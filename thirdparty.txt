@@ -1,0 +1,60 @@
+3-point gaussian sub-pixel estimator used in piv.m: by Uri Shavit, Roi Gurka, Alex Liberzon
+Technion – Israel Institute of Technology
+
+---------------------------------------------------------------------------------
+
+inpaint_nans by John D'Errico
+29 Feb 2004 (Updated 28 Jun 2006) 
+
+---------------------------------------------------------------------------------
+
+uipickfiles: uigetfile on steroids by Douglas Schwarz
+25 Apr 2006 (Updated 24 Mar 2010) 
+
+---------------------------------------------------------------------------------
+
+smoothn: SMOOTHN Robust spline smoothing for 1-D to N-D data.
+Damien Garcia -- 2009/03, revised 2010/06
+Garcia D: A fast all-in-one method for automated post-processing of PIV data.
+Exp Fluids, 2010
+Garcia D: Robust smoothing of gridded data in one and higher dimensions with missing values.
+Comput Statist Data Anal, 2010;54:1167-1178
+
+---------------------------------------------------------------------------------
+
+dctn: N-dimensional Discrete Cosine Transform
+Damien Garcia, http://www.biomecardio.com
+
+---------------------------------------------------------------------------------
+
+idctn: N-dimensional inverse Discrete Cosine Transform
+Damien Garcia, http://www.biomecardio.com
+
+---------------------------------------------------------------------------------
+
+Ellipse: by D.G. Long
+
+---------------------------------------------------------------------------------
+
+Particle image generation based on Raffel M, Willert CE, Kompenhans J (1998) Particle image velocity:
+a practical guide. Springer, Berlin Heidelberg New York, Hong Kong
+
+---------------------------------------------------------------------------------
+
+NaN Suite by Jan Gläscher, 31 Jan 2005 (Updated 05 May 2008)
+Descriptive Statistics for N-D matrices ignoring NaNs.
+
+-------
+Exportfig by Ben Hinkle, 13 Sep 2001 (Updated 28 Oct 2009)
+Functions for exporting figures.
+
+--------
+Line integral Convolution (LIC) from
+Matlab VFV Toolbox 1.0
+By Nima Bigdely Shamlo (email: bigdelys-vfv@yahoo.com)
+Computational Science Research Center
+San Diego State University
+
+-------
+Improved 2-D Streamlines by Duane Hanselman, 31 Oct 2012
+More comprehensive streamline computation than stream2 in MATLAB.
