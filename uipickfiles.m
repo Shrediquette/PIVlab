@@ -797,8 +797,15 @@ uicontrol('Position',[380 566 150 14],...
                         pick = dir_pick.name;
                         pick_full = fullfile(current_dir,pick);
                         %dir_pick.name = pick_full;
-                        imshow (imread(pick_full),'parent',ah1);
-                        
+                        if numel(pick)-strfind(pick,'.b16')==3 %b16 is only grayscale
+                            temp_img=f_readB16(pick_full);
+                            temp_img=imadjust(temp_img/max(temp_img(:)));
+                            imshow (temp_img,'parent',ah1);
+                        else
+                            temp_img=imread(pick_full);
+                            imshow (imadjust(temp_img,mean(stretchlim(temp_img),2)),'parent',ah1);
+                        end
+                        ylabel('enhanced image display')
                     catch
                     end
                 end
@@ -867,11 +874,16 @@ uicontrol('Position',[380 566 150 14],...
                 pick = file_picks(value(1));
                 pick_full = fullfile(current_dir,pick{1,1});
                 figure(fig)
-                
-                imshow (imread(pick_full),'parent',ah1);
-                
+                if numel(pick)-strfind(pick,'.b16')==3
+                    temp_img=f_readB16(pick_full);
+                    temp_img=imadjust(temp_img/max(temp_img(:)));
+                    imshow (temp_img,'parent',ah1);
+                else
+                    temp_img=imread(pick_full);
+                    imshow (imadjust(temp_img,mean(stretchlim(temp_img),2)),'parent',ah1);                
+                end
+                ylabel('enhanced image display')
             catch
-                
             end
         end
         if strcmp(get(fig,'SelectionType'),'open')

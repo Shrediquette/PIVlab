@@ -107,18 +107,6 @@ if do_pad==1 && passes == 1
     result_conv =result_conv((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 end
 
-% weighing matrix. Supposed to reduce peak locking. Does not work...?
-%{
-result_conv=result_conv-mean(mean(result_conv));
-hk=hankel(0:interrogationarea-1,interrogationarea-1:-1:0);
-hk=flipud(hk)+hk;
-hk=hk-min(min(hk));
-hk=hk./max(max(hk))*0.5;
-hk=1-hk;
-hk = repmat(hk,1,1,size(result_conv,3));
-result_conv=result_conv.*hk;
-%}
-
 %% repeated  Correlation in the first pass (might make sense to repeat more often to make it even more robust...)
 
 if repeat == 1 && passes == 1
@@ -279,61 +267,10 @@ for multipass=1:passes-1
         fprintf('.');
     end
     %multipass validation, smoothing
-    %stdev test
     utable_orig=utable;
     vtable_orig=vtable;
-    stdthresh=4;
-    meanu=nanmean(utable(:));
-    meanv=nanmean(vtable(:));
-    std2u=nanstd(reshape(utable,size(utable,1)*size(utable,2),1));
-    std2v=nanstd(reshape(vtable,size(vtable,1)*size(vtable,2),1));
-    minvalu=meanu-stdthresh*std2u;
-    maxvalu=meanu+stdthresh*std2u;
-    minvalv=meanv-stdthresh*std2v;
-    maxvalv=meanv+stdthresh*std2v;
-    utable(utable<minvalu)=NaN;
-    utable(utable>maxvalu)=NaN;
-    vtable(vtable<minvalv)=NaN;
-    vtable(vtable>maxvalv)=NaN;
-    
-    %median test
-    %info1=[];
-    epsilon=0.02;
-    thresh=2;
-    [J,I]=size(utable);
-    %medianres=zeros(J,I);
-    normfluct=zeros(J,I,2);
-    b=1;
-    %eps=0.1;
-    for c=1:2
-        if c==1
-            velcomp=utable;
-        else
-            velcomp=vtable;
-        end
-        
-        clear neigh
-        for ii = -b:b
-            for jj = -b:b
-                neigh(:, :, ii+2*b, jj+2*b)=velcomp((1+b:end-b)+ii, (1+b:end-b)+jj); %#ok<*AGROW>
-            end
-        end
-        
-        neighcol = reshape(neigh, size(neigh,1), size(neigh,2), (2*b+1)^2);
-        neighcol2= neighcol(:,:, [(1:(2*b+1)*b+b) ((2*b+1)*b+b+2:(2*b+1)^2)]);
-        neighcol2 = permute(neighcol2, [3, 1, 2]);
-        med=median(neighcol2);
-        velcomp = velcomp((1+b:end-b), (1+b:end-b));
-        fluct=velcomp-permute(med, [2 3 1]);
-        res=neighcol2-repmat(med, [(2*b+1)^2-1, 1,1]);
-        medianres=permute(median(abs(res)), [2 3 1]);
-        normfluct((1+b:end-b), (1+b:end-b), c)=abs(fluct./(medianres+epsilon));
-    end
-    
-    
-    info1=(sqrt(normfluct(:,:,1).^2+normfluct(:,:,2).^2)>thresh);
-    utable(info1==1)=NaN;
-    vtable(info1==1)=NaN;
+    [utable,vtable] = PIVlab_postproc (utable,vtable,[], [], 1,4, 1,1.5);
+
     %find typevector...
     %maskedpoints=numel(find((typevector)==0));
     %amountnans=numel(find(isnan(utable)==1))-maskedpoints;
@@ -360,10 +297,11 @@ for multipass=1:passes-1
     utable=inpaint_nans(utable,4);
     vtable=inpaint_nans(vtable,4);
     %smooth predictor
+    
     try
         if multipass<passes-1
-            utable = smoothn(utable,0.6); %stronger smoothing for first passes
-            vtable = smoothn(vtable,0.6);
+            utable = smoothn(utable,0.9); %stronger smoothing for first passes
+            vtable = smoothn(vtable,0.9);
         else
             utable = smoothn(utable); %weaker smoothing for last pass
             vtable = smoothn(vtable);

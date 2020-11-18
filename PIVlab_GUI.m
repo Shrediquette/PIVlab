@@ -14,6 +14,7 @@
 % NaN Suite by Jan GlÃ¤scher
 % Exportfig by Ben Hinkle
 % mmstream2 by Duane Hanselman
+% f_readB16 by Carl Hall
 
 
 function PIVlab_GUI
@@ -26,7 +27,7 @@ handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 guidata(MainWindow,handles)
 setappdata(0,'hgui',MainWindow);
 
-version = '2.36';
+version = '2.37';
 put('PIVver', version);
 v=ver('MATLAB');
 disp(['Please wait, starting PIVlab GUI...' sprintf('\n')])
@@ -68,7 +69,7 @@ catch
 end
 try
     ctr=0;
-    pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'Background_GUI.m' 'Background_GUI.fig' 'icons_quick.mat'};
+    pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'Background_GUI.m' 'Background_GUI.fig' 'icons_quick.mat' 'f_readB16.m'};
     for i=1:size(pivFiles,2)
         if exist(pivFiles{1,i},'file')~=2
             disp(['ERROR: A required file was not found: ' pivFiles{1,i}]);
@@ -115,7 +116,8 @@ uimenu(m7,'Label','Calibrate using current or external image','Callback',@cal_ac
 m8 = uimenu('Label','Post-processing');
 uimenu(m8,'Label','Vector validation','Callback',@vector_val_Callback,'Accelerator','V');
 m9 = uimenu('Label','Plot');
-uimenu(m9,'Label','Derive parameters / modify data','Callback',@plot_derivs_Callback,'Accelerator','D');
+uimenu(m9,'Label','Spatial: Derive parameters / modify data','Callback',@plot_derivs_Callback,'Accelerator','D');
+uimenu(m9,'Label','Temporal: Derive parameters','Callback',@plot_temporal_derivs_Callback);
 uimenu(m9,'Label','Modify plot appearance','Callback',@modif_plot_Callback,'Accelerator','M');
 uimenu(m9,'Label','Streamlines','Callback',@streamlines_Callback);
 uimenu(m9,'Label','Markers / distance / angle','Callback',@dist_angle_Callback,'Accelerator','T');
@@ -681,19 +683,19 @@ item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 handles.stdev_thresh = uicontrol(handles.multip06,'Style','edit','String','4.7','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@stdev_thresh_Callback,'Tag','stdev_thresh','TooltipString','Threshold for the standard deviation filter. Velocities that are outside the mean velocity +- n times the standard deviation will be removed');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
-handles.loc_median = uicontrol(handles.multip06,'Style','checkbox','String','Local median filter','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','loc_median','TooltipString','Based on: Westerweel, J. and Scarano, F. (2005) Universal outlier detection for PIV data');
+handles.loc_median = uicontrol(handles.multip06,'Style','checkbox','String','Local median filter','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','loc_median','TooltipString','Compares each vector to the median of the surrounding vectors. Discards vector if difference is above the selected threshold');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text19 = uicontrol(handles.multip06,'Style','text','String','Threshold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text19');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.loc_med_thresh = uicontrol(handles.multip06,'Style','edit','String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@loc_med_thresh_Callback,'Tag','loc_med_thresh');
+handles.loc_med_thresh = uicontrol(handles.multip06,'Style','edit','String','3','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@loc_med_thresh_Callback,'Tag','loc_med_thresh');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
-handles.text20 = uicontrol(handles.multip06,'Style','text','String','Epsilon','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text20');
+%handles.text20 = uicontrol(handles.multip06,'Style','text','String','Epsilon','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text20');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.epsilon = uicontrol(handles.multip06,'Style','edit','String','0.1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@epsilon_Callback,'Tag','epsilon');
+%handles.epsilon = uicontrol(handles.multip06,'Style','edit','String','0.1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@epsilon_Callback,'Tag','epsilon');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.rejectsingle = uicontrol(handles.multip06,'Style','pushbutton','String','Manually reject vector','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @rejectsingle_Callback,'Tag','rejectsingle','TooltipString','Manually remove vectors. Click on the base of the vectors that you want to discard');
@@ -824,7 +826,7 @@ handles.apply_deriv = uicontrol(handles.multip08,'Style','pushbutton','String','
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 handles.apply_deriv_all = uicontrol(handles.multip08,'Style','pushbutton','String','Apply to all frames','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@apply_deriv_all_Callback, 'Tag','apply_deriv_all','TooltipString','Apply settings to all frames');
-
+%{
 item=[0 item(2)+item(4)+margin/3*2 parentitem(3) 7];
 handles.uipanel43 = uipanel(handles.multip08, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Calculate mean / sum', 'Tag','uipanel43','fontweight','bold');
 
@@ -837,11 +839,11 @@ item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
 handles.selectedFramesMean = uicontrol(handles.uipanel43,'Style','edit','String','1:end','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','selectedFramesMean','TooltipString','Select which frames to include for calculating the mean velocity. E.g. "1,3,4,8:10"');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 2];
-handles.meanmaker = uicontrol(handles.uipanel43,'Style','pushbutton','String','Calc. mean','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@meanmaker_Callback, 1}, 'Tag','meanmaker','TooltipString','Calculate mean velocities and append an extra frame with the results');
+handles.meanmaker = uicontrol(handles.uipanel43,'Style','pushbutton','String','Calc. mean','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@temporal_operation_Callback, 1}, 'Tag','meanmaker','TooltipString','Calculate mean velocities and append an extra frame with the results');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
-handles.summaker = uicontrol(handles.uipanel43,'Style','pushbutton','String','Calc. sum','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@meanmaker_Callback, 0}, 'Tag','summaker','TooltipString','Calculate sum of displacements and append an extra frame with the results');
-
+handles.summaker = uicontrol(handles.uipanel43,'Style','pushbutton','String','Calc. sum','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@temporal_operation_Callback, 0}, 'Tag','summaker','TooltipString','Calculate sum of displacements and append an extra frame with the results');
+%}
 %% Multip09
 handles.multip09 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Modify plot appearance (CTRL+M)', 'Tag','multip09','fontweight','bold');
 parentitem=get(handles.multip09, 'Position');
@@ -1556,6 +1558,30 @@ handles.textsizedown = uicontrol(handles.multip21,'Style','pushbutton','String',
 item=[0 item(2)+item(4)+margin parentitem(3) 4];
 handles.paneltext4 = uicontrol(handles.multip21,'Style','text','String','Please note: This setting will currently not be saved. Because otherwise this might screw up your user interface permanently.','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','paneltext4');
 
+%% Multip22
+handles.multip22 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Derive Temporal Parameters', 'Tag','multip22','fontweight','bold');
+parentitem=get(handles.multip22, 'Position');
+item=[0 0 0 0];
+
+%item=[0 item(2)+item(4)+margin/3*2 parentitem(3) 7];
+%handles.uipanel43 = uipanel(handles.multip22, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Calculate mean / sum', 'Tag','uipanel43','fontweight','bold');
+
+
+item=[0 item(2)+item(4) parentitem(3) 2];
+handles.text153 = uicontrol(handles.multip22,'Style','text','String','Frames to process:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text153');
+
+item=[0 item(2)+item(4) parentitem(3) 2];
+handles.selectedFramesMean = uicontrol(handles.multip22,'Style','edit','String','1:end','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','selectedFramesMean','TooltipString','Select which frames to include for calculating the mean velocity. E.g. "1,3,4,8:10"');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
+handles.meanmaker = uicontrol(handles.multip22,'Style','pushbutton','String','Calculate mean','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@temporal_operation_Callback, 1}, 'Tag','meanmaker','TooltipString','Calculate mean velocities and append an extra frame with the results');
+
+item=[0 item(2)+item(4) parentitem(3) 2];
+handles.summaker = uicontrol(handles.multip22,'Style','pushbutton','String','Calculate sum','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@temporal_operation_Callback, 0}, 'Tag','summaker','TooltipString','Calculate sum of displacements and append an extra frame with the results');
+
+item=[0 item(2)+item(4) parentitem(3) 2];
+handles.stdmaker = uicontrol(handles.multip22,'Style','pushbutton','String','Calculate stdev','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@temporal_operation_Callback, 2}, 'Tag','stdmaker','TooltipString','Calculate standard deviation of displacements and append an extra frame with the results');
+
 disp('-> UI generated.')
 
 %% Menu items callbacks
@@ -1644,6 +1670,22 @@ else
     set(handles.text36,'String','v [m/s]:')
 end
 derivchoice_Callback(handles.derivchoice)
+
+function plot_temporal_derivs_Callback(~, ~, ~)
+handles=gethand;
+switchui('multip22');
+%{
+if retr('caluv')==1 && retr('calxy')==1
+    set(handles.derivchoice,'String',{'Vectors [px/frame]';'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Simple shear rate [1/frame]';'Simple strain rate [1/frame]';'Line integral convolution (LIC) [1]' ; 'Vector direction [degrees]'});
+    set(handles.text35,'String','u [px/frame]:')
+    set(handles.text36,'String','v [px/frame]:')
+else
+    set(handles.derivchoice,'String',{'Vectors [m/s]';'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Simple shear rate [1/s]';'Simple strain rate [1/s]';'Line integral convolution (LIC) [1]'; 'Vector direction [degrees]'});
+    set(handles.text35,'String','u [m/s]:')
+    set(handles.text36,'String','v [m/s]:')
+end
+derivchoice_Callback(handles.derivchoice)
+%}
 
 function modif_plot_Callback(~, ~, ~)
 switchui('multip09');
@@ -1865,7 +1907,7 @@ function handles=gethand
 hgui=getappdata(0,'hgui');
 handles=guihandles(hgui);
 
-function sliderdisp %this is the most im portant function, doind all the displaying
+function sliderdisp %this is the most important function, doing all the displaying
 handles=gethand;
 toggler=retr('toggler');
 selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
@@ -1914,8 +1956,6 @@ currentframe=2*floor(get(handles.fileselector, 'value'))-1;
 displaywhat=retr('displaywhat');
 delete(findobj('tag', 'derivhint'));
 if size(filepath,1)>0
-    
-    
     if get(handles.zoomon,'Value')==1
         set(handles.zoomon,'Value',0);
         zoomon_Callback(handles.zoomon)
@@ -1926,20 +1966,20 @@ if size(filepath,1)>0
     end
     xzoomlimit=retr('xzoomlimit');
     yzoomlimit=retr('yzoomlimit');
-    
-    
-    
-    
-    
+
     derived=retr('derived');
     if isempty(derived)==0   %derivatives were calculated
         %derived=retr('derived');
         %1=vectors only
         if displaywhat==1 %vectors only
-            currentimage=imread(filepath{selected});
+            [~,~,ext] = fileparts(filepath{selected});
+            if ext == '.b16'
+                currentimage=f_readB16(filepath{selected});
+            else
+                currentimage=imread(filepath{selected});
+            end
             image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
             colormap('gray');
-            
             vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
             %vectorcolor='g';
             %end
@@ -1947,24 +1987,19 @@ if size(filepath,1)>0
             if size(derived,2)>=(currentframe+1)/2 && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
                 currentimage=derived{displaywhat-1,(currentframe+1)/2};
                 %is currentimage 3d? That would cause problems.-....
-                
                 %pcolor(resultslist{1,(currentframe+1)/2},resultslist{2,(currentframe+1)/2},currentimage);shading interp;
                 if displaywhat ~=11 % 11 ist vector direction
                     image(rescale_maps(currentimage,0), 'parent',gca, 'cdatamapping', 'scaled');
                 else
                     image(rescale_maps(currentimage,1), 'parent',gca, 'cdatamapping', 'scaled');
                 end
-                
                 if displaywhat ~=10 %10 is LIC
-                    
                     avail_maps=get(handles.colormap_choice,'string');
                     selected_index=get(handles.colormap_choice,'value');
                     if selected_index == 4 %HochschuleBremen map
                         load hsbmap.mat;
                         colormap(hsb);
-                    elseif selected_index== 1 %rainbow
-                        %load rainbow.mat;
-                        %colormap (rainbow);
+                    elseif selected_index== 1 %parula
                         load parula.mat;
                         colormap (parula);
                     else
@@ -2001,7 +2036,12 @@ if size(filepath,1)>0
                     end
                 end
             else %no deriv available
-                currentimage=imread(filepath{selected});
+                [~,~,ext] = fileparts(filepath{selected});
+                if ext == '.b16'
+                    currentimage=f_readB16(filepath{selected});
+                else
+                    currentimage=imread(filepath{selected});
+                end
                 image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
                 colormap('gray');
                 vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
@@ -2011,7 +2051,13 @@ if size(filepath,1)>0
         end
     else %not in derivatives panel
         try
-            currentimage=imread(filepath{selected});
+            [~,~,ext] = fileparts(filepath{selected});
+            if ext == '.b16'
+                currentimage=f_readB16(filepath{selected});
+            else
+                currentimage=imread(filepath{selected});
+            end
+            
         catch
             disp(['Error: ' filepath{selected} ' --> Image could not be found!']);
             resultslist=retr('resultslist');
@@ -2028,7 +2074,6 @@ if size(filepath,1)>0
     set(gca,'ytick',[])
     set(gca,'xtick',[])
     filename=retr('filename');
-    
     ismean=retr('ismean');
     if size(ismean,1)>=(currentframe+1)/2
         if ismean((currentframe+1)/2,1) ==1
@@ -2069,8 +2114,6 @@ if size(filepath,1)>0
     end
     resultslist=retr('resultslist');
     delete(findobj('tag', 'smoothhint'));
-    
-    
     %manualmarkers
     if get(handles.displmarker,'value')==1
         manmarkersX=retr('manmarkersX');
@@ -2226,19 +2269,11 @@ if size(filepath,1)>0
                 hold off;
             end
         end
-        
-        %{
-        figure;
-        [Vx2,Vy2] = pppiv(u,v);
-        quiver(Vx2,Vy2)
-        %}
     end
     
     if isempty(xzoomlimit)==0
         set(gca,'xlim',xzoomlimit)
         set(gca,'ylim',yzoomlimit)
-        
-        
     end
     if verLessThan('matlab','8.4')
         %do nothing
@@ -2258,11 +2293,11 @@ y=reshape(y,size(y,1)*size(y,2),1);
 u=reshape(u,size(u,1)*size(u,2),1);
 v=reshape(v,size(v,1)*size(v,2),1);
 if retr('caluv')==1 && retr('calxy')==1
-    set (handles.meanu,'string', [num2str(nanmean(u*caluv)) ' Â± ' num2str(nanstd(u*caluv)) ' [px/frame]'])
-    set (handles.meanv,'string', [num2str(nanmean(v*caluv)) ' Â± ' num2str(nanstd(v*caluv)) ' [px/frame]'])
+    set (handles.meanu,'string', [num2str(nanmean(u*caluv)) ' ± ' num2str(nanstd(u*caluv)) ' [px/frame]'])
+    set (handles.meanv,'string', [num2str(nanmean(v*caluv)) ' ± ' num2str(nanstd(v*caluv)) ' [px/frame]'])
 else
-    set (handles.meanu,'string', [num2str(nanmean(u*caluv)) ' Â± ' num2str(nanstd(u*caluv)) ' [m/s]'])
-    set (handles.meanv,'string', [num2str(nanmean(v*caluv)) ' Â± ' num2str(nanstd(v*caluv)) ' [m/s]'])
+    set (handles.meanu,'string', [num2str(nanmean(u*caluv)) ' ± ' num2str(nanstd(u*caluv)) ' [m/s]'])
+    set (handles.meanv,'string', [num2str(nanmean(v*caluv)) ' ± ' num2str(nanstd(v*caluv)) ' [m/s]'])
 end
 
 function veclick(~,~)
@@ -2310,7 +2345,6 @@ end
 if typevector(info(1,1),info(1,2)) ~=0
     delete(findobj('tag', 'infopoint'));
     %here, the calibration matters...
-    
     if retr('caluv')==1 && retr('calxy')==1
         set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*retr('caluv')-retr('subtr_u'))*10000)/10000) ' [px/fr]']);
         set(handles.v_cp, 'String', ['v:' num2str(round((v(info(1,1),info(1,2))*retr('caluv')-retr('subtr_v'))*10000)/10000) ' [px/fr]']);
@@ -2443,10 +2477,17 @@ end
 handles=gethand;
 displogo(0)
 if ispc==1
-    
-    path=uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.tif$|\.jpeg$|\.tiff$', 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+    try
+        path=uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+    catch
+        path=uipickfiles ('FilterSpec', pwd, 'REFilter', '\.bmp$|\.jpg$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+    end
 else
-    path=uipickfiles ('FilterSpec', pathname, 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+    try
+        path=uipickfiles ('FilterSpec', pathname, 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+    catch
+        path=uipickfiles ('FilterSpec', pwd, 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+    end
 end
 if isequal(path,0) ==0
     if get(handles.zoomon,'Value')==1
@@ -3102,8 +3143,15 @@ if size(filepath,1) > 1
     filepath=retr('filepath');
     roirect = round(getrect(gca));
     if roirect(1,3)~=0 && roirect(1,4)~=0
-        imagesize(1)=size(imread(filepath{selected}),1);
-        imagesize(2)=size(imread(filepath{selected}),2);
+        [~,~,ext] = fileparts(filepath{selected});
+        if ext == '.b16'
+            imagesize(1)=size(f_readB16(filepath{selected}),1);
+            imagesize(2)=size(f_readB16(filepath{selected}),2);
+        else
+            imagesize(1)=size(imread(filepath{selected}),1);
+            imagesize(2)=size(imread(filepath{selected}),2);
+        end
+        
         if roirect(1)<1
             roirect(1)=1;
         end
@@ -3434,7 +3482,12 @@ if size(filepath,1) >1
     toggler=retr('toggler');
     filepath=retr('filepath');
     selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-    img=imread(filepath{selected});
+    [~,~,ext] = fileparts(filepath{selected});
+    if ext == '.b16'
+        img=f_readB16(filepath{selected});
+    else
+        img=imread(filepath{selected});
+    end
     clahe=get(handles.clahe_enable,'value');
     highp=get(handles.enable_highpass,'value');
     %clip=get(handles.enable_clip,'value');
@@ -3549,13 +3602,19 @@ handles=gethand;
 selected=2*floor(get(handles.fileselector, 'value'))-1;
 filepath=retr('filepath');
 if numel(filepath)>1
-    size_img(1)=size(imread(filepath{selected}),2)/2;
-    size_img(2)=size(imread(filepath{selected}),1)/2;
+    [~,~,ext] = fileparts(filepath{selected});
+    if ext == '.b16'
+        size_img(1)=size(f_readB16(filepath{selected}),2)/2;
+        size_img(2)=size(f_readB16(filepath{selected}),1)/2;
+    else
+        size_img(1)=size(imread(filepath{selected}),2)/2;
+        size_img(2)=size(imread(filepath{selected}),1)/2;
+    end
     step=str2double(get(handles.step,'string'));
     delete(findobj(gca,'Type','hggroup')); %=vectors and scatter markers
     delete(findobj(gca,'tag','intareadispl'));
-    centre(1)= size(imread(filepath{selected}),1)/2; %y
-    centre(2)= size(imread(filepath{selected}),2)/2; %x
+    centre(1)= size_img(2); %y
+    centre(2)= size_img(1); %x
     
     intarea1=str2double(get(handles.intarea,'string'))/2;
     x1=[centre(2)-intarea1 centre(2)+intarea1 centre(2)+intarea1 centre(2)-intarea1 centre(2)-intarea1];
@@ -3652,8 +3711,15 @@ if ok==1
         else
             text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
             drawnow
-            A=imread(filepath{selected});
-            B=imread(filepath{selected+1});
+            [~,~,ext] = fileparts(filepath{selected});
+            if ext == '.b16'
+                A=f_readB16(filepath{selected});
+                B=f_readB16(filepath{selected+1});
+            else
+                A=imread(filepath{selected});
+                B=imread(filepath{selected+1});
+            end
+            
             
             A=A(roirect(2):roirect(2)+roirect(4),roirect(1):roirect(1)+roirect(3));
             B=B(roirect(2):roirect(2)+roirect(4),roirect(1):roirect(1)+roirect(3));
@@ -3792,8 +3858,14 @@ if ok==1
         end
         cancel=retr('cancel');
         if isempty(cancel)==1 || cancel ~=1
-            image1=imread(filepath{i});
-            image2=imread(filepath{i+1});
+            [~,~,ext] = fileparts(filepath{i});
+            if ext == '.b16'
+                image1=f_readB16(filepath{i});
+                image2=f_readB16(filepath{i+1});
+            else
+                image1=imread(filepath{i});
+                image2=imread(filepath{i+1});
+            end
             if size(image1,3)>1
                 image1=uint8(mean(image1,3));
                 image2=uint8(mean(image2,3));
@@ -4085,8 +4157,16 @@ if ok==1
     end
     if currentwasmean==0
         tic;
-        image1=imread(filepath{selected});
-        image2=imread(filepath{selected+1});
+        [~,~,ext] = fileparts(filepath{selected});
+        if ext == '.b16'
+            image1=f_readB16(filepath{selected});
+            image2=f_readB16(filepath{selected+1});
+        else
+            image1=imread(filepath{selected});
+            image2=imread(filepath{selected+1});
+        end
+        
+        
         if size(image1,3)>1
             image1=uint8(mean(image1,3));
             image2=uint8(mean(image2,3));
@@ -4275,7 +4355,7 @@ try
     set(handles.stdev_thresh,'string',stdev_thresh);
     set(handles.loc_median,'value',loc_median);
     set(handles.loc_med_thresh,'string',loc_med_thresh);
-    set(handles.epsilon,'string',epsilon);
+    %set(handles.epsilon,'string',epsilon);
     set(handles.interpol_missing,'value',interpol_missing);
     set(handles.vectorscale,'string',vectorscale);
     set(handles.colormap_choice,'value',colormap_choice); %popup
@@ -4366,7 +4446,7 @@ stdev_check=get(handles.stdev_check,'value');
 stdev_thresh=get(handles.stdev_thresh,'string');
 loc_median=get(handles.loc_median,'value');
 loc_med_thresh=get(handles.loc_med_thresh,'string');
-epsilon=get(handles.epsilon,'string');
+%epsilon=get(handles.epsilon,'string');
 interpol_missing=get(handles.interpol_missing,'value');
 vectorscale=get(handles.vectorscale,'string');
 colormap_choice=get(handles.colormap_choice,'value'); %popup
@@ -4625,26 +4705,15 @@ if size(resultslist,2)>=frame
     typevector_original=resultslist{5,frame};
     typevector=typevector_original;
     if numel(u)>0
-        %velocity limits
         velrect=retr('velrect');
-        
-        if numel(velrect)>0 %velocity limits were activated
-            umin=velrect(1);
-            umax=velrect(3)+umin;
-            vmin=velrect(2);
-            vmax=velrect(4)+vmin;
-            u(u*caluv<umin)=NaN;
-            u(u*caluv>umax)=NaN;
-            v(u*caluv<umin)=NaN;
-            v(u*caluv>umax)=NaN;
-            v(v*caluv<vmin)=NaN;
-            v(v*caluv>vmax)=NaN;
-            u(v*caluv<vmin)=NaN;
-            u(v*caluv>vmax)=NaN;
-        end
+        do_stdev_check = get(handles.stdev_check, 'value');
+        stdthresh=str2double(get(handles.stdev_thresh, 'String'));
+        do_local_median = get(handles.loc_median, 'value');
+        %epsilon=str2double(get(handles.epsilon,'string'));
+        neigh_thresh=str2double(get(handles.loc_med_thresh,'string'));
+
         %manual point deletion
         manualdeletion=retr('manualdeletion');
-        
         if numel(manualdeletion)>0
             if size(manualdeletion,2)>=frame
                 if isempty(manualdeletion{1,frame}) ==0
@@ -4652,63 +4721,22 @@ if size(resultslist,2)>=frame
                     for i=1:size(framemanualdeletion,1)
                         u(framemanualdeletion(i,1),framemanualdeletion(i,2))=NaN;
                         v(framemanualdeletion(i,1),framemanualdeletion(i,2))=NaN;
-                        
-                        %                u(manualdeletion(i,1),manualdeletion(i,2))=NaN;
-                        %                v(manualdeletion(i,1),manualdeletion(i,2))=NaN;
                     end
                 end
             end
         end
-        %% stddev check
-        if get(handles.stdev_check, 'value')==1
-            stdthresh=str2double(get(handles.stdev_thresh, 'String'));
-            meanu=nanmean(u(:));
-            meanv=nanmean(v(:));
-            std2u=nanstd(reshape(u,size(u,1)*size(u,2),1));
-            std2v=nanstd(reshape(v,size(v,1)*size(v,2),1));
-            minvalu=meanu-stdthresh*std2u;
-            maxvalu=meanu+stdthresh*std2u;
-            minvalv=meanv-stdthresh*std2v;
-            maxvalv=meanv+stdthresh*std2v;
-            u(u<minvalu)=NaN;
-            u(u>maxvalu)=NaN;
-            v(v<minvalv)=NaN;
-            v(v>maxvalv)=NaN;
+        
+        %run postprocessing function
+        if numel(velrect)>0
+            valid_vel(1)=velrect(1); %umin
+            valid_vel(2)=velrect(3)+velrect(1); %umax
+            valid_vel(3)=velrect(2); %vmin
+            valid_vel(4)=velrect(4)+velrect(2); %vmax
+        else
+            valid_vel=[];
         end
-        %local median check
-        %Westerweel & Scarano (2005): Universal Outlier detection for PIV data
-        if get(handles.loc_median, 'value')==1
-            epsilon=str2double(get(handles.epsilon,'string'));
-            thresh=str2double(get(handles.loc_med_thresh,'string'));
-            [J,I]=size(u);
-            medianres=zeros(J,I);
-            normfluct=zeros(J,I,2);
-            b=1;
-            eps=0.1;
-            for c=1:2
-                if c==1; velcomp=u;else;velcomp=v;end %#ok<*NOSEM>
-                for i=1+b:I-b
-                    for j=1+b:J-b
-                        neigh=velcomp(j-b:j+b,i-b:i+b);
-                        neighcol=neigh(:);
-                        neighcol2=[neighcol(1:(2*b+1)*b+b);neighcol((2*b+1)*b+b+2:end)];
-                        med=median(neighcol2);
-                        fluct=velcomp(j,i)-med;
-                        res=neighcol2-med;
-                        medianres=median(abs(res));
-                        normfluct(j,i,c)=abs(fluct/(medianres+epsilon));
-                    end
-                end
-            end
-            info1=(sqrt(normfluct(:,:,1).^2+normfluct(:,:,2).^2)>thresh);
-            u(info1==1)=NaN;
-            v(info1==1)=NaN;
-        end
-        %0=mask
-        %1=normal
-        %2=manually filtered
-        u(isnan(v))=NaN;
-        v(isnan(u))=NaN;
+        [u,v] = PIVlab_postproc (u,v,caluv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
+        
         typevector(isnan(u))=2;
         typevector(isnan(v))=2;
         typevector(typevector_original==0)=0; %restores typevector for mask
@@ -4721,7 +4749,6 @@ if size(resultslist,2)>=frame
         resultslist{8, frame} = v;
         resultslist{9, frame} = typevector;
         put('resultslist', resultslist);
-    else
     end
 end
 %sliderdisp
@@ -4861,19 +4888,22 @@ if isempty (cali_folder)==1
     end
 end
 try
-    [filename, pathname, filterindex] = uigetfile({'*.bmp;*.tif;*.jpg;','Image Files (*.bmp,*.tif,*.jpg)'; '*.tif','tif'; '*.jpg','jpg'; '*.bmp','bmp'; },'Select calibration image',cali_folder);
+    [filename, pathname, filterindex] = uigetfile({'*.bmp;*.tif;*.jpg;*.tiff;*.b16;','Image Files (*.bmp,*.tif,*.jpg,*.tiff,*.b16)'; '*.tif','tif'; '*.jpg','jpg'; '*.bmp','bmp'; '*.tiff','tiff';'*.b16','b16'; },'Select calibration image',cali_folder);
 catch
-    [filename, pathname, filterindex] = uigetfile({'*.bmp;*.tif;*.jpg;','Image Files (*.bmp,*.tif,*.jpg)'; '*.tif','tif'; '*.jpg','jpg'; '*.bmp','bmp'; },'Select calibration image'); %unix/mac system may cause problems, can't be checked due to lack of unix/mac systems...
+    [filename, pathname, filterindex] = uigetfile({'*.bmp;*.tif;*.jpg;*.tiff;*.b16;','Image Files (*.bmp,*.tif,*.jpg,*.tiff,*.b16)'; '*.tif','tif'; '*.jpg','jpg'; '*.bmp','bmp';  '*.tiff','tiff';'*.b16','b16';},'Select calibration image'); %unix/mac system may cause problems, can't be checked due to lack of unix/mac systems...
 end
 if isequal(filename,0)==0
-    
-    %caliimg=adapthisteq(imread(fullfile(pathname, filename)));
-    caliimg=imread(fullfile(pathname, filename));
+    [~,~,ext] = fileparts(fullfile(pathname, filename));
+    if ext == '.b16'
+        caliimg=f_readB16(fullfile(pathname, filename));
+    else
+        caliimg=imread(fullfile(pathname, filename));
+    end
     if size(caliimg,3)>1 == 0
-        caliimg=adapthisteq(caliimg);
+        caliimg=adapthisteq(imadjust(caliimg));
     else
         try
-            caliimg=adapthisteq(rgb2gray(caliimg));
+            caliimg=adapthisteq(imadjust(rgb2gray(caliimg)));
         catch
         end
     end
@@ -5039,7 +5069,12 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
     derived=retr('derived');
     caluv=retr('caluv');
     calxy=retr('calxy');
-    currentimage=imread(filepath{2*frame-1});
+    [~,~,ext] = fileparts(filepath{2*frame-1});
+    if ext == '.b16'
+        currentimage=f_readB16(filepath{2*frame-1});
+    else
+        currentimage=imread(filepath{2*frame-1});
+    end
     x=resultslist{1,frame};
     y=resultslist{2,frame};
     %subtrayct mean u
@@ -5285,7 +5320,12 @@ function out=rescale_maps(in,isangle)
 handles=gethand;
 filepath=retr('filepath');
 currentframe=floor(get(handles.fileselector, 'value'));
-currentimage=imread(filepath{2*currentframe-1});
+[~,~,ext] = fileparts(filepath{2*currentframe-1});
+if ext == '.b16'
+    currentimage=f_readB16(filepath{2*currentframe-1});
+else
+    currentimage=imread(filepath{2*currentframe-1});
+end
 resultslist=retr('resultslist');
 x=resultslist{1,currentframe};
 y=resultslist{2,currentframe};
@@ -5350,7 +5390,12 @@ function out=rescale_maps_nan(in,isangle)
 handles=gethand;
 filepath=retr('filepath');
 currentframe=floor(get(handles.fileselector, 'value'));
-currentimage=imread(filepath{2*currentframe-1});
+[~,~,ext] = fileparts(filepath{2*currentframe-1});
+if ext == '.b16'
+    currentimage=f_readB16(filepath{2*currentframe-1});
+else
+    currentimage=imread(filepath{2*currentframe-1});
+end
 resultslist=retr('resultslist');
 x=resultslist{1,currentframe};
 y=resultslist{2,currentframe};
@@ -6567,7 +6612,7 @@ stdev_check=get(handles.stdev_check,'value');
 stdev_thresh=get(handles.stdev_thresh,'string');
 loc_median=get(handles.loc_median,'value');
 loc_med_thresh=get(handles.loc_med_thresh,'string');
-epsilon=get(handles.epsilon,'string');
+%epsilon=get(handles.epsilon,'string');
 interpol_missing=get(handles.interpol_missing,'value');
 vectorscale=get(handles.vectorscale,'string');
 colormap_choice=get(handles.colormap_choice,'value'); %popup
@@ -6674,7 +6719,6 @@ else
     set(handles.stdev_thresh,'string',retr('stdev_thresh'));
     set(handles.loc_median,'value',retr('loc_median'));
     set(handles.loc_med_thresh,'string',retr('loc_med_thresh'));
-    set(handles.epsilon,'string',retr('epsilon'));
     set(handles.interpol_missing,'value',retr('interpol_missing'));
     set(handles.vectorscale,'string',retr('vectorscale'));
     set(handles.colormap_choice,'value',retr('colormap_choice')); %popup
@@ -6687,11 +6731,14 @@ else
     set(handles.dcc, 'value',vars.dccmark);
     set(handles.fftmulti, 'value',vars.fftmark);
     
-    try
-        set(handles.ensemble, 'value',vars.ensemblemark);
-    catch
+    
+        try
+        
+    set(handles.ensemble, 'value',vars.ensemblemark);
+        catch
         vars.ensemblemark=0;
     end
+    
     
     if vars.fftmark==1 || vars.ensemblemark ==1
         set (handles.uipanel42,'visible','on')
@@ -6711,8 +6758,10 @@ else
     set(handles.streamlamount, 'string',vars.streamlamount);
     set(handles.streamlcolor, 'value',vars.streamlcolor);
     set(handles.streamlwidth, 'value',vars.streamlcolor);
+    
     try
         %neu v1.5:
+        
         set(handles.mask_auto_box,'value',vars.mask_auto_box);
         set(handles.Autolimit,'value',vars.Autolimit);
         set(handles.minintens,'string',vars.minintens);
@@ -6721,6 +6770,8 @@ else
     catch
         disp('Old version compatibility,')
     end
+
+    
     try
         set(handles.realdist, 'String',vars.realdist_string);
         set(handles.time_inp, 'String',vars.time_inp_string);
@@ -6731,11 +6782,13 @@ else
     catch
         disp('.')
     end
+    
     %reset zoom
     set(handles.panon,'Value',0);
     set(handles.zoomon,'Value',0);
     put('xzoomlimit', []);
     put('yzoomlimit', []);
+    
     sliderdisp
     zoom reset
 end
@@ -6811,6 +6864,8 @@ if formattype==1
     end
     put('imgsavepath',pathname );
     compr=get(handles.usecompr,'value');
+    
+    
     if verLessThan('matlab','8.4')
         if compr==0
             compr='none';
@@ -6844,6 +6899,9 @@ if formattype==1
         set(axesObject2,'Units',axes_units);
         set(axesObject2,'Position',[15 5 axes_pos(3) axes_pos(4)]);
         colormap(colo);
+        
+        
+        
         if get(handles.displ_colorbar,'value')==1
             name=get(handles.derivchoice,'string');
             posichoice = get(handles.colorbarpos,'String');
@@ -6894,6 +6952,7 @@ elseif formattype ==2 || formattype==3 || formattype==4 || formattype==5
             reso=1;
         end
     end
+    
     for i=startframe:endframe
         set(handles.fileselector, 'value',i)
         sliderdisp
@@ -7017,7 +7076,12 @@ for i=startfr:endfr
             
             derivative_calc(currentframe,extractwhat+1,0);
             derived=retr('derived');
-            currentimage=imread(filepath{2*currentframe-1});
+            [~,~,ext] = fileparts(filepath{2*currentframe-1});
+            if ext == '.b16'
+                currentimage=f_readB16(filepath{2*currentframe-1});
+            else
+                currentimage=imread(filepath{2*currentframe-1});
+            end
             sizeold=size(currentimage,1);
             sizenew=size(x,1);
             
@@ -7073,7 +7137,13 @@ for i=startfr:endfr
             maptoget=rescale_maps_nan(maptoget,0);
             
             calxy=retr('calxy');
-            currentimage=imread(filepath{2*currentframe-1});
+            [~,~,ext] = fileparts(filepath{2*currentframe-1});
+            if ext == '.b16'
+                currentimage=f_readB16(filepath{2*currentframe-1});
+            else
+                currentimage=imread(filepath{2*currentframe-1});
+            end
+            
             sizeold=size(currentimage,1);
             sizenew=size(x,1);
             if selected==0
@@ -7121,7 +7191,13 @@ for i=startfr:endfr
             % area only
             sliderdisp
             filepath=retr('filepath');
-            currentimage=imread(filepath{2*currentframe-1});
+            [~,~,ext] = fileparts(filepath{2*currentframe-1});
+            if ext == '.b16'
+                currentimage=f_readB16(filepath{2*currentframe-1});
+            else
+                currentimage=imread(filepath{2*currentframe-1});
+            end
+            
             x=resultslist{1,currentframe};
             sizeold=size(currentimage,1);
             sizenew=size(x,1);
@@ -7517,7 +7593,7 @@ for i=startfr:endfr
                     end
                     textposix=x(1,round(size(x,2)/4));
                     textposiy=y(round(size(y,1)/4),1);
-                    text(textposix, textposiy, ['angle=' num2str(angle) 'Â°' sprintf('\n') 'magnitude=' num2str(magg) un], 'margin', 0.01, 'fontsize', 10, 'color','w','fontweight','bold','BackgroundColor', [0 0 0],'verticalalignment','top','horizontalalignment','left');
+                    text(textposix, textposiy, ['angle=' num2str(angle) '°' sprintf('\n') 'magnitude=' num2str(magg) un], 'margin', 0.01, 'fontsize', 10, 'color','w','fontweight','bold','BackgroundColor', [0 0 0],'verticalalignment','top','horizontalalignment','left');
                 end
             end
         end %areaoperation
@@ -7709,7 +7785,7 @@ elseif contents==2
     set(handles.text112,'visible','on');
 end
 
-function meanmaker_Callback(~, ~, type)
+function temporal_operation_Callback(~, ~, type)
 handles=gethand;
 filepath=retr('filepath');
 resultslist=retr('resultslist');
@@ -7927,7 +8003,11 @@ if isempty(resultslist)==0
                     %hier neue matrix mit ausgewÃ¤hlten frames!
                     eval(['umittelselected=umittel(:,:,[' str ']);']);
                     eval(['vmittelselected=vmittel(:,:,[' str ']);']);
-                    
+                    if type==2
+                        %standard deviation
+                        resultslist{3,size(filepath,1)/2+1}=nanstd(umittelselected,3);
+                        resultslist{4,size(filepath,1)/2+1}=nanstd(vmittelselected,3);
+                    end                   
                     if type==1
                         resultslist{3,size(filepath,1)/2+1}=nanmean(umittelselected,3);
                         resultslist{4,size(filepath,1)/2+1}=nanmean(vmittelselected,3);
@@ -7950,7 +8030,10 @@ if isempty(resultslist)==0
                     filepath{size(filepath,1)+1,1}=filepathselected{1,1};
                     filepath{size(filepath,1)+1,1}=filepathselected{1,1};
                     filename=retr('filename');
-                    
+                    if type == 2
+                        filename{size(filename,1)+1,1}=['STDEV of frames ' str];
+                        filename{size(filename,1)+1,1}=['STDEV of frames ' str];
+                    end                    
                     if type == 1
                         filename{size(filename,1)+1,1}=['MEAN of frames ' str];
                         filename{size(filename,1)+1,1}=['MEAN of frames ' str];
@@ -8534,9 +8617,14 @@ if isempty(x)== 0 && isempty(y)== 0 && isempty(w)== 0 && isempty(h)== 0 && isnum
     toggler=retr('toggler');
     selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
     filepath=retr('filepath');
-    
-    imagesize(1)=size(imread(filepath{selected}),1);
-    imagesize(2)=size(imread(filepath{selected}),2);
+    [~,~,ext] = fileparts(filepath{selected});
+    if ext == '.b16'
+        imagesize(1)=size(f_readB16(filepath{selected}),1);
+        imagesize(2)=size(f_readB16(filepath{selected}),2);
+    else
+        imagesize(1)=size(imread(filepath{selected}),1);
+        imagesize(2)=size(imread(filepath{selected}),2);
+    end
     if roirect(1)<1
         roirect(1)=1;
     end
@@ -8590,7 +8678,12 @@ if get(handles.Autolimit, 'value') == 1
         toggler=retr('toggler');
         filepath=retr('filepath');
         selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-        img=imread(filepath{selected});
+        [~,~,ext] = fileparts(filepath{selected});
+        if ext == '.b16'
+            img=f_readB16(filepath{selected});
+        else
+            img=imread(filepath{selected});
+        end
         stretcher = stretchlim(img);
         set(handles.minintens, 'String',stretcher(1));
         set(handles.maxintens, 'String',stretcher(2));
@@ -8677,8 +8770,3 @@ function quick6_Callback (~,~)
 handles=gethand;
 set(handles.quick6,'Value',0)
 cal_actual_Callback
-%this is the end. I am writing this, because I want to play with github,
-%and I don't have a clue yet how it works. Currently I am playing around
-%with "Matlab Projects" that seems to have git version control built in.
-%This would be very nice, but I don't know yet how to use it properly.
-%We'll see what happens if I now press the "commit" button.....

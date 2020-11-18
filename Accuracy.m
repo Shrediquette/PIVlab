@@ -1,6 +1,6 @@
 %% This script can be used to check whether PIVlab generates high quality results on a specific harware / OS / MATLAB combination
 % (note that we are sure that it always does)
-close all; clear all; clc; drawnow
+close all;clear all; clc;drawnow
 
 %% Generate random artificial particle images
 size=600;

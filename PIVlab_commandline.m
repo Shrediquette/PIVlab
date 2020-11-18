@@ -3,9 +3,10 @@
 % You can adjust the settings in "s" and "p", specify a mask and a region of interest
 clc; clear all
 
-%% Create list of images inside specified directory
+%% Create list of images inside user specified directory
 directory=uigetdir; %directory containing the images you want to analyze
-suffix='*.bmp'; %*.bmp or *.tif or *.jpg or *.tiff or *.jpeg
+suffix='*.jpg'; %*.bmp or *.tif or *.jpg or *.tiff or *.jpeg
+disp(['Looking for ' suffix ' files in the selected directory.']);
 direc = dir([directory,filesep,suffix]); filenames={};
 [filenames{1:length(direc),1}] = deal(direc.name);
 filenames = sortrows(filenames); %sort all image files
@@ -42,6 +43,7 @@ p{8,1}= 'Wiener size';           p{8,2}=3;          % Wiener2 window size
 p{9,1}= 'Minimum intensity';     p{9,2}=0.0;        % Minimum intensity of input image (0 = no change) 
 p{10,1}='Maximum intensity';     p{10,2}=1.0;       % Maximum intensity on input image (1 = no change)
 
+
 %% PIV analysis loop
 if mod(amount,2) == 1 %Uneven number of images?
     disp('Image folder should contain an even number of images.')
@@ -56,8 +58,9 @@ u=x;
 v=x;
 typevector=x; %typevector will be 1 for regular vectors, 0 for masked areas
 cntr=0;
-%% PIV analysis loop:
-for i=1:2:amount
+%% Main PIV analysis loop:
+for i=1:2:amount %Process image pairs like this: A+B, C+D, E+F, ...
+    %change to 1:1:amount if you want to have it like A+B, B+C, C+D, ...
     cntr=cntr+1;
     image1=imread(fullfile(directory, filenames{i})); % read images
     image2=imread(fullfile(directory, filenames{i+1}));
@@ -72,7 +75,7 @@ for i=1:2:amount
     quiver(x{cntr},y{cntr},u{cntr},v{cntr},'g','AutoScaleFactor', 1.5);
     hold off;
     axis image;
-    title(filenames{i},'interpreter','none')
+    title(['Raw result ' filenames{i}],'interpreter','none')
     set(gca,'xtick',[],'ytick',[])
     drawnow;
     disp([int2str((i+1)/amount*100) ' %']);
@@ -80,76 +83,30 @@ for i=1:2:amount
 end
 
 %% PIV postprocessing loop
-% Settings
-umin = -100; % minimum allowed u velocity, adjust to your data
-umax = 100; % maximum allowed u velocity, adjust to your data
-vmin = -100; % minimum allowed v velocity, adjust to your data
-vmax = 100; % maximum allowed v velocity, adjust to your data
-stdthresh=6; % threshold for standard deviation check
-epsilon=0.15; % epsilon for normalized median test
-thresh=3; % threshold for normalized median test
+% Standard image post processing settings
+   
+r = cell(6,1);
+%Parameter     %Setting                                     %Options
+r{1,1}= 'Calibration factor, 1 for uncalibrated data';      r{1,2}=1;                   % Calibration factor for u and v
+r{2,1}= 'Valid velocities [u_min; u_max; v_min; v_max]';    r{2,2}=[-50; 50; -50; 50];  % Maximum allowed velocities, for uncalibrated data: maximum displacement in pixels
+r{3,1}= 'Stdev check?';                                     r{3,2}=1;                   % 1 = enable global standard deviation test
+r{4,1}= 'Stdev threshold';                                  r{4,2}=7;                   % Threshold for the stdev test
+r{5,1}= 'Local median check?';                              r{5,2}=1;                   % 1 = enable local median test
+r{6,1}= 'Local median threshold';                           r{6,2}=2;                   % Threshold for the local median test
 
-u_filt=cell(amount/2,1);
-v_filt=u_filt;
-typevector_filt=u_filt;
+u_filt=cell(size(u));
+v_filt=cell(size(v));
+typevector_filt=typevector;
 for PIVresult=1:size(x,1)
-    u_filtered=u{PIVresult,1};
-    v_filtered=v{PIVresult,1};
-    typevector_filtered=typevector{PIVresult,1};
-    %vellimit check
-    u_filtered(u_filtered<umin)=NaN;
-    u_filtered(u_filtered>umax)=NaN;
-    v_filtered(v_filtered<vmin)=NaN;
-    v_filtered(v_filtered>vmax)=NaN;
-    % stddev check
-    meanu=nanmean(u_filtered(:));
-    meanv=nanmean(v_filtered(:));
-    std2u=nanstd(reshape(u_filtered,size(u_filtered,1)*size(u_filtered,2),1));
-    std2v=nanstd(reshape(v_filtered,size(v_filtered,1)*size(v_filtered,2),1));
-    minvalu=meanu-stdthresh*std2u;
-    maxvalu=meanu+stdthresh*std2u;
-    minvalv=meanv-stdthresh*std2v;
-    maxvalv=meanv+stdthresh*std2v;
-    u_filtered(u_filtered<minvalu)=NaN;
-    u_filtered(u_filtered>maxvalu)=NaN;
-    v_filtered(v_filtered<minvalv)=NaN;
-    v_filtered(v_filtered>maxvalv)=NaN;
-    % normalized median check
-    %Westerweel & Scarano (2005): Universal Outlier detection for PIV data
-    [J,I]=size(u_filtered);
-    medianres=zeros(J,I);
-    normfluct=zeros(J,I,2);
-    b=1;
-    for c=1:2
-        if c==1; velcomp=u_filtered;else;velcomp=v_filtered;end %#ok<*NOSEM>
-        for i=1+b:I-b
-            for j=1+b:J-b
-                neigh=velcomp(j-b:j+b,i-b:i+b);
-                neighcol=neigh(:);
-                neighcol2=[neighcol(1:(2*b+1)*b+b);neighcol((2*b+1)*b+b+2:end)];
-                med=median(neighcol2);
-                fluct=velcomp(j,i)-med;
-                res=neighcol2-med;
-                medianres=median(abs(res));
-                normfluct(j,i,c)=abs(fluct/(medianres+epsilon));
-            end
-        end
-    end
-    info1=(sqrt(normfluct(:,:,1).^2+normfluct(:,:,2).^2)>thresh);
-    u_filtered(info1==1)=NaN;
-    v_filtered(info1==1)=NaN;
+    [u_filt{PIVresult,1},v_filt{PIVresult,1}] = PIVlab_postproc (u{PIVresult,1},v{PIVresult,1}, r{1,2}, r{2,2},r{3,2}, r{4,2},r{5,2},r{6,2});
 
-    typevector_filtered(isnan(u_filtered))=2;
-    typevector_filtered(isnan(v_filtered))=2;
-    typevector_filtered(typevector{PIVresult,1}==0)=0; %restores typevector for mask
+    typevector_filt{PIVresult,1}(isnan(u_filt{PIVresult,1}))=2;
+    typevector_filt{PIVresult,1}(isnan(v_filt{PIVresult,1}))=2;
+    typevector_filt{PIVresult,1}(typevector{PIVresult,1}==0)=0; %restores typevector for mask
     
-    %Interpolate missing data
-    u_filtered=inpaint_nans(u_filtered,4);
-    v_filtered=inpaint_nans(v_filtered,4);
-    
-    u_filt{PIVresult,1}=u_filtered;
-    v_filt{PIVresult,1}=v_filtered;
-    typevector_filt{PIVresult,1}=typevector_filtered;
+    %% Interpolate missing data (disable if you wish)
+    u_filt{PIVresult,1}=inpaint_nans(u_filt{PIVresult,1},4);
+    v_filt{PIVresult,1}=inpaint_nans(v_filt{PIVresult,1},4);
 end
-clearvars -except p s x y u v typevector directory filenames u_filt v_filt typevector_filt
+clearvars -except p s r x y u v typevector directory filenames u_filt v_filt typevector_filt
 disp('DONE.')
