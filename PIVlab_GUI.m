@@ -6687,14 +6687,11 @@ else
     set(handles.dcc, 'value',vars.dccmark);
     set(handles.fftmulti, 'value',vars.fftmark);
     
-    
-        try
-        
-    set(handles.ensemble, 'value',vars.ensemblemark);
-        catch
+    try
+        set(handles.ensemble, 'value',vars.ensemblemark);
+    catch
         vars.ensemblemark=0;
     end
-    
     
     if vars.fftmark==1 || vars.ensemblemark ==1
         set (handles.uipanel42,'visible','on')
@@ -6714,10 +6711,8 @@ else
     set(handles.streamlamount, 'string',vars.streamlamount);
     set(handles.streamlcolor, 'value',vars.streamlcolor);
     set(handles.streamlwidth, 'value',vars.streamlcolor);
-    
     try
         %neu v1.5:
-        
         set(handles.mask_auto_box,'value',vars.mask_auto_box);
         set(handles.Autolimit,'value',vars.Autolimit);
         set(handles.minintens,'string',vars.minintens);
@@ -6726,8 +6721,6 @@ else
     catch
         disp('Old version compatibility,')
     end
-
-    
     try
         set(handles.realdist, 'String',vars.realdist_string);
         set(handles.time_inp, 'String',vars.time_inp_string);
@@ -6738,13 +6731,11 @@ else
     catch
         disp('.')
     end
-    
     %reset zoom
     set(handles.panon,'Value',0);
     set(handles.zoomon,'Value',0);
     put('xzoomlimit', []);
     put('yzoomlimit', []);
-    
     sliderdisp
     zoom reset
 end
@@ -6820,8 +6811,6 @@ if formattype==1
     end
     put('imgsavepath',pathname );
     compr=get(handles.usecompr,'value');
-    
-    
     if verLessThan('matlab','8.4')
         if compr==0
             compr='none';
@@ -6855,9 +6844,6 @@ if formattype==1
         set(axesObject2,'Units',axes_units);
         set(axesObject2,'Position',[15 5 axes_pos(3) axes_pos(4)]);
         colormap(colo);
-        
-        
-        
         if get(handles.displ_colorbar,'value')==1
             name=get(handles.derivchoice,'string');
             posichoice = get(handles.colorbarpos,'String');
@@ -6908,7 +6894,6 @@ elseif formattype ==2 || formattype==3 || formattype==4 || formattype==5
             reso=1;
         end
     end
-    
     for i=startframe:endframe
         set(handles.fileselector, 'value',i)
         sliderdisp
@@ -8692,3 +8677,8 @@ function quick6_Callback (~,~)
 handles=gethand;
 set(handles.quick6,'Value',0)
 cal_actual_Callback
+%this is the end. I am writing this, because I want to play with github,
+%and I don't have a clue yet how it works. Currently I am playing around
+%with "Matlab Projects" that seems to have git version control built in.
+%This would be very nice, but I don't know yet how to use it properly.
+%We'll see what happens if I now press the "commit" button.....
