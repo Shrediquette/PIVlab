@@ -894,7 +894,7 @@ item=[parentitem(3)/5*2 item(2) parentitem(3)/5 1.5];
 handles.validb = uicontrol(handles.uipanel37,'Style','edit','String','0','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','validb');
 
 item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
-handles.text139 = uicontrol(handles.uipanel37,'Style','text','String','valid vectors','Units','characters','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text139');
+handles.text139 = uicontrol(handles.uipanel37,'Style','text','String','valid vectors','Units','characters','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text139', 'fontsize', 6);
 
 item=[0 item(2)+item(4) parentitem(3)/5 1.5];
 handles.validdr = uicontrol(handles.uipanel37,'Style','edit','String','0','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','validdr');
@@ -906,7 +906,7 @@ item=[parentitem(3)/5*2 item(2) parentitem(3)/5 1.5];
 handles.validdb = uicontrol(handles.uipanel37,'Style','edit','String','0','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','validdb');
 
 item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
-handles.text142 = uicontrol(handles.uipanel37,'Style','text','String','vectors on derivatives','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text142');
+handles.text142 = uicontrol(handles.uipanel37,'Style','text','String','vectors on derivatives','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text142', 'fontsize', 6);
 
 item=[0 item(2)+item(4) parentitem(3)/5 1.5];
 handles.interpr = uicontrol(handles.uipanel37,'Style','edit','String','1','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpr');
@@ -918,10 +918,10 @@ item=[parentitem(3)/5*2 item(2) parentitem(3)/5 1.5];
 handles.interpb = uicontrol(handles.uipanel37,'Style','edit','String','0','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpb');
 
 item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
-handles.text140 = uicontrol(handles.uipanel37,'Style','text','String','interpolated vectors','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text142');
+handles.text140 = uicontrol(handles.uipanel37,'Style','text','String','interpolated vectors','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text142', 'fontsize', 6);
 
 parentitem=get(handles.multip09, 'Position');
-item=[0 9.5+7 parentitem(3) 13];
+item=[0 9.5+7.5 parentitem(3) 10.5];
 handles.uipanel27 = uipanel(handles.multip09, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Derived parameter appearance', 'Tag','uipanel27','fontweight','bold');
 
 parentitem=get(handles.uipanel27, 'Position');
@@ -932,7 +932,7 @@ handles.text143 = uicontrol(handles.uipanel27,'Style','text','String','Color map
 item=[0 item(2)+item(4) parentitem(3) 1];
 handles.colormap_choice = uicontrol(handles.uipanel27,'Style','popupmenu', 'String',{'Parula','HSV','Jet','HSB','Hot','Cool','Spring','Summer','Autumn','Winter','Gray','Bone','Copper','Pink','Lines'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colormap_choice','TooltipString','Select the color map for displaying derived parameters here');
 
-item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
+%item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
 handles.img_not_mask = uicontrol(handles.uipanel27,'Style','checkbox','String','Do not display mask','Units','characters','Visible','off','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','img_not_mask');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
@@ -949,10 +949,13 @@ handles.text144 = uicontrol(handles.uipanel27,'Style','text','String','Colorbar 
 item=[0 item(2)+item(4)+margin/6 parentitem(3) 1];
 handles.colorbarcolor = uicontrol(handles.uipanel27,'Style','popupmenu', 'String',{'k','w','y','b','r'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colorbarcolor','TooltipString','Colour of the text etc. of the colour bar');
 
-
 parentitem=get(handles.multip09, 'Position');
 item=[0 0 0 0];
-item=[0 9.5+7+13+margin parentitem(3) 2];
+item=[0 9.5+4+13+margin parentitem(3) 1];
+
+handles.enhance_images = uicontrol(handles.multip09,'Style','checkbox','String','Enhance PIV image display','Value',1,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','enhance_images','TooltipString','Improve contrast of PIV images for display');
+item=[0 item(2)+item(4)+margin parentitem(3) 2];
+
 handles.dummy = uicontrol(handles.multip09,'Style','pushbutton','String','Apply','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@dummy_Callback,'Tag','dummy','TooltipString','Apply the settings');
 
 %% Multip10
@@ -1973,12 +1976,22 @@ if size(filepath,1)>0
         %1=vectors only
         if displaywhat==1 %vectors only
             [~,~,ext] = fileparts(filepath{selected});
-            if ext == '.b16'
+            if strcmp(ext,'.b16')
                 currentimage=f_readB16(filepath{selected});
             else
                 currentimage=imread(filepath{selected});
             end
-            image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
+            
+            if get(handles.enhance_images, 'Value') == 0
+                image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
+            else
+                if size(currentimage,3)==1 % grayscale image
+                    image(imadjust(currentimage), 'parent',gca, 'cdatamapping', 'scaled');
+                else
+                    image(imadjust(currentimage,stretchlim(rgb2gray(currentimage))), 'parent',gca, 'cdatamapping', 'scaled');
+                end
+            end
+            
             colormap('gray');
             vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
             %vectorcolor='g';
@@ -2037,12 +2050,20 @@ if size(filepath,1)>0
                 end
             else %no deriv available
                 [~,~,ext] = fileparts(filepath{selected});
-                if ext == '.b16'
+                if strcmp(ext,'.b16')
                     currentimage=f_readB16(filepath{selected});
                 else
                     currentimage=imread(filepath{selected});
                 end
-                image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
+                if get(handles.enhance_images, 'Value') == 0
+                    image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
+                else
+                    if size(currentimage,3)==1 % grayscale image
+                        image(imadjust(currentimage), 'parent',gca, 'cdatamapping', 'scaled');
+                    else
+                        image(imadjust(currentimage,stretchlim(rgb2gray(currentimage))), 'parent',gca, 'cdatamapping', 'scaled');
+                    end
+                end
                 colormap('gray');
                 vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
                 %vectorcolor='g';
@@ -2052,7 +2073,7 @@ if size(filepath,1)>0
     else %not in derivatives panel
         try
             [~,~,ext] = fileparts(filepath{selected});
-            if ext == '.b16'
+            if strcmp(ext,'.b16')
                 currentimage=f_readB16(filepath{selected});
             else
                 currentimage=imread(filepath{selected});
@@ -2065,7 +2086,16 @@ if size(filepath,1)>0
             maximgy=max(max(resultslist{2,1}))+min(min(resultslist{2,1}));
             currentimage=zeros(maximgy,maximgx);
         end
-        image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
+        if get(handles.enhance_images, 'Value') == 0
+            image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
+        else
+            if size(currentimage,3)==1 % grayscale image
+                image(imadjust(currentimage), 'parent',gca, 'cdatamapping', 'scaled');
+            else
+                image(imadjust(currentimage,stretchlim(rgb2gray(currentimage))), 'parent',gca, 'cdatamapping', 'scaled');
+            end
+        end
+        
         colormap('gray');
         vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
         %vectorcolor='g';
@@ -3144,7 +3174,7 @@ if size(filepath,1) > 1
     roirect = round(getrect(gca));
     if roirect(1,3)~=0 && roirect(1,4)~=0
         [~,~,ext] = fileparts(filepath{selected});
-        if ext == '.b16'
+        if strcmp(ext,'.b16')
             imagesize(1)=size(f_readB16(filepath{selected}),1);
             imagesize(2)=size(f_readB16(filepath{selected}),2);
         else
@@ -3483,7 +3513,7 @@ if size(filepath,1) >1
     filepath=retr('filepath');
     selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
     [~,~,ext] = fileparts(filepath{selected});
-    if ext == '.b16'
+    if strcmp(ext,'.b16')
         img=f_readB16(filepath{selected});
     else
         img=imread(filepath{selected});
@@ -3603,7 +3633,7 @@ selected=2*floor(get(handles.fileselector, 'value'))-1;
 filepath=retr('filepath');
 if numel(filepath)>1
     [~,~,ext] = fileparts(filepath{selected});
-    if ext == '.b16'
+    if strcmp(ext,'.b16')
         size_img(1)=size(f_readB16(filepath{selected}),2)/2;
         size_img(2)=size(f_readB16(filepath{selected}),1)/2;
     else
@@ -3712,7 +3742,7 @@ if ok==1
             text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
             drawnow
             [~,~,ext] = fileparts(filepath{selected});
-            if ext == '.b16'
+            if strcmp(ext,'.b16')
                 A=f_readB16(filepath{selected});
                 B=f_readB16(filepath{selected+1});
             else
@@ -3859,7 +3889,7 @@ if ok==1
         cancel=retr('cancel');
         if isempty(cancel)==1 || cancel ~=1
             [~,~,ext] = fileparts(filepath{i});
-            if ext == '.b16'
+            if strcmp(ext,'.b16')
                 image1=f_readB16(filepath{i});
                 image2=f_readB16(filepath{i+1});
             else
@@ -4158,7 +4188,7 @@ if ok==1
     if currentwasmean==0
         tic;
         [~,~,ext] = fileparts(filepath{selected});
-        if ext == '.b16'
+        if strcmp(ext,'.b16')
             image1=f_readB16(filepath{selected});
             image2=f_readB16(filepath{selected+1});
         else
@@ -4422,6 +4452,8 @@ try
     put ('panelwidth',panelwidth);
     %neu v2.11
     set(handles.CorrQuality,'Value',CorrQuality_nr);
+    %neu v2.37
+    set(handles.enhance_images, 'Value',enhance_disp);
 catch
     disp('Old version compatibility-');
 end
@@ -4503,6 +4535,8 @@ try
     panelwidth=get(handles.panelslider,'Value');
     %neu v2.11
     CorrQuality_nr=get(handles.CorrQuality, 'value');
+    %neu v2.37
+    enhance_disp=get(handles.enhance_images, 'Value');
 catch
     disp('Old version compatibility_');
 end
@@ -4894,7 +4928,7 @@ catch
 end
 if isequal(filename,0)==0
     [~,~,ext] = fileparts(fullfile(pathname, filename));
-    if ext == '.b16'
+    if strcmp(ext,'.b16')
         caliimg=f_readB16(fullfile(pathname, filename));
     else
         caliimg=imread(fullfile(pathname, filename));
@@ -5070,7 +5104,7 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
     caluv=retr('caluv');
     calxy=retr('calxy');
     [~,~,ext] = fileparts(filepath{2*frame-1});
-    if ext == '.b16'
+    if strcmp(ext,'.b16')
         currentimage=f_readB16(filepath{2*frame-1});
     else
         currentimage=imread(filepath{2*frame-1});
@@ -5321,7 +5355,7 @@ handles=gethand;
 filepath=retr('filepath');
 currentframe=floor(get(handles.fileselector, 'value'));
 [~,~,ext] = fileparts(filepath{2*currentframe-1});
-if ext == '.b16'
+if strcmp(ext,'.b16')
     currentimage=f_readB16(filepath{2*currentframe-1});
 else
     currentimage=imread(filepath{2*currentframe-1});
@@ -5361,7 +5395,7 @@ if miny<1
 end
 if minx<1
     minx=1;
-end;
+end
 try
     out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar;
 catch
@@ -5391,7 +5425,7 @@ handles=gethand;
 filepath=retr('filepath');
 currentframe=floor(get(handles.fileselector, 'value'));
 [~,~,ext] = fileparts(filepath{2*currentframe-1});
-if ext == '.b16'
+if strcmp(ext,'.b16')
     currentimage=f_readB16(filepath{2*currentframe-1});
 else
     currentimage=imread(filepath{2*currentframe-1});
@@ -6653,6 +6687,8 @@ try
     maxintens=get(handles.maxintens,'string');
     %neu v2.11
     CorrQuality_nr=get(handles.CorrQuality,'value');
+    %neu v2.37
+    enhance_disp=get(handles.enhance_images, 'Value');
 catch
     disp('Old version compatibility|');
 end
@@ -6689,7 +6725,7 @@ else
     hgui=getappdata(0,'hgui');
     warning off all
     try
-        vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'caluv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark');
+        vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'caluv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp');
     catch
         disp('Old version compatibility.')
         vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'caluv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
@@ -6767,6 +6803,8 @@ else
         set(handles.minintens,'string',vars.minintens);
         set(handles.maxintens,'string',vars.maxintens);
         set(handles.CorrQuality,'Value',vars.CorrQuality_nr);
+        %neu v2.37
+        set(handles.enhance_images, 'Value',vars.enhance_disp);
     catch
         disp('Old version compatibility,')
     end
@@ -7077,7 +7115,7 @@ for i=startfr:endfr
             derivative_calc(currentframe,extractwhat+1,0);
             derived=retr('derived');
             [~,~,ext] = fileparts(filepath{2*currentframe-1});
-            if ext == '.b16'
+            if strcmp(ext,'.b16')
                 currentimage=f_readB16(filepath{2*currentframe-1});
             else
                 currentimage=imread(filepath{2*currentframe-1});
@@ -7138,7 +7176,7 @@ for i=startfr:endfr
             
             calxy=retr('calxy');
             [~,~,ext] = fileparts(filepath{2*currentframe-1});
-            if ext == '.b16'
+            if strcmp(ext,'.b16')
                 currentimage=f_readB16(filepath{2*currentframe-1});
             else
                 currentimage=imread(filepath{2*currentframe-1});
@@ -7192,7 +7230,7 @@ for i=startfr:endfr
             sliderdisp
             filepath=retr('filepath');
             [~,~,ext] = fileparts(filepath{2*currentframe-1});
-            if ext == '.b16'
+            if strcmp(ext,'.b16')
                 currentimage=f_readB16(filepath{2*currentframe-1});
             else
                 currentimage=imread(filepath{2*currentframe-1});
@@ -8618,7 +8656,7 @@ if isempty(x)== 0 && isempty(y)== 0 && isempty(w)== 0 && isempty(h)== 0 && isnum
     selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
     filepath=retr('filepath');
     [~,~,ext] = fileparts(filepath{selected});
-    if ext == '.b16'
+    if strcmp(ext,'.b16')
         imagesize(1)=size(f_readB16(filepath{selected}),1);
         imagesize(2)=size(f_readB16(filepath{selected}),2);
     else
@@ -8679,7 +8717,7 @@ if get(handles.Autolimit, 'value') == 1
         filepath=retr('filepath');
         selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
         [~,~,ext] = fileparts(filepath{selected});
-        if ext == '.b16'
+        if strcmp(ext,'.b16')
             img=f_readB16(filepath{selected});
         else
             img=imread(filepath{selected});
