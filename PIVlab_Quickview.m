@@ -116,7 +116,7 @@ end
 
 axes(handles.axes5)
 imshow(imread('pivlab_logo1.jpg'),'parent',handles.axes5);
-set(handles.axes5,'Position',[0,0,1,1],'xtick',[],'ytick',[])
+set(handles.axes5,'Position',[0.1,0.1,0.8,0.8],'xtick',[],'ytick',[])
 set(handles.axes5,'Visible','on')
 
 % --- Outputs from this function are returned to the command line.
@@ -218,8 +218,16 @@ if ~isempty(roi)
         image1=imread(fullfile(path,file{1}));
         image2=imread(fullfile(path,file{2}));
     end
-    image1 = PIVlab_preproc (image1,roi.Position,1,50,0,0,0,0,0,0.0,1.0); %preprocess images
-    image2 = PIVlab_preproc (image2,roi.Position,1,50,0,0,0,0,0,0.0,1.0); %preprocess images
+    
+    if roi.Position(3)+roi.Position(1)>=size(image1,2)
+        roi.Position(3)=roi.Position(3)-1;
+    end
+    if roi.Position(4)+roi.Position(2)>=size(image1,1)
+        roi.Position(4)=roi.Position(4)-1;
+    end
+    
+    image1 = PIVlab_preproc (image1,round(roi.Position),1,50,0,0,0,0,0,0.0,1.0); %preprocess images
+    image2 = PIVlab_preproc (image2,round(roi.Position),1,50,0,0,0,0,0,0.0,1.0); %preprocess images
     IA_size=getappdata(handles.figure1,'IA_size');
     %piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask_inpt, roi_inpt,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad)
     if getappdata(handles.figure1,'fast_performance')==1
@@ -227,11 +235,12 @@ if ~isempty(roi)
         performance_settings2=0;
         performance_settings3=0;
     else
-             performance_settings1='*spline';
+        performance_settings1='*spline';
         performance_settings2=1;
         performance_settings3=1;
     end
-    [x, y, u, v, typevector] = piv_FFTmulti (image1,image2,IA_size*2,IA_size,1,[],roi.Position,2,IA_size,16,16,performance_settings1,performance_settings2,getappdata(handles.figure1,'disable_auto'),performance_settings3); %actual PIV analysis    axes(handles.axes2)
+    [x, y, u, v, ~] = piv_FFTmulti (image1,image2,IA_size*2,IA_size,1,[],roi.Position,2,IA_size,16,16,performance_settings1,performance_settings2,getappdata(handles.figure1,'disable_auto'),performance_settings3); %actual PIV analysis    axes(handles.axes2)
+    [u,v] = PIVlab_postproc (u,v,1, [], 1,7, 1,3);
     if get(handles.toggle_img,'Value')==0
         display_image=image1/2;
     else
@@ -372,16 +381,16 @@ setappdata(handles.figure1,'IA_size',16);
 
 % --------------------------------------------------------------------
 function perf_fast_Callback(hObject, eventdata, handles)
-    handles.perf_fast.Checked = 'on';
-    handles.perf_exhaustive.Checked = 'off';
-    setappdata(handles.figure1,'fast_performance',1);
+handles.perf_fast.Checked = 'on';
+handles.perf_exhaustive.Checked = 'off';
+setappdata(handles.figure1,'fast_performance',1);
 
 
 % --------------------------------------------------------------------
 function perf_exhaustive_Callback(hObject, eventdata, handles)
-    handles.perf_fast.Checked = 'off';
-    handles.perf_exhaustive.Checked = 'on';
-    setappdata(handles.figure1,'fast_performance',0);
+handles.perf_fast.Checked = 'off';
+handles.perf_exhaustive.Checked = 'on';
+setappdata(handles.figure1,'fast_performance',0);
 
 % --------------------------------------------------------------------
 function disable_auto_Callback(hObject, eventdata, handles)
@@ -389,7 +398,7 @@ if strcmp(hObject.Checked,'off')
     handles.disable_auto.Checked = 'on';
     setappdata(handles.figure1,'disable_auto',1);
 else
- strcmp(hObject.Checked,'on');    
+    strcmp(hObject.Checked,'on');
     handles.disable_auto.Checked = 'off';
     setappdata(handles.figure1,'disable_auto',0);
 end
@@ -401,7 +410,7 @@ IA_size=getappdata(handles.figure1,'IA_size');
 fast_performance=getappdata(handles.figure1,'fast_performance');
 disable_auto=getappdata(handles.figure1,'disable_auto');
 try
-save('quickview_settings.mat','IA_size','fast_performance','disable_auto','-append');
+    save('quickview_settings.mat','IA_size','fast_performance','disable_auto','-append');
 catch
     disp('Could not write settings')
 end
