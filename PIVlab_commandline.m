@@ -4,7 +4,7 @@
 clc; clear all
 
 %% Create list of images inside user specified directory
-directory='/Users/qmn203/Google Drive/temp/bird-lung-short-process--forward/shortbigA0.7cmf1.0hz40FPS_0004.avi_light/frames/'; %directory containing the images you want to analyze
+directory=''; %directory containing the images you want to analyze
 suffix='*.jpg'; %*.bmp or *.tif or *.jpg or *.tiff or *.jpeg
 disp(['Looking for ' suffix ' files in the selected directory.']);
 direc = dir([directory,filesep,suffix]); filenames={};
