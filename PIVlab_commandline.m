@@ -4,7 +4,7 @@
 clc; clear all
 
 %% Create list of images inside user specified directory
-directory=''; %directory containing the images you want to analyze
+directory='/Users/qmn203/Google Drive/temp/bird-lung-short-process--forward/shortbigA0.7cmf1.0hz40FPS_0004.avi_light/frames/'; %directory containing the images you want to analyze
 suffix='*.jpg'; %*.bmp or *.tif or *.jpg or *.tiff or *.jpeg
 disp(['Looking for ' suffix ' files in the selected directory.']);
 direc = dir([directory,filesep,suffix]); filenames={};
@@ -120,5 +120,8 @@ for PIVresult=1:size(x,1)
     u_filt{PIVresult,1}=inpaint_nans(u_filt{PIVresult,1},4);
     v_filt{PIVresult,1}=inpaint_nans(v_filt{PIVresult,1},4);
 end
+%% 
+save([directory 'PIV_result_' num2str(amount) '_frames.mat']);
+    %% 
 clearvars -except p s r x y u v typevector directory filenames u_filt v_filt typevector_filt
 disp('DONE.')
