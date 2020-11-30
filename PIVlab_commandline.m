@@ -4,7 +4,9 @@
 clc; clear all
 
 %% Create list of images inside user specified directory
-directory=''; %directory containing the images you want to analyze
+directory= fullfile(fileparts(mfilename('fullpath')) , 'Examples') ; %directory containing the images you want to analyze
+% default directory: PIVlab/Examples
+
 suffix='*.jpg'; %*.bmp or *.tif or *.jpg or *.tiff or *.jpeg
 disp(['Looking for ' suffix ' files in the selected directory.']);
 direc = dir([directory,filesep,suffix]); filenames={};
@@ -121,7 +123,7 @@ for PIVresult=1:size(x,1)
     v_filt{PIVresult,1}=inpaint_nans(v_filt{PIVresult,1},4);
 end
 %% 
-save([directory 'PIV_result_' num2str(amount) '_frames.mat']);
+save(fullfile(directory, [filenames{1} '_' filenames{end} '_' num2str(amount) '_frames_result_.mat']));
     %% 
 clearvars -except p s r x y u v typevector directory filenames u_filt v_filt typevector_filt
 disp('DONE.')
