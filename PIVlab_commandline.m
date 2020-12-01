@@ -4,7 +4,9 @@
 clc; clear all
 
 %% Create list of images inside user specified directory
-directory=uigetdir; %directory containing the images you want to analyze
+directory= fullfile(fileparts(mfilename('fullpath')) , 'Examples') ; %directory containing the images you want to analyze
+% default directory: PIVlab/Examples
+
 suffix='*.jpg'; %*.bmp or *.tif or *.jpg or *.tiff or *.jpeg
 disp(['Looking for ' suffix ' files in the selected directory.']);
 direc = dir([directory,filesep,suffix]); filenames={};
@@ -13,7 +15,7 @@ filenames = sortrows(filenames); %sort all image files
 amount = length(filenames);
 
 %% Standard PIV Settings
-s = cell(11,2); % To make it more readable, let's create a "settings table"
+s = cell(13,2); % To make it more readable, let's create a "settings table"
 %Parameter                          %Setting           %Options
 s{1,1}= 'Int. area 1';              s{1,2}=64;         % window size of first pass
 s{2,1}= 'Step size 1';              s{2,2}=32;         % step of first pass
@@ -30,7 +32,7 @@ s{12,1}='Disable Autocorrelation';  s{12,2}=0;         % 0 or 1 : Disable Autoco
 s{13,1}='Correlation style';        s{13,2}=0;         % 0 or 1 : Use circular correlation (0) or linear correlation (1). 
 
 %% Standard image preprocessing settings
-p = cell(8,1);
+p = cell(10,1);
 %Parameter                       %Setting           %Options
 p{1,1}= 'ROI';                   p{1,2}=s{5,2};     % same as in PIV settings
 p{2,1}= 'CLAHE';                 p{2,2}=1;          % 1 = enable CLAHE (contrast enhancement), 0 = disable
@@ -43,24 +45,35 @@ p{8,1}= 'Wiener size';           p{8,2}=3;          % Wiener2 window size
 p{9,1}= 'Minimum intensity';     p{9,2}=0.0;        % Minimum intensity of input image (0 = no change) 
 p{10,1}='Maximum intensity';     p{10,2}=1.0;       % Maximum intensity on input image (1 = no change)
 
+%% other settings
+pairwise = 1; % 0 for [A+B], [B+C], [C+D]... sequencing style, and 1 for [A+B], [C+D], [E+F]... sequencing style
 
 %% PIV analysis loop
-if mod(amount,2) == 1 %Uneven number of images?
-    disp('Image folder should contain an even number of images.')
-    %remove last image from list
-    amount=amount-1;
-    filenames(size(filenames,1))=[];
+if pairwise == 1
+    if mod(amount,2) == 1 %Uneven number of images?
+        disp('Image folder should contain an even number of images.')
+        %remove last image from list
+        amount=amount-1;
+        filenames(size(filenames,1))=[];
+    end
+
+    disp(['Found ' num2str(amount) ' images (' num2str(amount/2) ' image pairs).'])
+    x=cell(amount/2,1);
+    y=x;
+    u=x;
+    v=x;
+else
+    disp(['Found ' num2str(amount) ' images'])
+    x=cell(amount-1,1);
+    y=x;
+    u=x;
+    v=x;
 end
-disp(['Found ' num2str(amount) ' images (' num2str(amount/2) ' image pairs).'])
-x=cell(amount/2,1);
-y=x;
-u=x;
-v=x;
+
 typevector=x; %typevector will be 1 for regular vectors, 0 for masked areas
 cntr=0;
 %% Main PIV analysis loop:
-for i=1:2:amount %Process image pairs like this: A+B, C+D, E+F, ...
-    %change to 1:1:amount if you want to have it like A+B, B+C, C+D, ...
+for i=1:1+pairwise:amount-1 
     cntr=cntr+1;
     image1=imread(fullfile(directory, filenames{i})); % read images
     image2=imread(fullfile(directory, filenames{i+1}));
@@ -78,6 +91,7 @@ for i=1:2:amount %Process image pairs like this: A+B, C+D, E+F, ...
     title(['Raw result ' filenames{i}],'interpreter','none')
     set(gca,'xtick',[],'ytick',[])
     drawnow;
+    
     disp([int2str((i+1)/amount*100) ' %']);
     %%}
 end
@@ -108,5 +122,8 @@ for PIVresult=1:size(x,1)
     u_filt{PIVresult,1}=inpaint_nans(u_filt{PIVresult,1},4);
     v_filt{PIVresult,1}=inpaint_nans(v_filt{PIVresult,1},4);
 end
+%% 
+save(fullfile(directory, [filenames{1} '_' filenames{end} '_' num2str(amount) '_frames_result_.mat']));
+    %% 
 clearvars -except p s r x y u v typevector directory filenames u_filt v_filt typevector_filt
 disp('DONE.')
