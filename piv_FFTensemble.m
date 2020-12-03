@@ -1,4 +1,4 @@
-function [xtable, ytable, utable, vtable, typevector] = piv_FFTensemble (autolimit,filepath,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roi_inpt,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad)
+function [xtable, ytable, utable, vtable, typevector,correlation_map] = piv_FFTensemble (autolimit,filepath,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roi_inpt,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad)
 %this funtion performs the  PIV analysis. It is a modification of the
 %pivFFTmulti, and will do ensemble correlation. That is a suitable
 %algorithm for low seeding density as it happens in microPIV.
@@ -280,7 +280,7 @@ for ensemble_i1=1:2:size(filepath,1)
         result_conv_ensemble = zeros(size(result_conv));
         result_conv_ensemble=result_conv_ensemble+result_conv;
     end
-
+    
     if GUI_avail==1
         progri=ensemble_i1/(size(filepath,1))*100;
         from_total=from_total+1;
@@ -323,9 +323,6 @@ for ensemble_i1=1:2:size(filepath,1)
         else
             skippy=0;
         end
-        
-
-        
         try
             drawnow limitrate
         catch
@@ -334,41 +331,20 @@ for ensemble_i1=1:2:size(filepath,1)
     else
         fprintf('.');
     end
+    if passes==1 % only 1 pass selected, so correlation coefficient will be calculated in this (first & final) pass.
+        if ensemble_i1==1 %first image pair
+            correlation_map=zeros(size(typevector));
+            corr_map_cnt=0;
+        end
+        for cor_i=1:size(image1_cut,3)
+            correlation_map(cor_i)=correlation_map(cor_i) + corr2(image1_cut(:,:,cor_i),image2_cut(:,:,cor_i));
+        end
+        corr_map_cnt=corr_map_cnt+1;
+    end
 end
+
 if cancel == 0
     %% Correlation matrix of pass 1 is done.
-    %{
-    minres = permute(repmat(squeeze(min(min(result_conv_ensemble))), [1, size(result_conv_ensemble, 1), size(result_conv_ensemble, 2)]), [2 3 1]);
-    deltares = permute(repmat(squeeze(max(max(result_conv_ensemble))-min(min(result_conv_ensemble))),[ 1, size(result_conv_ensemble, 1), size(result_conv_ensemble, 2)]), [2 3 1]);
-    result_conv_ensemble = ((result_conv_ensemble-minres)./deltares)*255;
-    
-    %apply mask ---
-    ii = find(mask(ss1(round(interrogationarea/2+1), round(interrogationarea/2+1), :)));
-    result_conv_ensemble(:,:, ii) = 0;
-    
-    [y, x, z] = ind2sub(size(result_conv_ensemble), find(result_conv_ensemble==255));
-    
-    % we need only one peak from each couple pictures
-    [z1, zi] = sort(z);
-    dz1 = [z1(1); diff(z1)];
-    i0 = find(dz1~=0);
-    x1 = x(zi(i0));
-    y1 = y(zi(i0));
-    z1 = z(zi(i0));
-    
-    xtable = repmat((minix:step:maxix)+interrogationarea/2, length(miniy:step:maxiy), 1);
-    ytable = repmat(((miniy:step:maxiy)+interrogationarea/2)', 1, length(minix:step:maxix));
-    
-    if subpixfinder==1
-        [vector] = SUBPIXGAUSS (result_conv_ensemble,interrogationarea, x1, y1, z1, SubPixOffset);
-    elseif subpixfinder==2
-        [vector] = SUBPIX2DGAUSS (result_conv_ensemble,interrogationarea, x1, y1, z1, SubPixOffset);
-    end
-    vector = permute(reshape(vector, [size(xtable') 2]), [2 1 3]);
-    
-    utable = vector(:,:,1);
-    vtable = vector(:,:,2);
-    %}
     [xtable,ytable,utable, vtable] = peakfinding (result_conv_ensemble, mask, interrogationarea,minix,step,maxix,miniy,maxiy,SubPixOffset,ss1,subpixfinder);
     
     for multipass=1:passes-1
@@ -819,35 +795,20 @@ if cancel == 0
                 result_conv_ensemble = zeros(size(result_conv));
                 result_conv_ensemble=result_conv_ensemble+result_conv;
             end
+            
+            if multipass==passes-1 %correlation strength only in last pass
+                
+                if ensemble_i1==1 %first image pair
+                    correlation_map=zeros(size(typevector));
+                    corr_map_cnt=0;
+                end
+                %Correlation strength
+                for cor_i=1:size(image1_cut,3)
+                    correlation_map(cor_i)=correlation_map(cor_i)+corr2(image1_cut(:,:,cor_i),image2_cut(:,:,cor_i));
+                end
+                corr_map_cnt=corr_map_cnt+1;
+            end
         end
-        %{
-        minres = permute(repmat(squeeze(min(min(result_conv_ensemble))), [1, size(result_conv_ensemble, 1), size(result_conv_ensemble, 2)]), [2 3 1]);
-        deltares = permute(repmat(squeeze(max(max(result_conv_ensemble))-min(min(result_conv_ensemble))), [1, size(result_conv_ensemble, 1), size(result_conv_ensemble, 2)]), [2 3 1]);
-        result_conv_ensemble = ((result_conv_ensemble-minres)./deltares)*255;
-        
-        [y, x, z] = ind2sub(size(result_conv_ensemble), find(result_conv_ensemble==255));
-        [z1, zi] = sort(z);
-        % we need only one peak from each couple pictures
-        dz1 = [z1(1); diff(z1)];
-        i0 = find(dz1~=0);
-        x1 = x(zi(i0));
-        y1 = y(zi(i0));
-        z1 = z(zi(i0));
-        
-        %new xtable and ytable
-        xtable = repmat((minix:step:maxix)+interrogationarea/2, length(miniy:step:maxiy), 1);
-        ytable = repmat(((miniy:step:maxiy)+interrogationarea/2)', 1, length(minix:step:maxix));
-        
-        if subpixfinder==1
-            [vector] = SUBPIXGAUSS (result_conv_ensemble,interrogationarea, x1, y1, z1,SubPixOffset);
-        elseif subpixfinder==2
-            [vector] = SUBPIX2DGAUSS (result_conv_ensemble,interrogationarea, x1, y1, z1,SubPixOffset);
-        end
-        vector = permute(reshape(vector, [size(xtable') 2]), [2 1 3]);
-        
-        utable = utable+vector(:,:,1);
-        vtable = vtable+vector(:,:,2);
-        %}
         [xtable,ytable,utable2, vtable2] = peakfinding (result_conv_ensemble, [], interrogationarea,minix,step,maxix,miniy,maxiy,SubPixOffset,ss1,subpixfinder);
         utable = utable+utable2;
         vtable = vtable+vtable2;
@@ -880,8 +841,8 @@ if cancel == 0
         xtable=xtable+xroi;
         ytable=ytable+yroi;
     end
-%% Write correlation matrices to the workspace
-   %{
+    %% Write correlation matrices to the workspace
+    %{
 try
     counter=evalin('base','counter');
     counter=counter+1;
@@ -900,6 +861,11 @@ end
     
 end
 
+correlation_map = permute(reshape(correlation_map, [size(xtable')]), [2 1 3])/corr_map_cnt;
+%clear Correlation map in masked area
+correlation_map(typevector==0) = 0;
+
+
 function [xtable,ytable,utable, vtable] = peakfinding (result_conv_ensemble, mask, interrogationarea,minix,step,maxix,miniy,maxiy,SubPixOffset,ss1,subpixfinder)
 minres = permute(repmat(squeeze(min(min(result_conv_ensemble))), [1, size(result_conv_ensemble, 1), size(result_conv_ensemble, 2)]), [2 3 1]);
 deltares = permute(repmat(squeeze(max(max(result_conv_ensemble))-min(min(result_conv_ensemble))),[ 1, size(result_conv_ensemble, 1), size(result_conv_ensemble, 2)]), [2 3 1]);
@@ -907,8 +873,8 @@ result_conv_ensemble = ((result_conv_ensemble-minres)./deltares)*255;
 
 %apply mask ---
 if isempty (mask)==0
-ii = find(mask(ss1(round(interrogationarea/2+1), round(interrogationarea/2+1), :)));
-result_conv_ensemble(:,:, ii) = 0;
+    ii = find(mask(ss1(round(interrogationarea/2+1), round(interrogationarea/2+1), :)));
+    result_conv_ensemble(:,:, ii) = 0;
 end
 
 [y, x, z] = ind2sub(size(result_conv_ensemble), find(result_conv_ensemble==255));

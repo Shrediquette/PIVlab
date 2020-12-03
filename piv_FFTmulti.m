@@ -1,4 +1,4 @@
-function [xtable, ytable, utable, vtable, typevector] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask_inpt, roi_inpt,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad)
+function [xtable, ytable, utable, vtable, typevector, correlation_map] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask_inpt, roi_inpt,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad)
 %profile on
 %this funtion performs the  PIV analysis.
 warning off %#ok<*WNOFF> %MATLAB:log:logOfZero
@@ -302,9 +302,11 @@ for multipass=1:passes-1
         if multipass<passes-1
             utable = smoothn(utable,0.9); %stronger smoothing for first passes
             vtable = smoothn(vtable,0.9);
+            lastpass=0;
         else
             utable = smoothn(utable); %weaker smoothing for last pass
             vtable = smoothn(vtable);
+            lastpass=1;
         end
     catch
         
@@ -679,8 +681,14 @@ close(figu)
     
     utable = utable+vector(:,:,1);
     vtable = vtable+vector(:,:,2);
-    
 end
+%Correlation strength
+correlation_map=zeros(size(typevector));
+for cor_i=1:size(image1_cut,3)
+    correlation_map(cor_i)=corr2(image1_cut(:,:,cor_i),image2_cut(:,:,cor_i));
+end
+correlation_map = permute(reshape(correlation_map, [size(xtable')]), [2 1 3]);
+correlation_map(jj) = 0;
 
 xtable=xtable-ceil(interrogationarea/2);
 ytable=ytable-ceil(interrogationarea/2);

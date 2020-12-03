@@ -3782,7 +3782,7 @@ if ok==1
             if step < 6
                 step=6;
             end
-            [x, y, u, v, typevector] = piv_FFTmulti (A,B,interrogationarea, step,1,[],[],1,32,16,16,'*linear',1,0,0);
+            [x, y, u, v, typevector,~] = piv_FFTmulti (A,B,interrogationarea, step,1,[],[],1,32,16,16,'*linear',1,0,0);
             u=medfilt2(u);
             v=medfilt2(v);
             u=inpaint_nans(u,4);
@@ -3971,7 +3971,7 @@ if ok==1
                 mask_auto = get(handles.mask_auto_box,'value');
 
                 [imdeform, repeat, do_pad] = CorrQuality;
-                [x, y, u, v, typevector] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad);
+                [x, y, u, v, typevector,correlation_map] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad);
                 %u=real(u)
                 %v=real(v)
             end
@@ -4083,7 +4083,7 @@ if ok==1
     int4=str2num(get(handles.edit52,'string'));
     mask_auto = get(handles.mask_auto_box,'value');
     [imdeform, repeat, do_pad] = CorrQuality;
-    [x, y, u, v, typevector] = piv_FFTensemble (autolimit, filepath,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
+    [x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, filepath,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
     cancel = retr('cancel');
     if isempty(cancel)==1 || cancel ~=1
         %Fill all frames with the same result
@@ -4272,7 +4272,7 @@ if ok==1
             mask_auto = get(handles.mask_auto_box,'value');
             
             if get(handles.fftmulti,'Value')==1
-                [x, y, u, v, typevector] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad);
+                [x, y, u, v, typevector,correlation_map] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad);
             end
             
         end
