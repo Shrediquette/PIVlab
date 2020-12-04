@@ -1664,11 +1664,11 @@ function plot_derivs_Callback(~, ~, ~)
 handles=gethand;
 switchui('multip08');
 if retr('caluv')==1 && retr('calxy')==1
-    set(handles.derivchoice,'String',{'Vectors [px/frame]';'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Simple shear rate [1/frame]';'Simple strain rate [1/frame]';'Line integral convolution (LIC) [1]' ; 'Vector direction [degrees]'});
+    set(handles.derivchoice,'String',{'Vectors [px/frame]';'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Simple shear rate [1/frame]';'Simple strain rate [1/frame]';'Line integral convolution (LIC) [1]' ; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
     set(handles.text35,'String','u [px/frame]:')
     set(handles.text36,'String','v [px/frame]:')
 else
-    set(handles.derivchoice,'String',{'Vectors [m/s]';'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Simple shear rate [1/s]';'Simple strain rate [1/s]';'Line integral convolution (LIC) [1]'; 'Vector direction [degrees]'});
+    set(handles.derivchoice,'String',{'Vectors [m/s]';'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Simple shear rate [1/s]';'Simple strain rate [1/s]';'Line integral convolution (LIC) [1]'; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
     set(handles.text35,'String','u [m/s]:')
     set(handles.text36,'String','v [m/s]:')
 end
@@ -1703,9 +1703,9 @@ function poly_extract_Callback(~, ~, ~)
 handles=gethand;
 switchui('multip12')
 if retr('caluv')==1 && retr('calxy')==1
-    set(handles.extraction_choice,'string', {'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Tangent velocity [px/frame]'});
+    set(handles.extraction_choice,'string', {'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Correlation coefficient [-]';'Tangent velocity [px/frame]'});
 else
-    set(handles.extraction_choice,'string', {'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Tangent velocity [m/s]'});
+    set(handles.extraction_choice,'string', {'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]';'Tangent velocity [m/s]'});
 end
 
 function dist_angle_Callback(~, ~, ~)
@@ -1751,9 +1751,9 @@ function area_extract_Callback(~, ~, ~)
 handles=gethand;
 switchui('multip17');
 if retr('caluv')==1 && retr('calxy')==1
-    set(handles.area_para_select,'string', {'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]'});
+    set(handles.area_para_select,'string', {'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Correlation coefficient [-]'});
 else
-    set(handles.area_para_select,'string', {'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]'});
+    set(handles.area_para_select,'string', {'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]'});
 end
 
 function streamlines_Callback(~, ~, ~)
@@ -1997,6 +1997,7 @@ if size(filepath,1)>0
             %vectorcolor='g';
             %end
         else %displaywhat>1
+            
             if size(derived,2)>=(currentframe+1)/2 && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
                 currentimage=derived{displaywhat-1,(currentframe+1)/2};
                 %is currentimage 3d? That would cause problems.-....
@@ -2799,10 +2800,10 @@ if isempty(resultslist)==0
     end
     if isempty(derived)==0
         if size(derived,1)< 10 || size(derived,2) < nrframes
-            derived{10,nrframes}=[]; %make sure derived has cells for all params
+            derived{11,nrframes}=[]; %make sure derived has cells for all params
         end
     else
-        derived=cell(10,nrframes);
+        derived=cell(11,nrframes);
     end
     
     if calxy==1 && caluv==1
@@ -2865,6 +2866,7 @@ if isempty(resultslist)==0
         strain_rate{i,1}=derived{8,currentframe};
         LIC{i,1}=derived{9,currentframe};
         vectorangle{i,1}=derived{10,currentframe};
+        correlation_map{i,1}=derived{11,currentframe};
     end
     if type == 1 %nur ein frame
         x=x{i,1};
@@ -2888,11 +2890,12 @@ if isempty(resultslist)==0
         strain_rate=strain_rate{i,1};
         LIC=LIC{i,1};
         vectorangle=vectorangle{i,1};
+        correlation_map=correlation_map{i,1};
     end
 end
 
 information={'The first dimension of the variables is the frame number.';'The variables contain all data that was calculated in the PIVlab GUI.';'If some data was not calculated, the corresponding cell is empty.';'Typevector is 0 for masked vector, 1 for regular vector, 2 for filtered vector';'u_original and v_original are the unmodified velocities from the cross-correlation.';'u_filtered and v_filtered is the above incl. your data validation selection.';'u_smoothed and v_smoothed is the above incl. your smoothing selection.'};
-save(fullfile(PathName,FileName), 'x','y','u_original','v_original','typevector_original','u_filtered','v_filtered','typevector_filtered','u_smoothed','v_smoothed','vorticity','velocity_magnitude','u_component','v_component','divergence','vortex_locator','shear_rate','strain_rate','LIC','calxy','caluv','units','information','vectorangle');
+save(fullfile(PathName,FileName), 'x','y','u_original','v_original','typevector_original','u_filtered','v_filtered','typevector_filtered','u_smoothed','v_smoothed','vorticity','velocity_magnitude','u_component','v_component','divergence','vortex_locator','shear_rate','strain_rate','LIC','calxy','caluv','units','information','vectorangle','correlation_map');
 %}
 
 function file_save (currentframe,FileName,PathName,type)
@@ -2956,14 +2959,14 @@ if type==1 %ascii file
     if get(handles.add_header, 'value')==1
         if retr('calxy')==1 && retr('caluv')==1
             if get(handles.export_vort, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
-                header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'dcev [1]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
+                header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'dcev [1]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
             else
                 header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
             end
         else
             if get(handles.export_vort, 'Value') == 1  %alle derivatives exportieren, kalibriert
                 
-                header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'dcev [1]' delimiter 'simple shear [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]'];
+                header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'dcev [1]' delimiter 'simple shear [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
             else
                 header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
             end
@@ -3003,8 +3006,9 @@ if type==1 %ascii file
         shear=derived{8-1,currentframe};
         strain=derived{9-1,currentframe};
         vectorangle=derived{11-1,currentframe};
+        correlation_map=derived{12-1,currentframe};
         
-        wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
+        wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1) reshape(correlation_map,size(correlation_map,1)*size(correlation_map,2),1)];
     else
         wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1)];
     end
@@ -3012,43 +3016,6 @@ if type==1 %ascii file
 end %type==1
 
 if type==2 %NOT USED ANYMORE matlab file
-    %xxx
-    %ändern, so dass immer nur eine datei gespeichert wird. entweder mit allen frames drin, oder nur mit einem.
-    %wird aufgerufen durch
-    %save_mat_current_Callback und
-    %save_mat_all_Callback
-    %vielleicht mit"append oder so in matlab file
-    %{
-	u=u*caluv-subtract_u;
-	v=v*caluv-subtract_v;
-	x=x*calxy;
-	y=y*calxy;
-	if retr('calxy')==1 && retr('caluv')==1
-		info='units are px respectively px/frame';
-	else
-		info='units are m respectively m/s';
-	end
-	if get(handles.export_vort2, 'Value') == 1 %alle derivatives exportieren
-		derivative_calc(currentframe,2,1); %vorticity
-		derivative_calc(currentframe,3,1); %magnitude
-		%u und v habe ich ja...
-		derivative_calc(currentframe,6,1); %divergence
-		derivative_calc(currentframe,7,1); %dcev
-		derivative_calc(currentframe,8,1); %shear
-		derivative_calc(currentframe,9,1); %strain
-		derived=retr('derived');
-		vort=derived{2-1,currentframe};
-		magn=derived{3-1,currentframe};
-		div=derived{6-1,currentframe};
-		dcev=derived{7-1,currentframe};
-		shear=derived{8-1,currentframe};
-		strain=derived{9-1,currentframe};
-		
-		save(fullfile(PathName,FileName), 'u', 'v', 'x', 'y', 'typevector', 'calxy', 'caluv', 'vort' ,'magn','div','dcev','shear','strain','info');
-	else
-		save(fullfile(PathName,FileName), 'u', 'v', 'x', 'y', 'typevector', 'calxy', 'caluv', 'info');
-	end
-    %}
 end
 
 if type==3 %paraview vtk PARAVIEW DATEN OHNE die ganzen derivatives.... Berechnet man doch eh direkt in Paraview.
@@ -3095,16 +3062,16 @@ if type==4 %tecplot file
     header2=['# FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(caluv)];
     if retr('calxy')==1 && retr('caluv')==1
         if get(handles.export_vort_tec, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
-            header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'dcev [1]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
-            header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "dcev", "simple_shear", "simple_strain", "vector_direction"';
+            header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'dcev [1]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
+            header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "dcev", "simple_shear", "simple_strain", "vector_direction", "correlation_map"';
         else
             header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
             header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
         end
     else
         if get(handles.export_vort_tec, 'Value') == 1  %alle derivatives exportieren, kalibriert
-            header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'dcev [1]' delimiter 'simple shear [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]'];
-            header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "dcev", "simple_shear", "simple_strain", "vector_direction"';
+            header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'dcev [1]' delimiter 'simple shear [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
+            header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "dcev", "simple_shear", "simple_strain", "vector_direction", "correlation_map"';
         else
             header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
             header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
@@ -3126,6 +3093,7 @@ if type==4 %tecplot file
         derivative_calc(currentframe,8,1); %shear
         derivative_calc(currentframe,9,1); %strain
         derivative_calc(currentframe,11,1); %vectorangle
+        derivative_calc(currentframe,12,1); %correlation coefficient
         derived=retr('derived');
         vort=derived{2-1,currentframe};
         magn=derived{3-1,currentframe};
@@ -3134,6 +3102,7 @@ if type==4 %tecplot file
         shear=derived{8-1,currentframe};
         strain=derived{9-1,currentframe};
         vectorangle=derived{11-1,currentframe};
+        correlation_map=derived{12-1,currentframe};
         nanmarker=zeros(size(x));
         nanmarker(isnan(u))=1;
         %Nans mit nullen füllen
@@ -3146,7 +3115,7 @@ if type==4 %tecplot file
         shear(isnan(shear))=0;
         strain(isnan(strain))=0;
         vectorangle(isnan(vectorangle))=0;
-        wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
+        wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1) reshape(correlation_map,size(correlation_map,1)*size(correlation_map,2),1)];
     else
         nanmarker=zeros(size(x));
         nanmarker(isnan(u))=1;
@@ -3981,6 +3950,7 @@ if ok==1
             resultslist{4,(i+1)/2}=v;
             resultslist{5,(i+1)/2}=typevector;
             resultslist{6,(i+1)/2}=[];
+            resultslist{12,(i+1)/2}=correlation_map;
             put('resultslist',resultslist);
             set(handles.fileselector, 'value', (i+1)/2);
             set(handles.progress, 'string' , ['Frame progress: 100%'])
@@ -4105,6 +4075,7 @@ if ok==1
         resultslist{4,1}=v;
         resultslist{5,1}=typevector;
         resultslist{6,1}=[];
+        resultslist{12,1}=correlation_map;
         
         put('resultslist',resultslist);
         set(handles.fileselector, 'value', 1);
@@ -4288,6 +4259,7 @@ if ok==1
         resultslist{9, (selected+1)/2} = [];
         resultslist{10, (selected+1)/2} = [];
         resultslist{11, (selected+1)/2} = [];
+        resultslist{12,(selected+1)/2}=correlation_map;
         put('derived', [])
         put('resultslist',resultslist);
         set(handles.progress, 'string' , ['Frame progress: 100%'])
@@ -4961,11 +4933,11 @@ if isempty(resultslist)==0
         resultslist{11,nrframes}=[]; %make sure resultslist has cells for all params
     end
     if isempty(derived)==0
-        if size(derived,1)< 10 || size(derived,2) < nrframes
-            derived{10,nrframes}=[]; %make sure derived has cells for all params
+        if size(derived,1)< 11 || size(derived,2) < nrframes
+            derived{11,nrframes}=[]; %make sure derived has cells for all params
         end
     else
-        derived=cell(10,nrframes);
+        derived=cell(11,nrframes);
     end
     
     if calxy==1 && caluv==1
@@ -4996,6 +4968,7 @@ if isempty(resultslist)==0
     strain_rate=vorticity;
     LIC=vorticity;
     vectorangle=vorticity;
+    correlation_map=vorticity;
     
     for i=1:nrframes
         x{i,1}=resultslist{1,i}*calxy;
@@ -5019,6 +4992,7 @@ if isempty(resultslist)==0
         strain_rate{i,1}=derived{8,i};
         LIC{i,1}=derived{9,i};
         vectorangle{i,1}=derived{10,i};
+        correlation_map{i,1}=derived{11,i};
     end
     
     assignin('base','x',x);
@@ -5043,6 +5017,7 @@ if isempty(resultslist)==0
     assignin('base','strain_rate',strain_rate);
     assignin('base','LIC',LIC);
     assignin('base','vectorangle',vectorangle);
+    assignin('base','correlation_map',correlation_map);
     
     assignin('base','calxy',calxy);
     assignin('base','caluv',caluv);
@@ -5190,32 +5165,41 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
     end
     if deriv==1 %vectors only
         %do nothing
+        %disp('vectors')
     end
     if deriv==2 %vorticity
         [curlz,cav]= curl(x*calxy,y*calxy,u*caluv,v*caluv);
         derived{1,frame}=curlz;
+        %disp('vorticity')
     end
     if deriv==3 %magnitude
         %andersrum, (u*caluv)-subtr_u
         derived{2,frame}=sqrt((u*caluv-subtr_u).^2+(v*caluv-subtr_v).^2);
+        %disp('magnitude')
     end
     if deriv==4
         derived{3,frame}=u*caluv-subtr_u;
+        %disp('u')
     end
     if deriv==5
         derived{4,frame}=v*caluv-subtr_v;
+        %disp('v')
     end
     if deriv==6
         derived{5,frame}=divergence(x*calxy,y*calxy,u*caluv,v*caluv);
+        %disp('divergence')
     end
     if deriv==7
         derived{6,frame}=dcev(x*calxy,y*calxy,u*caluv,v*caluv);
+        %disp('dcev')
     end
     if deriv==8
         derived{7,frame}=shear(x*calxy,y*calxy,u*caluv,v*caluv);
+        %disp('shear')
     end
     if deriv==9
         derived{8,frame}=strain(x*calxy,y*calxy,u*caluv,v*caluv);
+        %disp('strain')
     end
     if deriv==10
         %{
@@ -5231,6 +5215,7 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
         %EDITED for williams visualization
         %Original:
         derived{9,frame}=LIC(v*caluv-subtr_v,u*caluv-subtr_u,frame);
+        %disp('LIC')
     end
     if deriv==11
         try
@@ -5240,8 +5225,14 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
             beep;
             disp('This operation is not supported in your Matlab version. Sorry...');
         end
+        %disp('angle')
         
     end
+    if deriv==12
+        derived{11,frame}=resultslist{12,frame}; % correlation map
+        %disp('corrmap')
+    end    
+
     put('subtr_u', subtr_u);
     put('subtr_v', subtr_v);
     put('resultslist', resultslist);
@@ -5751,7 +5742,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
         text(xposition(1,1)-radius-8,yposition(1,1)-radius,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag','extractline')
         text(xposition(1,1)+radius+8,yposition(1,1)-radius,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag','extractline')
     elseif get(handles.draw_what,'value')==3 %circle series
-        set(handles.extraction_choice,'Value',10);
+        set(handles.extraction_choice,'Value',11);
         for i=1:2
             [xi,yi,but] = ginput(1);
             if i==1;delete(findobj('tag', 'extractpoint'));end
@@ -5889,7 +5880,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
         yaufderivative=percentagey*size(y,1);
         nrpoints=str2num(get(handles.nrpoints,'string'));
         if get(handles.draw_what,'value')==3 %circle series
-            set(handles.extraction_choice,'Value',10); %set to tangent
+            set(handles.extraction_choice,'Value',11); %set to tangent
         end
         extractwhat=get(handles.extraction_choice,'Value');
         switch extractwhat
@@ -5903,8 +5894,10 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
                 
                 distance=linspace(0,length,size(c,1))';
                 
-            case 9
+            case {9,10}
                 % auf stelle 9 steht vector angle. Bei derivatives ist der aber auf platz 11. daher zwei dazu
+                %auf stelle 10 steht correlation coeff, bei derivatives auf
+                %12, daher zwei dazu
                 derivative_calc(currentframe,extractwhat+2,0);
                 derived=retr('derived');
                 maptoget=derived{extractwhat+1,currentframe};
@@ -5913,7 +5906,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
                 [cx, cy, c] = improfile(maptoget,xposition,yposition,round(nrpoints),'bicubic');
                 
                 distance=linspace(0,length,size(c,1))';
-            case 10 %tangent
+            case 11 %tangent
                 if size(xposition,1)<=1 %user did not choose circle series
                     if size(resultslist,1)>6 %filtered exists
                         if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
@@ -7050,7 +7043,7 @@ elseif formattype ==2 || formattype==3 || formattype==4 || formattype==5
 end
 
 function extraction_choice_Callback(hObject, ~, ~)
-if get(hObject, 'value') ~= 10
+if get(hObject, 'value') ~= 11
     handles=gethand;
     if get(handles.draw_what, 'value')==3
         set(handles.draw_what, 'value', 1)
@@ -7061,7 +7054,7 @@ function draw_what_Callback(hObject, ~, ~)
 handles=gethand;
 if get(hObject, 'value') == 3
     handles=gethand;
-    set (handles.extraction_choice, 'value', 10);
+    set (handles.extraction_choice, 'value', 11);
     set (handles.extraction_choice, 'enable', 'off');
 else
     set (handles.extraction_choice, 'enable', 'on');
@@ -7108,11 +7101,11 @@ for i=startfr:endfr
             filepath=retr('filepath');
             x=resultslist{1,currentframe};
             extractwhat=get(handles.area_para_select,'Value');
-            if extractwhat==9
-                extractwhat=10;
+            if extractwhat==9 || extractwhat==10
+                derivative_calc(currentframe,extractwhat+2,0);
+            else
+                derivative_calc(currentframe,extractwhat+1,0);
             end
-            
-            derivative_calc(currentframe,extractwhat+1,0);
             derived=retr('derived');
             [~,~,ext] = fileparts(filepath{2*currentframe-1});
             if strcmp(ext,'.b16')
@@ -7123,7 +7116,21 @@ for i=startfr:endfr
             sizeold=size(currentimage,1);
             sizenew=size(x,1);
             
-            maptoget=derived{extractwhat,currentframe};
+            %{
+            extractwhat9 ist vectorangle
+            extractwhat10 ist correlation_map
+            
+            
+            derived 9 ist LIC
+            derived10 ist vectorangle
+            derived11 ist correlation map
+            %}
+            
+            if extractwhat==9 || extractwhat==10
+                maptoget=derived{extractwhat+1,currentframe};
+            else
+                maptoget=derived{extractwhat,currentframe};
+            end
             maptoget=rescale_maps_nan(maptoget,0);
             if selected==0
                 [BW,ximask,yimask]=roipoly;
@@ -7166,12 +7173,17 @@ for i=startfr:endfr
             filepath=retr('filepath');
             x=resultslist{1,currentframe};
             extractwhat=get(handles.area_para_select,'Value');
-            if extractwhat==9
-                extractwhat=10; %weil lic ausgelassen wird
+            if extractwhat==9 || extractwhat==10
+                derivative_calc(currentframe,extractwhat+2,0);
+            else
+                derivative_calc(currentframe,extractwhat+1,0);
             end
-            derivative_calc(currentframe,extractwhat+1,0);
             derived=retr('derived');
-            maptoget=derived{extractwhat,currentframe};
+            if extractwhat==9 || extractwhat==10
+                maptoget=derived{extractwhat+1,currentframe};
+            else
+                maptoget=derived{extractwhat,currentframe};
+            end
             maptoget=rescale_maps_nan(maptoget,0);
             
             calxy=retr('calxy');
@@ -7303,14 +7315,18 @@ for i=startfr:endfr
                 calxy=retr('calxy');
                 
                 extractwhat=get(handles.area_para_select,'Value');
-                if extractwhat==9
-                    extractwhat=10; %weil lic ausgelassen wird
+                if extractwhat==9 || extractwhat==10
+                    derivative_calc(currentframe,extractwhat+2,0);
+                else
+                    derivative_calc(currentframe,extractwhat+1,0);
                 end
-                derivative_calc(currentframe,extractwhat+1,0);
                 derived=retr('derived');
-                currentimage=derived{extractwhat,currentframe};
                 
-                
+                if extractwhat==9 || extractwhat==10
+                    currentimage=derived{extractwhat+1,currentframe};
+                else
+                    currentimage=derived{extractwhat,currentframe};
+                end
                 currentimage=rescale_maps_nan(currentimage,0);
                 hgui=getappdata(0,'hgui');
                 figure(hgui);
@@ -7487,12 +7503,20 @@ for i=startfr:endfr
                 v=v*caluv-retr('subtr_v');
                 calxy=retr('calxy');
                 extractwhat=get(handles.area_para_select,'Value');
-                if extractwhat==9
-                    extractwhat=10; %weil lic ausgelassen wird
+                if extractwhat==9 || extractwhat==10
+                    derivative_calc(currentframe,extractwhat+2,0);
+                else
+                    derivative_calc(currentframe,extractwhat+1,0);
                 end
-                derivative_calc(currentframe,extractwhat+1,0);
+
                 derived=retr('derived');
-                currentimage=derived{extractwhat,currentframe};
+                
+                if extractwhat==9 || extractwhat==10
+                    currentimage=derived{extractwhat+1,currentframe};
+                else
+                    currentimage=derived{extractwhat,currentframe};
+                end
+
                 delete(findobj('tag','vortarea'));
                 
                 imagesc(currentimage);
