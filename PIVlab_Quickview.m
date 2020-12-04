@@ -118,6 +118,10 @@ axes(handles.axes5)
 imshow(imread('pivlab_logo1.jpg'),'parent',handles.axes5);
 set(handles.axes5,'Position',[0.1,0.1,0.8,0.8],'xtick',[],'ytick',[])
 set(handles.axes5,'Visible','on')
+if verLessThan('matlab','9.5')
+    disp('ERROR: PIVlab Quickview will only work for Matlab R2018b and later.')
+    disp('Please use the normal PIVlab_GUI.m !')
+end
 
 % --- Outputs from this function are returned to the command line.
 function varargout = PIVlab_Quickview_OutputFcn(hObject, eventdata, handles)
@@ -137,7 +141,6 @@ if exist('quickview_settings.mat','file')==0
     save ('quickview_settings.mat','path', '-append');
 else
     load('quickview_settings.mat','path');
-    
     if ~exist('path','var')
         path=pwd;
         save ('quickview_settings.mat','path', '-append');
@@ -239,7 +242,7 @@ if ~isempty(roi)
         performance_settings2=1;
         performance_settings3=1;
     end
-    [x, y, u, v, ~] = piv_FFTmulti (image1,image2,IA_size*2,IA_size,1,[],roi.Position,2,IA_size,16,16,performance_settings1,performance_settings2,getappdata(handles.figure1,'disable_auto'),performance_settings3); %actual PIV analysis    axes(handles.axes2)
+    [x, y, u, v, ~,correlation_map] = piv_FFTmulti (image1,image2,IA_size*2,IA_size,1,[],roi.Position,2,IA_size,16,16,performance_settings1,performance_settings2,getappdata(handles.figure1,'disable_auto'),performance_settings3); %actual PIV analysis    axes(handles.axes2)
     [u,v] = PIVlab_postproc (u,v,1, [], 1,7, 1,3);
     if get(handles.toggle_img,'Value')==0
         display_image=image1/2;
@@ -276,13 +279,9 @@ if ~isempty(roi)
     %disp('DAS FUNKTIONIERT SO NICHT! MUSS EIGENES CODEN')
     histogram(magn,round(numel(u)/10),'EdgeColor','none');
     set(gca,'ytick',[])
-    
     xlim([mean(magn(:),'omitnan') -  3*std(magn(:),'omitnan') , mean(magn(:),'omitnan') +  3*std(magn(:),'omitnan')])
     axes(handles.axes4)
-    
-    [xtable, ytable, correlation] = piv_corr2 (image1,image2,IA_size*2, IA_size, [], roi.Position);
-    
-    imagesc(correlation);colormap(handles.axes4,'parula')
+    imagesc(correlation_map);colormap(handles.axes4,'parula')
     xticks([])
     yticks([])
     colorbar('West')
