@@ -350,7 +350,8 @@ item=[0 0 0 0];
 
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.loadimgsbutton = uicontrol(handles.multip01,'Style','pushbutton','String','Load images','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @loadimgsbutton_Callback,'Tag','loadimgsbutton','TooltipString','Load image data');
-
+%GIThub experiment: I created a branch where I want to add video import.
+%Will it work...?
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.text2 = uicontrol(handles.multip01,'Style','text','units', 'characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Image list:');
 
