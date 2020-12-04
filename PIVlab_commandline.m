@@ -71,6 +71,7 @@ else
 end
 
 typevector=x; %typevector will be 1 for regular vectors, 0 for masked areas
+correlation_map=x; % correlation coefficient
 cntr=0;
 %% Main PIV analysis loop:
 for i=1:1+pairwise:amount-1 
@@ -79,7 +80,7 @@ for i=1:1+pairwise:amount-1
     image2=imread(fullfile(directory, filenames{i+1}));
     image1 = PIVlab_preproc (image1,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2}); %preprocess images
     image2 = PIVlab_preproc (image2,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2});
-    [x{cntr}, y{cntr}, u{cntr}, v{cntr}, typevector{cntr}] = piv_FFTmulti (image1,image2,s{1,2},s{2,2},s{3,2},s{4,2},s{5,2},s{6,2},s{7,2},s{8,2},s{9,2},s{10,2},s{11,2},s{12,2},s{13,2}); %actual PIV analysis
+    [x{cntr}, y{cntr}, u{cntr}, v{cntr}, typevector{cntr},correlation_map{cntr}] = piv_FFTmulti (image1,image2,s{1,2},s{2,2},s{3,2},s{4,2},s{5,2},s{6,2},s{7,2},s{8,2},s{9,2},s{10,2},s{11,2},s{12,2},s{13,2}); %actual PIV analysis
     
     % Graphical output (disable to improve speed)
     %%{
@@ -106,7 +107,7 @@ r{2,1}= 'Valid velocities [u_min; u_max; v_min; v_max]';    r{2,2}=[-50; 50; -50
 r{3,1}= 'Stdev check?';                                     r{3,2}=1;                   % 1 = enable global standard deviation test
 r{4,1}= 'Stdev threshold';                                  r{4,2}=7;                   % Threshold for the stdev test
 r{5,1}= 'Local median check?';                              r{5,2}=1;                   % 1 = enable local median test
-r{6,1}= 'Local median threshold';                           r{6,2}=2;                   % Threshold for the local median test
+r{6,1}= 'Local median threshold';                           r{6,2}=3;                   % Threshold for the local median test
 
 u_filt=cell(size(u));
 v_filt=cell(size(v));
@@ -125,5 +126,5 @@ end
 %% 
 save(fullfile(directory, [filenames{1} '_' filenames{end} '_' num2str(amount) '_frames_result_.mat']));
     %% 
-clearvars -except p s r x y u v typevector directory filenames u_filt v_filt typevector_filt
+clearvars -except p s r x y u v typevector directory filenames u_filt v_filt typevector_filt correlation_map
 disp('DONE.')
