@@ -344,15 +344,17 @@ set(handles.quick6, 'cdata',calpic);
 
 
 %% Multip01
-handles.multip01 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Images (CTRL+N)', 'Tag','multip01','fontweight','bold');
+handles.multip01 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Input data (CTRL+N)', 'Tag','multip01','fontweight','bold');
 parentitem=get(handles.multip01, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.loadimgsbutton = uicontrol(handles.multip01,'Style','pushbutton','String','Load images','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @loadimgsbutton_Callback,'Tag','loadimgsbutton','TooltipString','Load image data');
-%GIThub experiment: I created a branch where I want to add video import.
-%Will it work...?
-item=[0 item(2)+item(4)+margin parentitem(3) 1];
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
+handles.loadvideobutton = uicontrol(handles.multip01,'Style','pushbutton','String','Load video','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @loadvideobutton_Callback,'Tag','loadvideobutton','TooltipString','Load video file');
+
+item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 1];
 handles.text2 = uicontrol(handles.multip01,'Style','text','units', 'characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Image list:');
 
 item=[0 item(2)+item(4) parentitem(3) 12];
@@ -1597,7 +1599,7 @@ delete(findobj('tag','hinting'))
 %if test1(2)==603 && test2(2)==580 %%only display hint when logo is shown
 %	text(400,30,'\leftarrow import your image pairs by clicking on ''Load images''','horizontalalignment','right','verticalalignment','middle','fontsize',14,'tag','hinting')
 %end
-loadimgsbutton_Callback
+%loadimgsbutton_Callback
 
 function img_mask_Callback(~, ~, ~)
 switchui('multip02')
