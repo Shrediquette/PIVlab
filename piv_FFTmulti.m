@@ -215,14 +215,13 @@ if mask_auto == 1
     h=h.*result_conv((interrogationarea/2)+SubPixOffset-1:(interrogationarea/2)+SubPixOffset+1,(interrogationarea/2)+SubPixOffset-1:(interrogationarea/2)+SubPixOffset+1,:);
     result_conv((interrogationarea/2)+SubPixOffset-1:(interrogationarea/2)+SubPixOffset+1,(interrogationarea/2)+SubPixOffset-1:(interrogationarea/2)+SubPixOffset+1,:)=h;
 end
-
+%peakheight
+%peak_height=max(max(result_conv)) ./ mean(mean(result_conv)) ;
+%peak_height = permute(reshape(peak_height, [size(xtable')]), [2 1 3]);
 
 minres = permute(repmat(squeeze(min(min(result_conv))), [1, size(result_conv, 1), size(result_conv, 2)]), [2 3 1]);
 deltares = permute(repmat(squeeze(max(max(result_conv))-min(min(result_conv))),[ 1, size(result_conv, 1), size(result_conv, 2)]), [2 3 1]);
 result_conv = ((result_conv-minres)./deltares)*255;
-
-
-
 %apply mask
 ii = find(mask(ss1(round(interrogationarea/2+1), round(interrogationarea/2+1), :)));
 jj = find(mask((miniy:step:maxiy)+round(interrogationarea/2), (minix:step:maxix)+round(interrogationarea/2)));
@@ -519,7 +518,7 @@ for multipass=1:passes-1
                 image1_cut=image1_cut-mean(image1_cut,[1 2]);
                 image2_cut=image2_cut-mean(image2_cut,[1 2]);
             catch
-                for oldmatlab=1:size(image1_cut,3);
+                for oldmatlab=1:size(image1_cut,3)
                     image1_cut(:,:,oldmatlab)=image1_cut(:,:,oldmatlab)-mean(mean(image1_cut(:,:,oldmatlab)));
                     image2_cut(:,:,oldmatlab)=image2_cut(:,:,oldmatlab)-mean(mean(image2_cut(:,:,oldmatlab)));
                 end
@@ -587,7 +586,7 @@ for multipass=1:passes-1
                 image1_cut=image1_cut-mean(image1_cut,[1 2]);
                 image2_cut=image2_cut-mean(image2_cut,[1 2]);
             catch
-                for oldmatlab=1:size(image1_cut,3);
+                for oldmatlab=1:size(image1_cut,3)
                     image1_cut(:,:,oldmatlab)=image1_cut(:,:,oldmatlab)-mean(mean(image1_cut(:,:,oldmatlab)));
                     image2_cut(:,:,oldmatlab)=image2_cut(:,:,oldmatlab)-mean(mean(image2_cut(:,:,oldmatlab)));
                 end
@@ -637,20 +636,31 @@ result_conv((interrogationarea/2)+SubPixOffset-1:(interrogationarea/2)+SubPixOff
         end
         emptymatrix((interrogationarea/2)+SubPixOffset-sizeones:(interrogationarea/2)+SubPixOffset+sizeones,(interrogationarea/2)+SubPixOffset-sizeones:(interrogationarea/2)+SubPixOffset+sizeones,:)=h;
         result_conv = result_conv .* emptymatrix;
-        %{
-figu=figure;
-for kuku=1:10:size(result_conv,3)
-    imagesc(result_conv(:,:,kuku))
-    drawnow;
-    pause (0.1)
-end
-close(figu)
-        %}
     end
     %do fft2
-    
     minres = permute(repmat(squeeze(min(min(result_conv))), [1, size(result_conv, 1), size(result_conv, 2)]), [2 3 1]);
     deltares = permute(repmat(squeeze(max(max(result_conv))-min(min(result_conv))), [1, size(result_conv, 1), size(result_conv, 2)]), [2 3 1]);
+    %peakheight
+    %peak_height=max(max(result_conv))./mean(mean(result_conv));
+    %peak_height = permute(reshape(peak_height, [size(xtable')]), [2 1 3]);
+    %{
+    %1st to 2nd peak ratio:
+    for ll = 1:size(result_conv,3)
+        A=result_conv(:,:,ll);
+        max_A= max(A(:));
+        [row,col]=find(A==max_A);
+        try
+            A(row-3:row+3,col-3:col+3)=0;
+            max_A2nd= max(A(:));
+            ratio(1,1,ll)=max_A/max_A2nd;
+        catch
+            disp('lllll')
+            ratio(1,1,ll)=nan;
+        end
+    end
+    peak_height = permute(reshape(ratio, [size(xtable')]), [2 1 3]);
+    figure;imagesc(peak_height);axis image
+    %}
     result_conv = ((result_conv-minres)./deltares)*255;
     
     %apply mask
@@ -689,7 +699,7 @@ for cor_i=1:size(image1_cut,3)
 end
 correlation_map = permute(reshape(correlation_map, [size(xtable')]), [2 1 3]);
 correlation_map(jj) = 0;
-
+%correlation_map=peak_height; %replace correlation coefficient with peak height
 xtable=xtable-ceil(interrogationarea/2);
 ytable=ytable-ceil(interrogationarea/2);
 
