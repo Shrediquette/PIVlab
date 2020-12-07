@@ -2501,8 +2501,66 @@ sliderdisp
 zoom reset
 
 function loadvideobutton_Callback(~,~,~)
-disp('Vidload')
+if ispc==1
+    pathname=[retr('pathname') '\'];
+else
+    pathname=[retr('pathname') '/'];
+end
+handles=gethand;
+displogo(0)
+vid_import(pathname);
+uiwait
+disp('done selecting video')
+%{
+if ~isequal(path,0) 
+    if get(handles.zoomon,'Value')==1
+        set(handles.zoomon,'Value',0);
+        zoomon_Callback(handles.zoomon)
+    end
+    if get(handles.panon,'Value')==1
+        set(handles.panon,'Value',0);
+        panon_Callback(handles.zoomon)
+    end
+    put('xzoomlimit',[]);
+    put('yzoomlimit',[]);
+    
+    put('pathname',pathname); %last path
+        put ('filename',filename); %only for displaying
+        put ('filepath',fullfile(pathname,filename)); %full path and filename for analyses
+        %auf was reagiert sliderrange....?
+        sliderrange
+        set (handles.filenamebox, 'string', filename);
+        put ('resultslist', []); %clears old results
+        put ('derived',[]);
+        put('displaywhat',1);%vectors
+        put('ismean',[]);
+        put('framemanualdeletion',[]);
+        put('manualdeletion',[]);
+        put('streamlinesX',[]);
+        put('streamlinesY',[]);
+        set(handles.fileselector, 'value',1);
+        set(handles.minintens, 'string', 0);
+        set(handles.maxintens, 'string', 1);
+        %Clear all things
+        clear_vel_limit_Callback %clear velocity limits
+        clear_roi_Callback
+        %clear_mask_Callback:
+        delete(findobj(gca,'tag', 'maskplot'));
+        put ('maskiererx',{});
+        put ('maskierery',{});
+        set(handles.mask_hint, 'String', 'Mask inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
+        set (handles.external_mask_progress, 'string', '');
+        %reset zoom
+        set(handles.panon,'Value',0);
+        set(handles.zoomon,'Value',0);
+        put('xzoomlimit', []);
+        put('yzoomlimit', []);
+        set(handles.filenamebox,'value',1);
+        sliderdisp %displays raw image when slider moves
+        zoom reset
 
+end
+%}
 function loadimgsbutton_Callback(~, ~, ~)
 if ispc==1
     pathname=[retr('pathname') '\'];
