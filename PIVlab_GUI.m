@@ -2500,7 +2500,8 @@ sliderrange
 sliderdisp
 zoom reset
 
-
+function loadvideobutton_Callback(~,~,~)
+disp('Vidload')
 
 function loadimgsbutton_Callback(~, ~, ~)
 if ispc==1
