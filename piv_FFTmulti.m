@@ -232,8 +232,13 @@ result_conv(:,:, ii) = 0;
 
 % we need only one peak from each couple pictures
 [z1, zi] = sort(z);
-dz1 = [z1(1); diff(z1)];
-i0 = find(dz1~=0);
+if ~isempty(z1)
+    dz1 = [z1(1); diff(z1)];
+    i0 = find(dz1~=0);
+else
+    dz1=[];
+    i0=[];
+end
 x1 = x(zi(i0));
 y1 = y(zi(i0));
 z1 = z(zi(i0));
@@ -672,8 +677,13 @@ result_conv((interrogationarea/2)+SubPixOffset-1:(interrogationarea/2)+SubPixOff
     [y, x, z] = ind2sub(size(result_conv), find(result_conv==255));
     [z1, zi] = sort(z);
     % we need only one peak from each couple pictures
-    dz1 = [z1(1); diff(z1)];
-    i0 = find(dz1~=0);
+    if ~isempty(z1)
+        dz1 = [z1(1); diff(z1)];
+        i0 = find(dz1~=0);
+    else
+        dz1=[];
+        i0=[];
+    end
     x1 = x(zi(i0));
     y1 = y(zi(i0));
     z1 = z(zi(i0));
