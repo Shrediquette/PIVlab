@@ -27,7 +27,7 @@ handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 guidata(MainWindow,handles)
 setappdata(0,'hgui',MainWindow);
 
-version = '2.37';
+version = '2.38';
 put('PIVver', version);
 v=ver('MATLAB');
 disp(['Please wait, starting PIVlab GUI...' sprintf('\n')])
@@ -54,35 +54,36 @@ put('quickwidth',panelwidth);
 put('quickheight',3.2);
 put('quickvisible',1);
 put('alreadydisplayed',0);
+put('video_selection_done',0);
 
 
 try
-    psdfile=which('PIVlab_settings_default.mat');
-    dindex=strfind(psdfile,filesep); %filesep ist '\'
-    read_panel_width('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
+	psdfile=which('PIVlab_settings_default.mat');
+	dindex=strfind(psdfile,filesep); %filesep ist '\'
+	read_panel_width('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
 catch
-    try
-        disp(['Could not load default settings in this path: ' psdfile(1:(dindex(end)-1))])
-    catch
-    end
-    disp('Could not load default settings. But this doesn''t really matter.')
+	try
+		disp(['Could not load default settings in this path: ' psdfile(1:(dindex(end)-1))])
+	catch
+	end
+	disp('Could not load default settings. But this doesn''t really matter.')
 end
 try
-    ctr=0;
-    pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'Background_GUI.m' 'Background_GUI.fig' 'icons_quick.mat' 'f_readB16.m'};
-    for i=1:size(pivFiles,2)
-        if exist(pivFiles{1,i},'file')~=2
-            disp(['ERROR: A required file was not found: ' pivFiles{1,i}]);
-            beep;
-        else
-            ctr=ctr+1;
-        end
-    end
-    if ctr==size(pivFiles,2)
-        disp('-> Required additional files found.')
-    end
+	ctr=0;
+	pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'Background_GUI.m' 'Background_GUI.fig' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg'};
+	for i=1:size(pivFiles,2)
+		if exist(pivFiles{1,i},'file')~=2
+			disp(['ERROR: A required file was not found: ' pivFiles{1,i}]);
+			beep;
+		else
+			ctr=ctr+1;
+		end
+	end
+	if ctr==size(pivFiles,2)
+		disp('-> Required additional files found.')
+	end
 catch
-    disp('-> Problem detecting required files.')
+	disp('-> Problem detecting required files.')
 end
 
 generateUI
@@ -149,37 +150,37 @@ movegui(MainWindow,'center')
 set(MainWindow, 'Visible','on');
 %displogo(1)
 if strncmp (date,'15-Oct',6)
-    yr=date;
-    since=str2num(yr(8:11))-2005;
-    questdlg(['Loving Lena since ' num2str(since) ' years today!'],'It''s 15th of October!','Congratulations!','Congratulations!'); % #FallsNochRelevant
-    set(MainWindow, 'Name','Today it''s Lena-day!!')
+	yr=date;
+	since=str2num(yr(8:11))-2005;
+	questdlg(['Loving Lena since ' num2str(since) ' years today!'],'It''s 15th of October!','Congratulations!','Congratulations!'); % #FallsNochRelevant
+	set(MainWindow, 'Name','Today it''s Lena-day!!')
 end
 
 try
-    if verLessThan('matlab', '7.10.0') == 0
-        disp('-> Matlab version check ok.')
-    else
-        disp('WARNING: Your Matlab version might be too old for running PIVlab.')
-    end
+	if verLessThan('matlab', '7.10.0') == 0
+		disp('-> Matlab version check ok.')
+	else
+		disp('WARNING: Your Matlab version might be too old for running PIVlab.')
+	end
 catch
-    disp('MATLAB version could not be checked automatically. You need at least version 7.10.0 (R2010a) to run PIVlab.')
+	disp('MATLAB version could not be checked automatically. You need at least version 7.10.0 (R2010a) to run PIVlab.')
 end
 try
-    result=license('checkout','Image_Toolbox');
-    if result == 1
-        try
-            J = adapthisteq(rand(8,8));
-            disp('-> Image Processing Toolbox found.')
-        catch
-            disp('ERROR: Image Processing Toolbox not accessible! PIVlab won''t work like this.')
-            disp('A license has been found, but the toolbox could not be accessed.')
-        end
-    else
-        disp('ERROR: Image Processing Toolbox not found! PIVlab won''t work like this.')
-    end
-    
+	result=license('checkout','Image_Toolbox');
+	if result == 1
+		try
+			J = adapthisteq(rand(8,8));
+			disp('-> Image Processing Toolbox found.')
+		catch
+			disp('ERROR: Image Processing Toolbox not accessible! PIVlab won''t work like this.')
+			disp('A license has been found, but the toolbox could not be accessed.')
+		end
+	else
+		disp('ERROR: Image Processing Toolbox not found! PIVlab won''t work like this.')
+	end
+	
 catch
-    disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
+	disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
 end
 
 %Variable initialization
@@ -197,26 +198,26 @@ load('PIVlab_settings_default.mat','homedir');
 load('PIVlab_settings_default.mat','pathname');
 warning('on','all')
 if exist('pathname','var') && exist('homedir','var')
-    %lastdir=importdata('last.nf','\t');
-    %put('homedir',lastdir{1});
-    %put('pathname',lastdir{2});
-    
+	%lastdir=importdata('last.nf','\t');
+	%put('homedir',lastdir{1});
+	%put('pathname',lastdir{2});
+	
 else
-    homedir=pwd;
-    pathname=pwd;
+	homedir=pwd;
+	pathname=pwd;
 end
 put('homedir',homedir);
 put('pathname',pathname);
 save('PIVlab_settings_default.mat','homedir','pathname','-append');
 
 try
-    %XP Wu modification:
-    psdfile=which('PIVlab_settings_default.mat');
-    dindex=strfind(psdfile,filesep); %filesep ist '\'
-    %erstes argument datei, zweites pfad bis zum letzten fileseperator.
-    read_settings('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
+	%XP Wu modification:
+	psdfile=which('PIVlab_settings_default.mat');
+	dindex=strfind(psdfile,filesep); %filesep ist '\'
+	%erstes argument datei, zweites pfad bis zum letzten fileseperator.
+	read_settings('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
 catch
-    disp('Could not load default settings. But this doesn''t really matter.')
+	disp('Could not load default settings. But this doesn''t really matter.')
 end
 
 % Check for updates
@@ -224,29 +225,29 @@ filename_update = 'latest_version.txt';
 current_url = 'http://william.thielicke.org/PIVlab/latest_version.txt';
 % Update checking inspired by: https://www.mathworks.com/matlabcentral/fileexchange/64294-photoannotation
 try
-    if exist('websave','builtin')||exist('websave','file')
-        outfilename=websave(filename_update,current_url,weboptions('Timeout',10));
-    else
-        outfilename=urlwrite(current_url,filename_update); %#ok<*URLWR>
-    end
-    fileID_update = fopen(filename_update);
-    web_version = textscan(fileID_update,'%s');
-    web_version=cell2mat(web_version{1});
-    trash_upd = fclose(fileID_update);
-    recycle('on');
-    delete(filename_update)
-    if strcmp(version,web_version) == 1
-        update_msg = 'You have the latest PIVlab version.';
-        put('update_msg_color',[0 0.75 0]);
-        
-    else
-        update_msg = ['PIVlab is outdated. Please update to version ' web_version];
-        put('update_msg_color',[0.85 0 0]);
-    end
+	if exist('websave','builtin')||exist('websave','file')
+		outfilename=websave(filename_update,current_url,weboptions('Timeout',10));
+	else
+		outfilename=urlwrite(current_url,filename_update); %#ok<*URLWR>
+	end
+	fileID_update = fopen(filename_update);
+	web_version = textscan(fileID_update,'%s');
+	web_version=cell2mat(web_version{1});
+	trash_upd = fclose(fileID_update);
+	recycle('on');
+	delete(filename_update)
+	if strcmp(version,web_version) == 1
+		update_msg = 'You have the latest PIVlab version.';
+		put('update_msg_color',[0 0.75 0]);
+		
+	else
+		update_msg = ['PIVlab is outdated. Please update to version ' web_version];
+		put('update_msg_color',[0.85 0 0]);
+	end
 catch
-    %Either the download failed, or the file downloaded is empty.
-    update_msg = 'Could not check for updates';
-    put('update_msg_color',[0.75 0.75 0]);
+	%Either the download failed, or the file downloaded is empty.
+	update_msg = 'Could not check for updates';
+	put('update_msg_color',[0.75 0.75 0]);
 end
 clear filename_update current_url fileID_update outfilename web_version trash_upd
 disp (update_msg)
@@ -1626,10 +1627,10 @@ set(handles.messagetext, 'String','');
 
 
 if get(handles.fftmulti,'Value') == 1 || get(handles.dcc,'Value') == 1
-    set(handles.AnalyzeAll,'String','Analyze all frames');
+	set(handles.AnalyzeAll,'String','Analyze all frames');
 end
 if get(handles.ensemble,'Value') == 1
-    set(handles.AnalyzeAll,'String','Start ensemble analysis');  
+	set(handles.AnalyzeAll,'String','Start ensemble analysis');
 end
 
 switchui('multip05')
@@ -1641,39 +1642,50 @@ function cal_actual_Callback(~, ~, ~)
 switchui('multip07')
 pointscali=retr('pointscali');
 if numel(pointscali)>0
-    xposition=pointscali(:,1);
-    yposition=pointscali(:,2);
-    caliimg=retr('caliimg');
-    if numel(caliimg)>0
-        image(caliimg, 'parent',gca, 'cdatamapping', 'scaled');
-        colormap('gray');
-        axis image;
-        set(gca,'ytick',[])
-        set(gca,'xtick',[])
-    else
-        sliderdisp
-    end
-    hold on;
-    plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3 , 'tag', 'caliline');
-    plot (xposition,yposition,'y+:', 'tag', 'caliline');
-    hold off;
-    for j=1:2
-        text(xposition(j)+10,yposition(j)+10, ['x:' num2str(round(xposition(j)*10)/10) sprintf('\n') 'y:' num2str(round(yposition(j)*10)/10) ],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'caliline')
-    end
-    text(mean(xposition),mean(yposition), ['s = ' num2str(round((sqrt((xposition(1)-xposition(2))^2+(yposition(1)-yposition(2))^2))*100)/100) ' px'],'color','k','fontsize',7, 'BackgroundColor', 'r', 'tag', 'caliline','horizontalalignment','center')
+	xposition=pointscali(:,1);
+	yposition=pointscali(:,2);
+	caliimg=retr('caliimg');
+	if numel(caliimg)>0
+		image(caliimg, 'parent',gca, 'cdatamapping', 'scaled');
+		colormap('gray');
+		axis image;
+		set(gca,'ytick',[])
+		set(gca,'xtick',[])
+	else
+		sliderdisp
+	end
+	hold on;
+	plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3 , 'tag', 'caliline');
+	plot (xposition,yposition,'y+:', 'tag', 'caliline');
+	hold off;
+	for j=1:2
+		text(xposition(j)+10,yposition(j)+10, ['x:' num2str(round(xposition(j)*10)/10) sprintf('\n') 'y:' num2str(round(yposition(j)*10)/10) ],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'caliline')
+	end
+	text(mean(xposition),mean(yposition), ['s = ' num2str(round((sqrt((xposition(1)-xposition(2))^2+(yposition(1)-yposition(2))^2))*100)/100) ' px'],'color','k','fontsize',7, 'BackgroundColor', 'r', 'tag', 'caliline','horizontalalignment','center')
+else %no calibration performed yet
+	if retr('video_selection_done') == 1 %video file loaded
+		%enter a guess for the time step, based on video file frame rate.
+		video_reader_object = retr('video_reader_object');
+		video_frame_selection=retr('video_frame_selection');
+		skip = video_frame_selection(2) - video_frame_selection(1);
+		delta_t = 1/(video_reader_object.FrameRate / skip)*1000;
+		handles=gethand;
+		set(handles.time_inp,'String',num2str(delta_t))
+	end
+	
 end
 
 function plot_derivs_Callback(~, ~, ~)
 handles=gethand;
 switchui('multip08');
 if retr('caluv')==1 && retr('calxy')==1
-    set(handles.derivchoice,'String',{'Vectors [px/frame]';'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Simple shear rate [1/frame]';'Simple strain rate [1/frame]';'Line integral convolution (LIC) [1]' ; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
-    set(handles.text35,'String','u [px/frame]:')
-    set(handles.text36,'String','v [px/frame]:')
+	set(handles.derivchoice,'String',{'Vectors [px/frame]';'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Simple shear rate [1/frame]';'Simple strain rate [1/frame]';'Line integral convolution (LIC) [1]' ; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
+	set(handles.text35,'String','u [px/frame]:')
+	set(handles.text36,'String','v [px/frame]:')
 else
-    set(handles.derivchoice,'String',{'Vectors [m/s]';'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Simple shear rate [1/s]';'Simple strain rate [1/s]';'Line integral convolution (LIC) [1]'; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
-    set(handles.text35,'String','u [m/s]:')
-    set(handles.text36,'String','v [m/s]:')
+	set(handles.derivchoice,'String',{'Vectors [m/s]';'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Simple shear rate [1/s]';'Simple strain rate [1/s]';'Line integral convolution (LIC) [1]'; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
+	set(handles.text35,'String','u [m/s]:')
+	set(handles.text36,'String','v [m/s]:')
 end
 derivchoice_Callback(handles.derivchoice)
 
@@ -1706,9 +1718,9 @@ function poly_extract_Callback(~, ~, ~)
 handles=gethand;
 switchui('multip12')
 if retr('caluv')==1 && retr('calxy')==1
-    set(handles.extraction_choice,'string', {'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Correlation coefficient [-]';'Tangent velocity [px/frame]'});
+	set(handles.extraction_choice,'string', {'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Correlation coefficient [-]';'Tangent velocity [px/frame]'});
 else
-    set(handles.extraction_choice,'string', {'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]';'Tangent velocity [m/s]'});
+	set(handles.extraction_choice,'string', {'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]';'Tangent velocity [m/s]'});
 end
 
 function dist_angle_Callback(~, ~, ~)
@@ -1718,7 +1730,7 @@ function statistics_Callback(~, ~, ~)
 switchui('multip14')
 filepath=retr('filepath');
 if size(filepath,1) > 1
-    sliderdisp
+	sliderdisp
 end
 
 function part_img_sett_Callback(~, ~, ~)
@@ -1728,35 +1740,35 @@ function save_movie_Callback(~, ~, ~)
 handles=gethand;
 resultslist=retr('resultslist');
 if size(resultslist,2)>=1
-    startframe=0;
-    endframe=0;
-    for i=1:size(resultslist,2)
-        if numel(resultslist{1,i})>0 && startframe==0
-            startframe=i;
-        end
-        if numel(resultslist{1,i})>0
-            endframe=i;
-        end
-    end
-    set(handles.firstframe, 'String',int2str(startframe));
-    set(handles.lastframe, 'String',int2str(endframe));
-    if strmatch(get(handles.multip08, 'visible'), 'on'); %#ok<MATCH2>
-        put('p8wasvisible',1)
-    else
-        put('p8wasvisible',0)
-    end
-    switchui('multip16');
+	startframe=0;
+	endframe=0;
+	for i=1:size(resultslist,2)
+		if numel(resultslist{1,i})>0 && startframe==0
+			startframe=i;
+		end
+		if numel(resultslist{1,i})>0
+			endframe=i;
+		end
+	end
+	set(handles.firstframe, 'String',int2str(startframe));
+	set(handles.lastframe, 'String',int2str(endframe));
+	if strmatch(get(handles.multip08, 'visible'), 'on'); %#ok<MATCH2>
+		put('p8wasvisible',1)
+	else
+		put('p8wasvisible',0)
+	end
+	switchui('multip16');
 else
-    msgbox('No analyses yet...')
+	msgbox('No analyses yet...')
 end
 
 function area_extract_Callback(~, ~, ~)
 handles=gethand;
 switchui('multip17');
 if retr('caluv')==1 && retr('calxy')==1
-    set(handles.area_para_select,'string', {'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Correlation coefficient [-]'});
+	set(handles.area_para_select,'string', {'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Correlation coefficient [-]'});
 else
-    set(handles.area_para_select,'string', {'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]'});
+	set(handles.area_para_select,'string', {'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]'});
 end
 
 function streamlines_Callback(~, ~, ~)
@@ -1782,10 +1794,10 @@ A=get (objects,'fontsize');
 A=cellfun(@(x) x+magnifier, A);
 
 for i=1:size(A,1)
-    try
-        set(objects(i), 'FontSize',A(i));
-    catch
-    end
+	try
+		set(objects(i), 'FontSize',A(i));
+	catch
+	end
 end
 
 
@@ -1806,63 +1818,63 @@ quickheight=retr('quickheight');
 %starts lower left
 %                            X    Y    WIDTH    HEIGHT
 if (panelheighttools+panelheightpanels+margin*0.25+margin*0.25) <= Figure_Size(4)
-    %panels + tools DO fit vertically
-    try
-        set (findobj('-regexp','Tag','multip'), 'position', [0+margin*0.5 Figure_Size(4)-panelheightpanels-margin*0.25 panelwidth panelheightpanels]);
-        set (handles.tools, 'position', [0+margin*0.5 0+margin*0.5 panelwidth panelheighttools]);
-        set (gca, 'position', [panelwidth+margin 0+margin Figure_Size(3)-panelwidth-margin Figure_Size(4)-margin-quickheight]);
-    catch ME
-        disp('PIVLAB: Unexpected figure resize behaviour. Please report this issue here:')
-        disp('https://groups.google.com/forum/#!forum/pivlab ')
-        disp(ME)
-    end
+	%panels + tools DO fit vertically
+	try
+		set (findobj('-regexp','Tag','multip'), 'position', [0+margin*0.5 Figure_Size(4)-panelheightpanels-margin*0.25 panelwidth panelheightpanels]);
+		set (handles.tools, 'position', [0+margin*0.5 0+margin*0.5 panelwidth panelheighttools]);
+		set (gca, 'position', [panelwidth+margin 0+margin Figure_Size(3)-panelwidth-margin Figure_Size(4)-margin-quickheight]);
+	catch ME
+		disp('PIVLAB: Unexpected figure resize behaviour. Please report this issue here:')
+		disp('https://groups.google.com/forum/#!forum/pivlab ')
+		disp(ME)
+	end
 else
-    %panels + tools DO NOT fit vertically
-    %--> put them side by side
-    try
-        set (findobj('-regexp','Tag','multip'), 'position', [0+margin*0.5 Figure_Size(4)-panelheightpanels-margin*0.25 panelwidth panelheightpanels]);
-        set (handles.tools, 'position', [0+margin*0.5+panelwidth+margin 0+margin*0.5 panelwidth panelheighttools]);
-        set (gca, 'position', [0+margin+panelwidth+margin+panelwidth 0+margin Figure_Size(3)-panelwidth-panelwidth-margin-margin Figure_Size(4)-margin-quickheight]);
-    catch ME
-        disp('PIVLAB: Unexpected figure resize behaviour. Please report this issue here:')
-        disp('https://groups.google.com/forum/#!forum/pivlab ')
-        disp(ME)
-    end
+	%panels + tools DO NOT fit vertically
+	%--> put them side by side
+	try
+		set (findobj('-regexp','Tag','multip'), 'position', [0+margin*0.5 Figure_Size(4)-panelheightpanels-margin*0.25 panelwidth panelheightpanels]);
+		set (handles.tools, 'position', [0+margin*0.5+panelwidth+margin 0+margin*0.5 panelwidth panelheighttools]);
+		set (gca, 'position', [0+margin+panelwidth+margin+panelwidth 0+margin Figure_Size(3)-panelwidth-panelwidth-margin-margin Figure_Size(4)-margin-quickheight]);
+	catch ME
+		disp('PIVLAB: Unexpected figure resize behaviour. Please report this issue here:')
+		disp('https://groups.google.com/forum/#!forum/pivlab ')
+		disp(ME)
+	end
 end
 if (panelheighttools+panelheightpanels+margin*0.25+margin*0.5) <= Figure_Size(4)-quickheight
-    try
-        set (handles.quick,'Visible','on');
-        set (handles.quick, 'position',[0+margin*0.5 0+margin*0.5+panelheighttools quickwidth quickheight])
-    catch ME
-        disp('PIVLAB: Unexpected figure resize behaviour. Please report this issue here:')
-        disp('https://groups.google.com/forum/#!forum/pivlab ')
-        disp(ME)
-    end
+	try
+		set (handles.quick,'Visible','on');
+		set (handles.quick, 'position',[0+margin*0.5 0+margin*0.5+panelheighttools quickwidth quickheight])
+	catch ME
+		disp('PIVLAB: Unexpected figure resize behaviour. Please report this issue here:')
+		disp('https://groups.google.com/forum/#!forum/pivlab ')
+		disp(ME)
+	end
 else % not enough space for quick access box
-    set (handles.quick,'Visible','off');
+	set (handles.quick,'Visible','off');
 end
 %% Other Callback
 
 function displogo(zoom)
 logoimg=imread('PIVlablogo.jpg');
 if zoom==1
-    h=image(logoimg+255, 'parent', gca);
-    axis image;
-    set(gca,'ytick',[])
-    set(gca,'xtick',[])
-    set(gca, 'xlim', [1 size(logoimg,2)]);
-    set(gca, 'ylim', [1 size(logoimg,1)]);
-    set(gca, 'ydir', 'reverse');
-    set(gca, 'xcolor', [0.94 0.94 0.94], 'ycolor', [0.94 0.94 0.94]) ;
-    for i=0:0.05:1
-        RGB2=logoimg*i;
-        try
-            set (h, 'cdata', RGB2);
-        catch %#ok<*CTCH>
-            disp('.')
-        end
-        drawnow expose;
-    end
+	h=image(logoimg+255, 'parent', gca);
+	axis image;
+	set(gca,'ytick',[])
+	set(gca,'xtick',[])
+	set(gca, 'xlim', [1 size(logoimg,2)]);
+	set(gca, 'ylim', [1 size(logoimg,1)]);
+	set(gca, 'ydir', 'reverse');
+	set(gca, 'xcolor', [0.94 0.94 0.94], 'ycolor', [0.94 0.94 0.94]) ;
+	for i=0:0.05:1
+		RGB2=logoimg*i;
+		try
+			set (h, 'cdata', RGB2);
+		catch %#ok<*CTCH>
+			disp('.')
+		end
+		drawnow expose;
+	end
 end
 %get(gca,'position')
 image(logoimg, 'parent', gca);
@@ -1880,19 +1892,19 @@ text (520,453,['   ' sprintf('\n') retr('update_msg')], 'fontsize', 10,'fontangl
 imgproctoolbox=retr('imgproctoolbox');
 put('imgproctoolbox',[]);
 if imgproctoolbox==0
-    text (90,200,'Image processing toolbox not found!', 'fontsize', 16, 'color', [1 0 0], 'backgroundcolor', [0 0 0]);
+	text (90,200,'Image processing toolbox not found!', 'fontsize', 16, 'color', [1 0 0], 'backgroundcolor', [0 0 0]);
 end
 
 function switchui (who)
 handles=guihandles(getappdata(0,'hgui')); %#ok<*NASGU>
 
 if get(handles.zoomon,'Value')==1
-    set(handles.zoomon,'Value',0);
-    zoomon_Callback(handles.zoomon)
+	set(handles.zoomon,'Value',0);
+	zoomon_Callback(handles.zoomon)
 end
 if get(handles.panon,'Value')==1
-    set(handles.panon,'Value',0);
-    panon_Callback(handles.panon)
+	set(handles.panon,'Value',0);
+	panon_Callback(handles.panon)
 end
 
 turnoff=findobj('-regexp','Tag','multip');
@@ -1924,37 +1936,37 @@ filepath=retr('filepath');
 %and so on...
 %checking if all files exist takes 0.5 s each time... need for optimization
 %e.g. do this only one time at the start.
-if isempty(filepath) == 0 && exist(filepath{selected},'file') ~=2
-    for i=1:size(filepath,1)
-        while exist(filepath{i,1},'file') ~=2
-            errordlg(['The image ' sprintf('\n') filepath{i,1} sprintf('\n') '(and probably some more...) could not be found.' sprintf('\n') 'Please select the path where the images are located.'],'File not found!','on')
-            uiwait
-            new_dir = uigetdir(pwd,'Please specify the path to all the images');
-            if new_dir==0
-                break
-            else
-                for j=i:size(filepath,1) %apply new path to all following imgs.
-                    if ispc==1
-                        zeichen=strfind(filepath{j,1},'\');
-                    else
-                        zeichen=strfind(filepath{j,1},'/');
-                    end
-                    currentobject=filepath{j,1};
-                    currentpath=currentobject(1:(zeichen(1,size(zeichen,2))));
-                    currentfile=currentobject(zeichen(1,size(zeichen,2))+1:end);
-                    if ispc==1
-                        filepath{j,1}=[new_dir '\' currentfile];
-                    else
-                        filepath{j,1}=[new_dir '/' currentfile];
-                    end
-                end
-            end
-            put('filepath',filepath);
-        end
-        if new_dir==0
-            break
-        end
-    end
+if retr('video_selection_done') == 0 && isempty(filepath) == 0 && exist(filepath{selected},'file') ~=2
+	for i=1:size(filepath,1)
+		while exist(filepath{i,1},'file') ~=2
+			errordlg(['The image ' sprintf('\n') filepath{i,1} sprintf('\n') '(and probably some more...) could not be found.' sprintf('\n') 'Please select the path where the images are located.'],'File not found!','on')
+			uiwait
+			new_dir = uigetdir(pwd,'Please specify the path to all the images');
+			if new_dir==0
+				break
+			else
+				for j=i:size(filepath,1) %apply new path to all following imgs.
+					if ispc==1
+						zeichen=strfind(filepath{j,1},'\');
+					else
+						zeichen=strfind(filepath{j,1},'/');
+					end
+					currentobject=filepath{j,1};
+					currentpath=currentobject(1:(zeichen(1,size(zeichen,2))));
+					currentfile=currentobject(zeichen(1,size(zeichen,2))+1:end);
+					if ispc==1
+						filepath{j,1}=[new_dir '\' currentfile];
+					else
+						filepath{j,1}=[new_dir '/' currentfile];
+					end
+				end
+			end
+			put('filepath',filepath);
+		end
+		if new_dir==0
+			break
+		end
+	end
 end
 
 currentframe=2*floor(get(handles.fileselector, 'value'))-1;
@@ -1962,360 +1974,391 @@ currentframe=2*floor(get(handles.fileselector, 'value'))-1;
 displaywhat=retr('displaywhat');
 delete(findobj('tag', 'derivhint'));
 if size(filepath,1)>0
-    if get(handles.zoomon,'Value')==1
-        set(handles.zoomon,'Value',0);
-        zoomon_Callback(handles.zoomon)
-    end
-    if get(handles.panon,'Value')==1
-        set(handles.panon,'Value',0);
-        panon_Callback(handles.panon)
-    end
-    xzoomlimit=retr('xzoomlimit');
-    yzoomlimit=retr('yzoomlimit');
-
-    derived=retr('derived');
-    if isempty(derived)==0   %derivatives were calculated
-        %derived=retr('derived');
-        %1=vectors only
-        if displaywhat==1 %vectors only
-            [~,~,ext] = fileparts(filepath{selected});
-            if strcmp(ext,'.b16')
-                currentimage=f_readB16(filepath{selected});
-            else
-                currentimage=imread(filepath{selected});
-            end
-            
-            if get(handles.enhance_images, 'Value') == 0
-                image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
-            else
-                if size(currentimage,3)==1 % grayscale image
-                    image(imadjust(currentimage), 'parent',gca, 'cdatamapping', 'scaled');
-                else
-                    image(imadjust(currentimage,stretchlim(rgb2gray(currentimage))), 'parent',gca, 'cdatamapping', 'scaled');
-                end
-            end
-            
-            colormap('gray');
-            vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
-            %vectorcolor='g';
-            %end
-        else %displaywhat>1
-            
-            if size(derived,2)>=(currentframe+1)/2 && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
-                currentimage=derived{displaywhat-1,(currentframe+1)/2};
-                %is currentimage 3d? That would cause problems.-....
-                %pcolor(resultslist{1,(currentframe+1)/2},resultslist{2,(currentframe+1)/2},currentimage);shading interp;
-                if displaywhat ~=11 % 11 ist vector direction
-                    image(rescale_maps(currentimage,0), 'parent',gca, 'cdatamapping', 'scaled');
-                else
-                    image(rescale_maps(currentimage,1), 'parent',gca, 'cdatamapping', 'scaled');
-                end
-                if displaywhat ~=10 %10 is LIC
-                    avail_maps=get(handles.colormap_choice,'string');
-                    selected_index=get(handles.colormap_choice,'value');
-                    if selected_index == 4 %HochschuleBremen map
-                        load hsbmap.mat;
-                        colormap(hsb);
-                    elseif selected_index== 1 %parula
-                        load parula.mat;
-                        colormap (parula);
-                    else
-                        colormap(avail_maps{selected_index});
-                    end
-                else
-                    colormap('gray');
-                end
-                if get(handles.autoscaler,'value')==1
-                    minscale=min(min(currentimage));
-                    maxscale=max(max(currentimage));
-                    set (handles.mapscale_min, 'string', num2str(minscale))
-                    set (handles.mapscale_max, 'string', num2str(maxscale))
-                else
-                    minscale=str2double(get(handles.mapscale_min, 'string'));
-                    maxscale=str2double(get(handles.mapscale_max, 'string'));
-                end
-                caxis([minscale maxscale])
-                vectorcolor=[str2double(get(handles.validdr,'string')) str2double(get(handles.validdg,'string')) str2double(get(handles.validdb,'string'))];
-                %vectorcolor='k';
-                if get(handles.displ_colorbar,'value')==1
-                    name=get(handles.derivchoice,'string');
-                    posichoice = get(handles.colorbarpos,'String');
-                    colochoice=get(handles.colorbarcolor,'String');
-                    coloobj=colorbar (posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')});
-                    
-                    if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
-                        set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
-                        ylabel(coloobj,name{retr('displaywhat')},'fontsize',9,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
-                    end
-                    if strcmp(posichoice{get(handles.colorbarpos,'Value')},'North')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'South')==1
-                        set(coloobj,'XTickLabel',num2str(get(coloobj,'XTick')','%5.5g'))
-                        xlabel(coloobj,name{retr('displaywhat')},'fontsize',11,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
-                    end
-                end
-            else %no deriv available
-                [~,~,ext] = fileparts(filepath{selected});
-                if strcmp(ext,'.b16')
-                    currentimage=f_readB16(filepath{selected});
-                else
-                    currentimage=imread(filepath{selected});
-                end
-                if get(handles.enhance_images, 'Value') == 0
-                    image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
-                else
-                    if size(currentimage,3)==1 % grayscale image
-                        image(imadjust(currentimage), 'parent',gca, 'cdatamapping', 'scaled');
-                    else
-                        image(imadjust(currentimage,stretchlim(rgb2gray(currentimage))), 'parent',gca, 'cdatamapping', 'scaled');
-                    end
-                end
-                colormap('gray');
-                vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
-                %vectorcolor='g';
-                text(10,10,'This parameter needs to be calculated for this frame first. Go to Plot -> Derive Parameters and click "Apply to current frame".','color','r','fontsize',9, 'BackgroundColor', 'k', 'tag', 'derivhint')
-            end
-        end
-    else %not in derivatives panel
-        try
-            [~,~,ext] = fileparts(filepath{selected});
-            if strcmp(ext,'.b16')
-                currentimage=f_readB16(filepath{selected});
-            else
-                currentimage=imread(filepath{selected});
-            end
-            
-        catch
+	if get(handles.zoomon,'Value')==1
+		set(handles.zoomon,'Value',0);
+		zoomon_Callback(handles.zoomon)
+	end
+	if get(handles.panon,'Value')==1
+		set(handles.panon,'Value',0);
+		panon_Callback(handles.panon)
+	end
+	xzoomlimit=retr('xzoomlimit');
+	yzoomlimit=retr('yzoomlimit');
+	
+	derived=retr('derived');
+	if isempty(derived)==0   %derivatives were calculated
+		%derived=retr('derived');
+		%1=vectors only
+		if displaywhat==1 %vectors only
+			if retr('video_selection_done') == 0
+				[~,~,ext] = fileparts(filepath{selected});
+				if strcmp(ext,'.b16')
+					currentimage=f_readB16(filepath{selected});
+				else
+					currentimage=imread(filepath{selected});
+				end
+			else
+				video_reader_object = retr('video_reader_object');
+				video_frame_selection=retr('video_frame_selection');
+				currentimage = read(video_reader_object,video_frame_selection(selected));
+			end
+			if get(handles.enhance_images, 'Value') == 0
+				image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
+			else
+				if size(currentimage,3)==1 % grayscale image
+					image(imadjust(currentimage), 'parent',gca, 'cdatamapping', 'scaled');
+				else
+					image(imadjust(currentimage,stretchlim(rgb2gray(currentimage))), 'parent',gca, 'cdatamapping', 'scaled');
+				end
+			end
+			
+			colormap('gray');
+			vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
+			%vectorcolor='g';
+			%end
+		else %displaywhat>1
+			
+			if size(derived,2)>=(currentframe+1)/2 && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
+				currentimage=derived{displaywhat-1,(currentframe+1)/2};
+				%is currentimage 3d? That would cause problems.-....
+				%pcolor(resultslist{1,(currentframe+1)/2},resultslist{2,(currentframe+1)/2},currentimage);shading interp;
+				if displaywhat ~=11 % 11 ist vector direction
+					image(rescale_maps(currentimage,0), 'parent',gca, 'cdatamapping', 'scaled');
+				else
+					image(rescale_maps(currentimage,1), 'parent',gca, 'cdatamapping', 'scaled');
+				end
+				if displaywhat ~=10 %10 is LIC
+					avail_maps=get(handles.colormap_choice,'string');
+					selected_index=get(handles.colormap_choice,'value');
+					if selected_index == 4 %HochschuleBremen map
+						load hsbmap.mat;
+						colormap(hsb);
+					elseif selected_index== 1 %parula
+						load parula.mat;
+						colormap (parula);
+					else
+						colormap(avail_maps{selected_index});
+					end
+				else
+					colormap('gray');
+				end
+				if get(handles.autoscaler,'value')==1
+					minscale=min(min(currentimage));
+					maxscale=max(max(currentimage));
+					set (handles.mapscale_min, 'string', num2str(minscale))
+					set (handles.mapscale_max, 'string', num2str(maxscale))
+				else
+					minscale=str2double(get(handles.mapscale_min, 'string'));
+					maxscale=str2double(get(handles.mapscale_max, 'string'));
+				end
+				caxis([minscale maxscale])
+				vectorcolor=[str2double(get(handles.validdr,'string')) str2double(get(handles.validdg,'string')) str2double(get(handles.validdb,'string'))];
+				%vectorcolor='k';
+				if get(handles.displ_colorbar,'value')==1
+					name=get(handles.derivchoice,'string');
+					posichoice = get(handles.colorbarpos,'String');
+					colochoice=get(handles.colorbarcolor,'String');
+					coloobj=colorbar (posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')});
+					
+					if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
+						set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
+						ylabel(coloobj,name{retr('displaywhat')},'fontsize',9,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
+					end
+					if strcmp(posichoice{get(handles.colorbarpos,'Value')},'North')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'South')==1
+						set(coloobj,'XTickLabel',num2str(get(coloobj,'XTick')','%5.5g'))
+						xlabel(coloobj,name{retr('displaywhat')},'fontsize',11,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
+					end
+				end
+			else %no deriv available
+				if retr('video_selection_done') == 0
+					[~,~,ext] = fileparts(filepath{selected});
+					if strcmp(ext,'.b16')
+						currentimage=f_readB16(filepath{selected});
+					else
+						currentimage=imread(filepath{selected});
+					end
+				else
+					video_reader_object = retr('video_reader_object');
+					video_frame_selection=retr('video_frame_selection');
+					currentimage = read(video_reader_object,video_frame_selection(selected));
+				end
+				if get(handles.enhance_images, 'Value') == 0
+					image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
+				else
+					if size(currentimage,3)==1 % grayscale image
+						image(imadjust(currentimage), 'parent',gca, 'cdatamapping', 'scaled');
+					else
+						image(imadjust(currentimage,stretchlim(rgb2gray(currentimage))), 'parent',gca, 'cdatamapping', 'scaled');
+					end
+				end
+				colormap('gray');
+				vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
+				%vectorcolor='g';
+				text(10,10,'This parameter needs to be calculated for this frame first. Go to Plot -> Derive Parameters and click "Apply to current frame".','color','r','fontsize',9, 'BackgroundColor', 'k', 'tag', 'derivhint')
+			end
+		end
+	else %not in derivatives panel
+		%try
+		if retr('video_selection_done') == 0
+			[~,~,ext] = fileparts(filepath{selected});
+			if strcmp(ext,'.b16')
+				currentimage=f_readB16(filepath{selected});
+			else
+				currentimage=imread(filepath{selected});
+			end
+		else
+			video_reader_object = retr('video_reader_object');
+			video_frame_selection=retr('video_frame_selection');
+			try
+				currentimage = read(video_reader_object,video_frame_selection(selected));
+			catch
+			end
+		end
+		
+		%{
+            catch
             disp(['Error: ' filepath{selected} ' --> Image could not be found!']);
             resultslist=retr('resultslist');
             maximgx=max(max(resultslist{1,1}))+min(min(resultslist{1,1}));
             maximgy=max(max(resultslist{2,1}))+min(min(resultslist{2,1}));
             currentimage=zeros(maximgy,maximgx);
         end
-        if get(handles.enhance_images, 'Value') == 0
-            image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
-        else
-            if size(currentimage,3)==1 % grayscale image
-                image(imadjust(currentimage), 'parent',gca, 'cdatamapping', 'scaled');
-            else
-                image(imadjust(currentimage,stretchlim(rgb2gray(currentimage))), 'parent',gca, 'cdatamapping', 'scaled');
-            end
-        end
-        
-        colormap('gray');
-        vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
-        %vectorcolor='g';
-    end
-    axis image;
-    set(gca,'ytick',[])
-    set(gca,'xtick',[])
-    filename=retr('filename');
-    ismean=retr('ismean');
-    if size(ismean,1)>=(currentframe+1)/2
-        if ismean((currentframe+1)/2,1) ==1
-            currentwasmean=1;
-        else
-            currentwasmean=0;
-        end
-    else
-        currentwasmean=0;
-    end
-    
-    if currentwasmean==1
-        set (handles.filenameshow,'BackgroundColor',[0.65 0.65 1]);
-    else
-        set (handles.filenameshow,'BackgroundColor',[0.9412 0.9412 0.9412]);
-    end
-    
-    set (handles.filenameshow, 'string', ['Frame (' int2str(floor(get(handles.fileselector, 'value'))) '/' int2str(size(filepath,1)/2) '):' sprintf('\n') filename{selected}]);
-    set (handles.filenameshow, 'tooltipstring', filepath{selected});
-    if strncmp(get(handles.multip01, 'visible'), 'on',2);
-        set(handles.imsize, 'string', ['Image size: ' int2str(size(currentimage,2)) '*' int2str(size(currentimage,1)) 'px' ])
-    end
-    maskiererx=retr('maskiererx');
-    if size(maskiererx,2)>=currentframe
-        ximask=maskiererx{1,currentframe};
-        if size(ximask,1)>1
-            if displaywhat == 1 %%when vectors only are display: transparent mask
-                dispMASK(1-str2num(get(handles.masktransp,'String'))/100)
-            else %otherwise: 100% opaque mask.
-                %dispMASK(1)
-                dispMASK(1-str2num(get(handles.masktransp,'String'))/100)
-            end
-        end
-    end
-    roirect=retr('roirect');
-    if size(roirect,2)>1
-        dispROI
-    end
-    resultslist=retr('resultslist');
-    delete(findobj('tag', 'smoothhint'));
-    %manualmarkers
-    if get(handles.displmarker,'value')==1
-        manmarkersX=retr('manmarkersX');
-        manmarkersY=retr('manmarkersY');
-        delete(findobj('tag','manualmarker'));
-        if numel(manmarkersX)>0
-            hold on
-            plot(manmarkersX,manmarkersY, 'o','MarkerEdgeColor','k','MarkerFaceColor',[.2 .2 1], 'MarkerSize',9, 'tag', 'manualmarker');
-            plot(manmarkersX,manmarkersY, '*','MarkerEdgeColor','w', 'tag', 'manualmarker');
-            hold off
-        end
-    end
-    
-    
-    if size(resultslist,2)>=(currentframe+1)/2 && numel(resultslist{1,(currentframe+1)/2})>0
-        x=resultslist{1,(currentframe+1)/2};
-        y=resultslist{2,(currentframe+1)/2};
-        if size(resultslist,1)>6 %filtered exists
-            if size(resultslist,1)>10 && numel(resultslist{10,(currentframe+1)/2}) > 0 %smoothed exists
-                u=resultslist{10,(currentframe+1)/2};
-                v=resultslist{11,(currentframe+1)/2};
-                typevector=resultslist{9,(currentframe+1)/2};
-                text(3,size(currentimage,1)-4, 'Smoothed dataset','tag', 'smoothhint', 'backgroundcolor', 'k', 'color', 'y','fontsize',6);
-                if numel(typevector)==0 %happens if user smoothes sth without NaN and without validation
-                    typevector=resultslist{5,(currentframe+1)/2};
-                end
-            else
-                u=resultslist{7,(currentframe+1)/2};
-                if size(u,1)>1
-                    v=resultslist{8,(currentframe+1)/2};
-                    typevector=resultslist{9,(currentframe+1)/2};
-                else %filter was applied for other frames but not for this one
-                    u=resultslist{3,(currentframe+1)/2};
-                    v=resultslist{4,(currentframe+1)/2};
-                    typevector=resultslist{5,(currentframe+1)/2};
-                end
-            end
-        else
-            u=resultslist{3,(currentframe+1)/2};
-            v=resultslist{4,(currentframe+1)/2};
-            typevector=resultslist{5,(currentframe+1)/2};
-        end
-        if get(handles.highp_vectors, 'value')==1 & strncmp(get(handles.multip08, 'visible'), 'on',2) %#ok<AND2>
-            strength=54-round(get(handles.highpass_strength, 'value'));
-            h = fspecial('gaussian',strength,strength) ;
-            h2= fspecial('gaussian',3,3);
-            ubg=imfilter(u,h,'replicate');
-            vbg=imfilter(v,h,'replicate');
-            ufilt=u-ubg;
-            vfilt=v-vbg;
-            u=imfilter(ufilt,h2,'replicate');
-            v=imfilter(vfilt,h2,'replicate');
-        end
-        autoscale_vec=get(handles.autoscale_vec, 'Value');
-        vecskip=str2double(get(handles.nthvect,'String'));
-        if autoscale_vec == 1
-            autoscale=1;
-            %from quiver autoscale function:
-            if min(size(x))==1, n=sqrt(numel(x)); m=n; else; [m,n]=size(x); end
-            delx = diff([min(x(:)) max(x(:))])/n;
-            dely = diff([min(y(:)) max(y(:))])/m;
-            del = delx.^2 + dely.^2;
-            if del>0
-                len = sqrt((u.^2 + v.^2)/del);
-                maxlen = max(len(:));
-            else
-                maxlen = 0;
-            end
-            if maxlen>0
-                autoscale = autoscale/ maxlen * vecskip;
-            else
-                autoscale = autoscale; %#ok<*ASGSL>
-            end
-            vecscale=autoscale;
-        else %autoscale off
-            vecscale=str2num(get(handles.vectorscale,'string')); %#ok<*ST2NM>
-        end
-        hold on;
-        
-        vectorcolorintp=[str2double(get(handles.interpr,'string')) str2double(get(handles.interpg,'string')) str2double(get(handles.interpb,'string'))];
-        if vecskip==1
-            q=quiver(x(typevector==1),y(typevector==1),...
-                (u(typevector==1)-(retr('subtr_u')/retr('caluv')))*vecscale,...
-                (v(typevector==1)-(retr('subtr_v')/retr('caluv')))*vecscale,...
-                'Color', vectorcolor,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
-            q2=quiver(x(typevector==2),y(typevector==2),...
-                (u(typevector==2)-(retr('subtr_u')/retr('caluv')))*vecscale,...
-                (v(typevector==2)-(retr('subtr_v')/retr('caluv')))*vecscale,...
-                'Color', vectorcolorintp,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
-            scatter(x(typevector==0),y(typevector==0),'rx') %masked
-        else
-            typevector_reduced=typevector(1:vecskip:end,1:vecskip:end);
-            x_reduced=x(1:vecskip:end,1:vecskip:end);
-            y_reduced=y(1:vecskip:end,1:vecskip:end);
-            u_reduced=u(1:vecskip:end,1:vecskip:end);
-            v_reduced=v(1:vecskip:end,1:vecskip:end);
-            q=quiver(x_reduced(typevector_reduced==1),y_reduced(typevector_reduced==1),...
-                (u_reduced(typevector_reduced==1)-(retr('subtr_u')/retr('caluv')))*vecscale,...
-                (v_reduced(typevector_reduced==1)-(retr('subtr_v')/retr('caluv')))*vecscale,...
-                'Color', vectorcolor,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
-            q2=quiver(x_reduced(typevector_reduced==2),y_reduced(typevector_reduced==2),...
-                (u_reduced(typevector_reduced==2)-(retr('subtr_u')/retr('caluv')))*vecscale,...
-                (v_reduced(typevector_reduced==2)-(retr('subtr_v')/retr('caluv')))*vecscale,...
-                'Color', vectorcolorintp,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
-            scatter(x_reduced(typevector_reduced==0),y_reduced(typevector_reduced==0),'rx') %masked
-        end
-        hold off;
-        %streamlines:
-        streamlinesX=retr('streamlinesX');
-        streamlinesY=retr('streamlinesY');
-        delete(findobj('tag','streamline'));
-        if numel(streamlinesX)>0
-            ustream=u*retr('caluv')-retr('subtr_u');
-            vstream=v*retr('caluv')-retr('subtr_v');
-            ustream(typevector==0)=nan;
-            vstream(typevector==0)=nan;
-            h=streamline(mmstream2(x,y,ustream,vstream,streamlinesX,streamlinesY,'on'));
-            set (h,'tag','streamline');
-            contents = get(handles.streamlcolor,'String');
-            set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')});
-        end
-        
-        if verLessThan('matlab','8.4')
-            set(q, 'ButtonDownFcn', @veclick, 'hittestarea', 'on');
-            set(q2, 'ButtonDownFcn', @veclick, 'hittestarea', 'on');
-        else
-            % >R2014a
-            set(q, 'ButtonDownFcn', @veclick, 'PickableParts', 'visible');
-            set(q2, 'ButtonDownFcn', @veclick, 'PickableParts', 'visible');
-        end
-        
-        if strncmp(get(handles.multip14, 'visible'), 'on',2); %statistics panel visible
-            update_Stats (x,y,u,v);
-        end
-        if strncmp(get(handles.multip06, 'visible'), 'on',2); %validation panel visible
-            manualdeletion=retr('manualdeletion');
-            frame=floor(get(handles.fileselector, 'value'));
-            framemanualdeletion=[];
-            if numel(manualdeletion)>0
-                if size(manualdeletion,2)>=frame
-                    if isempty(manualdeletion{1,frame}) ==0
-                        framemanualdeletion=manualdeletion{frame};
-                    end
-                end
-            end
-            if isempty(framemanualdeletion)==0
-                
-                
-                hold on;
-                for i=1:size(framemanualdeletion,1)
-                    scatter (x(framemanualdeletion(i,1),framemanualdeletion(i,2)),y(framemanualdeletion(i,1),framemanualdeletion(i,2)), 'rx', 'tag','manualdot')
-                end
-                hold off;
-            end
-        end
-    end
-    
-    if isempty(xzoomlimit)==0
-        set(gca,'xlim',xzoomlimit)
-        set(gca,'ylim',yzoomlimit)
-    end
-    if verLessThan('matlab','8.4')
-        %do nothing
-    else
-        % >R2014a
-        set(gca,'YlimMode','manual');set(gca,'XlimMode','manual') %in r2014b, vectors are not clipped when set to auto... (?!?)
-    end
-    drawnow;
+		%}
+		if get(handles.enhance_images, 'Value') == 0
+			image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
+		else
+			try % if user presses 'Toggle' button too fast, a strange error occurs
+				if size(currentimage,3)==1 % grayscale image
+					image(imadjust(currentimage), 'parent',gca, 'cdatamapping', 'scaled');
+				else
+					image(imadjust(currentimage,stretchlim(rgb2gray(currentimage))), 'parent',gca, 'cdatamapping', 'scaled');
+				end
+			catch
+			end
+		end
+		
+		colormap('gray');
+		vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
+		%vectorcolor='g';
+	end
+	axis image;
+	set(gca,'ytick',[])
+	set(gca,'xtick',[])
+	filename=retr('filename');
+	ismean=retr('ismean');
+	if size(ismean,1)>=(currentframe+1)/2
+		if ismean((currentframe+1)/2,1) ==1
+			currentwasmean=1;
+		else
+			currentwasmean=0;
+		end
+	else
+		currentwasmean=0;
+	end
+	
+	if currentwasmean==1
+		set (handles.filenameshow,'BackgroundColor',[0.65 0.65 1]);
+	else
+		set (handles.filenameshow,'BackgroundColor',[0.9412 0.9412 0.9412]);
+	end
+	if retr('video_selection_done') == 0
+		set (handles.filenameshow, 'string', ['Frame (' int2str(floor(get(handles.fileselector, 'value'))) '/' int2str(size(filepath,1)/2) '):' sprintf('\n') filename{selected}]);
+		set (handles.filenameshow, 'tooltipstring', filepath{selected});
+	else %video loaded
+		video_frame_selection=retr('video_frame_selection');
+		set (handles.filenameshow, 'string', ['Frame (' int2str(floor(get(handles.fileselector, 'value'))) '/' int2str(size(filepath,1)/2) '):' sprintf('\n') filename{selected}]);
+		%set (handles.filenameshow, 'string', ['Frame (' int2str(floor(get(handles.fileselector, 'value'))) '/' int2str(numel(video_frame_selection)/2) '):' sprintf('\n') filename]);
+		set (handles.filenameshow, 'tooltipstring', filepath{selected});
+	end
+	if strncmp(get(handles.multip01, 'visible'), 'on',2)
+		set(handles.imsize, 'string', ['Image size: ' int2str(size(currentimage,2)) '*' int2str(size(currentimage,1)) 'px' ])
+	end
+	maskiererx=retr('maskiererx');
+	if size(maskiererx,2)>=currentframe
+		ximask=maskiererx{1,currentframe};
+		if size(ximask,1)>1
+			if displaywhat == 1 %%when vectors only are display: transparent mask
+				dispMASK(1-str2num(get(handles.masktransp,'String'))/100)
+			else %otherwise: 100% opaque mask.
+				%dispMASK(1)
+				dispMASK(1-str2num(get(handles.masktransp,'String'))/100)
+			end
+		end
+	end
+	roirect=retr('roirect');
+	if size(roirect,2)>1
+		dispROI
+	end
+	resultslist=retr('resultslist');
+	delete(findobj('tag', 'smoothhint'));
+	%manualmarkers
+	if get(handles.displmarker,'value')==1
+		manmarkersX=retr('manmarkersX');
+		manmarkersY=retr('manmarkersY');
+		delete(findobj('tag','manualmarker'));
+		if numel(manmarkersX)>0
+			hold on
+			plot(manmarkersX,manmarkersY, 'o','MarkerEdgeColor','k','MarkerFaceColor',[.2 .2 1], 'MarkerSize',9, 'tag', 'manualmarker');
+			plot(manmarkersX,manmarkersY, '*','MarkerEdgeColor','w', 'tag', 'manualmarker');
+			hold off
+		end
+	end
+	
+	
+	if size(resultslist,2)>=(currentframe+1)/2 && numel(resultslist{1,(currentframe+1)/2})>0
+		x=resultslist{1,(currentframe+1)/2};
+		y=resultslist{2,(currentframe+1)/2};
+		if size(resultslist,1)>6 %filtered exists
+			if size(resultslist,1)>10 && numel(resultslist{10,(currentframe+1)/2}) > 0 %smoothed exists
+				u=resultslist{10,(currentframe+1)/2};
+				v=resultslist{11,(currentframe+1)/2};
+				typevector=resultslist{9,(currentframe+1)/2};
+				%text(3,size(currentimage,1)-4, 'Smoothed dataset','tag', 'smoothhint', 'backgroundcolor', 'k', 'color', 'y','fontsize',6);
+				if numel(typevector)==0 %happens if user smoothes sth without NaN and without validation
+					typevector=resultslist{5,(currentframe+1)/2};
+				end
+			else
+				u=resultslist{7,(currentframe+1)/2};
+				if size(u,1)>1
+					v=resultslist{8,(currentframe+1)/2};
+					typevector=resultslist{9,(currentframe+1)/2};
+				else %filter was applied for other frames but not for this one
+					u=resultslist{3,(currentframe+1)/2};
+					v=resultslist{4,(currentframe+1)/2};
+					typevector=resultslist{5,(currentframe+1)/2};
+				end
+			end
+		else
+			u=resultslist{3,(currentframe+1)/2};
+			v=resultslist{4,(currentframe+1)/2};
+			typevector=resultslist{5,(currentframe+1)/2};
+		end
+		if get(handles.highp_vectors, 'value')==1 & strncmp(get(handles.multip08, 'visible'), 'on',2) %#ok<AND2>
+			strength=54-round(get(handles.highpass_strength, 'value'));
+			h = fspecial('gaussian',strength,strength) ;
+			h2= fspecial('gaussian',3,3);
+			ubg=imfilter(u,h,'replicate');
+			vbg=imfilter(v,h,'replicate');
+			ufilt=u-ubg;
+			vfilt=v-vbg;
+			u=imfilter(ufilt,h2,'replicate');
+			v=imfilter(vfilt,h2,'replicate');
+		end
+		autoscale_vec=get(handles.autoscale_vec, 'Value');
+		vecskip=str2double(get(handles.nthvect,'String'));
+		if autoscale_vec == 1
+			autoscale=1;
+			%from quiver autoscale function:
+			if min(size(x))==1, n=sqrt(numel(x)); m=n; else; [m,n]=size(x); end
+			delx = diff([min(x(:)) max(x(:))])/n;
+			dely = diff([min(y(:)) max(y(:))])/m;
+			del = delx.^2 + dely.^2;
+			if del>0
+				len = sqrt((u.^2 + v.^2)/del);
+				maxlen = max(len(:));
+			else
+				maxlen = 0;
+			end
+			if maxlen>0
+				autoscale = autoscale/ maxlen * vecskip;
+			else
+				autoscale = autoscale; %#ok<*ASGSL>
+			end
+			vecscale=autoscale;
+		else %autoscale off
+			vecscale=str2num(get(handles.vectorscale,'string')); %#ok<*ST2NM>
+		end
+		hold on;
+		
+		vectorcolorintp=[str2double(get(handles.interpr,'string')) str2double(get(handles.interpg,'string')) str2double(get(handles.interpb,'string'))];
+		if vecskip==1
+			q=quiver(x(typevector==1),y(typevector==1),...
+				(u(typevector==1)-(retr('subtr_u')/retr('caluv')))*vecscale,...
+				(v(typevector==1)-(retr('subtr_v')/retr('caluv')))*vecscale,...
+				'Color', vectorcolor,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
+			q2=quiver(x(typevector==2),y(typevector==2),...
+				(u(typevector==2)-(retr('subtr_u')/retr('caluv')))*vecscale,...
+				(v(typevector==2)-(retr('subtr_v')/retr('caluv')))*vecscale,...
+				'Color', vectorcolorintp,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
+			scatter(x(typevector==0),y(typevector==0),'rx') %masked
+		else
+			typevector_reduced=typevector(1:vecskip:end,1:vecskip:end);
+			x_reduced=x(1:vecskip:end,1:vecskip:end);
+			y_reduced=y(1:vecskip:end,1:vecskip:end);
+			u_reduced=u(1:vecskip:end,1:vecskip:end);
+			v_reduced=v(1:vecskip:end,1:vecskip:end);
+			q=quiver(x_reduced(typevector_reduced==1),y_reduced(typevector_reduced==1),...
+				(u_reduced(typevector_reduced==1)-(retr('subtr_u')/retr('caluv')))*vecscale,...
+				(v_reduced(typevector_reduced==1)-(retr('subtr_v')/retr('caluv')))*vecscale,...
+				'Color', vectorcolor,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
+			q2=quiver(x_reduced(typevector_reduced==2),y_reduced(typevector_reduced==2),...
+				(u_reduced(typevector_reduced==2)-(retr('subtr_u')/retr('caluv')))*vecscale,...
+				(v_reduced(typevector_reduced==2)-(retr('subtr_v')/retr('caluv')))*vecscale,...
+				'Color', vectorcolorintp,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
+			scatter(x_reduced(typevector_reduced==0),y_reduced(typevector_reduced==0),'rx') %masked
+		end
+		hold off;
+		%streamlines:
+		streamlinesX=retr('streamlinesX');
+		streamlinesY=retr('streamlinesY');
+		delete(findobj('tag','streamline'));
+		if numel(streamlinesX)>0
+			ustream=u*retr('caluv')-retr('subtr_u');
+			vstream=v*retr('caluv')-retr('subtr_v');
+			ustream(typevector==0)=nan;
+			vstream(typevector==0)=nan;
+			h=streamline(mmstream2(x,y,ustream,vstream,streamlinesX,streamlinesY,'on'));
+			set (h,'tag','streamline');
+			contents = get(handles.streamlcolor,'String');
+			set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')});
+		end
+		
+		if verLessThan('matlab','8.4')
+			set(q, 'ButtonDownFcn', @veclick, 'hittestarea', 'on');
+			set(q2, 'ButtonDownFcn', @veclick, 'hittestarea', 'on');
+		else
+			% >R2014a
+			set(q, 'ButtonDownFcn', @veclick, 'PickableParts', 'visible');
+			set(q2, 'ButtonDownFcn', @veclick, 'PickableParts', 'visible');
+		end
+		
+		if strncmp(get(handles.multip14, 'visible'), 'on',2); %statistics panel visible
+			update_Stats (x,y,u,v);
+		end
+		if strncmp(get(handles.multip06, 'visible'), 'on',2); %validation panel visible
+			manualdeletion=retr('manualdeletion');
+			frame=floor(get(handles.fileselector, 'value'));
+			framemanualdeletion=[];
+			if numel(manualdeletion)>0
+				if size(manualdeletion,2)>=frame
+					if isempty(manualdeletion{1,frame}) ==0
+						framemanualdeletion=manualdeletion{frame};
+					end
+				end
+			end
+			if isempty(framemanualdeletion)==0
+				
+				
+				hold on;
+				for i=1:size(framemanualdeletion,1)
+					scatter (x(framemanualdeletion(i,1),framemanualdeletion(i,2)),y(framemanualdeletion(i,1),framemanualdeletion(i,2)), 'rx', 'tag','manualdot')
+				end
+				hold off;
+			end
+		end
+	end
+	
+	if isempty(xzoomlimit)==0
+		set(gca,'xlim',xzoomlimit)
+		set(gca,'ylim',yzoomlimit)
+	end
+	if verLessThan('matlab','8.4')
+		%do nothing
+	else
+		% >R2014a
+		set(gca,'YlimMode','manual');set(gca,'XlimMode','manual') %in r2014b, vectors are not clipped when set to auto... (?!?)
+	end
+	drawnow;
 end
 
 function update_Stats(x,y,u,v)
@@ -2327,11 +2370,11 @@ y=reshape(y,size(y,1)*size(y,2),1);
 u=reshape(u,size(u,1)*size(u,2),1);
 v=reshape(v,size(v,1)*size(v,2),1);
 if retr('caluv')==1 && retr('calxy')==1
-    set (handles.meanu,'string', [num2str(nanmean(u*caluv)) ' � ' num2str(nanstd(u*caluv)) ' [px/frame]'])
-    set (handles.meanv,'string', [num2str(nanmean(v*caluv)) ' � ' num2str(nanstd(v*caluv)) ' [px/frame]'])
+	set (handles.meanu,'string', [num2str(nanmean(u*caluv)) ' � ' num2str(nanstd(u*caluv)) ' [px/frame]'])
+	set (handles.meanv,'string', [num2str(nanmean(v*caluv)) ' � ' num2str(nanstd(v*caluv)) ' [px/frame]'])
 else
-    set (handles.meanu,'string', [num2str(nanmean(u*caluv)) ' � ' num2str(nanstd(u*caluv)) ' [m/s]'])
-    set (handles.meanv,'string', [num2str(nanmean(v*caluv)) ' � ' num2str(nanstd(v*caluv)) ' [m/s]'])
+	set (handles.meanu,'string', [num2str(nanmean(u*caluv)) ' � ' num2str(nanstd(u*caluv)) ' [m/s]'])
+	set (handles.meanv,'string', [num2str(nanmean(v*caluv)) ' � ' num2str(nanstd(v*caluv)) ' [m/s]'])
 end
 
 function veclick(~,~)
@@ -2352,72 +2395,72 @@ info(1,1)=imagey(1,1);
 info(1,2)=imagex(1,1);
 
 if size(resultslist,1)>6 %filtered exists
-    if size(resultslist,1)>10 && numel(resultslist{10,(currentframe+1)/2}) > 0 %smoothed exists
-        u=resultslist{10,(currentframe+1)/2};
-        v=resultslist{11,(currentframe+1)/2};
-        typevector=resultslist{9,(currentframe+1)/2};
-        if numel(typevector)==0 %happens if user smoothes sth without NaN and without validation
-            typevector=resultslist{5,(currentframe+1)/2};
-        end
-    else
-        u=resultslist{7,(currentframe+1)/2};
-        if size(u,1)>1
-            v=resultslist{8,(currentframe+1)/2};
-            typevector=resultslist{9,(currentframe+1)/2};
-        else %filter was applied for other frames but not for this one
-            u=resultslist{3,(currentframe+1)/2};
-            v=resultslist{4,(currentframe+1)/2};
-            typevector=resultslist{5,(currentframe+1)/2};
-        end
-    end
+	if size(resultslist,1)>10 && numel(resultslist{10,(currentframe+1)/2}) > 0 %smoothed exists
+		u=resultslist{10,(currentframe+1)/2};
+		v=resultslist{11,(currentframe+1)/2};
+		typevector=resultslist{9,(currentframe+1)/2};
+		if numel(typevector)==0 %happens if user smoothes sth without NaN and without validation
+			typevector=resultslist{5,(currentframe+1)/2};
+		end
+	else
+		u=resultslist{7,(currentframe+1)/2};
+		if size(u,1)>1
+			v=resultslist{8,(currentframe+1)/2};
+			typevector=resultslist{9,(currentframe+1)/2};
+		else %filter was applied for other frames but not for this one
+			u=resultslist{3,(currentframe+1)/2};
+			v=resultslist{4,(currentframe+1)/2};
+			typevector=resultslist{5,(currentframe+1)/2};
+		end
+	end
 else
-    u=resultslist{3,(currentframe+1)/2};
-    v=resultslist{4,(currentframe+1)/2};
-    typevector=resultslist{5,(currentframe+1)/2};
+	u=resultslist{3,(currentframe+1)/2};
+	v=resultslist{4,(currentframe+1)/2};
+	typevector=resultslist{5,(currentframe+1)/2};
 end
 
 if typevector(info(1,1),info(1,2)) ~=0
-    delete(findobj('tag', 'infopoint'));
-    %here, the calibration matters...
-    if retr('caluv')==1 && retr('calxy')==1
-        set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*retr('caluv')-retr('subtr_u'))*10000)/10000) ' [px/fr]']);
-        set(handles.v_cp, 'String', ['v:' num2str(round((v(info(1,1),info(1,2))*retr('caluv')-retr('subtr_v'))*10000)/10000) ' [px/fr]']);
-        set(handles.x_cp, 'String', ['x:' num2str(round((x(info(1,1),info(1,2))*retr('calxy'))*1000)/1000) ' [px]']);
-        set(handles.y_cp, 'String', ['y:' num2str(round((y(info(1,1),info(1,2))*retr('calxy'))*1000)/1000) ' [px]']);
-    else
-        set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*retr('caluv')-retr('subtr_u'))*10000)/10000) ' [m/s]']);
-        set(handles.v_cp, 'String', ['v:' num2str(round((v(info(1,1),info(1,2))*retr('caluv')-retr('subtr_v'))*10000)/10000) ' [m/s]']);
-        set(handles.x_cp, 'String', ['x:' num2str(round((x(info(1,1),info(1,2))*retr('calxy'))*1000)/1000) ' [m]']);
-        set(handles.y_cp, 'String', ['y:' num2str(round((y(info(1,1),info(1,2))*retr('calxy'))*1000)/1000) ' [m]']);
-    end
-    derived=retr('derived');
-    displaywhat=retr('displaywhat');
-    if displaywhat>1
-        if size (derived,2) >= (currentframe+1)/2
-            if numel(derived{displaywhat-1,(currentframe+1)/2})>0
-                map=derived{displaywhat-1,(currentframe+1)/2};
-                name=get(handles.derivchoice,'string');
-                try
-                    set(handles.scalar_cp, 'String', [name{displaywhat} ': ' num2str(round(map(info(1,1),info(1,2))*10000)/10000)]);
-                catch
-                    plot_derivs_Callback
-                    name=get(handles.derivchoice,'string');
-                    set(handles.scalar_cp, 'String', [name{displaywhat} ': ' num2str(round(map(info(1,1),info(1,2))*10000)/10000)]);
-                end
-            else
-                set(handles.scalar_cp, 'String','N/A');
-            end
-        else
-            set(handles.scalar_cp, 'String','N/A');
-        end
-    else
-        set(handles.scalar_cp, 'String','N/A');
-    end
-    
-    hold on;
-    plot(x(info(1,1),info(1,2)),y(info(1,1),info(1,2)), 'yo', 'tag', 'infopoint','linewidth', 1, 'markersize', 10);
-    hold off;
-    
+	delete(findobj('tag', 'infopoint'));
+	%here, the calibration matters...
+	if retr('caluv')==1 && retr('calxy')==1
+		set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*retr('caluv')-retr('subtr_u'))*10000)/10000) ' [px/fr]']);
+		set(handles.v_cp, 'String', ['v:' num2str(round((v(info(1,1),info(1,2))*retr('caluv')-retr('subtr_v'))*10000)/10000) ' [px/fr]']);
+		set(handles.x_cp, 'String', ['x:' num2str(round((x(info(1,1),info(1,2))*retr('calxy'))*1000)/1000) ' [px]']);
+		set(handles.y_cp, 'String', ['y:' num2str(round((y(info(1,1),info(1,2))*retr('calxy'))*1000)/1000) ' [px]']);
+	else
+		set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*retr('caluv')-retr('subtr_u'))*10000)/10000) ' [m/s]']);
+		set(handles.v_cp, 'String', ['v:' num2str(round((v(info(1,1),info(1,2))*retr('caluv')-retr('subtr_v'))*10000)/10000) ' [m/s]']);
+		set(handles.x_cp, 'String', ['x:' num2str(round((x(info(1,1),info(1,2))*retr('calxy'))*1000)/1000) ' [m]']);
+		set(handles.y_cp, 'String', ['y:' num2str(round((y(info(1,1),info(1,2))*retr('calxy'))*1000)/1000) ' [m]']);
+	end
+	derived=retr('derived');
+	displaywhat=retr('displaywhat');
+	if displaywhat>1
+		if size (derived,2) >= (currentframe+1)/2
+			if numel(derived{displaywhat-1,(currentframe+1)/2})>0
+				map=derived{displaywhat-1,(currentframe+1)/2};
+				name=get(handles.derivchoice,'string');
+				try
+					set(handles.scalar_cp, 'String', [name{displaywhat} ': ' num2str(round(map(info(1,1),info(1,2))*10000)/10000)]);
+				catch
+					plot_derivs_Callback
+					name=get(handles.derivchoice,'string');
+					set(handles.scalar_cp, 'String', [name{displaywhat} ': ' num2str(round(map(info(1,1),info(1,2))*10000)/10000)]);
+				end
+			else
+				set(handles.scalar_cp, 'String','N/A');
+			end
+		else
+			set(handles.scalar_cp, 'String','N/A');
+		end
+	else
+		set(handles.scalar_cp, 'String','N/A');
+	end
+	
+	hold on;
+	plot(x(info(1,1),info(1,2)),y(info(1,1),info(1,2)), 'yo', 'tag', 'infopoint','linewidth', 1, 'markersize', 10);
+	hold off;
+	
 end
 
 function toolsavailable(inpt)
@@ -2426,14 +2469,14 @@ function toolsavailable(inpt)
 hgui=getappdata(0,'hgui');
 handles=gethand;
 if inpt==0
-    if get(handles.zoomon,'Value')==1
-        set(handles.zoomon,'Value',0);
-        zoomon_Callback(handles.zoomon)
-    end
-    if get(handles.panon,'Value')==1
-        set(handles.panon,'Value',0);
-        panon_Callback(handles.panon)
-    end
+	if get(handles.zoomon,'Value')==1
+		set(handles.zoomon,'Value',0);
+		zoomon_Callback(handles.zoomon)
+	end
+	if get(handles.panon,'Value')==1
+		set(handles.panon,'Value',0);
+		panon_Callback(handles.panon)
+	end
 end
 
 elementsOfCrime=findobj(hgui, 'type', 'uicontrol');
@@ -2442,19 +2485,19 @@ statuscell=get (elementsOfCrime, 'enable');
 wasdisabled=zeros(size(statuscell),'uint8');
 
 if inpt==0
-    set(elementsOfCrime, 'enable', 'off');
-    for i=1:size(statuscell,1)
-        if strncmp(statuscell{i,1}, 'off',3) ==1
-            wasdisabled(i)=1;
-        end
-    end
-    put('wasdisabled', wasdisabled);
-    set(elementsOfCrime2, 'enable', 'off');
+	set(elementsOfCrime, 'enable', 'off');
+	for i=1:size(statuscell,1)
+		if strncmp(statuscell{i,1}, 'off',3) ==1
+			wasdisabled(i)=1;
+		end
+	end
+	put('wasdisabled', wasdisabled);
+	set(elementsOfCrime2, 'enable', 'off');
 else
-    wasdisabled=retr('wasdisabled');
-    set(elementsOfCrime, 'enable', 'on');
-    set(elementsOfCrime(wasdisabled==1), 'enable', 'off');
-    set(elementsOfCrime2, 'enable', 'on');
+	wasdisabled=retr('wasdisabled');
+	set(elementsOfCrime, 'enable', 'on');
+	set(elementsOfCrime(wasdisabled==1), 'enable', 'off');
+	set(elementsOfCrime2, 'enable', 'on');
 end
 set(handles.progress, 'enable', 'on');
 set(handles.overall, 'enable', 'on');
@@ -2501,225 +2544,250 @@ sliderdisp
 zoom reset
 
 function loadvideobutton_Callback(~,~,~)
+hgui=getappdata(0,'hgui');
 if ispc==1
-    pathname=[retr('pathname') '\'];
+	pathname=[retr('pathname') '\'];
 else
-    pathname=[retr('pathname') '/'];
+	pathname=[retr('pathname') '/'];
 end
 handles=gethand;
 displogo(0)
+setappdata(hgui,'video_selection_done',0);
 vid_import(pathname);
 uiwait
 disp('done selecting video')
-%{
-if ~isequal(path,0) 
-    if get(handles.zoomon,'Value')==1
-        set(handles.zoomon,'Value',0);
-        zoomon_Callback(handles.zoomon)
-    end
-    if get(handles.panon,'Value')==1
-        set(handles.panon,'Value',0);
-        panon_Callback(handles.zoomon)
-    end
-    put('xzoomlimit',[]);
-    put('yzoomlimit',[]);
-    
-    put('pathname',pathname); %last path
-        put ('filename',filename); %only for displaying
-        put ('filepath',fullfile(pathname,filename)); %full path and filename for analyses
-        %auf was reagiert sliderrange....?
-        sliderrange
-        set (handles.filenamebox, 'string', filename);
-        put ('resultslist', []); %clears old results
-        put ('derived',[]);
-        put('displaywhat',1);%vectors
-        put('ismean',[]);
-        put('framemanualdeletion',[]);
-        put('manualdeletion',[]);
-        put('streamlinesX',[]);
-        put('streamlinesY',[]);
-        set(handles.fileselector, 'value',1);
-        set(handles.minintens, 'string', 0);
-        set(handles.maxintens, 'string', 1);
-        %Clear all things
-        clear_vel_limit_Callback %clear velocity limits
-        clear_roi_Callback
-        %clear_mask_Callback:
-        delete(findobj(gca,'tag', 'maskplot'));
-        put ('maskiererx',{});
-        put ('maskierery',{});
-        set(handles.mask_hint, 'String', 'Mask inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
-        set (handles.external_mask_progress, 'string', '');
-        %reset zoom
-        set(handles.panon,'Value',0);
-        set(handles.zoomon,'Value',0);
-        put('xzoomlimit', []);
-        put('yzoomlimit', []);
-        set(handles.filenamebox,'value',1);
-        sliderdisp %displays raw image when slider moves
-        zoom reset
 
+if getappdata(hgui,'video_selection_done')
+	pathname = getappdata(hgui,'pathname');
+	filename = getappdata(hgui,'filename');
+	filepath = getappdata(hgui,'filepath');
+	
+	%   put ('filepath',fullfile(getappdata(hgui,'pathname'),getappdata(hgui,'filename'))); %full path and filename for analyses
+	%save video file object in GUI
+	put('video_reader_object',VideoReader(filepath{1}));
+	if get(handles.zoomon,'Value')==1
+		set(handles.zoomon,'Value',0);
+		zoomon_Callback(handles.zoomon)
+	end
+	if get(handles.panon,'Value')==1
+		set(handles.panon,'Value',0);
+		panon_Callback(handles.zoomon)
+	end
+	put('xzoomlimit',[]);
+	put('yzoomlimit',[]);
+	
+	
+	%auf was reagiert sliderrange....?
+	sliderrange
+	set (handles.filenamebox, 'string', filename);
+	put ('resultslist', []); %clears old results
+	put ('derived',[]);
+	put('displaywhat',1);%vectors
+	put('ismean',[]);
+	put('framemanualdeletion',[]);
+	put('manualdeletion',[]);
+	put('streamlinesX',[]);
+	put('streamlinesY',[]);
+	set(handles.fileselector, 'value',1);
+	set(handles.minintens, 'string', 0);
+	set(handles.maxintens, 'string', 1);
+	%Clear all things
+	clear_vel_limit_Callback %clear velocity limits
+	clear_roi_Callback
+	%clear_mask_Callback:
+	delete(findobj(gca,'tag', 'maskplot'));
+	put ('maskiererx',{});
+	put ('maskierery',{});
+	set(handles.mask_hint, 'String', 'Mask inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
+	set (handles.external_mask_progress, 'string', '');
+	%reset zoom
+	set(handles.panon,'Value',0);
+	set(handles.zoomon,'Value',0);
+	put('xzoomlimit', []);
+	put('yzoomlimit', []);
+	set(handles.filenamebox,'value',1);
+	sliderdisp %displays raw image when slider moves
+	zoom reset
+	
 end
 %}
 function loadimgsbutton_Callback(~, ~, ~)
+hgui=getappdata(0,'hgui');
 if ispc==1
-    pathname=[retr('pathname') '\'];
+	pathname=[retr('pathname') '\'];
 else
-    pathname=[retr('pathname') '/'];
+	pathname=[retr('pathname') '/'];
 end
 handles=gethand;
 displogo(0)
 if ispc==1
-    try
-        path=uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
-    catch
-        path=uipickfiles ('FilterSpec', pwd, 'REFilter', '\.bmp$|\.jpg$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
-    end
+	try
+		path=uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+	catch
+		path=uipickfiles ('FilterSpec', pwd, 'REFilter', '\.bmp$|\.jpg$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+	end
 else
-    try
-        path=uipickfiles ('FilterSpec', pathname, 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
-    catch
-        path=uipickfiles ('FilterSpec', pwd, 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
-    end
+	try
+		path=uipickfiles ('FilterSpec', pathname, 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+	catch
+		path=uipickfiles ('FilterSpec', pwd, 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+	end
 end
 if isequal(path,0) ==0
-    if get(handles.zoomon,'Value')==1
-        set(handles.zoomon,'Value',0);
-        zoomon_Callback(handles.zoomon)
-    end
-    if get(handles.panon,'Value')==1
-        set(handles.panon,'Value',0);
-        panon_Callback(handles.zoomon)
-    end
-    put('xzoomlimit',[]);
-    put('yzoomlimit',[]);
-    
-    sequencer=retr('sequencer');
-    if sequencer==1
-        for i=1:size(path,1)
-            if path(i).isdir == 0 %remove directories from selection
-                if exist('filepath','var')==0 %first loop
-                    filepath{1,1}=path(i).name;
-                else
-                    filepath{size(filepath,1)+1,1}=path(i).name;
-                end
-            end
-        end
-    else %sequencer=0
-        for i=1:size(path,1)
-            if path(i).isdir == 0 %remove directories from selection
-                if exist('filepath','var')==0 %first loop
-                    filepath{1,1}=path(i).name;
-                else
-                    filepath{size(filepath,1)+1,1}=path(i).name;
-                    filepath{size(filepath,1)+1,1}=path(i).name;
-                end
-            end
-        end
-    end
-    if size(filepath,1) > 1
-        if mod(size(filepath,1),2)==1
-            cutoff=size(filepath,1);
-            filepath(cutoff)=[];
-        end
-        filename=cell(1);
-        for i=1:size(filepath,1)
-            if ispc==1
-                zeichen=strfind(filepath{i,1},'\');
-            else
-                zeichen=strfind(filepath{i,1},'/');
-            end
-            currentpath=filepath{i,1};
-            if mod(i,2) == 1
-                filename{i,1}=['A: ' currentpath(zeichen(1,size(zeichen,2))+1:end)];
-            else
-                filename{i,1}=['B: ' currentpath(zeichen(1,size(zeichen,2))+1:end)];
-            end
-        end
-        %extract path:
-        pathname=currentpath(1:zeichen(1,size(zeichen,2))-1);
-        put('pathname',pathname); %last path
-        put ('filename',filename); %only for displaying
-        put ('filepath',filepath); %full path and filename for analyses
-        sliderrange
-        set (handles.filenamebox, 'string', filename);
-        put ('resultslist', []); %clears old results
-        put ('derived',[]);
-        put('displaywhat',1);%vectors
-        put('ismean',[]);
-        put('framemanualdeletion',[]);
-        put('manualdeletion',[]);
-        put('streamlinesX',[]);
-        put('streamlinesY',[]);
-        set(handles.fileselector, 'value',1);
-        
-        set(handles.minintens, 'string', 0);
-        set(handles.maxintens, 'string', 1);
-        
-        %Clear all things
-        clear_vel_limit_Callback %clear velocity limits
-        clear_roi_Callback
-        %clear_mask_Callback:
-        delete(findobj(gca,'tag', 'maskplot'));
-        put ('maskiererx',{});
-        put ('maskierery',{});
-        set(handles.mask_hint, 'String', 'Mask inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
-        set (handles.external_mask_progress, 'string', '');
-        %reset zoom
-        set(handles.panon,'Value',0);
-        set(handles.zoomon,'Value',0);
-        put('xzoomlimit', []);
-        put('yzoomlimit', []);
-        
-        
-        %clear_cali_Callback do not clear calibration anymore.....
-        %Problems...?
-        %filelistbox auf erste position
-        set(handles.filenamebox,'value',1);
-        sliderdisp %displays raw image when slider moves
-        zoom reset
-        
-    else
-        errordlg('Please select at least two images ( = 1 pair of images)','Error','on')
-        
-    end
+	setappdata(hgui,'video_selection_done',0);
+	if get(handles.zoomon,'Value')==1
+		set(handles.zoomon,'Value',0);
+		zoomon_Callback(handles.zoomon)
+	end
+	if get(handles.panon,'Value')==1
+		set(handles.panon,'Value',0);
+		panon_Callback(handles.zoomon)
+	end
+	put('xzoomlimit',[]);
+	put('yzoomlimit',[]);
+	
+	sequencer=retr('sequencer');
+	if sequencer==1
+		for i=1:size(path,1)
+			if path(i).isdir == 0 %remove directories from selection
+				if exist('filepath','var')==0 %first loop
+					filepath{1,1}=path(i).name;
+				else
+					filepath{size(filepath,1)+1,1}=path(i).name;
+				end
+			end
+		end
+	else %sequencer=0
+		for i=1:size(path,1)
+			if path(i).isdir == 0 %remove directories from selection
+				if exist('filepath','var')==0 %first loop
+					filepath{1,1}=path(i).name;
+				else
+					filepath{size(filepath,1)+1,1}=path(i).name;
+					filepath{size(filepath,1)+1,1}=path(i).name;
+				end
+			end
+		end
+	end
+	if size(filepath,1) > 1
+		if mod(size(filepath,1),2)==1
+			cutoff=size(filepath,1);
+			filepath(cutoff)=[];
+		end
+		filename=cell(1);
+		for i=1:size(filepath,1)
+			if ispc==1
+				zeichen=strfind(filepath{i,1},'\');
+			else
+				zeichen=strfind(filepath{i,1},'/');
+			end
+			currentpath=filepath{i,1};
+			if mod(i,2) == 1
+				filename{i,1}=['A: ' currentpath(zeichen(1,size(zeichen,2))+1:end)];
+			else
+				filename{i,1}=['B: ' currentpath(zeichen(1,size(zeichen,2))+1:end)];
+			end
+		end
+		%extract path:
+		pathname=currentpath(1:zeichen(1,size(zeichen,2))-1);
+		put('pathname',pathname); %last path
+		put ('filename',filename); %only for displaying
+		put ('filepath',filepath); %full path and filename for analyses
+		sliderrange
+		set (handles.filenamebox, 'string', filename);
+		put ('resultslist', []); %clears old results
+		put ('derived',[]);
+		put('displaywhat',1);%vectors
+		put('ismean',[]);
+		put('framemanualdeletion',[]);
+		put('manualdeletion',[]);
+		put('streamlinesX',[]);
+		put('streamlinesY',[]);
+		set(handles.fileselector, 'value',1);
+		
+		set(handles.minintens, 'string', 0);
+		set(handles.maxintens, 'string', 1);
+		
+		%Clear all things
+		clear_vel_limit_Callback %clear velocity limits
+		clear_roi_Callback
+		%clear_mask_Callback:
+		delete(findobj(gca,'tag', 'maskplot'));
+		put ('maskiererx',{});
+		put ('maskierery',{});
+		set(handles.mask_hint, 'String', 'Mask inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
+		set (handles.external_mask_progress, 'string', '');
+		%reset zoom
+		set(handles.panon,'Value',0);
+		set(handles.zoomon,'Value',0);
+		put('xzoomlimit', []);
+		put('yzoomlimit', []);
+		%filelistbox auf erste position
+		set(handles.filenamebox,'value',1);
+		sliderdisp %displays raw image when slider moves
+		zoom reset
+	else
+		errordlg('Please select at least two images ( = 1 pair of images)','Error','on')
+	end
 end
 
 function sliderrange
 filepath=retr('filepath');
 handles=gethand;
-if size(filepath,1)>2
-    sliderstepcount=size(filepath,1)/2;
-    set(handles.fileselector, 'enable', 'on');
-    set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
-else
-    sliderstepcount=1;
-    set(handles.fileselector, 'enable', 'off');
-    set (handles.fileselector,'value',1, 'min', 1,'max',2,'sliderstep', [0.5 0.5]);
+if retr('video_selection_done') == 0
+	if size(filepath,1)>2
+		sliderstepcount=size(filepath,1)/2;
+		set(handles.fileselector, 'enable', 'on');
+		set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
+	else
+		sliderstepcount=1;
+		set(handles.fileselector, 'enable', 'off');
+		set (handles.fileselector,'value',1, 'min', 1,'max',2,'sliderstep', [0.5 0.5]);
+	end
+else % a video has been imported
+	%video_frame_selection=retr('video_frame_selection');
+	%sliderstepcount=numel(video_frame_selection)/2;
+	%set(handles.fileselector, 'enable', 'on');
+	%set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
+	sliderstepcount=size(filepath,1)/2;
+	set(handles.fileselector, 'enable', 'on');
+	set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
 end
 
 function fileselector_Callback(~, ~, ~)
 filepath=retr('filepath');
-if size(filepath,1) > 1
-    sliderdisp
-    handles=gethand;
-    toggler=retr('toggler');
-    selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-    set(handles.filenamebox,'value',selected);
+if size(filepath,1) > 1 || retr('video_selection_done') == 1
+	try
+		sliderdisp
+	catch
+	end
+	handles=gethand;
+	toggler=retr('toggler');
+	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
+	if retr('video_selection_done') == 0
+		set(handles.filenamebox,'value',selected);
+	else
+		set(handles.filenamebox,'value',1);
+	end
 end
+
 
 function togglepair_Callback(~, ~, ~)
 toggler=get(gco, 'value');
 put ('toggler',toggler);
 filepath=retr('filepath');
-if size(filepath,1) > 1
-    sliderdisp
-    handles=gethand;
-    if strncmp(get(handles.multip03, 'visible'), 'on',2)
-        preview_preprocess_Callback
-    end
-    selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-    set(handles.filenamebox,'value',selected);
+if size(filepath,1) > 1 || retr('video_selection_done') == 1
+	sliderdisp
+	handles=gethand;
+	if strncmp(get(handles.multip03, 'visible'), 'on',2)
+		preview_preprocess_Callback
+	end
+	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
+	if retr('video_selection_done') == 0
+		set(handles.filenamebox,'value',selected);
+	else
+		set(handles.filenamebox,'value',1);
+	end
 end
 
 function overlappercent
@@ -2732,43 +2800,43 @@ handles=gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
 resultslist=retr('resultslist');
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-    if size(resultslist,1)>6 %filtered exists
-        if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-            u=resultslist{10,currentframe};
-            v=resultslist{11,currentframe};
-        else
-            u=resultslist{7,currentframe};
-            if size(u,1)>1
-                v=resultslist{8,currentframe};
-            else
-                %filter was applied to some other frame than this
-                %load unfiltered results
-                u=resultslist{3,currentframe};
-                v=resultslist{4,currentframe};
-            end
-        end
-    else
-        u=resultslist{3,currentframe};
-        v=resultslist{4,currentframe};
-    end
-    caluv=retr('caluv');
-    u=reshape(u,size(u,1)*size(u,2),1);
-    v=reshape(v,size(v,1)*size(v,2),1);
-    h=figure;
-    screensize=get( 0, 'ScreenSize' );
-    %rect = [screensize(3)/2-300, screensize(4)/2-250, 600, 500];
-    rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
-    set(h,'position', rect);
-    set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',['Scatter plot u & v, frame ' num2str(currentframe)],'tag', 'derivplotwindow');
-    h2=scatter(u*caluv-retr('subtr_u'),v*caluv-retr('subtr_v'),'r.');
-    set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-    if retr('caluv')==1 && retr('calxy')==1
-        xlabel('u [px/frame]');
-        ylabel('v [px/frame]');
-    else
-        xlabel('u [m/s]');
-        ylabel('v [m/s]');
-    end
+	if size(resultslist,1)>6 %filtered exists
+		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+			u=resultslist{10,currentframe};
+			v=resultslist{11,currentframe};
+		else
+			u=resultslist{7,currentframe};
+			if size(u,1)>1
+				v=resultslist{8,currentframe};
+			else
+				%filter was applied to some other frame than this
+				%load unfiltered results
+				u=resultslist{3,currentframe};
+				v=resultslist{4,currentframe};
+			end
+		end
+	else
+		u=resultslist{3,currentframe};
+		v=resultslist{4,currentframe};
+	end
+	caluv=retr('caluv');
+	u=reshape(u,size(u,1)*size(u,2),1);
+	v=reshape(v,size(v,1)*size(v,2),1);
+	h=figure;
+	screensize=get( 0, 'ScreenSize' );
+	%rect = [screensize(3)/2-300, screensize(4)/2-250, 600, 500];
+	rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
+	set(h,'position', rect);
+	set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',['Scatter plot u & v, frame ' num2str(currentframe)],'tag', 'derivplotwindow');
+	h2=scatter(u*caluv-retr('subtr_u'),v*caluv-retr('subtr_v'),'r.');
+	set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
+	if retr('caluv')==1 && retr('calxy')==1
+		xlabel('u [px/frame]');
+		ylabel('v [px/frame]');
+	else
+		xlabel('u [m/s]');
+		ylabel('v [m/s]');
+	end
 end
 
 function pref_apply_Callback (~, ~)
@@ -2788,19 +2856,19 @@ displogo(1)
 function dcc_Callback(hObject, ~, ~)
 handles=gethand;
 if get(hObject,'Value')==1
-    set(handles.fftmulti,'value',0)
-    set(handles.ensemble,'value',0)
-    
-    set(handles.uipanel42,'visible','off')
-    set(handles.CorrQuality,'visible','off')
-    set(handles.text914,'visible','off')
-    set(handles.mask_auto_box,'visible','off')
-    %set(handles.AnalyzeAll,'visible','on')
-    set(handles.AnalyzeSingle,'visible','on')
-    set(handles.Settings_Apply_current,'visible','on')
-    
+	set(handles.fftmulti,'value',0)
+	set(handles.ensemble,'value',0)
+	
+	set(handles.uipanel42,'visible','off')
+	set(handles.CorrQuality,'visible','off')
+	set(handles.text914,'visible','off')
+	set(handles.mask_auto_box,'visible','off')
+	%set(handles.AnalyzeAll,'visible','on')
+	set(handles.AnalyzeSingle,'visible','on')
+	set(handles.Settings_Apply_current,'visible','on')
+	
 else
-    set(handles.dcc,'value',1)
+	set(handles.dcc,'value',1)
 end
 dispinterrog
 
@@ -2810,150 +2878,150 @@ A=imread(file);
 B=rgb2gray(A);
 
 for i=1:ceil(size(B,1)/2)
-    val(i)=mean(B(i,:));
+	val(i)=mean(B(i,:));
 end
 startcropy=max([find(val==255) 1]);
 for i=size(B,1):-1:ceil(size(B,1)/2)
-    val2(i)=mean(B(i,:));
+	val2(i)=mean(B(i,:));
 end
 endcropy=min(find(val2==255,1,'first'));
 clear val val2
 for i=1:ceil(size(B,2)/2)
-    val(i)=mean(B(:,i));
+	val(i)=mean(B(:,i));
 end
 startcropx=max([find(val==255) 1]);
 for i=size(B,2):-1:ceil(size(B,2)/2)
-    val2(i)=mean(B(:,i));
+	val2(i)=mean(B(:,i));
 end
 endcropx=min(find(val2==255,1,'first'));
 
 if isempty(startcropx)
-    startcropx = 1;
+	startcropx = 1;
 end
 if isempty(startcropy)
-    startcropy = 1;
+	startcropy = 1;
 end
 if isempty(endcropx)
-    endcropx = size(B,2);
+	endcropx = size(B,2);
 end
 if isempty(endcropy)
-    endcropy = size(B,1);
+	endcropy = size(B,1);
 end
 
 
 A=A(startcropy:endcropy,startcropx:endcropx,:);
 
 if fmt==1 %jpg
-    imwrite(A,file,'quality', 100);
+	imwrite(A,file,'quality', 100);
 else
-    imwrite(A,file);
+	imwrite(A,file);
 end
 
 function mat_file_save (currentframe,FileName,PathName,type)
 resultslist=retr('resultslist');
 if isempty(resultslist)==0
-    derived=retr('derived');
-    calxy=retr('calxy');
-    caluv=retr('caluv');
-    nrframes=size(resultslist,2);
-    
-    if size(resultslist,1)< 11
-        resultslist{11,nrframes}=[]; %make sure resultslist has cells for all params
-    end
-    if isempty(derived)==0
-        if size(derived,1)< 10 || size(derived,2) < nrframes
-            derived{11,nrframes}=[]; %make sure derived has cells for all params
-        end
-    else
-        derived=cell(11,nrframes);
-    end
-    
-    if calxy==1 && caluv==1
-        units='[px] respectively [px/frame]';
-    else
-        units='[m] respectively [m/s]';
-    end
-    %ohne alles: 6 hoch
-    %mit filtern: 11 hoch
-    %mit smoothed, 11 hoch und inhalt...
-    u_original=cell(nrframes,1);
-    v_original=u_original;
-    x=u_original;
-    y=u_original;
-    typevector_original=u_original;
-    u_filtered=u_original;
-    v_filtered=v_original;
-    typevector_filtered=u_original;
-    u_smoothed=u_original;
-    v_smoothed=u_original;
-    vorticity=cell(size(derived,2),1);
-    velocity_magnitude=vorticity;
-    u_component=vorticity;
-    v_component=vorticity;
-    divergence=vorticity;
-    vortex_locator=vorticity;
-    shear_rate=vorticity;
-    strain_rate=vorticity;
-    LIC=vorticity;
-    vectorangle=vorticity;
-    if type==1
-        nrframes=1;
-    end
-    
-    
-    %hier unterscheiden:nur ein frame oder all?
-    
-    for i=1:nrframes
-        if type==2 %all frames
-            currentframe=i;
-        end
-        x{i,1}=resultslist{1,currentframe}*calxy;
-        y{i,1}=resultslist{2,currentframe}*calxy;
-        u_original{i,1}=resultslist{3,currentframe}*caluv;
-        v_original{i,1}=resultslist{4,currentframe}*caluv;
-        typevector_original{i,1}=resultslist{5,currentframe};
-        u_filtered{i,1}=resultslist{7,currentframe}*caluv;
-        v_filtered{i,1}=resultslist{8,currentframe}*caluv;
-        typevector_filtered{i,1}=resultslist{9,currentframe};
-        u_smoothed{i,1}=resultslist{10,currentframe}*caluv;
-        v_smoothed{i,1}=resultslist{11,currentframe}*caluv;
-        
-        vorticity{i,1}=derived{1,currentframe};
-        velocity_magnitude{i,1}=derived{2,currentframe};
-        u_component{i,1}=derived{3,currentframe};
-        v_component{i,1}=derived{4,currentframe};
-        divergence{i,1}=derived{5,currentframe};
-        vortex_locator{i,1}=derived{6,currentframe};
-        shear_rate{i,1}=derived{7,currentframe};
-        strain_rate{i,1}=derived{8,currentframe};
-        LIC{i,1}=derived{9,currentframe};
-        vectorangle{i,1}=derived{10,currentframe};
-        correlation_map{i,1}=derived{11,currentframe};
-    end
-    if type == 1 %nur ein frame
-        x=x{i,1};
-        y=y{i,1};
-        u_original=u_original{i,1};
-        v_original=v_original{i,1};
-        typevector_original=typevector_original{i,1};
-        u_filtered=u_filtered{i,1};
-        v_filtered=v_filtered{i,1};
-        typevector_filtered=typevector_filtered{i,1};
-        u_smoothed=u_smoothed{i,1};
-        v_smoothed=v_smoothed{i,1};
-        
-        vorticity=vorticity{i,1};
-        velocity_magnitude=velocity_magnitude{i,1};
-        u_component=u_component{i,1};
-        v_component=v_component{i,1};
-        divergence=divergence{i,1};
-        vortex_locator=vortex_locator{i,1};
-        shear_rate=shear_rate{i,1};
-        strain_rate=strain_rate{i,1};
-        LIC=LIC{i,1};
-        vectorangle=vectorangle{i,1};
-        correlation_map=correlation_map{i,1};
-    end
+	derived=retr('derived');
+	calxy=retr('calxy');
+	caluv=retr('caluv');
+	nrframes=size(resultslist,2);
+	
+	if size(resultslist,1)< 11
+		resultslist{11,nrframes}=[]; %make sure resultslist has cells for all params
+	end
+	if isempty(derived)==0
+		if size(derived,1)< 10 || size(derived,2) < nrframes
+			derived{11,nrframes}=[]; %make sure derived has cells for all params
+		end
+	else
+		derived=cell(11,nrframes);
+	end
+	
+	if calxy==1 && caluv==1
+		units='[px] respectively [px/frame]';
+	else
+		units='[m] respectively [m/s]';
+	end
+	%ohne alles: 6 hoch
+	%mit filtern: 11 hoch
+	%mit smoothed, 11 hoch und inhalt...
+	u_original=cell(nrframes,1);
+	v_original=u_original;
+	x=u_original;
+	y=u_original;
+	typevector_original=u_original;
+	u_filtered=u_original;
+	v_filtered=v_original;
+	typevector_filtered=u_original;
+	u_smoothed=u_original;
+	v_smoothed=u_original;
+	vorticity=cell(size(derived,2),1);
+	velocity_magnitude=vorticity;
+	u_component=vorticity;
+	v_component=vorticity;
+	divergence=vorticity;
+	vortex_locator=vorticity;
+	shear_rate=vorticity;
+	strain_rate=vorticity;
+	LIC=vorticity;
+	vectorangle=vorticity;
+	if type==1
+		nrframes=1;
+	end
+	
+	
+	%hier unterscheiden:nur ein frame oder all?
+	
+	for i=1:nrframes
+		if type==2 %all frames
+			currentframe=i;
+		end
+		x{i,1}=resultslist{1,currentframe}*calxy;
+		y{i,1}=resultslist{2,currentframe}*calxy;
+		u_original{i,1}=resultslist{3,currentframe}*caluv;
+		v_original{i,1}=resultslist{4,currentframe}*caluv;
+		typevector_original{i,1}=resultslist{5,currentframe};
+		u_filtered{i,1}=resultslist{7,currentframe}*caluv;
+		v_filtered{i,1}=resultslist{8,currentframe}*caluv;
+		typevector_filtered{i,1}=resultslist{9,currentframe};
+		u_smoothed{i,1}=resultslist{10,currentframe}*caluv;
+		v_smoothed{i,1}=resultslist{11,currentframe}*caluv;
+		
+		vorticity{i,1}=derived{1,currentframe};
+		velocity_magnitude{i,1}=derived{2,currentframe};
+		u_component{i,1}=derived{3,currentframe};
+		v_component{i,1}=derived{4,currentframe};
+		divergence{i,1}=derived{5,currentframe};
+		vortex_locator{i,1}=derived{6,currentframe};
+		shear_rate{i,1}=derived{7,currentframe};
+		strain_rate{i,1}=derived{8,currentframe};
+		LIC{i,1}=derived{9,currentframe};
+		vectorangle{i,1}=derived{10,currentframe};
+		correlation_map{i,1}=derived{11,currentframe};
+	end
+	if type == 1 %nur ein frame
+		x=x{i,1};
+		y=y{i,1};
+		u_original=u_original{i,1};
+		v_original=v_original{i,1};
+		typevector_original=typevector_original{i,1};
+		u_filtered=u_filtered{i,1};
+		v_filtered=v_filtered{i,1};
+		typevector_filtered=typevector_filtered{i,1};
+		u_smoothed=u_smoothed{i,1};
+		v_smoothed=v_smoothed{i,1};
+		
+		vorticity=vorticity{i,1};
+		velocity_magnitude=velocity_magnitude{i,1};
+		u_component=u_component{i,1};
+		v_component=v_component{i,1};
+		divergence=divergence{i,1};
+		vortex_locator=vortex_locator{i,1};
+		shear_rate=shear_rate{i,1};
+		strain_rate=strain_rate{i,1};
+		LIC=LIC{i,1};
+		vectorangle=vectorangle{i,1};
+		correlation_map=correlation_map{i,1};
+	end
 end
 
 information={'The first dimension of the variables is the frame number.';'The variables contain all data that was calculated in the PIVlab GUI.';'If some data was not calculated, the corresponding cell is empty.';'Typevector is 0 for masked vector, 1 for regular vector, 2 for filtered vector';'u_original and v_original are the unmodified velocities from the cross-correlation.';'u_filtered and v_filtered is the above incl. your data validation selection.';'u_smoothed and v_smoothed is the above incl. your smoothing selection.'};
@@ -2968,34 +3036,34 @@ filename=retr('filename');
 caluv=retr('caluv');
 calxy=retr('calxy');
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-    x=resultslist{1,currentframe};
-    y=resultslist{2,currentframe};
-    if size(resultslist,1)>6 %filtered exists
-        if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-            u=resultslist{10,currentframe};
-            v=resultslist{11,currentframe};
-            typevector=resultslist{9,currentframe};
-            if numel(typevector)==0%happens if user smoothes sth without NaN and without validation
-                typevector=resultslist{5,currentframe};
-            end
-        else
-            u=resultslist{7,currentframe};
-            if size(u,1)>1
-                v=resultslist{8,currentframe};
-                typevector=resultslist{9,currentframe};
-            else
-                %filter was applied to some other frame than this
-                %load unfiltered results
-                u=resultslist{3,currentframe};
-                v=resultslist{4,currentframe};
-                typevector=resultslist{5,currentframe};
-            end
-        end
-    else
-        u=resultslist{3,currentframe};
-        v=resultslist{4,currentframe};
-        typevector=resultslist{5,currentframe};
-    end
+	x=resultslist{1,currentframe};
+	y=resultslist{2,currentframe};
+	if size(resultslist,1)>6 %filtered exists
+		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+			u=resultslist{10,currentframe};
+			v=resultslist{11,currentframe};
+			typevector=resultslist{9,currentframe};
+			if numel(typevector)==0%happens if user smoothes sth without NaN and without validation
+				typevector=resultslist{5,currentframe};
+			end
+		else
+			u=resultslist{7,currentframe};
+			if size(u,1)>1
+				v=resultslist{8,currentframe};
+				typevector=resultslist{9,currentframe};
+			else
+				%filter was applied to some other frame than this
+				%load unfiltered results
+				u=resultslist{3,currentframe};
+				v=resultslist{4,currentframe};
+				typevector=resultslist{5,currentframe};
+			end
+		end
+	else
+		u=resultslist{3,currentframe};
+		v=resultslist{4,currentframe};
+		typevector=resultslist{5,currentframe};
+	end
 end
 u(typevector==0)=NaN;
 v(typevector==0)=NaN;
@@ -3003,191 +3071,191 @@ subtract_u=retr('subtr_u');
 subtract_v=retr('subtr_v');
 
 if type==1 %ascii file
-    delimiter=get(handles.delimiter, 'value');
-    if delimiter==1
-        delimiter=',';
-    elseif delimiter==2
-        delimiter='\t';
-    elseif delimiter==3
-        delimiter=' ';
-    end
-    if get(handles.addfileinfo, 'value')==1
-        header1=['PIVlab by W.Th. & E.J.S., ASCII chart output - ' date];
-        header2=['FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(caluv)];
-    else
-        header1=[];
-        header2=[];
-    end
-    if get(handles.add_header, 'value')==1
-        if retr('calxy')==1 && retr('caluv')==1
-            if get(handles.export_vort, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
-                header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'dcev [1]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
-            else
-                header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
-            end
-        else
-            if get(handles.export_vort, 'Value') == 1  %alle derivatives exportieren, kalibriert
-                
-                header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'dcev [1]' delimiter 'simple shear [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
-            else
-                header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
-            end
-        end
-    else
-        header3=[];
-    end
-    if isempty(header1)==0
-        fid = fopen(fullfile(PathName,FileName), 'w');
-        fprintf(fid, [header1 '\r\n']);
-        fclose(fid);
-    end
-    if isempty(header2)==0
-        fid = fopen(fullfile(PathName,FileName), 'a');
-        fprintf(fid, [header2 '\r\n']);
-        fclose(fid);
-    end
-    if isempty(header3)==0
-        fid = fopen(fullfile(PathName,FileName), 'a');
-        fprintf(fid, [header3 '\r\n']);
-        fclose(fid);
-    end
-    if get(handles.export_vort, 'Value') == 1 %sollen alle derivatives exportiert werden?
-        derivative_calc(currentframe,2,1); %vorticity
-        derivative_calc(currentframe,3,1); %magnitude
-        %u und v habe ich ja...
-        derivative_calc(currentframe,6,1); %divergence
-        derivative_calc(currentframe,7,1); %dcev
-        derivative_calc(currentframe,8,1); %shear
-        derivative_calc(currentframe,9,1); %strain
-        derivative_calc(currentframe,11,1); %vectorangle
-        derived=retr('derived');
-        vort=derived{2-1,currentframe};
-        magn=derived{3-1,currentframe};
-        div=derived{6-1,currentframe};
-        dcev=derived{7-1,currentframe};
-        shear=derived{8-1,currentframe};
-        strain=derived{9-1,currentframe};
-        vectorangle=derived{11-1,currentframe};
-        correlation_map=derived{12-1,currentframe};
-        
-        wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1) reshape(correlation_map,size(correlation_map,1)*size(correlation_map,2),1)];
-    else
-        wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1)];
-    end
-    dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc');
+	delimiter=get(handles.delimiter, 'value');
+	if delimiter==1
+		delimiter=',';
+	elseif delimiter==2
+		delimiter='\t';
+	elseif delimiter==3
+		delimiter=' ';
+	end
+	if get(handles.addfileinfo, 'value')==1
+		header1=['PIVlab by W.Th. & E.J.S., ASCII chart output - ' date];
+		header2=['FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(caluv)];
+	else
+		header1=[];
+		header2=[];
+	end
+	if get(handles.add_header, 'value')==1
+		if retr('calxy')==1 && retr('caluv')==1
+			if get(handles.export_vort, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
+				header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'dcev [1]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
+			else
+				header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
+			end
+		else
+			if get(handles.export_vort, 'Value') == 1  %alle derivatives exportieren, kalibriert
+				
+				header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'dcev [1]' delimiter 'simple shear [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
+			else
+				header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
+			end
+		end
+	else
+		header3=[];
+	end
+	if isempty(header1)==0
+		fid = fopen(fullfile(PathName,FileName), 'w');
+		fprintf(fid, [header1 '\r\n']);
+		fclose(fid);
+	end
+	if isempty(header2)==0
+		fid = fopen(fullfile(PathName,FileName), 'a');
+		fprintf(fid, [header2 '\r\n']);
+		fclose(fid);
+	end
+	if isempty(header3)==0
+		fid = fopen(fullfile(PathName,FileName), 'a');
+		fprintf(fid, [header3 '\r\n']);
+		fclose(fid);
+	end
+	if get(handles.export_vort, 'Value') == 1 %sollen alle derivatives exportiert werden?
+		derivative_calc(currentframe,2,1); %vorticity
+		derivative_calc(currentframe,3,1); %magnitude
+		%u und v habe ich ja...
+		derivative_calc(currentframe,6,1); %divergence
+		derivative_calc(currentframe,7,1); %dcev
+		derivative_calc(currentframe,8,1); %shear
+		derivative_calc(currentframe,9,1); %strain
+		derivative_calc(currentframe,11,1); %vectorangle
+		derived=retr('derived');
+		vort=derived{2-1,currentframe};
+		magn=derived{3-1,currentframe};
+		div=derived{6-1,currentframe};
+		dcev=derived{7-1,currentframe};
+		shear=derived{8-1,currentframe};
+		strain=derived{9-1,currentframe};
+		vectorangle=derived{11-1,currentframe};
+		correlation_map=derived{12-1,currentframe};
+		
+		wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1) reshape(correlation_map,size(correlation_map,1)*size(correlation_map,2),1)];
+	else
+		wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1)];
+	end
+	dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc');
 end %type==1
 
 if type==2 %NOT USED ANYMORE matlab file
 end
 
 if type==3 %paraview vtk PARAVIEW DATEN OHNE die ganzen derivatives.... Berechnet man doch eh direkt in Paraview.
-    u=u*caluv-subtract_u;
-    v=v*caluv-subtract_v;
-    x=x*calxy;
-    y=y*calxy;
-    
-    
-    nr_of_elements=numel(x);
-    fid = fopen(fullfile(PathName,FileName), 'w');
-    if retr('calxy')==1 && retr('caluv')==1
-        info='[px/frame]';
-    else
-        info='[m/s]';
-    end
-    %ASCII file header
-    fprintf(fid, '# vtk DataFile Version 3.0\n');
-    fprintf(fid, ['VTK from PIVlab ' info '\n']);
-    fprintf(fid, 'BINARY\n\n');
-    fprintf(fid, 'DATASET STRUCTURED_GRID\n');
-    fprintf(fid, ['DIMENSIONS ' num2str(size(x,1)) ' ' num2str(size(x,2)) ' ' num2str(size(x,3)) '\n']);
-    fprintf(fid, ['POINTS ' num2str(nr_of_elements) ' float\n']);
-    fclose(fid);
-    
-    %append binary x,y,z data
-    fid = fopen(fullfile(PathName,FileName), 'a');
-    fwrite(fid, [reshape(x,1,nr_of_elements);  reshape(y,1,nr_of_elements); reshape(y,1,nr_of_elements)*0],'float','b');
-    
-    %append another ASCII sub header
-    fprintf(fid, ['\nPOINT_DATA ' num2str(nr_of_elements) '\n']);
-    fprintf(fid, 'VECTORS velocity_vectors float\n');
-    
-    %append binary u,v,w data
-    fwrite(fid, [reshape(u,1,nr_of_elements);  reshape(v,1,nr_of_elements); reshape(v,1,nr_of_elements)*0],'float','b');
-    
-    fclose(fid);
-    
+	u=u*caluv-subtract_u;
+	v=v*caluv-subtract_v;
+	x=x*calxy;
+	y=y*calxy;
+	
+	
+	nr_of_elements=numel(x);
+	fid = fopen(fullfile(PathName,FileName), 'w');
+	if retr('calxy')==1 && retr('caluv')==1
+		info='[px/frame]';
+	else
+		info='[m/s]';
+	end
+	%ASCII file header
+	fprintf(fid, '# vtk DataFile Version 3.0\n');
+	fprintf(fid, ['VTK from PIVlab ' info '\n']);
+	fprintf(fid, 'BINARY\n\n');
+	fprintf(fid, 'DATASET STRUCTURED_GRID\n');
+	fprintf(fid, ['DIMENSIONS ' num2str(size(x,1)) ' ' num2str(size(x,2)) ' ' num2str(size(x,3)) '\n']);
+	fprintf(fid, ['POINTS ' num2str(nr_of_elements) ' float\n']);
+	fclose(fid);
+	
+	%append binary x,y,z data
+	fid = fopen(fullfile(PathName,FileName), 'a');
+	fwrite(fid, [reshape(x,1,nr_of_elements);  reshape(y,1,nr_of_elements); reshape(y,1,nr_of_elements)*0],'float','b');
+	
+	%append another ASCII sub header
+	fprintf(fid, ['\nPOINT_DATA ' num2str(nr_of_elements) '\n']);
+	fprintf(fid, 'VECTORS velocity_vectors float\n');
+	
+	%append binary u,v,w data
+	fwrite(fid, [reshape(u,1,nr_of_elements);  reshape(v,1,nr_of_elements); reshape(v,1,nr_of_elements)*0],'float','b');
+	
+	fclose(fid);
+	
 end %type3
 
 if type==4 %tecplot file
-    delimiter = ' ';
-    header1=['# PIVlab by W.Th. & E.J.S., TECPLOT output - ' date];
-    header2=['# FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(caluv)];
-    if retr('calxy')==1 && retr('caluv')==1
-        if get(handles.export_vort_tec, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
-            header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'dcev [1]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
-            header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "dcev", "simple_shear", "simple_strain", "vector_direction", "correlation_map"';
-        else
-            header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
-            header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
-        end
-    else
-        if get(handles.export_vort_tec, 'Value') == 1  %alle derivatives exportieren, kalibriert
-            header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'dcev [1]' delimiter 'simple shear [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
-            header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "dcev", "simple_shear", "simple_strain", "vector_direction", "correlation_map"';
-        else
-            header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
-            header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
-        end
-    end
-    header4 = ['TITLE = "PIVlab frame: ' int2str(currentframe) '"'];
-    header6 = ['ZONE I=' int2str(size(x,2)) ', J=' int2str(size(x,1)) ', K=1, F=POINT, T="' int2str(currentframe) '"'];
-    
-    fid = fopen(fullfile(PathName,FileName), 'w');
-    fprintf(fid, [header1 '\r\n' header2 '\r\n' header3 '\r\n' header4 '\r\n' header5 '\r\n' header6 '\r\n']);
-    fclose(fid);
-    
-    if get(handles.export_vort_tec, 'Value') == 1 %sollen alle derivatives exportiert werden?
-        derivative_calc(currentframe,2,1); %vorticity
-        derivative_calc(currentframe,3,1); %magnitude
-        %u und v habe ich ja...
-        derivative_calc(currentframe,6,1); %divergence
-        derivative_calc(currentframe,7,1); %dcev
-        derivative_calc(currentframe,8,1); %shear
-        derivative_calc(currentframe,9,1); %strain
-        derivative_calc(currentframe,11,1); %vectorangle
-        derivative_calc(currentframe,12,1); %correlation coefficient
-        derived=retr('derived');
-        vort=derived{2-1,currentframe};
-        magn=derived{3-1,currentframe};
-        div=derived{6-1,currentframe};
-        dcev=derived{7-1,currentframe};
-        shear=derived{8-1,currentframe};
-        strain=derived{9-1,currentframe};
-        vectorangle=derived{11-1,currentframe};
-        correlation_map=derived{12-1,currentframe};
-        nanmarker=zeros(size(x));
-        nanmarker(isnan(u))=1;
-        %Nans mit nullen füllen
-        u(isnan(u))=0;
-        v(isnan(v))=0;
-        vort(isnan(vort))=0;
-        magn(isnan(magn))=0;
-        div(isnan(div))=0;
-        dcev(isnan(dcev))=0;
-        shear(isnan(shear))=0;
-        strain(isnan(strain))=0;
-        vectorangle(isnan(vectorangle))=0;
-        wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1) reshape(correlation_map,size(correlation_map,1)*size(correlation_map,2),1)];
-    else
-        nanmarker=zeros(size(x));
-        nanmarker(isnan(u))=1;
-        u(isnan(u))=0;
-        v(isnan(v))=0;
-        wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1)];
-    end
-    wholeLOT=sortrows(wholeLOT,2);
-    
-    dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc');
+	delimiter = ' ';
+	header1=['# PIVlab by W.Th. & E.J.S., TECPLOT output - ' date];
+	header2=['# FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(caluv)];
+	if retr('calxy')==1 && retr('caluv')==1
+		if get(handles.export_vort_tec, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
+			header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'dcev [1]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
+			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "dcev", "simple_shear", "simple_strain", "vector_direction", "correlation_map"';
+		else
+			header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
+			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
+		end
+	else
+		if get(handles.export_vort_tec, 'Value') == 1  %alle derivatives exportieren, kalibriert
+			header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'dcev [1]' delimiter 'simple shear [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
+			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "dcev", "simple_shear", "simple_strain", "vector_direction", "correlation_map"';
+		else
+			header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
+			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
+		end
+	end
+	header4 = ['TITLE = "PIVlab frame: ' int2str(currentframe) '"'];
+	header6 = ['ZONE I=' int2str(size(x,2)) ', J=' int2str(size(x,1)) ', K=1, F=POINT, T="' int2str(currentframe) '"'];
+	
+	fid = fopen(fullfile(PathName,FileName), 'w');
+	fprintf(fid, [header1 '\r\n' header2 '\r\n' header3 '\r\n' header4 '\r\n' header5 '\r\n' header6 '\r\n']);
+	fclose(fid);
+	
+	if get(handles.export_vort_tec, 'Value') == 1 %sollen alle derivatives exportiert werden?
+		derivative_calc(currentframe,2,1); %vorticity
+		derivative_calc(currentframe,3,1); %magnitude
+		%u und v habe ich ja...
+		derivative_calc(currentframe,6,1); %divergence
+		derivative_calc(currentframe,7,1); %dcev
+		derivative_calc(currentframe,8,1); %shear
+		derivative_calc(currentframe,9,1); %strain
+		derivative_calc(currentframe,11,1); %vectorangle
+		derivative_calc(currentframe,12,1); %correlation coefficient
+		derived=retr('derived');
+		vort=derived{2-1,currentframe};
+		magn=derived{3-1,currentframe};
+		div=derived{6-1,currentframe};
+		dcev=derived{7-1,currentframe};
+		shear=derived{8-1,currentframe};
+		strain=derived{9-1,currentframe};
+		vectorangle=derived{11-1,currentframe};
+		correlation_map=derived{12-1,currentframe};
+		nanmarker=zeros(size(x));
+		nanmarker(isnan(u))=1;
+		%Nans mit nullen füllen
+		u(isnan(u))=0;
+		v(isnan(v))=0;
+		vort(isnan(vort))=0;
+		magn(isnan(magn))=0;
+		div(isnan(div))=0;
+		dcev(isnan(dcev))=0;
+		shear(isnan(shear))=0;
+		strain(isnan(strain))=0;
+		vectorangle(isnan(vectorangle))=0;
+		wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1) reshape(correlation_map,size(correlation_map,1)*size(correlation_map,2),1)];
+	else
+		nanmarker=zeros(size(x));
+		nanmarker(isnan(u))=1;
+		u(isnan(u))=0;
+		v(isnan(v))=0;
+		wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1)];
+	end
+	wholeLOT=sortrows(wholeLOT,2);
+	
+	dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc');
 end %für mehrere Zones: einfach header6 nochmal appenden, dann whileLOT für den nächsten frame berechnen und appenden etc...
 % Drücken von "Save current": put('TecplotMultisave',0);Tecplotcallback.
 %Drücken von "Save all": put('TecplotMultisave',1);Tecplotcallback;put('TecplotMultisave',0)
@@ -3196,43 +3264,48 @@ end %für mehrere Zones: einfach header6 nochmal appenden, dann whileLOT für de
 function roi_select_Callback(~, ~, ~)
 filepath=retr('filepath');
 handles=gethand;
-if size(filepath,1) > 1
-    delete(findobj('tag','warning'));
-    toolsavailable(0);
-    toggler=retr('toggler');
-    selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-    filepath=retr('filepath');
-    roirect = round(getrect(gca));
-    if roirect(1,3)~=0 && roirect(1,4)~=0
-        [~,~,ext] = fileparts(filepath{selected});
-        if strcmp(ext,'.b16')
-            imagesize(1)=size(f_readB16(filepath{selected}),1);
-            imagesize(2)=size(f_readB16(filepath{selected}),2);
-        else
-            imagesize(1)=size(imread(filepath{selected}),1);
-            imagesize(2)=size(imread(filepath{selected}),2);
-        end
-        
-        if roirect(1)<1
-            roirect(1)=1;
-        end
-        if roirect(2)<1
-            roirect(2)=1;
-        end
-        if roirect(3)>imagesize(2)-roirect(1)
-            roirect(3)=imagesize(2)-roirect(1);
-        end
-        if roirect(4)>imagesize(1)-roirect(2)
-            roirect(4)=imagesize(1)-roirect(2);
-        end
-        put ('roirect',roirect);
-        dispROI
-        
-        set(handles.roi_hint, 'String', 'ROI active' , 'backgroundcolor', [0.5 1 0.5]);
-    else
-        text(50,50,'Invalid selection: Click and hold left mouse button to create a rectangle.','color','r','fontsize',8, 'BackgroundColor', 'k','tag','warning');
-    end
-    toolsavailable(1);
+if size(filepath,1) > 1 || retr('video_selection_done') == 1
+	delete(findobj('tag','warning'));
+	toolsavailable(0);
+	toggler=retr('toggler');
+	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
+	filepath=retr('filepath');
+	roirect = round(getrect(gca));
+	if roirect(1,3)~=0 && roirect(1,4)~=0
+		if retr('video_selection_done') == 0
+			[~,~,ext] = fileparts(filepath{selected});
+			if strcmp(ext,'.b16')
+				imagesize(1)=size(f_readB16(filepath{selected}),1);
+				imagesize(2)=size(f_readB16(filepath{selected}),2);
+			else
+				imagesize(1)=size(imread(filepath{selected}),1);
+				imagesize(2)=size(imread(filepath{selected}),2);
+			end
+		else
+			video_reader_object = retr('video_reader_object');
+			imagesize(1)=size(read(video_reader_object,1),1);
+			imagesize(2)=size(read(video_reader_object,1),2);
+		end
+		if roirect(1)<1
+			roirect(1)=1;
+		end
+		if roirect(2)<1
+			roirect(2)=1;
+		end
+		if roirect(3)>imagesize(2)-roirect(1)
+			roirect(3)=imagesize(2)-roirect(1);
+		end
+		if roirect(4)>imagesize(1)-roirect(2)
+			roirect(4)=imagesize(1)-roirect(2);
+		end
+		put ('roirect',roirect);
+		dispROI
+		
+		set(handles.roi_hint, 'String', 'ROI active' , 'backgroundcolor', [0.5 1 0.5]);
+	else
+		text(50,50,'Invalid selection: Click and hold left mouse button to create a rectangle.','color','r','fontsize',8, 'BackgroundColor', 'k','tag','warning');
+	end
+	toolsavailable(1);
 end
 
 function clear_roi_Callback(~, ~, ~)
@@ -3275,174 +3348,186 @@ maskierery=retr('maskierery');
 delete(findobj(gca,'tag', 'maskplot'));
 hold on;
 for j=1:size(maskiererx,1)
-    if isempty(maskiererx{j,currentframe})==0
-        ximask=maskiererx{j,currentframe};
-        yimask=maskierery{j,currentframe};
-        if verLessThan('matlab','8.4')
-            h=fill(ximask,yimask,'r','facecolor', [0.3 0.1 0.1],'linestyle','none','tag','maskplot');
-        else
-            % >R2014a
-            h=fill(ximask,yimask,'r','facecolor', maskcolor,'linestyle','none','tag','maskplot','Facealpha',opaqueness);
-        end
-        %h=area(ximask,yimask,'facecolor', [0.3 0.1 0.1],'linestyle', 'none','tag','maskplot');
-    else
-        break;
-    end
+	if isempty(maskiererx{j,currentframe})==0
+		ximask=maskiererx{j,currentframe};
+		yimask=maskierery{j,currentframe};
+		if verLessThan('matlab','8.4')
+			h=fill(ximask,yimask,'r','facecolor', [0.3 0.1 0.1],'linestyle','none','tag','maskplot');
+		else
+			% >R2014a
+			h=fill(ximask,yimask,'r','facecolor', maskcolor,'linestyle','none','tag','maskplot','Facealpha',opaqueness);
+		end
+		%h=area(ximask,yimask,'facecolor', [0.3 0.1 0.1],'linestyle', 'none','tag','maskplot');
+	else
+		break;
+	end
 end
 hold off;
 
 function draw_mask_Callback(~, ~, ~)
 filepath=retr('filepath');
 handles=gethand;
-if size(filepath,1) > 1
-    toolsavailable(0);
-    currentframe=2*floor(get(handles.fileselector, 'value'))-1;
-    filepath=retr('filepath');
-    amount=size(filepath,1);
-    %currentframe and currentframe+1 =is a pair with identical mask.
-    %maskiererx&y contains masks. 3rd dimension is frame nr.
-    maskiererx=retr('maskiererx');
-    maskierery=retr('maskierery');
-    [mask,ximask,yimask]=roipoly;
-    insertion=1;
-    for j=size(maskiererx,1):-1:1
-        try
-            if isempty(maskiererx{j,currentframe})==0
-                insertion=j+1;
-                break
-            end
-        catch
-            maskiererx{1,currentframe}=[];
-            maskierery{1,currentframe}=[];
-            insertion=1;
-        end
-    end
-    maskiererx{insertion,currentframe}=ximask;
-    maskiererx{insertion,currentframe+1}=ximask;
-    maskierery{insertion,currentframe}=yimask;
-    maskierery{insertion,currentframe+1}=yimask;
-    put('maskiererx' ,maskiererx);
-    put('maskierery' ,maskierery);
-    dispMASK(0.333) %hier so lassen, damit nach dem zeichnen die Maske angezeigt wird
-    set(handles.mask_hint, 'String', 'Mask active', 'backgroundcolor', [0.5 1 0.5]);
-    toolsavailable(1);
+if size(filepath,1) > 1 || retr('video_selection_done') == 1
+	toolsavailable(0);
+	currentframe=2*floor(get(handles.fileselector, 'value'))-1;
+	filepath=retr('filepath');
+	amount=size(filepath,1);
+	%currentframe and currentframe+1 =is a pair with identical mask.
+	%maskiererx&y contains masks. 3rd dimension is frame nr.
+	maskiererx=retr('maskiererx');
+	maskierery=retr('maskierery');
+	[mask,ximask,yimask]=roipoly;
+	insertion=1;
+	for j=size(maskiererx,1):-1:1
+		try
+			if isempty(maskiererx{j,currentframe})==0
+				insertion=j+1;
+				break
+			end
+		catch
+			maskiererx{1,currentframe}=[];
+			maskierery{1,currentframe}=[];
+			insertion=1;
+		end
+	end
+	maskiererx{insertion,currentframe}=ximask;
+	maskiererx{insertion,currentframe+1}=ximask;
+	maskierery{insertion,currentframe}=yimask;
+	maskierery{insertion,currentframe+1}=yimask;
+	put('maskiererx' ,maskiererx);
+	put('maskierery' ,maskierery);
+	dispMASK(0.333) %hier so lassen, damit nach dem zeichnen die Maske angezeigt wird
+	set(handles.mask_hint, 'String', 'Mask active', 'backgroundcolor', [0.5 1 0.5]);
+	toolsavailable(1);
 end
 
 function clear_mask_Callback(~, ~, ~)
 button = questdlg('Do you want to remove all masks?','Delete?','Yes','Cancel','Cancel');
 if strncmp(button,'Yes',3)==1
-    handles=gethand;
-    delete(findobj(gca,'tag', 'maskplot'));
-    put ('maskiererx',{});
-    put ('maskierery',{});
-    set(handles.mask_hint, 'String', 'Mask inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
-    set (handles.external_mask_progress, 'string', '');
+	handles=gethand;
+	delete(findobj(gca,'tag', 'maskplot'));
+	put ('maskiererx',{});
+	put ('maskierery',{});
+	set(handles.mask_hint, 'String', 'Mask inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
+	set (handles.external_mask_progress, 'string', '');
 end
 
 function clear_current_mask_Callback(~, ~, ~)
 filepath=retr('filepath');
 handles=gethand;
 if size(filepath,1) > 1
-    delete(findobj(gca,'tag', 'maskplot'));
-    currentframe=2*floor(get(handles.fileselector, 'value'))-1;
-    maskiererx=retr('maskiererx');
-    maskierery=retr('maskierery');
-    for i=1:size(maskiererx,1)
-        maskiererx{i,currentframe}=[];
-        maskiererx{i,currentframe+1}=[];
-        maskierery{i,currentframe}=[];
-        maskierery{i,currentframe+1}=[];
-    end
-    try
-        emptycells=cellfun('isempty',maskiererx);
-    catch
-        disp('Problems with old Matlab version... Please update Matlab or unexpected things might happen...')
-    end
-    if mean(double(emptycells))==1 %not very sophisticated way to determine if all cells are empty
-        set(handles.mask_hint, 'String', 'Mask inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
-        set (handles.external_mask_progress, 'string', '');
-    end
-    put('maskiererx' ,maskiererx);
-    put('maskierery' ,maskierery);
+	delete(findobj(gca,'tag', 'maskplot'));
+	currentframe=2*floor(get(handles.fileselector, 'value'))-1;
+	maskiererx=retr('maskiererx');
+	maskierery=retr('maskierery');
+	for i=1:size(maskiererx,1)
+		maskiererx{i,currentframe}=[];
+		maskiererx{i,currentframe+1}=[];
+		maskierery{i,currentframe}=[];
+		maskierery{i,currentframe+1}=[];
+	end
+	try
+		emptycells=cellfun('isempty',maskiererx);
+	catch
+		disp('Problems with old Matlab version... Please update Matlab or unexpected things might happen...')
+	end
+	if mean(double(emptycells))==1 %not very sophisticated way to determine if all cells are empty
+		set(handles.mask_hint, 'String', 'Mask inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
+		set (handles.external_mask_progress, 'string', '');
+	end
+	put('maskiererx' ,maskiererx);
+	put('maskierery' ,maskierery);
 end
 
 function maskToSelected_Callback(~, ~, ~)
 handles=gethand;
 filepath=retr('filepath');
-if size(filepath,1) > 1
-    str = strrep(get(handles.maskapplyselect,'string'),'-',':');
-    endinside=strfind(str, 'end');
-    if isempty(endinside)==0
-        str = strrep(str,'end',num2str(size(filepath,1)/2));
-        
-    end
-    selectionok=1;
-    strnum=str2num(str);
-    if isempty(strnum)==1 || isempty(strfind(str,'.'))==0 || isempty(strfind(str,';'))==0
-        msgbox(['Error in frame selection syntax. Please use the following syntax (examples):' sprintf('\n') '1:3' sprintf('\n') '1,3,7,9' sprintf('\n') '1:3,7,8,9,11:13' ],'Error','error','modal')
-        selectionok=0;
-    end
-    amount=max(strnum);
-    if amount*2>size(filepath,1)
-        msgbox(['Selected frames out of range.'],'Error','error','modal')
-        selectionok=0;
-    end
-    mini=min(strnum);
-    %checken ob nicht größer als geladene frame anzahl.
-    if selectionok==1
-        currentframe=2*floor(get(handles.fileselector, 'value'))-1;
-        %amount=size(filepath,1);
-        
-        maskiererx=retr('maskiererx');
-        maskierery=retr('maskierery');
-        
-        for i=1:size(strnum,2)
-            for j=1:size(maskiererx,1)
-                %keyboard
-                %in frame 1=maskiererx 1und2
-                maskiererx{j,strnum(i)*2-1}=maskiererx{j,currentframe};
-                maskiererx{j,strnum(i)*2}=maskiererx{j,currentframe+1};
-                maskierery{j,strnum(i)*2-1}=maskierery{j,currentframe};
-                maskierery{j,strnum(i)*2}=maskierery{j,currentframe+1};
-                
-            end
-        end
-        put('maskiererx' ,maskiererx);
-        put('maskierery' ,maskierery);
-    end
+if size(filepath,1) > 1 || retr('video_selection_done') == 1
+	str = strrep(get(handles.maskapplyselect,'string'),'-',':');
+	endinside=strfind(str, 'end');
+	if isempty(endinside)==0
+		if retr('video_selection_done') == 0
+			str = strrep(str,'end',num2str(size(filepath,1)/2));
+		else
+			video_frame_selection=retr('video_frame_selection');
+			str = strrep(str,'end',num2str(numel(video_frame_selection)/2));
+		end
+	end
+	selectionok=1;
+	strnum=str2num(str);
+	if isempty(strnum)==1 || isempty(strfind(str,'.'))==0 || isempty(strfind(str,';'))==0
+		msgbox(['Error in frame selection syntax. Please use the following syntax (examples):' sprintf('\n') '1:3' sprintf('\n') '1,3,7,9' sprintf('\n') '1:3,7,8,9,11:13' ],'Error','error','modal')
+		selectionok=0;
+	end
+	amount=max(strnum);
+	if retr('video_selection_done') == 0
+		if amount*2>size(filepath,1)
+			msgbox(['Selected frames out of range.'],'Error','error','modal')
+			selectionok=0;
+		end
+	else
+		video_frame_selection=retr('video_frame_selection');
+		if amount*2>numel(video_frame_selection)
+			msgbox(['Selected frames out of range.'],'Error','error','modal')
+			selectionok=0;
+		end
+	end
+	mini=min(strnum);
+	%checken ob nicht größer als geladene frame anzahl.
+	if selectionok==1
+		currentframe=2*floor(get(handles.fileselector, 'value'))-1;
+		%amount=size(filepath,1);
+		
+		maskiererx=retr('maskiererx');
+		maskierery=retr('maskierery');
+		
+		for i=1:size(strnum,2)
+			for j=1:size(maskiererx,1)
+				%keyboard
+				%in frame 1=maskiererx 1und2
+				maskiererx{j,strnum(i)*2-1}=maskiererx{j,currentframe};
+				maskiererx{j,strnum(i)*2}=maskiererx{j,currentframe+1};
+				maskierery{j,strnum(i)*2-1}=maskierery{j,currentframe};
+				maskierery{j,strnum(i)*2}=maskierery{j,currentframe+1};
+				
+			end
+		end
+		put('maskiererx' ,maskiererx);
+		put('maskierery' ,maskierery);
+	end
 end
 
 function save_mask_Callback(~, ~, ~)
 filepath=retr('filepath');
 handles=gethand;
 if size(filepath,1) > 1 %did the user load images?
-    [maskfile,maskpath] = uiputfile('*.mat','Save PIVlab mask','PIVlab_mask.mat');
-    if isequal(maskfile,0) | isequal(maskpath,0)
-        %do nothing
-    else
-        maskiererx=retr('maskiererx');
-        maskierery=retr('maskierery');
-        save(fullfile(maskpath,maskfile),'maskiererx','maskierery');
-    end
+	[maskfile,maskpath] = uiputfile('*.mat','Save PIVlab mask','PIVlab_mask.mat');
+	if isequal(maskfile,0) | isequal(maskpath,0)
+		%do nothing
+	else
+		maskiererx=retr('maskiererx');
+		maskierery=retr('maskierery');
+		save(fullfile(maskpath,maskfile),'maskiererx','maskierery');
+	end
 end
 
 function load_mask_Callback(~, ~, ~)
 filepath=retr('filepath');
 handles=gethand;
 if size(filepath,1) > 1 %did the user load images?
-    [maskfile,maskpath] = uigetfile('*.mat','Load PIVlab mask','PIVlab_mask.mat');
-    if isequal(maskfile,0) | isequal(maskpath,0)
-        %do nothing
-    else
-        load(fullfile(maskpath,maskfile),'maskiererx','maskierery');
-        try
-            put('maskiererx' ,maskiererx);
-            put('maskierery' ,maskierery);
-        catch
-            disp(['Error. No mask data found in ' fullfile(maskpath,maskfile)])
-        end
-        sliderdisp
-    end
+	[maskfile,maskpath] = uigetfile('*.mat','Load PIVlab mask','PIVlab_mask.mat');
+	if isequal(maskfile,0) | isequal(maskpath,0)
+		%do nothing
+	else
+		load(fullfile(maskpath,maskfile),'maskiererx','maskierery');
+		try
+			put('maskiererx' ,maskiererx);
+			put('maskierery' ,maskierery);
+		catch
+			disp(['Error. No mask data found in ' fullfile(maskpath,maskfile)])
+		end
+		sliderdisp
+	end
 end
 
 
@@ -3452,209 +3537,215 @@ uiwait(helpdlg(['You can load grayscale *.tif image(s) here:' sprintf('\n') 'Whi
 filepath=retr('filepath');
 handles=gethand;
 if size(filepath,1) > 1 %did the user load images?
-    [FileName,PathName] = uigetfile('*.tif','Select the binary image mask file','multiselect','on');
-    if isequal(FileName,0) | isequal(PathName,0)
-    else
-        if ischar(FileName)==1
-            AnzahlMasks=1;
-        else
-            AnzahlMasks=numel(FileName);
-        end
-        for j=1:AnzahlMasks
-            if AnzahlMasks>1
-                A=imread(fullfile(PathName,FileName{j}));
-                set (handles.external_mask_progress, 'string', ['Please wait... (' int2str((j-1)/AnzahlMasks*100) '%)']);
-                drawnow;
-            else
-                A=imread(fullfile(PathName,FileName));
-            end
-            A=im2bw(A,0.5);
-            A1=zeros(size(A));
-            A2=A1;A3=A1;A4=A1;
-            %cut mask in 4 pieces to minimize parent / child / hole problems in masks
-            rowshalf=round(size(A,1)/2);
-            colshalf=round(size(A,2)/2);
-            %A1(1:rowshalf,1:colshalf) = A(1:rowshalf,1:colshalf);%top left part
-            %A2(1:rowshalf,colshalf+1:end) = A(1:rowshalf,colshalf+1:end);%top right half
-            %A3(rowshalf+1:end,1:colshalf) = A(rowshalf+1:end,1:colshalf); % lower left part
-            %A4(rowshalf+1:end,colshalf+1:end) = A(rowshalf+1:end,colshalf+1:end); %lower right part
-            A1(1:rowshalf,1:colshalf) = A(1:rowshalf,1:colshalf);%top left part
-            A2(1:rowshalf,colshalf:end) = A(1:rowshalf,colshalf:end);%top right half
-            A3(rowshalf:end,1:colshalf) = A(rowshalf:end,1:colshalf); % lower left part
-            A4(rowshalf:end,colshalf:end) = A(rowshalf:end,colshalf:end); %lower right part
-            
-            
-            %A(:,round(size(A,2)/2))=0;
-            %A(round(size(A,1)/2),:)=0;
-            %B=A;
-            %B=im2bw(abs(A-B));
-            
-            
-            bwbound=[bwboundaries(A1); bwboundaries(A2) ; bwboundaries(A3) ; bwboundaries(A4)];
-            %bwbound=bwboundaries(A);
-            
-            importmaskx=cell(size(bwbound,1),1);
-            importmasky=importmaskx;
-            for i=1:size(bwbound,1)
-                temp=bwbound{i,1};
-                importmasky{i,1}=temp(1:10:end,1);
-                temp=bwbound{i,1};
-                importmaskx{i,1}=temp(1:10:end,2);
-            end
-            maskiererx=retr('maskiererx');
-            maskierery=retr('maskierery');
-            
-            currentframe=2*floor(get(handles.fileselector, 'value'))-1 + 2*(j-1);
-            if isempty(maskiererx)
-                maskiererx=cell(i,currentframe+1);
-                maskierery=maskiererx;
-            end
-            maskiererx(1:i,currentframe)=importmaskx;
-            maskiererx(1:i,currentframe+1)=importmaskx;
-            maskierery(1:i,currentframe)=importmasky;
-            maskierery(1:i,currentframe+1)=importmasky;
-            
-            
-            put('maskiererx' ,maskiererx);
-            put('maskierery' ,maskierery);
-            if j >= AnzahlMasks
-                set(handles.mask_hint, 'String', 'Mask active', 'backgroundcolor', [0.5 1 0.5]);
-                dispMASK(0.5)
-            end
-            
-            
-        end
-        set (handles.external_mask_progress, 'string', 'External mask(s) loaded.');
-        
-        %maskiererxundy abschneiden wenn länger als anderes zeugs
-        if size(maskiererx,2)>size(filepath,1) %user loaded more masks than there are frames
-            maskiererx (:,size(filepath,1)+1:end) = [];
-            maskierery  (:,size(filepath,1)+1:end) = [];
-            put('maskiererx' ,maskiererx);
-            put('maskierery' ,maskierery);
-        end
-    end
+	[FileName,PathName] = uigetfile('*.tif','Select the binary image mask file','multiselect','on');
+	if isequal(FileName,0) | isequal(PathName,0)
+	else
+		if ischar(FileName)==1
+			AnzahlMasks=1;
+		else
+			AnzahlMasks=numel(FileName);
+		end
+		for j=1:AnzahlMasks
+			if AnzahlMasks>1
+				A=imread(fullfile(PathName,FileName{j}));
+				set (handles.external_mask_progress, 'string', ['Please wait... (' int2str((j-1)/AnzahlMasks*100) '%)']);
+				drawnow;
+			else
+				A=imread(fullfile(PathName,FileName));
+			end
+			A=im2bw(A,0.5);
+			A1=zeros(size(A));
+			A2=A1;A3=A1;A4=A1;
+			%cut mask in 4 pieces to minimize parent / child / hole problems in masks
+			rowshalf=round(size(A,1)/2);
+			colshalf=round(size(A,2)/2);
+			%A1(1:rowshalf,1:colshalf) = A(1:rowshalf,1:colshalf);%top left part
+			%A2(1:rowshalf,colshalf+1:end) = A(1:rowshalf,colshalf+1:end);%top right half
+			%A3(rowshalf+1:end,1:colshalf) = A(rowshalf+1:end,1:colshalf); % lower left part
+			%A4(rowshalf+1:end,colshalf+1:end) = A(rowshalf+1:end,colshalf+1:end); %lower right part
+			A1(1:rowshalf,1:colshalf) = A(1:rowshalf,1:colshalf);%top left part
+			A2(1:rowshalf,colshalf:end) = A(1:rowshalf,colshalf:end);%top right half
+			A3(rowshalf:end,1:colshalf) = A(rowshalf:end,1:colshalf); % lower left part
+			A4(rowshalf:end,colshalf:end) = A(rowshalf:end,colshalf:end); %lower right part
+			
+			
+			%A(:,round(size(A,2)/2))=0;
+			%A(round(size(A,1)/2),:)=0;
+			%B=A;
+			%B=im2bw(abs(A-B));
+			
+			
+			bwbound=[bwboundaries(A1); bwboundaries(A2) ; bwboundaries(A3) ; bwboundaries(A4)];
+			%bwbound=bwboundaries(A);
+			
+			importmaskx=cell(size(bwbound,1),1);
+			importmasky=importmaskx;
+			for i=1:size(bwbound,1)
+				temp=bwbound{i,1};
+				importmasky{i,1}=temp(1:10:end,1);
+				temp=bwbound{i,1};
+				importmaskx{i,1}=temp(1:10:end,2);
+			end
+			maskiererx=retr('maskiererx');
+			maskierery=retr('maskierery');
+			
+			currentframe=2*floor(get(handles.fileselector, 'value'))-1 + 2*(j-1);
+			if isempty(maskiererx)
+				maskiererx=cell(i,currentframe+1);
+				maskierery=maskiererx;
+			end
+			maskiererx(1:i,currentframe)=importmaskx;
+			maskiererx(1:i,currentframe+1)=importmaskx;
+			maskierery(1:i,currentframe)=importmasky;
+			maskierery(1:i,currentframe+1)=importmasky;
+			
+			
+			put('maskiererx' ,maskiererx);
+			put('maskierery' ,maskierery);
+			if j >= AnzahlMasks
+				set(handles.mask_hint, 'String', 'Mask active', 'backgroundcolor', [0.5 1 0.5]);
+				dispMASK(0.5)
+			end
+			
+			
+		end
+		set (handles.external_mask_progress, 'string', 'External mask(s) loaded.');
+		
+		%maskiererxundy abschneiden wenn länger als anderes zeugs
+		if size(maskiererx,2)>size(filepath,1) %user loaded more masks than there are frames
+			maskiererx (:,size(filepath,1)+1:end) = [];
+			maskierery  (:,size(filepath,1)+1:end) = [];
+			put('maskiererx' ,maskiererx);
+			put('maskierery' ,maskierery);
+		end
+	end
 end
 
 function preview_preprocess_Callback(~, ~, ~)
 filepath=retr('filepath');
-if size(filepath,1) >1
-    handles=gethand;
-    toggler=retr('toggler');
-    filepath=retr('filepath');
-    selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-    [~,~,ext] = fileparts(filepath{selected});
-    if strcmp(ext,'.b16')
-        img=f_readB16(filepath{selected});
-    else
-        img=imread(filepath{selected});
-    end
-    clahe=get(handles.clahe_enable,'value');
-    highp=get(handles.enable_highpass,'value');
-    %clip=get(handles.enable_clip,'value');
-    intenscap=get(handles.enable_intenscap, 'value');
-    clahesize=str2double(get(handles.clahe_size, 'string'));
-    highpsize=str2double(get(handles.highp_size, 'string'));
-    wienerwurst=get(handles.wienerwurst, 'value');
-    wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-    
-    Autolimit_Callback
-    minintens=str2double(get(handles.minintens, 'string'));
-    maxintens=str2double(get(handles.maxintens, 'string'));
-    
-    %clipthresh=str2double(get(handles.clip_thresh, 'string'));
-    roirect=retr('roirect');
-    if size (roirect,2)<4
-        roirect=[1,1,size(img,2)-1,size(img,1)-1];
-    end
-    out = PIVlab_preproc (img,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-    image(out, 'parent',gca, 'cdatamapping', 'scaled');
-    colormap('gray');
-    axis image;
-    set(gca,'ytick',[]);
-    set(gca,'xtick',[]);
-    roirect=retr('roirect');
-    if size(roirect,2)>1
-        dispROI
-    end
-    currentframe=2*floor(get(handles.fileselector, 'value'))-1;
-    maskiererx=retr('maskiererx');
-    if size(maskiererx,2)>=currentframe
-        ximask=maskiererx{currentframe};
-        if size(ximask,1)>1
-            dispMASK(1-str2num(get(handles.masktransp,'String'))/100)
-            
-        end
-    end
+if size(filepath,1) >1 || retr('video_selection_done') == 1
+	handles=gethand;
+	toggler=retr('toggler');
+	filepath=retr('filepath');
+	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
+	
+	if retr('video_selection_done') == 0
+		[~,~,ext] = fileparts(filepath{selected});
+		if strcmp(ext,'.b16')
+			img=f_readB16(filepath{selected});
+		else
+			img=imread(filepath{selected});
+		end
+	else
+		video_frame_selection=retr('video_frame_selection');
+		img=read(retr('video_reader_object'),video_frame_selection(selected));
+	end
+	clahe=get(handles.clahe_enable,'value');
+	highp=get(handles.enable_highpass,'value');
+	%clip=get(handles.enable_clip,'value');
+	intenscap=get(handles.enable_intenscap, 'value');
+	clahesize=str2double(get(handles.clahe_size, 'string'));
+	highpsize=str2double(get(handles.highp_size, 'string'));
+	wienerwurst=get(handles.wienerwurst, 'value');
+	wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
+	
+	Autolimit_Callback
+	minintens=str2double(get(handles.minintens, 'string'));
+	maxintens=str2double(get(handles.maxintens, 'string'));
+	
+	%clipthresh=str2double(get(handles.clip_thresh, 'string'));
+	roirect=retr('roirect');
+	if size (roirect,2)<4
+		roirect=[1,1,size(img,2)-1,size(img,1)-1];
+	end
+	out = PIVlab_preproc (img,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+	image(out, 'parent',gca, 'cdatamapping', 'scaled');
+	colormap('gray');
+	axis image;
+	set(gca,'ytick',[]);
+	set(gca,'xtick',[]);
+	roirect=retr('roirect');
+	if size(roirect,2)>1
+		dispROI
+	end
+	currentframe=2*floor(get(handles.fileselector, 'value'))-1;
+	maskiererx=retr('maskiererx');
+	if size(maskiererx,2)>=currentframe
+		ximask=maskiererx{currentframe};
+		if size(ximask,1)>1
+			dispMASK(1-str2num(get(handles.masktransp,'String'))/100)
+			
+		end
+	end
 end
 
 function fftmulti_Callback(hObject, ~, ~)
 handles=gethand;
 if get(hObject,'Value') ==1
-    set(handles.dcc,'value',0)
-    set(handles.ensemble,'value',0)
-    set(handles.uipanel42,'visible','on')
-    set(handles.CorrQuality,'visible','on')
-    set(handles.text914,'visible','on')
-    set(handles.mask_auto_box,'visible','on')
-    %set(handles.AnalyzeAll,'visible','on')
-    set(handles.AnalyzeSingle,'visible','on')
-    set(handles.Settings_Apply_current,'visible','on')
+	set(handles.dcc,'value',0)
+	set(handles.ensemble,'value',0)
+	set(handles.uipanel42,'visible','on')
+	set(handles.CorrQuality,'visible','on')
+	set(handles.text914,'visible','on')
+	set(handles.mask_auto_box,'visible','on')
+	%set(handles.AnalyzeAll,'visible','on')
+	set(handles.AnalyzeSingle,'visible','on')
+	set(handles.Settings_Apply_current,'visible','on')
 else
-    set(handles.fftmulti,'value',1)
+	set(handles.fftmulti,'value',1)
 end
 dispinterrog
 
 function ensemble_Callback(hObject, ~, ~)
 handles=gethand;
 if get(hObject,'Value') ==1
-    set(handles.dcc,'value',0)
-    set(handles.fftmulti,'value',0)
-    set(handles.uipanel42,'visible','on')
-    set(handles.CorrQuality,'visible','on')
-    set(handles.text914,'visible','on')
-    set(handles.mask_auto_box,'visible','on')
-    
-    %set(handles.AnalyzeAll,'visible','off')
-    set(handles.AnalyzeSingle,'visible','off')
-    set(handles.Settings_Apply_current,'visible','off')
+	set(handles.dcc,'value',0)
+	set(handles.fftmulti,'value',0)
+	set(handles.uipanel42,'visible','on')
+	set(handles.CorrQuality,'visible','on')
+	set(handles.text914,'visible','on')
+	set(handles.mask_auto_box,'visible','on')
+	
+	%set(handles.AnalyzeAll,'visible','off')
+	set(handles.AnalyzeSingle,'visible','off')
+	set(handles.Settings_Apply_current,'visible','off')
 else
-    set(handles.ensemble,'value',1)
+	set(handles.ensemble,'value',1)
 end
 dispinterrog
 
 function checkbox27_Callback(hObject, ~, ~)
 handles=gethand;
 if get(hObject,'Value') == 0
-    set(handles.edit51,'enable','off')
-    set(handles.edit52,'enable','off')
-    set(handles.checkbox28,'value',0)
+	set(handles.edit51,'enable','off')
+	set(handles.edit52,'enable','off')
+	set(handles.checkbox28,'value',0)
 else
-    set(handles.edit50,'enable','on')
-    set(handles.edit51,'enable','on')
-    set(handles.checkbox26,'value',1)
+	set(handles.edit50,'enable','on')
+	set(handles.edit51,'enable','on')
+	set(handles.checkbox26,'value',1)
 end
 if get(handles.checkbox26,'value')==0
-    set(handles.checkbox27,'value',0)
-    set(handles.edit51,'enable','off')
+	set(handles.checkbox27,'value',0)
+	set(handles.edit51,'enable','off')
 end
 dispinterrog
 
 function checkbox28_Callback(hObject, ~, ~)
 handles=gethand;
 if get(hObject,'Value') == 0
-    set(handles.edit52,'enable','off')
+	set(handles.edit52,'enable','off')
 else
-    set(handles.edit52,'enable','on')
-    set(handles.edit50,'enable','on')
-    set(handles.edit51,'enable','on')
-    set(handles.checkbox26,'value',1)
-    set(handles.checkbox27,'value',1)
-    
+	set(handles.edit52,'enable','on')
+	set(handles.edit50,'enable','on')
+	set(handles.edit51,'enable','on')
+	set(handles.checkbox26,'value',1)
+	set(handles.checkbox27,'value',1)
+	
 end
 if get(handles.checkbox27,'value')==0
-    set(handles.checkbox28,'value',0)
-    set(handles.edit52,'enable','off')
+	set(handles.checkbox28,'value',0)
+	set(handles.edit52,'enable','off')
 end
 dispinterrog
 
@@ -3663,92 +3754,98 @@ handles=gethand;
 selected=2*floor(get(handles.fileselector, 'value'))-1;
 filepath=retr('filepath');
 if numel(filepath)>1
-    [~,~,ext] = fileparts(filepath{selected});
-    if strcmp(ext,'.b16')
-        size_img(1)=size(f_readB16(filepath{selected}),2)/2;
-        size_img(2)=size(f_readB16(filepath{selected}),1)/2;
-    else
-        size_img(1)=size(imread(filepath{selected}),2)/2;
-        size_img(2)=size(imread(filepath{selected}),1)/2;
-    end
-    step=str2double(get(handles.step,'string'));
-    delete(findobj(gca,'Type','hggroup')); %=vectors and scatter markers
-    delete(findobj(gca,'tag','intareadispl'));
-    centre(1)= size_img(2); %y
-    centre(2)= size_img(1); %x
-    
-    intarea1=str2double(get(handles.intarea,'string'))/2;
-    x1=[centre(2)-intarea1 centre(2)+intarea1 centre(2)+intarea1 centre(2)-intarea1 centre(2)-intarea1];
-    y1=[centre(1)-intarea1 centre(1)-intarea1 centre(1)+intarea1 centre(1)+intarea1 centre(1)-intarea1];
-    hold on;
-    plot(x1,y1,'c-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
-    if get(handles.fftmulti,'value')==1 || get(handles.ensemble,'value')==1
-        text(x1(1),y1(1), ['pass 1'],'color','c','fontsize',8,'tag','intareadispl','HorizontalAlignment','right','verticalalignment','bottom')
-        if get(handles.checkbox26,'value')==1
-            intarea2=str2double(get(handles.edit50,'string'))/2;
-            x2=[centre(2)-intarea2 centre(2)+intarea2 centre(2)+intarea2 centre(2)-intarea2 centre(2)-intarea2];
-            y2=[centre(1)-intarea2 centre(1)-intarea2 centre(1)+intarea2 centre(1)+intarea2 centre(1)-intarea2];
-            plot(x2,y2,'y-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
-            text(x2(2),y2(1), ['pass 2'],'color','y','fontsize',8,'tag','intareadispl','HorizontalAlignment','left','verticalalignment','bottom')
-        end
-        if get(handles.checkbox27,'value')==1
-            intarea3=str2double(get(handles.edit51,'string'))/2;
-            x3=[centre(2)-intarea3 centre(2)+intarea3 centre(2)+intarea3 centre(2)-intarea3 centre(2)-intarea3];
-            y3=[centre(1)-intarea3 centre(1)-intarea3 centre(1)+intarea3 centre(1)+intarea3 centre(1)-intarea3];
-            plot(x3,y3,'g-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
-            text(x3(2),y3(3), ['pass 3'],'color','g','fontsize',8,'tag','intareadispl','HorizontalAlignment','left','verticalalignment','top')
-        end
-        if get(handles.checkbox28,'value')==1
-            intarea4=str2double(get(handles.edit52,'string'))/2;
-            x4=[centre(2)-intarea4 centre(2)+intarea4 centre(2)+intarea4 centre(2)-intarea4 centre(2)-intarea4];
-            y4=[centre(1)-intarea4 centre(1)-intarea4 centre(1)+intarea4 centre(1)+intarea4 centre(1)-intarea4];
-            plot(x4,y4,'r-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
-            text(x4(1),y4(3), ['pass 4'],'color','r','fontsize',8,'tag','intareadispl','HorizontalAlignment','right','verticalalignment','top')
-        end
-    end
-    hold off;
-    %check if step is ok
-    if step/(intarea1*2) < 0.25
-        text (centre(2),centre(1)/2,'Warning: Step of pass 1 is very small.','color','r','tag','intareadispl','HorizontalAlignment','center','verticalalignment','top','Fontsize',10,'Backgroundcolor','k')
-    end
-    %check if int area sizes are decreasing
-    sizeerror=0;
-    try
-        if intarea4 > intarea3 || intarea4 > intarea2 || intarea4 > intarea1
-            sizeerror=1;
-        end
-    catch
-    end
-    try
-        if intarea3 > intarea2 || intarea3 > intarea1
-            sizeerror=1;
-        end
-    catch
-    end
-    try
-        if intarea2 > intarea1
-            sizeerror=1;
-        end
-    catch
-    end
-    if sizeerror == 1
-        text (centre(2),centre(1)*4/3,['Warning: Interrogation area sizes should be' sprintf('\n') 'gradually decreasing from pass 1 to pass 4.'],'color','r','tag','intareadispl','HorizontalAlignment','center','verticalalignment','top','Fontsize',10,'Backgroundcolor','k') %#ok<*SPRINTFN>
-        sizeerror=0;
-    end
-    
-    roirect=retr('roirect');
-    
-    if isempty(roirect) == 0 %roi eingeschaltet
-        roirect=retr('roirect');
-        minisize=min([roirect(3) roirect(4)]);
-    else
-        minisize=min([size_img(1) size_img(2)]);
-    end
-    
-    if intarea1*2 *2 > minisize
-        text (centre(2),centre(1)*5/3,['Warning: Interrogation area of pass 1 is most likely too big.'],'color','r','tag','intareadispl','HorizontalAlignment','center','verticalalignment','top','Fontsize',10,'Backgroundcolor','k')
-    end
-    
+	if retr('video_selection_done') == 0
+		[~,~,ext] = fileparts(filepath{selected});
+		if strcmp(ext,'.b16')
+			size_img(1)=size(f_readB16(filepath{selected}),2)/2;
+			size_img(2)=size(f_readB16(filepath{selected}),1)/2;
+		else
+			size_img(1)=size(imread(filepath{selected}),2)/2;
+			size_img(2)=size(imread(filepath{selected}),1)/2;
+		end
+	else
+		video_reader_object = retr('video_reader_object');
+		size_img(1)=size(read(video_reader_object,1),2)/2;
+		size_img(2)=size(read(video_reader_object,1),1)/2;
+	end
+	step=str2double(get(handles.step,'string'));
+	delete(findobj(gca,'Type','hggroup')); %=vectors and scatter markers
+	delete(findobj(gca,'tag','intareadispl'));
+	centre(1)= size_img(2); %y
+	centre(2)= size_img(1); %x
+	
+	intarea1=str2double(get(handles.intarea,'string'))/2;
+	x1=[centre(2)-intarea1 centre(2)+intarea1 centre(2)+intarea1 centre(2)-intarea1 centre(2)-intarea1];
+	y1=[centre(1)-intarea1 centre(1)-intarea1 centre(1)+intarea1 centre(1)+intarea1 centre(1)-intarea1];
+	hold on;
+	plot(x1,y1,'c-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
+	if get(handles.fftmulti,'value')==1 || get(handles.ensemble,'value')==1
+		text(x1(1),y1(1), ['pass 1'],'color','c','fontsize',8,'tag','intareadispl','HorizontalAlignment','right','verticalalignment','bottom')
+		if get(handles.checkbox26,'value')==1
+			intarea2=str2double(get(handles.edit50,'string'))/2;
+			x2=[centre(2)-intarea2 centre(2)+intarea2 centre(2)+intarea2 centre(2)-intarea2 centre(2)-intarea2];
+			y2=[centre(1)-intarea2 centre(1)-intarea2 centre(1)+intarea2 centre(1)+intarea2 centre(1)-intarea2];
+			plot(x2,y2,'y-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
+			text(x2(2),y2(1), ['pass 2'],'color','y','fontsize',8,'tag','intareadispl','HorizontalAlignment','left','verticalalignment','bottom')
+		end
+		if get(handles.checkbox27,'value')==1
+			intarea3=str2double(get(handles.edit51,'string'))/2;
+			x3=[centre(2)-intarea3 centre(2)+intarea3 centre(2)+intarea3 centre(2)-intarea3 centre(2)-intarea3];
+			y3=[centre(1)-intarea3 centre(1)-intarea3 centre(1)+intarea3 centre(1)+intarea3 centre(1)-intarea3];
+			plot(x3,y3,'g-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
+			text(x3(2),y3(3), ['pass 3'],'color','g','fontsize',8,'tag','intareadispl','HorizontalAlignment','left','verticalalignment','top')
+		end
+		if get(handles.checkbox28,'value')==1
+			intarea4=str2double(get(handles.edit52,'string'))/2;
+			x4=[centre(2)-intarea4 centre(2)+intarea4 centre(2)+intarea4 centre(2)-intarea4 centre(2)-intarea4];
+			y4=[centre(1)-intarea4 centre(1)-intarea4 centre(1)+intarea4 centre(1)+intarea4 centre(1)-intarea4];
+			plot(x4,y4,'r-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
+			text(x4(1),y4(3), ['pass 4'],'color','r','fontsize',8,'tag','intareadispl','HorizontalAlignment','right','verticalalignment','top')
+		end
+	end
+	hold off;
+	%check if step is ok
+	if step/(intarea1*2) < 0.25
+		text (centre(2),centre(1)/2,'Warning: Step of pass 1 is very small.','color','r','tag','intareadispl','HorizontalAlignment','center','verticalalignment','top','Fontsize',10,'Backgroundcolor','k')
+	end
+	%check if int area sizes are decreasing
+	sizeerror=0;
+	try
+		if intarea4 > intarea3 || intarea4 > intarea2 || intarea4 > intarea1
+			sizeerror=1;
+		end
+	catch
+	end
+	try
+		if intarea3 > intarea2 || intarea3 > intarea1
+			sizeerror=1;
+		end
+	catch
+	end
+	try
+		if intarea2 > intarea1
+			sizeerror=1;
+		end
+	catch
+	end
+	if sizeerror == 1
+		text (centre(2),centre(1)*4/3,['Warning: Interrogation area sizes should be' sprintf('\n') 'gradually decreasing from pass 1 to pass 4.'],'color','r','tag','intareadispl','HorizontalAlignment','center','verticalalignment','top','Fontsize',10,'Backgroundcolor','k') %#ok<*SPRINTFN>
+		sizeerror=0;
+	end
+	
+	roirect=retr('roirect');
+	
+	if isempty(roirect) == 0 %roi eingeschaltet
+		roirect=retr('roirect');
+		minisize=min([roirect(3) roirect(4)]);
+	else
+		minisize=min([size_img(1) size_img(2)]);
+	end
+	
+	if intarea1*2 *2 > minisize
+		text (centre(2),centre(1)*5/3,['Warning: Interrogation area of pass 1 is most likely too big.'],'color','r','tag','intareadispl','HorizontalAlignment','center','verticalalignment','top','Fontsize',10,'Backgroundcolor','k')
+	end
+	
 end
 
 function countparticles(~, ~, ~)
@@ -3758,119 +3855,119 @@ selected=2*floor(get(handles.fileselector, 'value'))-1;
 filepath=retr('filepath');
 ok=checksettings;
 if ok==1
-    uiwait(msgbox({'Please select a rectangle';'that encloses the area that';'you want to analyze.'},'Suggestion for PIV settings','modal'));
-    roirect=retr('roirect');
-    old_roirect=roirect;
-    roirect=[];
-    put ('roirect',roirect);
-    roi_select_Callback()
-    roirect=retr('roirect');
-    if numel(roirect) == 4
-        %roirect(1,3)~=0 && roirect(1,4)~=0
-        if roirect(3) < 50 || roirect(4)< 50
-            uiwait(msgbox({'The rectangle you selected is too small.';'Please select a larger rectangle.';'(should be larger than 50 x 50 pixels)'},'Suggestion for PIV settings','modal'));
-        else
-            text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
-            drawnow
-            [~,~,ext] = fileparts(filepath{selected});
-            if strcmp(ext,'.b16')
-                A=f_readB16(filepath{selected});
-                B=f_readB16(filepath{selected+1});
-            else
-                A=imread(filepath{selected});
-                B=imread(filepath{selected+1});
-            end
-            
-            
-            A=A(roirect(2):roirect(2)+roirect(4),roirect(1):roirect(1)+roirect(3));
-            B=B(roirect(2):roirect(2)+roirect(4),roirect(1):roirect(1)+roirect(3));
-            clahe=get(handles.clahe_enable,'value');
-            highp=get(handles.enable_highpass,'value');
-            intenscap=get(handles.enable_intenscap, 'value');
-            clahesize=str2double(get(handles.clahe_size, 'string'))*2; % faster...
-            highpsize=str2double(get(handles.highp_size, 'string'));
-            wienerwurst=get(handles.wienerwurst, 'value');
-            wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-            roirect=retr('roirect');
-            if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-                stretcher = stretchlim(A);
-                minintens = stretcher(1);
-                maxintens = stretcher(2);
-            end
-            A = PIVlab_preproc (A,[],clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-            if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-                stretcher = stretchlim(B);
-                minintens = stretcher(1);
-                maxintens = stretcher(2);
-            end
-            B = PIVlab_preproc (B,[],clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-            
-            interrogationarea=round(min(size(A))/4);
-            if interrogationarea > 64
-                interrogationarea = 64;
-            end
-            step=round(interrogationarea/4);
-            if step < 6
-                step=6;
-            end
-            [x, y, u, v, typevector,~] = piv_FFTmulti (A,B,interrogationarea, step,1,[],[],1,32,16,16,'*linear',1,0,0);
-            u=medfilt2(u);
-            v=medfilt2(v);
-            u=inpaint_nans(u,4);
-            v=inpaint_nans(v,4);
-            maxvel=max(max(sqrt(u.^2+v.^2)));
-            %minimum size recommendation based on displacement
-            recommended1=ceil(4*maxvel/2)*2;
-            A(A<=80)=0;
-            A(A>80)=255;
-            B(B<=80)=0;
-            B(B>80)=255;
-            [spots,numA]=bwlabeln(A,8);
-            [spots,numB]=bwlabeln(B,8);
-            XA=((numA+numB)/2)/(size(A,1)*size(A,2));
-            YA=8/XA;
-            %minimum size recommendation based on particle density
-            recommended2=round(sqrt(YA)/2)*2; % 8 peaks are in Z*Z area
-            %minimum size recommendation based on experience with "normal PIV images"
-            recommended3= 32; %relativ allgemeingültiger Erfahrungswert
-            recommendation = median([recommended1 recommended2 recommended3]);
-            %[recommended1 recommended2 recommended3]
-            uiwait(msgbox({'These are the recommendations for the size of the final interrogation area:';[''];['Based on the displacements: ' num2str(recommended1) ' pixels'];['Based on the particle count: ' num2str(recommended2) ' pixels'];['Based on practical experience: ' num2str(recommended3) ' pixels'];[''];'The settings are automatically updated with the median of the recommendation.'},'Suggestion for PIV settings','modal'));
-            set(handles.fftmulti,'Value', 1)
-            set(handles.ensemble,'Value', 1)
-            
-            set(handles.dcc,'Value', 0)
-            set (handles.intarea, 'String', recommendation*2); %two times the minimum recommendation
-            set (handles.step, 'String', recommendation);
-            set(handles.checkbox26,'Value',1); %pass2
-            set(handles.edit50,'String',recommendation); %pass2 size
-            set(handles.checkbox27, 'Value',0); %pass3
-            set(handles.edit51,'String',recommendation); %pass3 size
-            set(handles.checkbox28, 'Value',0); %pass4
-            set(handles.edit52,'String',recommendation); %pass4 size
-            %set(handles.popupmenu16,'Value',1);
-            set(handles.subpix,'value',1);
-            %set(handles.Repeated_box,'value',0);
-            set(handles.CorrQuality,'value',1)
-            set(handles.mask_auto_box,'value',0);
-            checkbox26_Callback(handles.checkbox26)
-            checkbox27_Callback(handles.checkbox27)
-            checkbox28_Callback(handles.checkbox28)
-            edit50_Callback(handles.edit50)
-            edit51_Callback(handles.edit51)
-            edit52_Callback(handles.edit52)
-            fftmulti_Callback(handles.fftmulti)
-            step_Callback(handles.step)
-            dispinterrog
-            delete(findobj('tag','hint'));
-            
-        end
-    end
-    roirect=old_roirect;
-    put ('roirect',roirect);
-    if size(roirect,2)>1
-        dispROI
-    end
+	uiwait(msgbox({'Please select a rectangle';'that encloses the area that';'you want to analyze.'},'Suggestion for PIV settings','modal'));
+	roirect=retr('roirect');
+	old_roirect=roirect;
+	roirect=[];
+	put ('roirect',roirect);
+	roi_select_Callback()
+	roirect=retr('roirect');
+	if numel(roirect) == 4
+		%roirect(1,3)~=0 && roirect(1,4)~=0
+		if roirect(3) < 50 || roirect(4)< 50
+			uiwait(msgbox({'The rectangle you selected is too small.';'Please select a larger rectangle.';'(should be larger than 50 x 50 pixels)'},'Suggestion for PIV settings','modal'));
+		else
+			text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
+			drawnow
+			[~,~,ext] = fileparts(filepath{selected});
+			if strcmp(ext,'.b16')
+				A=f_readB16(filepath{selected});
+				B=f_readB16(filepath{selected+1});
+			else
+				A=imread(filepath{selected});
+				B=imread(filepath{selected+1});
+			end
+			
+			
+			A=A(roirect(2):roirect(2)+roirect(4),roirect(1):roirect(1)+roirect(3));
+			B=B(roirect(2):roirect(2)+roirect(4),roirect(1):roirect(1)+roirect(3));
+			clahe=get(handles.clahe_enable,'value');
+			highp=get(handles.enable_highpass,'value');
+			intenscap=get(handles.enable_intenscap, 'value');
+			clahesize=str2double(get(handles.clahe_size, 'string'))*2; % faster...
+			highpsize=str2double(get(handles.highp_size, 'string'));
+			wienerwurst=get(handles.wienerwurst, 'value');
+			wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
+			roirect=retr('roirect');
+			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+				stretcher = stretchlim(A);
+				minintens = stretcher(1);
+				maxintens = stretcher(2);
+			end
+			A = PIVlab_preproc (A,[],clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+				stretcher = stretchlim(B);
+				minintens = stretcher(1);
+				maxintens = stretcher(2);
+			end
+			B = PIVlab_preproc (B,[],clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+			
+			interrogationarea=round(min(size(A))/4);
+			if interrogationarea > 64
+				interrogationarea = 64;
+			end
+			step=round(interrogationarea/4);
+			if step < 6
+				step=6;
+			end
+			[x, y, u, v, typevector,~] = piv_FFTmulti (A,B,interrogationarea, step,1,[],[],1,32,16,16,'*linear',1,0,0);
+			u=medfilt2(u);
+			v=medfilt2(v);
+			u=inpaint_nans(u,4);
+			v=inpaint_nans(v,4);
+			maxvel=max(max(sqrt(u.^2+v.^2)));
+			%minimum size recommendation based on displacement
+			recommended1=ceil(4*maxvel/2)*2;
+			A(A<=80)=0;
+			A(A>80)=255;
+			B(B<=80)=0;
+			B(B>80)=255;
+			[spots,numA]=bwlabeln(A,8);
+			[spots,numB]=bwlabeln(B,8);
+			XA=((numA+numB)/2)/(size(A,1)*size(A,2));
+			YA=8/XA;
+			%minimum size recommendation based on particle density
+			recommended2=round(sqrt(YA)/2)*2; % 8 peaks are in Z*Z area
+			%minimum size recommendation based on experience with "normal PIV images"
+			recommended3= 32; %relativ allgemeingültiger Erfahrungswert
+			recommendation = median([recommended1 recommended2 recommended3]);
+			%[recommended1 recommended2 recommended3]
+			uiwait(msgbox({'These are the recommendations for the size of the final interrogation area:';[''];['Based on the displacements: ' num2str(recommended1) ' pixels'];['Based on the particle count: ' num2str(recommended2) ' pixels'];['Based on practical experience: ' num2str(recommended3) ' pixels'];[''];'The settings are automatically updated with the median of the recommendation.'},'Suggestion for PIV settings','modal'));
+			set(handles.fftmulti,'Value', 1)
+			set(handles.ensemble,'Value', 1)
+			
+			set(handles.dcc,'Value', 0)
+			set (handles.intarea, 'String', recommendation*2); %two times the minimum recommendation
+			set (handles.step, 'String', recommendation);
+			set(handles.checkbox26,'Value',1); %pass2
+			set(handles.edit50,'String',recommendation); %pass2 size
+			set(handles.checkbox27, 'Value',0); %pass3
+			set(handles.edit51,'String',recommendation); %pass3 size
+			set(handles.checkbox28, 'Value',0); %pass4
+			set(handles.edit52,'String',recommendation); %pass4 size
+			%set(handles.popupmenu16,'Value',1);
+			set(handles.subpix,'value',1);
+			%set(handles.Repeated_box,'value',0);
+			set(handles.CorrQuality,'value',1)
+			set(handles.mask_auto_box,'value',0);
+			checkbox26_Callback(handles.checkbox26)
+			checkbox27_Callback(handles.checkbox27)
+			checkbox28_Callback(handles.checkbox28)
+			edit50_Callback(handles.edit50)
+			edit51_Callback(handles.edit51)
+			edit52_Callback(handles.edit52)
+			fftmulti_Callback(handles.fftmulti)
+			step_Callback(handles.step)
+			dispinterrog
+			delete(findobj('tag','hint'));
+			
+		end
+	end
+	roirect=old_roirect;
+	put ('roirect',roirect);
+	if size(roirect,2)>1
+		dispROI
+	end
 end
 
 function intarea_Callback(~, ~, ~)
@@ -3881,168 +3978,181 @@ function step_Callback(~, ~, ~)
 overlappercent
 dispinterrog
 
-function DCC_and_DFT_analyze_all 
+function DCC_and_DFT_analyze_all
 ok=checksettings;
 if ok==1
-    handles=gethand;
-    filepath=retr('filepath');
-    filename=retr('filename');
-    resultslist=cell(0); %clear old results
-    toolsavailable(0);
-    set (handles.cancelbutt, 'enable', 'on');
-    ismean=retr('ismean');
-    maskiererx=retr('maskiererx');
-    maskierery=retr('maskierery');
-    for i=size(ismean,1):-1:1 %remove averaged results
-        if ismean(i,1)==1
-            filepath(i*2,:)=[];
-            filename(i*2,:)=[];
-            
-            filepath(i*2-1,:)=[];
-            filename(i*2-1,:)=[];
-            if size(maskiererx,2)>=i*2
-                maskiererx(:,i*2)=[];
-                maskierery(:,i*2)=[];
-                maskiererx(:,i*2-1)=[];
-                maskierery(:,i*2-1)=[];
-            end
-        end
-    end
-    put('filepath',filepath);
-    put('filename',filename);
-    put('ismean',[]);
-    sliderrange
-    
-    for i=1:2:size(filepath,1)
-        if i==1
-            tic
-        end
-        cancel=retr('cancel');
-        if isempty(cancel)==1 || cancel ~=1
-            [~,~,ext] = fileparts(filepath{i});
-            if strcmp(ext,'.b16')
-                image1=f_readB16(filepath{i});
-                image2=f_readB16(filepath{i+1});
-            else
-                image1=imread(filepath{i});
-                image2=imread(filepath{i+1});
-            end
-            if size(image1,3)>1
-                image1=uint8(mean(image1,3));
-                image2=uint8(mean(image2,3));
-                %disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
-            end
-            set(handles.progress, 'string' , ['Frame progress: 0%']);drawnow; %#ok<*NBRAK>
-            clahe=get(handles.clahe_enable,'value');
-            highp=get(handles.enable_highpass,'value');
-            %clip=get(handles.enable_clip,'value');
-            intenscap=get(handles.enable_intenscap, 'value');
-            clahesize=str2double(get(handles.clahe_size, 'string'));
-            highpsize=str2double(get(handles.highp_size, 'string'));
-            wienerwurst=get(handles.wienerwurst, 'value');
-            wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-            
-            Autolimit_Callback
-            minintens=str2double(get(handles.minintens, 'string'));
-            maxintens=str2double(get(handles.maxintens, 'string'));
-            %clipthresh=str2double(get(handles.clip_thresh, 'string'));
-            roirect=retr('roirect');
-            if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-                stretcher = stretchlim(image1);
-                minintens = stretcher(1);
-                maxintens = stretcher(2);
-            end
-            image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-            if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-                stretcher = stretchlim(image2);
-                minintens = stretcher(1);
-                maxintens = stretcher(2);
-            end
-            image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-            maskiererx=retr('maskiererx');
-            maskierery=retr('maskierery');
-            ximask={};
-            yimask={};
-            if size(maskiererx,2)>=i
-                for j=1:size(maskiererx,1);
-                    if isempty(maskiererx{j,i})==0
-                        ximask{j,1}=maskiererx{j,i}; %#ok<*AGROW>
-                        yimask{j,1}=maskierery{j,i};
-                    else
-                        break
-                    end
-                end
-                if size(ximask,1)>0
-                    mask=[ximask yimask];
-                else
-                    mask=[];
-                end
-            else
-                mask=[];
-            end
-            interrogationarea=str2double(get(handles.intarea, 'string'));
-            step=str2double(get(handles.step, 'string'));
-            subpixfinder=get(handles.subpix,'value');
-            if get(handles.dcc,'Value')==1
-                [x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask, roirect);
-            elseif get(handles.fftmulti,'Value')==1
-                passes=1;
-                if get(handles.checkbox26,'value')==1
-                    passes=2;
-                end
-                if get(handles.checkbox27,'value')==1
-                    passes=3;
-                end
-                if get(handles.checkbox28,'value')==1
-                    passes=4;
-                end
-                int2=str2num(get(handles.edit50,'string'));
-                int3=str2num(get(handles.edit51,'string'));
-                int4=str2num(get(handles.edit52,'string'));
-                mask_auto = get(handles.mask_auto_box,'value');
-
-                [imdeform, repeat, do_pad] = CorrQuality;
-                [x, y, u, v, typevector,correlation_map] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad);
-                %u=real(u)
-                %v=real(v)
-            end
-            resultslist{1,(i+1)/2}=x;
-            resultslist{2,(i+1)/2}=y;
-            resultslist{3,(i+1)/2}=u;
-            resultslist{4,(i+1)/2}=v;
-            resultslist{5,(i+1)/2}=typevector;
-            resultslist{6,(i+1)/2}=[];
-            resultslist{12,(i+1)/2}=correlation_map;
-            put('resultslist',resultslist);
-            set(handles.fileselector, 'value', (i+1)/2);
-            set(handles.progress, 'string' , ['Frame progress: 100%'])
-            set(handles.overall, 'string' , ['Total progress: ' int2str((i+1)/2/(size(filepath,1)/2)*100) '%'])
-            put('subtr_u', 0);
-            put('subtr_v', 0);
-            sliderdisp
-            %xpos=size(image1,2)/2-40;
-            %text(xpos,50, ['Analyzing... ' int2str((i+1)/2/(size(filepath,1)/2)*100) '%' ],'color', 'r','FontName','FixedWidth','fontweight', 'bold', 'fontsize', 20, 'tag', 'annoyingthing')
-            zeit=toc;
-            done=(i+1)/2;
-            tocome=(size(filepath,1)/2)-done;
-            zeit=zeit/done*tocome;
-            hrs=zeit/60^2;
-            mins=(hrs-floor(hrs))*60;
-            secs=(mins-floor(mins))*60;
-            hrs=floor(hrs);
-            mins=floor(mins);
-            secs=floor(secs);
-            set(handles.totaltime,'string', ['Time left: ' sprintf('%2.2d', hrs) 'h ' sprintf('%2.2d', mins) 'm ' sprintf('%2.2d', secs) 's']);
-        end %cancel==0
-    end
-    delete(findobj('tag', 'annoyingthing'));
-    set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
-    set(handles.totaltime, 'String','Time left: N/A');
-    if isempty(cancel)==1 || cancel ~=1
-        try;sound(audioread('finished.mp3'),22000);catch;end
-    end
-    put('cancel',0);
-    
+	handles=gethand;
+	filepath=retr('filepath');
+	filename=retr('filename');
+	resultslist=cell(0); %clear old results
+	toolsavailable(0);
+	set (handles.cancelbutt, 'enable', 'on');
+	ismean=retr('ismean');
+	maskiererx=retr('maskiererx');
+	maskierery=retr('maskierery');
+	for i=size(ismean,1):-1:1 %remove averaged results
+		if ismean(i,1)==1
+			filepath(i*2,:)=[];
+			filename(i*2,:)=[];
+			
+			filepath(i*2-1,:)=[];
+			filename(i*2-1,:)=[];
+			if size(maskiererx,2)>=i*2
+				maskiererx(:,i*2)=[];
+				maskierery(:,i*2)=[];
+				maskiererx(:,i*2-1)=[];
+				maskierery(:,i*2-1)=[];
+			end
+		end
+	end
+	put('filepath',filepath);
+	put('filename',filename);
+	put('ismean',[]);
+	sliderrange
+	if retr('video_selection_done')==0
+		num_frames_to_process = size(filepath,1);
+	else
+		video_frame_selection=retr('video_frame_selection');
+		num_frames_to_process = numel(video_frame_selection);
+	end
+	for i=1:2:num_frames_to_process
+		if i==1
+			tic
+		end
+		cancel=retr('cancel');
+		if isempty(cancel)==1 || cancel ~=1
+			if retr('video_selection_done') == 0
+				[~,~,ext] = fileparts(filepath{i});
+				if strcmp(ext,'.b16')
+					image1=f_readB16(filepath{i});
+					image2=f_readB16(filepath{i+1});
+				else
+					image1=imread(filepath{i});
+					image2=imread(filepath{i+1});
+				end
+			else
+				video_reader_object = retr('video_reader_object');
+				video_frame_selection=retr('video_frame_selection');
+				image1 = read(video_reader_object,video_frame_selection(i));
+				image2 = read(video_reader_object,video_frame_selection(i+1));
+			end
+			
+			if size(image1,3)>1
+				image1=uint8(mean(image1,3));
+				image2=uint8(mean(image2,3));
+				%disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
+			end
+			set(handles.progress, 'string' , ['Frame progress: 0%']);drawnow; %#ok<*NBRAK>
+			clahe=get(handles.clahe_enable,'value');
+			highp=get(handles.enable_highpass,'value');
+			%clip=get(handles.enable_clip,'value');
+			intenscap=get(handles.enable_intenscap, 'value');
+			clahesize=str2double(get(handles.clahe_size, 'string'));
+			highpsize=str2double(get(handles.highp_size, 'string'));
+			wienerwurst=get(handles.wienerwurst, 'value');
+			wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
+			
+			Autolimit_Callback
+			minintens=str2double(get(handles.minintens, 'string'));
+			maxintens=str2double(get(handles.maxintens, 'string'));
+			%clipthresh=str2double(get(handles.clip_thresh, 'string'));
+			roirect=retr('roirect');
+			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+				stretcher = stretchlim(image1);
+				minintens = stretcher(1);
+				maxintens = stretcher(2);
+			end
+			image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+				stretcher = stretchlim(image2);
+				minintens = stretcher(1);
+				maxintens = stretcher(2);
+			end
+			image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+			maskiererx=retr('maskiererx');
+			maskierery=retr('maskierery');
+			ximask={};
+			yimask={};
+			if size(maskiererx,2)>=i
+				for j=1:size(maskiererx,1);
+					if isempty(maskiererx{j,i})==0
+						ximask{j,1}=maskiererx{j,i}; %#ok<*AGROW>
+						yimask{j,1}=maskierery{j,i};
+					else
+						break
+					end
+				end
+				if size(ximask,1)>0
+					mask=[ximask yimask];
+				else
+					mask=[];
+				end
+			else
+				mask=[];
+			end
+			interrogationarea=str2double(get(handles.intarea, 'string'));
+			step=str2double(get(handles.step, 'string'));
+			subpixfinder=get(handles.subpix,'value');
+			if get(handles.dcc,'Value')==1
+				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask, roirect);
+			elseif get(handles.fftmulti,'Value')==1
+				passes=1;
+				if get(handles.checkbox26,'value')==1
+					passes=2;
+				end
+				if get(handles.checkbox27,'value')==1
+					passes=3;
+				end
+				if get(handles.checkbox28,'value')==1
+					passes=4;
+				end
+				int2=str2num(get(handles.edit50,'string'));
+				int3=str2num(get(handles.edit51,'string'));
+				int4=str2num(get(handles.edit52,'string'));
+				mask_auto = get(handles.mask_auto_box,'value');
+				
+				[imdeform, repeat, do_pad] = CorrQuality;
+				[x, y, u, v, typevector,correlation_map] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad);
+				%u=real(u)
+				%v=real(v)
+			end
+			resultslist{1,(i+1)/2}=x;
+			resultslist{2,(i+1)/2}=y;
+			resultslist{3,(i+1)/2}=u;
+			resultslist{4,(i+1)/2}=v;
+			resultslist{5,(i+1)/2}=typevector;
+			resultslist{6,(i+1)/2}=[];
+			resultslist{12,(i+1)/2}=correlation_map;
+			put('resultslist',resultslist);
+			set(handles.fileselector, 'value', (i+1)/2);
+			set(handles.progress, 'string' , ['Frame progress: 100%'])
+			set(handles.overall, 'string' , ['Total progress: ' int2str((i+1)/2/num_frames_to_process*200) '%'])
+			put('subtr_u', 0);
+			put('subtr_v', 0);
+			sliderdisp
+			%xpos=size(image1,2)/2-40;
+			%text(xpos,50, ['Analyzing... ' int2str((i+1)/2/(size(filepath,1)/2)*100) '%' ],'color', 'r','FontName','FixedWidth','fontweight', 'bold', 'fontsize', 20, 'tag', 'annoyingthing')
+			zeit=toc;
+			done=(i+1)/2;
+			tocome=(num_frames_to_process/2)-done;
+			zeit=zeit/done*tocome;
+			hrs=zeit/60^2;
+			mins=(hrs-floor(hrs))*60;
+			secs=(mins-floor(mins))*60;
+			hrs=floor(hrs);
+			mins=floor(mins);
+			secs=floor(secs);
+			set(handles.totaltime,'string', ['Time left: ' sprintf('%2.2d', hrs) 'h ' sprintf('%2.2d', mins) 'm ' sprintf('%2.2d', secs) 's']);
+		end %cancel==0
+	end
+	delete(findobj('tag', 'annoyingthing'));
+	set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
+	set(handles.totaltime, 'String','Time left: N/A');
+	if isempty(cancel)==1 || cancel ~=1
+		try;sound(audioread('finished.mp3'),22000);catch;end
+	end
+	put('cancel',0);
+	
 end
 toolsavailable(1);
 
@@ -4051,75 +4161,84 @@ handles=gethand;
 put('cancel',0);
 ok=checksettings;
 if ok==1
-    filepath=retr('filepath');
-    filename=retr('filename');
-    resultslist=cell(0); %clear old results
-    toolsavailable(0);
-    set (handles.cancelbutt, 'enable', 'on');
-    ismean=retr('ismean');
-    maskiererx=retr('maskiererx');
-    maskierery=retr('maskierery');
-    for i=size(ismean,1):-1:1 %remove averaged results
-        if ismean(i,1)==1
-            filepath(i*2,:)=[];
-            filename(i*2,:)=[];
-            filepath(i*2-1,:)=[];
-            filename(i*2-1,:)=[];
-            if size(maskiererx,2)>=i*2
-                maskiererx(:,i*2)=[];
-                maskierery(:,i*2)=[];
-                maskiererx(:,i*2-1)=[];
-                maskierery(:,i*2-1)=[];
-            end
-        end
-    end
-    put('filepath',filepath);
-    put('filename',filename);
-    put('ismean',[]);
-    sliderrange
-    %% get all parameters for preprocessing
-    clahe=get(handles.clahe_enable,'value');
-    highp=get(handles.enable_highpass,'value');
-    %clip=get(handles.enable_clip,'value');
-    intenscap=get(handles.enable_intenscap, 'value');
-    clahesize=str2double(get(handles.clahe_size, 'string'));
-    highpsize=str2double(get(handles.highp_size, 'string'));
-    wienerwurst=get(handles.wienerwurst, 'value');
-    wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-    
-    Autolimit_Callback
-    minintens1=str2double(get(handles.minintens, 'string'));
-    maxintens1=str2double(get(handles.maxintens, 'string'));
-    minintens2=str2double(get(handles.minintens, 'string'));
-    maxintens2=str2double(get(handles.maxintens, 'string'));
-    %clipthresh=str2double(get(handles.clip_thresh, 'string'));
-    roirect=retr('roirect');
-    autolimit = get(handles.Autolimit, 'value');
-    maskiererx=retr('maskiererx');
-    maskierery=retr('maskierery');
-    interrogationarea=str2double(get(handles.intarea, 'string'));
-    step=str2double(get(handles.step, 'string'));
-    subpixfinder=get(handles.subpix,'value');
-    passes=1;
-    if get(handles.checkbox26,'value')==1
-        passes=2;
-    end
-    if get(handles.checkbox27,'value')==1
-        passes=3;
-    end
-    if get(handles.checkbox28,'value')==1
-        passes=4;
-    end
-    int2=str2num(get(handles.edit50,'string'));
-    int3=str2num(get(handles.edit51,'string'));
-    int4=str2num(get(handles.edit52,'string'));
-    mask_auto = get(handles.mask_auto_box,'value');
-    [imdeform, repeat, do_pad] = CorrQuality;
-    [x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, filepath,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
-    cancel = retr('cancel');
-    if isempty(cancel)==1 || cancel ~=1
-        %Fill all frames with the same result
-        %{
+	filepath=retr('filepath');
+	filename=retr('filename');
+	resultslist=cell(0); %clear old results
+	toolsavailable(0);
+	set (handles.cancelbutt, 'enable', 'on');
+	ismean=retr('ismean');
+	maskiererx=retr('maskiererx');
+	maskierery=retr('maskierery');
+	for i=size(ismean,1):-1:1 %remove averaged results
+		if ismean(i,1)==1
+			filepath(i*2,:)=[];
+			filename(i*2,:)=[];
+			filepath(i*2-1,:)=[];
+			filename(i*2-1,:)=[];
+			if size(maskiererx,2)>=i*2
+				maskiererx(:,i*2)=[];
+				maskierery(:,i*2)=[];
+				maskiererx(:,i*2-1)=[];
+				maskierery(:,i*2-1)=[];
+			end
+		end
+	end
+	put('filepath',filepath);
+	put('filename',filename);
+	put('ismean',[]);
+	sliderrange
+	%% get all parameters for preprocessing
+	clahe=get(handles.clahe_enable,'value');
+	highp=get(handles.enable_highpass,'value');
+	%clip=get(handles.enable_clip,'value');
+	intenscap=get(handles.enable_intenscap, 'value');
+	clahesize=str2double(get(handles.clahe_size, 'string'));
+	highpsize=str2double(get(handles.highp_size, 'string'));
+	wienerwurst=get(handles.wienerwurst, 'value');
+	wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
+	
+	Autolimit_Callback
+	minintens1=str2double(get(handles.minintens, 'string'));
+	maxintens1=str2double(get(handles.maxintens, 'string'));
+	minintens2=str2double(get(handles.minintens, 'string'));
+	maxintens2=str2double(get(handles.maxintens, 'string'));
+	%clipthresh=str2double(get(handles.clip_thresh, 'string'));
+	roirect=retr('roirect');
+	autolimit = get(handles.Autolimit, 'value');
+	maskiererx=retr('maskiererx');
+	maskierery=retr('maskierery');
+	interrogationarea=str2double(get(handles.intarea, 'string'));
+	step=str2double(get(handles.step, 'string'));
+	subpixfinder=get(handles.subpix,'value');
+	passes=1;
+	if get(handles.checkbox26,'value')==1
+		passes=2;
+	end
+	if get(handles.checkbox27,'value')==1
+		passes=3;
+	end
+	if get(handles.checkbox28,'value')==1
+		passes=4;
+	end
+	int2=str2num(get(handles.edit50,'string'));
+	int3=str2num(get(handles.edit51,'string'));
+	int4=str2num(get(handles.edit52,'string'));
+	mask_auto = get(handles.mask_auto_box,'value');
+	[imdeform, repeat, do_pad] = CorrQuality;
+	%�bergeben: Video frame selection
+	if retr('video_selection_done') == 0
+		video_frame_selection=[];
+		[x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, filepath,video_frame_selection,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
+	else
+		video_frame_selection=retr('video_frame_selection');
+		video_reader_object = retr('video_reader_object');
+		[x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, video_reader_object ,video_frame_selection,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
+	end
+	
+	cancel = retr('cancel');
+	if isempty(cancel)==1 || cancel ~=1
+		%Fill all frames with the same result
+		%{
         for filler=1:size(filepath,1)/2
             resultslist{1,filler}=x;
             resultslist{2,filler}=y;
@@ -4128,235 +4247,241 @@ if ok==1
             resultslist{5,filler}=typevector;
             resultslist{6,filler}=[];
         end
-        %}
-
-        %fill only first frame with results
-        resultslist{1,1}=x;
-        resultslist{2,1}=y;
-        resultslist{3,1}=u;
-        resultslist{4,1}=v;
-        resultslist{5,1}=typevector;
-        resultslist{6,1}=[];
-        resultslist{12,1}=correlation_map;
-        
-        put('resultslist',resultslist);
-        set(handles.fileselector, 'value', 1);
-        set(handles.progress, 'string' , ['Frame progress: 100%'])
-        %set(handles.overall, 'string' , ['Total progress: ' int2str((i+1)/2/(size(filepath,1)/2)*100) '%'])
-        put('subtr_u', 0);
-        put('subtr_v', 0);
-        sliderdisp
-        %delete(findobj('tag', 'annoyingthing'));
-        set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
-        set(handles.totaltime, 'String','Time left: N/A');
-        try;sound(audioread('finished.mp3'),22000);catch;end
-    else %user pressed cancel, no results
-        if verLessThan('matlab','8.4')
-            delete (findobj(getappdata(0,'hgui'),'type', 'hggroup'))
-        else
-            delete (findobj(getappdata(0,'hgui'),'type', 'quiver'))
-        end
-        %delete(findobj('tag', 'annoyingthing'));
-        set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
-        set(handles.totaltime, 'String','Time left: N/A');
-        set(handles.progress, 'string' , ['Frame progress: 100%'])
-    end
-  
-    put('cancel',0);
-    toolsavailable(1);
+		%}
+		
+		%fill only first frame with results
+		resultslist{1,1}=x;
+		resultslist{2,1}=y;
+		resultslist{3,1}=u;
+		resultslist{4,1}=v;
+		resultslist{5,1}=typevector;
+		resultslist{6,1}=[];
+		resultslist{12,1}=correlation_map;
+		
+		put('resultslist',resultslist);
+		set(handles.fileselector, 'value', 1);
+		set(handles.progress, 'string' , ['Frame progress: 100%'])
+		%set(handles.overall, 'string' , ['Total progress: ' int2str((i+1)/2/(size(filepath,1)/2)*100) '%'])
+		put('subtr_u', 0);
+		put('subtr_v', 0);
+		sliderdisp
+		%delete(findobj('tag', 'annoyingthing'));
+		set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
+		set(handles.totaltime, 'String','Time left: N/A');
+		try;sound(audioread('finished.mp3'),22000);catch;end
+	else %user pressed cancel, no results
+		if verLessThan('matlab','8.4')
+			delete (findobj(getappdata(0,'hgui'),'type', 'hggroup'))
+		else
+			delete (findobj(getappdata(0,'hgui'),'type', 'quiver'))
+		end
+		%delete(findobj('tag', 'annoyingthing'));
+		set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
+		set(handles.totaltime, 'String','Time left: N/A');
+		set(handles.progress, 'string' , ['Frame progress: 100%'])
+	end
+	
+	put('cancel',0);
+	toolsavailable(1);
 end
 
 
 function AnalyzeAll_Callback(~, ~, ~)
 handles=gethand;
 if get(handles.ensemble,'value')==0
-    DCC_and_DFT_analyze_all
+	DCC_and_DFT_analyze_all
 else
-    ensemble_piv_analyze_all
+	ensemble_piv_analyze_all
 end
 
 function [imdeform, repeat, do_pad]=CorrQuality(~,~)
 handles=gethand;
 quali = get(handles.CorrQuality,'Value');
 if quali==1 % normal quality
-    imdeform='*linear';
-    repeat = 0;
-    do_pad = 0;
+	imdeform='*linear';
+	repeat = 0;
+	do_pad = 0;
 end
 if quali==2 % better quality
-    imdeform='*spline';
-    repeat = 0;
-    do_pad = 0;
+	imdeform='*spline';
+	repeat = 0;
+	do_pad = 0;
 end
 if quali==3 % high quality
-    imdeform='*spline';
-    repeat = 0;
-    do_pad = 1;
+	imdeform='*spline';
+	repeat = 0;
+	do_pad = 1;
 end
 if quali==4 % ultra quality
-    imdeform='*spline';
-    repeat = 1;
-    do_pad = 1;
+	imdeform='*spline';
+	repeat = 1;
+	do_pad = 1;
 end
 
 function AnalyzeSingle_Callback(~, ~, ~)
 handles=gethand;
 ok=checksettings;
 if ok==1
-    resultslist=retr('resultslist');
-    set(handles.progress, 'string' , ['Frame progress: 0%']);drawnow;
-    handles=gethand;
-    filepath=retr('filepath');
-    selected=2*floor(get(handles.fileselector, 'value'))-1;
-    ismean=retr('ismean');
-    if size(ismean,1)>=(selected+1)/2
-        if ismean((selected+1)/2,1) ==1
-            currentwasmean=1;
-        else
-            currentwasmean=0;
-        end
-    else
-        currentwasmean=0;
-    end
-    if currentwasmean==0
-        tic;
-        [~,~,ext] = fileparts(filepath{selected});
-        if strcmp(ext,'.b16')
-            image1=f_readB16(filepath{selected});
-            image2=f_readB16(filepath{selected+1});
-        else
-            image1=imread(filepath{selected});
-            image2=imread(filepath{selected+1});
-        end
-        
-        
-        if size(image1,3)>1
-            image1=uint8(mean(image1,3));
-            image2=uint8(mean(image2,3));
-            %disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
-        end
-        clahe=get(handles.clahe_enable,'value');
-        highp=get(handles.enable_highpass,'value');
-        %clip=get(handles.enable_clip,'value');
-        intenscap=get(handles.enable_intenscap, 'value');
-        clahesize=str2double(get(handles.clahe_size, 'string'));
-        highpsize=str2double(get(handles.highp_size, 'string'));
-        wienerwurst=get(handles.wienerwurst, 'value');
-        wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-        Autolimit_Callback
-        minintens=str2double(get(handles.minintens, 'string'));
-        maxintens=str2double(get(handles.maxintens, 'string'));
-        %clipthresh=str2double(get(handles.clip_thresh, 'string'));
-        roirect=retr('roirect');
-        if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-            stretcher = stretchlim(image1);
-            minintens = stretcher(1);
-            maxintens = stretcher(2);
-        end
-        image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-        if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-            stretcher = stretchlim(image2);
-            minintens = stretcher(1);
-            maxintens = stretcher(2);
-        end
-        
-        image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-        maskiererx=retr('maskiererx');
-        maskierery=retr('maskierery');
-        ximask={};
-        yimask={};
-        if size(maskiererx,2)>=selected
-            for i=1:size(maskiererx,1);
-                if isempty(maskiererx{i,selected})==0
-                    ximask{i,1}=maskiererx{i,selected};
-                    yimask{i,1}=maskierery{i,selected};
-                else
-                    break
-                end
-            end
-            if size(ximask,1)>0
-                mask=[ximask yimask];
-            else
-                mask=[];
-            end
-        else
-            mask=[];
-        end
-        interrogationarea=str2double(get(handles.intarea, 'string'));
-        step=str2double(get(handles.step, 'string'));
-        subpixfinder=get(handles.subpix,'value');
-        if get(handles.dcc,'Value')==1
-            [x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask, roirect);
-        elseif get(handles.fftmulti,'Value')==1 || get(handles.ensemble,'Value')==1
-            passes=1;
-            if get(handles.checkbox26,'value')==1
-                passes=2;
-            end
-            if get(handles.checkbox27,'value')==1
-                passes=3;
-            end
-            if get(handles.checkbox28,'value')==1
-                passes=4;
-            end
-            int2=str2num(get(handles.edit50,'string'));
-            int3=str2num(get(handles.edit51,'string'));
-            int4=str2num(get(handles.edit52,'string'));
-            [imdeform, repeat, do_pad] = CorrQuality;
-            mask_auto = get(handles.mask_auto_box,'value');
-            
-            if get(handles.fftmulti,'Value')==1
-                [x, y, u, v, typevector,correlation_map] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad);
-            end
-            
-        end
-        resultslist{1,(selected+1)/2}=x;
-        resultslist{2,(selected+1)/2}=y;
-        resultslist{3,(selected+1)/2}=u;
-        resultslist{4,(selected+1)/2}=v;
-        resultslist{5,(selected+1)/2}=typevector;
-        resultslist{6,(selected+1)/2}=[];
-        %clear previous interpolation results
-        resultslist{7, (selected+1)/2} = [];
-        resultslist{8, (selected+1)/2} = [];
-        resultslist{9, (selected+1)/2} = [];
-        resultslist{10, (selected+1)/2} = [];
-        resultslist{11, (selected+1)/2} = [];
-        resultslist{12,(selected+1)/2}=correlation_map;
-        put('derived', [])
-        put('resultslist',resultslist);
-        set(handles.progress, 'string' , ['Frame progress: 100%'])
-        set(handles.overall, 'string' , ['Total progress: 100%'])
-        time1frame=toc;
-        set(handles.totaltime, 'String',['Analysis time: ' num2str(round(time1frame*100)/100) ' s']);
-        set(handles.messagetext, 'String','');
-        put('subtr_u', 0);
-        put('subtr_v', 0);
-        sliderdisp
-    end
-    
+	resultslist=retr('resultslist');
+	set(handles.progress, 'string' , ['Frame progress: 0%']);drawnow;
+	handles=gethand;
+	filepath=retr('filepath');
+	selected=2*floor(get(handles.fileselector, 'value'))-1;
+	ismean=retr('ismean');
+	if size(ismean,1)>=(selected+1)/2
+		if ismean((selected+1)/2,1) ==1
+			currentwasmean=1;
+		else
+			currentwasmean=0;
+		end
+	else
+		currentwasmean=0;
+	end
+	if currentwasmean==0
+		tic;
+		if retr('video_selection_done') == 0
+			[~,~,ext] = fileparts(filepath{selected});
+			if strcmp(ext,'.b16')
+				image1=f_readB16(filepath{selected});
+				image2=f_readB16(filepath{selected+1});
+			else
+				image1=imread(filepath{selected});
+				image2=imread(filepath{selected+1});
+			end
+		else
+			video_reader_object = retr('video_reader_object');
+			video_frame_selection=retr('video_frame_selection');
+			image1 = read(video_reader_object,video_frame_selection(selected));
+			image2 = read(video_reader_object,video_frame_selection(selected+1));
+		end
+		if size(image1,3)>1
+			image1=uint8(mean(image1,3));
+			image2=uint8(mean(image2,3));
+			%disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
+		end
+		clahe=get(handles.clahe_enable,'value');
+		highp=get(handles.enable_highpass,'value');
+		%clip=get(handles.enable_clip,'value');
+		intenscap=get(handles.enable_intenscap, 'value');
+		clahesize=str2double(get(handles.clahe_size, 'string'));
+		highpsize=str2double(get(handles.highp_size, 'string'));
+		wienerwurst=get(handles.wienerwurst, 'value');
+		wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
+		Autolimit_Callback
+		minintens=str2double(get(handles.minintens, 'string'));
+		maxintens=str2double(get(handles.maxintens, 'string'));
+		%clipthresh=str2double(get(handles.clip_thresh, 'string'));
+		roirect=retr('roirect');
+		if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+			stretcher = stretchlim(image1);
+			minintens = stretcher(1);
+			maxintens = stretcher(2);
+		end
+		image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+		if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+			stretcher = stretchlim(image2);
+			minintens = stretcher(1);
+			maxintens = stretcher(2);
+		end
+		
+		image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+		maskiererx=retr('maskiererx');
+		maskierery=retr('maskierery');
+		ximask={};
+		yimask={};
+		if size(maskiererx,2)>=selected
+			for i=1:size(maskiererx,1);
+				if isempty(maskiererx{i,selected})==0
+					ximask{i,1}=maskiererx{i,selected};
+					yimask{i,1}=maskierery{i,selected};
+				else
+					break
+				end
+			end
+			if size(ximask,1)>0
+				mask=[ximask yimask];
+			else
+				mask=[];
+			end
+		else
+			mask=[];
+		end
+		interrogationarea=str2double(get(handles.intarea, 'string'));
+		step=str2double(get(handles.step, 'string'));
+		subpixfinder=get(handles.subpix,'value');
+		if get(handles.dcc,'Value')==1
+			[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask, roirect);
+			correlation_map=zeros(size(u)); %nor correlation map available with DCC
+		elseif get(handles.fftmulti,'Value')==1 || get(handles.ensemble,'Value')==1
+			passes=1;
+			if get(handles.checkbox26,'value')==1
+				passes=2;
+			end
+			if get(handles.checkbox27,'value')==1
+				passes=3;
+			end
+			if get(handles.checkbox28,'value')==1
+				passes=4;
+			end
+			int2=str2num(get(handles.edit50,'string'));
+			int3=str2num(get(handles.edit51,'string'));
+			int4=str2num(get(handles.edit52,'string'));
+			[imdeform, repeat, do_pad] = CorrQuality;
+			mask_auto = get(handles.mask_auto_box,'value');
+			
+			if get(handles.fftmulti,'Value')==1
+				[x, y, u, v, typevector,correlation_map] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad);
+			end
+			
+		end
+		resultslist{1,(selected+1)/2}=x;
+		resultslist{2,(selected+1)/2}=y;
+		resultslist{3,(selected+1)/2}=u;
+		resultslist{4,(selected+1)/2}=v;
+		resultslist{5,(selected+1)/2}=typevector;
+		resultslist{6,(selected+1)/2}=[];
+		%clear previous interpolation results
+		resultslist{7, (selected+1)/2} = [];
+		resultslist{8, (selected+1)/2} = [];
+		resultslist{9, (selected+1)/2} = [];
+		resultslist{10, (selected+1)/2} = [];
+		resultslist{11, (selected+1)/2} = [];
+		resultslist{12,(selected+1)/2}=correlation_map;
+		put('derived', [])
+		put('resultslist',resultslist);
+		set(handles.progress, 'string' , ['Frame progress: 100%'])
+		set(handles.overall, 'string' , ['Total progress: 100%'])
+		time1frame=toc;
+		set(handles.totaltime, 'String',['Analysis time: ' num2str(round(time1frame*100)/100) ' s']);
+		set(handles.messagetext, 'String','');
+		put('subtr_u', 0);
+		put('subtr_v', 0);
+		sliderdisp
+	end
+	
 end
 
 function ok=checksettings
 handles=gethand;
 mess={};
 filepath=retr('filepath');
-if size(filepath,1) <2
-    mess{size(mess,2)+1}='No images were loaded';
+if size(filepath,1) <2 && retr('video_selection_done') == 0
+	mess{size(mess,2)+1}='No images were loaded';
 end
 if get(handles.clahe_enable, 'value')==1
-    if isnan(str2double(get(handles.clahe_size, 'string')))==1
-        mess{size(mess,2)+1}='CLAHE window size contains NaN';
-    end
+	if isnan(str2double(get(handles.clahe_size, 'string')))==1
+		mess{size(mess,2)+1}='CLAHE window size contains NaN';
+	end
 end
 if get(handles.enable_highpass, 'value')==1
-    if isnan(str2double(get(handles.highp_size, 'string')))==1
-        mess{size(mess,2)+1}='Highpass filter size contains NaN';
-    end
+	if isnan(str2double(get(handles.highp_size, 'string')))==1
+		mess{size(mess,2)+1}='Highpass filter size contains NaN';
+	end
 end
 if get(handles.wienerwurst, 'value')==1
-    if isnan(str2double(get(handles.wienerwurstsize, 'string')))==1
-        mess{size(mess,2)+1}='Wiener2 filter size contains NaN';
-    end
+	if isnan(str2double(get(handles.wienerwurstsize, 'string')))==1
+		mess{size(mess,2)+1}='Wiener2 filter size contains NaN';
+	end
 end
 %if get(handles.enable_clip, 'value')==1
 %    if isnan(str2double(get(handles.clip_thresh, 'string')))==1
@@ -4364,16 +4489,16 @@ end
 %    end
 %end
 if isnan(str2double(get(handles.intarea, 'string')))==1
-    mess{size(mess,2)+1}='Interrogation area size contains NaN';
+	mess{size(mess,2)+1}='Interrogation area size contains NaN';
 end
 if isnan(str2double(get(handles.step, 'string')))==1
-    mess{size(mess,2)+1}='Step size contains NaN';
+	mess{size(mess,2)+1}='Step size contains NaN';
 end
 if size(mess,2)>0 %error somewhere
-    msgbox(['Errors found:' mess],'Errors detected.','warn','modal')
-    ok=0;
+	msgbox(['Errors found:' mess],'Errors detected.','warn','modal')
+	ok=0;
 else
-    ok=1;
+	ok=1;
 end
 
 function cancelbutt_Callback(~, ~, ~)
@@ -4384,112 +4509,112 @@ toolsavailable(1);
 function load_settings_Callback(~, ~, ~)
 [FileName,PathName] = uigetfile('*.mat','Load PIVlab settings','PIVlab_settings.mat');
 if isequal(FileName,0)==0
-    read_panel_width (FileName,PathName) %read panel settings, apply, rebuild UI
-    destroyUI %needed to adapt panel width etc. to changed values in the settings file.
-    generateUI
-    read_settings (FileName,PathName) %When UI is set up, read settings.
-    switchui('multip01')
+	read_panel_width (FileName,PathName) %read panel settings, apply, rebuild UI
+	destroyUI %needed to adapt panel width etc. to changed values in the settings file.
+	generateUI
+	read_settings (FileName,PathName) %When UI is set up, read settings.
+	switchui('multip01')
 end
 
 function read_panel_width (FileName,PathName)
 handles=gethand;
 try
-    load(fullfile(PathName,FileName)); %#ok<*LOAD>
-    put ('panelwidth',panelwidth);
+	load(fullfile(PathName,FileName)); %#ok<*LOAD>
+	put ('panelwidth',panelwidth);
 catch
 end
 
 function read_settings (FileName,PathName)
 handles=gethand;
 try
-    load(fullfile(PathName,FileName));
-    set(handles.clahe_enable,'value',clahe_enable);
-    set(handles.clahe_size,'string',clahe_size);
-    set(handles.enable_highpass,'value',enable_highpass);
-    set(handles.highp_size,'string',highp_size);
-    set(handles.wienerwurst,'value',wienerwurst);
-    set(handles.wienerwurstsize,'string',wienerwurstsize);
-    %set(handles.enable_clip,'value',enable_clip);
-    %set(handles.clip_thresh,'string',clip_thresh);
-    set(handles.enable_intenscap,'value',enable_intenscap);
-    set(handles.intarea,'string',intarea);
-    set(handles.step,'string',stepsize);
-    set(handles.subpix,'value',subpix);  %popup
-    set(handles.stdev_check,'value',stdev_check);
-    set(handles.stdev_thresh,'string',stdev_thresh);
-    set(handles.loc_median,'value',loc_median);
-    set(handles.loc_med_thresh,'string',loc_med_thresh);
-    %set(handles.epsilon,'string',epsilon);
-    set(handles.interpol_missing,'value',interpol_missing);
-    set(handles.vectorscale,'string',vectorscale);
-    set(handles.colormap_choice,'value',colormap_choice); %popup
-    set(handles.addfileinfo,'value',addfileinfo);
-    set(handles.add_header,'value',add_header);
-    set(handles.delimiter,'value',delimiter);%popup
-    set(handles.img_not_mask,'value',img_not_mask);
-    set(handles.autoscale_vec,'value',autoscale_vec);
-    
-    %set(handles.popupmenu16, 'value',imginterpol);
-    set(handles.dcc, 'value',dccmark);
-    set(handles.fftmulti, 'value',fftmark);
-    set(handles.ensemble, 'value',ensemblemark);
-    if fftmark==1 || ensemblemark == 1
-        set (handles.uipanel42,'visible','on')
-    else
-        set (handles.uipanel42,'visible','off')
-    end
-    set(handles.checkbox26, 'value',pass2);
-    set(handles.checkbox27, 'value',pass3);
-    set(handles.checkbox28, 'value',pass4);
-    set(handles.edit50, 'string',pass2val);
-    set(handles.edit51, 'string',pass3val);
-    set(handles.edit52, 'string',pass4val);
-    set(handles.text126, 'string',step2);
-    set(handles.text127, 'string',step3);
-    set(handles.text128, 'string',step4);
-    set(handles.holdstream, 'value',holdstream);
-    set(handles.streamlamount, 'string',streamlamount);
-    set(handles.streamlcolor, 'value',streamlcolor);
-    set(handles.streamlwidth, 'value',streamlcolor);
-    
-    set(handles.realdist, 'string',realdist);
-    set(handles.time_inp, 'string',time_inp);
-    
-    set(handles.nthvect, 'string',nthvect);
-    set(handles.validr,'string',validr);
-    set(handles.validg,'string',validg);
-    set(handles.validb,'string',validb);
-    set(handles.validdr,'string',validdr);
-    set(handles.validdg,'string',validdg);
-    set(handles.validdb,'string',validdb);
-    set(handles.interpr,'string',interpr);
-    set(handles.interpg,'string',interpg);
-    set(handles.interpb,'string',interpb);
-    if caluv~=1 || calxy ~=1
-        set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(caluv*100000)/100000) ' m/s'],  'backgroundcolor', [0.5 1 0.5]);
-    end
-    
-    put('calxy',calxy);
-    put('caluv',caluv);
-    
+	load(fullfile(PathName,FileName));
+	set(handles.clahe_enable,'value',clahe_enable);
+	set(handles.clahe_size,'string',clahe_size);
+	set(handles.enable_highpass,'value',enable_highpass);
+	set(handles.highp_size,'string',highp_size);
+	set(handles.wienerwurst,'value',wienerwurst);
+	set(handles.wienerwurstsize,'string',wienerwurstsize);
+	%set(handles.enable_clip,'value',enable_clip);
+	%set(handles.clip_thresh,'string',clip_thresh);
+	set(handles.enable_intenscap,'value',enable_intenscap);
+	set(handles.intarea,'string',intarea);
+	set(handles.step,'string',stepsize);
+	set(handles.subpix,'value',subpix);  %popup
+	set(handles.stdev_check,'value',stdev_check);
+	set(handles.stdev_thresh,'string',stdev_thresh);
+	set(handles.loc_median,'value',loc_median);
+	set(handles.loc_med_thresh,'string',loc_med_thresh);
+	%set(handles.epsilon,'string',epsilon);
+	set(handles.interpol_missing,'value',interpol_missing);
+	set(handles.vectorscale,'string',vectorscale);
+	set(handles.colormap_choice,'value',colormap_choice); %popup
+	set(handles.addfileinfo,'value',addfileinfo);
+	set(handles.add_header,'value',add_header);
+	set(handles.delimiter,'value',delimiter);%popup
+	set(handles.img_not_mask,'value',img_not_mask);
+	set(handles.autoscale_vec,'value',autoscale_vec);
+	
+	%set(handles.popupmenu16, 'value',imginterpol);
+	set(handles.dcc, 'value',dccmark);
+	set(handles.fftmulti, 'value',fftmark);
+	set(handles.ensemble, 'value',ensemblemark);
+	if fftmark==1 || ensemblemark == 1
+		set (handles.uipanel42,'visible','on')
+	else
+		set (handles.uipanel42,'visible','off')
+	end
+	set(handles.checkbox26, 'value',pass2);
+	set(handles.checkbox27, 'value',pass3);
+	set(handles.checkbox28, 'value',pass4);
+	set(handles.edit50, 'string',pass2val);
+	set(handles.edit51, 'string',pass3val);
+	set(handles.edit52, 'string',pass4val);
+	set(handles.text126, 'string',step2);
+	set(handles.text127, 'string',step3);
+	set(handles.text128, 'string',step4);
+	set(handles.holdstream, 'value',holdstream);
+	set(handles.streamlamount, 'string',streamlamount);
+	set(handles.streamlcolor, 'value',streamlcolor);
+	set(handles.streamlwidth, 'value',streamlcolor);
+	
+	set(handles.realdist, 'string',realdist);
+	set(handles.time_inp, 'string',time_inp);
+	
+	set(handles.nthvect, 'string',nthvect);
+	set(handles.validr,'string',validr);
+	set(handles.validg,'string',validg);
+	set(handles.validb,'string',validb);
+	set(handles.validdr,'string',validdr);
+	set(handles.validdg,'string',validdg);
+	set(handles.validdb,'string',validdb);
+	set(handles.interpr,'string',interpr);
+	set(handles.interpg,'string',interpg);
+	set(handles.interpb,'string',interpb);
+	if caluv~=1 || calxy ~=1
+		set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(caluv*100000)/100000) ' m/s'],  'backgroundcolor', [0.5 1 0.5]);
+	end
+	
+	put('calxy',calxy);
+	put('caluv',caluv);
+	
 catch
 end
 try
-    %neu v1.5:
-    %set(handles.Repeated_box,'value',Repeated_box);
-    set(handles.mask_auto_box,'value',mask_auto_box);
-    set(handles.Autolimit,'value',Autolimit);
-    set(handles.minintens,'string',minintens);
-    set(handles.maxintens,'string',maxintens);
-    %neu v2.0
-    set(handles.panelslider,'Value',panelwidth);
-    put ('panelwidth',panelwidth);
-    %neu v2.11
-    set(handles.CorrQuality,'Value',CorrQuality_nr);
-    %neu v2.37
-    set(handles.enhance_images, 'Value',enhance_disp);
+	%neu v1.5:
+	%set(handles.Repeated_box,'value',Repeated_box);
+	set(handles.mask_auto_box,'value',mask_auto_box);
+	set(handles.Autolimit,'value',Autolimit);
+	set(handles.minintens,'string',minintens);
+	set(handles.maxintens,'string',maxintens);
+	%neu v2.0
+	set(handles.panelslider,'Value',panelwidth);
+	put ('panelwidth',panelwidth);
+	%neu v2.11
+	set(handles.CorrQuality,'Value',CorrQuality_nr);
+	%neu v2.37
+	set(handles.enhance_images, 'Value',enhance_disp);
 catch
-    disp('Old version compatibility-');
+	disp('Old version compatibility-');
 end
 
 
@@ -4559,34 +4684,34 @@ calxy=retr('calxy');
 caluv=retr('caluv');
 
 try
-    %neu v1.5:
-    %Repeated_box=get(handles.Repeated_box,'value');
-    mask_auto_box=get(handles.mask_auto_box,'value');
-    Autolimit=get(handles.Autolimit,'value');
-    minintens=get(handles.minintens,'string');
-    maxintens=get(handles.maxintens,'string');
-    %neu v2.0:
-    panelwidth=get(handles.panelslider,'Value');
-    %neu v2.11
-    CorrQuality_nr=get(handles.CorrQuality, 'value');
-    %neu v2.37
-    enhance_disp=get(handles.enhance_images, 'Value');
+	%neu v1.5:
+	%Repeated_box=get(handles.Repeated_box,'value');
+	mask_auto_box=get(handles.mask_auto_box,'value');
+	Autolimit=get(handles.Autolimit,'value');
+	minintens=get(handles.minintens,'string');
+	maxintens=get(handles.maxintens,'string');
+	%neu v2.0:
+	panelwidth=get(handles.panelslider,'Value');
+	%neu v2.11
+	CorrQuality_nr=get(handles.CorrQuality, 'value');
+	%neu v2.37
+	enhance_disp=get(handles.enhance_images, 'Value');
 catch
-    disp('Old version compatibility_');
+	disp('Old version compatibility_');
 end
 
 if ispc==1
-    [FileName,PathName] = uiputfile('*.mat','Save current settings as...',['PIVlab_set_' getenv('USERNAME') '.mat']);
+	[FileName,PathName] = uiputfile('*.mat','Save current settings as...',['PIVlab_set_' getenv('USERNAME') '.mat']);
 else
-    try
-        [FileName,PathName] = uiputfile('*.mat','Save current settings as...',['PIVlab_set_' getenv('USER') '.mat']);
-    catch
-        [FileName,PathName] = uiputfile('*.mat','Save current settings as...','PIVlab_set.mat');
-    end
+	try
+		[FileName,PathName] = uiputfile('*.mat','Save current settings as...',['PIVlab_set_' getenv('USER') '.mat']);
+	catch
+		[FileName,PathName] = uiputfile('*.mat','Save current settings as...','PIVlab_set.mat');
+	end
 end
 clear handles hObject eventdata
 if isequal(FileName,0)==0
-    save('-v6', fullfile(PathName,FileName))
+	save('-v6', fullfile(PathName,FileName))
 end
 
 function vel_limit_Callback(~, ~, ~)
@@ -4596,122 +4721,122 @@ resultslist=retr('resultslist');
 handles=gethand;
 currentframe=2*floor(get(handles.fileselector, 'value'))-1;
 if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
-    x=resultslist{1,(currentframe+1)/2};
-    if size(x,1)>1
-        if get(handles.meanofall,'value')==1 %calculating mean doesn't mae sense...
-            index=1;
-            foundfirst=0;
-            for i = 1:size(resultslist,2)
-                x=resultslist{1,i};
-                if isempty(x)==0 && foundfirst==0
-                    firstsizex=size(x,1);
-                    secondsizex=size(x,2);
-                    foundfirst=1;
-                end
-                if size(x,1)>1 && size(x,1)==firstsizex && size(x,2) == secondsizex
-                    u(:,:,index)=resultslist{3,i};
-                    v(:,:,index)=resultslist{4,i};
-                    index=index+1;
-                end
-            end
-        else
-            y=resultslist{2,(currentframe+1)/2};
-            u=resultslist{3,(currentframe+1)/2};
-            v=resultslist{4,(currentframe+1)/2};
-            typevector=resultslist{5,(currentframe+1)/2};
-        end
-        velrect=retr('velrect');
-        caluv=retr('caluv');
-        if numel(velrect)>0
-            %user already selected window before...
-            %"filter u+v" and display scatterplot
-            %problem: if user selects limits and then wants to refine vel
-            %limits, all data is filterd out...
-            umin=velrect(1);
-            umax=velrect(3)+umin;
-            vmin=velrect(2);
-            vmax=velrect(4)+vmin;
-            %check if all results are nan...
-            u_backup=u;
-            v_backup=v;
-            u(u*caluv<umin)=NaN;
-            u(u*caluv>umax)=NaN;
-            v(u*caluv<umin)=NaN;
-            v(u*caluv>umax)=NaN;
-            v(v*caluv<vmin)=NaN;
-            v(v*caluv>vmax)=NaN;
-            u(v*caluv<vmin)=NaN;
-            u(v*caluv>vmax)=NaN;
-            if mean(mean(mean((isnan(u)))))>0.9 || mean(mean(mean((isnan(v)))))>0.9
-                disp('User calibrated after selecting velocity limits. Discarding limits.')
-                u=u_backup;
-                v=v_backup;
-            end
-        end
-        
-        %problem: wenn nur ein frame analysiert, dann gibts probleme wenn display all frames in scatterplot an.
-        datau=reshape(u*caluv,1,size(u,1)*size(u,2)*size(u,3));
-        datav=reshape(v*caluv,1,size(v,1)*size(v,2)*size(v,3));
-        
-        if size(datau,2)>20000 %more than 20000 value pairs are too slow in scatterplot.
-            pos=unique(ceil(rand(21000,1)*(size(datau,2)-1))); %select random entries...
-            scatter(gca,datau(pos),datav(pos), 'b.'); %.. and plot them
-            set(gca,'Yaxislocation','right','layer','top');
-        else
-            scatter(gca,datau,datav, 'b.');
-            set(gca,'Yaxislocation','right','layer','top');
-        end
-        
-        %skipper=ceil(size(datau,2)/8000);
-        %scatter(datau(:,1:skipper:end),datav(:,1:skipper:end), 'b.');
-        
-        oldsize=get(gca,'outerposition');
-        newsize=[oldsize(1)+10 0.15 oldsize(3)*0.87 oldsize(4)*0.87];
-        set(gca,'outerposition', newsize)
-        
-        
-        
-        %%{
-        if retr('caluv')==1 && retr('calxy')==1
-            xlabel(gca, 'u velocity [px/frame]', 'fontsize', 12)
-            ylabel(gca, 'v velocity [px/frame]', 'fontsize', 12)
-        else
-            xlabel(gca, 'u velocity [m/s]', 'fontsize', 12)
-            ylabel(gca, 'v velocity [m/s]', 'fontsize', 12)
-        end
-        
-        grid on
-        %axis equal;
-        set (gca, 'tickdir', 'in');
-        rangeu=nanmax(nanmax(nanmax(u*caluv)))-nanmin(nanmin(nanmin(u*caluv)));
-        rangev=nanmax(nanmax(nanmax(v*caluv)))-nanmin(nanmin(nanmin(v*caluv)));
-        %set(gca,'xlim',[nanmin(nanmin(nanmin(u*caluv)))-rangeu*0.15 nanmax(nanmax(nanmax(u*caluv)))+rangeu*0.15])
-        %set(gca,'ylim',[nanmin(nanmin(nanmin(v*caluv)))-rangev*0.15 nanmax(nanmax(nanmax(v*caluv)))+rangev*0.15])
-        %=range of data +- 15%
-        %%}
-        velrect = getrect(gca);
-        if velrect(1,3)~=0 && velrect(1,4)~=0
-            put('velrect', velrect);
-            set (handles.vel_limit_active, 'String', 'Limit active', 'backgroundcolor', [0.5 1 0.5]);
-            umin=velrect(1);
-            umax=velrect(3)+umin;
-            vmin=velrect(2);
-            vmax=velrect(4)+vmin;
-            if retr('caluv')==1 && retr('calxy')==1
-                set (handles.limittext, 'String', ['valid u: ' num2str(round(umin*100)/100) ' to ' num2str(round(umax*100)/100) ' [px/frame]' sprintf('\n') 'valid v: ' num2str(round(vmin*100)/100) ' to ' num2str(round(vmax*100)/100) ' [px/frame]']);
-            else
-                set (handles.limittext, 'String', ['valid u: ' num2str(round(umin*100)/100) ' to ' num2str(round(umax*100)/100) ' [m/s]' sprintf('\n') 'valid v: ' num2str(round(vmin*100)/100) ' to ' num2str(round(vmax*100)/100) ' [m/s]']);
-            end
-            sliderdisp
-            delete(findobj(gca,'Type','text','color','r'));
-            text(50,50,'Result will be shown after applying vector validation','color','r','fontsize',10, 'fontweight','bold', 'BackgroundColor', 'k')
-            set (handles.vel_limit, 'String', 'Refine velocity limits');
-        else
-            sliderdisp
-            text(50,50,'Invalid selection: Click and hold left mouse button to create a rectangle.','color','r','fontsize',8, 'BackgroundColor', 'k')
-        end
-        
-    end
+	x=resultslist{1,(currentframe+1)/2};
+	if size(x,1)>1
+		if get(handles.meanofall,'value')==1 %calculating mean doesn't mae sense...
+			index=1;
+			foundfirst=0;
+			for i = 1:size(resultslist,2)
+				x=resultslist{1,i};
+				if isempty(x)==0 && foundfirst==0
+					firstsizex=size(x,1);
+					secondsizex=size(x,2);
+					foundfirst=1;
+				end
+				if size(x,1)>1 && size(x,1)==firstsizex && size(x,2) == secondsizex
+					u(:,:,index)=resultslist{3,i};
+					v(:,:,index)=resultslist{4,i};
+					index=index+1;
+				end
+			end
+		else
+			y=resultslist{2,(currentframe+1)/2};
+			u=resultslist{3,(currentframe+1)/2};
+			v=resultslist{4,(currentframe+1)/2};
+			typevector=resultslist{5,(currentframe+1)/2};
+		end
+		velrect=retr('velrect');
+		caluv=retr('caluv');
+		if numel(velrect)>0
+			%user already selected window before...
+			%"filter u+v" and display scatterplot
+			%problem: if user selects limits and then wants to refine vel
+			%limits, all data is filterd out...
+			umin=velrect(1);
+			umax=velrect(3)+umin;
+			vmin=velrect(2);
+			vmax=velrect(4)+vmin;
+			%check if all results are nan...
+			u_backup=u;
+			v_backup=v;
+			u(u*caluv<umin)=NaN;
+			u(u*caluv>umax)=NaN;
+			v(u*caluv<umin)=NaN;
+			v(u*caluv>umax)=NaN;
+			v(v*caluv<vmin)=NaN;
+			v(v*caluv>vmax)=NaN;
+			u(v*caluv<vmin)=NaN;
+			u(v*caluv>vmax)=NaN;
+			if mean(mean(mean((isnan(u)))))>0.9 || mean(mean(mean((isnan(v)))))>0.9
+				disp('User calibrated after selecting velocity limits. Discarding limits.')
+				u=u_backup;
+				v=v_backup;
+			end
+		end
+		
+		%problem: wenn nur ein frame analysiert, dann gibts probleme wenn display all frames in scatterplot an.
+		datau=reshape(u*caluv,1,size(u,1)*size(u,2)*size(u,3));
+		datav=reshape(v*caluv,1,size(v,1)*size(v,2)*size(v,3));
+		
+		if size(datau,2)>20000 %more than 20000 value pairs are too slow in scatterplot.
+			pos=unique(ceil(rand(21000,1)*(size(datau,2)-1))); %select random entries...
+			scatter(gca,datau(pos),datav(pos), 'b.'); %.. and plot them
+			set(gca,'Yaxislocation','right','layer','top');
+		else
+			scatter(gca,datau,datav, 'b.');
+			set(gca,'Yaxislocation','right','layer','top');
+		end
+		
+		%skipper=ceil(size(datau,2)/8000);
+		%scatter(datau(:,1:skipper:end),datav(:,1:skipper:end), 'b.');
+		
+		oldsize=get(gca,'outerposition');
+		newsize=[oldsize(1)+10 0.15 oldsize(3)*0.87 oldsize(4)*0.87];
+		set(gca,'outerposition', newsize)
+		
+		
+		
+		%%{
+		if retr('caluv')==1 && retr('calxy')==1
+			xlabel(gca, 'u velocity [px/frame]', 'fontsize', 12)
+			ylabel(gca, 'v velocity [px/frame]', 'fontsize', 12)
+		else
+			xlabel(gca, 'u velocity [m/s]', 'fontsize', 12)
+			ylabel(gca, 'v velocity [m/s]', 'fontsize', 12)
+		end
+		
+		grid on
+		%axis equal;
+		set (gca, 'tickdir', 'in');
+		rangeu=nanmax(nanmax(nanmax(u*caluv)))-nanmin(nanmin(nanmin(u*caluv)));
+		rangev=nanmax(nanmax(nanmax(v*caluv)))-nanmin(nanmin(nanmin(v*caluv)));
+		%set(gca,'xlim',[nanmin(nanmin(nanmin(u*caluv)))-rangeu*0.15 nanmax(nanmax(nanmax(u*caluv)))+rangeu*0.15])
+		%set(gca,'ylim',[nanmin(nanmin(nanmin(v*caluv)))-rangev*0.15 nanmax(nanmax(nanmax(v*caluv)))+rangev*0.15])
+		%=range of data +- 15%
+		%%}
+		velrect = getrect(gca);
+		if velrect(1,3)~=0 && velrect(1,4)~=0
+			put('velrect', velrect);
+			set (handles.vel_limit_active, 'String', 'Limit active', 'backgroundcolor', [0.5 1 0.5]);
+			umin=velrect(1);
+			umax=velrect(3)+umin;
+			vmin=velrect(2);
+			vmax=velrect(4)+vmin;
+			if retr('caluv')==1 && retr('calxy')==1
+				set (handles.limittext, 'String', ['valid u: ' num2str(round(umin*100)/100) ' to ' num2str(round(umax*100)/100) ' [px/frame]' sprintf('\n') 'valid v: ' num2str(round(vmin*100)/100) ' to ' num2str(round(vmax*100)/100) ' [px/frame]']);
+			else
+				set (handles.limittext, 'String', ['valid u: ' num2str(round(umin*100)/100) ' to ' num2str(round(umax*100)/100) ' [m/s]' sprintf('\n') 'valid v: ' num2str(round(vmin*100)/100) ' to ' num2str(round(vmax*100)/100) ' [m/s]']);
+			end
+			sliderdisp
+			delete(findobj(gca,'Type','text','color','r'));
+			text(50,50,'Result will be shown after applying vector validation','color','r','fontsize',10, 'fontweight','bold', 'BackgroundColor', 'k')
+			set (handles.vel_limit, 'String', 'Refine velocity limits');
+		else
+			sliderdisp
+			text(50,50,'Invalid selection: Click and hold left mouse button to create a rectangle.','color','r','fontsize',8, 'BackgroundColor', 'k')
+		end
+		
+	end
 end
 toolsavailable(1)
 MainWindow_ResizeFcn(gcf)
@@ -4730,10 +4855,16 @@ filepath=retr('filepath');
 toolsavailable(0)
 %put('manualdeletion',[]); %not available for filtering several images
 put('derived', []); %clear derived parameters if user modifies source data
-for i=1:floor(size(filepath,1)/2)+1
-    filtervectors(i)
-    set (handles.apply_filter_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
-    drawnow;
+if retr('video_selection_done') == 0
+	num_frames_to_process=floor(size(filepath,1)/2)+1;
+else
+	video_frame_selection=retr('video_frame_selection');
+	num_frames_to_process=floor(numel(video_frame_selection)/2)+1;
+end
+for i=1:num_frames_to_process
+	filtervectors(i)
+	set (handles.apply_filter_all, 'string', ['Please wait... (' int2str((i-1)/num_frames_to_process*100) '%)']);
+	drawnow;
 end
 set (handles.apply_filter_all, 'string', 'Apply to all frames');
 toolsavailable(1)
@@ -4744,12 +4875,12 @@ function restore_all_Callback(~, ~, ~)
 resultslist=retr('resultslist');
 
 if size(resultslist,1) > 6
-    resultslist(7:9,:)={[]};
-    if size(resultslist,1) > 9
-        resultslist(10:11,:)={[]};
-    end
-    put('resultslist', resultslist);
-    sliderdisp
+	resultslist(7:9,:)={[]};
+	if size(resultslist,1) > 9
+		resultslist(10:11,:)={[]};
+	end
+	put('resultslist', resultslist);
+	sliderdisp
 end
 put('manualdeletion',[]);
 
@@ -4767,57 +4898,57 @@ resultslist=retr('resultslist');
 resultslist{10,frame}=[]; %remove smoothed results when user modifies original data
 resultslist{11,frame}=[];
 if size(resultslist,2)>=frame
-    caluv=retr('caluv');
-    u=resultslist{3,frame};
-    v=resultslist{4,frame};
-    typevector_original=resultslist{5,frame};
-    typevector=typevector_original;
-    if numel(u)>0
-        velrect=retr('velrect');
-        do_stdev_check = get(handles.stdev_check, 'value');
-        stdthresh=str2double(get(handles.stdev_thresh, 'String'));
-        do_local_median = get(handles.loc_median, 'value');
-        %epsilon=str2double(get(handles.epsilon,'string'));
-        neigh_thresh=str2double(get(handles.loc_med_thresh,'string'));
-
-        %manual point deletion
-        manualdeletion=retr('manualdeletion');
-        if numel(manualdeletion)>0
-            if size(manualdeletion,2)>=frame
-                if isempty(manualdeletion{1,frame}) ==0
-                    framemanualdeletion=manualdeletion{frame};
-                    for i=1:size(framemanualdeletion,1)
-                        u(framemanualdeletion(i,1),framemanualdeletion(i,2))=NaN;
-                        v(framemanualdeletion(i,1),framemanualdeletion(i,2))=NaN;
-                    end
-                end
-            end
-        end
-        
-        %run postprocessing function
-        if numel(velrect)>0
-            valid_vel(1)=velrect(1); %umin
-            valid_vel(2)=velrect(3)+velrect(1); %umax
-            valid_vel(3)=velrect(2); %vmin
-            valid_vel(4)=velrect(4)+velrect(2); %vmax
-        else
-            valid_vel=[];
-        end
-        [u,v] = PIVlab_postproc (u,v,caluv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
-        
-        typevector(isnan(u))=2;
-        typevector(isnan(v))=2;
-        typevector(typevector_original==0)=0; %restores typevector for mask
-        %interpolation using inpaint_NaNs
-        if get(handles.interpol_missing, 'value')==1
-            u=inpaint_nans(u,4);
-            v=inpaint_nans(v,4);
-        end
-        resultslist{7, frame} = u;
-        resultslist{8, frame} = v;
-        resultslist{9, frame} = typevector;
-        put('resultslist', resultslist);
-    end
+	caluv=retr('caluv');
+	u=resultslist{3,frame};
+	v=resultslist{4,frame};
+	typevector_original=resultslist{5,frame};
+	typevector=typevector_original;
+	if numel(u)>0
+		velrect=retr('velrect');
+		do_stdev_check = get(handles.stdev_check, 'value');
+		stdthresh=str2double(get(handles.stdev_thresh, 'String'));
+		do_local_median = get(handles.loc_median, 'value');
+		%epsilon=str2double(get(handles.epsilon,'string'));
+		neigh_thresh=str2double(get(handles.loc_med_thresh,'string'));
+		
+		%manual point deletion
+		manualdeletion=retr('manualdeletion');
+		if numel(manualdeletion)>0
+			if size(manualdeletion,2)>=frame
+				if isempty(manualdeletion{1,frame}) ==0
+					framemanualdeletion=manualdeletion{frame};
+					for i=1:size(framemanualdeletion,1)
+						u(framemanualdeletion(i,1),framemanualdeletion(i,2))=NaN;
+						v(framemanualdeletion(i,1),framemanualdeletion(i,2))=NaN;
+					end
+				end
+			end
+		end
+		
+		%run postprocessing function
+		if numel(velrect)>0
+			valid_vel(1)=velrect(1); %umin
+			valid_vel(2)=velrect(3)+velrect(1); %umax
+			valid_vel(3)=velrect(2); %vmin
+			valid_vel(4)=velrect(4)+velrect(2); %vmax
+		else
+			valid_vel=[];
+		end
+		[u,v] = PIVlab_postproc (u,v,caluv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
+		
+		typevector(isnan(u))=2;
+		typevector(isnan(v))=2;
+		typevector(typevector_original==0)=0; %restores typevector for mask
+		%interpolation using inpaint_NaNs
+		if get(handles.interpol_missing, 'value')==1
+			u=inpaint_nans(u,4);
+			v=inpaint_nans(v,4);
+		end
+		resultslist{7, frame} = u;
+		resultslist{8, frame} = v;
+		resultslist{9, frame} = typevector;
+		put('resultslist', resultslist);
+	end
 end
 %sliderdisp
 
@@ -4826,59 +4957,59 @@ handles=gethand;
 resultslist=retr('resultslist');
 frame=floor(get(handles.fileselector, 'value'));
 if size(resultslist,2)>=frame %2nd dimesnion = frame
-    x=resultslist{1,frame};
-    y=resultslist{2,frame};
-    u=resultslist{3,frame};
-    v=resultslist{4,frame};
-    typevector_original=resultslist{5,frame};
-    typevector=typevector_original;
-    manualdeletion=retr('manualdeletion');
-    framemanualdeletion=[];
-    if numel(manualdeletion)>0
-        if size(manualdeletion,2)>=frame
-            if isempty(manualdeletion{1,frame}) ==0
-                framemanualdeletion=manualdeletion{frame};
-            end
-        end
-    end
-    
-    if numel(u)>0
-        delete(findobj(gca,'tag','manualdot'));
-        text(50,10,'Right mouse button exits manual validation mode.','color','g','fontsize',8, 'BackgroundColor', 'k', 'tag', 'hint')
-        toolsavailable(0);
-        button = 1;
-        while button == 1
-            [xposition,yposition,button] = ginput(1);
-            if button~=1
-                break
-            end
-            if numel (xposition)>0 %will be 0 if user presses enter
-                xposition=round(xposition);
-                yposition=round(yposition);
-                %manualdeletion=zeros(size(xposition,1),2);
-                findx=abs(x/xposition-1);
-                [trash, imagex]=find(findx==min(min(findx)));
-                findy=abs(y/yposition-1);
-                [imagey, trash]=find(findy==min(min(findy)));
-                idx=size(framemanualdeletion,1);
-                %manualdeletion(idx+1,1)=imagey(1,1);
-                %manualdeletion(idx+1,2)=imagex(1,1);
-                
-                framemanualdeletion(idx+1,1)=imagey(1,1);
-                framemanualdeletion(idx+1,2)=imagex(1,1);
-                
-                hold on;
-                plot (x(framemanualdeletion(idx+1,1),framemanualdeletion(idx+1,2)),y(framemanualdeletion(idx+1,1),framemanualdeletion(idx+1,2)), 'yo', 'markerfacecolor', 'r', 'markersize', 10,'tag','manualdot')
-                hold off;
-            end
-        end
-        manualdeletion{frame}=framemanualdeletion;
-        put('manualdeletion',manualdeletion);
-        
-        delete(findobj(gca,'Type','text','color','r'));
-        delete(findobj(gca,'tag','hint'));
-        text(50,50,'Result will be shown after applying vector validation','color','r','fontsize',10, 'fontweight','bold', 'BackgroundColor', 'k')
-    end
+	x=resultslist{1,frame};
+	y=resultslist{2,frame};
+	u=resultslist{3,frame};
+	v=resultslist{4,frame};
+	typevector_original=resultslist{5,frame};
+	typevector=typevector_original;
+	manualdeletion=retr('manualdeletion');
+	framemanualdeletion=[];
+	if numel(manualdeletion)>0
+		if size(manualdeletion,2)>=frame
+			if isempty(manualdeletion{1,frame}) ==0
+				framemanualdeletion=manualdeletion{frame};
+			end
+		end
+	end
+	
+	if numel(u)>0
+		delete(findobj(gca,'tag','manualdot'));
+		text(50,10,'Right mouse button exits manual validation mode.','color','g','fontsize',8, 'BackgroundColor', 'k', 'tag', 'hint')
+		toolsavailable(0);
+		button = 1;
+		while button == 1
+			[xposition,yposition,button] = ginput(1);
+			if button~=1
+				break
+			end
+			if numel (xposition)>0 %will be 0 if user presses enter
+				xposition=round(xposition);
+				yposition=round(yposition);
+				%manualdeletion=zeros(size(xposition,1),2);
+				findx=abs(x/xposition-1);
+				[trash, imagex]=find(findx==min(min(findx)));
+				findy=abs(y/yposition-1);
+				[imagey, trash]=find(findy==min(min(findy)));
+				idx=size(framemanualdeletion,1);
+				%manualdeletion(idx+1,1)=imagey(1,1);
+				%manualdeletion(idx+1,2)=imagex(1,1);
+				
+				framemanualdeletion(idx+1,1)=imagey(1,1);
+				framemanualdeletion(idx+1,2)=imagex(1,1);
+				
+				hold on;
+				plot (x(framemanualdeletion(idx+1,1),framemanualdeletion(idx+1,2)),y(framemanualdeletion(idx+1,1),framemanualdeletion(idx+1,2)), 'yo', 'markerfacecolor', 'r', 'markersize', 10,'tag','manualdot')
+				hold off;
+			end
+		end
+		manualdeletion{frame}=framemanualdeletion;
+		put('manualdeletion',manualdeletion);
+		
+		delete(findobj(gca,'Type','text','color','r'));
+		delete(findobj(gca,'tag','hint'));
+		text(50,50,'Result will be shown after applying vector validation','color','r','fontsize',10, 'fontweight','bold', 'BackgroundColor', 'k')
+	end
 end
 toolsavailable(1);
 
@@ -4886,29 +5017,29 @@ function draw_line_Callback(~, ~, ~)
 filepath=retr('filepath');
 caliimg=retr('caliimg');
 if numel(caliimg)==0 && size(filepath,1) >1
-    sliderdisp
+	sliderdisp
 end
-if size(filepath,1) >1 || numel(caliimg)>0
-    handles=gethand;
-    toolsavailable(0)
-    delete(findobj('tag', 'caliline'))
-    for i=1:2
-        [xposition(i),yposition(i)] = ginput(1);
-        if numel(caliimg)==0
-            sliderdisp
-        end
-        hold on;
-        plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'caliline');
-        plot (xposition,yposition,'y+:', 'tag', 'caliline');
-        hold off;
-        for j=1:i
-            text(xposition(j)+10,yposition(j)+10, ['x:' num2str(round(xposition(j)*10)/10) sprintf('\n') 'y:' num2str(round(yposition(j)*10)/10) ],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'caliline')
-        end
-        
-        put('pointscali',[xposition' yposition']);
-    end
-    text(mean(xposition),mean(yposition), ['s = ' num2str(round((sqrt((xposition(1)-xposition(2))^2+(yposition(1)-yposition(2))^2))*100)/100) ' px'],'color','k','fontsize',7, 'BackgroundColor', 'r', 'tag', 'caliline','horizontalalignment','center')
-    toolsavailable(1)
+if size(filepath,1) >1 || numel(caliimg)>0 || retr('video_selection_done') == 1
+	handles=gethand;
+	toolsavailable(0)
+	delete(findobj('tag', 'caliline'))
+	for i=1:2
+		[xposition(i),yposition(i)] = ginput(1);
+		if numel(caliimg)==0
+			sliderdisp
+		end
+		hold on;
+		plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'caliline');
+		plot (xposition,yposition,'y+:', 'tag', 'caliline');
+		hold off;
+		for j=1:i
+			text(xposition(j)+10,yposition(j)+10, ['x:' num2str(round(xposition(j)*10)/10) sprintf('\n') 'y:' num2str(round(yposition(j)*10)/10) ],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'caliline')
+		end
+		
+		put('pointscali',[xposition' yposition']);
+	end
+	text(mean(xposition),mean(yposition), ['s = ' num2str(round((sqrt((xposition(1)-xposition(2))^2+(yposition(1)-yposition(2))^2))*100)/100) ' px'],'color','k','fontsize',7, 'BackgroundColor', 'r', 'tag', 'caliline','horizontalalignment','center')
+	toolsavailable(1)
 end
 
 function calccali
@@ -4916,16 +5047,16 @@ put('derived',[]) %calibration makes previously derived params incorrect
 handles=gethand;
 pointscali=retr('pointscali');
 if numel(pointscali)>0
-    xposition=pointscali(:,1);
-    yposition=pointscali(:,2);
-    dist=sqrt((xposition(1)-xposition(2))^2 + (yposition(1)-yposition(2))^2);
-    realdist=str2double(get(handles.realdist, 'String'));
-    time=str2double(get(handles.time_inp, 'String'));
-    calxy=(realdist/1000)/dist; %m/px %realdist=realdistance in m; dist=distance in px
-    caluv=calxy/(time/1000);
-    put('caluv',caluv);
-    put('calxy',calxy);
-    set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(caluv*100000)/100000) ' m/s'],  'backgroundcolor', [0.5 1 0.5]);
+	xposition=pointscali(:,1);
+	yposition=pointscali(:,2);
+	dist=sqrt((xposition(1)-xposition(2))^2 + (yposition(1)-yposition(2))^2);
+	realdist=str2double(get(handles.realdist, 'String'));
+	time=str2double(get(handles.time_inp, 'String'));
+	calxy=(realdist/1000)/dist; %m/px %realdist=realdistance in m; dist=distance in px
+	caluv=calxy/(time/1000);
+	put('caluv',caluv);
+	put('calxy',calxy);
+	set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(caluv*100000)/100000) ' m/s'],  'backgroundcolor', [0.5 1 0.5]);
 end
 sliderdisp
 
@@ -4940,163 +5071,163 @@ set(handles.calidisp, 'string', ['inactive'], 'backgroundcolor', [0.941176470588
 delete(findobj('tag', 'caliline'));
 set(handles.realdist, 'String','1');
 set(handles.time_inp, 'String','1');
-if size(filepath,1) >1
-    sliderdisp
+if size(filepath,1) >1 || retr('video_selection_done') == 1
+	sliderdisp
 else
-    displogo(0)
+	displogo(0)
 end
 
 function load_ext_img_Callback(~, ~, ~)
 cali_folder=retr('cali_folder');
 if isempty (cali_folder)==1
-    if ispc==1
-        cali_folder=[retr('pathname') '\'];
-    else
-        cali_folder=[retr('pathname') '/'];
-    end
+	if ispc==1
+		cali_folder=[retr('pathname') '\'];
+	else
+		cali_folder=[retr('pathname') '/'];
+	end
 end
 try
-    [filename, pathname, filterindex] = uigetfile({'*.bmp;*.tif;*.jpg;*.tiff;*.b16;','Image Files (*.bmp,*.tif,*.jpg,*.tiff,*.b16)'; '*.tif','tif'; '*.jpg','jpg'; '*.bmp','bmp'; '*.tiff','tiff';'*.b16','b16'; },'Select calibration image',cali_folder);
+	[filename, pathname, filterindex] = uigetfile({'*.bmp;*.tif;*.jpg;*.tiff;*.b16;','Image Files (*.bmp,*.tif,*.jpg,*.tiff,*.b16)'; '*.tif','tif'; '*.jpg','jpg'; '*.bmp','bmp'; '*.tiff','tiff';'*.b16','b16'; },'Select calibration image',cali_folder);
 catch
-    [filename, pathname, filterindex] = uigetfile({'*.bmp;*.tif;*.jpg;*.tiff;*.b16;','Image Files (*.bmp,*.tif,*.jpg,*.tiff,*.b16)'; '*.tif','tif'; '*.jpg','jpg'; '*.bmp','bmp';  '*.tiff','tiff';'*.b16','b16';},'Select calibration image'); %unix/mac system may cause problems, can't be checked due to lack of unix/mac systems...
+	[filename, pathname, filterindex] = uigetfile({'*.bmp;*.tif;*.jpg;*.tiff;*.b16;','Image Files (*.bmp,*.tif,*.jpg,*.tiff,*.b16)'; '*.tif','tif'; '*.jpg','jpg'; '*.bmp','bmp';  '*.tiff','tiff';'*.b16','b16';},'Select calibration image'); %unix/mac system may cause problems, can't be checked due to lack of unix/mac systems...
 end
 if isequal(filename,0)==0
-    [~,~,ext] = fileparts(fullfile(pathname, filename));
-    if strcmp(ext,'.b16')
-        caliimg=f_readB16(fullfile(pathname, filename));
-    else
-        caliimg=imread(fullfile(pathname, filename));
-    end
-    if size(caliimg,3)>1 == 0
-        caliimg=adapthisteq(imadjust(caliimg));
-    else
-        try
-            caliimg=adapthisteq(imadjust(rgb2gray(caliimg)));
-        catch
-        end
-    end
-    image(caliimg, 'parent',gca, 'cdatamapping', 'scaled');
-    colormap('gray');
-    axis image;
-    set(gca,'ytick',[])
-    set(gca,'xtick',[])
-    put('caliimg', caliimg);
-    put('cali_folder', pathname);
+	[~,~,ext] = fileparts(fullfile(pathname, filename));
+	if strcmp(ext,'.b16')
+		caliimg=f_readB16(fullfile(pathname, filename));
+	else
+		caliimg=imread(fullfile(pathname, filename));
+	end
+	if size(caliimg,3)>1 == 0
+		caliimg=adapthisteq(imadjust(caliimg));
+	else
+		try
+			caliimg=adapthisteq(imadjust(rgb2gray(caliimg)));
+		catch
+		end
+	end
+	image(caliimg, 'parent',gca, 'cdatamapping', 'scaled');
+	colormap('gray');
+	axis image;
+	set(gca,'ytick',[])
+	set(gca,'xtick',[])
+	put('caliimg', caliimg);
+	put('cali_folder', pathname);
 end
 
 function write_workspace_Callback(~, ~, ~)
 resultslist=retr('resultslist');
 if isempty(resultslist)==0
-    derived=retr('derived');
-    calxy=retr('calxy');
-    caluv=retr('caluv');
-    nrframes=size(resultslist,2);
-    if size(resultslist,1)< 11
-        resultslist{11,nrframes}=[]; %make sure resultslist has cells for all params
-    end
-    if isempty(derived)==0
-        if size(derived,1)< 11 || size(derived,2) < nrframes
-            derived{11,nrframes}=[]; %make sure derived has cells for all params
-        end
-    else
-        derived=cell(11,nrframes);
-    end
-    
-    if calxy==1 && caluv==1
-        units='[px] respectively [px/frame]';
-    else
-        units='[m] respectively [m/s]';
-    end
-    %ohne alles: 6 hoch
-    %mit filtern: 11 hoch
-    %mit smoothed, 11 hoch und inhalt...
-    u_original=cell(size(resultslist,2),1);
-    v_original=u_original;
-    x=u_original;
-    y=u_original;
-    typevector_original=u_original;
-    u_filtered=u_original;
-    v_filtered=v_original;
-    typevector_filtered=u_original;
-    u_smoothed=u_original;
-    v_smoothed=u_original;
-    vorticity=cell(size(derived,2),1);
-    velocity_magnitude=vorticity;
-    u_component=vorticity;
-    v_component=vorticity;
-    divergence=vorticity;
-    vortex_locator=vorticity;
-    shear_rate=vorticity;
-    strain_rate=vorticity;
-    LIC=vorticity;
-    vectorangle=vorticity;
-    correlation_map=vorticity;
-    
-    for i=1:nrframes
-        x{i,1}=resultslist{1,i}*calxy;
-        y{i,1}=resultslist{2,i}*calxy;
-        u_original{i,1}=resultslist{3,i}*caluv;
-        v_original{i,1}=resultslist{4,i}*caluv;
-        typevector_original{i,1}=resultslist{5,i};
-        u_filtered{i,1}=resultslist{7,i}*caluv;
-        v_filtered{i,1}=resultslist{8,i}*caluv;
-        typevector_filtered{i,1}=resultslist{9,i};
-        u_smoothed{i,1}=resultslist{10,i}*caluv;
-        v_smoothed{i,1}=resultslist{11,i}*caluv;
-        
-        vorticity{i,1}=derived{1,i};
-        velocity_magnitude{i,1}=derived{2,i};
-        u_component{i,1}=derived{3,i};
-        v_component{i,1}=derived{4,i};
-        divergence{i,1}=derived{5,i};
-        vortex_locator{i,1}=derived{6,i};
-        shear_rate{i,1}=derived{7,i};
-        strain_rate{i,1}=derived{8,i};
-        LIC{i,1}=derived{9,i};
-        vectorangle{i,1}=derived{10,i};
-        correlation_map{i,1}=derived{11,i};
-    end
-    
-    assignin('base','x',x);
-    assignin('base','y',y);
-    assignin('base','u_original',u_original);
-    assignin('base','v_original',v_original);
-    assignin('base','typevector_original',typevector_original);
-    assignin('base','u_filtered',u_filtered);
-    assignin('base','v_filtered',v_filtered);
-    assignin('base','typevector_filtered',typevector_filtered);
-    assignin('base','u_smoothed',u_smoothed);
-    assignin('base','v_smoothed',v_smoothed);
-    
-    assignin('base','vorticity',vorticity);
-    
-    assignin('base','velocity_magnitude',velocity_magnitude);
-    assignin('base','u_component',u_component);
-    assignin('base','v_component',v_component);
-    assignin('base','divergence',divergence);
-    assignin('base','vortex_locator',vortex_locator);
-    assignin('base','shear_rate',shear_rate);
-    assignin('base','strain_rate',strain_rate);
-    assignin('base','LIC',LIC);
-    assignin('base','vectorangle',vectorangle);
-    assignin('base','correlation_map',correlation_map);
-    
-    assignin('base','calxy',calxy);
-    assignin('base','caluv',caluv);
-    assignin('base','units',units);
-    
-    
-    clc
-    disp('EXPLANATIONS:')
-    disp(' ')
-    disp('The first dimension of the variables is the frame number.')
-    disp('The variables contain all data that was calculated in the PIVlab GUI.')
-    disp('If some data was not calculated, the corresponding cell is empty.')
-    disp('Typevector is 0 for masked vector, 1 for regular vector, 2 for filtered vector')
-    disp(' ')
-    disp('u_original and v_original are the unmodified velocities from the cross-correlation.')
-    disp('u_filtered and v_filtered is the above incl. your data validation selection.')
-    disp('u_smoothed and v_smoothed is the above incl. your smoothing selection.')
+	derived=retr('derived');
+	calxy=retr('calxy');
+	caluv=retr('caluv');
+	nrframes=size(resultslist,2);
+	if size(resultslist,1)< 11
+		resultslist{11,nrframes}=[]; %make sure resultslist has cells for all params
+	end
+	if isempty(derived)==0
+		if size(derived,1)< 11 || size(derived,2) < nrframes
+			derived{11,nrframes}=[]; %make sure derived has cells for all params
+		end
+	else
+		derived=cell(11,nrframes);
+	end
+	
+	if calxy==1 && caluv==1
+		units='[px] respectively [px/frame]';
+	else
+		units='[m] respectively [m/s]';
+	end
+	%ohne alles: 6 hoch
+	%mit filtern: 11 hoch
+	%mit smoothed, 11 hoch und inhalt...
+	u_original=cell(size(resultslist,2),1);
+	v_original=u_original;
+	x=u_original;
+	y=u_original;
+	typevector_original=u_original;
+	u_filtered=u_original;
+	v_filtered=v_original;
+	typevector_filtered=u_original;
+	u_smoothed=u_original;
+	v_smoothed=u_original;
+	vorticity=cell(size(derived,2),1);
+	velocity_magnitude=vorticity;
+	u_component=vorticity;
+	v_component=vorticity;
+	divergence=vorticity;
+	vortex_locator=vorticity;
+	shear_rate=vorticity;
+	strain_rate=vorticity;
+	LIC=vorticity;
+	vectorangle=vorticity;
+	correlation_map=vorticity;
+	
+	for i=1:nrframes
+		x{i,1}=resultslist{1,i}*calxy;
+		y{i,1}=resultslist{2,i}*calxy;
+		u_original{i,1}=resultslist{3,i}*caluv;
+		v_original{i,1}=resultslist{4,i}*caluv;
+		typevector_original{i,1}=resultslist{5,i};
+		u_filtered{i,1}=resultslist{7,i}*caluv;
+		v_filtered{i,1}=resultslist{8,i}*caluv;
+		typevector_filtered{i,1}=resultslist{9,i};
+		u_smoothed{i,1}=resultslist{10,i}*caluv;
+		v_smoothed{i,1}=resultslist{11,i}*caluv;
+		
+		vorticity{i,1}=derived{1,i};
+		velocity_magnitude{i,1}=derived{2,i};
+		u_component{i,1}=derived{3,i};
+		v_component{i,1}=derived{4,i};
+		divergence{i,1}=derived{5,i};
+		vortex_locator{i,1}=derived{6,i};
+		shear_rate{i,1}=derived{7,i};
+		strain_rate{i,1}=derived{8,i};
+		LIC{i,1}=derived{9,i};
+		vectorangle{i,1}=derived{10,i};
+		correlation_map{i,1}=derived{11,i};
+	end
+	
+	assignin('base','x',x);
+	assignin('base','y',y);
+	assignin('base','u_original',u_original);
+	assignin('base','v_original',v_original);
+	assignin('base','typevector_original',typevector_original);
+	assignin('base','u_filtered',u_filtered);
+	assignin('base','v_filtered',v_filtered);
+	assignin('base','typevector_filtered',typevector_filtered);
+	assignin('base','u_smoothed',u_smoothed);
+	assignin('base','v_smoothed',v_smoothed);
+	
+	assignin('base','vorticity',vorticity);
+	
+	assignin('base','velocity_magnitude',velocity_magnitude);
+	assignin('base','u_component',u_component);
+	assignin('base','v_component',v_component);
+	assignin('base','divergence',divergence);
+	assignin('base','vortex_locator',vortex_locator);
+	assignin('base','shear_rate',shear_rate);
+	assignin('base','strain_rate',strain_rate);
+	assignin('base','LIC',LIC);
+	assignin('base','vectorangle',vectorangle);
+	assignin('base','correlation_map',correlation_map);
+	
+	assignin('base','calxy',calxy);
+	assignin('base','caluv',caluv);
+	assignin('base','units',units);
+	
+	
+	clc
+	disp('EXPLANATIONS:')
+	disp(' ')
+	disp('The first dimension of the variables is the frame number.')
+	disp('The variables contain all data that was calculated in the PIVlab GUI.')
+	disp('If some data was not calculated, the corresponding cell is empty.')
+	disp('Typevector is 0 for masked vector, 1 for regular vector, 2 for filtered vector')
+	disp(' ')
+	disp('u_original and v_original are the unmodified velocities from the cross-correlation.')
+	disp('u_filtered and v_filtered is the above incl. your data validation selection.')
+	disp('u_smoothed and v_smoothed is the above incl. your smoothing selection.')
 end
 
 function mean_u_Callback(~, ~, ~)
@@ -5104,15 +5235,15 @@ handles=gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
 resultslist=retr('resultslist');
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0 %analysis exists
-    if size(resultslist,1)>6 && numel(resultslist{7,currentframe})>0 %filtered exists
-        u=resultslist{7,currentframe};
-    else
-        u=resultslist{3,currentframe};
-    end
-    caluv=retr('caluv');
-    set(handles.subtr_u, 'string', num2str(nanmean(u(:)*caluv)));
+	if size(resultslist,1)>6 && numel(resultslist{7,currentframe})>0 %filtered exists
+		u=resultslist{7,currentframe};
+	else
+		u=resultslist{3,currentframe};
+	end
+	caluv=retr('caluv');
+	set(handles.subtr_u, 'string', num2str(nanmean(u(:)*caluv)));
 else
-    set(handles.subtr_u, 'string', '0');
+	set(handles.subtr_u, 'string', '0');
 end
 
 function mean_v_Callback(~, ~, ~)
@@ -5120,151 +5251,157 @@ handles=gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
 resultslist=retr('resultslist');
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0 %analysis exists
-    if size(resultslist,1)>6 && numel(resultslist{7,currentframe})>0 %filtered exists
-        v=resultslist{8,currentframe};
-    else
-        v=resultslist{4,currentframe};
-    end
-    caluv=retr('caluv');
-    set(handles.subtr_v, 'string', num2str(nanmean(v(:)*caluv)));
+	if size(resultslist,1)>6 && numel(resultslist{7,currentframe})>0 %filtered exists
+		v=resultslist{8,currentframe};
+	else
+		v=resultslist{4,currentframe};
+	end
+	caluv=retr('caluv');
+	set(handles.subtr_v, 'string', num2str(nanmean(v(:)*caluv)));
 else
-    set(handles.subtr_v, 'string', '0');
+	set(handles.subtr_v, 'string', '0');
 end
 
 function derivative_calc (frame,deriv,update)
 handles=gethand;
 resultslist=retr('resultslist');
 if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
-    filenames=retr('filenames');
-    filepath=retr('filepath');
-    derived=retr('derived');
-    caluv=retr('caluv');
-    calxy=retr('calxy');
-    [~,~,ext] = fileparts(filepath{2*frame-1});
-    if strcmp(ext,'.b16')
-        currentimage=f_readB16(filepath{2*frame-1});
-    else
-        currentimage=imread(filepath{2*frame-1});
-    end
-    x=resultslist{1,frame};
-    y=resultslist{2,frame};
-    %subtrayct mean u
-    subtr_u=str2double(get(handles.subtr_u, 'string'));
-    if isnan(subtr_u)
-        subtr_u=0;set(handles.subtr_u, 'string', '0');
-    end
-    subtr_v=str2double(get(handles.subtr_v, 'string'));
-    if isnan(subtr_v)
-        subtr_v=0;set(handles.subtr_v, 'string', '0');
-    end
-    if size(resultslist,1)>6 && numel(resultslist{7,frame})>0 %filtered exists
-        u=resultslist{7,frame};
-        v=resultslist{8,frame};
-        typevector=resultslist{9,frame};
-    else
-        u=resultslist{3,frame};
-        v=resultslist{4,frame};
-        typevector=resultslist{5,frame};
-    end
-    if get(handles.interpol_missing,'value')==1
-        if any(any(isnan(u)))==1 || any(any(isnan(v)))==1
-            if isempty(strfind(get(handles.apply_deriv_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.ascii_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.save_mat_all,'string'), 'Please'))==1%not in batch
-                drawnow;
-                if retr('alreadydisplayed') == 1
-                else
-                    msgbox('Your dataset contains NaNs. A vector interpolation will be performed automatically to interpolate missing vectors.', 'modal')
-                    uiwait
-                end
-                put('alreadydisplayed',1);
-            end
-            typevector_original=typevector;
-            u(isnan(v))=NaN;
-            v(isnan(u))=NaN;
-            typevector(isnan(u))=2;
-            typevector(typevector_original==0)=0;
-            u=inpaint_nans(u,4);
-            v=inpaint_nans(v,4);
-            resultslist{7, frame} = u;
-            resultslist{8, frame} = v;
-            resultslist{9, frame} = typevector;
-            
-        end
-    else
-        if isempty(strfind(get(handles.apply_deriv_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.ascii_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.tecplot_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.save_mat_all,'string'), 'Please'))==1%not in batch
-            drawnow;
-            if retr('alreadydisplayed') == 1
-            else
-                msgbox('Your dataset contains NaNs. Derived parameters will have a lot of missing data. Redo the vector validation with the option to interpolate missing data turned on.', 'modal')
-                uiwait
-            end
-            put('alreadydisplayed',1);
-        end
-    end
-    if get(handles.smooth, 'Value') == 1
-        smoothfactor=floor(get(handles.smoothstr, 'Value'));
-        try
-            
-            u = smoothn(u,smoothfactor/10); %not supported in prehistoric Matlab versions like the one I have to use :'-(
-            v = smoothn(v,smoothfactor/10); %not supported in prehistoric Matlab versions like the one I have to use :'-(
-            clc
-            disp ('Using smoothn.m from Damien Garcia for data smoothing.')
-            disp (['Input smoothing parameter S for smoothn is: ' num2str(smoothfactor/10)])
-            disp ('see the documentation here: https://de.mathworks.com/matlabcentral/fileexchange/25634-smoothn')
-            
-        catch
-            h=fspecial('gaussian',smoothfactor+2,(smoothfactor+2)/7);
-            u=imfilter(u,h,'replicate');
-            v=imfilter(v,h,'replicate');
-            clc
-            disp ('Using Gaussian kernel for data smoothing (your Matlab version is pretty old btw...).')
-        end
-        resultslist{10,frame}=u; %smoothed u
-        resultslist{11,frame}=v; %smoothed v
-    else
-        %careful if more things are added, [] replaced by {[]}
-        resultslist{10,frame}=[]; %remove smoothed u
-        resultslist{11,frame}=[]; %remove smoothed v
-    end
-    if deriv==1 %vectors only
-        %do nothing
-        %disp('vectors')
-    end
-    if deriv==2 %vorticity
-        [curlz,cav]= curl(x*calxy,y*calxy,u*caluv,v*caluv);
-        derived{1,frame}=curlz;
-        %disp('vorticity')
-    end
-    if deriv==3 %magnitude
-        %andersrum, (u*caluv)-subtr_u
-        derived{2,frame}=sqrt((u*caluv-subtr_u).^2+(v*caluv-subtr_v).^2);
-        %disp('magnitude')
-    end
-    if deriv==4
-        derived{3,frame}=u*caluv-subtr_u;
-        %disp('u')
-    end
-    if deriv==5
-        derived{4,frame}=v*caluv-subtr_v;
-        %disp('v')
-    end
-    if deriv==6
-        derived{5,frame}=divergence(x*calxy,y*calxy,u*caluv,v*caluv);
-        %disp('divergence')
-    end
-    if deriv==7
-        derived{6,frame}=dcev(x*calxy,y*calxy,u*caluv,v*caluv);
-        %disp('dcev')
-    end
-    if deriv==8
-        derived{7,frame}=shear(x*calxy,y*calxy,u*caluv,v*caluv);
-        %disp('shear')
-    end
-    if deriv==9
-        derived{8,frame}=strain(x*calxy,y*calxy,u*caluv,v*caluv);
-        %disp('strain')
-    end
-    if deriv==10
-        %{
+	filenames=retr('filenames');
+	filepath=retr('filepath');
+	derived=retr('derived');
+	caluv=retr('caluv');
+	calxy=retr('calxy');
+	if retr('video_selection_done') == 0
+		[~,~,ext] = fileparts(filepath{2*frame-1});
+		if strcmp(ext,'.b16')
+			currentimage=f_readB16(filepath{2*frame-1});
+		else
+			currentimage=imread(filepath{2*frame-1});
+		end
+	else
+		video_reader_object = retr('video_reader_object');
+		video_frame_selection=retr('video_frame_selection');
+		currentimage = read(video_reader_object,video_frame_selection(2*frame-1));
+	end
+	x=resultslist{1,frame};
+	y=resultslist{2,frame};
+	%subtrayct mean u
+	subtr_u=str2double(get(handles.subtr_u, 'string'));
+	if isnan(subtr_u)
+		subtr_u=0;set(handles.subtr_u, 'string', '0');
+	end
+	subtr_v=str2double(get(handles.subtr_v, 'string'));
+	if isnan(subtr_v)
+		subtr_v=0;set(handles.subtr_v, 'string', '0');
+	end
+	if size(resultslist,1)>6 && numel(resultslist{7,frame})>0 %filtered exists
+		u=resultslist{7,frame};
+		v=resultslist{8,frame};
+		typevector=resultslist{9,frame};
+	else
+		u=resultslist{3,frame};
+		v=resultslist{4,frame};
+		typevector=resultslist{5,frame};
+	end
+	if get(handles.interpol_missing,'value')==1
+		if any(any(isnan(u)))==1 || any(any(isnan(v)))==1
+			if isempty(strfind(get(handles.apply_deriv_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.ascii_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.save_mat_all,'string'), 'Please'))==1%not in batch
+				drawnow;
+				if retr('alreadydisplayed') == 1
+				else
+					msgbox('Your dataset contains NaNs. A vector interpolation will be performed automatically to interpolate missing vectors.', 'modal')
+					uiwait
+				end
+				put('alreadydisplayed',1);
+			end
+			typevector_original=typevector;
+			u(isnan(v))=NaN;
+			v(isnan(u))=NaN;
+			typevector(isnan(u))=2;
+			typevector(typevector_original==0)=0;
+			u=inpaint_nans(u,4);
+			v=inpaint_nans(v,4);
+			resultslist{7, frame} = u;
+			resultslist{8, frame} = v;
+			resultslist{9, frame} = typevector;
+			
+		end
+	else
+		if isempty(strfind(get(handles.apply_deriv_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.ascii_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.tecplot_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.save_mat_all,'string'), 'Please'))==1%not in batch
+			drawnow;
+			if retr('alreadydisplayed') == 1
+			else
+				msgbox('Your dataset contains NaNs. Derived parameters will have a lot of missing data. Redo the vector validation with the option to interpolate missing data turned on.', 'modal')
+				uiwait
+			end
+			put('alreadydisplayed',1);
+		end
+	end
+	if get(handles.smooth, 'Value') == 1
+		smoothfactor=floor(get(handles.smoothstr, 'Value'));
+		try
+			
+			u = smoothn(u,smoothfactor/10); %not supported in prehistoric Matlab versions like the one I have to use :'-(
+			v = smoothn(v,smoothfactor/10); %not supported in prehistoric Matlab versions like the one I have to use :'-(
+			clc
+			disp ('Using smoothn.m from Damien Garcia for data smoothing.')
+			disp (['Input smoothing parameter S for smoothn is: ' num2str(smoothfactor/10)])
+			disp ('see the documentation here: https://de.mathworks.com/matlabcentral/fileexchange/25634-smoothn')
+			
+		catch
+			h=fspecial('gaussian',smoothfactor+2,(smoothfactor+2)/7);
+			u=imfilter(u,h,'replicate');
+			v=imfilter(v,h,'replicate');
+			clc
+			disp ('Using Gaussian kernel for data smoothing (your Matlab version is pretty old btw...).')
+		end
+		resultslist{10,frame}=u; %smoothed u
+		resultslist{11,frame}=v; %smoothed v
+	else
+		%careful if more things are added, [] replaced by {[]}
+		resultslist{10,frame}=[]; %remove smoothed u
+		resultslist{11,frame}=[]; %remove smoothed v
+	end
+	if deriv==1 %vectors only
+		%do nothing
+		%disp('vectors')
+	end
+	if deriv==2 %vorticity
+		[curlz,~]= curl(x*calxy,y*calxy,u*caluv,v*caluv);
+		derived{1,frame}=-curlz;
+		%disp('vorticity')
+	end
+	if deriv==3 %magnitude
+		%andersrum, (u*caluv)-subtr_u
+		derived{2,frame}=sqrt((u*caluv-subtr_u).^2+(v*caluv-subtr_v).^2);
+		%disp('magnitude')
+	end
+	if deriv==4
+		derived{3,frame}=u*caluv-subtr_u;
+		%disp('u')
+	end
+	if deriv==5
+		derived{4,frame}=v*caluv-subtr_v;
+		%disp('v')
+	end
+	if deriv==6
+		derived{5,frame}=divergence(x*calxy,y*calxy,u*caluv,v*caluv);
+		%disp('divergence')
+	end
+	if deriv==7
+		derived{6,frame}=dcev(x*calxy,y*calxy,u*caluv,v*caluv);
+		%disp('dcev')
+	end
+	if deriv==8
+		derived{7,frame}=shear(x*calxy,y*calxy,u*caluv,v*caluv);
+		%disp('shear')
+	end
+	if deriv==9
+		derived{8,frame}=strain(x*calxy,y*calxy,u*caluv,v*caluv);
+		%disp('strain')
+	end
+	if deriv==10
+		%{
         A=rescale_maps(LIC(v*caluv-subtr_v,u*caluv-subtr_u,frame),0);
         [curlz,cav]= curl(x*calxy,y*calxy,u*caluv,v*caluv);
         B= rescale_maps(curlz,0);
@@ -5273,35 +5410,35 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
         C=C/max(max(C));
         RGB_B = ind2rgb(uint8(C*255),colormap('jet'));
         RGB_A = ind2rgb(uint8(A*255),colormap('gray'));
-        %}
-        %EDITED for williams visualization
-        %Original:
-        derived{9,frame}=LIC(v*caluv-subtr_v,u*caluv-subtr_u,frame);
-        %disp('LIC')
-    end
-    if deriv==11
-        try
-        derived{10,frame}=atan2d(v*caluv-subtr_v,u*caluv-subtr_u);
-        catch
-            derived{10,frame}=v*0;
-            beep;
-            disp('This operation is not supported in your Matlab version. Sorry...');
-        end
-        %disp('angle')
-        
-    end
-    if deriv==12
-        derived{11,frame}=resultslist{12,frame}; % correlation map
-        %disp('corrmap')
-    end    
-
-    put('subtr_u', subtr_u);
-    put('subtr_v', subtr_v);
-    put('resultslist', resultslist);
-    put ('derived',derived);
-    if update==1
-        put('displaywhat', deriv);
-    end
+		%}
+		%EDITED for williams visualization
+		%Original:
+		derived{9,frame}=LIC(v*caluv-subtr_v,u*caluv-subtr_u,frame);
+		%disp('LIC')
+	end
+	if deriv==11
+		try
+			derived{10,frame}=atan2d(v*caluv-subtr_v,u*caluv-subtr_u);
+		catch
+			derived{10,frame}=v*0;
+			beep;
+			disp('This operation is not supported in your Matlab version. Sorry...');
+		end
+		%disp('angle')
+		
+	end
+	if deriv==12
+		derived{11,frame}=resultslist{12,frame}; % correlation map
+		%disp('corrmap')
+	end
+	
+	put('subtr_u', subtr_u);
+	put('subtr_v', subtr_v);
+	put('resultslist', resultslist);
+	put ('derived',derived);
+	if update==1
+		put('displaywhat', deriv);
+	end
 end
 
 function out=LIC(vx,vy,frame)
@@ -5321,9 +5458,9 @@ axessize=axessize(3:4);
 xextend=size(vx,2);
 yextend=size(vx,1);
 if yextend<xextend
-    scalefactor=axessize(1)/xextend;
+	scalefactor=axessize(1)/xextend;
 else
-    scalefactor=axessize(2)/yextend;
+	scalefactor=axessize(2)/yextend;
 end
 
 vx=imresize(vx,scalefactor*LICreso,'bicubic');
@@ -5352,18 +5489,18 @@ noiseImage=rand(width,height);
 
 % Making LIC Image
 try
-    for m = 1:iterations
-        [LICImage, intensity,normvx,normvy] = fastLICFunction(vx,vy,noiseImage,kernel); % External Fast LIC implemennted in C language
-        LICImage = imadjust(LICImage); % Adjust the value range
-        noiseImage = LICImage;
-    end
-    out=LICImage;
-    delete(findobj('tag', 'waitplease'));
+	for m = 1:iterations
+		[LICImage, intensity,normvx,normvy] = fastLICFunction(vx,vy,noiseImage,kernel); % External Fast LIC implemennted in C language
+		LICImage = imadjust(LICImage); % Adjust the value range
+		noiseImage = LICImage;
+	end
+	out=LICImage;
+	delete(findobj('tag', 'waitplease'));
 catch
-    h=errordlg(['Could not run the LIC tool.' sprintf('\n') 'Probably the tool is not compiled correctly.' sprintf('\n')  'Please execute the following command in Matlab:' sprintf('\n') sprintf('\n') '     mex fastLICFunction.c     ' sprintf('\n') sprintf('\n') 'Then try again.'],'Error','on');
-    
-    uiwait(h);
-    out=zeros(size(vx));
+	h=errordlg(['Could not run the LIC tool.' sprintf('\n') 'Probably the tool is not compiled correctly.' sprintf('\n')  'Please execute the following command in Matlab:' sprintf('\n') sprintf('\n') '     mex fastLICFunction.c     ' sprintf('\n') sprintf('\n') 'Then try again.'],'Error','on');
+	
+	uiwait(h);
+	out=zeros(size(vx));
 end
 
 function apply_deriv_Callback(~, ~, ~)
@@ -5375,13 +5512,13 @@ sliderdisp
 
 function out=dcev(x,y,u,v);
 dUdX=conv2(u,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid')./...
-    conv2(x,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid');
+	conv2(x,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid');
 dVdX=conv2(v,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid')./...
-    conv2(x,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid');
+	conv2(x,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid');
 dUdY=conv2(u,[ 0,-1, 0; 0, 0, 0; 0, 1, 0],'valid')./...
-    conv2(y,[ 0,-1, 0; 0, 0, 0; 0, 1, 0],'valid');
+	conv2(y,[ 0,-1, 0; 0, 0, 0; 0, 1, 0],'valid');
 dVdY=conv2(v,[ 0,-1, 0; 0, 0, 0; 0, 1, 0],'valid')./...
-    conv2(y,[ 0,-1, 0; 0, 0, 0; 0, 1, 0],'valid');
+	conv2(y,[ 0,-1, 0; 0, 0, 0; 0, 1, 0],'valid');
 res=(dUdX+dVdY)/2+sqrt(0.25*(dUdX+dVdY).^2+dUdY.*dVdX);
 d=zeros(size(x));
 d(2:end-1,2:end-1)=imag(res);
@@ -5407,18 +5544,24 @@ function out=rescale_maps(in,isangle)
 handles=gethand;
 filepath=retr('filepath');
 currentframe=floor(get(handles.fileselector, 'value'));
-[~,~,ext] = fileparts(filepath{2*currentframe-1});
-if strcmp(ext,'.b16')
-    currentimage=f_readB16(filepath{2*currentframe-1});
+if retr('video_selection_done') == 0
+	[~,~,ext] = fileparts(filepath{2*currentframe-1});
+	if strcmp(ext,'.b16')
+		currentimage=f_readB16(filepath{2*currentframe-1});
+	else
+		currentimage=imread(filepath{2*currentframe-1});
+	end
 else
-    currentimage=imread(filepath{2*currentframe-1});
+	video_reader_object = retr('video_reader_object');
+	video_frame_selection=retr('video_frame_selection');
+	currentimage = read(video_reader_object,video_frame_selection(2*currentframe-1));
 end
 resultslist=retr('resultslist');
 x=resultslist{1,currentframe};
 y=resultslist{2,currentframe};
 out=zeros(size(currentimage));
 if size(out,3)>1
-    out(:,:,2:end)=[];
+	out(:,:,2:end)=[];
 end
 out(:,:)=mean(mean(in)); %Rand wird auf Mittelwert gesetzt
 step=x(1,2)-x(1,1)+1;
@@ -5429,45 +5572,45 @@ maxy=(max(max(y))+step/2);
 width=maxx-minx;
 height=maxy-miny;
 if size(in,3)>1 %why would this actually happen...?
-    in(:,:,2:end)=[];
+	in(:,:,2:end)=[];
 end
 if isangle == 1 %angle data is unsteady, needs to interpolated differently
-    X_raw=cos(in/180*pi);
-    Y_raw=sin(in/180*pi);
-    %interpolate
-    X_interp = imresize(X_raw,[height width],'bilinear');
-    Y_interp = imresize(Y_raw,[height width],'bilinear');
-    %reconvert to phase
-    dispvar = angle(complex(X_interp,Y_interp))*180/pi;
+	X_raw=cos(in/180*pi);
+	Y_raw=sin(in/180*pi);
+	%interpolate
+	X_interp = imresize(X_raw,[height width],'bilinear');
+	Y_interp = imresize(Y_raw,[height width],'bilinear');
+	%reconvert to phase
+	dispvar = angle(complex(X_interp,Y_interp))*180/pi;
 else
-    dispvar = imresize(in,[height width],'bilinear'); %INTERPOLATION
+	dispvar = imresize(in,[height width],'bilinear'); %INTERPOLATION
 end
 
 if miny<1
-    miny=1;
+	miny=1;
 end
 if minx<1
-    minx=1;
+	minx=1;
 end
 try
-    out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar;
+	out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar;
 catch
-    disp('temp workaround')
-    A=out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1));
-    out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar(1:size(A,1),1:size(A,2));
+	disp('temp workaround')
+	A=out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1));
+	out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar(1:size(A,1),1:size(A,2));
 end
 maskiererx=retr('maskiererx');
 if numel(maskiererx)>0
-    if get(handles.img_not_mask, 'value')==1 && numel(maskiererx{currentframe*2-1})>0
-        maskierery=retr('maskierery');
-        ximask=maskiererx{currentframe*2-1};
-        yimask=maskierery{currentframe*2-1};
-        BW=poly2mask(ximask,yimask,size(out,1),size(out,2));
-        max_img=double(max(max(currentimage)));
-        max_map=max(max(out));
-        currentimage=double(currentimage)/max_img*max_map;
-        out(BW==1)=currentimage(BW==1);
-    end
+	if get(handles.img_not_mask, 'value')==1 && numel(maskiererx{currentframe*2-1})>0
+		maskierery=retr('maskierery');
+		ximask=maskiererx{currentframe*2-1};
+		yimask=maskierery{currentframe*2-1};
+		BW=poly2mask(ximask,yimask,size(out,1),size(out,2));
+		max_img=double(max(max(currentimage)));
+		max_map=max(max(out));
+		currentimage=double(currentimage)/max_img*max_map;
+		out(BW==1)=currentimage(BW==1);
+	end
 end
 
 function out=rescale_maps_nan(in,isangle)
@@ -5477,18 +5620,24 @@ function out=rescale_maps_nan(in,isangle)
 handles=gethand;
 filepath=retr('filepath');
 currentframe=floor(get(handles.fileselector, 'value'));
+if retr('video_selection_done') == 0
 [~,~,ext] = fileparts(filepath{2*currentframe-1});
 if strcmp(ext,'.b16')
-    currentimage=f_readB16(filepath{2*currentframe-1});
+	currentimage=f_readB16(filepath{2*currentframe-1});
 else
-    currentimage=imread(filepath{2*currentframe-1});
+	currentimage=imread(filepath{2*currentframe-1});
+end
+else
+	video_reader_object = retr('video_reader_object');
+	video_frame_selection=retr('video_frame_selection');
+	currentimage = read(video_reader_object,video_frame_selection(2*currentframe-1));
 end
 resultslist=retr('resultslist');
 x=resultslist{1,currentframe};
 y=resultslist{2,currentframe};
 out=zeros(size(currentimage));
 if size(out,3)>1
-    out(:,:,2:end)=[];
+	out(:,:,2:end)=[];
 end
 out(:,:)=nan; %rand wird auf nan gesetzt
 step=x(1,2)-x(1,1)+1;
@@ -5499,47 +5648,47 @@ maxy=(max(max(y))+step/2);
 width=maxx-minx;
 height=maxy-miny;
 if size(in,3)>1 %why would this actually happen...?
-    in(:,:,2:end)=[];
+	in(:,:,2:end)=[];
 end
 
 if isangle == 1 %angle data is unsteady, needs to interpolated differently
-    X_raw=cos(in/180*pi);
-    Y_raw=sin(in/180*pi);
-    %interpolate
-    X_interp = imresize(X_raw,[height width],'bilinear');
-    Y_interp = imresize(Y_raw,[height width],'bilinear');
-    %reconvert to phase
-    dispvar = angle(complex(X_interp,Y_interp))*180/pi;
+	X_raw=cos(in/180*pi);
+	Y_raw=sin(in/180*pi);
+	%interpolate
+	X_interp = imresize(X_raw,[height width],'bilinear');
+	Y_interp = imresize(Y_raw,[height width],'bilinear');
+	%reconvert to phase
+	dispvar = angle(complex(X_interp,Y_interp))*180/pi;
 else
-    dispvar = imresize(in,[height width],'bilinear'); %INTERPOLATION
+	dispvar = imresize(in,[height width],'bilinear'); %INTERPOLATION
 end
 
 if miny<1
-    miny=1;
+	miny=1;
 end
 if minx<1
-    minx=1;
+	minx=1;
 end;
 try
-    out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar;
+	out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar;
 catch
-    disp('temp workaround')
-    A=out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1));
-    out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar(1:size(A,1),1:size(A,2));
+	disp('temp workaround')
+	A=out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1));
+	out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar(1:size(A,1),1:size(A,2));
 end
 
 maskiererx=retr('maskiererx');
 if numel(maskiererx)>0
-    try
-        if numel(maskiererx{currentframe*2-1})>0
-            maskierery=retr('maskierery');
-            ximask=maskiererx{currentframe*2-1};
-            yimask=maskierery{currentframe*2-1};
-            BW=poly2mask(ximask,yimask,size(out,1),size(out,2));
-            out(BW==1)=nan;
-        end
-    catch
-    end
+	try
+		if numel(maskiererx{currentframe*2-1})>0
+			maskierery=retr('maskierery');
+			ximask=maskiererx{currentframe*2-1};
+			yimask=maskierery{currentframe*2-1};
+			BW=poly2mask(ximask,yimask,size(out,1),size(out,2));
+			out(BW==1)=nan;
+		end
+	catch
+	end
 end
 
 function apply_cali_Callback(~, ~, ~)
@@ -5550,10 +5699,10 @@ handles=gethand;
 filepath=retr('filepath');
 toolsavailable(0)
 for i=1:floor(size(filepath,1)/2)+1
-    deriv=get(handles.derivchoice, 'value');
-    derivative_calc(i,deriv,1)
-    set (handles.apply_deriv_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
-    drawnow;
+	deriv=get(handles.derivchoice, 'value');
+	derivative_calc(i,deriv,1)
+	set (handles.apply_deriv_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
+	drawnow;
 end
 set (handles.apply_deriv_all, 'string', 'Apply to all frames');
 toolsavailable(1)
@@ -5562,31 +5711,31 @@ sliderdisp
 function autoscaler_Callback(~, ~, ~)
 handles=gethand;
 if get(handles.autoscaler, 'value')==1
-    set (handles.mapscale_min, 'enable', 'off')
-    set (handles.mapscale_max, 'enable', 'off')
+	set (handles.mapscale_min, 'enable', 'off')
+	set (handles.mapscale_max, 'enable', 'off')
 else
-    set (handles.mapscale_min, 'enable', 'on')
-    set (handles.mapscale_max, 'enable', 'on')
+	set (handles.mapscale_min, 'enable', 'on')
+	set (handles.mapscale_max, 'enable', 'on')
 end
 
 function MainWindow_CloseRequestFcn(hObject, ~, ~)
 button = questdlg('Do you want to quit PIVlab?','Quit?','Yes','Cancel','Cancel');
 try
-    toolsavailable(1)
+	toolsavailable(1)
 catch
 end
 if strmatch(button,'Yes')==1 %#ok<MATCH2>
-    try
-        homedir=retr('homedir');
-        pathname=retr('pathname');
-        save('PIVlab_settings_default.mat','homedir','pathname','-append');
-    catch
-    end
-    try
-        delete(hObject);
-    catch
-        delete(gcf);
-    end
+	try
+		homedir=retr('homedir');
+		pathname=retr('pathname');
+		save('PIVlab_settings_default.mat','homedir','pathname','-append');
+	catch
+	end
+	try
+		delete(hObject);
+	catch
+		delete(gcf);
+	end
 end
 
 function vectorscale_Callback(~, ~, ~)
@@ -5594,26 +5743,26 @@ handles=gethand;
 resultslist=retr('resultslist');
 currentframe=floor(get(handles.fileselector, 'value'));
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-    sliderdisp
+	sliderdisp
 end
 
 function masktransp_Callback(~, ~, ~)
 handles=gethand;
 
 try
-    if isempty(str2num(get(handles.masktransp,'String'))) == 1
-        set(handles.masktransp,'String','0');
-    end
+	if isempty(str2num(get(handles.masktransp,'String'))) == 1
+		set(handles.masktransp,'String','0');
+	end
 catch
-    set(handles.masktransp,'String','0');
+	set(handles.masktransp,'String','0');
 end
 check_comma(handles.masktransp)
 set(handles.masktransp,'String',round(str2num(get(handles.masktransp,'String'))))
 if str2num(get(handles.masktransp,'String')) > 100
-    set(handles.masktransp,'String','100');
+	set(handles.masktransp,'String','100');
 end
 if str2num(get(handles.masktransp,'String')) < 0
-    set(handles.masktransp,'String','0');
+	set(handles.masktransp,'String','0');
 end
 
 
@@ -5622,11 +5771,11 @@ handles=gethand;
 resultslist=retr('resultslist');
 currentframe=floor(get(handles.fileselector, 'value'));
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-    [FileName,PathName] = uiputfile('*.txt','Save vector data as...','PIVlab.txt'); %framenummer in dateiname
-    if isequal(FileName,0) | isequal(PathName,0) %#ok<*OR2>
-    else
-        file_save(currentframe,FileName,PathName,1);
-    end
+	[FileName,PathName] = uiputfile('*.txt','Save vector data as...','PIVlab.txt'); %framenummer in dateiname
+	if isequal(FileName,0) | isequal(PathName,0) %#ok<*OR2>
+	else
+		file_save(currentframe,FileName,PathName,1);
+	end
 end
 
 function ascii_all_Callback(~, ~, ~)
@@ -5636,19 +5785,19 @@ resultslist=retr('resultslist');
 [FileName,PathName] = uiputfile('*.txt','Save vector data as...','PIVlab.txt'); %framenummer in dateiname
 if isequal(FileName,0) | isequal(PathName,0)
 else
-    toolsavailable(0)
-    for i=1:floor(size(filepath,1)/2)
-        %if analysis exists
-        if size(resultslist,2)>=i && numel(resultslist{1,i})>0
-            [Dir, Name, Ext] = fileparts(FileName);
-            FileName_nr=[Name sprintf('_%.4d', i) Ext];
-            file_save(i,FileName_nr,PathName,1)
-            set (handles.ascii_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
-            drawnow;
-        end
-    end
-    toolsavailable(1)
-    set (handles.ascii_all, 'string', 'Export all frames');
+	toolsavailable(0)
+	for i=1:floor(size(filepath,1)/2)
+		%if analysis exists
+		if size(resultslist,2)>=i && numel(resultslist{1,i})>0
+			[Dir, Name, Ext] = fileparts(FileName);
+			FileName_nr=[Name sprintf('_%.4d', i) Ext];
+			file_save(i,FileName_nr,PathName,1)
+			set (handles.ascii_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
+			drawnow;
+		end
+	end
+	toolsavailable(1)
+	set (handles.ascii_all, 'string', 'Export all frames');
 end
 
 function tecplot_current_Callback(~, ~, ~)
@@ -5656,11 +5805,11 @@ handles=gethand;
 resultslist=retr('resultslist');
 currentframe=floor(get(handles.fileselector, 'value'));
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-    [FileName,PathName] = uiputfile('*.dat','Save vector data as...','PIVlab.dat'); %framenummer in dateiname
-    if isequal(FileName,0) | isequal(PathName,0) %#ok<*OR2>
-    else
-        file_save(currentframe,FileName,PathName,4);
-    end
+	[FileName,PathName] = uiputfile('*.dat','Save vector data as...','PIVlab.dat'); %framenummer in dateiname
+	if isequal(FileName,0) | isequal(PathName,0) %#ok<*OR2>
+	else
+		file_save(currentframe,FileName,PathName,4);
+	end
 end
 
 function tecplot_all_Callback(~, ~, ~)
@@ -5670,19 +5819,19 @@ resultslist=retr('resultslist');
 [FileName,PathName] = uiputfile('*.dat','Save vector data as...','PIVlab.dat'); %framenummer in dateiname
 if isequal(FileName,0) | isequal(PathName,0)
 else
-    toolsavailable(0)
-    for i=1:floor(size(filepath,1)/2)
-        %if analysis exists
-        if size(resultslist,2)>=i && numel(resultslist{1,i})>0
-            [Dir, Name, Ext] = fileparts(FileName);
-            FileName_nr=[Name sprintf('_%.4d', i) Ext];
-            file_save(i,FileName_nr,PathName,4)
-            set (handles.tecplot_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
-            drawnow;
-        end
-    end
-    toolsavailable(1)
-    set (handles.tecplot_all, 'string', 'Export all frames');
+	toolsavailable(0)
+	for i=1:floor(size(filepath,1)/2)
+		%if analysis exists
+		if size(resultslist,2)>=i && numel(resultslist{1,i})>0
+			[Dir, Name, Ext] = fileparts(FileName);
+			FileName_nr=[Name sprintf('_%.4d', i) Ext];
+			file_save(i,FileName_nr,PathName,4)
+			set (handles.tecplot_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
+			drawnow;
+		end
+	end
+	toolsavailable(1)
+	set (handles.tecplot_all, 'string', 'Export all frames');
 end
 
 function save_mat_current_Callback(~, ~, ~)
@@ -5690,11 +5839,11 @@ handles=gethand;
 resultslist=retr('resultslist');
 currentframe=floor(get(handles.fileselector, 'value'));
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-    [FileName,PathName] = uiputfile('*.mat','Save MATLAB file as...','PIVlab.mat'); %framenummer in dateiname
-    if isequal(FileName,0) | isequal(PathName,0)
-    else
-        mat_file_save(currentframe,FileName,PathName,1); %option 1 = only currentframe
-    end
+	[FileName,PathName] = uiputfile('*.mat','Save MATLAB file as...','PIVlab.mat'); %framenummer in dateiname
+	if isequal(FileName,0) | isequal(PathName,0)
+	else
+		mat_file_save(currentframe,FileName,PathName,1); %option 1 = only currentframe
+	end
 end
 
 function save_mat_all_Callback(~, ~, ~)
@@ -5702,11 +5851,11 @@ handles=gethand;
 resultslist=retr('resultslist');
 currentframe=floor(get(handles.fileselector, 'value'));
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-    [FileName,PathName] = uiputfile('*.mat','Save MATLAB file as...','PIVlab.mat'); %framenummer in dateiname
-    if isequal(FileName,0) | isequal(PathName,0)
-    else
-        mat_file_save(currentframe,FileName,PathName,2); %option2 = all frames
-    end
+	[FileName,PathName] = uiputfile('*.mat','Save MATLAB file as...','PIVlab.mat'); %framenummer in dateiname
+	if isequal(FileName,0) | isequal(PathName,0)
+	else
+		mat_file_save(currentframe,FileName,PathName,2); %option2 = all frames
+	end
 end
 
 function set_points_Callback(~, ~, ~)
@@ -5716,13 +5865,13 @@ toolsavailable(0)
 delete(findobj('tag', 'measure'));
 n=0;
 for i=1:2
-    [xi,yi,but] = ginput(1);
-    n=n+1;
-    xposition(n)=xi;
-    yposition(n)=yi;
-    plot(xposition(n),yposition(n), 'r*','Color', [0.55,0.75,0.9], 'tag', 'measure');
-    line(xposition,yposition,'LineWidth',3, 'Color', [0.05,0,0], 'tag', 'measure');
-    line(xposition,yposition,'LineWidth',1, 'Color', [0.05,0.75,0.05], 'tag', 'measure');
+	[xi,yi,but] = ginput(1);
+	n=n+1;
+	xposition(n)=xi;
+	yposition(n)=yi;
+	plot(xposition(n),yposition(n), 'r*','Color', [0.55,0.75,0.9], 'tag', 'measure');
+	line(xposition,yposition,'LineWidth',3, 'Color', [0.05,0,0], 'tag', 'measure');
+	line(xposition,yposition,'LineWidth',1, 'Color', [0.05,0.75,0.05], 'tag', 'measure');
 end
 line([xposition(1,1) xposition(1,2)],[yposition(1,1) yposition(1,1)], 'LineWidth',3, 'Color', [0.05,0.0,0.0], 'tag', 'measure');
 line([xposition(1,1) xposition(1,2)],[yposition(1,1) yposition(1,1)], 'LineWidth',1, 'Color', [0.95,0.05,0.01], 'tag', 'measure');
@@ -5738,14 +5887,14 @@ beta=(180/pi) *(asin(deltax/length));
 handles=gethand;
 calxy=retr('calxy');
 if retr('caluv')==1 && retr('calxy')==1
-    set (handles.deltax, 'String', [num2str(deltax*calxy) ' [px]']);
-    set (handles.deltay, 'String', [num2str(deltay*calxy) ' [px]']);
-    set (handles.length, 'String', [num2str(length*calxy) ' [px]']);
-    
+	set (handles.deltax, 'String', [num2str(deltax*calxy) ' [px]']);
+	set (handles.deltay, 'String', [num2str(deltay*calxy) ' [px]']);
+	set (handles.length, 'String', [num2str(length*calxy) ' [px]']);
+	
 else
-    set (handles.deltax, 'String', [num2str(deltax*calxy) ' [m]']);
-    set (handles.deltay, 'String', [num2str(deltay*calxy) ' [m]']);
-    set (handles.length, 'String', [num2str(length*calxy) ' [m]']);
+	set (handles.deltax, 'String', [num2str(deltax*calxy) ' [m]']);
+	set (handles.deltay, 'String', [num2str(deltay*calxy) ' [m]']);
+	set (handles.length, 'String', [num2str(length*calxy) ' [m]']);
 end
 set (handles.alpha, 'String', num2str(alpha));
 set (handles.beta, 'String', num2str(beta));
@@ -5756,87 +5905,87 @@ handles=gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
 resultslist=retr('resultslist');
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-    toolsavailable(0);
-    xposition=[];
-    yposition=[];
-    n = 0;
-    but = 1;
-    hold on;
-    if get(handles.draw_what,'value')==1 %polyline
-        while but == 1
-            [xi,yi,but] = ginput(1);
-            if but~=1
-                break
-            end
-            delete(findobj('tag', 'extractpoint'))
-            plot(xi,yi,'r+','tag','extractpoint')
-            n = n+1;
-            xposition(n)=xi;
-            yposition(n)=yi;
-            delete(findobj('tag', 'extractline'))
-            delete(findobj('tag','areaint'));
-            line(xposition,yposition,'LineWidth',3, 'Color', [0,0,0.95],'tag','extractline');
-            line(xposition,yposition,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','extractline');
-        end
-    elseif get(handles.draw_what,'value')==2 %circle
-        for i=1:2
-            [xi,yi,but] = ginput(1);
-            if i==1;delete(findobj('tag', 'extractpoint'));end
-            n=n+1;
-            xposition_raw(n)=xi;
-            yposition_raw(n)=yi;
-            plot(xposition_raw(n),yposition_raw(n), 'r+', 'MarkerSize',10,'tag','extractpoint');
-        end
-        deltax=abs(xposition_raw(1,1)-xposition_raw(1,2));
-        deltay=abs(yposition_raw(1,1)-yposition_raw(1,2));
-        radius=sqrt(deltax^2+deltay^2);
-        valtable=linspace(0,2*pi,361);
-        for i=1:size(valtable,2)
-            xposition(1,i)=sin(valtable(1,i))*radius+xposition_raw(1,1);
-            yposition(1,i)=cos(valtable(1,i))*radius+yposition_raw(1,1);
-        end
-        delete(findobj('tag', 'extractline'))
-        line(xposition,yposition,'LineWidth',3, 'Color', [0,0,0.95],'tag','extractline');
-        line(xposition,yposition,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','extractline');
-        text(xposition(1,1),yposition(1,1),'\leftarrow start/end','FontSize',7, 'Rotation', 90, 'BackgroundColor',[1 1 1],'tag','extractline')
-        text(xposition(1,1),yposition(1,1)+8,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag','extractline')
-        text(xposition(1,1),yposition(1,1)-8-radius*2,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag','extractline')
-        text(xposition(1,1)-radius-8,yposition(1,1)-radius,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag','extractline')
-        text(xposition(1,1)+radius+8,yposition(1,1)-radius,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag','extractline')
-    elseif get(handles.draw_what,'value')==3 %circle series
-        set(handles.extraction_choice,'Value',11);
-        for i=1:2
-            [xi,yi,but] = ginput(1);
-            if i==1;delete(findobj('tag', 'extractpoint'));end
-            n=n+1;
-            xposition_raw(n)=xi;
-            yposition_raw(n)=yi;
-            plot(xposition_raw(n),yposition_raw(n), 'r+', 'MarkerSize',10,'tag','extractpoint');
-        end
-        deltax=abs(xposition_raw(1,1)-xposition_raw(1,2));
-        deltay=abs(yposition_raw(1,1)-yposition_raw(1,2));
-        radius=sqrt(deltax^2+deltay^2);
-        valtable=linspace(0,2*pi,361);
-        for m=1:30
-            for i=1:size(valtable,2)
-                xposition(m,i)=sin(valtable(1,i))*(radius-((30-m)/30)*radius)+xposition_raw(1,1);
-                yposition(m,i)=cos(valtable(1,i))*(radius-((30-m)/30)*radius)+yposition_raw(1,1);
-            end
-        end
-        delete(findobj('tag', 'extractline'))
-        for m=1:30
-            line(xposition(m,:),yposition(m,:),'LineWidth',1.5, 'Color', [0.95,0.5,0.01],'tag','extractline');
-        end
-        text(xposition(30,1),yposition(30,1),'\leftarrow start/end','FontSize',7, 'Rotation', 90, 'BackgroundColor',[1 1 1],'tag','extractline')
-        text(xposition(30,1),yposition(30,1)+8,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag','extractline')
-        text(xposition(30,1),yposition(30,1)-8-radius*2,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag','extractline')
-        text(xposition(30,1)-radius-8,yposition(30,1)-radius,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag','extractline')
-        text(xposition(30,1)+radius+8,yposition(30,1)-radius,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag','extractline')
-    end
-    hold off;
-    put('xposition',xposition)
-    put('yposition',yposition)
-    toolsavailable(1);
+	toolsavailable(0);
+	xposition=[];
+	yposition=[];
+	n = 0;
+	but = 1;
+	hold on;
+	if get(handles.draw_what,'value')==1 %polyline
+		while but == 1
+			[xi,yi,but] = ginput(1);
+			if but~=1
+				break
+			end
+			delete(findobj('tag', 'extractpoint'))
+			plot(xi,yi,'r+','tag','extractpoint')
+			n = n+1;
+			xposition(n)=xi;
+			yposition(n)=yi;
+			delete(findobj('tag', 'extractline'))
+			delete(findobj('tag','areaint'));
+			line(xposition,yposition,'LineWidth',3, 'Color', [0,0,0.95],'tag','extractline');
+			line(xposition,yposition,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','extractline');
+		end
+	elseif get(handles.draw_what,'value')==2 %circle
+		for i=1:2
+			[xi,yi,but] = ginput(1);
+			if i==1;delete(findobj('tag', 'extractpoint'));end
+			n=n+1;
+			xposition_raw(n)=xi;
+			yposition_raw(n)=yi;
+			plot(xposition_raw(n),yposition_raw(n), 'r+', 'MarkerSize',10,'tag','extractpoint');
+		end
+		deltax=abs(xposition_raw(1,1)-xposition_raw(1,2));
+		deltay=abs(yposition_raw(1,1)-yposition_raw(1,2));
+		radius=sqrt(deltax^2+deltay^2);
+		valtable=linspace(0,2*pi,361);
+		for i=1:size(valtable,2)
+			xposition(1,i)=sin(valtable(1,i))*radius+xposition_raw(1,1);
+			yposition(1,i)=cos(valtable(1,i))*radius+yposition_raw(1,1);
+		end
+		delete(findobj('tag', 'extractline'))
+		line(xposition,yposition,'LineWidth',3, 'Color', [0,0,0.95],'tag','extractline');
+		line(xposition,yposition,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','extractline');
+		text(xposition(1,1),yposition(1,1),'\leftarrow start/end','FontSize',7, 'Rotation', 90, 'BackgroundColor',[1 1 1],'tag','extractline')
+		text(xposition(1,1),yposition(1,1)+8,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag','extractline')
+		text(xposition(1,1),yposition(1,1)-8-radius*2,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag','extractline')
+		text(xposition(1,1)-radius-8,yposition(1,1)-radius,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag','extractline')
+		text(xposition(1,1)+radius+8,yposition(1,1)-radius,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag','extractline')
+	elseif get(handles.draw_what,'value')==3 %circle series
+		set(handles.extraction_choice,'Value',11);
+		for i=1:2
+			[xi,yi,but] = ginput(1);
+			if i==1;delete(findobj('tag', 'extractpoint'));end
+			n=n+1;
+			xposition_raw(n)=xi;
+			yposition_raw(n)=yi;
+			plot(xposition_raw(n),yposition_raw(n), 'r+', 'MarkerSize',10,'tag','extractpoint');
+		end
+		deltax=abs(xposition_raw(1,1)-xposition_raw(1,2));
+		deltay=abs(yposition_raw(1,1)-yposition_raw(1,2));
+		radius=sqrt(deltax^2+deltay^2);
+		valtable=linspace(0,2*pi,361);
+		for m=1:30
+			for i=1:size(valtable,2)
+				xposition(m,i)=sin(valtable(1,i))*(radius-((30-m)/30)*radius)+xposition_raw(1,1);
+				yposition(m,i)=cos(valtable(1,i))*(radius-((30-m)/30)*radius)+yposition_raw(1,1);
+			end
+		end
+		delete(findobj('tag', 'extractline'))
+		for m=1:30
+			line(xposition(m,:),yposition(m,:),'LineWidth',1.5, 'Color', [0.95,0.5,0.01],'tag','extractline');
+		end
+		text(xposition(30,1),yposition(30,1),'\leftarrow start/end','FontSize',7, 'Rotation', 90, 'BackgroundColor',[1 1 1],'tag','extractline')
+		text(xposition(30,1),yposition(30,1)+8,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag','extractline')
+		text(xposition(30,1),yposition(30,1)-8-radius*2,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag','extractline')
+		text(xposition(30,1)-radius-8,yposition(30,1)-radius,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag','extractline')
+		text(xposition(30,1)+radius+8,yposition(30,1)-radius,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag','extractline')
+	end
+	hold off;
+	put('xposition',xposition)
+	put('yposition',yposition)
+	toolsavailable(1);
 end
 
 function save_data_Callback(~, ~, ~)
@@ -5845,79 +5994,79 @@ resultslist=retr('resultslist');
 currentframe=floor(get(handles.fileselector, 'value'));
 
 if get(handles.extractLineAll, 'value')==0
-    startfr=currentframe;
-    endfr=currentframe;
+	startfr=currentframe;
+	endfr=currentframe;
 else
-    startfr=1;
-    endfr=size(resultslist,2);
+	startfr=1;
+	endfr=size(resultslist,2);
 end
 selected=0;
 for i=startfr:endfr
-    set(handles.fileselector, 'value',i)
-    %sliderdisp
-    currentframe=floor(get(handles.fileselector, 'value'));
-    if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-        delete(findobj('tag', 'derivplotwindow'));
-        plot_data_Callback %make sure that data was calculated
-        %close figure...
-        delete(findobj('tag', 'derivplotwindow'));
-        extractwhat=get(handles.extraction_choice,'Value');
-        current=get(handles.extraction_choice,'string');
-        current=current{extractwhat};
-        if selected==0
-            imgsavepath=retr('imgsavepath');
-            if isempty(imgsavepath)
-                imgsavepath=retr('pathname');
-            end
-            %find '\', replace with 'per'
-            part1= current(1:strfind(current,'/')-1) ;
-            part2= current(strfind(current,'/')+1:end);
-            if isempty(part1)==1
-                currentED=current;
-            else
-                currentED=[part1 ' per ' part2];
-            end
-            [FileName,PathName] = uiputfile('*.txt','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' currentED '.txt'])); %framenummer in dateiname
-            selected=1;
-        end
-        if isequal(FileName,0) | isequal(PathName,0)
-            %exit for
-            break;
-        else
-            put('imgsavepath',PathName);
-            pointpos=strfind(FileName, '.');
-            pointpos=pointpos(end);
-            FileName_final=[FileName(1:pointpos-1) '_' num2str(currentframe) '.' FileName(pointpos+1:end)];
-            c=retr('c');
-            distance=retr('distance');
-            %also retrieve coordinates of polyline points if possible
-            cx=retr('cx');
-            cy=retr('cy');
-            if size(c,2)>1 %circle series
-                if retr('calxy')==1 && retr('caluv')==1
-                    header=['circle nr., Distance on line [px], x-coordinate [px], y-coordinate [px], ' current];
-                else
-                    header=['circle nr., Distance on line [m], x-coordinate [m], y-coordinate [m], ' current];
-                end
-                wholeLOT=[];
-                for z=1:30
-                    wholeLOT=[wholeLOT;[linspace(z,z,size(c,2))' distance(z,:)' cx(z,:)' cy(z,:)' c(z,:)']]; %anders.... untereinander
-                end
-            else
-                
-                if retr('calxy')==1 && retr('caluv')==1
-                    header=['Distance on line [px], x-coordinate [px], y-coordinate [px], ' current];
-                else
-                    header=['Distance on line [m], x-coordinate [m], y-coordinate [m], ' current];
-                end
-                wholeLOT=[distance cx cy c];
-            end
-            fid = fopen(fullfile(PathName,FileName_final), 'w');
-            fprintf(fid, [header '\r\n']);
-            fclose(fid);
-            dlmwrite(fullfile(PathName,FileName_final), wholeLOT, '-append', 'delimiter', ',', 'precision', 10, 'newline', 'pc');
-        end
-    end
+	set(handles.fileselector, 'value',i)
+	%sliderdisp
+	currentframe=floor(get(handles.fileselector, 'value'));
+	if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+		delete(findobj('tag', 'derivplotwindow'));
+		plot_data_Callback %make sure that data was calculated
+		%close figure...
+		delete(findobj('tag', 'derivplotwindow'));
+		extractwhat=get(handles.extraction_choice,'Value');
+		current=get(handles.extraction_choice,'string');
+		current=current{extractwhat};
+		if selected==0
+			imgsavepath=retr('imgsavepath');
+			if isempty(imgsavepath)
+				imgsavepath=retr('pathname');
+			end
+			%find '\', replace with 'per'
+			part1= current(1:strfind(current,'/')-1) ;
+			part2= current(strfind(current,'/')+1:end);
+			if isempty(part1)==1
+				currentED=current;
+			else
+				currentED=[part1 ' per ' part2];
+			end
+			[FileName,PathName] = uiputfile('*.txt','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' currentED '.txt'])); %framenummer in dateiname
+			selected=1;
+		end
+		if isequal(FileName,0) | isequal(PathName,0)
+			%exit for
+			break;
+		else
+			put('imgsavepath',PathName);
+			pointpos=strfind(FileName, '.');
+			pointpos=pointpos(end);
+			FileName_final=[FileName(1:pointpos-1) '_' num2str(currentframe) '.' FileName(pointpos+1:end)];
+			c=retr('c');
+			distance=retr('distance');
+			%also retrieve coordinates of polyline points if possible
+			cx=retr('cx');
+			cy=retr('cy');
+			if size(c,2)>1 %circle series
+				if retr('calxy')==1 && retr('caluv')==1
+					header=['circle nr., Distance on line [px], x-coordinate [px], y-coordinate [px], ' current];
+				else
+					header=['circle nr., Distance on line [m], x-coordinate [m], y-coordinate [m], ' current];
+				end
+				wholeLOT=[];
+				for z=1:30
+					wholeLOT=[wholeLOT;[linspace(z,z,size(c,2))' distance(z,:)' cx(z,:)' cy(z,:)' c(z,:)']]; %anders.... untereinander
+				end
+			else
+				
+				if retr('calxy')==1 && retr('caluv')==1
+					header=['Distance on line [px], x-coordinate [px], y-coordinate [px], ' current];
+				else
+					header=['Distance on line [m], x-coordinate [m], y-coordinate [m], ' current];
+				end
+				wholeLOT=[distance cx cy c];
+			end
+			fid = fopen(fullfile(PathName,FileName_final), 'w');
+			fprintf(fid, [header '\r\n']);
+			fclose(fid);
+			dlmwrite(fullfile(PathName,FileName_final), wholeLOT, '-append', 'delimiter', ',', 'precision', 10, 'newline', 'pc');
+		end
+	end
 end
 sliderdisp
 
@@ -5926,329 +6075,329 @@ handles=gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
 resultslist=retr('resultslist');
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-    x=resultslist{1,currentframe};
-    y=resultslist{2,currentframe};
-    xposition=retr('xposition'); %not conflicting...?
-    yposition=retr('yposition'); %not conflicting...?
-    if numel(xposition)>1
-        for i=1:size(xposition,2)-1
-            %length of one segment:
-            laenge(i)=sqrt((xposition(1,i+1)-xposition(1,i))^2+(yposition(1,i+1)-yposition(1,i))^2);
-        end
-        length=sum(laenge);
-        percentagex=xposition/max(max(x));
-        xaufderivative=percentagex*size(x,2);
-        percentagey=yposition/max(max(y));
-        yaufderivative=percentagey*size(y,1);
-        nrpoints=str2num(get(handles.nrpoints,'string'));
-        if get(handles.draw_what,'value')==3 %circle series
-            set(handles.extraction_choice,'Value',11); %set to tangent
-        end
-        extractwhat=get(handles.extraction_choice,'Value');
-        switch extractwhat
-            case {1,2,3,4,5,6,7,8}
-                derivative_calc(currentframe,extractwhat+1,0);
-                derived=retr('derived');
-                maptoget=derived{extractwhat,currentframe};
-                
-                maptoget=rescale_maps_nan(maptoget,0);
-                [cx, cy, c] = improfile(maptoget,xposition,yposition,round(nrpoints),'bicubic');
-                
-                distance=linspace(0,length,size(c,1))';
-                
-            case {9,10}
-                % auf stelle 9 steht vector angle. Bei derivatives ist der aber auf platz 11. daher zwei dazu
-                %auf stelle 10 steht correlation coeff, bei derivatives auf
-                %12, daher zwei dazu
-                derivative_calc(currentframe,extractwhat+2,0);
-                derived=retr('derived');
-                maptoget=derived{extractwhat+1,currentframe};
-                
-                maptoget=rescale_maps_nan(maptoget,0);
-                [cx, cy, c] = improfile(maptoget,xposition,yposition,round(nrpoints),'bicubic');
-                
-                distance=linspace(0,length,size(c,1))';
-            case 11 %tangent
-                if size(xposition,1)<=1 %user did not choose circle series
-                    if size(resultslist,1)>6 %filtered exists
-                        if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-                            u=resultslist{10,currentframe};
-                            v=resultslist{11,currentframe};
-                            typevector=resultslist{9,currentframe};
-                            if numel(typevector)==0%happens if user smoothes sth without NaN and without validation
-                                typevector=resultslist{5,currentframe};
-                            end
-                        else
-                            u=resultslist{7,currentframe};
-                            if size(u,1)>1
-                                v=resultslist{8,currentframe};
-                                typevector=resultslist{9,currentframe};
-                            else
-                                u=resultslist{3,currentframe};
-                                v=resultslist{4,currentframe};
-                                typevector=resultslist{5,currentframe};
-                            end
-                        end
-                    else
-                        u=resultslist{3,currentframe};
-                        v=resultslist{4,currentframe};
-                        typevector=resultslist{5,currentframe};
-                    end
-                    caluv=retr('caluv');
-                    u=u*caluv-retr('subtr_u');
-                    v=v*caluv-retr('subtr_v');
-                    
-                    u=rescale_maps_nan(u,0);
-                    v=rescale_maps_nan(v,0);
-                    
-                    [cx, cy, cu] = improfile(u,xposition,yposition,round(nrpoints),'bicubic');
-                    cv = improfile(v,xposition,yposition,round(nrpoints),'bicubic');
-                    cx=cx';
-                    cy=cy';
-                    deltax=zeros(1,size(cx,2)-1);
-                    deltay=zeros(1,size(cx,2)-1);
-                    laenge=zeros(1,size(cx,2)-1);
-                    alpha=zeros(1,size(cx,2)-1);
-                    sinalpha=zeros(1,size(cx,2)-1);
-                    cosalpha=zeros(1,size(cx,2)-1);
-                    for i=2:size(cx,2)
-                        deltax(1,i)=cx(1,i)-cx(1,i-1);
-                        deltay(1,i)=cy(1,i)-cy(1,i-1);
-                        laenge(1,i)=sqrt(deltax(1,i)*deltax(1,i)+deltay(1,i)*deltay(1,i));
-                        alpha(1,i)=(acos(deltax(1,i)/laenge(1,i)));
-                        if deltay(1,i) < 0
-                            sinalpha(1,i)=sin(alpha(1,i));
-                        else
-                            sinalpha(1,i)=sin(alpha(1,i))*-1;
-                        end
-                        cosalpha(1,i)=cos(alpha(1,i));
-                    end
-                    sinalpha(1,1)=sinalpha(1,2);
-                    cosalpha(1,1)=cosalpha(1,2);
-                    cu=cu.*cosalpha';
-                    cv=cv.*sinalpha';
-                    c=cu-cv;
-                    cx=cx';
-                    cy=cy';
-                    distance=linspace(0,length,size(cu,1))';
-                else %user chose circle series
-                    for m=1:30
-                        for i=1:size(xposition,2)-1
-                            %length of one segment:
-                            laenge(m,i)=sqrt((xposition(m,i+1)-xposition(m,i))^2+(yposition(m,i+1)-yposition(m,i))^2);
-                        end
-                        length(m)=sum(laenge(m,:));
-                    end
-                    if size(resultslist,1)>6 %filtered exists
-                        if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-                            u=resultslist{10,currentframe};
-                            v=resultslist{11,currentframe};
-                            typevector=resultslist{9,currentframe};
-                            if numel(typevector)==0%happens if user smoothes sth without NaN and without validation
-                                typevector=resultslist{5,currentframe};
-                            end
-                        else
-                            u=resultslist{7,currentframe};
-                            if size(u,1)>1
-                                v=resultslist{8,currentframe};
-                                typevector=resultslist{9,currentframe};
-                            else
-                                u=resultslist{3,currentframe};
-                                v=resultslist{4,currentframe};
-                                typevector=resultslist{5,currentframe};
-                            end
-                        end
-                    else
-                        u=resultslist{3,currentframe};
-                        v=resultslist{4,currentframe};
-                        typevector=resultslist{5,currentframe};
-                    end
-                    caluv=retr('caluv');
-                    u=u*caluv-retr('subtr_u');
-                    v=v*caluv-retr('subtr_v');
-                    u=rescale_maps_nan(u,0);
-                    v=rescale_maps_nan(v,0);
-                    min_y=floor(min(min(yposition)))-1;
-                    max_y=ceil(max(max(yposition)))+1;
-                    min_x=floor(min(min(xposition)))-1;
-                    max_x=ceil(max(max(xposition)))+1;
-                    if min_y<1
-                        min_y=1;
-                    end
-                    if max_y>size(u,1)
-                        max_y=size(u,1);
-                    end
-                    if min_x<1
-                        min_x=1;
-                    end
-                    if max_x>size(u,2)
-                        max_x=size(u,2);
-                    end
-                    
-                    uc=u(min_y:max_y,min_x:max_x);
-                    vc=v(min_y:max_y,min_x:max_x);
-                    for m=1:30
-                        [cx(m,:),cy(m,:),cu(m,:)] = improfile(uc,xposition(m,:)-min_x,yposition(m,:)-min_y,100,'nearest');
-                        cv(m,:) =improfile(vc,xposition(m,:)-min_x,yposition(m,:)-min_y,100,'nearest');
-                    end
-                    deltax=zeros(1,size(cx,2)-1);
-                    deltay=zeros(1,size(cx,2)-1);
-                    laenge=zeros(1,size(cx,2)-1);
-                    alpha=zeros(1,size(cx,2)-1);
-                    sinalpha=zeros(1,size(cx,2)-1);
-                    cosalpha=zeros(1,size(cx,2)-1);
-                    for m=1:30
-                        for i=2:size(cx,2)
-                            deltax(m,i)=cx(m,i)-cx(m,i-1);
-                            deltay(m,i)=cy(m,i)-cy(m,i-1);
-                            laenge(m,i)=sqrt(deltax(m,i)*deltax(m,i)+deltay(m,i)*deltay(m,i));
-                            alpha(m,i)=(acos(deltax(m,i)/laenge(m,i)));
-                            if deltay(m,i) < 0
-                                sinalpha(m,i)=sin(alpha(m,i));
-                            else
-                                sinalpha(m,i)=sin(alpha(m,i))*-1;
-                            end
-                            cosalpha(m,i)=cos(alpha(m,i));
-                        end
-                        sinalpha(m,1)=sinalpha(m,2); %ersten winkel füllen
-                        cosalpha(m,1)=cosalpha(m,2);
-                    end
-                    cu=cu.*cosalpha;
-                    cv=cv.*sinalpha;
-                    c=cu-cv;
-                    for m=1:30
-                        distance(m,:)=linspace(0,length(m),size(cu,2))'; %in pixeln...
-                    end
-                end
-                
-        end
-        if size(xposition,1)<=1 %user did not choose circle series
-            h=figure;
-            screensize=get( 0, 'ScreenSize' );
-            rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
-            set(h,'position', rect);
-            current=get(handles.extraction_choice,'string');
-            current=current{extractwhat};
-            set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
-            calxy=retr('calxy');
-            
-            %removing nans for integral!
-            distance2=distance(isnan(c)==0);
-            c2=c(isnan(c)==0);
-            
-            integral=trapz(distance2*calxy,c2);
-            h2=plot(distance*calxy,c);
-            
-            %get units
-            if retr('caluv')==1 && retr('calxy')==1
-                distunit='px^2';
-            else
-                distunit='m^2';
-            end
-            
-            unitpar=get(handles.extraction_choice,'string');
-            unitpar=unitpar{get(handles.extraction_choice,'value')};
-            unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
-            
-            %text(0+0.05*max(distance*calxy),min(c)+0.05*max(c),['Integral = ' num2str(integral) ' [' unitpar '*' distunit ']'], 'BackgroundColor', 'w','fontsize',7)
-            set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-            
-            
-            if retr('caluv')==1 && retr('calxy')==1
-                distunit_2=' [px]';
-            else
-                distunit_2=' [m]';
-            end
-            
-            currentstripped=current(1:strfind(current,'[')-1);
-            
-            %modified units...
-            xlabel(['Distance on line' distunit_2 sprintf('\n') 'Integral of ' currentstripped ' = ' num2str(integral) ' [' unitpar '*' distunit_2 ']']);
-            
-            ylabel(current);
-            put('distance',distance*calxy);
-            put('c',c);
-            put('cx',cx*calxy);
-            put('cy',cy*calxy);
-            h_extractionplot=retr('h_extractionplot');
-            h_extractionplot(size(h_extractionplot,1)+1,1)=h;
-            put ('h_extractionplot', h_extractionplot);
-        else %user chose circle series
-            calxy=retr('calxy');
-            for m=1:30
-                integral(m)=trapz(distance(m,:)*calxy,c(m,:));
-            end
-            %highlight circle with highest circ
-            delete(findobj('tag', 'extractline'))
-            for m=1:30
-                line(xposition(m,:),yposition(m,:),'LineWidth',1.5, 'Color', [0.95,0.5,0.01],'tag','extractline');
-            end
-            [r,col]=find(max(abs(integral))==abs(integral)); %find absolute max of integral
-            line(xposition(col,:),yposition(col,:),'LineWidth',2.5, 'Color', [0.2,0.5,0.7],'tag','extractline');
-            h=figure;
-            screensize=get( 0, 'ScreenSize' );
-            rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
-            set(h,'position', rect);
-            current=get(handles.extraction_choice,'string');
-            current=current{extractwhat};
-            set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
-            hold on;
-            for m=1:30
-                h2=plot(distance(m,:)*calxy,c(m,:), 'color',[m/30, rand(1)/4+0.5, 1-m/30]);
-            end
-            hold off;
-            set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-            if retr('caluv')==1 && retr('calxy')==1
-                xlabel('Distance on line [px]');
-            else
-                xlabel('Distance on line [m]');
-            end
-            ylabel(current);
-            h3=figure;
-            screensize=get( 0, 'ScreenSize' );
-            rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
-            set(h3,'position', rect);
-            current=get(handles.extraction_choice,'string');
-            current=current{extractwhat};
-            set(h3,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
-            calxy=retr('calxy');
-            %user can click on point, circle will be displayed in main window
-            plot (1:30, integral);
-            hold on;
-            scattergroup1=scatter(1:30, integral, 80, 'ko');
-            hold off;
-            
-            if verLessThan('matlab','8.4')
-                set(scattergroup1, 'ButtonDownFcn', @hitcircle, 'hittestarea', 'off');
-            else
-                % >R2014a
-                set(scattergroup1, 'ButtonDownFcn', @hitcircle, 'pickableparts', 'visible');
-            end
-            
-            
-            
-            title('Click the points of the graph to highlight it''s corresponding circle.')
-            set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-            xlabel('circle series nr. (circle with max. circulation highlighted in blue)');
-            if retr('caluv')==1 && retr('calxy')==1
-                ylabel('tangent velocity loop integral (circulation) [px^2/frame]');
-            else
-                ylabel('tangent velocity loop integral (circulation) [m^2/s]');
-            end
-            put('distance',distance*calxy);
-            put('c',c);
-            put('cx',cx);
-            put('cy',cy);
-            put('h3plot', h3);
-            put('integral', integral);
-            h_extractionplot=retr('h_extractionplot');
-            h_extractionplot(size(h_extractionplot,1)+1,1)=h;
-            put ('h_extractionplot', h_extractionplot);
-            h_extractionplot2=retr('h_extractionplot2');
-            h_extractionplot2(size(h_extractionplot2,1)+1,1)=h3;
-            put ('h_extractionplot2', h_extractionplot2);
-        end
-    end
+	x=resultslist{1,currentframe};
+	y=resultslist{2,currentframe};
+	xposition=retr('xposition'); %not conflicting...?
+	yposition=retr('yposition'); %not conflicting...?
+	if numel(xposition)>1
+		for i=1:size(xposition,2)-1
+			%length of one segment:
+			laenge(i)=sqrt((xposition(1,i+1)-xposition(1,i))^2+(yposition(1,i+1)-yposition(1,i))^2);
+		end
+		length=sum(laenge);
+		percentagex=xposition/max(max(x));
+		xaufderivative=percentagex*size(x,2);
+		percentagey=yposition/max(max(y));
+		yaufderivative=percentagey*size(y,1);
+		nrpoints=str2num(get(handles.nrpoints,'string'));
+		if get(handles.draw_what,'value')==3 %circle series
+			set(handles.extraction_choice,'Value',11); %set to tangent
+		end
+		extractwhat=get(handles.extraction_choice,'Value');
+		switch extractwhat
+			case {1,2,3,4,5,6,7,8}
+				derivative_calc(currentframe,extractwhat+1,0);
+				derived=retr('derived');
+				maptoget=derived{extractwhat,currentframe};
+				
+				maptoget=rescale_maps_nan(maptoget,0);
+				[cx, cy, c] = improfile(maptoget,xposition,yposition,round(nrpoints),'bicubic');
+				
+				distance=linspace(0,length,size(c,1))';
+				
+			case {9,10}
+				% auf stelle 9 steht vector angle. Bei derivatives ist der aber auf platz 11. daher zwei dazu
+				%auf stelle 10 steht correlation coeff, bei derivatives auf
+				%12, daher zwei dazu
+				derivative_calc(currentframe,extractwhat+2,0);
+				derived=retr('derived');
+				maptoget=derived{extractwhat+1,currentframe};
+				
+				maptoget=rescale_maps_nan(maptoget,0);
+				[cx, cy, c] = improfile(maptoget,xposition,yposition,round(nrpoints),'bicubic');
+				
+				distance=linspace(0,length,size(c,1))';
+			case 11 %tangent
+				if size(xposition,1)<=1 %user did not choose circle series
+					if size(resultslist,1)>6 %filtered exists
+						if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+							u=resultslist{10,currentframe};
+							v=resultslist{11,currentframe};
+							typevector=resultslist{9,currentframe};
+							if numel(typevector)==0%happens if user smoothes sth without NaN and without validation
+								typevector=resultslist{5,currentframe};
+							end
+						else
+							u=resultslist{7,currentframe};
+							if size(u,1)>1
+								v=resultslist{8,currentframe};
+								typevector=resultslist{9,currentframe};
+							else
+								u=resultslist{3,currentframe};
+								v=resultslist{4,currentframe};
+								typevector=resultslist{5,currentframe};
+							end
+						end
+					else
+						u=resultslist{3,currentframe};
+						v=resultslist{4,currentframe};
+						typevector=resultslist{5,currentframe};
+					end
+					caluv=retr('caluv');
+					u=u*caluv-retr('subtr_u');
+					v=v*caluv-retr('subtr_v');
+					
+					u=rescale_maps_nan(u,0);
+					v=rescale_maps_nan(v,0);
+					
+					[cx, cy, cu] = improfile(u,xposition,yposition,round(nrpoints),'bicubic');
+					cv = improfile(v,xposition,yposition,round(nrpoints),'bicubic');
+					cx=cx';
+					cy=cy';
+					deltax=zeros(1,size(cx,2)-1);
+					deltay=zeros(1,size(cx,2)-1);
+					laenge=zeros(1,size(cx,2)-1);
+					alpha=zeros(1,size(cx,2)-1);
+					sinalpha=zeros(1,size(cx,2)-1);
+					cosalpha=zeros(1,size(cx,2)-1);
+					for i=2:size(cx,2)
+						deltax(1,i)=cx(1,i)-cx(1,i-1);
+						deltay(1,i)=cy(1,i)-cy(1,i-1);
+						laenge(1,i)=sqrt(deltax(1,i)*deltax(1,i)+deltay(1,i)*deltay(1,i));
+						alpha(1,i)=(acos(deltax(1,i)/laenge(1,i)));
+						if deltay(1,i) < 0
+							sinalpha(1,i)=sin(alpha(1,i));
+						else
+							sinalpha(1,i)=sin(alpha(1,i))*-1;
+						end
+						cosalpha(1,i)=cos(alpha(1,i));
+					end
+					sinalpha(1,1)=sinalpha(1,2);
+					cosalpha(1,1)=cosalpha(1,2);
+					cu=cu.*cosalpha';
+					cv=cv.*sinalpha';
+					c=cu-cv;
+					cx=cx';
+					cy=cy';
+					distance=linspace(0,length,size(cu,1))';
+				else %user chose circle series
+					for m=1:30
+						for i=1:size(xposition,2)-1
+							%length of one segment:
+							laenge(m,i)=sqrt((xposition(m,i+1)-xposition(m,i))^2+(yposition(m,i+1)-yposition(m,i))^2);
+						end
+						length(m)=sum(laenge(m,:));
+					end
+					if size(resultslist,1)>6 %filtered exists
+						if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+							u=resultslist{10,currentframe};
+							v=resultslist{11,currentframe};
+							typevector=resultslist{9,currentframe};
+							if numel(typevector)==0%happens if user smoothes sth without NaN and without validation
+								typevector=resultslist{5,currentframe};
+							end
+						else
+							u=resultslist{7,currentframe};
+							if size(u,1)>1
+								v=resultslist{8,currentframe};
+								typevector=resultslist{9,currentframe};
+							else
+								u=resultslist{3,currentframe};
+								v=resultslist{4,currentframe};
+								typevector=resultslist{5,currentframe};
+							end
+						end
+					else
+						u=resultslist{3,currentframe};
+						v=resultslist{4,currentframe};
+						typevector=resultslist{5,currentframe};
+					end
+					caluv=retr('caluv');
+					u=u*caluv-retr('subtr_u');
+					v=v*caluv-retr('subtr_v');
+					u=rescale_maps_nan(u,0);
+					v=rescale_maps_nan(v,0);
+					min_y=floor(min(min(yposition)))-1;
+					max_y=ceil(max(max(yposition)))+1;
+					min_x=floor(min(min(xposition)))-1;
+					max_x=ceil(max(max(xposition)))+1;
+					if min_y<1
+						min_y=1;
+					end
+					if max_y>size(u,1)
+						max_y=size(u,1);
+					end
+					if min_x<1
+						min_x=1;
+					end
+					if max_x>size(u,2)
+						max_x=size(u,2);
+					end
+					
+					uc=u(min_y:max_y,min_x:max_x);
+					vc=v(min_y:max_y,min_x:max_x);
+					for m=1:30
+						[cx(m,:),cy(m,:),cu(m,:)] = improfile(uc,xposition(m,:)-min_x,yposition(m,:)-min_y,100,'nearest');
+						cv(m,:) =improfile(vc,xposition(m,:)-min_x,yposition(m,:)-min_y,100,'nearest');
+					end
+					deltax=zeros(1,size(cx,2)-1);
+					deltay=zeros(1,size(cx,2)-1);
+					laenge=zeros(1,size(cx,2)-1);
+					alpha=zeros(1,size(cx,2)-1);
+					sinalpha=zeros(1,size(cx,2)-1);
+					cosalpha=zeros(1,size(cx,2)-1);
+					for m=1:30
+						for i=2:size(cx,2)
+							deltax(m,i)=cx(m,i)-cx(m,i-1);
+							deltay(m,i)=cy(m,i)-cy(m,i-1);
+							laenge(m,i)=sqrt(deltax(m,i)*deltax(m,i)+deltay(m,i)*deltay(m,i));
+							alpha(m,i)=(acos(deltax(m,i)/laenge(m,i)));
+							if deltay(m,i) < 0
+								sinalpha(m,i)=sin(alpha(m,i));
+							else
+								sinalpha(m,i)=sin(alpha(m,i))*-1;
+							end
+							cosalpha(m,i)=cos(alpha(m,i));
+						end
+						sinalpha(m,1)=sinalpha(m,2); %ersten winkel füllen
+						cosalpha(m,1)=cosalpha(m,2);
+					end
+					cu=cu.*cosalpha;
+					cv=cv.*sinalpha;
+					c=cu-cv;
+					for m=1:30
+						distance(m,:)=linspace(0,length(m),size(cu,2))'; %in pixeln...
+					end
+				end
+				
+		end
+		if size(xposition,1)<=1 %user did not choose circle series
+			h=figure;
+			screensize=get( 0, 'ScreenSize' );
+			rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
+			set(h,'position', rect);
+			current=get(handles.extraction_choice,'string');
+			current=current{extractwhat};
+			set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
+			calxy=retr('calxy');
+			
+			%removing nans for integral!
+			distance2=distance(isnan(c)==0);
+			c2=c(isnan(c)==0);
+			
+			integral=trapz(distance2*calxy,c2);
+			h2=plot(distance*calxy,c);
+			
+			%get units
+			if retr('caluv')==1 && retr('calxy')==1
+				distunit='px^2';
+			else
+				distunit='m^2';
+			end
+			
+			unitpar=get(handles.extraction_choice,'string');
+			unitpar=unitpar{get(handles.extraction_choice,'value')};
+			unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
+			
+			%text(0+0.05*max(distance*calxy),min(c)+0.05*max(c),['Integral = ' num2str(integral) ' [' unitpar '*' distunit ']'], 'BackgroundColor', 'w','fontsize',7)
+			set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
+			
+			
+			if retr('caluv')==1 && retr('calxy')==1
+				distunit_2=' [px]';
+			else
+				distunit_2=' [m]';
+			end
+			
+			currentstripped=current(1:strfind(current,'[')-1);
+			
+			%modified units...
+			xlabel(['Distance on line' distunit_2 sprintf('\n') 'Integral of ' currentstripped ' = ' num2str(integral) ' [' unitpar '*' distunit_2 ']']);
+			
+			ylabel(current);
+			put('distance',distance*calxy);
+			put('c',c);
+			put('cx',cx*calxy);
+			put('cy',cy*calxy);
+			h_extractionplot=retr('h_extractionplot');
+			h_extractionplot(size(h_extractionplot,1)+1,1)=h;
+			put ('h_extractionplot', h_extractionplot);
+		else %user chose circle series
+			calxy=retr('calxy');
+			for m=1:30
+				integral(m)=trapz(distance(m,:)*calxy,c(m,:));
+			end
+			%highlight circle with highest circ
+			delete(findobj('tag', 'extractline'))
+			for m=1:30
+				line(xposition(m,:),yposition(m,:),'LineWidth',1.5, 'Color', [0.95,0.5,0.01],'tag','extractline');
+			end
+			[r,col]=find(max(abs(integral))==abs(integral)); %find absolute max of integral
+			line(xposition(col,:),yposition(col,:),'LineWidth',2.5, 'Color', [0.2,0.5,0.7],'tag','extractline');
+			h=figure;
+			screensize=get( 0, 'ScreenSize' );
+			rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
+			set(h,'position', rect);
+			current=get(handles.extraction_choice,'string');
+			current=current{extractwhat};
+			set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
+			hold on;
+			for m=1:30
+				h2=plot(distance(m,:)*calxy,c(m,:), 'color',[m/30, rand(1)/4+0.5, 1-m/30]);
+			end
+			hold off;
+			set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
+			if retr('caluv')==1 && retr('calxy')==1
+				xlabel('Distance on line [px]');
+			else
+				xlabel('Distance on line [m]');
+			end
+			ylabel(current);
+			h3=figure;
+			screensize=get( 0, 'ScreenSize' );
+			rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
+			set(h3,'position', rect);
+			current=get(handles.extraction_choice,'string');
+			current=current{extractwhat};
+			set(h3,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
+			calxy=retr('calxy');
+			%user can click on point, circle will be displayed in main window
+			plot (1:30, integral);
+			hold on;
+			scattergroup1=scatter(1:30, integral, 80, 'ko');
+			hold off;
+			
+			if verLessThan('matlab','8.4')
+				set(scattergroup1, 'ButtonDownFcn', @hitcircle, 'hittestarea', 'off');
+			else
+				% >R2014a
+				set(scattergroup1, 'ButtonDownFcn', @hitcircle, 'pickableparts', 'visible');
+			end
+			
+			
+			
+			title('Click the points of the graph to highlight it''s corresponding circle.')
+			set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
+			xlabel('circle series nr. (circle with max. circulation highlighted in blue)');
+			if retr('caluv')==1 && retr('calxy')==1
+				ylabel('tangent velocity loop integral (circulation) [px^2/frame]');
+			else
+				ylabel('tangent velocity loop integral (circulation) [m^2/s]');
+			end
+			put('distance',distance*calxy);
+			put('c',c);
+			put('cx',cx);
+			put('cy',cy);
+			put('h3plot', h3);
+			put('integral', integral);
+			h_extractionplot=retr('h_extractionplot');
+			h_extractionplot(size(h_extractionplot,1)+1,1)=h;
+			put ('h_extractionplot', h_extractionplot);
+			h_extractionplot2=retr('h_extractionplot2');
+			h_extractionplot2(size(h_extractionplot2,1)+1,1)=h3;
+			put ('h_extractionplot2', h_extractionplot2);
+		end
+	end
 end
 
 function hitcircle(~,~)
@@ -6263,7 +6412,7 @@ h3plot=retr('h3plot');
 figure(hgui);
 delete(findobj('tag', 'extractline'))
 for m=1:30
-    line(xposition(m,:),yposition(m,:),'LineWidth',1.5, 'Color', [0.95,0.5,0.01],'tag','extractline');
+	line(xposition(m,:),yposition(m,:),'LineWidth',1.5, 'Color', [0.95,0.5,0.01],'tag','extractline');
 end
 line(xposition(pos,:),yposition(pos,:),'LineWidth',2.5, 'Color',[0.2,0.5,0.7],'tag','extractline');
 figure(h3plot);
@@ -6271,9 +6420,9 @@ marksize=linspace(80,80,30)';
 marksize(pos)=150;
 set(gco, 'SizeData', marksize);
 if retr('caluv')==1 && retr('calxy')==1
-    units='px^2/frame';
+	units='px^2/frame';
 else
-    units='m^2/s';
+	units='m^2/s';
 end
 text(posreal(1,1)+0.75,posreal(2,2),['\leftarrow ' num2str(integral(pos)) ' ' units],'tag','circstring','BackgroundColor', [1 1 1], 'margin', 0.01, 'fontsize', 7, 'HitTest', 'off')
 
@@ -6281,14 +6430,14 @@ function clear_plot_Callback(~, ~, ~)
 h_extractionplot=retr('h_extractionplot');
 h_extractionplot2=retr('h_extractionplot2');
 for i=1:size(h_extractionplot,1)
-    try
-        close (h_extractionplot(i));
-    catch
-    end
-    try
-        close (h_extractionplot2(i));
-    catch
-    end
+	try
+		close (h_extractionplot(i));
+	catch
+	end
+	try
+		close (h_extractionplot2(i));
+	catch
+	end
 end
 put ('h_extractionplot', []);
 put ('h_extractionplot2', []);
@@ -6301,154 +6450,154 @@ handles=gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
 resultslist=retr('resultslist');
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-    x=resultslist{1,currentframe};
-    y=resultslist{2,currentframe};
-    typevector=resultslist{5,currentframe};
-    if size(resultslist,1)>6 %filtered exists
-        if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-            u=resultslist{10,currentframe};
-            v=resultslist{11,currentframe};
-            typevector=resultslist{9,currentframe}; %von smoothed
-        else
-            u=resultslist{7,currentframe};
-            if size(u,1)>1
-                v=resultslist{8,currentframe};
-                typevector=resultslist{9,currentframe}; %von smoothed
-            else
-                u=resultslist{3,currentframe};
-                v=resultslist{4,currentframe};
-                typevector=resultslist{5,currentframe};
-            end
-        end
-    else
-        u=resultslist{3,currentframe};
-        v=resultslist{4,currentframe};
-    end
-    ismean=retr('ismean');
-    if    numel(ismean)>0
-        if ismean(currentframe)==1 %if current frame is a mean frame, typevector is stored at pos 5
-            typevector=resultslist{5,currentframe};
-        end
-    end
-    
-    u(typevector==0)=nan;
-    v(typevector==0)=nan;
-    
-    caluv=retr('caluv');
-    calxy=retr('calxy');
-    x=reshape(x,size(x,1)*size(x,2),1);
-    y=reshape(y,size(y,1)*size(y,2),1);
-    u=reshape(u,size(u,1)*size(u,2),1);
-    v=reshape(v,size(v,1)*size(v,2),1);
-    choice_plot=get(handles.hist_select,'value');
-    current=get(handles.hist_select,'string');
-    current=current{choice_plot};
-    h=figure;
-    screensize=get( 0, 'ScreenSize' );
-    rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
-    set(h,'position', rect);
-    set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',['Histogram ' current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
-    nrofbins=str2double(get(handles.nrofbins, 'string'));
-    if choice_plot==1
-        [n, xout]=hist(u*caluv-retr('subtr_u'),nrofbins); %#ok<*HIST>
-        xdescript='velocity (u)';
-    elseif choice_plot==2
-        [n, xout]=hist(v*caluv-retr('subtr_v'),nrofbins);
-        xdescript='velocity (v)';
-    elseif choice_plot==3
-        [n, xout]=hist(sqrt((u*caluv-retr('subtr_u')).^2+(v*caluv-retr('subtr_v')).^2),nrofbins);
-        xdescript='velocity magnitude';
-    end
-    h2=bar(xout,n);
-    set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-    if retr('caluv')==1 && retr('calxy')==1
-        xlabel([xdescript ' [px/frame]']);
-    else
-        xlabel([xdescript ' [m/s]']);
-    end
-    ylabel('frequency');
+	x=resultslist{1,currentframe};
+	y=resultslist{2,currentframe};
+	typevector=resultslist{5,currentframe};
+	if size(resultslist,1)>6 %filtered exists
+		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+			u=resultslist{10,currentframe};
+			v=resultslist{11,currentframe};
+			typevector=resultslist{9,currentframe}; %von smoothed
+		else
+			u=resultslist{7,currentframe};
+			if size(u,1)>1
+				v=resultslist{8,currentframe};
+				typevector=resultslist{9,currentframe}; %von smoothed
+			else
+				u=resultslist{3,currentframe};
+				v=resultslist{4,currentframe};
+				typevector=resultslist{5,currentframe};
+			end
+		end
+	else
+		u=resultslist{3,currentframe};
+		v=resultslist{4,currentframe};
+	end
+	ismean=retr('ismean');
+	if    numel(ismean)>0
+		if ismean(currentframe)==1 %if current frame is a mean frame, typevector is stored at pos 5
+			typevector=resultslist{5,currentframe};
+		end
+	end
+	
+	u(typevector==0)=nan;
+	v(typevector==0)=nan;
+	
+	caluv=retr('caluv');
+	calxy=retr('calxy');
+	x=reshape(x,size(x,1)*size(x,2),1);
+	y=reshape(y,size(y,1)*size(y,2),1);
+	u=reshape(u,size(u,1)*size(u,2),1);
+	v=reshape(v,size(v,1)*size(v,2),1);
+	choice_plot=get(handles.hist_select,'value');
+	current=get(handles.hist_select,'string');
+	current=current{choice_plot};
+	h=figure;
+	screensize=get( 0, 'ScreenSize' );
+	rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
+	set(h,'position', rect);
+	set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',['Histogram ' current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
+	nrofbins=str2double(get(handles.nrofbins, 'string'));
+	if choice_plot==1
+		[n, xout]=hist(u*caluv-retr('subtr_u'),nrofbins); %#ok<*HIST>
+		xdescript='velocity (u)';
+	elseif choice_plot==2
+		[n, xout]=hist(v*caluv-retr('subtr_v'),nrofbins);
+		xdescript='velocity (v)';
+	elseif choice_plot==3
+		[n, xout]=hist(sqrt((u*caluv-retr('subtr_u')).^2+(v*caluv-retr('subtr_v')).^2),nrofbins);
+		xdescript='velocity magnitude';
+	end
+	h2=bar(xout,n);
+	set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
+	if retr('caluv')==1 && retr('calxy')==1
+		xlabel([xdescript ' [px/frame]']);
+	else
+		xlabel([xdescript ' [m/s]']);
+	end
+	ylabel('frequency');
 end
 
 function generate_it_Callback(~, ~, ~)
 handles=gethand;
 flow_sim=get(handles.flow_sim,'value');
 switch flow_sim
-    case 1 %rankine
-        v0 = str2double(get(handles.rank_displ,'string')); %max velocity
-        vortexplayground=[str2double(get(handles.img_sizex,'string')),str2double(get(handles.img_sizey,'string'))]; %width, height)
-        center1=[str2double(get(handles.rankx1,'string')),str2double(get(handles.ranky1,'string'))]; %x,y
-        center2=[str2double(get(handles.rankx2,'string')),str2double(get(handles.ranky2,'string'))]; %x,y
-        [x,y]=meshgrid(-center1(1):vortexplayground(1)-center1(1)-1,-center1(2):vortexplayground(2)-center1(2)-1);
-        [o,r] = cart2pol(x,y);
-        uo=zeros(size(x));
-        R0 = str2double(get(handles.rank_core,'string')); %radius %35
-        uoin = (r <= R0);
-        uout = (r > R0);
-        uo = uoin+uout;
-        uo(uoin) =  v0*r(uoin)/R0;
-        uo(uout) =  v0*R0./r(uout);
-        uo(isnan(uo))=0;
-        u = -uo.*sin(o);
-        v = uo.*cos(o);
-        if get(handles.singledoublerankine,'value')==2
-            [x,y]=meshgrid(-center2(1):vortexplayground(1)-center2(1)-1,-center2(2):vortexplayground(2)-center2(2)-1);
-            [o,r] = cart2pol(x,y);
-            uo=zeros(size(x));
-            R0 = str2double(get(handles.rank_core,'string')); %radius %35
-            uoin = (r <= R0);
-            uout = (r > R0);
-            uo = uoin+uout;
-            uo(uoin) =  v0*r(uoin)/R0;
-            uo(uout) =  v0*R0./r(uout);
-            uo(isnan(uo))=0;
-            u2 = -uo.*sin(o);
-            v2 = uo.*cos(o);
-            u=u-u2;
-            v=v-v2;
-        end
-    case 2 %oseen
-        v0 = str2double(get(handles.oseen_displ,'string'))*3; %max velocity
-        vortexplayground=[str2double(get(handles.img_sizex,'string')),str2double(get(handles.img_sizey,'string'))]; %width, height)
-        center1=[str2double(get(handles.oseenx1,'string')),str2double(get(handles.oseeny1,'string'))]; %x,y
-        center2=[str2double(get(handles.oseenx2,'string')),str2double(get(handles.oseeny2,'string'))]; %x,y
-        [x,y]=meshgrid(-center1(1):vortexplayground(1)-center1(1)-1,-center1(2):vortexplayground(2)-center1(2)-1);
-        [o,r] = cart2pol(x,y);
-        uo=zeros(size(x));
-        zaeh=1;
-        t=str2double(get(handles.oseen_time,'string'));
-        r=r/100;
-        
-        %uo wird im zwentrum NaN!!
-        uo=(v0./(2*pi*r)).*(1-exp(-r.^2/(4*zaeh*t)));
-        uo(isnan(uo))=0;
-        u = -uo.*sin(o);
-        v = uo.*cos(o);
-        if get(handles.singledoubleoseen,'value')==2
-            [x,y]=meshgrid(-center2(1):vortexplayground(1)-center2(1)-1,-center2(2):vortexplayground(2)-center2(2)-1);
-            [o,r] = cart2pol(x,y);
-            r=r/100;
-            uo=(v0./(2*pi*r)).*(1-exp(-r.^2/(4*zaeh*t)));
-            uo(isnan(uo))=0;
-            u2 = -uo.*sin(o);
-            v2 = uo.*cos(o);
-            u=u-u2;
-            v=v-v2;
-        end
-    case 3 %linear
-        u=zeros(str2double(get(handles.img_sizey,'string')),str2double(get(handles.img_sizex,'string')));
-        v(1:str2double(get(handles.img_sizey,'string')),1:str2double(get(handles.img_sizex,'string')))=str2double(get(handles.shiftdisplacement,'string'));
-    case 4 % rotation
-        [v,u] = meshgrid(-(str2double(get(handles.img_sizex,'string')))/2:1:(str2double(get(handles.img_sizex,'string')))/2-1,-(str2double(get(handles.img_sizey,'string')))/2:1:(str2double(get(handles.img_sizey,'string')))/2-1);
-        
-        u=u/max(max(u));
-        v=-v/max(max(v));
-        u=u*str2double(get(handles.rotationdislacement,'string'));
-        v=v*str2double(get(handles.rotationdislacement,'string'));
-        [x,y]=meshgrid(1:1:str2double(get(handles.img_sizex,'string'))+1);
-    case 5 %membrane
-        [x,y]=meshgrid(linspace(-3,3,str2double(get(handles.img_sizex,'string'))),linspace(-3,3,str2double(get(handles.img_sizey,'string'))));
-        u = peaks(x,y)/3;
-        v = peaks(y,x)/3;
+	case 1 %rankine
+		v0 = str2double(get(handles.rank_displ,'string')); %max velocity
+		vortexplayground=[str2double(get(handles.img_sizex,'string')),str2double(get(handles.img_sizey,'string'))]; %width, height)
+		center1=[str2double(get(handles.rankx1,'string')),str2double(get(handles.ranky1,'string'))]; %x,y
+		center2=[str2double(get(handles.rankx2,'string')),str2double(get(handles.ranky2,'string'))]; %x,y
+		[x,y]=meshgrid(-center1(1):vortexplayground(1)-center1(1)-1,-center1(2):vortexplayground(2)-center1(2)-1);
+		[o,r] = cart2pol(x,y);
+		uo=zeros(size(x));
+		R0 = str2double(get(handles.rank_core,'string')); %radius %35
+		uoin = (r <= R0);
+		uout = (r > R0);
+		uo = uoin+uout;
+		uo(uoin) =  v0*r(uoin)/R0;
+		uo(uout) =  v0*R0./r(uout);
+		uo(isnan(uo))=0;
+		u = -uo.*sin(o);
+		v = uo.*cos(o);
+		if get(handles.singledoublerankine,'value')==2
+			[x,y]=meshgrid(-center2(1):vortexplayground(1)-center2(1)-1,-center2(2):vortexplayground(2)-center2(2)-1);
+			[o,r] = cart2pol(x,y);
+			uo=zeros(size(x));
+			R0 = str2double(get(handles.rank_core,'string')); %radius %35
+			uoin = (r <= R0);
+			uout = (r > R0);
+			uo = uoin+uout;
+			uo(uoin) =  v0*r(uoin)/R0;
+			uo(uout) =  v0*R0./r(uout);
+			uo(isnan(uo))=0;
+			u2 = -uo.*sin(o);
+			v2 = uo.*cos(o);
+			u=u-u2;
+			v=v-v2;
+		end
+	case 2 %oseen
+		v0 = str2double(get(handles.oseen_displ,'string'))*3; %max velocity
+		vortexplayground=[str2double(get(handles.img_sizex,'string')),str2double(get(handles.img_sizey,'string'))]; %width, height)
+		center1=[str2double(get(handles.oseenx1,'string')),str2double(get(handles.oseeny1,'string'))]; %x,y
+		center2=[str2double(get(handles.oseenx2,'string')),str2double(get(handles.oseeny2,'string'))]; %x,y
+		[x,y]=meshgrid(-center1(1):vortexplayground(1)-center1(1)-1,-center1(2):vortexplayground(2)-center1(2)-1);
+		[o,r] = cart2pol(x,y);
+		uo=zeros(size(x));
+		zaeh=1;
+		t=str2double(get(handles.oseen_time,'string'));
+		r=r/100;
+		
+		%uo wird im zwentrum NaN!!
+		uo=(v0./(2*pi*r)).*(1-exp(-r.^2/(4*zaeh*t)));
+		uo(isnan(uo))=0;
+		u = -uo.*sin(o);
+		v = uo.*cos(o);
+		if get(handles.singledoubleoseen,'value')==2
+			[x,y]=meshgrid(-center2(1):vortexplayground(1)-center2(1)-1,-center2(2):vortexplayground(2)-center2(2)-1);
+			[o,r] = cart2pol(x,y);
+			r=r/100;
+			uo=(v0./(2*pi*r)).*(1-exp(-r.^2/(4*zaeh*t)));
+			uo(isnan(uo))=0;
+			u2 = -uo.*sin(o);
+			v2 = uo.*cos(o);
+			u=u-u2;
+			v=v-v2;
+		end
+	case 3 %linear
+		u=zeros(str2double(get(handles.img_sizey,'string')),str2double(get(handles.img_sizex,'string')));
+		v(1:str2double(get(handles.img_sizey,'string')),1:str2double(get(handles.img_sizex,'string')))=str2double(get(handles.shiftdisplacement,'string'));
+	case 4 % rotation
+		[v,u] = meshgrid(-(str2double(get(handles.img_sizex,'string')))/2:1:(str2double(get(handles.img_sizex,'string')))/2-1,-(str2double(get(handles.img_sizey,'string')))/2:1:(str2double(get(handles.img_sizey,'string')))/2-1);
+		
+		u=u/max(max(u));
+		v=-v/max(max(v));
+		u=u*str2double(get(handles.rotationdislacement,'string'));
+		v=v*str2double(get(handles.rotationdislacement,'string'));
+		[x,y]=meshgrid(1:1:str2double(get(handles.img_sizex,'string'))+1);
+	case 5 %membrane
+		[x,y]=meshgrid(linspace(-3,3,str2double(get(handles.img_sizex,'string'))),linspace(-3,3,str2double(get(handles.img_sizey,'string'))));
+		u = peaks(x,y)/3;
+		v = peaks(y,x)/3;
 end
 %% Create Particle Image
 set(handles.status_creation,'string','Calculating particles...');drawnow;
@@ -6513,10 +6662,10 @@ xlimit4=xlimit3;
 ylimit3=xlimit3;
 ylimit4=xlimit3;
 for n=1:partAm
-    xlimit3(n,1)=floor(x0(n)-d(n)/2-offsetx((y0integer(n)),(x0integer(n)))); %x min particle extent image2
-    xlimit4(n,1)=ceil(x0(n)+d(n)/2-offsetx((y0integer(n)),(x0integer(n)))); %x max particle extent image2
-    ylimit3(n,1)=floor(y0(n)-d(n)/2-offsety((y0integer(n)),(x0integer(n)))); %y min particle extent image2
-    ylimit4(n,1)=ceil(y0(n)+d(n)/2-offsety((y0integer(n)),(x0integer(n)))); %y max particle extent image2
+	xlimit3(n,1)=floor(x0(n)-d(n)/2-offsetx((y0integer(n)),(x0integer(n)))); %x min particle extent image2
+	xlimit4(n,1)=ceil(x0(n)+d(n)/2-offsetx((y0integer(n)),(x0integer(n)))); %x max particle extent image2
+	ylimit3(n,1)=floor(y0(n)-d(n)/2-offsety((y0integer(n)),(x0integer(n)))); %y min particle extent image2
+	ylimit4(n,1)=ceil(y0(n)+d(n)/2-offsety((y0integer(n)),(x0integer(n)))); %y max particle extent image2
 end
 xlimit3(xlimit3<1)=1;
 xlimit4(xlimit4>sizex)=sizex;
@@ -6525,18 +6674,18 @@ ylimit4(ylimit4>sizey)=sizey;
 
 set(handles.status_creation,'string','Placing particles...');drawnow;
 for n=1:partAm
-    r = rd(n);
-    for j=xlimit1(n):xlimit2(n)
-        rj = (j-x0(n))^2;
-        for i=ylimit1(n):ylimit2(n)
-            A(i,j)=A(i,j)+I0(n)*exp((rj+(i-y0(n))^2)*r);
-        end
-    end
-    for j=xlimit3(n):xlimit4(n)
-        for i=ylimit3(n):ylimit4(n)
-            B(i,j)=B(i,j)+I1(n)*exp((-(j-x0(n)+offsetx(i,j))^2-(i-y0(n)+offsety(i,j))^2)*-rd(n)); %place particle with gaussian intensity profile
-        end
-    end
+	r = rd(n);
+	for j=xlimit1(n):xlimit2(n)
+		rj = (j-x0(n))^2;
+		for i=ylimit1(n):ylimit2(n)
+			A(i,j)=A(i,j)+I0(n)*exp((rj+(i-y0(n))^2)*r);
+		end
+	end
+	for j=xlimit3(n):xlimit4(n)
+		for i=ylimit3(n):ylimit4(n)
+			B(i,j)=B(i,j)+I1(n)*exp((-(j-x0(n)+offsetx(i,j))^2-(i-y0(n)+offsety(i,j))^2)*-rd(n)); %place particle with gaussian intensity profile
+		end
+	end
 end
 
 A(A>255)=255;
@@ -6559,28 +6708,28 @@ gen_image_2=retr('gen_image_2');
 real_displacement_u=retr('real_displ_u');
 real_displacement_v=retr('real_displ_v');
 if isempty(gen_image_1)==0
-    [FileName,PathName] = uiputfile('*.tif','Save generated images as...',['PIVlab_gen.tif']);
-    if isequal(FileName,0) | isequal(PathName,0)
-    else
-        [Dir, Name, Ext] = fileparts(FileName);
-        FileName_1=[Name '_01' Ext];
-        FileName_2=[Name '_02' Ext];
-        if exist(fullfile(PathName,FileName_1),'file') >0 || exist(fullfile(PathName,FileName_2),'file') >0
-            butt = questdlg(['Warning: File ' FileName_1 ' already exists.'],'File exists','Overwrite','Cancel','Overwrite');
-            if strncmp(butt, 'Overwrite',9) == 1
-                write_it=1;
-            else
-                write_it=0;
-            end
-        else
-            write_it=1;
-        end
-        if write_it==1
-            imwrite(gen_image_1,fullfile(PathName,FileName_1),'Compression','none')
-            imwrite(gen_image_2,fullfile(PathName,FileName_2),'Compression','none')
-            save(fullfile(PathName,[Name '_real_displacement.mat']) ,'real_displacement_u','real_displacement_v')
-        end
-    end
+	[FileName,PathName] = uiputfile('*.tif','Save generated images as...',['PIVlab_gen.tif']);
+	if isequal(FileName,0) | isequal(PathName,0)
+	else
+		[Dir, Name, Ext] = fileparts(FileName);
+		FileName_1=[Name '_01' Ext];
+		FileName_2=[Name '_02' Ext];
+		if exist(fullfile(PathName,FileName_1),'file') >0 || exist(fullfile(PathName,FileName_2),'file') >0
+			butt = questdlg(['Warning: File ' FileName_1 ' already exists.'],'File exists','Overwrite','Cancel','Overwrite');
+			if strncmp(butt, 'Overwrite',9) == 1
+				write_it=1;
+			else
+				write_it=0;
+			end
+		else
+			write_it=1;
+		end
+		if write_it==1
+			imwrite(gen_image_1,fullfile(PathName,FileName_1),'Compression','none')
+			imwrite(gen_image_2,fullfile(PathName,FileName_2),'Compression','none')
+			save(fullfile(PathName,[Name '_real_displacement.mat']) ,'real_displacement_u','real_displacement_v')
+		end
+	end
 end
 
 function dummy_Callback(~, ~, ~)
@@ -6588,29 +6737,29 @@ sliderdisp
 
 function pivlabhelp_Callback(~, ~, ~)
 try
-    web('http://pivlab.blogspot.de/p/blog-page_19.html','-browser')
+	web('http://pivlab.blogspot.de/p/blog-page_19.html','-browser')
 catch
-    %why does 'web' not work in v 7.1.0.246 ...?
-    disp('Ooops, MATLAB couldn''t open the website.')
-    disp('You''ll have to open the website manually:')
-    disp('http://pivlab.blogspot.de/p/blog-page_19.html')
+	%why does 'web' not work in v 7.1.0.246 ...?
+	disp('Ooops, MATLAB couldn''t open the website.')
+	disp('You''ll have to open the website manually:')
+	disp('http://pivlab.blogspot.de/p/blog-page_19.html')
 end
 
 function aboutpiv_Callback(~, ~, ~)
 string={...
-    'PIVlab - Time-Resolved Digital Particle Image Velocimetry Tool for MATLAB';...
-    ['version: ' retr('PIVver')];...
-    '';...
-    'developed by Dr. William Thielicke and Prof. Dr. Eize J. Stamhuis';...
-    'published under the BSD and CC-BY licence.';...
-    '';...
-    '';...
-    'programmed with MATLAB Version 7.10 (R2010a)';...
-    'first released March 09, 2010';...
-    '';...
-    'http://PIVlab.blogspot.com';...
-    'contact: PIVlab@gmx.com';...
-    };
+	'PIVlab - Time-Resolved Digital Particle Image Velocimetry Tool for MATLAB';...
+	['version: ' retr('PIVver')];...
+	'';...
+	'developed by Dr. William Thielicke and Prof. Dr. Eize J. Stamhuis';...
+	'published under the BSD and CC-BY licence.';...
+	'';...
+	'';...
+	'programmed with MATLAB Version 7.10 (R2010a)';...
+	'first released March 09, 2010';...
+	'';...
+	'http://PIVlab.blogspot.com';...
+	'contact: PIVlab@gmx.com';...
+	};
 helpdlg(string,'About')
 
 function clear_everything_Callback(~, ~, ~)
@@ -6626,21 +6775,21 @@ sliderdisp
 function autoscale_vec_Callback(~, ~, ~)
 handles=gethand;
 if get(handles.autoscale_vec, 'value')==1
-    set(handles.vectorscale,'enable', 'off');
+	set(handles.vectorscale,'enable', 'off');
 else
-    set(handles.vectorscale,'enable', 'on');
+	set(handles.vectorscale,'enable', 'on');
 end
 
 function save_session_Callback(~, ~, ~)
 sessionpath=retr('sessionpath');
 if isempty(sessionpath)
-    sessionpath=retr('pathname');
+	sessionpath=retr('pathname');
 end
 [FileName,PathName] = uiputfile('*.mat','Save current session as...',fullfile(sessionpath,'PIVlab_session.mat'));
 if isequal(FileName,0) | isequal(PathName,0)
 else
-    put('sessionpath',PathName );
-    savesessionfuntion (PathName,FileName)
+	put('sessionpath',PathName );
+	savesessionfuntion (PathName,FileName)
 end
 
 function savesessionfuntion (PathName,FileName)
@@ -6665,16 +6814,16 @@ app.PanFigureState=[];
 app.uitools_FigureToolManager=[];
 
 try
-    iptPointerManager(gcf, 'disable');
+	iptPointerManager(gcf, 'disable');
 catch
 end
 clear hgui iptPointerManager GUIDEOptions GUIOnScreen Listeners SavedVisible ScribePloteditEnable UsedByGUIData_m ZoomObject
 deli={'UsedByGUIData_m', 'uitools_FigureToolManager','PanFigureState','ZoomOnState','ZoomFigureState','ZoomObject','lastValidTag','SavedVisible','Listeners','GUIOnScreen','GUIDEOptions','ScribePloteditEnable','nonexistingfield'};
 for i=1:size(deli,2)
-    try
-        app=rmfield(app,deli{i});
-    catch
-    end
+	try
+		app=rmfield(app,deli{i});
+	catch
+	end
 end
 clear deli
 %save('-v6', fullfile(PathName,FileName), '-struct', 'app')
@@ -6734,18 +6883,18 @@ streamlamount=get(handles.streamlamount, 'string');
 streamlcolor=get(handles.streamlcolor, 'value');
 
 try
-    %neu v1.5:
-    %Repeated_box=get(handles.Repeated_box,'value');
-    mask_auto_box=get(handles.mask_auto_box,'value');
-    Autolimit=get(handles.Autolimit,'value');
-    minintens=get(handles.minintens,'string');
-    maxintens=get(handles.maxintens,'string');
-    %neu v2.11
-    CorrQuality_nr=get(handles.CorrQuality,'value');
-    %neu v2.37
-    enhance_disp=get(handles.enhance_images, 'Value');
+	%neu v1.5:
+	%Repeated_box=get(handles.Repeated_box,'value');
+	mask_auto_box=get(handles.mask_auto_box,'value');
+	Autolimit=get(handles.Autolimit,'value');
+	minintens=get(handles.minintens,'string');
+	maxintens=get(handles.maxintens,'string');
+	%neu v2.11
+	CorrQuality_nr=get(handles.CorrQuality,'value');
+	%neu v2.37
+	enhance_disp=get(handles.enhance_images, 'Value');
 catch
-    disp('Old version compatibility|');
+	disp('Old version compatibility|');
 end
 
 
@@ -6762,128 +6911,128 @@ drawnow;
 function load_session_Callback(~, ~, ~)
 sessionpath=retr('sessionpath');
 if isempty(sessionpath)
-    sessionpath=retr('pathname');
+	sessionpath=retr('pathname');
 end
 [FileName,PathName, filterindex] = uigetfile({'*.mat','MATLAB Files (*.mat)'; '*.mat','mat'},'Load PIVlab session',fullfile(sessionpath, 'PIVlab_session.mat'));
 if isequal(FileName,0) | isequal(PathName,0)
 else
-    clear iptPointerManager
-    put('sessionpath',PathName );
-    put('derived',[]);
-    put('resultslist',[]);
-    put('maskiererx',[]);
-    put('maskierery',[]);
-    put('roirect',[]);
-    put('velrect',[]);
-    put('filename',[]);
-    put('filepath',[]);
-    hgui=getappdata(0,'hgui');
-    warning off all
-    try
-        vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'caluv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp');
-    catch
-        disp('Old version compatibility.')
-        vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'caluv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
-    end
-    names=fieldnames(vars);
-    for i=1:size(names,1)
-        setappdata(hgui,names{i},vars.(names{i}))
-    end
-    sliderrange
-    handles=gethand;
-    
-    set(handles.clahe_enable,'value',retr('clahe_enable'));
-    set(handles.clahe_size,'string',retr('clahe_size'));
-    set(handles.enable_highpass,'value',retr('enable_highpass'));
-    set(handles.highp_size,'string',retr('highp_size'));
-    
-    set(handles.wienerwurst,'value',retr('wienerwurst'));
-    set(handles.wienerwurstsize,'string',retr('wienerwurstsize'));
-    
-    %set(handles.enable_clip,'value',retr('enable_clip'));
-    %set(handles.clip_thresh,'string',retr('clip_thresh'));
-    set(handles.enable_intenscap,'value',retr('enable_intenscap'));
-    set(handles.intarea,'string',retr('intarea'));
-    set(handles.step,'string',retr('stepsize'));
-    set(handles.subpix,'value',retr('subpix'));  %popup
-    set(handles.stdev_check,'value',retr('stdev_check'));
-    set(handles.stdev_thresh,'string',retr('stdev_thresh'));
-    set(handles.loc_median,'value',retr('loc_median'));
-    set(handles.loc_med_thresh,'string',retr('loc_med_thresh'));
-    set(handles.interpol_missing,'value',retr('interpol_missing'));
-    set(handles.vectorscale,'string',retr('vectorscale'));
-    set(handles.colormap_choice,'value',retr('colormap_choice')); %popup
-    set(handles.addfileinfo,'value',retr('addfileinfo'));
-    set(handles.add_header,'value',retr('add_header'));
-    set(handles.delimiter,'value',retr('delimiter'));%popup
-    set(handles.img_not_mask,'value',retr('img_not_mask'));
-    set(handles.autoscale_vec,'value',retr('autoscale_vec'));
-    
-    set(handles.dcc, 'value',vars.dccmark);
-    set(handles.fftmulti, 'value',vars.fftmark);
-    
-    
-        try
-        
-    set(handles.ensemble, 'value',vars.ensemblemark);
-        catch
-        vars.ensemblemark=0;
-    end
-    
-    
-    if vars.fftmark==1 || vars.ensemblemark ==1
-        set (handles.uipanel42,'visible','on')
-    else
-        set (handles.uipanel42,'visible','off')
-    end
-    set(handles.checkbox26, 'value',vars.pass2);
-    set(handles.checkbox27, 'value',vars.pass3);
-    set(handles.checkbox28, 'value',vars.pass4);
-    set(handles.edit50, 'string',vars.pass2val);
-    set(handles.edit51, 'string',vars.pass3val);
-    set(handles.edit52, 'string',vars.pass4val);
-    set(handles.text126, 'string',vars.step2);
-    set(handles.text127, 'string',vars.step3);
-    set(handles.text128, 'string',vars.step4);
-    set(handles.holdstream, 'value',vars.holdstream);
-    set(handles.streamlamount, 'string',vars.streamlamount);
-    set(handles.streamlcolor, 'value',vars.streamlcolor);
-    set(handles.streamlwidth, 'value',vars.streamlcolor);
-    
-    try
-        %neu v1.5:
-        
-        set(handles.mask_auto_box,'value',vars.mask_auto_box);
-        set(handles.Autolimit,'value',vars.Autolimit);
-        set(handles.minintens,'string',vars.minintens);
-        set(handles.maxintens,'string',vars.maxintens);
-        set(handles.CorrQuality,'Value',vars.CorrQuality_nr);
-        %neu v2.37
-        set(handles.enhance_images, 'Value',vars.enhance_disp);
-    catch
-        disp('Old version compatibility,')
-    end
-
-    
-    try
-        set(handles.realdist, 'String',vars.realdist_string);
-        set(handles.time_inp, 'String',vars.time_inp_string);
-        if isempty(vars.pointscali)==0
-            caluv=retr('caluv');
-            set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(caluv*100000)/100000) ' m/s'],  'backgroundcolor', [0.5 1 0.5]);
-        end
-    catch
-        disp('.')
-    end
-    
-    %reset zoom
-    set(handles.panon,'Value',0);
-    set(handles.zoomon,'Value',0);
-    put('xzoomlimit', []);
-    put('yzoomlimit', []);
-    
-    sliderdisp
-    zoom reset
+	clear iptPointerManager
+	put('sessionpath',PathName );
+	put('derived',[]);
+	put('resultslist',[]);
+	put('maskiererx',[]);
+	put('maskierery',[]);
+	put('roirect',[]);
+	put('velrect',[]);
+	put('filename',[]);
+	put('filepath',[]);
+	hgui=getappdata(0,'hgui');
+	warning off all
+	try
+		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'caluv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object');
+	catch
+		disp('Old version compatibility.')
+		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'caluv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
+	end
+	names=fieldnames(vars);
+	for i=1:size(names,1)
+		setappdata(hgui,names{i},vars.(names{i}))
+	end
+	sliderrange
+	handles=gethand;
+	
+	set(handles.clahe_enable,'value',retr('clahe_enable'));
+	set(handles.clahe_size,'string',retr('clahe_size'));
+	set(handles.enable_highpass,'value',retr('enable_highpass'));
+	set(handles.highp_size,'string',retr('highp_size'));
+	
+	set(handles.wienerwurst,'value',retr('wienerwurst'));
+	set(handles.wienerwurstsize,'string',retr('wienerwurstsize'));
+	
+	%set(handles.enable_clip,'value',retr('enable_clip'));
+	%set(handles.clip_thresh,'string',retr('clip_thresh'));
+	set(handles.enable_intenscap,'value',retr('enable_intenscap'));
+	set(handles.intarea,'string',retr('intarea'));
+	set(handles.step,'string',retr('stepsize'));
+	set(handles.subpix,'value',retr('subpix'));  %popup
+	set(handles.stdev_check,'value',retr('stdev_check'));
+	set(handles.stdev_thresh,'string',retr('stdev_thresh'));
+	set(handles.loc_median,'value',retr('loc_median'));
+	set(handles.loc_med_thresh,'string',retr('loc_med_thresh'));
+	set(handles.interpol_missing,'value',retr('interpol_missing'));
+	set(handles.vectorscale,'string',retr('vectorscale'));
+	set(handles.colormap_choice,'value',retr('colormap_choice')); %popup
+	set(handles.addfileinfo,'value',retr('addfileinfo'));
+	set(handles.add_header,'value',retr('add_header'));
+	set(handles.delimiter,'value',retr('delimiter'));%popup
+	set(handles.img_not_mask,'value',retr('img_not_mask'));
+	set(handles.autoscale_vec,'value',retr('autoscale_vec'));
+	
+	set(handles.dcc, 'value',vars.dccmark);
+	set(handles.fftmulti, 'value',vars.fftmark);
+	
+	
+	try
+		
+		set(handles.ensemble, 'value',vars.ensemblemark);
+	catch
+		vars.ensemblemark=0;
+	end
+	
+	
+	if vars.fftmark==1 || vars.ensemblemark ==1
+		set (handles.uipanel42,'visible','on')
+	else
+		set (handles.uipanel42,'visible','off')
+	end
+	set(handles.checkbox26, 'value',vars.pass2);
+	set(handles.checkbox27, 'value',vars.pass3);
+	set(handles.checkbox28, 'value',vars.pass4);
+	set(handles.edit50, 'string',vars.pass2val);
+	set(handles.edit51, 'string',vars.pass3val);
+	set(handles.edit52, 'string',vars.pass4val);
+	set(handles.text126, 'string',vars.step2);
+	set(handles.text127, 'string',vars.step3);
+	set(handles.text128, 'string',vars.step4);
+	set(handles.holdstream, 'value',vars.holdstream);
+	set(handles.streamlamount, 'string',vars.streamlamount);
+	set(handles.streamlcolor, 'value',vars.streamlcolor);
+	set(handles.streamlwidth, 'value',vars.streamlcolor);
+	
+	try
+		%neu v1.5:
+		
+		set(handles.mask_auto_box,'value',vars.mask_auto_box);
+		set(handles.Autolimit,'value',vars.Autolimit);
+		set(handles.minintens,'string',vars.minintens);
+		set(handles.maxintens,'string',vars.maxintens);
+		set(handles.CorrQuality,'Value',vars.CorrQuality_nr);
+		%neu v2.37
+		set(handles.enhance_images, 'Value',vars.enhance_disp);
+	catch
+		disp('Old version compatibility,')
+	end
+	
+	
+	try
+		set(handles.realdist, 'String',vars.realdist_string);
+		set(handles.time_inp, 'String',vars.time_inp_string);
+		if isempty(vars.pointscali)==0
+			caluv=retr('caluv');
+			set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(caluv*100000)/100000) ' m/s'],  'backgroundcolor', [0.5 1 0.5]);
+		end
+	catch
+		disp('.')
+	end
+	
+	%reset zoom
+	set(handles.panon,'Value',0);
+	set(handles.zoomon,'Value',0);
+	put('xzoomlimit', []);
+	put('yzoomlimit', []);
+	
+	sliderdisp
+	zoom reset
 end
 
 function save_only_one_Callback(~, ~, ~)
@@ -6899,227 +7048,227 @@ only_single_frame=retr('only_single_frame');
 handles=gethand;
 filepath=retr('filepath');
 if only_single_frame==1
-    startframe=str2num(get(handles.firstframe,'string'));
-    endframe=str2num(get(handles.lastframe,'string'));
-    %formattype=2; %single frame --> only jpg
-    %set (handles.jpgfilesave, 'value',1)
-    %set (handles.avifilesave, 'value',0)
-    drawnow;
+	startframe=str2num(get(handles.firstframe,'string'));
+	endframe=str2num(get(handles.lastframe,'string'));
+	%formattype=2; %single frame --> only jpg
+	%set (handles.jpgfilesave, 'value',1)
+	%set (handles.avifilesave, 'value',0)
+	drawnow;
 else
-    set(handles.fileselector, 'value',1)
-    startframe=str2num(get(handles.firstframe,'string'));
-    if startframe <1
-        startframe=1;
-    elseif startframe>size(filepath,1)/2
-        startframe=size(filepath,1)/2;
-    end
-    set(handles.firstframe,'string',int2str(startframe));
-    endframe=str2num(get(handles.lastframe,'string'));
-    if endframe <startframe
-        endframe=startframe;
-    elseif endframe>size(filepath,1)/2
-        endframe=size(filepath,1)/2;
-    end
-    set(handles.lastframe,'string',int2str(endframe));
+	set(handles.fileselector, 'value',1)
+	startframe=str2num(get(handles.firstframe,'string'));
+	if startframe <1
+		startframe=1;
+	elseif startframe>size(filepath,1)/2
+		startframe=size(filepath,1)/2;
+	end
+	set(handles.firstframe,'string',int2str(startframe));
+	endframe=str2num(get(handles.lastframe,'string'));
+	if endframe <startframe
+		endframe=startframe;
+	elseif endframe>size(filepath,1)/2
+		endframe=size(filepath,1)/2;
+	end
+	set(handles.lastframe,'string',int2str(endframe));
 end
 if get (handles.avifilesave, 'value')==1
-    formattype=1;
+	formattype=1;
 end
 if get (handles.jpgfilesave, 'value')==1
-    formattype=2;
+	formattype=2;
 end
 if get (handles.bmpfilesave, 'value')==1
-    formattype=3;
+	formattype=3;
 end
 if get (handles.epsfilesave, 'value')==1
-    formattype=4;
+	formattype=4;
 end
 if get (handles.pdffilesave, 'value')==1
-    formattype=5;
+	formattype=5;
 end
 
 put('only_single_frame',0);
 
 p8wasvisible=retr('p8wasvisible');
 if p8wasvisible==1
-    switchui('multip08');
-    sliderdisp
+	switchui('multip08');
+	sliderdisp
 end
 imgsavepath=retr('imgsavepath');
 if isempty(imgsavepath)
-    imgsavepath=retr('pathname');
+	imgsavepath=retr('pathname');
 end
 
 if formattype==1
-    [filename, pathname] = uiputfile({ '*.avi','movie (*.avi)'}, 'Save movie as',fullfile(imgsavepath, 'PIVlab_out'));
-    if isequal(filename,0) || isequal(pathname,0)
-        return
-    end
-    put('imgsavepath',pathname );
-    compr=get(handles.usecompr,'value');
-    
-    
-    if verLessThan('matlab','8.4')
-        if compr==0
-            compr='none';
-        else
-            compr='cinepak';
-        end
-        aviobj = avifile(fullfile(pathname,filename),'compression',compr,'quality', 100, 'fps', str2double(get(handles.fps_setting,'string'))); %#ok<*DAVIFL>
-    else
-        if compr==0
-            compr='Uncompressed AVI';
-        else
-            compr='Motion JPEG AVI';
-        end
-        aviobj = VideoWriter(fullfile(pathname,filename),compr);
-        aviobj.FrameRate = str2double(get(handles.fps_setting,'string'));
-        open(aviobj);
-    end
-    
-    for i=startframe:endframe
-        set(handles.fileselector, 'value',i)
-        sliderdisp
-        hgca=gca;
-        colo=get(gcf, 'colormap');
-        axes_units = get(hgca,'Units');
-        axes_pos = get(hgca,'Position');
-        newFig=figure('visible', 'off');
-        set(newFig,'visible', 'off');
-        set(newFig,'Units',axes_units);
-        set(newFig,'Position',[15 5 axes_pos(3)+30 axes_pos(4)+10]);
-        axesObject2=copyobj(hgca,newFig);
-        set(axesObject2,'Units',axes_units);
-        set(axesObject2,'Position',[15 5 axes_pos(3) axes_pos(4)]);
-        colormap(colo);
-        
-        
-        
-        if get(handles.displ_colorbar,'value')==1
-            name=get(handles.derivchoice,'string');
-            posichoice = get(handles.colorbarpos,'String');
-            colochoice=get(handles.colorbarcolor,'String');
-            coloobj=colorbar (posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')});
-            
-            if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
-                set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
-                ylabel(coloobj,name{retr('displaywhat')},'fontsize',9,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
-            end
-            if strcmp(posichoice{get(handles.colorbarpos,'Value')},'North')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'South')==1
-                set(coloobj,'XTickLabel',num2str(get(coloobj,'XTick')','%5.5g'))
-                xlabel(coloobj,name{retr('displaywhat')},'fontsize',11,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
-            end
-        end
-        delete(findobj('tag','smoothhint'));
-        F=getframe(axesObject2);
-        close(newFig)
-        if verLessThan('matlab','8.4')
-            aviobj = addframe(aviobj,F);
-        else
-            writeVideo(aviobj,F);
-        end
-    end
-    if verLessThan('matlab','8.4')
-        aviobj = close(aviobj);
-    else
-        close(aviobj);
-    end
+	[filename, pathname] = uiputfile({ '*.avi','movie (*.avi)'}, 'Save movie as',fullfile(imgsavepath, 'PIVlab_out'));
+	if isequal(filename,0) || isequal(pathname,0)
+		return
+	end
+	put('imgsavepath',pathname );
+	compr=get(handles.usecompr,'value');
+	
+	
+	if verLessThan('matlab','8.4')
+		if compr==0
+			compr='none';
+		else
+			compr='cinepak';
+		end
+		aviobj = avifile(fullfile(pathname,filename),'compression',compr,'quality', 100, 'fps', str2double(get(handles.fps_setting,'string'))); %#ok<*DAVIFL>
+	else
+		if compr==0
+			compr='Uncompressed AVI';
+		else
+			compr='Motion JPEG AVI';
+		end
+		aviobj = VideoWriter(fullfile(pathname,filename),compr);
+		aviobj.FrameRate = str2double(get(handles.fps_setting,'string'));
+		open(aviobj);
+	end
+	
+	for i=startframe:endframe
+		set(handles.fileselector, 'value',i)
+		sliderdisp
+		hgca=gca;
+		colo=get(gcf, 'colormap');
+		axes_units = get(hgca,'Units');
+		axes_pos = get(hgca,'Position');
+		newFig=figure('visible', 'off');
+		set(newFig,'visible', 'off');
+		set(newFig,'Units',axes_units);
+		set(newFig,'Position',[15 5 axes_pos(3)+30 axes_pos(4)+10]);
+		axesObject2=copyobj(hgca,newFig);
+		set(axesObject2,'Units',axes_units);
+		set(axesObject2,'Position',[15 5 axes_pos(3) axes_pos(4)]);
+		colormap(colo);
+		
+		
+		
+		if get(handles.displ_colorbar,'value')==1
+			name=get(handles.derivchoice,'string');
+			posichoice = get(handles.colorbarpos,'String');
+			colochoice=get(handles.colorbarcolor,'String');
+			coloobj=colorbar (posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')});
+			
+			if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
+				set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
+				ylabel(coloobj,name{retr('displaywhat')},'fontsize',9,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
+			end
+			if strcmp(posichoice{get(handles.colorbarpos,'Value')},'North')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'South')==1
+				set(coloobj,'XTickLabel',num2str(get(coloobj,'XTick')','%5.5g'))
+				xlabel(coloobj,name{retr('displaywhat')},'fontsize',11,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
+			end
+		end
+		delete(findobj('tag','smoothhint'));
+		F=getframe(axesObject2);
+		close(newFig)
+		if verLessThan('matlab','8.4')
+			aviobj = addframe(aviobj,F);
+		else
+			writeVideo(aviobj,F);
+		end
+	end
+	if verLessThan('matlab','8.4')
+		aviobj = close(aviobj);
+	else
+		close(aviobj);
+	end
 elseif formattype ==2 || formattype==3 || formattype==4 || formattype==5
-    if formattype==2
-        [filename, pathname] = uiputfile({ '*.jpg','images (*.jpg)'}, 'Save images as',fullfile(imgsavepath, 'PIVlab_out'));
-    elseif formattype==3
-        [filename, pathname] = uiputfile({ '*.bmp','images (*.bmp)'}, 'Save images as',fullfile(imgsavepath, 'PIVlab_out'));
-    elseif formattype==4
-        [filename, pathname] = uiputfile({ '*.eps','images (*.eps)'}, 'Save images as',fullfile(imgsavepath, 'PIVlab_out'));
-    elseif formattype==5
-        [filename, pathname] = uiputfile({ '*.pdf','PostScript (*.pdf)'}, 'Save images as',fullfile(imgsavepath, 'PIVlab_out'));
-    end
-    if isequal(filename,0) || isequal(pathname,0)
-        return
-    end
-    put('imgsavepath',pathname );
-    if formattype==2 || formattype==3
-        reso=inputdlg(['Please enter scale factor' sprintf('\n') '(1 = render image at same size as currently displayed)'],'Specify resolution',1,{'1'});
-        [reso, status] = str2num(reso{1});  % Use curly bracket for subscript
-        if ~status
-            reso=1;
-        end
-    end
-    
-    for i=startframe:endframe
-        set(handles.fileselector, 'value',i)
-        sliderdisp
-        hgca=gca;
-        colo=get(gcf, 'colormap');
-        axes_units = get(hgca,'Units');
-        axes_pos = get(hgca,'Position');
-        aspect=axes_pos(3)/axes_pos(4);
-        newFig=figure;
-        set(newFig,'visible', 'off');
-        set(newFig,'Units',axes_units);
-        set(newFig,'Position',[15 5 axes_pos(3)+30 axes_pos(4)+10]);
-        axesObject2=copyobj(hgca,newFig);
-        set(axesObject2,'Units',axes_units);
-        set(axesObject2,'Position',[15 5 axes_pos(3) axes_pos(4)]);
-        colormap(colo);
-        if get(handles.displ_colorbar,'value')==1
-            name=get(handles.derivchoice,'string');
-            posichoice = get(handles.colorbarpos,'String');
-            colochoice=get(handles.colorbarcolor,'String');
-            coloobj=colorbar (posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')});
-            
-            if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
-                set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
-                ylabel(coloobj,name{retr('displaywhat')},'fontsize',9,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
-            end
-            if strcmp(posichoice{get(handles.colorbarpos,'Value')},'North')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'South')==1
-                set(coloobj,'XTickLabel',num2str(get(coloobj,'XTick')','%5.5g'))
-                xlabel(coloobj,name{retr('displaywhat')},'fontsize',11,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
-            end
-        end
-        delete(findobj('tag','smoothhint'));
-        [Dir, Name, Ext] = fileparts(filename);
-        newfilename=[Name sprintf('_%03d',i) Ext];
-        drawnow
-        if formattype==2 || formattype==3
-            exportfig(newFig,fullfile(pathname,newfilename),'height',3,'color','rgb','format','bmp','resolution',96*reso,'FontMode','scaled','FontSizeMin',16);
-        elseif formattype ==4
-            exportfig(newFig,fullfile(pathname,newfilename),'preview','tiff','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16);
-        elseif formattype==5
-            f = gcf;
-            a = axesObject2; %gca;
-            set(a,'LooseInset',get(a,'TightInset'))
-            set(f,'Units','inches');
-            pos = get(f,'Position');
-            set(f,'PaperPositionMode','auto','PaperUnits','inches','PaperPosition',[0,0,pos(3),pos(4)],'PaperSize',[pos(3), pos(4)])
-            exportfig(newFig,fullfile(pathname,newfilename),'format','pdf','preview','tiff','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16);
-            
-        end
-        close(newFig)
-        if formattype==2
-            autocrop(fullfile(pathname,newfilename),1);
-        elseif formattype==3
-            autocrop(fullfile(pathname,newfilename),0);
-        end
-    end
+	if formattype==2
+		[filename, pathname] = uiputfile({ '*.jpg','images (*.jpg)'}, 'Save images as',fullfile(imgsavepath, 'PIVlab_out'));
+	elseif formattype==3
+		[filename, pathname] = uiputfile({ '*.bmp','images (*.bmp)'}, 'Save images as',fullfile(imgsavepath, 'PIVlab_out'));
+	elseif formattype==4
+		[filename, pathname] = uiputfile({ '*.eps','images (*.eps)'}, 'Save images as',fullfile(imgsavepath, 'PIVlab_out'));
+	elseif formattype==5
+		[filename, pathname] = uiputfile({ '*.pdf','PostScript (*.pdf)'}, 'Save images as',fullfile(imgsavepath, 'PIVlab_out'));
+	end
+	if isequal(filename,0) || isequal(pathname,0)
+		return
+	end
+	put('imgsavepath',pathname );
+	if formattype==2 || formattype==3
+		reso=inputdlg(['Please enter scale factor' sprintf('\n') '(1 = render image at same size as currently displayed)'],'Specify resolution',1,{'1'});
+		[reso, status] = str2num(reso{1});  % Use curly bracket for subscript
+		if ~status
+			reso=1;
+		end
+	end
+	
+	for i=startframe:endframe
+		set(handles.fileselector, 'value',i)
+		sliderdisp
+		hgca=gca;
+		colo=get(gcf, 'colormap');
+		axes_units = get(hgca,'Units');
+		axes_pos = get(hgca,'Position');
+		aspect=axes_pos(3)/axes_pos(4);
+		newFig=figure;
+		set(newFig,'visible', 'off');
+		set(newFig,'Units',axes_units);
+		set(newFig,'Position',[15 5 axes_pos(3)+30 axes_pos(4)+10]);
+		axesObject2=copyobj(hgca,newFig);
+		set(axesObject2,'Units',axes_units);
+		set(axesObject2,'Position',[15 5 axes_pos(3) axes_pos(4)]);
+		colormap(colo);
+		if get(handles.displ_colorbar,'value')==1
+			name=get(handles.derivchoice,'string');
+			posichoice = get(handles.colorbarpos,'String');
+			colochoice=get(handles.colorbarcolor,'String');
+			coloobj=colorbar (posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')});
+			
+			if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
+				set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
+				ylabel(coloobj,name{retr('displaywhat')},'fontsize',9,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
+			end
+			if strcmp(posichoice{get(handles.colorbarpos,'Value')},'North')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'South')==1
+				set(coloobj,'XTickLabel',num2str(get(coloobj,'XTick')','%5.5g'))
+				xlabel(coloobj,name{retr('displaywhat')},'fontsize',11,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
+			end
+		end
+		delete(findobj('tag','smoothhint'));
+		[Dir, Name, Ext] = fileparts(filename);
+		newfilename=[Name sprintf('_%03d',i) Ext];
+		drawnow
+		if formattype==2 || formattype==3
+			exportfig(newFig,fullfile(pathname,newfilename),'height',3,'color','rgb','format','bmp','resolution',96*reso,'FontMode','scaled','FontSizeMin',16);
+		elseif formattype ==4
+			exportfig(newFig,fullfile(pathname,newfilename),'preview','tiff','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16);
+		elseif formattype==5
+			f = gcf;
+			a = axesObject2; %gca;
+			set(a,'LooseInset',get(a,'TightInset'))
+			set(f,'Units','inches');
+			pos = get(f,'Position');
+			set(f,'PaperPositionMode','auto','PaperUnits','inches','PaperPosition',[0,0,pos(3),pos(4)],'PaperSize',[pos(3), pos(4)])
+			exportfig(newFig,fullfile(pathname,newfilename),'format','pdf','preview','tiff','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16);
+			
+		end
+		close(newFig)
+		if formattype==2
+			autocrop(fullfile(pathname,newfilename),1);
+		elseif formattype==3
+			autocrop(fullfile(pathname,newfilename),0);
+		end
+	end
 end
 
 function extraction_choice_Callback(hObject, ~, ~)
 if get(hObject, 'value') ~= 11
-    handles=gethand;
-    if get(handles.draw_what, 'value')==3
-        set(handles.draw_what, 'value', 1)
-    end
+	handles=gethand;
+	if get(handles.draw_what, 'value')==3
+		set(handles.draw_what, 'value', 1)
+	end
 end
 
 function draw_what_Callback(hObject, ~, ~)
 handles=gethand;
 if get(hObject, 'value') == 3
-    handles=gethand;
-    set (handles.extraction_choice, 'value', 11);
-    set (handles.extraction_choice, 'enable', 'off');
+	handles=gethand;
+	set (handles.extraction_choice, 'value', 11);
+	set (handles.extraction_choice, 'enable', 'off');
 else
-    set (handles.extraction_choice, 'enable', 'on');
+	set (handles.extraction_choice, 'enable', 'on');
 end
 
 function check_comma(who)
@@ -7136,49 +7285,55 @@ resultslist=retr('resultslist');
 
 %NEU
 if get(handles.extractareaall, 'value')==0
-    startfr=currentframe;
-    endfr=currentframe;
+	startfr=currentframe;
+	endfr=currentframe;
 else
-    %sollte erstes element sein mit inhalt...
-    for findcontent=size(resultslist,2):-1:1
-        if numel(resultslist{1,findcontent}) > 0
-            startfr=findcontent;
-        end
-    end
-    
-    endfr=size(resultslist,2);
+	%sollte erstes element sein mit inhalt...
+	for findcontent=size(resultslist,2):-1:1
+		if numel(resultslist{1,findcontent}) > 0
+			startfr=findcontent;
+		end
+	end
+	
+	endfr=size(resultslist,2);
 end
 selected=0;
 areaoperation=get(handles.areatype, 'value');
 toolsavailable(0)
 for i=startfr:endfr
-    set(handles.fileselector, 'value',i)
-    %sliderdisp
-    currentframe=floor(get(handles.fileselector, 'value'));
-    
-    if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-        if areaoperation==1
-            %area mean value
-            sliderdisp
-            filepath=retr('filepath');
-            x=resultslist{1,currentframe};
-            extractwhat=get(handles.area_para_select,'Value');
-            if extractwhat==9 || extractwhat==10
-                derivative_calc(currentframe,extractwhat+2,0);
-            else
-                derivative_calc(currentframe,extractwhat+1,0);
-            end
-            derived=retr('derived');
-            [~,~,ext] = fileparts(filepath{2*currentframe-1});
-            if strcmp(ext,'.b16')
-                currentimage=f_readB16(filepath{2*currentframe-1});
-            else
-                currentimage=imread(filepath{2*currentframe-1});
-            end
-            sizeold=size(currentimage,1);
-            sizenew=size(x,1);
-            
-            %{
+	set(handles.fileselector, 'value',i)
+	%sliderdisp
+	currentframe=floor(get(handles.fileselector, 'value'));
+	
+	if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+		if areaoperation==1
+			%area mean value
+			sliderdisp
+			filepath=retr('filepath');
+			x=resultslist{1,currentframe};
+			extractwhat=get(handles.area_para_select,'Value');
+			if extractwhat==9 || extractwhat==10
+				derivative_calc(currentframe,extractwhat+2,0);
+			else
+				derivative_calc(currentframe,extractwhat+1,0);
+			end
+			derived=retr('derived');
+			if retr('video_selection_done') == 0
+			[~,~,ext] = fileparts(filepath{2*currentframe-1});
+			if strcmp(ext,'.b16')
+				currentimage=f_readB16(filepath{2*currentframe-1});
+			else
+				currentimage=imread(filepath{2*currentframe-1});
+			end
+			else
+                video_reader_object = retr('video_reader_object');
+                video_frame_selection=retr('video_frame_selection');
+                currentimage = read(video_reader_object,video_frame_selection(2*currentframe-1));
+			end
+			sizeold=size(currentimage,1);
+			sizenew=size(x,1);
+			
+			%{
             extractwhat9 ist vectorangle
             extractwhat10 ist correlation_map
             
@@ -7186,268 +7341,278 @@ for i=startfr:endfr
             derived 9 ist LIC
             derived10 ist vectorangle
             derived11 ist correlation map
-            %}
-            
-            if extractwhat==9 || extractwhat==10
-                maptoget=derived{extractwhat+1,currentframe};
-            else
-                maptoget=derived{extractwhat,currentframe};
-            end
-            maptoget=rescale_maps_nan(maptoget,0);
-            if selected==0
-                [BW,ximask,yimask]=roipoly;
-            end
-            if isempty(BW)
-            else
-                delete(findobj('tag','areaint'));
-                delete(findobj('tag', 'extractline'))
-                delete(findobj('tag', 'extractpoint'))
-                numcells=0;
-                summe=0;
-                for i=1:size(BW,1) %#ok<*FXSET>
-                    for j=1:size(BW,2)
-                        if BW(i,j)==1
-                            if isnan(maptoget(i,j))==0
-                                summe=summe+maptoget(i,j);
-                                numcells=numcells+1;
-                            end
-                        end
-                    end
-                end
-                average=summe/numcells;
-                hold on;
-                plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
-                plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
-                hold off;
-                %get units
-                unitpar=get(handles.area_para_select,'string');
-                unitpar=unitpar{get(handles.area_para_select,'value')};
-                unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
-                
-                
-                text(min(ximask),mean(yimask), ['area mean value = ' num2str(average) ' [' unitpar ']'], 'BackgroundColor', 'w','tag','areaint');
-                areaoutput=average;
-                varis='[mean]';
-            end
-        elseif areaoperation==2
-            %area integral
-            sliderdisp
-            filepath=retr('filepath');
-            x=resultslist{1,currentframe};
-            extractwhat=get(handles.area_para_select,'Value');
-            if extractwhat==9 || extractwhat==10
-                derivative_calc(currentframe,extractwhat+2,0);
-            else
-                derivative_calc(currentframe,extractwhat+1,0);
-            end
-            derived=retr('derived');
-            if extractwhat==9 || extractwhat==10
-                maptoget=derived{extractwhat+1,currentframe};
-            else
-                maptoget=derived{extractwhat,currentframe};
-            end
-            maptoget=rescale_maps_nan(maptoget,0);
-            
-            calxy=retr('calxy');
-            [~,~,ext] = fileparts(filepath{2*currentframe-1});
-            if strcmp(ext,'.b16')
-                currentimage=f_readB16(filepath{2*currentframe-1});
-            else
-                currentimage=imread(filepath{2*currentframe-1});
-            end
-            
-            sizeold=size(currentimage,1);
-            sizenew=size(x,1);
-            if selected==0
-                [BW,ximask,yimask]=roipoly; %select in currently displayed image
-            end
-            if isempty(BW)
-            else
-                delete(findobj('tag','areaint'));
-                delete(findobj('tag', 'extractline'))
-                delete(findobj('tag', 'extractpoint'))
-                celllength=1*calxy; %size of one pixel
-                cellarea=celllength^2; %area of one cell
-                integral=0;
-                for i=1:size(BW,1)
-                    for j=1:size(BW,2)
-                        if BW(i,j)==1
-                            if isnan(maptoget(i,j))==0 %do not include nans and nan area in integral.
-                                integral=integral+cellarea*maptoget(i,j);
-                            end
-                        end
-                    end
-                end
-                hold on;
-                plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
-                plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
-                hold off;
-                
-                %get units
-                if retr('caluv')==1 && retr('calxy')==1
-                    distunit='px^2';
-                else
-                    distunit='m^2';
-                end
-                
-                unitpar=get(handles.area_para_select,'string');
-                unitpar=unitpar{get(handles.area_para_select,'value')};
-                unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
-                
-                
-                text(min(ximask),mean(yimask), ['area integral = ' num2str(integral) ' [' unitpar '*' distunit ']'], 'BackgroundColor', 'w','tag','areaint');
-                areaoutput=integral;
-                varis='[integral]';
-            end
-        elseif areaoperation==3
-            % area only
-            sliderdisp
-            filepath=retr('filepath');
-            [~,~,ext] = fileparts(filepath{2*currentframe-1});
-            if strcmp(ext,'.b16')
-                currentimage=f_readB16(filepath{2*currentframe-1});
-            else
-                currentimage=imread(filepath{2*currentframe-1});
-            end
-            
-            x=resultslist{1,currentframe};
-            sizeold=size(currentimage,1);
-            sizenew=size(x,1);
-            if selected==0
-                [BW,ximask,yimask]=roipoly;
-            end
-            if isempty(BW)
-            else
-                delete(findobj('tag','areaint'));
-                delete(findobj('tag', 'extractline'))
-                delete(findobj('tag', 'extractpoint'))
-                calxy=retr('calxy');
-                celllength=1*calxy;
-                cellarea=celllength^2;
-                summe=0;
-                for i=1:size(BW,1)
-                    for j=1:size(BW,2)
-                        if BW(i,j)==1
-                            summe=summe+cellarea;
-                        end
-                    end
-                end
-                hold on;
-                plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
-                plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
-                hold off;
-                
-                %get units
-                if retr('caluv')==1 && retr('calxy')==1
-                    distunit='px^2';
-                else
-                    distunit='m^2';
-                end
-                
-                
-                text(min(ximask),mean(yimask), ['area = ' num2str(summe) ' [' distunit ']'], 'BackgroundColor', 'w','tag','areaint');
-                areaoutput=summe;
-                varis='[area]';
-            end
-        elseif areaoperation==4
-            %area series
-            if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-                x=resultslist{1,currentframe};
-                y=resultslist{2,currentframe};
-                if size(resultslist,1)>6 %filtered exists
-                    if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-                        u=resultslist{10,currentframe};
-                        v=resultslist{11,currentframe};
-                    else
-                        u=resultslist{7,currentframe};
-                        if size(u,1)>1
-                            v=resultslist{8,currentframe};
-                        else
-                            u=resultslist{3,currentframe};
-                            v=resultslist{4,currentframe};
-                        end
-                    end
-                else
-                    u=resultslist{3,currentframe};
-                    v=resultslist{4,currentframe};
-                end
-                caluv=retr('caluv');
-                u=u*caluv-retr('subtr_u');
-                v=v*caluv-retr('subtr_v');
-                calxy=retr('calxy');
-                
-                extractwhat=get(handles.area_para_select,'Value');
-                if extractwhat==9 || extractwhat==10
-                    derivative_calc(currentframe,extractwhat+2,0);
-                else
-                    derivative_calc(currentframe,extractwhat+1,0);
-                end
-                derived=retr('derived');
-                
-                if extractwhat==9 || extractwhat==10
-                    currentimage=derived{extractwhat+1,currentframe};
-                else
-                    currentimage=derived{extractwhat,currentframe};
-                end
-                currentimage=rescale_maps_nan(currentimage,0);
-                hgui=getappdata(0,'hgui');
-                figure(hgui);
-                sliderdisp
-                
-                delete(findobj('tag','vortarea'));
-                
-                %draw ellipse
-                if selected==0
-                    for i=1:5
-                        [xellip(i),yellip(i),but] = ginput(1);
-                        if but~=1
-                            break
-                        end
-                        hold on;
-                        plot (xellip(i),yellip(i),'w*')
-                        hold off;
-                        if i==3
-                            line(xellip(2:3),yellip(2:3))
-                        end
-                        if i==5
-                            line(xellip(4:5),yellip(4:5))
-                        end
-                    end
-                end
-                if size(xellip,2)==5
-                    %click1=centre of vortical structure
-                    %click2=top of vortical structure
-                    %click3=bottom of vortical structure
-                    %click4=left of vortical structure
-                    %click5=right of vortical structure
-                    x0=(mean(xellip)+xellip(1))/2;
-                    y0=(mean(yellip)+yellip(1))/2;
-                    if xellip(2)<xellip(3)
-                        ang=acos((yellip(2)-yellip(3))/(sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)))-pi/2;
-                    else
-                        ang=asin((yellip(2)-yellip(3))/(sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)));
-                    end
-                    rb=sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)/2;
-                    ra=sqrt((xellip(4)-xellip(5))^2+(yellip(4)-yellip(5))^2)/2;
-                    ra=sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)/2;
-                    rb=sqrt((xellip(4)-xellip(5))^2+(yellip(4)-yellip(5))^2)/2;
-                    
-                    celllength=1*calxy;
-                    %celllength=(x(1,2)-x(1,1))*calxy; %size of one cell
-                    cellarea=celllength^2; %area of one cell
-                    integralindex=0;
-                    
-                    if get(handles.usethreshold,'value')==1
-                        %sign=currentimage(round(yellip(1)),round(xellip(1)));
-                        condition=get(handles.smallerlarger, 'value'); %1 is larger, 2 is smaller
-                        thresholdareavalue=str2num(get(handles.thresholdarea, 'string'));
-                        
-                        if condition==1
-                            currentimage(currentimage>thresholdareavalue)=nan;
-                        else
-                            currentimage(currentimage<thresholdareavalue)=nan;
-                        end
-                        %{
+			%}
+			
+			if extractwhat==9 || extractwhat==10
+				maptoget=derived{extractwhat+1,currentframe};
+			else
+				maptoget=derived{extractwhat,currentframe};
+			end
+			maptoget=rescale_maps_nan(maptoget,0);
+			if selected==0
+				[BW,ximask,yimask]=roipoly;
+			end
+			if isempty(BW)
+			else
+				delete(findobj('tag','areaint'));
+				delete(findobj('tag', 'extractline'))
+				delete(findobj('tag', 'extractpoint'))
+				numcells=0;
+				summe=0;
+				for i=1:size(BW,1) %#ok<*FXSET>
+					for j=1:size(BW,2)
+						if BW(i,j)==1
+							if isnan(maptoget(i,j))==0
+								summe=summe+maptoget(i,j);
+								numcells=numcells+1;
+							end
+						end
+					end
+				end
+				average=summe/numcells;
+				hold on;
+				plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
+				plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
+				hold off;
+				%get units
+				unitpar=get(handles.area_para_select,'string');
+				unitpar=unitpar{get(handles.area_para_select,'value')};
+				unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
+				
+				
+				text(min(ximask),mean(yimask), ['area mean value = ' num2str(average) ' [' unitpar ']'], 'BackgroundColor', 'w','tag','areaint');
+				areaoutput=average;
+				varis='[mean]';
+			end
+		elseif areaoperation==2
+			%area integral
+			sliderdisp
+			filepath=retr('filepath');
+			x=resultslist{1,currentframe};
+			extractwhat=get(handles.area_para_select,'Value');
+			if extractwhat==9 || extractwhat==10
+				derivative_calc(currentframe,extractwhat+2,0);
+			else
+				derivative_calc(currentframe,extractwhat+1,0);
+			end
+			derived=retr('derived');
+			if extractwhat==9 || extractwhat==10
+				maptoget=derived{extractwhat+1,currentframe};
+			else
+				maptoget=derived{extractwhat,currentframe};
+			end
+			maptoget=rescale_maps_nan(maptoget,0);
+			
+			calxy=retr('calxy');
+			if retr('video_selection_done') == 0
+				[~,~,ext] = fileparts(filepath{2*currentframe-1});
+				if strcmp(ext,'.b16')
+					currentimage=f_readB16(filepath{2*currentframe-1});
+				else
+					currentimage=imread(filepath{2*currentframe-1});
+				end
+			else
+				video_reader_object = retr('video_reader_object');
+				video_frame_selection=retr('video_frame_selection');
+				currentimage = read(video_reader_object,video_frame_selection(2*currentframe-1));
+			end
+			sizeold=size(currentimage,1);
+			sizenew=size(x,1);
+			if selected==0
+				[BW,ximask,yimask]=roipoly; %select in currently displayed image
+			end
+			if isempty(BW)
+			else
+				delete(findobj('tag','areaint'));
+				delete(findobj('tag', 'extractline'))
+				delete(findobj('tag', 'extractpoint'))
+				celllength=1*calxy; %size of one pixel
+				cellarea=celllength^2; %area of one cell
+				integral=0;
+				for i=1:size(BW,1)
+					for j=1:size(BW,2)
+						if BW(i,j)==1
+							if isnan(maptoget(i,j))==0 %do not include nans and nan area in integral.
+								integral=integral+cellarea*maptoget(i,j);
+							end
+						end
+					end
+				end
+				hold on;
+				plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
+				plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
+				hold off;
+				
+				%get units
+				if retr('caluv')==1 && retr('calxy')==1
+					distunit='px^2';
+				else
+					distunit='m^2';
+				end
+				
+				unitpar=get(handles.area_para_select,'string');
+				unitpar=unitpar{get(handles.area_para_select,'value')};
+				unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
+				
+				
+				text(min(ximask),mean(yimask), ['area integral = ' num2str(integral) ' [' unitpar '*' distunit ']'], 'BackgroundColor', 'w','tag','areaint');
+				areaoutput=integral;
+				varis='[integral]';
+			end
+		elseif areaoperation==3
+			% area only
+			sliderdisp
+			filepath=retr('filepath');
+			if retr('video_selection_done') == 0
+				[~,~,ext] = fileparts(filepath{2*currentframe-1});
+				if strcmp(ext,'.b16')
+					currentimage=f_readB16(filepath{2*currentframe-1});
+				else
+					currentimage=imread(filepath{2*currentframe-1});
+				end
+			else
+				video_reader_object = retr('video_reader_object');
+				video_frame_selection=retr('video_frame_selection');
+				currentimage = read(video_reader_object,video_frame_selection(2*currentframe-1));
+			end
+			x=resultslist{1,currentframe};
+			sizeold=size(currentimage,1);
+			sizenew=size(x,1);
+			if selected==0
+				[BW,ximask,yimask]=roipoly;
+			end
+			if isempty(BW)
+			else
+				delete(findobj('tag','areaint'));
+				delete(findobj('tag', 'extractline'))
+				delete(findobj('tag', 'extractpoint'))
+				calxy=retr('calxy');
+				celllength=1*calxy;
+				cellarea=celllength^2;
+				summe=0;
+				for i=1:size(BW,1)
+					for j=1:size(BW,2)
+						if BW(i,j)==1
+							summe=summe+cellarea;
+						end
+					end
+				end
+				hold on;
+				plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
+				plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
+				hold off;
+				
+				%get units
+				if retr('caluv')==1 && retr('calxy')==1
+					distunit='px^2';
+				else
+					distunit='m^2';
+				end
+				
+				
+				text(min(ximask),mean(yimask), ['area = ' num2str(summe) ' [' distunit ']'], 'BackgroundColor', 'w','tag','areaint');
+				areaoutput=summe;
+				varis='[area]';
+			end
+		elseif areaoperation==4
+			%area series
+			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+				x=resultslist{1,currentframe};
+				y=resultslist{2,currentframe};
+				if size(resultslist,1)>6 %filtered exists
+					if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+						u=resultslist{10,currentframe};
+						v=resultslist{11,currentframe};
+					else
+						u=resultslist{7,currentframe};
+						if size(u,1)>1
+							v=resultslist{8,currentframe};
+						else
+							u=resultslist{3,currentframe};
+							v=resultslist{4,currentframe};
+						end
+					end
+				else
+					u=resultslist{3,currentframe};
+					v=resultslist{4,currentframe};
+				end
+				caluv=retr('caluv');
+				u=u*caluv-retr('subtr_u');
+				v=v*caluv-retr('subtr_v');
+				calxy=retr('calxy');
+				
+				extractwhat=get(handles.area_para_select,'Value');
+				if extractwhat==9 || extractwhat==10
+					derivative_calc(currentframe,extractwhat+2,0);
+				else
+					derivative_calc(currentframe,extractwhat+1,0);
+				end
+				derived=retr('derived');
+				
+				if extractwhat==9 || extractwhat==10
+					currentimage=derived{extractwhat+1,currentframe};
+				else
+					currentimage=derived{extractwhat,currentframe};
+				end
+				currentimage=rescale_maps_nan(currentimage,0);
+				hgui=getappdata(0,'hgui');
+				figure(hgui);
+				sliderdisp
+				
+				delete(findobj('tag','vortarea'));
+				
+				%draw ellipse
+				if selected==0
+					for i=1:5
+						[xellip(i),yellip(i),but] = ginput(1);
+						if but~=1
+							break
+						end
+						hold on;
+						plot (xellip(i),yellip(i),'w*')
+						hold off;
+						if i==3
+							line(xellip(2:3),yellip(2:3))
+						end
+						if i==5
+							line(xellip(4:5),yellip(4:5))
+						end
+					end
+				end
+				if size(xellip,2)==5
+					%click1=centre of vortical structure
+					%click2=top of vortical structure
+					%click3=bottom of vortical structure
+					%click4=left of vortical structure
+					%click5=right of vortical structure
+					x0=(mean(xellip)+xellip(1))/2;
+					y0=(mean(yellip)+yellip(1))/2;
+					if xellip(2)<xellip(3)
+						ang=acos((yellip(2)-yellip(3))/(sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)))-pi/2;
+					else
+						ang=asin((yellip(2)-yellip(3))/(sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)));
+					end
+					rb=sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)/2;
+					ra=sqrt((xellip(4)-xellip(5))^2+(yellip(4)-yellip(5))^2)/2;
+					ra=sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)/2;
+					rb=sqrt((xellip(4)-xellip(5))^2+(yellip(4)-yellip(5))^2)/2;
+					
+					celllength=1*calxy;
+					%celllength=(x(1,2)-x(1,1))*calxy; %size of one cell
+					cellarea=celllength^2; %area of one cell
+					integralindex=0;
+					
+					if get(handles.usethreshold,'value')==1
+						%sign=currentimage(round(yellip(1)),round(xellip(1)));
+						condition=get(handles.smallerlarger, 'value'); %1 is larger, 2 is smaller
+						thresholdareavalue=str2num(get(handles.thresholdarea, 'string'));
+						
+						if condition==1
+							currentimage(currentimage>thresholdareavalue)=nan;
+						else
+							currentimage(currentimage<thresholdareavalue)=nan;
+						end
+						%{
                     %redraw map to show excluded areas
                     [xhelper,yhelper]=meshgrid(1:size(u,2),1:size(u,1));
                     areaincluded=ones(size(u));
@@ -7458,327 +7623,327 @@ for i=startfr:endfr
                     quiver(xhelper(areaincluded==1),yhelper(areaincluded==1),u(areaincluded==1),v(areaincluded==1),'k','linewidth',str2double(get(handles.vecwidth,'string')))
                     scatter(xhelper(areaincluded==0),yhelper(areaincluded==0),'rx')
                     hold off;
-                        %}
-                    end
-                    increasefactor=str2num(get(handles.radiusincrease,'string'))/100;
-                    if ra<rb
-                        minimumrad=ra;
-                    else
-                        minimumrad=rb;
-                    end
-                    %for incr = -(minimumrad)/1.5 :0.5: (ra+rb)/2*increasefactor
-                    for incr = -(minimumrad)/1.5 :5: (ra+rb)/2*increasefactor
-                        integralindex=integralindex+1;
-                        [outputx, outputy]=ellipse(ra+incr,rb+incr,ang,x0,y0,'w');
-                        %BW = roipoly(u,outputx,outputy);
-                        BW = roipoly(currentimage,outputx,outputy);
-                        ra_all(integralindex)=ra+incr;
-                        rb_all(integralindex)=rb+incr;
-                        
-                        integral=0;
-                        %for i=1:size(u,1)
-                        for i=1:size(currentimage,1)
-                            %for j=1:size(u,2)
-                            for j=1:size(currentimage,2)
-                                if BW(i,j)==1
-                                    if isnan(currentimage(i,j))==0
-                                        integral=integral+cellarea*currentimage(i,j);
-                                    end
-                                end
-                            end
-                        end
-                        integralseries(integralindex)=integral;
-                    end
-                    put('ra',ra_all);
-                    put('rb',rb_all)
-                    put('ang',ang)
-                    put('x0',x0)
-                    put('y0',y0)
-                    h2=figure;
-                    %plot(integralseries)
-                    set(h2, 'tag', 'vortarea');
-                    
-                    plot (1:size(integralseries,2), integralseries);
-                    hold on;
-                    scattergroup1=scatter(1:size(integralseries,2), integralseries, 80, 'ko');
-                    hold off;
-                    if verLessThan('matlab','8.4')
-                        set(scattergroup1, 'ButtonDownFcn', @hitcircle2, 'hittestarea', 'off');
-                    else
-                        % >R2014a
-                        set(scattergroup1, 'ButtonDownFcn', @hitcircle2, 'pickableparts', 'visible');
-                    end
-                    
-                    title('Click the points of the graph to highlight it''s corresponding circle.')
-                    put('integralseries',integralseries);
-                    put ('hellipse',h2);
-                    screensize=get( 0, 'ScreenSize' );
-                    rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
-                    set(h2,'position', rect);
-                    
-                    extractwhat=get(handles.area_para_select,'Value');
-                    current=get(handles.area_para_select,'string');
-                    current=current{extractwhat};
-                    set(h2,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ' area integral series, frame ' num2str(currentframe)]);
-                    set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-                    xlabel('Ellipse series nr.');
-                    
-                    if retr('caluv')==1 && retr('calxy')==1
-                        units='px^2';
-                    else
-                        units='m^2';
-                    end
-                    
-                    current_2=current(1:strfind(current, '[')-1);
-                    current_3=current(strfind(current, '[')+1:end-1);
-                    
-                    
-                    ylabel([current_2 ' area integral [' current_3 '*' units ']']);
-                    areaoutput=integralseries;
-                    varis='[integral, starting at ellipse with smallest radius]';
-                end
-            end
-        elseif areaoperation==5
-            %weighted centroid
-            if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-                x=resultslist{1,currentframe};
-                y=resultslist{2,currentframe};
-                if size(resultslist,1)>6 %filtered exists
-                    if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-                        u=resultslist{10,currentframe};
-                        v=resultslist{11,currentframe};
-                    else
-                        u=resultslist{7,currentframe};
-                        if size(u,1)>1
-                            v=resultslist{8,currentframe};
-                        else
-                            u=resultslist{3,currentframe};
-                            v=resultslist{4,currentframe};
-                        end
-                    end
-                else
-                    u=resultslist{3,currentframe};
-                    v=resultslist{4,currentframe};
-                end
-                caluv=retr('caluv');
-                u=u*caluv-retr('subtr_u');
-                v=v*caluv-retr('subtr_v');
-                calxy=retr('calxy');
-                extractwhat=get(handles.area_para_select,'Value');
-                if extractwhat==9 || extractwhat==10
-                    derivative_calc(currentframe,extractwhat+2,0);
-                else
-                    derivative_calc(currentframe,extractwhat+1,0);
-                end
-
-                derived=retr('derived');
-                
-                if extractwhat==9 || extractwhat==10
-                    currentimage=derived{extractwhat+1,currentframe};
-                else
-                    currentimage=derived{extractwhat,currentframe};
-                end
-
-                delete(findobj('tag','vortarea'));
-                
-                imagesc(currentimage);
-                axis image
-                hold on;
-                quiver(u,v,'k','linewidth',str2double(get(handles.vecwidth,'string')))
-                hold off;
-                
-                avail_maps=get(handles.colormap_choice,'string');
-                selected_index=get(handles.colormap_choice,'value');
-                if selected_index == 4 %HochschuleBremen map
-                    load hsbmap.mat;
-                    colormap(hsb);
-                elseif selected_index== 1 %rainbow
-                    %load rainbow.mat;
-                    colormap (parula);
-                else
-                    colormap(avail_maps{selected_index});
-                end
-                if selected==0
-                    [BW,ximask,yimask]=roipoly;
-                end
-                if isempty(BW)
-                else
-                    
-                    delete(findobj('tag', 'extractline'));
-                    line(ximask,yimask,'tag', 'extractline');
-                    [rows,cols] = size(currentimage);
-                    
-                    x = ones(rows,1)*[1:cols];
-                    y = [1:rows]'*ones(1,cols);
-                    area=0;
-                    meanx=0;
-                    meany=0;
-                    for i=1:size(currentimage,1)
-                        for j=1:size(currentimage,2)
-                            if BW(i,j)==1
-                                area=area+double(currentimage(i,j));%sum image intesity
-                                meanx=meanx+x(i,j)*double(currentimage(i,j));%sum position*intensity
-                                meany=meany+y(i,j)*double(currentimage(i,j));
-                            end
-                        end
-                    end
-                    meanx=meanx/area;%*(sizeold/sizenew)
-                    meany=meany/area;%*(sizeold/sizenew)
-                    hold on; plot(meanx,meany,'w*','markersize',20,'tag', 'extractline');hold off;
-                    xecht=resultslist{1,currentframe};
-                    yecht=resultslist{2,currentframe};
-                    step=(xecht(1,2)-xecht(1,1))*calxy;
-                    %+x(1,1)
-                    areaoutput=[xecht(1,1)*calxy+(meanx-1)*step yecht(1,1)*calxy+(meany-1)*step];
-                    
-                    if retr('caluv')==1 && retr('calxy')==1
-                        un=' px';
-                    else
-                        un=' m';
-                    end
-                    textposix=x(1,round(size(x,2)/4));
-                    textposiy=y(round(size(y,1)/4),1);
-                    text(textposix, textposiy,  ['x =' num2str(xecht(1,1)*calxy+(meanx-1)*step) un sprintf('\n') 'y =' num2str(yecht(1,1)*calxy+(meany-1)*step) un], 'margin', 0.01, 'fontsize', 10, 'color','w','fontweight','bold','BackgroundColor', [0 0 0],'verticalalignment','top','horizontalalignment','left');
-                    
-                    varis='[x coordinate, y coordinate]';
-                end
-            end
-        elseif areaoperation==6
-            %mean flow direction
-            if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-                x=resultslist{1,currentframe};
-                y=resultslist{2,currentframe};
-                if size(resultslist,1)>6 %filtered exists
-                    if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-                        u=resultslist{10,currentframe};
-                        v=resultslist{11,currentframe};
-                    else
-                        u=resultslist{7,currentframe};
-                        if size(u,1)>1
-                            v=resultslist{8,currentframe};
-                        else
-                            u=resultslist{3,currentframe};
-                            v=resultslist{4,currentframe};
-                        end
-                    end
-                else
-                    u=resultslist{3,currentframe};
-                    v=resultslist{4,currentframe};
-                end
-                sliderdisp
-                caluv=retr('caluv');
-                u=u*caluv-retr('subtr_u');
-                v=v*caluv-retr('subtr_v');
-                calxy=retr('calxy');
-                delete(findobj('tag','vortarea'));
-                filepath=retr('filepath');
-                x=resultslist{1,currentframe};
-                y=resultslist{2,currentframe};
-                if selected==0
-                    [BW,ximask,yimask]=roipoly;
-                end
-                if isempty(BW)
-                else
-                    delete(findobj('tag', 'extractline'));
-                    line(ximask,yimask,'tag', 'extractline');
-                    umean=0;
-                    vmean=0;
-                    uamount=0;
-                    u=rescale_maps_nan(u,0);
-                    v=rescale_maps_nan(v,0);
-                    for i=1:size(u,1)
-                        for j=1:size(u,2)
-                            if BW(i,j)==1
-                                if isnan(u(i,j))==0 && isnan(v(i,j))==0
-                                    umean=umean+u(i,j);
-                                    vmean=vmean+v(i,j);
-                                    uamount=uamount+1;
-                                end
-                            end
-                        end
-                    end
-                    umean=umean/uamount;
-                    vmean=vmean/uamount;
-                    veclength=(x(1,2)-x(1,1))*6;
-                    if vmean<=0
-                        angle=-atan2(vmean,umean)*180/pi;
-                    else
-                        angle=360-atan2(vmean,umean)*180/pi;
-                    end
-                    magg=sqrt(umean^2+vmean^2);
-                    areaoutput=[magg angle];
-                    varis='[magnitude, angle in degrees, 0 = right, 90 = up, 180 = left, 270 = down, 360 = right]';
-                    hold on;quiver(mean2(ximask), mean2(yimask), umean/sqrt(umean^2+vmean^2)*veclength,vmean/sqrt(umean^2+vmean^2)*veclength,'r','autoscale','off', 'autoscalefactor', 100, 'linewidth',2,'MaxHeadSize',3,'tag', 'extractline');hold off;
-                    
-                    if retr('caluv')==1 && retr('calxy')==1
-                        un=' px/frame';
-                    else
-                        un=' m/s';
-                    end
-                    textposix=x(1,round(size(x,2)/4));
-                    textposiy=y(round(size(y,1)/4),1);
-                    text(textposix, textposiy, ['angle=' num2str(angle) '�' sprintf('\n') 'magnitude=' num2str(magg) un], 'margin', 0.01, 'fontsize', 10, 'color','w','fontweight','bold','BackgroundColor', [0 0 0],'verticalalignment','top','horizontalalignment','left');
-                end
-            end
-        end %areaoperation
-    end
-    if get(handles.savearea,'Value')==1
-        %nur wenn man es auch speichern will...
-        if selected==0
-            switch areaoperation
-                case 1
-                    whatoperation = 'mean_value';
-                case 2
-                    whatoperation = 'integral';
-                case 3
-                    whatoperation = 'area';
-                case 4
-                    whatoperation = 'integral_series';
-                case 5
-                    whatoperation = 'weighted centroid';
-                case 6
-                    whatoperation = 'mean_flow';
-            end
-            par = get(handles.area_para_select,'string');
-            par=par{get(handles.area_para_select,'Value')};
-            if areaoperation==3 || areaoperation==6
-                par=[];
-            end
-            imgsavepath=retr('imgsavepath');
-            if isempty(imgsavepath)
-                imgsavepath=retr('pathname');
-            end
-            
-            if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-                
-                part1= par(1:strfind(par,'/')-1) ;
-                part2= par(strfind(par,'/')+1:end);
-                if isempty(part1)==1
-                    parED=par;
-                else
-                    parED=[part1 ' per ' part2];
-                end
-                
-                [FileName,PathName] = uiputfile('*.txt','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' whatoperation '_' parED '.txt'])); %framenummer in dateiname
-                selected=1;
-                if isequal(FileName,0) | isequal(PathName,0)
-                    break
-                else
-                    put ('imgsavepath',PathName);
-                    fid = fopen(fullfile(PathName,FileName), 'w');
-                    fprintf(fid, ['Frame Nr.,' par ': ' whatoperation ' ' varis '\r\n']);
-                    fclose(fid);
-                end
-            end
-        end
-        if isequal(FileName,0) | isequal(PathName,0)
-        else
-            if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-                dlmwrite(fullfile(PathName,FileName), [currentframe areaoutput], '-append', 'delimiter', ',', 'precision', 10, 'newline', 'pc');
-            end
-        end
-    end
-    %areaoutput
+						%}
+					end
+					increasefactor=str2num(get(handles.radiusincrease,'string'))/100;
+					if ra<rb
+						minimumrad=ra;
+					else
+						minimumrad=rb;
+					end
+					%for incr = -(minimumrad)/1.5 :0.5: (ra+rb)/2*increasefactor
+					for incr = -(minimumrad)/1.5 :5: (ra+rb)/2*increasefactor
+						integralindex=integralindex+1;
+						[outputx, outputy]=ellipse(ra+incr,rb+incr,ang,x0,y0,'w');
+						%BW = roipoly(u,outputx,outputy);
+						BW = roipoly(currentimage,outputx,outputy);
+						ra_all(integralindex)=ra+incr;
+						rb_all(integralindex)=rb+incr;
+						
+						integral=0;
+						%for i=1:size(u,1)
+						for i=1:size(currentimage,1)
+							%for j=1:size(u,2)
+							for j=1:size(currentimage,2)
+								if BW(i,j)==1
+									if isnan(currentimage(i,j))==0
+										integral=integral+cellarea*currentimage(i,j);
+									end
+								end
+							end
+						end
+						integralseries(integralindex)=integral;
+					end
+					put('ra',ra_all);
+					put('rb',rb_all)
+					put('ang',ang)
+					put('x0',x0)
+					put('y0',y0)
+					h2=figure;
+					%plot(integralseries)
+					set(h2, 'tag', 'vortarea');
+					
+					plot (1:size(integralseries,2), integralseries);
+					hold on;
+					scattergroup1=scatter(1:size(integralseries,2), integralseries, 80, 'ko');
+					hold off;
+					if verLessThan('matlab','8.4')
+						set(scattergroup1, 'ButtonDownFcn', @hitcircle2, 'hittestarea', 'off');
+					else
+						% >R2014a
+						set(scattergroup1, 'ButtonDownFcn', @hitcircle2, 'pickableparts', 'visible');
+					end
+					
+					title('Click the points of the graph to highlight it''s corresponding circle.')
+					put('integralseries',integralseries);
+					put ('hellipse',h2);
+					screensize=get( 0, 'ScreenSize' );
+					rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
+					set(h2,'position', rect);
+					
+					extractwhat=get(handles.area_para_select,'Value');
+					current=get(handles.area_para_select,'string');
+					current=current{extractwhat};
+					set(h2,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ' area integral series, frame ' num2str(currentframe)]);
+					set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
+					xlabel('Ellipse series nr.');
+					
+					if retr('caluv')==1 && retr('calxy')==1
+						units='px^2';
+					else
+						units='m^2';
+					end
+					
+					current_2=current(1:strfind(current, '[')-1);
+					current_3=current(strfind(current, '[')+1:end-1);
+					
+					
+					ylabel([current_2 ' area integral [' current_3 '*' units ']']);
+					areaoutput=integralseries;
+					varis='[integral, starting at ellipse with smallest radius]';
+				end
+			end
+		elseif areaoperation==5
+			%weighted centroid
+			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+				x=resultslist{1,currentframe};
+				y=resultslist{2,currentframe};
+				if size(resultslist,1)>6 %filtered exists
+					if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+						u=resultslist{10,currentframe};
+						v=resultslist{11,currentframe};
+					else
+						u=resultslist{7,currentframe};
+						if size(u,1)>1
+							v=resultslist{8,currentframe};
+						else
+							u=resultslist{3,currentframe};
+							v=resultslist{4,currentframe};
+						end
+					end
+				else
+					u=resultslist{3,currentframe};
+					v=resultslist{4,currentframe};
+				end
+				caluv=retr('caluv');
+				u=u*caluv-retr('subtr_u');
+				v=v*caluv-retr('subtr_v');
+				calxy=retr('calxy');
+				extractwhat=get(handles.area_para_select,'Value');
+				if extractwhat==9 || extractwhat==10
+					derivative_calc(currentframe,extractwhat+2,0);
+				else
+					derivative_calc(currentframe,extractwhat+1,0);
+				end
+				
+				derived=retr('derived');
+				
+				if extractwhat==9 || extractwhat==10
+					currentimage=derived{extractwhat+1,currentframe};
+				else
+					currentimage=derived{extractwhat,currentframe};
+				end
+				
+				delete(findobj('tag','vortarea'));
+				
+				imagesc(currentimage);
+				axis image
+				hold on;
+				quiver(u,v,'k','linewidth',str2double(get(handles.vecwidth,'string')))
+				hold off;
+				
+				avail_maps=get(handles.colormap_choice,'string');
+				selected_index=get(handles.colormap_choice,'value');
+				if selected_index == 4 %HochschuleBremen map
+					load hsbmap.mat;
+					colormap(hsb);
+				elseif selected_index== 1 %rainbow
+					%load rainbow.mat;
+					colormap (parula);
+				else
+					colormap(avail_maps{selected_index});
+				end
+				if selected==0
+					[BW,ximask,yimask]=roipoly;
+				end
+				if isempty(BW)
+				else
+					
+					delete(findobj('tag', 'extractline'));
+					line(ximask,yimask,'tag', 'extractline');
+					[rows,cols] = size(currentimage);
+					
+					x = ones(rows,1)*[1:cols];
+					y = [1:rows]'*ones(1,cols);
+					area=0;
+					meanx=0;
+					meany=0;
+					for i=1:size(currentimage,1)
+						for j=1:size(currentimage,2)
+							if BW(i,j)==1
+								area=area+double(currentimage(i,j));%sum image intesity
+								meanx=meanx+x(i,j)*double(currentimage(i,j));%sum position*intensity
+								meany=meany+y(i,j)*double(currentimage(i,j));
+							end
+						end
+					end
+					meanx=meanx/area;%*(sizeold/sizenew)
+					meany=meany/area;%*(sizeold/sizenew)
+					hold on; plot(meanx,meany,'w*','markersize',20,'tag', 'extractline');hold off;
+					xecht=resultslist{1,currentframe};
+					yecht=resultslist{2,currentframe};
+					step=(xecht(1,2)-xecht(1,1))*calxy;
+					%+x(1,1)
+					areaoutput=[xecht(1,1)*calxy+(meanx-1)*step yecht(1,1)*calxy+(meany-1)*step];
+					
+					if retr('caluv')==1 && retr('calxy')==1
+						un=' px';
+					else
+						un=' m';
+					end
+					textposix=x(1,round(size(x,2)/4));
+					textposiy=y(round(size(y,1)/4),1);
+					text(textposix, textposiy,  ['x =' num2str(xecht(1,1)*calxy+(meanx-1)*step) un sprintf('\n') 'y =' num2str(yecht(1,1)*calxy+(meany-1)*step) un], 'margin', 0.01, 'fontsize', 10, 'color','w','fontweight','bold','BackgroundColor', [0 0 0],'verticalalignment','top','horizontalalignment','left');
+					
+					varis='[x coordinate, y coordinate]';
+				end
+			end
+		elseif areaoperation==6
+			%mean flow direction
+			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+				x=resultslist{1,currentframe};
+				y=resultslist{2,currentframe};
+				if size(resultslist,1)>6 %filtered exists
+					if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+						u=resultslist{10,currentframe};
+						v=resultslist{11,currentframe};
+					else
+						u=resultslist{7,currentframe};
+						if size(u,1)>1
+							v=resultslist{8,currentframe};
+						else
+							u=resultslist{3,currentframe};
+							v=resultslist{4,currentframe};
+						end
+					end
+				else
+					u=resultslist{3,currentframe};
+					v=resultslist{4,currentframe};
+				end
+				sliderdisp
+				caluv=retr('caluv');
+				u=u*caluv-retr('subtr_u');
+				v=v*caluv-retr('subtr_v');
+				calxy=retr('calxy');
+				delete(findobj('tag','vortarea'));
+				filepath=retr('filepath');
+				x=resultslist{1,currentframe};
+				y=resultslist{2,currentframe};
+				if selected==0
+					[BW,ximask,yimask]=roipoly;
+				end
+				if isempty(BW)
+				else
+					delete(findobj('tag', 'extractline'));
+					line(ximask,yimask,'tag', 'extractline');
+					umean=0;
+					vmean=0;
+					uamount=0;
+					u=rescale_maps_nan(u,0);
+					v=rescale_maps_nan(v,0);
+					for i=1:size(u,1)
+						for j=1:size(u,2)
+							if BW(i,j)==1
+								if isnan(u(i,j))==0 && isnan(v(i,j))==0
+									umean=umean+u(i,j);
+									vmean=vmean+v(i,j);
+									uamount=uamount+1;
+								end
+							end
+						end
+					end
+					umean=umean/uamount;
+					vmean=vmean/uamount;
+					veclength=(x(1,2)-x(1,1))*6;
+					if vmean<=0
+						angle=-atan2(vmean,umean)*180/pi;
+					else
+						angle=360-atan2(vmean,umean)*180/pi;
+					end
+					magg=sqrt(umean^2+vmean^2);
+					areaoutput=[magg angle];
+					varis='[magnitude, angle in degrees, 0 = right, 90 = up, 180 = left, 270 = down, 360 = right]';
+					hold on;quiver(mean2(ximask), mean2(yimask), umean/sqrt(umean^2+vmean^2)*veclength,vmean/sqrt(umean^2+vmean^2)*veclength,'r','autoscale','off', 'autoscalefactor', 100, 'linewidth',2,'MaxHeadSize',3,'tag', 'extractline');hold off;
+					
+					if retr('caluv')==1 && retr('calxy')==1
+						un=' px/frame';
+					else
+						un=' m/s';
+					end
+					textposix=x(1,round(size(x,2)/4));
+					textposiy=y(round(size(y,1)/4),1);
+					text(textposix, textposiy, ['angle=' num2str(angle) '�' sprintf('\n') 'magnitude=' num2str(magg) un], 'margin', 0.01, 'fontsize', 10, 'color','w','fontweight','bold','BackgroundColor', [0 0 0],'verticalalignment','top','horizontalalignment','left');
+				end
+			end
+		end %areaoperation
+	end
+	if get(handles.savearea,'Value')==1
+		%nur wenn man es auch speichern will...
+		if selected==0
+			switch areaoperation
+				case 1
+					whatoperation = 'mean_value';
+				case 2
+					whatoperation = 'integral';
+				case 3
+					whatoperation = 'area';
+				case 4
+					whatoperation = 'integral_series';
+				case 5
+					whatoperation = 'weighted centroid';
+				case 6
+					whatoperation = 'mean_flow';
+			end
+			par = get(handles.area_para_select,'string');
+			par=par{get(handles.area_para_select,'Value')};
+			if areaoperation==3 || areaoperation==6
+				par=[];
+			end
+			imgsavepath=retr('imgsavepath');
+			if isempty(imgsavepath)
+				imgsavepath=retr('pathname');
+			end
+			
+			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+				
+				part1= par(1:strfind(par,'/')-1) ;
+				part2= par(strfind(par,'/')+1:end);
+				if isempty(part1)==1
+					parED=par;
+				else
+					parED=[part1 ' per ' part2];
+				end
+				
+				[FileName,PathName] = uiputfile('*.txt','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' whatoperation '_' parED '.txt'])); %framenummer in dateiname
+				selected=1;
+				if isequal(FileName,0) | isequal(PathName,0)
+					break
+				else
+					put ('imgsavepath',PathName);
+					fid = fopen(fullfile(PathName,FileName), 'w');
+					fprintf(fid, ['Frame Nr.,' par ': ' whatoperation ' ' varis '\r\n']);
+					fclose(fid);
+				end
+			end
+		end
+		if isequal(FileName,0) | isequal(PathName,0)
+		else
+			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+				dlmwrite(fullfile(PathName,FileName), [currentframe areaoutput], '-append', 'delimiter', ',', 'precision', 10, 'newline', 'pc');
+			end
+		end
+	end
+	%areaoutput
 end
 
 toolsavailable(1)
@@ -7799,7 +7964,7 @@ x0= retr('x0');
 y0=retr('y0');
 
 for m=1:size(ra,2)
-    ellipse(ra(1,m),rb(1,m),ang,x0,y0,'w');
+	ellipse(ra(1,m),rb(1,m),ang,x0,y0,'w');
 end
 ellipse(ra(1,pos),rb(1,pos),ang,x0,y0,'b');
 figure(h3plot);
@@ -7812,9 +7977,9 @@ extractwhat=get(handles.area_para_select,'Value');
 current=get(handles.area_para_select,'string');
 current=current{extractwhat};
 if retr('caluv')==1 && retr('calxy')==1
-    units='px^2';
+	units='px^2';
 else
-    units='m^2';
+	units='m^2';
 end
 current_3=current(strfind(current, '[')+1:end-1);
 text(posreal(1,1)+0.25,posreal(2,2),['\leftarrow ' num2str(integralseries(pos)) ' ' current_3 '*' units],'tag','circstring','BackgroundColor', [1 1 1], 'margin', 0.01, 'fontsize', 7, 'HitTest', 'off')
@@ -7822,28 +7987,28 @@ text(posreal(1,1)+0.25,posreal(2,2),['\leftarrow ' num2str(integralseries(pos)) 
 function areatype_Callback(hObject, ~, ~)
 handles=gethand;
 if get(hObject,'value')==4
-    set(handles.text93, 'visible', 'on')
-    set(handles.smallerlarger, 'visible', 'on')
-    set(handles.text94, 'visible', 'on')
-    set(handles.radiusincrease, 'visible', 'on')
-    set(handles.thresholdarea, 'visible', 'on')
-    set(handles.usethreshold, 'visible', 'on')
-    set(handles.text95, 'visible', 'on')
+	set(handles.text93, 'visible', 'on')
+	set(handles.smallerlarger, 'visible', 'on')
+	set(handles.text94, 'visible', 'on')
+	set(handles.radiusincrease, 'visible', 'on')
+	set(handles.thresholdarea, 'visible', 'on')
+	set(handles.usethreshold, 'visible', 'on')
+	set(handles.text95, 'visible', 'on')
 else
-    set(handles.text93, 'visible', 'off')
-    set(handles.smallerlarger, 'visible', 'off')
-    set(handles.text94, 'visible', 'off')
-    set(handles.radiusincrease, 'visible', 'off')
-    set(handles.thresholdarea, 'visible', 'off')
-    set(handles.usethreshold, 'visible', 'off')
-    set(handles.text95, 'visible', 'off')
+	set(handles.text93, 'visible', 'off')
+	set(handles.smallerlarger, 'visible', 'off')
+	set(handles.text94, 'visible', 'off')
+	set(handles.radiusincrease, 'visible', 'off')
+	set(handles.thresholdarea, 'visible', 'off')
+	set(handles.usethreshold, 'visible', 'off')
+	set(handles.text95, 'visible', 'off')
 end
 if get(hObject,'value')==3 || get(hObject,'value')==6
-    set(handles.area_para_select,'visible','off');
-    set(handles.text89,'visible','off');
+	set(handles.area_para_select,'visible','off');
+	set(handles.text89,'visible','off');
 else
-    set(handles.area_para_select,'visible','on');
-    set(handles.text89,'visible','on');
+	set(handles.area_para_select,'visible','on');
+	set(handles.text89,'visible','on');
 end
 
 function flow_sim_Callback(hObject, ~, ~)
@@ -7854,13 +8019,13 @@ set(handles.shiftpanel,'visible','off');
 set(handles.rotationpanel,'visible','off');
 set(handles.oseenpanel,'visible','off');
 if contents==1
-    set(handles.rankinepanel,'visible','on');
+	set(handles.rankinepanel,'visible','on');
 elseif contents==2
-    set(handles.oseenpanel,'visible','on');
+	set(handles.oseenpanel,'visible','on');
 elseif contents==3
-    set(handles.shiftpanel,'visible','on');
+	set(handles.shiftpanel,'visible','on');
 elseif contents==4
-    set(handles.rotationpanel,'visible','on');
+	set(handles.rotationpanel,'visible','on');
 end
 
 function singledoublerankine_Callback(hObject, ~, ~)
@@ -7874,16 +8039,16 @@ set(handles.text102,'visible','off');
 set(handles.text103,'visible','off');
 set(handles.text104,'visible','off');
 if contents==1
-    set(handles.rankx1,'visible','on');
-    set(handles.ranky1,'visible','on');
+	set(handles.rankx1,'visible','on');
+	set(handles.ranky1,'visible','on');
 elseif contents==2
-    set(handles.rankx1,'visible','on');
-    set(handles.ranky1,'visible','on');
-    set(handles.rankx2,'visible','on');
-    set(handles.ranky2,'visible','on');
-    set(handles.text102,'visible','on');
-    set(handles.text103,'visible','on');
-    set(handles.text104,'visible','on');
+	set(handles.rankx1,'visible','on');
+	set(handles.ranky1,'visible','on');
+	set(handles.rankx2,'visible','on');
+	set(handles.ranky2,'visible','on');
+	set(handles.text102,'visible','on');
+	set(handles.text103,'visible','on');
+	set(handles.text104,'visible','on');
 end
 
 function singledoubleoseen_Callback(hObject, ~, ~)
@@ -7897,16 +8062,16 @@ set(handles.text110,'visible','off');
 set(handles.text111,'visible','off');
 set(handles.text112,'visible','off');
 if contents==1
-    set(handles.oseenx1,'visible','on');
-    set(handles.oseeny1,'visible','on');
+	set(handles.oseenx1,'visible','on');
+	set(handles.oseeny1,'visible','on');
 elseif contents==2
-    set(handles.oseenx1,'visible','on');
-    set(handles.oseeny1,'visible','on');
-    set(handles.oseenx2,'visible','on');
-    set(handles.oseeny2,'visible','on');
-    set(handles.text110,'visible','on');
-    set(handles.text111,'visible','on');
-    set(handles.text112,'visible','on');
+	set(handles.oseenx1,'visible','on');
+	set(handles.oseeny1,'visible','on');
+	set(handles.oseenx2,'visible','on');
+	set(handles.oseeny2,'visible','on');
+	set(handles.text110,'visible','on');
+	set(handles.text111,'visible','on');
+	set(handles.text112,'visible','on');
 end
 
 function temporal_operation_Callback(~, ~, type)
@@ -7914,278 +8079,274 @@ handles=gethand;
 filepath=retr('filepath');
 resultslist=retr('resultslist');
 if isempty(resultslist)==0
-    if size(filepath,1)>0
-        sizeerror=0;
-        typevectormittel=ones(size(resultslist{1,1}));
-        ismean=retr('ismean');
-        if isempty(ismean)==1
-            ismean=zeros(size(resultslist,2),1);
-        end
-        %man könnte erstmal alle frames stapeln, und danach nur die verwenden deren
-        %nummer gewählt war.
-        %for count=1:size(resultslist,2)
-        %eval('A(1,[1,6,3])')
-        %in textbox eintragen 1,6,3
-        %oder 1:5
-        %oder 1:end
-        %oder 1:3,8:10
-        str = strrep(get(handles.selectedFramesMean,'string'),'-',':');
-        endinside=strfind(str, 'end');
-        if isempty(endinside)==0 %#ok<*STREMP>
-            str = strrep(get(handles.selectedFramesMean,'string'),'end',num2str(max(find(ismean==0)))); %#ok<MXFND>
-        end
-        selectionok=1;
-        
-        strnum=str2num(str);
-        if isempty(strnum)==1 || isempty(strfind(str,'.'))==0 || isempty(strfind(str,';'))==0
-            msgbox(['Error in frame selection syntax. Please use the following syntax (examples):' sprintf('\n') '1:3' sprintf('\n') '1,3,7,9' sprintf('\n') '1:3,7,8,9,11:13' ],'Error','error','modal')
-            selectionok=0;
-        end
-        if selectionok==1
-            mincount=(min(strnum));
-            for count=mincount:size(resultslist,2)
-                if size(resultslist,2)>=count && numel(resultslist{1,count})>0
-                    x=resultslist{1,count};
-                    y=resultslist{2,count};
-                    if size(resultslist,1)>6 %filtered exists
-                        if size(resultslist,1)>10 && numel(resultslist{10,count}) > 0 %smoothed exists
-                            u=resultslist{10,count};
-                            v=resultslist{11,count};
-                            typevector=resultslist{9,count};
-                            if numel(typevector)==0 %happens if user smoothes sth without NaN and without validation
-                                typevector=resultslist{5,count};
-                            end
-                        else
-                            u=resultslist{7,count};
-                            if size(u,1)>1
-                                v=resultslist{8,count};
-                                typevector=resultslist{9,count};
-                            else %filter was applied for other frames but not for this one
-                                u=resultslist{3,count};
-                                v=resultslist{4,count};
-                                typevector=resultslist{5,count};
-                            end
-                        end
-                    else
-                        u=resultslist{3,count};
-                        v=resultslist{4,count};
-                        typevector=resultslist{5,count};
-                    end
-                    
-                    %if count==mincount %besser: wenn orgsize nicht existiert
-                    if exist('originalsizex','var')==0
-                        originalsizex=size(u,2);
-                        originalsizey=size(u,1);
-                    else
-                        
-                        if size(u,2)~=originalsizex || size(u,1)~=originalsizey
-                            sizeerror=1;
-                        end
-                    end
-                    if ismean(count,1)==0 && sizeerror==0
-                        umittel(:,:,count)=u;
-                        vmittel(:,:,count)=v;
-                    end
-                    if sizeerror==0
-                        typevectormittel(:,:,count)=typevector;
-                    end
-                end
-                
-            end
-            if sizeerror==0
-                for i=1:size(strnum,2)
-                    if size(resultslist,2)>=strnum(i) %dann ok
-                        x_tmp=resultslist{1,strnum(i)};
-                        if isempty(x_tmp)==1 %dann nicht ok
-                            msgbox('Your selected range includes non-analyzed frames.','Error','error','modal')
-                            selectionok=0;
-                            break
-                        end
-                    else
-                        msgbox('Your selected range includes non-analyzed frames.','Error','error','modal')
-                        selectionok=0;
-                        break
-                    end
-                    if size(ismean,1)>=strnum(i)
-                        if ismean(strnum(i))==1
-                            msgbox('You must not include frames in your selection that already consist of mean vectors.','Error','error','modal')
-                            selectionok=0;
-                            break
-                        end
-                    else
-                        msgbox('Your selected range exceeds the amount of analyzed frames.','Error','error','modal')
-                        selectionok=0;
-                        break
-                    end
-                end
-                
-                if selectionok==1
-                    maskiererx=retr('maskiererx');
-                    maskierery=retr('maskierery');
-                    if isempty(maskiererx)==1
-                        maskiererx=cell(1,1);
-                        maskierery=cell(1,1);
-                    end
-                    maskiererx_temp=cell(1,1);
-                    maskierery_temp=cell(1,1);
-                    maskiererx_temp=maskiererx(:,1:2:end);
-                    maskierery_temp=maskierery(:,1:2:end);
-                    %kopieren in temp "originalmaske", dann alles löschen was nicht
-                    %ausgewählt. (auf [] setzen)
-                    % z.B.: maskiererxselected=maskiererx_temp(1,[1:6])
-                    try
-                        eval(['maskiererxselected=maskiererx_temp(:,[' str ']);']);
-                        eval(['maskiereryselected=maskierery_temp(:,[' str ']);']);
-                    catch
-                        maskiererxselected=cell(1,1);
-                        maskiereryselected=cell(1,1);
-                    end
-                    newmaskx=cell(0,0);
-                    for i=1:size(maskiererxselected,1)
-                        for j=1:size(maskiererxselected,2)
-                            if numel(maskiererxselected{i,j})~=0
-                                newmaskx{size(newmaskx,1)+1,1}=maskiererxselected{i,j};
-                            end
-                        end
-                    end
-                    for i=size(newmaskx,1):-1:2
-                        if numel(newmaskx{i,1})==numel(newmaskx{i-1,1})
-                            A=newmaskx{i-1,1};
-                            B=newmaskx{i,1};
-                            if mean(A-B)==0
-                                newmaskx{i,1}={};
-                            end
-                        end
-                    end
-                    
-                    try
-                        newmaskx(cellfun(@isempty,newmaskx))=[];
-                    catch
-                        disp('Problems with old Matlab version... Please update Matlab or unexpected things might happen...')
-                    end
-                    newmasky=cell(0,0);
-                    for i=1:size(maskiereryselected,1)
-                        for j=1:size(maskiereryselected,2)
-                            if numel(maskiereryselected{i,j})~=0
-                                newmasky{size(newmasky,1)+1,1}=maskiereryselected{i,j};
-                            end
-                        end
-                    end
-                    for i=size(newmasky,1):-1:2
-                        if numel(newmasky{i,1})==numel(newmasky{i-1,1})
-                            A=newmasky{i-1,1};
-                            B=newmasky{i,1};
-                            if mean(A-B)==0
-                                newmasky{i,1}={};
-                            end
-                        end
-                    end
-                    try
-                        newmasky(cellfun(@isempty,newmasky))=[];
-                    catch
-                        disp('Problems with old Matlab version... Please update Matlab or unexpected things might happen...')
-                    end
-                    for i=1:size(newmaskx,1)
-                        %ans Ende der originalmaske wird eine zusammengesetzte maske
-                        %aus allen gewählten frames gehängt.
-                        maskiererx{i,size(filepath,1)+1}=newmaskx{i,1};
-                        maskiererx{i,size(filepath,1)+2}=newmaskx{i,1};
-                        maskierery{i,size(filepath,1)+1}=newmasky{i,1};
-                        maskierery{i,size(filepath,1)+2}=newmasky{i,1};
-                    end
-                    put('maskiererx',maskiererx);
-                    put('maskierery',maskierery);
-                    typevectoralle=ones(size(typevector));
-                    
-                    
-                    
-                    %Hier erst neue matrix erstellen mit ausgewählten frames
-                    %typevectoralle ist ausgabe für gui
-                    %typevectormean ist der mittelwert aller types
-                    %typevectormittel ist der stapel aus allen typevectors
-                    
-                    eval(['typevectormittelselected=typevectormittel(:,:,[' str ']);']);
-                    
-                    typevectormean=mean(typevectormittelselected,3); %#ok<NODEF>
-                    %for i=1:size(typevectormittelselected,3)
-                    for i=1:size(typevectormittelselected,1)
-                        for j=1:size(typevectormittelselected,2)
-                            if mean(typevectormittelselected(i,j,:))==0 %#ok<*IDISVAR>
-                                typevectoralle(i,j)=0;
-                            end
-                        end
-                    end
-                    %da wo ALLE null sidn auf null setzen.
-                    %typevectoralle(typevectormittelselected(:,:,i)==0)=0; %maskierte vektoren sollen im Mean maskiert sein
-                    % end
-                    
-                    typevectoralle(typevectormean>1.5)=2; %if more than 50% of vectors are interpolated, then mark vector in mean as interpolated too.
-                    resultslist{5,size(filepath,1)/2+1}=typevectoralle;
-                    resultslist{1,size(filepath,1)/2+1}=x;
-                    resultslist{2,size(filepath,1)/2+1}=y;
-                    
-                    %hier neue matrix mit ausgewählten frames!
-                    eval(['umittelselected=umittel(:,:,[' str ']);']);
-                    eval(['vmittelselected=vmittel(:,:,[' str ']);']);
-                    if type==2
-                        %standard deviation
-                        resultslist{3,size(filepath,1)/2+1}=nanstd(umittelselected,3);
-                        resultslist{4,size(filepath,1)/2+1}=nanstd(vmittelselected,3);
-                    end                   
-                    if type==1
-                        resultslist{3,size(filepath,1)/2+1}=nanmean(umittelselected,3);
-                        resultslist{4,size(filepath,1)/2+1}=nanmean(vmittelselected,3);
-                    end
-                    
-                    if type==0
-                        try
-                            resultslist{3,size(filepath,1)/2+1}=sum(umittelselected,3,'omitnan');
-                            resultslist{4,size(filepath,1)/2+1}=sum(vmittelselected,3,'omitnan');
-                        catch
-                            umittelselected(isnan(umittelselected))=0;
-                            vmittelselected(isnan(vmittelselected))=0;
-                            resultslist{3,size(filepath,1)/2+1}=sum(umittelselected,3);
-                            resultslist{4,size(filepath,1)/2+1}=sum(vmittelselected,3);
-                        end
-                    end
-                    
-                    filepathselected=filepath(1:2:end);
-                    eval(['filepathselected=filepathselected([' str '],:);']);
-                    filepath{size(filepath,1)+1,1}=filepathselected{1,1};
-                    filepath{size(filepath,1)+1,1}=filepathselected{1,1};
-                    filename=retr('filename');
-                    if type == 2
-                        filename{size(filename,1)+1,1}=['STDEV of frames ' str];
-                        filename{size(filename,1)+1,1}=['STDEV of frames ' str];
-                    end                    
-                    if type == 1
-                        filename{size(filename,1)+1,1}=['MEAN of frames ' str];
-                        filename{size(filename,1)+1,1}=['MEAN of frames ' str];
-                    end
-                    if type == 0
-                        filename{size(filename,1)+1,1}=['SUM of frames ' str];
-                        filename{size(filename,1)+1,1}=['SUM of frames ' str];
-                    end
-                    ismean(size(resultslist,2),1)=1;
-                    put('ismean',ismean);
-                    
-                    put ('resultslist', resultslist);
-                    put ('filepath', filepath);
-                    put ('filename', filename);
-                    put ('typevector', typevector);
-                    sliderrange
-                    try
-                        set (handles.fileselector,'value',get (handles.fileselector,'max'));
-                    catch
-                    end
-                    
-                    sliderdisp
-                end
-            else %user tried to average analyses with different sizes
-                errordlg('All analyses of one session have to be of the same size and have to be analyzed with identical PIV settings.','Averaging / summing not possible...')
-            end
-        end
-    end
+	if size(filepath,1)>0
+		sizeerror=0;
+		typevectormittel=ones(size(resultslist{1,1}));
+		ismean=retr('ismean');
+		if isempty(ismean)==1
+			ismean=zeros(size(resultslist,2),1);
+		end
+		str = strrep(get(handles.selectedFramesMean,'string'),'-',':');
+		endinside=strfind(str, 'end');
+		if isempty(endinside)==0 %#ok<*STREMP>
+			str = strrep(get(handles.selectedFramesMean,'string'),'end',num2str(max(find(ismean==0)))); %#ok<MXFND>
+		end
+		selectionok=1;
+		
+		strnum=str2num(str);
+		if isempty(strnum)==1 || isempty(strfind(str,'.'))==0 || isempty(strfind(str,';'))==0
+			msgbox(['Error in frame selection syntax. Please use the following syntax (examples):' sprintf('\n') '1:3' sprintf('\n') '1,3,7,9' sprintf('\n') '1:3,7,8,9,11:13' ],'Error','error','modal')
+			selectionok=0;
+		end
+		if selectionok==1
+			mincount=(min(strnum));
+			for count=mincount:size(resultslist,2)
+				if size(resultslist,2)>=count && numel(resultslist{1,count})>0
+					x=resultslist{1,count};
+					y=resultslist{2,count};
+					if size(resultslist,1)>6 %filtered exists
+						if size(resultslist,1)>10 && numel(resultslist{10,count}) > 0 %smoothed exists
+							u=resultslist{10,count};
+							v=resultslist{11,count};
+							typevector=resultslist{9,count};
+							if numel(typevector)==0 %happens if user smoothes sth without NaN and without validation
+								typevector=resultslist{5,count};
+							end
+						else
+							u=resultslist{7,count};
+							if size(u,1)>1
+								v=resultslist{8,count};
+								typevector=resultslist{9,count};
+							else %filter was applied for other frames but not for this one
+								u=resultslist{3,count};
+								v=resultslist{4,count};
+								typevector=resultslist{5,count};
+							end
+						end
+					else
+						u=resultslist{3,count};
+						v=resultslist{4,count};
+						typevector=resultslist{5,count};
+					end
+					
+					%if count==mincount %besser: wenn orgsize nicht existiert
+					if exist('originalsizex','var')==0
+						originalsizex=size(u,2);
+						originalsizey=size(u,1);
+					else
+						
+						if size(u,2)~=originalsizex || size(u,1)~=originalsizey
+							sizeerror=1;
+						end
+					end
+					if ismean(count,1)==0 && sizeerror==0
+						umittel(:,:,count)=u;
+						vmittel(:,:,count)=v;
+					end
+					if sizeerror==0
+						typevectormittel(:,:,count)=typevector;
+					end
+				end
+				
+			end
+			if sizeerror==0
+				for i=1:size(strnum,2)
+					if size(resultslist,2)>=strnum(i) %dann ok
+						x_tmp=resultslist{1,strnum(i)};
+						if isempty(x_tmp)==1 %dann nicht ok
+							msgbox('Your selected range includes non-analyzed frames.','Error','error','modal')
+							selectionok=0;
+							break
+						end
+					else
+						msgbox('Your selected range includes non-analyzed frames.','Error','error','modal')
+						selectionok=0;
+						break
+					end
+					if size(ismean,1)>=strnum(i)
+						if ismean(strnum(i))==1
+							msgbox('You must not include frames in your selection that already consist of mean vectors.','Error','error','modal')
+							selectionok=0;
+							break
+						end
+					else
+						msgbox('Your selected range exceeds the amount of analyzed frames.','Error','error','modal')
+						selectionok=0;
+						break
+					end
+				end
+				
+				if selectionok==1
+					maskiererx=retr('maskiererx');
+					maskierery=retr('maskierery');
+					if isempty(maskiererx)==1
+						maskiererx=cell(1,1);
+						maskierery=cell(1,1);
+					end
+					maskiererx_temp=cell(1,1);
+					maskierery_temp=cell(1,1);
+					maskiererx_temp=maskiererx(:,1:2:end);
+					maskierery_temp=maskierery(:,1:2:end);
+					%kopieren in temp "originalmaske", dann alles löschen was nicht
+					%ausgewählt. (auf [] setzen)
+					% z.B.: maskiererxselected=maskiererx_temp(1,[1:6])
+					try
+						eval(['maskiererxselected=maskiererx_temp(:,[' str ']);']);
+						eval(['maskiereryselected=maskierery_temp(:,[' str ']);']);
+					catch
+						maskiererxselected=cell(1,1);
+						maskiereryselected=cell(1,1);
+					end
+					newmaskx=cell(0,0);
+					for i=1:size(maskiererxselected,1)
+						for j=1:size(maskiererxselected,2)
+							if numel(maskiererxselected{i,j})~=0
+								newmaskx{size(newmaskx,1)+1,1}=maskiererxselected{i,j};
+							end
+						end
+					end
+					for i=size(newmaskx,1):-1:2
+						if numel(newmaskx{i,1})==numel(newmaskx{i-1,1})
+							A=newmaskx{i-1,1};
+							B=newmaskx{i,1};
+							if mean(A-B)==0
+								newmaskx{i,1}={};
+							end
+						end
+					end
+					
+					try
+						newmaskx(cellfun(@isempty,newmaskx))=[];
+					catch
+						disp('Problems with old Matlab version... Please update Matlab or unexpected things might happen...')
+					end
+					newmasky=cell(0,0);
+					for i=1:size(maskiereryselected,1)
+						for j=1:size(maskiereryselected,2)
+							if numel(maskiereryselected{i,j})~=0
+								newmasky{size(newmasky,1)+1,1}=maskiereryselected{i,j};
+							end
+						end
+					end
+					for i=size(newmasky,1):-1:2
+						if numel(newmasky{i,1})==numel(newmasky{i-1,1})
+							A=newmasky{i-1,1};
+							B=newmasky{i,1};
+							if mean(A-B)==0
+								newmasky{i,1}={};
+							end
+						end
+					end
+					try
+						newmasky(cellfun(@isempty,newmasky))=[];
+					catch
+						disp('Problems with old Matlab version... Please update Matlab or unexpected things might happen...')
+					end
+					for i=1:size(newmaskx,1)
+						%ans Ende der originalmaske wird eine zusammengesetzte maske
+						%aus allen gewählten frames gehängt.
+						maskiererx{i,size(filepath,1)+1}=newmaskx{i,1};
+						maskiererx{i,size(filepath,1)+2}=newmaskx{i,1};
+						maskierery{i,size(filepath,1)+1}=newmasky{i,1};
+						maskierery{i,size(filepath,1)+2}=newmasky{i,1};
+					end
+					put('maskiererx',maskiererx);
+					put('maskierery',maskierery);
+					typevectoralle=ones(size(typevector));
+					
+					
+					
+					%Hier erst neue matrix erstellen mit ausgewählten frames
+					%typevectoralle ist ausgabe für gui
+					%typevectormean ist der mittelwert aller types
+					%typevectormittel ist der stapel aus allen typevectors
+					
+					eval(['typevectormittelselected=typevectormittel(:,:,[' str ']);']);
+					
+					typevectormean=mean(typevectormittelselected,3); %#ok<NODEF>
+					%for i=1:size(typevectormittelselected,3)
+					for i=1:size(typevectormittelselected,1)
+						for j=1:size(typevectormittelselected,2)
+							if mean(typevectormittelselected(i,j,:))==0 %#ok<*IDISVAR>
+								typevectoralle(i,j)=0;
+							end
+						end
+					end
+					%da wo ALLE null sidn auf null setzen.
+					%typevectoralle(typevectormittelselected(:,:,i)==0)=0; %maskierte vektoren sollen im Mean maskiert sein
+					% end
+					
+					typevectoralle(typevectormean>1.5)=2; %if more than 50% of vectors are interpolated, then mark vector in mean as interpolated too.
+					resultslist{5,size(filepath,1)/2+1}=typevectoralle;
+					resultslist{1,size(filepath,1)/2+1}=x;
+					resultslist{2,size(filepath,1)/2+1}=y;
+					
+					%hier neue matrix mit ausgewählten frames!
+					eval(['umittelselected=umittel(:,:,[' str ']);']);
+					eval(['vmittelselected=vmittel(:,:,[' str ']);']);
+					if type==2
+						%standard deviation
+						resultslist{3,size(filepath,1)/2+1}=nanstd(umittelselected,3);
+						resultslist{4,size(filepath,1)/2+1}=nanstd(vmittelselected,3);
+					end
+					if type==1
+						resultslist{3,size(filepath,1)/2+1}=nanmean(umittelselected,3);
+						resultslist{4,size(filepath,1)/2+1}=nanmean(vmittelselected,3);
+					end
+					
+					if type==0
+						try
+							resultslist{3,size(filepath,1)/2+1}=sum(umittelselected,3,'omitnan');
+							resultslist{4,size(filepath,1)/2+1}=sum(vmittelselected,3,'omitnan');
+						catch
+							umittelselected(isnan(umittelselected))=0;
+							vmittelselected(isnan(vmittelselected))=0;
+							resultslist{3,size(filepath,1)/2+1}=sum(umittelselected,3);
+							resultslist{4,size(filepath,1)/2+1}=sum(vmittelselected,3);
+						end
+					end
+					
+					filepathselected=filepath(1:2:end);
+					eval(['filepathselected=filepathselected([' str '],:);']);
+					filepath{size(filepath,1)+1,1}=filepathselected{1,1};
+					filepath{size(filepath,1)+1,1}=filepathselected{1,1};
+					video_frame_selection=retr('video_frame_selection');
+					video_frame_selection(end+1,1)=video_frame_selection(strnum(end)*2);
+					video_frame_selection(end+1,1)=video_frame_selection(strnum(end)*2);
+					put('video_frame_selection',video_frame_selection);
+					filename=retr('filename');
+					if type == 2
+						filename{size(filename,1)+1,1}=['STDEV of frames ' str];
+						filename{size(filename,1)+1,1}=['STDEV of frames ' str];
+					end
+					if type == 1
+						filename{size(filename,1)+1,1}=['MEAN of frames ' str];
+						filename{size(filename,1)+1,1}=['MEAN of frames ' str];
+					end
+					if type == 0
+						filename{size(filename,1)+1,1}=['SUM of frames ' str];
+						filename{size(filename,1)+1,1}=['SUM of frames ' str];
+					end
+					ismean(size(resultslist,2),1)=1;
+					put('ismean',ismean);
+					
+					put ('resultslist', resultslist);
+					put ('filepath', filepath);
+					put ('filename', filename);
+					put ('typevector', typevector);
+					sliderrange
+					try
+						set (handles.fileselector,'value',get (handles.fileselector,'max'));
+					catch
+					end
+					
+					sliderdisp
+				end
+			else %user tried to average analyses with different sizes
+				errordlg('All analyses of one session have to be of the same size and have to be analyzed with identical PIV settings.','Averaging / summing not possible...')
+			end
+		end
+	end
 end
 
 function part_am_Callback(hObject, ~, ~)
@@ -8254,59 +8415,59 @@ check_comma(hObject)
 function avifilesave_Callback(hObject, ~, ~)
 handles=gethand;
 if get(hObject,'Value')==1
-    set (handles.jpgfilesave, 'value', 0);
-    set (handles.bmpfilesave, 'value', 0);
-    set (handles.epsfilesave, 'value', 0);
-    set (handles.pdffilesave, 'value', 0);
-    set(handles.usecompr,'enable','on');
-    set(handles.fps_setting,'enable','on');
+	set (handles.jpgfilesave, 'value', 0);
+	set (handles.bmpfilesave, 'value', 0);
+	set (handles.epsfilesave, 'value', 0);
+	set (handles.pdffilesave, 'value', 0);
+	set(handles.usecompr,'enable','on');
+	set(handles.fps_setting,'enable','on');
 else
-    set (handles.avifilesave, 'value', 1);
+	set (handles.avifilesave, 'value', 1);
 end
 
 function jpgfilesave_Callback(hObject, ~, ~)
 handles=gethand;
 if get(hObject,'Value')==1
-    set (handles.avifilesave, 'value', 0);
-    set (handles.bmpfilesave, 'value', 0);
-    set (handles.epsfilesave, 'value', 0);
-    set (handles.pdffilesave, 'value', 0);
-    set(handles.usecompr,'value',0);
-    set(handles.usecompr,'enable','off');
-    set(handles.fps_setting,'enable','off');
-    
+	set (handles.avifilesave, 'value', 0);
+	set (handles.bmpfilesave, 'value', 0);
+	set (handles.epsfilesave, 'value', 0);
+	set (handles.pdffilesave, 'value', 0);
+	set(handles.usecompr,'value',0);
+	set(handles.usecompr,'enable','off');
+	set(handles.fps_setting,'enable','off');
+	
 else
-    set (handles.jpgfilesave, 'value', 1);
+	set (handles.jpgfilesave, 'value', 1);
 end
 
 function bmpfilesave_Callback(hObject, ~, ~)
 handles=gethand;
 if get(hObject,'Value')==1
-    set (handles.avifilesave, 'value', 0);
-    set (handles.jpgfilesave, 'value', 0);
-    set (handles.epsfilesave, 'value', 0);
-    set (handles.pdffilesave, 'value', 0);
-    set(handles.usecompr,'value',0);
-    set(handles.usecompr,'enable','off');
-    set(handles.fps_setting,'enable','off');
-    
+	set (handles.avifilesave, 'value', 0);
+	set (handles.jpgfilesave, 'value', 0);
+	set (handles.epsfilesave, 'value', 0);
+	set (handles.pdffilesave, 'value', 0);
+	set(handles.usecompr,'value',0);
+	set(handles.usecompr,'enable','off');
+	set(handles.fps_setting,'enable','off');
+	
 else
-    set (handles.bmpfilesave, 'value', 1);
+	set (handles.bmpfilesave, 'value', 1);
 end
 
 function pdffilesave_Callback(hObject, ~, ~)
 handles=gethand;
 if get(hObject,'Value')==1
-    set (handles.avifilesave, 'value', 0);
-    set (handles.jpgfilesave, 'value', 0);
-    set (handles.epsfilesave, 'value', 0);
-    set (handles.bmpfilesave, 'value', 0);
-    set(handles.usecompr,'value',0);
-    set(handles.usecompr,'enable','off');
-    set(handles.fps_setting,'enable','off');
-    
+	set (handles.avifilesave, 'value', 0);
+	set (handles.jpgfilesave, 'value', 0);
+	set (handles.epsfilesave, 'value', 0);
+	set (handles.bmpfilesave, 'value', 0);
+	set(handles.usecompr,'value',0);
+	set(handles.usecompr,'enable','off');
+	set(handles.fps_setting,'enable','off');
+	
 else
-    set (handles.pdffilesave, 'value', 1);
+	set (handles.pdffilesave, 'value', 1);
 end
 
 function drawstreamlines_Callback(~, ~, ~)
@@ -8316,81 +8477,81 @@ selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
 resultslist=retr('resultslist');
 currentframe=floor(get(handles.fileselector, 'value'));
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-    toolsavailable(0);
-    x=resultslist{1,currentframe};
-    y=resultslist{2,currentframe};
-    typevector=resultslist{5,currentframe};
-    if size(resultslist,1)>6 %filtered exists
-        if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-            u=resultslist{10,currentframe};
-            v=resultslist{11,currentframe};
-            typevector=resultslist{9,currentframe}; %von smoothed
-        else
-            u=resultslist{7,currentframe};
-            if size(u,1)>1
-                v=resultslist{8,currentframe};
-                typevector=resultslist{9,currentframe}; %von smoothed
-            else
-                u=resultslist{3,currentframe};
-                v=resultslist{4,currentframe};
-                typevector=resultslist{5,currentframe};
-            end
-        end
-    else
-        u=resultslist{3,currentframe};
-        v=resultslist{4,currentframe};
-    end
-    ismean=retr('ismean');
-    if    numel(ismean)>0
-        if ismean(currentframe)==1 %if current frame is a mean frame, typevector is stored at pos 5
-            typevector=resultslist{5,currentframe};
-        end
-    end
-    caluv=retr('caluv');
-    u=u*caluv-retr('subtr_u');
-    v=v*caluv-retr('subtr_v');
-    u(typevector==0)=nan;
-    v(typevector==0)=nan;
-    calxy=retr('calxy');
-    button=1;
-    streamlinesX=retr('streamlinesX');
-    streamlinesY=  retr('streamlinesY');
-    if get(handles.holdstream,'value')==1
-        if numel(streamlinesX)>0
-            i=size(streamlinesX,2)+1;
-            xposition=streamlinesX;
-            yposition=streamlinesY;
-        else
-            i=1;
-        end
-    else
-        i=1;
-        put('streamlinesX',[]);
-        put('streamlinesY',[]);
-        xposition=[];
-        yposition=[];
-        delete(findobj('tag','streamline'));
-    end
-    while button == 1
-        [rawx,rawy,button] = ginput(1);
-        if button~=1
-            break
-        end
-        xposition(i)=rawx;
-        yposition(i)=rawy;
-        h=streamline(mmstream2(x,y,u,v,xposition(i),yposition(i),'on'));
-        set (h,'tag','streamline');
-        i=i+1;
-    end
-    delete(findobj('tag','streamline'));
-    if exist('xposition','var')==1
-        h=streamline(mmstream2(x,y,u,v,xposition,yposition,'on'));
-        set (h,'tag','streamline');
-        contents = get(handles.streamlcolor,'String');
-        set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')})
-        put('streamlinesX',xposition);
-        put('streamlinesY',yposition);
-    end
+	toolsavailable(0);
+	x=resultslist{1,currentframe};
+	y=resultslist{2,currentframe};
+	typevector=resultslist{5,currentframe};
+	if size(resultslist,1)>6 %filtered exists
+		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+			u=resultslist{10,currentframe};
+			v=resultslist{11,currentframe};
+			typevector=resultslist{9,currentframe}; %von smoothed
+		else
+			u=resultslist{7,currentframe};
+			if size(u,1)>1
+				v=resultslist{8,currentframe};
+				typevector=resultslist{9,currentframe}; %von smoothed
+			else
+				u=resultslist{3,currentframe};
+				v=resultslist{4,currentframe};
+				typevector=resultslist{5,currentframe};
+			end
+		end
+	else
+		u=resultslist{3,currentframe};
+		v=resultslist{4,currentframe};
+	end
+	ismean=retr('ismean');
+	if    numel(ismean)>0
+		if ismean(currentframe)==1 %if current frame is a mean frame, typevector is stored at pos 5
+			typevector=resultslist{5,currentframe};
+		end
+	end
+	caluv=retr('caluv');
+	u=u*caluv-retr('subtr_u');
+	v=v*caluv-retr('subtr_v');
+	u(typevector==0)=nan;
+	v(typevector==0)=nan;
+	calxy=retr('calxy');
+	button=1;
+	streamlinesX=retr('streamlinesX');
+	streamlinesY=  retr('streamlinesY');
+	if get(handles.holdstream,'value')==1
+		if numel(streamlinesX)>0
+			i=size(streamlinesX,2)+1;
+			xposition=streamlinesX;
+			yposition=streamlinesY;
+		else
+			i=1;
+		end
+	else
+		i=1;
+		put('streamlinesX',[]);
+		put('streamlinesY',[]);
+		xposition=[];
+		yposition=[];
+		delete(findobj('tag','streamline'));
+	end
+	while button == 1
+		[rawx,rawy,button] = ginput(1);
+		if button~=1
+			break
+		end
+		xposition(i)=rawx;
+		yposition(i)=rawy;
+		h=streamline(mmstream2(x,y,u,v,xposition(i),yposition(i),'on'));
+		set (h,'tag','streamline');
+		i=i+1;
+	end
+	delete(findobj('tag','streamline'));
+	if exist('xposition','var')==1
+		h=streamline(mmstream2(x,y,u,v,xposition,yposition,'on'));
+		set (h,'tag','streamline');
+		contents = get(handles.streamlcolor,'String');
+		set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')})
+		put('streamlinesX',xposition);
+		put('streamlinesY',yposition);
+	end
 end
 toolsavailable(1);
 
@@ -8406,82 +8567,82 @@ selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
 resultslist=retr('resultslist');
 currentframe=floor(get(handles.fileselector, 'value'));
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-    toolsavailable(0);
-    x=resultslist{1,currentframe};
-    y=resultslist{2,currentframe};
-    typevector=resultslist{5,currentframe};
-    if size(resultslist,1)>6 %filtered exists
-        if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-            u=resultslist{10,currentframe};
-            v=resultslist{11,currentframe};
-            typevector=resultslist{9,currentframe}; %von smoothed
-        else
-            u=resultslist{7,currentframe};
-            if size(u,1)>1
-                v=resultslist{8,currentframe};
-                typevector=resultslist{9,currentframe}; %von smoothed
-            else
-                u=resultslist{3,currentframe};
-                v=resultslist{4,currentframe};
-                typevector=resultslist{5,currentframe};
-            end
-        end
-    else
-        u=resultslist{3,currentframe};
-        v=resultslist{4,currentframe};
-    end
-    ismean=retr('ismean');
-    if    numel(ismean)>0
-        if ismean(currentframe)==1 %if current frame is a mean frame, typevector is stored at pos 5
-            typevector=resultslist{5,currentframe};
-        end
-    end
-    caluv=retr('caluv');
-    u=u*caluv-retr('subtr_u');
-    v=v*caluv-retr('subtr_v');
-    u(typevector==0)=nan;
-    v(typevector==0)=nan;
-    calxy=retr('calxy');
-    button=1;
-    streamlinesX=retr('streamlinesX');
-    streamlinesY=  retr('streamlinesY');
-    if get(handles.holdstream,'value')==1
-        if numel(streamlinesX)>0
-            i=size(streamlinesX,2)+1;
-            xposition=streamlinesX;
-            yposition=streamlinesY;
-        else
-            i=1;
-        end
-    else
-        i=1;
-        put('streamlinesX',[]);
-        put('streamlinesY',[]);
-        xposition=[];
-        yposition=[];
-        delete(findobj('tag','streamline'));
-    end
-    [rawx,rawy,~] = ginput(1);
-    hold on; scatter(rawx,rawy,'y*','tag','streammarker');hold off;
-    [rawx(2),rawy(2),~] = ginput(1);
-    delete(findobj('tag','streammarker'))
-    rawx=linspace(rawx(1),rawx(2),str2num(get(handles.streamlamount,'string')));
-    rawy=linspace(rawy(1),rawy(2),str2num(get(handles.streamlamount,'string')));
-    
-    xposition(i:i+str2num(get(handles.streamlamount,'string'))-1)=rawx;
-    yposition(i:i+str2num(get(handles.streamlamount,'string'))-1)=rawy;
-    h=streamline(mmstream2(x,y,u,v,xposition(i),yposition(i),'on'));
-    set (h,'tag','streamline');
-    i=i+1;
+	toolsavailable(0);
+	x=resultslist{1,currentframe};
+	y=resultslist{2,currentframe};
+	typevector=resultslist{5,currentframe};
+	if size(resultslist,1)>6 %filtered exists
+		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+			u=resultslist{10,currentframe};
+			v=resultslist{11,currentframe};
+			typevector=resultslist{9,currentframe}; %von smoothed
+		else
+			u=resultslist{7,currentframe};
+			if size(u,1)>1
+				v=resultslist{8,currentframe};
+				typevector=resultslist{9,currentframe}; %von smoothed
+			else
+				u=resultslist{3,currentframe};
+				v=resultslist{4,currentframe};
+				typevector=resultslist{5,currentframe};
+			end
+		end
+	else
+		u=resultslist{3,currentframe};
+		v=resultslist{4,currentframe};
+	end
+	ismean=retr('ismean');
+	if    numel(ismean)>0
+		if ismean(currentframe)==1 %if current frame is a mean frame, typevector is stored at pos 5
+			typevector=resultslist{5,currentframe};
+		end
+	end
+	caluv=retr('caluv');
+	u=u*caluv-retr('subtr_u');
+	v=v*caluv-retr('subtr_v');
+	u(typevector==0)=nan;
+	v(typevector==0)=nan;
+	calxy=retr('calxy');
+	button=1;
+	streamlinesX=retr('streamlinesX');
+	streamlinesY=  retr('streamlinesY');
+	if get(handles.holdstream,'value')==1
+		if numel(streamlinesX)>0
+			i=size(streamlinesX,2)+1;
+			xposition=streamlinesX;
+			yposition=streamlinesY;
+		else
+			i=1;
+		end
+	else
+		i=1;
+		put('streamlinesX',[]);
+		put('streamlinesY',[]);
+		xposition=[];
+		yposition=[];
+		delete(findobj('tag','streamline'));
+	end
+	[rawx,rawy,~] = ginput(1);
+	hold on; scatter(rawx,rawy,'y*','tag','streammarker');hold off;
+	[rawx(2),rawy(2),~] = ginput(1);
+	delete(findobj('tag','streammarker'))
+	rawx=linspace(rawx(1),rawx(2),str2num(get(handles.streamlamount,'string')));
+	rawy=linspace(rawy(1),rawy(2),str2num(get(handles.streamlamount,'string')));
+	
+	xposition(i:i+str2num(get(handles.streamlamount,'string'))-1)=rawx;
+	yposition(i:i+str2num(get(handles.streamlamount,'string'))-1)=rawy;
+	h=streamline(mmstream2(x,y,u,v,xposition(i),yposition(i),'on'));
+	set (h,'tag','streamline');
+	i=i+1;
 end
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-    delete(findobj('tag','streamline'));
-    h=streamline(mmstream2(x,y,u,v,xposition,yposition,'on'));
-    contents = get(handles.streamlcolor,'String');
-    set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')});
-    set (h,'tag','streamline');
-    put('streamlinesX',xposition);
-    put('streamlinesY',yposition);
+	delete(findobj('tag','streamline'));
+	h=streamline(mmstream2(x,y,u,v,xposition,yposition,'on'));
+	contents = get(handles.streamlcolor,'String');
+	set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')});
+	set (h,'tag','streamline');
+	put('streamlinesX',xposition);
+	put('streamlinesY',yposition);
 end
 toolsavailable(1);
 
@@ -8494,33 +8655,33 @@ button=1;
 manmarkersX=retr('manmarkersX');
 manmarkersY=retr('manmarkersY');
 if get(handles.holdmarkers,'value')==1
-    
-    if numel(manmarkersX)>0
-        i=size(manmarkersX,2)+1;
-        xposition=manmarkersX;
-        yposition=manmarkersY;
-    else
-        i=1;
-    end
+	
+	if numel(manmarkersX)>0
+		i=size(manmarkersX,2)+1;
+		xposition=manmarkersX;
+		yposition=manmarkersY;
+	else
+		i=1;
+	end
 else
-    i=1;
-    put('manmarkersX',[]);
-    put('manmarkersY',[]);
-    xposition=[];
-    yposition=[];
-    delete(findobj('tag','manualmarker'));
+	i=1;
+	put('manmarkersX',[]);
+	put('manmarkersY',[]);
+	xposition=[];
+	yposition=[];
+	delete(findobj('tag','manualmarker'));
 end
 hold on;
 toolsavailable(0)
 while button == 1
-    [rawx,rawy,button] = ginput(1);
-    if button~=1
-        break
-    end
-    xposition(i)=rawx;
-    yposition(i)=rawy;
-    plot(xposition(i),yposition(i), 'r*','Color', [0.55,0.75,0.9], 'tag', 'manualmarker');
-    i=i+1;
+	[rawx,rawy,button] = ginput(1);
+	if button~=1
+		break
+	end
+	xposition(i)=rawx;
+	yposition(i)=rawy;
+	plot(xposition(i),yposition(i), 'r*','Color', [0.55,0.75,0.9], 'tag', 'manualmarker');
+	i=i+1;
 end
 toolsavailable(1)
 delete(findobj('tag','manualmarker'));
@@ -8541,13 +8702,13 @@ sliderdisp;
 function checkbox26_Callback(hObject, ~, ~)
 handles=gethand;
 if get(hObject,'Value') == 0
-    set(handles.edit50,'enable','off')
-    set(handles.edit51,'enable','off')
-    set(handles.edit52,'enable','off')
-    set(handles.checkbox27,'value',0)
-    set(handles.checkbox28,'value',0)
+	set(handles.edit50,'enable','off')
+	set(handles.edit51,'enable','off')
+	set(handles.edit52,'enable','off')
+	set(handles.checkbox27,'value',0)
+	set(handles.checkbox28,'value',0)
 else
-    set(handles.edit50,'enable','on')
+	set(handles.edit50,'enable','on')
 end
 dispinterrog
 
@@ -8572,20 +8733,20 @@ dispinterrog
 function extractareaall_Callback(hObject, ~, ~)
 handles=gethand;
 if get(hObject,'Value')==1
-    set(handles.savearea,'enable','off');
-    set(handles.savearea,'value',1);
+	set(handles.savearea,'enable','off');
+	set(handles.savearea,'value',1);
 else
-    set(handles.savearea,'enable','on');
+	set(handles.savearea,'enable','on');
 end
 
 function radiusincrease_Callback(hObject, ~, ~)
 check_comma(hObject)
 val=get(hObject,'string');
 if str2double(val)>500
-    set(hObject,'string',500);
+	set(hObject,'string',500);
 end
 if str2double(val)<0 || isempty(val)==1 || isnan(str2double(val))==1
-    set(hObject,'string',0);
+	set(hObject,'string',0);
 end
 
 function licres_Callback (~,~,~)
@@ -8597,15 +8758,15 @@ set(handles.LIChint2,'String',value)
 function derivdropdown(hObject, ~, ~)
 handles=gethand;
 if get(hObject,'value')==10
-    set(handles.LIChint1,'visible','on');
-    set(handles.LIChint2,'visible','on');
-    %set(handles.LIChint3,'visible','on');
-    set(handles.licres,'visible','on');
+	set(handles.LIChint1,'visible','on');
+	set(handles.LIChint2,'visible','on');
+	%set(handles.LIChint3,'visible','on');
+	set(handles.licres,'visible','on');
 else
-    set(handles.LIChint1,'visible','off');
-    set(handles.LIChint2,'visible','off');
-    %set(handles.LIChint3,'visible','off');
-    set(handles.licres,'visible','off');
+	set(handles.LIChint1,'visible','off');
+	set(handles.LIChint2,'visible','off');
+	%set(handles.LIChint3,'visible','off');
+	set(handles.licres,'visible','off');
 end
 
 function derivchoice_Callback(hObject, ~, ~)
@@ -8620,16 +8781,16 @@ derivdropdown(hObject);
 function epsfilesave_Callback(hObject, ~, ~)
 handles=gethand;
 if get(hObject,'Value')==1
-    set (handles.avifilesave, 'value', 0);
-    set (handles.jpgfilesave, 'value', 0);
-    set (handles.bmpfilesave, 'value', 0);
-    set (handles.pdffilesave, 'value', 0);
-    set(handles.usecompr,'value',0);
-    set(handles.usecompr,'enable','off');
-    set(handles.fps_setting,'enable','off');
-    
+	set (handles.avifilesave, 'value', 0);
+	set (handles.jpgfilesave, 'value', 0);
+	set (handles.bmpfilesave, 'value', 0);
+	set (handles.pdffilesave, 'value', 0);
+	set(handles.usecompr,'value',0);
+	set(handles.usecompr,'enable','off');
+	set(handles.fps_setting,'enable','off');
+	
 else
-    set (handles.epsfilesave, 'value', 1);
+	set (handles.epsfilesave, 'value', 1);
 end
 
 function zoomcontext(~,~)
@@ -8648,35 +8809,35 @@ function zoomon_Callback(hObject, ~, ~)
 hgui=getappdata(0,'hgui');
 handles=gethand;
 if get(hObject,'Value')==1
-    hCMZ = uicontextmenu;
-    hZMenu = uimenu('Parent',hCMZ,'Label','Reset Zoom / Pan','Callback',@zoomcontext);
-    hZoom=zoom(gcf);
-    hZoom.UIContextMenu = hCMZ;
-    zoom(gca,'on')
-    set(handles.panon,'Value',0);
+	hCMZ = uicontextmenu;
+	hZMenu = uimenu('Parent',hCMZ,'Label','Reset Zoom / Pan','Callback',@zoomcontext);
+	hZoom=zoom(gcf);
+	hZoom.UIContextMenu = hCMZ;
+	zoom(gca,'on')
+	set(handles.panon,'Value',0);
 else
-    zoom(gca,'off')
-    put('xzoomlimit', get (gca, 'xlim'));
-    put('yzoomlimit', get (gca, 'ylim'));
-    
+	zoom(gca,'off')
+	put('xzoomlimit', get (gca, 'xlim'));
+	put('yzoomlimit', get (gca, 'ylim'));
+	
 end
 
 function panon_Callback(hObject, ~, ~)
 
 handles=gethand;
 if get(hObject,'Value')==1
-    
-    hCMP = uicontextmenu;
-    hPMenu = uimenu('Parent',hCMP,'Label','Reset Pan / Zoom','Callback',@zoomcontext);
-    hPan=pan(gcf);
-    hPan.UIContextMenu = hCMP;
-    pan(gca,'on')
-    set(handles.zoomon,'Value',0);
+	
+	hCMP = uicontextmenu;
+	hPMenu = uimenu('Parent',hCMP,'Label','Reset Pan / Zoom','Callback',@zoomcontext);
+	hPan=pan(gcf);
+	hPan.UIContextMenu = hCMP;
+	pan(gca,'on')
+	set(handles.zoomon,'Value',0);
 else
-    pan(gca,'off')
-    put('xzoomlimit', get (gca, 'xlim'));
-    put('yzoomlimit', get (gca, 'ylim'));
-    
+	pan(gca,'off')
+	put('xzoomlimit', get (gca, 'xlim'));
+	put('yzoomlimit', get (gca, 'ylim'));
+	
 end
 
 function paraview_current_Callback(~, ~, ~)
@@ -8684,11 +8845,11 @@ handles=gethand;
 resultslist=retr('resultslist');
 currentframe=floor(get(handles.fileselector, 'value'));
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-    [FileName,PathName] = uiputfile('*.vtk','Save Paraview binary vtk as...','PIVlab.vtk'); %framenummer in dateiname
-    if isequal(FileName,0) | isequal(PathName,0)
-    else
-        file_save(currentframe,FileName,PathName,3);
-    end
+	[FileName,PathName] = uiputfile('*.vtk','Save Paraview binary vtk as...','PIVlab.vtk'); %framenummer in dateiname
+	if isequal(FileName,0) | isequal(PathName,0)
+	else
+		file_save(currentframe,FileName,PathName,3);
+	end
 end
 
 function paraview_all_Callback(~, ~, ~)
@@ -8698,72 +8859,72 @@ resultslist=retr('resultslist');
 [FileName,PathName] = uiputfile('*.vtk','Save Paraview binary vtk as...','PIVlab.vtk'); %framenummer in dateiname
 if isequal(FileName,0) | isequal(PathName,0)
 else
-    toolsavailable(0)
-    for i=1:floor(size(filepath,1)/2)
-        %if analysis exists
-        if size(resultslist,2)>=i && numel(resultslist{1,i})>0
-            [Dir, Name, Ext] = fileparts(FileName);
-            FileName_nr=[Name sprintf('_%.4d', i) Ext];
-            file_save(i,FileName_nr,PathName,3)
-            set (handles.paraview_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
-            drawnow;
-        end
-    end
-    toolsavailable(1)
-    set (handles.paraview_all, 'string', 'Save all frames');
+	toolsavailable(0)
+	for i=1:floor(size(filepath,1)/2)
+		%if analysis exists
+		if size(resultslist,2)>=i && numel(resultslist{1,i})>0
+			[Dir, Name, Ext] = fileparts(FileName);
+			FileName_nr=[Name sprintf('_%.4d', i) Ext];
+			file_save(i,FileName_nr,PathName,3)
+			set (handles.paraview_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
+			drawnow;
+		end
+	end
+	toolsavailable(1)
+	set (handles.paraview_all, 'string', 'Save all frames');
 end
 
 function Website_Callback(~, ~, ~)
 try
-    web('http://pivlab.blogspot.com','-browser')
+	web('http://pivlab.blogspot.com','-browser')
 catch
-    %why does 'web' not work in v 7.1.0.246 ...?
-    disp('Ooops, MATLAB couldn''t open the website.')
-    disp('You''ll have to open the website manually:')
-    disp('http://PIVlab.blogspot.de')
+	%why does 'web' not work in v 7.1.0.246 ...?
+	disp('Ooops, MATLAB couldn''t open the website.')
+	disp('You''ll have to open the website manually:')
+	disp('http://PIVlab.blogspot.de')
 end
 
 function Man_ROI_Callback
 handles=gethand;
 try
-    x=round(str2num(get(handles.ROI_Man_x,'String')));
-    y=round(str2num(get(handles.ROI_Man_y,'String')));
-    w=round(str2num(get(handles.ROI_Man_w,'String')));
-    h=round(str2num(get(handles.ROI_Man_h,'String')));
+	x=round(str2num(get(handles.ROI_Man_x,'String')));
+	y=round(str2num(get(handles.ROI_Man_y,'String')));
+	w=round(str2num(get(handles.ROI_Man_w,'String')));
+	h=round(str2num(get(handles.ROI_Man_h,'String')));
 catch
 end
 if isempty(x)== 0 && isempty(y)== 0 && isempty(w)== 0 && isempty(h)== 0 && isnumeric(x) && isnumeric(y) && isnumeric(w) && isnumeric(h)
-    roirect(1)=x;
-    roirect(2)=y;
-    roirect(3)=w;
-    roirect(4)=h;
-    
-    toggler=retr('toggler');
-    selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-    filepath=retr('filepath');
-    [~,~,ext] = fileparts(filepath{selected});
-    if strcmp(ext,'.b16')
-        imagesize(1)=size(f_readB16(filepath{selected}),1);
-        imagesize(2)=size(f_readB16(filepath{selected}),2);
-    else
-        imagesize(1)=size(imread(filepath{selected}),1);
-        imagesize(2)=size(imread(filepath{selected}),2);
-    end
-    if roirect(1)<1
-        roirect(1)=1;
-    end
-    if roirect(2)<1
-        roirect(2)=1;
-    end
-    if roirect(3)>imagesize(2)-roirect(1)
-        roirect(3)=imagesize(2)-roirect(1);
-    end
-    if roirect(4)>imagesize(1)-roirect(2)
-        roirect(4)=imagesize(1)-roirect(2);
-    end
-    put ('roirect',roirect);
-    dispROI
-    set(handles.roi_hint, 'String', 'ROI active' , 'backgroundcolor', [0.5 1 0.5]);
+	roirect(1)=x;
+	roirect(2)=y;
+	roirect(3)=w;
+	roirect(4)=h;
+	
+	toggler=retr('toggler');
+	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
+	filepath=retr('filepath');
+	[~,~,ext] = fileparts(filepath{selected});
+	if strcmp(ext,'.b16')
+		imagesize(1)=size(f_readB16(filepath{selected}),1);
+		imagesize(2)=size(f_readB16(filepath{selected}),2);
+	else
+		imagesize(1)=size(imread(filepath{selected}),1);
+		imagesize(2)=size(imread(filepath{selected}),2);
+	end
+	if roirect(1)<1
+		roirect(1)=1;
+	end
+	if roirect(2)<1
+		roirect(2)=1;
+	end
+	if roirect(3)>imagesize(2)-roirect(1)
+		roirect(3)=imagesize(2)-roirect(1);
+	end
+	if roirect(4)>imagesize(1)-roirect(2)
+		roirect(4)=imagesize(1)-roirect(2);
+	end
+	put ('roirect',roirect);
+	dispROI
+	set(handles.roi_hint, 'String', 'ROI active' , 'backgroundcolor', [0.5 1 0.5]);
 end
 
 function ROI_Man_x_Callback(~, ~, ~)
@@ -8786,51 +8947,57 @@ close(gcf)
 
 function Forum_Callback(~, ~, ~)
 try
-    web('http://pivlab.blogspot.de/p/forum.html','-browser')
+	web('http://pivlab.blogspot.de/p/forum.html','-browser')
 catch
-    %why does 'web' not work in v 7.1.0.246 ...?
-    disp('Ooops, MATLAB couldn''t open the website.')
-    disp('You''ll have to open the website manually:')
-    disp('http://pivlab.blogspot.de/p/forum.html')
+	%why does 'web' not work in v 7.1.0.246 ...?
+	disp('Ooops, MATLAB couldn''t open the website.')
+	disp('You''ll have to open the website manually:')
+	disp('http://pivlab.blogspot.de/p/forum.html')
 end
 
 function Autolimit_Callback(~, ~, ~)
 handles=gethand;
 if get(handles.Autolimit, 'value') == 1
-    filepath=retr('filepath');
-    if size(filepath,1) >1
-        toggler=retr('toggler');
-        filepath=retr('filepath');
-        selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-        [~,~,ext] = fileparts(filepath{selected});
-        if strcmp(ext,'.b16')
-            img=f_readB16(filepath{selected});
-        else
-            img=imread(filepath{selected});
-        end
-        stretcher = stretchlim(img);
-        set(handles.minintens, 'String',stretcher(1));
-        set(handles.maxintens, 'String',stretcher(2));
-    end
+	filepath=retr('filepath');
+	if size(filepath,1) >1 || retr('video_selection_done') == 1
+		toggler=retr('toggler');
+		filepath=retr('filepath');
+		selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
+		[~,~,ext] = fileparts(filepath{selected});
+		if retr('video_selection_done') == 0
+		if strcmp(ext,'.b16')
+			img=f_readB16(filepath{selected});
+		else
+			img=imread(filepath{selected});
+		end
+		else
+			video_reader_object = retr('video_reader_object');
+			video_frame_selection=retr('video_frame_selection');
+			img = read(video_reader_object,video_frame_selection(selected));
+		end
+		stretcher = stretchlim(img);
+		set(handles.minintens, 'String',stretcher(1));
+		set(handles.maxintens, 'String',stretcher(2));
+	end
 end
 
 
 function maxintens_Callback(hObject, ~, ~)
 if str2num(get(hObject,'String'))>1
-    set(hObject,'String',1)
+	set(hObject,'String',1)
 end
 
 if str2num(get(hObject,'String'))<0
-    set(hObject,'String',1)
+	set(hObject,'String',1)
 end
 
 function minintens_Callback(hObject, ~, ~)
 if str2num(get(hObject,'String'))<0
-    set(hObject,'String',0);
+	set(hObject,'String',0);
 end
 
 if str2num(get(hObject,'String'))>1
-    set(hObject,'String',0);
+	set(hObject,'String',0);
 end
 
 function Start_BG_GUI_Callback(~, ~, ~)
@@ -8841,14 +9008,17 @@ handles=gethand;
 box_select=get(handles.filenamebox,'value');
 set(handles.fileselector, 'value',ceil(box_select/2));
 if mod(box_select,2) == 1 %ungerade
-    toggler=0;
+	toggler=0;
 else
-    toggler=1;
+	toggler=1;
 end
 
 set(handles.togglepair, 'Value',toggler);
 put('toggler',toggler);
-sliderdisp
+try %if user presses buttons too quickly, error occurs.
+	sliderdisp
+catch
+end
 
 
 %set(handles.fileselector, 'value',goto);
@@ -8860,9 +9030,9 @@ sliderdisp
 
 function shortcuts_Callback (~, ~)
 try
-    open('PIVlab_shortcuts.pdf')
+	open('PIVlab_shortcuts.pdf')
 catch
-    msgbox('Could not open "PIVlab_Shortcuts.pdf".')
+	msgbox('Could not open "PIVlab_Shortcuts.pdf".')
 end
 
 function quick1_Callback (~,~)
