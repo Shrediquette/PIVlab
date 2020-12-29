@@ -1925,6 +1925,21 @@ function handles=gethand
 hgui=getappdata(0,'hgui');
 handles=guihandles(hgui);
 
+function currentimage = get_img(selected)
+filepath = retr('filepath');
+if retr('video_selection_done') == 0
+	[~,~,ext] = fileparts(filepath{selected});
+	if strcmp(ext,'.b16')
+		currentimage=f_readB16(filepath{selected});
+	else
+		currentimage=imread(filepath{selected});
+	end
+else
+	video_reader_object = retr('video_reader_object');
+	video_frame_selection=retr('video_frame_selection');
+	currentimage = read(video_reader_object,video_frame_selection(selected));
+end
+
 function sliderdisp %this is the most important function, doing all the displaying
 handles=gethand;
 toggler=retr('toggler');
@@ -1990,18 +2005,7 @@ if size(filepath,1)>0
 		%derived=retr('derived');
 		%1=vectors only
 		if displaywhat==1 %vectors only
-			if retr('video_selection_done') == 0
-				[~,~,ext] = fileparts(filepath{selected});
-				if strcmp(ext,'.b16')
-					currentimage=f_readB16(filepath{selected});
-				else
-					currentimage=imread(filepath{selected});
-				end
-			else
-				video_reader_object = retr('video_reader_object');
-				video_frame_selection=retr('video_frame_selection');
-				currentimage = read(video_reader_object,video_frame_selection(selected));
-			end
+			currentimage=get_img(selected);
 			if get(handles.enhance_images, 'Value') == 0
 				image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
 			else
@@ -2011,7 +2015,6 @@ if size(filepath,1)>0
 					image(imadjust(currentimage,stretchlim(rgb2gray(currentimage))), 'parent',gca, 'cdatamapping', 'scaled');
 				end
 			end
-			
 			colormap('gray');
 			vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
 			%vectorcolor='g';
@@ -2070,18 +2073,7 @@ if size(filepath,1)>0
 					end
 				end
 			else %no deriv available
-				if retr('video_selection_done') == 0
-					[~,~,ext] = fileparts(filepath{selected});
-					if strcmp(ext,'.b16')
-						currentimage=f_readB16(filepath{selected});
-					else
-						currentimage=imread(filepath{selected});
-					end
-				else
-					video_reader_object = retr('video_reader_object');
-					video_frame_selection=retr('video_frame_selection');
-					currentimage = read(video_reader_object,video_frame_selection(selected));
-				end
+currentimage=get_img(selected);
 				if get(handles.enhance_images, 'Value') == 0
 					image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
 				else
@@ -2099,21 +2091,7 @@ if size(filepath,1)>0
 		end
 	else %not in derivatives panel
 		%try
-		if retr('video_selection_done') == 0
-			[~,~,ext] = fileparts(filepath{selected});
-			if strcmp(ext,'.b16')
-				currentimage=f_readB16(filepath{selected});
-			else
-				currentimage=imread(filepath{selected});
-			end
-		else
-			video_reader_object = retr('video_reader_object');
-			video_frame_selection=retr('video_frame_selection');
-			try
-				currentimage = read(video_reader_object,video_frame_selection(selected));
-			catch
-			end
-		end
+currentimage=get_img(selected);
 		
 		%{
             catch
@@ -3272,20 +3250,9 @@ if size(filepath,1) > 1 || retr('video_selection_done') == 1
 	filepath=retr('filepath');
 	roirect = round(getrect(gca));
 	if roirect(1,3)~=0 && roirect(1,4)~=0
-		if retr('video_selection_done') == 0
-			[~,~,ext] = fileparts(filepath{selected});
-			if strcmp(ext,'.b16')
-				imagesize(1)=size(f_readB16(filepath{selected}),1);
-				imagesize(2)=size(f_readB16(filepath{selected}),2);
-			else
-				imagesize(1)=size(imread(filepath{selected}),1);
-				imagesize(2)=size(imread(filepath{selected}),2);
-			end
-		else
-			video_reader_object = retr('video_reader_object');
-			imagesize(1)=size(read(video_reader_object,1),1);
-			imagesize(2)=size(read(video_reader_object,1),2);
-		end
+		currentimage_dummy=get_img(selected);
+		imagesize(1)=size(currentimage_dummy,1);
+		imagesize(2)=size(currentimage_dummy,2);
 		if roirect(1)<1
 			roirect(1)=1;
 		end
@@ -3628,18 +3595,7 @@ if size(filepath,1) >1 || retr('video_selection_done') == 1
 	toggler=retr('toggler');
 	filepath=retr('filepath');
 	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-	
-	if retr('video_selection_done') == 0
-		[~,~,ext] = fileparts(filepath{selected});
-		if strcmp(ext,'.b16')
-			img=f_readB16(filepath{selected});
-		else
-			img=imread(filepath{selected});
-		end
-	else
-		video_frame_selection=retr('video_frame_selection');
-		img=read(retr('video_reader_object'),video_frame_selection(selected));
-	end
+	img=get_img(selected);
 	clahe=get(handles.clahe_enable,'value');
 	highp=get(handles.enable_highpass,'value');
 	%clip=get(handles.enable_clip,'value');
@@ -3754,20 +3710,9 @@ handles=gethand;
 selected=2*floor(get(handles.fileselector, 'value'))-1;
 filepath=retr('filepath');
 if numel(filepath)>1
-	if retr('video_selection_done') == 0
-		[~,~,ext] = fileparts(filepath{selected});
-		if strcmp(ext,'.b16')
-			size_img(1)=size(f_readB16(filepath{selected}),2)/2;
-			size_img(2)=size(f_readB16(filepath{selected}),1)/2;
-		else
-			size_img(1)=size(imread(filepath{selected}),2)/2;
-			size_img(2)=size(imread(filepath{selected}),1)/2;
-		end
-	else
-		video_reader_object = retr('video_reader_object');
-		size_img(1)=size(read(video_reader_object,1),2)/2;
-		size_img(2)=size(read(video_reader_object,1),1)/2;
-	end
+	image_dummy=get_img(selected);
+	size_img(1)=size(image_dummy,2)/2;
+	size_img(2)=size(image_dummy,1)/2;
 	step=str2double(get(handles.step,'string'));
 	delete(findobj(gca,'Type','hggroup')); %=vectors and scatter markers
 	delete(findobj(gca,'tag','intareadispl'));
@@ -3869,16 +3814,8 @@ if ok==1
 		else
 			text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
 			drawnow
-			[~,~,ext] = fileparts(filepath{selected});
-			if strcmp(ext,'.b16')
-				A=f_readB16(filepath{selected});
-				B=f_readB16(filepath{selected+1});
-			else
-				A=imread(filepath{selected});
-				B=imread(filepath{selected+1});
-			end
-			
-			
+			A = get_img(selected);
+			B = get_img(selected+1);
 			A=A(roirect(2):roirect(2)+roirect(4),roirect(1):roirect(1)+roirect(3));
 			B=B(roirect(2):roirect(2)+roirect(4),roirect(1):roirect(1)+roirect(3));
 			clahe=get(handles.clahe_enable,'value');
@@ -4021,22 +3958,8 @@ if ok==1
 		end
 		cancel=retr('cancel');
 		if isempty(cancel)==1 || cancel ~=1
-			if retr('video_selection_done') == 0
-				[~,~,ext] = fileparts(filepath{i});
-				if strcmp(ext,'.b16')
-					image1=f_readB16(filepath{i});
-					image2=f_readB16(filepath{i+1});
-				else
-					image1=imread(filepath{i});
-					image2=imread(filepath{i+1});
-				end
-			else
-				video_reader_object = retr('video_reader_object');
-				video_frame_selection=retr('video_frame_selection');
-				image1 = read(video_reader_object,video_frame_selection(i));
-				image2 = read(video_reader_object,video_frame_selection(i+1));
-			end
-			
+			image1 = get_img(i);
+			image2 = get_img(i+1);
 			if size(image1,3)>1
 				image1=uint8(mean(image1,3));
 				image2=uint8(mean(image2,3));
@@ -4339,21 +4262,8 @@ if ok==1
 	end
 	if currentwasmean==0
 		tic;
-		if retr('video_selection_done') == 0
-			[~,~,ext] = fileparts(filepath{selected});
-			if strcmp(ext,'.b16')
-				image1=f_readB16(filepath{selected});
-				image2=f_readB16(filepath{selected+1});
-			else
-				image1=imread(filepath{selected});
-				image2=imread(filepath{selected+1});
-			end
-		else
-			video_reader_object = retr('video_reader_object');
-			video_frame_selection=retr('video_frame_selection');
-			image1 = read(video_reader_object,video_frame_selection(selected));
-			image2 = read(video_reader_object,video_frame_selection(selected+1));
-		end
+		image1=get_img(selected);
+		image2=get_img(selected+1);
 		if size(image1,3)>1
 			image1=uint8(mean(image1,3));
 			image2=uint8(mean(image2,3));
@@ -5271,18 +5181,7 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 	derived=retr('derived');
 	caluv=retr('caluv');
 	calxy=retr('calxy');
-	if retr('video_selection_done') == 0
-		[~,~,ext] = fileparts(filepath{2*frame-1});
-		if strcmp(ext,'.b16')
-			currentimage=f_readB16(filepath{2*frame-1});
-		else
-			currentimage=imread(filepath{2*frame-1});
-		end
-	else
-		video_reader_object = retr('video_reader_object');
-		video_frame_selection=retr('video_frame_selection');
-		currentimage = read(video_reader_object,video_frame_selection(2*frame-1));
-	end
+	currentimage=get_img(2*frame-1);
 	x=resultslist{1,frame};
 	y=resultslist{2,frame};
 	%subtrayct mean u
@@ -5544,18 +5443,7 @@ function out=rescale_maps(in,isangle)
 handles=gethand;
 filepath=retr('filepath');
 currentframe=floor(get(handles.fileselector, 'value'));
-if retr('video_selection_done') == 0
-	[~,~,ext] = fileparts(filepath{2*currentframe-1});
-	if strcmp(ext,'.b16')
-		currentimage=f_readB16(filepath{2*currentframe-1});
-	else
-		currentimage=imread(filepath{2*currentframe-1});
-	end
-else
-	video_reader_object = retr('video_reader_object');
-	video_frame_selection=retr('video_frame_selection');
-	currentimage = read(video_reader_object,video_frame_selection(2*currentframe-1));
-end
+currentimage=get_img(2*currentframe-1);
 resultslist=retr('resultslist');
 x=resultslist{1,currentframe};
 y=resultslist{2,currentframe};
@@ -5620,18 +5508,7 @@ function out=rescale_maps_nan(in,isangle)
 handles=gethand;
 filepath=retr('filepath');
 currentframe=floor(get(handles.fileselector, 'value'));
-if retr('video_selection_done') == 0
-[~,~,ext] = fileparts(filepath{2*currentframe-1});
-if strcmp(ext,'.b16')
-	currentimage=f_readB16(filepath{2*currentframe-1});
-else
-	currentimage=imread(filepath{2*currentframe-1});
-end
-else
-	video_reader_object = retr('video_reader_object');
-	video_frame_selection=retr('video_frame_selection');
-	currentimage = read(video_reader_object,video_frame_selection(2*currentframe-1));
-end
+currentimage=get_img(2*currentframe-1);
 resultslist=retr('resultslist');
 x=resultslist{1,currentframe};
 y=resultslist{2,currentframe};
@@ -7318,18 +7195,7 @@ for i=startfr:endfr
 				derivative_calc(currentframe,extractwhat+1,0);
 			end
 			derived=retr('derived');
-			if retr('video_selection_done') == 0
-			[~,~,ext] = fileparts(filepath{2*currentframe-1});
-			if strcmp(ext,'.b16')
-				currentimage=f_readB16(filepath{2*currentframe-1});
-			else
-				currentimage=imread(filepath{2*currentframe-1});
-			end
-			else
-                video_reader_object = retr('video_reader_object');
-                video_frame_selection=retr('video_frame_selection');
-                currentimage = read(video_reader_object,video_frame_selection(2*currentframe-1));
-			end
+			currentimage=get_img(2*currentframe-1);
 			sizeold=size(currentimage,1);
 			sizenew=size(x,1);
 			
@@ -7404,18 +7270,7 @@ for i=startfr:endfr
 			maptoget=rescale_maps_nan(maptoget,0);
 			
 			calxy=retr('calxy');
-			if retr('video_selection_done') == 0
-				[~,~,ext] = fileparts(filepath{2*currentframe-1});
-				if strcmp(ext,'.b16')
-					currentimage=f_readB16(filepath{2*currentframe-1});
-				else
-					currentimage=imread(filepath{2*currentframe-1});
-				end
-			else
-				video_reader_object = retr('video_reader_object');
-				video_frame_selection=retr('video_frame_selection');
-				currentimage = read(video_reader_object,video_frame_selection(2*currentframe-1));
-			end
+			currentimage=get_img(2*currentframe-1);
 			sizeold=size(currentimage,1);
 			sizenew=size(x,1);
 			if selected==0
@@ -7463,18 +7318,7 @@ for i=startfr:endfr
 			% area only
 			sliderdisp
 			filepath=retr('filepath');
-			if retr('video_selection_done') == 0
-				[~,~,ext] = fileparts(filepath{2*currentframe-1});
-				if strcmp(ext,'.b16')
-					currentimage=f_readB16(filepath{2*currentframe-1});
-				else
-					currentimage=imread(filepath{2*currentframe-1});
-				end
-			else
-				video_reader_object = retr('video_reader_object');
-				video_frame_selection=retr('video_frame_selection');
-				currentimage = read(video_reader_object,video_frame_selection(2*currentframe-1));
-			end
+			currentimage=get_img(2*currentframe-1);
 			x=resultslist{1,currentframe};
 			sizeold=size(currentimage,1);
 			sizenew=size(x,1);
@@ -8902,14 +8746,9 @@ if isempty(x)== 0 && isempty(y)== 0 && isempty(w)== 0 && isempty(h)== 0 && isnum
 	toggler=retr('toggler');
 	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
 	filepath=retr('filepath');
-	[~,~,ext] = fileparts(filepath{selected});
-	if strcmp(ext,'.b16')
-		imagesize(1)=size(f_readB16(filepath{selected}),1);
-		imagesize(2)=size(f_readB16(filepath{selected}),2);
-	else
-		imagesize(1)=size(imread(filepath{selected}),1);
-		imagesize(2)=size(imread(filepath{selected}),2);
-	end
+	dummy_image=get_img(selected);
+	imagesize(1)=size(dummy_image,1);
+	imagesize(2)=size(dummy_image,2);
 	if roirect(1)<1
 		roirect(1)=1;
 	end
@@ -8963,18 +8802,7 @@ if get(handles.Autolimit, 'value') == 1
 		toggler=retr('toggler');
 		filepath=retr('filepath');
 		selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-		[~,~,ext] = fileparts(filepath{selected});
-		if retr('video_selection_done') == 0
-		if strcmp(ext,'.b16')
-			img=f_readB16(filepath{selected});
-		else
-			img=imread(filepath{selected});
-		end
-		else
-			video_reader_object = retr('video_reader_object');
-			video_frame_selection=retr('video_frame_selection');
-			img = read(video_reader_object,video_frame_selection(selected));
-		end
+		img=get_img(selected);
 		stretcher = stretchlim(img);
 		set(handles.minintens, 'String',stretcher(1));
 		set(handles.maxintens, 'String',stretcher(2));
