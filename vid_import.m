@@ -151,29 +151,39 @@ video_loaded=0;
 		if ~isequal(filename,0)
 			video_loaded = 1;
 			% videofile='xylophone.mpg';
-			
-			v = VideoReader(fullfile(video_pathname,filename));
-			play_fps = v.FrameRate;
-			num_frames=v.NumberOfFrames;
-			scroll_bar_width = max(1 / num_frames, 0.02);
-			video_end=num_frames;
-			
-			if isnan(v.Height)
-				fprintf('Failed to create video object.\n');
+			success=0;
+			try
+				v = VideoReader(fullfile(video_pathname,filename));
+				success=1;
+			catch ME
+				success=0;
+			end
+			if success==1
+				play_fps = v.FrameRate;
+				num_frames=v.NumberOfFrames;
+				scroll_bar_width = max(1 / num_frames, 0.02);
+				video_end=num_frames;
+				
+				if isnan(v.Height)
+					fprintf('Failed to create video object.\n');
+				else
+					axes (axes_handle)
+					h_fig=imshow(read(v,1));drawnow
+					set(handles.startframe,'String', num2str(1))
+					set(handles.endframe,'String', num2str(num_frames))
+					set(handles.skipframe,'String', num2str(1))
+					frame_selection = [1:1:num_frames];
+					scroll(1)
+					set(handles.importvideo,'enable','on')
+					set(handles.startframe,'enable','on')
+					set(handles.endframe,'enable','on')
+					set(handles.skipframe,'enable','on')
+				end
 			else
-				axes (axes_handle)
-				h_fig=imshow(read(v,1));drawnow
-				set(handles.startframe,'String', num2str(1))
-				set(handles.endframe,'String', num2str(num_frames))
-				set(handles.skipframe,'String', num2str(1))
-				frame_selection = [1:1:num_frames];
-				scroll(1)
-				set(handles.importvideo,'enable','on')
-				set(handles.startframe,'enable','on')
-				set(handles.endframe,'enable','on')
-				set(handles.skipframe,'enable','on')
+				errordlg({'Matlab could not import this video file. Most likely, the video codec cannot be used by Matlab. This is not a PIVlab-related issue. The exact error message is: ' newline ME.identifier newline ME.message});
 			end
 		end
+		
 	end
 
 
@@ -344,6 +354,5 @@ video_loaded=0;
 		setappdata(hgui,'video_frame_selection',frame_selection_out);
 		setappdata(hgui,'video_selection_done',1);
 		close(fig_handle)
-		disp('import')
 	end
 end

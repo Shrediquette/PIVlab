@@ -11,7 +11,7 @@
 % smoothn by Damien Garcia
 % dctn, idctn by Damien Garcia
 % Ellipse by D.G. Long
-% NaN Suite by Jan Gläscher
+% NaN Suite by Jan Glaescher
 % Exportfig by Ben Hinkle
 % mmstream2 by Duane Hanselman
 % f_readB16 by Carl Hall
@@ -31,13 +31,6 @@ version = '2.38';
 put('PIVver', version);
 v=ver('MATLAB');
 disp(['Please wait, starting PIVlab GUI...' sprintf('\n')])
-%{
-addpath(pwd); %add pivlab path as temporary global accessible path
-all_paths=path;
-if strfind(all_paths,pwd) ~=0
-    disp(['-> Added ' pwd ' as temporary search path.'])
-end
-%}
 disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
 disp(['-> Starting PIVlab ' version '.'])
 
@@ -55,7 +48,6 @@ put('quickheight',3.2);
 put('quickvisible',1);
 put('alreadydisplayed',0);
 put('video_selection_done',0);
-
 
 try
 	psdfile=which('PIVlab_settings_default.mat');
@@ -191,7 +183,6 @@ put('subtr_u', 0);
 put('subtr_v', 0);
 put('displaywhat',1);%vectors
 
-
 %read current and last directory.....:
 warning('off','all') %if the variables don't exist, an ugly warning is displayed
 load('PIVlab_settings_default.mat','homedir');
@@ -325,7 +316,6 @@ iconheight=2;
 iconamount=6;
 quickwidth = retr('quickwidth')-iconwidth-0.5;
 quickheight = retr('quickheight');
-
 
 handles.quick = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin*0.5 0+margin*0.5+panelheighttools quickwidth quickheight],'title','Main tasks quick access', 'Tag','quick','fontweight','bold','Visible','on');
 handles.quick1 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[1*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@quick1_Callback,'tag','quick1','TooltipString','Load images');
@@ -1623,16 +1613,12 @@ set(handles.progress, 'String','Frame progress: N/A');
 set(handles.overall, 'String','Total progress: N/A');
 set(handles.totaltime, 'String','Time left: N/A');
 set(handles.messagetext, 'String','');
-
-
-
 if get(handles.fftmulti,'Value') == 1 || get(handles.dcc,'Value') == 1
 	set(handles.AnalyzeAll,'String','Analyze all frames');
 end
 if get(handles.ensemble,'Value') == 1
 	set(handles.AnalyzeAll,'String','Start ensemble analysis');
 end
-
 switchui('multip05')
 
 function vector_val_Callback(~, ~, ~)
@@ -1672,7 +1658,6 @@ else %no calibration performed yet
 		handles=gethand;
 		set(handles.time_inp,'String',num2str(delta_t))
 	end
-	
 end
 
 function plot_derivs_Callback(~, ~, ~)
@@ -1752,7 +1737,7 @@ if size(resultslist,2)>=1
 	end
 	set(handles.firstframe, 'String',int2str(startframe));
 	set(handles.lastframe, 'String',int2str(endframe));
-	if strmatch(get(handles.multip08, 'visible'), 'on'); %#ok<MATCH2>
+	if strmatch(get(handles.multip08, 'visible'), 'on') %#ok<MATCH2>
 		put('p8wasvisible',1)
 	else
 		put('p8wasvisible',0)
@@ -2073,7 +2058,7 @@ if size(filepath,1)>0
 					end
 				end
 			else %no deriv available
-currentimage=get_img(selected);
+				currentimage=get_img(selected);
 				if get(handles.enhance_images, 'Value') == 0
 					image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
 				else
@@ -2091,7 +2076,7 @@ currentimage=get_img(selected);
 		end
 	else %not in derivatives panel
 		%try
-currentimage=get_img(selected);
+		currentimage=get_img(selected);
 		
 		%{
             catch
@@ -2300,10 +2285,10 @@ currentimage=get_img(selected);
 			set(q2, 'ButtonDownFcn', @veclick, 'PickableParts', 'visible');
 		end
 		
-		if strncmp(get(handles.multip14, 'visible'), 'on',2); %statistics panel visible
+		if strncmp(get(handles.multip14, 'visible'), 'on',2) %statistics panel visible
 			update_Stats (x,y,u,v);
 		end
-		if strncmp(get(handles.multip06, 'visible'), 'on',2); %validation panel visible
+		if strncmp(get(handles.multip06, 'visible'), 'on',2) %validation panel visible
 			manualdeletion=retr('manualdeletion');
 			frame=floor(get(handles.fileselector, 'value'));
 			framemanualdeletion=[];
@@ -2533,14 +2518,10 @@ displogo(0)
 setappdata(hgui,'video_selection_done',0);
 vid_import(pathname);
 uiwait
-disp('done selecting video')
-
 if getappdata(hgui,'video_selection_done')
 	pathname = getappdata(hgui,'pathname');
 	filename = getappdata(hgui,'filename');
 	filepath = getappdata(hgui,'filepath');
-	
-	%   put ('filepath',fullfile(getappdata(hgui,'pathname'),getappdata(hgui,'filename'))); %full path and filename for analyses
 	%save video file object in GUI
 	put('video_reader_object',VideoReader(filepath{1}));
 	if get(handles.zoomon,'Value')==1
@@ -2553,9 +2534,6 @@ if getappdata(hgui,'video_selection_done')
 	end
 	put('xzoomlimit',[]);
 	put('yzoomlimit',[]);
-	
-	
-	%auf was reagiert sliderrange....?
 	sliderrange
 	set (handles.filenamebox, 'string', filename);
 	put ('resultslist', []); %clears old results
@@ -2586,9 +2564,8 @@ if getappdata(hgui,'video_selection_done')
 	set(handles.filenamebox,'value',1);
 	sliderdisp %displays raw image when slider moves
 	zoom reset
-	
 end
-%}
+
 function loadimgsbutton_Callback(~, ~, ~)
 hgui=getappdata(0,'hgui');
 if ispc==1
@@ -2611,7 +2588,7 @@ else
 		path=uipickfiles ('FilterSpec', pwd, 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
 	end
 end
-if isequal(path,0) ==0
+if ~isequal(path,0)
 	setappdata(hgui,'video_selection_done',0);
 	if get(handles.zoomon,'Value')==1
 		set(handles.zoomon,'Value',0);
@@ -3997,7 +3974,7 @@ if ok==1
 			ximask={};
 			yimask={};
 			if size(maskiererx,2)>=i
-				for j=1:size(maskiererx,1);
+				for j=1:size(maskiererx,1)
 					if isempty(maskiererx{j,i})==0
 						ximask{j,1}=maskiererx{j,i}; %#ok<*AGROW>
 						yimask{j,1}=maskierery{j,i};
@@ -4072,7 +4049,10 @@ if ok==1
 	set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
 	set(handles.totaltime, 'String','Time left: N/A');
 	if isempty(cancel)==1 || cancel ~=1
-		try;sound(audioread('finished.mp3'),22000);catch;end
+		try
+			sound(audioread('finished.mp3'),22000);
+		catch
+		end
 	end
 	put('cancel',0);
 	
@@ -4191,7 +4171,10 @@ if ok==1
 		%delete(findobj('tag', 'annoyingthing'));
 		set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
 		set(handles.totaltime, 'String','Time left: N/A');
-		try;sound(audioread('finished.mp3'),22000);catch;end
+		try
+			sound(audioread('finished.mp3'),22000);
+		catch
+		end
 	else %user pressed cancel, no results
 		if verLessThan('matlab','8.4')
 			delete (findobj(getappdata(0,'hgui'),'type', 'hggroup'))
@@ -4300,7 +4283,7 @@ if ok==1
 		ximask={};
 		yimask={};
 		if size(maskiererx,2)>=selected
-			for i=1:size(maskiererx,1);
+			for i=1:size(maskiererx,1)
 				if isempty(maskiererx{i,selected})==0
 					ximask{i,1}=maskiererx{i,selected};
 					yimask{i,1}=maskierery{i,selected};
@@ -4379,17 +4362,17 @@ if size(filepath,1) <2 && retr('video_selection_done') == 0
 	mess{size(mess,2)+1}='No images were loaded';
 end
 if get(handles.clahe_enable, 'value')==1
-	if isnan(str2double(get(handles.clahe_size, 'string')))==1
+	if isnan(str2double(get(handles.clahe_size, 'string')))
 		mess{size(mess,2)+1}='CLAHE window size contains NaN';
 	end
 end
 if get(handles.enable_highpass, 'value')==1
-	if isnan(str2double(get(handles.highp_size, 'string')))==1
+	if isnan(str2double(get(handles.highp_size, 'string')))
 		mess{size(mess,2)+1}='Highpass filter size contains NaN';
 	end
 end
 if get(handles.wienerwurst, 'value')==1
-	if isnan(str2double(get(handles.wienerwurstsize, 'string')))==1
+	if isnan(str2double(get(handles.wienerwurstsize, 'string')))
 		mess{size(mess,2)+1}='Wiener2 filter size contains NaN';
 	end
 end
@@ -4398,10 +4381,10 @@ end
 %        mess{size(mess,2)+1}='Clipping threshold contains NaN';
 %    end
 %end
-if isnan(str2double(get(handles.intarea, 'string')))==1
+if isnan(str2double(get(handles.intarea, 'string')))
 	mess{size(mess,2)+1}='Interrogation area size contains NaN';
 end
-if isnan(str2double(get(handles.step, 'string')))==1
+if isnan(str2double(get(handles.step, 'string')))
 	mess{size(mess,2)+1}='Step size contains NaN';
 end
 if size(mess,2)>0 %error somewhere
@@ -4418,7 +4401,7 @@ toolsavailable(1);
 
 function load_settings_Callback(~, ~, ~)
 [FileName,PathName] = uigetfile('*.mat','Load PIVlab settings','PIVlab_settings.mat');
-if isequal(FileName,0)==0
+if ~isequal(FileName,0)
 	read_panel_width (FileName,PathName) %read panel settings, apply, rebuild UI
 	destroyUI %needed to adapt panel width etc. to changed values in the settings file.
 	generateUI
@@ -4620,7 +4603,7 @@ else
 	end
 end
 clear handles hObject eventdata
-if isequal(FileName,0)==0
+if ~isequal(FileName,0)
 	save('-v6', fullfile(PathName,FileName))
 end
 
@@ -5001,7 +4984,7 @@ try
 catch
 	[filename, pathname, filterindex] = uigetfile({'*.bmp;*.tif;*.jpg;*.tiff;*.b16;','Image Files (*.bmp,*.tif,*.jpg,*.tiff,*.b16)'; '*.tif','tif'; '*.jpg','jpg'; '*.bmp','bmp';  '*.tiff','tiff';'*.b16','b16';},'Select calibration image'); %unix/mac system may cause problems, can't be checked due to lack of unix/mac systems...
 end
-if isequal(filename,0)==0
+if ~isequal(filename,0)
 	[~,~,ext] = fileparts(fullfile(pathname, filename));
 	if strcmp(ext,'.b16')
 		caliimg=f_readB16(fullfile(pathname, filename));
@@ -5203,7 +5186,7 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 		typevector=resultslist{5,frame};
 	end
 	if get(handles.interpol_missing,'value')==1
-		if any(any(isnan(u)))==1 || any(any(isnan(v)))==1
+		if any(any(isnan(u))) || any(any(isnan(v)))
 			if isempty(strfind(get(handles.apply_deriv_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.ascii_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.save_mat_all,'string'), 'Please'))==1%not in batch
 				drawnow;
 				if retr('alreadydisplayed') == 1
@@ -5409,7 +5392,7 @@ deriv=get(handles.derivchoice, 'value');
 derivative_calc (currentframe,deriv,1)
 sliderdisp
 
-function out=dcev(x,y,u,v);
+function out=dcev(x,y,u,v)
 dUdX=conv2(u,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid')./...
 	conv2(x,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid');
 dVdX=conv2(v,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid')./...
@@ -5545,7 +5528,7 @@ if miny<1
 end
 if minx<1
 	minx=1;
-end;
+end
 try
 	out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar;
 catch
@@ -6159,8 +6142,8 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			calxy=retr('calxy');
 			
 			%removing nans for integral!
-			distance2=distance(isnan(c)==0);
-			c2=c(isnan(c)==0);
+			distance2=distance(~isnan(c));
+			c2=c(~isnan(c));
 			
 			integral=trapz(distance2*calxy,c2);
 			h2=plot(distance*calxy,c);
@@ -7228,7 +7211,7 @@ for i=startfr:endfr
 				for i=1:size(BW,1) %#ok<*FXSET>
 					for j=1:size(BW,2)
 						if BW(i,j)==1
-							if isnan(maptoget(i,j))==0
+							if ~isnan(maptoget(i,j))
 								summe=summe+maptoget(i,j);
 								numcells=numcells+1;
 							end
@@ -7287,7 +7270,7 @@ for i=startfr:endfr
 				for i=1:size(BW,1)
 					for j=1:size(BW,2)
 						if BW(i,j)==1
-							if isnan(maptoget(i,j))==0 %do not include nans and nan area in integral.
+							if ~isnan(maptoget(i,j)) %do not include nans and nan area in integral.
 								integral=integral+cellarea*maptoget(i,j);
 							end
 						end
@@ -7490,7 +7473,7 @@ for i=startfr:endfr
 							%for j=1:size(u,2)
 							for j=1:size(currentimage,2)
 								if BW(i,j)==1
-									if isnan(currentimage(i,j))==0
+									if ~isnan(currentimage(i,j))
 										integral=integral+cellarea*currentimage(i,j);
 									end
 								end
@@ -7698,7 +7681,7 @@ for i=startfr:endfr
 					for i=1:size(u,1)
 						for j=1:size(u,2)
 							if BW(i,j)==1
-								if isnan(u(i,j))==0 && isnan(v(i,j))==0
+								if ~isnan(u(i,j)) && ~isnan(v(i,j))
 									umean=umean+u(i,j);
 									vmean=vmean+v(i,j);
 									uamount=uamount+1;
@@ -8107,7 +8090,7 @@ if isempty(resultslist)==0
 					
 					eval(['typevectormittelselected=typevectormittel(:,:,[' str ']);']);
 					
-					typevectormean=mean(typevectormittelselected,3); %#ok<NODEF>
+					typevectormean=mean(typevectormittelselected,3);  %#ok<USENS>
 					%for i=1:size(typevectormittelselected,3)
 					for i=1:size(typevectormittelselected,1)
 						for j=1:size(typevectormittelselected,2)
@@ -8130,8 +8113,8 @@ if isempty(resultslist)==0
 					eval(['vmittelselected=vmittel(:,:,[' str ']);']);
 					if type==2
 						%standard deviation
-						resultslist{3,size(filepath,1)/2+1}=nanstd(umittelselected,3);
-						resultslist{4,size(filepath,1)/2+1}=nanstd(vmittelselected,3);
+						resultslist{3,size(filepath,1)/2+1}=nanstd(umittelselected,3); %#ok<NODEF>
+						resultslist{4,size(filepath,1)/2+1}=nanstd(vmittelselected,3); %#ok<NODEF>
 					end
 					if type==1
 						resultslist{3,size(filepath,1)/2+1}=nanmean(umittelselected,3);
@@ -8154,10 +8137,12 @@ if isempty(resultslist)==0
 					eval(['filepathselected=filepathselected([' str '],:);']);
 					filepath{size(filepath,1)+1,1}=filepathselected{1,1};
 					filepath{size(filepath,1)+1,1}=filepathselected{1,1};
-					video_frame_selection=retr('video_frame_selection');
-					video_frame_selection(end+1,1)=video_frame_selection(strnum(end)*2);
-					video_frame_selection(end+1,1)=video_frame_selection(strnum(end)*2);
-					put('video_frame_selection',video_frame_selection);
+					if retr('video_selection_done') == 1
+						video_frame_selection=retr('video_frame_selection');
+						video_frame_selection(end+1,1)=video_frame_selection(strnum(end)*2);
+						video_frame_selection(end+1,1)=video_frame_selection(strnum(end)*2);
+						put('video_frame_selection',video_frame_selection);
+					end
 					filename=retr('filename');
 					if type == 2
 						filename{size(filename,1)+1,1}=['STDEV of frames ' str];
@@ -8224,8 +8209,6 @@ check_comma(hObject)
 function stdev_thresh_Callback(hObject, ~, ~)
 check_comma(hObject)
 function loc_med_thresh_Callback(hObject, ~, ~)
-check_comma(hObject)
-function epsilon_Callback(hObject, ~, ~)
 check_comma(hObject)
 function thresholdarea_Callback(hObject, ~, ~)
 check_comma(hObject)
@@ -8589,7 +8572,7 @@ val=get(hObject,'string');
 if str2double(val)>500
 	set(hObject,'string',500);
 end
-if str2double(val)<0 || isempty(val)==1 || isnan(str2double(val))==1
+if str2double(val)<0 || isempty(val)==1 || isnan(str2double(val))
 	set(hObject,'string',0);
 end
 
@@ -8597,7 +8580,6 @@ function licres_Callback (~,~,~)
 handles=gethand;
 value=num2str(round(get(handles.licres,'Value')*10)/10);
 set(handles.LIChint2,'String',value)
-
 
 function derivdropdown(hObject, ~, ~)
 handles=gethand;
