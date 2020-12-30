@@ -1,19 +1,29 @@
-function [xtable, ytable, utable, vtable, typevector,correlation_map] = piv_FFTensemble (autolimit,filepath,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roi_inpt,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad)
+function [xtable, ytable, utable, vtable, typevector,correlation_map] = piv_FFTensemble (autolimit,filepath,video_frame_selection,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roi_inpt,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad)
 %this funtion performs the  PIV analysis. It is a modification of the
 %pivFFTmulti, and will do ensemble correlation. That is a suitable
 %algorithm for low seeding density as it happens in microPIV.
 warning off %#ok<*WNOFF> %MATLAB:log:logOfZero
 %% pre-processing is done in this function
 result_conv_ensemble = zeros(interrogationarea,interrogationarea); % prepare empty result_conv
-total_analyses_amount=size(filepath,1) / 2 * passes;
+if isempty(video_frame_selection) %list with image files was passed
+	amount_input_imgs=size(filepath,1);
+else
+	amount_input_imgs=numel(video_frame_selection);
+end
+total_analyses_amount=amount_input_imgs / 2 * passes;
 from_total = 0;
 tic
 skippy=0;
-for ensemble_i1=1:2:size(filepath,1)
-    image1=imread(filepath{ensemble_i1});
-    image2=imread(filepath{ensemble_i1+1});
-    if size(image1,3)>1
-        image1=uint8(mean(image1,3));
+for ensemble_i1=1:2:amount_input_imgs
+	if isempty(video_frame_selection) %list with image files was passed
+		image1=imread(filepath{ensemble_i1});
+		image2=imread(filepath{ensemble_i1+1});
+	else % video file was passed
+		image1 = read(filepath,video_frame_selection(ensemble_i1));
+		image2 = read(filepath,video_frame_selection(ensemble_i1+1));
+	end
+	if size(image1,3)>1
+		image1=uint8(mean(image1,3));
         image2=uint8(mean(image2,3));
         disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
     end
@@ -282,7 +292,7 @@ for ensemble_i1=1:2:size(filepath,1)
     end
     
     if GUI_avail==1
-        progri=ensemble_i1/(size(filepath,1))*100;
+        progri=ensemble_i1/(amount_input_imgs)*100;
         from_total=from_total+1;
         set(handles.progress, 'string' , ['Pass ' int2str(1) ' progress: ' int2str(progri) '%' ])
         set(handles.overall, 'string' , ['Total progress: ' int2str(from_total / total_analyses_amount * 100) '%'])
@@ -360,14 +370,19 @@ if cancel == 0
         end
         result_conv_ensemble = zeros(interrogationarea,interrogationarea); % prepare empty result_conv
         skippy=0;
-        for ensemble_i1=1:2:size(filepath,1)
+        for ensemble_i1=1:2:amount_input_imgs
             if skippy <10
                 skippy=skippy+1;
             else
                 skippy=0;
-            end
-            image1=imread(filepath{ensemble_i1});
-            image2=imread(filepath{ensemble_i1+1});
+			end
+			if isempty(video_frame_selection) %list with image files was passed
+				image1=imread(filepath{ensemble_i1});
+				image2=imread(filepath{ensemble_i1+1});
+			else % video file was passed
+				image1 = read(filepath,video_frame_selection(ensemble_i1));
+				image2 = read(filepath,video_frame_selection(ensemble_i1+1));
+			end
             if size(image1,3)>1
                 image1=uint8(mean(image1,3));
                 image2=uint8(mean(image2,3));
@@ -398,7 +413,7 @@ if cancel == 0
             gen_image1_roi = image1_roi;
             gen_image2_roi = image2_roi;
             if GUI_avail==1
-                progri=ensemble_i1/(size(filepath,1))*100;
+                progri=ensemble_i1/(amount_input_imgs)*100;
                 from_total=from_total+1;
                 set(handles.progress, 'string' , ['Pass ' int2str(multipass+1) ' progress: ' int2str(progri) '%' ])
                 set(handles.overall, 'string' , ['Total progress: ' int2str(from_total / total_analyses_amount * 100) '%'])
@@ -830,7 +845,7 @@ if cancel == 0
                     nrxreal=1;
                 end
                 %fehlerzeile:
-                if average_mask(round(jmask+interrogationarea/2),round(imask+interrogationarea/2)) >= size(filepath,1)/2
+                if average_mask(round(jmask+interrogationarea/2),round(imask+interrogationarea/2)) >= amount_input_imgs/2
                     typevector(nry,nrxreal)=0;
                 end
             end
