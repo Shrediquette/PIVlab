@@ -1,4 +1,5 @@
 # PIVlab
+Software documentation is available in the wiki: https://github.com/Shrediquette/PIVlab/wiki
 
 Visit Matlabs File exchange site for PIVlab: [![View PIVlab - particle image velocimetry (PIV) tool on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://de.mathworks.com/matlabcentral/fileexchange/27659-pivlab-particle-image-velocimetry-piv-tool)
 
