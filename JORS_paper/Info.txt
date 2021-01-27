@@ -1,0 +1,1 @@
+This folder contains all the test cases for the 2021 publication in the Journal of Open Research Software.
