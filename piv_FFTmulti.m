@@ -367,12 +367,27 @@ for multipass=1:passes-1
     image1_roi=padarray(image1_roi,[ceil(interrogationarea/2) ceil(interrogationarea/2)], min(min(image1_roi)));
     image2_roi=padarray(image2_roi,[ceil(interrogationarea/2) ceil(interrogationarea/2)], min(min(image1_roi)));
     mask=padarray(mask,[ceil(interrogationarea/2) ceil(interrogationarea/2)],0);
-    if (rem(interrogationarea,2) == 0) %for the subpixel displacement measurement
+    
+	%{
+	%Improve masking?
+	max_img_value=(max(image1_roi(:))+max(image2_roi(:)))/2;
+	noise_mask1=rand(size(image1_roi))*max_img_value*0;
+	noise_mask2=rand(size(image1_roi))*max_img_value*0;
+	image1_roi(mask==1)=0;
+	image2_roi(mask==1)=0;
+	noise_mask1(mask==0)=0;
+	noise_mask2(mask==0)=0;
+	image1_roi=image1_roi+noise_mask1;
+	image2_roi=image2_roi+noise_mask2;
+	%keyboard
+	disp('XXX')
+	%}
+	
+	if (rem(interrogationarea,2) == 0) %for the subpixel displacement measurement
         SubPixOffset=1;
     else
         SubPixOffset=0.5;
-    end
-    
+	end
     xtable_old=xtable;
     ytable_old=ytable;
     typevector=ones(numelementsy,numelementsx);

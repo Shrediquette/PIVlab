@@ -27,7 +27,7 @@ handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 guidata(MainWindow,handles)
 setappdata(0,'hgui',MainWindow);
 
-version = '2.38';
+version = '2.39';
 put('PIVver', version);
 v=ver('MATLAB');
 disp(['Please wait, starting PIVlab GUI...' sprintf('\n')])
@@ -610,10 +610,10 @@ item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
 handles.mask_auto_box = uicontrol(handles.multip04,'Style','checkbox', 'String','Disable auto-correlation','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_auto_box','TooltipString','This will disallow displacements close to zero. It helps when there is a very strong background signal');
 
 item=[0 item(2)+item(4)+margin/1.5 parentitem(3) 1];
-handles.text914 = uicontrol(handles.multip04,'Style','text', 'String','Correlation quality','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text914');
+handles.text914 = uicontrol(handles.multip04,'Style','text', 'String','Correlation robustness','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text914');
 
 item=[0 item(2)+item(4)+margin/6 parentitem(3) 1];
-handles.CorrQuality = uicontrol(handles.multip04,'Style','popupmenu', 'String',{'Normal (recommended)','Better','High','Extreme'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','CorrQuality','TooltipString','Correlation quality. Better = slower...');
+handles.CorrQuality = uicontrol(handles.multip04,'Style','popupmenu', 'String',{'Standard (recommended)','High','Extreme'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','CorrQuality','TooltipString','Correlation quality. Better = slower...');
 
 item=[0 item(2)+item(4)+margin/1.5 parentitem(3) 1.5];
 handles.Settings_Apply_current = uicontrol(handles.multip04,'Style','pushbutton','String','Analyze current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @AnalyzeSingle_Callback,'Tag','Settings_Apply_current','TooltipString','Apply PIV settings to current frame');
@@ -3291,7 +3291,7 @@ maskiererx=retr('maskiererx');
 maskierery=retr('maskierery');
 delete(findobj(gca,'tag', 'maskplot'));
 hold on;
-for j=1:size(maskiererx,1)
+for j=1:min([size(maskiererx,1) size(maskierery,1)])
 	if isempty(maskiererx{j,currentframe})==0
 		ximask=maskiererx{j,currentframe};
 		yimask=maskierery{j,currentframe};
@@ -3299,7 +3299,10 @@ for j=1:size(maskiererx,1)
 			h=fill(ximask,yimask,'r','facecolor', [0.3 0.1 0.1],'linestyle','none','tag','maskplot');
 		else
 			% >R2014a
-			h=fill(ximask,yimask,'r','facecolor', maskcolor,'linestyle','none','tag','maskplot','Facealpha',opaqueness);
+			try
+				h=fill(ximask,yimask,'r','facecolor', maskcolor,'linestyle','none','tag','maskplot','Facealpha',opaqueness);
+			catch
+			end
 		end
 		%h=area(ximask,yimask,'facecolor', [0.3 0.1 0.1],'linestyle', 'none','tag','maskplot');
 	else
@@ -4022,6 +4025,9 @@ if ok==1
 			resultslist{4,(i+1)/2}=v;
 			resultslist{5,(i+1)/2}=typevector;
 			resultslist{6,(i+1)/2}=[];
+			if get(handles.dcc,'Value')==1
+				correlation_map=zeros(size(x));
+			end
 			resultslist{12,(i+1)/2}=correlation_map;
 			put('resultslist',resultslist);
 			set(handles.fileselector, 'value', (i+1)/2);
@@ -4208,17 +4214,12 @@ if quali==1 % normal quality
 	repeat = 0;
 	do_pad = 0;
 end
-if quali==2 % better quality
-	imdeform='*spline';
-	repeat = 0;
-	do_pad = 0;
-end
-if quali==3 % high quality
+if quali==2 % high quality
 	imdeform='*spline';
 	repeat = 0;
 	do_pad = 1;
 end
-if quali==4 % ultra quality
+if quali==3 % ultra quality
 	imdeform='*spline';
 	repeat = 1;
 	do_pad = 1;
@@ -4229,7 +4230,9 @@ handles=gethand;
 ok=checksettings;
 if ok==1
 	resultslist=retr('resultslist');
-	set(handles.progress, 'string' , ['Frame progress: 0%']);drawnow;
+	set(handles.progress, 'string' , ['Frame progress: 0%']);
+	set(handles.Settings_Apply_current, 'string' , ['Please wait...']);
+	toolsavailable(0);drawnow;
 	handles=gethand;
 	filepath=retr('filepath');
 	selected=2*floor(get(handles.fileselector, 'value'))-1;
@@ -4327,6 +4330,7 @@ if ok==1
 			end
 			
 		end
+		toolsavailable(1);
 		resultslist{1,(selected+1)/2}=x;
 		resultslist{2,(selected+1)/2}=y;
 		resultslist{3,(selected+1)/2}=u;
@@ -4344,6 +4348,7 @@ if ok==1
 		put('resultslist',resultslist);
 		set(handles.progress, 'string' , ['Frame progress: 100%'])
 		set(handles.overall, 'string' , ['Total progress: 100%'])
+		set(handles.Settings_Apply_current, 'string' , ['Analyze current frame']);
 		time1frame=toc;
 		set(handles.totaltime, 'String',['Analysis time: ' num2str(round(time1frame*100)/100) ' s']);
 		set(handles.messagetext, 'String','');
@@ -4671,24 +4676,17 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 		datau=reshape(u*caluv,1,size(u,1)*size(u,2)*size(u,3));
 		datav=reshape(v*caluv,1,size(v,1)*size(v,2)*size(v,3));
 		
-		if size(datau,2)>20000 %more than 20000 value pairs are too slow in scatterplot.
-			pos=unique(ceil(rand(21000,1)*(size(datau,2)-1))); %select random entries...
+		if size(datau,2)>1000000 %more than one million value pairs are too slow in scatterplot.
+			pos=unique(ceil(rand(1000000,1)*(size(datau,2)-1))); %select random entries...
 			scatter(gca,datau(pos),datav(pos), 'b.'); %.. and plot them
 			set(gca,'Yaxislocation','right','layer','top');
 		else
 			scatter(gca,datau,datav, 'b.');
 			set(gca,'Yaxislocation','right','layer','top');
 		end
-		
-		%skipper=ceil(size(datau,2)/8000);
-		%scatter(datau(:,1:skipper:end),datav(:,1:skipper:end), 'b.');
-		
 		oldsize=get(gca,'outerposition');
 		newsize=[oldsize(1)+10 0.15 oldsize(3)*0.87 oldsize(4)*0.87];
 		set(gca,'outerposition', newsize)
-		
-		
-		
 		%%{
 		if retr('caluv')==1 && retr('calxy')==1
 			xlabel(gca, 'u velocity [px/frame]', 'fontsize', 12)
@@ -8069,7 +8067,7 @@ if isempty(resultslist)==0
 					catch
 						disp('Problems with old Matlab version... Please update Matlab or unexpected things might happen...')
 					end
-					for i=1:size(newmaskx,1)
+					for i=1:min ([size(newmaskx,1) size(newmasky,1)])
 						%ans Ende der originalmaske wird eine zusammengesetzte maske
 						%aus allen gewählten frames gehängt.
 						maskiererx{i,size(filepath,1)+1}=newmaskx{i,1};
