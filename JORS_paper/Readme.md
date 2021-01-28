@@ -10,7 +10,7 @@ Correlation robustness test:
 https://drive.google.com/file/d/1ZVH_14yGnd4oRcZMSFxyXYeH_5kHTV4P/view?usp=sharing
 
 Propeller anemometer test:
-https://drive.google.com/file/d/1BlXhOgXlW4DeIrOcsahJnaumJqob0ptx/view?usp=sharing
+https://drive.google.com/file/d/1nQuSn9QngtFI_J2_0pj8FoExlSSgPybo/view?usp=sharing
 
 Texture tests:
 https://drive.google.com/file/d/1-JUVF1B5f1DOJmQhFvGTgggCG-QyeN9O/view?usp=sharing
