@@ -493,11 +493,21 @@ handles.minintens = uicontrol(handles.multip03,'Style','edit', 'String','0','Uni
 item=[parentitem(3)/2 item(2) parentitem(3)/3*1 1];
 handles.maxintens = uicontrol(handles.multip03,'Style','edit', 'String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','maxintens','Callback',@minintens_Callback,'TooltipString','Upper bound of the histogram [0...1]');
 
-item=[0 item(2)+item(4)+margin*2 parentitem(3) 2];
+item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 3.5];
+handles.uipanel351 = uipanel(handles.multip03, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Background Subtraction', 'Tag','uipanel351','fontweight','bold');
+parentitem=get(handles.uipanel351, 'Position');
+item=[0 0 0 0];
+item=[0 item(2)+item(4) parentitem(3) 1];
+handles.bg_subtract = uicontrol(handles.uipanel351,'Style','checkbox', 'value',0, 'String','Subtract mean intensity','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bg_subtract','TooltipString','Automatic stretching of the image intensity histogram. Important for 16-bit images.');
+
+parentitem=get(handles.multip03, 'Position');
+item=[0 0 0 0];
+item=[0 item(2)+item(4)+25 parentitem(3) 2];
 handles.preview_preprocess = uicontrol(handles.multip03,'Style','pushbutton','String','Preview current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preview_preprocess_Callback,'Tag','preview_preprocess','TooltipString','Preview the effect of image pre-processing');
 
-item=[0 item(2)+item(4)+margin*2 parentitem(3) 2];
-handles.Start_BG_GUI = uicontrol(handles.multip03,'Style','pushbutton','String','Background subtraction GUI','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @Start_BG_GUI_Callback,'Tag','Start_BG_GUI','TooltipString','Extract the mean background signal from a large series of images that all contain the same background signal');
+%item=[0 item(2)+item(4)+margin*2 parentitem(3) 2];
+%handles.Start_BG_GUI = uicontrol(handles.multip03,'Style','pushbutton','String','Background subtraction GUI','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @Start_BG_GUI_Callback,'Tag','Start_BG_GUI','TooltipString','Extract the mean background signal from a large series of images that all contain the same background signal');
+
 
 %% Multip04
 handles.multip04 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','PIV settings (CTRL+S)', 'Tag','multip04','fontweight','bold');
@@ -1911,6 +1921,7 @@ hgui=getappdata(0,'hgui');
 handles=guihandles(hgui);
 
 function currentimage = get_img(selected)
+handles=gethand;
 filepath = retr('filepath');
 if retr('video_selection_done') == 0
 	[~,~,ext] = fileparts(filepath{selected});
@@ -1924,6 +1935,43 @@ else
 	video_frame_selection=retr('video_frame_selection');
 	currentimage = read(video_reader_object,video_frame_selection(selected));
 end
+if get(handles.bg_subtract,'Value')==1 % Hier wird ja nur display gemacht. also lade nur das passende bild.
+	toggler=retr('toggler');
+	if toggler == 0
+		bg_img = retr('bg_img_A');
+	else
+		bg_img = retr('bg_img_B');
+	end
+	if isempty(bg_img) %checkbox is enabled, but no bg is present
+		set(handles.bg_subtract,'Value',0);
+	else
+		currentimage = currentimage-bg_img;
+	end
+end
+
+function generate_BG_img
+
+handles=gethand;
+if get(handles.bg_subtract,'Value')==1
+	bg_img_A = retr('bg_img_A');
+	bg_img_B = retr('bg_img_B');
+	if isempty(bg_img_A) || isempty(bg_img_B)
+		answer = questdlg('Mean intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
+		if strcmp(answer , 'OK')
+			disp('BG not present, calculating now')
+			%Calculate BG for all images....
+			bg_img_A = 0;
+			bg_img_B = 0;
+			put('bg_img_A',bg_img_A);
+			put('bg_img_B',bg_img_B);
+		else % user has checkbox enabled, but doesn't want to calculate the background...
+			set(handles.bg_subtract,'Value',0);
+		end
+	else
+		disp('BG exists')
+	end
+end
+
 
 function sliderdisp %this is the most important function, doing all the displaying
 handles=gethand;
@@ -2658,6 +2706,9 @@ if ~isequal(path,0)
 		put('manualdeletion',[]);
 		put('streamlinesX',[]);
 		put('streamlinesY',[]);
+		put('bg_img_A',[]);
+		put('bg_img_B',[]);
+		set(handles.bg_subtract,'Value',0);
 		set(handles.fileselector, 'value',1);
 		
 		set(handles.minintens, 'string', 0);
@@ -3575,6 +3626,7 @@ if size(filepath,1) >1 || retr('video_selection_done') == 1
 	toggler=retr('toggler');
 	filepath=retr('filepath');
 	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
+	generate_BG_img
 	img=get_img(selected);
 	clahe=get(handles.clahe_enable,'value');
 	highp=get(handles.enable_highpass,'value');
@@ -3610,7 +3662,6 @@ if size(filepath,1) >1 || retr('video_selection_done') == 1
 		ximask=maskiererx{currentframe};
 		if size(ximask,1)>1
 			dispMASK(1-str2num(get(handles.masktransp,'String'))/100)
-			
 		end
 	end
 end
