@@ -470,7 +470,7 @@ item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.enable_intenscap = uicontrol(handles.multip03,'Style','checkbox', 'value',0, 'String','Enable intensity capping','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','enable_intenscap','TooltipString','Intensity capping. Only needed for some special cases');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
-handles.wienerwurst = uicontrol(handles.multip03,'Style','checkbox', 'value',0, 'String','Wiener2 denoise filter','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','wienerwurst','TooltipString','Wiener denoise filter. Only needed for some special cases');
+handles.wienerwurst = uicontrol(handles.multip03,'Style','checkbox', 'value',0, 'String','Wiener2 denoise and low pass','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','wienerwurst','TooltipString','Wiener denoise filter and Gaussian low pass. Only needed for some special cases');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text159 = uicontrol(handles.multip03,'Style','text', 'String','Window size [px]','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text159');
@@ -503,7 +503,7 @@ handles.bg_subtract = uicontrol(handles.uipanel351,'Style','checkbox', 'value',0
 parentitem=get(handles.multip03, 'Position');
 item=[0 0 0 0];
 item=[0 item(2)+item(4)+25 parentitem(3) 2];
-handles.preview_preprocess = uicontrol(handles.multip03,'Style','pushbutton','String','Preview current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preview_preprocess_Callback,'Tag','preview_preprocess','TooltipString','Preview the effect of image pre-processing');
+handles.preview_preprocess = uicontrol(handles.multip03,'Style','pushbutton','String','Apply and preview current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preview_preprocess_Callback,'Tag','preview_preprocess','TooltipString','Preview the effect of image pre-processing');
 
 %item=[0 item(2)+item(4)+margin*2 parentitem(3) 2];
 %handles.Start_BG_GUI = uicontrol(handles.multip03,'Style','pushbutton','String','Background subtraction GUI','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @Start_BG_GUI_Callback,'Tag','Start_BG_GUI','TooltipString','Extract the mean background signal from a large series of images that all contain the same background signal');
@@ -2080,7 +2080,7 @@ if get(handles.bg_subtract,'Value')==1
 			else
 				put('bg_img_B',image1_bg); %timeresolved --> same bg image for a and b
 			end
-			set(handles.preview_preprocess, 'String', 'Preview current frame');drawnow;
+			set(handles.preview_preprocess, 'String', 'Apply and preview current frame');drawnow;
 			toolsavailable(1)
 		else % user has checkbox enabled, but doesn't want to calculate the background...
 			set(handles.bg_subtract,'Value',0);
@@ -4305,14 +4305,16 @@ if ok==1
 	int4=str2num(get(handles.edit52,'string'));
 	mask_auto = get(handles.mask_auto_box,'value');
 	[imdeform, repeat, do_pad] = CorrQuality;
+	bg_img_A = retr('bg_img_A'); %contains bg image, or is empty array
+	bg_img_B = retr('bg_img_B');
 	%übergeben: Video frame selection
 	if retr('video_selection_done') == 0
 		video_frame_selection=[];
-		[x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, filepath,video_frame_selection,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
+		[x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, filepath,video_frame_selection,bg_img_A,bg_img_B,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
 	else
 		video_frame_selection=retr('video_frame_selection');
 		video_reader_object = retr('video_reader_object');
-		[x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, video_reader_object ,video_frame_selection,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
+		[x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, video_reader_object ,video_frame_selection,bg_img_A,bg_img_B,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
 	end
 	
 	cancel = retr('cancel');
@@ -4635,6 +4637,24 @@ try
 	set(handles.checkbox26, 'value',pass2);
 	set(handles.checkbox27, 'value',pass3);
 	set(handles.checkbox28, 'value',pass4);
+	if pass2 == 1
+		set(handles.edit50, 'enable','on')
+	else
+		set(handles.edit50, 'enable','off')
+	end
+	if pass3 == 1
+		set(handles.edit51, 'enable','on')
+	else
+		set(handles.edit51, 'enable','off')
+	end
+	if pass4 == 1
+		set(handles.edit52, 'enable','on')
+	else
+		set(handles.edit52, 'enable','off')
+	end
+	
+	
+	
 	set(handles.edit50, 'string',pass2val);
 	set(handles.edit51, 'string',pass3val);
 	set(handles.edit52, 'string',pass4val);
@@ -6926,6 +6946,13 @@ catch
 	disp('Old version compatibility|');
 end
 
+try
+	bg_img_A=retr('bg_img_A');
+	bg_img_B=retr('bg_img_B');
+catch
+	disp('Could not fetch bg imgs')
+end
+
 
 %handles lÃ¶schen?
 clear handles
@@ -6958,7 +6985,8 @@ else
 	hgui=getappdata(0,'hgui');
 	warning off all
 	try
-		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'caluv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object');
+		%even if a variable doesn't exist, this doesn't throw an error...
+		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'caluv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B');
 	catch
 		disp('Old version compatibility.')
 		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'caluv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
@@ -7017,6 +7045,22 @@ else
 	set(handles.checkbox26, 'value',vars.pass2);
 	set(handles.checkbox27, 'value',vars.pass3);
 	set(handles.checkbox28, 'value',vars.pass4);
+	
+	if vars.pass2 == 1
+		set(handles.edit50, 'enable','on')
+	else
+		set(handles.edit50, 'enable','off')
+	end
+	if vars.pass3 == 1
+		set(handles.edit51, 'enable','on')
+	else
+		set(handles.edit51, 'enable','off')
+	end
+	if vars.pass4 == 1
+		set(handles.edit52, 'enable','on')
+	else
+		set(handles.edit52, 'enable','off')
+	end
 	set(handles.edit50, 'string',vars.pass2val);
 	set(handles.edit51, 'string',vars.pass3val);
 	set(handles.edit52, 'string',vars.pass4val);
@@ -7052,6 +7096,16 @@ else
 		end
 	catch
 		disp('.')
+	end
+	
+	try
+		if ~isempty(vars.bg_img_A)
+			set(handles.bg_subtract,'Value',1);
+		else
+			set(handles.bg_subtract,'Value',1);
+		end
+	catch
+		disp('Could not set bg checkbox')
 	end
 	
 	%reset zoom
