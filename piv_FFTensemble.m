@@ -16,8 +16,15 @@ tic
 skippy=0;
 for ensemble_i1=1:2:amount_input_imgs
 	if isempty(video_frame_selection) %list with image files was passed
-		image1=imread(filepath{ensemble_i1});
-		image2=imread(filepath{ensemble_i1+1});
+		%detect if it is b16 or standard pixel image
+		[~,~,ext] = fileparts(filepath{1});
+		if strcmp(ext,'.b16')
+			image1=f_readB16(filepath{ensemble_i1});
+			image2=f_readB16(filepath{ensemble_i1+1});
+		else
+			image1=imread(filepath{ensemble_i1});
+			image2=imread(filepath{ensemble_i1+1});
+		end
 	else % video file was passed
 		image1 = read(filepath,video_frame_selection(ensemble_i1));
 		image2 = read(filepath,video_frame_selection(ensemble_i1+1));
@@ -384,8 +391,13 @@ if cancel == 0
                 skippy=0;
 			end
 			if isempty(video_frame_selection) %list with image files was passed
-				image1=imread(filepath{ensemble_i1});
-				image2=imread(filepath{ensemble_i1+1});
+				if strcmp(ext,'.b16')
+					image1=f_readB16(filepath{ensemble_i1});
+					image2=f_readB16(filepath{ensemble_i1+1});
+				else
+					image1=imread(filepath{ensemble_i1});
+					image2=imread(filepath{ensemble_i1+1});
+				end
 			else % video file was passed
 				image1 = read(filepath,video_frame_selection(ensemble_i1));
 				image2 = read(filepath,video_frame_selection(ensemble_i1+1));
