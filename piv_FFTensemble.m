@@ -1,4 +1,4 @@
-function [xtable, ytable, utable, vtable, typevector,correlation_map] = piv_FFTensemble (autolimit,filepath,video_frame_selection,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roi_inpt,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad)
+function [xtable, ytable, utable, vtable, typevector,correlation_map] = piv_FFTensemble (autolimit,filepath,video_frame_selection,bg_img_A,bg_img_B,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roi_inpt,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad)
 %this funtion performs the  PIV analysis. It is a modification of the
 %pivFFTmulti, and will do ensemble correlation. That is a suitable
 %algorithm for low seeding density as it happens in microPIV.
@@ -26,7 +26,14 @@ for ensemble_i1=1:2:amount_input_imgs
 		image1=uint8(mean(image1,3));
         image2=uint8(mean(image2,3));
         disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
-    end
+	end
+	%Subtract background (if existent)
+	if ~isempty(bg_img_A)
+		image1=image1-bg_img_A;
+	end
+	if ~isempty(bg_img_B)
+		image2=image2-bg_img_B;
+	end
     if autolimit == 1 %if autolimit is desired: do autolimit for each image seperately
         stretcher = stretchlim(image1);
         minintens1 = stretcher(1);
@@ -386,7 +393,14 @@ if cancel == 0
             if size(image1,3)>1
                 image1=uint8(mean(image1,3));
                 image2=uint8(mean(image2,3));
-            end
+			end
+			%subtract bg if present
+			if ~isempty(bg_img_A)
+				image1=image1-bg_img_A;
+			end
+			if ~isempty(bg_img_B)
+				image2=image2-bg_img_B;
+			end
             if autolimit == 1 %if autolimit is desired: do autolimit for each image seperately
                 stretcher = stretchlim(image1);
                 minintens1 = stretcher(1);
@@ -735,7 +749,7 @@ if cancel == 0
                         image1_cut=image1_cut-mean(image1_cut,[1 2]);
                         image2_cut=image2_cut-mean(image2_cut,[1 2]);
                     catch
-                        for oldmatlab=1:size(image1_cut,3);
+                        for oldmatlab=1:size(image1_cut,3)
                             image1_cut(:,:,oldmatlab)=image1_cut(:,:,oldmatlab)-mean(mean(image1_cut(:,:,oldmatlab)));
                             image2_cut(:,:,oldmatlab)=image2_cut(:,:,oldmatlab)-mean(mean(image2_cut(:,:,oldmatlab)));
                         end
@@ -769,7 +783,7 @@ if cancel == 0
                         image1_cut=image1_cut-mean(image1_cut,[1 2]);
                         image2_cut=image2_cut-mean(image2_cut,[1 2]);
                     catch
-                        for oldmatlab=1:size(image1_cut,3);
+                        for oldmatlab=1:size(image1_cut,3)
                             image1_cut(:,:,oldmatlab)=image1_cut(:,:,oldmatlab)-mean(mean(image1_cut(:,:,oldmatlab)));
                             image2_cut(:,:,oldmatlab)=image2_cut(:,:,oldmatlab)-mean(mean(image2_cut(:,:,oldmatlab)));
                         end
