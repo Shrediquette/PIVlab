@@ -27,9 +27,10 @@ handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 guidata(MainWindow,handles)
 setappdata(0,'hgui',MainWindow);
 
-version = '2.39';
+version = '2.40';
 put('PIVver', version);
 v=ver('MATLAB');
+%splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','on','handlevisibility','off');movegui(splashscreen,'center');drawnow;
 disp(['Please wait, starting PIVlab GUI...' sprintf('\n')])
 disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
 disp(['-> Starting PIVlab ' version '.'])
@@ -138,8 +139,8 @@ axes1=axes('units','characters');
 axis image;
 set(gca,'ActivePositionProperty','outerposition');%,'Box','off','DataAspectRatioMode','auto','Layer','bottom','Units','normalized');
 set(MainWindow, 'Name',['PIVlab ' retr('PIVver') ' by William Thielicke and Eize J. Stamhuis'])
-movegui(MainWindow,'center')
-set(MainWindow, 'Visible','on');
+%movegui(MainWindow,'center')
+%set(MainWindow, 'Visible','on');
 %displogo(1)
 if strncmp (date,'15-Oct',6)
 	yr=date;
@@ -230,10 +231,12 @@ try
 	if strcmp(version,web_version) == 1
 		update_msg = 'You have the latest PIVlab version.';
 		put('update_msg_color',[0 0.75 0]);
-		
-	else
+	elseif str2num (version) < str2num(web_version)
 		update_msg = ['PIVlab is outdated. Please update to version ' web_version];
 		put('update_msg_color',[0.85 0 0]);
+	elseif str2num (version) > str2num(web_version)
+		update_msg = ['Your PIVlab version is newer than the latest official release.'];
+		put('update_msg_color',[0.5 0.5 0]);
 	end
 catch
 	%Either the download failed, or the file downloaded is empty.
@@ -244,6 +247,9 @@ clear filename_update current_url fileID_update outfilename web_version trash_up
 disp (update_msg)
 put('update_msg',update_msg);
 disp ([sprintf('\n') '... done.'])
+%close(splashscreen)
+movegui(MainWindow,'center')
+set(MainWindow, 'Visible','on');drawnow;
 displogo(1)
 
 function destroyUI
