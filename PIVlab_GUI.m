@@ -63,7 +63,7 @@ catch
 end
 try
 	ctr=0;
-	pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'Background_GUI.m' 'Background_GUI.fig' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg'};
+	pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg'};
 	for i=1:size(pivFiles,2)
 		if exist(pivFiles{1,i},'file')~=2
 			disp(['ERROR: A required file was not found: ' pivFiles{1,i}]);
@@ -510,10 +510,6 @@ parentitem=get(handles.multip03, 'Position');
 item=[0 0 0 0];
 item=[0 item(2)+item(4)+25 parentitem(3) 2];
 handles.preview_preprocess = uicontrol(handles.multip03,'Style','pushbutton','String','Apply and preview current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preview_preprocess_Callback,'Tag','preview_preprocess','TooltipString','Preview the effect of image pre-processing');
-
-%item=[0 item(2)+item(4)+margin*2 parentitem(3) 2];
-%handles.Start_BG_GUI = uicontrol(handles.multip03,'Style','pushbutton','String','Background subtraction GUI','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @Start_BG_GUI_Callback,'Tag','Start_BG_GUI','TooltipString','Extract the mean background signal from a large series of images that all contain the same background signal');
-
 
 %% Multip04
 handles.multip04 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','PIV settings (CTRL+S)', 'Tag','multip04','fontweight','bold');
@@ -9038,9 +9034,6 @@ end
 if str2num(get(hObject,'String'))>1
 	set(hObject,'String',0);
 end
-
-function Start_BG_GUI_Callback(~, ~, ~)
-Background_GUI
 
 function filenamebox_Callback (~, ~)
 handles=gethand;
