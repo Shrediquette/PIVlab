@@ -2093,7 +2093,7 @@ if get(handles.bg_subtract,'Value')==1
 	end
 	else
 		set(handles.bg_subtract,'Value',0);
-		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time-resolved ABABABBA' sprintf('\n') 'Pair wise'])
+		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'])
 		uiwait
 	end
 end
