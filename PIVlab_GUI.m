@@ -1960,6 +1960,7 @@ handles=gethand;
 if get(handles.bg_subtract,'Value')==1
 	bg_img_A = retr('bg_img_A');
 	bg_img_B = retr('bg_img_B');
+	if retr('sequencer') ~= 2 % bg subtraction only makes sense with time-resolved and pairwise sequencing style, not with reference style.
 	if isempty(bg_img_A) || isempty(bg_img_B)
 		answer = questdlg('Mean intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
 		if strcmp(answer , 'OK')
@@ -2089,6 +2090,11 @@ if get(handles.bg_subtract,'Value')==1
 		end
 	else
 		%disp('BG exists')
+	end
+	else
+		set(handles.bg_subtract,'Value',0);
+		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time-resolved ABABABBA' sprintf('\n') 'Pair wise'])
+		uiwait
 	end
 end
 
@@ -2782,13 +2788,25 @@ if ~isequal(path,0)
 				end
 			end
 		end
-	else %sequencer=0
+	elseif sequencer==0 
 		for i=1:size(path,1)
 			if path(i).isdir == 0 %remove directories from selection
 				if exist('filepath','var')==0 %first loop
 					filepath{1,1}=path(i).name;
 				else
 					filepath{size(filepath,1)+1,1}=path(i).name;
+					filepath{size(filepath,1)+1,1}=path(i).name;
+				end
+			end
+		end
+	elseif sequencer == 2 % Reference image style
+		for i=1:size(path,1)
+			if path(i).isdir == 0 %remove directories from selection
+				if exist('filepath','var')==0 %first loop
+					reference_image_i=i;
+					filepath=[];
+				else
+					filepath{size(filepath,1)+1,1}=path(reference_image_i).name;
 					filepath{size(filepath,1)+1,1}=path(i).name;
 				end
 			end
