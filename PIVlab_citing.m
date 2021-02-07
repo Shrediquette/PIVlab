@@ -59,9 +59,12 @@ handles.output = hObject;
 guidata(hObject, handles);
 handles=guihandles(gcf);
 
-hgui=getappdata(0,'hgui');
-var=getappdata(hgui, 'PIVver');
-
+try
+	hgui=getappdata(0,'hgui');
+	var=getappdata(hgui, 'PIVver');
+catch
+	var='';
+end
 set(handles.edit5,'String',['Thielicke, W. & Stamhuis, E.J. (2014). PIVlab – Towards User-friendly, Affordable and Accurate Digital Particle Image Velocimetry in MATLAB. Journal of Open Research Software 2(1):e30, DOI: http://dx.doi.org/10.5334/jors.bl']);
 set(handles.edit2,'String',['Thielicke, W. & Stamhuis, E.J. (2014): PIVlab - Time-Resolved Digital Particle Image Velocimetry Tool for MATLAB (version: ' var '), DOI: http://dx.doi.org/10.6084/m9.figshare.1092508']);
 set(handles.edit3,'String',['Thielicke, W. (2014): The Flapping Flight of Birds - Analysis and Application. Phd thesis, Rijksuniversiteit Groningen, http://irs.ub.rug.nl/ppn/382783069']);

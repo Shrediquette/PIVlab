@@ -53,6 +53,11 @@ end
 
 if wienerwurst == 1
     in_roi=wiener2(in_roi,[wienerwurstsize wienerwurstsize]);
+	%wiener denoise might be pretty useless? At least I didn't see any
+	%benefits yet. So I add another low pass filter, which might actually help in
+	%cases with noise
+	h = fspecial('gaussian',wienerwurstsize,wienerwurstsize/2); 
+	in_roi=imfilter(in_roi,h,'replicate');
 end
 
 out=in;

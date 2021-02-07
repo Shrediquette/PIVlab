@@ -27,9 +27,10 @@ handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 guidata(MainWindow,handles)
 setappdata(0,'hgui',MainWindow);
 
-version = '2.39';
+version = '2.40';
 put('PIVver', version);
 v=ver('MATLAB');
+%splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','on','handlevisibility','off');movegui(splashscreen,'center');drawnow;
 disp(['Please wait, starting PIVlab GUI...' sprintf('\n')])
 disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
 disp(['-> Starting PIVlab ' version '.'])
@@ -62,7 +63,7 @@ catch
 end
 try
 	ctr=0;
-	pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'Background_GUI.m' 'Background_GUI.fig' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg'};
+	pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg'};
 	for i=1:size(pivFiles,2)
 		if exist(pivFiles{1,i},'file')~=2
 			disp(['ERROR: A required file was not found: ' pivFiles{1,i}]);
@@ -138,8 +139,8 @@ axes1=axes('units','characters');
 axis image;
 set(gca,'ActivePositionProperty','outerposition');%,'Box','off','DataAspectRatioMode','auto','Layer','bottom','Units','normalized');
 set(MainWindow, 'Name',['PIVlab ' retr('PIVver') ' by William Thielicke and Eize J. Stamhuis'])
-movegui(MainWindow,'center')
-set(MainWindow, 'Visible','on');
+%movegui(MainWindow,'center')
+%set(MainWindow, 'Visible','on');
 %displogo(1)
 if strncmp (date,'15-Oct',6)
 	yr=date;
@@ -230,10 +231,12 @@ try
 	if strcmp(version,web_version) == 1
 		update_msg = 'You have the latest PIVlab version.';
 		put('update_msg_color',[0 0.75 0]);
-		
-	else
+	elseif str2num (version) < str2num(web_version)
 		update_msg = ['PIVlab is outdated. Please update to version ' web_version];
 		put('update_msg_color',[0.85 0 0]);
+	elseif str2num (version) > str2num(web_version)
+		update_msg = ['Your PIVlab version is newer than the latest official release.'];
+		put('update_msg_color',[0.5 0.5 0]);
 	end
 catch
 	%Either the download failed, or the file downloaded is empty.
@@ -244,6 +247,9 @@ clear filename_update current_url fileID_update outfilename web_version trash_up
 disp (update_msg)
 put('update_msg',update_msg);
 disp ([sprintf('\n') '... done.'])
+%close(splashscreen)
+movegui(MainWindow,'center')
+set(MainWindow, 'Visible','on');drawnow;
 displogo(1)
 
 function destroyUI
@@ -470,7 +476,7 @@ item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.enable_intenscap = uicontrol(handles.multip03,'Style','checkbox', 'value',0, 'String','Enable intensity capping','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','enable_intenscap','TooltipString','Intensity capping. Only needed for some special cases');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
-handles.wienerwurst = uicontrol(handles.multip03,'Style','checkbox', 'value',0, 'String','Wiener2 denoise filter','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','wienerwurst','TooltipString','Wiener denoise filter. Only needed for some special cases');
+handles.wienerwurst = uicontrol(handles.multip03,'Style','checkbox', 'value',0, 'String','Wiener2 denoise and low pass','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','wienerwurst','TooltipString','Wiener denoise filter and Gaussian low pass. Only needed for some special cases');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text159 = uicontrol(handles.multip03,'Style','text', 'String','Window size [px]','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text159');
@@ -493,11 +499,17 @@ handles.minintens = uicontrol(handles.multip03,'Style','edit', 'String','0','Uni
 item=[parentitem(3)/2 item(2) parentitem(3)/3*1 1];
 handles.maxintens = uicontrol(handles.multip03,'Style','edit', 'String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','maxintens','Callback',@minintens_Callback,'TooltipString','Upper bound of the histogram [0...1]');
 
-item=[0 item(2)+item(4)+margin*2 parentitem(3) 2];
-handles.preview_preprocess = uicontrol(handles.multip03,'Style','pushbutton','String','Preview current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preview_preprocess_Callback,'Tag','preview_preprocess','TooltipString','Preview the effect of image pre-processing');
+item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 3.5];
+handles.uipanel351 = uipanel(handles.multip03, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Background Subtraction', 'Tag','uipanel351','fontweight','bold');
+parentitem=get(handles.uipanel351, 'Position');
+item=[0 0 0 0];
+item=[0 item(2)+item(4) parentitem(3) 1];
+handles.bg_subtract = uicontrol(handles.uipanel351,'Style','checkbox', 'value',0, 'String','Subtract mean intensity','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bg_subtract','TooltipString','Automatic stretching of the image intensity histogram. Important for 16-bit images.');
 
-item=[0 item(2)+item(4)+margin*2 parentitem(3) 2];
-handles.Start_BG_GUI = uicontrol(handles.multip03,'Style','pushbutton','String','Background subtraction GUI','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @Start_BG_GUI_Callback,'Tag','Start_BG_GUI','TooltipString','Extract the mean background signal from a large series of images that all contain the same background signal');
+parentitem=get(handles.multip03, 'Position');
+item=[0 0 0 0];
+item=[0 item(2)+item(4)+25 parentitem(3) 2];
+handles.preview_preprocess = uicontrol(handles.multip03,'Style','pushbutton','String','Apply and preview current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preview_preprocess_Callback,'Tag','preview_preprocess','TooltipString','Preview the effect of image pre-processing');
 
 %% Multip04
 handles.multip04 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','PIV settings (CTRL+S)', 'Tag','multip04','fontweight','bold');
@@ -1911,6 +1923,7 @@ hgui=getappdata(0,'hgui');
 handles=guihandles(hgui);
 
 function currentimage = get_img(selected)
+handles=gethand;
 filepath = retr('filepath');
 if retr('video_selection_done') == 0
 	[~,~,ext] = fileparts(filepath{selected});
@@ -1924,6 +1937,167 @@ else
 	video_frame_selection=retr('video_frame_selection');
 	currentimage = read(video_reader_object,video_frame_selection(selected));
 end
+if get(handles.bg_subtract,'Value')==1 % Hier wird ja nur display gemacht. also lade nur das passende bild.
+	toggler=retr('toggler');
+	if toggler == 0
+		bg_img = retr('bg_img_A');
+	else
+		bg_img = retr('bg_img_B');
+	end
+	if isempty(bg_img) %checkbox is enabled, but no bg is present
+		set(handles.bg_subtract,'Value',0);
+	else
+		if size(currentimage,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+			currentimage = rgb2gray(currentimage)-bg_img;
+		else
+			currentimage = currentimage-bg_img;
+		end
+	end
+end
+
+function generate_BG_img
+handles=gethand;
+if get(handles.bg_subtract,'Value')==1
+	bg_img_A = retr('bg_img_A');
+	bg_img_B = retr('bg_img_B');
+	if retr('sequencer') ~= 2 % bg subtraction only makes sense with time-resolved and pairwise sequencing style, not with reference style.
+	if isempty(bg_img_A) || isempty(bg_img_B)
+		answer = questdlg('Mean intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
+		if strcmp(answer , 'OK')
+			%disp('BG not present, calculating now')
+			%% Calculate BG for all images....
+			% read first image to determine properties
+			filepath = retr('filepath');
+			if retr('video_selection_done') == 0
+				sequencer=retr('sequencer'); %Timeresolved or pairwise 0=timeres.; 1=pairwise
+				[~,~,ext] = fileparts(filepath{1});
+				if strcmp(ext,'.b16')
+					image1=f_readB16(filepath{1});
+					image2=f_readB16(filepath{2});
+					imagesource='b16_image';
+				else
+					image1=imread(filepath{1});
+					image2=imread(filepath{2});
+					imagesource='normal_pixel_image';
+				end
+			else
+				video_reader_object = retr('video_reader_object');
+				video_frame_selection=retr('video_frame_selection');
+				image1 = read(video_reader_object,video_frame_selection(1));
+				image2 = read(video_reader_object,video_frame_selection(2));
+				imagesource='from_video';
+				sequencer=0; %set sequencer to timeresolved for videos
+			end
+			if size(image1,3)>1
+				image1=rgb2gray(image1);
+				image2=rgb2gray(image2);
+				colorimg=1;
+			else
+				colorimg=0;
+			end
+			counter=1;
+			classimage=class(image1); %memorize the original image format
+			
+			if strcmp(classimage,'double')==1
+				image1=int64(image1*1024); %convert to int64 to accept very large numbers
+				image2=int64(image2*1024);
+			else
+				image1=int64(image1); %convert to int64 to accept very large numbers
+				image2=int64(image2);
+			end
+			if sequencer==0 %time-resolved
+				start_bg=2;
+				skip_bg=1;
+			else
+				start_bg=3;
+				skip_bg=2;
+			end
+			%perform image addition
+			%if timeresolved: generate only one background image from all
+			%images
+			%if not: generate two background images. One from even frames,
+			%one from odd frames
+			toolsavailable(0)
+			for i=start_bg:skip_bg:size(filepath,1)
+				counter=counter+1;
+				set(handles.preview_preprocess, 'String', ['Progress: ' num2str(round(i/size(filepath,1)*99)) ' %']);drawnow;
+				if strcmp('b16_image',imagesource)
+					image_to_add1 = f_readB16(filepath{i});
+					if sequencer==1 %not time-resolved
+						image_to_add2 = f_readB16(filepath{i+1});
+					end
+				elseif strcmp('normal_pixel_image',imagesource)
+					image_to_add1 = imread(filepath{i});
+					if sequencer==1 %not time-resolved
+						image_to_add2 = imread(filepath{i+1});
+					end
+				elseif strcmp('from_video',imagesource)
+					image_to_add1 = read(video_reader_object,video_frame_selection(i));
+					if sequencer==1 %not time-resolved
+						image_to_add2 = read(video_reader_object,video_frame_selection(i+1));
+					end
+				end
+				if strcmp(classimage,'double')==1
+					image_to_add1=image_to_add1*1024;
+					if sequencer==1 %not time-resolved
+						image_to_add2=image_to_add2*1024;
+					end
+				end
+				if colorimg==1
+					image_to_add1 = rgb2gray(image_to_add1);
+					if sequencer==1 %not time-resolved
+						image_to_add2 = rgb2gray(image_to_add2);
+					end
+				end
+				
+				image1=image1+int64(image_to_add1);
+				if sequencer==1 %not time-resolved
+					image2=image2+int64(image_to_add2);
+				end
+			end
+			%Making average in the format of the original image
+			if strcmp(classimage,'uint16')==1
+				image1_bg=uint16(image1/counter);
+				if sequencer==1 %not time-resolved
+					image2_bg=uint16(image2/counter);
+				end
+			end
+			if strcmp(classimage,'uint8')==1
+				image1_bg=uint8(image1/counter);
+				if sequencer==1 %not time-resolved
+					image2_bg=uint8(image2/counter);
+				end
+			end
+			if strcmp(classimage,'double')==1
+				image1_bg=double(image1);
+				image1_bg=(image1_bg/counter/1024);
+				if sequencer==1 %not time-resolved
+					image2_bg=double(image2);
+					image2_bg=(image2_bg/counter/1024);
+				end
+			end
+			%make results accessible to the rest of the GUI:
+			put('bg_img_A',image1_bg);
+			if sequencer==1 %not time-resolved
+				put('bg_img_B',image2_bg);
+			else
+				put('bg_img_B',image1_bg); %timeresolved --> same bg image for a and b
+			end
+			set(handles.preview_preprocess, 'String', 'Apply and preview current frame');drawnow;
+			toolsavailable(1)
+		else % user has checkbox enabled, but doesn't want to calculate the background...
+			set(handles.bg_subtract,'Value',0);
+		end
+	else
+		%disp('BG exists')
+	end
+	else
+		set(handles.bg_subtract,'Value',0);
+		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time-resolved ABABABBA' sprintf('\n') 'Pair wise'])
+		uiwait
+	end
+end
+
 
 function sliderdisp %this is the most important function, doing all the displaying
 handles=gethand;
@@ -2536,6 +2710,8 @@ if getappdata(hgui,'video_selection_done')
 	put('yzoomlimit',[]);
 	sliderrange
 	set (handles.filenamebox, 'string', filename);
+	put('bg_img_A',[]);
+	put('bg_img_B',[]);
 	put ('resultslist', []); %clears old results
 	put ('derived',[]);
 	put('displaywhat',1);%vectors
@@ -2612,13 +2788,25 @@ if ~isequal(path,0)
 				end
 			end
 		end
-	else %sequencer=0
+	elseif sequencer==0 
 		for i=1:size(path,1)
 			if path(i).isdir == 0 %remove directories from selection
 				if exist('filepath','var')==0 %first loop
 					filepath{1,1}=path(i).name;
 				else
 					filepath{size(filepath,1)+1,1}=path(i).name;
+					filepath{size(filepath,1)+1,1}=path(i).name;
+				end
+			end
+		end
+	elseif sequencer == 2 % Reference image style
+		for i=1:size(path,1)
+			if path(i).isdir == 0 %remove directories from selection
+				if exist('filepath','var')==0 %first loop
+					reference_image_i=i;
+					filepath=[];
+				else
+					filepath{size(filepath,1)+1,1}=path(reference_image_i).name;
 					filepath{size(filepath,1)+1,1}=path(i).name;
 				end
 			end
@@ -2658,6 +2846,9 @@ if ~isequal(path,0)
 		put('manualdeletion',[]);
 		put('streamlinesX',[]);
 		put('streamlinesY',[]);
+		put('bg_img_A',[]);
+		put('bg_img_B',[]);
+		set(handles.bg_subtract,'Value',0);
 		set(handles.fileselector, 'value',1);
 		
 		set(handles.minintens, 'string', 0);
@@ -3575,6 +3766,7 @@ if size(filepath,1) >1 || retr('video_selection_done') == 1
 	toggler=retr('toggler');
 	filepath=retr('filepath');
 	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
+	generate_BG_img
 	img=get_img(selected);
 	clahe=get(handles.clahe_enable,'value');
 	highp=get(handles.enable_highpass,'value');
@@ -3610,7 +3802,6 @@ if size(filepath,1) >1 || retr('video_selection_done') == 1
 		ximask=maskiererx{currentframe};
 		if size(ximask,1)>1
 			dispMASK(1-str2num(get(handles.masktransp,'String'))/100)
-			
 		end
 	end
 end
@@ -4134,14 +4325,16 @@ if ok==1
 	int4=str2num(get(handles.edit52,'string'));
 	mask_auto = get(handles.mask_auto_box,'value');
 	[imdeform, repeat, do_pad] = CorrQuality;
+	bg_img_A = retr('bg_img_A'); %contains bg image, or is empty array
+	bg_img_B = retr('bg_img_B');
 	%übergeben: Video frame selection
 	if retr('video_selection_done') == 0
 		video_frame_selection=[];
-		[x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, filepath,video_frame_selection,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
+		[x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, filepath,video_frame_selection,bg_img_A,bg_img_B,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
 	else
 		video_frame_selection=retr('video_frame_selection');
 		video_reader_object = retr('video_reader_object');
-		[x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, video_reader_object ,video_frame_selection,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
+		[x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, video_reader_object ,video_frame_selection,bg_img_A,bg_img_B,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
 	end
 	
 	cancel = retr('cancel');
@@ -4464,6 +4657,24 @@ try
 	set(handles.checkbox26, 'value',pass2);
 	set(handles.checkbox27, 'value',pass3);
 	set(handles.checkbox28, 'value',pass4);
+	if pass2 == 1
+		set(handles.edit50, 'enable','on')
+	else
+		set(handles.edit50, 'enable','off')
+	end
+	if pass3 == 1
+		set(handles.edit51, 'enable','on')
+	else
+		set(handles.edit51, 'enable','off')
+	end
+	if pass4 == 1
+		set(handles.edit52, 'enable','on')
+	else
+		set(handles.edit52, 'enable','off')
+	end
+	
+	
+	
 	set(handles.edit50, 'string',pass2val);
 	set(handles.edit51, 'string',pass3val);
 	set(handles.edit52, 'string',pass4val);
@@ -6755,6 +6966,13 @@ catch
 	disp('Old version compatibility|');
 end
 
+try
+	bg_img_A=retr('bg_img_A');
+	bg_img_B=retr('bg_img_B');
+catch
+	disp('Could not fetch bg imgs')
+end
+
 
 %handles lÃ¶schen?
 clear handles
@@ -6787,7 +7005,8 @@ else
 	hgui=getappdata(0,'hgui');
 	warning off all
 	try
-		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'caluv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object');
+		%even if a variable doesn't exist, this doesn't throw an error...
+		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'caluv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B');
 	catch
 		disp('Old version compatibility.')
 		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'caluv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
@@ -6846,6 +7065,22 @@ else
 	set(handles.checkbox26, 'value',vars.pass2);
 	set(handles.checkbox27, 'value',vars.pass3);
 	set(handles.checkbox28, 'value',vars.pass4);
+	
+	if vars.pass2 == 1
+		set(handles.edit50, 'enable','on')
+	else
+		set(handles.edit50, 'enable','off')
+	end
+	if vars.pass3 == 1
+		set(handles.edit51, 'enable','on')
+	else
+		set(handles.edit51, 'enable','off')
+	end
+	if vars.pass4 == 1
+		set(handles.edit52, 'enable','on')
+	else
+		set(handles.edit52, 'enable','off')
+	end
 	set(handles.edit50, 'string',vars.pass2val);
 	set(handles.edit51, 'string',vars.pass3val);
 	set(handles.edit52, 'string',vars.pass4val);
@@ -6881,6 +7116,16 @@ else
 		end
 	catch
 		disp('.')
+	end
+	
+	try
+		if ~isempty(vars.bg_img_A)
+			set(handles.bg_subtract,'Value',1);
+		else
+			set(handles.bg_subtract,'Value',1);
+		end
+	catch
+		disp('Could not set bg checkbox')
 	end
 	
 	%reset zoom
@@ -8808,9 +9053,6 @@ if str2num(get(hObject,'String'))>1
 	set(hObject,'String',0);
 end
 
-function Start_BG_GUI_Callback(~, ~, ~)
-Background_GUI
-
 function filenamebox_Callback (~, ~)
 handles=gethand;
 box_select=get(handles.filenamebox,'value');
@@ -8872,3 +9114,5 @@ function quick6_Callback (~,~)
 handles=gethand;
 set(handles.quick6,'Value',0)
 cal_actual_Callback
+
+%testing new ssh key acces via matlab
