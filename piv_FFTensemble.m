@@ -290,7 +290,8 @@ for ensemble_i1=1:2:amount_input_imgs
         h = fspecial('gaussian', 3, 1.5);
         h=h/h(2,2);
         h=1-h;
-        h=repmat(h,1,1,size(result_conv,3));
+        %h=repmat(h,1,1,size(result_conv,3));
+        h=repmat(h,[1,1,size(result_conv,3)]);
         h=h.*result_conv((interrogationarea/2)+SubPixOffset-1:(interrogationarea/2)+SubPixOffset+1,(interrogationarea/2)+SubPixOffset-1:(interrogationarea/2)+SubPixOffset+1,:);
         result_conv((interrogationarea/2)+SubPixOffset-1:(interrogationarea/2)+SubPixOffset+1,(interrogationarea/2)+SubPixOffset-1:(interrogationarea/2)+SubPixOffset+1,:)=h;
     end
@@ -821,7 +822,8 @@ if cancel == 0
                 %h = fspecial('gaussian', sizeones*2+1,1);
                 h=fspecial('disk',4);
                 h=h/max(max(h));
-                h=repmat(h,1,1,size(result_conv,3));
+                %h=repmat(h,1,1,size(result_conv,3));
+                h=repmat(h,[1,1,size(result_conv,3)]);
                 emptymatrix((interrogationarea/2)+SubPixOffset-sizeones:(interrogationarea/2)+SubPixOffset+sizeones,(interrogationarea/2)+SubPixOffset-sizeones:(interrogationarea/2)+SubPixOffset+sizeones,:)=h;
                 result_conv = result_conv .* emptymatrix;
             end

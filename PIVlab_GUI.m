@@ -249,8 +249,8 @@ put('update_msg',update_msg);
 disp ([sprintf('\n') '... done.'])
 %close(splashscreen)
 movegui(MainWindow,'center')
-set(MainWindow, 'Visible','on');drawnow;
-displogo(1)
+set(MainWindow, 'Visible','on');
+displogo(1);drawnow;
 
 function destroyUI
 handles = guihandles; %alle handles mit tag laden und ansprechbar machen
@@ -1863,14 +1863,15 @@ if zoom==1
 	set(gca, 'ylim', [1 size(logoimg,1)]);
 	set(gca, 'ydir', 'reverse');
 	set(gca, 'xcolor', [0.94 0.94 0.94], 'ycolor', [0.94 0.94 0.94]) ;
-	for i=0:0.05:1
+	for i=0.5:0.05:1
 		RGB2=logoimg*i;
 		try
 			set (h, 'cdata', RGB2);
+			pause(0.05)
 		catch %#ok<*CTCH>
 			disp('.')
 		end
-		drawnow expose;
+		drawnow %limitrate;
 	end
 end
 %get(gca,'position')
@@ -2093,7 +2094,7 @@ if get(handles.bg_subtract,'Value')==1
 	end
 	else
 		set(handles.bg_subtract,'Value',0);
-		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time-resolved ABABABBA' sprintf('\n') 'Pair wise'])
+		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'])
 		uiwait
 	end
 end

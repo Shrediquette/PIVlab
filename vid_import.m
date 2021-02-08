@@ -180,7 +180,7 @@ video_loaded=0;
 					set(handles.skipframe,'enable','on')
 				end
 			else
-				errordlg({'Matlab could not import this video file. Most likely, the video codec cannot be used by Matlab. This is not a PIVlab-related issue. The exact error message is: ' newline ME.identifier newline ME.message});
+				errordlg({'Matlab could not import this video file. Most likely, the video codec cannot be used by Matlab. This is not a PIVlab-related issue. The exact error message is: ' sprintf('\n') ME.identifier sprintf('\n') ME.message});
 			end
 		end
 		
