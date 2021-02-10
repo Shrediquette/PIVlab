@@ -1989,22 +1989,29 @@ if get(handles.bg_subtract,'Value')==1
 				imagesource='from_video';
 				sequencer=0; %set sequencer to timeresolved for videos
 			end
+			classimage=class(image1); %memorize the original image format (double, uint8 etc)
+		
 			if size(image1,3)>1
-				image1=rgb2gray(image1);
+				image1=rgb2gray(image1); %rgb2gray conserves the variable class (single, double, uint8, uint16)
 				image2=rgb2gray(image2);
 				colorimg=1;
 			else
 				colorimg=0;
 			end
 			counter=1;
-			classimage=class(image1); %memorize the original image format
 			
-			if strcmp(classimage,'double')==1
-				image1=int64(image1*1024); %convert to int64 to accept very large numbers
-				image2=int64(image2*1024);
-			else
-				image1=int64(image1); %convert to int64 to accept very large numbers
-				image2=int64(image2);
+			%convert all image types to double, ranging from 0...1
+			if strcmp(classimage,'double')==1 %double stays double
+				%do nothing
+			elseif strcmp(classimage,'single')==1 %e.g. 32bit tif, ranges from 0...1
+				image1=double(image1);
+				image2=double(image2);
+			elseif strcmp(classimage,'uint16')==1 %e.g. 16bit tif, ranges from 0...65535
+				image1=double(image1)/65535;
+				image2=double(image2)/65535;
+			elseif strcmp(classimage,'uint8')==1 %0...255
+				image1=double(image1)/255;
+				image2=double(image2)/255;
 			end
 			if sequencer==0 %time-resolved
 				start_bg=2;
@@ -2019,18 +2026,23 @@ if get(handles.bg_subtract,'Value')==1
 			%if not: generate two background images. One from even frames,
 			%one from odd frames
 			toolsavailable(0)
+			updatecntr=0;
 			for i=start_bg:skip_bg:size(filepath,1)
 				counter=counter+1;
-				set(handles.preview_preprocess, 'String', ['Progress: ' num2str(round(i/size(filepath,1)*99)) ' %']);drawnow;
+				updatecntr=updatecntr+1;
+				if updatecntr==5
+					set(handles.preview_preprocess, 'String', ['Progress: ' num2str(round(i/size(filepath,1)*99)) ' %']);drawnow expose;
+					updatecntr=0;
+				end
 				if strcmp('b16_image',imagesource)
-					image_to_add1 = f_readB16(filepath{i});
+					image_to_add1 = f_readB16(filepath{i}); %will be double
 					if sequencer==1 %not time-resolved
 						image_to_add2 = f_readB16(filepath{i+1});
 					end
 				elseif strcmp('normal_pixel_image',imagesource)
 					image_to_add1 = imread(filepath{i});
 					if sequencer==1 %not time-resolved
-						image_to_add2 = imread(filepath{i+1});
+						image_to_add2 = imread(filepath{i+1}); %will be double or uint8
 					end
 				elseif strcmp('from_video',imagesource)
 					image_to_add1 = read(video_reader_object,video_frame_selection(i));
@@ -2038,45 +2050,72 @@ if get(handles.bg_subtract,'Value')==1
 						image_to_add2 = read(video_reader_object,video_frame_selection(i+1));
 					end
 				end
-				if strcmp(classimage,'double')==1
-					image_to_add1=image_to_add1*1024;
-					if sequencer==1 %not time-resolved
-						image_to_add2=image_to_add2*1024;
-					end
-				end
+				%images arrive in their original format here
+				%convert everything to grayscale and double [0...1]
 				if colorimg==1
-					image_to_add1 = rgb2gray(image_to_add1);
+					image_to_add1 = rgb2gray(image_to_add1); %will conserve image class
 					if sequencer==1 %not time-resolved
 						image_to_add2 = rgb2gray(image_to_add2);
 					end
 				end
-				
-				image1=image1+int64(image_to_add1);
-				if sequencer==1 %not time-resolved
-					image2=image2+int64(image_to_add2);
+				if strcmp(classimage,'double')==1
+					image_to_add1=image_to_add1;
+					if sequencer==1 %not time-resolved
+						image_to_add2=image_to_add2;
+					end
 				end
-			end
-			%Making average in the format of the original image
-			if strcmp(classimage,'uint16')==1
-				image1_bg=uint16(image1/counter);
-				if sequencer==1 %not time-resolved
-					image2_bg=uint16(image2/counter);
+				if strcmp(classimage,'single')==1
+					image_to_add1=double(image_to_add1);
+					if sequencer==1 %not time-resolved
+						image_to_add2=double(image_to_add2);
+					end
 				end
+				if strcmp(classimage,'uint8')==1
+					image_to_add1=double(image_to_add1)/255;
+					if sequencer==1 %not time-resolved
+						image_to_add2=double(image_to_add2)/255;
+					end
+				end				
+				if strcmp(classimage,'uint16')==1
+					image_to_add1=double(image_to_add1)/65535;
+					if sequencer==1 %not time-resolved
+						image_to_add2=double(image_to_add2)/65535;
+					end
+				end								
+				%now everything is double [0...1]
+				%Sum up  all images
+				image1=image1 +image_to_add1;
+				if sequencer==1 %not time-resolved
+					image2=image2+image_to_add2;
+				end
+			end %of for loop and image summing
+			
+			%divide the sum by the amount of summed images
+			image1_bg=image1/counter;
+			if sequencer==1 %not time-resolved
+				image2_bg=image2/counter;
 			end
+			
+			%Convert back to original image class, if not double anyway
 			if strcmp(classimage,'uint8')==1
-				image1_bg=uint8(image1/counter);
+				image1_bg=uint8(image1_bg*255);
 				if sequencer==1 %not time-resolved
-					image2_bg=uint8(image2/counter);
+					image2_bg=uint8(image2_bg*255);
 				end
 			end
-			if strcmp(classimage,'double')==1
-				image1_bg=double(image1);
-				image1_bg=(image1_bg/counter/1024);
+			if strcmp(classimage,'single')==1
+				image1_bg=single(image1_bg);
 				if sequencer==1 %not time-resolved
-					image2_bg=double(image2);
-					image2_bg=(image2_bg/counter/1024);
+					image2_bg=single(image2_bg);
+				end
+			end			
+			if strcmp(classimage,'uint16')==1
+				image1_bg=uint16(image1_bg*65535);
+				if sequencer==1 %not time-resolved
+					image2_bg=uint16(image2_bg*65535);
 				end
 			end
+			
 			%make results accessible to the rest of the GUI:
 			put('bg_img_A',image1_bg);
 			if sequencer==1 %not time-resolved
@@ -2089,9 +2128,11 @@ if get(handles.bg_subtract,'Value')==1
 		else % user has checkbox enabled, but doesn't want to calculate the background...
 			set(handles.bg_subtract,'Value',0);
 		end
+		
 	else
 		%disp('BG exists')
 	end
+	
 	else
 		set(handles.bg_subtract,'Value',0);
 		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'])
@@ -4137,6 +4178,7 @@ if ok==1
 				image2=uint8(mean(image2,3));
 				%disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
 			end
+			
 			set(handles.progress, 'string' , ['Frame progress: 0%']);drawnow; %#ok<*NBRAK>
 			clahe=get(handles.clahe_enable,'value');
 			highp=get(handles.enable_highpass,'value');
