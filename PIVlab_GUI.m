@@ -27,7 +27,7 @@ handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 guidata(MainWindow,handles)
 setappdata(0,'hgui',MainWindow);
 
-version = '2.40';
+version = '2.41';
 put('PIVver', version);
 v=ver('MATLAB');
 %splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','on','handlevisibility','off');movegui(splashscreen,'center');drawnow;
@@ -216,6 +216,8 @@ end
 filename_update = 'latest_version.txt';
 current_url = 'http://william.thielicke.org/PIVlab/latest_version.txt';
 % Update checking inspired by: https://www.mathworks.com/matlabcentral/fileexchange/64294-photoannotation
+update_msg = 'Could not check for updates'; %default message will be overwritten by the following lines
+put('update_msg_color',[0 0 0.75]);
 try
 	if exist('websave','builtin')||exist('websave','file')
 		outfilename=websave(filename_update,current_url,weboptions('Timeout',10));
@@ -231,10 +233,12 @@ try
 	if strcmp(version,web_version) == 1
 		update_msg = 'You have the latest PIVlab version.';
 		put('update_msg_color',[0 0.75 0]);
-	elseif str2num (version) < str2num(web_version)
+		
+		
+	elseif str2num (strrep(version,'.','')) < str2num(strrep(web_version,'.',''))
 		update_msg = ['PIVlab is outdated. Please update to version ' web_version];
 		put('update_msg_color',[0.85 0 0]);
-	elseif str2num (version) > str2num(web_version)
+	elseif str2num (strrep(version,'.','')) > str2num(strrep(web_version,'.',''))
 		update_msg = ['Your PIVlab version is newer than the latest official release.'];
 		put('update_msg_color',[0.5 0.5 0]);
 	end
@@ -1938,13 +1942,13 @@ else
 	video_frame_selection=retr('video_frame_selection');
 	currentimage = read(video_reader_object,video_frame_selection(selected));
 end
-if get(handles.bg_subtract,'Value')==1 % Hier wird ja nur display gemacht. also lade nur das passende bild.
-	toggler=retr('toggler');
-	if toggler == 0
+if get(handles.bg_subtract,'Value')==1
+	if mod(selected,2)==1 %uneven image nr.
 		bg_img = retr('bg_img_A');
 	else
 		bg_img = retr('bg_img_B');
 	end
+	
 	if isempty(bg_img) %checkbox is enabled, but no bg is present
 		set(handles.bg_subtract,'Value',0);
 	else
@@ -1955,184 +1959,187 @@ if get(handles.bg_subtract,'Value')==1 % Hier wird ja nur display gemacht. also 
 		end
 	end
 end
+currentimage(currentimage<0)=0; %bg subtraction may yield negative
+%results. I am unsure about the best way to deal with this data. Is
+%negative data useful, or just trash? Doesn't seem to make any difference
+%in the results however.
 
 function generate_BG_img
 handles=gethand;
 if get(handles.bg_subtract,'Value')==1
 	bg_img_A = retr('bg_img_A');
 	bg_img_B = retr('bg_img_B');
-	if retr('sequencer') ~= 2 % bg subtraction only makes sense with time-resolved and pairwise sequencing style, not with reference style.
-	if isempty(bg_img_A) || isempty(bg_img_B)
-		answer = questdlg('Mean intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
-		if strcmp(answer , 'OK')
-			%disp('BG not present, calculating now')
-			%% Calculate BG for all images....
-			% read first image to determine properties
-			filepath = retr('filepath');
-			if retr('video_selection_done') == 0
-				sequencer=retr('sequencer'); %Timeresolved or pairwise 0=timeres.; 1=pairwise
-				[~,~,ext] = fileparts(filepath{1});
-				if strcmp(ext,'.b16')
-					image1=f_readB16(filepath{1});
-					image2=f_readB16(filepath{2});
-					imagesource='b16_image';
+	sequencer=retr('sequencer');%Timeresolved or pairwise 0=timeres.; 1=pairwise
+	if sequencer ~= 2 % bg subtraction only makes sense with time-resolved and pairwise sequencing style, not with reference style.
+		if isempty(bg_img_A) || isempty(bg_img_B)
+			answer = questdlg('Mean intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
+			if strcmp(answer , 'OK')
+				%disp('BG not present, calculating now')
+				%% Calculate BG for all images....
+				% read first image to determine properties
+				filepath = retr('filepath');
+				if retr('video_selection_done') == 0
+					[~,~,ext] = fileparts(filepath{1});
+					if strcmp(ext,'.b16')
+						image1=f_readB16(filepath{1});
+						image2=f_readB16(filepath{2});
+						imagesource='b16_image';
+					else
+						image1=imread(filepath{1});
+						image2=imread(filepath{2});
+						imagesource='normal_pixel_image';
+					end
 				else
-					image1=imread(filepath{1});
-					image2=imread(filepath{2});
-					imagesource='normal_pixel_image';
+					video_reader_object = retr('video_reader_object');
+					video_frame_selection=retr('video_frame_selection');
+					image1 = read(video_reader_object,video_frame_selection(1));
+					image2 = read(video_reader_object,video_frame_selection(2));
+					imagesource='from_video';
 				end
-			else
-				video_reader_object = retr('video_reader_object');
-				video_frame_selection=retr('video_frame_selection');
-				image1 = read(video_reader_object,video_frame_selection(1));
-				image2 = read(video_reader_object,video_frame_selection(2));
-				imagesource='from_video';
-				sequencer=0; %set sequencer to timeresolved for videos
-			end
-			classimage=class(image1); %memorize the original image format (double, uint8 etc)
-		
-			if size(image1,3)>1
-				image1=rgb2gray(image1); %rgb2gray conserves the variable class (single, double, uint8, uint16)
-				image2=rgb2gray(image2);
-				colorimg=1;
-			else
-				colorimg=0;
-			end
-			counter=1;
-			
-			%convert all image types to double, ranging from 0...1
-			if strcmp(classimage,'double')==1 %double stays double
-				%do nothing
-			elseif strcmp(classimage,'single')==1 %e.g. 32bit tif, ranges from 0...1
-				image1=double(image1);
-				image2=double(image2);
-			elseif strcmp(classimage,'uint16')==1 %e.g. 16bit tif, ranges from 0...65535
-				image1=double(image1)/65535;
-				image2=double(image2)/65535;
-			elseif strcmp(classimage,'uint8')==1 %0...255
-				image1=double(image1)/255;
-				image2=double(image2)/255;
-			end
-			if sequencer==0 %time-resolved
-				start_bg=2;
-				skip_bg=1;
-			else
-				start_bg=3;
-				skip_bg=2;
-			end
-			%perform image addition
-			%if timeresolved: generate only one background image from all
-			%images
-			%if not: generate two background images. One from even frames,
-			%one from odd frames
-			toolsavailable(0)
-			updatecntr=0;
-			for i=start_bg:skip_bg:size(filepath,1)
-				counter=counter+1;
-				updatecntr=updatecntr+1;
-				if updatecntr==5
-					set(handles.preview_preprocess, 'String', ['Progress: ' num2str(round(i/size(filepath,1)*99)) ' %']);drawnow expose;
-					updatecntr=0;
+				classimage=class(image1); %memorize the original image format (double, uint8 etc)
+				
+				if size(image1,3)>1
+					image1=rgb2gray(image1); %rgb2gray conserves the variable class (single, double, uint8, uint16)
+					image2=rgb2gray(image2);
+					colorimg=1;
+				else
+					colorimg=0;
 				end
-				if strcmp('b16_image',imagesource)
-					image_to_add1 = f_readB16(filepath{i}); %will be double
-					if sequencer==1 %not time-resolved
-						image_to_add2 = f_readB16(filepath{i+1});
-					end
-				elseif strcmp('normal_pixel_image',imagesource)
-					image_to_add1 = imread(filepath{i});
-					if sequencer==1 %not time-resolved
-						image_to_add2 = imread(filepath{i+1}); %will be double or uint8
-					end
-				elseif strcmp('from_video',imagesource)
-					image_to_add1 = read(video_reader_object,video_frame_selection(i));
-					if sequencer==1 %not time-resolved
-						image_to_add2 = read(video_reader_object,video_frame_selection(i+1));
-					end
+				counter=1;
+				
+				%convert all image types to double, ranging from 0...1
+				if strcmp(classimage,'double')==1 %double stays double
+					%do nothing
+				elseif strcmp(classimage,'single')==1 %e.g. 32bit tif, ranges from 0...1
+					image1=double(image1);
+					image2=double(image2);
+				elseif strcmp(classimage,'uint16')==1 %e.g. 16bit tif, ranges from 0...65535
+					image1=double(image1)/65535;
+					image2=double(image2)/65535;
+				elseif strcmp(classimage,'uint8')==1 %0...255
+					image1=double(image1)/255;
+					image2=double(image2)/255;
 				end
-				%images arrive in their original format here
-				%convert everything to grayscale and double [0...1]
-				if colorimg==1
-					image_to_add1 = rgb2gray(image_to_add1); %will conserve image class
-					if sequencer==1 %not time-resolved
-						image_to_add2 = rgb2gray(image_to_add2);
-					end
+				if sequencer==0 %time-resolved
+					start_bg=2;
+					skip_bg=1;
+				else
+					start_bg=3;
+					skip_bg=2;
 				end
-				if strcmp(classimage,'double')==1
-					image_to_add1=image_to_add1;
+				%perform image addition
+				%if timeresolved: generate only one background image from all
+				%images
+				%if not: generate two background images. One from even frames,
+				%one from odd frames
+				toolsavailable(0)
+				updatecntr=0;
+				for i=start_bg:skip_bg:size(filepath,1)
+					counter=counter+1;
+					updatecntr=updatecntr+1;
+					if updatecntr==5
+						set(handles.preview_preprocess, 'String', ['Progress: ' num2str(round(i/size(filepath,1)*99)) ' %']);drawnow expose;
+						updatecntr=0;
+					end
+					if strcmp('b16_image',imagesource)
+						image_to_add1 = f_readB16(filepath{i}); %will be double
+						if sequencer==1 %not time-resolved
+							image_to_add2 = f_readB16(filepath{i+1});
+						end
+					elseif strcmp('normal_pixel_image',imagesource)
+						image_to_add1 = imread(filepath{i});
+						if sequencer==1 %not time-resolved
+							image_to_add2 = imread(filepath{i+1}); %will be double or uint8
+						end
+					elseif strcmp('from_video',imagesource)
+						image_to_add1 = read(video_reader_object,video_frame_selection(i));
+						if sequencer==1 %not time-resolved
+							image_to_add2 = read(video_reader_object,video_frame_selection(i+1));
+						end
+					end
+					%images arrive in their original format here
+					%convert everything to grayscale and double [0...1]
+					if colorimg==1
+						image_to_add1 = rgb2gray(image_to_add1); %will conserve image class
+						if sequencer==1 %not time-resolved
+							image_to_add2 = rgb2gray(image_to_add2);
+						end
+					end
+					if strcmp(classimage,'double')==1
+						image_to_add1=image_to_add1;
+						if sequencer==1 %not time-resolved
+							image_to_add2=image_to_add2;
+						end
+					end
+					if strcmp(classimage,'single')==1
+						image_to_add1=double(image_to_add1);
+						if sequencer==1 %not time-resolved
+							image_to_add2=double(image_to_add2);
+						end
+					end
+					if strcmp(classimage,'uint8')==1
+						image_to_add1=double(image_to_add1)/255;
+						if sequencer==1 %not time-resolved
+							image_to_add2=double(image_to_add2)/255;
+						end
+					end
+					if strcmp(classimage,'uint16')==1
+						image_to_add1=double(image_to_add1)/65535;
+						if sequencer==1 %not time-resolved
+							image_to_add2=double(image_to_add2)/65535;
+						end
+					end
+					%now everything is double [0...1]
+					%Sum up  all images
+					image1=image1 +image_to_add1;
 					if sequencer==1 %not time-resolved
-						image_to_add2=image_to_add2;
+						image2=image2+image_to_add2;
+					end
+				end %of for loop and image summing
+				
+				%divide the sum by the amount of summed images
+				image1_bg=image1/counter;
+				if sequencer==1 %not time-resolved
+					image2_bg=image2/counter;
+				end
+				
+				%Convert back to original image class, if not double anyway
+				if strcmp(classimage,'uint8')==1
+					image1_bg=uint8(image1_bg*255);
+					if sequencer==1 %not time-resolved
+						image2_bg=uint8(image2_bg*255);
 					end
 				end
 				if strcmp(classimage,'single')==1
-					image_to_add1=double(image_to_add1);
+					image1_bg=single(image1_bg);
 					if sequencer==1 %not time-resolved
-						image_to_add2=double(image_to_add2);
+						image2_bg=single(image2_bg);
 					end
 				end
-				if strcmp(classimage,'uint8')==1
-					image_to_add1=double(image_to_add1)/255;
-					if sequencer==1 %not time-resolved
-						image_to_add2=double(image_to_add2)/255;
-					end
-				end				
 				if strcmp(classimage,'uint16')==1
-					image_to_add1=double(image_to_add1)/65535;
+					image1_bg=uint16(image1_bg*65535);
 					if sequencer==1 %not time-resolved
-						image_to_add2=double(image_to_add2)/65535;
+						image2_bg=uint16(image2_bg*65535);
 					end
-				end								
-				%now everything is double [0...1]
-				%Sum up  all images
-				image1=image1 +image_to_add1;
-				if sequencer==1 %not time-resolved
-					image2=image2+image_to_add2;
 				end
-			end %of for loop and image summing
-			
-			%divide the sum by the amount of summed images
-			image1_bg=image1/counter;
-			if sequencer==1 %not time-resolved
-				image2_bg=image2/counter;
+				
+				%make results accessible to the rest of the GUI:
+				put('bg_img_A',image1_bg);
+				if sequencer==1 %not time-resolved
+					put('bg_img_B',image2_bg);
+				else
+					put('bg_img_B',image1_bg); %timeresolved --> same bg image for a and b
+				end
+				set(handles.preview_preprocess, 'String', 'Apply and preview current frame');drawnow;
+				toolsavailable(1)
+			else % user has checkbox enabled, but doesn't want to calculate the background...
+				set(handles.bg_subtract,'Value',0);
 			end
 			
-			%Convert back to original image class, if not double anyway
-			if strcmp(classimage,'uint8')==1
-				image1_bg=uint8(image1_bg*255);
-				if sequencer==1 %not time-resolved
-					image2_bg=uint8(image2_bg*255);
-				end
-			end
-			if strcmp(classimage,'single')==1
-				image1_bg=single(image1_bg);
-				if sequencer==1 %not time-resolved
-					image2_bg=single(image2_bg);
-				end
-			end			
-			if strcmp(classimage,'uint16')==1
-				image1_bg=uint16(image1_bg*65535);
-				if sequencer==1 %not time-resolved
-					image2_bg=uint16(image2_bg*65535);
-				end
-			end
-			
-			%make results accessible to the rest of the GUI:
-			put('bg_img_A',image1_bg);
-			if sequencer==1 %not time-resolved
-				put('bg_img_B',image2_bg);
-			else
-				put('bg_img_B',image1_bg); %timeresolved --> same bg image for a and b
-			end
-			set(handles.preview_preprocess, 'String', 'Apply and preview current frame');drawnow;
-			toolsavailable(1)
-		else % user has checkbox enabled, but doesn't want to calculate the background...
-			set(handles.bg_subtract,'Value',0);
+		else
+			%disp('BG exists')
 		end
 		
-	else
-		%disp('BG exists')
-	end
-	
 	else
 		set(handles.bg_subtract,'Value',0);
 		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'])
@@ -2782,6 +2789,7 @@ if getappdata(hgui,'video_selection_done')
 	set(handles.filenamebox,'value',1);
 	sliderdisp %displays raw image when slider moves
 	zoom reset
+	put('sequencer',0);%time-resolved = only possibility for video
 end
 
 function loadimgsbutton_Callback(~, ~, ~)
@@ -4173,12 +4181,11 @@ if ok==1
 		if isempty(cancel)==1 || cancel ~=1
 			image1 = get_img(i);
 			image2 = get_img(i+1);
-			if size(image1,3)>1
-				image1=uint8(mean(image1,3));
-				image2=uint8(mean(image2,3));
+			%if size(image1,3)>1
+			%	image1=uint8(mean(image1,3));
+			%	image2=uint8(mean(image2,3));
 				%disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
-			end
-			
+			%end
 			set(handles.progress, 'string' , ['Frame progress: 0%']);drawnow; %#ok<*NBRAK>
 			clahe=get(handles.clahe_enable,'value');
 			highp=get(handles.enable_highpass,'value');
@@ -4188,7 +4195,7 @@ if ok==1
 			highpsize=str2double(get(handles.highp_size, 'string'));
 			wienerwurst=get(handles.wienerwurst, 'value');
 			wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-			
+		
 			Autolimit_Callback
 			minintens=str2double(get(handles.minintens, 'string'));
 			maxintens=str2double(get(handles.maxintens, 'string'));
@@ -4486,11 +4493,11 @@ if ok==1
 		tic;
 		image1=get_img(selected);
 		image2=get_img(selected+1);
-		if size(image1,3)>1
-			image1=uint8(mean(image1,3));
-			image2=uint8(mean(image2,3));
+		%if size(image1,3)>1
+			%image1=uint8(mean(image1,3));
+			%image2=uint8(mean(image2,3));
 			%disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
-		end
+		%end
 		clahe=get(handles.clahe_enable,'value');
 		highp=get(handles.enable_highpass,'value');
 		%clip=get(handles.enable_clip,'value');
