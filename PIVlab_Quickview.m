@@ -22,7 +22,7 @@ function varargout = PIVlab_Quickview(varargin)
 
 % Edit the above text to modify the response to help PIVlab_Quickview
 
-% Last Modified by GUIDE v2.5 20-Nov-2020 13:21:19
+% Last Modified by GUIDE v2.5 05-Mar-2021 20:07:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,8 +58,7 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-set(gcf,'numbertitle','off','MenuBar','none','DockControls','off','Toolbar','none');
-
+set(gcf,'numbertitle','off','MenuBar','none','DockControls','off','Toolbar','none','visible','off');
 % UIWAIT makes PIVlab_Quickview wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 set(handles.axes1,'Visible','off')
@@ -72,6 +71,15 @@ setappdata(handles.figure1,'analyzed',0);
 if exist('quickview_settings.mat','file')==0
 	IA_size=32;fast_performance=1;disable_auto=0;
 	save('quickview_settings.mat','IA_size','fast_performance','disable_auto');
+	%default
+	cmos=11.3;
+	lens=50;
+	reso=2048;
+	FOV=700;
+	velo=2;
+	pulse=100;
+	int=32;
+	save ('quickview_settings.mat','cmos','lens','reso','FOV','velo','pulse','int','-append');
 else
 	load('quickview_settings.mat');
 end
@@ -113,9 +121,8 @@ if disable_auto==0
 else
 	handles.disable_auto.Checked = 'on';
 end
-
-
-
+movegui('center');
+set(gcf,'visible','on')
 axes(handles.axes5)
 imshow(imread('pivlab_logo1.jpg'),'parent',handles.axes5);
 set(handles.axes5,'Position',[0.1,0.1,0.8,0.8],'xtick',[],'ytick',[])
@@ -124,6 +131,7 @@ if verLessThan('matlab','9.5')
 	disp('ERROR: PIVlab Quickview will only work for Matlab R2018b and later.')
 	disp('Please use the normal PIVlab_GUI.m !')
 end
+
 
 % --- Outputs from this function are returned to the command line.
 function varargout = PIVlab_Quickview_OutputFcn(hObject, eventdata, handles)
@@ -149,7 +157,7 @@ else
 	end
 end
 [file,path]=uigetfile({'*.bmp;*.tiff;*.tif;*.jpg;*.b16;*.png;*.jpeg'},'Halleluja',path,'MultiSelect','on');
-if ~isequal(file,0) && iscell(file)
+if ~isequal(file,0)
 	set(handles.axes1,'Visible','on')
 	set(handles.axes2,'Visible','on')
 	set(handles.axes3,'Visible','on')
@@ -162,10 +170,24 @@ if ~isequal(file,0) && iscell(file)
 		delete(handles.axes5)
 	end
 	save ('quickview_settings.mat','path', '-append');
-	display_images(file, path,handles,0);
 	setappdata(handles.figure1,'analyzed',0);
+	if iscell(file) %two selected files
+		display_images(file, path,handles,0);
+	else
+		[~,~,suffix] = fileparts(file);
+		direc=dir ([path '\*' suffix]);
+		[filenames{1:length(direc),1}] = deal(direc.name);
+		filenames = sortrows(filenames);
+		for ijk = 1: size(filenames,1)
+			if strcmp (filenames{ijk}, file) ==1
+				file2=filenames{ijk+1};
+			end
+		end
+		file={file,file2};
+		display_images(file, path,handles,0);
+	end
 else
-	disp('Please select 2 images')
+	disp('Please select 1 or 2 images')
 end
 
 function display_images(file, path,handles,whoIsCalling)
@@ -290,7 +312,6 @@ if ~isempty(roi)
 	yticks([])
 	colorbar('West')
 	setappdata(handles.figure1,'analyzed',1);
-	
 end
 
 
@@ -370,6 +391,9 @@ if strcmp(eventdata.Character,'a')
 		set(dat,'VData',v-vmean);
 	end
 end
+if strcmp(eventdata.Character,'c')
+	calc_GUI
+end
 
 function switch_menu(hObject,handles)
 if strcmp(hObject.Checked,'off')
@@ -438,3 +462,67 @@ catch
 	disp('Could not write settings')
 end
 delete(hObject);
+
+function calc_GUI
+% Open a small GUI for calculating PIV parameters
+f = figure('units','characters','Position',[1,1,45,20],'MenuBar','none', 'Toolbar','none', 'Units','characters', 'Name','PIV calc','numbertitle','off','Visible','off','Windowstyle','normal','resize','off','dockcontrol','off');
+movegui(f,'center')
+set(f,'units','characters');
+figsize=get(f,'position');
+textwidth=26;
+inputwidth=10;
+inputheight=1;
+margin=0.25;
+try %load previous settings
+	load ('quickview_settings.mat','cmos','lens','reso','FOV','velo','pulse','int');
+catch
+	cmos=0;lens=0;reso=0;FOV=0;velo=0;pulse=0;int=0;
+end
+cmos_text  = uicontrol('Style','text','units','characters','horizontalalignment','right','String','Chip width in mm','Position',[margin,figsize(4)-inputheight-margin,textwidth,inputheight],'tag','cmos_text');
+cmos_edit  = uicontrol('Style','edit','units','characters','String',num2str(cmos),'Position',[3+margin+textwidth+margin,figsize(4)-inputheight-margin,inputwidth,inputheight],'Callback',@update_calc_fields,'tag','cmos_edit');
+lens_text  = uicontrol('Style','text','units','characters','horizontalalignment','right','String','Focal length in mm','Position',[margin,figsize(4)-inputheight-margin-(margin+inputheight)*1,textwidth,inputheight],'tag','lens_text');
+lens_edit  = uicontrol('Style','edit','units','characters','String',num2str(lens),'Position',[3+margin+textwidth+margin,figsize(4)-inputheight-margin-(margin+inputheight)*1,inputwidth,inputheight],'Callback',@update_calc_fields,'tag','lens_edit');
+reso_text  = uicontrol('Style','text','units','characters','horizontalalignment','right','String','Camera x resolution in mm','Position',[margin,figsize(4)-inputheight-margin-(margin+inputheight)*2,textwidth,inputheight],'tag','reso_text');
+reso_edit  = uicontrol('Style','edit','units','characters','String',num2str(reso),'Position',[3+margin+textwidth+margin,figsize(4)-inputheight-margin-(margin+inputheight)*2,inputwidth,inputheight],'Callback',@update_calc_fields,'tag','reso_edit');
+FOV_text  = uicontrol('Style','text','units','characters','horizontalalignment','right','String','FOV width in mm','Position',[margin,figsize(4)-inputheight-margin-(margin+inputheight)*3,textwidth,inputheight],'tag','FOV_text');
+FOV_edit  = uicontrol('Style','edit','units','characters','String',num2str(FOV),'Position',[3+margin+textwidth+margin,figsize(4)-inputheight-margin-(margin+inputheight)*3,inputwidth,inputheight],'Callback',@update_calc_fields,'tag','FOV_edit');
+velo_text  = uicontrol('Style','text','units','characters','horizontalalignment','right','String','Velocity in m/s','Position',[margin,figsize(4)-inputheight-margin-(margin+inputheight)*4,textwidth,inputheight],'tag','velo_text');
+velo_edit  = uicontrol('Style','edit','units','characters','String',num2str(velo),'Position',[3+margin+textwidth+margin,figsize(4)-inputheight-margin-(margin+inputheight)*4,inputwidth,inputheight],'Callback',@update_calc_fields,'tag','velo_edit');
+pulse_text  = uicontrol('Style','text','units','characters','horizontalalignment','right','String','Pulse separation in µs','Position',[margin,figsize(4)-inputheight-margin-(margin+inputheight)*5,textwidth,inputheight],'tag','pulse_text');
+pulse_edit  = uicontrol('Style','edit','units','characters','String',num2str(pulse),'Position',[3+margin+textwidth+margin,figsize(4)-inputheight-margin-(margin+inputheight)*5,inputwidth,inputheight],'Callback',@update_calc_fields,'tag','pulse_edit');
+int_text  = uicontrol('Style','text','units','characters','horizontalalignment','right','String','Final interrogation area in px','Position',[margin,figsize(4)-inputheight-margin-(margin+inputheight)*6,textwidth,inputheight],'tag','int_text');
+int_edit  = uicontrol('Style','edit','units','characters','String',num2str(int),'Position',[3+margin+textwidth+margin,figsize(4)-inputheight-margin-(margin+inputheight)*6,inputwidth,inputheight],'Callback',@update_calc_fields,'tag','int_edit');
+working_text  = uicontrol('fontweight','bold','Style','text','units','characters','horizontalalignment','right','String','Working distance in m','Position',[margin,figsize(4)-inputheight-margin-(margin+inputheight)*7,textwidth,inputheight],'tag','working_text');
+working_out  = uicontrol('fontweight','bold','Style','text','units','characters','String','32','Position',[3+margin+textwidth+margin,figsize(4)-inputheight-margin-(margin+inputheight)*7,inputwidth,inputheight],'tag','working_out');
+displace_text  = uicontrol('fontweight','bold','Style','text','units','characters','horizontalalignment','right','String','Displacement in px','Position',[margin,figsize(4)-inputheight-margin-(margin+inputheight)*8,textwidth,inputheight],'tag','displace_text');
+displace_out  = uicontrol('fontweight','bold','Style','text','units','characters','String','32','Position',[3+margin+textwidth+margin,figsize(4)-inputheight-margin-(margin+inputheight)*8,inputwidth,inputheight],'tag','displace_out');
+spacing_text  = uicontrol('fontweight','bold','Style','text','units','characters','horizontalalignment','right','String','Vector spacing in mm','Position',[margin,figsize(4)-inputheight-margin-(margin+inputheight)*9,textwidth,inputheight],'tag','spacing_text');
+spacing_out  = uicontrol('fontweight','bold','Style','text','units','characters','String','32','Position',[3+margin+textwidth+margin,figsize(4)-inputheight-margin-(margin+inputheight)*9,inputwidth,inputheight],'tag','spacing_out');
+handles = guihandles; %alle handles mit tag laden und ansprechbar machen
+guidata(f,handles)
+setappdata(0,'calchandle',f);
+update_calc_fields
+set(f,'visible','on');
+
+function update_calc_fields(~,~)
+getappdata(0,'calchandle');
+handles=guihandles(getappdata(0,'calchandle'));
+cmos=str2num(get(handles.cmos_edit,'string'));
+lens=str2num(get(handles.lens_edit,'string'));
+reso=str2num(get(handles.reso_edit,'string'));
+FOV=str2num(get(handles.FOV_edit,'string'));
+velo=str2num(get(handles.velo_edit,'string'));
+pulse=str2num(get(handles.pulse_edit,'string'));
+int=str2num(get(handles.int_edit,'string'));
+save ('quickview_settings.mat','cmos','lens','reso','FOV','velo','pulse','int','-append');
+
+working=((lens/1000)*(FOV/1000))/(cmos/1000);
+displace=velo*pulse/1000*(reso/FOV);
+spacing=FOV/(reso/(int/2));
+
+set(handles.working_out,'String',num2str(round(working,1)))
+set(handles.displace_out,'String',num2str(round(displace,1)))
+set(handles.spacing_out,'String',num2str(round(spacing,1)))
+
+% --- Executes during object creation, after setting all properties.
+function figure1_CreateFcn(~, ~, ~)
