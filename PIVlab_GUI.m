@@ -189,14 +189,28 @@ warning('off','all') %if the variables don't exist, an ugly warning is displayed
 load('PIVlab_settings_default.mat','homedir');
 load('PIVlab_settings_default.mat','pathname');
 warning('on','all')
-if exist('pathname','var') && exist('homedir','var')
-	%lastdir=importdata('last.nf','\t');
-	%put('homedir',lastdir{1});
-	%put('pathname',lastdir{2});
-	
+if ~exist('pathname','var') || ~exist('homedir','var')
+	try
+		if exist(fullfile(fileparts(mfilename('fullpath')) , 'Examples'),'dir') == 7 %if no previous path -> check if example dir exists
+			homedir=fullfile(fileparts(mfilename('fullpath')) , 'Examples'); %... and use it as default
+			pathname=homedir;
+			disp('-> No previous path found, using file default path.')
+		else %if example path doesnt exist -> use current directory
+			homedir=pwd;
+			pathname=pwd;
+			disp(['-> Start up path: ' pwd])
+		end
+	catch %if something goes wrong -> use current dir
+		homedir=pwd;
+		pathname=pwd;
+		disp(['-> Start up path: ' pwd])
+	end
 else
-	homedir=pwd;
-	pathname=pwd;
+	if exist(pathname ,'dir') ~= 7 %stored path doesnt exist -> replace with default
+		homedir=pwd;
+		pathname=pwd;
+	end
+	disp(['-> Start up path: ' pathname])
 end
 put('homedir',homedir);
 put('pathname',pathname);
