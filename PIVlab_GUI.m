@@ -108,7 +108,8 @@ uimenu(m6,'Label','ANALYZE!','Callback',@do_analys_Callback,'Accelerator','A');
 m7 = uimenu('Label','Calibration');
 uimenu(m7,'Label','Calibrate using current or external image','Callback',@cal_actual_Callback,'Accelerator','Z');
 m8 = uimenu('Label','Post-processing');
-uimenu(m8,'Label','Vector validation','Callback',@vector_val_Callback,'Accelerator','V');
+uimenu(m8,'Label','Velocity based validation','Callback',@vector_val_Callback,'Accelerator','V');
+uimenu(m8,'Label','Image based validation','Callback',@image_val_Callback);
 m9 = uimenu('Label','Plot');
 uimenu(m9,'Label','Spatial: Derive parameters / modify data','Callback',@plot_derivs_Callback,'Accelerator','D');
 uimenu(m9,'Label','Temporal: Derive parameters','Callback',@plot_temporal_derivs_Callback);
@@ -715,19 +716,19 @@ handles.text19 = uicontrol(handles.multip06,'Style','text','String','Threshold',
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 handles.loc_med_thresh = uicontrol(handles.multip06,'Style','edit','String','3','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@loc_med_thresh_Callback,'Tag','loc_med_thresh');
 
-item=[0 item(2)+item(4) parentitem(3)/3*2 1];
+%item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 %handles.text20 = uicontrol(handles.multip06,'Style','text','String','Epsilon','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text20');
 
-item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+%item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 %handles.epsilon = uicontrol(handles.multip06,'Style','edit','String','0.1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@epsilon_Callback,'Tag','epsilon');
 
-item=[0 item(2)+item(4)+margin parentitem(3) 2];
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
 handles.rejectsingle = uicontrol(handles.multip06,'Style','pushbutton','String','Manually reject vector','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @rejectsingle_Callback,'Tag','rejectsingle','TooltipString','Manually remove vectors. Click on the base of the vectors that you want to discard');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
-handles.interpol_missing = uicontrol(handles.multip06,'Style','checkbox','String','Interpolate missing data','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpol_missing','TooltipString','Interpolate missing velocity data. Interpolated data appears as ORANGE vectors');
+handles.interpol_missing = uicontrol(handles.multip06,'Style','checkbox','String','Interpolate missing data','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpol_missing','TooltipString','Interpolate missing velocity data. Interpolated data appears as ORANGE vectors','Callback',@set_other_interpol_checkbox);
 
-item=[0 item(2)+item(4)+margin parentitem(3) 2];
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
 handles.apply_filter_current = uicontrol(handles.multip06,'Style','pushbutton','String','Apply to current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @apply_filter_current_Callback,'Tag','apply_filter_current','TooltipString','Apply the filters to the current frame');
 
 item=[0 item(2)+item(4) parentitem(3) 2];
@@ -1609,6 +1610,38 @@ handles.summaker = uicontrol(handles.multip22,'Style','pushbutton','String','Cal
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.stdmaker = uicontrol(handles.multip22,'Style','pushbutton','String','Calculate stdev','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@temporal_operation_Callback, 2}, 'Tag','stdmaker','TooltipString','Calculate standard deviation of displacements and append an extra frame with the results');
 
+%% multip23
+handles.multip23 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Image based validation', 'Tag','multip23','fontweight','bold');
+parentitem=get(handles.multip23, 'Position');
+item=[0 0 0 0];
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
+handles.do_img_filter = uicontrol(handles.multip23,'Style','checkbox','String','Image contrast based filter','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','do_img_filter','TooltipString','This filter removes vectors from regions where the input image contrast is low.');
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1];
+handles.text19a = uicontrol(handles.multip23,'Style','text','String','Threshold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text19a');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+handles.img_filter_thresh = uicontrol(handles.multip23,'Style','edit','String','0.001','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','img_filter_thresh');
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
+handles.suggest_img_filter = uicontrol(handles.multip23,'Style','pushbutton','String','Suggest threshold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'TooltipString','Finds a threshold that discards vectors in the regions where image contrast is low. Use this as a starting point only.','Tag','suggest_img_filter','Callback', @suggest_img_filter_Callback);
+
+
+item=[0 item(2)+item(4)+margin parentitem(3) 1];
+handles.interpol_missing2 = uicontrol(handles.multip23,'Style','checkbox','String','Interpolate missing data','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpol_missing2','TooltipString','Interpolate missing velocity data. Interpolated data appears as ORANGE vectors','Callback',@set_other_interpol_checkbox);
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
+handles.apply_filter_current = uicontrol(handles.multip23,'Style','pushbutton','String','Apply to current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @apply_filter_current_Callback,'Tag','apply_filter_current','TooltipString','Apply the filters to the current frame');
+
+item=[0 item(2)+item(4) parentitem(3) 2];
+handles.apply_filter_all = uicontrol(handles.multip23,'Style','pushbutton','String','Apply to all frames','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @apply_filter_all_Callback,'Tag','apply_filter_all','TooltipString','Apply the filters to all frames');
+
+item=[0 item(2)+item(4) parentitem(3) 2];
+handles.restore_all = uicontrol(handles.multip23,'Style','pushbutton','String','Undo all validations (all frames)','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @restore_all_Callback,'Tag','restore_all','TooltipString','Remove all velocity filters for all frames');
+
+
+
 disp('-> UI generated.')
 
 %% Menu items callbacks
@@ -1653,6 +1686,9 @@ switchui('multip05')
 
 function vector_val_Callback(~, ~, ~)
 switchui('multip06')
+
+function image_val_Callback(~, ~, ~)
+switchui('multip23')
 
 function cal_actual_Callback(~, ~, ~)
 switchui('multip07')
@@ -1941,21 +1977,25 @@ function handles=gethand
 hgui=getappdata(0,'hgui');
 handles=guihandles(hgui);
 
-function currentimage = get_img(selected)
+function [currentimage,rawimage] = get_img(selected)
 handles=gethand;
 filepath = retr('filepath');
 if retr('video_selection_done') == 0
 	[~,~,ext] = fileparts(filepath{selected});
 	if strcmp(ext,'.b16')
 		currentimage=f_readB16(filepath{selected});
+		rawimage=currentimage;
 	else
 		currentimage=imread(filepath{selected});
+		rawimage=currentimage;
 	end
 else
 	video_reader_object = retr('video_reader_object');
 	video_frame_selection=retr('video_frame_selection');
 	currentimage = read(video_reader_object,video_frame_selection(selected));
+	rawimage=currentimage;
 end
+
 if get(handles.bg_subtract,'Value')==1
 	if mod(selected,2)==1 %uneven image nr.
 		bg_img = retr('bg_img_A');
@@ -2227,7 +2267,7 @@ if size(filepath,1)>0
 		%derived=retr('derived');
 		%1=vectors only
 		if displaywhat==1 %vectors only
-			currentimage=get_img(selected);
+			[currentimage,~]=get_img(selected);
 			if get(handles.enhance_images, 'Value') == 0
 				image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
 			else
@@ -2295,7 +2335,7 @@ if size(filepath,1)>0
 					end
 				end
 			else %no deriv available
-				currentimage=get_img(selected);
+				[currentimage,~]=get_img(selected);
 				if get(handles.enhance_images, 'Value') == 0
 					image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
 				else
@@ -2313,7 +2353,7 @@ if size(filepath,1)>0
 		end
 	else %not in derivatives panel
 		%try
-		currentimage=get_img(selected);
+		[currentimage,~]=get_img(selected);
 		
 		%{
             catch
@@ -3482,7 +3522,7 @@ if size(filepath,1) > 1 || retr('video_selection_done') == 1
 	filepath=retr('filepath');
 	roirect = round(getrect(gca));
 	if roirect(1,3)~=0 && roirect(1,4)~=0
-		currentimage_dummy=get_img(selected);
+		[currentimage_dummy,~]=get_img(selected);
 		imagesize(1)=size(currentimage_dummy,1);
 		imagesize(2)=size(currentimage_dummy,2);
 		if roirect(1)<1
@@ -3831,7 +3871,7 @@ if size(filepath,1) >1 || retr('video_selection_done') == 1
 	filepath=retr('filepath');
 	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
 	generate_BG_img
-	img=get_img(selected);
+	[img,~]=get_img(selected);
 	clahe=get(handles.clahe_enable,'value');
 	highp=get(handles.enable_highpass,'value');
 	%clip=get(handles.enable_clip,'value');
@@ -3945,7 +3985,7 @@ handles=gethand;
 selected=2*floor(get(handles.fileselector, 'value'))-1;
 filepath=retr('filepath');
 if numel(filepath)>1
-	image_dummy=get_img(selected);
+	[image_dummy,~]=get_img(selected);
 	size_img(1)=size(image_dummy,2)/2;
 	size_img(2)=size(image_dummy,1)/2;
 	step=str2double(get(handles.step,'string'));
@@ -4049,8 +4089,8 @@ if ok==1
 		else
 			text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
 			drawnow
-			A = get_img(selected);
-			B = get_img(selected+1);
+			[A,~] = get_img(selected);
+			[B,~] = get_img(selected+1);
 			A=A(roirect(2):roirect(2)+roirect(4),roirect(1):roirect(1)+roirect(3));
 			B=B(roirect(2):roirect(2)+roirect(4),roirect(1):roirect(1)+roirect(3));
 			clahe=get(handles.clahe_enable,'value');
@@ -4193,8 +4233,8 @@ if ok==1
 		end
 		cancel=retr('cancel');
 		if isempty(cancel)==1 || cancel ~=1
-			image1 = get_img(i);
-			image2 = get_img(i+1);
+			[image1,~] = get_img(i);
+			[image2,~] = get_img(i+1);
 			%if size(image1,3)>1
 			%	image1=uint8(mean(image1,3));
 			%	image2=uint8(mean(image2,3));
@@ -4505,8 +4545,8 @@ if ok==1
 	end
 	if currentwasmean==0
 		tic;
-		image1=get_img(selected);
-		image2=get_img(selected+1);
+		[image1,~]=get_img(selected);
+		[image2,~]=get_img(selected+1);
 		%if size(image1,3)>1
 			%image1=uint8(mean(image1,3));
 			%image2=uint8(mean(image2,3));
@@ -4786,6 +4826,8 @@ try
 	set(handles.CorrQuality,'Value',CorrQuality_nr);
 	%neu v2.37
 	set(handles.enhance_images, 'Value',enhance_disp);
+	%neu v2.42
+	set(handles.interpol_missing2,'value',interpol_missing);
 catch
 	disp('Old version compatibility-');
 end
@@ -5100,7 +5142,26 @@ if size(resultslist,2)>=frame
 		else
 			valid_vel=[];
 		end
+		
+		%image-based filtering
+		do_img_filter = get(handles.do_img_filter, 'value');
+		%do_img_filter=1
+		if do_img_filter == 1
+			selected=2*frame-1;
+			x=resultslist{1,frame};
+			y=resultslist{2,frame};
+			img_filter_thresh=str2double(get(handles.img_filter_thresh, 'String'));
+			%img_filter_thresh=0.4;
+			[A,rawimageA]=get_img(selected);
+			[B,rawimageB]=get_img(selected+1);
+			[u,v,~] = PIVlab_image_filter (x,y,u,v,img_filter_thresh,A,B,rawimageA,rawimageB);
+		end
+		
+		%vector-based filtering
 		[u,v] = PIVlab_postproc (u,v,caluv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
+				
+		
+		
 		
 		typevector(isnan(u))=2;
 		typevector(isnan(v))=2;
@@ -5437,7 +5498,7 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 	derived=retr('derived');
 	caluv=retr('caluv');
 	calxy=retr('calxy');
-	currentimage=get_img(2*frame-1);
+	[currentimage,~]=get_img(2*frame-1);
 	x=resultslist{1,frame};
 	y=resultslist{2,frame};
 	%subtrayct mean u
@@ -5699,7 +5760,7 @@ function out=rescale_maps(in,isangle)
 handles=gethand;
 filepath=retr('filepath');
 currentframe=floor(get(handles.fileselector, 'value'));
-currentimage=get_img(2*currentframe-1);
+[currentimage,~]=get_img(2*currentframe-1);
 resultslist=retr('resultslist');
 x=resultslist{1,currentframe};
 y=resultslist{2,currentframe};
@@ -5764,7 +5825,7 @@ function out=rescale_maps_nan(in,isangle)
 handles=gethand;
 filepath=retr('filepath');
 currentframe=floor(get(handles.fileselector, 'value'));
-currentimage=get_img(2*currentframe-1);
+[currentimage,~]=get_img(2*currentframe-1);
 resultslist=retr('resultslist');
 x=resultslist{1,currentframe};
 y=resultslist{2,currentframe};
@@ -7101,6 +7162,7 @@ else
 	set(handles.loc_median,'value',retr('loc_median'));
 	set(handles.loc_med_thresh,'string',retr('loc_med_thresh'));
 	set(handles.interpol_missing,'value',retr('interpol_missing'));
+
 	set(handles.vectorscale,'string',retr('vectorscale'));
 	set(handles.colormap_choice,'value',retr('colormap_choice')); %popup
 	set(handles.addfileinfo,'value',retr('addfileinfo'));
@@ -7169,7 +7231,10 @@ else
 	catch
 		disp('Old version compatibility,')
 	end
-	
+	try %neu v2.42
+		set(handles.interpol_missing2,'value',retr('interpol_missing'));
+	catch
+	end
 	
 	try
 		set(handles.realdist, 'String',vars.realdist_string);
@@ -7485,7 +7550,7 @@ for i=startfr:endfr
 				derivative_calc(currentframe,extractwhat+1,0);
 			end
 			derived=retr('derived');
-			currentimage=get_img(2*currentframe-1);
+			[currentimage,~]=get_img(2*currentframe-1);
 			sizeold=size(currentimage,1);
 			sizenew=size(x,1);
 			
@@ -7560,7 +7625,7 @@ for i=startfr:endfr
 			maptoget=rescale_maps_nan(maptoget,0);
 			
 			calxy=retr('calxy');
-			currentimage=get_img(2*currentframe-1);
+			[currentimage,~]=get_img(2*currentframe-1);
 			sizeold=size(currentimage,1);
 			sizenew=size(x,1);
 			if selected==0
@@ -7608,7 +7673,7 @@ for i=startfr:endfr
 			% area only
 			sliderdisp
 			filepath=retr('filepath');
-			currentimage=get_img(2*currentframe-1);
+			[currentimage,~]=get_img(2*currentframe-1);
 			x=resultslist{1,currentframe};
 			sizeold=size(currentimage,1);
 			sizenew=size(x,1);
@@ -9035,7 +9100,7 @@ if isempty(x)== 0 && isempty(y)== 0 && isempty(w)== 0 && isempty(h)== 0 && isnum
 	toggler=retr('toggler');
 	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
 	filepath=retr('filepath');
-	dummy_image=get_img(selected);
+	[dummy_image,~]=get_img(selected);
 	imagesize(1)=size(dummy_image,1);
 	imagesize(2)=size(dummy_image,2);
 	if roirect(1)<1
@@ -9091,7 +9156,7 @@ if get(handles.Autolimit, 'value') == 1
 		toggler=retr('toggler');
 		filepath=retr('filepath');
 		selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-		img=get_img(selected);
+		[img,~]=get_img(selected);
 		stretcher = stretchlim(img);
 		set(handles.minintens, 'String',stretcher(1));
 		set(handles.maxintens, 'String',stretcher(2));
@@ -9179,4 +9244,28 @@ handles=gethand;
 set(handles.quick6,'Value',0)
 cal_actual_Callback
 
-%testing new ssh key acces via matlab
+function suggest_img_filter_Callback (~,~,~)
+handles=gethand;
+resultslist=retr('resultslist');
+frame=floor(get(handles.fileselector, 'value'));
+if size(resultslist,2)>=frame
+	%image-based filtering
+	set(handles.do_img_filter, 'value',1);
+	%do_img_filter=1
+	selected=2*floor(get(handles.fileselector, 'value'))-1;
+	x=resultslist{1,frame};
+	y=resultslist{2,frame};
+	u=resultslist{3,frame};
+	v=resultslist{4,frame};
+	img_filter_thresh=str2double(get(handles.img_filter_thresh, 'String'));
+	[A,rawimageA]=get_img(selected);
+	[B,rawimageB]=get_img(selected+1);
+	[u,v,threshold_suggestion] = PIVlab_image_filter (x,y,u,v,0,A,B,rawimageA,rawimageB);
+	set(handles.img_filter_thresh, 'String',num2str(threshold_suggestion));
+	[u,v,~] = PIVlab_image_filter (x,y,u,v,threshold_suggestion,A,B,rawimageA,rawimageB);
+end
+
+function set_other_interpol_checkbox(hObject,~,~) %synchronizes the two existing "interpoalte missing data" checkboxes
+handles=gethand;
+set(handles.interpol_missing,'Value',get(hObject,'Value'));
+set(handles.interpol_missing2,'Value',get(hObject,'Value'));
