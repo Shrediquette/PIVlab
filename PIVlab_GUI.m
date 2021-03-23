@@ -2670,24 +2670,6 @@ y_cal=y_cal*retr('calxy');
 x_cal=x_cal-retr('offset_x_true');
 y_cal=y_cal-retr('offset_y_true');
 
-function [u_cal,v_cal] = calibrate_uv(u,v)
-handles=gethand;
-x_axis_direction=get(handles.x_axis_direction,'value'); %1= increase to right, 2= increase to left
-y_axis_direction=get(handles.y_axis_direction,'value'); %1= increase to bottom, 2= increase to top
-if x_axis_direction == 1
-	u_cal=u;
-else
-	u_cal=-u;
-end
-if y_axis_direction == 1
-	v_cal=v;
-else
-	v_cal=-v;
-end
-u_cal=u_cal*retr('caluv');
-v_cal=v_cal*retr('caluv');
-
-
 function veclick(~,~)
 %only active if vectors are displayed.
 handles=gethand;
