@@ -2,6 +2,7 @@ function [xtable, ytable, utable, vtable, typevector, correlation_map] = piv_FFT
 %profile on
 %this funtion performs the  PIV analysis.
 limit_peak_search_area=1; %new in 2.41: Default is to limit the peak search area in pass 2-4.
+do_corr2 = 1; %set to zero to disable calculation of correlation map to save time
 warning off %#ok<*WNOFF> %MATLAB:log:logOfZero
 if numel(roi_inpt)>0
 	xroi=roi_inpt(1);
@@ -74,16 +75,25 @@ vtable=xtable;
 typevector=ones(numelementsy,numelementsx);
 
 %% MAINLOOP
-try %check if used from GUI
-	handles=guihandles(getappdata(0,'hgui'));
-	GUI_avail=1;
-catch %#ok<CTCH>
-	GUI_avail=0;
+GUI_avail=0;
+hgui=getappdata(0,'hgui'); %check if GUI is open
+if ~isempty(hgui)
+	figure_exists=isvalid(hgui);
+	if figure_exists==1
+		update_display=getappdata(hgui, 'update_display');
+		if ~isempty(update_display)
+			if update_display == 1
+				GUI_avail=1;
+				handles=guihandles(hgui);
+			end
+		else %the variable has not been found, but a gui is existing for sure. The display has not been explicitely disabled, so it should be enabled by default.
+			GUI_avail=1; 
+			handles=guihandles(hgui);
+		end
+	end
 end
-
 % divide images by small pictures
 % new index for image1_roi and image2_roi
-
 
 s0 = (repmat((miniy:step:maxiy)'-1, 1,numelementsx) + repmat(((minix:step:maxix)-1)*size(image1_roi, 1), numelementsy,1))';
 s0 = permute(s0(:), [2 3 1]);
@@ -271,12 +281,12 @@ for multipass=1:passes-1
 	if GUI_avail==1
 		set(handles.progress, 'string' , ['Frame progress: ' int2str(j/maxiy*100/passes+((multipass-1)*(100/passes))) '%' sprintf('\n') 'Validating velocity field']);drawnow;
 	else
-		fprintf('.');
+		%fprintf('.');
 	end
 	%multipass validation, smoothing
 	utable_orig=utable;
 	vtable_orig=vtable;
-	[utable,vtable] = PIVlab_postproc (utable,vtable,[], [], 1,4, 1,1.5);
+	[utable,vtable] = PIVlab_postproc (utable,vtable,[],[], [], 1,4, 1,1.5);
 	
 	%find typevector...
 	%maskedpoints=numel(find((typevector)==0));
@@ -403,7 +413,7 @@ for multipass=1:passes-1
 		set(handles.progress, 'string' , ['Frame progress: ' int2str(j/maxiy*100/passes+((multipass-1)*(100/passes))) '%' sprintf('\n') 'Interpolating velocity field']);drawnow;
 		%set(handles.progress, 'string' , 'Interpolating velocity field');drawnow;
 	else
-		fprintf('.');
+		%fprintf('.');
 	end
 	
 	utable=interp2(xtable_old,ytable_old,utable,xtable,ytable,'*spline');
@@ -645,18 +655,29 @@ for multipass=1:passes-1
 			try
 				h=repmat(h,1,1,size(result_conv,3));
 			catch %old matlab releases fail
-				h_repl=[];
+				h_repl=zeros([size(h,1),size(h,2),size(result_conv,3)]);
 				for repli=1:size(result_conv,3)
-					h_repl(:,:,repli)=h;
-				end
-				h=h_repl;
-			end
-			emptymatrix((interrogationarea/2)+SubPixOffset-sizeones:(interrogationarea/2)+SubPixOffset+sizeones,(interrogationarea/2)+SubPixOffset-sizeones:(interrogationarea/2)+SubPixOffset+sizeones,:)=h;
-			bg_sig=(1-emptymatrix).*mean(result_conv,1:2); %zeros in middle, average correlation value in the remaining space
-			result_conv = result_conv .* emptymatrix + bg_sig;
-		end
-	end
-	
+                    h_repl(:,:,repli)=h;
+                end
+                h=h_repl;
+            end
+            emptymatrix((interrogationarea/2)+SubPixOffset-sizeones:(interrogationarea/2)+SubPixOffset+sizeones,(interrogationarea/2)+SubPixOffset-sizeones:(interrogationarea/2)+SubPixOffset+sizeones,:)=h;
+            try
+                bg_sig=(1-emptymatrix).*mean(result_conv,1:2); %zeros in middle, average correlation value in the remaining space
+            catch %old matlab releases fail
+                mean_result_conv=zeros(1,1,size(result_conv,3));
+                for oldmatlab=1:size(result_conv,3);
+                    mean_result_conv(:,:,oldmatlab)=mean(mean(result_conv(:,:,oldmatlab)));
+                end
+                bg_sig=zeros(size(result_conv));
+                for oldmatlab=1:size(result_conv,3)
+                    bg_sig(:,:,oldmatlab) = (1-emptymatrix(:,:,oldmatlab)) .*mean_result_conv(:,:,oldmatlab);
+                end
+            end
+            result_conv = result_conv .* emptymatrix + bg_sig;
+        end
+    end
+
 	%do fft2
 	minres = permute(repmat(squeeze(min(min(result_conv))), [1, size(result_conv, 1), size(result_conv, 2)]), [2 3 1]);
 	deltares = permute(repmat(squeeze(max(max(result_conv))-min(min(result_conv))), [1, size(result_conv, 1), size(result_conv, 2)]), [2 3 1]);
@@ -719,8 +740,10 @@ for multipass=1:passes-1
 end
 %Correlation strength
 correlation_map=zeros(size(typevector));
-for cor_i=1:size(image1_cut,3)
-	correlation_map(cor_i)=corr2(image1_cut(:,:,cor_i),image2_cut(:,:,cor_i));
+if do_corr2 == 1
+	for cor_i=1:size(image1_cut,3)
+		correlation_map(cor_i)=corr2(image1_cut(:,:,cor_i),image2_cut(:,:,cor_i));
+	end
 end
 correlation_map = permute(reshape(correlation_map, [size(xtable')]), [2 1 3]);
 correlation_map(jj) = 0;

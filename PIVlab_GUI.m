@@ -3,19 +3,16 @@
 % programmed with MATLAB Version 7.10 (R2010a) - 9.6 (R2019a)
 % March 09, 2010 - today
 % http://PIVlab.blogspot.com
-
 % Third party content, thank you for your contributions!
 % 3-point gaussian sub-pixel estimator by Uri Shavit, Roi Gurka, Alex Liberzon
 % inpaint_nans by John D'Errico
 % uipickfiles by Douglas Schwarz
-% smoothn by Damien Garcia
-% dctn, idctn by Damien Garcia
+% smoothn, dctn, idctn by Damien Garcia
 % Ellipse by D.G. Long
 % NaN Suite by Jan Glaescher
 % Exportfig by Ben Hinkle
 % mmstream2 by Duane Hanselman
 % f_readB16 by Carl Hall
-
 
 function PIVlab_GUI
 %% Make figure
@@ -168,18 +165,20 @@ try
 		catch
 			disp('ERROR: Image Processing Toolbox not accessible! PIVlab won''t work like this.')
 			disp('A license has been found, but the toolbox could not be accessed.')
+			disp('This is not a PIVlab related issue. Before you can use PIVlab, you need to make sure that the following command can be run without error message from the MATLAB command line:')
+			disp('"J = adapthisteq(rand(8,8))" (enter this without quotes)')
 		end
 	else
 		disp('ERROR: Image Processing Toolbox not found! PIVlab won''t work like this.')
 	end
-	
 catch
 	disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
 end
 
 %Variable initialization
 put ('toggler',0);
-put('caluv',1);
+put('calu',1);
+put('calv',1);
 put('calxy',1);
 put('offset_x_true',0)
 put('offset_y_true',0)
@@ -250,8 +249,6 @@ try
 	if strcmp(version,web_version) == 1
 		update_msg = 'You have the latest PIVlab version.';
 		put('update_msg_color',[0 0.75 0]);
-		
-		
 	elseif str2num (strrep(version,'.','')) < str2num(strrep(web_version,'.',''))
 		update_msg = ['PIVlab is outdated. Please update to version ' web_version];
 		put('update_msg_color',[0.85 0 0]);
@@ -265,7 +262,7 @@ catch
 	put('update_msg_color',[0.75 0.75 0]);
 end
 clear filename_update current_url fileID_update outfilename web_version trash_upd
-disp (update_msg)
+disp (['-> ' update_msg])
 put('update_msg',update_msg);
 disp ([sprintf('\n') '... done.'])
 %close(splashscreen)
@@ -662,7 +659,10 @@ handles.AnalyzeSingle = uicontrol(handles.multip05,'Style','pushbutton','String'
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.AnalyzeAll = uicontrol(handles.multip05,'Style','pushbutton','String','Analyze all frames','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @AnalyzeAll_Callback,'Tag','AnalyzeAll','TooltipString','Perform PIV analyses for all frames');
 
-item=[parentitem(3)/2 item(2)+item(4) parentitem(3)/2 1.5];
+item=[0 item(2)+item(4) parentitem(3)/4*2.5 1.5];
+handles.update_display_checkbox = uicontrol(handles.multip05,'Style','checkbox', 'value',1, 'String','Refresh display','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','update_display_checkbox','TooltipString','Refresh the display during the analysis. Disabling it will increase processing speed.');
+
+item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1.5];
 handles.cancelbutt = uicontrol(handles.multip05,'Style','pushbutton','String','Cancel','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @cancelbutt_Callback,'Tag','cancelbutt','TooltipString','Cancel analysis');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1.5];
@@ -765,28 +765,32 @@ handles.text27 = uicontrol(handles.multip07,'Style','text','String','time step [
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 handles.time_inp = uicontrol(handles.multip07,'Style','edit','String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@time_inp_Callback,'Tag','time_inp','TooltipString','Enter the delta t between two images here');
 
-item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
-uicontrol(handles.multip07,'Style','text','String','Setup Offsets','FontWeight','bold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 7.5];
+handles.uipanel_offsets = uipanel(handles.multip07, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Setup Offsets', 'Tag','uipanel_offsets','fontweight','bold');
+parentitem=get(handles.uipanel_offsets, 'Position');
+item=[0 0 0 0];
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/4*3 1];
-handles.text27a = uicontrol(handles.multip07,'Style','text','String','x increases towards the','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text27a');
+handles.text27a = uicontrol(handles.uipanel_offsets,'Style','text','String','x increases towards the','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text27a');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.x_axis_direction = uicontrol(handles.multip07,'Style','popupmenu','String',{'right','left'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','x_axis_direction','TooltipString','Direction of the x axis');
+handles.x_axis_direction = uicontrol(handles.uipanel_offsets,'Style','popupmenu','String',{'right','left'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','x_axis_direction','TooltipString','Direction of the x axis');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/4*3 1];
-handles.text27b = uicontrol(handles.multip07,'Style','text','String','y increases towards the','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text27b');
+handles.text27b = uicontrol(handles.uipanel_offsets,'Style','text','String','y increases towards the','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text27b');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.y_axis_direction = uicontrol(handles.multip07,'Style','popupmenu','String',{'bottom','top'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','y_axis_direction','TooltipString','Direction of the y axis');
+handles.y_axis_direction = uicontrol(handles.uipanel_offsets,'Style','popupmenu','String',{'bottom','top'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','y_axis_direction','TooltipString','Direction of the y axis');
 
-item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 2];
-handles.set_x_offset = uicontrol(handles.multip07,'Style','pushbutton','String','Set x offset','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @set_offset_Callback,'Tag','set_x_offset','TooltipString','Click into your calibration image and tell PIVlab what physical x-coordinate this point represents.');
+item=[0 item(2)+item(4)+margin/2 parentitem(3)/2 2];
+handles.set_x_offset = uicontrol(handles.uipanel_offsets,'Style','pushbutton','String','Set x offset','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @set_offset_Callback,'Tag','set_x_offset','TooltipString','Click into your calibration image and tell PIVlab what physical x-coordinate this point represents.');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
-handles.set_y_offset = uicontrol(handles.multip07,'Style','pushbutton','String','Set y offset','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @set_offset_Callback,'Tag','set_y_offset','TooltipString','Click into your calibration image and tell PIVlab what physical y-coordinate this point represents.');
+handles.set_y_offset = uicontrol(handles.uipanel_offsets,'Style','pushbutton','String','Set y offset','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @set_offset_Callback,'Tag','set_y_offset','TooltipString','Click into your calibration image and tell PIVlab what physical y-coordinate this point represents.');
+item=[0 0 0 0];
+parentitem=get(handles.multip07, 'Position');
 
-item=[0 item(2)+item(4)+margin parentitem(3) 4];
+item=[0 18.5 parentitem(3) 4];
 handles.calidisp = uicontrol(handles.multip07,'Style','text','String','inactive','HorizontalAlignment','center','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calidisp');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
@@ -1715,7 +1719,7 @@ switchui('multip06')
 function image_val_Callback(~, ~, ~)
 switchui('multip23')
 
-function cal_actual_Callback(~, ~, ~)
+function cal_actual_Callback(~, ~, ~) %executed when calibration panel is made visible
 switchui('multip07')
 pointscali=retr('pointscali');
 if numel(pointscali)>0
@@ -1739,22 +1743,26 @@ if numel(pointscali)>0
 		text(xposition(j)+10,yposition(j)+10, ['x:' num2str(round(xposition(j)*10)/10) sprintf('\n') 'y:' num2str(round(yposition(j)*10)/10) ],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'caliline')
 	end
 	text(mean(xposition),mean(yposition), ['s = ' num2str(round((sqrt((xposition(1)-xposition(2))^2+(yposition(1)-yposition(2))^2))*100)/100) ' px'],'color','k','fontsize',7, 'BackgroundColor', 'r', 'tag', 'caliline','horizontalalignment','center')
+	handles=gethand;
+	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','on')
 else %no calibration performed yet
+	handles=gethand;
 	if retr('video_selection_done') == 1 %video file loaded
 		%enter a guess for the time step, based on video file frame rate.
 		video_reader_object = retr('video_reader_object');
 		video_frame_selection=retr('video_frame_selection');
 		skip = video_frame_selection(2) - video_frame_selection(1);
 		delta_t = 1/(video_reader_object.FrameRate / skip)*1000;
-		handles=gethand;
+		
 		set(handles.time_inp,'String',num2str(delta_t))
 	end
+		set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
 end
 
 function plot_derivs_Callback(~, ~, ~)
 handles=gethand;
 switchui('multip08');
-if retr('caluv')==1 && retr('calxy')==1
+if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 	set(handles.derivchoice,'String',{'Vectors [px/frame]';'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Simple shear rate [1/frame]';'Simple strain rate [1/frame]';'Line integral convolution (LIC) [1]' ; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
 	set(handles.text35,'String','u [px/frame]:')
 	set(handles.text36,'String','v [px/frame]:')
@@ -1793,7 +1801,7 @@ switchui('multip11')
 function poly_extract_Callback(~, ~, ~)
 handles=gethand;
 switchui('multip12')
-if retr('caluv')==1 && retr('calxy')==1
+if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 	set(handles.extraction_choice,'string', {'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Correlation coefficient [-]';'Tangent velocity [px/frame]'});
 else
 	set(handles.extraction_choice,'string', {'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]';'Tangent velocity [m/s]'});
@@ -1841,7 +1849,7 @@ end
 function area_extract_Callback(~, ~, ~)
 handles=gethand;
 switchui('multip17');
-if retr('caluv')==1 && retr('calxy')==1
+if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 	set(handles.area_para_select,'string', {'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Correlation coefficient [-]'});
 else
 	set(handles.area_para_select,'string', {'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]'});
@@ -1942,11 +1950,11 @@ if zoom==1
 	set(gca, 'ylim', [1 size(logoimg,1)]);
 	set(gca, 'ydir', 'reverse');
 	set(gca, 'xcolor', [0.94 0.94 0.94], 'ycolor', [0.94 0.94 0.94]) ;
-	for i=0.5:0.05:1
+	for i=0.5:0.1:1
 		RGB2=logoimg*i;
 		try
 			set (h, 'cdata', RGB2);
-			pause(0.05)
+			pause(0.01)
 		catch %#ok<*CTCH>
 			disp('..')
 		end
@@ -2541,12 +2549,12 @@ if size(filepath,1)>0
 		vectorcolorintp=[str2double(get(handles.interpr,'string')) str2double(get(handles.interpg,'string')) str2double(get(handles.interpb,'string'))];
 		if vecskip==1
 			q=quiver(x(typevector==1),y(typevector==1),...
-				(u(typevector==1)-(retr('subtr_u')/retr('caluv')))*vecscale,...
-				(v(typevector==1)-(retr('subtr_v')/retr('caluv')))*vecscale,...
+				(u(typevector==1)-(retr('subtr_u')/retr('calu')))*vecscale,...
+				(v(typevector==1)-(retr('subtr_v')/retr('calv')))*vecscale,...
 				'Color', vectorcolor,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
 			q2=quiver(x(typevector==2),y(typevector==2),...
-				(u(typevector==2)-(retr('subtr_u')/retr('caluv')))*vecscale,...
-				(v(typevector==2)-(retr('subtr_v')/retr('caluv')))*vecscale,...
+				(u(typevector==2)-(retr('subtr_u')/retr('calu')))*vecscale,...
+				(v(typevector==2)-(retr('subtr_v')/retr('calv')))*vecscale,...
 				'Color', vectorcolorintp,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
 			scatter(x(typevector==0),y(typevector==0),'rx') %masked
 		else
@@ -2556,12 +2564,12 @@ if size(filepath,1)>0
 			u_reduced=u(1:vecskip:end,1:vecskip:end);
 			v_reduced=v(1:vecskip:end,1:vecskip:end);
 			q=quiver(x_reduced(typevector_reduced==1),y_reduced(typevector_reduced==1),...
-				(u_reduced(typevector_reduced==1)-(retr('subtr_u')/retr('caluv')))*vecscale,...
-				(v_reduced(typevector_reduced==1)-(retr('subtr_v')/retr('caluv')))*vecscale,...
+				(u_reduced(typevector_reduced==1)-(retr('subtr_u')/retr('calu')))*vecscale,...
+				(v_reduced(typevector_reduced==1)-(retr('subtr_v')/retr('calv')))*vecscale,...
 				'Color', vectorcolor,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
 			q2=quiver(x_reduced(typevector_reduced==2),y_reduced(typevector_reduced==2),...
-				(u_reduced(typevector_reduced==2)-(retr('subtr_u')/retr('caluv')))*vecscale,...
-				(v_reduced(typevector_reduced==2)-(retr('subtr_v')/retr('caluv')))*vecscale,...
+				(u_reduced(typevector_reduced==2)-(retr('subtr_u')/retr('calu')))*vecscale,...
+				(v_reduced(typevector_reduced==2)-(retr('subtr_v')/retr('calv')))*vecscale,...
 				'Color', vectorcolorintp,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
 			scatter(x_reduced(typevector_reduced==0),y_reduced(typevector_reduced==0),'rx') %masked
 		end
@@ -2571,8 +2579,8 @@ if size(filepath,1)>0
 		streamlinesY=retr('streamlinesY');
 		delete(findobj('tag','streamline'));
 		if numel(streamlinesX)>0
-			ustream=u*retr('caluv')-retr('subtr_u');
-			vstream=v*retr('caluv')-retr('subtr_v');
+			ustream=u*retr('calu')-retr('subtr_u');
+			vstream=v*retr('calv')-retr('subtr_v');
 			ustream(typevector==0)=nan;
 			vstream(typevector==0)=nan;
 			h=streamline(mmstream2(x,y,ustream,vstream,streamlinesX,streamlinesY,'on'));
@@ -2632,20 +2640,21 @@ if size(filepath,1)>0
 	drawnow;
 end
 
+
 function update_Stats(x,y,u,v)
 handles=gethand;
-caluv=retr('caluv');
+calu=retr('calu');calv=retr('calv');
 calxy=retr('calxy');
 x=reshape(x,size(x,1)*size(x,2),1);
 y=reshape(y,size(y,1)*size(y,2),1);
 u=reshape(u,size(u,1)*size(u,2),1);
 v=reshape(v,size(v,1)*size(v,2),1);
-if retr('caluv')==1 && retr('calxy')==1
-	set (handles.meanu,'string', [num2str(nanmean(u*caluv)) ' ± ' num2str(nanstd(u*caluv)) ' [px/frame]'])
-	set (handles.meanv,'string', [num2str(nanmean(v*caluv)) ' ± ' num2str(nanstd(v*caluv)) ' [px/frame]'])
+if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
+	set (handles.meanu,'string', [num2str(nanmean(u*calu)) ' ± ' num2str(nanstd(u*calu)) ' [px/frame]'])
+	set (handles.meanv,'string', [num2str(nanmean(v*calv)) ' ± ' num2str(nanstd(v*calv)) ' [px/frame]'])
 else
-	set (handles.meanu,'string', [num2str(nanmean(u*caluv)) ' ± ' num2str(nanstd(u*caluv)) ' [m/s]'])
-	set (handles.meanv,'string', [num2str(nanmean(v*caluv)) ' ± ' num2str(nanstd(v*caluv)) ' [m/s]'])
+	set (handles.meanu,'string', [num2str(nanmean(u*calu)) ' ± ' num2str(nanstd(u*calu)) ' [m/s]'])
+	set (handles.meanv,'string', [num2str(nanmean(v*calv)) ' ± ' num2str(nanstd(v*calv)) ' [m/s]'])
 end
 
 function [x_cal,y_cal] = calibrate_xy(x,y)
@@ -2721,14 +2730,14 @@ end
 if typevector(info(1,1),info(1,2)) ~=0
 	delete(findobj('tag', 'infopoint'));
 	%here, the calibration matters...
-	if retr('caluv')==1 && retr('calxy')==1 %not calibrated
-		set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*retr('caluv')-retr('subtr_u'))*100000)/100000) ' px/fr']);
-		set(handles.v_cp, 'String', ['v:' num2str(round((v(info(1,1),info(1,2))*retr('caluv')-retr('subtr_v'))*100000)/100000) ' px/fr']);
+	if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1%not calibrated
+		set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*retr('calu')-retr('subtr_u'))*100000)/100000) ' px/fr']);
+		set(handles.v_cp, 'String', ['v:' num2str(round((v(info(1,1),info(1,2))*retr('calv')-retr('subtr_v'))*100000)/100000) ' px/fr']);
 		set(handles.x_cp, 'String', ['x:' num2str(round((x_cal(info(1,1),info(1,2)))*10000)/10000) ' px']);
 		set(handles.y_cp, 'String', ['y:' num2str(round((y_cal(info(1,1),info(1,2)))*10000)/10000) ' px']);
 	else %calibrated
-		set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*retr('caluv')-retr('subtr_u'))*100000)/100000) ' m/s']);
-		set(handles.v_cp, 'String', ['v:' num2str(round((v(info(1,1),info(1,2))*retr('caluv')-retr('subtr_v'))*100000)/100000) ' m/s']);
+		set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*retr('calu')-retr('subtr_u'))*100000)/100000) ' m/s']);
+		set(handles.v_cp, 'String', ['v:' num2str(round((v(info(1,1),info(1,2))*retr('calv')-retr('subtr_v'))*100000)/100000) ' m/s']);
 		set(handles.x_cp, 'String', ['x:' num2str(round((x_cal(info(1,1),info(1,2)))*10000)/10000) ' m']);
 		set(handles.y_cp, 'String', ['y:' num2str(round((y_cal(info(1,1),info(1,2)))*10000)/10000) ' m']);
 	end
@@ -2757,7 +2766,8 @@ if typevector(info(1,1),info(1,2)) ~=0
 	end
 	
 	hold on;
-	plot(x(info(1,1),info(1,2)),y(info(1,1),info(1,2)), 'yo', 'tag', 'infopoint','linewidth', 1, 'markersize', 10);
+	plot(x(info(1,1),info(1,2)),y(info(1,1),info(1,2)), 'ys', 'tag', 'infopoint','linewidth', 1.5, 'markersize', 20);
+	plot(x(info(1,1),info(1,2)),y(info(1,1),info(1,2)), 'yx', 'tag', 'infopoint','linewidth', 0.5, 'markersize', 20);
 	hold off;
 	
 end
@@ -3128,7 +3138,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		u=resultslist{3,currentframe};
 		v=resultslist{4,currentframe};
 	end
-	caluv=retr('caluv');
+	calu=retr('calu');calv=retr('calv');
 	u=reshape(u,size(u,1)*size(u,2),1);
 	v=reshape(v,size(v,1)*size(v,2),1);
 	h=figure;
@@ -3137,9 +3147,9 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
 	set(h,'position', rect);
 	set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',['Scatter plot u & v, frame ' num2str(currentframe)],'tag', 'derivplotwindow');
-	h2=scatter(u*caluv-retr('subtr_u'),v*caluv-retr('subtr_v'),'r.');
+	h2=scatter(u*calu-retr('subtr_u'),v*calv-retr('subtr_v'),'r.');
 	set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-	if retr('caluv')==1 && retr('calxy')==1
+	if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 		xlabel('u [px/frame]');
 		ylabel('v [px/frame]');
 	else
@@ -3231,7 +3241,7 @@ resultslist=retr('resultslist');
 if isempty(resultslist)==0
 	derived=retr('derived');
 	calxy=retr('calxy');
-	caluv=retr('caluv');
+	calu=retr('calu');calv=retr('calv');
 	nrframes=size(resultslist,2);
 	
 	if size(resultslist,1)< 11
@@ -3245,7 +3255,7 @@ if isempty(resultslist)==0
 		derived=cell(11,nrframes);
 	end
 	
-	if calxy==1 && caluv==1
+	if calxy==1 && (calu==1 ||calu==-1)
 		units='[px] respectively [px/frame]';
 	else
 		units='[m] respectively [m/s]';
@@ -3288,14 +3298,14 @@ if isempty(resultslist)==0
 		x{i,1}=x_cal;
 		y{i,1}=y_cal;
 		
-		u_original{i,1}=resultslist{3,currentframe}*caluv;
-		v_original{i,1}=resultslist{4,currentframe}*caluv;
+		u_original{i,1}=resultslist{3,currentframe}*calu;
+		v_original{i,1}=resultslist{4,currentframe}*calv;
 		typevector_original{i,1}=resultslist{5,currentframe};
-		u_filtered{i,1}=resultslist{7,currentframe}*caluv;
-		v_filtered{i,1}=resultslist{8,currentframe}*caluv;
+		u_filtered{i,1}=resultslist{7,currentframe}*calu;
+		v_filtered{i,1}=resultslist{8,currentframe}*calv;
 		typevector_filtered{i,1}=resultslist{9,currentframe};
-		u_smoothed{i,1}=resultslist{10,currentframe}*caluv;
-		v_smoothed{i,1}=resultslist{11,currentframe}*caluv;
+		u_smoothed{i,1}=resultslist{10,currentframe}*calu;
+		v_smoothed{i,1}=resultslist{11,currentframe}*calv;
 		
 		vorticity{i,1}=derived{1,currentframe};
 		velocity_magnitude{i,1}=derived{2,currentframe};
@@ -3336,7 +3346,7 @@ if isempty(resultslist)==0
 end
 
 information={'The first dimension of the variables is the frame number.';'The variables contain all data that was calculated in the PIVlab GUI.';'If some data was not calculated, the corresponding cell is empty.';'Typevector is 0 for masked vector, 1 for regular vector, 2 for filtered vector';'u_original and v_original are the unmodified velocities from the cross-correlation.';'u_filtered and v_filtered is the above incl. your data validation selection.';'u_smoothed and v_smoothed is the above incl. your smoothing selection.'};
-save(fullfile(PathName,FileName), 'x','y','u_original','v_original','typevector_original','u_filtered','v_filtered','typevector_filtered','u_smoothed','v_smoothed','vorticity','velocity_magnitude','u_component','v_component','divergence','vortex_locator','shear_rate','strain_rate','LIC','calxy','caluv','units','information','vectorangle','correlation_map');
+save(fullfile(PathName,FileName), 'x','y','u_original','v_original','typevector_original','u_filtered','v_filtered','typevector_filtered','u_smoothed','v_smoothed','vorticity','velocity_magnitude','u_component','v_component','divergence','vortex_locator','shear_rate','strain_rate','LIC','calxy','calu', 'calv','units','information','vectorangle','correlation_map');
 %}
 
 function file_save (currentframe,FileName,PathName,type)
@@ -3344,7 +3354,7 @@ handles=gethand;
 resultslist=retr('resultslist');
 derived=retr('derived');
 filename=retr('filename');
-caluv=retr('caluv');
+calu=retr('calu');calv=retr('calv');
 calxy=retr('calxy');
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	x=resultslist{1,currentframe};
@@ -3394,13 +3404,13 @@ if type==1 %ascii file
 	end
 	if get(handles.addfileinfo, 'value')==1
 		header1=['PIVlab, ASCII chart output - ' date];
-		header2=['FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(caluv)];
+		header2=['FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(calu)];
 	else
 		header1=[];
 		header2=[];
 	end
 	if get(handles.add_header, 'value')==1
-		if retr('calxy')==1 && retr('caluv')==1
+		if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 			if get(handles.export_vort, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
 				header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'Vector type [-]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'dcev [1]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
 			else
@@ -3451,10 +3461,10 @@ if type==1 %ascii file
 		vectorangle=derived{11-1,currentframe};
     %correlation_map=derived{12-1,currentframe};
 		%wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
-		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
+		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
     else %no derivatives.
 		%wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
-		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
+		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
 	end
 	dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc');
 end %type==1
@@ -3463,12 +3473,12 @@ if type==2 %NOT USED ANYMORE matlab file
 end
 
 if type==3 %paraview vtk PARAVIEW DATEN OHNE die ganzen derivatives.... Berechnet man doch eh direkt in Paraview.
-	u=u*caluv-subtract_u;
-	v=v*caluv-subtract_v;
+	u=u*calu-subtract_u;
+	v=v*calv-subtract_v;
 	
 	nr_of_elements=numel(x_cal);
 	fid = fopen(fullfile(PathName,FileName), 'w');
-	if retr('calxy')==1 && retr('caluv')==1
+	if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 		info='[px/frame]';
 	else
 		info='[m/s]';
@@ -3500,8 +3510,8 @@ end %type3
 if type==4 %tecplot file
 	delimiter = ' ';
 	header1=['# PIVlab by W.Th. & E.J.S., TECPLOT output - ' date];
-	header2=['# FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(caluv)];
-	if retr('calxy')==1 && retr('caluv')==1
+	header2=['# FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(calu)];
+	if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 		if get(handles.export_vort_tec, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
 			header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'dcev [1]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
 			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "dcev", "simple_shear", "simple_strain", "vector_direction"';
@@ -3556,13 +3566,13 @@ if type==4 %tecplot file
 		shear(isnan(shear))=0;
 		strain(isnan(strain))=0;
 		vectorangle(isnan(vectorangle))=0;
-		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
+		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
 	else
 		nanmarker=zeros(size(x));
 		nanmarker(isnan(u))=1;
 		u(isnan(u))=0;
 		v(isnan(v))=0;
-		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1)];
+		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1)];
 	end
 	wholeLOT=sortrows(wholeLOT,2);
 	
@@ -4256,6 +4266,17 @@ function DCC_and_DFT_analyze_all
 ok=checksettings;
 if ok==1
 	handles=gethand;
+	try
+		if get(handles.update_display_checkbox,'Value')==1
+			put('update_display',1);
+		else
+			put('update_display',0);
+			text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
+		end
+	catch
+		put('update_display',1)
+	end
+	
 	filepath=retr('filepath');
 	filename=retr('filename');
 	resultslist=cell(0); %clear old results
@@ -4302,7 +4323,7 @@ if ok==1
 			%	image2=uint8(mean(image2,3));
 				%disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
 			%end
-			set(handles.progress, 'string' , ['Frame progress: 0%']);drawnow; %#ok<*NBRAK>
+			set(handles.progress, 'string' , ['Frame progress: N/A']);drawnow; %#ok<*NBRAK>
 			clahe=get(handles.clahe_enable,'value');
 			highp=get(handles.enable_highpass,'value');
 			%clip=get(handles.enable_clip,'value');
@@ -4392,7 +4413,10 @@ if ok==1
 			set(handles.overall, 'string' , ['Total progress: ' int2str((i+1)/2/num_frames_to_process*200) '%'])
 			put('subtr_u', 0);
 			put('subtr_v', 0);
-			sliderdisp
+			if retr('update_display')==0
+			else
+				sliderdisp
+			end
 			%xpos=size(image1,2)/2-40;
 			%text(xpos,50, ['Analyzing... ' int2str((i+1)/2/(size(filepath,1)/2)*100) '%' ],'color', 'r','FontName','FixedWidth','fontweight', 'bold', 'fontsize', 20, 'tag', 'annoyingthing')
 			zeit=toc;
@@ -4410,7 +4434,8 @@ if ok==1
 	end
 	delete(findobj('tag', 'annoyingthing'));
 	set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
-	set(handles.totaltime, 'String','Time left: N/A');
+	%set(handles.totaltime, 'String','Time left: N/A');
+	set(handles.totaltime, 'String',['Analysis time: ' num2str(round(toc*10)/10) ' s']);
 	if isempty(cancel)==1 || cancel ~=1
 		try
 			sound(audioread('finished.mp3'),22000);
@@ -4421,9 +4446,20 @@ if ok==1
 	
 end
 toolsavailable(1);
+sliderdisp
 
 function ensemble_piv_analyze_all
 handles=gethand;
+try
+	if get(handles.update_display_checkbox,'Value')==1
+		put('update_display',1);
+	else
+		put('update_display',0);
+		text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
+	end
+catch
+	put('update_display',1)
+end
 put('cancel',0);
 ok=checksettings;
 if ok==1
@@ -4535,7 +4571,7 @@ if ok==1
 		sliderdisp
 		%delete(findobj('tag', 'annoyingthing'));
 		set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
-		set(handles.totaltime, 'String','Time left: N/A');
+		set(handles.totaltime, 'String',['Analysis time: ' num2str(round(toc*10)/10) ' s']);
 		try
 			sound(audioread('finished.mp3'),22000);
 		catch
@@ -4550,6 +4586,7 @@ if ok==1
 		set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
 		set(handles.totaltime, 'String','Time left: N/A');
 		set(handles.progress, 'string' , ['Frame progress: 100%'])
+		sliderdisp
 	end
 	
 	put('cancel',0);
@@ -4878,17 +4915,18 @@ try
 		put('size_of_the_image',size_of_the_image);
 		set(handles.x_axis_direction,'value',x_axis_direction);
 		set(handles.y_axis_direction,'value',y_axis_direction);
-	catch
-		disp('-')
+	catch %ME
+		%disp(ME)
 	end
-	
-	if caluv~=1 || calxy ~=1
-		set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(caluv*100000)/100000) ' m/s' sprintf('\n') 'x offset: ' round(num2str(offset_x_true)*1000)/1000 ' m' sprintf('\n') 'y offset: ' round(num2str(offset_y_true)*1000)/1000 ' m'],  'backgroundcolor', [0.5 1 0.5]);
+	if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
+	else
+		set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(calu*100000)/100000) ' m/s' sprintf('\n') 'x offset: ' round(num2str(offset_x_true)*1000)/1000 ' m' sprintf('\n') 'y offset: ' round(num2str(offset_y_true)*1000)/1000 ' m'],  'backgroundcolor', [0.5 1 0.5]);
 	end
 	put('offset_x_true',offset_x_true);
 	put('offset_y_true',offset_y_true);
 	put('calxy',calxy);
-	put('caluv',caluv);
+	put('calu',calu);
+	put('calv',calv);
 	
 catch
 	disp('something went wrong during settings loading')
@@ -4977,7 +5015,7 @@ interpg=get(handles.interpg,'string');
 interpb=get(handles.interpb,'string');
 
 calxy=retr('calxy');
-caluv=retr('caluv');
+calu=retr('calu');calv=retr('calv');
 
 try
 	%neu v1.5:
@@ -5053,7 +5091,7 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 			typevector=resultslist{5,(currentframe+1)/2};
 		end
 		velrect=retr('velrect');
-		caluv=retr('caluv');
+		calu=retr('calu');calv=retr('calv');
 		if numel(velrect)>0
 			%user already selected window before...
 			%"filter u+v" and display scatterplot
@@ -5066,14 +5104,14 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 			%check if all results are nan...
 			u_backup=u;
 			v_backup=v;
-			u(u*caluv<umin)=NaN;
-			u(u*caluv>umax)=NaN;
-			v(u*caluv<umin)=NaN;
-			v(u*caluv>umax)=NaN;
-			v(v*caluv<vmin)=NaN;
-			v(v*caluv>vmax)=NaN;
-			u(v*caluv<vmin)=NaN;
-			u(v*caluv>vmax)=NaN;
+			u(u*calu<umin)=NaN;
+			u(u*calu>umax)=NaN;
+			v(u*calu<umin)=NaN;
+			v(u*calu>umax)=NaN;
+			v(v*calv<vmin)=NaN;
+			v(v*calv>vmax)=NaN;
+			u(v*calv<vmin)=NaN;
+			u(v*calv>vmax)=NaN;
 			if mean(mean(mean((isnan(u)))))>0.9 || mean(mean(mean((isnan(v)))))>0.9
 				disp('User calibrated after selecting velocity limits. Discarding limits.')
 				u=u_backup;
@@ -5082,9 +5120,8 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 		end
 		
 		%problem: wenn nur ein frame analysiert, dann gibts probleme wenn display all frames in scatterplot an.
-		datau=reshape(u*caluv,1,size(u,1)*size(u,2)*size(u,3));
-		datav=reshape(v*caluv,1,size(v,1)*size(v,2)*size(v,3));
-		
+		datau=reshape(u*calu,1,size(u,1)*size(u,2)*size(u,3));
+		datav=reshape(v*calv,1,size(v,1)*size(v,2)*size(v,3));
 		if size(datau,2)>1000000 %more than one million value pairs are too slow in scatterplot.
 			pos=unique(ceil(rand(1000000,1)*(size(datau,2)-1))); %select random entries...
 			scatter(gca,datau(pos),datav(pos), 'b.'); %.. and plot them
@@ -5097,7 +5134,7 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 		newsize=[oldsize(1)+10 0.15 oldsize(3)*0.87 oldsize(4)*0.87];
 		set(gca,'outerposition', newsize)
 		%%{
-		if retr('caluv')==1 && retr('calxy')==1
+		if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 			xlabel(gca, 'u velocity [px/frame]', 'fontsize', 12)
 			ylabel(gca, 'v velocity [px/frame]', 'fontsize', 12)
 		else
@@ -5108,8 +5145,9 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 		grid on
 		%axis equal;
 		set (gca, 'tickdir', 'in');
-		rangeu=nanmax(nanmax(nanmax(u*caluv)))-nanmin(nanmin(nanmin(u*caluv)));
-		rangev=nanmax(nanmax(nanmax(v*caluv)))-nanmin(nanmin(nanmin(v*caluv)));
+		%rangeu=nanmax(nanmax(nanmax(u*calu)))-nanmin(nanmin(nanmin(u*calu)));
+		%rangev=nanmax(nanmax(nanmax(v*calv)))-nanmin(nanmin(nanmin(v*calv)));
+		
 		%set(gca,'xlim',[nanmin(nanmin(nanmin(u*caluv)))-rangeu*0.15 nanmax(nanmax(nanmax(u*caluv)))+rangeu*0.15])
 		%set(gca,'ylim',[nanmin(nanmin(nanmin(v*caluv)))-rangev*0.15 nanmax(nanmax(nanmax(v*caluv)))+rangev*0.15])
 		%=range of data +- 15%
@@ -5122,7 +5160,7 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 			umax=velrect(3)+umin;
 			vmin=velrect(2);
 			vmax=velrect(4)+vmin;
-			if retr('caluv')==1 && retr('calxy')==1
+			if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 				set (handles.limittext, 'String', ['valid u: ' num2str(round(umin*100)/100) ' to ' num2str(round(umax*100)/100) ' [px/frame]' sprintf('\n') 'valid v: ' num2str(round(vmin*100)/100) ' to ' num2str(round(vmax*100)/100) ' [px/frame]']);
 			else
 				set (handles.limittext, 'String', ['valid u: ' num2str(round(umin*100)/100) ' to ' num2str(round(umax*100)/100) ' [m/s]' sprintf('\n') 'valid v: ' num2str(round(vmin*100)/100) ' to ' num2str(round(vmax*100)/100) ' [m/s]']);
@@ -5198,7 +5236,7 @@ resultslist=retr('resultslist');
 resultslist{10,frame}=[]; %remove smoothed results when user modifies original data
 resultslist{11,frame}=[];
 if size(resultslist,2)>=frame
-	caluv=retr('caluv');
+	calu=retr('calu');calv=retr('calv');
 	u=resultslist{3,frame};
 	v=resultslist{4,frame};
 	typevector_original=resultslist{5,frame};
@@ -5234,7 +5272,7 @@ if size(resultslist,2)>=frame
 		else
 			valid_vel=[];
 		end
-		
+
 		%image-based filtering
 		do_img_filter = get(handles.do_img_filter, 'value');
 		%do_img_filter=1
@@ -5248,13 +5286,10 @@ if size(resultslist,2)>=frame
 			[B,rawimageB]=get_img(selected+1);
 			[u,v,~] = PIVlab_image_filter (x,y,u,v,img_filter_thresh,A,B,rawimageA,rawimageB);
 		end
-		
+
 		%vector-based filtering
-		[u,v] = PIVlab_postproc (u,v,caluv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
-				
-		
-		
-		
+		[u,v] = PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
+	
 		typevector(isnan(u))=2;
 		typevector(isnan(v))=2;
 		typevector(typevector_original==0)=0; %restores typevector for mask
@@ -5372,49 +5407,72 @@ if numel(pointscali)>0
 	realdist=str2double(get(handles.realdist, 'String'));
 	time=str2double(get(handles.time_inp, 'String'));
 	calxy=(realdist/1000)/dist; %m/px %realdist=realdistance in m; dist=distance in px
-	caluv=calxy/(time/1000);
-	put('caluv',caluv);
+	x_axis_direction=get(handles.x_axis_direction,'value'); %1= increase to right, 2= increase to left
+	y_axis_direction=get(handles.y_axis_direction,'value'); %1= increase to bottom, 2= increase to top
+	if x_axis_direction==1
+		calu=calxy/(time/1000);
+	else
+		calu=-1*(calxy/(time/1000));
+	end
+	if y_axis_direction==1
+		calv=calxy/(time/1000);
+	else
+		calv=-1*(calxy/(time/1000));
+	end
+	put('calu',calu);
+	put('calv',calv);
 	put('calxy',calxy);
 	%set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(caluv*100000)/100000) ' m/s'],  'backgroundcolor', [0.5 1 0.5]);
-end
-points_offsetx=retr('points_offsetx');
-if numel(points_offsetx)>0
-	offsetx = calculate_offset_axis('x',points_offsetx(1),points_offsetx(2));
-	put('offset_x_true',offsetx);
-else %no offsets applied
-	put('offset_x_true',0);
-end
-points_offsety=retr('points_offsety');
-if numel(points_offsety)>0
-	offsety = calculate_offset_axis('y',points_offsety(1),points_offsety(2));
-	put('offset_y_true',offsety);
-else %no offsets applied
-	put('offset_y_true',0);
+	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','on')
+	points_offsetx=retr('points_offsetx');
+	if numel(points_offsetx)>0
+		offsetx = calculate_offset_axis('x',points_offsetx(1),points_offsetx(2));
+		put('offset_x_true',offsetx);
+	else %no offsets applied
+		put('offset_x_true',0);
+	end
+	points_offsety=retr('points_offsety');
+	if numel(points_offsety)>0
+		offsety = calculate_offset_axis('y',points_offsety(1),points_offsety(2));
+		put('offset_y_true',offsety);
+	else %no offsets applied
+		put('offset_y_true',0);
+	end
+	
+	calxy=retr('calxy');
+	calu=retr('calu');calv=retr('calv');
+	offset_x_true = retr('offset_x_true');
+	offset_y_true = retr('offset_y_true');
+	set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(calu*100000)/100000) ' m/s' sprintf('\n') 'x offset: ' round(num2str(offset_x_true)*1000)/1000 ' m' sprintf('\n') 'y offset: ' round(num2str(offset_y_true)*1000)/1000 ' m'],  'backgroundcolor', [0.5 1 0.5]);
+	sliderdisp
+
+else %no calibration performed yet
+	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
+	set(handles.x_axis_direction,'value',1);
+	set(handles.y_axis_direction,'value',1);
+	msgbox ('You need to select a reference distance befor applying a calibration.','modal')
 end
 
-calxy=retr('calxy');
-caluv=retr('caluv');
-offset_x_true = retr('offset_x_true');
-offset_y_true = retr('offset_y_true');
-set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(caluv*100000)/100000) ' m/s' sprintf('\n') 'x offset: ' round(num2str(offset_x_true)*1000)/1000 ' m' sprintf('\n') 'y offset: ' round(num2str(offset_y_true)*1000)/1000 ' m'],  'backgroundcolor', [0.5 1 0.5]);
-sliderdisp
 
 function clear_cali_Callback(~, ~, ~)
 handles=gethand;
 put('pointscali',[]);
 put('points_offsetx',[]);
 put('points_offsety',[]);
-put('caluv',1);
+put('calu',1);
+put('calv',1);
 put('calxy',1);
 put('offset_x_true',0);
 put('offset_y_true',0);
-
 put('caliimg', []);
 filepath=retr('filepath');
 set(handles.calidisp, 'string', ['inactive'], 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
 delete(findobj('tag', 'caliline'));
 set(handles.realdist, 'String','1');
 set(handles.time_inp, 'String','1');
+set(handles.x_axis_direction,'value',1); 
+set(handles.y_axis_direction,'value',1); 
+set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
 if size(filepath,1) >1 || retr('video_selection_done') == 1
 	sliderdisp
 else
@@ -5464,7 +5522,7 @@ resultslist=retr('resultslist');
 if isempty(resultslist)==0
 	derived=retr('derived');
 	calxy=retr('calxy');
-	caluv=retr('caluv');
+	calu=retr('calu');calv=retr('calv');
 	nrframes=size(resultslist,2);
 	if size(resultslist,1)< 11
 		resultslist{11,nrframes}=[]; %make sure resultslist has cells for all params
@@ -5477,7 +5535,7 @@ if isempty(resultslist)==0
 		derived=cell(11,nrframes);
 	end
 	
-	if calxy==1 && caluv==1
+	if calxy==1 && (calu==1 ||calu==-1)
 		units='[px] respectively [px/frame]';
 	else
 		units='[m] respectively [m/s]';
@@ -5511,14 +5569,14 @@ if isempty(resultslist)==0
 		[x_cal,y_cal]=calibrate_xy (resultslist{1,i},resultslist{2,i});
 		x{i,1}=x_cal;
 		y{i,1}=y_cal;
-		u_original{i,1}=resultslist{3,i}*caluv;
-		v_original{i,1}=resultslist{4,i}*caluv;
+		u_original{i,1}=resultslist{3,i}*calu;
+		v_original{i,1}=resultslist{4,i}*calv;
 		typevector_original{i,1}=resultslist{5,i};
-		u_filtered{i,1}=resultslist{7,i}*caluv;
-		v_filtered{i,1}=resultslist{8,i}*caluv;
+		u_filtered{i,1}=resultslist{7,i}*calu;
+		v_filtered{i,1}=resultslist{8,i}*calv;
 		typevector_filtered{i,1}=resultslist{9,i};
-		u_smoothed{i,1}=resultslist{10,i}*caluv;
-		v_smoothed{i,1}=resultslist{11,i}*caluv;
+		u_smoothed{i,1}=resultslist{10,i}*calu;
+		v_smoothed{i,1}=resultslist{11,i}*calv;
 		
 		vorticity{i,1}=derived{1,i};
 		velocity_magnitude{i,1}=derived{2,i};
@@ -5558,7 +5616,8 @@ if isempty(resultslist)==0
 	assignin('base','correlation_map',correlation_map);
 	
 	assignin('base','calxy',calxy);
-	assignin('base','caluv',caluv);
+	assignin('base','calu',calu);
+	assignin('base','calv',calv);
 	assignin('base','units',units);
 	
 	
@@ -5585,8 +5644,8 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0 %an
 	else
 		u=resultslist{3,currentframe};
 	end
-	caluv=retr('caluv');
-	set(handles.subtr_u, 'string', num2str(nanmean(u(:)*caluv)));
+	calu=retr('calu');calv=retr('calv');
+	set(handles.subtr_u, 'string', num2str(nanmean(u(:)*calu)));
 else
 	set(handles.subtr_u, 'string', '0');
 end
@@ -5601,8 +5660,8 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0 %an
 	else
 		v=resultslist{4,currentframe};
 	end
-	caluv=retr('caluv');
-	set(handles.subtr_v, 'string', num2str(nanmean(v(:)*caluv)));
+	calu=retr('calu');calv=retr('calv');
+	set(handles.subtr_v, 'string', num2str(nanmean(v(:)*calv)));
 else
 	set(handles.subtr_v, 'string', '0');
 end
@@ -5614,7 +5673,7 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 	filenames=retr('filenames');
 	filepath=retr('filepath');
 	derived=retr('derived');
-	caluv=retr('caluv');
+	calu=retr('calu');calv=retr('calv');
 	calxy=retr('calxy');
 	[currentimage,~]=get_img(2*frame-1);
 	x=resultslist{1,frame};
@@ -5701,37 +5760,37 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 		%disp('vectors')
 	end
 	if deriv==2 %vorticity
-		[curlz,~]= curl(x*calxy,y*calxy,u*caluv,v*caluv);
+		[curlz,~]= curl(x*calxy,y*calxy,u*calu,v*calv);
 		derived{1,frame}=-curlz;
 		%disp('vorticity')
 	end
 	if deriv==3 %magnitude
 		%andersrum, (u*caluv)-subtr_u
-		derived{2,frame}=sqrt((u*caluv-subtr_u).^2+(v*caluv-subtr_v).^2);
+		derived{2,frame}=sqrt((u*calu-subtr_u).^2+(v*calv-subtr_v).^2);
 		%disp('magnitude')
 	end
 	if deriv==4
-		derived{3,frame}=u*caluv-subtr_u;
+		derived{3,frame}=u*calu-subtr_u;
 		%disp('u')
 	end
 	if deriv==5
-		derived{4,frame}=v*caluv-subtr_v;
+		derived{4,frame}=v*calv-subtr_v;
 		%disp('v')
 	end
 	if deriv==6
-		derived{5,frame}=divergence(x*calxy,y*calxy,u*caluv,v*caluv);
+		derived{5,frame}=divergence(x*calxy,y*calxy,u*calu,v*calv);
 		%disp('divergence')
 	end
 	if deriv==7
-		derived{6,frame}=dcev(x*calxy,y*calxy,u*caluv,v*caluv);
+		derived{6,frame}=dcev(x*calxy,y*calxy,u*calu,v*calv);
 		%disp('dcev')
 	end
 	if deriv==8
-		derived{7,frame}=shear(x*calxy,y*calxy,u*caluv,v*caluv);
+		derived{7,frame}=shear(x*calxy,y*calxy,u*calu,v*calv);
 		%disp('shear')
 	end
 	if deriv==9
-		derived{8,frame}=strain(x*calxy,y*calxy,u*caluv,v*caluv);
+		derived{8,frame}=strain(x*calxy,y*calxy,u*calu,v*calv);
 		%disp('strain')
 	end
 	if deriv==10
@@ -5747,12 +5806,12 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 		%}
 		%EDITED for williams visualization
 		%Original:
-		derived{9,frame}=LIC(v*caluv-subtr_v,u*caluv-subtr_u,frame);
+		derived{9,frame}=LIC(v*calv-subtr_v,u*calu-subtr_u,frame);
 		%disp('LIC')
 	end
 	if deriv==11
 		try
-			derived{10,frame}=atan2d(v*caluv-subtr_v,u*caluv-subtr_u);
+			derived{10,frame}=atan2d(v*calv-subtr_v,u*calu-subtr_u);
 		catch
 			derived{10,frame}=v*0;
 			beep;
@@ -6198,7 +6257,7 @@ alpha=(180/pi) *(acos(deltax/length));
 beta=(180/pi) *(asin(deltax/length));
 handles=gethand;
 calxy=retr('calxy');
-if retr('caluv')==1 && retr('calxy')==1
+if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 	set (handles.deltax, 'String', [num2str(deltax*calxy) ' [px]']);
 	set (handles.deltay, 'String', [num2str(deltay*calxy) ' [px]']);
 	set (handles.length, 'String', [num2str(length*calxy) ' [px]']);
@@ -6355,7 +6414,7 @@ for i=startfr:endfr
 			cx=retr('cx');
 			cy=retr('cy');
 			if size(c,2)>1 %circle series
-				if retr('calxy')==1 && retr('caluv')==1
+				if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 					header=['circle nr., Distance on line [px], x-coordinate [px], y-coordinate [px], ' current];
 				else
 					header=['circle nr., Distance on line [m], x-coordinate [m], y-coordinate [m], ' current];
@@ -6366,7 +6425,7 @@ for i=startfr:endfr
 				end
 			else
 				
-				if retr('calxy')==1 && retr('caluv')==1
+				if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 					header=['Distance on line [px], x-coordinate [px], y-coordinate [px], ' current];
 				else
 					header=['Distance on line [m], x-coordinate [m], y-coordinate [m], ' current];
@@ -6455,9 +6514,9 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 						v=resultslist{4,currentframe};
 						typevector=resultslist{5,currentframe};
 					end
-					caluv=retr('caluv');
-					u=u*caluv-retr('subtr_u');
-					v=v*caluv-retr('subtr_v');
+					calu=retr('calu');calv=retr('calv');
+					u=u*calu-retr('subtr_u');
+					v=v*calv-retr('subtr_v');
 					
 					u=rescale_maps_nan(u,0);
 					v=rescale_maps_nan(v,0);
@@ -6524,9 +6583,9 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 						v=resultslist{4,currentframe};
 						typevector=resultslist{5,currentframe};
 					end
-					caluv=retr('caluv');
-					u=u*caluv-retr('subtr_u');
-					v=v*caluv-retr('subtr_v');
+					calu=retr('calu');calv=retr('calv');
+					u=u*calu-retr('subtr_u');
+					v=v*calv-retr('subtr_v');
 					u=rescale_maps_nan(u,0);
 					v=rescale_maps_nan(v,0);
 					min_y=floor(min(min(yposition)))-1;
@@ -6601,7 +6660,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			h2=plot(distance*calxy,c);
 			
 			%get units
-			if retr('caluv')==1 && retr('calxy')==1
+			if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 				distunit='px^2';
 			else
 				distunit='m^2';
@@ -6615,7 +6674,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
 			
 			
-			if retr('caluv')==1 && retr('calxy')==1
+			if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 				distunit_2=' [px]';
 			else
 				distunit_2=' [m]';
@@ -6629,8 +6688,9 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			ylabel(current);
 			put('distance',distance*calxy);
 			put('c',c);
-			put('cx',cx*calxy);
-			put('cy',cy*calxy);
+			[cx_cal,cy_cal] = calibrate_xy(cx,cy);
+			put('cx',cx_cal);
+			put('cy',cy_cal);
 			h_extractionplot=retr('h_extractionplot');
 			h_extractionplot(size(h_extractionplot,1)+1,1)=h;
 			put ('h_extractionplot', h_extractionplot);
@@ -6659,7 +6719,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			end
 			hold off;
 			set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-			if retr('caluv')==1 && retr('calxy')==1
+			if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 				xlabel('Distance on line [px]');
 			else
 				xlabel('Distance on line [m]');
@@ -6691,15 +6751,16 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			title('Click the points of the graph to highlight it''s corresponding circle.')
 			set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
 			xlabel('circle series nr. (circle with max. circulation highlighted in blue)');
-			if retr('caluv')==1 && retr('calxy')==1
+			if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 				ylabel('tangent velocity loop integral (circulation) [px^2/frame]');
 			else
 				ylabel('tangent velocity loop integral (circulation) [m^2/s]');
 			end
 			put('distance',distance*calxy);
 			put('c',c);
-			put('cx',cx);
-			put('cy',cy);
+			[cx_cal,cy_cal] = calibrate_xy(cx,cy);
+			put('cx',cx_cal);
+			put('cy',cy_cal);
 			put('h3plot', h3);
 			put('integral', integral);
 			h_extractionplot=retr('h_extractionplot');
@@ -6731,7 +6792,7 @@ figure(h3plot);
 marksize=linspace(80,80,30)';
 marksize(pos)=150;
 set(gco, 'SizeData', marksize);
-if retr('caluv')==1 && retr('calxy')==1
+if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 	units='px^2/frame';
 else
 	units='m^2/s';
@@ -6795,7 +6856,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	u(typevector==0)=nan;
 	v(typevector==0)=nan;
 	
-	caluv=retr('caluv');
+	calu=retr('calu');calv=retr('calv');
 	calxy=retr('calxy');
 	x=reshape(x,size(x,1)*size(x,2),1);
 	y=reshape(y,size(y,1)*size(y,2),1);
@@ -6811,18 +6872,18 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',['Histogram ' current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
 	nrofbins=str2double(get(handles.nrofbins, 'string'));
 	if choice_plot==1
-		[n, xout]=hist(u*caluv-retr('subtr_u'),nrofbins); %#ok<*HIST>
+		[n, xout]=hist(u*calu-retr('subtr_u'),nrofbins); %#ok<*HIST>
 		xdescript='velocity (u)';
 	elseif choice_plot==2
-		[n, xout]=hist(v*caluv-retr('subtr_v'),nrofbins);
+		[n, xout]=hist(v*calv-retr('subtr_v'),nrofbins);
 		xdescript='velocity (v)';
 	elseif choice_plot==3
-		[n, xout]=hist(sqrt((u*caluv-retr('subtr_u')).^2+(v*caluv-retr('subtr_v')).^2),nrofbins);
+		[n, xout]=hist(sqrt((u*calu-retr('subtr_u')).^2+(v*calv-retr('subtr_v')).^2),nrofbins);
 		xdescript='velocity magnitude';
 	end
 	h2=bar(xout,n);
 	set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-	if retr('caluv')==1 && retr('calxy')==1
+	if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 		xlabel([xdescript ' [px/frame]']);
 	else
 		xlabel([xdescript ' [m/s]']);
@@ -7172,7 +7233,7 @@ delimiter=get(handles.delimiter,'value');%popup
 img_not_mask=get(handles.img_not_mask,'value');
 autoscale_vec=get(handles.autoscale_vec,'value');
 calxy=retr('calxy');
-caluv=retr('caluv');
+calu=retr('calu');calv=retr('calv');
 pointscali=retr('pointscali');
 
 x_axis_direction=get(handles.x_axis_direction,'value');
@@ -7258,10 +7319,10 @@ else
 	warning off all
 	try
 		%even if a variable doesn't exist, this doesn't throw an error...
-		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'caluv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B','x_axis_direction','y_axis_direction','size_of_the_image','points_offsetx','points_offsety','offset_x_true','offset_y_true');
+		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu', 'calv','calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B','x_axis_direction','y_axis_direction','size_of_the_image','points_offsetx','points_offsety','offset_x_true','offset_y_true');
 	catch
 		disp('Old version compatibility.')
-		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'caluv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
+		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu','calv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
 	end
 	names=fieldnames(vars);
 	for i=1:size(names,1)
@@ -7374,7 +7435,7 @@ else
 		
 		if isempty(vars.pointscali)==0
 			handles=gethand;
-			caluv=retr('caluv');
+			calu=retr('calu');calv=retr('calv');
 			calxy=retr('calxy');
 			if isfield(vars,'offset_x_true') == 1
 				offset_x_true = retr('offset_x_true');
@@ -7386,7 +7447,7 @@ else
 			else
 				offset_y_true=0;
 			end			
-			set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(caluv*100000)/100000) ' m/s' sprintf('\n') 'x offset: ' round(num2str(offset_x_true)*1000)/1000 ' m' sprintf('\n') 'y offset: ' round(num2str(offset_y_true)*1000)/1000 ' m'],  'backgroundcolor', [0.5 1 0.5]);
+			set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(calu*100000)/100000) ' m/s' sprintf('\n') 'x offset: ' round(num2str(offset_x_true)*1000)/1000 ' m' sprintf('\n') 'y offset: ' round(num2str(offset_y_true)*1000)/1000 ' m'],  'backgroundcolor', [0.5 1 0.5]);
 		end
 	catch
 		disp('...')
@@ -7799,7 +7860,7 @@ for i=startfr:endfr
 				hold off;
 				
 				%get units
-				if retr('caluv')==1 && retr('calxy')==1
+				if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 					distunit='px^2';
 				else
 					distunit='m^2';
@@ -7847,7 +7908,7 @@ for i=startfr:endfr
 				hold off;
 				
 				%get units
-				if retr('caluv')==1 && retr('calxy')==1
+				if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 					distunit='px^2';
 				else
 					distunit='m^2';
@@ -7880,9 +7941,9 @@ for i=startfr:endfr
 					u=resultslist{3,currentframe};
 					v=resultslist{4,currentframe};
 				end
-				caluv=retr('caluv');
-				u=u*caluv-retr('subtr_u');
-				v=v*caluv-retr('subtr_v');
+				calu=retr('calu');calv=retr('calv');
+				u=u*calu-retr('subtr_u');
+				v=v*calv-retr('subtr_v');
 				calxy=retr('calxy');
 				
 				extractwhat=get(handles.area_para_select,'Value');
@@ -8032,7 +8093,7 @@ for i=startfr:endfr
 					set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
 					xlabel('Ellipse series nr.');
 					
-					if retr('caluv')==1 && retr('calxy')==1
+					if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 						units='px^2';
 					else
 						units='m^2';
@@ -8069,9 +8130,11 @@ for i=startfr:endfr
 					u=resultslist{3,currentframe};
 					v=resultslist{4,currentframe};
 				end
-				caluv=retr('caluv');
-				u=u*caluv-retr('subtr_u');
-				v=v*caluv-retr('subtr_v');
+				calu=retr('calu');calv=retr('calv');
+				u_orig=u;
+				v_orig=v;
+				u=u*calu-retr('subtr_u');
+				v=v*calv-retr('subtr_v');
 				calxy=retr('calxy');
 				extractwhat=get(handles.area_para_select,'Value');
 				if extractwhat==9 || extractwhat==10
@@ -8089,11 +8152,11 @@ for i=startfr:endfr
 				end
 				
 				delete(findobj('tag','vortarea'));
-				
+				%keyboard
 				imagesc(currentimage);
 				axis image
 				hold on;
-				quiver(u,v,'k','linewidth',str2double(get(handles.vecwidth,'string')))
+				quiver(u_orig-(retr('subtr_u')/retr('calu')),v_orig-(retr('subtr_v')/retr('calv')),'k','linewidth',str2double(get(handles.vecwidth,'string')))
 				hold off;
 				
 				avail_maps=get(handles.colormap_choice,'string');
@@ -8138,16 +8201,17 @@ for i=startfr:endfr
 					yecht=resultslist{2,currentframe};
 					step=(xecht(1,2)-xecht(1,1))*calxy;
 					%+x(1,1)
-					areaoutput=[xecht(1,1)*calxy+(meanx-1)*step yecht(1,1)*calxy+(meany-1)*step];
+					[xecht_cal,yecht_cal]=calibrate_xy(xecht(1,1),yecht(1,1));
+					areaoutput=[xecht_cal+(meanx-1)*step yecht_cal+(meany-1)*step];
 					
-					if retr('caluv')==1 && retr('calxy')==1
+					if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 						un=' px';
 					else
 						un=' m';
 					end
 					textposix=x(1,round(size(x,2)/4));
 					textposiy=y(round(size(y,1)/4),1);
-					text(textposix, textposiy,  ['x =' num2str(xecht(1,1)*calxy+(meanx-1)*step) un sprintf('\n') 'y =' num2str(yecht(1,1)*calxy+(meany-1)*step) un], 'margin', 0.01, 'fontsize', 10, 'color','w','fontweight','bold','BackgroundColor', [0 0 0],'verticalalignment','top','horizontalalignment','left');
+					text(textposix, textposiy,  ['x =' num2str(xecht_cal+(meanx-1)*step) un sprintf('\n') 'y =' num2str(yecht_cal+(meany-1)*step) un], 'margin', 0.01, 'fontsize', 10, 'color','w','fontweight','bold','BackgroundColor', [0 0 0],'verticalalignment','top','horizontalalignment','left');
 					
 					varis='[x coordinate, y coordinate]';
 				end
@@ -8175,9 +8239,9 @@ for i=startfr:endfr
 					v=resultslist{4,currentframe};
 				end
 				sliderdisp
-				caluv=retr('caluv');
-				u=u*caluv-retr('subtr_u');
-				v=v*caluv-retr('subtr_v');
+				calu=retr('calu');calv=retr('calv');
+				u=u*calu-retr('subtr_u');
+				v=v*calv-retr('subtr_v');
 				calxy=retr('calxy');
 				delete(findobj('tag','vortarea'));
 				filepath=retr('filepath');
@@ -8209,17 +8273,18 @@ for i=startfr:endfr
 					umean=umean/uamount;
 					vmean=vmean/uamount;
 					veclength=(x(1,2)-x(1,1))*6;
-					if vmean<=0
-						angle=-atan2(vmean,umean)*180/pi;
+					if vmean/calv<=0
+						angle=-atan2(vmean/calv,umean/calu)*180/pi; %divided by calibration to remove sign resulting from calibration. because the angle should not depend on the coordinate system.
 					else
-						angle=360-atan2(vmean,umean)*180/pi;
+						angle=360-atan2(vmean/calv,umean/calu)*180/pi;
 					end
 					magg=sqrt(umean^2+vmean^2);
 					areaoutput=[magg angle];
 					varis='[magnitude, angle in degrees, 0 = right, 90 = up, 180 = left, 270 = down, 360 = right]';
-					hold on;quiver(mean2(ximask), mean2(yimask), umean/sqrt(umean^2+vmean^2)*veclength,vmean/sqrt(umean^2+vmean^2)*veclength,'r','autoscale','off', 'autoscalefactor', 100, 'linewidth',2,'MaxHeadSize',3,'tag', 'extractline');hold off;
+		
+					hold on;quiver(mean2(ximask), mean2(yimask), (umean/calu)/sqrt((umean/calu)^2+(vmean/calv)^2)*veclength,(vmean/calv)/sqrt((umean/calu)^2+(vmean/calv)^2)*veclength,'r','autoscale','off', 'autoscalefactor', 100, 'linewidth',2,'MaxHeadSize',3,'tag', 'extractline');hold off;
 					
-					if retr('caluv')==1 && retr('calxy')==1
+					if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 						un=' px/frame';
 					else
 						un=' m/s';
@@ -8320,7 +8385,7 @@ handles=gethand;
 extractwhat=get(handles.area_para_select,'Value');
 current=get(handles.area_para_select,'string');
 current=current{extractwhat};
-if retr('caluv')==1 && retr('calxy')==1
+if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 	units='px^2';
 else
 	units='m^2';
@@ -8851,9 +8916,9 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			typevector=resultslist{5,currentframe};
 		end
 	end
-	caluv=retr('caluv');
-	u=u*caluv-retr('subtr_u');
-	v=v*caluv-retr('subtr_v');
+	calu=retr('calu');calv=retr('calv');
+	u=u*calu-retr('subtr_u');
+	v=v*calv-retr('subtr_v');
 	u(typevector==0)=nan;
 	v(typevector==0)=nan;
 	calxy=retr('calxy');
@@ -8941,9 +9006,9 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			typevector=resultslist{5,currentframe};
 		end
 	end
-	caluv=retr('caluv');
-	u=u*caluv-retr('subtr_u');
-	v=v*caluv-retr('subtr_v');
+	calu=retr('calu');calv=retr('calv');
+	u=u*calu-retr('subtr_u');
+	v=v*calv-retr('subtr_v');
 	u(typevector==0)=nan;
 	v(typevector==0)=nan;
 	calxy=retr('calxy');

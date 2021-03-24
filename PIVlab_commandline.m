@@ -102,18 +102,19 @@ end
    
 r = cell(6,1);
 %Parameter     %Setting                                     %Options
-r{1,1}= 'Calibration factor, 1 for uncalibrated data';      r{1,2}=1;                   % Calibration factor for u and v
-r{2,1}= 'Valid velocities [u_min; u_max; v_min; v_max]';    r{2,2}=[-50; 50; -50; 50];  % Maximum allowed velocities, for uncalibrated data: maximum displacement in pixels
-r{3,1}= 'Stdev check?';                                     r{3,2}=1;                   % 1 = enable global standard deviation test
-r{4,1}= 'Stdev threshold';                                  r{4,2}=7;                   % Threshold for the stdev test
-r{5,1}= 'Local median check?';                              r{5,2}=1;                   % 1 = enable local median test
-r{6,1}= 'Local median threshold';                           r{6,2}=3;                   % Threshold for the local median test
+r{1,1}= 'Calibration factor, 1 for uncalibrated data';      r{1,2}=1;                   % Calibration factor for u 
+r{2,1}= 'Calibration factor, 1 for uncalibrated data';      r{2,2}=1;                   % Calibration factor for v
+r{3,1}= 'Valid velocities [u_min; u_max; v_min; v_max]';    r{3,2}=[-50; 50; -50; 50];  % Maximum allowed velocities, for uncalibrated data: maximum displacement in pixels
+r{4,1}= 'Stdev check?';                                     r{4,2}=1;                   % 1 = enable global standard deviation test
+r{5,1}= 'Stdev threshold';                                  r{5,2}=7;                   % Threshold for the stdev test
+r{6,1}= 'Local median check?';                              r{6,2}=1;                   % 1 = enable local median test
+r{7,1}= 'Local median threshold';                           r{7,2}=3;                   % Threshold for the local median test
 
 u_filt=cell(size(u));
 v_filt=cell(size(v));
 typevector_filt=typevector;
 for PIVresult=1:size(x,1)
-    [u_filt{PIVresult,1},v_filt{PIVresult,1}] = PIVlab_postproc (u{PIVresult,1},v{PIVresult,1}, r{1,2}, r{2,2},r{3,2}, r{4,2},r{5,2},r{6,2});
+    [u_filt{PIVresult,1},v_filt{PIVresult,1}] = PIVlab_postproc (u{PIVresult,1},v{PIVresult,1}, r{1,2}, r{2,2},r{3,2}, r{4,2},r{5,2},r{6,2},r{7,2});
 
     typevector_filt{PIVresult,1}(isnan(u_filt{PIVresult,1}))=2;
     typevector_filt{PIVresult,1}(isnan(v_filt{PIVresult,1}))=2;

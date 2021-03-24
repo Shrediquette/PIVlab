@@ -468,7 +468,7 @@ if cancel == 0
             %multipass validation, smoothing
             utable_orig=utable;
             vtable_orig=vtable;
-            [utable,vtable] = PIVlab_postproc (utable,vtable,[], [], 1,4, 1,1.5);
+            [utable,vtable] = PIVlab_postproc (utable,vtable,[],[], [], 1,4, 1,1.5);
             if GUI_avail==1
                 cancel=getappdata(hgui, 'cancel');
                 if cancel == 1
