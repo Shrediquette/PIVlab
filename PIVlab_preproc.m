@@ -46,8 +46,9 @@ end
 
 if highp == 1
     h = fspecial('gaussian',highpsize,highpsize);
-    in_roi=double(in_roi-(imfilter(in_roi,h,'replicate')));
-    in_roi=in_roi/max(max(in_roi));
+    %in_roi=double(in_roi-(imfilter(in_roi,h,'replicate')));
+		in_roi=(in_roi-(imfilter(in_roi,h,'replicate')));
+    %in_roi=in_roi/max(max(in_roi));
 end
 
 if wienerwurst == 1

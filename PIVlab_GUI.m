@@ -1645,17 +1645,28 @@ parentitem=get(handles.multip23, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
-handles.do_img_filter = uicontrol(handles.multip23,'Style','checkbox','String','Image contrast based filter','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','do_img_filter','TooltipString','This filter removes vectors from regions where the input image contrast is low.');
+handles.do_contrast_filter = uicontrol(handles.multip23,'Style','checkbox','String','Filter low contrast','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','do_contrast_filter','TooltipString','This filter removes vectors from regions where the input image contrast is low.');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text19a = uicontrol(handles.multip23,'Style','text','String','Threshold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text19a');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.img_filter_thresh = uicontrol(handles.multip23,'Style','edit','String','0.001','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','img_filter_thresh');
+handles.contrast_filter_thresh = uicontrol(handles.multip23,'Style','edit','String','0.001','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','contrast_filter_thresh');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
-handles.suggest_img_filter = uicontrol(handles.multip23,'Style','pushbutton','String','Suggest threshold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'TooltipString','Finds a threshold that discards vectors in the regions where image contrast is low. Use this as a starting point only.','Tag','suggest_img_filter','Callback', @suggest_img_filter_Callback);
+handles.suggest_contrast_filter = uicontrol(handles.multip23,'Style','pushbutton','String','Suggest threshold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'TooltipString','Finds a threshold that discards vectors in the regions where image contrast is low. Use this as a starting point only.','Tag','suggest_contrast_filter','Callback', @suggest_contrast_filter_Callback);
 
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
+handles.do_bright_filter = uicontrol(handles.multip23,'Style','checkbox','String','Filter bright objects','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','do_bright_filter','TooltipString','This filter removes vectors from regions where the input image has connected bright objects.');
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1];
+handles.text19b = uicontrol(handles.multip23,'Style','text','String','Threshold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text19b');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+handles.bright_filter_thresh = uicontrol(handles.multip23,'Style','edit','String','0.001','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bright_filter_thresh');
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
+handles.suggest_bright_filter = uicontrol(handles.multip23,'Style','pushbutton','String','Suggest threshold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'TooltipString','Finds a threshold that discards vectors in the regions where bright objects are found. Use this as a starting point only.','Tag','suggest_bright_filter','Callback', @suggest_bright_filter_Callback);
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.interpol_missing2 = uicontrol(handles.multip23,'Style','checkbox','String','Interpolate missing data','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpol_missing2','TooltipString','Interpolate missing velocity data. Interpolated data appears as ORANGE vectors','Callback',@set_other_interpol_checkbox);
@@ -1722,6 +1733,8 @@ switchui('multip23')
 function cal_actual_Callback(~, ~, ~) %executed when calibration panel is made visible
 switchui('multip07')
 pointscali=retr('pointscali');
+points_offsetx=retr('points_offsetx');
+points_offsety=retr('points_offsety');
 if numel(pointscali)>0
 	xposition=pointscali(:,1);
 	yposition=pointscali(:,2);
@@ -1743,6 +1756,18 @@ if numel(pointscali)>0
 		text(xposition(j)+10,yposition(j)+10, ['x:' num2str(round(xposition(j)*10)/10) sprintf('\n') 'y:' num2str(round(yposition(j)*10)/10) ],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'caliline')
 	end
 	text(mean(xposition),mean(yposition), ['s = ' num2str(round((sqrt((xposition(1)-xposition(2))^2+(yposition(1)-yposition(2))^2))*100)/100) ' px'],'color','k','fontsize',7, 'BackgroundColor', 'r', 'tag', 'caliline','horizontalalignment','center')
+	if numel(points_offsetx)>0 &&  numel(points_offsety)>0
+		delete(findobj('tag','offset_label_x'))
+		delete(findobj('tag','offset_label_y'))
+		hold on;
+		plot (points_offsetx(1),points_offsetx(2),'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'offset_label_x');
+		plot (points_offsetx(1),points_offsetx(2),'y+:', 'tag', 'offset_label_x');
+		plot (points_offsety(1),points_offsety(2),'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'offset_label_y');
+		plot (points_offsety(1),points_offsety(2),'y+:', 'tag', 'offset_label_y');
+		hold off;
+		text(points_offsetx(1)+10,points_offsetx(2)+10, ['x reference:' num2str(round(points_offsetx(1)*10)/10) ' px'],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'offset_label_x')
+		text(points_offsety(1)+10,points_offsety(2)+10, ['y reference:' num2str(round(points_offsety(2)*10)/10) ' px'],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'offset_label_y')
+	end
 	handles=gethand;
 	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','on')
 else %no calibration performed yet
@@ -4875,9 +4900,7 @@ try
 	else
 		set(handles.edit52, 'enable','off')
 	end
-	
-	
-	
+
 	set(handles.edit50, 'string',pass2val);
 	set(handles.edit51, 'string',pass3val);
 	set(handles.edit52, 'string',pass4val);
@@ -4950,7 +4973,15 @@ try
 catch
 	disp('Old version compatibility-');
 end
-
+try
+	%neu v2.41
+	set(handles.contrast_filter_thresh,'string',contrast_filter_thresh);
+	set(handles.bright_filter_thresh,'string',bright_filter_thresh);
+	set(handles.do_bright_filter,'Value',do_bright_filter);
+	set(handles.do_contrast_filter,'Value',do_contrast_filter);
+catch
+	disp('img_filter_settings');
+end
 
 function curr_settings_Callback(~, ~, ~)
 handles=gethand;
@@ -5034,14 +5065,18 @@ catch
 	disp('Old version compatibility_');
 end
 try
+	%v2.41
 	x_axis_direction=get(handles.x_axis_direction,'value');
 	y_axis_direction=get(handles.y_axis_direction,'value');
 	size_of_the_image=retr('size_of_the_image');
-		points_offsetx=retr('points_offsetx');
-		points_offsety=retr('points_offsety');
-		offset_x_true=retr('offset_x_true');
-		offset_y_true=retr('offset_y_true');
-
+	points_offsetx=retr('points_offsetx');
+	points_offsety=retr('points_offsety');
+	offset_x_true=retr('offset_x_true');
+	offset_y_true=retr('offset_y_true');
+	contrast_filter_thresh=get(handles.contrast_filter_thresh,'string');
+	bright_filter_thresh=get(handles.bright_filter_thresh,'string');
+	do_bright_filter=get(handles.do_bright_filter,'Value');
+	do_contrast_filter=get(handles.do_contrast_filter,'Value');
 catch
 end
 
@@ -5274,17 +5309,19 @@ if size(resultslist,2)>=frame
 		end
 
 		%image-based filtering
-		do_img_filter = get(handles.do_img_filter, 'value');
-		%do_img_filter=1
-		if do_img_filter == 1
+		do_contrast_filter = get(handles.do_contrast_filter, 'value');
+		do_bright_filter = get(handles.do_bright_filter, 'value');
+		%do_contrast_filter=1
+		if do_contrast_filter == 1 || do_bright_filter == 1
 			selected=2*frame-1;
 			x=resultslist{1,frame};
 			y=resultslist{2,frame};
-			img_filter_thresh=str2double(get(handles.img_filter_thresh, 'String'));
-			%img_filter_thresh=0.4;
+			contrast_filter_thresh=str2double(get(handles.contrast_filter_thresh, 'String'));
+			bright_filter_thresh=str2double(get(handles.bright_filter_thresh, 'String'));
+			
 			[A,rawimageA]=get_img(selected);
 			[B,rawimageB]=get_img(selected+1);
-			[u,v,~] = PIVlab_image_filter (x,y,u,v,img_filter_thresh,A,B,rawimageA,rawimageB);
+			[u,v,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
 		end
 
 		%vector-based filtering
@@ -5426,14 +5463,14 @@ if numel(pointscali)>0
 	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','on')
 	points_offsetx=retr('points_offsetx');
 	if numel(points_offsetx)>0
-		offsetx = calculate_offset_axis('x',points_offsetx(1),points_offsetx(2));
+		offsetx = calculate_offset_axis('x',points_offsetx(1),points_offsetx(3));
 		put('offset_x_true',offsetx);
 	else %no offsets applied
 		put('offset_x_true',0);
 	end
 	points_offsety=retr('points_offsety');
 	if numel(points_offsety)>0
-		offsety = calculate_offset_axis('y',points_offsety(1),points_offsety(2));
+		offsety = calculate_offset_axis('y',points_offsety(2),points_offsety(3));
 		put('offset_y_true',offsety);
 	else %no offsets applied
 		put('offset_y_true',0);
@@ -5444,7 +5481,7 @@ if numel(pointscali)>0
 	offset_x_true = retr('offset_x_true');
 	offset_y_true = retr('offset_y_true');
 	set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(calu*100000)/100000) ' m/s' sprintf('\n') 'x offset: ' round(num2str(offset_x_true)*1000)/1000 ' m' sprintf('\n') 'y offset: ' round(num2str(offset_y_true)*1000)/1000 ' m'],  'backgroundcolor', [0.5 1 0.5]);
-	sliderdisp
+	%sliderdisp
 
 else %no calibration performed yet
 	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
@@ -7278,6 +7315,13 @@ try
 catch
 	disp('Old version compatibility|');
 end
+try
+	contrast_filter_thresh=get(handles.contrast_filter_thresh,'string');
+	bright_filter_thresh=get(handles.bright_filter_thresh,'string');
+	do_bright_filter=get(handles.do_bright_filter,'Value');
+	do_contrast_filter=get(handles.do_contrast_filter,'Value');
+catch
+end
 
 try
 	bg_img_A=retr('bg_img_A');
@@ -7319,7 +7363,7 @@ else
 	warning off all
 	try
 		%even if a variable doesn't exist, this doesn't throw an error...
-		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu', 'calv','calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B','x_axis_direction','y_axis_direction','size_of_the_image','points_offsetx','points_offsety','offset_x_true','offset_y_true');
+		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu', 'calv','calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B','x_axis_direction','y_axis_direction','size_of_the_image','points_offsetx','points_offsety','offset_x_true','offset_y_true','bright_filter_thresh','contrast_filter_thresh','do_bright_filter','do_contrast_filter');
 	catch
 		disp('Old version compatibility.')
 		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu','calv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
@@ -7425,6 +7469,11 @@ else
 	try %neu 2.42
 	set (handles.x_axis_direction,'value',vars.x_axis_direction);
 	set (handles.y_axis_direction,'value',vars.y_axis_direction);
+	
+	set(handles.contrast_filter_thresh,'string',vars.contrast_filter_thresh);
+	set(handles.bright_filter_thresh,'string',vars.bright_filter_thresh);
+	set(handles.do_bright_filter,'Value',vars.do_bright_filter);
+	set(handles.do_contrast_filter,'Value',vars.do_contrast_filter);
 	catch
 	end
 		
@@ -9454,25 +9503,46 @@ handles=gethand;
 set(handles.quick6,'Value',0)
 cal_actual_Callback
 
-function suggest_img_filter_Callback (~,~,~)
+function suggest_bright_filter_Callback (~,~,~)
 handles=gethand;
 resultslist=retr('resultslist');
 frame=floor(get(handles.fileselector, 'value'));
 if size(resultslist,2)>=frame
 	%image-based filtering
-	set(handles.do_img_filter, 'value',1);
-	%do_img_filter=1
+	set(handles.do_bright_filter, 'value',1);
+	%do_contrast_filter=1
 	selected=2*floor(get(handles.fileselector, 'value'))-1;
 	x=resultslist{1,frame};
 	y=resultslist{2,frame};
 	u=resultslist{3,frame};
 	v=resultslist{4,frame};
-	img_filter_thresh=str2double(get(handles.img_filter_thresh, 'String'));
+	bright_filter_thresh=str2double(get(handles.bright_filter_thresh, 'String'));
 	[A,rawimageA]=get_img(selected);
 	[B,rawimageB]=get_img(selected+1);
-	[u,v,threshold_suggestion] = PIVlab_image_filter (x,y,u,v,0,A,B,rawimageA,rawimageB);
-	set(handles.img_filter_thresh, 'String',num2str(threshold_suggestion));
-	[u,v,~] = PIVlab_image_filter (x,y,u,v,threshold_suggestion,A,B,rawimageA,rawimageB);
+	[~,~,threshold_suggestion] = PIVlab_image_filter (0,1,x,y,u,v,0,bright_filter_thresh,A,B,rawimageA,rawimageB);
+	set(handles.bright_filter_thresh, 'String',num2str(threshold_suggestion));
+	[u,v,~] = PIVlab_image_filter (0,1,x,y,u,v,0,threshold_suggestion,A,B,rawimageA,rawimageB);
+end
+
+function suggest_contrast_filter_Callback (~,~,~)
+handles=gethand;
+resultslist=retr('resultslist');
+frame=floor(get(handles.fileselector, 'value'));
+if size(resultslist,2)>=frame
+	%image-based filtering
+	set(handles.do_contrast_filter, 'value',1);
+	%do_contrast_filter=1
+	selected=2*floor(get(handles.fileselector, 'value'))-1;
+	x=resultslist{1,frame};
+	y=resultslist{2,frame};
+	u=resultslist{3,frame};
+	v=resultslist{4,frame};
+	contrast_filter_thresh=str2double(get(handles.contrast_filter_thresh, 'String'));
+	[A,rawimageA]=get_img(selected);
+	[B,rawimageB]=get_img(selected+1);
+	[~,~,threshold_suggestion] = PIVlab_image_filter (1,0,x,y,u,v,contrast_filter_thresh,0,A,B,rawimageA,rawimageB);
+	set(handles.contrast_filter_thresh, 'String',num2str(threshold_suggestion));
+	[u,v,~] = PIVlab_image_filter (1,0,x,y,u,v,threshold_suggestion,0,A,B,rawimageA,rawimageB);
 end
 
 function set_other_interpol_checkbox(hObject,~,~) %synchronizes the two existing "interpoalte missing data" checkboxes
@@ -9491,25 +9561,16 @@ if size(filepath,1) >1 || numel(caliimg)>0 || retr('video_selection_done') == 1
 	handles=gethand;
 	toolsavailable(0)
 	[xposition,yposition] = ginput(1);
+	hold on;
+	plot (xposition,yposition,'y.', 'markersize', 20,'LineWidth',3, 'tag', 'offset_label_x');
+	hold off;
 	if numel(caliimg)==0
 		sliderdisp
 	end
 	if strcmp(get(hObject,'tag'),'set_x_offset')
 		offset_dim='x';
-		delete(findobj('tag','offset_label_x'))
-		hold on;
-		plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'offset_label_x');
-		plot (xposition,yposition,'y+:', 'tag', 'offset_label_x');
-		hold off;
-		text(xposition+10,yposition+10, ['x:' num2str(round(xposition*10)/10)],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'offset_label_x')
 	else
 		offset_dim='y';
-		delete(findobj('tag','offset_label_y'))
-		hold on;
-		plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'offset_label_y');
-		plot (xposition,yposition,'y+:', 'tag', 'offset_label_y');
-		hold off;
-		text(xposition+10,yposition+10, ['y:' num2str(round(yposition*10)/10) ],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'offset_label_y')
 	end
 	prompt =['Enter true ' offset_dim ' coordinate in mm:'];
 	dlgtitle = ['Set ' offset_dim ' offset'];
@@ -9518,12 +9579,27 @@ if size(filepath,1) >1 || numel(caliimg)>0 || retr('video_selection_done') == 1
 	if ~isempty(answer)
 		answer{1} = regexprep(answer{1}, ',', '.');
 		if strcmp(get(hObject,'tag'),'set_x_offset')
-			points_offsetx = [xposition,str2num(answer{1})];
+			points_offsetx = [xposition,yposition,str2num(answer{1})];
 			put('points_offsetx',points_offsetx);
 		else
-			points_offsety = [yposition,str2num(answer{1})];
+			points_offsety = [xposition,yposition,str2num(answer{1})];
 			put('points_offsety',points_offsety);
 		end
+	end
+	if strcmp(get(hObject,'tag'),'set_x_offset')
+		delete(findobj('tag','offset_label_x'))
+		hold on;
+		plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'offset_label_x');
+		plot (xposition,yposition,'y+:', 'tag', 'offset_label_x');
+		hold off;
+		text(xposition+10,yposition+10, ['x reference:' num2str(round(xposition*10)/10) ' px'],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'offset_label_x')
+	else
+		delete(findobj('tag','offset_label_y'))
+		hold on;
+		plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'offset_label_y');
+		plot (xposition,yposition,'y+:', 'tag', 'offset_label_y');
+		hold off;
+		text(xposition+10,yposition+10, ['y reference:' num2str(round(yposition*10)/10) ' px'],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'offset_label_y')
 	end
 	toolsavailable(1)
 end
