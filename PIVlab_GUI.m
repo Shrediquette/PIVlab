@@ -24,7 +24,7 @@ handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 guidata(MainWindow,handles)
 setappdata(0,'hgui',MainWindow);
 
-version = '2.41';
+version = '2.44';
 put('PIVver', version);
 v=ver('MATLAB');
 %splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','on','handlevisibility','off');movegui(splashscreen,'center');drawnow;
@@ -2272,9 +2272,9 @@ filepath=retr('filepath');
 %not found: assign new path to all following elements.
 %check next file. not found -> assign new path to all following.
 %and so on...
-%checking if all files exist takes 0.5 s each time... need for optimization
-%e.g. do this only one time at the start.
-if retr('video_selection_done') == 0 && isempty(filepath) == 0 && exist(filepath{selected},'file') ~=2
+
+%if retr('video_selection_done') == 0 && isempty(filepath) == 0 && exist(filepath{selected},'file') ~=2
+if isempty(filepath) == 0 && exist(filepath{selected},'file') ~=2
 	for i=1:size(filepath,1)
 		while exist(filepath{i,1},'file') ~=2
 			errordlg(['The image ' sprintf('\n') filepath{i,1} sprintf('\n') '(and probably some more...) could not be found.' sprintf('\n') 'Please select the path where the images are located.'],'File not found!','on')
@@ -2304,6 +2304,9 @@ if retr('video_selection_done') == 0 && isempty(filepath) == 0 && exist(filepath
 		if new_dir==0
 			break
 		end
+	end
+	if retr('video_selection_done') == 1 %create new video object with the updated file location.
+		put('video_reader_object',VideoReader(filepath{1}));
 	end
 end
 
@@ -3070,6 +3073,7 @@ if ~isequal(path,0)
 		set(handles.filenamebox,'value',1);
 		sliderdisp %displays raw image when slider moves
 		zoom reset
+		set(getappdata(0,'hgui'), 'Name',['PIVlab ' retr('PIVver') '   [Path: ' pathname ']']) %for people like me that always forget what dataset they are currently working on...
 	else
 		errordlg('Please select at least two images ( = 1 pair of images)','Error','on')
 	end
@@ -5190,29 +5194,34 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 		velrect = getrect(gca);
 		if velrect(1,3)~=0 && velrect(1,4)~=0
 			put('velrect', velrect);
-			set (handles.vel_limit_active, 'String', 'Limit active', 'backgroundcolor', [0.5 1 0.5]);
-			umin=velrect(1);
-			umax=velrect(3)+umin;
-			vmin=velrect(2);
-			vmax=velrect(4)+vmin;
-			if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
-				set (handles.limittext, 'String', ['valid u: ' num2str(round(umin*100)/100) ' to ' num2str(round(umax*100)/100) ' [px/frame]' sprintf('\n') 'valid v: ' num2str(round(vmin*100)/100) ' to ' num2str(round(vmax*100)/100) ' [px/frame]']);
-			else
-				set (handles.limittext, 'String', ['valid u: ' num2str(round(umin*100)/100) ' to ' num2str(round(umax*100)/100) ' [m/s]' sprintf('\n') 'valid v: ' num2str(round(vmin*100)/100) ' to ' num2str(round(vmax*100)/100) ' [m/s]']);
-			end
+			update_velocity_limits_information
 			sliderdisp
 			delete(findobj(gca,'Type','text','color','r'));
 			text(50,50,'Result will be shown after applying vector validation','color','r','fontsize',10, 'fontweight','bold', 'BackgroundColor', 'k')
-			set (handles.vel_limit, 'String', 'Refine velocity limits');
 		else
 			sliderdisp
 			text(50,50,'Invalid selection: Click and hold left mouse button to create a rectangle.','color','r','fontsize',8, 'BackgroundColor', 'k')
 		end
-		
 	end
 end
 toolsavailable(1)
 MainWindow_ResizeFcn(gcf)
+
+function update_velocity_limits_information
+velrect=retr('velrect');
+handles=gethand;
+set (handles.vel_limit_active, 'String', 'Limit active', 'backgroundcolor', [0.5 1 0.5]);
+umin=velrect(1);
+umax=velrect(3)+umin;
+vmin=velrect(2);
+vmax=velrect(4)+vmin;
+if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
+	set (handles.limittext, 'String', ['valid u: ' num2str(round(umin*100)/100) ' to ' num2str(round(umax*100)/100) ' [px/frame]' sprintf('\n') 'valid v: ' num2str(round(vmin*100)/100) ' to ' num2str(round(vmax*100)/100) ' [px/frame]']);
+else
+	set (handles.limittext, 'String', ['valid u: ' num2str(round(umin*100)/100) ' to ' num2str(round(umax*100)/100) ' [m/s]' sprintf('\n') 'valid v: ' num2str(round(vmin*100)/100) ' to ' num2str(round(vmax*100)/100) ' [m/s]']);
+end
+set (handles.vel_limit, 'String', 'Refine velocity limits');
+
 
 function apply_filter_current_Callback(~, ~, ~)
 handles=gethand;
@@ -7336,7 +7345,7 @@ clear handles
 
 %save('-v6', fullfile(PathName,FileName), '-append');
 %save(fullfile(PathName,FileName), '-append');
-save(fullfile(PathName,FileName), '-append','-v7.3');
+save(fullfile(PathName,FileName), '-append');
 
 delete(findobj('tag','savehint'));
 drawnow;
@@ -7476,7 +7485,14 @@ else
 	set(handles.do_contrast_filter,'Value',vars.do_contrast_filter);
 	catch
 	end
-		
+	try
+		if vars.velrect(1,3)~=0 && vars.velrect(1,4)~=0
+			put('velrect', vars.velrect);
+			update_velocity_limits_information
+		end
+	catch
+	end
+	
 	
 	try
 		set(handles.realdist, 'String',vars.realdist_string);
