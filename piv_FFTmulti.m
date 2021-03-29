@@ -77,20 +77,29 @@ typevector=ones(numelementsy,numelementsx);
 %% MAINLOOP
 GUI_avail=0;
 hgui=getappdata(0,'hgui'); %check if GUI is open
-if ~isempty(hgui)
-	figure_exists=isvalid(hgui);
-	if figure_exists==1
-		update_display=getappdata(hgui, 'update_display');
-		if ~isempty(update_display)
-			if update_display == 1
-				GUI_avail=1;
-				handles=guihandles(hgui);
-			end
-		else %the variable has not been found, but a gui is existing for sure. The display has not been explicitely disabled, so it should be enabled by default.
-			GUI_avail=1; 
-			handles=guihandles(hgui);
-		end
-	end
+try
+    if ~isempty(hgui)
+        figure_exists=isvalid(hgui);
+        if figure_exists==1
+            update_display=getappdata(hgui, 'update_display');
+            if ~isempty(update_display)
+                if update_display == 1
+                    GUI_avail=1;
+                    handles=guihandles(hgui);
+                end
+            else %the variable has not been found, but a gui is existing for sure. The display has not been explicitely disabled, so it should be enabled by default.
+                GUI_avail=1;
+                handles=guihandles(hgui);
+            end
+        end
+    end
+catch
+    try
+        handles=guihandles(getappdata(0,'hgui'));
+        GUI_avail=1;
+    catch
+        GUI_avail=0;
+    end
 end
 % divide images by small pictures
 % new index for image1_roi and image2_roi
@@ -104,12 +113,23 @@ image1_cut = image1_roi(ss1);
 image2_cut = image2_roi(ss1);
 
 if do_pad==1 && passes == 1 %only on first pass
-	%subtract mean to avoid high frequencies at border of correlation:
-	image1_cut=image1_cut-mean(image1_cut,[1 2]);
-	image2_cut=image2_cut-mean(image2_cut,[1 2]);
-	% padding (faster than padarray) to get the linear correlation:
-	image1_cut=[image1_cut zeros(interrogationarea,interrogationarea-1,size(image1_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cut,3))];
-	image2_cut=[image2_cut zeros(interrogationarea,interrogationarea-1,size(image2_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cut,3))];
+    %subtract mean to avoid high frequencies at border of correlation:
+    try
+        image1_cut=image1_cut-mean(image1_cut,[1 2]);
+        image2_cut=image2_cut-mean(image2_cut,[1 2]);
+    catch
+        mean_image1_cut=zeros(size(image1_cut));
+        mean_image2_cut=zeros(size(image2_cut));
+        for oldmatlab=1:size(image2_cut,3);
+            mean_image1_cut(:,:,oldmatlab)=mean(mean(image1_cut(:,:,oldmatlab)));
+            mean_image2_cut(:,:,oldmatlab)=mean(mean(image2_cut(:,:,oldmatlab)));
+        end
+        image1_cut=image1_cut-mean_image1_cut;
+        image2_cut=image2_cut-mean_image2_cut;
+    end
+    % padding (faster than padarray) to get the linear correlation:
+    image1_cut=[image1_cut zeros(interrogationarea,interrogationarea-1,size(image1_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cut,3))];
+    image2_cut=[image2_cut zeros(interrogationarea,interrogationarea-1,size(image2_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cut,3))];
 end
 %do fft2:
 result_conv = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
@@ -131,9 +151,20 @@ if repeat == 1 && passes == 1
 	image2_cutB = image2_roi(ss1B);
 	if do_pad==1 && passes == 1
 		%subtract mean to avoid high frequencies at border of correlation:
-		image1_cutB=image1_cutB-mean(image1_cutB,[1 2]);
-		image2_cutB=image2_cutB-mean(image2_cutB,[1 2]);
-		% padding (faster than padarray) to get the linear correlation:
+        try
+            image1_cutB=image1_cutB-mean(image1_cutB,[1 2]);
+            image2_cutB=image2_cutB-mean(image2_cutB,[1 2]);
+        catch
+            mean_image1_cutB=zeros(size(image1_cutB));
+            mean_image2_cutB=zeros(size(image2_cutB));
+            for oldmatlab=1:size(image2_cutB,3);
+                mean_image1_cutB(:,:,oldmatlab)=mean(mean(image1_cutB(:,:,oldmatlab)));
+                mean_image2_cutB(:,:,oldmatlab)=mean(mean(image2_cutB(:,:,oldmatlab)));
+            end
+            image1_cutB=image1_cutB-mean_image1_cutB;
+            image2_cutB=image2_cutB-mean_image2_cutB;
+        end
+        % padding (faster than padarray) to get the linear correlation:
 		image1_cutB=[image1_cutB zeros(interrogationarea,interrogationarea-1,size(image1_cutB,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cutB,3))];
 		image2_cutB=[image2_cutB zeros(interrogationarea,interrogationarea-1,size(image2_cutB,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cutB,3))];
 	end
@@ -151,10 +182,21 @@ if repeat == 1 && passes == 1
 	image1_cutC = image1_roi(ss1C);
 	image2_cutC = image2_roi(ss1C);
 	if do_pad==1 && passes == 1
-		%subtract mean to avoid high frequencies at border of correlation:
-		image1_cutC=image1_cutC-mean(image1_cutC,[1 2]);
-		image2_cutC=image2_cutC-mean(image2_cutC,[1 2]);
-		% padding (faster than padarray) to get the linear correlation:
+        %subtract mean to avoid high frequencies at border of correlation:
+        try
+            image1_cutC=image1_cutC-mean(image1_cutC,[1 2]);
+            image2_cutC=image2_cutC-mean(image2_cutC,[1 2]);
+        catch
+            mean_image1_cutC=zeros(size(image1_cutC));
+            mean_image2_cutC=zeros(size(image2_cutC));
+            for oldmatlab=1:size(image2_cutC,3);
+                mean_image1_cutC(:,:,oldmatlab)=mean(mean(image1_cutC(:,:,oldmatlab)));
+                mean_image2_cutC(:,:,oldmatlab)=mean(mean(image2_cutC(:,:,oldmatlab)));
+            end
+            image1_cutC=image1_cutC-mean_image1_cutC;
+            image2_cutC=image2_cutC-mean_image2_cutC;
+        end
+        % padding (faster than padarray) to get the linear correlation:
 		image1_cutC=[image1_cutC zeros(interrogationarea,interrogationarea-1,size(image1_cutC,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cutC,3))];
 		image2_cutC=[image2_cutC zeros(interrogationarea,interrogationarea-1,size(image2_cutC,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cutC,3))];
 	end
@@ -171,11 +213,22 @@ if repeat == 1 && passes == 1
 	ss1D = repmat(s1D, [1, 1, size(s0D,3)])+repmat(s0D, [interrogationarea, interrogationarea, 1]);
 	image1_cutD = image1_roi(ss1D);
 	image2_cutD = image2_roi(ss1D);
-	
-	if do_pad==1 && passes == 1
-		%subtract mean to avoid high frequencies at border of correlation:
-		image1_cutD=image1_cutD-mean(image1_cutD,[1 2]);
-		image2_cutD=image2_cutD-mean(image2_cutD,[1 2]);
+    
+    if do_pad==1 && passes == 1
+        %subtract mean to avoid high frequencies at border of correlation:
+        try
+            image1_cutD=image1_cutD-mean(image1_cutD,[1 2]);
+            image2_cutD=image2_cutD-mean(image2_cutD,[1 2]);
+        catch
+            mean_image1_cutD=zeros(size(image1_cutD));
+            mean_image2_cutD=zeros(size(image2_cutD));
+            for oldmatlab=1:size(image2_cutD,3);
+                mean_image1_cutD(:,:,oldmatlab)=mean(mean(image1_cutD(:,:,oldmatlab)));
+                mean_image2_cutD(:,:,oldmatlab)=mean(mean(image2_cutD(:,:,oldmatlab)));
+            end
+            image1_cutD=image1_cutD-mean_image1_cutD;
+            image2_cutD=image2_cutD-mean_image2_cutD;
+        end
 		% padding (faster than padarray) to get the linear correlation:
 		image1_cutD=[image1_cutD zeros(interrogationarea,interrogationarea-1,size(image1_cutD,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cutD,3))];
 		image2_cutD=[image2_cutD zeros(interrogationarea,interrogationarea-1,size(image2_cutD,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cutD,3))];
@@ -194,9 +247,20 @@ if repeat == 1 && passes == 1
 	image1_cutE = image1_roi(ss1E);
 	image2_cutE = image2_roi(ss1E);
 	if do_pad==1 && passes == 1
-		%subtract mean to avoid high frequencies at border of correlation:
-		image1_cutE=image1_cutE-mean(image1_cutE,[1 2]);
-		image2_cutE=image2_cutE-mean(image2_cutE,[1 2]);
+        %subtract mean to avoid high frequencies at border of correlation:
+        try
+            image1_cutE=image1_cutE-mean(image1_cutE,[1 2]);
+            image2_cutE=image2_cutE-mean(image2_cutE,[1 2]);
+        catch
+            mean_image1_cutE=zeros(size(image1_cutE));
+            mean_image2_cutE=zeros(size(image2_cutE));
+            for oldmatlab=1:size(image2_cutE,3);
+                mean_image1_cutE(:,:,oldmatlab)=mean(mean(image1_cutE(:,:,oldmatlab)));
+                mean_image2_cutE(:,:,oldmatlab)=mean(mean(image2_cutE(:,:,oldmatlab)));
+            end
+            image1_cutE=image1_cutE-mean_image1_cutE;
+            image2_cutE=image2_cutE-mean_image2_cutE;
+        end
 		% padding (faster than padarray) to get the linear correlation:
 		image1_cutE=[image1_cutE zeros(interrogationarea,interrogationarea-1,size(image1_cutE,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cutE,3))];
 		image2_cutE=[image2_cutE zeros(interrogationarea,interrogationarea-1,size(image2_cutE,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cutE,3))];
@@ -585,7 +649,7 @@ for multipass=1:passes-1
 				image1_cut=image1_cut-mean(image1_cut,[1 2]);
 				image2_cut=image2_cut-mean(image2_cut,[1 2]);
 			catch
-				for oldmatlab=1:size(image1_cut,3);
+				for oldmatlab=1:size(image1_cut,3)
 					image1_cut(:,:,oldmatlab)=image1_cut(:,:,oldmatlab)-mean(mean(image1_cut(:,:,oldmatlab)));
 					image2_cut(:,:,oldmatlab)=image2_cut(:,:,oldmatlab)-mean(mean(image2_cut(:,:,oldmatlab)));
 				end
@@ -666,7 +730,7 @@ for multipass=1:passes-1
                 bg_sig=(1-emptymatrix).*mean(result_conv,1:2); %zeros in middle, average correlation value in the remaining space
             catch %old matlab releases fail
                 mean_result_conv=zeros(1,1,size(result_conv,3));
-                for oldmatlab=1:size(result_conv,3);
+                for oldmatlab=1:size(result_conv,3)
                     mean_result_conv(:,:,oldmatlab)=mean(mean(result_conv(:,:,oldmatlab)));
                 end
                 bg_sig=zeros(size(result_conv));

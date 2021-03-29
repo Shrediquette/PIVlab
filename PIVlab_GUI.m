@@ -2219,7 +2219,7 @@ if get(handles.bg_subtract,'Value')==1
 				end
 				
 				%Convert back to original image class, if not double anyway
-				if strcmp(classimage,'uint8')==1
+				if strcmp(classimage,'uint8')==1 %#ok<*STISA>
 					image1_bg=uint8(image1_bg*255);
 					if sequencer==1 %not time-resolved
 						image2_bg=uint8(image2_bg*255);
