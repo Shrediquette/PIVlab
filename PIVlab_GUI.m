@@ -2952,6 +2952,13 @@ else
 end
 handles=gethand;
 displogo(0)
+%remember imagesize of currently loaded images
+try
+	old_img_size=size(get_img(1));
+catch
+	old_img_size=0;
+end
+
 if ispc==1
 	try
 		path=uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
@@ -3057,7 +3064,12 @@ if ~isequal(path,0)
 		
 		%Clear all things
 		clear_vel_limit_Callback %clear velocity limits
-		clear_roi_Callback
+		if old_img_size ~= 0%ROI should be cleared only when image size of loaded imgs is different from before...
+			new_img_size=size(get_img(1));
+			if new_img_size(1) ~= old_img_size(1) || new_img_size(2) ~= old_img_size(2)
+				clear_roi_Callback
+			end
+		end
 		%clear_mask_Callback:
 		delete(findobj(gca,'tag', 'maskplot'));
 		put ('maskiererx',{});
@@ -7535,6 +7547,10 @@ else
 	put('yzoomlimit', []);
 	
 	sliderdisp
+	try
+			set(getappdata(0,'hgui'), 'Name',['PIVlab ' retr('PIVver') '   [Path: ' vars.pathname ']']) %for people like me that always forget what dataset they are currently working on...
+	catch
+	end
 	zoom reset
 end
 
