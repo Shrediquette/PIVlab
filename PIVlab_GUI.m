@@ -912,19 +912,22 @@ handles.text43 = uicontrol(handles.multip09,'Style','text','String','Vector scal
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4*1 1];
 handles.vectorscale = uicontrol(handles.multip09,'Style','edit','String','8','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@vectorscale_Callback,'Tag','vectorscale','TooltipString','Manually enter a vector scale factor here');
 
-item=[0 item(2)+item(4)+margin/4 parentitem(3)/4*3 1];
+item=[0 item(2)+item(4)+margin/4*0 parentitem(3)/4*3 1];
 handles.text114 = uicontrol(handles.multip09,'Style','text','String','Vector line width','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text114');
 
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1];
 handles.vecwidth = uicontrol(handles.multip09,'Style','edit','String','0.5','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@vecwidth_Callback,'Tag','vecwidth','TooltipString','Line width of the vectors');
 
-item=[0 item(2)+item(4)+margin/4 parentitem(3)/4*3 1];
+item=[0 item(2)+item(4)+margin/4*0 parentitem(3)/4*3 1];
 handles.text132 = uicontrol(handles.multip09,'Style','text','String','plot every nth vector, n =','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','tex132');
 
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1];
 handles.nthvect = uicontrol(handles.multip09,'Style','edit','String','1','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','nthvect','TooltipString','If you are confused by the amount of arrows shown on the screen, then you can reduce the amount here.');
 
-item=[0 item(2)+item(4)+margin/4 parentitem(3)/4*3 1];
+item=[0 item(2)+item(4) parentitem(3) 1];
+handles.suppress_vec = uicontrol(handles.multip09,'Style','checkbox','String','hide vectors','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@suppress_vec_Callback,'Tag','suppress_vec','TooltipString','Hide vectors in display');
+
+item=[0 item(2)+item(4)+margin/4*0 parentitem(3)/4*3 1];
 handles.text200 = uicontrol(handles.multip09,'Style','text','String','Mask transparency [%]','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text200');
 
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1];
@@ -9652,4 +9655,14 @@ if axis_direction ==1
 	offset = pixel_position*calxy - true_position/1000;
 else
 	offset = (size_dim-pixel_position)*calxy - true_position/1000;
+end
+
+function suppress_vec_Callback (hObject,~)
+handles=gethand;
+if get(hObject,'Value')==1
+	set(handles.nthvect,'String','100000');
+	set(handles.vectorscale,'String','0');
+else
+	set(handles.nthvect,'String','1');
+	set(handles.vectorscale,'String','8');
 end
