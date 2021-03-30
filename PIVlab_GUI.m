@@ -1076,6 +1076,13 @@ handles.draw_what = uicontrol(handles.multip12,'Style','popupmenu','String',{'po
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
 handles.draw_stuff = uicontrol(handles.multip12,'Style','pushbutton','String','Draw!','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@draw_stuff_Callback,'Tag','draw_stuff','TooltipString','Draw the object that you selected above');
 
+%%new buttons, load and save polylines
+item=[0 item(2)+item(4) parentitem(3)/2 2];
+handles.save_polyline = uicontrol(handles.multip12,'Style','pushbutton','String','Save coords','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@save_polyline_Callback,'Tag','save_polyline','TooltipString','Save poly line coordinates to *.mat file');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
+handles.load_polyline = uicontrol(handles.multip12,'Style','pushbutton','String','Load coords','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@load_polyline_Callback,'Tag','load_polyline','TooltipString','Load poly line coordinates from *.mat file');
+
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.text56 = uicontrol(handles.multip12,'Style','text','String','Parameter:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text56');
 
@@ -1784,7 +1791,7 @@ else %no calibration performed yet
 		
 		set(handles.time_inp,'String',num2str(delta_t))
 	end
-		set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
+	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
 end
 
 function plot_derivs_Callback(~, ~, ~)
@@ -3015,7 +3022,7 @@ if ~isequal(path,0)
 				end
 			end
 		end
-	elseif sequencer==0 
+	elseif sequencer==0
 		for i=1:size(path,1)
 			if path(i).isdir == 0 %remove directories from selection
 				if exist('filepath','var')==0 %first loop
@@ -3519,10 +3526,10 @@ if type==1 %ascii file
 		shear=derived{8-1,currentframe};
 		strain=derived{9-1,currentframe};
 		vectorangle=derived{11-1,currentframe};
-    %correlation_map=derived{12-1,currentframe};
+		%correlation_map=derived{12-1,currentframe};
 		%wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
 		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
-    else %no derivatives.
+	else %no derivatives.
 		%wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
 		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
 	end
@@ -4381,7 +4388,7 @@ if ok==1
 			%if size(image1,3)>1
 			%	image1=uint8(mean(image1,3));
 			%	image2=uint8(mean(image2,3));
-				%disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
+			%disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
 			%end
 			set(handles.progress, 'string' , ['Frame progress: N/A']);drawnow; %#ok<*NBRAK>
 			clahe=get(handles.clahe_enable,'value');
@@ -4392,7 +4399,7 @@ if ok==1
 			highpsize=str2double(get(handles.highp_size, 'string'));
 			wienerwurst=get(handles.wienerwurst, 'value');
 			wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-		
+			
 			Autolimit_Callback
 			minintens=str2double(get(handles.minintens, 'string'));
 			maxintens=str2double(get(handles.maxintens, 'string'));
@@ -4707,9 +4714,9 @@ if ok==1
 		[image1,~]=get_img(selected);
 		[image2,~]=get_img(selected+1);
 		%if size(image1,3)>1
-			%image1=uint8(mean(image1,3));
-			%image2=uint8(mean(image2,3));
-			%disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
+		%image1=uint8(mean(image1,3));
+		%image2=uint8(mean(image2,3));
+		%disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
 		%end
 		clahe=get(handles.clahe_enable,'value');
 		highp=get(handles.enable_highpass,'value');
@@ -4935,7 +4942,7 @@ try
 	else
 		set(handles.edit52, 'enable','off')
 	end
-
+	
 	set(handles.edit50, 'string',pass2val);
 	set(handles.edit51, 'string',pass3val);
 	set(handles.edit52, 'string',pass4val);
@@ -5347,7 +5354,7 @@ if size(resultslist,2)>=frame
 		else
 			valid_vel=[];
 		end
-
+		
 		%image-based filtering
 		do_contrast_filter = get(handles.do_contrast_filter, 'value');
 		do_bright_filter = get(handles.do_bright_filter, 'value');
@@ -5363,10 +5370,10 @@ if size(resultslist,2)>=frame
 			[B,rawimageB]=get_img(selected+1);
 			[u,v,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
 		end
-
+		
 		%vector-based filtering
 		[u,v] = PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
-	
+		
 		typevector(isnan(u))=2;
 		typevector(isnan(v))=2;
 		typevector(typevector_original==0)=0; %restores typevector for mask
@@ -5522,7 +5529,7 @@ if numel(pointscali)>0
 	offset_y_true = retr('offset_y_true');
 	set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(calu*100000)/100000) ' m/s' sprintf('\n') 'x offset: ' round(num2str(offset_x_true)*1000)/1000 ' m' sprintf('\n') 'y offset: ' round(num2str(offset_y_true)*1000)/1000 ' m'],  'backgroundcolor', [0.5 1 0.5]);
 	%sliderdisp
-
+	
 else %no calibration performed yet
 	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
 	set(handles.x_axis_direction,'value',1);
@@ -5547,8 +5554,8 @@ set(handles.calidisp, 'string', ['inactive'], 'backgroundcolor', [0.941176470588
 delete(findobj('tag', 'caliline'));
 set(handles.realdist, 'String','1');
 set(handles.time_inp, 'String','1');
-set(handles.x_axis_direction,'value',1); 
-set(handles.y_axis_direction,'value',1); 
+set(handles.x_axis_direction,'value',1);
+set(handles.y_axis_direction,'value',1);
 set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
 if size(filepath,1) >1 || retr('video_selection_done') == 1
 	sliderdisp
@@ -7434,7 +7441,7 @@ else
 	set(handles.loc_median,'value',retr('loc_median'));
 	set(handles.loc_med_thresh,'string',retr('loc_med_thresh'));
 	set(handles.interpol_missing,'value',retr('interpol_missing'));
-
+	
 	set(handles.vectorscale,'string',retr('vectorscale'));
 	set(handles.colormap_choice,'value',retr('colormap_choice')); %popup
 	set(handles.addfileinfo,'value',retr('addfileinfo'));
@@ -7507,13 +7514,13 @@ else
 	end
 	
 	try %neu 2.42
-	set (handles.x_axis_direction,'value',vars.x_axis_direction);
-	set (handles.y_axis_direction,'value',vars.y_axis_direction);
-	
-	set(handles.contrast_filter_thresh,'string',vars.contrast_filter_thresh);
-	set(handles.bright_filter_thresh,'string',vars.bright_filter_thresh);
-	set(handles.do_bright_filter,'Value',vars.do_bright_filter);
-	set(handles.do_contrast_filter,'Value',vars.do_contrast_filter);
+		set (handles.x_axis_direction,'value',vars.x_axis_direction);
+		set (handles.y_axis_direction,'value',vars.y_axis_direction);
+		
+		set(handles.contrast_filter_thresh,'string',vars.contrast_filter_thresh);
+		set(handles.bright_filter_thresh,'string',vars.bright_filter_thresh);
+		set(handles.do_bright_filter,'Value',vars.do_bright_filter);
+		set(handles.do_contrast_filter,'Value',vars.do_contrast_filter);
 	catch
 	end
 	try
@@ -7542,7 +7549,7 @@ else
 				offset_y_true = retr('offset_y_true');
 			else
 				offset_y_true=0;
-			end			
+			end
 			set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(calu*100000)/100000) ' m/s' sprintf('\n') 'x offset: ' round(num2str(offset_x_true)*1000)/1000 ' m' sprintf('\n') 'y offset: ' round(num2str(offset_y_true)*1000)/1000 ' m'],  'backgroundcolor', [0.5 1 0.5]);
 		end
 	catch
@@ -7567,7 +7574,7 @@ else
 	
 	sliderdisp
 	try
-			set(getappdata(0,'hgui'), 'Name',['PIVlab ' retr('PIVver') '   [Path: ' vars.pathname ']']) %for people like me that always forget what dataset they are currently working on...
+		set(getappdata(0,'hgui'), 'Name',['PIVlab ' retr('PIVver') '   [Path: ' vars.pathname ']']) %for people like me that always forget what dataset they are currently working on...
 	catch
 	end
 	zoom reset
@@ -8381,7 +8388,7 @@ for i=startfr:endfr
 					magg=sqrt(umean^2+vmean^2);
 					areaoutput=[magg angle];
 					varis='[magnitude, angle in degrees, 0 = right, 90 = up, 180 = left, 270 = down, 360 = right]';
-		
+					
 					hold on;quiver(mean2(ximask), mean2(yimask), (umean/calu)/sqrt((umean/calu)^2+(vmean/calv)^2)*veclength,(vmean/calv)/sqrt((umean/calu)^2+(vmean/calv)^2)*veclength,'r','autoscale','off', 'autoscalefactor', 100, 'linewidth',2,'MaxHeadSize',3,'tag', 'extractline');hold off;
 					
 					if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
@@ -9683,3 +9690,45 @@ else
 	set(handles.nthvect,'String','1');
 	set(handles.vectorscale,'String','8');
 end
+
+function save_polyline_Callback (~,~)
+xposition=retr('xposition');
+yposition=retr('yposition');
+if ~isempty(xposition) && ~isempty(yposition)
+	[polyfile,polypath] = uiputfile('*.mat','Save coordinates','PIVlab_coordinates.mat');
+	if isequal(polyfile,0) | isequal(polypath,0)
+		%do nothing
+	else
+		save(fullfile(polypath,polyfile),'xposition','yposition');
+	end
+end
+
+function load_polyline_Callback (~,~)
+filepath=retr('filepath');
+handles=gethand;
+if size(filepath,1) > 1 %did the user load images?
+	[polyfile,polypath] = uigetfile('*.mat','Load coordinate','PIVlab_coordinates.mat');
+	if isequal(polyfile,0) | isequal(polypath,0)
+		%do nothing
+	else
+		load(fullfile(polypath,polyfile),'xposition','yposition');
+		try
+			put('xposition',xposition);
+			put('yposition',yposition);
+			delete(findobj('tag', 'extractline'))
+			delete(findobj('tag','areaint'));
+			if size(xposition,1)==1
+				line(xposition,yposition,'LineWidth',3, 'Color', [0,0,0.95],'tag','extractline');
+				line(xposition,yposition,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','extractline');
+			else
+				for m=1:30
+					line(xposition(m,:),yposition(m,:),'LineWidth',1.5, 'Color', [0.95,0.5,0.01],'tag','extractline');
+				end
+			end
+		catch
+			disp(['Error. No coordinate data found in ' fullfile(polypath,polyfile)])
+		end
+	end
+end
+
+
