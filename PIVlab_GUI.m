@@ -2599,7 +2599,9 @@ if size(filepath,1)>0
 				(u(typevector==2)-(retr('subtr_u')/retr('calu')))*vecscale,...
 				(v(typevector==2)-(retr('subtr_v')/retr('calv')))*vecscale,...
 				'Color', vectorcolorintp,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
-			scatter(x(typevector==0),y(typevector==0),'rx') %masked
+			if str2num(get(handles.masktransp,'String')) < 100
+				scatter(x(typevector==0),y(typevector==0),'rx') %masked
+			end
 		else
 			typevector_reduced=typevector(1:vecskip:end,1:vecskip:end);
 			x_reduced=x(1:vecskip:end,1:vecskip:end);
@@ -2614,7 +2616,9 @@ if size(filepath,1)>0
 				(u_reduced(typevector_reduced==2)-(retr('subtr_u')/retr('calu')))*vecscale,...
 				(v_reduced(typevector_reduced==2)-(retr('subtr_v')/retr('calv')))*vecscale,...
 				'Color', vectorcolorintp,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
-			scatter(x_reduced(typevector_reduced==0),y_reduced(typevector_reduced==0),'rx') %masked
+			if str2num(get(handles.masktransp,'String')) < 100
+				scatter(x_reduced(typevector_reduced==0),y_reduced(typevector_reduced==0),'rx') %masked
+			end
 		end
 		hold off;
 		%streamlines:
@@ -2659,11 +2663,11 @@ if size(filepath,1)>0
 				end
 			end
 			if isempty(framemanualdeletion)==0
-				
-				
 				hold on;
-				for i=1:size(framemanualdeletion,1)
-					scatter (x(framemanualdeletion(i,1),framemanualdeletion(i,2)),y(framemanualdeletion(i,1),framemanualdeletion(i,2)), 'rx', 'tag','manualdot')
+				if str2num(get(handles.masktransp,'String')) < 100
+					for i=1:size(framemanualdeletion,1)
+						scatter (x(framemanualdeletion(i,1),framemanualdeletion(i,2)),y(framemanualdeletion(i,1),framemanualdeletion(i,2)), 'rx', 'tag','manualdot')
+					end
 				end
 				hold off;
 			end
