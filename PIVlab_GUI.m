@@ -2622,8 +2622,8 @@ if size(filepath,1)>0
 		streamlinesY=retr('streamlinesY');
 		delete(findobj('tag','streamline'));
 		if numel(streamlinesX)>0
-			ustream=u*retr('calu')-retr('subtr_u');
-			vstream=v*retr('calv')-retr('subtr_v');
+			ustream=u-(retr('subtr_u')/retr('calu'));
+			vstream=v-(retr('subtr_v')/retr('calv'));
 			ustream(typevector==0)=nan;
 			vstream(typevector==0)=nan;
 			h=streamline(mmstream2(x,y,ustream,vstream,streamlinesX,streamlinesY,'on'));
@@ -9013,10 +9013,10 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		end
 	end
 	calu=retr('calu');calv=retr('calv');
-	u=u*calu-retr('subtr_u');
-	v=v*calv-retr('subtr_v');
-	u(typevector==0)=nan;
-	v(typevector==0)=nan;
+	ustream=u-(retr('subtr_u')/retr('calu'));
+	vstream=v-(retr('subtr_v')/retr('calv'));
+	ustream(typevector==0)=nan;
+	vstream(typevector==0)=nan;
 	calxy=retr('calxy');
 	button=1;
 	streamlinesX=retr('streamlinesX');
@@ -9044,13 +9044,14 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		end
 		xposition(i)=rawx;
 		yposition(i)=rawy;
-		h=streamline(mmstream2(x,y,u,v,xposition(i),yposition(i),'on'));
+		
+		h=streamline(mmstream2(x,y,ustream,vstream,xposition(i),yposition(i),'on'));
 		set (h,'tag','streamline');
 		i=i+1;
 	end
 	delete(findobj('tag','streamline'));
 	if exist('xposition','var')==1
-		h=streamline(mmstream2(x,y,u,v,xposition,yposition,'on'));
+		h=streamline(mmstream2(x,y,ustream,vstream,xposition,yposition,'on'));
 		set (h,'tag','streamline');
 		contents = get(handles.streamlcolor,'String');
 		set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')})
@@ -9103,10 +9104,10 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		end
 	end
 	calu=retr('calu');calv=retr('calv');
-	u=u*calu-retr('subtr_u');
-	v=v*calv-retr('subtr_v');
-	u(typevector==0)=nan;
-	v(typevector==0)=nan;
+	ustream=u-(retr('subtr_u')/retr('calu'));
+	vstream=v-(retr('subtr_v')/retr('calv'));
+	ustream(typevector==0)=nan;
+	vstream(typevector==0)=nan;
 	calxy=retr('calxy');
 	button=1;
 	streamlinesX=retr('streamlinesX');
@@ -9136,13 +9137,13 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	
 	xposition(i:i+str2num(get(handles.streamlamount,'string'))-1)=rawx;
 	yposition(i:i+str2num(get(handles.streamlamount,'string'))-1)=rawy;
-	h=streamline(mmstream2(x,y,u,v,xposition(i),yposition(i),'on'));
+	h=streamline(mmstream2(x,y,ustream,vstream,xposition(i),yposition(i),'on'));
 	set (h,'tag','streamline');
 	i=i+1;
 end
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	delete(findobj('tag','streamline'));
-	h=streamline(mmstream2(x,y,u,v,xposition,yposition,'on'));
+	h=streamline(mmstream2(x,y,ustream,vstream,xposition,yposition,'on'));
 	contents = get(handles.streamlcolor,'String');
 	set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')});
 	set (h,'tag','streamline');
