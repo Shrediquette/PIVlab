@@ -2388,6 +2388,18 @@ if size(filepath,1)>0
 				%vectorcolor='k';
 				if get(handles.displ_colorbar,'value')==1
 					name=get(handles.derivchoice,'string');
+					if strcmp(name,'N/A') %user hasn't visited the derived panel before
+						if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
+							set(handles.derivchoice,'String',{'Vectors [px/frame]';'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Simple shear rate [1/frame]';'Simple strain rate [1/frame]';'Line integral convolution (LIC) [1]' ; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
+							set(handles.text35,'String','u [px/frame]:')
+							set(handles.text36,'String','v [px/frame]:')
+						else
+							set(handles.derivchoice,'String',{'Vectors [m/s]';'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Simple shear rate [1/s]';'Simple strain rate [1/s]';'Line integral convolution (LIC) [1]'; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
+							set(handles.text35,'String','u [m/s]:')
+							set(handles.text36,'String','v [m/s]:')
+						end
+						name=get(handles.derivchoice,'String');
+					end
 					posichoice = get(handles.colorbarpos,'String');
 					colochoice=get(handles.colorbarcolor,'String');
 					coloobj=colorbar (posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')});
