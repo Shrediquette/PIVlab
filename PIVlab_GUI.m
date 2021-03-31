@@ -5563,7 +5563,7 @@ else
 	displogo(0)
 end
 
-function load_ext_img_Callback(~, ~, ~)
+function load_ext_img_Callback(~, ~, ~) %load extra calibration image
 cali_folder=retr('cali_folder');
 if isempty (cali_folder)==1
 	if ispc==1
@@ -5584,11 +5584,20 @@ if ~isequal(filename,0)
 	else
 		caliimg=imread(fullfile(pathname, filename));
 	end
+	numberoftiles1=round(size(caliimg,1)/15);
+	numberoftiles2=round(size(caliimg,2)/15);
+	if numberoftiles1 < 2
+		numberoftiles1=2;
+	end
+	if numberoftiles2 < 2
+		numberoftiles2=2;
+	end
+	
 	if size(caliimg,3)>1 == 0
-		caliimg=adapthisteq(imadjust(caliimg),'NumTiles',[15 15]);
+		caliimg=adapthisteq(imadjust(caliimg),'NumTiles',[numberoftiles1 numberoftiles2],'clipLimit',0.04);
 	else
 		try
-			caliimg=adapthisteq(imadjust(rgb2gray(caliimg)),'NumTiles',[15 15]);
+			caliimg=adapthisteq(imadjust(rgb2gray(caliimg)),'NumTiles',[numberoftiles1 numberoftiles2],'clipLimit',0.04);
 		catch
 		end
 	end
