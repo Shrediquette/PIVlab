@@ -517,16 +517,18 @@ handles.minintens = uicontrol(handles.multip03,'Style','edit', 'String','0','Uni
 item=[parentitem(3)/2 item(2) parentitem(3)/3*1 1];
 handles.maxintens = uicontrol(handles.multip03,'Style','edit', 'String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','maxintens','Callback',@minintens_Callback,'TooltipString','Upper bound of the histogram [0...1]');
 
-item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 3.5];
+item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 5];
 handles.uipanel351 = uipanel(handles.multip03, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Background Subtraction', 'Tag','uipanel351','fontweight','bold');
 parentitem=get(handles.uipanel351, 'Position');
 item=[0 0 0 0];
 item=[0 item(2)+item(4) parentitem(3) 1];
 handles.bg_subtract = uicontrol(handles.uipanel351,'Style','checkbox', 'value',0, 'String','Subtract mean intensity','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bg_subtract','TooltipString','Automatic stretching of the image intensity histogram. Important for 16-bit images.');
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
+handles.bg_view = uicontrol(handles.uipanel351,'Style','pushbutton','String','View background image','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @bg_view_Callback,'Tag','bg_view','TooltipString','Display the generated background image. Click again to toggle between background A and B.');
 
 parentitem=get(handles.multip03, 'Position');
 item=[0 0 0 0];
-item=[0 item(2)+item(4)+25 parentitem(3) 2];
+item=[0 item(2)+item(4)+26 parentitem(3) 2];
 handles.preview_preprocess = uicontrol(handles.multip03,'Style','pushbutton','String','Apply and preview current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preview_preprocess_Callback,'Tag','preview_preprocess','TooltipString','Preview the effect of image pre-processing');
 
 %% Multip04
@@ -9740,4 +9742,36 @@ if size(filepath,1) > 1 %did the user load images?
 	end
 end
 
-
+function bg_view_Callback (~,~) %displays background in GUI
+handles=gethand;
+bg_toggle=retr('bg_toggle');
+if isempty(bg_toggle)
+	bg_toggle=0;
+elseif bg_toggle==0
+	bg_toggle=1;
+elseif bg_toggle==1
+	bg_toggle=0;
+end
+put('bg_toggle',bg_toggle)
+if get(handles.bg_subtract,'Value')==1
+	bg_img_A = retr('bg_img_A');
+	bg_img_B = retr('bg_img_B');
+	sequencer=retr('sequencer');%Timeresolved or pairwise 0=timeres.; 1=pairwise
+	if sequencer ~= 2 % bg subtraction only makes sense with time-resolved and pairwise sequencing style, not with reference style.
+		if isempty(bg_img_A) || isempty(bg_img_B)
+			generate_BG_img
+			bg_img_A = retr('bg_img_A');
+			bg_img_B = retr('bg_img_B');
+		end
+		%display it (needs to be toggable....)
+		if bg_toggle==0
+			image(imadjust(bg_img_A), 'parent',gca, 'cdatamapping', 'scaled');
+		elseif bg_toggle==1
+			image(imadjust(bg_img_B), 'parent',gca, 'cdatamapping', 'scaled');
+		end
+		colormap('gray');
+		axis image;
+		set(gca,'ytick',[])
+		set(gca,'xtick',[])
+	end
+end
