@@ -1978,6 +1978,7 @@ end
 
 function displogo(zoom)
 logoimg=imread('PIVlablogo.jpg');
+%{
 if zoom==1
 	h=image(logoimg+255, 'parent', gca);
 	axis image;
@@ -1998,8 +1999,13 @@ if zoom==1
 		drawnow %limitrate;
 	end
 end
-%get(gca,'position')
-image(logoimg, 'parent', gca);
+%}
+
+try
+	image(logoimg, 'parent', gca,'interpolation','bilinear');
+catch
+	image(logoimg, 'parent', gca);
+end
 set(gca, 'xcolor', [0.94 0.94 0.94], 'ycolor', [0.94 0.94 0.94]) ;
 
 axis image;
@@ -2008,9 +2014,9 @@ set(gca,'xtick',[])
 set(gca, 'xlim', [1 size(logoimg,2)]);
 set(gca, 'ylim', [1 size(logoimg,1)]);
 
-set(gca, 'ydir', 'reverse');
-text (520,450,['version: ' retr('PIVver')], 'fontsize', 8,'fontangle','italic','horizontalalignment','right');
-text (520,453,['   ' sprintf('\n') retr('update_msg')], 'fontsize', 10,'fontangle','italic','horizontalalignment','right','Color',retr('update_msg_color'));
+set(gca, 'ydir', 'reverse'); %750%582
+text (745,568,['version: ' retr('PIVver')], 'fontsize', 8,'fontangle','italic','horizontalalignment','right');
+text (745,581,['   ' sprintf('\n') retr('update_msg')], 'fontsize', 10,'fontangle','italic','horizontalalignment','right','Color',retr('update_msg_color'));
 imgproctoolbox=retr('imgproctoolbox');
 put('imgproctoolbox',[]);
 if imgproctoolbox==0
