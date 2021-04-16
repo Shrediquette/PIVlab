@@ -1,4 +1,6 @@
 function [x, y, u, v, typevec,corr_map] = piv_analysis(dir, filename1, filename2, preprocess_setting,piv_setting,graph)
+    % wrapper function to do PIV preprocess and PIV fft for a pair of image
+
     % INPUT
     %dir: directory containing images
     % filename1: the first image
