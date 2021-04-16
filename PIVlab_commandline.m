@@ -3,7 +3,7 @@
 % You can adjust the settings in "s" and "p", specify a mask and a region of interest
 clc; clear all
 
-multicore = 3; % integer. 1 means single core, greater than 1 means parallel
+multicore = 1; % integer. 1 means single core, greater than 1 means parallel
 c=parcluster('local'); % single node 
 corenum =  c.NumWorkers ; % fix : get corenumber from the machine
 
@@ -152,16 +152,38 @@ r{7,1}= 'Local median threshold';                           r{7,2}=3;           
 u_filt=cell(size(u));
 v_filt=cell(size(v));
 typevector_filt=typevector;
-for PIVresult=1:size(x,1)
-    [u_filt{PIVresult,1},v_filt{PIVresult,1}] = PIVlab_postproc (u{PIVresult,1},v{PIVresult,1}, r{1,2}, r{2,2},r{3,2}, r{4,2},r{5,2},r{6,2},r{7,2});
-
-    typevector_filt{PIVresult,1}(isnan(u_filt{PIVresult,1}))=2;
-    typevector_filt{PIVresult,1}(isnan(v_filt{PIVresult,1}))=2;
-    typevector_filt{PIVresult,1}(typevector{PIVresult,1}==0)=0; %restores typevector for mask
+if multicore >1
     
-    %% Interpolate missing data (disable if you wish)
-    u_filt{PIVresult,1}=inpaint_nans(u_filt{PIVresult,1},4);
-    v_filt{PIVresult,1}=inpaint_nans(v_filt{PIVresult,1},4);
+    poolobj = gcp('nocreate'); % get current pool object
+    
+    if isempty(poolobj)  % if no pool has been created 
+        parpool('local',min(corenum,multicore))
+    end
+    
+    parfor PIVresult=1:size(x,1)
+        [u_filt{PIVresult,1},v_filt{PIVresult,1}] = PIVlab_postproc (u{PIVresult,1},v{PIVresult,1}, r{1,2}, r{2,2},r{3,2}, r{4,2},r{5,2},r{6,2},r{7,2});
+
+        typevector_filt{PIVresult,1}(isnan(u_filt{PIVresult,1}))=2;
+        typevector_filt{PIVresult,1}(isnan(v_filt{PIVresult,1}))=2;
+        typevector_filt{PIVresult,1}(typevector{PIVresult,1}==0)=0; %restores typevector for mask
+
+        %% Interpolate missing data (disable if you wish)
+        u_filt{PIVresult,1}=inpaint_nans(u_filt{PIVresult,1},4);
+        v_filt{PIVresult,1}=inpaint_nans(v_filt{PIVresult,1},4);
+    end
+else
+    for PIVresult=1:size(x,1)
+        [u_filt{PIVresult,1},v_filt{PIVresult,1}] = PIVlab_postproc (u{PIVresult,1},v{PIVresult,1}, r{1,2}, r{2,2},r{3,2}, r{4,2},r{5,2},r{6,2},r{7,2});
+
+        typevector_filt{PIVresult,1}(isnan(u_filt{PIVresult,1}))=2;
+        typevector_filt{PIVresult,1}(isnan(v_filt{PIVresult,1}))=2;
+        typevector_filt{PIVresult,1}(typevector{PIVresult,1}==0)=0; %restores typevector for mask
+
+        %% Interpolate missing data (disable if you wish)
+        u_filt{PIVresult,1}=inpaint_nans(u_filt{PIVresult,1},4);
+        v_filt{PIVresult,1}=inpaint_nans(v_filt{PIVresult,1},4);
+    end
+    
 end
 %% 
 save(fullfile(directory, [filenames{1} '_' filenames{end} '_' num2str(amount) '_frames_result_.mat']));
