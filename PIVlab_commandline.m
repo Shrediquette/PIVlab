@@ -3,9 +3,15 @@
 % You can adjust the settings in "s" and "p", specify a mask and a region of interest
 clc; clear all
 
+multicore = 3; % integer. 1 means single core, greater than 1 means parallel
+c=parcluster('local'); % single node 
+corenum =  c.NumWorkers ; % fix : get corenumber from the machine
+
 %% Create list of images inside user specified directory
 directory= fullfile(fileparts(mfilename('fullpath')) , 'Examples') ; %directory containing the images you want to analyze
 % default directory: PIVlab/Examples
+addpath(fileparts(mfilename('fullpath')));
+disp(fileparts(mfilename('fullpath')))
 
 suffix='*.jpg'; %*.bmp or *.tif or *.jpg or *.tiff or *.jpeg
 disp(['Looking for ' suffix ' files in the selected directory.']);
@@ -72,30 +78,63 @@ end
 
 typevector=x; %typevector will be 1 for regular vectors, 0 for masked areas
 correlation_map=x; % correlation coefficient
-cntr=0;
+
+ %% Pre-load the image names out side of the parallelizable loop  
+    slicedfilename1=cell(0);
+    slicedfilename2=cell(0);
+    j = 1;
+    for i=1:1+pairwise:amount-1 
+        slicedfilename1{j}=filenames{i}; % begin
+        slicedfilename2{j}=filenames{i+1}; % end 
+        j = j+1;
+    end
+    
+
 %% Main PIV analysis loop:
-for i=1:1+pairwise:amount-1 
-    cntr=cntr+1;
-    image1=imread(fullfile(directory, filenames{i})); % read images
-    image2=imread(fullfile(directory, filenames{i+1}));
-    image1 = PIVlab_preproc (image1,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2}); %preprocess images
-    image2 = PIVlab_preproc (image2,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2});
-    [x{cntr}, y{cntr}, u{cntr}, v{cntr}, typevector{cntr},correlation_map{cntr}] = piv_FFTmulti (image1,image2,s{1,2},s{2,2},s{3,2},s{4,2},s{5,2},s{6,2},s{7,2},s{8,2},s{9,2},s{10,2},s{11,2},s{12,2},s{13,2}); %actual PIV analysis
+% parallel 
+if multicore > 1
     
-    % Graphical output (disable to improve speed)
-    %%{
-    imagesc(double(image1)+double(image2));colormap('gray');
-    hold on
-    quiver(x{cntr},y{cntr},u{cntr},v{cntr},'g','AutoScaleFactor', 1.5);
-    hold off;
-    axis image;
-    title(['Raw result ' filenames{i}],'interpreter','none')
-    set(gca,'xtick',[],'ytick',[])
-    drawnow;
+    poolobj = gcp('nocreate'); % get current pool object
     
-    disp([int2str((i+1)/amount*100) ' %']);
-    %%}
+    if isempty(poolobj)  % if no pool has been created 
+        parpool('local',min(corenum,multicore))
+    end
+    
+    parfor i=1:size(slicedfilename1,2)  % index must increment by 1
+
+        image1=imread(fullfile(directory, slicedfilename1{i})); % read images
+        image2=imread(fullfile(directory, slicedfilename2{i}));
+        image1 = PIVlab_preproc (image1,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2}); %preprocess images
+        image2 = PIVlab_preproc (image2,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2});
+        [x{i}, y{i}, u{i}, v{i}, typevector{i},correlation_map{i}] = piv_FFTmulti (image1,image2,s{1,2},s{2,2},s{3,2},s{4,2},s{5,2},s{6,2},s{7,2},s{8,2},s{9,2},s{10,2},s{11,2},s{12,2},s{13,2}); %actual PIV analysis
+
+    end
+else % sequential loop
+
+    for i=1:size(slicedfilename1,2)  % index must increment by 1
+
+        image1=imread(fullfile(directory, slicedfilename1{i})); % read images
+        image2=imread(fullfile(directory, slicedfilename2{i}));
+        image1 = PIVlab_preproc (image1,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2}); %preprocess images
+        image2 = PIVlab_preproc (image2,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2});
+        [x{i}, y{i}, u{i}, v{i}, typevector{i},correlation_map{i}] = piv_FFTmulti (image1,image2,s{1,2},s{2,2},s{3,2},s{4,2},s{5,2},s{6,2},s{7,2},s{8,2},s{9,2},s{10,2},s{11,2},s{12,2},s{13,2}); %actual PIV analysis
+
+        % Graphical output (disable to improve speed)
+        %%{
+        imagesc(double(image1)+double(image2));colormap('gray');
+        hold on
+        quiver(x{i},y{i},u{i},v{i},'g','AutoScaleFactor', 1.5);
+        hold off;
+        axis image;
+        title(['Raw result ' filenames{i}],'interpreter','none')
+        set(gca,'xtick',[],'ytick',[])
+        drawnow;
+
+        disp([int2str((i+1)/amount*100) ' %']);
+        %%}
+    end
 end
+
 
 %% PIV postprocessing loop
 % Standard image post processing settings
@@ -126,6 +165,11 @@ for PIVresult=1:size(x,1)
 end
 %% 
 save(fullfile(directory, [filenames{1} '_' filenames{end} '_' num2str(amount) '_frames_result_.mat']));
-    %% 
+
+%% clean up parallel pool
+poolobj = gcp('nocreate'); % GET the current parallel pool
+if ~isempty(poolobj ); delete(poolobj );end
+
+%% 
 clearvars -except p s r x y u v typevector directory filenames u_filt v_filt typevector_filt correlation_map
 disp('DONE.')
