@@ -3,7 +3,7 @@
 % You can adjust the settings in "s" and "p", specify a mask and a region of interest
 clc; clear all
 
-multicore = 1; % integer. 1 means single core, greater than 1 means parallel
+multicore = 3; % integer. 1 means single core, greater than 1 means parallel
 c=parcluster('local'); % single node 
 corenum =  c.NumWorkers ; % fix : get corenumber from the machine
 
@@ -94,11 +94,7 @@ correlation_map=x; % correlation coefficient
 % parallel 
 if multicore > 1
     
-    poolobj = gcp('nocreate'); % get current pool object
-    
-    if isempty(poolobj)  % if no pool has been created 
-        parpool('local',min(corenum,multicore))
-    end
+    create_local_pool(corenum,multicore)
     
     parfor i=1:size(slicedfilename1,2)  % index must increment by 1
 
@@ -154,11 +150,7 @@ v_filt=cell(size(v));
 typevector_filt=typevector;
 if multicore >1
     
-    poolobj = gcp('nocreate'); % get current pool object
-    
-    if isempty(poolobj)  % if no pool has been created 
-        parpool('local',min(corenum,multicore))
-    end
+    create_local_pool(corenum,multicore)
     
     parfor PIVresult=1:size(x,1)
         [u_filt{PIVresult,1},v_filt{PIVresult,1}] = PIVlab_postproc (u{PIVresult,1},v{PIVresult,1}, r{1,2}, r{2,2},r{3,2}, r{4,2},r{5,2},r{6,2},r{7,2});
@@ -195,3 +187,14 @@ if ~isempty(poolobj ); delete(poolobj );end
 %% 
 clearvars -except p s r x y u v typevector directory filenames u_filt v_filt typevector_filt correlation_map
 disp('DONE.')
+
+function create_local_pool(default_core, option_core)
+
+    poolobj = gcp('nocreate'); % get current pool object
+    
+    if isempty(poolobj)  % if no pool has been created 
+        parpool('local',min(default_core,option_core))
+    end
+
+end
+
