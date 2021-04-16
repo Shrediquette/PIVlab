@@ -3,7 +3,7 @@
 % You can adjust the settings in "s" and "p", specify a mask and a region of interest
 clc; clear all
 
-multicore = 3; % integer. 1 means single core, greater than 1 means parallel
+multicore = 2; % integer. 1 means single core, greater than 1 means parallel
 c=parcluster('local'); % single node 
 corenum =  c.NumWorkers ; % fix : get corenumber from the machine
 
@@ -98,36 +98,18 @@ if multicore > 1
     
     parfor i=1:size(slicedfilename1,2)  % index must increment by 1
 
-        image1=imread(fullfile(directory, slicedfilename1{i})); % read images
-        image2=imread(fullfile(directory, slicedfilename2{i}));
-        image1 = PIVlab_preproc (image1,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2}); %preprocess images
-        image2 = PIVlab_preproc (image2,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2});
-        [x{i}, y{i}, u{i}, v{i}, typevector{i},correlation_map{i}] = piv_FFTmulti (image1,image2,s{1,2},s{2,2},s{3,2},s{4,2},s{5,2},s{6,2},s{7,2},s{8,2},s{9,2},s{10,2},s{11,2},s{12,2},s{13,2}); %actual PIV analysis
-
+        [x{i}, y{i}, u{i}, v{i}, typevector{i},correlation_map{i}] = ...
+            piv_analysis(directory, slicedfilename1{i}, slicedfilename2{i},p,s,false);
     end
 else % sequential loop
 
     for i=1:size(slicedfilename1,2)  % index must increment by 1
 
-        image1=imread(fullfile(directory, slicedfilename1{i})); % read images
-        image2=imread(fullfile(directory, slicedfilename2{i}));
-        image1 = PIVlab_preproc (image1,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2}); %preprocess images
-        image2 = PIVlab_preproc (image2,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2});
-        [x{i}, y{i}, u{i}, v{i}, typevector{i},correlation_map{i}] = piv_FFTmulti (image1,image2,s{1,2},s{2,2},s{3,2},s{4,2},s{5,2},s{6,2},s{7,2},s{8,2},s{9,2},s{10,2},s{11,2},s{12,2},s{13,2}); %actual PIV analysis
-
-        % Graphical output (disable to improve speed)
-        %%{
-        imagesc(double(image1)+double(image2));colormap('gray');
-        hold on
-        quiver(x{i},y{i},u{i},v{i},'g','AutoScaleFactor', 1.5);
-        hold off;
-        axis image;
-        title(['Raw result ' filenames{i}],'interpreter','none')
-        set(gca,'xtick',[],'ytick',[])
-        drawnow;
-
+        [x{i}, y{i}, u{i}, v{i}, typevector{i},correlation_map{i}] = ...
+            piv_analysis(directory, slicedfilename1{i}, slicedfilename2{i},p,s,true);     
+        
         disp([int2str((i+1)/amount*100) ' %']);
-        %%}
+
     end
 end
 
@@ -198,3 +180,68 @@ function create_local_pool(default_core, option_core)
 
 end
 
+function [x, y, u, v, typevec,corr_map] = piv_analysis(dir, filename1, filename2, preprocess_setting,piv_setting,graph)
+    %dir: directory containing images
+    % filename1: the first image
+    % filename2: the second image 
+    % preprocess_setting: cell of dimension 10 x 2
+    % piv_setting: cell of dimension 13 x 2
+    % graph: bool, whether to display graphical output ( not available
+    % for parallel worker)
+
+    image1=imread(fullfile(dir, filename1)); % read images
+    image2=imread(fullfile(dir, filename2));
+    image1 = PIVlab_preproc (image1,...
+        preprocess_setting{1,2},...
+        preprocess_setting{2,2},...
+        preprocess_setting{3,2},...
+        preprocess_setting{4,2},...
+        preprocess_setting{5,2},...
+        preprocess_setting{6,2},...
+        preprocess_setting{7,2},...
+        preprocess_setting{8,2},...
+        preprocess_setting{9,2},...
+        preprocess_setting{10,2}); %preprocess images
+    image2 = PIVlab_preproc (image2,...
+        preprocess_setting{1,2},...
+        preprocess_setting{2,2},...
+        preprocess_setting{3,2},...
+        preprocess_setting{4,2},...
+        preprocess_setting{5,2},...
+        preprocess_setting{6,2},...
+        preprocess_setting{7,2},...
+        preprocess_setting{8,2},...
+        preprocess_setting{9,2},...
+        preprocess_setting{10,2});
+    [x, y, u, v, typevec,corr_map] = piv_FFTmulti(image1,image2,...
+        piv_setting{1,2},...
+        piv_setting{2,2},...
+        piv_setting{3,2},...
+        piv_setting{4,2},...
+        piv_setting{5,2},...
+        piv_setting{6,2},...
+        piv_setting{7,2},...
+        piv_setting{8,2},...
+        piv_setting{9,2},...
+        piv_setting{10,2},...
+        piv_setting{11,2},...
+        piv_setting{12,2},...
+        piv_setting{13,2}); %actual PIV analysis
+    
+    poolobj = gcp('nocreate');
+    
+    if graph == true && isempty(poolobj) % won't run in parallel mode
+        
+        imagesc(double(image1)+double(image2));colormap('gray');
+        hold on
+        quiver(x,y,u,v,'g','AutoScaleFactor', 1.5);
+        hold off;
+        axis image;
+        title(['Raw result ' filename1],'interpreter','none')
+        set(gca,'xtick',[],'ytick',[])
+        drawnow;
+        
+    end
+
+
+end
