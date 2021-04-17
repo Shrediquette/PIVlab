@@ -3,7 +3,7 @@
 % You can adjust the settings in "s" and "p", specify a mask and a region of interest
 clc; clear all
 
-multicore = 1; % integer. 1 means single core, greater than 1 means parallel
+nr_of_cores = 1; % integer, 1 means single core, greater than 1 means parallel
 c=parcluster('local'); % single node 
 corenum =  c.NumWorkers ; % fix : get the number of cores available
 
