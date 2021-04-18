@@ -92,9 +92,9 @@ correlation_map=x; % correlation coefficient
 
 %% Main PIV analysis loop:
 % parallel 
-if multicore > 1
+if nr_of_cores > 1
     
-    get_or_create_local_pool(corenum,multicore)
+    get_or_create_local_pool(corenum,nr_of_cores)
     
     parfor i=1:size(slicedfilename1,2)  % index must increment by 1
 
@@ -131,9 +131,9 @@ u_filt=cell(size(u));
 v_filt=cell(size(v));
 typevector_filt=typevector;
 
-if multicore >1 % parallel
+if nr_of_cores >1 % parallel
     
-    get_or_create_local_pool(corenum,multicore)
+    get_or_create_local_pool(corenum,nr_of_cores)
     
     parfor PIVresult=1:size(x,1)
 
