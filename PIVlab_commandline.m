@@ -4,9 +4,16 @@
 clc; clear all
 
 nr_of_cores = 1; % integer, 1 means single core, greater than 1 means parallel
-c=parcluster('local'); % single node 
-corenum =  c.NumWorkers ; % fix : get the number of cores available
-
+if nr_of_cores > 1   
+    try
+        c=parcluster('local'); % single node 
+        corenum =  c.NumWorkers ; % fix : get the number of cores available
+    catch
+        warning('on');
+        warning('parallel local cluster can not be created, assigning number of cores to 1');
+        nr_of_cores = 1;
+    end
+end
 %% Create list of images inside user specified directory
 directory= fullfile(fileparts(mfilename('fullpath')) , 'Examples') ; %directory containing the images you want to analyze
 % default directory: PIVlab/Examples
@@ -99,14 +106,14 @@ if nr_of_cores > 1
     parfor i=1:size(slicedfilename1,2)  % index must increment by 1
 
         [x{i}, y{i}, u{i}, v{i}, typevector{i},correlation_map{i}] = ...
-            piv_analysis(directory, slicedfilename1{i}, slicedfilename2{i},p,s,false);
+            piv_analysis(directory, slicedfilename1{i}, slicedfilename2{i},p,s,nr_of_cores,false);
     end
 else % sequential loop
 
     for i=1:size(slicedfilename1,2)  % index must increment by 1
 
         [x{i}, y{i}, u{i}, v{i}, typevector{i},correlation_map{i}] = ...
-            piv_analysis(directory, slicedfilename1{i}, slicedfilename2{i},p,s,true);     
+            piv_analysis(directory, slicedfilename1{i}, slicedfilename2{i},p,s,nr_of_cores,true);     
         
         disp([int2str((i+1)/amount*100) ' %']);
 
@@ -156,8 +163,10 @@ end
 save(fullfile(directory, [filenames{1} '_' filenames{end} '_' num2str(amount) '_frames_result_.mat']));
 
 %% clean up parallel pool
-poolobj = gcp('nocreate'); % GET the current parallel pool
-if ~isempty(poolobj ); delete(poolobj );end
+if nr_of_cores >1 % parallel
+    poolobj = gcp('nocreate'); % GET the current parallel pool
+    if ~isempty(poolobj ); delete(poolobj );end
+end 
 
 %% 
 clearvars -except p s r x y u v typevector directory filenames u_filt v_filt typevector_filt correlation_map

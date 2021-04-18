@@ -1,4 +1,5 @@
-function [x, y, u, v, typevec,corr_map] = piv_analysis(dir, filename1, filename2, preprocess_setting,piv_setting,graph)
+function [x, y, u, v, typevec,corr_map] = piv_analysis(dir, filename1, filename2,...
+    preprocess_setting,piv_setting,nr_of_cores,graph)
     % wrapper function to do PIV preprocess and PIV fft for a pair of image
 
     % INPUT
@@ -7,6 +8,7 @@ function [x, y, u, v, typevec,corr_map] = piv_analysis(dir, filename1, filename2
     % filename2: the second image 
     % preprocess_setting: cell of dimension 10 x 2
     % piv_setting: cell of dimension 13 x 2
+    % nr_of_cores: number of cores specified by user 
     % graph: bool, whether to display graphical output ( not available
     % for parallel worker)
     
@@ -54,10 +56,8 @@ function [x, y, u, v, typevec,corr_map] = piv_analysis(dir, filename1, filename2
         piv_setting{11,2},...
         piv_setting{12,2},...
         piv_setting{13,2}); %actual PIV analysis
-    
-    poolobj = gcp('nocreate');
-    
-    if graph && isempty(poolobj) % won't run in parallel mode
+        
+    if graph && nr_of_cores == 1 % won't run in parallel mode
         
         imagesc(double(image1)+double(image2));colormap('gray');
         hold on
