@@ -6,8 +6,8 @@ clc; clear all
 nr_of_cores = 1; % integer, 1 means single core, greater than 1 means parallel
 if nr_of_cores > 1   
     try
-        c=parcluster('local'); % single node 
-        corenum =  c.NumWorkers ; % fix : get the number of cores available
+        local_cluster=parcluster('local'); % single node 
+        corenum =  local_cluster.NumWorkers ; % fix : get the number of cores available
     catch
         warning('on');
         warning('parallel local cluster can not be created, assigning number of cores to 1');
@@ -101,7 +101,7 @@ correlation_map=x; % correlation coefficient
 % parallel 
 if nr_of_cores > 1
     
-    get_or_create_local_pool(corenum,nr_of_cores)
+    get_or_create_local_pool(corenum,nr_of_cores);
     
     parfor i=1:size(slicedfilename1,2)  % index must increment by 1
 
@@ -140,7 +140,7 @@ typevector_filt=typevector;
 
 if nr_of_cores >1 % parallel
     
-    get_or_create_local_pool(corenum,nr_of_cores)
+    get_or_create_local_pool(corenum,nr_of_cores);
     
     parfor PIVresult=1:size(x,1)
 
@@ -159,14 +159,15 @@ else % sequential loop
     end
     
 end
-%% 
-save(fullfile(directory, [filenames{1} '_' filenames{end} '_' num2str(amount) '_frames_result_.mat']));
 
-%% clean up parallel pool
+%% clean up parallel pool, and cluster 
 if nr_of_cores >1 % parallel
     poolobj = gcp('nocreate'); % GET the current parallel pool
     if ~isempty(poolobj ); delete(poolobj );end
+    clear local_cluster;
 end 
+%%
+save(fullfile(directory, [filenames{1} '_' filenames{end} '_' num2str(amount) '_frames_result_.mat']));
 
 %% 
 clearvars -except p s r x y u v typevector directory filenames u_filt v_filt typevector_filt correlation_map
