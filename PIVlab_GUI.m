@@ -36,6 +36,7 @@ margin=1.5;
 panelwidth=37;
 panelheighttools=12;
 panelheightpanels=35;
+enable_parallel=1;
 
 put('panelwidth',panelwidth);
 put('margin',margin);
@@ -171,8 +172,22 @@ try
 	else
 		disp('ERROR: Image Processing Toolbox not found! PIVlab won''t work like this.')
 	end
+	put('parallel',0);
+	if enable_parallel == 1
+	try %checking for a parallel license file throws a huge error message wheh it is not available. This might scare users...
+		gcp('nocreate');
+		disp('-> Distributed Computing Toolbox found. Parallel pool active (default settings).')
+		gcp;
+		put('parallel',1);
+	catch
+		disp('-> Running without parallelization (no distributed computing toolbox installed).')
+	end
+	else
+		disp('-> Distributed Computing disabled.')
+	end
+	
 catch
-	disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
+    disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
 end
 
 %Variable initialization
@@ -1734,6 +1749,9 @@ end
 if get(handles.ensemble,'Value') == 1
 	set(handles.AnalyzeAll,'String','Start ensemble analysis');
 end
+if retr('parallel')==1
+		set(handles.update_display_checkbox,'Visible','Off')
+end
 switchui('multip05')
 
 function vector_val_Callback(~, ~, ~)
@@ -2054,48 +2072,49 @@ hgui=getappdata(0,'hgui');
 handles=guihandles(hgui);
 
 function [currentimage,rawimage] = get_img(selected)
-handles=gethand;
-filepath = retr('filepath');
-if retr('video_selection_done') == 0
-	[~,~,ext] = fileparts(filepath{selected});
-	if strcmp(ext,'.b16')
-		currentimage=f_readB16(filepath{selected});
-		rawimage=currentimage;
+	handles=gethand;
+	filepath = retr('filepath');
+	if retr('video_selection_done') == 0
+		[~,~,ext] = fileparts(filepath{selected});
+		if strcmp(ext,'.b16')
+			currentimage=f_readB16(filepath{selected});
+			rawimage=currentimage;
+		else
+			currentimage=imread(filepath{selected});
+			rawimage=currentimage;
+		end
 	else
-		currentimage=imread(filepath{selected});
+		video_reader_object = retr('video_reader_object');
+		video_frame_selection=retr('video_frame_selection');
+		currentimage = read(video_reader_object,video_frame_selection(selected));
 		rawimage=currentimage;
-	end
-else
-	video_reader_object = retr('video_reader_object');
-	video_frame_selection=retr('video_frame_selection');
-	currentimage = read(video_reader_object,video_frame_selection(selected));
-	rawimage=currentimage;
-end
-
-if get(handles.bg_subtract,'Value')==1
-	if mod(selected,2)==1 %uneven image nr.
-		bg_img = retr('bg_img_A');
-	else
-		bg_img = retr('bg_img_B');
 	end
 	
-	if isempty(bg_img) %checkbox is enabled, but no bg is present
-		set(handles.bg_subtract,'Value',0);
-	else
-		if size(currentimage,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
-			currentimage = rgb2gray(currentimage)-bg_img;
+	if get(handles.bg_subtract,'Value')==1
+		if mod(selected,2)==1 %uneven image nr.
+			bg_img = retr('bg_img_A');
 		else
-			currentimage = currentimage-bg_img;
+			bg_img = retr('bg_img_B');
+		end
+		
+		if isempty(bg_img) %checkbox is enabled, but no bg is present
+			set(handles.bg_subtract,'Value',0);
+		else
+			if size(currentimage,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+				currentimage = rgb2gray(currentimage)-bg_img;
+			else
+				currentimage = currentimage-bg_img;
+			end
 		end
 	end
-end
-%get and save the image size (assuming that every image of a session has the same size)
-size_of_the_image=size(currentimage);
-put('size_of_the_image',size_of_the_image);
-currentimage(currentimage<0)=0; %bg subtraction may yield negative
-%results. I am unsure about the best way to deal with this data. Is
-%negative data useful, or just trash? Doesn't seem to make any difference
-%in the results however.
+	%get and save the image size (assuming that every image of a session has the same size)
+	size_of_the_image=size(currentimage);
+	put('size_of_the_image',size_of_the_image);
+	currentimage(currentimage<0)=0; %bg subtraction may yield negative
+	%results. I am unsure about the best way to deal with this data. Is
+	%negative data useful, or just trash? Doesn't seem to make any difference
+	%in the results however.
+
 
 function generate_BG_img
 handles=gethand;
@@ -3119,7 +3138,12 @@ if ~isequal(path,0)
 		set(handles.filenamebox,'value',1);
 		sliderdisp %displays raw image when slider moves
 		zoom reset
-		set(getappdata(0,'hgui'), 'Name',['PIVlab ' retr('PIVver') '   [Path: ' pathname ']']) %for people like me that always forget what dataset they are currently working on...
+				if retr('parallel')==1
+			modestr=' (parallel)';
+		else
+			modestr=' (serial)';
+		end
+		set(getappdata(0,'hgui'), 'Name',['PIVlab ' retr('PIVver') modestr '   [Path: ' pathname ']']) %for people like me that always forget what dataset they are currently working on...
 	else
 		errordlg('Please select at least two images ( = 1 pair of images)','Error','on')
 	end
@@ -4351,9 +4375,9 @@ if ok==1
 	catch
 		put('update_display',1)
 	end
-	
 	filepath=retr('filepath');
 	filename=retr('filename');
+	toggler=retr('toggler');
 	resultslist=cell(0); %clear old results
 	toolsavailable(0);
 	set (handles.cancelbutt, 'enable', 'on');
@@ -4379,54 +4403,62 @@ if ok==1
 	put('filename',filename);
 	put('ismean',[]);
 	sliderrange
+	
+	clahe=get(handles.clahe_enable,'value');
+	highp=get(handles.enable_highpass,'value');
+	%clip=get(handles.enable_clip,'value');
+	intenscap=get(handles.enable_intenscap, 'value');
+	clahesize=str2double(get(handles.clahe_size, 'string'));
+	highpsize=str2double(get(handles.highp_size, 'string'));
+	wienerwurst=get(handles.wienerwurst, 'value');
+	wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
+	
+	%Autolimit_Callback
+	autolimit=get(handles.Autolimit, 'value');
+	minintens=str2double(get(handles.minintens, 'string'));
+	maxintens=str2double(get(handles.maxintens, 'string'));
+	%clipthresh=str2double(get(handles.clip_thresh, 'string'));
+	roirect=retr('roirect');
+	
+	interrogationarea=str2double(get(handles.intarea, 'string'));
+	step=str2double(get(handles.step, 'string'));
+	subpixfinder=get(handles.subpix,'value');
+	
+	int2=str2num(get(handles.edit50,'string'));
+	int3=str2num(get(handles.edit51,'string'));
+	int4=str2num(get(handles.edit52,'string'));
+	mask_auto = get(handles.mask_auto_box,'value');
+	[imdeform, repeat, do_pad] = CorrQuality;
+	
+	
 	if retr('video_selection_done')==0
 		num_frames_to_process = size(filepath,1);
 	else
 		video_frame_selection=retr('video_frame_selection');
 		num_frames_to_process = numel(video_frame_selection);
 	end
-	for i=1:2:num_frames_to_process
-		if i==1
-			tic
-		end
-		cancel=retr('cancel');
-		if isempty(cancel)==1 || cancel ~=1
-			[image1,~] = get_img(i);
-			[image2,~] = get_img(i+1);
-			%if size(image1,3)>1
-			%	image1=uint8(mean(image1,3));
-			%	image2=uint8(mean(image2,3));
-			%disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
-			%end
-			set(handles.progress, 'string' , ['Frame progress: N/A']);drawnow; %#ok<*NBRAK>
-			clahe=get(handles.clahe_enable,'value');
-			highp=get(handles.enable_highpass,'value');
-			%clip=get(handles.enable_clip,'value');
-			intenscap=get(handles.enable_intenscap, 'value');
-			clahesize=str2double(get(handles.clahe_size, 'string'));
-			highpsize=str2double(get(handles.highp_size, 'string'));
-			wienerwurst=get(handles.wienerwurst, 'value');
-			wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-			
-			Autolimit_Callback
-			minintens=str2double(get(handles.minintens, 'string'));
-			maxintens=str2double(get(handles.maxintens, 'string'));
-			%clipthresh=str2double(get(handles.clip_thresh, 'string'));
-			roirect=retr('roirect');
-			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-				stretcher = stretchlim(image1);
-				minintens = stretcher(1);
-				maxintens = stretcher(2);
-			end
-			image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-				stretcher = stretchlim(image2);
-				minintens = stretcher(1);
-				maxintens = stretcher(2);
-			end
-			image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-			maskiererx=retr('maskiererx');
-			maskierery=retr('maskierery');
+	
+	if retr('parallel')==1 && retr('video_selection_done') == 1
+		disp('Parallel processing of video files not yet supported.')
+	end
+	if retr('parallel')==1 && retr('video_selection_done') == 0
+ %parallel toolbox available
+		%drawnow; %#ok<*NBRAK>
+		set(handles.progress, 'string' , ['Frame progress: 100%']);
+		set(handles.overall, 'string' , ['Total progress: 0%']);
+		drawnow; %#ok<*NBRAK>
+		maskiererx=retr('maskiererx');
+		maskierery=retr('maskierery');
+		slicedfilepath1=cell(0);
+		slicedfilepath2=cell(0);
+		mask=cell(0);
+		xlist=cell(0);
+		ylist=cell(0);
+		ulist=cell(0);
+		vlist=cell(0);
+		typelist=cell(0);
+		for i=1:2:num_frames_to_process
+			k=(i+1)/2;
 			ximask={};
 			yimask={};
 			if size(maskiererx,2)>=i
@@ -4439,78 +4471,300 @@ if ok==1
 					end
 				end
 				if size(ximask,1)>0
-					mask=[ximask yimask];
+					mask{k}=[ximask yimask];
+				else
+					mask{k}=[];
+				end
+			else
+				mask{k}=[];
+			end
+			slicedfilepath1{k}=filepath{i};
+			slicedfilepath2{k}=filepath{i+1};
+		end
+		%set(handles.totaltime, 'String','Time elapsed: N/A');
+		%xpos=size(image1,2)/2-40;
+		info=text(60,50, 'Analyzing ...','color', 'r','FontName','FixedWidth','fontweight', 'bold', 'fontsize', 16, 'tag', 'annoyingthing');
+		drawnow;
+		tic;
+		hbar = pivprogress(size(slicedfilepath1,2),handles.overall);
+		if get(handles.dcc,'Value')==1
+			parfor i=1:size(slicedfilepath1,2)
+				cancel=retr('cancel');
+				if cancel ==1
+
+					stop(getappdata(0,'timer'));
+					pause(0.01)
+					delete(getappdata(0,'timer'));
+					close(hbar);
+					continue; %%doesn't work...
+				end
+				% the current version does not support video format
+				% and also not b16
+				
+				%can I use get_img anyway...?
+				
+				[image1,~] = get_img(slicedfilepath1{i});
+				[image2,~] = get_img(slicedfilepath2{i});
+				
+				%{
+				image1=imread(slicedfilepath1{i});
+				image2=imread(slicedfilepath2{i});
+				if size(image1,3)>1
+					image1=uint8(mean(image1,3));
+					image2=uint8(mean(image2,3));
+				end
+				%}
+				minintenst=minintens;
+				maxintenst=maxintens;
+				if autolimit == 1
+					if toggler==0
+						stretcher = stretchlim(image1);
+					else
+						stretcher = stretchlim(image2);
+					end
+					minintenst=stretcher(1);
+					maxintenst=stretcher(2);
+				end
+				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+				image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+				
+				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect);
+				xlist{i}=x;
+				ylist{i}=y;
+				ulist{i}=u;
+				vlist{i}=v;
+				typelist{i}=typevector;
+				hbar.iterate(1);
+			end
+		elseif get(handles.fftmulti,'Value')==1
+			passes=1;
+			if get(handles.checkbox26,'value')==1
+				passes=2;
+			end
+			if get(handles.checkbox27,'value')==1
+				passes=3;
+			end
+			if get(handles.checkbox28,'value')==1
+				passes=4;
+			end
+			
+			if get(handles.bg_subtract,'Value')==1
+				bg_img_A = retr('bg_img_A');
+				bg_img_B = retr('bg_img_B');
+				bg_sub=1;
+			else
+				bg_img_A=[];
+				bg_img_B=[];
+				bg_sub=0;
+			end
+			parfor i=1:size(slicedfilepath1,2)
+	
+					[~,~,ext] = fileparts(slicedfilepath1{i});
+					if strcmp(ext,'.b16')
+						currentimage1=f_readB16(slicedfilepath1{i});
+						currentimage2=f_readB16(slicedfilepath2{i});
+						
+					else
+						currentimage1=imread(slicedfilepath1{i});
+						currentimage2=imread(slicedfilepath2{i});
+					end
+		if bg_sub==1
+		
+			if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+				currentimage1 = rgb2gray(currentimage1)-bg_img_A;
+				currentimage2 = rgb2gray(currentimage2)-bg_img_B;
+			else
+				currentimage1 = currentimage1-bg_img_A;
+				currentimage2 = currentimage2-bg_img_B;
+			end
+		end
+	
+	%get and save the image size (assuming that every image of a session has the same size)
+	
+	currentimage1(currentimage1<0)=0; %bg subtraction may yield negative
+	currentimage2(currentimage2<0)=0; %bg subtraction may yield negative
+	image1=currentimage1;				
+	image2=currentimage2;
+				
+				minintenst=minintens;
+				maxintenst=maxintens;
+				if autolimit == 1
+					if toggler==0
+						stretcher = stretchlim(image1);
+					else
+						stretcher = stretchlim(image2);
+					end
+					minintenst=stretcher(1);
+					maxintenst=stretcher(2);
+				end
+				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+				image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+				[x, y, u, v, typevector,correlation_map] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad);
+				xlist{i}=x;
+				ylist{i}=y;
+				ulist{i}=u;
+				vlist{i}=v;
+				typelist{i}=typevector;
+				hbar.iterate(1);
+			end
+		end
+		close(hbar);
+		zeit=toc;
+		hrs=zeit/60^2;
+		mins=(hrs-floor(hrs))*60;
+		secs=(mins-floor(mins))*60;
+		hrs=floor(hrs);
+		mins=floor(mins);
+		secs=floor(secs);
+		for i=1:size(slicedfilepath1,2)
+			resultslist{1,i}=xlist{i};
+			resultslist{2,i}=ylist{i};
+			resultslist{3,i}=ulist{i};
+			resultslist{4,i}=vlist{i};
+			resultslist{5,i}=typelist{i};
+			resultslist{6,i}=[];
+		end
+		put('resultslist',resultslist);
+		put('subtr_u', 0);
+		put('subtr_v', 0);
+		sliderdisp
+		delete(findobj('tag', 'annoyingthing'));
+		set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%']);
+		set(handles.totaltime,'string', ['Time elapsed: ' sprintf('%2.2d', hrs) 'h ' sprintf('%2.2d', mins) 'm ' sprintf('%2.2d', secs) 's']);
+		put('cancel',0);
+	end	
+	%% serial (standard) calculation
+	if retr('parallel')==0 ||  retr('video_selection_done') == 1
+		
+		set (handles.cancelbutt, 'enable', 'on');
+		for i=1:2:num_frames_to_process
+			if i==1
+				tic
+			end
+			cancel=retr('cancel');
+			if isempty(cancel)==1 || cancel ~=1
+				image1 = get_img(i);
+				image2 = get_img(i+1);
+				%if size(image1,3)>1
+				%	image1=uint8(mean(image1,3));
+				%	image2=uint8(mean(image2,3));
+				%disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
+				%end
+				set(handles.progress, 'string' , ['Frame progress: 0%']);drawnow; %#ok<*NBRAK>
+				clahe=get(handles.clahe_enable,'value');
+				highp=get(handles.enable_highpass,'value');
+				%clip=get(handles.enable_clip,'value');
+				intenscap=get(handles.enable_intenscap, 'value');
+				clahesize=str2double(get(handles.clahe_size, 'string'));
+				highpsize=str2double(get(handles.highp_size, 'string'));
+				wienerwurst=get(handles.wienerwurst, 'value');
+				wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
+				
+				Autolimit_Callback
+				minintens=str2double(get(handles.minintens, 'string'));
+				maxintens=str2double(get(handles.maxintens, 'string'));
+				%clipthresh=str2double(get(handles.clip_thresh, 'string'));
+				roirect=retr('roirect');
+				if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+					stretcher = stretchlim(image1);
+					minintens = stretcher(1);
+					maxintens = stretcher(2);
+				end
+				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+				if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+					stretcher = stretchlim(image2);
+					minintens = stretcher(1);
+					maxintens = stretcher(2);
+				end
+				image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+				maskiererx=retr('maskiererx');
+				maskierery=retr('maskierery');
+				ximask={};
+				yimask={};
+				if size(maskiererx,2)>=i
+					for j=1:size(maskiererx,1)
+						if isempty(maskiererx{j,i})==0
+							ximask{j,1}=maskiererx{j,i}; %#ok<*AGROW>
+							yimask{j,1}=maskierery{j,i};
+						else
+							break
+						end
+					end
+					if size(ximask,1)>0
+						mask=[ximask yimask];
+					else
+						mask=[];
+					end
 				else
 					mask=[];
 				end
-			else
-				mask=[];
-			end
-			interrogationarea=str2double(get(handles.intarea, 'string'));
-			step=str2double(get(handles.step, 'string'));
-			subpixfinder=get(handles.subpix,'value');
-			if get(handles.dcc,'Value')==1
-				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask, roirect);
-			elseif get(handles.fftmulti,'Value')==1
-				passes=1;
-				if get(handles.checkbox26,'value')==1
-					passes=2;
+				interrogationarea=str2double(get(handles.intarea, 'string'));
+				step=str2double(get(handles.step, 'string'));
+				subpixfinder=get(handles.subpix,'value');
+				if get(handles.dcc,'Value')==1
+					[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask, roirect);
+				elseif get(handles.fftmulti,'Value')==1
+					passes=1;
+					if get(handles.checkbox26,'value')==1
+						passes=2;
+					end
+					if get(handles.checkbox27,'value')==1
+						passes=3;
+					end
+					if get(handles.checkbox28,'value')==1
+						passes=4;
+					end
+					int2=str2num(get(handles.edit50,'string'));
+					int3=str2num(get(handles.edit51,'string'));
+					int4=str2num(get(handles.edit52,'string'));
+					mask_auto = get(handles.mask_auto_box,'value');
+					
+					[imdeform, repeat, do_pad] = CorrQuality;
+					[x, y, u, v, typevector,correlation_map] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad);
+					%u=real(u)
+					%v=real(v)
 				end
-				if get(handles.checkbox27,'value')==1
-					passes=3;
+				resultslist{1,(i+1)/2}=x;
+				resultslist{2,(i+1)/2}=y;
+				resultslist{3,(i+1)/2}=u;
+				resultslist{4,(i+1)/2}=v;
+				resultslist{5,(i+1)/2}=typevector;
+				resultslist{6,(i+1)/2}=[];
+				if get(handles.dcc,'Value')==1
+					correlation_map=zeros(size(x));
 				end
-				if get(handles.checkbox28,'value')==1
-					passes=4;
+				resultslist{12,(i+1)/2}=correlation_map;
+				put('resultslist',resultslist);
+				set(handles.fileselector, 'value', (i+1)/2);
+				set(handles.progress, 'string' , ['Frame progress: 100%'])
+				set(handles.overall, 'string' , ['Total progress: ' int2str((i+1)/2/num_frames_to_process*200) '%'])
+				put('subtr_u', 0);
+				put('subtr_v', 0);
+				if retr('update_display')==0
+				else
+					sliderdisp
 				end
-				int2=str2num(get(handles.edit50,'string'));
-				int3=str2num(get(handles.edit51,'string'));
-				int4=str2num(get(handles.edit52,'string'));
-				mask_auto = get(handles.mask_auto_box,'value');
-				
-				[imdeform, repeat, do_pad] = CorrQuality;
-				[x, y, u, v, typevector,correlation_map] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad);
-				%u=real(u)
-				%v=real(v)
-			end
-			resultslist{1,(i+1)/2}=x;
-			resultslist{2,(i+1)/2}=y;
-			resultslist{3,(i+1)/2}=u;
-			resultslist{4,(i+1)/2}=v;
-			resultslist{5,(i+1)/2}=typevector;
-			resultslist{6,(i+1)/2}=[];
-			if get(handles.dcc,'Value')==1
-				correlation_map=zeros(size(x));
-			end
-			resultslist{12,(i+1)/2}=correlation_map;
-			put('resultslist',resultslist);
-			set(handles.fileselector, 'value', (i+1)/2);
-			set(handles.progress, 'string' , ['Frame progress: 100%'])
-			set(handles.overall, 'string' , ['Total progress: ' int2str((i+1)/2/num_frames_to_process*200) '%'])
-			put('subtr_u', 0);
-			put('subtr_v', 0);
-			if retr('update_display')==0
-			else
-				sliderdisp
-			end
-			%xpos=size(image1,2)/2-40;
-			%text(xpos,50, ['Analyzing... ' int2str((i+1)/2/(size(filepath,1)/2)*100) '%' ],'color', 'r','FontName','FixedWidth','fontweight', 'bold', 'fontsize', 20, 'tag', 'annoyingthing')
-			zeit=toc;
-			done=(i+1)/2;
-			tocome=(num_frames_to_process/2)-done;
-			zeit=zeit/done*tocome;
-			hrs=zeit/60^2;
-			mins=(hrs-floor(hrs))*60;
-			secs=(mins-floor(mins))*60;
-			hrs=floor(hrs);
-			mins=floor(mins);
-			secs=floor(secs);
-			set(handles.totaltime,'string', ['Time left: ' sprintf('%2.2d', hrs) 'h ' sprintf('%2.2d', mins) 'm ' sprintf('%2.2d', secs) 's']);
-		end %cancel==0
+				%xpos=size(image1,2)/2-40;
+				%text(xpos,50, ['Analyzing... ' int2str((i+1)/2/(size(filepath,1)/2)*100) '%' ],'color', 'r','FontName','FixedWidth','fontweight', 'bold', 'fontsize', 20, 'tag', 'annoyingthing')
+				zeit=toc;
+				done=(i+1)/2;
+				tocome=(num_frames_to_process/2)-done;
+				zeit=zeit/done*tocome;
+				hrs=zeit/60^2;
+				mins=(hrs-floor(hrs))*60;
+				secs=(mins-floor(mins))*60;
+				hrs=floor(hrs);
+				mins=floor(mins);
+				secs=floor(secs);
+				set(handles.totaltime,'string', ['Time left: ' sprintf('%2.2d', hrs) 'h ' sprintf('%2.2d', mins) 'm ' sprintf('%2.2d', secs) 's']);
+			end %cancel==0
+		end
+		
+		delete(findobj('tag', 'annoyingthing'));
+		set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
+		set(handles.totaltime, 'String',['Analysis time: ' num2str(round(toc*10)/10) ' s']);
 	end
-	delete(findobj('tag', 'annoyingthing'));
-	set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
-	%set(handles.totaltime, 'String','Time left: N/A');
-	set(handles.totaltime, 'String',['Analysis time: ' num2str(round(toc*10)/10) ' s']);
+	cancel=retr('cancel');
 	if isempty(cancel)==1 || cancel ~=1
 		try
 			sound(audioread('finished.mp3'),22000);
@@ -4518,7 +4772,6 @@ if ok==1
 		end
 	end
 	put('cancel',0);
-	
 end
 toolsavailable(1);
 sliderdisp
@@ -7591,7 +7844,12 @@ else
 	
 	sliderdisp
 	try
-		set(getappdata(0,'hgui'), 'Name',['PIVlab ' retr('PIVver') '   [Path: ' vars.pathname ']']) %for people like me that always forget what dataset they are currently working on...
+		if retr('parallel')==1
+			modestr=' (parallel)';
+		else
+			modestr=' (serial)';
+		end
+		set(getappdata(0,'hgui'), 'Name',['PIVlab ' retr('PIVver')  modestr '   [Path: ' vars.pathname ']']) %for people like me that always forget what dataset they are currently working on...
 	catch
 	end
 	zoom reset
