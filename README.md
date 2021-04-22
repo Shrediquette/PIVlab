@@ -1,6 +1,13 @@
 # PIVlab
 Software documentation is available in the wiki: https://github.com/Shrediquette/PIVlab/wiki
 
+**Code contributors:**
+* Main: William Thielicke (http://william.thielicke.org)
+* Vectorization in piv_fftmulti: Sergey Filatov (http://www.issp.ac.ru/lqc/people.html)
+* GUI parallelization: Chun-Sheng Wang, ParaPIV (https://de.mathworks.com/matlabcentral/fileexchange/63358-parapiv)
+* Command line parallelization: Quynh M. Nguyen (https://github.com/quynhneo)
+* Several donations to update Matlab licenses: https://www.paypal.com/pools/c/8cj8E4slJx
+
 Visit Matlabs File exchange site for PIVlab: [![View PIVlab - particle image velocimetry (PIV) tool on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://de.mathworks.com/matlabcentral/fileexchange/27659-pivlab-particle-image-velocimetry-piv-tool)
 
 Particle Image Velocimetry for Matlab, official repository
