@@ -174,20 +174,23 @@ try
 	end
 	put('parallel',0);
 	if enable_parallel == 1
-	try %checking for a parallel license file throws a huge error message wheh it is not available. This might scare users...
-		gcp('nocreate');
-		disp('-> Distributed Computing Toolbox found. Parallel pool active (default settings).')
-		gcp;
-		put('parallel',1);
-	catch
-		disp('-> Running without parallelization (no distributed computing toolbox installed).')
-	end
+		try %checking for a parallel license file throws a huge error message wheh it is not available. This might scare users...
+			corenum = feature('numCores');
+			if pivparpool('size')<=0
+				disp('-> Please wait, checking Distributed Computing Toolbox...')
+				pivparpool('open',corenum);
+			end
+			disp(['-> Distributed Computing Toolbox found. Parallel pool (' int2str(pivparpool('size')) ' workers) active (default settings).'])
+			put('parallel',1);
+		catch
+			disp('-> Running without parallelization (no distributed computing toolbox installed).')
+		end
 	else
 		disp('-> Distributed Computing disabled.')
 	end
 	
 catch
-    disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
+	disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
 end
 
 %Variable initialization
@@ -1750,7 +1753,7 @@ if get(handles.ensemble,'Value') == 1
 	set(handles.AnalyzeAll,'String','Start ensemble analysis');
 end
 if retr('parallel')==1
-		set(handles.update_display_checkbox,'Visible','Off')
+	set(handles.update_display_checkbox,'Visible','Off')
 end
 switchui('multip05')
 
@@ -2072,48 +2075,48 @@ hgui=getappdata(0,'hgui');
 handles=guihandles(hgui);
 
 function [currentimage,rawimage] = get_img(selected)
-	handles=gethand;
-	filepath = retr('filepath');
-	if retr('video_selection_done') == 0
-		[~,~,ext] = fileparts(filepath{selected});
-		if strcmp(ext,'.b16')
-			currentimage=f_readB16(filepath{selected});
-			rawimage=currentimage;
-		else
-			currentimage=imread(filepath{selected});
-			rawimage=currentimage;
-		end
+handles=gethand;
+filepath = retr('filepath');
+if retr('video_selection_done') == 0
+	[~,~,ext] = fileparts(filepath{selected});
+	if strcmp(ext,'.b16')
+		currentimage=f_readB16(filepath{selected});
+		rawimage=currentimage;
 	else
-		video_reader_object = retr('video_reader_object');
-		video_frame_selection=retr('video_frame_selection');
-		currentimage = read(video_reader_object,video_frame_selection(selected));
+		currentimage=imread(filepath{selected});
 		rawimage=currentimage;
 	end
+else
+	video_reader_object = retr('video_reader_object');
+	video_frame_selection=retr('video_frame_selection');
+	currentimage = read(video_reader_object,video_frame_selection(selected));
+	rawimage=currentimage;
+end
+
+if get(handles.bg_subtract,'Value')==1
+	if mod(selected,2)==1 %uneven image nr.
+		bg_img = retr('bg_img_A');
+	else
+		bg_img = retr('bg_img_B');
+	end
 	
-	if get(handles.bg_subtract,'Value')==1
-		if mod(selected,2)==1 %uneven image nr.
-			bg_img = retr('bg_img_A');
+	if isempty(bg_img) %checkbox is enabled, but no bg is present
+		set(handles.bg_subtract,'Value',0);
+	else
+		if size(currentimage,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+			currentimage = rgb2gray(currentimage)-bg_img;
 		else
-			bg_img = retr('bg_img_B');
-		end
-		
-		if isempty(bg_img) %checkbox is enabled, but no bg is present
-			set(handles.bg_subtract,'Value',0);
-		else
-			if size(currentimage,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
-				currentimage = rgb2gray(currentimage)-bg_img;
-			else
-				currentimage = currentimage-bg_img;
-			end
+			currentimage = currentimage-bg_img;
 		end
 	end
-	%get and save the image size (assuming that every image of a session has the same size)
-	size_of_the_image=size(currentimage);
-	put('size_of_the_image',size_of_the_image);
-	currentimage(currentimage<0)=0; %bg subtraction may yield negative
-	%results. I am unsure about the best way to deal with this data. Is
-	%negative data useful, or just trash? Doesn't seem to make any difference
-	%in the results however.
+end
+%get and save the image size (assuming that every image of a session has the same size)
+size_of_the_image=size(currentimage);
+put('size_of_the_image',size_of_the_image);
+currentimage(currentimage<0)=0; %bg subtraction may yield negative
+%results. I am unsure about the best way to deal with this data. Is
+%negative data useful, or just trash? Doesn't seem to make any difference
+%in the results however.
 
 
 function generate_BG_img
@@ -3138,7 +3141,7 @@ if ~isequal(path,0)
 		set(handles.filenamebox,'value',1);
 		sliderdisp %displays raw image when slider moves
 		zoom reset
-				if retr('parallel')==1
+		if retr('parallel')==1
 			modestr=' (parallel)';
 		else
 			modestr=' (serial)';
@@ -4363,8 +4366,16 @@ dispinterrog
 
 function DCC_and_DFT_analyze_all
 ok=checksettings;
+handles=gethand;
+try
+	warning off
+	delete('cancel_piv');
+	put('cancel',0);
+	warning on
+catch
+end
 if ok==1
-	handles=gethand;
+	
 	try
 		if get(handles.update_display_checkbox,'Value')==1
 			put('update_display',1);
@@ -4442,7 +4453,7 @@ if ok==1
 		disp('Parallel processing of video files not yet supported.')
 	end
 	if retr('parallel')==1 && retr('video_selection_done') == 0
- %parallel toolbox available
+		%parallel toolbox available
 		%drawnow; %#ok<*NBRAK>
 		set(handles.progress, 'string' , ['Frame progress: 100%']);
 		set(handles.overall, 'string' , ['Total progress: 0%']);
@@ -4488,32 +4499,49 @@ if ok==1
 		tic;
 		hbar = pivprogress(size(slicedfilepath1,2),handles.overall);
 		if get(handles.dcc,'Value')==1
+						if get(handles.bg_subtract,'Value')==1
+				bg_img_A = retr('bg_img_A');
+				bg_img_B = retr('bg_img_B');
+				bg_sub=1;
+			else
+				bg_img_A=[];
+				bg_img_B=[];
+				bg_sub=0;
+			end
 			parfor i=1:size(slicedfilepath1,2)
-				cancel=retr('cancel');
-				if cancel ==1
-
-					stop(getappdata(0,'timer'));
-					pause(0.01)
-					delete(getappdata(0,'timer'));
+				if exist('cancel_piv','file')
+					%disp('cancelled')
 					close(hbar);
-					continue; %%doesn't work...
+					continue
 				end
-				% the current version does not support video format
-				% and also not b16
 				
-				%can I use get_img anyway...?
-				
-				[image1,~] = get_img(slicedfilepath1{i});
-				[image2,~] = get_img(slicedfilepath2{i});
-				
-				%{
-				image1=imread(slicedfilepath1{i});
-				image2=imread(slicedfilepath2{i});
-				if size(image1,3)>1
-					image1=uint8(mean(image1,3));
-					image2=uint8(mean(image2,3));
+				[~,~,ext] = fileparts(slicedfilepath1{i});
+				if strcmp(ext,'.b16')
+					currentimage1=f_readB16(slicedfilepath1{i});
+					currentimage2=f_readB16(slicedfilepath2{i});
+					
+				else
+					currentimage1=imread(slicedfilepath1{i});
+					currentimage2=imread(slicedfilepath2{i});
 				end
-				%}
+				if bg_sub==1
+					if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+						currentimage1 = rgb2gray(currentimage1)-bg_img_A;
+						currentimage2 = rgb2gray(currentimage2)-bg_img_B;
+					else
+						currentimage1 = currentimage1-bg_img_A;
+						currentimage2 = currentimage2-bg_img_B;
+					end
+				end
+				
+				%get and save the image size (assuming that every image of a session has the same size)
+				
+				currentimage1(currentimage1<0)=0; %bg subtraction may yield negative
+				currentimage2(currentimage2<0)=0; %bg subtraction may yield negative
+				image1=currentimage1;
+				image2=currentimage2;
+				
+				
 				minintenst=minintens;
 				maxintenst=maxintens;
 				if autolimit == 1
@@ -4534,7 +4562,9 @@ if ok==1
 				ulist{i}=u;
 				vlist{i}=v;
 				typelist{i}=typevector;
+				
 				hbar.iterate(1);
+				
 			end
 		elseif get(handles.fftmulti,'Value')==1
 			passes=1;
@@ -4558,33 +4588,38 @@ if ok==1
 				bg_sub=0;
 			end
 			parfor i=1:size(slicedfilepath1,2)
-	
-					[~,~,ext] = fileparts(slicedfilepath1{i});
-					if strcmp(ext,'.b16')
-						currentimage1=f_readB16(slicedfilepath1{i});
-						currentimage2=f_readB16(slicedfilepath2{i});
-						
+				%------------------------
+				if exist('cancel_piv','file')
+					%disp('cancelled')
+					close(hbar);
+					continue
+				end
+				
+				[~,~,ext] = fileparts(slicedfilepath1{i});
+				if strcmp(ext,'.b16')
+					currentimage1=f_readB16(slicedfilepath1{i});
+					currentimage2=f_readB16(slicedfilepath2{i});
+					
+				else
+					currentimage1=imread(slicedfilepath1{i});
+					currentimage2=imread(slicedfilepath2{i});
+				end
+				if bg_sub==1
+					if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+						currentimage1 = rgb2gray(currentimage1)-bg_img_A;
+						currentimage2 = rgb2gray(currentimage2)-bg_img_B;
 					else
-						currentimage1=imread(slicedfilepath1{i});
-						currentimage2=imread(slicedfilepath2{i});
+						currentimage1 = currentimage1-bg_img_A;
+						currentimage2 = currentimage2-bg_img_B;
 					end
-		if bg_sub==1
-		
-			if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
-				currentimage1 = rgb2gray(currentimage1)-bg_img_A;
-				currentimage2 = rgb2gray(currentimage2)-bg_img_B;
-			else
-				currentimage1 = currentimage1-bg_img_A;
-				currentimage2 = currentimage2-bg_img_B;
-			end
-		end
-	
-	%get and save the image size (assuming that every image of a session has the same size)
-	
-	currentimage1(currentimage1<0)=0; %bg subtraction may yield negative
-	currentimage2(currentimage2<0)=0; %bg subtraction may yield negative
-	image1=currentimage1;				
-	image2=currentimage2;
+				end
+				
+				%get and save the image size (assuming that every image of a session has the same size)
+				
+				currentimage1(currentimage1<0)=0; %bg subtraction may yield negative
+				currentimage2(currentimage2<0)=0; %bg subtraction may yield negative
+				image1=currentimage1;
+				image2=currentimage2;
 				
 				minintenst=minintens;
 				maxintenst=maxintens;
@@ -4616,26 +4651,26 @@ if ok==1
 		hrs=floor(hrs);
 		mins=floor(mins);
 		secs=floor(secs);
-		for i=1:size(slicedfilepath1,2)
-			resultslist{1,i}=xlist{i};
-			resultslist{2,i}=ylist{i};
-			resultslist{3,i}=ulist{i};
-			resultslist{4,i}=vlist{i};
-			resultslist{5,i}=typelist{i};
-			resultslist{6,i}=[];
+		if retr('cancel')==0 %dont output anything if cancelled
+			for i=1:size(slicedfilepath1,2)
+				resultslist{1,i}=xlist{i};
+				resultslist{2,i}=ylist{i};
+				resultslist{3,i}=ulist{i};
+				resultslist{4,i}=vlist{i};
+				resultslist{5,i}=typelist{i};
+				resultslist{6,i}=[];
+			end
+			put('resultslist',resultslist);
+			put('subtr_u', 0);
+			put('subtr_v', 0);
 		end
-		put('resultslist',resultslist);
-		put('subtr_u', 0);
-		put('subtr_v', 0);
 		sliderdisp
 		delete(findobj('tag', 'annoyingthing'));
 		set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%']);
 		set(handles.totaltime,'string', ['Time elapsed: ' sprintf('%2.2d', hrs) 'h ' sprintf('%2.2d', mins) 'm ' sprintf('%2.2d', secs) 's']);
-		put('cancel',0);
-	end	
+	end
 	%% serial (standard) calculation
 	if retr('parallel')==0 ||  retr('video_selection_done') == 1
-		
 		set (handles.cancelbutt, 'enable', 'on');
 		for i=1:2:num_frames_to_process
 			if i==1
@@ -4772,6 +4807,12 @@ if ok==1
 		end
 	end
 	put('cancel',0);
+	try
+		warning off
+		delete('cancel_piv')
+		warning on
+	catch
+	end
 end
 toolsavailable(1);
 sliderdisp
@@ -5125,6 +5166,12 @@ end
 
 function cancelbutt_Callback(~, ~, ~)
 put('cancel',1);
+
+fileID = fopen('cancel_piv','w');
+fwrite(fileID,1);
+fclose(fileID);
+
+
 drawnow;
 toolsavailable(1);
 

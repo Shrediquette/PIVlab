@@ -367,7 +367,7 @@ for ensemble_i1=1:2:amount_input_imgs
         corr_map_cnt=corr_map_cnt+1;
     end
 end
-
+correlation_map=[];
 if cancel == 0
     %% Correlation matrix of pass 1 is done.
     [xtable,ytable,utable, vtable] = peakfinding (result_conv_ensemble, mask, interrogationarea,minix,step,maxix,miniy,maxiy,SubPixOffset,ss1,subpixfinder);
@@ -901,12 +901,12 @@ catch
     disp('created new matrix')
 end
     %}
-    
-end
-
+ 
 correlation_map = permute(reshape(correlation_map, [size(xtable')]), [2 1 3])/corr_map_cnt;
 %clear Correlation map in masked area
-correlation_map(typevector==0) = 0;
+correlation_map(typevector==0) = 0;   
+end
+
 
 
 function [xtable,ytable,utable, vtable] = peakfinding (result_conv_ensemble, mask, interrogationarea,minix,step,maxix,miniy,maxiy,SubPixOffset,ss1,subpixfinder)

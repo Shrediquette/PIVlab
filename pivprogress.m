@@ -43,7 +43,6 @@ methods
                              'BusyMode','drop', 'Name',mfilename, ...
                              'TimerFcn',@(x,y)this.tupdate);
         start(this.htimer);
-				setappdata(0,'timer',this.htimer);
     end
     
     function delete(this)
@@ -100,7 +99,10 @@ methods (Access=protected, Hidden)
         else
             % Kill the timer if the waitbar is closed.
             close(this);
-        end
+				end
+				if exist('cancel_piv','file')
+					close(this)
+				end
     end
 end %private methods
 
