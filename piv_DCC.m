@@ -98,7 +98,7 @@ for j = miniy:step:maxiy %vertical loop
         try
         set(handles.progress, 'string' , ['Frame progress: ' int2str(j/maxiy*100) '%']);drawnow;
         catch
-            fprintf('.');
+            %fprintf('.');
         end
     end
     for i = minix:step:maxix % horizontal loop
