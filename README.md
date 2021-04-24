@@ -12,13 +12,15 @@ Visit Matlabs File exchange site for PIVlab: [![View PIVlab - particle image vel
 
 Particle Image Velocimetry for Matlab, official repository
 
-*PIVlab is an extremely easy to use Matlab toolbox that calculates velocities in image data (movies, pictures). It uses a method called 'Particle Image Velocimetry'. Usually, this method is used to calculate velocities in fluids. But there are also many other possibilities. Recently, ensemble correlation was added, making PIVLab suitable for micro-PIV too.*
+*PIVlab is an extremely easy to use Matlab toolbox that calculates velocities in image data (movies, pictures). It uses a method called 'Particle Image Velocimetry'. Usually, this method is used to calculate velocities in fluids. But there are also many other possibilities. Recently, PIV camera control and laser control was added to PIVlab, making it a complete PIV software suite.*
 
 **Features:** 
 * userfriendly and GUI based PIV tool
 * multi-pass, multi-grid window deformation technique
+* parallel processing supported when the parallel computing toolbox is installed
 * ensemble correlation 
 * import bmp/ tiff/ jpeg image pairs/ series
+* acquire PIV images and control a camera and laser directly in PIVlab (additional hardware required)
 * multiple image sequencing styles
 * individual image masking and region of interest
 * image pre-processing
