@@ -71,7 +71,7 @@ try
 		end
 	end
 	if ctr==size(pivFiles,2)
-		disp('-> Required additional files found.')
+		disp('-> All required files found.')
 	end
 catch
 	disp('-> Problem detecting required files.')
@@ -81,7 +81,7 @@ generateUI
 
 %% Menu items
 m1 = uimenu('Label','File');
-uimenu(m1,'Label','New Session','Callback',@loadimgs_Callback,'Accelerator','N');
+uimenu(m1,'Label','New session','Callback',@loadimgs_Callback,'Accelerator','N');
 m2 = uimenu(m1,'Label','Load');
 uimenu(m2,'Label','PIVlab settings','Callback',@load_settings_Callback);
 uimenu(m2,'Label','PIVlab session','Callback',@load_session_Callback);
@@ -97,8 +97,8 @@ uimenu(m14,'Label','Paraview binary VTK','Callback',@paraview_Callback);
 uimenu(m14,'Label','All results to Matlab workspace','Callback',@write_workspace_Callback);
 uimenu(m1,'Label','Preferences','Callback',@preferences_Callback);
 m4 = uimenu(m1,'Label','Exit','Separator','on','Callback',@exitpivlab_Callback);
-m51 = uimenu('Label','Image Acquisition');
-uimenu(m51,'Label','Capture PIV Images','Callback',@capture_images_Callback);
+m51 = uimenu('Label','Image acquisition');
+uimenu(m51,'Label','Capture PIV images','Callback',@capture_images_Callback);
 m5 = uimenu('Label','Image settings');
 uimenu(m5,'Label','Exclusions (ROI, mask)','Callback',@img_mask_Callback,'Accelerator','E');
 uimenu(m5,'Label','Image pre-processing','Callback',@pre_proc_Callback,'Accelerator','I');
@@ -139,7 +139,7 @@ switchui('multip01');
 axes1=axes('units','characters');
 axis image;
 set(gca,'ActivePositionProperty','outerposition');%,'Box','off','DataAspectRatioMode','auto','Layer','bottom','Units','normalized');
-set(MainWindow, 'Name',['PIVlab ' retr('PIVver') ' by William Thielicke and Eize J. Stamhuis'])
+set(MainWindow, 'Name',['PIVlab ' retr('PIVver')])% ' by William Thielicke and Eize J. Stamhuis'])
 %movegui(MainWindow,'center')
 %set(MainWindow, 'Visible','on');
 %displogo(1)
@@ -316,11 +316,9 @@ else
 	catch
 	end
 end
-
-	warning on
-
-set(MainWindow, 'Visible','on');
+warning on
 displogo(1);drawnow;
+set(MainWindow, 'Visible','on');
 
 function destroyUI
 handles = guihandles; %alle handles mit tag laden und ansprechbar machen
@@ -1763,13 +1761,13 @@ item=[0 item(2)+item(4) parentitem(3)/1.5 1.5];
 handles.ac_project = uicontrol(handles.uipanelac_general,'Style','edit','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Project path...','tag','ac_project');
 
 item=[parentitem(3)/1.5 item(2) parentitem(3)/3 1.5];
-handles.ac_browse = uicontrol(handles.uipanelac_general,'Style','pushbutton','String','Browse...','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_browse_Callback,'Tag','ac_browse','TooltipString','---');
+handles.ac_browse = uicontrol(handles.uipanelac_general,'Style','pushbutton','String','Browse...','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_browse_Callback,'Tag','ac_browse','TooltipString','Browse for project folder. Images and configurations will be stored here.');
 
 item=[0 item(2)+item(4)+margin*0.3 parentitem(3) 1];
 handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Select configuration:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_configtxt');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'PIVlab-SimpleSync + ILA.PIV.nano camera' 'PIVlab-SimpleSync + pco.panda 26 usb'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','---');
+handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'PIVlab-SimpleSync + ILA.PIV.nano camera' 'PIVlab-SimpleSync + pco.panda 26 usb'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)');
 
 % Sync control
 parentitem=get(handles.multip24, 'Position');
@@ -1783,36 +1781,36 @@ item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.ac_comport = uicontrol(handles.uipanelac_laser,'Style','popupmenu', 'String',{'COM1'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_comport');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2*0.9 1.5];
-handles.ac_connect = uicontrol(handles.uipanelac_laser,'Style','pushbutton','String','Connect','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_connect_Callback,'Tag','ac_connect','TooltipString','---');
+handles.ac_connect = uicontrol(handles.uipanelac_laser,'Style','pushbutton','String','Connect','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_connect_Callback,'Tag','ac_connect','TooltipString','Connect to PIVlab-SimpleSync');
 
 IndicatorPos=get(handles.ac_connect,'Position');
 
-handles.ac_serialstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[IndicatorPos(1)+IndicatorPos(3) IndicatorPos(2) 2 IndicatorPos(4)],'String','','tag','ac_serialstatus','BackgroundColor',[1 0 0],'Foregroundcolor',[1 1 1],'Enable','inactive');
+handles.ac_serialstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[IndicatorPos(1)+IndicatorPos(3) IndicatorPos(2) 2 IndicatorPos(4)],'String','','tag','ac_serialstatus','BackgroundColor',[1 0 0],'Foregroundcolor',[1 1 1],'Enable','inactive','TooltipString','Status of the serial connection to PIVlab-SimpleSync');
 
 
 item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/4*2.5 1];
 handles.ac_fpstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Frame rate [Hz]:','tag','ac_fpstxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
-handles.ac_fps = uicontrol(handles.uipanelac_laser,'Style','popupmenu','String',{'5' '3' '1.5' '1'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_fps','TooltipString','---');
+handles.ac_fps = uicontrol(handles.uipanelac_laser,'Style','popupmenu','String',{'5' '3' '1.5' '1'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_fps','TooltipString','Double-image frame rate during PIV image capture');
 
 item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2.5 1];
 handles.ac_interpulstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pulse distance [µs]:','tag','ac_interpulstxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
-handles.ac_interpuls = uicontrol(handles.uipanelac_laser,'Style','edit','String','100','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_interpuls','TooltipString','---');
+handles.ac_interpuls = uicontrol(handles.uipanelac_laser,'Style','edit','String','100','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_interpuls','TooltipString','Pulse spacing of the laser');
 
 item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2.5 1];
-handles.ac_powertxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Laser power [%]:','tag','ac_powertxt');
+handles.ac_powertxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Laser energy [%]:','tag','ac_powertxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
-handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String','0','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_power','TooltipString','---');
+handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String','0','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_power','TooltipString','Laser energy');
 
 item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2 2];
-handles.ac_laserstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Laser is OFF','tag','ac_laserstatus','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold');
+handles.ac_laserstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Laser is OFF','tag','ac_laserstatus','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold','TooltipString','Status of the laser');
 
 item=[parentitem(3)/4*2 item(2) parentitem(3)/4*2 2];
-handles.ac_lasertoggle = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Toggle Laser','Fontweight','bold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_lasertoggle_Callback,'Tag','ac_lasertoggle','TooltipString','---');
+handles.ac_lasertoggle = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Toggle Laser','Fontweight','bold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_lasertoggle_Callback,'Tag','ac_lasertoggle','TooltipString','Toggle laser on and off');
 
 
 % Calib capture
@@ -1829,13 +1827,13 @@ item=[0 item(2)+item(4) parentitem(3)/2 1];
 handles.ac_expotxt = uicontrol(handles.uipanelac_calib,'Style','text', 'String','Exposure [ms]: ','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_expotxt');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
-handles.ac_expo = uicontrol(handles.uipanelac_calib,'Style','edit','units','characters','HorizontalAlignment','right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','100','tag','ac_expo');
+handles.ac_expo = uicontrol(handles.uipanelac_calib,'Style','edit','units','characters','HorizontalAlignment','right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','100','tag','ac_expo','TooltipString','Exposure of the camera during calibration image capture');
 
 item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/2 1.5];
-handles.ac_calibcapture = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Start live view','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_calibcapture_Callback,'Tag','ac_calibcapture','TooltipString','---');
+handles.ac_calibcapture = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Start live view','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_calibcapture_Callback,'Tag','ac_calibcapture','TooltipString','Start live view of the camera');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.ac_calibstop = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Stop & save','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_camstop_Callback,'Tag','ac_calibstop','TooltipString','---');
+handles.ac_calibstop = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Stop & save','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_camstop_Callback,'Tag','ac_calibstop','TooltipString','Stop live view and save last image');
 
 % PIV capture
 parentitem=get(handles.multip24, 'Position');
@@ -1849,17 +1847,17 @@ item=[0 item(2)+item(4) parentitem(3)/2 1];
 handles.ac_imgamounttxt = uicontrol(handles.uipanelac_capture,'Style','text', 'String','Image amount: ','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_imgamounttxt');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
-handles.ac_imgamount = uicontrol(handles.uipanelac_capture,'Style','edit','units','characters','HorizontalAlignment','right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','100','tag','ac_imgamount');
+handles.ac_imgamount = uicontrol(handles.uipanelac_capture,'Style','edit','units','characters','HorizontalAlignment','right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','100','tag','ac_imgamount','TooltipString','Amount of double images to capture');
 
 item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/2 1.5];
-handles.ac_pivcapture = uicontrol(handles.uipanelac_capture,'Style','pushbutton','String','Start & save','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_pivcapture_Callback,'Tag','ac_pivcapture','TooltipString','---');
+handles.ac_pivcapture = uicontrol(handles.uipanelac_capture,'Style','pushbutton','String','Start & save','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_pivcapture_Callback,'Tag','ac_pivcapture','TooltipString','Start PIV image capture and laser');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.ac_pivstop = uicontrol(handles.uipanelac_capture,'Style','pushbutton','String','Abort','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_camstop_Callback,'Tag','ac_pivstop','TooltipString','---');
+handles.ac_pivstop = uicontrol(handles.uipanelac_capture,'Style','pushbutton','String','Abort','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_camstop_Callback,'Tag','ac_pivstop','TooltipString','Cancel capture and discard images');
 
 parentitem=get(handles.multip24, 'Position');
 item=[0 30.5 parentitem(3) 2];
-handles.ac_msgbox = uicontrol(handles.multip24,'Style','edit', 'Fontname','fixedwidth', 'enable','inactive','Max', 3, 'min', 1, 'String',{'Welcome to PIVlab' 'image acquisition!'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_msgbox');
+handles.ac_msgbox = uicontrol(handles.multip24,'Style','edit', 'Fontname','fixedwidth', 'enable','inactive','Max', 3, 'min', 1, 'String',{'Welcome to PIVlab' 'image acquisition!'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_msgbox','TooltipString','Messages');
 set(handles.ac_msgbox,'BackgroundColor', get (handles.ac_msgbox,'BackgroundColor')*0.95); %dim msgbox color
 
 disp('-> UI generated.')
@@ -2074,16 +2072,23 @@ switchui('multip20')
 
 function pco_error_msgbox
 [filepath,~,~] = fileparts(mfilename('fullpath'));
-msgbox(['PCO camera drivers not found in this directory:' sprintf('\n') fullfile(filepath, 'PCO_resources') sprintf('\n\n') 'The free pco toolbox for Matlab can be downloaded here:' sprintf('\n') 'https://www.pco.de/de/software/third-party/matlab/' sprintf('\n\n') 'Please download and install this toolbox to use your pco camera in PIVlab.'],'modal')
+uiwait(msgbox(['PCO camera drivers not found in this directory:' sprintf('\n') fullfile(filepath, 'PCO_resources') sprintf('\n\n') 'The free pco toolbox for Matlab can be downloaded here:' sprintf('\n') 'https://www.pco.de/de/software/third-party/matlab/' sprintf('\n\n') 'Please download and install this toolbox to use your pco camera in PIVlab.'],'modal'))
 
 function capture_images_Callback(~,~,~) %Menu item is called
 switchui('multip24')
 [filepath,~,~] = fileparts(mfilename('fullpath'));
 if exist(fullfile(filepath, 'PCO_resources'),'dir')
-	addpath(genpath(fullfile(filepath, 'PCO_resources')));
+	%addpath(genpath(fullfile(filepath, 'PCO_resources')));
+	addpath(fullfile(filepath, 'PCO_resources\scripts'));
+	%PCO setup_files.m copies required dlls and headers to dir.
+	%subfolders might not be necessary. Check!
 else
 	pco_error_msgbox
 end
+if verLessThan('matlab','9.7') %R2019b
+	uiwait(msgbox('Image capture and synchronizer control in PIVlab requires at least MATLAB version 9.7 (R2019b).','modal'))
+end
+	
 handles=gethand;
 if ~isempty(retr('pathname'))
 	set(handles.ac_project,'String',retr('pathname'));
@@ -4688,7 +4693,7 @@ if ok==1
 		end
 		%set(handles.totaltime, 'String','Time elapsed: N/A');
 		%xpos=size(image1,2)/2-40;
-		info=text(60,50, 'Analyzing ...','color', 'r','FontName','FixedWidth','fontweight', 'bold', 'fontsize', 16, 'tag', 'annoyingthing');
+		info=text(60,50, 'Analyzing ...','color', 'r','FontName','FixedWidth','fontweight', 'bold', 'fontsize', 16, 'BackgroundColor', 'k', 'tag', 'annoyingthing');
 		drawnow;
 		tic;
 		hbar = pivprogress(size(slicedfilepath1,2),handles.overall);
