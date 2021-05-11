@@ -9,12 +9,18 @@ Capture Images, nr of imgs (enables laser, loads in session when done)
 
 Laser control komplett wie im simple sync
 %}
+hgui=getappdata(0,'hgui');
 OutputError=0;
-PIVlab_axis = findobj(getappdata(0,'hgui'),'Type','Axes');
-image_handle=(imagesc(zeros(1040,1392),'Parent',PIVlab_axis));
-colormap('gray');axis image;
+PIVlab_axis = findobj(hgui,'Type','Axes');
+image_handle=imagesc(zeros(1040,1392),'Parent',PIVlab_axis,[0 2^16]);
+frame_nr_display=text(100,100,'Initializing...','Color',[1 1 0]);
+new_map=colormap('gray');
+new_map(1:3,:)=[0 0.3 0;0 0.3 0;0 0.3 0];
+new_map(end-2:end,:)=[1 0.7 0.7;1 0.7 0.7;1 0.7 0.7];
+colormap(new_map);axis image;
 set(gca,'ytick',[])
 set(gca,'xtick',[])
+colorbar
 
 %{
 needed:
@@ -236,7 +242,7 @@ try
 		%grab and display loop
 		ima_nr=0;
 		last_ok=0;
-		while(ima_nr<nr_of_images) && getappdata(getappdata(0,'hgui'),'cancel_capture') ~=1
+		while(ima_nr<nr_of_images) && getappdata(hgui,'cancel_capture') ~=1
 			drawnow
 			%wait for buffers
 			[errorCode,~,buflist]  = calllib('PCO_CAM_SDK','PCO_WaitforBuffer', out_ptr,bufcount,buflist,1000);
@@ -288,32 +294,18 @@ try
 						imgB_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',image_save_number) '_B.tif']);
 						imwrite(ima(1:1040,:),imgA_path);
 						imwrite(ima(1041:end,:),imgB_path);
-						if mod(image_save_number,2) == 0
-							set(image_handle,'CData',ima(1:1040,:));
+						toggle_image_state=getappdata(hgui,'toggler');
+						if toggle_image_state == 0
+							set(image_handle,'CData',(ima(1:1040,:)));
 						else
-							set(image_handle,'CData',ima(1041:end,:));
+							set(image_handle,'CData',(ima(1041:end,:)));
 						end
+						set(frame_nr_display,'String',int2str(image_save_number));
 						image_save_number=image_save_number+1;
 					elseif triggermode==0
 						set(image_handle,'CData',ima);
 					end
-					%{
-                    if triggermode==0 %calibration
-                        if runfirst==1
-                        numbi = 0;
-                        imgA_path = fullfile(ImagePath, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']);
-                        while exist(imgA_path, 'file')
-                            numbi = numbi+1;
-                            imgA_path = fullfile(ImagePath, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']);
-                        end
-                        runfirst=0;
-                        end
-                        imwrite(ima,imgA_path);
-                        imagesc(ima);colormap('gray')
-                    end
-					%}
 					pause(0.0001);
-					
 					errorCode = calllib('PCO_CAM_SDK','PCO_AddBufferEx', out_ptr,0,0,bufnum(next),act_xsize,act_ysize,bitpix);
 					if(errorCode)
 						pco_errdisp('PCO_AddBufferEx',errorCode);
