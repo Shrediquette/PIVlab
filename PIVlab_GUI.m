@@ -16,69 +16,203 @@
 
 function PIVlab_GUI
 %% Make figure
-MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0.05 0.1 0.9 0.8],'ResizeFcn', @MainWindow_ResizeFcn,'CloseRequestFcn', @MainWindow_CloseRequestFcn,'tag','hgui','visible','off');
-set (MainWindow,'Units','Characters');
-clc
-%% Initialize
-handles = guihandles; %alle handles mit tag laden und ansprechbar machen
-guidata(MainWindow,handles)
-setappdata(0,'hgui',MainWindow);
-
-version = '2.50';
-put('PIVver', version);
-v=ver('MATLAB');
-%splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','on','handlevisibility','off');movegui(splashscreen,'center');drawnow;
-disp(['Please wait, starting PIVlab GUI...' sprintf('\n')])
-disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
-disp(['-> Starting PIVlab ' version '.'])
-
-margin=1.5;
-panelwidth=37;
-panelheighttools=12;
-panelheightpanels=35;
-enable_parallel=1;
-
-put('panelwidth',panelwidth);
-put('margin',margin);
-put('panelheighttools',panelheighttools);
-put('panelheightpanels',panelheightpanels);
-put('quickwidth',panelwidth);
-put('quickheight',3.2);
-put('quickvisible',1);
-put('alreadydisplayed',0);
-put('video_selection_done',0);
-
-try
-	psdfile=which('PIVlab_settings_default.mat');
-	dindex=strfind(psdfile,filesep); %filesep ist '\'
-	read_panel_width('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
-catch
+fh = findobj('tag', 'hgui');
+if isempty(fh)
+	MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0.05 0.1 0.9 0.8],'ResizeFcn', @MainWindow_ResizeFcn,'CloseRequestFcn', @MainWindow_CloseRequestFcn,'tag','hgui','visible','off');
+	set (MainWindow,'Units','Characters');
+	clc
+	%% Initialize
+	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
+	guidata(MainWindow,handles)
+	setappdata(0,'hgui',MainWindow);
+	
+	version = '2.50';
+	put('PIVver', version);
+	v=ver('MATLAB');
+	%splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','on','handlevisibility','off');movegui(splashscreen,'center');drawnow;
+	disp(['-> Starting PIVlab ' version ' ...'])
+	disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
+	
+	margin=1.5;
+	panelwidth=37;
+	panelheighttools=12;
+	panelheightpanels=35;
+	enable_parallel=1;
+	put('panelwidth',panelwidth);
+	put('margin',margin);
+	put('panelheighttools',panelheighttools);
+	put('panelheightpanels',panelheightpanels);
+	put('quickwidth',panelwidth);
+	put('quickheight',3.2);
+	put('quickvisible',1);
+	put('alreadydisplayed',0);
+	put('video_selection_done',0);
+	
+	%% check write access
 	try
-		disp(['Could not load default settings in this path: ' psdfile(1:(dindex(end)-1))])
+		temp=rand(3,3);
+		save('temp.mat','temp');
+		delete 'temp.mat'
+		disp('-> Write access in current folder ok.')
 	catch
+		disp(['-> No write access in ' pwd '. PIVlab won''t work like this.'])
 	end
-	disp('Could not load default settings. But this doesn''t really matter.')
-end
-try
-	ctr=0;
-	pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg' 'PIVlab_Capture_Pixelfly.m' 'PIVlab_image_filter.m' 'pivparpool.m' 'pivprogress.m' 'piv_analysis.m'};
-	for i=1:size(pivFiles,2)
-		if exist(pivFiles{1,i},'file')~=2
-			disp(['ERROR: A required file was not found: ' pivFiles{1,i}]);
-			beep;
-		else
-			ctr=ctr+1;
+	
+	%% Load defaults
+	try
+		psdfile=which('PIVlab_settings_default.mat');
+		dindex=strfind(psdfile,filesep); %filesep ist '\'
+		read_panel_width('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
+	catch
+		try
+			disp(['Could not load default settings in this path: ' psdfile(1:(dindex(end)-1))])
+		catch
 		end
+		disp('Could not load default settings. But this doesn''t really matter.')
 	end
-	if ctr==size(pivFiles,2)
-		disp('-> All required files found.')
+	%% check required files
+	try
+		ctr=0;
+		pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg' 'PIVlab_Capture_Pixelfly.m' 'PIVlab_image_filter.m' 'pivparpool.m' 'pivprogress.m' 'piv_analysis.m'};
+		for i=1:size(pivFiles,2)
+			if exist(pivFiles{1,i},'file')~=2
+				disp(['ERROR: A required file was not found: ' pivFiles{1,i}]);
+				beep;
+			else
+				ctr=ctr+1;
+			end
+		end
+		if ctr==size(pivFiles,2)
+			disp('-> All required files found.')
+		end
+	catch
+		disp('-> Problem detecting required files.')
 	end
-catch
-	disp('-> Problem detecting required files.')
+	%%
+	generateUI
+	generateMenu
+	
+	%% Prepare axes
+	switchui('multip01');
+	axes1=axes('units','characters');
+	axis image;
+	set(gca,'ActivePositionProperty','outerposition');%,'Box','off','DataAspectRatioMode','auto','Layer','bottom','Units','normalized');
+	set(MainWindow, 'Name',['PIVlab ' retr('PIVver')])% ' by William Thielicke and Eize J. Stamhuis'])
+	
+	%%
+	Lena
+	%% Check Matlab version
+	try
+		if verLessThan('matlab', '7.10.0') == 0
+			disp('-> Matlab version check ok.')
+		else
+			disp('WARNING: Your Matlab version might be too old for running PIVlab.')
+		end
+	catch
+		disp('MATLAB version could not be checked automatically. You need at least version 7.10.0 (R2010a) to run PIVlab.')
+	end
+	%% Check image toolbox availability
+	try
+		result=license('checkout','Image_Toolbox');
+		if result == 1
+			try
+				J = adapthisteq(rand(8,8));
+				disp('-> Image Processing Toolbox found.')
+			catch
+				disp('ERROR: Image Processing Toolbox not accessible! PIVlab won''t work like this.')
+				disp('A license has been found, but the toolbox could not be accessed.')
+				disp('This is not a PIVlab related issue. Before you can use PIVlab, you need to make sure that the following command can be run without error message from the MATLAB command line:')
+				disp('"J = adapthisteq(rand(8,8))" (enter this without quotes)')
+			end
+		else
+			disp('ERROR: Image Processing Toolbox not found! PIVlab won''t work like this.')
+		end
+		%% Check parallel computing toolbox availability
+		put('parallel',0);
+		if enable_parallel == 1
+			try %checking for a parallel license file throws a huge error message wheh it is not available. This might scare users...
+				corenum = feature('numCores');
+				if pivparpool('size')<=0
+					disp('-> Please wait, checking Distributed Computing Toolbox...')
+					pivparpool('open',corenum);
+				end
+				disp(['-> Distributed Computing Toolbox found. Parallel pool (' int2str(pivparpool('size')) ' workers) active (default settings).'])
+				put('parallel',1);
+			catch
+				disp('-> Running without parallelization (no distributed computing toolbox installed).')
+			end
+		else
+			disp('-> Distributed Computing disabled.')
+		end
+	catch
+		disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
+	end
+	
+	%% Variable initialization
+	put ('toggler',0);
+	put('calu',1);
+	put('calv',1);
+	put('calxy',1);
+	put('offset_x_true',0)
+	put('offset_y_true',0)
+	put('subtr_u', 0);
+	put('subtr_v', 0);
+	put('displaywhat',1);%vectors
+	
+	%% read current and last directory.....:
+	warning('off','all') %if the variables don't exist, an ugly warning is displayed
+	load('PIVlab_settings_default.mat','homedir');
+	load('PIVlab_settings_default.mat','pathname');
+	warning('on','all')
+	if ~exist('pathname','var') || ~exist('homedir','var')
+		try
+			if exist(fullfile(fileparts(mfilename('fullpath')) , 'Examples'),'dir') == 7 %if no previous path -> check if example dir exists
+				homedir=fullfile(fileparts(mfilename('fullpath')) , 'Examples'); %... and use it as default
+				pathname=homedir;
+				disp('-> No previous path found, using default path.')
+			else %if example path doesnt exist -> use current directory
+				homedir=pwd;
+				pathname=pwd;
+				disp(['-> Start up path: ' pwd])
+			end
+		catch %if something goes wrong -> use current dir
+			homedir=pwd;
+			pathname=pwd;
+			disp(['-> Start up path: ' pwd])
+		end
+	else
+		if exist(pathname ,'dir') ~= 7 %stored path doesnt exist -> replace with default
+			homedir=pwd;
+			pathname=pwd;
+		end
+		disp(['-> Start up path: ' pathname])
+	end
+	put('homedir',homedir);
+	put('pathname',pathname);
+	save('PIVlab_settings_default.mat','homedir','pathname','-append');
+	
+	%% Read and apply default settings
+	try
+		%XP Wu modification:
+		psdfile=which('PIVlab_settings_default.mat');
+		dindex=strfind(psdfile,filesep); %filesep ist '\'
+		%erstes argument datei, zweites pfad bis zum letzten fileseperator.
+		read_settings('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
+		disp(['-> Got default settings from: ' psdfile])
+	catch
+		disp('Could not load default settings. But this doesn''t really matter.')
+	end
+	%%
+	CheckUpdates
+	SetFullScreen
+	
+	displogo(1);drawnow;
+	set(MainWindow, 'Visible','on');
+else %Figure handle does already exist --> bring PIVlab to foreground.
+	disp('Only one instance of PIVlab is allowed to run.')
+	figure(fh)
 end
-
-generateUI
-
+function generateMenu
 %% Menu items
 m1 = uimenu('Label','File');
 uimenu(m1,'Label','New session','Callback',@loadimgs_Callback,'Accelerator','N');
@@ -130,19 +264,42 @@ uimenu(m13,'Label','Forum','Callback',@Forum_Callback);
 uimenu(m13,'Label','Tutorial / getting started','Callback',@pivlabhelp_Callback,'Accelerator','H');
 uimenu(m13,'Label','About','Callback',@aboutpiv_Callback);
 uimenu(m13,'Label','Website','Callback',@Website_Callback);
-menuhandles = findall(MainWindow,'type','uimenu'); %das soll gemacht werden laut Hilfe
+menuhandles = findall(getappdata(0,'hgui'),'type','uimenu'); %das soll gemacht werden laut Hilfe
 set(menuhandles,'HandleVisibility','off');
 disp('-> Menu generated.')
 
-%% Axes
-switchui('multip01');
-axes1=axes('units','characters');
-axis image;
-set(gca,'ActivePositionProperty','outerposition');%,'Box','off','DataAspectRatioMode','auto','Layer','bottom','Units','normalized');
-set(MainWindow, 'Name',['PIVlab ' retr('PIVver')])% ' by William Thielicke and Eize J. Stamhuis'])
-%movegui(MainWindow,'center')
-%set(MainWindow, 'Visible','on');
-%displogo(1)
+function SetFullScreen
+MainWindow=getappdata(0,'hgui');
+if verLessThan('matlab','9.4') %r2018a
+	if verLessThan('matlab','9.2') %dont know exactly in which release this was supported, 9.2 is a safe assumption
+		set (MainWindow,'Units','pixels');
+		set(0,'Units','pixels')
+		scnsize = get(0,'ScreenSize');
+		position = get(MainWindow,'Position');
+		outerpos = get(MainWindow,'OuterPosition');
+		borders = outerpos - position;
+		edge = -borders(1)/2;
+		pos1 = [edge, edge+25, scnsize(3) - edge,scnsize(4)-25];
+		set(MainWindow,'OuterPosition',pos1)
+		set (MainWindow,'Units','Characters');
+	else
+		try
+			warning off
+			frame_h = get(handle(gcf),'JavaFrame'); %#ok<JAVFM>
+			set(frame_h,'Maximized',1);
+		catch
+		end
+	end
+else
+	try
+		set(MainWindow,'WindowState','maximized');
+	catch
+	end
+end
+warning on
+
+function Lena
+MainWindow=getappdata(0,'hgui');
 if strncmp (date,'15-Oct',6)
 	yr=date;
 	since=str2num(yr(8:11))-2005;
@@ -150,105 +307,9 @@ if strncmp (date,'15-Oct',6)
 	set(MainWindow, 'Name','Today it''s Lena-day!!')
 end
 
-try
-	if verLessThan('matlab', '7.10.0') == 0
-		disp('-> Matlab version check ok.')
-	else
-		disp('WARNING: Your Matlab version might be too old for running PIVlab.')
-	end
-catch
-	disp('MATLAB version could not be checked automatically. You need at least version 7.10.0 (R2010a) to run PIVlab.')
-end
-try
-	result=license('checkout','Image_Toolbox');
-	if result == 1
-		try
-			J = adapthisteq(rand(8,8));
-			disp('-> Image Processing Toolbox found.')
-		catch
-			disp('ERROR: Image Processing Toolbox not accessible! PIVlab won''t work like this.')
-			disp('A license has been found, but the toolbox could not be accessed.')
-			disp('This is not a PIVlab related issue. Before you can use PIVlab, you need to make sure that the following command can be run without error message from the MATLAB command line:')
-			disp('"J = adapthisteq(rand(8,8))" (enter this without quotes)')
-		end
-	else
-		disp('ERROR: Image Processing Toolbox not found! PIVlab won''t work like this.')
-	end
-	put('parallel',0);
-	if enable_parallel == 1
-		try %checking for a parallel license file throws a huge error message wheh it is not available. This might scare users...
-			corenum = feature('numCores');
-			if pivparpool('size')<=0
-				disp('-> Please wait, checking Distributed Computing Toolbox...')
-				pivparpool('open',corenum);
-			end
-			disp(['-> Distributed Computing Toolbox found. Parallel pool (' int2str(pivparpool('size')) ' workers) active (default settings).'])
-			put('parallel',1);
-		catch
-			disp('-> Running without parallelization (no distributed computing toolbox installed).')
-		end
-	else
-		disp('-> Distributed Computing disabled.')
-	end
-	
-catch
-	disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
-end
-
-%Variable initialization
-put ('toggler',0);
-put('calu',1);
-put('calv',1);
-put('calxy',1);
-put('offset_x_true',0)
-put('offset_y_true',0)
-put('subtr_u', 0);
-put('subtr_v', 0);
-put('displaywhat',1);%vectors
-
-%read current and last directory.....:
-warning('off','all') %if the variables don't exist, an ugly warning is displayed
-load('PIVlab_settings_default.mat','homedir');
-load('PIVlab_settings_default.mat','pathname');
-warning('on','all')
-if ~exist('pathname','var') || ~exist('homedir','var')
-	try
-		if exist(fullfile(fileparts(mfilename('fullpath')) , 'Examples'),'dir') == 7 %if no previous path -> check if example dir exists
-			homedir=fullfile(fileparts(mfilename('fullpath')) , 'Examples'); %... and use it as default
-			pathname=homedir;
-			disp('-> No previous path found, using default path.')
-		else %if example path doesnt exist -> use current directory
-			homedir=pwd;
-			pathname=pwd;
-			disp(['-> Start up path: ' pwd])
-		end
-	catch %if something goes wrong -> use current dir
-		homedir=pwd;
-		pathname=pwd;
-		disp(['-> Start up path: ' pwd])
-	end
-else
-	if exist(pathname ,'dir') ~= 7 %stored path doesnt exist -> replace with default
-		homedir=pwd;
-		pathname=pwd;
-	end
-	disp(['-> Start up path: ' pathname])
-end
-put('homedir',homedir);
-put('pathname',pathname);
-save('PIVlab_settings_default.mat','homedir','pathname','-append');
-
-try
-	%XP Wu modification:
-	psdfile=which('PIVlab_settings_default.mat');
-	dindex=strfind(psdfile,filesep); %filesep ist '\'
-	%erstes argument datei, zweites pfad bis zum letzten fileseperator.
-	read_settings('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
-catch
-	disp('Could not load default settings. But this doesn''t really matter.')
-end
-
+function CheckUpdates
 % Check for updates
+version=retr('PIVver');
 filename_update = 'latest_version.txt';
 current_url = 'http://william.thielicke.org/PIVlab/latest_version.txt';
 % Update checking inspired by: https://www.mathworks.com/matlabcentral/fileexchange/64294-photoannotation
@@ -258,7 +319,7 @@ try
 	if exist('websave','builtin')||exist('websave','file')
 		outfilename=websave(filename_update,current_url,weboptions('Timeout',10));
 		%load a counter image to get anonymous usage statistics, https://www.andyhoppe.com/counter/counter-datenschutz.htm
-		outfilename=websave('temp.tmp','http://c.andyhoppe.com/1619962004',weboptions('Timeout',10));
+		outfilename=websave('temp.tmp','http://c.andyhoppe.com/1619962004',weboptions('Timeout',2));
 	else
 		outfilename=urlwrite(current_url,filename_update); %#ok<*URLWR>
 		%load a counter image to get anonymous usage statistics, https://www.andyhoppe.com/counter/counter-datenschutz.htm
@@ -289,41 +350,10 @@ end
 clear filename_update current_url fileID_update outfilename web_version trash_upd
 disp (['-> ' update_msg])
 put('update_msg',update_msg);
-disp ([sprintf('\n') '... done.'])
+
 %close(splashscreen)
-movegui(MainWindow,'center')
+%movegui(MainWindow,'center')
 
-%set to full screen
-
-if verLessThan('matlab','9.4') %r2018a
-	if verLessThan('matlab','9.2') %dont know exactly in which release this was supported, 9.2 is a safe assumption
-        set (MainWindow,'Units','pixels');        
-        set(0,'Units','pixels')
-        scnsize = get(0,'ScreenSize');
-        position = get(MainWindow,'Position');
-        outerpos = get(MainWindow,'OuterPosition');
-        borders = outerpos - position;
-        edge = -borders(1)/2;
-        pos1 = [edge, edge+25, scnsize(3) - edge,scnsize(4)-25];    
-        set(MainWindow,'OuterPosition',pos1)
-        set (MainWindow,'Units','Characters');
-	else
-		try
-			warning off
-			frame_h = get(handle(gcf),'JavaFrame');
-			set(frame_h,'Maximized',1);
-		catch
-		end
-	end
-else
-	try
-		set(MainWindow,'WindowState','maximized');
-	catch
-	end
-end
-warning on
-displogo(1);drawnow;
-set(MainWindow, 'Visible','on');
 
 function destroyUI
 handles = guihandles; %alle handles mit tag laden und ansprechbar machen
@@ -2096,7 +2126,7 @@ if verLessThan('matlab','9.7') %R2019b
 end
 handles=gethand;
 if isempty(get(handles.ac_project,'String')) %if user hasnt entered a project path...
-	if ~isempty(retr('pathname')) 
+	if ~isempty(retr('pathname'))
 		set(handles.ac_project,'String',fullfile(retr('pathname'),['PIVlabCapture_' date]));
 	else
 		set(handles.ac_project,'String',fullfile(pwd,['PIVlabCapture_' date]));
@@ -2118,19 +2148,19 @@ if alreadyconnected
 	set(handles.ac_connect,'String','Connect');
 	set(handles.ac_serialstatus,'Backgroundcolor',[0 1 0]);
 else
-    try
-        serports=serialportlist('available');
-    catch
-        serports=[];
-    end
-    if isempty(serports)
-        serports='No available serial ports found!';
-        set(handles.ac_connect,'String','Refresh');
-    else
-        set(handles.ac_connect,'String','Connect');
-    end
-    set(handles.ac_comport,'String',serports);
-    set(handles.ac_serialstatus,'Backgroundcolor',[1 0 0]);
+	try
+		serports=serialportlist('available');
+	catch
+		serports=[];
+	end
+	if isempty(serports)
+		serports='No available serial ports found!';
+		set(handles.ac_connect,'String','Refresh');
+	else
+		set(handles.ac_connect,'String','Connect');
+	end
+	set(handles.ac_comport,'String',serports);
+	set(handles.ac_serialstatus,'Backgroundcolor',[1 0 0]);
 end
 
 
@@ -3162,6 +3192,10 @@ end
 handles=gethand;
 displogo(0)
 setappdata(hgui,'video_selection_done',0);
+if retr('parallel')==1 %videos are not yet supported in parallel processing. But an opened parallel pool (that is not used) slows down video processing
+	pivparpool('close')
+	disp('Parallel video processing is not yet supported by PIVlab. Parallel pool was therefore closed.')
+end
 vid_import(pathname);
 uiwait
 if getappdata(hgui,'video_selection_done')
