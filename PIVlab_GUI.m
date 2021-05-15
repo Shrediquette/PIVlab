@@ -37,7 +37,7 @@ if isempty(fh)
 	panelwidth=37;
 	panelheighttools=12;
 	panelheightpanels=35;
-	enable_parallel=1;
+	enable_parallel=0;
 	put('panelwidth',panelwidth);
 	put('margin',margin);
 	put('panelheighttools',panelheighttools);
@@ -5830,116 +5830,140 @@ filtervectors(currentframe)
 sliderdisp;
 
 function apply_filter_all_Callback(~, ~, ~)
-handles=gethand;
-filepath=retr('filepath');
-toolsavailable(0)
-%put('manualdeletion',[]); %not available for filtering several images
-put('derived', []); %clear derived parameters if user modifies source data
-if retr('video_selection_done') == 0
-	num_frames_to_process=floor(size(filepath,1)/2)+1;
-else
-	video_frame_selection=retr('video_frame_selection');
-	num_frames_to_process=floor(numel(video_frame_selection)/2)+1;
-end
-
-if retr('video_selection_done') == 1 %if post-processing a video, parallelization cannot be used.
-	for i=1:num_frames_to_process
-		filtervectors(i)
-		set (handles.apply_filter_all, 'string', ['Please wait... (' int2str((i-1)/num_frames_to_process*100) '%)']);
-		drawnow;
-	end
-else %not using a video file --> parallel processing possible
-	slicedfilepath1=cell(0);
-	slicedfilepath2=cell(0);
-	for i=1:2:size(filepath,1)%num_frames_to_process
-		k=(i+1)/2;
-		slicedfilepath1{k}=filepath{i};
-		slicedfilepath2{k}=filepath{i+1};
-	end
-	if get(handles.bg_subtract,'Value')==1
-		bg_img_A = retr('bg_img_A');
-		bg_img_B = retr('bg_img_B');
-		bg_sub=1;
+resultslist=retr('resultslist');
+if ~isempty(resultslist)
+	handles=gethand;
+	filepath=retr('filepath');
+	toolsavailable(0)
+	put('derived', []); %clear derived parameters if user modifies source data
+	if retr('video_selection_done') == 0
+		num_frames_to_process=floor(size(filepath,1)/2)+1;
 	else
-		bg_img_A=[];
-		bg_img_B=[];
-		bg_sub=0;
+		video_frame_selection=retr('video_frame_selection');
+		num_frames_to_process=floor(numel(video_frame_selection)/2)+1;
 	end
-	resultslist=retr('resultslist');
-	resultslist(10,:)={[]}; %remove smoothed results when user modifies original data
-	resultslist(11,:)={[]};
-	calu=retr('calu');calv=retr('calv');
-	x=resultslist(1,:);
-	y=resultslist(2,:);
-	u=resultslist(3,:);
-	v=resultslist(4,:);
-	typevector_original=resultslist(5,:);
-	velrect=retr('velrect');
-	do_stdev_check = get(handles.stdev_check, 'value');
-	stdthresh=str2double(get(handles.stdev_thresh, 'String'));
-	do_local_median = get(handles.loc_median, 'value');
-	neigh_thresh=str2double(get(handles.loc_med_thresh,'string'));
-	manualdeletion=retr('manualdeletion');
-	%manual point deletion
-	disp('geht so nicht... weil da frame drin steht.... muss als anze liste übergeben werden denke ich mit allen frames drin.')
-	framemanualdeletion=[];
-	if numel(manualdeletion)>0
-		if size(manualdeletion,2)>=frame
-			if isempty(manualdeletion{1,frame}) ==0
-				framemanualdeletion=manualdeletion{frame};
-			end
+	if retr('video_selection_done') == 1 %if post-processing a video, parallelization cannot be used.
+		for i=1:num_frames_to_process
+			filtervectors(i)
+			set (handles.apply_filter_all, 'string', ['Please wait... (' int2str((i-1)/num_frames_to_process*100) '%)']);
+			drawnow;
 		end
-	end
-	%image-based filtering
-	do_contrast_filter = get(handles.do_contrast_filter, 'value');
-	do_bright_filter = get(handles.do_bright_filter, 'value');
-	contrast_filter_thresh=str2double(get(handles.contrast_filter_thresh, 'String'));
-	bright_filter_thresh=str2double(get(handles.bright_filter_thresh, 'String'));
-	interpol_missing= get(handles.interpol_missing, 'value');
-	%tic;
-	hbar = pivprogress(size(slicedfilepath1,2),handles.apply_filter_all);
-	parfor i=1:num_frames_to_process-1 %without parallel processing toolbox, this is just a normal for loop.
-		if do_contrast_filter == 1 || do_bright_filter == 1
-			%% load images in a parfor loop
-			[~,~,ext] = fileparts(slicedfilepath1{i});
-			if strcmp(ext,'.b16')
-				currentimage1=f_readB16(slicedfilepath1{i});
-				currentimage2=f_readB16(slicedfilepath2{i});
-			else
-				currentimage1=imread(slicedfilepath1{i});
-				currentimage2=imread(slicedfilepath2{i});
-			end
-			rawimageA=currentimage1;
-			rawimageB=currentimage2;
-			if bg_sub==1
-				if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
-					currentimage1 = rgb2gray(currentimage1)-bg_img_A;
-					currentimage2 = rgb2gray(currentimage2)-bg_img_B;
-				else
-					currentimage1 = currentimage1-bg_img_A;
-					currentimage2 = currentimage2-bg_img_B;
+	else %not using a video file --> parallel processing possible
+		slicedfilepath1=cell(0);
+		slicedfilepath2=cell(0);
+		for i=1:2:size(filepath,1)%num_frames_to_process
+			k=(i+1)/2;
+			slicedfilepath1{k}=filepath{i};
+			slicedfilepath2{k}=filepath{i+1};
+		end
+		if get(handles.bg_subtract,'Value')==1
+			bg_img_A = retr('bg_img_A');
+			bg_img_B = retr('bg_img_B');
+			bg_sub=1;
+		else
+			bg_img_A=[];
+			bg_img_B=[];
+			bg_sub=0;
+		end
+		resultslist(10,:)={[]}; %remove smoothed results when user modifies original data
+		resultslist(11,:)={[]};
+		calu=retr('calu');calv=retr('calv');
+		x=resultslist(1,:);
+		y=resultslist(2,:);
+		u=resultslist(3,:);
+		v=resultslist(4,:);
+		typevector=resultslist(5,:);
+		typevector_original=resultslist(5,:);
+		manualdeletion=retr('manualdeletion');
+		
+		if numel(manualdeletion)>0
+			for i=1:size(u,2)
+				if size(manualdeletion,2)>=i
+					if isempty(manualdeletion{1,i}) ==0
+						framemanualdeletion=manualdeletion{i};
+						[u{i},v{i},typevector{i}]=manual_point_deletion(u{i},v{i},typevector{i},framemanualdeletion);
+					end
 				end
 			end
-			%get and save the image size (assuming that every image of a session has the same size)
-			currentimage1(currentimage1<0)=0; %bg subtraction may yield negative
-			currentimage2(currentimage2<0)=0; %bg subtraction may yield negative
-			A=currentimage1;
-			B=currentimage2;
-		else
-			A=[];B=[];rawimageA=[];rawimageB=[];
 		end
-		[u_new{i},v_new{i},typevector_new{i}]=filtervectors_all_parallel(x{i},y{i},u{i},v{i},typevector_original{i},calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,framemanualdeletion,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB);
-		hbar.iterate(1); %#ok<*PFBNS>
+		velrect=retr('velrect');
+		do_stdev_check = get(handles.stdev_check, 'value');
+		stdthresh=str2double(get(handles.stdev_thresh, 'String'));
+		do_local_median = get(handles.loc_median, 'value');
+		neigh_thresh=str2double(get(handles.loc_med_thresh,'string'));
+		%image-based filtering
+		do_contrast_filter = get(handles.do_contrast_filter, 'value');
+		do_bright_filter = get(handles.do_bright_filter, 'value');
+		contrast_filter_thresh=str2double(get(handles.contrast_filter_thresh, 'String'));
+		bright_filter_thresh=str2double(get(handles.bright_filter_thresh, 'String'));
+		interpol_missing= get(handles.interpol_missing, 'value');
+		hbar = pivprogress(size(slicedfilepath1,2),handles.apply_filter_all);
+		if size(u,2)<num_frames_to_process-1 %If not all frames have been analyzed. Parfor loop crashes otherwise.
+			u(num_frames_to_process-1)={[]};
+			v(num_frames_to_process-1)={[]};
+			x(num_frames_to_process-1)={[]};
+			y(num_frames_to_process-1)={[]};
+			typevector_original(num_frames_to_process-1)={[]};
+			resultslist(1,num_frames_to_process-1)={[]};
+		end
+		parfor i=1:num_frames_to_process-1 %without parallel processing toolbox, this is just a normal for loop.
+			if ~isempty(x(i))
+				if do_contrast_filter == 1 || do_bright_filter == 1
+					%% load images in a parfor loop
+					[~,~,ext] = fileparts(slicedfilepath1{i});
+					if strcmp(ext,'.b16')
+						currentimage1=f_readB16(slicedfilepath1{i});
+						currentimage2=f_readB16(slicedfilepath2{i});
+					else
+						currentimage1=imread(slicedfilepath1{i});
+						currentimage2=imread(slicedfilepath2{i});
+					end
+					rawimageA=currentimage1;
+					rawimageB=currentimage2;
+					if bg_sub==1
+						if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+							currentimage1 = rgb2gray(currentimage1)-bg_img_A;
+							currentimage2 = rgb2gray(currentimage2)-bg_img_B;
+						else
+							currentimage1 = currentimage1-bg_img_A;
+							currentimage2 = currentimage2-bg_img_B;
+						end
+					end
+					currentimage1(currentimage1<0)=0; %bg subtraction may yield negative
+					currentimage2(currentimage2<0)=0; %bg subtraction may yield negative
+					A=currentimage1;
+					B=currentimage2;
+				else
+					A=[];B=[];rawimageA=[];rawimageB=[];
+				end
+				[u_new{i},v_new{i},typevector_new{i}]=filtervectors_all_parallel(x{i},y{i},u{i},v{i},typevector_original{i},calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB);
+				hbar.iterate(1); %#ok<*PFBNS>
+			end
+		end
+		close(hbar);
+		resultslist(7, :) = u_new;
+		resultslist(8, :) = v_new;
+		resultslist(9, :) = typevector_new;
+		put('resultslist', resultslist);
 	end
-	close(hbar);
-	resultslist(7, :) = u_new;
-	resultslist(8, :) = v_new;
-	resultslist(9, :) = typevector_new;
-	put('resultslist', resultslist);
+	set (handles.apply_filter_all, 'string', 'Apply to all frames');
+	toolsavailable(1)
+	sliderdisp;
 end
-set (handles.apply_filter_all, 'string', 'Apply to all frames');
-toolsavailable(1)
-sliderdisp;
+
+function [u,v,typevector]=manual_point_deletion(u,v,typevector,framemanualdeletion)
+manualdeletion=retr('manualdeletion');
+if numel(manualdeletion)>0
+	if numel(u)>0
+		for i=1:size(framemanualdeletion,1)
+			u(framemanualdeletion(i,1),framemanualdeletion(i,2))=NaN;
+			v(framemanualdeletion(i,1),framemanualdeletion(i,2))=NaN;
+		end
+		typevector(isnan(u))=2;
+		typevector(isnan(v))=2;
+	end
+end
+
 
 function restore_all_Callback(~, ~, ~)
 %clears resultslist at 7,8,9
@@ -5962,13 +5986,8 @@ set (handles.vel_limit_active, 'String', 'Limit inactive', 'backgroundcolor', [0
 set (handles.limittext, 'String', '');
 set (handles.vel_limit, 'String', 'Select velocity limits');
 
-function [u,v,typevector]=filtervectors_all_parallel(x,y,u,v,typevector_original,calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,framemanualdeletion,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB)
+function [u,v,typevector]=filtervectors_all_parallel(x,y,u,v,typevector_original,calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB)
 typevector=typevector_original;
-for i=1:size(framemanualdeletion,1)
-	u(framemanualdeletion(i,1),framemanualdeletion(i,2))=NaN;
-	v(framemanualdeletion(i,1),framemanualdeletion(i,2))=NaN;
-end
-
 %run postprocessing function
 if numel(velrect)>0
 	valid_vel(1)=velrect(1); %umin
@@ -5995,11 +6014,6 @@ if interpol_missing==1
 	v=inpaint_nans(v,4);
 end
 
-	
-
-
-
-
 function filtervectors(frame)
 %executes filters one after another, writes results to resultslist 7,8,9
 handles=gethand;
@@ -6012,6 +6026,13 @@ if size(resultslist,2)>=frame
 	v=resultslist{4,frame};
 	typevector_original=resultslist{5,frame};
 	typevector=typevector_original;
+	manualdeletion=retr('manualdeletion');
+	if size(manualdeletion,2)>=frame
+		if isempty(manualdeletion{1,frame}) ==0
+			framemanualdeletion=manualdeletion{frame};
+			[u,v,typevector]=manual_point_deletion(u,v,typevector,framemanualdeletion);
+		end
+	end
 	if numel(u)>0
 		velrect=retr('velrect');
 		do_stdev_check = get(handles.stdev_check, 'value');
@@ -6020,19 +6041,7 @@ if size(resultslist,2)>=frame
 		%epsilon=str2double(get(handles.epsilon,'string'));
 		neigh_thresh=str2double(get(handles.loc_med_thresh,'string'));
 		
-		%manual point deletion
-		manualdeletion=retr('manualdeletion');
-		if numel(manualdeletion)>0
-			if size(manualdeletion,2)>=frame
-				if isempty(manualdeletion{1,frame}) ==0
-					framemanualdeletion=manualdeletion{frame};
-					for i=1:size(framemanualdeletion,1)
-						u(framemanualdeletion(i,1),framemanualdeletion(i,2))=NaN;
-						v(framemanualdeletion(i,1),framemanualdeletion(i,2))=NaN;
-					end
-				end
-			end
-		end
+		
 		
 		%run postprocessing function
 		if numel(velrect)>0
