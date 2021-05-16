@@ -37,7 +37,7 @@ if isempty(fh)
 	panelwidth=37;
 	panelheighttools=12;
 	panelheightpanels=35;
-	enable_parallel=0;
+	enable_parallel=1;
 	put('panelwidth',panelwidth);
 	put('margin',margin);
 	put('panelheighttools',panelheighttools);
