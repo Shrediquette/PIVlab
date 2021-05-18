@@ -1882,8 +1882,11 @@ item=[0 0 0 0];
 item=[0 item(2)+item(4) parentitem(3)/2 1];
 handles.ac_imgamounttxt = uicontrol(handles.uipanelac_capture,'Style','text', 'String','Image amount: ','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_imgamounttxt');
 
-item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
+item=[parentitem(3)/2 item(2) parentitem(3)/4 1];
 handles.ac_imgamount = uicontrol(handles.uipanelac_capture,'Style','edit','units','characters','HorizontalAlignment','right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','100','tag','ac_imgamount','TooltipString','Amount of double images to capture');
+
+item=[parentitem(3)/2+parentitem(3)/4 item(2) parentitem(3)/4 1];
+handles.ac_realtime = uicontrol(handles.uipanelac_capture,'Style','checkbox','units','characters','HorizontalAlignment','right','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3) item(4)],'Value',0,'String','Live','tag','ac_realtime','TooltipString','Enable real-time PIV','Callback',@ac_realtime_Callback);
 
 item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/2 1.5];
 handles.ac_pivcapture = uicontrol(handles.uipanelac_capture,'Style','pushbutton','String','Start & save','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_pivcapture_Callback,'Tag','ac_pivcapture','TooltipString','Start PIV image capture and laser');
@@ -10569,8 +10572,11 @@ if alreadyconnected
 		timestamp=datestr(datetime(now,'ConvertFrom','datenum'));
 		logger_content= [timestamp sync_setting];
 		if exist (fullfile(logger_path, 'sync_history.mat'),'file')
+			try
 			logger_content_old=load (fullfile(logger_path, 'sync_history.mat'),'logger_content');
 			logger_content=[logger_content_old.logger_content;logger_content];
+			catch
+			end
 		end
 		save (fullfile(logger_path, 'sync_history.mat'),'logger_content');
 	end
@@ -10646,7 +10652,7 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 		set(handles.ac_serialstatus,'enable','on')
 		set(handles.ac_laserstatus,'enable','on')
 		set(handles.ac_lasertoggle,'enable','on')
-		[errorcode, caliimg]=PIVlab_Capture_Pixelfly(50000,expos,'Calibration',projectpath);
+		[errorcode, caliimg]=PIVlab_Capture_Pixelfly(50000,expos,'Calibration',projectpath,[],0,[]);
 		put('caliimg',caliimg);
 	end
 else
@@ -10679,8 +10685,6 @@ if strcmp(caller,'double_images')
 	end
 end
 
-
-
 function ac_pivcapture_Callback(~,~,~)
 put('capturing',0);
 [filepath,~,~] = fileparts(mfilename('fullpath'));
@@ -10692,6 +10696,15 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 		put('cancel_capture',0);
 		projectpath=get(handles.ac_project,'String');
 		capture_ok=check_project_path(projectpath,'double_images');
+		%Camera fps
+		ac_fps_value=get(handles.ac_fps,'Value');
+		ac_fps_str=get(handles.ac_fps,'String');
+		cam_fps=str2double(ac_fps_str(ac_fps_value));
+		ac_ROI=retr('ac_ROI');
+		do_realtime=retr('do_realtime');
+		if isempty(do_realtime)
+			do_realtime=0;
+		end
 		if capture_ok==1
 			put('capturing',1);
 			toolsavailable(0)
@@ -10701,7 +10714,9 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 			set(handles.ac_laserstatus,'enable','on')
 			control_simple_sync_serial(1);
 			pause(1)
-			PIVlab_Capture_Pixelfly(imageamount,400,'Synchronizer',projectpath);
+			
+			PIVlab_Capture_Pixelfly(imageamount,400,'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI);
+			
 			control_simple_sync_serial(0);
 			if retr('cancel_capture')==0
 				push_recorded_to_GUI;
@@ -10764,4 +10779,32 @@ folder_name = uigetdir(retr('pathname'),'Select image folder for saving');
 if ~isequal(folder_name,0)
 	set(handles.ac_project,'String',folder_name);
 	put('pathname',folder_name);
+end
+
+function ac_realtime_Callback(~,~,~)
+handles=gethand;
+if get(handles.ac_realtime,'Value')==1
+	put('capturing',0);
+	try
+		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
+	catch
+		set(handles.ac_expo,'String','100');
+		expos=100000;
+	end
+	projectpath=get(handles.ac_project,'String');
+	capture_ok=check_project_path(projectpath,'calibration');
+	if capture_ok==1
+		put('cancel_capture',0);
+		put('capturing',1);
+		[errorcode, caliimg]=PIVlab_Capture_Pixelfly(1,expos,'Calibration',projectpath,[],0,[]);
+	end
+	put('capturing',0);
+	uiwait(msgbox(['Please select the ROI for real-time PIV.'],'modal'))
+	roirect = round(getrect(gca));
+	if roirect(1,3)~=0 && roirect(1,4)~=0
+		put('ac_ROI',roirect);
+		put('do_realtime',1);
+	end
+else
+	put('do_realtime',0);
 end

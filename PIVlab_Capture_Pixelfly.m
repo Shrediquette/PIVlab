@@ -1,18 +1,28 @@
-function [OutputError,ima] = PIVlab_Capture_Pixelfly(nr_of_images,exposure_time,TriggerModeString,ImagePath)
-
-%{
-PIVlab UI elements
-select setup type (PIVlabSync + ILA PIV.nano)
-select Project path
-Calibration, Exposure time
-Capture Images, nr of imgs (enables laser, loads in session when done)
-
-Laser control komplett wie im simple sync
-%}
+function [OutputError,ima] = PIVlab_Capture_Pixelfly(nr_of_images,exposure_time,TriggerModeString,ImagePath,framerate,do_realtime,ROI)
 hgui=getappdata(0,'hgui');
+if strcmp(TriggerModeString,'Calibration') || strcmp(TriggerModeString,'calibration')
+	triggermode=0; %External trigger
+elseif  strcmp(TriggerModeString,'Synchronizer') || strcmp(TriggerModeString,'synchronizer')
+	triggermode=2; %Internal Trigger
+end
 OutputError=0;
 PIVlab_axis = findobj(hgui,'Type','Axes');
 image_handle=imagesc(zeros(1040,1392),'Parent',PIVlab_axis,[0 2^16]);
+if triggermode == 2 && do_realtime==1 %external trigger and realtime
+	[X,Y]=meshgrid(1:32:1392,1:32:1040);
+	hold on;
+	quiver_handle=quiver(X,Y,X*0,Y*0,'autoscale','off','Linewidth',1.5,'Color','g');
+	hold off
+	set(gca,'ActivePositionProperty','outerposition','Clipping','on')
+	int_area=32;
+	step=32;
+	msg_displayed=0;
+	performance_settings_int_area = [16 16 32 32 48 48 64 96];
+	performance_settings_step = [128 64 64 32 32 24 24 16];
+	performance_settings_int_area= round(interp1(1:numel(performance_settings_int_area),performance_settings_int_area,1:0.15:numel(performance_settings_int_area)));
+	performance_settings_step= round(interp1(1:numel(performance_settings_step),performance_settings_step,1:0.15:numel(performance_settings_step)));
+	performance_preset=10;
+end
 frame_nr_display=text(100,100,'Initializing...','Color',[1 1 0]);
 new_map=colormap('gray');
 new_map(1:3,:)=[0 0.3 0;0 0.3 0;0 0.3 0];
@@ -31,11 +41,7 @@ needed:
     'C:\Program Files\PCO Digital Camera Toolbox\pco.matlab\scripts\pco_errdisp.m'
     'C:\Program Files\PCO Digital Camera Toolbox\pco.matlab\scripts\pco_uint32err.m'}
 %}
-if strcmp(TriggerModeString,'Calibration') || strcmp(TriggerModeString,'calibration')
-	triggermode=0; %External trigger
-elseif  strcmp(TriggerModeString,'Synchronizer') || strcmp(TriggerModeString,'synchronizer')
-	triggermode=2; %Internal Trigger
-end
+
 image_save_number=0;
 glvar=struct('do_libunload',1,'do_close',0,'camera_open',0,'out_ptr',[]);
 pco_camera_load_defines();
@@ -265,6 +271,7 @@ try
 			%test and display buffer
 			next=last_ok+1;
 			multi=0;
+			tic
 			for n=1:bufcount
 				if(next>bufcount)
 					next=1;
@@ -288,6 +295,7 @@ try
 					end
 					
 					%% Save images with external trigger
+					tic
 					ima=bitshift(ima,2); %16 bit to 14 bit conversion
 					if triggermode == 2 %external trigger
 						imgA_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',image_save_number) '_A.tif']);
@@ -304,13 +312,55 @@ try
 						image_save_number=image_save_number+1;
 					elseif triggermode==0
 						set(image_handle,'CData',ima);
+						set(frame_nr_display,'String','');
 					end
 					pause(0.0001);
+					%% Live preview
+					if triggermode == 2 && do_realtime==1%external trigger
+						A=adapthisteq(ima(1:1040,:)); %0.08s
+						B=adapthisteq(ima(1041:end,:));
+						A=A(ROI(2):ROI(2)+ROI(4) , ROI(1):ROI(1)+ROI(3));
+						B=B(ROI(2):ROI(2)+ROI(4) , ROI(1):ROI(1)+ROI(3));
+						%0.17s
+						
+						[xtable, ytable, utable, vtable] = piv_quick (A,B,int_area, step);
+						xtable=xtable+ROI(1);
+						ytable=ytable+ROI(2);
+						%0.008
+						[utable,vtable] = PIVlab_postproc (utable,vtable,1,1, [-10 10 -10 10], 1,7, 1,4);
+						set(quiver_handle,'Xdata',xtable,'ydata',ytable,'udata',utable*8,'vdata',vtable*8);
+					end
 					errorCode = calllib('PCO_CAM_SDK','PCO_AddBufferEx', out_ptr,0,0,bufnum(next),act_xsize,act_ysize,bitpix);
 					if(errorCode)
 						pco_errdisp('PCO_AddBufferEx',errorCode);
 						break;
 					end
+					if triggermode == 2 && do_realtime==1
+						time_consumed=toc;
+						time_consumed=time_consumed*1.1; %add 10% safety margin
+						%computing_effort = int_area^2 / step^2
+						if time_consumed > 1/framerate+0.1
+							if performance_preset>1
+								performance_preset=performance_preset-1;
+								disp('Decreasing processor load')
+							end
+							msg_displayed=0;
+						elseif time_consumed < 1/framerate-0.1
+							if performance_preset< numel(performance_settings_int_area)
+								performance_preset=performance_preset+1;
+								disp('Increasing processor load')
+							end
+							msg_displayed=0;
+						else
+							if msg_displayed==0
+								disp(['Processor load optimal (int_area = ' int2str(int_area) ', step = ' int2str(step) ])
+								msg_displayed=1;
+							end
+						end
+						int_area=performance_settings_int_area(performance_preset);
+						step=performance_settings_step(performance_preset);
+					end
+					
 				end
 				next=next+1;
 			end
