@@ -26,7 +26,7 @@ if isempty(fh)
 	guidata(MainWindow,handles)
 	setappdata(0,'hgui',MainWindow);
 	
-	version = '2.50';
+	version = '2.51';
 	put('PIVver', version);
 	v=ver('MATLAB');
 	%splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','on','handlevisibility','off');movegui(splashscreen,'center');drawnow;
@@ -4723,6 +4723,7 @@ if ok==1
 		ulist=cell(0);
 		vlist=cell(0);
 		typelist=cell(0);
+		corrlist=cell(0);
 		for i=1:2:num_frames_to_process
 			k=(i+1)/2;
 			ximask={};
@@ -4817,6 +4818,7 @@ if ok==1
 				ulist{i}=u;
 				vlist{i}=v;
 				typelist{i}=typevector;
+				corrlist{i}=zeros(size(typevector)); %no correlation coefficient in DCC.
 				
 				hbar.iterate(1);
 				
@@ -4895,6 +4897,7 @@ if ok==1
 				ulist{i}=u;
 				vlist{i}=v;
 				typelist{i}=typevector;
+				corrlist{i}=correlation_map;
 				hbar.iterate(1);
 			end
 		end
@@ -4914,6 +4917,7 @@ if ok==1
 				resultslist{4,i}=vlist{i};
 				resultslist{5,i}=typelist{i};
 				resultslist{6,i}=[];
+				resultslist{12,i}=corrlist{i};
 			end
 			put('resultslist',resultslist);
 			put('subtr_u', 0);
