@@ -3,7 +3,7 @@
 % You can adjust the settings in "s" and "p", specify a mask and a region of interest
 clc; clear all
 
-nr_of_cores = 2; % integer, 1 means single core, greater than 1 means parallel
+nr_of_cores = 1; % integer, 1 means single core, greater than 1 means parallel
 if nr_of_cores > 1
 	try
 		local_cluster=parcluster('local'); % single node

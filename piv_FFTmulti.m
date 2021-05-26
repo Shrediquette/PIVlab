@@ -1,4 +1,4 @@
-function [xtable, ytable, utable, vtable, typevector, correlation_map] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask_inpt, roi_inpt,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad)
+function [xtable, ytable, utable, vtable, typevector, correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask_inpt, roi_inpt,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices)
 %profile on
 %this funtion performs the  PIV analysis.
 limit_peak_search_area=1; %new in 2.41: Default is to limit the peak search area in pass 2-4.
@@ -332,10 +332,6 @@ vector = permute(reshape(vector, [size(xtable') 2]), [2 1 3]);
 
 utable = vector(:,:,1);
 vtable = vector(:,:,2);
-
-
-%assignin('base','corr_results',corr_results);
-
 
 %multipass
 %feststellen wie viele passes
@@ -818,23 +814,13 @@ ytable=ytable-ceil(interrogationarea/2);
 xtable=xtable+xroi;
 ytable=ytable+yroi;
 
-% Write correlation matrices to the workspace
-%{
-try
-    counter=evalin('base','counter');
-    counter=counter+1;
-    assignin('base','counter',counter);
-    all_matrices=evalin('base','all_matrices');
-    all_matrices{end+1}=result_conv;
-    assignin('base','all_matrices',all_matrices);
-    disp('appended matrix')
-catch
-    assignin('base','counter',1);
-    all_matrices{1}=result_conv;
-    assignin('base','all_matrices',all_matrices);
-    disp('created new matrix')
+% Output correlation matrices
+if do_correlation_matrices==1
+	correlation_matrices=result_conv;
+else
+	correlation_matrices = [];
 end
-%}
+
 %%{
 function [vector] = SUBPIXGAUSS(result_conv, interrogationarea, x, y, z, SubPixOffset)
 %was hat peak nr.1 für einen Durchmesser?

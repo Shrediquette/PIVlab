@@ -13,7 +13,6 @@
 % Exportfig by Ben Hinkle
 % mmstream2 by Duane Hanselman
 % f_readB16 by Carl Hall
-
 function PIVlab_GUI
 %% Make figure
 fh = findobj('tag', 'hgui');
@@ -37,7 +36,9 @@ if isempty(fh)
 	panelwidth=37;
 	panelheighttools=12;
 	panelheightpanels=35;
-	enable_parallel=1;
+	enable_parallel=1; %enable or disable the use of the parallel computing toolbox
+	do_correlation_matrices=0; % enable or disable the output of raw correlation matrices
+	put('do_correlation_matrices',do_correlation_matrices);
 	put('panelwidth',panelwidth);
 	put('margin',margin);
 	put('panelheighttools',panelheighttools);
@@ -285,7 +286,7 @@ if verLessThan('matlab','9.4') %r2018a
 	else
 		try
 			warning off
-			frame_h = get(handle(gcf),'JavaFrame'); %#ok<JAVFM>
+			frame_h = get(handle(gcf),'JavaFrame'); 
 			set(frame_h,'Maximized',1);
 		catch
 		end
@@ -2242,7 +2243,7 @@ else % not enough space for quick access box
 end
 %% Other Callback
 
-function displogo(zoom)
+function displogo(~)
 logoimg=imread('PIVlablogo.jpg');
 %{
 if zoom==1
@@ -4529,6 +4530,7 @@ if ok==1
 			highpsize=str2double(get(handles.highp_size, 'string'));
 			wienerwurst=get(handles.wienerwurst, 'value');
 			wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
+			do_correlation_matrices=retr('do_correlation_matrices');
 			roirect=retr('roirect');
 			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
 				stretcher = stretchlim(A);
@@ -4551,7 +4553,7 @@ if ok==1
 			if step < 6
 				step=6;
 			end
-			[x, y, u, v, typevector,~] = piv_FFTmulti (A,B,interrogationarea, step,1,[],[],1,32,16,16,'*linear',1,0,0);
+			[x, y, u, v, typevector,~,correlation_matrices] = piv_FFTmulti (A,B,interrogationarea, step,1,[],[],1,32,16,16,'*linear',1,0,0,do_correlation_matrices);
 			u=medfilt2(u);
 			v=medfilt2(v);
 			u=inpaint_nans(u,4);
@@ -4715,6 +4717,7 @@ if ok==1
 		drawnow; %#ok<*NBRAK>
 		maskiererx=retr('maskiererx');
 		maskierery=retr('maskierery');
+		do_correlation_matrices=retr('do_correlation_matrices');
 		slicedfilepath1=cell(0);
 		slicedfilepath2=cell(0);
 		mask=cell(0);
@@ -4724,6 +4727,7 @@ if ok==1
 		vlist=cell(0);
 		typelist=cell(0);
 		corrlist=cell(0);
+		correlation_matrices_list=cell(0);
 		for i=1:2:num_frames_to_process
 			k=(i+1)/2;
 			ximask={};
@@ -4812,14 +4816,14 @@ if ok==1
 				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 				image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 				
-				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect);
+				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect); %#ok<PFTUSE>
 				xlist{i}=x;
 				ylist{i}=y;
 				ulist{i}=u;
 				vlist{i}=v;
 				typelist{i}=typevector;
 				corrlist{i}=zeros(size(typevector)); %no correlation coefficient in DCC.
-				
+				correlation_matrices_list{i}=[];%no correlation matrix output for dcc
 				hbar.iterate(1);
 				
 			end
@@ -4891,13 +4895,14 @@ if ok==1
 				end
 				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 				image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-				[x, y, u, v, typevector,correlation_map] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad);
+				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices); %#ok<PFTUSW,PFTUSE>
 				xlist{i}=x;
 				ylist{i}=y;
 				ulist{i}=u;
 				vlist{i}=v;
 				typelist{i}=typevector;
 				corrlist{i}=correlation_map;
+				correlation_matrices_list{i}=correlation_matrices;
 				hbar.iterate(1);
 			end
 		end
@@ -4953,7 +4958,7 @@ if ok==1
 				highpsize=str2double(get(handles.highp_size, 'string'));
 				wienerwurst=get(handles.wienerwurst, 'value');
 				wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-				
+				do_correlation_matrices=retr('do_correlation_matrices');
 				Autolimit_Callback
 				minintens=str2double(get(handles.minintens, 'string'));
 				maxintens=str2double(get(handles.maxintens, 'string'));
@@ -4997,6 +5002,7 @@ if ok==1
 				subpixfinder=get(handles.subpix,'value');
 				if get(handles.dcc,'Value')==1
 					[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask, roirect);
+					correlation_matrices=[];%not available for DCC
 				elseif get(handles.fftmulti,'Value')==1
 					passes=1;
 					if get(handles.checkbox26,'value')==1
@@ -5014,7 +5020,7 @@ if ok==1
 					mask_auto = get(handles.mask_auto_box,'value');
 					
 					[imdeform, repeat, do_pad] = CorrQuality;
-					[x, y, u, v, typevector,correlation_map] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad);
+					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices);
 					%u=real(u)
 					%v=real(v)
 				end
@@ -5027,6 +5033,7 @@ if ok==1
 				if get(handles.dcc,'Value')==1
 					correlation_map=zeros(size(x));
 				end
+				correlation_matrices_list{(i+1)/2}=correlation_matrices;
 				resultslist{12,(i+1)/2}=correlation_map;
 				put('resultslist',resultslist);
 				set(handles.fileselector, 'value', (i+1)/2);
@@ -5061,7 +5068,7 @@ if ok==1
 	cancel=retr('cancel');
 	if isempty(cancel)==1 || cancel ~=1
 		try
-			sound(audioread('finished.mp3'),22000);
+			sound(audioread('finished.mp3'),44100);
 		catch
 		end
 	end
@@ -5073,6 +5080,7 @@ if ok==1
 	catch
 	end
 end
+assignin('base','correlation_matrices',correlation_matrices_list);
 toolsavailable(1);
 sliderdisp
 
@@ -5201,7 +5209,7 @@ if ok==1
 		set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
 		set(handles.totaltime, 'String',['Analysis time: ' num2str(round(toc*10)/10) ' s']);
 		try
-			sound(audioread('finished.mp3'),22000);
+			sound(audioread('finished.mp3'),44100);
 		catch
 		end
 	else %user pressed cancel, no results
@@ -5329,6 +5337,7 @@ if ok==1
 		interrogationarea=str2double(get(handles.intarea, 'string'));
 		step=str2double(get(handles.step, 'string'));
 		subpixfinder=get(handles.subpix,'value');
+		do_correlation_matrices=retr('do_correlation_matrices');
 		if get(handles.dcc,'Value')==1
 			[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask, roirect);
 			correlation_map=zeros(size(u)); %nor correlation map available with DCC
@@ -5350,7 +5359,7 @@ if ok==1
 			mask_auto = get(handles.mask_auto_box,'value');
 			
 			if get(handles.fftmulti,'Value')==1
-				[x, y, u, v, typevector,correlation_map] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad);
+				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices);
 			end
 			
 		end

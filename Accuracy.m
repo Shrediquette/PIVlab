@@ -154,7 +154,7 @@ p{10,1}='Maximum intensity';     p{10,2}=1.0;         % Maximum intensity on inp
 image1 = PIVlab_preproc (A,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2}); %preprocess images
 image2 = PIVlab_preproc (B,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2});
 tic % start timer for PIV analysis only
-[x y u v typevector] = piv_FFTmulti (image2,image1,s{1,2},s{2,2},s{3,2},s{4,2},s{5,2},s{6,2},s{7,2},s{8,2},s{9,2},s{10,2},s{11,2},s{12,2},s{13,2});
+[x y u v typevector,~,~] = piv_FFTmulti (image2,image1,s{1,2},s{2,2},s{3,2},s{4,2},s{5,2},s{6,2},s{7,2},s{8,2},s{9,2},s{10,2},s{11,2},s{12,2},s{13,2},0);
 clearvars -except x y u v typevector image1 image2 u_real v_real x_real y_real A B
 elapsedtime=toc;
 fprintf('\n\n');
