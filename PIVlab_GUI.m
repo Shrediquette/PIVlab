@@ -319,12 +319,8 @@ put('update_msg_color',[0 0 0.75]);
 try
 	if exist('websave','builtin')||exist('websave','file')
 		outfilename=websave(filename_update,current_url,weboptions('Timeout',10));
-		%load a counter image to get anonymous usage statistics, https://www.andyhoppe.com/counter/counter-datenschutz.htm
-		outfilename=websave('temp.tmp','http://c.andyhoppe.com/1619962004',weboptions('Timeout',2));
 	else
 		outfilename=urlwrite(current_url,filename_update); %#ok<*URLWR>
-		%load a counter image to get anonymous usage statistics, https://www.andyhoppe.com/counter/counter-datenschutz.htm
-		outfilename=urlwrite('http://c.andyhoppe.com/1619962004','temp.tmp'); %#ok<*URLWR>
 	end
 	fileID_update = fopen(filename_update);
 	web_version = textscan(fileID_update,'%s');
@@ -332,7 +328,6 @@ try
 	trash_upd = fclose(fileID_update);
 	recycle('on');
 	delete(filename_update)
-	delete('temp.tmp')
 	if strcmp(version,web_version) == 1
 		update_msg = 'You have the latest PIVlab version.';
 		put('update_msg_color',[0 0.75 0]);
