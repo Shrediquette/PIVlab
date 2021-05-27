@@ -5341,6 +5341,7 @@ if ok==1
 		if get(handles.dcc,'Value')==1
 			[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask, roirect);
 			correlation_map=zeros(size(u)); %nor correlation map available with DCC
+			correlation_matrices=[];
 		elseif get(handles.fftmulti,'Value')==1 || get(handles.ensemble,'Value')==1
 			passes=1;
 			if get(handles.checkbox26,'value')==1
@@ -5387,6 +5388,7 @@ if ok==1
 		set(handles.messagetext, 'String','');
 		put('subtr_u', 0);
 		put('subtr_v', 0);
+		assignin('base','correlation_matrices',correlation_matrices);
 		sliderdisp
 	end
 	
