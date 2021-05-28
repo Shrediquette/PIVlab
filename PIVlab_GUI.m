@@ -24,7 +24,6 @@ if isempty(fh)
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 	guidata(MainWindow,handles)
 	setappdata(0,'hgui',MainWindow);
-	
 	version = '2.51';
 	put('PIVver', version);
 	v=ver('MATLAB');
@@ -286,7 +285,7 @@ if verLessThan('matlab','9.4') %r2018a
 	else
 		try
 			warning off
-			frame_h = get(handle(gcf),'JavaFrame'); 
+			frame_h = get(handle(gcf),'JavaFrame');
 			set(frame_h,'Maximized',1);
 		catch
 		end
@@ -317,26 +316,42 @@ if retr('parallel')==1
 else
 	current_url = 'http://william.thielicke.org/PIVlab/latest_version.txt';
 end
+starred_feature_url='http://william.thielicke.org/PIVlab/starred_feature.txt';
+filename_starred='starred_feature.txt';
 % Update checking inspired by: https://www.mathworks.com/matlabcentral/fileexchange/64294-photoannotation
 update_msg = 'Could not check for updates'; %default message will be overwritten by the following lines
+starred_feature_text='';
 put('update_msg_color',[0 0 0.75]);
 try
 	if exist('websave','builtin')||exist('websave','file')
 		outfilename=websave(filename_update,current_url,weboptions('Timeout',10));
+		try
+			outfilename2=websave(filename_starred,starred_feature_url,weboptions('Timeout',2));
+		catch
+		end
 	else
 		outfilename=urlwrite(current_url,filename_update); %#ok<*URLWR>
+		try
+			outfilename2=urlwrite(starred_feature_url,filename_starred); %#ok<*URLWR>
+		catch
+		end
 	end
+	%version number
 	fileID_update = fopen(filename_update);
 	web_version = textscan(fileID_update,'%s');
 	web_version=cell2mat(web_version{1});
 	trash_upd = fclose(fileID_update);
 	recycle('on');
 	delete(filename_update)
+	%starred feature message
+	starred_feature_text = fileread(filename_starred);
+	recycle('on');
+	delete(filename_starred)
 	if strcmp(version,web_version) == 1
 		update_msg = 'You have the latest PIVlab version.';
 		put('update_msg_color',[0 0.75 0]);
 	elseif str2num (strrep(version,'.','')) < str2num(strrep(web_version,'.',''))
-		update_msg = ['PIVlab is outdated. Please update to version ' web_version];
+		update_msg = ['PIVlab is outdated. Please update to version ' web_version sprintf('\n') starred_feature_text];
 		put('update_msg_color',[0.85 0 0]);
 	elseif str2num (strrep(version,'.','')) > str2num(strrep(web_version,'.',''))
 		update_msg = ['Your PIVlab version is newer than the latest official release.'];
@@ -2282,7 +2297,7 @@ set(gca, 'ylim', [1 size(logoimg,1)]);
 
 set(gca, 'ydir', 'reverse'); %750%582
 text (745,568,['version: ' retr('PIVver')], 'fontsize', 8,'fontangle','italic','horizontalalignment','right');
-text (745,581,['   ' sprintf('\n') retr('update_msg')], 'fontsize', 10,'fontangle','italic','horizontalalignment','right','Color',retr('update_msg_color'));
+text (745,570,['   ' sprintf('\n') retr('update_msg')], 'fontsize', 10,'fontangle','italic','horizontalalignment','right','Color',retr('update_msg_color'),'verticalalignment','top');
 imgproctoolbox=retr('imgproctoolbox');
 put('imgproctoolbox',[]);
 if imgproctoolbox==0
@@ -5078,8 +5093,8 @@ if ok==1
 		warning on
 	catch
 	end
+	assignin('base','correlation_matrices',correlation_matrices_list);
 end
-assignin('base','correlation_matrices',correlation_matrices_list);
 toolsavailable(1);
 sliderdisp
 
@@ -10587,8 +10602,8 @@ if alreadyconnected
 		logger_content= [timestamp sync_setting];
 		if exist (fullfile(logger_path, 'sync_history.mat'),'file')
 			try
-			logger_content_old=load (fullfile(logger_path, 'sync_history.mat'),'logger_content');
-			logger_content=[logger_content_old.logger_content;logger_content];
+				logger_content_old=load (fullfile(logger_path, 'sync_history.mat'),'logger_content');
+				logger_content=[logger_content_old.logger_content;logger_content];
 			catch
 			end
 		end
