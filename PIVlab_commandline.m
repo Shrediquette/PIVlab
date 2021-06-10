@@ -28,7 +28,7 @@ filenames = sortrows(filenames); %sort all image files
 amount = length(filenames);
 
 %% Standard PIV Settings
-s = cell(13,2); % To make it more readable, let's create a "settings table"
+s = cell(15,2); % To make it more readable, let's create a "settings table"
 %Parameter                          %Setting           %Options
 s{1,1}= 'Int. area 1';              s{1,2}=64;         % window size of first pass
 s{2,1}= 'Step size 1';              s{2,2}=32;         % step of first pass
@@ -43,6 +43,9 @@ s{10,1}='Window deformation';       s{10,2}='*linear'; % '*spline' is more accur
 s{11,1}='Repeated Correlation';     s{11,2}=0;         % 0 or 1 : Repeat the correlation four times and multiply the correlation matrices.
 s{12,1}='Disable Autocorrelation';  s{12,2}=0;         % 0 or 1 : Disable Autocorrelation in the first pass.
 s{13,1}='Correlation style';        s{13,2}=0;         % 0 or 1 : Use circular correlation (0) or linear correlation (1).
+s{14,1}='Repeat last pass';   s{14,2}=0; % 0 or 1 : Repeat the last pass of a multipass analyis
+s{15,1}='Last pass quality slope';   s{15,2}=0.025; % Repetitions of last pass will stop when the average difference to the previous pass is less than this number.
+
 
 %% Standard image preprocessing settings
 p = cell(10,1);

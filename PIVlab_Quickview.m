@@ -267,7 +267,7 @@ if ~isempty(roi)
 		performance_settings2=1;
 		performance_settings3=1;
 	end
-	[x, y, u, v, ~,correlation_map,~] = piv_FFTmulti (image1,image2,IA_size*2,IA_size,1,[],roi.Position,2,IA_size,16,16,performance_settings1,performance_settings2,getappdata(handles.figure1,'disable_auto'),performance_settings3,0); %actual PIV analysis    axes(handles.axes2)
+	[x, y, u, v, ~,correlation_map,~] = piv_FFTmulti (image1,image2,IA_size*2,IA_size,1,[],roi.Position,2,IA_size,16,16,performance_settings1,performance_settings2,getappdata(handles.figure1,'disable_auto'),performance_settings3,0,0,0); %actual PIV analysis    axes(handles.axes2)
 	[u,v] = PIVlab_postproc (u,v,1,1, [], 1,7, 1,3);
 	if get(handles.toggle_img,'Value')==0
 		display_image=image1/2;

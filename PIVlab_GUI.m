@@ -24,7 +24,7 @@ if isempty(fh)
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 	guidata(MainWindow,handles)
 	setappdata(0,'hgui',MainWindow);
-	version = '2.51';
+	version = '2.52';
 	put('PIVver', version);
 	v=ver('MATLAB');
 	%splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','on','handlevisibility','off');movegui(splashscreen,'center');drawnow;
@@ -693,38 +693,41 @@ handles.text129 = uicontrol(handles.uipanel42,'Style','text','units','characters
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
 handles.text130 = uicontrol(handles.uipanel42,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Step [px]','tag','text130');
 
-item=[0 item(2)+item(4)+margin/6 parentitem(3) 1];
+item=[0 item(2)+item(4)+margin/6 parentitem(3)/2.5 1];
 handles.checkbox26 = uicontrol(handles.uipanel42,'Style','checkbox', 'String','Pass 2','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','checkbox26','Callback',@checkbox26_Callback);
 
-item=[0 item(2)+item(4) parentitem(3)/3*1 1];
+item=[parentitem(3)/2.5 item(2) parentitem(3)/4*1 1];
 handles.edit50 = uicontrol(handles.uipanel42,'Style','edit', 'String','32','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@edit50_Callback,'Tag','edit50','TooltipString','Second pass interrogation window edge length (interrogation area). Must be <= the previous pass');
 
-item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+item=[parentitem(3)/3*2 item(2) parentitem(3)/4*1 1];
 handles.text126 = uicontrol(handles.uipanel42,'Style','text', 'String','16','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text126');
 
-item=[0 item(2)+item(4)+margin/4 parentitem(3) 1];
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/2.5 1];
 handles.checkbox27= uicontrol(handles.uipanel42,'Style','checkbox', 'String','Pass 3','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','checkbox27','Callback',@checkbox27_Callback);
 
-item=[0 item(2)+item(4) parentitem(3)/3*1 1];
+item=[parentitem(3)/2.5 item(2) parentitem(3)/4*1 1];
 handles.edit51 = uicontrol(handles.uipanel42,'Style','edit', 'String','32','Units','characters','enable','off', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@edit51_Callback,'Tag','edit51','TooltipString','Third pass interrogation window edge length (interrogation area). Must be <= the previous pass');
 
-item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+item=[parentitem(3)/3*2 item(2) parentitem(3)/4*1 1];
 handles.text127 = uicontrol(handles.uipanel42,'Style','text', 'String','16','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text127');
 
-item=[0 item(2)+item(4)+margin/4 parentitem(3) 1];
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/2.5 1];
 handles.checkbox28= uicontrol(handles.uipanel42,'Style','checkbox', 'String','Pass 4','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','checkbox28','Callback',@checkbox28_Callback);
 
-item=[0 item(2)+item(4) parentitem(3)/3*1 1];
+item=[parentitem(3)/2.5 item(2) parentitem(3)/4*1 1];
 handles.edit52 = uicontrol(handles.uipanel42,'Style','edit', 'String','32','Units','characters','enable','off', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@edit52_Callback,'Tag','edit52','TooltipString','Fourth pass interrogation window edge length (interrogation area). Must be <= the previous pass');
 
-item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+item=[parentitem(3)/3*2 item(2) parentitem(3)/4*1 1];
 handles.text128 = uicontrol(handles.uipanel42,'Style','text', 'String','16','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text128');
 
-%item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
-%handles.text131 = uicontrol(handles.uipanel42,'Style','text', 'String','Window deformation interpolator:','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text131');
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
+handles.repeat_last= uicontrol(handles.uipanel42,'Style','checkbox', 'String','Repeat last pass until','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@repeat_last_Callback,'Tag','repeat_last','TooltipString','This will repeat the last pass of a multipass analysis until the average difference to the previous pass is less than "quality slope".');
 
-%item=[0 item(2)+item(4) parentitem(3) 1];
-%handles.popupmenu16 = uicontrol(handles.uipanel42,'Style','popupmenu', 'String',{'*linear','*spline'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','popupmenu16','TooltipString','Window deformation interpolation style. Spline is slightly more accurate, but quite slow');
+item=[0 item(2)+item(4) parentitem(3)/2 1];
+handles.text128x = uicontrol(handles.uipanel42,'Style','text', 'String','quality slope <','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text128x');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/3.5 1];
+handles.edit52x = uicontrol(handles.uipanel42,'Style','edit', 'String','0.025','Units','characters','enable','off', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@edit52x_Callback,'Tag','edit52x','TooltipString','This will repeat the last pass of a multipass analysis until the average difference to the previous pass is less than "quality slope".');
 
 parentitem=get(handles.multip04, 'Position');
 item=[0 0 0 0];
@@ -4366,6 +4369,10 @@ if get(hObject,'Value') ==1
 	%set(handles.AnalyzeAll,'visible','on')
 	set(handles.AnalyzeSingle,'visible','on')
 	set(handles.Settings_Apply_current,'visible','on')
+	if get(handles.checkbox26,'value') ~=0
+		set(handles.repeat_last,'Enable','on')
+		set(handles.edit52x,'Enable','on')
+	end
 else
 	set(handles.fftmulti,'value',1)
 end
@@ -4380,7 +4387,9 @@ if get(hObject,'Value') ==1
 	set(handles.CorrQuality,'visible','on')
 	set(handles.text914,'visible','on')
 	set(handles.mask_auto_box,'visible','on')
-	
+	set(handles.repeat_last,'Value',0)
+	set(handles.repeat_last,'Enable','off')
+	set(handles.edit52x,'Enable','off')		
 	%set(handles.AnalyzeAll,'visible','off')
 	set(handles.AnalyzeSingle,'visible','off')
 	set(handles.Settings_Apply_current,'visible','off')
@@ -4395,10 +4404,15 @@ if get(hObject,'Value') == 0
 	set(handles.edit51,'enable','off')
 	set(handles.edit52,'enable','off')
 	set(handles.checkbox28,'value',0)
+	set(handles.repeat_last,'Value',0)
+	set(handles.repeat_last,'Enable','off')
+	set(handles.edit52x,'Enable','off')		
 else
 	set(handles.edit50,'enable','on')
 	set(handles.edit51,'enable','on')
 	set(handles.checkbox26,'value',1)
+	set(handles.repeat_last,'Enable','on')
+	set(handles.edit52x,'Enable','on')	
 end
 if get(handles.checkbox26,'value')==0
 	set(handles.checkbox27,'value',0)
@@ -4410,13 +4424,17 @@ function checkbox28_Callback(hObject, ~, ~)
 handles=gethand;
 if get(hObject,'Value') == 0
 	set(handles.edit52,'enable','off')
+	set(handles.repeat_last,'Value',0)
+	set(handles.repeat_last,'Enable','off')
+	set(handles.edit52x,'Enable','off')	
 else
 	set(handles.edit52,'enable','on')
 	set(handles.edit50,'enable','on')
 	set(handles.edit51,'enable','on')
 	set(handles.checkbox26,'value',1)
 	set(handles.checkbox27,'value',1)
-	
+	set(handles.repeat_last,'Enable','on')
+	set(handles.edit52x,'Enable','on')	
 end
 if get(handles.checkbox27,'value')==0
 	set(handles.checkbox28,'value',0)
@@ -4567,7 +4585,7 @@ if ok==1
 			if step < 6
 				step=6;
 			end
-			[x, y, u, v, typevector,~,correlation_matrices] = piv_FFTmulti (A,B,interrogationarea, step,1,[],[],1,32,16,16,'*linear',1,0,0,do_correlation_matrices);
+			[x, y, u, v, typevector,~,correlation_matrices] = piv_FFTmulti (A,B,interrogationarea, step,1,[],[],1,32,16,16,'*linear',1,0,0,do_correlation_matrices,0,0);
 			u=medfilt2(u);
 			v=medfilt2(v);
 			u=inpaint_nans(u,4);
@@ -4852,7 +4870,8 @@ if ok==1
 			if get(handles.checkbox28,'value')==1
 				passes=4;
 			end
-			
+			repeat_last_pass = get(handles.repeat_last,'Value');
+			delta_diff_min = str2double(get(handles.edit52x,'String'));
 			if get(handles.bg_subtract,'Value')==1
 				bg_img_A = retr('bg_img_A');
 				bg_img_B = retr('bg_img_B');
@@ -4909,7 +4928,7 @@ if ok==1
 				end
 				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 				image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices); %#ok<PFTUSW,PFTUSE>
+				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min); %#ok<PFTUSW,PFTUSE>
 				xlist{i}=x;
 				ylist{i}=y;
 				ulist{i}=u;
@@ -5032,9 +5051,10 @@ if ok==1
 					int3=str2num(get(handles.edit51,'string'));
 					int4=str2num(get(handles.edit52,'string'));
 					mask_auto = get(handles.mask_auto_box,'value');
-					
+					repeat_last_pass = get(handles.repeat_last,'Value');
+					delta_diff_min = str2double(get(handles.edit52x,'String'));
 					[imdeform, repeat, do_pad] = CorrQuality;
-					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices);
+					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
 					%u=real(u)
 					%v=real(v)
 				end
@@ -5372,9 +5392,10 @@ if ok==1
 			int4=str2num(get(handles.edit52,'string'));
 			[imdeform, repeat, do_pad] = CorrQuality;
 			mask_auto = get(handles.mask_auto_box,'value');
-			
+			repeat_last_pass = get(handles.repeat_last,'Value');
+			delta_diff_min = str2double(get(handles.edit52x,'String'));
 			if get(handles.fftmulti,'Value')==1
-				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices);
+				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
 			end
 			
 		end
@@ -5616,6 +5637,15 @@ try
 catch
 	disp('img_filter_settings');
 end
+%neu v2.52
+try
+	
+set (handles.repeat_last,'Value',repeat_last);
+set(handles.edit52x,'String',repeat_last_thresh);
+repeat_last_Callback
+catch
+	disp('repeat_last didnt work')
+end
 
 function curr_settings_Callback(~, ~, ~)
 handles=gethand;
@@ -5712,6 +5742,14 @@ try
 	do_bright_filter=get(handles.do_bright_filter,'Value');
 	do_contrast_filter=get(handles.do_contrast_filter,'Value');
 catch
+end
+
+%neu v2.52
+try
+	repeat_last = get (handles.repeat_last,'Value');
+	repeat_last_thresh = get(handles.edit52x,'String');
+catch
+	disp('repeat_last didnt work2')
 end
 
 if ispc==1
@@ -8109,6 +8147,14 @@ try
 catch
 end
 
+%neu v2.52
+try
+	repeat_last = get (handles.repeat_last,'Value');
+	repeat_last_thresh = get(handles.edit52x,'String');
+catch
+	disp('repeat_last didnt work3')
+end
+
 try
 	bg_img_A=retr('bg_img_A');
 	bg_img_B=retr('bg_img_B');
@@ -8116,8 +8162,6 @@ catch
 	disp('Could not fetch bg imgs')
 end
 
-
-%handles löschen?
 clear handles
 
 %save('-v6', fullfile(PathName,FileName), '-append');
@@ -8149,7 +8193,7 @@ else
 	warning off all
 	try
 		%even if a variable doesn't exist, this doesn't throw an error...
-		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu', 'calv','calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B','x_axis_direction','y_axis_direction','size_of_the_image','points_offsetx','points_offsety','offset_x_true','offset_y_true','bright_filter_thresh','contrast_filter_thresh','do_bright_filter','do_contrast_filter');
+		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu', 'calv','calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B','x_axis_direction','y_axis_direction','size_of_the_image','points_offsetx','points_offsety','offset_x_true','offset_y_true','bright_filter_thresh','contrast_filter_thresh','do_bright_filter','do_contrast_filter','repeat_last','repeat_last_thresh');
 	catch
 		disp('Old version compatibility.')
 		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu','calv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
@@ -8304,6 +8348,16 @@ else
 	catch
 		disp('Could not set bg checkbox')
 	end
+	
+	%neu v2.52
+	try
+		set (handles.repeat_last,'Value',vars.repeat_last);
+		set(handles.edit52x,'String',vars.repeat_last_thresh);
+		repeat_last_Callback
+	catch
+		disp('repeat_last didnt work4')
+	end
+	
 	
 	%reset zoom
 	set(handles.panon,'Value',0);
@@ -9968,8 +10022,13 @@ if get(hObject,'Value') == 0
 	set(handles.edit52,'enable','off')
 	set(handles.checkbox27,'value',0)
 	set(handles.checkbox28,'value',0)
+	set(handles.repeat_last,'Value',0)
+	set(handles.repeat_last,'Enable','off')
+	set(handles.edit52x,'Enable','off')	
 else
 	set(handles.edit50,'enable','on')
+	set(handles.repeat_last,'Enable','on')
+	set(handles.edit52x,'Enable','on')	
 end
 dispinterrog
 
@@ -9984,6 +10043,21 @@ handles=gethand;
 step=str2double(get(hObject,'String'));
 set (handles.text127, 'string', int2str(step/2));
 dispinterrog
+
+function edit52x_Callback(hObject, ~, ~)
+check_comma(hObject)
+
+function repeat_last_Callback (~,~,~)
+handles=gethand;
+if get (handles.checkbox26,'Value')==1
+	if get(handles.repeat_last,'Value')
+		set(handles.edit52x,'Enable','on')
+	else
+		set(handles.edit52x,'Enable','off')
+	end
+else
+	set(handles.edit52x,'Enable','off')
+end
 
 function edit52_Callback(hObject, ~, ~)
 handles=gethand;
@@ -10010,7 +10084,7 @@ if str2double(val)<0 || isempty(val)==1 || isnan(str2double(val))
 	set(hObject,'string',0);
 end
 
-function licres_Callback (~,~,~)
+function licres_Callback
 handles=gethand;
 value=num2str(round(get(handles.licres,'Value')*10)/10);
 set(handles.LIChint2,'String',value)
