@@ -815,18 +815,22 @@ if cancel == 0
             
             
             if mask_auto == 1
-                %limit peak search arena....
-                emptymatrix=zeros(size(result_conv,1),size(result_conv,2),size(result_conv,3));
-                %emptymatrix=emptymatrix+0.1;
-                sizeones=4;
-                %h = fspecial('gaussian', sizeones*2+1,1);
-                h=fspecial('disk',4);
-                h=h/max(max(h));
-                %h=repmat(h,1,1,size(result_conv,3));
-                h=repmat(h,[1,1,size(result_conv,3)]);
-                emptymatrix((interrogationarea/2)+SubPixOffset-sizeones:(interrogationarea/2)+SubPixOffset+sizeones,(interrogationarea/2)+SubPixOffset-sizeones:(interrogationarea/2)+SubPixOffset+sizeones,:)=h;
-                result_conv = result_conv .* emptymatrix;
-            end
+							%limit peak search arena....
+							emptymatrix=zeros(size(result_conv,1),size(result_conv,2),size(result_conv,3));
+							%emptymatrix=emptymatrix+0.1;
+							if interrogationarea > 8 % masking central peak will not work for extrmely small interrogation areas. And it also doesn't make sense.
+								sizeones=4;
+								%h = fspecial('gaussian', sizeones*2+1,1);
+								h=fspecial('disk',4);
+								h=h/max(max(h));
+								%h=repmat(h,1,1,size(result_conv,3));
+								h=repmat(h,[1,1,size(result_conv,3)]);
+								emptymatrix((interrogationarea/2)+SubPixOffset-sizeones:(interrogationarea/2)+SubPixOffset+sizeones,(interrogationarea/2)+SubPixOffset-sizeones:(interrogationarea/2)+SubPixOffset+sizeones,:)=h;
+								result_conv = result_conv .* emptymatrix;
+							else
+								disp('All interrogation areas must be larger than 8 pixels for disabling auto correlation successfully.')
+							end
+						end
             
             %apply mask ---
             ii = find(mask(ss1(round(interrogationarea/2+1), round(interrogationarea/2+1), :)));
