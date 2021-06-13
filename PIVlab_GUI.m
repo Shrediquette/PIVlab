@@ -1821,11 +1821,11 @@ item=[0 item(2)+item(4)+margin*0.3 parentitem(3) 1];
 handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Select configuration:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_configtxt');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'PIVlab-SimpleSync + ILA.PIV.nano camera' 'PIVlab-SimpleSync + pco.panda 26 usb'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)');
+handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'PIVlab-SimpleSync + ILA.PIV.nano camera' 'PIVlab-SimpleSync + pco.panda 26 DS'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
 
 % Sync control
 parentitem=get(handles.multip24, 'Position');
-item=[0 8.5 parentitem(3) 11];
+item=[0 8.5 parentitem(3) 14];
 handles.uipanelac_laser = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Synchronizer control', 'Tag','uipanelac_laser','fontweight','bold');
 
 parentitem=get(handles.uipanelac_laser, 'Position');
@@ -1866,11 +1866,16 @@ handles.ac_laserstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units
 item=[parentitem(3)/4*2 item(2) parentitem(3)/4*2 2];
 handles.ac_lasertoggle = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Toggle Laser','Fontweight','bold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_lasertoggle_Callback,'Tag','ac_lasertoggle','TooltipString','Toggle laser on and off');
 
+item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2.5 2];
+handles.ac_enable_ext_trigger = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','External trigger','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_ext_trigger','TooltipString','Use external trigger input on PIVlab-SimpleSync','Callback', @ac_ext_trigger_settings_Callback);
+
+%item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 2];
+%handles.ac_ext_trigger_settings = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Setup','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_ext_trigger_settings_Callback,'Tag','ac_ext_trigger_settings','TooltipString','Setup external trigger input on PIVlab-SimpleSync');
 
 % Calib capture
 
 parentitem=get(handles.multip24, 'Position');
-item=[0 20 parentitem(3) 5];
+item=[0 22.75 parentitem(3) 5];
 
 handles.uipanelac_calib = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Capture calibration image', 'Tag','uipanelac_calib','fontweight','bold');
 
@@ -1891,7 +1896,7 @@ handles.ac_calibstop = uicontrol(handles.uipanelac_calib,'Style','pushbutton','S
 
 % PIV capture
 parentitem=get(handles.multip24, 'Position');
-item=[0 25 parentitem(3) 5];
+item=[0 28 parentitem(3) 5];
 handles.uipanelac_capture = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Capture PIV images', 'Tag','uipanelac_capture','fontweight','bold');
 
 parentitem=get(handles.uipanelac_capture, 'Position');
@@ -1914,7 +1919,7 @@ handles.ac_pivstop = uicontrol(handles.uipanelac_capture,'Style','pushbutton','S
 
 parentitem=get(handles.multip24, 'Position');
 item=[0 30.5 parentitem(3) 2];
-handles.ac_msgbox = uicontrol(handles.multip24,'Style','edit', 'Fontname','fixedwidth', 'enable','inactive','Max', 3, 'min', 1, 'String',{'Welcome to PIVlab' 'image acquisition!'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_msgbox','TooltipString','Messages');
+handles.ac_msgbox = uicontrol(handles.multip24,'Style','edit', 'Fontname','fixedwidth', 'enable','inactive','Max', 3, 'min', 1, 'String',{'Welcome to PIVlab' 'image acquisition!'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_msgbox','TooltipString','Messages','visible','off');
 set(handles.ac_msgbox,'BackgroundColor', get (handles.ac_msgbox,'BackgroundColor')*0.95); %dim msgbox color
 
 disp('-> UI generated.')
@@ -2133,6 +2138,7 @@ uiwait(msgbox(['PCO camera drivers not found in this directory:' sprintf('\n') f
 
 function capture_images_Callback(~,~,~) %Menu item is called
 switchui('multip24')
+select_capture_config_Callback
 [filepath,~,~] = fileparts(mfilename('fullpath'));
 if exist(fullfile(filepath, 'PCO_resources'),'dir')
 	%addpath(genpath(fullfile(filepath, 'PCO_resources')));
@@ -10636,6 +10642,18 @@ catch
 	alreadyconnected=0;
 end
 if alreadyconnected
+	%Master frequency in Hz
+	master_freq =retr('master_freq'); %will depend on the laser system (frequency with best beam quality)
+	%frame 1 exposure time incl. readout time in µs
+	f1exp = retr('f1exp'); % will depend on camera model
+	%External trigger input settings
+	if get(handles.ac_enable_ext_trigger,'Value') == 0
+		extdly = -1; % external trigger input delay. -1 disables external trigger
+		extskp = 0; %external trigger amount of signals to skip.
+	else
+		extdly = retr('selectedtriggerdelay'); % external trigger input delay. -1 disables external trigger
+		extskp = retr('selectedtriggerskip'); %external trigger amount of signals to skip.
+	end
 	%Camera fps
 	ac_fps_value=get(handles.ac_fps,'Value');
 	ac_fps_str=get(handles.ac_fps,'String');
@@ -10653,12 +10671,12 @@ if alreadyconnected
 	if switch_it==1
 		flush(serpo)
 		configureTerminator(serpo,'CR');
-		send_string=['CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';INTERF:' int2str(pulse_sep) ';LASER:enable'];
+		send_string=['FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
 		writeline(serpo,send_string);
 	else
 		flush(serpo)
 		configureTerminator(serpo,'CR');
-		writeline(serpo,['CAM:1;ENER:' int2str(min_energy) ';INTERF:2000;LASER:disable']);
+		writeline(serpo,['FREQ:1;CAM:1;ENER:' int2str(min_energy) ';F1EXP:100;INTERF:2000;EXTDLY:-1;EXTSKP:0;LASER:disable']);
 	end
 	warning off
 	configureTerminator(serpo,'CR/LF');
@@ -10687,9 +10705,8 @@ if alreadyconnected
 	set(handles.ac_laserstatus,'String','No Answer');drawnow;
 	C = strsplit(sync_setting,'\t');
 	if ~isempty(C)
-		if size(C,2)==4
-			if strcmp(C{4},'1')
-				%laser on
+		if size(C,2)==8
+			if strcmp(C{8},'1') %laser is reported to be on
 				set(handles.ac_laserstatus,'BackgroundColor',[0 1 0]); %green = on
 				set(handles.ac_laserstatus,'String','Laser ON');
 			else
@@ -10911,3 +10928,55 @@ if get(handles.ac_realtime,'Value')==1
 else
 	put('do_realtime',0);
 end
+
+function ac_ext_trigger_settings_Callback (~,~,~)
+handles=gethand;
+serpo=retr('serpo');
+if ~isempty(serpo)
+	control_simple_sync_serial(0);
+	if get(handles.ac_enable_ext_trigger,'Value')==1 %execute only if checkbox was off before it was clicked.
+		old_label=get(handles.ac_enable_ext_trigger,'String');
+		set(handles.ac_enable_ext_trigger,'String','Acquiring...','Enable','off')
+		
+		drawnow;
+		flush(serpo)
+		configureTerminator(serpo,'CR');
+		writeline(serpo,'TrigFreq?');
+		pause(1.25);
+		warning off
+		configureTerminator(serpo,'CR/LF');
+		serial_answer=readline(serpo);
+		warning on
+		set(handles.ac_enable_ext_trigger,'String',old_label,'Enable','on');
+		selectedtriggerdelay=retr('selectedtriggerdelay');
+		if isempty(selectedtriggerdelay)
+			selectedtriggerdelay=100;
+		end
+		selectedtriggerskip=retr('selectedtriggerskip');
+		if isempty(selectedtriggerskip)
+			selectedtriggerdelay=0;
+		end
+		prompt = {['Detected frequency on trigger input: ' num2str(serial_answer) ' Hz.' sprintf('\n\n') 'Trigger delay in µs:'],'Nr. of trigger signals to skip:'};
+		dlgtitle = 'External Trigger Configuration';
+		dims = [1 50];
+		definput = {num2str(selectedtriggerdelay),num2str(selectedtriggerskip)};
+		answer = inputdlg(prompt,dlgtitle,dims,definput);
+		if ~isempty(answer)
+			put('selectedtriggerdelay',str2double(answer{1}));
+			put('selectedtriggerskip',str2double(answer{2}));
+		end
+	end
+end
+
+function select_capture_config_Callback (~,~,~)
+handles=gethand;
+value=get(handles.ac_config,'value');
+if value==1 % ILA.piv nano
+	put('f1exp',406); % will depend on camera model
+	put('master_freq',15);
+elseif value == 2 % pco panda
+	put('f1exp',406); % will depend on camera model
+	put('master_freq',15);
+end
+%contents=get(handles.ac_config,'String')
+%contents(value)
