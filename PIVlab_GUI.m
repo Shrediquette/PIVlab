@@ -6074,12 +6074,20 @@ else
 	valid_vel=[];
 end
 %do_contrast_filter=1
-if do_contrast_filter == 1 || do_bright_filter == 1
-	[u,v,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
+if ~isempty(x)
+	if do_contrast_filter == 1 || do_bright_filter == 1
+		[u,v,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
+	end
+else
+	u=[];v=[];
 end
 
-%vector-based filtering
-[u,v] = PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
+if ~isempty(x)
+	%vector-based filtering
+	[u,v] = PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
+else
+	u=[];v=[];
+end
 
 typevector(isnan(u))=2;
 typevector(isnan(v))=2;
