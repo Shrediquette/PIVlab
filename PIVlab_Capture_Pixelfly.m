@@ -399,8 +399,11 @@ catch ME
 	disp(ME)
 	errorCode=subfunc.fh_lasterr();
 	txt=blanks(101);
-	txt=calllib('PCO_CAM_SDK','PCO_GetErrorTextSDK',pco_uint32err(errorCode),txt,100);
-	
+	try
+		txt=calllib('PCO_CAM_SDK','PCO_GetErrorTextSDK',pco_uint32err(errorCode),txt,100);
+	catch
+		msgbox('Camera not connected')
+	end
 	calllib('PCO_CAM_SDK', 'PCO_CancelImages', out_ptr);
 	for n=1:bufcount
 		calllib('PCO_CAM_SDK','PCO_FreeBuffer',out_ptr,bufnum(n));

@@ -1869,6 +1869,10 @@ handles.ac_lasertoggle = uicontrol(handles.uipanelac_laser,'Style','Pushbutton',
 item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2.5 2];
 handles.ac_enable_ext_trigger = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','External trigger','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_ext_trigger','TooltipString','Use external trigger input on PIVlab-SimpleSync','Callback', @ac_ext_trigger_settings_Callback);
 
+item=[item(3) item(2) parentitem(3)/4*2.5 2];
+handles.ac_enable_seeding = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Seeding','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_seeding','TooltipString','Enable seeding','Callback',@ac_enable_seeding_Callback);
+
+
 %item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 2];
 %handles.ac_ext_trigger_settings = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Setup','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_ext_trigger_settings_Callback,'Tag','ac_ext_trigger_settings','TooltipString','Setup external trigger input on PIVlab-SimpleSync');
 
@@ -10840,9 +10844,33 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 			set(handles.togglepair,'enable','on')
 			set(handles.ac_serialstatus,'enable','on')
 			set(handles.ac_laserstatus,'enable','on')
-			control_simple_sync_serial(1);
-			pause(1)
+			f = waitbar(0,'dgd');
+			if get(handles.ac_enable_seeding,'Value')==1
+				ext_dev_01_pwm = retr('ext_dev_01_pwm');
+				ext_dev_02_pwm = retr('ext_dev_02_pwm');
+				ext_dev_03_pwm = retr('ext_dev_03_pwm');
+				serpo=retr('serpo');
+				flush(serpo)
+				configureTerminator(serpo,'CR');
+				writeline(serpo,['SEEDER_01:' num2str(ext_dev_01_pwm)]);
+				pause(0.1)
+				writeline(serpo,['SEEDER_02:' num2str(ext_dev_02_pwm)]);
+				pause(0.1)
+				writeline(serpo,['SEEDER_03:' num2str(ext_dev_03_pwm)]);
+				%2 seconds pause after starting seeder
+				waitbar(.15,f,'Starting seeder...');
+				pause(1)
+				waitbar(.33,f,'Starting seeder...');
+				pause(1)
+				flush(serpo)
+			end
 			
+			waitbar(.66,f,'Starting laser...');
+			control_simple_sync_serial(1);
+			pause(0.5)
+			waitbar(1,f,'Starting camera...');
+			pause(0.5)
+			close(f)
 			PIVlab_Capture_Pixelfly(imageamount,400,'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI);
 			
 			control_simple_sync_serial(0);
@@ -10898,8 +10926,11 @@ set(handles.ac_msgbox,'String',contents);
 function ac_camstop_Callback(~,~,~)
 put('cancel_capture',1);
 control_simple_sync_serial(0);
+put('laser_running',0);
 put('capturing',0);
+toolsavailable(1)
 drawnow;
+
 
 function ac_browse_Callback(~,~,~)
 handles=gethand;
@@ -10964,7 +10995,7 @@ if ~isempty(serpo)
 		if isempty(selectedtriggerskip)
 			selectedtriggerdelay=0;
 		end
-		prompt = {['Detected frequency on trigger input: ' num2str(serial_answer) ' Hz.' sprintf('\n\n') 'Trigger delay in µs:'],'Nr. of trigger signals to skip:'};
+		prompt = {['Detected frequency on trigger input: ' num2str(serial_answer) ' Hz.' sprintf('\n\n') 'Trigger delay in µs (must be > 100):'],'Nr. of trigger signals to skip:'};
 		dlgtitle = 'External Trigger Configuration';
 		dims = [1 50];
 		definput = {num2str(selectedtriggerdelay),num2str(selectedtriggerskip)};
@@ -10976,6 +11007,21 @@ if ~isempty(serpo)
 	end
 end
 
+function ac_enable_seeding_Callback (~,~,~)
+handles=gethand;
+if get(handles.ac_enable_seeding,'Value')==1
+	prompt = {'External device 01 PWM [0...1]', 'External device 02 PWM [0...1]','External device 03 PWM [0...1]'};
+	dlgtitle = 'External Device Control';
+	dims = [1 50];
+	
+	definput = {num2str(retr('ext_dev_01_pwm')),num2str(retr('ext_dev_02_pwm')),num2str(retr('ext_dev_03_pwm'))};
+	answer = inputdlg(prompt,dlgtitle,dims,definput);
+	if ~isempty(answer)
+		put('ext_dev_01_pwm',str2double(answer{1}));
+		put('ext_dev_02_pwm',str2double(answer{2}));
+		put('ext_dev_03_pwm',str2double(answer{3}));
+	end
+end
 function select_capture_config_Callback (~,~,~)
 handles=gethand;
 value=get(handles.ac_config,'value');
