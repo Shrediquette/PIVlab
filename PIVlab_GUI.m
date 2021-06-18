@@ -10844,27 +10844,14 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 			set(handles.togglepair,'enable','on')
 			set(handles.ac_serialstatus,'enable','on')
 			set(handles.ac_laserstatus,'enable','on')
-			f = waitbar(0,'dgd');
+			f = waitbar(0,'Initializing...');
 			if get(handles.ac_enable_seeding,'Value')==1
-				ext_dev_01_pwm = retr('ext_dev_01_pwm');
-				ext_dev_02_pwm = retr('ext_dev_02_pwm');
-				ext_dev_03_pwm = retr('ext_dev_03_pwm');
-				serpo=retr('serpo');
-				flush(serpo)
-				configureTerminator(serpo,'CR');
-				writeline(serpo,['SEEDER_01:' num2str(ext_dev_01_pwm)]);
-				pause(0.1)
-				writeline(serpo,['SEEDER_02:' num2str(ext_dev_02_pwm)]);
-				pause(0.1)
-				writeline(serpo,['SEEDER_03:' num2str(ext_dev_03_pwm)]);
-				%2 seconds pause after starting seeder
+				external_device_control(1);
 				waitbar(.15,f,'Starting seeder...');
 				pause(1)
 				waitbar(.33,f,'Starting seeder...');
 				pause(1)
-				flush(serpo)
 			end
-			
 			waitbar(.66,f,'Starting laser...');
 			control_simple_sync_serial(1);
 			pause(0.5)
@@ -10872,7 +10859,8 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 			pause(0.5)
 			close(f)
 			PIVlab_Capture_Pixelfly(imageamount,400,'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI);
-			
+			%disable external devices
+			external_device_control(0);
 			control_simple_sync_serial(0);
 			if retr('cancel_capture')==0
 				push_recorded_to_GUI;
@@ -10887,6 +10875,30 @@ else
 end
 put('capturing',0);
 toolsavailable(1)
+
+function external_device_control(switch_it)
+handles=gethand;
+serpo=retr('serpo');
+configureTerminator(serpo,'CR');
+flush(serpo)
+if switch_it==1
+	ext_dev_01_pwm = retr('ext_dev_01_pwm');
+	ext_dev_02_pwm = retr('ext_dev_02_pwm');
+	ext_dev_03_pwm = retr('ext_dev_03_pwm');
+	writeline(serpo,' ') %without this, there seems to be still junk in the line...
+	writeline(serpo,['SEEDER_01:' num2str(ext_dev_01_pwm)]);
+	pause(0.05)
+	writeline(serpo,['SEEDER_02:' num2str(ext_dev_02_pwm)]);
+	pause(0.05)
+	writeline(serpo,['SEEDER_03:' num2str(ext_dev_03_pwm)]);
+else
+	writeline(serpo,' ')
+	writeline(serpo,'SEEDER_01:0');
+	pause(0.05)
+	writeline(serpo,'SEEDER_02:0');
+	pause(0.05)
+	writeline(serpo,'SEEDER_02:0');
+end
 
 function push_recorded_to_GUI
 handles=gethand;
@@ -10926,6 +10938,7 @@ set(handles.ac_msgbox,'String',contents);
 function ac_camstop_Callback(~,~,~)
 put('cancel_capture',1);
 control_simple_sync_serial(0);
+external_device_control(0);
 put('laser_running',0);
 put('capturing',0);
 toolsavailable(1)
