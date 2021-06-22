@@ -17,7 +17,7 @@ function PIVlab_GUI
 %% Make figure
 fh = findobj('tag', 'hgui');
 if isempty(fh)
-	MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0.05 0.1 0.9 0.8],'ResizeFcn', @MainWindow_ResizeFcn,'CloseRequestFcn', @MainWindow_CloseRequestFcn,'tag','hgui','visible','off');
+	MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0.05 0.1 0.9 0.8],'ResizeFcn', @MainWindow_ResizeFcn,'CloseRequestFcn', @MainWindow_CloseRequestFcn,'tag','hgui','visible','off','KeyPressFcn', @key_press);
 	set (MainWindow,'Units','Characters');
 	clc
 	%% Initialize
@@ -369,6 +369,27 @@ put('update_msg',update_msg);
 %close(splashscreen)
 %movegui(MainWindow,'center')
 
+function key_press(src, event) %General (currently hidden, respectively not documented) keyboard shortcuts in PIVlab
+if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(event.Modifier{2},'control') %ctrl and shift modifiers
+	if strcmp(event.Key,'s')
+		disp('Toggle Seeder shortcut')
+		seeder_toggle=retr('seeder_toggle');
+		if isempty(seeder_toggle)
+			seeder_toggle=0;
+		end
+		external_device_control(1-seeder_toggle);
+		put('seeder_toggle',1-seeder_toggle);
+	elseif strcmp(event.Key,'l')
+		disp('toggle laser shortcut')
+		laser_toggle=retr('laser_toggle');
+		if isempty(laser_toggle)
+			laser_toggle=0;
+		end
+		control_simple_sync_serial(1-laser_toggle);
+		put('laser_toggle',1-laser_toggle);
+	end
+end
+%       event.Key: 'x'
 
 function destroyUI
 handles = guihandles; %alle handles mit tag laden und ansprechbar machen
