@@ -17,7 +17,7 @@ function PIVlab_GUI
 %% Make figure
 fh = findobj('tag', 'hgui');
 if isempty(fh)
-	MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0.05 0.1 0.9 0.8],'ResizeFcn', @MainWindow_ResizeFcn,'CloseRequestFcn', @MainWindow_CloseRequestFcn,'tag','hgui','visible','off');
+	MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0.05 0.1 0.9 0.8],'ResizeFcn', @MainWindow_ResizeFcn,'CloseRequestFcn', @MainWindow_CloseRequestFcn,'tag','hgui','visible','off','KeyPressFcn', @key_press);
 	set (MainWindow,'Units','Characters');
 	clc
 	%% Initialize
@@ -369,6 +369,27 @@ put('update_msg',update_msg);
 %close(splashscreen)
 %movegui(MainWindow,'center')
 
+function key_press(src, event) %General (currently hidden, respectively not documented) keyboard shortcuts in PIVlab
+if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(event.Modifier{2},'control') %ctrl and shift modifiers
+	if strcmp(event.Key,'s')
+		disp('Toggle Seeder shortcut')
+		seeder_toggle=retr('seeder_toggle');
+		if isempty(seeder_toggle)
+			seeder_toggle=0;
+		end
+		external_device_control(1-seeder_toggle);
+		put('seeder_toggle',1-seeder_toggle);
+	elseif strcmp(event.Key,'l')
+		disp('toggle laser shortcut')
+		laser_toggle=retr('laser_toggle');
+		if isempty(laser_toggle)
+			laser_toggle=0;
+		end
+		control_simple_sync_serial(1-laser_toggle);
+		put('laser_toggle',1-laser_toggle);
+	end
+end
+%       event.Key: 'x'
 
 function destroyUI
 handles = guihandles; %alle handles mit tag laden und ansprechbar machen
@@ -1868,6 +1889,10 @@ handles.ac_lasertoggle = uicontrol(handles.uipanelac_laser,'Style','Pushbutton',
 
 item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2.5 2];
 handles.ac_enable_ext_trigger = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','External trigger','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_ext_trigger','TooltipString','Use external trigger input on PIVlab-SimpleSync','Callback', @ac_ext_trigger_settings_Callback);
+
+item=[item(3) item(2) parentitem(3)/4*2.5 2];
+handles.ac_enable_seeding = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Seeding','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_seeding','TooltipString','Enable seeding','Callback',@ac_enable_seeding_Callback);
+
 
 %item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 2];
 %handles.ac_ext_trigger_settings = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Setup','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_ext_trigger_settings_Callback,'Tag','ac_ext_trigger_settings','TooltipString','Setup external trigger input on PIVlab-SimpleSync');
@@ -6074,12 +6099,20 @@ else
 	valid_vel=[];
 end
 %do_contrast_filter=1
-if do_contrast_filter == 1 || do_bright_filter == 1
-	[u,v,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
+if ~isempty(x)
+	if do_contrast_filter == 1 || do_bright_filter == 1
+		[u,v,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
+	end
+else
+	u=[];v=[];
 end
 
-%vector-based filtering
-[u,v] = PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
+if ~isempty(x)
+	%vector-based filtering
+	[u,v] = PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
+else
+	u=[];v=[];
+end
 
 typevector(isnan(u))=2;
 typevector(isnan(v))=2;
@@ -10832,11 +10865,23 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 			set(handles.togglepair,'enable','on')
 			set(handles.ac_serialstatus,'enable','on')
 			set(handles.ac_laserstatus,'enable','on')
+			f = waitbar(0,'Initializing...');
+			if get(handles.ac_enable_seeding,'Value')==1
+				external_device_control(1);
+				waitbar(.15,f,'Starting seeder...');
+				pause(1)
+				waitbar(.33,f,'Starting seeder...');
+				pause(1)
+			end
+			waitbar(.66,f,'Starting laser...');
 			control_simple_sync_serial(1);
-			pause(1)
-			
+			pause(0.5)
+			waitbar(1,f,'Starting camera...');
+			pause(0.5)
+			close(f)
 			PIVlab_Capture_Pixelfly(imageamount,400,'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI);
-			
+			%disable external devices
+			external_device_control(0);
 			control_simple_sync_serial(0);
 			if retr('cancel_capture')==0
 				push_recorded_to_GUI;
@@ -10851,6 +10896,30 @@ else
 end
 put('capturing',0);
 toolsavailable(1)
+
+function external_device_control(switch_it)
+handles=gethand;
+serpo=retr('serpo');
+configureTerminator(serpo,'CR');
+flush(serpo)
+if switch_it==1
+	ext_dev_01_pwm = retr('ext_dev_01_pwm');
+	ext_dev_02_pwm = retr('ext_dev_02_pwm');
+	ext_dev_03_pwm = retr('ext_dev_03_pwm');
+	writeline(serpo,' ') %without this, there seems to be still junk in the line...
+	writeline(serpo,['SEEDER_01:' num2str(ext_dev_01_pwm)]);
+	pause(0.05)
+	writeline(serpo,['SEEDER_02:' num2str(ext_dev_02_pwm)]);
+	pause(0.05)
+	writeline(serpo,['SEEDER_03:' num2str(ext_dev_03_pwm)]);
+else
+	writeline(serpo,' ')
+	writeline(serpo,'SEEDER_01:0');
+	pause(0.05)
+	writeline(serpo,'SEEDER_02:0');
+	pause(0.05)
+	writeline(serpo,'SEEDER_02:0');
+end
 
 function push_recorded_to_GUI
 handles=gethand;
@@ -10890,8 +10959,12 @@ set(handles.ac_msgbox,'String',contents);
 function ac_camstop_Callback(~,~,~)
 put('cancel_capture',1);
 control_simple_sync_serial(0);
+external_device_control(0);
+put('laser_running',0);
 put('capturing',0);
+toolsavailable(1)
 drawnow;
+
 
 function ac_browse_Callback(~,~,~)
 handles=gethand;
@@ -10956,7 +11029,7 @@ if ~isempty(serpo)
 		if isempty(selectedtriggerskip)
 			selectedtriggerdelay=0;
 		end
-		prompt = {['Detected frequency on trigger input: ' num2str(serial_answer) ' Hz.' sprintf('\n\n') 'Trigger delay in µs:'],'Nr. of trigger signals to skip:'};
+		prompt = {['Detected frequency on trigger input: ' num2str(serial_answer) ' Hz.' sprintf('\n\n') 'Trigger delay in µs (must be > 100):'],'Nr. of trigger signals to skip:'};
 		dlgtitle = 'External Trigger Configuration';
 		dims = [1 50];
 		definput = {num2str(selectedtriggerdelay),num2str(selectedtriggerskip)};
@@ -10968,6 +11041,21 @@ if ~isempty(serpo)
 	end
 end
 
+function ac_enable_seeding_Callback (~,~,~)
+handles=gethand;
+if get(handles.ac_enable_seeding,'Value')==1
+	prompt = {'External device 01 PWM [0...1]', 'External device 02 PWM [0...1]','External device 03 PWM [0...1]'};
+	dlgtitle = 'External Device Control';
+	dims = [1 50];
+	
+	definput = {num2str(retr('ext_dev_01_pwm')),num2str(retr('ext_dev_02_pwm')),num2str(retr('ext_dev_03_pwm'))};
+	answer = inputdlg(prompt,dlgtitle,dims,definput);
+	if ~isempty(answer)
+		put('ext_dev_01_pwm',str2double(answer{1}));
+		put('ext_dev_02_pwm',str2double(answer{2}));
+		put('ext_dev_03_pwm',str2double(answer{3}));
+	end
+end
 function select_capture_config_Callback (~,~,~)
 handles=gethand;
 value=get(handles.ac_config,'value');
