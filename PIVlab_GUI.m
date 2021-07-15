@@ -4420,7 +4420,7 @@ if get(hObject,'Value') ==1
 	set(handles.mask_auto_box,'visible','on')
 	set(handles.repeat_last,'Value',0)
 	set(handles.repeat_last,'Enable','off')
-	set(handles.edit52x,'Enable','off')		
+	set(handles.edit52x,'Enable','off')
 	%set(handles.AnalyzeAll,'visible','off')
 	set(handles.AnalyzeSingle,'visible','off')
 	set(handles.Settings_Apply_current,'visible','off')
@@ -4437,13 +4437,13 @@ if get(hObject,'Value') == 0
 	set(handles.checkbox28,'value',0)
 	set(handles.repeat_last,'Value',0)
 	set(handles.repeat_last,'Enable','off')
-	set(handles.edit52x,'Enable','off')		
+	set(handles.edit52x,'Enable','off')
 else
 	set(handles.edit50,'enable','on')
 	set(handles.edit51,'enable','on')
 	set(handles.checkbox26,'value',1)
 	set(handles.repeat_last,'Enable','on')
-	set(handles.edit52x,'Enable','on')	
+	set(handles.edit52x,'Enable','on')
 end
 if get(handles.checkbox26,'value')==0
 	set(handles.checkbox27,'value',0)
@@ -4457,7 +4457,7 @@ if get(hObject,'Value') == 0
 	set(handles.edit52,'enable','off')
 	set(handles.repeat_last,'Value',0)
 	set(handles.repeat_last,'Enable','off')
-	set(handles.edit52x,'Enable','off')	
+	set(handles.edit52x,'Enable','off')
 else
 	set(handles.edit52,'enable','on')
 	set(handles.edit50,'enable','on')
@@ -4465,7 +4465,7 @@ else
 	set(handles.checkbox26,'value',1)
 	set(handles.checkbox27,'value',1)
 	set(handles.repeat_last,'Enable','on')
-	set(handles.edit52x,'Enable','on')	
+	set(handles.edit52x,'Enable','on')
 end
 if get(handles.checkbox27,'value')==0
 	set(handles.checkbox28,'value',0)
@@ -5671,9 +5671,9 @@ end
 %neu v2.52
 try
 	
-set (handles.repeat_last,'Value',repeat_last);
-set(handles.edit52x,'String',repeat_last_thresh);
-repeat_last_Callback
+	set (handles.repeat_last,'Value',repeat_last);
+	set(handles.edit52x,'String',repeat_last_thresh);
+	repeat_last_Callback
 catch
 	disp('repeat_last didnt work')
 end
@@ -10063,11 +10063,11 @@ if get(hObject,'Value') == 0
 	set(handles.checkbox28,'value',0)
 	set(handles.repeat_last,'Value',0)
 	set(handles.repeat_last,'Enable','off')
-	set(handles.edit52x,'Enable','off')	
+	set(handles.edit52x,'Enable','off')
 else
 	set(handles.edit50,'enable','on')
 	set(handles.repeat_last,'Enable','on')
-	set(handles.edit52x,'Enable','on')	
+	set(handles.edit52x,'Enable','on')
 end
 dispinterrog
 
@@ -10772,7 +10772,7 @@ else
 			selected_port=avail_ports;
 		end
 		serpo = serialport(selected_port,9600,'Timeout',1);
-        configureTerminator(serpo,'CR/LF');
+		configureTerminator(serpo,'CR/LF');
 		put('serpo',serpo);
 		set(handles.ac_serialstatus,'Backgroundcolor',[0 1 0]);
 		update_ac_status(['Connected to ' selected_port]);
@@ -10806,8 +10806,12 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 		set(handles.ac_serialstatus,'enable','on')
 		set(handles.ac_laserstatus,'enable','on')
 		set(handles.ac_lasertoggle,'enable','on')
-		[errorcode, caliimg]=PIVlab_Capture_Pixelfly(50000,expos,'Calibration',projectpath,[],0,[]);
-		put('caliimg',caliimg);
+		try
+			[errorcode, caliimg]=PIVlab_Capture_Pixelfly(50000,expos,'Calibration',projectpath,[],0,[]);
+			put('caliimg',caliimg);
+		catch
+			msgbox('Camera not connected')
+		end
 	end
 else
 	pco_error_msgbox
@@ -10885,10 +10889,12 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 			external_device_control(0);
 			control_simple_sync_serial(0);
 			if retr('cancel_capture')==0
-				push_recorded_to_GUI;
-				put('sessionpath',projectpath );
-				set(handles.time_inp,'String',num2str(str2num(get(handles.ac_interpuls,'String'))/1000));
-				savesessionfuntion (projectpath,'PIVlab_Capture_Session.mat');
+				found_the_data=push_recorded_to_GUI;
+				if found_the_data==1
+					put('sessionpath',projectpath );
+					set(handles.time_inp,'String',num2str(str2num(get(handles.ac_interpuls,'String'))/1000));
+					savesessionfuntion (projectpath,'PIVlab_Capture_Session.mat');
+				end
 			end
 		end
 	end
@@ -10901,31 +10907,33 @@ toolsavailable(1)
 function external_device_control(switch_it)
 handles=gethand;
 serpo=retr('serpo');
-%configureTerminator(serpo,'CR');
-flush(serpo)
-if switch_it==1
-	ext_dev_01_pwm = retr('ext_dev_01_pwm');
-	ext_dev_02_pwm = retr('ext_dev_02_pwm');
-	ext_dev_03_pwm = retr('ext_dev_03_pwm');
-	writeline(serpo,['SEEDER_01:' num2str(ext_dev_01_pwm)]);
-	pause(0.2)
-	writeline(serpo,['SEEDER_02:' num2str(ext_dev_02_pwm)]);
-	pause(0.2)
-	writeline(serpo,['SEEDER_03:' num2str(ext_dev_03_pwm)]);
-else
-    writeline(serpo,'SEEDER_01:0');
-	pause(0.2)
-	writeline(serpo,'SEEDER_02:0');
-	pause(0.2)
-	writeline(serpo,'SEEDER_02:0');
+if ~isempty(serpo)
+	flush(serpo)
+	if switch_it==1
+		ext_dev_01_pwm = retr('ext_dev_01_pwm');
+		ext_dev_02_pwm = retr('ext_dev_02_pwm');
+		ext_dev_03_pwm = retr('ext_dev_03_pwm');
+		writeline(serpo,['SEEDER_01:' num2str(ext_dev_01_pwm)]);
+		pause(0.2)
+		writeline(serpo,['SEEDER_02:' num2str(ext_dev_02_pwm)]);
+		pause(0.2)
+		writeline(serpo,['SEEDER_03:' num2str(ext_dev_03_pwm)]);
+	else
+		writeline(serpo,'SEEDER_01:0');
+		pause(0.2)
+		writeline(serpo,'SEEDER_02:0');
+		pause(0.2)
+		writeline(serpo,'SEEDER_02:0');
+	end
 end
 
-function push_recorded_to_GUI
+function found_the_data = push_recorded_to_GUI
 handles=gethand;
 projectpath=get(handles.ac_project,'String');
 imageamount=str2double(get(handles.ac_imgamount,'String'));
 pathlist={};
 pathfilelist={};
+file_existing=zeros(imageamount,1);
 for i=1:imageamount
 	pathfileA=fullfile(projectpath,['PIVlab_' sprintf('%4.4d',i-1) '_A.tif']);
 	pathfileB=fullfile(projectpath,['PIVlab_' sprintf('%4.4d',i-1) '_B.tif']);
@@ -10936,14 +10944,20 @@ for i=1:imageamount
 	pathfilelist{i*2-1,1}=pathfileA;
 	pathfilelist{i*2,1}=pathfileB;
 	
+	file_existing(i,1) = (isfile(pathfileA) + isfile(pathfileB))/2;
+	
 	pathlist{i*2-1,1}=pathA;
 	pathlist{i*2,1}=pathB;
 end
-s = struct('name',pathfilelist,'folder',pathlist,'isdir',0);
-put('sequencer',1);
-put('capturing',0);
-loadimgsbutton_Callback([],[],0,s);
-
+if all(file_existing)
+	s = struct('name',pathfilelist,'folder',pathlist,'isdir',0);
+	put('sequencer',1);
+	put('capturing',0);
+	loadimgsbutton_Callback([],[],0,s);
+	found_the_data=1;
+else
+	found_the_data=0;
+end
 
 function update_ac_status(status)
 handles=gethand;
@@ -10985,6 +10999,7 @@ if get(handles.ac_realtime,'Value')==1
 	end
 	projectpath=get(handles.ac_project,'String');
 	capture_ok=check_project_path(projectpath,'calibration');
+	try
 	if capture_ok==1
 		put('cancel_capture',0);
 		put('capturing',1);
@@ -10996,6 +11011,10 @@ if get(handles.ac_realtime,'Value')==1
 	if roirect(1,3)~=0 && roirect(1,4)~=0
 		put('ac_ROI',roirect);
 		put('do_realtime',1);
+	end
+	catch
+		put('do_realtime',0);
+		set(handles.ac_realtime,'Value',0)
 	end
 else
 	put('do_realtime',0);
@@ -11044,14 +11063,14 @@ function ac_enable_seeding_Callback (~,~,~)
 handles=gethand;
 if get(handles.ac_enable_seeding,'Value')==1
 	ext_dev_01_pwm=retr('ext_dev_01_pwm');
-    ext_dev_02_pwm=retr('ext_dev_02_pwm');
-    ext_dev_03_pwm=retr('ext_dev_03_pwm');
-    if isempty(ext_dev_01_pwm) || isnan(ext_dev_01_pwm)
-        ext_dev_01_pwm=1;%default setting
-        ext_dev_02_pwm=1;%default setting
-        ext_dev_03_pwm=1;%default setting
-    end
-    prompt = {'External device 01 PWM [0...1]', 'External device 02 PWM [0...1]','External device 03 PWM [0...1]'};
+	ext_dev_02_pwm=retr('ext_dev_02_pwm');
+	ext_dev_03_pwm=retr('ext_dev_03_pwm');
+	if isempty(ext_dev_01_pwm) || isnan(ext_dev_01_pwm)
+		ext_dev_01_pwm=1;%default setting
+		ext_dev_02_pwm=1;%default setting
+		ext_dev_03_pwm=1;%default setting
+	end
+	prompt = {'External device 01 PWM [0...1]', 'External device 02 PWM [0...1]','External device 03 PWM [0...1]'};
 	dlgtitle = 'External Device Control';
 	dims = [1 50];
 	definput = {num2str(ext_dev_01_pwm),num2str(ext_dev_02_pwm),num2str(ext_dev_03_pwm)};

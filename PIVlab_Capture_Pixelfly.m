@@ -251,10 +251,11 @@ try
 		while(ima_nr<nr_of_images) && getappdata(hgui,'cancel_capture') ~=1
 			drawnow
 			%wait for buffers
-			[errorCode,~,buflist]  = calllib('PCO_CAM_SDK','PCO_WaitforBuffer', out_ptr,bufcount,buflist,1000);
+			[errorCode,~,buflist]  = calllib('PCO_CAM_SDK','PCO_WaitforBuffer', out_ptr,bufcount,buflist,2000); %wait 2000 ms for trigger input
 			if(errorCode)
 				pco_errdisp('PCO_WaitforBuffer',errorCode);
 				OutputError='NoTrigger';
+				uiwait(msgbox('Camera did not receive a trigger signal.'))
 				break;
 			end
 			%  disp(['After wait image ',int2str(ima_nr),' last_ok ',num2str(last_ok)]);
@@ -393,43 +394,43 @@ try
 			pco_errdisp('PCO_FreeBuffer',errorCode);
 		end
 	end
-	
-	
+    
+    
 catch ME
-	disp(ME)
-	errorCode=subfunc.fh_lasterr();
-	txt=blanks(101);
-	try
-		txt=calllib('PCO_CAM_SDK','PCO_GetErrorTextSDK',pco_uint32err(errorCode),txt,100);
-	catch
-		msgbox('Camera not connected')
-	end
-	calllib('PCO_CAM_SDK', 'PCO_CancelImages', out_ptr);
-	for n=1:bufcount
-		calllib('PCO_CAM_SDK','PCO_FreeBuffer',out_ptr,bufnum(n));
-	end
-	if(glvar.camera_open==1)
-		glvar.do_close=1;
-		glvar.do_libunload=1;
-		pco_camera_open_close(glvar);
-	end
-	if strfind(ME.identifier,'PCO_ERROR:')
-		msg=[ME.identifier,' ',ME.message];
-		warning('off','backtrace')
-		warning(msg)
-		disp(txt);
-		for k=1:length(ME.stack)
-			disp(['from file ',ME.stack(k).file,' at line ',num2str(ME.stack(k).line)]);
-		end
-		close();
-		%clearvars -except errorCode;
-		%commandwindow;
-		return;
-	else
-		close();
-		%clearvars -except ME;
-		rethrow(ME)
-	end
+    disp(ME)
+    errorCode=subfunc.fh_lasterr();
+    txt=blanks(101);
+    try
+        txt=calllib('PCO_CAM_SDK','PCO_GetErrorTextSDK',pco_uint32err(errorCode),txt,100);
+        calllib('PCO_CAM_SDK', 'PCO_CancelImages', out_ptr);
+        for n=1:bufcount
+            calllib('PCO_CAM_SDK','PCO_FreeBuffer',out_ptr,bufnum(n));
+        end
+        if(glvar.camera_open==1)
+            glvar.do_close=1;
+            glvar.do_libunload=1;
+            pco_camera_open_close(glvar);
+        end
+        if strfind(ME.identifier,'PCO_ERROR:')
+            msg=[ME.identifier,' ',ME.message];
+            warning('off','backtrace')
+            warning(msg)
+            disp(txt);
+            for k=1:length(ME.stack)
+                disp(['from file ',ME.stack(k).file,' at line ',num2str(ME.stack(k).line)]);
+            end
+            close();
+            %clearvars -except errorCode;
+            %commandwindow;
+            return;
+        else
+            close();
+            %clearvars -except ME;
+            rethrow(ME)
+        end
+    catch
+        disp('Could not start camera.')
+    end
 end
 
 %clearvars -except glvar errorCode;
