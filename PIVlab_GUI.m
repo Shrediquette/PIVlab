@@ -10703,16 +10703,16 @@ if alreadyconnected
 	pulse_sep=str2double(get(handles.ac_interpuls,'String'));
 	if switch_it==1
 		flush(serpo)
-		configureTerminator(serpo,'CR');
+		%configureTerminator(serpo,'CR');
 		send_string=['FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
 		writeline(serpo,send_string);
 	else
 		flush(serpo)
-		configureTerminator(serpo,'CR');
+		%configureTerminator(serpo,'CR');
 		writeline(serpo,['FREQ:1;CAM:1;ENER:' int2str(min_energy) ';F1EXP:100;INTERF:2000;EXTDLY:-1;EXTSKP:0;LASER:disable']);
 	end
 	warning off
-	configureTerminator(serpo,'CR/LF');
+	%configureTerminator(serpo,'CR/LF');
 	serial_answer=readline(serpo);
 	warning on
 	sync_setting=serial_answer;
@@ -10772,6 +10772,7 @@ else
 			selected_port=avail_ports;
 		end
 		serpo = serialport(selected_port,9600,'Timeout',1);
+        configureTerminator(serpo,'CR/LF');
 		put('serpo',serpo);
 		set(handles.ac_serialstatus,'Backgroundcolor',[0 1 0]);
 		update_ac_status(['Connected to ' selected_port]);
@@ -10900,24 +10901,22 @@ toolsavailable(1)
 function external_device_control(switch_it)
 handles=gethand;
 serpo=retr('serpo');
-configureTerminator(serpo,'CR');
+%configureTerminator(serpo,'CR');
 flush(serpo)
 if switch_it==1
 	ext_dev_01_pwm = retr('ext_dev_01_pwm');
 	ext_dev_02_pwm = retr('ext_dev_02_pwm');
 	ext_dev_03_pwm = retr('ext_dev_03_pwm');
-	writeline(serpo,' ') %without this, there seems to be still junk in the line...
 	writeline(serpo,['SEEDER_01:' num2str(ext_dev_01_pwm)]);
-	pause(0.05)
+	pause(0.2)
 	writeline(serpo,['SEEDER_02:' num2str(ext_dev_02_pwm)]);
-	pause(0.05)
+	pause(0.2)
 	writeline(serpo,['SEEDER_03:' num2str(ext_dev_03_pwm)]);
 else
-	writeline(serpo,' ')
-	writeline(serpo,'SEEDER_01:0');
-	pause(0.05)
+    writeline(serpo,'SEEDER_01:0');
+	pause(0.2)
 	writeline(serpo,'SEEDER_02:0');
-	pause(0.05)
+	pause(0.2)
 	writeline(serpo,'SEEDER_02:0');
 end
 
@@ -11013,11 +11012,11 @@ if ~isempty(serpo)
 		
 		drawnow;
 		flush(serpo)
-		configureTerminator(serpo,'CR');
+		%configureTerminator(serpo,'CR');
 		writeline(serpo,'TrigFreq?');
 		pause(1.25);
 		warning off
-		configureTerminator(serpo,'CR/LF');
+		%configureTerminator(serpo,'CR/LF');
 		serial_answer=readline(serpo);
 		warning on
 		set(handles.ac_enable_ext_trigger,'String',old_label,'Enable','on');
@@ -11044,11 +11043,18 @@ end
 function ac_enable_seeding_Callback (~,~,~)
 handles=gethand;
 if get(handles.ac_enable_seeding,'Value')==1
-	prompt = {'External device 01 PWM [0...1]', 'External device 02 PWM [0...1]','External device 03 PWM [0...1]'};
+	ext_dev_01_pwm=retr('ext_dev_01_pwm');
+    ext_dev_02_pwm=retr('ext_dev_02_pwm');
+    ext_dev_03_pwm=retr('ext_dev_03_pwm');
+    if isempty(ext_dev_01_pwm) || isnan(ext_dev_01_pwm)
+        ext_dev_01_pwm=1;%default setting
+        ext_dev_02_pwm=1;%default setting
+        ext_dev_03_pwm=1;%default setting
+    end
+    prompt = {'External device 01 PWM [0...1]', 'External device 02 PWM [0...1]','External device 03 PWM [0...1]'};
 	dlgtitle = 'External Device Control';
 	dims = [1 50];
-	
-	definput = {num2str(retr('ext_dev_01_pwm')),num2str(retr('ext_dev_02_pwm')),num2str(retr('ext_dev_03_pwm'))};
+	definput = {num2str(ext_dev_01_pwm),num2str(ext_dev_02_pwm),num2str(ext_dev_03_pwm)};
 	answer = inputdlg(prompt,dlgtitle,dims,definput);
 	if ~isempty(answer)
 		put('ext_dev_01_pwm',str2double(answer{1}));
