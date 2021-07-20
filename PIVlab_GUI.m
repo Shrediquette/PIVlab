@@ -35,7 +35,7 @@ if isempty(fh)
 	panelwidth=37;
 	panelheighttools=12;
 	panelheightpanels=35;
-	enable_parallel=1; %enable or disable the use of the parallel computing toolbox
+	enable_parallel=0; %enable or disable the use of the parallel computing toolbox
 	do_correlation_matrices=0; % enable or disable the output of raw correlation matrices
 	put('do_correlation_matrices',do_correlation_matrices);
 	put('panelwidth',panelwidth);
@@ -1059,7 +1059,7 @@ handles.text200 = uicontrol(handles.multip09,'Style','text','String','Mask trans
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1];
 handles.masktransp = uicontrol(handles.multip09,'Style','edit','String','50','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','masktransp','Callback',@masktransp_Callback,'TooltipString','Transparency of the masking area display (red)');
 
-item=[0 item(2)+item(4)+margin/3*2 parentitem(3) 9.5];
+item=[0 item(2)+item(4)+margin/3 parentitem(3) 9.5];
 handles.uipanel37 = uipanel(handles.multip09, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Vector colors', 'Tag','uipanel37','fontweight','bold');
 
 parentitem=get(handles.uipanel37, 'Position');
@@ -1104,16 +1104,28 @@ item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
 handles.text140 = uicontrol(handles.uipanel37,'Style','text','String','interpolated vectors','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text142', 'fontsize', 6);
 
 parentitem=get(handles.multip09, 'Position');
-item=[0 9.5+7.5 parentitem(3) 10.5];
+item=[0 9.5+6.5 parentitem(3) 12];
 handles.uipanel27 = uipanel(handles.multip09, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Derived parameter appearance', 'Tag','uipanel27','fontweight','bold');
 
 parentitem=get(handles.uipanel27, 'Position');
 item=[0 0 0 0];
-item=[0 item(2)+item(4) parentitem(3) 1];
+item=[0 item(2)+item(4) parentitem(3)/2 1];
 handles.text143 = uicontrol(handles.uipanel27,'Style','text','String','Color map','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text143');
 
-item=[0 item(2)+item(4) parentitem(3) 1];
+item=[0+item(3) item(2) parentitem(3)/2 1];
+handles.text143a = uicontrol(handles.uipanel27,'Style','text','String','Steps','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text143a');
+
+item=[0 item(2)+item(4) parentitem(3)/2 1];
 handles.colormap_choice = uicontrol(handles.uipanel27,'Style','popupmenu', 'String',{'Parula','HSV','Jet','HSB','Hot','Cool','Spring','Summer','Autumn','Winter','Gray','Bone','Copper','Pink','Lines'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colormap_choice','TooltipString','Select the color map for displaying derived parameters here');
+
+item=[0+item(3) item(2) parentitem(3)/2 1];
+handles.colormap_steps = uicontrol(handles.uipanel27,'Style','popupmenu', 'String',{'256','128','64','32','16','8','4','2'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colormap_steps','TooltipString','Select the amount of colors in a colormap');
+
+item=[0 item(2)+item(4)+margin/3*2 parentitem(3)/5*3 1];
+handles.text143b = uicontrol(handles.uipanel27,'Style','text','String','Image interpolation','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text143b');
+
+item=[0+item(3) item(2)-0.2 parentitem(3)/5*2 1];
+handles.colormap_interpolation = uicontrol(handles.uipanel27,'Style','popupmenu', 'String',{'bilinear','bicubic','nearest'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colormap_interpolation','TooltipString','Image interpolation method for displaying the derived parameters. Default is bilinear');
 
 %item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
 handles.img_not_mask = uicontrol(handles.uipanel27,'Style','checkbox','String','Do not display mask','Units','characters','Visible','off','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','img_not_mask');
@@ -1134,11 +1146,10 @@ handles.colorbarcolor = uicontrol(handles.uipanel27,'Style','popupmenu', 'String
 
 parentitem=get(handles.multip09, 'Position');
 item=[0 0 0 0];
-item=[0 9.5+4+13+margin parentitem(3) 1];
-
+item=[0 9.5+4+14+margin parentitem(3) 1];
 handles.enhance_images = uicontrol(handles.multip09,'Style','checkbox','String','Enhance PIV image display','Value',1,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','enhance_images','TooltipString','Improve contrast of PIV images for display');
-item=[0 item(2)+item(4)+margin parentitem(3) 2];
 
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
 handles.dummy = uicontrol(handles.multip09,'Style','pushbutton','String','Apply','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@dummy_Callback,'Tag','dummy','TooltipString','Apply the settings');
 
 %% Multip10
@@ -2706,7 +2717,14 @@ if capturing==0
 						else
 							colormap(avail_maps{selected_index});
 						end
-					else
+						%adjust colormap steps
+						cmap = colormap(gca);	
+						colormap_steps_list=get(handles.colormap_steps,'String');
+						colormap_steps_value=get(handles.colormap_steps,'Value');
+						colormap_steps=str2double(colormap_steps_list{colormap_steps_value});
+						cmap_new=interp1(1:size(cmap,1),cmap,linspace(1,size(cmap,1),colormap_steps));
+						colormap(cmap_new);
+					else %LIC can only be gray
 						colormap('gray');
 					end
 					if get(handles.autoscaler,'value')==1
@@ -5553,6 +5571,8 @@ try
 	set(handles.interpol_missing,'value',interpol_missing);
 	set(handles.vectorscale,'string',vectorscale);
 	set(handles.colormap_choice,'value',colormap_choice); %popup
+	set(handles.colormap_steps,'value',colormap_steps); 
+	set(handles.colormap_interpolation,'value',colormap_interpolation); 
 	set(handles.addfileinfo,'value',addfileinfo);
 	set(handles.add_header,'value',add_header);
 	set(handles.delimiter,'value',delimiter);%popup
@@ -5701,6 +5721,8 @@ loc_med_thresh=get(handles.loc_med_thresh,'string');
 interpol_missing=get(handles.interpol_missing,'value');
 vectorscale=get(handles.vectorscale,'string');
 colormap_choice=get(handles.colormap_choice,'value'); %popup
+colormap_steps=get(handles.colormap_steps,'value'); 
+colormap_interpolation=get(handles.colormap_interpolation,'value'); 
 addfileinfo=get(handles.addfileinfo,'value');
 add_header=get(handles.add_header,'value');
 delimiter=get(handles.delimiter,'value');%popup
@@ -6845,7 +6867,7 @@ out=zeros(size(currentimage));
 if size(out,3)>1
 	out(:,:,2:end)=[];
 end
-out(:,:)=mean(mean(in)); %Rand wird auf Mittelwert gesetzt
+out(:,:)=mean(in(:)); %Rand wird auf Mittelwert gesetzt
 step=x(1,2)-x(1,1)+1;
 minx=(min(min(x))-step/2);
 maxx=(max(max(x))+step/2);
@@ -6865,7 +6887,9 @@ if isangle == 1 %angle data is unsteady, needs to interpolated differently
 	%reconvert to phase
 	dispvar = angle(complex(X_interp,Y_interp))*180/pi;
 else
-	dispvar = imresize(in,[height width],'bilinear'); %INTERPOLATION
+	colormap_interpolation_list=get(handles.colormap_interpolation,'String');
+	colormap_interpolation_value = get(handles.colormap_interpolation,'Value');
+	dispvar = imresize(in,[height width],colormap_interpolation_list{colormap_interpolation_value}); %INTERPOLATION
 end
 
 if miny<1
@@ -8127,6 +8151,8 @@ loc_med_thresh=get(handles.loc_med_thresh,'string');
 interpol_missing=get(handles.interpol_missing,'value');
 vectorscale=get(handles.vectorscale,'string');
 colormap_choice=get(handles.colormap_choice,'value'); %popup
+colormap_steps=get(handles.colormap_steps,'value'); 
+colormap_interpolation=get(handles.colormap_interpolation,'value'); 
 addfileinfo=get(handles.addfileinfo,'value');
 add_header=get(handles.add_header,'value');
 delimiter=get(handles.delimiter,'value');%popup
@@ -8232,10 +8258,10 @@ else
 	warning off all
 	try
 		%even if a variable doesn't exist, this doesn't throw an error...
-		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu', 'calv','calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B','x_axis_direction','y_axis_direction','size_of_the_image','points_offsetx','points_offsety','offset_x_true','offset_y_true','bright_filter_thresh','contrast_filter_thresh','do_bright_filter','do_contrast_filter','repeat_last','repeat_last_thresh');
+		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu', 'calv','calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'colormap_steps', 'colormap_interpolation', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B','x_axis_direction','y_axis_direction','size_of_the_image','points_offsetx','points_offsety','offset_x_true','offset_y_true','bright_filter_thresh','contrast_filter_thresh','do_bright_filter','do_contrast_filter','repeat_last','repeat_last_thresh');
 	catch
 		disp('Old version compatibility.')
-		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu','calv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
+		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu','calv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_steps','colormap_choice', 'colormap_interpolation', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
 	end
 	names=fieldnames(vars);
 	for i=1:size(names,1)
@@ -8266,6 +8292,8 @@ else
 	
 	set(handles.vectorscale,'string',retr('vectorscale'));
 	set(handles.colormap_choice,'value',retr('colormap_choice')); %popup
+	set(handles.colormap_steps,'value',retr('colormap_steps')); 
+	set(handles.colormap_interpolation,'value',retr('colormap_interpolation')); 
 	set(handles.addfileinfo,'value',retr('addfileinfo'));
 	set(handles.add_header,'value',retr('add_header'));
 	set(handles.delimiter,'value',retr('delimiter'));%popup
