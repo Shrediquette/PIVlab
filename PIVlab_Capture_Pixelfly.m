@@ -32,16 +32,6 @@ set(gca,'ytick',[])
 set(gca,'xtick',[])
 colorbar
 
-%{
-needed:
-'C:\Program Files\PCO Digital Camera Toolbox\pco.matlab\scripts\pco_camera_def.txt'
-    'C:\Program Files\PCO Digital Camera Toolbox\pco.matlab\scripts\pco_camera_load_defines.m'
-    'C:\Program Files\PCO Digital Camera Toolbox\pco.matlab\scripts\pco_camera_open_close.m'
-    'C:\Program Files\PCO Digital Camera Toolbox\pco.matlab\scripts\pco_camera_subfunction.m'
-    'C:\Program Files\PCO Digital Camera Toolbox\pco.matlab\scripts\pco_errdisp.m'
-    'C:\Program Files\PCO Digital Camera Toolbox\pco.matlab\scripts\pco_uint32err.m'}
-%}
-
 image_save_number=0;
 glvar=struct('do_libunload',1,'do_close',0,'camera_open',0,'out_ptr',[]);
 pco_camera_load_defines();
@@ -62,6 +52,13 @@ try
 	elseif triggermode==0
 		[errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetDoubleImageMode', out_ptr,0);
 	end
+	
+	%Pixel Binning
+	[errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetBinning', out_ptr,1,1); %2,4, etc.
+	%ROI selection
+	%[errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetROI', out_ptr,1,1,1024,1024); %does this work for the panda...?
+	
+	
 	%stop camera
 	subfunc.fh_stop_camera(out_ptr);
 	cam_desc=libstruct('PCO_Description');
