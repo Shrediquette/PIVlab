@@ -13,7 +13,7 @@
 % Exportfig by Ben Hinkle
 % mmstream2 by Duane Hanselman
 % f_readB16 by Carl Hall
-function PIVlab_GUI
+function PIVlab_GUI(desired_num_cores)
 %% Make figure
 fh = findobj('tag', 'hgui');
 if isempty(fh)
@@ -35,7 +35,6 @@ if isempty(fh)
 	panelwidth=37;
 	panelheighttools=12;
 	panelheightpanels=35;
-	enable_parallel=1; %enable or disable the use of the parallel computing toolbox
 	do_correlation_matrices=0; % enable or disable the output of raw correlation matrices
 	put('do_correlation_matrices',do_correlation_matrices);
 	put('panelwidth',panelwidth);
@@ -129,21 +128,36 @@ if isempty(fh)
 		end
 		%% Check parallel computing toolbox availability
 		put('parallel',0);
-		if enable_parallel == 1
-			try %checking for a parallel license file throws a huge error message wheh it is not available. This might scare users...
-				corenum = feature('numCores');
-				if pivparpool('size')<=0
-					disp('-> Please wait, checking Distributed Computing Toolbox...')
-					pivparpool('open',corenum);
+		try %checking for a parallel license file throws a huge error message wheh it is not available. This might scare users... Better: Try...catch block
+			if ~exist('desired_num_cores','var') %no input argument --> use all existing cores
+				if pivparpool('size')<=0 %no exisitng pool
+					pivparpool('open',feature('numCores')); %use all cores
 				end
-				disp(['-> Distributed Computing Toolbox found. Parallel pool (' int2str(pivparpool('size')) ' workers) active (default settings).'])
 				put('parallel',1);
-			catch
-				disp('-> Running without parallelization (no distributed computing toolbox installed).')
+			else%parameter supplied
+				if desired_num_cores > 1 && desired_num_cores ~= pivparpool('size') %desired doesn't match existing pool
+					if desired_num_cores > feature('numCores')%desired too many cores
+						desired_num_cores=feature('numCores');
+						disp('Selected too many cores. Adjusted to actually existing cores')
+					end
+					pivparpool('close')
+					pivparpool('open',desired_num_cores);
+					put('parallel',1);
+				elseif desired_num_cores < 2 %leq than 1 core desired --> serial processing.
+					pivparpool('close')
+					put('parallel',0);
+				elseif desired_num_cores==pivparpool('size')
+					put('parallel',1);
+				end
 			end
-		else
-			disp('-> Distributed Computing disabled.')
-		end
+			if retr('parallel')==1
+				disp(['-> Distributed Computing Toolbox found. Parallel pool (' int2str(pivparpool('size')) ' workers) active (default settings).'])
+			else
+				disp('-> Distributed Computing disabled.')
+			end	
+		catch
+			disp('-> Running without parallelization (no distributed computing toolbox installed).')
+		end		
 	catch
 		disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
 	end
