@@ -10718,12 +10718,12 @@ if alreadyconnected
 	%Camera fps
 	ac_fps_value=get(handles.ac_fps,'Value');
 	ac_fps_str=get(handles.ac_fps,'String');
-	cam_prescaler=15/str2double(ac_fps_str(ac_fps_value));
+	cam_prescaler=master_freq/str2double(ac_fps_str(ac_fps_value));
 	%Laser power
 	las_percent=str2double(get(handles.ac_power,'String'));
-	p=[-1.99546090554858e-13	9.39656793905601e-11	-1.86479471891806e-08	2.02795948758341e-06	-0.000131633664360478	0.00521179938488954	-0.123717342996495	1.67791791450679	-13.5695089299158	315.657955532136]; %Polynom des Lasers
+	%specific laser power polynom for converting Q-switch delay to laser energy
+	load q_delay_to_laser_power_polynom.mat %loads q and min_energy
 	energy_us = round(polyval(p,las_percent));
-	min_energy=315;
 	if energy_us > min_energy
 		energy_us = min_energy;
 	end
@@ -10753,14 +10753,15 @@ if alreadyconnected
 	if exist(logger_path,'dir') %only log when directory has been set up.
 		timestamp=datestr(datetime(now,'ConvertFrom','datenum'));
 		logger_content= [timestamp sync_setting];
-		if exist (fullfile(logger_path, 'sync_history.mat'),'file')
-			try
-				logger_content_old=load (fullfile(logger_path, 'sync_history.mat'),'logger_content');
-				logger_content=[logger_content_old.logger_content;logger_content];
-			catch
-			end
+		if exist (fullfile(logger_path, 'sync_history.txt'),'file')
+			string_operation='w'; %write
+		else
+			string_operation='a'; %append
 		end
-		save (fullfile(logger_path, 'sync_history.mat'),'logger_content');
+		logger_fid = fopen(fullfile(logger_path, 'sync_history.txt'), string_operation);
+		fprintf(logger_fid, logger_content);
+		fprintf(logger_fid, '\n');
+		fclose(logger_fid);
 	end
 	set(handles.ac_laserstatus,'BackgroundColor',[1 1 0]); %yellow=warning
 	set(handles.ac_laserstatus,'String','No Answer');drawnow;
