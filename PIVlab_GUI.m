@@ -35,7 +35,7 @@ if isempty(fh)
 	panelwidth=37;
 	panelheighttools=12;
 	panelheightpanels=35;
-	enable_parallel=0; %enable or disable the use of the parallel computing toolbox
+	enable_parallel=1; %enable or disable the use of the parallel computing toolbox
 	do_correlation_matrices=0; % enable or disable the output of raw correlation matrices
 	put('do_correlation_matrices',do_correlation_matrices);
 	put('panelwidth',panelwidth);
