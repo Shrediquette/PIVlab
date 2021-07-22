@@ -887,6 +887,9 @@ item=[0 0 0 0];
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.load_ext_img = uicontrol(handles.multip07,'Style','pushbutton','String','Load calibration image (optional)','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @load_ext_img_Callback,'Tag','load_ext_img','TooltipString','Load a reference image for calibration (if you recorded one)');
 
+item=[0 item(2)+item(4) parentitem(3) 1];
+handles.optimize_calib_img = uicontrol(handles.multip07,'Style','checkbox','Value',1,'String','Optimize display','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','optimize_calib_img','Callback',@optimize_calib_img_Callback, 'TooltipString','Enhance the display of the calibration image');
+
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
 uicontrol(handles.multip07,'Style','text','String','Setup Scaling','FontWeight','bold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
@@ -930,7 +933,7 @@ handles.set_y_offset = uicontrol(handles.uipanel_offsets,'Style','pushbutton','S
 item=[0 0 0 0];
 parentitem=get(handles.multip07, 'Position');
 
-item=[0 18.5 parentitem(3) 4];
+item=[0 19.5 parentitem(3) 4];
 handles.calidisp = uicontrol(handles.multip07,'Style','text','String','inactive','HorizontalAlignment','center','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calidisp');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
@@ -6406,6 +6409,39 @@ else
 	displogo(0)
 end
 
+function optimize_calib_img_Callback(~,~,~) %optimize display of calibration image
+caliimg=retr('caliimg');
+if ~isempty(caliimg)
+	display_cali_img (caliimg)
+end
+
+function display_cali_img (caliimg)
+handles=gethand;
+if get(handles.optimize_calib_img,'value')==1
+	numberoftiles1=round(size(caliimg,1)/40);
+	numberoftiles2=round(size(caliimg,2)/40);
+	if numberoftiles1 < 2
+		numberoftiles1=2;
+	end
+	if numberoftiles2 < 2
+		numberoftiles2=2;
+	end
+	
+	if size(caliimg,3)>1 == 0
+		caliimg=adapthisteq(imadjust(caliimg),'NumTiles',[numberoftiles1 numberoftiles2],'clipLimit',0.01);
+	else
+		try
+			caliimg=adapthisteq(imadjust(rgb2gray(caliimg)),'NumTiles',[numberoftiles1 numberoftiles2],'clipLimit',0.01);
+		catch
+		end
+	end
+end
+image(caliimg, 'parent',gca, 'cdatamapping', 'scaled');
+colormap('gray');
+axis image;
+set(gca,'ytick',[])
+set(gca,'xtick',[])
+
 function load_ext_img_Callback(~, ~, ~) %load extra calibration image
 cali_folder=retr('cali_folder');
 if isempty (cali_folder)==1
@@ -6427,30 +6463,9 @@ if ~isequal(filename,0)
 	else
 		caliimg=imread(fullfile(pathname, filename));
 	end
-	numberoftiles1=round(size(caliimg,1)/15);
-	numberoftiles2=round(size(caliimg,2)/15);
-	if numberoftiles1 < 2
-		numberoftiles1=2;
-	end
-	if numberoftiles2 < 2
-		numberoftiles2=2;
-	end
-	
-	if size(caliimg,3)>1 == 0
-		caliimg=adapthisteq(imadjust(caliimg),'NumTiles',[numberoftiles1 numberoftiles2],'clipLimit',0.04);
-	else
-		try
-			caliimg=adapthisteq(imadjust(rgb2gray(caliimg)),'NumTiles',[numberoftiles1 numberoftiles2],'clipLimit',0.04);
-		catch
-		end
-	end
-	image(caliimg, 'parent',gca, 'cdatamapping', 'scaled');
-	colormap('gray');
-	axis image;
-	set(gca,'ytick',[])
-	set(gca,'xtick',[])
 	put('caliimg', caliimg);
 	put('cali_folder', pathname);
+	display_cali_img (caliimg)
 end
 
 function write_workspace_Callback(~, ~, ~)
@@ -10566,6 +10581,11 @@ function offset = calculate_offset_axis (axis,pixel_position,true_position)
 handles=gethand;
 calxy=retr('calxy');
 size_of_the_image=retr('size_of_the_image');
+if isempty(size_of_the_image)%user applies calibration before loading images
+	caliimg=retr('caliimg');
+	size_of_the_image=size(caliimg);
+	put('size_of_the_image',size_of_the_image);
+end
 if strcmp(axis,'x')
 	axis_direction=get(handles.x_axis_direction,'value');
 	size_dim=size_of_the_image(2);
