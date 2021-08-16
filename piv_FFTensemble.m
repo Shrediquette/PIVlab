@@ -32,7 +32,7 @@ for ensemble_i1=1:2:amount_input_imgs
 	if size(image1,3)>1
 		image1=uint8(mean(image1,3));
         image2=uint8(mean(image2,3));
-        disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
+        %disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
 	end
 	%Subtract background (if existent)
 	if ~isempty(bg_img_A)
@@ -41,14 +41,22 @@ for ensemble_i1=1:2:amount_input_imgs
 	if ~isempty(bg_img_B)
 		image2=image2-bg_img_B;
 	end
-    if autolimit == 1 %if autolimit is desired: do autolimit for each image seperately
-        stretcher = stretchlim(image1);
-        minintens1 = stretcher(1);
-        maxintens1 = stretcher(2);
-        stretcher = stretchlim(image2);
-        minintens2 = stretcher(1);
-        maxintens2 = stretcher(2);
-    end
+	if autolimit == 1 %if autolimit is desired: do autolimit for each image seperately
+		if size(image1,3)>1
+			stretcher = stretchlim(rgb2gray(image1));
+		else
+			stretcher = stretchlim(image1);
+		end
+		minintens1 = stretcher(1);
+		maxintens1 = stretcher(2);
+		if size(image2,3)>1
+			stretcher = stretchlim(rgb2gray(image2));
+		else
+			stretcher = stretchlim(image2);
+		end
+		minintens2 = stretcher(1);
+		maxintens2 = stretcher(2);
+	end
     image1 = PIVlab_preproc (image1,roi_inpt,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens1,maxintens1);
     image2 = PIVlab_preproc (image2,roi_inpt,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens2,maxintens2);
     if numel(roi_inpt)>0
@@ -414,19 +422,27 @@ if cancel == 0
 			if ~isempty(bg_img_B)
 				image2=image2-bg_img_B;
 			end
-            if autolimit == 1 %if autolimit is desired: do autolimit for each image seperately
-                stretcher = stretchlim(image1);
-                minintens1 = stretcher(1);
-                maxintens1 = stretcher(2);
-                stretcher = stretchlim(image2);
-                minintens2 = stretcher(1);
-                maxintens2 = stretcher(2);
-            end
-            image1 = PIVlab_preproc (image1,roi_inpt,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens1,maxintens1);
-            image2 = PIVlab_preproc (image2,roi_inpt,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens2,maxintens2);
-            if numel(roi_inpt)>0
-                xroi=roi_inpt(1);
-                yroi=roi_inpt(2);
+			if autolimit == 1 %if autolimit is desired: do autolimit for each image seperately
+				if size(image1,3)>1
+					stretcher = stretchlim(rgb2gray(image1));
+				else
+					stretcher = stretchlim(image1);
+				end
+				minintens1 = stretcher(1);
+				maxintens1 = stretcher(2);
+				if size(image2,3)>1
+					stretcher = stretchlim(rgb2gray(image2));
+				else
+					stretcher = stretchlim(image2);
+				end
+				minintens2 = stretcher(1);
+				maxintens2 = stretcher(2);
+			end
+			image1 = PIVlab_preproc (image1,roi_inpt,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens1,maxintens1);
+			image2 = PIVlab_preproc (image2,roi_inpt,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens2,maxintens2);
+			if numel(roi_inpt)>0
+				xroi=roi_inpt(1);
+				yroi=roi_inpt(2);
                 widthroi=roi_inpt(3);
                 heightroi=roi_inpt(4);
                 image1_roi=double(image1(yroi:yroi+heightroi,xroi:xroi+widthroi));

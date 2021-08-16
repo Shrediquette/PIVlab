@@ -1,6 +1,6 @@
 % PIVlab - Digital Particle Image Velocimetry Tool for MATLAB
 % developed by Dr. William Thielicke and Prof. Dr. Eize J. Stamhuis
-% programmed with MATLAB Version 7.10 (R2010a) - 9.6 (R2019a)
+% programmed with MATLAB Version 7.10 (R2010a) - 9.6 (R2019b)
 % March 09, 2010 - today
 % http://PIVlab.blogspot.com
 % Third party content, thank you for your contributions!
@@ -72,7 +72,7 @@ if isempty(fh)
 	%% check required files
 	try
 		ctr=0;
-		pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg' 'PIVlab_Capture_Pixelfly.m' 'PIVlab_image_filter.m' 'pivparpool.m' 'pivprogress.m' 'piv_analysis.m' 'piv_quick.m'};
+		pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg' 'PIVlab_capture_pco.m' 'PIVlab_image_filter.m' 'pivparpool.m' 'pivprogress.m' 'piv_analysis.m' 'piv_quick.m' 'PIVlab_notch_filter.m' 'PIVlab_correlation_filter.m'};
 		for i=1:size(pivFiles,2)
 			if exist(pivFiles{1,i},'file')~=2
 				disp(['ERROR: A required file was not found: ' pivFiles{1,i}]);
@@ -118,10 +118,15 @@ if isempty(fh)
 				J = adapthisteq(rand(8,8));
 				disp('-> Image Processing Toolbox found.')
 			catch
-				disp('ERROR: Image Processing Toolbox not accessible! PIVlab won''t work like this.')
+				disp(' ')
+				disp('Image Processing Toolbox not accessible! PIVlab won''t work like this.')
 				disp('A license has been found, but the toolbox could not be accessed.')
 				disp('This is not a PIVlab related issue. Before you can use PIVlab, you need to make sure that the following command can be run without error message from the MATLAB command line:')
 				disp('"J = adapthisteq(rand(8,8))" (enter this without quotes)')
+				disp(' ')
+				disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
+				commandwindow
+				pause
 			end
 		else
 			disp('ERROR: Image Processing Toolbox not found! PIVlab won''t work like this.')
@@ -392,15 +397,43 @@ if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(even
 			seeder_toggle=0;
 		end
 		external_device_control(1-seeder_toggle);
+		disp(num2str(1-seeder_toggle))
 		put('seeder_toggle',1-seeder_toggle);
-	elseif strcmp(event.Key,'l')
-		disp('toggle laser shortcut')
-		laser_toggle=retr('laser_toggle');
-		if isempty(laser_toggle)
-			laser_toggle=0;
+	elseif strcmp(event.Key,'1')
+		if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
+			delete(findobj('tag','roitxt'))
+			text(50,50,'ca. 1 Hz','tag','roitxt','Color','yellow')
+			ac_ROI_general_handle=retr('ac_ROI_general_handle');
+			setPosition(ac_ROI_general_handle,[1,1,5120,5120]) %1Hz default
 		end
-		control_simple_sync_serial(1-laser_toggle);
-		put('laser_toggle',1-laser_toggle);
+	elseif strcmp(event.Key,'2')
+		if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
+			delete(findobj('tag','roitxt'))
+			text(50,50,'ca. 3 Hz','tag','roitxt','Color','yellow')
+			ac_ROI_general_handle=retr('ac_ROI_general_handle');
+			setPosition(ac_ROI_general_handle,[545,1025,4032,3072]) %3Hz default
+		end
+	elseif strcmp(event.Key,'3')
+		if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
+			delete(findobj('tag','roitxt'))
+			text(50,50,'ca. 5 Hz','tag','roitxt','Color','yellow')
+			ac_ROI_general_handle=retr('ac_ROI_general_handle');
+			setPosition(ac_ROI_general_handle,[1153,1585,2816,1952]) %5Hz default
+		end
+	elseif strcmp(event.Key,'4')
+		if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
+			delete(findobj('tag','roitxt'))
+			text(50,50,'ca. 7.5 Hz','tag','roitxt','Color','yellow')
+			ac_ROI_general_handle=retr('ac_ROI_general_handle');
+			setPosition(ac_ROI_general_handle,[1601,1857,1920,1408]) %7.5Hz default
+		end		
+	elseif strcmp(event.Key,'5')
+		if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
+			delete(findobj('tag','roitxt'))
+			text(50,50,'ca. 15 Hz','tag','roitxt','Color','yellow')
+			ac_ROI_general_handle=retr('ac_ROI_general_handle');
+			setPosition(ac_ROI_general_handle,[2033,2177,1056,768]) %15Hz default
+		end
 	end
 end
 %       event.Key: 'x'
@@ -657,7 +690,7 @@ handles.uipanel351 = uipanel(handles.multip03, 'Units','characters', 'Position',
 parentitem=get(handles.uipanel351, 'Position');
 item=[0 0 0 0];
 item=[0 item(2)+item(4) parentitem(3) 1];
-handles.bg_subtract = uicontrol(handles.uipanel351,'Style','checkbox', 'value',0, 'String','Subtract mean intensity','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bg_subtract','TooltipString','Automatic stretching of the image intensity histogram. Important for 16-bit images.');
+handles.bg_subtract = uicontrol(handles.uipanel351,'Style','checkbox', 'value',0, 'String','Subtract mean intensity','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bg_subtract','Callback',@bg_subtract_Callback, 'TooltipString','Automatic stretching of the image intensity histogram. Important for 16-bit images.');
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
 handles.bg_view = uicontrol(handles.uipanel351,'Style','pushbutton','String','View background image','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @bg_view_Callback,'Tag','bg_view','TooltipString','Display the generated background image. Click again to toggle between background A and B.');
 
@@ -840,7 +873,7 @@ handles.limittext = uicontrol(handles.multip06,'Style','text','String','','Units
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.clear_vel_limit = uicontrol(handles.multip06,'Style','pushbutton','String','Clear velocity limits','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @clear_vel_limit_Callback,'Tag','clear_vel_limit','TooltipString','Remove the velocity limits');
 
-item=[0 item(2)+item(4)+margin parentitem(3) 1];
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
 handles.stdev_check = uicontrol(handles.multip06,'Style','checkbox','String','Standard deviation filter','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','stdev_check','TooltipString','Filter velocities by removing velocities that are outside the mean velocity +- n times the standard deviation');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
@@ -849,7 +882,7 @@ handles.text18 = uicontrol(handles.multip06,'Style','text','String','Threshold [
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 handles.stdev_thresh = uicontrol(handles.multip06,'Style','edit','String','4.7','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@stdev_thresh_Callback,'Tag','stdev_thresh','TooltipString','Threshold for the standard deviation filter. Velocities that are outside the mean velocity +- n times the standard deviation will be removed');
 
-item=[0 item(2)+item(4)+margin parentitem(3) 1];
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
 handles.loc_median = uicontrol(handles.multip06,'Style','checkbox','String','Local median filter','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','loc_median','TooltipString','Compares each vector to the median of the surrounding vectors. Discards vector if difference is above the selected threshold');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
@@ -857,6 +890,21 @@ handles.text19 = uicontrol(handles.multip06,'Style','text','String','Threshold',
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 handles.loc_med_thresh = uicontrol(handles.multip06,'Style','edit','String','3','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@loc_med_thresh_Callback,'Tag','loc_med_thresh');
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
+handles.notch_filter = uicontrol(handles.multip06,'Style','checkbox','String','Magnitude notch filter','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','notch_filter','TooltipString','Notch filter: Discards velocities in the specified range from vL to vH');
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1];
+handles.textnotchL = uicontrol(handles.multip06,'Style','text','String','vL','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','textnotchL');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+handles.notch_L_thresh = uicontrol(handles.multip06,'Style','edit','String','-1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@lnotch_L_thresh_Callback,'Tag','notch_L_thresh');
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1];
+handles.textnotchH = uicontrol(handles.multip06,'Style','text','String','vH','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','textnotchH');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+handles.notch_H_thresh = uicontrol(handles.multip06,'Style','edit','String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@notch_H_thresh_Callback,'Tag','notch_H_thresh');
 
 %item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 %handles.text20 = uicontrol(handles.multip06,'Style','text','String','Epsilon','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text20');
@@ -1832,6 +1880,15 @@ handles.bright_filter_thresh = uicontrol(handles.multip23,'Style','edit','String
 item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
 handles.suggest_bright_filter = uicontrol(handles.multip23,'Style','pushbutton','String','Suggest threshold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'TooltipString','Finds a threshold that discards vectors in the regions where bright objects are found. Use this as a starting point only.','Tag','suggest_bright_filter','Callback', @suggest_bright_filter_Callback);
 
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
+handles.do_corr2_filter = uicontrol(handles.multip23,'Style','checkbox','String','Correlation coefficient filter','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','do_corr2_filter','TooltipString','This filter removes vectors from image areas that have a low correlation between image A and B. Especially useful after removing the background signal.');
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1];
+handles.text19corrfilter = uicontrol(handles.multip23,'Style','text','String','Threshold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text19corrfilter');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+handles.corr_filter_thresh = uicontrol(handles.multip23,'Style','edit','String','0.5','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','corr_filter_thresh');
+
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.interpol_missing2 = uicontrol(handles.multip23,'Style','checkbox','String','Interpolate missing data','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpol_missing2','TooltipString','Interpolate missing velocity data. Interpolated data appears as ORANGE vectors','Callback',@set_other_interpol_checkbox);
 
@@ -1930,7 +1987,7 @@ handles.ac_enable_seeding = uicontrol(handles.uipanelac_laser,'Style','checkbox'
 parentitem=get(handles.multip24, 'Position');
 item=[0 22.75 parentitem(3) 5];
 
-handles.uipanelac_calib = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Capture calibration image', 'Tag','uipanelac_calib','fontweight','bold');
+handles.uipanelac_calib = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Calibration image', 'Tag','uipanelac_calib','fontweight','bold');
 
 parentitem=get(handles.uipanelac_calib, 'Position');
 item=[0 0 0 0];
@@ -1941,11 +1998,14 @@ handles.ac_expotxt = uicontrol(handles.uipanelac_calib,'Style','text', 'String',
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
 handles.ac_expo = uicontrol(handles.uipanelac_calib,'Style','edit','units','characters','HorizontalAlignment','right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','100','tag','ac_expo','TooltipString','Exposure of the camera during calibration image capture');
 
-item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/2 1.5];
-handles.ac_calibcapture = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Start live view','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_calibcapture_Callback,'Tag','ac_calibcapture','TooltipString','Start live view of the camera');
+item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/3 1.5];
+handles.ac_calibROI = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','ROI','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_calibROI_Callback,'Tag','ac_calibROI','TooltipString','Select ROI in camera image');
 
-item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.ac_calibstop = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Stop & save','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_camstop_Callback,'Tag','ac_calibstop','TooltipString','Stop live view and save last image');
+item=[parentitem(3)/3*1 item(2) parentitem(3)/3 1.5];
+handles.ac_calibcapture = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Start','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_calibcapture_Callback,'Tag','ac_calibcapture','TooltipString','Start live view of the camera');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
+handles.ac_calibstop = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Save','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_camstop_Callback,'Tag','ac_calibstop','TooltipString','Stop live view and save last image');
 
 % PIV capture
 parentitem=get(handles.multip24, 'Position');
@@ -4854,7 +4914,7 @@ if ok==1
 		%xpos=size(image1,2)/2-40;
 		info=text(60,50, 'Analyzing ...','color', 'r','FontName','FixedWidth','fontweight', 'bold', 'fontsize', 16, 'BackgroundColor', 'k', 'tag', 'annoyingthing');
 		drawnow;
-		tic;
+		calc_time_start=tic;
 		hbar = pivprogress(size(slicedfilepath1,2),handles.overall);
 		if get(handles.dcc,'Value')==1
 			if get(handles.bg_subtract,'Value')==1
@@ -4904,9 +4964,17 @@ if ok==1
 				maxintenst=maxintens;
 				if autolimit == 1
 					if toggler==0
-						stretcher = stretchlim(image1);
+						if size(image1,3)>1
+							stretcher = stretchlim(rgb2gray(image1));
+						else
+							stretcher = stretchlim(image1);
+						end
 					else
-						stretcher = stretchlim(image2);
+						if size(image2,3)>1
+							stretcher = stretchlim(rgb2gray(image2));
+						else
+							stretcher = stretchlim(image2);
+						end
 					end
 					minintenst=stretcher(1);
 					maxintenst=stretcher(2);
@@ -4985,9 +5053,17 @@ if ok==1
 				maxintenst=maxintens;
 				if autolimit == 1
 					if toggler==0
-						stretcher = stretchlim(image1);
+						if size(image1,3)>1
+							stretcher = stretchlim(rgb2gray(image1));
+						else
+							stretcher = stretchlim(image1);
+						end
 					else
-						stretcher = stretchlim(image2);
+						if size(image2,3)>1
+							stretcher = stretchlim(rgb2gray(image2));
+						else
+							stretcher = stretchlim(image2);
+						end
 					end
 					minintenst=stretcher(1);
 					maxintenst=stretcher(2);
@@ -5006,7 +5082,7 @@ if ok==1
 			end
 		end
 		close(hbar);
-		zeit=toc;
+		zeit=toc(calc_time_start);
 		hrs=zeit/60^2;
 		mins=(hrs-floor(hrs))*60;
 		secs=(mins-floor(mins))*60;
@@ -5064,13 +5140,21 @@ if ok==1
 				%clipthresh=str2double(get(handles.clip_thresh, 'string'));
 				roirect=retr('roirect');
 				if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-					stretcher = stretchlim(image1);
+					if size(image1,3)>1
+						stretcher = stretchlim(rgb2gray(image1));
+					else
+						stretcher = stretchlim(image1);
+					end
 					minintens = stretcher(1);
 					maxintens = stretcher(2);
 				end
 				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 				if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-					stretcher = stretchlim(image2);
+					if size(image2,3)>1
+						stretcher = stretchlim(rgb2gray(image2));
+					else
+						stretcher = stretchlim(image2);
+					end
 					minintens = stretcher(1);
 					maxintens = stretcher(2);
 				end
@@ -5401,13 +5485,21 @@ if ok==1
 		%clipthresh=str2double(get(handles.clip_thresh, 'string'));
 		roirect=retr('roirect');
 		if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-			stretcher = stretchlim(image1);
+			if size(image1,3)>1
+				stretcher = stretchlim(rgb2gray(image1));
+			else
+				stretcher = stretchlim(image1);
+			end
 			minintens = stretcher(1);
 			maxintens = stretcher(2);
 		end
 		image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 		if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-			stretcher = stretchlim(image2);
+			if size(image2,3)>1
+				stretcher = stretchlim(rgb2gray(image2));
+			else
+				stretcher = stretchlim(image2);
+			end
 			minintens = stretcher(1);
 			maxintens = stretcher(2);
 		end
@@ -5705,6 +5797,16 @@ try
 catch
 	disp('img_filter_settings');
 end
+try
+	%neu v2.54
+	set(handles.do_corr2_filter,'value',do_corr2_filter);
+	set(handles.corr_filter_thresh,'string',corr_filter_thresh);
+	set(handles.notch_L_thresh,'String',notch_L_thresh);
+	set(handles.notch_H_thresh,'string',notch_H_thresh);
+	set(handles.notch_filter,'Value',notch_filter);
+catch
+	disp('corr filter / notch settings');
+end
 %neu v2.52
 try
 	
@@ -5813,7 +5915,16 @@ try
 	do_contrast_filter=get(handles.do_contrast_filter,'Value');
 catch
 end
-
+try
+	%neu v2.54
+	do_corr2_filter=get(handles.do_corr2_filter,'value');
+	corr_filter_thresh=get(handles.corr_filter_thresh,'string');
+	notch_L_thresh=get(handles.notch_L_thresh,'string');
+	notch_H_thresh=get(handles.notch_H_thresh,'string');
+	notch_filter=get(handles.notch_filter,'Value');
+catch
+	disp('corr filter / notch settings');
+end
 %neu v2.52
 try
 	repeat_last = get (handles.repeat_last,'Value');
@@ -6037,6 +6148,12 @@ if ~isempty(resultslist)
 		contrast_filter_thresh=str2double(get(handles.contrast_filter_thresh, 'String'));
 		bright_filter_thresh=str2double(get(handles.bright_filter_thresh, 'String'));
 		interpol_missing= get(handles.interpol_missing, 'value');
+		do_corr2_filter = get(handles.do_corr2_filter, 'value');
+		corr_filter_thresh=str2double(get(handles.corr_filter_thresh,'String'));
+		do_notch_filter = get(handles.notch_filter, 'value');
+		notch_L_thresh=str2double(get(handles.notch_L_thresh,'String'));
+		notch_H_thresh=str2double(get(handles.notch_H_thresh,'String'));
+
 		hbar = pivprogress(size(slicedfilepath1,2),handles.apply_filter_all);
 		if size(u,2)<num_frames_to_process-1 %If not all frames have been analyzed. Parfor loop crashes otherwise.
 			u(num_frames_to_process-1)={[]};
@@ -6075,8 +6192,9 @@ if ~isempty(resultslist)
 					B=currentimage2;
 				else
 					A=[];B=[];rawimageA=[];rawimageB=[];
-				end
-				[u_new{i},v_new{i},typevector_new{i}]=filtervectors_all_parallel(x{i},y{i},u{i},v{i},typevector_original{i},calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB);
+                end
+				corr2_value=resultslist{12,i};
+				[u_new{i},v_new{i},typevector_new{i}]=filtervectors_all_parallel(x{i},y{i},u{i},v{i},typevector_original{i},calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh);
 				hbar.iterate(1); %#ok<*PFBNS>
 			end
 		end
@@ -6126,7 +6244,7 @@ set (handles.vel_limit_active, 'String', 'Limit inactive', 'backgroundcolor', [0
 set (handles.limittext, 'String', '');
 set (handles.vel_limit, 'String', 'Select velocity limits');
 
-function [u,v,typevector]=filtervectors_all_parallel(x,y,u,v,typevector_original,calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB)
+function [u,v,typevector]=filtervectors_all_parallel(x,y,u,v,typevector_original,calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh)
 typevector=typevector_original;
 %run postprocessing function
 if numel(velrect)>0
@@ -6144,6 +6262,22 @@ if ~isempty(x)
 	end
 else
 	u=[];v=[];
+end
+
+%correlation filter
+if ~isempty(x)
+	if do_corr2_filter == 1
+		[u,v] = PIVlab_correlation_filter (u,v,corr_filter_thresh,corr2_value);
+	end
+else
+	u=[];v=[];
+end
+
+%Notch velocity magnitude filter
+if ~isempty(x)
+	if do_notch_filter == 1
+		[u,v] = PIVlab_notch_filter (u,v,calu,calv,notch_L_thresh,notch_H_thresh);
+	end
 end
 
 if ~isempty(x)
@@ -6215,6 +6349,19 @@ if size(resultslist,2)>=frame
 			[A,rawimageA]=get_img(selected);
 			[B,rawimageB]=get_img(selected+1);
 			[u,v,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
+		end
+		
+		%correlation filter
+		do_corr2_filter = get(handles.do_corr2_filter, 'value');
+		if do_corr2_filter == 1
+			corr_filter_thresh=str2double(get(handles.corr_filter_thresh,'String'));
+			[u,v] = PIVlab_correlation_filter (u,v,corr_filter_thresh,resultslist{12,frame});
+		end
+		
+		%Notch velocity magnitude filter
+		do_notch_filter = get(handles.notch_filter, 'value');
+		if do_notch_filter == 1
+			[u,v] = PIVlab_notch_filter (u,v,calu,calv,str2double(get(handles.notch_L_thresh,'String')),str2double(get(handles.notch_H_thresh,'String')));
 		end
 		
 		%vector-based filtering
@@ -8240,7 +8387,16 @@ try
 	do_contrast_filter=get(handles.do_contrast_filter,'Value');
 catch
 end
-
+try
+	%neu v2.54
+	do_corr2_filter=get(handles.do_corr2_filter,'value');
+	corr_filter_thresh=get(handles.corr_filter_thresh,'string');
+	notch_L_thresh=get(handles.notch_L_thresh,'string');
+	notch_H_thresh=get(handles.notch_H_thresh,'string');
+	notch_filter=get(handles.notch_filter,'Value');
+catch
+	disp('corr filter / notch settings');
+end
 %neu v2.52
 try
 	repeat_last = get (handles.repeat_last,'Value');
@@ -8287,7 +8443,7 @@ else
 	warning off all
 	try
 		%even if a variable doesn't exist, this doesn't throw an error...
-		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu', 'calv','calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'colormap_steps', 'colormap_interpolation', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B','x_axis_direction','y_axis_direction','size_of_the_image','points_offsetx','points_offsety','offset_x_true','offset_y_true','bright_filter_thresh','contrast_filter_thresh','do_bright_filter','do_contrast_filter','repeat_last','repeat_last_thresh');
+		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu', 'calv','calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'colormap_steps', 'colormap_interpolation', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B','x_axis_direction','y_axis_direction','size_of_the_image','points_offsetx','points_offsety','offset_x_true','offset_y_true','bright_filter_thresh','contrast_filter_thresh','do_bright_filter','do_contrast_filter','repeat_last','repeat_last_thresh','do_corr2_filter','corr_filter_thresh','notch_L_thresh','notch_H_thresh','notch_filter');
 	catch
 		disp('Old version compatibility.')
 		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu','calv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_steps','colormap_choice', 'colormap_interpolation', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
@@ -8402,6 +8558,19 @@ else
 		set(handles.do_contrast_filter,'Value',vars.do_contrast_filter);
 	catch
 	end
+	
+	try
+	%neu v2.54
+	set(handles.do_corr2_filter,'value',vars.do_corr2_filter);
+	set(handles.corr_filter_thresh,'string',vars.corr_filter_thresh);
+	set(handles.notch_L_thresh,'string',vars.notch_L_thresh);
+	set(handles.notch_H_thresh,'string',vars.notch_H_thresh);
+	set(handles.notch_filter,'Value',vars.notch_filter);
+catch
+	disp('corr filter / notch settings');
+end
+
+	
 	try
 		if vars.velrect(1,3)~=0 && vars.velrect(1,4)~=0
 			put('velrect', vars.velrect);
@@ -10389,6 +10558,9 @@ if get(handles.Autolimit, 'value') == 1
 		filepath=retr('filepath');
 		selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
 		[img,~]=get_img(selected);
+		if size(img,3)>1
+			img = rgb2gray(img);
+		end
 		stretcher = stretchlim(img,[0.01 0.995]);
 		set(handles.minintens, 'String',stretcher(1));
 		set(handles.maxintens, 'String',stretcher(2));
@@ -10786,14 +10958,18 @@ if alreadyconnected
 	logger_path = get(handles.ac_project,'String');
 	if exist(logger_path,'dir') %only log when directory has been set up.
 		timestamp=datestr(datetime(now,'ConvertFrom','datenum'));
-		logger_content= [timestamp sync_setting];
-		if exist (fullfile(logger_path, 'sync_history.txt'),'file')
-			string_operation='w'; %write
-		else
-			string_operation='a'; %append
+		if exist (fullfile(logger_path, 'acquisition_log.txt'),'file')~=2
+			logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'w');
+			fprintf(logger_fid,'Time\tProject_folder\tMaster_frequency\tCamera_divider\tEnergy_us\tFrame_1_exposure_us\tInterframe_us\tExternal_delay_us\tExternal_skip\tLaser_status');
+			fprintf(logger_fid, '\n');
+			fclose(logger_fid);
 		end
-		logger_fid = fopen(fullfile(logger_path, 'sync_history.txt'), string_operation);
-		fprintf(logger_fid, logger_content);
+		logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'a');
+		fprintf(logger_fid, '%s', timestamp);
+		fprintf(logger_fid, '\t');
+		fprintf(logger_fid, '%s', logger_path);
+		fprintf(logger_fid, '\t');
+		fprintf(logger_fid, '%s', sync_setting);
 		fprintf(logger_fid, '\n');
 		fclose(logger_fid);
 	end
@@ -10847,6 +11023,93 @@ else
 	end
 end
 
+function ac_calibROI_Callback (~,~,~)
+handles=gethand;
+put('capturing',0);
+camera_type=retr('camera_type');
+if strcmp(camera_type,'pco_pixelfly') %ROI selection available only for pco panda
+	uiwait(msgbox('ROI selection is only available for the pco.panda 26 DS.'))
+else
+	try
+		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
+	catch
+		set(handles.ac_expo,'String','100');
+		expos=100000;
+	end
+	projectpath=get(handles.ac_project,'String');
+	capture_ok=check_project_path(projectpath,'calibration');
+	if capture_ok==1
+		put('cancel_capture',0);
+		put('capturing',1);
+		%disp('NUR HIER WIRD DIE KAMERA AUF 5120x5120 gesetzt und ignoriert ROI')
+		%disp('ANSONSTEN WIRD IMMER ROI BERÜCKSICHTIGT')
+		camera_type=retr('camera_type');
+		try
+			[errorcode, caliimg,~]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],[1,1, 5120,5120],camera_type,0);
+		catch ME
+			disp(ME)
+			uiwait(msgbox('Camera not connected'))
+			displogo
+			capture_ok=0;
+		end
+		put('capturing',0);
+		if capture_ok==1
+			displaysize_x=floor(get(gca,'XLim'));
+			displaysize_y=floor(get(gca,'YLim'));
+			ac_ROI_general=retr('ac_ROI_general');
+			if isempty(ac_ROI_general)
+				ac_ROI_general=[1,1,5120,5120]; %1 Hz default ROI
+				%ac_ROI_general=[1153,1585,2816,1952]; %5Hz default ROI
+			end
+			put('doing_roi',1)
+			ac_ROI_general=imrect(gca,ac_ROI_general); %#ok<*IMRECT>
+			put('ac_ROI_general_handle',ac_ROI_general);
+			position = wait(ac_ROI_general);
+			put('doing_roi',0)
+			position=round(position);
+
+			xmin=position(1);
+			ymin=position(2);
+			xmax=position(1)+position(3)-1;
+			ymax=position(2)+position(4)-1;
+			
+			% Round so it fits the requirements of the camera ROI
+			xmin=floor(xmin/8)*8+1;
+			ymin=floor(ymin/2)*2+1;
+			xmax=floor(xmax/8)*8;
+			ymax=floor(ymax/2)*2;
+			
+			if xmin<1
+				xmin=1;
+			end
+			if ymin<1
+				ymin=1;
+			end
+			if xmax>5120
+				xmax=5120;
+			end
+			if ymax>5120
+				ymax=5120;
+			end
+			position(1)=xmin;
+			position(2)=ymin;
+			position(3)=xmax-xmin+1;
+			position(4)=ymax-ymin+1;
+			put('ac_ROI_general',position);
+			delete(ac_ROI_general)
+			rectangle('Position',position,'EdgeColor','y')
+			%% jetzt nochmal mit finalen einstellungen bild capturen zum messen der framerate...
+			%Camera fps
+			ac_fps_value=get(handles.ac_fps,'Value');
+			ac_fps_str=get(handles.ac_fps,'String');
+			cam_fps=str2double(ac_fps_str(ac_fps_value));
+			ac_ROI_general=retr('ac_ROI_general');
+			[~,~,framerate_max]=PIVlab_capture_pco(1,retr('f1exp_cam'),'Synchronizer',projectpath,cam_fps,0,[],ac_ROI_general,camera_type,1);
+			delete(findobj('tag','roitxt'));
+			text(50,50,['Max framerate: ' num2str(round(framerate_max,2)) ' Hz'],'tag','roitxt','Color','yellow','FontSize',14,'FontWeight','bold')
+		end
+	end
+end
 
 function ac_calibcapture_Callback(~,~,~)
 put('capturing',0);
@@ -10862,6 +11125,10 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 	put('cancel_capture',0);
 	projectpath=get(handles.ac_project,'String');
 	capture_ok=check_project_path(projectpath,'calibration');
+	ac_ROI_general=retr('ac_ROI_general');	
+	if isempty(ac_ROI_general)
+		ac_ROI_general=[1,1,5120,5120];
+	end
 	if capture_ok==1
 		put('capturing',1);
 		toolsavailable(0)
@@ -10869,11 +11136,14 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 		set(handles.ac_serialstatus,'enable','on')
 		set(handles.ac_laserstatus,'enable','on')
 		set(handles.ac_lasertoggle,'enable','on')
+		camera_type=retr('camera_type');
 		try
-			[errorcode, caliimg]=PIVlab_Capture_Pixelfly(50000,expos,'Calibration',projectpath,[],0,[]);
+			%[errorcode, caliimg]=PIVlab_Capture_Pixelfly(50000,expos,'Calibration',projectpath,[],0,[]);
+			[errorcode, caliimg,framerate_max]=PIVlab_capture_pco(50000,expos,'Calibration',projectpath,[],0,[],ac_ROI_general,camera_type,0);
 			put('caliimg',caliimg);
 		catch
-			msgbox('Camera not connected')
+			uiwait(msgbox('Camera not connected'))
+			displogo
 		end
 	end
 else
@@ -10921,12 +11191,13 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 		ac_fps_value=get(handles.ac_fps,'Value');
 		ac_fps_str=get(handles.ac_fps,'String');
 		cam_fps=str2double(ac_fps_str(ac_fps_value));
-		ac_ROI=retr('ac_ROI');
+		ac_ROI_realtime=retr('ac_ROI_realtime');
 		do_realtime=retr('do_realtime');
 		if isempty(do_realtime)
 			do_realtime=0;
 		end
 		if capture_ok==1
+			ac_ROI_general=retr('ac_ROI_general');
 			put('capturing',1);
 			toolsavailable(0)
 			set(handles.ac_pivstop,'enable','on')
@@ -10947,7 +11218,8 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 			waitbar(1,f,'Starting camera...');
 			pause(0.5)
 			close(f)
-			PIVlab_Capture_Pixelfly(imageamount,400,'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI);
+			camera_type=retr('camera_type');
+			PIVlab_capture_pco(imageamount,retr('f1exp_cam'),'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI_realtime,ac_ROI_general,camera_type,0);
 			%disable external devices
 			external_device_control(0);
 			control_simple_sync_serial(0);
@@ -10957,6 +11229,8 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 					put('sessionpath',projectpath );
 					set(handles.time_inp,'String',num2str(str2num(get(handles.ac_interpuls,'String'))/1000));
 					savesessionfuntion (projectpath,'PIVlab_Capture_Session.mat');
+				else
+					displogo
 				end
 			end
 		end
@@ -11072,7 +11346,7 @@ if get(handles.ac_realtime,'Value')==1
 	uiwait(msgbox(['Please select the ROI for real-time PIV.'],'modal'))
 	roirect = round(getrect(gca));
 	if roirect(1,3)~=0 && roirect(1,4)~=0
-		put('ac_ROI',roirect);
+		put('ac_ROI_realtime',roirect);
 		put('do_realtime',1);
 	end
 	catch
@@ -11148,11 +11422,27 @@ function select_capture_config_Callback (~,~,~)
 handles=gethand;
 value=get(handles.ac_config,'value');
 if value==1 % ILA.piv nano
-	put('f1exp',406); % will depend on camera model
+	put('camera_type','pco_pixelfly'); % Exposure start -> Q1 delay
+	put('f1exp',406); % Exposure start -> Q1 delay
+	put('f1exp_cam',400); %exposure time setting first frame
 	put('master_freq',15);
+	set(handles.ac_fps,'string',{'5' '3' '1.5' '1'});
+	set(handles.ac_fps,'value',1)
 elseif value == 2 % pco panda
-	put('f1exp',406); % will depend on camera model
+	put('camera_type','pco_panda');
+	put('f1exp',352) % Exposure start -> Q1 delay
+	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
+	set(handles.ac_fps,'string',{'15' '7.5' '5' '3' '1.5' '1'});
+	set(handles.ac_fps,'value',4)
 end
 %contents=get(handles.ac_config,'String')
 %contents(value)
+
+function bg_subtract_Callback (~,~,~)
+handles=gethand;
+if get(handles.bg_subtract,'Value')==0
+	%remove the background image. Needs to be done for ensemble correlation to work properly
+	put('bg_img_A',[]);
+	put('bg_img_B',[]);
+end

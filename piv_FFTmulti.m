@@ -120,7 +120,7 @@ if do_pad==1 && passes == 1 %only on first pass
 	catch
 		mean_image1_cut=zeros(size(image1_cut));
 		mean_image2_cut=zeros(size(image2_cut));
-		for oldmatlab=1:size(image2_cut,3);
+		for oldmatlab=1:size(image2_cut,3)
 			mean_image1_cut(:,:,oldmatlab)=mean(mean(image1_cut(:,:,oldmatlab)));
 			mean_image2_cut(:,:,oldmatlab)=mean(mean(image2_cut(:,:,oldmatlab)));
 		end
