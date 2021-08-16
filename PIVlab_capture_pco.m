@@ -156,6 +156,7 @@ else
 		performance_preset=10;
 	end
 	frame_nr_display=text(100,100,'Initializing...','Color',[1 1 0]);
+	colormap default %reset colormap steps
 	new_map=colormap('gray');
 	new_map(1:3,:)=[0 0.2 0;0 0.2 0;0 0.2 0];
 	new_map(end-2:end,:)=[1 0.7 0.7;1 0.7 0.7;1 0.7 0.7];
