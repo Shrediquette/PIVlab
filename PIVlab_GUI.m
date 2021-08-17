@@ -399,6 +399,14 @@ if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(even
 		external_device_control(1-seeder_toggle);
 		disp(num2str(1-seeder_toggle))
 		put('seeder_toggle',1-seeder_toggle);
+	elseif strcmp(event.Key,'c')
+		disp('Crosshair enabled')
+		crosshair_enabled=retr('crosshair_enabled');
+		if isempty(crosshair_enabled)
+			crosshair_enabled=0;
+		end
+		disp(num2str(1-crosshair_enabled))
+		put('crosshair_enabled',1-crosshair_enabled);		
 	elseif strcmp(event.Key,'1')
 		if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
 			delete(findobj('tag','roitxt'))
@@ -898,7 +906,7 @@ item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.textnotchL = uicontrol(handles.multip06,'Style','text','String','vL','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','textnotchL');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.notch_L_thresh = uicontrol(handles.multip06,'Style','edit','String','-1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@lnotch_L_thresh_Callback,'Tag','notch_L_thresh');
+handles.notch_L_thresh = uicontrol(handles.multip06,'Style','edit','String','-1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@notch_L_thresh_Callback,'Tag','notch_L_thresh');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.textnotchH = uicontrol(handles.multip06,'Style','text','String','vH','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','textnotchH');
@@ -1863,7 +1871,7 @@ item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text19a = uicontrol(handles.multip23,'Style','text','String','Threshold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text19a');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.contrast_filter_thresh = uicontrol(handles.multip23,'Style','edit','String','0.001','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','contrast_filter_thresh');
+handles.contrast_filter_thresh = uicontrol(handles.multip23,'Style','edit','String','0.001','Units','characters', 'Fontunits','points','Callback',@contrast_filter_thresh_Callback, 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','contrast_filter_thresh');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
 handles.suggest_contrast_filter = uicontrol(handles.multip23,'Style','pushbutton','String','Suggest threshold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'TooltipString','Finds a threshold that discards vectors in the regions where image contrast is low. Use this as a starting point only.','Tag','suggest_contrast_filter','Callback', @suggest_contrast_filter_Callback);
@@ -1875,7 +1883,7 @@ item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text19b = uicontrol(handles.multip23,'Style','text','String','Threshold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text19b');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.bright_filter_thresh = uicontrol(handles.multip23,'Style','edit','String','0.001','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bright_filter_thresh');
+handles.bright_filter_thresh = uicontrol(handles.multip23,'Style','edit','String','0.001','Units','characters', 'Fontunits','points','Callback',@bright_filter_thresh_Callback,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bright_filter_thresh');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
 handles.suggest_bright_filter = uicontrol(handles.multip23,'Style','pushbutton','String','Suggest threshold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'TooltipString','Finds a threshold that discards vectors in the regions where bright objects are found. Use this as a starting point only.','Tag','suggest_bright_filter','Callback', @suggest_bright_filter_Callback);
@@ -1887,7 +1895,7 @@ item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text19corrfilter = uicontrol(handles.multip23,'Style','text','String','Threshold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text19corrfilter');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.corr_filter_thresh = uicontrol(handles.multip23,'Style','edit','String','0.5','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','corr_filter_thresh');
+handles.corr_filter_thresh = uicontrol(handles.multip23,'Style','edit','String','0.5','Units','characters', 'Fontunits','points','Callback',@corr_filter_thresh_Callback,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','corr_filter_thresh');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.interpol_missing2 = uicontrol(handles.multip23,'Style','checkbox','String','Interpolate missing data','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpol_missing2','TooltipString','Interpolate missing velocity data. Interpolated data appears as ORANGE vectors','Callback',@set_other_interpol_checkbox);
@@ -8301,8 +8309,9 @@ end
 clear deli
 %save('-v6', fullfile(PathName,FileName), '-struct', 'app')
 %save(fullfile(PathName,FileName), '-struct', 'app') % AKTUELL PUBLIZIERT
+warning off
 save(fullfile(PathName,FileName), '-struct', 'app','-v7.3')% riesig aber nur das geht...
-
+warning on
 
 clear app %hgui iptPointerManager
 clear hgui iptPointerManager GUIDEOptions GUIOnScreen Listeners SavedVisible ScribePloteditEnable UsedByGUIData_m
@@ -9990,6 +9999,16 @@ function part_z_Callback(hObject, ~, ~)
 check_comma(hObject)
 function vecwidth_Callback(hObject, ~, ~)
 check_comma(hObject)
+function notch_L_thresh_Callback(hObject, ~, ~)
+check_comma(hObject)
+function notch_H_thresh_Callback(hObject, ~, ~)
+check_comma(hObject)
+function contrast_filter_thresh_Callback(hObject, ~, ~)
+check_comma(hObject)
+function bright_filter_thresh_Callback(hObject, ~, ~)
+check_comma(hObject)
+function corr_filter_thresh_Callback(hObject, ~, ~)
+check_comma(hObject)
 
 function avifilesave_Callback(hObject, ~, ~)
 handles=gethand;
@@ -11136,6 +11155,7 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 		set(handles.ac_serialstatus,'enable','on')
 		set(handles.ac_laserstatus,'enable','on')
 		set(handles.ac_lasertoggle,'enable','on')
+		set(handles.ac_power,'enable','on')
 		camera_type=retr('camera_type');
 		try
 			%[errorcode, caliimg]=PIVlab_Capture_Pixelfly(50000,expos,'Calibration',projectpath,[],0,[]);
@@ -11426,15 +11446,21 @@ if value==1 % ILA.piv nano
 	put('f1exp',406); % Exposure start -> Q1 delay
 	put('f1exp_cam',400); %exposure time setting first frame
 	put('master_freq',15);
-	set(handles.ac_fps,'string',{'5' '3' '1.5' '1'});
-	set(handles.ac_fps,'value',1)
+	avail_freqs={'5' '3' '1.5' '1'};
+	set(handles.ac_fps,'string',avail_freqs);
+	if get(handles.ac_fps,'value') > numel(avail_freqs)
+		set(handles.ac_fps,'value',1)
+	end
 elseif value == 2 % pco panda
 	put('camera_type','pco_panda');
 	put('f1exp',352) % Exposure start -> Q1 delay
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
-	set(handles.ac_fps,'string',{'15' '7.5' '5' '3' '1.5' '1'});
-	set(handles.ac_fps,'value',4)
+	avail_freqs={'15' '7.5' '5' '3' '1.5' '1'};
+	set(handles.ac_fps,'string',avail_freqs);
+	if get(handles.ac_fps,'value') > numel(avail_freqs)
+		set(handles.ac_fps,'value',1)
+	end
 end
 %contents=get(handles.ac_config,'String')
 %contents(value)
