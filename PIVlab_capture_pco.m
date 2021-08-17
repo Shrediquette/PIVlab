@@ -131,6 +131,7 @@ if measure_framerate_max == 1
 else
 	framerate_max=[];
 	hgui=getappdata(0,'hgui');
+	crosshair_enabled = getappdata(hgui,'crosshair_enabled');
 	if strcmp(TriggerModeString,'Calibration') || strcmp(TriggerModeString,'calibration')
 		triggermode=0; %internal trigger
 	elseif  strcmp(TriggerModeString,'Synchronizer') || strcmp(TriggerModeString,'synchronizer')
@@ -478,7 +479,23 @@ else
 							set(frame_nr_display,'String',int2str(image_save_number));
 							image_save_number=image_save_number+1;
 						elseif triggermode==0
+							if crosshair_enabled == 1
+								locations=[0.15 0.5 0.85];
+								half_thickness=2;
+								brightness_incr=3000;
+								ima_ed=ima;
+								old_max=max(ima(:));
+								for loca=locations
+									%vertical
+									ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)=ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)+brightness_incr;
+									%horizontal
+									ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)=ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)+brightness_incr;
+								end
+								ima_ed(ima_ed>old_max)=old_max;
+							set(image_handle,'CData',ima_ed);
+							else
 							set(image_handle,'CData',ima);
+							end
 							set(frame_nr_display,'String','');
 						end
 						
