@@ -157,7 +157,7 @@ if repeat == 1 && passes == 1
 		catch
 			mean_image1_cutB=zeros(size(image1_cutB));
 			mean_image2_cutB=zeros(size(image2_cutB));
-			for oldmatlab=1:size(image2_cutB,3);
+			for oldmatlab=1:size(image2_cutB,3)
 				mean_image1_cutB(:,:,oldmatlab)=mean(mean(image1_cutB(:,:,oldmatlab)));
 				mean_image2_cutB(:,:,oldmatlab)=mean(mean(image2_cutB(:,:,oldmatlab)));
 			end
