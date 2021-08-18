@@ -409,38 +409,73 @@ if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(even
 		put('crosshair_enabled',1-crosshair_enabled);		
 	elseif strcmp(event.Key,'1')
 		if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
+			binning=retr('binning');
+			if isempty(binning)
+				binning=1;
+			end
 			delete(findobj('tag','roitxt'))
 			text(50,50,'ca. 1 Hz','tag','roitxt','Color','yellow')
 			ac_ROI_general_handle=retr('ac_ROI_general_handle');
-			setPosition(ac_ROI_general_handle,[1,1,5120,5120]) %1Hz default
+			img_size=[5120/binning 5120/binning]; %must be even, %X Y
+			min_x=(5120/binning-img_size(1))/2+1;
+			min_y=(5120/binning-img_size(2))/2+1;
+			setPosition(ac_ROI_general_handle,[min_x,min_y,img_size(1),img_size(2)]) %1Hz default
 		end
 	elseif strcmp(event.Key,'2')
 		if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
+			binning=retr('binning');
+			if isempty(binning)
+				binning=1;
+			end			
 			delete(findobj('tag','roitxt'))
 			text(50,50,'ca. 3 Hz','tag','roitxt','Color','yellow')
 			ac_ROI_general_handle=retr('ac_ROI_general_handle');
-			setPosition(ac_ROI_general_handle,[545,1025,4032,3072]) %3Hz default
+			img_size=[4488/binning 3320/binning]; %must be even, %X Y
+			min_x=(5120/binning-img_size(1))/2+1;
+			min_y=(5120/binning-img_size(2))/2+1;
+			setPosition(ac_ROI_general_handle,[min_x,min_y,img_size(1),img_size(2)]) %3Hz default
 		end
 	elseif strcmp(event.Key,'3')
 		if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
+			binning=retr('binning');
+			if isempty(binning)
+				binning=1;
+			end			
 			delete(findobj('tag','roitxt'))
 			text(50,50,'ca. 5 Hz','tag','roitxt','Color','yellow')
 			ac_ROI_general_handle=retr('ac_ROI_general_handle');
-			setPosition(ac_ROI_general_handle,[1153,1585,2816,1952]) %5Hz default
+			img_size=[3464/binning 2710/binning]; %must be even, %X Y
+			min_x=(5120/binning-img_size(1))/2+1;
+			min_y=(5120/binning-img_size(2))/2+1;
+			setPosition(ac_ROI_general_handle,[min_x,min_y,img_size(1),img_size(2)])%5Hz default
 		end
 	elseif strcmp(event.Key,'4')
 		if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
+			binning=retr('binning');
+			if isempty(binning)
+				binning=1;
+			end			
 			delete(findobj('tag','roitxt'))
 			text(50,50,'ca. 7.5 Hz','tag','roitxt','Color','yellow')
 			ac_ROI_general_handle=retr('ac_ROI_general_handle');
-			setPosition(ac_ROI_general_handle,[1601,1857,1920,1408]) %7.5Hz default
+			img_size=[2352/binning 1824/binning]; %must be even, %X Y
+			min_x=(5120/binning-img_size(1))/2+1;
+			min_y=(5120/binning-img_size(2))/2+1;
+			setPosition(ac_ROI_general_handle,[min_x,min_y,img_size(1),img_size(2)])%7.5Hz default
 		end		
 	elseif strcmp(event.Key,'5')
 		if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
+			binning=retr('binning');
+			if isempty(binning)
+				binning=1;
+			end			
 			delete(findobj('tag','roitxt'))
 			text(50,50,'ca. 15 Hz','tag','roitxt','Color','yellow')
 			ac_ROI_general_handle=retr('ac_ROI_general_handle');
-			setPosition(ac_ROI_general_handle,[2033,2177,1056,768]) %15Hz default
+			img_size=[1160/binning 870/binning]; %must be even, %X Y
+			min_x=(5120/binning-img_size(1))/2+1;
+			min_y=(5120/binning-img_size(2))/2+1;
+			setPosition(ac_ROI_general_handle,[min_x,min_y,img_size(1),img_size(2)])%15Hz default			
 		end
 	end
 end
@@ -655,7 +690,7 @@ item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text8 = uicontrol(handles.multip03,'Style','text', 'String','Window size [px]','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text8');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.clahe_size = uicontrol(handles.multip03,'Style','edit', 'String','20','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','clahe_size','TooltipString','Size of the tiles for CLAHE. Default setting is fine in most cases');
+handles.clahe_size = uicontrol(handles.multip03,'Style','edit', 'String','64','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','clahe_size','TooltipString','Size of the tiles for CLAHE. Default setting is fine in most cases');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.enable_highpass = uicontrol(handles.multip03,'Style','checkbox', 'value',0, 'String','Enable highpass','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','enable_highpass','TooltipString','Highpass the image data. Only needed for some special cases');
@@ -1935,7 +1970,7 @@ item=[0 item(2)+item(4)+margin*0.3 parentitem(3) 1];
 handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Select configuration:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_configtxt');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'PIVlab-SimpleSync + ILA.PIV.nano camera' 'PIVlab-SimpleSync + pco.panda 26 DS'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
+handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'SimpleSync + pco.pixelfly usb' 'SimpleSync + pco.panda 26 DS'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
 
 % Sync control
 parentitem=get(handles.multip24, 'Position');
@@ -2006,14 +2041,17 @@ handles.ac_expotxt = uicontrol(handles.uipanelac_calib,'Style','text', 'String',
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
 handles.ac_expo = uicontrol(handles.uipanelac_calib,'Style','edit','units','characters','HorizontalAlignment','right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','100','tag','ac_expo','TooltipString','Exposure of the camera during calibration image capture');
 
-item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/3 1.5];
-handles.ac_calibROI = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','ROI','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_calibROI_Callback,'Tag','ac_calibROI','TooltipString','Select ROI in camera image');
+item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/4 1.5];
+handles.ac_calibBinning = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Binning','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_calibBinning_Callback,'Tag','ac_calibBinning','TooltipString','Select pixel binning');
 
-item=[parentitem(3)/3*1 item(2) parentitem(3)/3 1.5];
-handles.ac_calibcapture = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Start','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_calibcapture_Callback,'Tag','ac_calibcapture','TooltipString','Start live view of the camera');
+item=[parentitem(3)/4*1  item(2) parentitem(3)/4 1.5];
+handles.ac_calibROI = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','ROI','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_calibROI_Callback,'Tag','ac_calibROI','TooltipString','Select ROI in camera image');
 
-item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
-handles.ac_calibstop = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Save','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_camstop_Callback,'Tag','ac_calibstop','TooltipString','Stop live view and save last image');
+item=[parentitem(3)/4*2 item(2) parentitem(3)/4 1.5];
+handles.ac_calibcapture = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Start','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_calibcapture_Callback,'Tag','ac_calibcapture','TooltipString','Start live view of the camera');
+
+item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1.5];
+handles.ac_calibstop = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Save','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_camstop_Callback,'Tag','ac_calibstop','TooltipString','Stop live view and save last image');
 
 % PIV capture
 parentitem=get(handles.multip24, 'Position');
@@ -11042,10 +11080,47 @@ else
 	end
 end
 
+function ac_calibBinning_Callback (~,~,~)
+handles=gethand;
+camera_type=retr('camera_type');
+if strcmp(camera_type,'pco_pixelfly') %ROI selection available only for pco panda
+	uiwait(msgbox('Binning is only available for the pco.panda 26 DS.'))
+else
+	binning=retr('binning');
+	if isempty(binning)
+		binning=1;
+	end
+	definput = {num2str(binning)};
+	prompt = {'Pixel binning (1, 2, 4)'};
+	dlgtitle = 'Pixel binning Configuration';
+	dims = [1 50];
+	answer = inputdlg(prompt,dlgtitle,dims,definput);
+	if ~isempty(answer)
+		if str2double(answer{1}) ~= 1 && str2double(answer{1}) ~= 2 && str2double(answer{1}) ~= 4
+			msgbox('Not a valid binning option.','modal')
+			put('binning',1)
+		else
+			put('binning',str2double(answer{1}));
+		end
+		if answer{1} ~= definput{1}
+			set(handles.ac_realtime,'Value',0);%reset realtime roi
+			put('do_realtime',0);
+			%reset roi too
+			ac_ROI_general=[];
+			put('ac_ROI_general',ac_ROI_general);
+			save('PIVlab_settings_default.mat','ac_ROI_general','-append');
+		end
+	end
+end
+
 function ac_calibROI_Callback (~,~,~)
 handles=gethand;
 put('capturing',0);
 camera_type=retr('camera_type');
+binning=retr('binning');
+if isempty(binning)
+	binning=1;
+end
 if strcmp(camera_type,'pco_pixelfly') %ROI selection available only for pco panda
 	uiwait(msgbox('ROI selection is only available for the pco.panda 26 DS.'))
 else
@@ -11064,7 +11139,7 @@ else
 		%disp('ANSONSTEN WIRD IMMER ROI BERÜCKSICHTIGT')
 		camera_type=retr('camera_type');
 		try
-			[errorcode, caliimg,~]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],[1,1, 5120,5120],camera_type,0);
+			[errorcode, caliimg,~]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,[1,1, 5120/binning,5120/binning],camera_type,0);
 		catch ME
 			disp(ME)
 			uiwait(msgbox('Camera not connected'))
@@ -11075,15 +11150,18 @@ else
 		if capture_ok==1
 			displaysize_x=floor(get(gca,'XLim'));
 			displaysize_y=floor(get(gca,'YLim'));
-			ac_ROI_general=retr('ac_ROI_general');
+			ac_ROI_general=[];
+			warning off
+			load('PIVlab_settings_default.mat','ac_ROI_general');
+			warning on
 			if isempty(ac_ROI_general)
-				ac_ROI_general=[1,1,5120,5120]; %1 Hz default ROI
+				ac_ROI_general=[1,1,5120/binning,5120/binning]; %1 Hz default ROI
 				%ac_ROI_general=[1153,1585,2816,1952]; %5Hz default ROI
 			end
 			put('doing_roi',1)
-			ac_ROI_general=imrect(gca,ac_ROI_general); %#ok<*IMRECT>
-			put('ac_ROI_general_handle',ac_ROI_general);
-			position = wait(ac_ROI_general);
+			ac_ROI_general_handle=imrect(gca,ac_ROI_general); %#ok<*IMRECT>
+			put('ac_ROI_general_handle',ac_ROI_general_handle);
+			position = wait(ac_ROI_general_handle);
 			put('doing_roi',0)
 			position=round(position);
 
@@ -11114,8 +11192,10 @@ else
 			position(2)=ymin;
 			position(3)=xmax-xmin+1;
 			position(4)=ymax-ymin+1;
-			put('ac_ROI_general',position);
-			delete(ac_ROI_general)
+			ac_ROI_general=position;
+			put('ac_ROI_general',ac_ROI_general);
+			save('PIVlab_settings_default.mat','ac_ROI_general','-append');
+			delete(ac_ROI_general_handle)
 			rectangle('Position',position,'EdgeColor','y')
 			%% jetzt nochmal mit finalen einstellungen bild capturen zum messen der framerate...
 			%Camera fps
@@ -11123,9 +11203,11 @@ else
 			ac_fps_str=get(handles.ac_fps,'String');
 			cam_fps=str2double(ac_fps_str(ac_fps_value));
 			ac_ROI_general=retr('ac_ROI_general');
-			[~,~,framerate_max]=PIVlab_capture_pco(1,retr('f1exp_cam'),'Synchronizer',projectpath,cam_fps,0,[],ac_ROI_general,camera_type,1);
+			[~,~,framerate_max]=PIVlab_capture_pco(1,retr('f1exp_cam'),'Synchronizer',projectpath,cam_fps,0,[],binning,ac_ROI_general,camera_type,1);
 			delete(findobj('tag','roitxt'));
 			text(50,50,['Max framerate: ' num2str(round(framerate_max,2)) ' Hz'],'tag','roitxt','Color','yellow','FontSize',14,'FontWeight','bold')
+			set(handles.ac_realtime,'Value',0);%reset realtime roi
+			put('do_realtime',0);
 		end
 	end
 end
@@ -11144,9 +11226,13 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 	put('cancel_capture',0);
 	projectpath=get(handles.ac_project,'String');
 	capture_ok=check_project_path(projectpath,'calibration');
-	ac_ROI_general=retr('ac_ROI_general');	
+	ac_ROI_general=retr('ac_ROI_general');
+	binning=retr('binning');
+	if isempty(binning)
+		binning=1;
+	end
 	if isempty(ac_ROI_general)
-		ac_ROI_general=[1,1,5120,5120];
+		ac_ROI_general=[1,1,5120/binning,5120/binning];
 	end
 	if capture_ok==1
 		put('capturing',1);
@@ -11159,7 +11245,7 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 		camera_type=retr('camera_type');
 		try
 			%[errorcode, caliimg]=PIVlab_Capture_Pixelfly(50000,expos,'Calibration',projectpath,[],0,[]);
-			[errorcode, caliimg,framerate_max]=PIVlab_capture_pco(50000,expos,'Calibration',projectpath,[],0,[],ac_ROI_general,camera_type,0);
+			[errorcode, caliimg,framerate_max]=PIVlab_capture_pco(50000,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
 			put('caliimg',caliimg);
 		catch
 			uiwait(msgbox('Camera not connected'))
@@ -11239,7 +11325,11 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 			pause(0.5)
 			close(f)
 			camera_type=retr('camera_type');
-			PIVlab_capture_pco(imageamount,retr('f1exp_cam'),'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI_realtime,ac_ROI_general,camera_type,0);
+			binning=retr('binning');
+			if isempty(binning)
+				binning=1;
+			end
+			PIVlab_capture_pco(imageamount,retr('f1exp_cam'),'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI_realtime,binning,ac_ROI_general,camera_type,0);
 			%disable external devices
 			external_device_control(0);
 			control_simple_sync_serial(0);
@@ -11356,11 +11446,20 @@ if get(handles.ac_realtime,'Value')==1
 	end
 	projectpath=get(handles.ac_project,'String');
 	capture_ok=check_project_path(projectpath,'calibration');
+	ac_ROI_general=retr('ac_ROI_general');
+	binning=retr('binning');
+	if isempty(binning)
+		binning=1;
+	end
+	if isempty(ac_ROI_general)
+		ac_ROI_general=[1,1,5120/binning,5120/binning];
+	end
+	camera_type=retr('camera_type');
 	try
 	if capture_ok==1
 		put('cancel_capture',0);
 		put('capturing',1);
-		[errorcode, caliimg]=PIVlab_Capture_Pixelfly(1,expos,'Calibration',projectpath,[],0,[]);
+		[errorcode, caliimg]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
 	end
 	put('capturing',0);
 	uiwait(msgbox(['Please select the ROI for real-time PIV.'],'modal'))
@@ -11441,11 +11540,14 @@ end
 function select_capture_config_Callback (~,~,~)
 handles=gethand;
 value=get(handles.ac_config,'value');
-if value==1 % ILA.piv nano
+put('do_realtime',0);
+set(handles.ac_realtime,'Value',0)
+if value==1 % ILA.piv nano / pco pixelfly
 	put('camera_type','pco_pixelfly'); % Exposure start -> Q1 delay
 	put('f1exp',406); % Exposure start -> Q1 delay
 	put('f1exp_cam',400); %exposure time setting first frame
 	put('master_freq',15);
+	put('binning',1);
 	avail_freqs={'5' '3' '1.5' '1'};
 	set(handles.ac_fps,'string',avail_freqs);
 	if get(handles.ac_fps,'value') > numel(avail_freqs)

@@ -1,4 +1,4 @@
-function [OutputError,ima,framerate_max] = PIVlab_capture_pco(nr_of_images,exposure_time,TriggerModeString,ImagePath,framerate,do_realtime,ROI_live,ROI_general,camera_type,measure_framerate_max)
+function [OutputError,ima,framerate_max] = PIVlab_capture_pco(nr_of_images,exposure_time,TriggerModeString,ImagePath,framerate,do_realtime,ROI_live,binning,ROI_general,camera_type,measure_framerate_max)
 if measure_framerate_max == 1
 	OutputError=0;
 	glvar=struct('do_libunload',1,'do_close',0,'camera_open',0,'out_ptr',[]);
@@ -26,10 +26,8 @@ if measure_framerate_max == 1
 		pco_errdisp('PCO_GetCameraDescription',errorCode);
 		%% Pixel Binning
 		%binning funktioniert nur wenn gleichzeitig ROI gesetzt wird.
-		h_binning=1; %1,2,4
-		v_binning=1; %1,2,4
-		
-		%WAS TUN MIT BINNING....? WO REIN...? Wer braucht überhaupt binning...?
+		h_binning=binning; %1,2,4
+		v_binning=binning; %1,2,4
 		
 		xmin=ROI_general(1);
 		ymin=ROI_general(2);
@@ -105,8 +103,8 @@ if measure_framerate_max == 1
 		dummy_image=uint16(rand(act_ysize/2,act_xsize)*65530);
 		img_save_time=tic;
 		for im_write_test=1:3
-			imwrite(dummy_image,imgA_path);
-			imwrite(dummy_image,imgB_path);
+			imwrite(dummy_image,imgA_path,'compression','none');
+			imwrite(dummy_image,imgB_path,'compression','none');
 		end
 		test_data_write_time=toc(img_save_time)/im_write_test;
 		delete (fullfile(ImagePath,'PIVlab_dummy_A.tif'));
@@ -151,10 +149,10 @@ else
 		step=32;
 		msg_displayed=0;
 		performance_settings_int_area = [16 16 32 32 48 48 64 96];
-		performance_settings_step = [128 64 64 32 32 24 24 16];
+		performance_settings_step =     [128 64 64 32 32 24 24 16];
 		performance_settings_int_area= round(interp1(1:numel(performance_settings_int_area),performance_settings_int_area,1:0.15:numel(performance_settings_int_area)));
 		performance_settings_step= round(interp1(1:numel(performance_settings_step),performance_settings_step,1:0.15:numel(performance_settings_step)));
-		performance_preset=10;
+		performance_preset=1;
 	end
 	frame_nr_display=text(100,100,'Initializing...','Color',[1 1 0]);
 	colormap default %reset colormap steps
@@ -215,11 +213,9 @@ else
 		
 		%% Pixel Binning
 		%binning funktioniert nur wenn gleichzeitig ROI gesetzt wird.
-		h_binning=1; %1,2,4
-		v_binning=1; %1,2,4
-		
-		%WAS TUN MIT BINNING....? WO REIN...? Wer braucht überhaupt binning...?
-		
+		h_binning=binning; %1,2,4
+		v_binning=binning; %1,2,4
+
 		[errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetBinning', out_ptr,h_binning,v_binning); %2,4, etc.
 		pco_errdisp('PCO_SetBinning',errorCode);
 		%% ROI selection
@@ -467,8 +463,8 @@ else
 							imgA_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',image_save_number) '_A.tif']);
 							imgB_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',image_save_number) '_B.tif']);
 							%img_save_time=tic;
-							imwrite(ima(1:act_ysize/2  ,  1:act_xsize),imgA_path);
-							imwrite(ima(act_ysize/2+1:end  ,  1:act_xsize),imgB_path);
+							imwrite(ima(1:act_ysize/2  ,  1:act_xsize),imgA_path,'compression','none'); %tif file saving seems to be the fastest method for saving data...
+							imwrite(ima(act_ysize/2+1:end  ,  1:act_xsize),imgB_path,'compression','none');
 							%toc(img_save_time)
 							toggle_image_state=getappdata(hgui,'toggler');
 							if toggle_image_state == 0
@@ -502,8 +498,8 @@ else
 						pause(0.0001);
 						%% Live preview
 						if triggermode == 2 && do_realtime==1%external trigger
-							A=adapthisteq(ima(1:1040,:)); %0.08s
-							B=adapthisteq(ima(1041:end,:));
+							A=adapthisteq(ima(1:act_ysize/2  ,  1:act_xsize)); %0.08s
+							B=adapthisteq(ima(act_ysize/2+1:end  ,  1:act_xsize));
 							A=A(ROI_live(2):ROI_live(2)+ROI_live(4) , ROI_live(1):ROI_live(1)+ROI_live(3));
 							B=B(ROI_live(2):ROI_live(2)+ROI_live(4) , ROI_live(1):ROI_live(1)+ROI_live(3));
 							[xtable, ytable, utable, vtable] = piv_quick (A,B,int_area, step);
