@@ -21,7 +21,7 @@ https://youtube.com/watch?v=47NCB_RFiE8
 * Vectorization in piv_fftmulti: Sergey Filatov (http://www.issp.ac.ru/lqc/people.html)
 * GUI parallelization: Chun-Sheng Wang, ParaPIV (https://de.mathworks.com/matlabcentral/fileexchange/63358-parapiv)
 * Command line parallelization: Quynh M. Nguyen (https://github.com/quynhneo)
-* Several donations to update Matlab licenses: https://www.paypal.com/pools/c/8cj8E4slJx
+* Several donations to update Matlab licenses
 
 We would like to acknowledge Uri Shavit, Roi Gurka &amp; Alex Liberzon for sharing their code for 3-point Gaussian sub-pixel estimation. Thanks to Nima Bigdely Shamlo for allowing me to include the LIC function. Thanks to Raffel et al. for writing the book "Particle Image Velocimetry, A Practical Guide", which was a very good help.
 
