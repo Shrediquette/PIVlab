@@ -836,6 +836,7 @@ if do_corr2 == 1
 		correlation_map(cor_i)=corr2(image1_cut(:,:,cor_i),image2_cut(:,:,cor_i));
 	end
 end
+
 correlation_map = permute(reshape(correlation_map, [size(xtable')]), [2 1 3]);
 correlation_map(jj) = 0;
 %correlation_map=peak_height; %replace correlation coefficient with peak height
@@ -844,6 +845,91 @@ ytable=ytable-ceil(interrogationarea/2);
 
 xtable=xtable+xroi;
 ytable=ytable+yroi;
+
+%{
+%% Hier uncertainty...?
+%Die Werte sind viel zu hoch, im Prinzip folgen sie aber den Erwartungen.
+Das Problem wird meine Partikelpäarchenfinder sein. Evtl. doch aus dem Beispiel klauen...
+%lowpass filter
+image1_cut = imfilter(image1_cut,fspecial('gaussian',[3 3]));
+image2_cut = imfilter(image2_cut,fspecial('gaussian',[3 3]));
+
+multiplied_images = image1_cut(:,:,:) .* image1_cut(:,:,:);
+max_val=max(multiplied_images,[],[1 2]); %maximum for each slice
+multiplied_images_binary=imbinarize(multiplied_images./max_val,0.75);
+multiplied_images_binary = bwareaopen(multiplied_images_binary, 2); %remove everything with less than n pixels
+for islice=1:size(multiplied_images_binary,3)
+	multiplied_images_binary(:,:,islice) = bwmorph(multiplied_images_binary(:,:,islice), 'shrink', inf);
+end
+%remove pixels at borders (otherwise subpixfinder will fail)
+multiplied_images_binary(:,1,:)=0;multiplied_images_binary(:,end,:)=0;
+multiplied_images_binary(1,:,:)=0;multiplied_images_binary(end,:,:)=0;
+amount_of_particles_pairs_per_IA = squeeze(sum(multiplied_images_binary,[1 2]));
+
+%meine koordinaten zeigen nicht zwingend partikel päarchen. wenn es keine partikel päarchen sind, dann wird disparity groß sein
+
+%find all coordinates of particle pairs
+[y_img, x_img, z_img] = ind2sub(size(multiplied_images_binary), find(multiplied_images_binary==1));
+
+[peakx_A, peaky_A] = multispot_SUBPIXGAUSS(image1_cut, x_img, y_img, z_img);
+[peakx_B, peaky_B] = multispot_SUBPIXGAUSS(image2_cut, x_img, y_img, z_img);
+
+%PRoblem: ich finde peaks an stellen wo particel evtl weit auseinander sind
+
+%{
+Each point (i, j) where ? is non-null indicates a particle
+image pair; the peak of the corresponding particle images is
+detected in I1 and I2 in a ___neighborhood of search radius r___
+(typically 1 or 2 pixels), centered in (i, j).
+%}
+
+xdisparity=peakx_A-peakx_B;
+ydisparity=peaky_A-peaky_B;
+
+%mismatch is limited to 1.5 pixel:
+%{
+Each point (i, j) where ? is non-null indicates a particle
+image pair; the peak of the corresponding particle images is
+detected in I1 and I2 in a ___neighborhood of search radius r___
+(typically 1 or 2 pixels), centered in (i, j).
+%}
+xdisparity (xdisparity>1.5 | xdisparity<-1.5)=nan;
+ydisparity (ydisparity>1.5 | ydisparity<-1.5)=nan;
+
+total_disparity=(xdisparity.^2+ydisparity.^2).^0.5;
+
+
+
+per_slice_stdev=zeros(size(multiplied_images,3),1);
+per_slice_mean=zeros(size(multiplied_images,3),1);
+for slice_no=1:size(multiplied_images,3)
+	%for every slice...
+	idx=find(z_img==slice_no);
+	per_slice_stdev(slice_no,1)=std(total_disparity(idx),'omitnan');
+	per_slice_mean(slice_no,1)=mean(total_disparity(idx),'omitnan');
+end
+
+disp_error = sqrt(per_slice_mean.^2  + sqrt(per_slice_stdev ./ sqrt(amount_of_particles_pairs_per_IA)));
+
+%aus vektor mit infos wieder eine matrize machen:
+disp_error = permute(reshape(disp_error, [size(xtable')]), [2 1 3]);
+
+
+figure;imagesc(disp_error);pause(0.1)
+figure(getappdata(0,'hgui'))
+%sqrt(mean^2+ sqrt(stdev/sqrt(amount_particles))
+
+%there are still some major mismatches in the position... why?
+%if the mismatch is larger than 3 pixels: It can't be an uncertainty of particle position...
+%because: we identify particles that are visible at the same position in image A and B (ideally, after image deformation all particles should be in identical positions.
+%If the disparity is larger than the particle radius, then this can't be real, because then these particles did not have an overlap and something must have gone wrong.
+
+
+%multiplied_images_binary(y(id),x(id),z(id))
+
+%gg=100;figure;imagesc(multiplied_images(:,:,gg));figure;imagesc(image1_cut(:,:,gg));figure;imagesc(image2_cut(:,:,gg));figure;imagesc(multiplied_images_binary(:,:,gg))
+%}
+
 
 % Output correlation matrices
 if do_correlation_matrices==1
@@ -878,6 +964,35 @@ if(numel(x)~=0)
 	vector(z, :) = [SubpixelX, SubpixelY];
 	
 end
+
+
+
+function [peakx, peaky] = multispot_SUBPIXGAUSS(image_data, x, y, z)
+%{
+xi = find(~((x <= (size(image_data,2)-1)) & (y <= (size(image_data,1)-1)) & (x >= 2) & (y >= 2)));
+x(xi) = [];
+y(xi) = [];
+z(xi) = [];
+%}
+xmax = size(image_data, 2);
+if(numel(x)~=0)
+	ip = sub2ind(size(image_data), y, x, z);
+	%the following 8 lines are copyright (c) 1998, Uri Shavit, Roi Gurka, Alex Liberzon, Technion Ã¯Â¿Â½ Israel Institute of Technology
+	%http://urapiv.wordpress.com
+	f0 = log(image_data(ip));
+	f1 = log(image_data(ip-1));
+	f2 = log(image_data(ip+1));
+	peaky = y + (f1-f2)./(2*f1-4*f0+2*f2);
+	f0 = log(image_data(ip));
+	f1 = log(image_data(ip-xmax));
+	f2 = log(image_data(ip+xmax));
+	peakx = x + (f1-f2)./(2*f1-4*f0+2*f2);
+end
+
+
+
+
+
 %}
 function [vector] = SUBPIX2DGAUSS(result_conv, interrogationarea, x, y, z, SubPixOffset)
 xi = find(~((x <= (size(result_conv,2)-1)) & (y <= (size(result_conv,1)-1)) & (x >= 2) & (y >= 2)));

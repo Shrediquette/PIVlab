@@ -5687,11 +5687,23 @@ toolsavailable(1);
 function load_settings_Callback(~, ~, ~)
 [FileName,PathName] = uigetfile('*.mat','Load PIVlab settings','PIVlab_settings.mat');
 if ~isequal(FileName,0)
+	handles=gethand;
+	try
+		fileboxcontents=get (handles.filenamebox, 'string');
+	catch
+	end
 	read_panel_width (FileName,PathName) %read panel settings, apply, rebuild UI
 	destroyUI %needed to adapt panel width etc. to changed values in the settings file.
 	generateUI
 	read_settings (FileName,PathName) %When UI is set up, read settings.
 	switchui('multip01')
+	try
+		handles=gethand;
+		sliderrange
+		set (handles.filenamebox, 'string', fileboxcontents);
+		sliderdisp
+	catch
+	end
 end
 
 function read_panel_width (FileName,PathName)
@@ -5855,13 +5867,13 @@ catch
 end
 %neu v2.52
 try
-	
 	set (handles.repeat_last,'Value',repeat_last);
 	set(handles.edit52x,'String',repeat_last_thresh);
 	repeat_last_Callback
 catch
 	disp('repeat_last didnt work')
 end
+
 
 function curr_settings_Callback(~, ~, ~)
 handles=gethand;
@@ -8607,17 +8619,16 @@ else
 	end
 	
 	try
-	%neu v2.54
-	set(handles.do_corr2_filter,'value',vars.do_corr2_filter);
-	set(handles.corr_filter_thresh,'string',vars.corr_filter_thresh);
-	set(handles.notch_L_thresh,'string',vars.notch_L_thresh);
-	set(handles.notch_H_thresh,'string',vars.notch_H_thresh);
-	set(handles.notch_filter,'Value',vars.notch_filter);
-catch
-	disp('corr filter / notch settings');
-end
+		%neu v2.54
+		set(handles.do_corr2_filter,'value',vars.do_corr2_filter);
+		set(handles.corr_filter_thresh,'string',vars.corr_filter_thresh);
+		set(handles.notch_L_thresh,'string',vars.notch_L_thresh);
+		set(handles.notch_H_thresh,'string',vars.notch_H_thresh);
+		set(handles.notch_filter,'Value',vars.notch_filter);
+	catch
+		disp('corr filter / notch settings');
+	end
 
-	
 	try
 		if vars.velrect(1,3)~=0 && vars.velrect(1,4)~=0
 			put('velrect', vars.velrect);
@@ -8625,8 +8636,7 @@ end
 		end
 	catch
 	end
-	
-	
+
 	try
 		set(handles.realdist, 'String',vars.realdist_string);
 		set(handles.time_inp, 'String',vars.time_inp_string);
@@ -8687,6 +8697,10 @@ end
 	catch
 	end
 	zoom reset
+	try
+		set (handles.filenamebox, 'string', vars.filename);
+	catch
+	end
 end
 
 
@@ -11000,7 +11014,7 @@ if alreadyconnected
 	else
 		flush(serpo)
 		%configureTerminator(serpo,'CR');
-		writeline(serpo,['FREQ:1;CAM:1;ENER:' int2str(min_energy) ';F1EXP:100;INTERF:2000;EXTDLY:-1;EXTSKP:0;LASER:disable']);
+		writeline(serpo,['FREQ:1;CAM:1;ENER:' int2str(min_energy) ';F1EXP:100;INTERF:1234;EXTDLY:-1;EXTSKP:0;LASER:disable']);
 	end
 	warning off
 	%configureTerminator(serpo,'CR/LF');
