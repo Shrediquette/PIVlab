@@ -391,92 +391,38 @@ put('update_msg',update_msg);
 function key_press(src, event) %General (currently hidden, respectively not documented) keyboard shortcuts in PIVlab
 if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(event.Modifier{2},'control') %ctrl and shift modifiers
 	if strcmp(event.Key,'s')
-		disp('Toggle Seeder shortcut')
 		seeder_toggle=retr('seeder_toggle');
 		if isempty(seeder_toggle)
 			seeder_toggle=0;
 		end
 		external_device_control(1-seeder_toggle);
-		disp(num2str(1-seeder_toggle))
+		if (1-seeder_toggle) == 1
+			seederstat='ON';
+		else
+			seederstat='OFF';
+		end
+		msgbox(['Seeder is ' seederstat '!'],'Info','modal')
 		put('seeder_toggle',1-seeder_toggle);
 	elseif strcmp(event.Key,'c')
-		disp('Crosshair enabled')
 		crosshair_enabled=retr('crosshair_enabled');
 		if isempty(crosshair_enabled)
 			crosshair_enabled=0;
 		end
-		disp(num2str(1-crosshair_enabled))
-		put('crosshair_enabled',1-crosshair_enabled);		
-	elseif strcmp(event.Key,'1')
-		if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
-			binning=retr('binning');
-			if isempty(binning)
-				binning=1;
-			end
-			delete(findobj('tag','roitxt'))
-			text(50,50,'ca. 1 Hz','tag','roitxt','Color','yellow')
-			ac_ROI_general_handle=retr('ac_ROI_general_handle');
-			img_size=[5120/binning 5120/binning]; %must be even, %X Y
-			min_x=(5120/binning-img_size(1))/2+1;
-			min_y=(5120/binning-img_size(2))/2+1;
-			setPosition(ac_ROI_general_handle,[min_x,min_y,img_size(1),img_size(2)]) %1Hz default
+		%{
+		if (1-crosshair_enabled) == 1
+			crossstat='ON';
+		else
+			crossstat='OFF';
 		end
-	elseif strcmp(event.Key,'2')
-		if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
-			binning=retr('binning');
-			if isempty(binning)
-				binning=1;
-			end			
-			delete(findobj('tag','roitxt'))
-			text(50,50,'ca. 3 Hz','tag','roitxt','Color','yellow')
-			ac_ROI_general_handle=retr('ac_ROI_general_handle');
-			img_size=[4488/binning 3320/binning]; %must be even, %X Y
-			min_x=(5120/binning-img_size(1))/2+1;
-			min_y=(5120/binning-img_size(2))/2+1;
-			setPosition(ac_ROI_general_handle,[min_x,min_y,img_size(1),img_size(2)]) %3Hz default
+		msgbox(['Crosshair & sharpness indicator is ' crossstat '!'],'Info','modal')
+		%}
+		put('crosshair_enabled',1-crosshair_enabled);
+	elseif strcmp(event.Key,'x')
+		sharpness_enabled=retr('sharpness_enabled');
+		if isempty(sharpness_enabled)
+			sharpness_enabled=0;
 		end
-	elseif strcmp(event.Key,'3')
-		if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
-			binning=retr('binning');
-			if isempty(binning)
-				binning=1;
-			end			
-			delete(findobj('tag','roitxt'))
-			text(50,50,'ca. 5 Hz','tag','roitxt','Color','yellow')
-			ac_ROI_general_handle=retr('ac_ROI_general_handle');
-			img_size=[3464/binning 2710/binning]; %must be even, %X Y
-			min_x=(5120/binning-img_size(1))/2+1;
-			min_y=(5120/binning-img_size(2))/2+1;
-			setPosition(ac_ROI_general_handle,[min_x,min_y,img_size(1),img_size(2)])%5Hz default
-		end
-	elseif strcmp(event.Key,'4')
-		if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
-			binning=retr('binning');
-			if isempty(binning)
-				binning=1;
-			end			
-			delete(findobj('tag','roitxt'))
-			text(50,50,'ca. 7.5 Hz','tag','roitxt','Color','yellow')
-			ac_ROI_general_handle=retr('ac_ROI_general_handle');
-			img_size=[2352/binning 1824/binning]; %must be even, %X Y
-			min_x=(5120/binning-img_size(1))/2+1;
-			min_y=(5120/binning-img_size(2))/2+1;
-			setPosition(ac_ROI_general_handle,[min_x,min_y,img_size(1),img_size(2)])%7.5Hz default
-		end		
-	elseif strcmp(event.Key,'5')
-		if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
-			binning=retr('binning');
-			if isempty(binning)
-				binning=1;
-			end			
-			delete(findobj('tag','roitxt'))
-			text(50,50,'ca. 15 Hz','tag','roitxt','Color','yellow')
-			ac_ROI_general_handle=retr('ac_ROI_general_handle');
-			img_size=[1160/binning 870/binning]; %must be even, %X Y
-			min_x=(5120/binning-img_size(1))/2+1;
-			min_y=(5120/binning-img_size(2))/2+1;
-			setPosition(ac_ROI_general_handle,[min_x,min_y,img_size(1),img_size(2)])%15Hz default			
-		end
+		put('sharpness_enabled',1-sharpness_enabled);
 	end
 end
 %       event.Key: 'x'
@@ -1950,7 +1896,7 @@ handles.multip24 = uipanel(MainWindow, 'Units','characters', 'Position', [0+marg
 parentitem=get(handles.multip24, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4) parentitem(3) 8];
+item=[0 item(2)+item(4) parentitem(3) 7];
 handles.uipanelac_general = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','General settings', 'Tag','uipanelac_general','fontweight','bold');
 
 parentitem=get(handles.uipanelac_general, 'Position');
@@ -1966,15 +1912,15 @@ set(handles.ac_project,'Fontsize', get(handles.ac_project,'Fontsize')-1);
 item=[parentitem(3)/1.5 item(2) parentitem(3)/3 1.5];
 handles.ac_browse = uicontrol(handles.uipanelac_general,'Style','pushbutton','String','Browse...','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_browse_Callback,'Tag','ac_browse','TooltipString','Browse for project folder. Images and configurations will be stored here.');
 
-item=[0 item(2)+item(4)+margin*0.3 parentitem(3) 1];
+item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
 handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Select configuration:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_configtxt');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'SimpleSync + pco.pixelfly usb' 'SimpleSync + pco.panda 26 DS'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
+handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 2, 'String',{'SimpleSync + pco.pixelfly usb' 'SimpleSync + pco.panda 26 DS'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
 
 % Sync control
 parentitem=get(handles.multip24, 'Position');
-item=[0 8.5 parentitem(3) 14];
+item=[0 7 parentitem(3) 12.5];
 handles.uipanelac_laser = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Synchronizer control', 'Tag','uipanelac_laser','fontweight','bold');
 
 parentitem=get(handles.uipanelac_laser, 'Position');
@@ -1989,7 +1935,6 @@ handles.ac_connect = uicontrol(handles.uipanelac_laser,'Style','pushbutton','Str
 IndicatorPos=get(handles.ac_connect,'Position');
 
 handles.ac_serialstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[IndicatorPos(1)+IndicatorPos(3) IndicatorPos(2) 2 IndicatorPos(4)],'String','','tag','ac_serialstatus','BackgroundColor',[1 0 0],'Foregroundcolor',[1 1 1],'Enable','inactive','TooltipString','Status of the serial connection to PIVlab-SimpleSync');
-
 
 item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/4*2.5 1];
 handles.ac_fpstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Frame rate [Hz]:','tag','ac_fpstxt');
@@ -2015,7 +1960,7 @@ handles.ac_laserstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units
 item=[parentitem(3)/4*2 item(2) parentitem(3)/4*2 2];
 handles.ac_lasertoggle = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Toggle Laser','Fontweight','bold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_lasertoggle_Callback,'Tag','ac_lasertoggle','TooltipString','Toggle laser on and off');
 
-item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2.5 2];
+item=[0 item(2)+item(4)+margin*0.1 parentitem(3)/4*2.5 2];
 handles.ac_enable_ext_trigger = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','External trigger','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_ext_trigger','TooltipString','Use external trigger input on PIVlab-SimpleSync','Callback', @ac_ext_trigger_settings_Callback);
 
 item=[item(3) item(2) parentitem(3)/4*2.5 2];
@@ -2025,10 +1970,27 @@ handles.ac_enable_seeding = uicontrol(handles.uipanelac_laser,'Style','checkbox'
 %item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 2];
 %handles.ac_ext_trigger_settings = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Setup','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_ext_trigger_settings_Callback,'Tag','ac_ext_trigger_settings','TooltipString','Setup external trigger input on PIVlab-SimpleSync');
 
+
+% Camera settings
+parentitem=get(handles.multip24, 'Position');
+item=[0 19.75 parentitem(3) 3.25];
+handles.uipanelac_camsettings = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Camera settings', 'Tag','uipanelac_camsettings','fontweight','bold');
+
+parentitem=get(handles.uipanelac_camsettings, 'Position');
+item=[0 0 0 0];
+
+item=[0 item(2)+item(4)-0.25 parentitem(3)/4 1.5];
+handles.ac_calibBinning = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Binning','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_calibBinning_Callback,'Tag','ac_calibBinning','TooltipString','Select pixel binning');
+
+item=[parentitem(3)/4*1  item(2) parentitem(3)/4 1.5];
+handles.ac_calibROI = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','ROI','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_calibROI_Callback,'Tag','ac_calibROI','TooltipString','Select ROI in camera image');
+
+
+
 % Calib capture
 
 parentitem=get(handles.multip24, 'Position');
-item=[0 22.75 parentitem(3) 5];
+item=[0 23.25 parentitem(3) 4.5];
 
 handles.uipanelac_calib = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Calibration image', 'Tag','uipanelac_calib','fontweight','bold');
 
@@ -2042,16 +2004,10 @@ item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
 handles.ac_expo = uicontrol(handles.uipanelac_calib,'Style','edit','units','characters','HorizontalAlignment','right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','100','tag','ac_expo','TooltipString','Exposure of the camera during calibration image capture');
 
 item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/4 1.5];
-handles.ac_calibBinning = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Binning','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_calibBinning_Callback,'Tag','ac_calibBinning','TooltipString','Select pixel binning');
-
-item=[parentitem(3)/4*1  item(2) parentitem(3)/4 1.5];
-handles.ac_calibROI = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','ROI','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_calibROI_Callback,'Tag','ac_calibROI','TooltipString','Select ROI in camera image');
-
-item=[parentitem(3)/4*2 item(2) parentitem(3)/4 1.5];
 handles.ac_calibcapture = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Start','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_calibcapture_Callback,'Tag','ac_calibcapture','TooltipString','Start live view of the camera');
 
-item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1.5];
-handles.ac_calibstop = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Save','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_camstop_Callback,'Tag','ac_calibstop','TooltipString','Stop live view and save last image');
+item=[parentitem(3)/4*1 item(2) parentitem(3)/4 1.5];
+handles.ac_calibsave = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Save','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_camstop_Callback,'Tag','ac_calibsave','TooltipString','Save last image','enable','off');
 
 % PIV capture
 parentitem=get(handles.multip24, 'Position');
@@ -3795,7 +3751,7 @@ if isempty(resultslist)==0
 		resultslist{11,nrframes}=[]; %make sure resultslist has cells for all params
 	end
 	if isempty(derived)==0
-		if size(derived,1)< 10 || size(derived,2) < nrframes
+		if size(derived,1)<= 10 || size(derived,2) < nrframes
 			derived{11,nrframes}=[]; %make sure derived has cells for all params
 		end
 	else
@@ -6140,6 +6096,7 @@ sliderdisp;
 
 function apply_filter_all_Callback(~, ~, ~)
 resultslist=retr('resultslist');
+
 if ~isempty(resultslist)
 	handles=gethand;
 	filepath=retr('filepath');
@@ -6257,6 +6214,31 @@ if ~isempty(resultslist)
 			end
 		end
 		close(hbar);
+		
+		%% 3D local median filtering test
+		%{
+		neigh_thresh=3;
+		u=u_new;%resultslist(3,:);
+		v=v_new;%resultslist(4,:);
+
+		u_3d = cat(3,u{:});
+		v_3d = cat(3,v{:});
+	
+		neigh_filt=medfilt3(u_3d);
+		neigh_filt=fillmissing(neigh_filt,'linear');
+		neigh_filt=abs(neigh_filt-u_3d);
+		u_3d(neigh_filt>neigh_thresh)=nan;
+		neigh_filt=medfilt3(v_3d);
+		neigh_filt=fillmissing(neigh_filt,'linear');
+		neigh_filt=abs(neigh_filt-v_3d);
+		v_3d(neigh_filt>neigh_thresh)=nan;
+	
+		u = squeeze(num2cell(u_3d, [1,2]))';
+		v = squeeze(num2cell(v_3d, [1,2]))';
+		
+		u_new=u;
+		v_new=v;
+		%}
 		resultslist(7, :) = u_new;
 		resultslist(8, :) = v_new;
 		resultslist(9, :) = typevector_new;
@@ -6684,7 +6666,7 @@ if isempty(resultslist)==0
 		resultslist{11,nrframes}=[]; %make sure resultslist has cells for all params
 	end
 	if isempty(derived)==0
-		if size(derived,1)< 11 || size(derived,2) < nrframes
+		if size(derived,1)<= 10|| size(derived,2) < nrframes
 			derived{11,nrframes}=[]; %make sure derived has cells for all params
 		end
 	else
@@ -10790,7 +10772,7 @@ if size(filepath,1) >1 || numel(caliimg)>0 || retr('video_selection_done') == 1
 	end
 	prompt =['Enter true ' offset_dim ' coordinate in mm:'];
 	dlgtitle = ['Set ' offset_dim ' offset'];
-	definput = {'1'};
+	definput = {'0'};
 	answer = inputdlg(prompt,dlgtitle,[1 40],definput);
 	if ~isempty(answer)
 		answer{1} = regexprep(answer{1}, ',', '.');
@@ -10804,20 +10786,25 @@ if size(filepath,1) >1 || numel(caliimg)>0 || retr('video_selection_done') == 1
 	end
 	if strcmp(get(hObject,'tag'),'set_x_offset')
 		delete(findobj('tag','offset_label_x'))
+		y_limits=get(gca,'ylim');
 		hold on;
-		plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'offset_label_x');
-		plot (xposition,yposition,'y+:', 'tag', 'offset_label_x');
+		plot([xposition xposition],y_limits, 'y-','tag', 'offset_label_x')
+		%plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'offset_label_x');
+		plot (xposition,yposition,'r+:', 'tag', 'offset_label_x');
 		hold off;
 		text(xposition+10,yposition+10, ['x reference:' num2str(round(xposition*10)/10) ' px'],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'offset_label_x')
 	else
 		delete(findobj('tag','offset_label_y'))
+		x_limits=get(gca,'xlim');
 		hold on;
-		plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'offset_label_y');
-		plot (xposition,yposition,'y+:', 'tag', 'offset_label_y');
+		plot(x_limits,[yposition yposition], 'y-','tag', 'offset_label_y')
+		%plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'offset_label_y');
+		plot (xposition,yposition,'r+:', 'tag', 'offset_label_y');
 		hold off;
 		text(xposition+10,yposition+10, ['y reference:' num2str(round(yposition*10)/10) ' px'],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'offset_label_y')
 	end
 	toolsavailable(1)
+	
 end
 
 function offset = calculate_offset_axis (axis,pixel_position,true_position)
@@ -11031,16 +11018,19 @@ if alreadyconnected
 		timestamp=datestr(datetime(now,'ConvertFrom','datenum'));
 		if exist (fullfile(logger_path, 'acquisition_log.txt'),'file')~=2
 			logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'w');
-			fprintf(logger_fid,'Time\tProject_folder\tMaster_frequency\tCamera_divider\tEnergy_us\tFrame_1_exposure_us\tInterframe_us\tExternal_delay_us\tExternal_skip\tLaser_status');
+			fprintf(logger_fid,'Time\tProject_folder\tMaster_frequency\tCamera_divider\tEnergy_us\tFrame_1_exposure_us\tInterframe_us\tExternal_delay_us\tExternal_skip\tLaser_status\tROI');
 			fprintf(logger_fid, '\n');
 			fclose(logger_fid);
 		end
+		ac_ROI_general=retr('ac_ROI_general');
 		logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'a');
 		fprintf(logger_fid, '%s', timestamp);
 		fprintf(logger_fid, '\t');
 		fprintf(logger_fid, '%s', logger_path);
 		fprintf(logger_fid, '\t');
 		fprintf(logger_fid, '%s', sync_setting);
+		fprintf(logger_fid, '\t');
+		fprintf(logger_fid, '%s', mat2str(ac_ROI_general));		
 		fprintf(logger_fid, '\n');
 		fclose(logger_fid);
 	end
@@ -11169,13 +11159,30 @@ else
 			load('PIVlab_settings_default.mat','ac_ROI_general');
 			warning on
 			if isempty(ac_ROI_general)
-				ac_ROI_general=[1,1,5120/binning,5120/binning]; %1 Hz default ROI
-				%ac_ROI_general=[1153,1585,2816,1952]; %5Hz default ROI
+				ac_ROI_general=[0.5,0.5,5120/binning,5120/binning]; %1 Hz default ROI
 			end
 			put('doing_roi',1)
-			ac_ROI_general_handle=imrect(gca,ac_ROI_general); %#ok<*IMRECT>
+			
+			bla=findobj(gca,'type','image');
+			current_image_size=size(bla.CData);
+			ac_ROI_general_handle = drawrectangle(gca,'Position',ac_ROI_general,'LabelVisible','hover','Deletable',0,'DrawingArea',[1 1 current_image_size(2) current_image_size(1)],'tag','new_ROImethod','StripeColor','y');
+			addlistener(ac_ROI_general_handle,'MovingROI',@ROIallevents);
+			addlistener(ac_ROI_general_handle,'ROIMoved',@ROIallevents);
+			evt.EventName='ROIMoved';
+			evt.CurrentPosition=ac_ROI_general;
+			ROIallevents(ac_ROI_general_handle,evt)
+			
+			c_menu = uicontextmenu;
+			ac_ROI_general_handle.UIContextMenu = c_menu;
+			m1 = uimenu(c_menu,'Label','15 Hz','Callback',@setdefaultroi);
+			m2 = uimenu(c_menu,'Label','7.5 Hz','Callback',@setdefaultroi);
+			m3 = uimenu(c_menu,'Label','5 Hz','Callback',@setdefaultroi);
+			m4 = uimenu(c_menu,'Label','3 Hz','Callback',@setdefaultroi);
+			m5 = uimenu(c_menu,'Label','1 Hz','Callback',@setdefaultroi);
+			m6 = uimenu(c_menu,'Label','Enter ROI','Callback',@setdefaultroi);
+			position = customWait(ac_ROI_general_handle);
+
 			put('ac_ROI_general_handle',ac_ROI_general_handle);
-			position = wait(ac_ROI_general_handle);
 			put('doing_roi',0)
 			position=round(position);
 
@@ -11210,7 +11217,7 @@ else
 			put('ac_ROI_general',ac_ROI_general);
 			save('PIVlab_settings_default.mat','ac_ROI_general','-append');
 			delete(ac_ROI_general_handle)
-			rectangle('Position',position,'EdgeColor','y')
+			rectangle('Position',position,'EdgeColor','y','linewidth',2)
 			%% jetzt nochmal mit finalen einstellungen bild capturen zum messen der framerate...
 			%Camera fps
 			ac_fps_value=get(handles.ac_fps,'Value');
@@ -11227,7 +11234,6 @@ else
 end
 
 function ac_calibcapture_Callback(~,~,~)
-put('capturing',0);
 [filepath,~,~] = fileparts(mfilename('fullpath'));
 if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'file')
 	handles=gethand;
@@ -11248,29 +11254,42 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 	if isempty(ac_ROI_general)
 		ac_ROI_general=[1,1,5120/binning,5120/binning];
 	end
-	if capture_ok==1
+	capturing=retr('capturing');
+	if isempty(capturing);capturing=0;end
+	if capture_ok==1 && capturing == 0
 		put('capturing',1);
 		toolsavailable(0)
-		set(handles.ac_calibstop,'enable','on')
+		%set(handles.ac_calibsave,'enable','on')
+		set(handles.ac_calibcapture,'enable','on')
 		set(handles.ac_serialstatus,'enable','on')
 		set(handles.ac_laserstatus,'enable','on')
 		set(handles.ac_lasertoggle,'enable','on')
 		set(handles.ac_power,'enable','on')
 		camera_type=retr('camera_type');
 		try
+			set(handles.ac_calibcapture,'String','Stop')
 			%[errorcode, caliimg]=PIVlab_Capture_Pixelfly(50000,expos,'Calibration',projectpath,[],0,[]);
 			[errorcode, caliimg,framerate_max]=PIVlab_capture_pco(50000,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
 			put('caliimg',caliimg);
+			put('fresh_calib_image',1);
 		catch
+			set(handles.ac_calibcapture,'String','Start')
 			uiwait(msgbox('Camera not connected'))
 			displogo
+			put('capturing',0);
+			toolsavailable(1)
 		end
+	elseif capture_ok==1 && capturing == 1
+		put('cancel_capture',1);
+		put('capturing',0);
+		set(handles.ac_calibcapture,'String','Start')
+		toolsavailable(1)
+		set(handles.ac_calibsave,'enable','on')
 	end
 else
 	pco_error_msgbox
 end
-put('capturing',0);
-toolsavailable(1)
+%toolsavailable(1)
 
 function result=check_project_path(projectpath,caller)
 handles=gethand;
@@ -11318,12 +11337,17 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 		end
 		if capture_ok==1
 			ac_ROI_general=retr('ac_ROI_general');
+			if isempty(ac_ROI_general)
+				ac_ROI_general=[1 1 5120 5120];
+			end
 			put('capturing',1);
 			toolsavailable(0)
 			set(handles.ac_pivstop,'enable','on')
 			set(handles.togglepair,'enable','on')
 			set(handles.ac_serialstatus,'enable','on')
 			set(handles.ac_laserstatus,'enable','on')
+			set(handles.ac_power,'enable','on')
+
 			f = waitbar(0,'Initializing...');
 			if get(handles.ac_enable_seeding,'Value')==1
 				external_device_control(1);
@@ -11334,6 +11358,7 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 			end
 			waitbar(.66,f,'Starting laser...');
 			control_simple_sync_serial(1);
+			put('laser_running',1);
 			pause(0.5)
 			waitbar(1,f,'Starting camera...');
 			pause(0.5)
@@ -11347,6 +11372,7 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 			%disable external devices
 			external_device_control(0);
 			control_simple_sync_serial(0);
+			put('laser_running',0);
 			if retr('cancel_capture')==0
 				found_the_data=push_recorded_to_GUI;
 				if found_the_data==1
@@ -11437,6 +11463,20 @@ external_device_control(0);
 put('laser_running',0);
 put('capturing',0);
 toolsavailable(1)
+fresh_calib_image=retr('fresh_calib_image');
+if ~isempty(fresh_calib_image) && fresh_calib_image == 1
+	put('fresh_calib_image',0);
+	handles=gethand;
+	projectpath=get(handles.ac_project,'String');
+	numbi = 0;
+	imgA_path = fullfile(projectpath, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']);
+	while exist(imgA_path, 'file')
+		numbi = numbi+1;
+		imgA_path = fullfile(projectpath, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']);
+	end
+	imwrite(retr('caliimg'),imgA_path);
+	set(handles.ac_calibsave,'enable','off')
+end
 drawnow;
 
 
@@ -11587,4 +11627,100 @@ if get(handles.bg_subtract,'Value')==0
 	%remove the background image. Needs to be done for ensemble correlation to work properly
 	put('bg_img_A',[]);
 	put('bg_img_B',[]);
+end
+
+%{
+function update_roi_txt_fcn(h,pos)
+setPosition(h,[300,300,600,700])
+getPosition(h)
+delete(findobj('tag','roitxtdisplay'))
+text (pos(1)+pos(3),pos(2)-75,['x' int2str(pos(1)) ' y' int2str(pos(2)) ' w' int2str(pos(3)) ' h' int2str(pos(4))],'Color','yellow','tag','roitxtdisplay','horizontalalignment','right','fontsize',8)
+%}
+
+function pos = customWait(hROI)
+% Listen for mouse clicks on the ROI
+l = addlistener(hROI,'ROIClicked',@ROIclickCallback);
+% Block program execution
+uiwait;
+% Remove listener
+delete(l);
+% Return the current position
+pos = hROI.Position;
+
+
+function ROIclickCallback(~,evt)
+if strcmp(evt.SelectionType,'double')
+	uiresume;
+end
+
+function ROIallevents(src,evt)
+%src.Position = round(evt.CurrentPosition ,-1);
+src.Position = floor(evt.CurrentPosition/8)*8;
+
+if src.Position(1)<0.5
+	src.Position(1) = 0.5;
+end
+if src.Position(2)<0.5
+	src.Position(2) = 0.5;
+end
+evname = evt.EventName;
+switch(evname)
+	case{'MovingROI'}
+		src.Label =([int2str(ceil(evt.PreviousPosition(1))) ' ' int2str(ceil(evt.PreviousPosition(2))) ' ' int2str(ceil(evt.PreviousPosition(3))) ' ' int2str(ceil(evt.PreviousPosition(4)))]);
+	case{'ROIMoved'}
+		src.Label =([int2str(ceil(evt.CurrentPosition(1))) ' ' int2str(ceil(evt.CurrentPosition(2))) ' ' int2str(ceil(evt.CurrentPosition(3))) ' ' int2str(ceil(evt.CurrentPosition(4)))]);
+end
+
+function setdefaultroi(source,~)
+if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
+	ac_ROI_general_handle = findobj('tag','new_ROImethod');
+	binning=retr('binning');
+	if isempty(binning)
+		binning=1;
+	end
+	selection=1; %automatic centering of ROI
+	switch source.Label
+		case '15 Hz'
+			des_x=1160;
+			des_y=864;
+		case '7.5 Hz'
+			des_x=2352;
+			des_y=1824;
+		case '5 Hz'
+			des_x=3464;
+			des_y=2728;%2624;
+		case '3 Hz'
+			des_x=4488;
+			des_y=3320;
+		case '1 Hz'
+			des_x=5120;
+			des_y=5120;
+		case 'Enter ROI'
+			prompt = {'x','y','w','h'};
+			dlgtitle = 'ROI';
+			dims = [1 15];
+			current_pos=get(ac_ROI_general_handle,'Position');
+			definput = {num2str(current_pos(1)),num2str(current_pos(2)),num2str(current_pos(3)),num2str(current_pos(4))};
+			answer = inputdlg(prompt,dlgtitle,dims,definput);
+			if ~isempty(answer)
+				selection=2; %manual x and y coordinates
+				des_x=str2num(answer{3});
+				des_y=str2num(answer{4});
+				min_x=str2num(answer{1});
+				min_y=str2num(answer{2});
+				img_size=[des_x des_y];
+			else
+				des_x=5120;
+				des_y=5120;
+			end
+	end
+	if selection==1
+		img_size=[des_x/binning des_y/binning]; %must be even, %X Y
+		min_x=(5120/binning-img_size(1))/2+1;
+		min_y=(5120/binning-img_size(2))/2+1;
+	end
+	set(findobj('tag','new_ROImethod'), 'Position',[min_x,min_y,img_size(1),img_size(2)])
+	evt.EventName='ROIMoved';
+	evt.CurrentPosition=[min_x,min_y,img_size(1),img_size(2)];
+	ROIallevents(ac_ROI_general_handle,evt)
 end

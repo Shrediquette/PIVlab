@@ -3,6 +3,12 @@ function [xtable, ytable, utable, vtable, typevector, correlation_map,correlatio
 %this funtion performs the  PIV analysis.
 limit_peak_search_area=1; %new in 2.41: Default is to limit the peak search area in pass 2-4.
 do_corr2 = 1; %set to zero to disable calculation of correlation map to save time
+if repeat == 0
+	convert_image_class_type = 'single'; % 'single', 'double': do the cross-correlation with single and not double precision. Saves 50% memory.
+else %repeted correlation needs double as type
+	convert_image_class_type = 'double';
+end
+
 warning off %#ok<*WNOFF> %MATLAB:log:logOfZero
 if numel(roi_inpt)>0
 	xroi=roi_inpt(1);
@@ -131,8 +137,17 @@ if do_pad==1 && passes == 1 %only on first pass
 	image1_cut=[image1_cut zeros(interrogationarea,interrogationarea-1,size(image1_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cut,3))];
 	image2_cut=[image2_cut zeros(interrogationarea,interrogationarea-1,size(image2_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cut,3))];
 end
+
+%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
+image1_cut = convert_image_class(image1_cut,convert_image_class_type);
+image2_cut = convert_image_class(image2_cut,convert_image_class_type);
+result_conv=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
+
 %do fft2:
 result_conv = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
+%for i=1:size(image1_cut,3)
+%	result_conv(:,:,i) = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut(:,:,i))).*fft2(image2_cut(:,:,i)))), 1), 2);
+%end
 if do_pad==1 && passes == 1
 	%cropping of correlation matrix:
 	result_conv =result_conv((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
@@ -168,6 +183,10 @@ if repeat == 1 && passes == 1
 		image1_cutB=[image1_cutB zeros(interrogationarea,interrogationarea-1,size(image1_cutB,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cutB,3))];
 		image2_cutB=[image2_cutB zeros(interrogationarea,interrogationarea-1,size(image2_cutB,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cutB,3))];
 	end
+	%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
+	image1_cutB = convert_image_class(image1_cutB,convert_image_class_type);
+	image2_cutB = convert_image_class(image2_cutB,convert_image_class_type);
+	result_convB=zeros(size(image1_cutB),convert_image_class_type); %#ok<PREALL>
 	result_convB = fftshift(fftshift(real(ifft2(conj(fft2(image1_cutB)).*fft2(image2_cutB))), 1), 2);
 	if do_pad==1 && passes == 1
 		%cropping of correlation matrix:
@@ -189,7 +208,7 @@ if repeat == 1 && passes == 1
 		catch
 			mean_image1_cutC=zeros(size(image1_cutC));
 			mean_image2_cutC=zeros(size(image2_cutC));
-			for oldmatlab=1:size(image2_cutC,3);
+			for oldmatlab=1:size(image2_cutC,3)
 				mean_image1_cutC(:,:,oldmatlab)=mean(mean(image1_cutC(:,:,oldmatlab)));
 				mean_image2_cutC(:,:,oldmatlab)=mean(mean(image2_cutC(:,:,oldmatlab)));
 			end
@@ -200,6 +219,10 @@ if repeat == 1 && passes == 1
 		image1_cutC=[image1_cutC zeros(interrogationarea,interrogationarea-1,size(image1_cutC,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cutC,3))];
 		image2_cutC=[image2_cutC zeros(interrogationarea,interrogationarea-1,size(image2_cutC,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cutC,3))];
 	end
+	%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
+	image1_cutC = convert_image_class(image1_cutC,convert_image_class_type);
+	image2_cutC = convert_image_class(image2_cutC,convert_image_class_type);
+	result_convC=zeros(size(image1_cutC),convert_image_class_type); %#ok<PREALL>
 	result_convC = fftshift(fftshift(real(ifft2(conj(fft2(image1_cutC)).*fft2(image2_cutC))), 1), 2);
 	if do_pad==1 && passes == 1
 		%cropping of correlation matrix:
@@ -233,6 +256,10 @@ if repeat == 1 && passes == 1
 		image1_cutD=[image1_cutD zeros(interrogationarea,interrogationarea-1,size(image1_cutD,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cutD,3))];
 		image2_cutD=[image2_cutD zeros(interrogationarea,interrogationarea-1,size(image2_cutD,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cutD,3))];
 	end
+	%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
+	image1_cutD = convert_image_class(image1_cutD,convert_image_class_type);
+	image2_cutD = convert_image_class(image2_cutD,convert_image_class_type);
+	result_convD=zeros(size(image1_cutD),convert_image_class_type); %#ok<PREALL>
 	result_convD = fftshift(fftshift(real(ifft2(conj(fft2(image1_cutD)).*fft2(image2_cutD))), 1), 2);
 	if do_pad==1 && passes == 1
 		%cropping of correlation matrix:
@@ -265,6 +292,10 @@ if repeat == 1 && passes == 1
 		image1_cutE=[image1_cutE zeros(interrogationarea,interrogationarea-1,size(image1_cutE,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cutE,3))];
 		image2_cutE=[image2_cutE zeros(interrogationarea,interrogationarea-1,size(image2_cutE,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cutE,3))];
 	end
+	%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
+	image1_cutE = convert_image_class(image1_cutE,convert_image_class_type);
+	image2_cutE = convert_image_class(image2_cutE,convert_image_class_type);
+	result_convE=zeros(size(image1_cutE),convert_image_class_type); %#ok<PREALL>
 	result_convE = fftshift(fftshift(real(ifft2(conj(fft2(image1_cutE)).*fft2(image2_cutE))), 1), 2);
 	if do_pad==1 && passes == 1
 		%cropping of correlation matrix:
@@ -295,7 +326,6 @@ end
 %peakheight
 %peak_height=max(max(result_conv)) ./ mean(mean(result_conv)) ;
 %peak_height = permute(reshape(peak_height, [size(xtable')]), [2 1 3]);
-
 minres = permute(repmat(squeeze(min(min(result_conv))), [1, size(result_conv, 1), size(result_conv, 2)]), [2 3 1]);
 deltares = permute(repmat(squeeze(max(max(result_conv))-min(min(result_conv))),[ 1, size(result_conv, 1), size(result_conv, 2)]), [2 3 1]);
 result_conv = ((result_conv-minres)./deltares)*255;
@@ -550,6 +580,10 @@ for multipass=1:passes-1
 			image2_cut=[image2_cut zeros(interrogationarea,interrogationarea-1,size(image2_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cut,3))];
 		end
 		%do fft2:
+		%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
+		image1_cut = convert_image_class(image1_cut,convert_image_class_type);
+		image2_cut = convert_image_class(image2_cut,convert_image_class_type);
+		result_conv=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 		result_conv = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
 		if do_pad==1 && multipass==passes-1
 			%cropping of correlation matrix:
@@ -589,6 +623,10 @@ for multipass=1:passes-1
 				image1_cut=[image1_cut zeros(interrogationarea,interrogationarea-1,size(image1_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cut,3))];
 				image2_cut=[image2_cut zeros(interrogationarea,interrogationarea-1,size(image2_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cut,3))];
 			end
+			%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
+			image1_cut = convert_image_class(image1_cut,convert_image_class_type);
+			image2_cut = convert_image_class(image2_cut,convert_image_class_type);
+			result_convB=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 			result_convB = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
 			if do_pad==1 && multipass==passes-1
 				%cropping of correlation matrix:
@@ -626,6 +664,10 @@ for multipass=1:passes-1
 				image1_cut=[image1_cut zeros(interrogationarea,interrogationarea-1,size(image1_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cut,3))];
 				image2_cut=[image2_cut zeros(interrogationarea,interrogationarea-1,size(image2_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cut,3))];
 			end
+			%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
+			image1_cut = convert_image_class(image1_cut,convert_image_class_type);
+			image2_cut = convert_image_class(image2_cut,convert_image_class_type);
+			result_convC=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 			result_convC = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
 			if do_pad==1 && multipass==passes-1
 				%cropping of correlation matrix:
@@ -660,6 +702,10 @@ for multipass=1:passes-1
 				image1_cut=[image1_cut zeros(interrogationarea,interrogationarea-1,size(image1_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cut,3))];
 				image2_cut=[image2_cut zeros(interrogationarea,interrogationarea-1,size(image2_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cut,3))];
 			end
+			%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
+			image1_cut = convert_image_class(image1_cut,convert_image_class_type);
+			image2_cut = convert_image_class(image2_cut,convert_image_class_type);
+			result_convD=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 			result_convD = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
 			if do_pad==1 && multipass==passes-1
 				%cropping of correlation matrix:
@@ -694,6 +740,10 @@ for multipass=1:passes-1
 				image1_cut=[image1_cut zeros(interrogationarea,interrogationarea-1,size(image1_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cut,3))];
 				image2_cut=[image2_cut zeros(interrogationarea,interrogationarea-1,size(image2_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cut,3))];
 			end
+			%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
+			image1_cut = convert_image_class(image1_cut,convert_image_class_type);
+			image2_cut = convert_image_class(image2_cut,convert_image_class_type);
+			result_convE=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 			result_convE = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
 			if do_pad==1 && multipass==passes-1
 				%cropping of correlation matrix:
@@ -806,11 +856,11 @@ for multipass=1:passes-1
 		
 		
 		%compare result to previous pass, do extra passes when delta is not around zero.
-
+		
 		if repetition > 1 %only then we'll have an utable with the same dimension
 			deltau=abs(utable_orig-utable);
 			deltav=abs(vtable_orig-vtable);
-
+			
 		else
 			deltau=0;
 			deltav=0;
@@ -1043,6 +1093,16 @@ if(numel(x)~=0)
 	vector(z, :) = [SubpixelX, SubpixelY];
 end
 
+function out = convert_image_class(in,type)
+if strcmp(type,'double')
+	out=in; %images arrive in double format
+elseif strcmp(type,'single')
+	out=im2single(in);
+elseif strcmp(type,'uint8')
+	out=im2uint8(in);
+elseif strcmp(type,'uint16')
+	out=im2uint16(in);
+end
 %{
 %Problem ist nicht das subpixel-finden. Sondern das integer-finden.....
 function [vector] = SUBPIXCENTROID(result_conv, interrogationarea, x, y, z, SubPixOffset)

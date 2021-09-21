@@ -14,11 +14,11 @@ if measure_framerate_max == 1
 			pco_errdisp('PCO_GetRecordingState',errorCode);
 		end
 		%% Set to double image
-			[errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetDoubleImageMode', out_ptr,1);
+		[errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetDoubleImageMode', out_ptr,1);
 		if(errorCode)
 			pco_errdisp('PCO_SetDoubleImageMode',errorCode);
 		end
-
+		
 		%% camera description
 		cam_desc=libstruct('PCO_Description');
 		set(cam_desc,'wSize',cam_desc.structsize);
@@ -43,7 +43,7 @@ if measure_framerate_max == 1
 		end
 		%stop camera
 		subfunc.fh_stop_camera(out_ptr);
-
+		
 		bitpix=uint16(cam_desc.wDynResDESC);
 		%set bitalignment LSB
 		bitalign=uint16(BIT_ALIGNMENT_LSB);
@@ -52,7 +52,7 @@ if measure_framerate_max == 1
 		
 		errorCode = calllib('PCO_CAM_SDK', 'PCO_SetRecorderSubmode',out_ptr,RECORDER_SUBMODE_RINGBUFFER);
 		pco_errdisp('PCO_SetRecorderSubmode',errorCode);
-
+		
 		%set default Pixelrate
 		subfunc.fh_set_pixelrate(out_ptr,2);
 		
@@ -125,11 +125,12 @@ if measure_framerate_max == 1
 	catch ME
 		disp(ME)
 	end
-
+	
 else
 	framerate_max=[];
 	hgui=getappdata(0,'hgui');
 	crosshair_enabled = getappdata(hgui,'crosshair_enabled');
+	sharpness_enabled = getappdata(hgui,'sharpness_enabled');
 	if strcmp(TriggerModeString,'Calibration') || strcmp(TriggerModeString,'calibration')
 		triggermode=0; %internal trigger
 	elseif  strcmp(TriggerModeString,'Synchronizer') || strcmp(TriggerModeString,'synchronizer')
@@ -215,7 +216,7 @@ else
 		%binning funktioniert nur wenn gleichzeitig ROI gesetzt wird.
 		h_binning=binning; %1,2,4
 		v_binning=binning; %1,2,4
-
+		
 		[errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetBinning', out_ptr,h_binning,v_binning); %2,4, etc.
 		pco_errdisp('PCO_SetBinning',errorCode);
 		%% ROI selection
@@ -459,7 +460,7 @@ else
 						elseif strcmp(camera_type,'pco_pixelfly')
 							ima=bitshift(ima,2); %14 bit to 16 bit conversion
 						end
-						if triggermode == 2 %external trigger
+						if triggermode == 2 %external trigger --> PIV mode
 							imgA_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',image_save_number) '_A.tif']);
 							imgB_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',image_save_number) '_B.tif']);
 							%img_save_time=tic;
@@ -472,10 +473,44 @@ else
 							else
 								set(image_handle,'CData',(ima(act_ysize/2+1:end  ,  1:act_xsize)));
 							end
-							set(frame_nr_display,'String',int2str(image_save_number));
+							set(frame_nr_display,'String',['Image nr.: ' int2str(image_save_number)]);
 							image_save_number=image_save_number+1;
-						elseif triggermode==0
-							if crosshair_enabled == 1
+							sharpness_enabled = getappdata(hgui,'sharpness_enabled');
+							if sharpness_enabled == 1 %cross-hair and sharpness indicator
+								%% sharpness indicator for particle images
+								if strcmp(camera_type,'pco_panda')
+									textx=ROI_general(3)-10;
+									texty=ROI_general(4)-50;
+								else
+									textx=1300;
+									texty=950;
+								end
+								[~,~] = sharpness_indicator (ima(1:act_ysize/2  ,  1:act_xsize),textx,texty);
+							end
+						elseif triggermode==0 %internal trigger --> calibration mode
+							%% sharpness indicator for particle images
+							sharpness_enabled = getappdata(hgui,'sharpness_enabled');
+							if sharpness_enabled == 1
+								if strcmp(camera_type,'pco_panda')
+									textx=ROI_general(3)-10;
+									texty=ROI_general(4)-50;
+								else
+									textx=1300;
+									texty=950;
+								end
+								[~,sharpness_map] = sharpness_indicator (ima,textx,texty);
+								%local sharpness indicator
+								%{
+								checker=zeros(200,round(size(sharpness_map,2)/size(sharpness_map,1)*200));
+								checker(1:2:end,:)=1;
+								checker(:,1:2:end)=1;
+								checker=imresize(checker,size(ima),'nearest');
+								ima=double(ima)   + ((sharpness_map).*checker*double(max(ima(:))));
+								%}
+							end
+							crosshair_enabled = getappdata(hgui,'crosshair_enabled');
+							if crosshair_enabled == 1 %cross-hair
+								%% cross-hair
 								locations=[0.15 0.5 0.85];
 								half_thickness=2;
 								brightness_incr=3000;
@@ -488,9 +523,9 @@ else
 									ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)=ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)+brightness_incr;
 								end
 								ima_ed(ima_ed>old_max)=old_max;
-							set(image_handle,'CData',ima_ed);
+								set(image_handle,'CData',ima_ed);
 							else
-							set(image_handle,'CData',ima);
+								set(image_handle,'CData',ima);
 							end
 							set(frame_nr_display,'String','');
 						end
@@ -545,7 +580,9 @@ else
 				end
 			end
 			% SAVE calibration Image when live view is cancelled
+			delete(findobj('tag','sharpness_display_text'));
 			if triggermode==0 %calibration
+				%{
 				numbi = 0;
 				imgA_path = fullfile(ImagePath, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']);
 				while exist(imgA_path, 'file')
@@ -553,6 +590,7 @@ else
 					imgA_path = fullfile(ImagePath, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']);
 				end
 				imwrite(ima,imgA_path);
+				%}
 				set(image_handle,'CData',ima);
 			end
 			
@@ -614,3 +652,21 @@ else
 		pco_camera_open_close(glvar);
 	end
 end
+
+function [sharpness,sharpness_map]=sharpness_indicator (input_image,textx,texty)
+skip=3;
+diff_image=abs(diff(input_image(1:skip:end,1:skip:end))); %process only every 3rd pixel.... still works?
+sharpness=std2(single(diff_image));
+delete(findobj('tag','sharpness_display_text'));
+text(textx,texty,['Sharpness: ' int2str(sharpness)],'Color',[1 1 0],'tag','sharpness_display_text','Horizontalalignment','right');
+
+
+sharpness_map=[];
+%{
+fun = @(block_struct) std2(block_struct.data) * ones(size(block_struct.data));
+blocksize_r=round(size(diff_image,1)/9);
+blocksize_c=round(size(diff_image,2)/9);
+sharpness_map = blockproc(diff_image,[blocksize_r blocksize_c],fun);
+sharpness_map = rescale(sharpness_map);
+sharpness_map=imresize(sharpness_map,size(input_image),'nearest');
+%}
