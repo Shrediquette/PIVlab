@@ -72,7 +72,7 @@ if isempty(fh)
 	%% check required files
 	try
 		ctr=0;
-		pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg' 'PIVlab_capture_pco.m' 'PIVlab_image_filter.m' 'pivparpool.m' 'pivprogress.m' 'piv_analysis.m' 'piv_quick.m' 'PIVlab_notch_filter.m' 'PIVlab_correlation_filter.m'};
+		pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg' 'PIVlab_capture_pco.m' 'PIVlab_image_filter.m' 'pivparpool.m' 'pivprogress.m' 'piv_analysis.m' 'piv_quick.m' 'PIVlab_notch_filter.m' 'PIVlab_correlation_filter.m' 'lens_control_GUI.m' 'PIVlab_capture_lensctrl.m' 'PIVlab_capture_sharpness_indicator.m'};
 		for i=1:size(pivFiles,2)
 			if exist(pivFiles{1,i},'file')~=2
 				disp(['ERROR: A required file was not found: ' pivFiles{1,i}]);
@@ -422,7 +422,11 @@ if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(even
 		if isempty(sharpness_enabled)
 			sharpness_enabled=0;
 		end
-		put('sharpness_enabled',1-sharpness_enabled);
+		put('sharpness_enabled',1-sharpness_enabled); % only autofocs OR sharpness display must be enabled at a time
+		if retr('sharpness_enabled')==1
+			put('autofocus_enabled',0);
+		end
+		%ES darf nur entweder sharpness display oder autofokus aktiv sein!
 	end
 end
 %       event.Key: 'x'
@@ -1985,6 +1989,8 @@ handles.ac_calibBinning = uicontrol(handles.uipanelac_camsettings,'Style','pushb
 item=[parentitem(3)/4*1  item(2) parentitem(3)/4 1.5];
 handles.ac_calibROI = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','ROI','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_calibROI_Callback,'Tag','ac_calibROI','TooltipString','Select ROI in camera image');
 
+item=[parentitem(3)/4*2  item(2) parentitem(3)/4 1.5];
+handles.ac_lensctrl = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Lens','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_lensctrl_Callback,'Tag','ac_lensctrl','TooltipString','Control camera lens');
 
 
 % Calib capture
@@ -11018,17 +11024,20 @@ if alreadyconnected
 		timestamp=datestr(datetime(now,'ConvertFrom','datenum'));
 		if exist (fullfile(logger_path, 'acquisition_log.txt'),'file')~=2
 			logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'w');
-			fprintf(logger_fid,'Time\tProject_folder\tMaster_frequency\tCamera_divider\tEnergy_us\tFrame_1_exposure_us\tInterframe_us\tExternal_delay_us\tExternal_skip\tLaser_status\tROI');
+			fprintf(logger_fid,'Time\tProject_folder\tMaster_frequency\tCamera_divider\tEnergy_us\tFrame_1_exposure_us\tInterframe_us\tExternal_delay_us\tExternal_skip\tLaser_status\tBinning\tROI');
 			fprintf(logger_fid, '\n');
 			fclose(logger_fid);
 		end
 		ac_ROI_general=retr('ac_ROI_general');
+		binning=retr('binning');
 		logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'a');
 		fprintf(logger_fid, '%s', timestamp);
 		fprintf(logger_fid, '\t');
 		fprintf(logger_fid, '%s', logger_path);
 		fprintf(logger_fid, '\t');
 		fprintf(logger_fid, '%s', sync_setting);
+		fprintf(logger_fid, '\t');
+		fprintf(logger_fid, '%s', num2str(binning));		
 		fprintf(logger_fid, '\t');
 		fprintf(logger_fid, '%s', mat2str(ac_ROI_general));		
 		fprintf(logger_fid, '\n');
@@ -11629,13 +11638,9 @@ if get(handles.bg_subtract,'Value')==0
 	put('bg_img_B',[]);
 end
 
-%{
-function update_roi_txt_fcn(h,pos)
-setPosition(h,[300,300,600,700])
-getPosition(h)
-delete(findobj('tag','roitxtdisplay'))
-text (pos(1)+pos(3),pos(2)-75,['x' int2str(pos(1)) ' y' int2str(pos(2)) ' w' int2str(pos(3)) ' h' int2str(pos(4))],'Color','yellow','tag','roitxtdisplay','horizontalalignment','right','fontsize',8)
-%}
+function ac_lensctrl_Callback (~,~,~)
+handles=gethand;
+lens_control_GUI
 
 function pos = customWait(hROI)
 % Listen for mouse clicks on the ROI

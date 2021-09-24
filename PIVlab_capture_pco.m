@@ -485,7 +485,9 @@ else
 									textx=1300;
 									texty=950;
 								end
-								[~,~] = sharpness_indicator (ima(1:act_ysize/2  ,  1:act_xsize),textx,texty);
+								[~,~] = PIVlab_capture_sharpness_indicator (ima(1:act_ysize/2  ,  1:act_xsize),textx,texty);
+							else
+								delete(findobj('tag','sharpness_display_text'));
 							end
 						elseif triggermode==0 %internal trigger --> calibration mode
 							%% sharpness indicator for particle images
@@ -498,7 +500,7 @@ else
 									textx=1300;
 									texty=950;
 								end
-								[~,sharpness_map] = sharpness_indicator (ima,textx,texty);
+								[~,sharpness_map] = PIVlab_capture_sharpness_indicator (ima,textx,texty);
 								%local sharpness indicator
 								%{
 								checker=zeros(200,round(size(sharpness_map,2)/size(sharpness_map,1)*200));
@@ -507,6 +509,8 @@ else
 								checker=imresize(checker,size(ima),'nearest');
 								ima=double(ima)   + ((sharpness_map).*checker*double(max(ima(:))));
 								%}
+							else
+								delete(findobj('tag','sharpness_display_text'));
 							end
 							crosshair_enabled = getappdata(hgui,'crosshair_enabled');
 							if crosshair_enabled == 1 %cross-hair
@@ -529,6 +533,72 @@ else
 							end
 							set(frame_nr_display,'String','');
 						end
+						
+						%% Lens control
+						autofocus_enabled = getappdata(hgui,'autofocus_enabled');
+						if autofocus_enabled == 1
+							focus_start=500;
+							focus_end=2500;
+							focus_steps_raw=50;
+							focus_steps_fine=5;
+							if ~exist('sharpness_focus_table','var') || ~exist('sharpness_focus_table','var') || isempty(sharpness_focus_table) || isempty(sharp_loop_cnt)
+								sharpness_focus_table=zeros(1,2);
+								sharp_loop_cnt=0;
+								focus=focus_start;
+								raw_finished=0;
+								aperture=1500; %diese müsste vom Nutzer eingestellt werden in GUI. Hier nicht ändern.
+								lighting=0;
+								PIVlab_capture_lensctrl(focus,aperture,lighting)	
+							end
+							if raw_finished==0
+								if focus < focus_end % maxialer focus = endanschlag. Bis zu dem wert wird von null gefahren
+									sharp_loop_cnt=sharp_loop_cnt+1;
+									[sharpness,~] = PIVlab_capture_sharpness_indicator (ima,[],[]);
+									sharpness_focus_table(sharp_loop_cnt,1)=focus;
+									sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
+									focus=focus+focus_steps_raw;
+									PIVlab_capture_lensctrl(focus,aperture,lighting)		%kann steuern und aktuelle position ausgeben
+								else
+									%assignin('base','sharpness_focus_table',sharpness_focus_table)
+									%find best focus
+									[r,~]=find(sharpness_focus_table == max(sharpness_focus_table(:,2)));
+									focus_peak=sharpness_focus_table(r(1),1);
+									disp(['Best raw focus: ' num2str(focus_peak)])
+									raw_finished=1;
+									focus_start_fine=focus_peak-2*focus_steps_raw; %start of finer focussearch
+									focus_end_fine=focus_peak+2*focus_steps_raw;
+									focus=focus_start_fine;
+									PIVlab_capture_lensctrl(focus,aperture,lighting)
+									sharp_loop_cnt=0;
+									sharpness_focus_table=zeros(1,2);
+								end
+							end
+							if raw_finished == 1
+								%repeat with finer steps
+								if focus < focus_end_fine % maxialer focus = endanschlag. Bis zu dem wert wird von null gefahren
+									sharp_loop_cnt=sharp_loop_cnt+1;
+									[sharpness,~] = PIVlab_capture_sharpness_indicator (ima,[],[]);
+									sharpness_focus_table(sharp_loop_cnt,1)=focus;
+									sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
+									focus=focus+focus_steps_fine;
+									PIVlab_capture_lensctrl(focus,aperture,lighting)		%kann steuern und aktuelle position ausgeben
+								else %fine focus search finished
+									%assignin('base','sharpness_focus_table',sharpness_focus_table)
+									%find best focus
+									[r,~]=find(sharpness_focus_table == max(sharpness_focus_table(:,2)));
+									focus_peak=sharpness_focus_table(r(1),1);
+									disp(['Best fine focus: ' num2str(focus_peak)])
+									PIVlab_capture_lensctrl(focus_peak,aperture,lighting) %set to best focus	
+									setappdata(hgui,'autofocus_enabled',0); %autofocus am ende ausschalten
+									setappdata(hgui,'cancel_capture',1); %stop recording....?
+									figure;plot(sharpness_focus_table(:,1),sharpness_focus_table(:,2))
+								end
+							end
+						else
+							sharpness_focus_table=[];
+							sharp_loop_cnt=[];
+						end
+						
 						
 						pause(0.0001);
 						%% Live preview
@@ -653,20 +723,3 @@ else
 	end
 end
 
-function [sharpness,sharpness_map]=sharpness_indicator (input_image,textx,texty)
-skip=3;
-diff_image=abs(diff(input_image(1:skip:end,1:skip:end))); %process only every 3rd pixel.... still works?
-sharpness=std2(single(diff_image));
-delete(findobj('tag','sharpness_display_text'));
-text(textx,texty,['Sharpness: ' int2str(sharpness)],'Color',[1 1 0],'tag','sharpness_display_text','Horizontalalignment','right');
-
-
-sharpness_map=[];
-%{
-fun = @(block_struct) std2(block_struct.data) * ones(size(block_struct.data));
-blocksize_r=round(size(diff_image,1)/9);
-blocksize_c=round(size(diff_image,2)/9);
-sharpness_map = blockproc(diff_image,[blocksize_r blocksize_c],fun);
-sharpness_map = rescale(sharpness_map);
-sharpness_map=imresize(sharpness_map,size(input_image),'nearest');
-%}
