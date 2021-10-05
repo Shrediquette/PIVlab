@@ -141,10 +141,22 @@ end
 %% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
 image1_cut = convert_image_class(image1_cut,convert_image_class_type);
 image2_cut = convert_image_class(image2_cut,convert_image_class_type);
+
+
 result_conv=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 
 %do fft2:
+%tic
 result_conv = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
+%toc
+%GPU computing performance test
+%image1_cut_gpu=gpuArray(image1_cut);
+%image2_cut_gpu=gpuArray(image2_cut);
+%tic
+%result_conv_gpu = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut_gpu)).*fft2(image2_cut_gpu))), 1), 2);
+%toc
+%result_conv2=gather(result_conv_gpu);
+%result_conv=result_conv2;
 %for i=1:size(image1_cut,3)
 %	result_conv(:,:,i) = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut(:,:,i))).*fft2(image2_cut(:,:,i)))), 1), 2);
 %end

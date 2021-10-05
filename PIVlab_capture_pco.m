@@ -139,7 +139,9 @@ else
 	OutputError=0;
 	PIVlab_axis = findobj(hgui,'Type','Axes');
 	
+	%image_handle=imagesc(zeros(1040,1392),'Parent',PIVlab_axis,[0 2^16]);
 	image_handle=imagesc(zeros(1040,1392),'Parent',PIVlab_axis,[0 2^16]);
+	
 	if triggermode == 2 && do_realtime==1 %external trigger and realtime
 		[X,Y]=meshgrid(1:32:1392,1:32:1040);
 		hold on;
@@ -450,7 +452,6 @@ else
 							s=s*-1;
 							ima=bitshift(ima,s);
 						end
-						
 						%% Save images with external trigger
 						tic
 						%0-4095 panda original range

@@ -5,6 +5,7 @@ hgui = getappdata(0,'hgui');
 serpo=getappdata(hgui,'serpo');
 try
 	serpo.Port; %is there no other way to determine if serialport is working...?
+	configureTerminator(serpo,'CR/LF');
 	alreadyconnected=1;
 catch
 	alreadyconnected=0;
@@ -13,7 +14,8 @@ end
 
 if alreadyconnected==1
 	flush(serpo)
-	writeline(serpo,['FOCUS:' num2str(focus) ';APERTURE:' num2str(aperture) ';LIGHTING:' num2str(lighting)]);
+	line_to_write=['FOCUS:' num2str(focus) ';APERTURE:' num2str(aperture) ';LIGHTING:' num2str(lighting)]
+	writeline(serpo,line_to_write);
 	disp(['Setting focus: ' num2str(focus) ' us, aperture: ' num2str(aperture) ' us, light: ' num2str(lighting)])
 else 
 	disp(['No connection to serial port. Focus: ' num2str(focus) ' us, aperture: ' num2str(aperture) ' us, light: ' num2str(lighting)])

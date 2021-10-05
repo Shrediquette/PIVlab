@@ -1,4 +1,4 @@
-function lens_control_GUI
+function PIVlab_capture_lensctrl_GUI
 [focus,aperture,lighting]=get_lens_status;
 lens_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Lens control','Toolbar','none','Units','characters','Position',[3 5 35 15],'tag','lens_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
 set (lens_control_window,'Units','Characters');

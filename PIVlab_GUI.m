@@ -72,7 +72,7 @@ if isempty(fh)
 	%% check required files
 	try
 		ctr=0;
-		pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg' 'PIVlab_capture_pco.m' 'PIVlab_image_filter.m' 'pivparpool.m' 'pivprogress.m' 'piv_analysis.m' 'piv_quick.m' 'PIVlab_notch_filter.m' 'PIVlab_correlation_filter.m' 'lens_control_GUI.m' 'PIVlab_capture_lensctrl.m' 'PIVlab_capture_sharpness_indicator.m'};
+		pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg' 'PIVlab_capture_pco.m' 'PIVlab_image_filter.m' 'pivparpool.m' 'pivprogress.m' 'piv_analysis.m' 'piv_quick.m' 'PIVlab_notch_filter.m' 'PIVlab_correlation_filter.m' 'PIVlab_capture_devicectrl_GUI.m' 'PIVlab_capture_lensctrl_GUI.m' 'PIVlab_capture_lensctrl.m' 'PIVlab_capture_sharpness_indicator.m'};
 		for i=1:size(pivFiles,2)
 			if exist(pivFiles{1,i},'file')~=2
 				disp(['ERROR: A required file was not found: ' pivFiles{1,i}]);
@@ -159,10 +159,10 @@ if isempty(fh)
 				disp(['-> Distributed Computing Toolbox found. Parallel pool (' int2str(pivparpool('size')) ' workers) active (default settings).'])
 			else
 				disp('-> Distributed Computing disabled.')
-			end	
+			end
 		catch
 			disp('-> Running without parallelization (no distributed computing toolbox installed).')
-		end		
+		end
 	catch
 		disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
 	end
@@ -388,34 +388,15 @@ put('update_msg',update_msg);
 %close(splashscreen)
 %movegui(MainWindow,'center')
 
-function key_press(src, event) %General (currently hidden, respectively not documented) keyboard shortcuts in PIVlab
+function key_press(~, event) %General (currently hidden, respectively not documented) keyboard shortcuts in PIVlab
+%display currently pressed key name:
+%disp(event.Key)
 if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(event.Modifier{2},'control') %ctrl and shift modifiers
-	if strcmp(event.Key,'s')
-		seeder_toggle=retr('seeder_toggle');
-		if isempty(seeder_toggle)
-			seeder_toggle=0;
-		end
-		external_device_control(1-seeder_toggle);
-		if (1-seeder_toggle) == 1
-			seederstat='ON';
-		else
-			seederstat='OFF';
-		end
-		msgbox(['Seeder is ' seederstat '!'],'Info','modal')
-		put('seeder_toggle',1-seeder_toggle);
-	elseif strcmp(event.Key,'c')
+	if strcmp(event.Key,'c')
 		crosshair_enabled=retr('crosshair_enabled');
 		if isempty(crosshair_enabled)
 			crosshair_enabled=0;
 		end
-		%{
-		if (1-crosshair_enabled) == 1
-			crossstat='ON';
-		else
-			crossstat='OFF';
-		end
-		msgbox(['Crosshair & sharpness indicator is ' crossstat '!'],'Info','modal')
-		%}
 		put('crosshair_enabled',1-crosshair_enabled);
 	elseif strcmp(event.Key,'x')
 		sharpness_enabled=retr('sharpness_enabled');
@@ -426,10 +407,30 @@ if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(even
 		if retr('sharpness_enabled')==1
 			put('autofocus_enabled',0);
 		end
-		%ES darf nur entweder sharpness display oder autofokus aktiv sein!
+	elseif strcmp(event.Key,'hyphen') %minus key
+		ac_upper_clim = retr('ac_upper_clim');
+		if ac_upper_clim < 2^16
+			ac_upper_clim = ac_upper_clim + 5000;
+		end
+		put('ac_upper_clim',ac_upper_clim);
+		put('ac_lower_clim',0);
+		caxis([0 ac_upper_clim])
+	elseif strcmp(event.Key,'0') %plus
+		ac_upper_clim = retr('ac_upper_clim');
+		if ac_upper_clim > 5000
+			ac_upper_clim = ac_upper_clim - 5000;
+		end
+		put('ac_upper_clim',ac_upper_clim);
+		put('ac_lower_clim',0);
+		caxis([0 ac_upper_clim])
+	elseif strcmp(event.Key,'k') %plus
+		if strmatch (get(gca,'ColorScale'),'log') %#ok<*MATCH2>
+			set(gca,'ColorScale','linear')
+		else
+			set(gca,'ColorScale','log')
+		end
 	end
 end
-%       event.Key: 'x'
 
 function destroyUI
 handles = guihandles; %alle handles mit tag laden und ansprechbar machen
@@ -1959,16 +1960,16 @@ item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
 handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String','0','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_power','TooltipString','Laser energy');
 
 item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2 2];
-handles.ac_laserstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Laser OFF','tag','ac_laserstatus','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold','TooltipString','Status of the laser');
+handles.ac_laserstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','NC','tag','ac_laserstatus','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold','TooltipString','Status of the laser');
 
 item=[parentitem(3)/4*2 item(2) parentitem(3)/4*2 2];
 handles.ac_lasertoggle = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Toggle Laser','Fontweight','bold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_lasertoggle_Callback,'Tag','ac_lasertoggle','TooltipString','Toggle laser on and off');
 
-item=[0 item(2)+item(4)+margin*0.1 parentitem(3)/4*2.5 2];
-handles.ac_enable_ext_trigger = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','External trigger','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_ext_trigger','TooltipString','Use external trigger input on PIVlab-SimpleSync','Callback', @ac_ext_trigger_settings_Callback);
+item=[0 item(2)+item(4)+margin*0.1 parentitem(3)/2 1.5];
+handles.ac_enable_ext_trigger = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Ext. trigger','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_ext_trigger','TooltipString','Use external trigger input on PIVlab-SimpleSync','Callback', @ac_ext_trigger_settings_Callback);
 
-item=[item(3) item(2) parentitem(3)/4*2.5 2];
-handles.ac_enable_seeding = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Seeding','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_seeding','TooltipString','Enable seeding','Callback',@ac_enable_seeding_Callback);
+item=[item(3) item(2) parentitem(3)/2 1.5];
+handles.ac_device_control = uicontrol(handles.uipanelac_laser,'Style','pushbutton','String','Devices','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_device_control','TooltipString','Setup external devices (such as remote controlled seeding generator etc.)','Callback',@ac_device_control_Callback);
 
 
 %item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 2];
@@ -2007,7 +2008,7 @@ item=[0 item(2)+item(4) parentitem(3)/2 1];
 handles.ac_expotxt = uicontrol(handles.uipanelac_calib,'Style','text', 'String','Exposure [ms]: ','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_expotxt');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
-handles.ac_expo = uicontrol(handles.uipanelac_calib,'Style','edit','units','characters','HorizontalAlignment','right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','100','tag','ac_expo','TooltipString','Exposure of the camera during calibration image capture');
+handles.ac_expo = uicontrol(handles.uipanelac_calib,'Style','edit','units','characters','HorizontalAlignment','right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','350','tag','ac_expo','TooltipString','Exposure of the camera during calibration image capture','Callback', @ac_expo_Callback);
 
 item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/4 1.5];
 handles.ac_calibcapture = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Start','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_calibcapture_Callback,'Tag','ac_calibcapture','TooltipString','Start live view of the camera');
@@ -2225,7 +2226,7 @@ if size(resultslist,2)>=1
 	end
 	set(handles.firstframe, 'String',int2str(startframe));
 	set(handles.lastframe, 'String',int2str(endframe));
-	if strmatch(get(handles.multip08, 'visible'), 'on') %#ok<MATCH2>
+	if strmatch(get(handles.multip08, 'visible'), 'on')
 		put('p8wasvisible',1)
 	else
 		put('p8wasvisible',0)
@@ -2289,6 +2290,7 @@ catch
 	delete(serpo)
 	put('serpo',[]);
 	set(handles.ac_comport,'Value',1);
+	set(handles.ac_laserstatus,'String','NC','BackgroundColor',[1 0 0])
 end
 if alreadyconnected
 	serports=serialportlist('available');
@@ -2310,6 +2312,11 @@ else
 	set(handles.ac_comport,'String',serports);
 	set(handles.ac_serialstatus,'Backgroundcolor',[1 0 0]);
 end
+% Set default image colormap limits
+put('ac_lower_clim',0);
+put('ac_upper_clim',2^16);
+delete(findobj('tag','shortcutlist'));
+text(10,10,['Image acquisition keyboard shortcuts' sprintf('\n') 'CTRL SHIFT C : Toggle crosshair' sprintf('\n') 'CTRL SHIFT X : Toggle sharpness measure' sprintf('\n') 'CTRL SHIFT + : Increase display brightness' sprintf('\n') 'CTRL SHIFT - : Decrease display brightness' sprintf('\n') 'CTRL SHIFT K : Toggle between log and lin color scale'],'tag','shortcutlist','Color','black','BackgroundColor','white','VerticalAlignment','top');
 
 
 function preferences_Callback (~,~)
@@ -2803,7 +2810,7 @@ if capturing==0
 							colormap(avail_maps{selected_index});
 						end
 						%adjust colormap steps
-						cmap = colormap(gca);	
+						cmap = colormap(gca);
 						colormap_steps_list=get(handles.colormap_steps,'String');
 						colormap_steps_value=get(handles.colormap_steps,'Value');
 						colormap_steps=str2double(colormap_steps_list{colormap_steps_value});
@@ -4376,7 +4383,7 @@ if size(filepath,1) > 1 %did the user load images?
 			else
 				A=imread(fullfile(PathName,FileName));
 			end
-			A=im2bw(A,0.5);
+			A=im2bw(A,0.5); %#ok<*IM2BW>
 			A1=zeros(size(A));
 			A2=A1;A3=A1;A4=A1;
 			%cut mask in 4 pieces to minimize parent / child / hole problems in masks
@@ -5700,8 +5707,8 @@ try
 	set(handles.interpol_missing,'value',interpol_missing);
 	set(handles.vectorscale,'string',vectorscale);
 	set(handles.colormap_choice,'value',colormap_choice); %popup
-	set(handles.colormap_steps,'value',colormap_steps); 
-	set(handles.colormap_interpolation,'value',colormap_interpolation); 
+	set(handles.colormap_steps,'value',colormap_steps);
+	set(handles.colormap_interpolation,'value',colormap_interpolation);
 	set(handles.addfileinfo,'value',addfileinfo);
 	set(handles.add_header,'value',add_header);
 	set(handles.delimiter,'value',delimiter);%popup
@@ -5860,8 +5867,8 @@ loc_med_thresh=get(handles.loc_med_thresh,'string');
 interpol_missing=get(handles.interpol_missing,'value');
 vectorscale=get(handles.vectorscale,'string');
 colormap_choice=get(handles.colormap_choice,'value'); %popup
-colormap_steps=get(handles.colormap_steps,'value'); 
-colormap_interpolation=get(handles.colormap_interpolation,'value'); 
+colormap_steps=get(handles.colormap_steps,'value');
+colormap_interpolation=get(handles.colormap_interpolation,'value');
 addfileinfo=get(handles.addfileinfo,'value');
 add_header=get(handles.add_header,'value');
 delimiter=get(handles.delimiter,'value');%popup
@@ -6174,7 +6181,7 @@ if ~isempty(resultslist)
 		do_notch_filter = get(handles.notch_filter, 'value');
 		notch_L_thresh=str2double(get(handles.notch_L_thresh,'String'));
 		notch_H_thresh=str2double(get(handles.notch_H_thresh,'String'));
-
+		
 		hbar = pivprogress(size(slicedfilepath1,2),handles.apply_filter_all);
 		if size(u,2)<num_frames_to_process-1 %If not all frames have been analyzed. Parfor loop crashes otherwise.
 			u(num_frames_to_process-1)={[]};
@@ -6213,7 +6220,7 @@ if ~isempty(resultslist)
 					B=currentimage2;
 				else
 					A=[];B=[];rawimageA=[];rawimageB=[];
-                end
+				end
 				corr2_value=resultslist{12,i};
 				[u_new{i},v_new{i},typevector_new{i}]=filtervectors_all_parallel(x{i},y{i},u{i},v{i},typevector_original{i},calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh);
 				hbar.iterate(1); %#ok<*PFBNS>
@@ -7241,7 +7248,7 @@ try
 	toolsavailable(1)
 catch
 end
-if strmatch(button,'Yes')==1 %#ok<MATCH2>
+if strmatch(button,'Yes')==1 
 	try
 		homedir=retr('homedir');
 		pathname=retr('pathname');
@@ -8374,8 +8381,8 @@ loc_med_thresh=get(handles.loc_med_thresh,'string');
 interpol_missing=get(handles.interpol_missing,'value');
 vectorscale=get(handles.vectorscale,'string');
 colormap_choice=get(handles.colormap_choice,'value'); %popup
-colormap_steps=get(handles.colormap_steps,'value'); 
-colormap_interpolation=get(handles.colormap_interpolation,'value'); 
+colormap_steps=get(handles.colormap_steps,'value');
+colormap_interpolation=get(handles.colormap_interpolation,'value');
 addfileinfo=get(handles.addfileinfo,'value');
 add_header=get(handles.add_header,'value');
 delimiter=get(handles.delimiter,'value');%popup
@@ -8524,8 +8531,8 @@ else
 	
 	set(handles.vectorscale,'string',retr('vectorscale'));
 	set(handles.colormap_choice,'value',retr('colormap_choice')); %popup
-	set(handles.colormap_steps,'value',retr('colormap_steps')); 
-	set(handles.colormap_interpolation,'value',retr('colormap_interpolation')); 
+	set(handles.colormap_steps,'value',retr('colormap_steps'));
+	set(handles.colormap_interpolation,'value',retr('colormap_interpolation'));
 	set(handles.addfileinfo,'value',retr('addfileinfo'));
 	set(handles.add_header,'value',retr('add_header'));
 	set(handles.delimiter,'value',retr('delimiter'));%popup
@@ -8616,7 +8623,7 @@ else
 	catch
 		disp('corr filter / notch settings');
 	end
-
+	
 	try
 		if vars.velrect(1,3)~=0 && vars.velrect(1,4)~=0
 			put('velrect', vars.velrect);
@@ -8624,7 +8631,7 @@ else
 		end
 	catch
 	end
-
+	
 	try
 		set(handles.realdist, 'String',vars.realdist_string);
 		set(handles.time_inp, 'String',vars.time_inp_string);
@@ -9914,12 +9921,27 @@ if isempty(resultslist)==0
 					eval(['vmittelselected=vmittel(:,:,[' str ']);']);
 					if type==2
 						%standard deviation
-						resultslist{3,size(filepath,1)/2+1}=nanstd(umittelselected,3); %#ok<NODEF>
-						resultslist{4,size(filepath,1)/2+1}=nanstd(vmittelselected,3); %#ok<NODEF>
+						%ROCHE Modifikation
+						out_mean_u=nanstd(umittelselected,3); %#ok<NODEF>
+						out_mean_v=nanstd(vmittelselected,3); %#ok<NODEF>
+						out_mean_u(typevectormean>=1.75)=nan; %discard everything that has less than 25% valid measurements
+						out_mean_v(typevectormean>=1.75)=nan;
+						resultslist{3,size(filepath,1)/2+1}=out_mean_u;
+						resultslist{4,size(filepath,1)/2+1}=out_mean_v;
+						%resultslist{3,size(filepath,1)/2+1}=nanstd(umittelselected,3); %#ok<NODEF>
+						%resultslist{4,size(filepath,1)/2+1}=nanstd(vmittelselected,3); %#ok<NODEF>
 					end
+					
 					if type==1
-						resultslist{3,size(filepath,1)/2+1}=nanmean(umittelselected,3);
-						resultslist{4,size(filepath,1)/2+1}=nanmean(vmittelselected,3);
+						%ROCHE Modifikation
+						out_mean_u=nanmean(umittelselected,3);
+						out_mean_v=nanmean(vmittelselected,3);
+						out_mean_u(typevectormean>=1.75)=nan; %discard everything that has less than 25% valid measurements
+						out_mean_v(typevectormean>=1.75)=nan;
+						resultslist{3,size(filepath,1)/2+1}=out_mean_u;
+						resultslist{4,size(filepath,1)/2+1}=out_mean_v;
+						%resultslist{3,size(filepath,1)/2+1}=nanmean(umittelselected,3);
+						%resultslist{4,size(filepath,1)/2+1}=nanmean(vmittelselected,3);
 					end
 					
 					if type==0
@@ -11037,9 +11059,9 @@ if alreadyconnected
 		fprintf(logger_fid, '\t');
 		fprintf(logger_fid, '%s', sync_setting);
 		fprintf(logger_fid, '\t');
-		fprintf(logger_fid, '%s', num2str(binning));		
+		fprintf(logger_fid, '%s', num2str(binning));
 		fprintf(logger_fid, '\t');
-		fprintf(logger_fid, '%s', mat2str(ac_ROI_general));		
+		fprintf(logger_fid, '%s', mat2str(ac_ROI_general));
 		fprintf(logger_fid, '\n');
 		fclose(logger_fid);
 	end
@@ -11153,6 +11175,7 @@ else
 		camera_type=retr('camera_type');
 		try
 			[errorcode, caliimg,~]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,[1,1, 5120/binning,5120/binning],camera_type,0);
+			
 		catch ME
 			disp(ME)
 			uiwait(msgbox('Camera not connected'))
@@ -11174,6 +11197,8 @@ else
 			
 			bla=findobj(gca,'type','image');
 			current_image_size=size(bla.CData);
+			stretched_image=adapthisteq(bla.CData);
+			bla.CData=stretched_image;
 			ac_ROI_general_handle = drawrectangle(gca,'Position',ac_ROI_general,'LabelVisible','hover','Deletable',0,'DrawingArea',[1 1 current_image_size(2) current_image_size(1)],'tag','new_ROImethod','StripeColor','y');
 			addlistener(ac_ROI_general_handle,'MovingROI',@ROIallevents);
 			addlistener(ac_ROI_general_handle,'ROIMoved',@ROIallevents);
@@ -11190,11 +11215,11 @@ else
 			m5 = uimenu(c_menu,'Label','1 Hz','Callback',@setdefaultroi);
 			m6 = uimenu(c_menu,'Label','Enter ROI','Callback',@setdefaultroi);
 			position = customWait(ac_ROI_general_handle);
-
+			
 			put('ac_ROI_general_handle',ac_ROI_general_handle);
 			put('doing_roi',0)
 			position=round(position);
-
+			
 			xmin=position(1);
 			ymin=position(2);
 			xmax=position(1)+position(3)-1;
@@ -11305,7 +11330,7 @@ handles=gethand;
 result=0;
 if ~exist(projectpath,'dir')
 	button = questdlg('Folder does not exist. Create?','Create?','Yes','Cancel','Yes');
-	if strmatch(button,'Yes')==1 %#ok<MATCH2>
+	if strmatch(button,'Yes')==1 
 		mkdir(projectpath);
 		result=1;
 		update_ac_status(['Created folder ' projectpath]);
@@ -11316,7 +11341,7 @@ end
 if strcmp(caller,'double_images')
 	if result==1 && exist(fullfile(projectpath,'PIVlab_0000_A.tif'),'file')
 		button = questdlg('Overwrite files?','Overwrite?','Yes','Cancel','Yes');
-		if strmatch(button,'Yes')==1 %#ok<MATCH2>
+		if strmatch(button,'Yes')==1 
 			result=1;
 		else
 			result=0;
@@ -11329,7 +11354,7 @@ put('capturing',0);
 [filepath,~,~] = fileparts(mfilename('fullpath'));
 if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'file')
 	button = questdlg('Start Laser and camera?','Warning','Yes','Cancel','Yes');
-	if strmatch(button,'Yes')==1 %#ok<MATCH2>
+	if strmatch(button,'Yes')==1 
 		handles=gethand;
 		imageamount=str2double(get(handles.ac_imgamount,'String'));
 		put('cancel_capture',0);
@@ -11356,21 +11381,28 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 			set(handles.ac_serialstatus,'enable','on')
 			set(handles.ac_laserstatus,'enable','on')
 			set(handles.ac_power,'enable','on')
-
+			
 			f = waitbar(0,'Initializing...');
-			if get(handles.ac_enable_seeding,'Value')==1
-				external_device_control(1);
-				waitbar(.15,f,'Starting seeder...');
+			%if any external device is activated for automatic control, then...
+			if (~isempty(retr('ac_enable_seeding1')) && retr('ac_enable_seeding1') ~=0) || (~isempty(retr('ac_enable_device1')) && retr('ac_enable_device1') ~=0) || (~isempty(retr('ac_enable_device2')) && retr('ac_enable_device2') ~=0) 
+				external_device_control(1); %starts selected devices
+				waitbar(.15,f,'Starting external devices...');
 				pause(1)
-				waitbar(.33,f,'Starting seeder...');
+				waitbar(.33,f,'Starting external devices...');
 				pause(1)
 			end
-			waitbar(.66,f,'Starting laser...');
+			waitbar(.5,f,'Starting laser...');
 			control_simple_sync_serial(1);
 			put('laser_running',1);
-			pause(0.5)
+			pause(1)
+			waitbar(.6,f,'Starting laser...');
+			pause(1)
+			waitbar(.7,f,'Laser stabilization...');
+			pause(1)
+			waitbar(.85,f,'Starting camera...');
+			pause(1)
 			waitbar(1,f,'Starting camera...');
-			pause(0.5)
+			pause(1)
 			close(f)
 			camera_type=retr('camera_type');
 			binning=retr('binning');
@@ -11379,7 +11411,7 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 			end
 			PIVlab_capture_pco(imageamount,retr('f1exp_cam'),'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI_realtime,binning,ac_ROI_general,camera_type,0);
 			%disable external devices
-			external_device_control(0);
+			external_device_control(0); % stops all external devices
 			control_simple_sync_serial(0);
 			put('laser_running',0);
 			if retr('cancel_capture')==0
@@ -11406,22 +11438,41 @@ serpo=retr('serpo');
 if ~isempty(serpo)
 	flush(serpo)
 	if switch_it==1
-		ext_dev_01_pwm = retr('ext_dev_01_pwm');
-		ext_dev_02_pwm = retr('ext_dev_02_pwm');
-		ext_dev_03_pwm = retr('ext_dev_03_pwm');
-		writeline(serpo,['SEEDER_01:' num2str(ext_dev_01_pwm)]);
-		pause(0.2)
-		writeline(serpo,['SEEDER_02:' num2str(ext_dev_02_pwm)]);
-		pause(0.2)
-		writeline(serpo,['SEEDER_03:' num2str(ext_dev_03_pwm)]);
+		if ~isempty(retr('ac_enable_seeding1')) && retr('ac_enable_seeding1') == 1
+				ext_dev_01_pwm = retr('ext_dev_01_pwm');
+				line_to_write=['SEEDER_01:' num2str(ext_dev_01_pwm)]
+				writeline(serpo,line_to_write);
+				put('ac_seeding1_status',1);
+				pause(0.2)
+		end
+		if ~isempty(retr('ac_enable_device1')) && retr('ac_enable_device1') == 1
+				ext_dev_02_pwm = retr('ext_dev_02_pwm');
+				line_to_write=['SEEDER_02:' num2str(ext_dev_02_pwm)]
+				writeline(serpo,line_to_write);
+				put('ac_device1_status',1);
+				pause(0.2)
+		end		
+		if ~isempty(retr('ac_enable_device2')) && retr('ac_enable_device2') == 1
+				ext_dev_03_pwm = retr('ext_dev_03_pwm');
+				line_to_write=['SEEDER_03:' num2str(ext_dev_03_pwm)]
+				writeline(serpo,line_to_write);
+				put('ac_device2_status',1);
+				pause(0.2)
+		end				
 	else
 		writeline(serpo,'SEEDER_01:0');
-		pause(0.2)
+		pause(0.1)
 		writeline(serpo,'SEEDER_02:0');
-		pause(0.2)
-		writeline(serpo,'SEEDER_02:0');
+		pause(0.1)
+		writeline(serpo,'SEEDER_03:0');
+		put('ac_seeding1_status',0);
+		put('ac_device1_status',0);
+		put('ac_device2_status',0);
 	end
 end
+
+
+
 
 function found_the_data = push_recorded_to_GUI
 handles=gethand;
@@ -11519,18 +11570,18 @@ if get(handles.ac_realtime,'Value')==1
 	end
 	camera_type=retr('camera_type');
 	try
-	if capture_ok==1
-		put('cancel_capture',0);
-		put('capturing',1);
-		[errorcode, caliimg]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
-	end
-	put('capturing',0);
-	uiwait(msgbox(['Please select the ROI for real-time PIV.'],'modal'))
-	roirect = round(getrect(gca));
-	if roirect(1,3)~=0 && roirect(1,4)~=0
-		put('ac_ROI_realtime',roirect);
-		put('do_realtime',1);
-	end
+		if capture_ok==1
+			put('cancel_capture',0);
+			put('capturing',1);
+			[errorcode, caliimg]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
+		end
+		put('capturing',0);
+		uiwait(msgbox(['Please select the ROI for real-time PIV.'],'modal'))
+		roirect = round(getrect(gca));
+		if roirect(1,3)~=0 && roirect(1,4)~=0
+			put('ac_ROI_realtime',roirect);
+			put('do_realtime',1);
+		end
 	catch
 		put('do_realtime',0);
 		set(handles.ac_realtime,'Value',0)
@@ -11578,28 +11629,9 @@ if ~isempty(serpo)
 	end
 end
 
-function ac_enable_seeding_Callback (~,~,~)
-handles=gethand;
-if get(handles.ac_enable_seeding,'Value')==1
-	ext_dev_01_pwm=retr('ext_dev_01_pwm');
-	ext_dev_02_pwm=retr('ext_dev_02_pwm');
-	ext_dev_03_pwm=retr('ext_dev_03_pwm');
-	if isempty(ext_dev_01_pwm) || isnan(ext_dev_01_pwm)
-		ext_dev_01_pwm=1;%default setting
-		ext_dev_02_pwm=1;%default setting
-		ext_dev_03_pwm=1;%default setting
-	end
-	prompt = {'External device 01 PWM [0...1]', 'External device 02 PWM [0...1]','External device 03 PWM [0...1]'};
-	dlgtitle = 'External Device Control';
-	dims = [1 50];
-	definput = {num2str(ext_dev_01_pwm),num2str(ext_dev_02_pwm),num2str(ext_dev_03_pwm)};
-	answer = inputdlg(prompt,dlgtitle,dims,definput);
-	if ~isempty(answer)
-		put('ext_dev_01_pwm',str2double(answer{1}));
-		put('ext_dev_02_pwm',str2double(answer{2}));
-		put('ext_dev_03_pwm',str2double(answer{3}));
-	end
-end
+function ac_device_control_Callback (~,~,~)
+PIVlab_capture_devicectrl_GUI
+
 function select_capture_config_Callback (~,~,~)
 handles=gethand;
 value=get(handles.ac_config,'value');
@@ -11630,6 +11662,28 @@ end
 %contents=get(handles.ac_config,'String')
 %contents(value)
 
+function ac_expo_Callback(~,~,~)
+handles=gethand;
+camera_type=retr('camera_type');
+if strcmp(camera_type,'pco_pixelfly')
+	if str2double(get(handles.ac_expo,'String')) < 1
+		set(handles.ac_expo,'String','1')
+	end
+	if str2double(get(handles.ac_expo,'String')) > 2000
+		set(handles.ac_expo,'String','2000')
+	end
+end
+if strcmp(camera_type,'pco_panda')
+	if str2double(get(handles.ac_expo,'String')) < 6
+		set(handles.ac_expo,'String','6')
+	end
+	if str2double(get(handles.ac_expo,'String')) > 350
+		set(handles.ac_expo,'String','350')
+	end
+	
+end
+
+
 function bg_subtract_Callback (~,~,~)
 handles=gethand;
 if get(handles.bg_subtract,'Value')==0
@@ -11640,7 +11694,7 @@ end
 
 function ac_lensctrl_Callback (~,~,~)
 handles=gethand;
-lens_control_GUI
+PIVlab_capture_lensctrl_GUI
 
 function pos = customWait(hROI)
 % Listen for mouse clicks on the ROI
