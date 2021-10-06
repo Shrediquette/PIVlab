@@ -23,10 +23,8 @@ if isempty(retr('ac_enable_device2'))
 	put('ac_enable_device2',0)
 end
 
-seeding_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Device control','Toolbar','none','Units','characters','Position',[3+35 5 35 15],'tag','lens_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
+seeding_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Device control','Toolbar','none','Units','characters','Position',[3+35 5 35 15+1.5],'tag','lens_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
 set (seeding_control_window,'Units','Characters');
-
-
 
 
 handles = guihandles; %alle handles mit tag laden und ansprechbar machen
@@ -38,9 +36,9 @@ parentitem = get(seeding_control_window, 'Position');
 margin=1.5;
 
 panelheight=5;
-handles.seeder1panel = uipanel(seeding_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight parentitem(3)-2 panelheight],'title','Seeder 1','fontweight','bold');
-handles.device1panel = uipanel(seeding_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*2 parentitem(3)-2 panelheight],'title','Device 1','fontweight','bold');
-handles.device2panel = uipanel(seeding_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3 parentitem(3)-2 panelheight],'title','Device 2','fontweight','bold');
+handles.seeder1panel = uipanel(seeding_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight-1.5 parentitem(3)-2 panelheight],'title','Seeder 1','fontweight','bold');
+handles.device1panel = uipanel(seeding_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*2-1.5 parentitem(3)-2 panelheight],'title','Device 1','fontweight','bold');
+handles.device2panel = uipanel(seeding_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5 parentitem(3)-2 panelheight],'title','Device 2','fontweight','bold');
 
 %% Seeder
 parentitem=get(handles.seeder1panel, 'Position');
@@ -99,8 +97,6 @@ handles.device2_edit = uicontrol(handles.device2panel,'Style','edit','String',nu
 item=[parentitem(3)/2+7 item(2) 15 1];
 handles.device2_active = uicontrol(handles.device2panel,'Style','checkbox','String','active','value',retr('ac_enable_device2'),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@checkbox_set,3},'tag','device2_active','Tooltipstring','Enable this device when a PIV capture starts');
 
-
-
 function checkbox_set(caller,~,device)
 if device==1
 	if caller.Value == 1
@@ -132,9 +128,8 @@ elseif device==2
 	external_device_control(device,retr('ac_device1_status'))
 elseif device==3
 	put('ext_dev_03_pwm',pwm);
-	external_device_control(device,retr('ac_device2_status'))	
-end	
-
+	external_device_control(device,retr('ac_device2_status'))
+end
 
 function device_set (~,~,device,inpt)
 handles=gethand;
@@ -148,7 +143,6 @@ end
 if strmatch(inpt,'off')
 	external_device_control(device,0)
 end
-
 
 function external_device_control(device,status)
 hgui = getappdata(0,'hgui');
@@ -167,100 +161,34 @@ if alreadyconnected==1
 		case 1
 			if status==1
 				ext_dev_01_pwm = retr('ext_dev_01_pwm');
-				line_to_write=['SEEDER_01:' num2str(ext_dev_01_pwm)]
+				line_to_write=['SEEDER_01:' num2str(ext_dev_01_pwm)];
 				put('ac_seeding1_status',1);
 			else
-				line_to_write='SEEDER_01:0'
+				line_to_write='SEEDER_01:0';
 				put('ac_seeding1_status',0);
 			end
 		case 2
 			if status==1
 				ext_dev_02_pwm = retr('ext_dev_02_pwm');
-				line_to_write=['SEEDER_02:' num2str(ext_dev_02_pwm)]
+				line_to_write=['SEEDER_02:' num2str(ext_dev_02_pwm)];
 				put('ac_device1_status',1);
 			else
-				line_to_write='SEEDER_02:0'
+				line_to_write='SEEDER_02:0';
 				put('ac_device1_status',0);
 			end
 		case 3
 			if status==1
 				ext_dev_03_pwm = retr('ext_dev_03_pwm');
-				line_to_write=['SEEDER_03:' num2str(ext_dev_03_pwm)]
+				line_to_write=['SEEDER_03:' num2str(ext_dev_03_pwm)];
 				put('ac_device2_status',1);
 			else
-				line_to_write='SEEDER_03:0'
+				line_to_write='SEEDER_03:0';
 				put('ac_device2_status',0);
 			end
 	end
 	writeline(serpo,line_to_write);
 end
 
-
-
-
-
-
-
-%{
-function [focus,aperture,lighting]=get_lens_status
-focus=retr('focus');
-aperture=retr('aperture');
-lighting=retr('lighting');
-if isempty(focus)
-	focus=1500;
-end
-if isempty(aperture)
-	aperture=1500;
-end
-if isempty(lighting)
-	lighting=0;
-end
-
-function aperture_set (~,~,inpt)
-[focus,aperture,lighting]=get_lens_status;
-if strmatch(inpt,'open')
-	if aperture<2500
-		aperture=aperture+100;
-	end
-end
-if strmatch(inpt,'close')
-	if aperture>500
-		aperture=aperture-100;
-	end
-end
-PIVlab_capture_lensctrl (focus, aperture,lighting)
-update_edit_fields
-
-function aperture_edit_Callback(caller,~)
-[focus,aperture,lighting]=get_lens_status;
-aperture=str2double(caller.String);
-PIVlab_capture_lensctrl (focus, aperture,lighting)
-
-function focus_edit_Callback(caller,~)
-[focus,aperture,lighting]=get_lens_status;
-focus=str2double(caller.String);
-PIVlab_capture_lensctrl (focus, aperture,lighting)
-
-function update_edit_fields(~,~)
-[focus,aperture,lighting]=get_lens_status;
-handles=gethand;
-set(handles.focus_edit ,'String', num2str(focus))
-set(handles.aperture_edit ,'String', num2str(aperture))
-set(handles.light_edit ,'String', num2str(lighting))
-
-
-function light_switch (~, ~,inpt)
-[focus,aperture,lighting]=get_lens_status;
-if strmatch(inpt,'on')
-	lighting=1;
-end
-if strmatch(inpt,'off')
-	lighting=0;
-end
-PIVlab_capture_lensctrl (focus, aperture,lighting)
-update_edit_fields
-
-%}
 function put(name, what)
 hgui=getappdata(0,'hgui');
 setappdata(hgui, name, what);

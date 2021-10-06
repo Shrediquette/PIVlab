@@ -1,6 +1,6 @@
 function PIVlab_capture_lensctrl_GUI
 [focus,aperture,lighting]=get_lens_status;
-lens_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Lens control','Toolbar','none','Units','characters','Position',[3 5 35 15],'tag','lens_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
+lens_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Lens control','Toolbar','none','Units','characters','Position',[3 5 35 15+1.5],'tag','lens_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
 set (lens_control_window,'Units','Characters');
 
 
@@ -15,9 +15,15 @@ parentitem = get(lens_control_window, 'Position');
 margin=1.5;
 
 panelheight=5;
-handles.aperturepanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight parentitem(3)-2 panelheight],'title','Aperture control','fontweight','bold');
-handles.focuspanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*2 parentitem(3)-2 panelheight],'title','Focus control','fontweight','bold');
-handles.lightpanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3 parentitem(3)-2 panelheight],'title','Light control','fontweight','bold');
+handles.aperturepanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight-1.5 parentitem(3)-2 panelheight],'title','Aperture control','fontweight','bold');
+handles.focuspanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*2-1.5 parentitem(3)-2 panelheight],'title','Focus control','fontweight','bold');
+handles.lightpanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5 parentitem(3)-2 panelheight],'title','Light control','fontweight','bold');
+
+%% Config selection
+if isempty(retr('selected_lens_config'))
+	put('selected_lens_config',1)
+end
+handles.configu = uicontrol(lens_control_window,'Style','popupmenu', 'String',{'Zeiss Dimension 2-25','None'},'Value',retr('selected_lens_config'),'Units','characters', 'Fontunits','points','Position',[1 parentitem(4)-1.5 parentitem(3)-2 1.5],'Tag','configu','TooltipString','Lens configuration. Sets the limits for the servo motors.','Callback',@configu_Callback);
 
 %% APERTURE
 parentitem=get(handles.aperturepanel, 'Position');
@@ -66,8 +72,33 @@ handles.light_label = uicontrol(handles.lightpanel,'Style','text','String','Ligh
 item=[parentitem(3)/2*1 item(2) parentitem(3)/3 1];
 handles.light_edit = uicontrol(handles.lightpanel,'Style','edit','String',num2str(lighting),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@focus_edit_Callback,'tag','light_edit','enable','off');
 
+configu_Callback(handles.configu,[]) %execute callback and set servo limits
+
+
+
+function configu_Callback (inpt,~)
+if inpt.Value == 2
+	focus_servo_lower_limit = 500;
+	focus_servo_upper_limit = 2500;
+	aperture_servo_lower_limit = 500;
+	aperture_servo_upper_limit = 2500;	
+elseif inpt.Value == 1
+	load (['lenslimits_' inpt.String{inpt.Value} '.mat'] ,'focus_servo_lower_limit','focus_servo_upper_limit','aperture_servo_lower_limit','aperture_servo_upper_limit');
+end
+put('focus_servo_lower_limit',focus_servo_lower_limit)
+put('focus_servo_upper_limit',focus_servo_upper_limit)
+put('aperture_servo_lower_limit',aperture_servo_lower_limit)
+put('aperture_servo_upper_limit',aperture_servo_upper_limit)
+put('selected_lens_config',inpt.Value)
+handles=gethand;
+focus_edit_Callback(handles.aperture_edit,[])
+pause(0.2)
+aperture_edit_Callback(handles.focus_edit,[])
+
+
 
 function focus_set (~,~,inpt)
+focus_step=100;
 [focus,aperture,lighting]=get_lens_status;
 if strmatch(inpt,'auto')
 	if retr('capturing')==1
@@ -75,7 +106,7 @@ if strmatch(inpt,'auto')
 		if isempty(autofocus_enabled)
 			autofocus_enabled=0;
 		end
-		put('autofocus_enabled',1-autofocus_enabled);
+		put('autofocus_enabled',1-autofocus_enabled); %toggles the autofocus_enabled variable. That is checked in PIVlab_capture_pco after each frame capture
 		if retr('autofocus_enabled')==1 % only autofocs OR sharpness display must be enabled at a time
 			put('sharpness_enabled',0);
 		end
@@ -86,13 +117,17 @@ if strmatch(inpt,'auto')
 end
 
 if strmatch(inpt,'near')
-	if focus>500
-		focus=focus-100;
+	if focus>=retr('focus_servo_lower_limit')+focus_step
+		focus=focus-focus_step;
+	else
+		focus=retr('focus_servo_lower_limit');
 	end
 end
 if strmatch(inpt,'far')
-	if focus<2500
-		focus=focus+100;
+	if focus<=retr('focus_servo_upper_limit')-focus_step
+		focus=focus+focus_step;
+	else
+		focus=retr('focus_servo_upper_limit');
 	end
 end
 PIVlab_capture_lensctrl (focus, aperture,lighting)
@@ -114,27 +149,48 @@ end
 
 function aperture_set (~,~,inpt)
 [focus,aperture,lighting]=get_lens_status;
-if strmatch(inpt,'open')
-	if aperture<2500
-		aperture=aperture+100;
-	end
-end
+aperture_step=100;
 if strmatch(inpt,'close')
-	if aperture>500
-		aperture=aperture-100;
+	if aperture>=retr('aperture_servo_lower_limit')+aperture_step
+		aperture=aperture-aperture_step;
+	else
+		aperture=retr('aperture_servo_lower_limit');
 	end
 end
+if strmatch(inpt,'open')
+	if aperture<=retr('aperture_servo_upper_limit')-aperture_step
+		aperture=aperture+aperture_step;
+	else
+		aperture=retr('aperture_servo_upper_limit');
+	end
+end
+
 PIVlab_capture_lensctrl (focus, aperture,lighting)
 update_edit_fields
 
+
 function aperture_edit_Callback(caller,~)
-[focus,aperture,lighting]=get_lens_status;
+[focus,~,lighting]=get_lens_status;
 aperture=str2double(caller.String);
+if aperture > retr('aperture_servo_upper_limit')
+	aperture =retr('aperture_servo_upper_limit');
+end
+if aperture < retr('aperture_servo_lower_limit')
+	aperture =retr('aperture_servo_lower_limit');
+end
+caller.String=num2str(aperture);
 PIVlab_capture_lensctrl (focus, aperture,lighting)
 
 function focus_edit_Callback(caller,~)
-[focus,aperture,lighting]=get_lens_status;
+[~,aperture,lighting]=get_lens_status;
 focus=str2double(caller.String);
+if focus > retr('focus_servo_upper_limit')
+	focus =retr('focus_servo_upper_limit');
+end
+if focus< retr('focus_servo_lower_limit')
+	focus =retr('focus_servo_lower_limit');
+end
+caller.String=num2str(focus);
 PIVlab_capture_lensctrl (focus, aperture,lighting)
 
 function update_edit_fields(~,~)
