@@ -3,9 +3,6 @@ function PIVlab_capture_lensctrl_GUI
 lens_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Lens control','Toolbar','none','Units','characters','Position',[3 5 35 15+1.5],'tag','lens_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
 set (lens_control_window,'Units','Characters');
 
-
-
-
 handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 guidata(lens_control_window,handles)
 setappdata(0,'hlens',lens_control_window);
@@ -19,11 +16,14 @@ handles.aperturepanel = uipanel(lens_control_window, 'Units','characters', 'Posi
 handles.focuspanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*2-1.5 parentitem(3)-2 panelheight],'title','Focus control','fontweight','bold');
 handles.lightpanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5 parentitem(3)-2 panelheight],'title','Light control','fontweight','bold');
 
-%% Config selection
+%% Setup Configurations
 if isempty(retr('selected_lens_config'))
 	put('selected_lens_config',1)
 end
-handles.configu = uicontrol(lens_control_window,'Style','popupmenu', 'String',{'Zeiss Dimension 2-25','None'},'Value',retr('selected_lens_config'),'Units','characters', 'Fontunits','points','Position',[1 parentitem(4)-1.5 parentitem(3)-2 1.5],'Tag','configu','TooltipString','Lens configuration. Sets the limits for the servo motors.','Callback',@configu_Callback);
+load ('PIVlab_capture_lensconfig.mat','lens_configurations');
+% New lens configurations can be added to the table by modifying the variable 'lens_configurations' in the file 'PIVlab_capture_lensconfig.mat :
+% Example: lens_configurations=addvars(lens_configurations,[500;2500;500;2500],'NewVariableNames','Generic lens')
+handles.configu = uicontrol(lens_control_window,'Style','popupmenu', 'String',lens_configurations.Properties.VariableNames,'Value',retr('selected_lens_config'),'Units','characters', 'Fontunits','points','Position',[1 parentitem(4)-1.5 parentitem(3)-2 1.5],'Tag','configu','TooltipString','Lens configuration. Sets the limits for the servo motors.','Callback',@configu_Callback);
 
 %% APERTURE
 parentitem=get(handles.aperturepanel, 'Position');
@@ -75,16 +75,13 @@ handles.light_edit = uicontrol(handles.lightpanel,'Style','edit','String',num2st
 configu_Callback(handles.configu,[]) %execute callback and set servo limits
 
 
-
 function configu_Callback (inpt,~)
-if inpt.Value == 2
-	focus_servo_lower_limit = 500;
-	focus_servo_upper_limit = 2500;
-	aperture_servo_lower_limit = 500;
-	aperture_servo_upper_limit = 2500;	
-elseif inpt.Value == 1
-	load (['lenslimits_' inpt.String{inpt.Value} '.mat'] ,'focus_servo_lower_limit','focus_servo_upper_limit','aperture_servo_lower_limit','aperture_servo_upper_limit');
-end
+load ('PIVlab_capture_lensconfig.mat','lens_configurations');
+focus_servo_lower_limit = lens_configurations{1,inpt.Value};
+focus_servo_upper_limit = lens_configurations{2,inpt.Value};
+aperture_servo_lower_limit = lens_configurations{3,inpt.Value};
+aperture_servo_upper_limit = lens_configurations{4,inpt.Value};
+	
 put('focus_servo_lower_limit',focus_servo_lower_limit)
 put('focus_servo_upper_limit',focus_servo_upper_limit)
 put('aperture_servo_lower_limit',aperture_servo_lower_limit)

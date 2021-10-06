@@ -2908,6 +2908,25 @@ if capturing==0
 		axis image;
 		set(gca,'ytick',[])
 		set(gca,'xtick',[])
+		
+		%% include axis tick labels. Doesnt work with exportfig.....?
+		%{
+		xticks('auto')
+		yticks('auto')
+		xticklabels('auto')
+		yticklabels('auto')
+		pixelxticks=xticklabels(gca);
+		pixelyticks=yticklabels(gca);
+		pixelxticks_S = sprintf('%s ', pixelxticks{:});
+		pixelxticks = sscanf(pixelxticks_S, '%f');
+		pixelyticks_S = sprintf('%s ', pixelyticks{:});
+		pixelyticks = sscanf(pixelyticks_S, '%f');
+		
+		[xticklabel_cal,yticklabel_cal] = calibrate_xy(pixelxticks,pixelyticks);
+		set(gca,'xticklabel',num2cell(xticklabel_cal))
+		set(gca,'yticklabel',num2cell(yticklabel_cal))
+		%}
+		
 		filename=retr('filename');
 		ismean=retr('ismean');
 		if size(ismean,1)>=(currentframe+1)/2
