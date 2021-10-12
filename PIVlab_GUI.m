@@ -6058,10 +6058,10 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 		datav=reshape(v*calv,1,size(v,1)*size(v,2)*size(v,3));
 		if size(datau,2)>1000000 %more than one million value pairs are too slow in scatterplot.
 			pos=unique(ceil(rand(1000000,1)*(size(datau,2)-1))); %select random entries...
-			scatter(gca,datau(pos),datav(pos), 'b.'); %.. and plot them
+			scatter(gca,datau(pos),datav(pos), 0.25,'k.'); %.. and plot them
 			set(gca,'Yaxislocation','right','layer','top');
 		else
-			scatter(gca,datau,datav, 'b.');
+			scatter(gca,datau,datav, 0.25,'k.');
 			set(gca,'Yaxislocation','right','layer','top');
 		end
 		drawnow;%needed from R2021b on... Why...?
