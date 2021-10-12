@@ -204,6 +204,19 @@ else
 			if(errorCode)
 				pco_errdisp('PCO_GetHWIOSignal',errorCode);
 			end
+			%enable exposure output on panda
+			hwio_sig=libstruct('PCO_Signal');
+			set(hwio_sig,'wSize',hwio_sig.structsize);
+			[errorCode,~,hwio_sig] = calllib('PCO_CAM_SDK', 'PCO_GetHWIOSignal', out_ptr,3,hwio_sig);
+			pco_errdisp('PCO_GetHWIOSignal',errorCode);
+			hwio_sig.wEnabled = 1;
+			[errorCode,~,~] = calllib('PCO_CAM_SDK', 'PCO_SetHWIOSignal', out_ptr,3,hwio_sig);
+			pco_errdisp('PCO_SetHWIOSignal',errorCode);
+			[errorCode,~,hwio_sig] = calllib('PCO_CAM_SDK', 'PCO_GetHWIOSignal', out_ptr,3,hwio_sig);
+			if(errorCode)
+				pco_errdisp('PCO_GetHWIOSignal',errorCode);
+			end			
+			
 			%disp(['hardware trigger status: ' num2str(hwio_sig.wEnabled)]);
 		elseif strcmp(camera_type,'pco_pixelfly')
 			%no special treatment
@@ -538,17 +551,17 @@ else
 						%% Lens control
 						autofocus_enabled = getappdata(hgui,'autofocus_enabled');
 						if autofocus_enabled == 1
-							focus_start=500;
-							focus_end=2500;
-							focus_steps_raw=50;
-							focus_steps_fine=5;
+							focus_start = getappdata(hgui,'focus_servo_lower_limit');
+							focus_end = getappdata(hgui,'focus_servo_upper_limit');
+							focus_steps_raw=round((focus_end-focus_start)/30);%50;
+							focus_steps_fine=round(focus_steps_raw/10);%5;
 							if ~exist('sharpness_focus_table','var') || ~exist('sharpness_focus_table','var') || isempty(sharpness_focus_table) || isempty(sharp_loop_cnt)
 								sharpness_focus_table=zeros(1,2);
 								sharp_loop_cnt=0;
 								focus=focus_start;
 								raw_finished=0;
-								aperture=1500; %diese müsste vom Nutzer eingestellt werden in GUI. Hier nicht ändern.
-								lighting=0;
+								aperture=getappdata(hgui,'aperture');
+								lighting=getappdata(hgui,'lighting');
 								PIVlab_capture_lensctrl(focus,aperture,lighting)	
 							end
 							if raw_finished==0
@@ -591,7 +604,7 @@ else
 									disp(['Best fine focus: ' num2str(focus_peak)])
 									PIVlab_capture_lensctrl(focus_peak,aperture,lighting) %set to best focus	
 									setappdata(hgui,'autofocus_enabled',0); %autofocus am ende ausschalten
-									setappdata(hgui,'cancel_capture',1); %stop recording....?
+									%setappdata(hgui,'cancel_capture',1); %stop recording....?
 									figure;plot(sharpness_focus_table(:,1),sharpness_focus_table(:,2))
 								end
 							end

@@ -236,11 +236,11 @@ function generateMenu
 m1 = uimenu('Label','File');
 uimenu(m1,'Label','New session','Callback',@loadimgs_Callback,'Accelerator','N');
 m2 = uimenu(m1,'Label','Load');
-uimenu(m2,'Label','PIVlab settings','Callback',@load_settings_Callback);
-uimenu(m2,'Label','PIVlab session','Callback',@load_session_Callback);
+uimenu(m2,'Label','Import PIVlab settings','Callback',@load_settings_Callback);
+uimenu(m2,'Label','Load PIVlab session','Separator','on','Callback',@load_session_Callback);
 m3 = uimenu(m1,'Label','Save');
-uimenu(m3,'Label','PIVlab settings','Callback',@curr_settings_Callback);
-uimenu(m3,'Label','PIVlab session','Callback',@save_session_Callback);
+uimenu(m3,'Label','Export PIVlab settings','Callback',@curr_settings_Callback);
+uimenu(m3,'Label','Save PIVlab session','Separator','on','Callback',@save_session_Callback);
 m14 = uimenu(m1,'Label','Export');
 uimenu(m14,'Label','Image or movie (jpg, avi, bmp, eps, pdf)','Callback',@save_movie_Callback);
 uimenu(m14,'Label','Text file (ASCII)','Callback',@ascii_chart_Callback);
@@ -10449,7 +10449,7 @@ if str2double(val)<0 || isempty(val)==1 || isnan(str2double(val))
 	set(hObject,'string',0);
 end
 
-function licres_Callback
+function licres_Callback(~,~,~)
 handles=gethand;
 value=num2str(round(get(handles.licres,'Value')*10)/10);
 set(handles.LIChint2,'String',value)
@@ -11317,6 +11317,7 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 		set(handles.ac_serialstatus,'enable','on')
 		set(handles.ac_laserstatus,'enable','on')
 		set(handles.ac_lasertoggle,'enable','on')
+		set(handles.ac_lensctrl,'enable','on')
 		set(handles.ac_power,'enable','on')
 		camera_type=retr('camera_type');
 		try
@@ -11400,6 +11401,7 @@ if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'
 			set(handles.ac_serialstatus,'enable','on')
 			set(handles.ac_laserstatus,'enable','on')
 			set(handles.ac_power,'enable','on')
+			set(handles.ac_lensctrl,'enable','on')
 			
 			f = waitbar(0,'Initializing...');
 			%if any external device is activated for automatic control, then...

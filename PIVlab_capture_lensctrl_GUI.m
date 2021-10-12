@@ -1,4 +1,5 @@
 function PIVlab_capture_lensctrl_GUI
+%todo: nach dem autofokus wird edit field nicht updedatet
 [focus,aperture,lighting]=get_lens_status;
 lens_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Lens control','Toolbar','none','Units','characters','Position',[3 5 35 15+1.5],'tag','lens_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
 set (lens_control_window,'Units','Characters');
@@ -88,9 +89,24 @@ put('aperture_servo_lower_limit',aperture_servo_lower_limit)
 put('aperture_servo_upper_limit',aperture_servo_upper_limit)
 put('selected_lens_config',inpt.Value)
 handles=gethand;
-focus_edit_Callback(handles.aperture_edit,[])
-pause(0.2)
-aperture_edit_Callback(handles.focus_edit,[])
+focus=retr('focus');
+aperture=retr('aperture');
+lighting=retr('lighting');
+if isempty(focus)
+	focus=1500;
+end
+if isempty(aperture)
+	aperture=1500;
+end
+if isempty(lighting)
+	aperture=0;
+end
+set (handles.aperture_edit,'String',num2str(aperture))
+set (handles.focus_edit,'String',num2str(focus))
+set (handles.light_edit,'String',num2str(lighting))
+%focus_edit_Callback(handles.aperture_edit,[])
+%pause(0.2)
+%aperture_edit_Callback(handles.focus_edit,[])
 
 
 
@@ -99,6 +115,9 @@ focus_step=100;
 [focus,aperture,lighting]=get_lens_status;
 if strmatch(inpt,'auto')
 	if retr('capturing')==1
+		%move to lower limit
+		PIVlab_capture_lensctrl (retr('focus_servo_lower_limit'), retr('aperture'),retr('lighting'))
+		pause(1)
 		autofocus_enabled=retr('autofocus_enabled');
 		if isempty(autofocus_enabled)
 			autofocus_enabled=0;
@@ -119,6 +138,7 @@ if strmatch(inpt,'near')
 	else
 		focus=retr('focus_servo_lower_limit');
 	end
+	PIVlab_capture_lensctrl (focus, aperture,lighting)
 end
 if strmatch(inpt,'far')
 	if focus<=retr('focus_servo_upper_limit')-focus_step
@@ -126,8 +146,10 @@ if strmatch(inpt,'far')
 	else
 		focus=retr('focus_servo_upper_limit');
 	end
+	PIVlab_capture_lensctrl (focus, aperture,lighting)
 end
-PIVlab_capture_lensctrl (focus, aperture,lighting)
+%put('focus',focus);
+
 update_edit_fields
 
 function [focus,aperture,lighting]=get_lens_status
@@ -161,7 +183,7 @@ if strmatch(inpt,'open')
 		aperture=retr('aperture_servo_upper_limit');
 	end
 end
-
+%put('aperture',aperture);
 PIVlab_capture_lensctrl (focus, aperture,lighting)
 update_edit_fields
 
@@ -176,6 +198,7 @@ if aperture < retr('aperture_servo_lower_limit')
 	aperture =retr('aperture_servo_lower_limit');
 end
 caller.String=num2str(aperture);
+%put('aperture',aperture);
 PIVlab_capture_lensctrl (focus, aperture,lighting)
 
 function focus_edit_Callback(caller,~)
@@ -188,6 +211,7 @@ if focus< retr('focus_servo_lower_limit')
 	focus =retr('focus_servo_lower_limit');
 end
 caller.String=num2str(focus);
+%put('focus',focus);
 PIVlab_capture_lensctrl (focus, aperture,lighting)
 
 function update_edit_fields(~,~)
@@ -206,6 +230,7 @@ end
 if strmatch(inpt,'off')
 	lighting=0;
 end
+%put('lighting',lighting);
 PIVlab_capture_lensctrl (focus, aperture,lighting)
 update_edit_fields
 
