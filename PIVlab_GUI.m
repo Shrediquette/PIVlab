@@ -6064,6 +6064,7 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 			scatter(gca,datau,datav, 'b.');
 			set(gca,'Yaxislocation','right','layer','top');
 		end
+		drawnow;%needed from R2021b on... Why...?
 		oldsize=get(gca,'outerposition');
 		newsize=[oldsize(1)+10 0.15 oldsize(3)*0.87 oldsize(4)*0.87];
 		set(gca,'outerposition', newsize)
