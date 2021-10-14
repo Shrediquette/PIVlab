@@ -423,12 +423,33 @@ if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(even
 		put('ac_upper_clim',ac_upper_clim);
 		put('ac_lower_clim',0);
 		caxis([0 ac_upper_clim])
-	elseif strcmp(event.Key,'k') %plus
+	elseif strcmp(event.Key,'k') 
 		if strmatch (get(gca,'ColorScale'),'log') %#ok<*MATCH2>
 			set(gca,'ColorScale','linear')
 		else
 			set(gca,'ColorScale','log')
 		end
+	elseif strcmp(event.Key,'h') %
+		%{
+		hgui=getappdata(0,'hgui');
+		PIVlab_axis = findobj(hgui,'Type','Axes');
+		image_handle_pco=retr('image_handle_pco');
+		if isvalid(image_handle_pco)
+			hist_fig=findobj('tag','hist_fig');
+			if isempty(hist_fig)
+				hist_fig=figure('tag','hist_fig');
+			end
+			
+			histogram(image_handle_pco.CData,'Parent',hist_fig,'binlimits',[0 65535]);
+			
+			figure(hist_fig)
+		end
+		%}
+		hist_enabled=retr('hist_enabled');
+		if isempty(hist_enabled)
+			hist_enabled=0;
+		end
+		put('hist_enabled',1-hist_enabled);
 	end
 end
 
@@ -1999,7 +2020,7 @@ handles.ac_lensctrl = uicontrol(handles.uipanelac_camsettings,'Style','pushbutto
 parentitem=get(handles.multip24, 'Position');
 item=[0 23.25 parentitem(3) 4.5];
 
-handles.uipanelac_calib = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Calibration image', 'Tag','uipanelac_calib','fontweight','bold');
+handles.uipanelac_calib = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Live image', 'Tag','uipanelac_calib','fontweight','bold');
 
 parentitem=get(handles.uipanelac_calib, 'Position');
 item=[0 0 0 0];
@@ -2316,7 +2337,7 @@ end
 put('ac_lower_clim',0);
 put('ac_upper_clim',2^16);
 delete(findobj('tag','shortcutlist'));
-text(10,10,['Image acquisition keyboard shortcuts' sprintf('\n') 'CTRL SHIFT C : Toggle crosshair' sprintf('\n') 'CTRL SHIFT X : Toggle sharpness measure' sprintf('\n') 'CTRL SHIFT + : Increase display brightness' sprintf('\n') 'CTRL SHIFT - : Decrease display brightness' sprintf('\n') 'CTRL SHIFT K : Toggle between log and lin color scale'],'tag','shortcutlist','Color','black','BackgroundColor','white','VerticalAlignment','top');
+text(10,10,['Image acquisition keyboard shortcuts' sprintf('\n') 'CTRL SHIFT C : Toggle crosshair' sprintf('\n') 'CTRL SHIFT X : Toggle sharpness measure' sprintf('\n') 'CTRL SHIFT + : Increase display brightness' sprintf('\n') 'CTRL SHIFT - : Decrease display brightness' sprintf('\n') 'CTRL SHIFT K : Toggle between log and lin color scale' sprintf('\n') 'CTRL SHIFT H : Toggle histogram display'],'tag','shortcutlist','Color','black','BackgroundColor','white','VerticalAlignment','top');
 
 
 function preferences_Callback (~,~)
@@ -11171,6 +11192,7 @@ end
 function ac_calibROI_Callback (~,~,~)
 handles=gethand;
 put('capturing',0);
+put('hist_enabled',0);
 camera_type=retr('camera_type');
 binning=retr('binning');
 if isempty(binning)

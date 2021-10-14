@@ -1,4 +1,5 @@
 function PIVlab_capture_devicectrl_GUI
+fh = findobj('tag', 'device_control_window');
 
 %abgefragt in main GUI werden muss:
 %ac_enable_seeding1 0 oder 1
@@ -22,80 +23,87 @@ end
 if isempty(retr('ac_enable_device2'))
 	put('ac_enable_device2',0)
 end
-
-seeding_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Device control','Toolbar','none','Units','characters','Position',[3+35 5 35 15+1.5],'tag','lens_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
-set (seeding_control_window,'Units','Characters');
-
-
-handles = guihandles; %alle handles mit tag laden und ansprechbar machen
-guidata(seeding_control_window,handles)
-setappdata(0,'hseeding',seeding_control_window);
-
-parentitem = get(seeding_control_window, 'Position');
-
-margin=1.5;
-
-panelheight=5;
-handles.seeder1panel = uipanel(seeding_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight-1.5 parentitem(3)-2 panelheight],'title','Seeder 1','fontweight','bold');
-handles.device1panel = uipanel(seeding_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*2-1.5 parentitem(3)-2 panelheight],'title','Device 1','fontweight','bold');
-handles.device2panel = uipanel(seeding_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5 parentitem(3)-2 panelheight],'title','Device 2','fontweight','bold');
-
-%% Seeder
-parentitem=get(handles.seeder1panel, 'Position');
-item=[0 0 0 0];
-item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2*1 1.5];
-handles.seeder_on = uicontrol(handles.seeder1panel,'Style','pushbutton','String','On','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,1,'on'} ,'TooltipString','Load image data');
-
-item=[parentitem(3)/2*1 item(2) parentitem(3)/2*1 1.5];
-handles.seeder_off = uicontrol(handles.seeder1panel,'Style','pushbutton','String','Off','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,1,'off'} ,'TooltipString','Load image data');
-
-item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
-handles.seeder_label = uicontrol(handles.seeder1panel,'Style','text','String','PWM [0...1]','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','right');
-
-item=[parentitem(3)/2*1 item(2) 7 1];
-handles.seeder_edit = uicontrol(handles.seeder1panel,'Style','edit','String',num2str(retr('ext_dev_01_pwm')),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@editfield_edit_Callback,1},'tag','seeder_edit');
-
-item=[parentitem(3)/2+7 item(2) 15 1];
-handles.seeder_active = uicontrol(handles.seeder1panel,'Style','checkbox','String','active','value',retr('ac_enable_seeding1'),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@checkbox_set,1},'tag','seeder_active','Tooltipstring','Enable this device when a PIV capture starts');
-
-
-%% Device1
-parentitem=get(handles.device1panel, 'Position');
-item=[0 0 0 0];
-item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2*1 1.5];
-handles.device1_on = uicontrol(handles.device1panel,'Style','pushbutton','String','On','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,2,'on'} ,'TooltipString','Load image data');
-
-item=[parentitem(3)/2*1 item(2) parentitem(3)/2*1 1.5];
-handles.device1_off = uicontrol(handles.device1panel,'Style','pushbutton','String','Off','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,2,'off'} ,'TooltipString','Load image data');
-
-item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
-handles.device1_label = uicontrol(handles.device1panel,'Style','text','String','PWM [0...1]','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','right');
-
-item=[parentitem(3)/2*1 item(2) 7 1];
-handles.device1_edit = uicontrol(handles.device1panel,'Style','edit','String',num2str(retr('ext_dev_02_pwm')),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@editfield_edit_Callback,2},'tag','device1_edit');
-
-item=[parentitem(3)/2+7 item(2) 15 1];
-handles.device1_active = uicontrol(handles.device1panel,'Style','checkbox','String','active','value',retr('ac_enable_device1'),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@checkbox_set,2},'tag','device1_active','Tooltipstring','Enable this device when a PIV capture starts');
-
-
-
-%% Device2
-parentitem=get(handles.device2panel, 'Position');
-item=[0 0 0 0];
-item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2*1 1.5];
-handles.device2_on = uicontrol(handles.device2panel,'Style','pushbutton','String','On','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,3,'on'} ,'TooltipString','Load image data');
-
-item=[parentitem(3)/2*1 item(2) parentitem(3)/2*1 1.5];
-handles.device2_off = uicontrol(handles.device2panel,'Style','pushbutton','String','Off','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,3,'off'} ,'TooltipString','Load image data');
-
-item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
-handles.device2_label = uicontrol(handles.device2panel,'Style','text','String','PWM [0...1]','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','right');
-
-item=[parentitem(3)/2*1 item(2) 7 1];
-handles.device2_edit = uicontrol(handles.device2panel,'Style','edit','String',num2str(retr('ext_dev_03_pwm')),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@editfield_edit_Callback,3},'tag','device2_edit');
-
-item=[parentitem(3)/2+7 item(2) 15 1];
-handles.device2_active = uicontrol(handles.device2panel,'Style','checkbox','String','active','value',retr('ac_enable_device2'),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@checkbox_set,3},'tag','device2_active','Tooltipstring','Enable this device when a PIV capture starts');
+if isempty(fh)
+	hgui=getappdata(0,'hgui');
+	mainpos=get(hgui,'Position');
+	device_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Device control','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4 35 15+1.5],'tag','device_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
+	set (device_control_window,'Units','Characters');
+	
+	
+	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
+	guidata(device_control_window,handles)
+	setappdata(0,'hseeding',device_control_window);
+	
+	parentitem = get(device_control_window, 'Position');
+	
+	margin=1.5;
+	
+	panelheight=5;
+	handles.seeder1panel = uipanel(device_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight-1.5 parentitem(3)-2 panelheight],'title','Seeder 1','fontweight','bold');
+	handles.device1panel = uipanel(device_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*2-1.5 parentitem(3)-2 panelheight],'title','Device 1','fontweight','bold');
+	handles.device2panel = uipanel(device_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5 parentitem(3)-2 panelheight],'title','Device 2','fontweight','bold');
+	
+	%% Seeder
+	parentitem=get(handles.seeder1panel, 'Position');
+	item=[0 0 0 0];
+	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2*1 1.5];
+	handles.seeder_on = uicontrol(handles.seeder1panel,'Style','pushbutton','String','On','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,1,'on'} ,'TooltipString','Load image data');
+	
+	item=[parentitem(3)/2*1 item(2) parentitem(3)/2*1 1.5];
+	handles.seeder_off = uicontrol(handles.seeder1panel,'Style','pushbutton','String','Off','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,1,'off'} ,'TooltipString','Load image data');
+	
+	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
+	handles.seeder_label = uicontrol(handles.seeder1panel,'Style','text','String','PWM [0...1]','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','right');
+	
+	item=[parentitem(3)/2*1 item(2) 7 1];
+	handles.seeder_edit = uicontrol(handles.seeder1panel,'Style','edit','String',num2str(retr('ext_dev_01_pwm')),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@editfield_edit_Callback,1},'tag','seeder_edit');
+	
+	item=[parentitem(3)/2+7 item(2) 15 1];
+	handles.seeder_active = uicontrol(handles.seeder1panel,'Style','checkbox','String','active','value',retr('ac_enable_seeding1'),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@checkbox_set,1},'tag','seeder_active','Tooltipstring','Enable this device when a PIV capture starts');
+	
+	
+	%% Device1
+	parentitem=get(handles.device1panel, 'Position');
+	item=[0 0 0 0];
+	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2*1 1.5];
+	handles.device1_on = uicontrol(handles.device1panel,'Style','pushbutton','String','On','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,2,'on'} ,'TooltipString','Load image data');
+	
+	item=[parentitem(3)/2*1 item(2) parentitem(3)/2*1 1.5];
+	handles.device1_off = uicontrol(handles.device1panel,'Style','pushbutton','String','Off','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,2,'off'} ,'TooltipString','Load image data');
+	
+	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
+	handles.device1_label = uicontrol(handles.device1panel,'Style','text','String','PWM [0...1]','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','right');
+	
+	item=[parentitem(3)/2*1 item(2) 7 1];
+	handles.device1_edit = uicontrol(handles.device1panel,'Style','edit','String',num2str(retr('ext_dev_02_pwm')),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@editfield_edit_Callback,2},'tag','device1_edit');
+	
+	item=[parentitem(3)/2+7 item(2) 15 1];
+	handles.device1_active = uicontrol(handles.device1panel,'Style','checkbox','String','active','value',retr('ac_enable_device1'),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@checkbox_set,2},'tag','device1_active','Tooltipstring','Enable this device when a PIV capture starts');
+	
+	
+	
+	%% Device2
+	parentitem=get(handles.device2panel, 'Position');
+	item=[0 0 0 0];
+	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2*1 1.5];
+	handles.device2_on = uicontrol(handles.device2panel,'Style','pushbutton','String','On','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,3,'on'} ,'TooltipString','Load image data');
+	
+	item=[parentitem(3)/2*1 item(2) parentitem(3)/2*1 1.5];
+	handles.device2_off = uicontrol(handles.device2panel,'Style','pushbutton','String','Off','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,3,'off'} ,'TooltipString','Load image data');
+	
+	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
+	handles.device2_label = uicontrol(handles.device2panel,'Style','text','String','PWM [0...1]','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','right');
+	
+	item=[parentitem(3)/2*1 item(2) 7 1];
+	handles.device2_edit = uicontrol(handles.device2panel,'Style','edit','String',num2str(retr('ext_dev_03_pwm')),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@editfield_edit_Callback,3},'tag','device2_edit');
+	
+	item=[parentitem(3)/2+7 item(2) 15 1];
+	handles.device2_active = uicontrol(handles.device2panel,'Style','checkbox','String','active','value',retr('ac_enable_device2'),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@checkbox_set,3},'tag','device2_active','Tooltipstring','Enable this device when a PIV capture starts');
+	
+	
+else %Figure handle does already exist --> bring UI to foreground.
+	figure(fh)
+end
 
 function checkbox_set(caller,~,device)
 if device==1
