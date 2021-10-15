@@ -649,8 +649,9 @@ else
 										focus_peak=sharpness_focus_table(r(1),1);
 										disp(['Best raw focus: ' num2str(focus_peak)])
 										raw_finished=1;
-										focus_start_fine=focus_peak-5*focus_step_raw; %start of finer focussearch
-										focus_end_fine=focus_peak+5*focus_step_raw;
+										%focus vs. distance is not linear!
+										focus_start_fine=focus_peak-6*focus_step_raw; %start of finer focussearch
+										focus_end_fine=focus_peak+3*focus_step_raw;
 										if focus_start_fine < focus_start
 											focus_start_fine = focus_start;
 										end
@@ -660,11 +661,7 @@ else
 										focus=focus_end_fine;
 										PIVlab_capture_lensctrl(focus,aperture,lighting)
 										sharp_loop_cnt=0;
-										figure;plot(sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range'))
-										title('Raw focus search')
-										xlabel('Pulsewidth us')
-										ylabel('Sharpness')
-										grid on
+										raw_data=[sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range')];
 										sharpness_focus_table=zeros(1,2);
 									end
 								end
@@ -704,10 +701,12 @@ else
 											focus_edit_field=getappdata(lens_control_window,'handle_to_focus_edit_field');
 											set(focus_edit_field,'String',num2str(focus_peak)); %update 
 											%setappdata(hgui,'cancel_capture',1); %stop recording....?
-											figure;plot(sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range'))
-											title('Fine focus search')
+											figure;plot(raw_data(:,1),raw_data(:,2))
+											hold on;plot(sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range'));hold off
+											title('Focus search')
 											xlabel('Pulsewidth us')
 											ylabel('Sharpness')
+											legend('Coarse search','Fine search')
 											grid on
 										end
 									end

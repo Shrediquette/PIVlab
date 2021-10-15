@@ -5,7 +5,9 @@ sharpness=std2(single(diff_image));
 sharpness=sharpness/mean(input_image(:))*10000;
 delete(findobj('tag','sharpness_display_text'));
 if ~isempty(textx) && ~isempty(texty)
-	text(textx,texty,['Sharpness: ' int2str(sharpness)],'Color',[1 1 0],'tag','sharpness_display_text','Horizontalalignment','right');
+	hgui=getappdata(0,'hgui');
+	PIVlab_axis = findobj(hgui,'Type','Axes');
+	text(textx,texty,['Sharpness: ' int2str(sharpness)],'Color',[1 1 0],'tag','sharpness_display_text','Horizontalalignment','right','Parent',PIVlab_axis);
 end
 
 sharpness_map=[];

@@ -404,9 +404,6 @@ if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(even
 			sharpness_enabled=0;
 		end
 		put('sharpness_enabled',1-sharpness_enabled); % only autofocs OR sharpness display must be enabled at a time
-		if retr('sharpness_enabled')==1
-			put('autofocus_enabled',0);
-		end
 	elseif strcmp(event.Key,'hyphen') %minus key
 		ac_upper_clim = retr('ac_upper_clim');
 		if ac_upper_clim < 2^16
@@ -430,21 +427,6 @@ if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(even
 			set(gca,'ColorScale','log')
 		end
 	elseif strcmp(event.Key,'h') %
-		%{
-		hgui=getappdata(0,'hgui');
-		PIVlab_axis = findobj(hgui,'Type','Axes');
-		image_handle_pco=retr('image_handle_pco');
-		if isvalid(image_handle_pco)
-			hist_fig=findobj('tag','hist_fig');
-			if isempty(hist_fig)
-				hist_fig=figure('tag','hist_fig');
-			end
-			
-			histogram(image_handle_pco.CData,'Parent',hist_fig,'binlimits',[0 65535]);
-			
-			figure(hist_fig)
-		end
-		%}
 		hist_enabled=retr('hist_enabled');
 		if isempty(hist_enabled)
 			hist_enabled=0;
@@ -1922,7 +1904,7 @@ handles.multip24 = uipanel(MainWindow, 'Units','characters', 'Position', [0+marg
 parentitem=get(handles.multip24, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4) parentitem(3) 7];
+item=[0 item(2)+item(4) parentitem(3) 8.5];
 handles.uipanelac_general = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','General settings', 'Tag','uipanelac_general','fontweight','bold');
 
 parentitem=get(handles.uipanelac_general, 'Position');
@@ -1944,25 +1926,26 @@ handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'Stri
 item=[0 item(2)+item(4) parentitem(3) 1.5];
 handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 2, 'String',{'SimpleSync + pco.pixelfly usb' 'SimpleSync + pco.panda 26 DS'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
 
+item=[0 item(2)+item(4) parentitem(3)/2 1.5];
+handles.ac_comport = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'COM1'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_comport');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2*0.9 1.5];
+handles.ac_connect = uicontrol(handles.uipanelac_general,'Style','pushbutton','String','Connect','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_connect_Callback,'Tag','ac_connect','TooltipString','Connect to PIVlab-SimpleSync');
+
+IndicatorPos=get(handles.ac_connect,'Position');
+
+handles.ac_serialstatus = uicontrol(handles.uipanelac_general,'Style','edit','units','characters','HorizontalAlignment','center','position',[IndicatorPos(1)+IndicatorPos(3) IndicatorPos(2) 2 IndicatorPos(4)],'String','','tag','ac_serialstatus','BackgroundColor',[1 0 0],'Foregroundcolor',[1 1 1],'Enable','inactive','TooltipString','Status of the serial connection to PIVlab-SimpleSync');
+
+
 % Sync control
 parentitem=get(handles.multip24, 'Position');
-item=[0 7 parentitem(3) 12.5];
+item=[0 8.5 parentitem(3) 10.75];
 handles.uipanelac_laser = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Synchronizer control', 'Tag','uipanelac_laser','fontweight','bold');
 
 parentitem=get(handles.uipanelac_laser, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4) parentitem(3)/2 1.5];
-handles.ac_comport = uicontrol(handles.uipanelac_laser,'Style','popupmenu', 'String',{'COM1'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_comport');
-
-item=[parentitem(3)/2 item(2) parentitem(3)/2*0.9 1.5];
-handles.ac_connect = uicontrol(handles.uipanelac_laser,'Style','pushbutton','String','Connect','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_connect_Callback,'Tag','ac_connect','TooltipString','Connect to PIVlab-SimpleSync');
-
-IndicatorPos=get(handles.ac_connect,'Position');
-
-handles.ac_serialstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[IndicatorPos(1)+IndicatorPos(3) IndicatorPos(2) 2 IndicatorPos(4)],'String','','tag','ac_serialstatus','BackgroundColor',[1 0 0],'Foregroundcolor',[1 1 1],'Enable','inactive','TooltipString','Status of the serial connection to PIVlab-SimpleSync');
-
-item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/4*2.5 1];
+item=[0 item(2)+item(4) parentitem(3)/4*2.5 1];
 handles.ac_fpstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Frame rate [Hz]:','tag','ac_fpstxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
@@ -1999,7 +1982,7 @@ handles.ac_device_control = uicontrol(handles.uipanelac_laser,'Style','pushbutto
 
 % Camera settings
 parentitem=get(handles.multip24, 'Position');
-item=[0 19.75 parentitem(3) 3.25];
+item=[0 19.25 parentitem(3) 3.25];
 handles.uipanelac_camsettings = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Camera settings', 'Tag','uipanelac_camsettings','fontweight','bold');
 
 parentitem=get(handles.uipanelac_camsettings, 'Position');
@@ -2018,7 +2001,7 @@ handles.ac_lensctrl = uicontrol(handles.uipanelac_camsettings,'Style','pushbutto
 % Calib capture
 
 parentitem=get(handles.multip24, 'Position');
-item=[0 23.25 parentitem(3) 4.5];
+item=[0 22.5 parentitem(3) 4.5];
 
 handles.uipanelac_calib = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Live image', 'Tag','uipanelac_calib','fontweight','bold');
 
@@ -2039,7 +2022,7 @@ handles.ac_calibsave = uicontrol(handles.uipanelac_calib,'Style','pushbutton','S
 
 % PIV capture
 parentitem=get(handles.multip24, 'Position');
-item=[0 28 parentitem(3) 5];
+item=[0 27.25 parentitem(3) 5];
 handles.uipanelac_capture = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Capture PIV images', 'Tag','uipanelac_capture','fontweight','bold');
 
 parentitem=get(handles.uipanelac_capture, 'Position');
@@ -2337,6 +2320,7 @@ end
 put('ac_lower_clim',0);
 put('ac_upper_clim',2^16);
 delete(findobj('tag','shortcutlist'));
+%Keyboard shortcuts
 text(10,10,['Image acquisition keyboard shortcuts' sprintf('\n') 'CTRL SHIFT C : Toggle crosshair' sprintf('\n') 'CTRL SHIFT X : Toggle sharpness measure' sprintf('\n') 'CTRL SHIFT + : Increase display brightness' sprintf('\n') 'CTRL SHIFT - : Decrease display brightness' sprintf('\n') 'CTRL SHIFT K : Toggle between log and lin color scale' sprintf('\n') 'CTRL SHIFT H : Toggle histogram display'],'tag','shortcutlist','Color','black','BackgroundColor','white','VerticalAlignment','top');
 
 
