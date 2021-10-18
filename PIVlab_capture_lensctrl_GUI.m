@@ -1,10 +1,12 @@
+
+
 function PIVlab_capture_lensctrl_GUI
 fh = findobj('tag', 'lens_control_window');
 if isempty(fh)
 	hgui=getappdata(0,'hgui');
 	mainpos=get(hgui,'Position');
 	[focus,aperture,lighting]=get_lens_status;
-	lens_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Lens control','Toolbar','none','Units','characters','Position',[mainpos(1)+mainpos(3)-35 mainpos(2) 35 15+1.5],'tag','lens_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
+	lens_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Lens control','Toolbar','none','Units','characters','Position',[mainpos(1)+mainpos(3)-35 mainpos(2) 35 15+1.5+4],'tag','lens_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
 	set (lens_control_window,'Units','Characters');
 	
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
@@ -19,6 +21,7 @@ if isempty(fh)
 	handles.aperturepanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight-1.5 parentitem(3)-2 panelheight],'title','Aperture control','fontweight','bold');
 	handles.focuspanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*2-1.5 parentitem(3)-2 panelheight],'title','Focus control','fontweight','bold');
 	handles.lightpanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5 parentitem(3)-2 panelheight],'title','Light control','fontweight','bold');
+	handles.anglepanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5-4 parentitem(3)-2 4],'title','Camera angle','fontweight','bold');
 	
 	%% Setup Configurations
 	if isempty(retr('selected_lens_config'))
@@ -79,8 +82,60 @@ if isempty(fh)
 	
 	configu_Callback(handles.configu,[]) %execute callback and set servo limits
 	
+	%% Angle feedback
+	parentitem=get(handles.anglepanel, 'Position');
+	item=[0 0 parentitem(3) 1];
+	handles.angle_measure = uicontrol(handles.anglepanel,'Style','checkbox','String','Measure angle','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','left','Callback',@angle_measure_Callback,'tag','angle_measure');
+	
+	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/3 1.5];
+	handles.pitch = uicontrol(handles.anglepanel,'Style','text','String','Pitch: 0','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','left','tag','pitch');
+	
+	item=[parentitem(3)/2*1 item(2) parentitem(3)/3 1.5];
+	handles.roll = uicontrol(handles.anglepanel,'Style','text','String','Roll: 0','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','left','tag','roll');
 else %Figure handle does already exist --> bring UI to foreground.
 	figure(fh)
+end
+
+function angle_measure_Callback (inpt,~)
+if inpt.Value == 1 %on
+	t = timer;
+	t.StartDelay = 0.1;
+	t.ExecutionMode = 'fixedRate';
+	t.Period = 0.5;
+	t.TimerFcn = @lens_timer_tick_fcn;
+	start(t)
+	setappdata(0,'lens_timer',t);
+else
+	lens_timer = getappdata(0,'lens_timer');
+	stop(lens_timer)
+	delete(lens_timer)
+end
+
+function lens_timer_tick_fcn(~,~)
+hgui = getappdata(0,'hgui');
+serpo=getappdata(hgui,'serpo');
+try
+	serpo.Port; %is there no other way to determine if serialport is working...?
+	alreadyconnected=1;
+catch
+	alreadyconnected=0;
+	delete(serpo)
+end
+if alreadyconnected==1
+	flush(serpo)
+	writeline(serpo,'WhatIsTheAngle?');
+	warning off
+	%configureTerminator(serpo,'CR/LF');
+	serial_answer=readline(serpo);
+	warning on
+	%serial_answer{1}(1:5)
+	Roll=serial_answer{1}(strfind(serial_answer,'Measured_Roll:')+14:strfind(serial_answer,char(9))-1);
+	Pitch=serial_answer{1}(strfind(serial_answer,'Measured_Pitch:')+15:end);
+	Roll=str2num(Roll)/100;
+	Pitch=str2num(Pitch)/100;
+	handles=gethand;
+	set(handles.pitch,'String',['P: ' num2str(Pitch)])
+	set(handles.roll,'String',['R: ' num2str(Roll)])
 end
 
 function configu_Callback (inpt,~)
