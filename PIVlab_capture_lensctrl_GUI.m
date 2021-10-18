@@ -106,7 +106,7 @@ if isempty(aperture)
 	aperture=1500;
 end
 if isempty(lighting)
-	aperture=0;
+	lighting=0;
 end
 set (handles.aperture_edit,'String',num2str(aperture))
 set (handles.focus_edit,'String',num2str(focus))
