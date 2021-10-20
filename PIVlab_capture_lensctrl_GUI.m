@@ -1,12 +1,10 @@
-
-
 function PIVlab_capture_lensctrl_GUI
 fh = findobj('tag', 'lens_control_window');
 if isempty(fh)
 	hgui=getappdata(0,'hgui');
 	mainpos=get(hgui,'Position');
 	[focus,aperture,lighting]=get_lens_status;
-	lens_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Lens control','Toolbar','none','Units','characters','Position',[mainpos(1)+mainpos(3)-35 mainpos(2) 35 15+1.5+4],'tag','lens_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
+	lens_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Lens control','Toolbar','none','Units','characters','Position',[mainpos(1)+mainpos(3)-35 mainpos(2) 35 15+1.5+4],'tag','lens_control_window','visible','on','KeyPressFcn', @key_press,'resize','off','CloseRequestFcn',@CloseRequestFcn);
 	set (lens_control_window,'Units','Characters');
 	
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
@@ -21,7 +19,7 @@ if isempty(fh)
 	handles.aperturepanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight-1.5 parentitem(3)-2 panelheight],'title','Aperture control','fontweight','bold');
 	handles.focuspanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*2-1.5 parentitem(3)-2 panelheight],'title','Focus control','fontweight','bold');
 	handles.lightpanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5 parentitem(3)-2 panelheight],'title','Light control','fontweight','bold');
-	handles.anglepanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5-4 parentitem(3)-2 4],'title','Camera angle','fontweight','bold');
+	handles.anglepanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5-4 parentitem(3)-2 4],'title','Camera attitude','fontweight','bold');
 	
 	%% Setup Configurations
 	if isempty(retr('selected_lens_config'))
@@ -30,7 +28,10 @@ if isempty(fh)
 	load ('PIVlab_capture_lensconfig.mat','lens_configurations');
 	% New lens configurations can be added to the table by modifying the variable 'lens_configurations' in the file 'PIVlab_capture_lensconfig.mat :
 	% Example: lens_configurations=addvars(lens_configurations,[500;2500;500;2500],'NewVariableNames','Generic lens')
-	handles.configu = uicontrol(lens_control_window,'Style','popupmenu', 'String',lens_configurations.Properties.VariableNames,'Value',retr('selected_lens_config'),'Units','characters', 'Fontunits','points','Position',[1 parentitem(4)-1.5 parentitem(3)-2 1.5],'Tag','configu','TooltipString','Lens configuration. Sets the limits for the servo motors.','Callback',@configu_Callback);
+	handles.configu = uicontrol(lens_control_window,'Style','popupmenu', 'String',lens_configurations.Properties.VariableNames,'Value',retr('selected_lens_config'),'Units','characters', 'Fontunits','points','Position',[1 parentitem(4)-1.5 parentitem(3)/3*2 1.5],'Tag','configu','TooltipString','Lens configuration. Sets the limits for the servo motors.','Callback',@configu_Callback);
+	parentitem=get(lens_control_window, 'Position');
+	item=[parentitem(3)/3*2 0 parentitem(3)/3 1.5];
+	handles.lens_status = uicontrol(lens_control_window,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin parentitem(4)-1.5 item(3)-margin*1.5 item(4)],'String','N/A','tag', 'lens_status','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold');
 	
 	%% APERTURE
 	parentitem=get(handles.aperturepanel, 'Position');
@@ -92,23 +93,49 @@ if isempty(fh)
 	
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/3 1.5];
 	handles.roll = uicontrol(handles.anglepanel,'Style','text','String','Roll: 0','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','left','tag','roll');
+
+	find_devices
 else %Figure handle does already exist --> bring UI to foreground.
 	figure(fh)
+end
+
+function find_devices
+hgui = getappdata(0,'hgui');
+serpo=getappdata(hgui,'serpo');
+try
+	serpo.Port; %is there no other way to determine if serialport is working...?
+	configureTerminator(serpo,'CR/LF');
+	alreadyconnected=1;
+catch
+	alreadyconnected=0;
+	delete(serpo)
+end
+if alreadyconnected==1
+	flush(serpo)
+	writeline(serpo,'WhatIsTheAngle?');
+	warning off
+	serial_answer=readline(serpo);
+	warning on
+	lens_available=strfind(serial_answer,'Measured_Roll:');
+	if ~isempty(lens_available) &&  lens_available~=0
+		set(handles.lens_status, 'Backgroundcolor',[0 1 0])
+		set(handles.lens_status, 'String','OK')
+	end
 end
 
 function angle_measure_Callback (inpt,~)
 if inpt.Value == 1 %on
 	t = timer;
+	t.Tag='lens_timer';
 	t.StartDelay = 0.1;
 	t.ExecutionMode = 'fixedRate';
 	t.Period = 0.5;
 	t.TimerFcn = @lens_timer_tick_fcn;
 	start(t)
-	setappdata(0,'lens_timer',t);
+	setappdata(0,'handle_to_lens_timer_checkbox',inpt);
 else
-	lens_timer = getappdata(0,'lens_timer');
-	stop(lens_timer)
-	delete(lens_timer)
+	stop(timerfind)
+	delete(timerfind)
 end
 
 function lens_timer_tick_fcn(~,~)
@@ -125,17 +152,20 @@ if alreadyconnected==1
 	flush(serpo)
 	writeline(serpo,'WhatIsTheAngle?');
 	warning off
-	%configureTerminator(serpo,'CR/LF');
 	serial_answer=readline(serpo);
 	warning on
-	%serial_answer{1}(1:5)
-	Roll=serial_answer{1}(strfind(serial_answer,'Measured_Roll:')+14:strfind(serial_answer,char(9))-1);
-	Pitch=serial_answer{1}(strfind(serial_answer,'Measured_Pitch:')+15:end);
-	Roll=str2num(Roll)/100;
-	Pitch=str2num(Pitch)/100;
 	handles=gethand;
-	set(handles.pitch,'String',['P: ' num2str(Pitch)])
-	set(handles.roll,'String',['R: ' num2str(Roll)])
+	if ~isempty (serial_answer) & strfind(serial_answer,'Measured_Roll:')==1
+		Roll=serial_answer{1}(strfind(serial_answer,'Measured_Roll:')+14:strfind(serial_answer,char(9))-1);
+		Pitch=serial_answer{1}(strfind(serial_answer,'Measured_Pitch:')+15:end);
+		Roll=str2double(Roll)/100+retr('Roll_Offset');
+		Pitch=str2double(Pitch)/100+retr('Pitch_Offset');
+		set(handles.pitch,'String',['P: ' num2str(Pitch)])
+		set(handles.roll,'String',['R: ' num2str(Roll)])
+	else
+		set(handles.pitch,'String','No reply')
+		set(handles.roll,'String','No reply')
+	end
 end
 
 function configu_Callback (inpt,~)
@@ -144,11 +174,16 @@ focus_servo_lower_limit = lens_configurations{1,inpt.Value};
 focus_servo_upper_limit = lens_configurations{2,inpt.Value};
 aperture_servo_lower_limit = lens_configurations{3,inpt.Value};
 aperture_servo_upper_limit = lens_configurations{4,inpt.Value};
+Pitch_Offset = lens_configurations{5,inpt.Value};
+Roll_Offset = lens_configurations{6,inpt.Value};
 
 put('focus_servo_lower_limit',focus_servo_lower_limit)
 put('focus_servo_upper_limit',focus_servo_upper_limit)
 put('aperture_servo_lower_limit',aperture_servo_lower_limit)
 put('aperture_servo_upper_limit',aperture_servo_upper_limit)
+put('Pitch_Offset',Pitch_Offset)
+put('Roll_Offset',Roll_Offset)
+
 put('selected_lens_config',inpt.Value)
 handles=gethand;
 focus=retr('focus');
@@ -173,6 +208,7 @@ set (handles.light_edit,'String',num2str(lighting))
 
 
 function focus_set (~,~,inpt)
+
 focus_step=100;
 [focus,aperture,lighting]=get_lens_status;
 if strmatch(inpt,'auto')
@@ -212,6 +248,12 @@ end
 update_edit_fields
 
 function [focus,aperture,lighting]=get_lens_status
+try %try to switch of camera angle report
+	stop(timerfind)
+	delete(timerfind)
+	set(getappdata(0,'handle_to_lens_timer_checkbox'),'Value',0)
+catch
+end
 focus=retr('focus');
 aperture=retr('aperture');
 lighting=retr('lighting');
@@ -228,14 +270,14 @@ end
 function aperture_set (~,~,inpt)
 [focus,aperture,lighting]=get_lens_status;
 aperture_step=100;
-if strmatch(inpt,'close')
+if strmatch(inpt,'open')
 	if aperture>=retr('aperture_servo_lower_limit')+aperture_step
 		aperture=aperture-aperture_step;
 	else
 		aperture=retr('aperture_servo_lower_limit');
 	end
 end
-if strmatch(inpt,'open')
+if strmatch(inpt,'close')
 	if aperture<=retr('aperture_servo_upper_limit')-aperture_step
 		aperture=aperture+aperture_step;
 	else
@@ -305,3 +347,16 @@ var=getappdata(hgui, name);
 function handles=gethand
 hlens=getappdata(0,'hlens');
 handles=guihandles(hlens);
+
+function CloseRequestFcn(hObject, ~, ~)
+try
+	stop(timerfind)
+	delete(timerfind)
+catch
+end
+try
+	delete(hObject);
+catch
+	delete(gcf);
+end
+

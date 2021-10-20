@@ -26,7 +26,7 @@ end
 if isempty(fh)
 	hgui=getappdata(0,'hgui');
 	mainpos=get(hgui,'Position');
-	device_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Device control','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4 35 15+1.5],'tag','device_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
+	device_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Device control','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4+4 35 15+1.5],'tag','device_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
 	set (device_control_window,'Units','Characters');
 	
 	
@@ -43,14 +43,23 @@ if isempty(fh)
 	handles.device1panel = uipanel(device_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*2-1.5 parentitem(3)-2 panelheight],'title','Device 1','fontweight','bold');
 	handles.device2panel = uipanel(device_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5 parentitem(3)-2 panelheight],'title','Device 2','fontweight','bold');
 	
+	%% Status symbols
+	parentitem=get(device_control_window, 'Position');
+	item=[parentitem(3)/3*0 0 parentitem(3)/3 1];
+	handles.Seeder1_status = uicontrol(device_control_window,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin*0.25-item(2) item(3)-margin*0.25 item(4)],'String','Seeder1','tag', 'Seeder1_status','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold');
+	item=[parentitem(3)/3*1 0 parentitem(3)/3 1];
+	handles.Device1_status = uicontrol(device_control_window,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin*0.25-item(2) item(3)-margin*0.25 item(4)],'String','Device1','tag', 'Device1_status','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold');
+	item=[parentitem(3)/3*2 0 parentitem(3)/3 1];
+	handles.Device2_status = uicontrol(device_control_window,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin*0.25-item(2) item(3)-margin*0.25 item(4)],'String','Device2','tag', 'Device2_status','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold');	
+	
 	%% Seeder
 	parentitem=get(handles.seeder1panel, 'Position');
 	item=[0 0 0 0];
 	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2*1 1.5];
-	handles.seeder_on = uicontrol(handles.seeder1panel,'Style','pushbutton','String','On','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,1,'on'} ,'TooltipString','Load image data');
+	handles.seeder_on = uicontrol(handles.seeder1panel,'Style','pushbutton','String','On','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,1,'on'} );
 	
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/2*1 1.5];
-	handles.seeder_off = uicontrol(handles.seeder1panel,'Style','pushbutton','String','Off','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,1,'off'} ,'TooltipString','Load image data');
+	handles.seeder_off = uicontrol(handles.seeder1panel,'Style','pushbutton','String','Off','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,1,'off'} );
 	
 	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
 	handles.seeder_label = uicontrol(handles.seeder1panel,'Style','text','String','PWM [0...1]','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','right');
@@ -66,10 +75,10 @@ if isempty(fh)
 	parentitem=get(handles.device1panel, 'Position');
 	item=[0 0 0 0];
 	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2*1 1.5];
-	handles.device1_on = uicontrol(handles.device1panel,'Style','pushbutton','String','On','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,2,'on'} ,'TooltipString','Load image data');
+	handles.device1_on = uicontrol(handles.device1panel,'Style','pushbutton','String','On','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,2,'on'} );
 	
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/2*1 1.5];
-	handles.device1_off = uicontrol(handles.device1panel,'Style','pushbutton','String','Off','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,2,'off'} ,'TooltipString','Load image data');
+	handles.device1_off = uicontrol(handles.device1panel,'Style','pushbutton','String','Off','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,2,'off'} );
 	
 	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
 	handles.device1_label = uicontrol(handles.device1panel,'Style','text','String','PWM [0...1]','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','right');
@@ -86,10 +95,10 @@ if isempty(fh)
 	parentitem=get(handles.device2panel, 'Position');
 	item=[0 0 0 0];
 	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2*1 1.5];
-	handles.device2_on = uicontrol(handles.device2panel,'Style','pushbutton','String','On','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,3,'on'} ,'TooltipString','Load image data');
+	handles.device2_on = uicontrol(handles.device2panel,'Style','pushbutton','String','On','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,3,'on'} );
 	
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/2*1 1.5];
-	handles.device2_off = uicontrol(handles.device2panel,'Style','pushbutton','String','Off','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,3,'off'} ,'TooltipString','Load image data');
+	handles.device2_off = uicontrol(handles.device2panel,'Style','pushbutton','String','Off','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,3,'off'} );
 	
 	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
 	handles.device2_label = uicontrol(handles.device2panel,'Style','text','String','PWM [0...1]','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','right');
@@ -99,11 +108,62 @@ if isempty(fh)
 	
 	item=[parentitem(3)/2+7 item(2) 15 1];
 	handles.device2_active = uicontrol(handles.device2panel,'Style','checkbox','String','active','value',retr('ac_enable_device2'),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@checkbox_set,3},'tag','device2_active','Tooltipstring','Enable this device when a PIV capture starts');
-	
-	
+	drawnow;
+	find_devices('seeder_01');pause(0.1)
+	find_devices('device_01');pause(0.1)
+	find_devices('device_02');
 else %Figure handle does already exist --> bring UI to foreground.
 	figure(fh)
 end
+
+function status = find_devices(device)
+hgui = getappdata(0,'hgui');
+serpo=getappdata(hgui,'serpo');
+try
+	serpo.Port; %is there no other way to determine if serialport is working...?
+	configureTerminator(serpo,'CR/LF');
+	alreadyconnected=1;
+catch
+	alreadyconnected=0;
+	delete(serpo)
+end
+if alreadyconnected==1
+	flush(serpo)
+	status=[];
+	switch device
+		case 'seeder_01'
+			writeline(serpo,'SEEDER_STATUS_01?');
+			warning off
+			serial_answer=readline(serpo);
+			warning on
+			seeder1_available=strfind(serial_answer,'status_S01=');
+			if ~isempty(seeder1_available) &&  seeder1_available~=0
+				status=str2double(serial_answer(seeder1_available+11:end));
+				set(handles.Seeder1_status, 'Backgroundcolor',[0 1 0])
+			end
+		case 'device1'
+			writeline(serpo,'DEVICE_STATUS_01?');
+			warning off
+			serial_answer=readline(serpo);
+			warning on
+			device1_available=strfind(serial_answer,'status_D01=');
+			if ~isempty(device1_available) &&  device1_available~=0
+				status=str2double(serial_answer(device1_available+11:end));
+				set(handles.Device1_status, 'Backgroundcolor',[0 1 0])
+			end
+		case 'device2'
+			writeline(serpo,'DEVICE_STATUS_02?');
+			warning off
+			serial_answer=readline(serpo);
+			warning on
+			device2_available=strfind(serial_answer,'status_D02=');
+			if ~isempty(device2_available) &&  device2_available~=0
+				status=str2double(serial_answer(device2_available+11:end));
+				set(handles.Device2_status, 'Backgroundcolor',[0 1 0])
+			end
+	end
+end
+
 
 function checkbox_set(caller,~,device)
 if device==1
@@ -145,12 +205,23 @@ if device == 1
 	pwm=str2double(get(handles.seeder_edit,'String'));
 	put('ext_dev_01_pwm',pwm);
 end
+if device == 2
+	pwm=str2double(get(handles.device1_edit,'String'));
+	put('ext_dev_02_pwm',pwm);
+end
+
+if device == 3
+	pwm=str2double(get(handles.device2_edit,'String'));
+	put('ext_dev_03_pwm',pwm);
+end
+
 if strmatch(inpt,'on')
 	external_device_control(device,1)
 end
 if strmatch(inpt,'off')
 	external_device_control(device,0)
 end
+
 
 function external_device_control(device,status)
 hgui = getappdata(0,'hgui');
@@ -165,6 +236,7 @@ catch
 end
 
 if alreadyconnected==1
+	handles=gethand;
 	switch device
 		case 1
 			if status==1
@@ -175,26 +247,53 @@ if alreadyconnected==1
 				line_to_write='SEEDER_01:0';
 				put('ac_seeding1_status',0);
 			end
+			writeline(serpo,line_to_write);
+			status = find_devices('seeder_01');
+			if ~isempty(status)
+				set(handles.Seeder1_status, 'Backgroundcolor',[0 1 1])
+				drawnow;pause(0.2)
+				set(handles.Seeder1_status, 'Backgroundcolor',[0 1 0])
+			else
+				set(handles.Seeder1_status, 'Backgroundcolor',[1 0 0])
+			end
 		case 2
 			if status==1
 				ext_dev_02_pwm = retr('ext_dev_02_pwm');
-				line_to_write=['SEEDER_02:' num2str(ext_dev_02_pwm)];
+				line_to_write=['DEVICE_01:' num2str(ext_dev_02_pwm)];
 				put('ac_device1_status',1);
 			else
-				line_to_write='SEEDER_02:0';
+				line_to_write='DEVICE_01:0';
 				put('ac_device1_status',0);
 			end
+			writeline(serpo,line_to_write);
+			status = find_devices('device_01');
+			if ~isempty(status)
+				set(handles.Device1_status, 'Backgroundcolor',[0 1 1])
+				drawnow;pause(0.2)
+				set(handles.Device1_status, 'Backgroundcolor',[0 1 0])
+			else
+				set(handles.Device1_status, 'Backgroundcolor',[1 0 0])
+			end			
 		case 3
 			if status==1
 				ext_dev_03_pwm = retr('ext_dev_03_pwm');
-				line_to_write=['SEEDER_03:' num2str(ext_dev_03_pwm)];
+				line_to_write=['DEVICE_02:' num2str(ext_dev_03_pwm)];
 				put('ac_device2_status',1);
 			else
-				line_to_write='SEEDER_03:0';
+				line_to_write='DEVICE_02:0';
 				put('ac_device2_status',0);
 			end
+			writeline(serpo,line_to_write);
+			status = find_devices('device_02');
+			if ~isempty(status)
+				set(handles.Device2_status, 'Backgroundcolor',[0 1 1])
+				drawnow;pause(0.2)
+				set(handles.Device2_status, 'Backgroundcolor',[0 1 0])
+			else
+				set(handles.Device2_status, 'Backgroundcolor',[1 0 0])
+			end					
 	end
-	writeline(serpo,line_to_write);
+	
 end
 
 function put(name, what)

@@ -1964,7 +1964,7 @@ item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
 handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String','0','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_power','TooltipString','Laser energy');
 
 item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2 2];
-handles.ac_laserstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','NC','tag','ac_laserstatus','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold','TooltipString','Status of the laser');
+handles.ac_laserstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','N/A','tag','ac_laserstatus','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold','TooltipString','Status of the laser');
 
 item=[parentitem(3)/4*2 item(2) parentitem(3)/4*2 2];
 handles.ac_lasertoggle = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Toggle Laser','Fontweight','bold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_lasertoggle_Callback,'Tag','ac_lasertoggle','TooltipString','Toggle laser on and off');
@@ -2294,7 +2294,7 @@ catch
 	delete(serpo)
 	put('serpo',[]);
 	set(handles.ac_comport,'Value',1);
-	set(handles.ac_laserstatus,'String','NC','BackgroundColor',[1 0 0])
+	set(handles.ac_laserstatus,'String','N/A','BackgroundColor',[1 0 0])
 end
 if alreadyconnected
 	serports=serialportlist('available');
@@ -11011,6 +11011,12 @@ if alreadyconnected
 end
 
 function serial_answer = control_simple_sync_serial(switch_it)
+try %try to switch of camera angle report
+	stop(timerfind)
+	delete(timerfind)
+	set(getappdata(0,'handle_to_lens_timer_checkbox'),'Value',0)
+catch
+end
 handles=gethand;
 serpo=retr('serpo');
 try
