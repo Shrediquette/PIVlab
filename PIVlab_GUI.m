@@ -2260,15 +2260,16 @@ switchui('multip20')
 
 function pco_error_msgbox
 [filepath,~,~] = fileparts(mfilename('fullpath'));
-uiwait(msgbox(['PCO camera drivers not found in this directory:' sprintf('\n') fullfile(filepath, 'PCO_resources') sprintf('\n\n') 'The free pco toolbox for Matlab can be downloaded here:' sprintf('\n') 'https://www.pco.de/de/software/third-party/matlab/' sprintf('\n\n') 'Please download and install this toolbox to use your pco camera in PIVlab.'],'modal'))
+uiwait(msgbox(['PCO camera drivers not found in this directory:' sprintf('\n') fullfile(filepath, 'PIVlab_capture_resources\PCO_resources') sprintf('\n\n') 'The free pco toolbox for Matlab can be downloaded here:' sprintf('\n') 'https://www.pco.de/de/software/third-party/matlab/' sprintf('\n\n') 'Please download and install this toolbox to use your pco camera in PIVlab.'],'modal'))
 
 function capture_images_Callback(~,~,~) %Menu item is called
 switchui('multip24')
 select_capture_config_Callback
 [filepath,~,~] = fileparts(mfilename('fullpath'));
-if exist(fullfile(filepath, 'PCO_resources'),'dir')
+%keyboard
+if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources'),'dir')==7
 	%addpath(genpath(fullfile(filepath, 'PCO_resources')));
-	addpath(fullfile(filepath, 'PCO_resources\scripts'));
+	addpath(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts'));
 	%PCO setup_files.m copies required dlls and headers to dir.
 	%subfolders might not be necessary. Check!
 else
@@ -7273,7 +7274,7 @@ try
 	toolsavailable(1)
 catch
 end
-if strmatch(button,'Yes')==1 
+if strcmp(button,'Yes')==1 
 	try
 		homedir=retr('homedir');
 		pathname=retr('pathname');
@@ -11301,7 +11302,7 @@ end
 
 function ac_calibcapture_Callback(~,~,~)
 [filepath,~,~] = fileparts(mfilename('fullpath'));
-if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'file')
+if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_camera_load_defines.m'),'file')
 	handles=gethand;
 	try
 		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
@@ -11385,7 +11386,7 @@ end
 function ac_pivcapture_Callback(~,~,~)
 put('capturing',0);
 [filepath,~,~] = fileparts(mfilename('fullpath'));
-if exist(fullfile(filepath, 'PCO_resources\scripts\pco_camera_load_defines.m'),'file')
+if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_camera_load_defines.m'),'file')
 	button = questdlg('Start Laser and camera?','Warning','Yes','Cancel','Yes');
 	if strmatch(button,'Yes')==1 
 		handles=gethand;
