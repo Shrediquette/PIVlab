@@ -2263,10 +2263,10 @@ function pco_error_msgbox
 uiwait(msgbox(['PCO camera drivers not found in this directory:' sprintf('\n') fullfile(filepath, 'PIVlab_capture_resources\PCO_resources') sprintf('\n\n') 'The free pco toolbox for Matlab can be downloaded here:' sprintf('\n') 'https://www.pco.de/de/software/third-party/matlab/' sprintf('\n\n') 'Please download and install this toolbox to use your pco camera in PIVlab.'],'modal'))
 
 function capture_images_Callback(~,~,~) %Menu item is called
+[filepath,~,~] = fileparts(mfilename('fullpath'));
+addpath(fullfile(filepath, 'PIVlab_capture_resources'));
 switchui('multip24')
 select_capture_config_Callback
-[filepath,~,~] = fileparts(mfilename('fullpath'));
-%keyboard
 if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources'),'dir')==7
 	%addpath(genpath(fullfile(filepath, 'PCO_resources')));
 	addpath(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts'));
@@ -11665,6 +11665,12 @@ if ~isempty(serpo)
 end
 
 function ac_device_control_Callback (~,~,~)
+try %try to switch of camera angle report
+	stop(timerfind)
+	delete(timerfind)
+	set(getappdata(0,'handle_to_lens_timer_checkbox'),'Value',0)
+catch
+end
 PIVlab_capture_devicectrl_GUI
 
 function select_capture_config_Callback (~,~,~)

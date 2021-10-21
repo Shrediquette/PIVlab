@@ -116,12 +116,11 @@ else %Figure handle does already exist --> bring UI to foreground.
 	figure(fh)
 end
 
-function status = find_devices(device)
+function status_device = find_devices(device)
 hgui = getappdata(0,'hgui');
 serpo=getappdata(hgui,'serpo');
 try
 	serpo.Port; %is there no other way to determine if serialport is working...?
-	configureTerminator(serpo,'CR/LF');
 	alreadyconnected=1;
 catch
 	alreadyconnected=0;
@@ -129,40 +128,45 @@ catch
 end
 if alreadyconnected==1
 	flush(serpo)
-	status=[];
+	status_device=[];
+	handles=gethand;
 	switch device
 		case 'seeder_01'
 			writeline(serpo,'SEEDER_STATUS_01?');
 			warning off
 			serial_answer=readline(serpo);
+			serial_answer=convertStringsToChars(serial_answer);
 			warning on
 			seeder1_available=strfind(serial_answer,'status_S01=');
 			if ~isempty(seeder1_available) &&  seeder1_available~=0
-				status=str2double(serial_answer(seeder1_available+11:end));
+				status_device=str2double(serial_answer(seeder1_available+11:end));
 				set(handles.Seeder1_status, 'Backgroundcolor',[0 1 0])
 			end
 		case 'device1'
 			writeline(serpo,'DEVICE_STATUS_01?');
 			warning off
 			serial_answer=readline(serpo);
+			serial_answer=convertStringsToChars(serial_answer);
 			warning on
 			device1_available=strfind(serial_answer,'status_D01=');
 			if ~isempty(device1_available) &&  device1_available~=0
-				status=str2double(serial_answer(device1_available+11:end));
+				status_device=str2double(serial_answer(device1_available+11:end));
 				set(handles.Device1_status, 'Backgroundcolor',[0 1 0])
 			end
 		case 'device2'
 			writeline(serpo,'DEVICE_STATUS_02?');
 			warning off
 			serial_answer=readline(serpo);
+			serial_answer=convertStringsToChars(serial_answer);
 			warning on
 			device2_available=strfind(serial_answer,'status_D02=');
 			if ~isempty(device2_available) &&  device2_available~=0
-				status=str2double(serial_answer(device2_available+11:end));
+				status_device=str2double(serial_answer(device2_available+11:end));
 				set(handles.Device2_status, 'Backgroundcolor',[0 1 0])
 			end
 	end
 end
+
 
 
 function checkbox_set(caller,~,device)
@@ -228,7 +232,7 @@ hgui = getappdata(0,'hgui');
 serpo=getappdata(hgui,'serpo');
 try
 	serpo.Port; %is there no other way to determine if serialport is working...?
-	configureTerminator(serpo,'CR/LF');
+	%configureTerminator(serpo,'CR/LF');
 	alreadyconnected=1;
 catch
 	alreadyconnected=0;
@@ -248,8 +252,8 @@ if alreadyconnected==1
 				put('ac_seeding1_status',0);
 			end
 			writeline(serpo,line_to_write);
-			status = find_devices('seeder_01');
-			if ~isempty(status)
+			status_device = find_devices('seeder_01');
+			if ~isempty(status_device)
 				set(handles.Seeder1_status, 'Backgroundcolor',[0 1 1])
 				drawnow;pause(0.2)
 				set(handles.Seeder1_status, 'Backgroundcolor',[0 1 0])
@@ -266,8 +270,8 @@ if alreadyconnected==1
 				put('ac_device1_status',0);
 			end
 			writeline(serpo,line_to_write);
-			status = find_devices('device_01');
-			if ~isempty(status)
+			status_device = find_devices('device_01');
+			if ~isempty(status_device)
 				set(handles.Device1_status, 'Backgroundcolor',[0 1 1])
 				drawnow;pause(0.2)
 				set(handles.Device1_status, 'Backgroundcolor',[0 1 0])
@@ -284,8 +288,8 @@ if alreadyconnected==1
 				put('ac_device2_status',0);
 			end
 			writeline(serpo,line_to_write);
-			status = find_devices('device_02');
-			if ~isempty(status)
+			status_device = find_devices('device_02');
+			if ~isempty(status_device)
 				set(handles.Device2_status, 'Backgroundcolor',[0 1 1])
 				drawnow;pause(0.2)
 				set(handles.Device2_status, 'Backgroundcolor',[0 1 0])

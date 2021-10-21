@@ -104,7 +104,7 @@ hgui = getappdata(0,'hgui');
 serpo=getappdata(hgui,'serpo');
 try
 	serpo.Port; %is there no other way to determine if serialport is working...?
-	configureTerminator(serpo,'CR/LF');
+	%configureTerminator(serpo,'CR/LF');
 	alreadyconnected=1;
 catch
 	alreadyconnected=0;
@@ -116,6 +116,7 @@ if alreadyconnected==1
 	warning off
 	serial_answer=readline(serpo);
 	warning on
+	handles=gethand;
 	lens_available=strfind(serial_answer,'Measured_Roll:');
 	if ~isempty(lens_available) &&  lens_available~=0
 		set(handles.lens_status, 'Backgroundcolor',[0 1 0])
