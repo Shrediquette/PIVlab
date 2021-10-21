@@ -2036,15 +2036,18 @@ item=[0 item(2)+item(4) parentitem(3)/2 1];
 handles.ac_imgamounttxt = uicontrol(handles.uipanelac_capture,'Style','text', 'String','Image amount: ','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_imgamounttxt');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/4 1];
-handles.ac_imgamount = uicontrol(handles.uipanelac_capture,'Style','edit','units','characters','HorizontalAlignment','right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','100','tag','ac_imgamount','TooltipString','Amount of double images to capture');
+handles.ac_imgamount = uicontrol(handles.uipanelac_capture,'Style','edit','units','characters','HorizontalAlignment','right', 'enable','off','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','100','tag','ac_imgamount','TooltipString','Amount of double images to capture');
 
 item=[parentitem(3)/2+parentitem(3)/4 item(2) parentitem(3)/4 1];
 handles.ac_realtime = uicontrol(handles.uipanelac_capture,'Style','checkbox','units','characters','HorizontalAlignment','right','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3) item(4)],'Value',0,'String','Live','tag','ac_realtime','TooltipString','Enable real-time PIV','Callback',@ac_realtime_Callback);
 
-item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/2 1.5];
-handles.ac_pivcapture = uicontrol(handles.uipanelac_capture,'Style','pushbutton','String','Start & save','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_pivcapture_Callback,'Tag','ac_pivcapture','TooltipString','Start PIV image capture and laser');
+item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/3 1.5];
+handles.ac_pivcapture = uicontrol(handles.uipanelac_capture,'Style','pushbutton','String','Start','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_pivcapture_Callback,'Tag','ac_pivcapture','TooltipString','Start PIV image capture and laser');
 
-item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
+item=[parentitem(3)/3*1 item(2) parentitem(3)/3 1.5];
+handles.ac_pivcapture_save = uicontrol(handles.uipanelac_capture,'Style','checkbox','units','characters','HorizontalAlignment','right','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3) item(4)],'Value',0,'String','Save','tag','ac_pivcapture_save','TooltipString','Save PIV double images','Callback',@ac_pivcapture_save_Callback);
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
 handles.ac_pivstop = uicontrol(handles.uipanelac_capture,'Style','pushbutton','String','Abort','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_camstop_Callback,'Tag','ac_pivstop','TooltipString','Cancel capture and discard images');
 
 parentitem=get(handles.multip24, 'Position');
@@ -11386,6 +11389,17 @@ if strcmp(caller,'double_images')
 	end
 end
 
+function ac_pivcapture_save_Callback(inpt,~)
+handles=gethand;
+if inpt.Value == 0
+	set (handles.ac_imgamount, 'enable','off')
+else
+	set (handles.ac_imgamount, 'enable','on')
+end
+	
+
+
+
 function ac_pivcapture_Callback(~,~,~)
 put('capturing',0);
 [filepath,~,~] = fileparts(mfilename('fullpath'));
@@ -11393,10 +11407,16 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 	button = questdlg('Start Laser and camera?','Warning','Yes','Cancel','Yes');
 	if strmatch(button,'Yes')==1 
 		handles=gethand;
-		imageamount=str2double(get(handles.ac_imgamount,'String'));
+		
 		put('cancel_capture',0);
 		projectpath=get(handles.ac_project,'String');
-		capture_ok=check_project_path(projectpath,'double_images');
+		if get(handles.ac_pivcapture_save,'Value')==1 %check settings only when user wants to save data
+			imageamount=str2double(get(handles.ac_imgamount,'String'));
+			capture_ok=check_project_path(projectpath,'double_images');
+		else
+			imageamount=inf; %run forever if user doesnt want to save images
+			capture_ok=1;
+		end
 		%Camera fps
 		ac_fps_value=get(handles.ac_fps,'Value');
 		ac_fps_str=get(handles.ac_fps,'String');

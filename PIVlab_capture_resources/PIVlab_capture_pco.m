@@ -479,8 +479,10 @@ else
 							imgA_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',image_save_number) '_A.tif']);
 							imgB_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',image_save_number) '_B.tif']);
 							%img_save_time=tic;
-							imwrite(ima(1:act_ysize/2  ,  1:act_xsize),imgA_path,'compression','none'); %tif file saving seems to be the fastest method for saving data...
-							imwrite(ima(act_ysize/2+1:end  ,  1:act_xsize),imgB_path,'compression','none');
+							if ~isinf(nr_of_images) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
+								imwrite(ima(1:act_ysize/2  ,  1:act_xsize),imgA_path,'compression','none'); %tif file saving seems to be the fastest method for saving data...
+								imwrite(ima(act_ysize/2+1:end  ,  1:act_xsize),imgB_path,'compression','none');
+							end
 							%toc(img_save_time)
 
 							toggle_image_state=getappdata(hgui,'toggler');
@@ -534,8 +536,12 @@ else
 								if crosshair_enabled == 1 %cross-hair
 									%% cross-hair
 									locations=[0.15 0.5 0.85];
-									half_thickness=2;
-									brightness_incr=3000;
+									if numel(ima)<10000000
+										half_thickness=2;
+									else
+										half_thickness=4;
+									end
+									brightness_incr=10000;
 									ima_ed=ima;
 									old_max=max(ima(:));
 									for loca=locations
