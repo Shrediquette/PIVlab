@@ -70,6 +70,8 @@ if isempty(fh)
 		disp('Could not load default settings. But this doesn''t really matter.')
 	end
 	%% check required files
+	[tempfilepath,~,~] = fileparts(mfilename('fullpath'));
+	addpath(fullfile(tempfilepath, 'PIVlab_capture_resources'));
 	try
 		ctr=0;
 		pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg' 'PIVlab_capture_pco.m' 'PIVlab_image_filter.m' 'pivparpool.m' 'pivprogress.m' 'piv_analysis.m' 'piv_quick.m' 'PIVlab_notch_filter.m' 'PIVlab_correlation_filter.m' 'PIVlab_capture_devicectrl_GUI.m' 'PIVlab_capture_lensctrl_GUI.m' 'PIVlab_capture_lensctrl.m' 'PIVlab_capture_sharpness_indicator.m'};
@@ -178,11 +180,13 @@ if isempty(fh)
 	put('subtr_v', 0);
 	put('displaywhat',1);%vectors
 	
+	
 	%% read current and last directory.....:
 	warning('off','all') %if the variables don't exist, an ugly warning is displayed
 	load('PIVlab_settings_default.mat','homedir');
 	load('PIVlab_settings_default.mat','pathname');
 	warning('on','all')
+	warning('off','serialport:serialport:ReadlineWarning')
 	if ~exist('pathname','var') || ~exist('homedir','var')
 		try
 			if exist(fullfile(fileparts(mfilename('fullpath')) , 'Examples'),'dir') == 7 %if no previous path -> check if example dir exists
@@ -2264,7 +2268,6 @@ uiwait(msgbox(['PCO camera drivers not found in this directory:' sprintf('\n') f
 
 function capture_images_Callback(~,~,~) %Menu item is called
 [filepath,~,~] = fileparts(mfilename('fullpath'));
-addpath(fullfile(filepath, 'PIVlab_capture_resources'));
 switchui('multip24')
 select_capture_config_Callback
 if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources'),'dir')==7
