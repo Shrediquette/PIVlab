@@ -563,7 +563,7 @@ else
 							if isvalid(image_handle_pco)
 								hist_fig=findobj('tag','hist_fig');
 								if isempty(hist_fig)
-									hist_fig=figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Live histogram','Toolbar','none','tag','hist_fig');
+									hist_fig=figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Live histogram','Toolbar','none','tag','hist_fig','CloseRequestFcn', @HistWindow_CloseRequestFcn);
 								end
 								if ~exist ('old_hist_y_limits','var')
 									old_hist_y_limits =[0 35000];
@@ -840,3 +840,11 @@ else
 	end
 end
 
+function HistWindow_CloseRequestFcn(hObject,~)
+hgui=getappdata(0,'hgui');
+setappdata(hgui,'hist_enabled',0);
+try
+	delete(hObject);
+catch
+	delete(gcf);
+end
