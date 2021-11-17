@@ -10,6 +10,10 @@ https://youtube.com/watch?v=15RTs_USHFk
 Video tutorial 3/3: Data exploration and data export
 https://youtube.com/watch?v=47NCB_RFiE8
 
+Using PIVlab for PIV experiments: Hardware control
+https://youtu.be/54lOx2s2uBU
+
+
 **Installation:** https://github.com/Shrediquette/PIVlab/wiki#installation-instructions
 
 **Please ask your questions in the PIVlab forum:** http://pivlab.blogspot.de/p/forum.html
