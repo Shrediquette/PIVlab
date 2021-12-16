@@ -908,7 +908,9 @@ ytable=ytable-ceil(interrogationarea/2);
 xtable=xtable+xroi;
 ytable=ytable+yroi;
 
+
 %{
+%mal alle daten die ich brauche speichern. Als Beispielsatz. Dann damit experimentieren wie in echt...
 %% Hier uncertainty...?
 %Die Werte sind viel zu hoch, im Prinzip folgen sie aber den Erwartungen.
 Das Problem wird meine Partikelpäarchenfinder sein. Evtl. doch aus dem Beispiel klauen...

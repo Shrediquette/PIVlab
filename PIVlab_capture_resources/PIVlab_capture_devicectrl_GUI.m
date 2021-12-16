@@ -119,6 +119,7 @@ end
 function status_device = find_devices(device)
 hgui = getappdata(0,'hgui');
 serpo=getappdata(hgui,'serpo');
+%serpo.configureTerminator ("CR/LF");
 try
 	serpo.Port; %is there no other way to determine if serialport is working...?
 	alreadyconnected=1;
@@ -127,6 +128,7 @@ catch
 	delete(serpo)
 end
 if alreadyconnected==1
+	pause(0.1)
 	flush(serpo)
 	status_device=[];
 	handles=gethand;
@@ -142,7 +144,7 @@ if alreadyconnected==1
 				status_device=str2double(serial_answer(seeder1_available+11:end));
 				set(handles.Seeder1_status, 'Backgroundcolor',[0 1 0])
 			end
-		case 'device1'
+		case 'device_01'
 			writeline(serpo,'DEVICE_STATUS_01?');
 			warning off
 			serial_answer=readline(serpo);
@@ -153,7 +155,7 @@ if alreadyconnected==1
 				status_device=str2double(serial_answer(device1_available+11:end));
 				set(handles.Device1_status, 'Backgroundcolor',[0 1 0])
 			end
-		case 'device2'
+		case 'device_02'
 			writeline(serpo,'DEVICE_STATUS_02?');
 			warning off
 			serial_answer=readline(serpo);
@@ -238,7 +240,6 @@ catch
 	alreadyconnected=0;
 	delete(serpo)
 end
-
 if alreadyconnected==1
 	handles=gethand;
 	switch device

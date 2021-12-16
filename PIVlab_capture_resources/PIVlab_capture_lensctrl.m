@@ -17,9 +17,9 @@ if alreadyconnected==1
 	flush(serpo)
 	line_to_write=['FOCUS:' num2str(focus) ';APERTURE:' num2str(aperture) ';LIGHTING:' num2str(lighting)];
 	writeline(serpo,line_to_write);
-	disp(['Setting focus: ' num2str(focus) ' us, aperture: ' num2str(aperture) ' us, light: ' num2str(lighting)])
+	%disp(['Setting focus: ' num2str(focus) ' us, aperture: ' num2str(aperture) ' us, light: ' num2str(lighting)])
 else 
-	disp(['Not connected. Focus: ' num2str(focus) ' us, aperture: ' num2str(aperture) ' us, light: ' num2str(lighting)])
+	%disp(['Not connected. Focus: ' num2str(focus) ' us, aperture: ' num2str(aperture) ' us, light: ' num2str(lighting)])
 end
 setappdata(hgui,'focus',focus);
 setappdata(hgui,'aperture',aperture);

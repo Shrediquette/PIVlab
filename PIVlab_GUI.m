@@ -424,7 +424,7 @@ if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(even
 		put('ac_upper_clim',ac_upper_clim);
 		put('ac_lower_clim',0);
 		caxis([0 ac_upper_clim])
-	elseif strcmp(event.Key,'k') 
+	elseif strcmp(event.Key,'k')
 		if strmatch (get(gca,'ColorScale'),'log') %#ok<*MATCH2>
 			set(gca,'ColorScale','linear')
 		else
@@ -1928,7 +1928,7 @@ item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
 handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Select configuration:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_configtxt');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 2, 'String',{'SimpleSync + pco.pixelfly usb' 'SimpleSync + pco.panda 26 DS'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
+handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 2, 'String',{'PIVlab SimpleSync + pco.pixelfly usb' 'PIVlab SimpleSync + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.ac_comport = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'COM1'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_comport');
@@ -7280,11 +7280,15 @@ try
 	toolsavailable(1)
 catch
 end
-if strcmp(button,'Yes')==1 
+if strcmp(button,'Yes')==1
 	try
 		homedir=retr('homedir');
 		pathname=retr('pathname');
 		save('PIVlab_settings_default.mat','homedir','pathname','-append');
+	catch
+	end
+	try
+		PIVlab_capture_lensctrl (1400,1400,0) %lens needs to be set to neutral otherwise re-enabling power might cause issues
 	catch
 	end
 	try
@@ -11061,17 +11065,21 @@ if alreadyconnected
 	pulse_sep=str2double(get(handles.ac_interpuls,'String'));
 	if switch_it==1
 		flush(serpo)
-		%configureTerminator(serpo,'CR');
-		send_string=['FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
+		send_string=['FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
+		%send_string='FREQ:3;EXPO:300;CAMDLY:0;LDPULS:300;INTERF:500;LASER:enable'
+		%disp('testing laserdiode')
 		writeline(serpo,send_string);
 	else
 		flush(serpo)
 		%configureTerminator(serpo,'CR');
-		writeline(serpo,['FREQ:1;CAM:1;ENER:' int2str(min_energy) ';F1EXP:100;INTERF:1234;EXTDLY:-1;EXTSKP:0;LASER:disable']);
+		writeline(serpo,['FREQ:1;CAM:1;ENER:' int2str(min_energy) ';ener%:0;F1EXP:100;INTERF:1234;EXTDLY:-1;EXTSKP:0;LASER:disable']);
+		%writeline(serpo,'FREQ:5;EXPO:300;CAMDLY:835;LDPULS:300;INTERF:500;LASER:disable');
+		%disp('testing laserdiode')
 	end
 	warning off
 	%configureTerminator(serpo,'CR/LF');
-	serial_answer=readline(serpo);
+	disp('Answer received:')
+	serial_answer=readline(serpo)
 	warning on
 	sync_setting=serial_answer;
 	if isempty(sync_setting)
@@ -11174,6 +11182,7 @@ else
 			put('binning',1)
 		else
 			put('binning',str2double(answer{1}));
+			clear_roi_Callback %PIV-ROI must be cleared when camera resolution is chnaged.
 		end
 		if answer{1} ~= definput{1}
 			set(handles.ac_realtime,'Value',0);%reset realtime roi
@@ -11370,7 +11379,7 @@ handles=gethand;
 result=0;
 if ~exist(projectpath,'dir')
 	button = questdlg('Folder does not exist. Create?','Create?','Yes','Cancel','Yes');
-	if strmatch(button,'Yes')==1 
+	if strmatch(button,'Yes')==1
 		mkdir(projectpath);
 		result=1;
 		update_ac_status(['Created folder ' projectpath]);
@@ -11381,7 +11390,7 @@ end
 if strcmp(caller,'double_images')
 	if result==1 && exist(fullfile(projectpath,'PIVlab_0000_A.tif'),'file')
 		button = questdlg('Overwrite files?','Overwrite?','Yes','Cancel','Yes');
-		if strmatch(button,'Yes')==1 
+		if strmatch(button,'Yes')==1
 			result=1;
 		else
 			result=0;
@@ -11396,7 +11405,7 @@ if inpt.Value == 0
 else
 	set (handles.ac_imgamount, 'enable','on')
 end
-	
+
 
 
 
@@ -11405,7 +11414,7 @@ put('capturing',0);
 [filepath,~,~] = fileparts(mfilename('fullpath'));
 if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_camera_load_defines.m'),'file')
 	button = questdlg('Start Laser and camera?','Warning','Yes','Cancel','Yes');
-	if strmatch(button,'Yes')==1 
+	if strmatch(button,'Yes')==1
 		handles=gethand;
 		
 		put('cancel_capture',0);
@@ -11437,37 +11446,62 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 			set(handles.togglepair,'enable','on')
 			set(handles.ac_serialstatus,'enable','on')
 			set(handles.ac_laserstatus,'enable','on')
-			set(handles.ac_power,'enable','on')
+			value=get(handles.ac_config,'value');
+			
+			if value== 3 || value == 4 %setup with LD-PS
+				%do nothing... Laser power can not be adjusted on the fly with LD-PS
+			else
+				set(handles.ac_power,'enable','on')
+			end
 			set(handles.ac_lensctrl,'enable','on')
 			
 			f = waitbar(0,'Initializing...');
 			%if any external device is activated for automatic control, then...
-			if (~isempty(retr('ac_enable_seeding1')) && retr('ac_enable_seeding1') ~=0) || (~isempty(retr('ac_enable_device1')) && retr('ac_enable_device1') ~=0) || (~isempty(retr('ac_enable_device2')) && retr('ac_enable_device2') ~=0) 
+			if (~isempty(retr('ac_enable_seeding1')) && retr('ac_enable_seeding1') ~=0) || (~isempty(retr('ac_enable_device1')) && retr('ac_enable_device1') ~=0) || (~isempty(retr('ac_enable_device2')) && retr('ac_enable_device2') ~=0)
 				external_device_control(1); %starts selected devices
 				waitbar(.15,f,'Starting external devices...');
 				pause(1)
 				waitbar(.33,f,'Starting external devices...');
 				pause(1)
 			end
-			waitbar(.5,f,'Starting laser...');
-			control_simple_sync_serial(1);
-			put('laser_running',1);
-			pause(1)
-			waitbar(.6,f,'Starting laser...');
-			pause(1)
-			waitbar(.7,f,'Laser stabilization...');
-			pause(1)
-			waitbar(.85,f,'Starting camera...');
-			pause(1)
-			waitbar(1,f,'Starting camera...');
-			pause(1)
-			close(f)
+			if value~= 3 && value ~= 4 %setup withOUT LD-PS
+				%Start-up sequence for normal Q-Switched laser
+				waitbar(.5,f,'Starting laser...');
+				control_simple_sync_serial(1);
+				put('laser_running',1);
+				pause(1)
+				waitbar(.6,f,'Starting laser...');
+				pause(1)
+				waitbar(.7,f,'Laser stabilization...');
+				pause(1)
+				waitbar(.85,f,'Starting camera...');
+				pause(1)
+				waitbar(1,f,'Starting camera...');
+				pause(1)
+				close(f)
+			else
+				%Start-up sequence for PIVlab LD-PS (much quicker)
+				waitbar(.01,f,'Starting laser...');
+				control_simple_sync_serial(1);
+				put('laser_running',1);
+				close(f)
+			end
 			camera_type=retr('camera_type');
 			binning=retr('binning');
 			if isempty(binning)
 				binning=1;
 			end
-			PIVlab_capture_pco(imageamount,retr('f1exp_cam'),'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI_realtime,binning,ac_ROI_general,camera_type,0);
+			value=get(handles.ac_config,'value');
+			if value== 3 || value == 4 %setup with LD-PS
+				las_percent=str2double(get(handles.ac_power,'String'));
+				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
+				f1exp_cam =floor(pulse_sep*las_percent/100)+1; %+1 because in the snychronizer, the cam expo is started 1 us before the ld pulse 
+				disp('laserdiode')
+				disp('on the fly ändern von laser power geht nicht...')
+			else
+				f1exp_cam=retr('f1exp_cam');
+			end
+			PIVlab_capture_pco(imageamount,f1exp_cam,'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI_realtime,binning,ac_ROI_general,camera_type,0);
 			%disable external devices
 			external_device_control(0); % stops all external devices
 			control_simple_sync_serial(0);
@@ -11497,32 +11531,32 @@ if ~isempty(serpo)
 	flush(serpo)
 	if switch_it==1
 		if ~isempty(retr('ac_enable_seeding1')) && retr('ac_enable_seeding1') == 1
-				ext_dev_01_pwm = retr('ext_dev_01_pwm');
-				line_to_write=['SEEDER_01:' num2str(ext_dev_01_pwm)]
-				writeline(serpo,line_to_write);
-				put('ac_seeding1_status',1);
-				pause(0.2)
+			ext_dev_01_pwm = retr('ext_dev_01_pwm');
+			line_to_write=['SEEDER_01:' num2str(ext_dev_01_pwm)];
+			writeline(serpo,line_to_write);
+			put('ac_seeding1_status',1);
+			pause(0.2)
 		end
 		if ~isempty(retr('ac_enable_device1')) && retr('ac_enable_device1') == 1
-				ext_dev_02_pwm = retr('ext_dev_02_pwm');
-				line_to_write=['SEEDER_02:' num2str(ext_dev_02_pwm)]
-				writeline(serpo,line_to_write);
-				put('ac_device1_status',1);
-				pause(0.2)
-		end		
+			ext_dev_02_pwm = retr('ext_dev_02_pwm');
+			line_to_write=['DEVICE_01:' num2str(ext_dev_02_pwm)];
+			writeline(serpo,line_to_write);
+			put('ac_device1_status',1);
+			pause(0.2)
+		end
 		if ~isempty(retr('ac_enable_device2')) && retr('ac_enable_device2') == 1
-				ext_dev_03_pwm = retr('ext_dev_03_pwm');
-				line_to_write=['SEEDER_03:' num2str(ext_dev_03_pwm)]
-				writeline(serpo,line_to_write);
-				put('ac_device2_status',1);
-				pause(0.2)
-		end				
+			ext_dev_03_pwm = retr('ext_dev_03_pwm');
+			line_to_write=['DEVICE_02:' num2str(ext_dev_03_pwm)];
+			writeline(serpo,line_to_write);
+			put('ac_device2_status',1);
+			pause(0.2)
+		end
 	else
 		writeline(serpo,'SEEDER_01:0');
 		pause(0.1)
-		writeline(serpo,'SEEDER_02:0');
+		writeline(serpo,'DEVICE_01:0');
 		pause(0.1)
-		writeline(serpo,'SEEDER_03:0');
+		writeline(serpo,'DEVICE_02:0');
 		put('ac_seeding1_status',0);
 		put('ac_device1_status',0);
 		put('ac_device2_status',0);
@@ -11701,7 +11735,7 @@ handles=gethand;
 value=get(handles.ac_config,'value');
 put('do_realtime',0);
 set(handles.ac_realtime,'Value',0)
-if value==1 % ILA.piv nano / pco pixelfly
+if value==1 || value==3 % ILA.piv nano / pco pixelfly with evergreen or LD-PS
 	put('camera_type','pco_pixelfly'); % Exposure start -> Q1 delay
 	put('f1exp',406); % Exposure start -> Q1 delay
 	put('f1exp_cam',400); %exposure time setting first frame
@@ -11712,9 +11746,13 @@ if value==1 % ILA.piv nano / pco pixelfly
 	if get(handles.ac_fps,'value') > numel(avail_freqs)
 		set(handles.ac_fps,'value',1)
 	end
-elseif value == 2 % pco panda
+end
+if value == 2 || value == 4% pco panda with evergreen or LD-PS
 	put('camera_type','pco_panda');
 	put('f1exp',352) % Exposure start -> Q1 delay
+	%disp('testing laserdiode')
+	%put('f1exp_cam',300)
+	%put('master_freq',3);
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
 	avail_freqs={'15' '7.5' '5' '3' '1.5' '1'};
@@ -11723,6 +11761,10 @@ elseif value == 2 % pco panda
 		set(handles.ac_fps,'value',1)
 	end
 end
+
+
+
+
 %contents=get(handles.ac_config,'String')
 %contents(value)
 
