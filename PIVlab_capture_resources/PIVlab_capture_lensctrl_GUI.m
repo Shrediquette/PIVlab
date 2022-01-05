@@ -23,7 +23,7 @@ if isempty(fh)
 	
 	%% Setup Configurations
 	if isempty(retr('selected_lens_config'))
-		put('selected_lens_config',3) %set default to computar
+		put('selected_lens_config',2) %set default to zeiss Dimension
 	end
 	load ('PIVlab_capture_lensconfig.mat','lens_configurations');
 	% New lens configurations can be added to the table by modifying the variable 'lens_configurations' in the file 'PIVlab_capture_lensconfig.mat :
