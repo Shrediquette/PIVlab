@@ -2521,6 +2521,19 @@ if get(handles.bg_subtract,'Value')==1
 end
 %get and save the image size (assuming that every image of a session has the same size)
 size_of_the_image=size(currentimage);
+expected_image_size=retr('expected_image_size');
+if isempty(expected_image_size) %expected_image_size is empty, we have not read an image before
+	expected_image_size = size_of_the_image;
+	put('expected_image_size',expected_image_size);
+else %expected_image_size is not empty, an image has been read before
+	if 	expected_image_size(1) ~= size_of_the_image(1) || expected_image_size(2) ~= size_of_the_image(2)
+		cancelbutt_Callback
+		uiwait(warndlg('Error: All images in a session  MUST have the same size!'));
+		warning off
+		delete('cancel_piv');
+		warning on
+	end
+end
 put('size_of_the_image',size_of_the_image);
 currentimage(currentimage<0)=0; %bg subtraction may yield negative
 %results. I am unsure about the best way to deal with this data. Is
@@ -2655,8 +2668,20 @@ if get(handles.bg_subtract,'Value')==1
 					end
 					%now everything is double [0...1]
 					%Sum up  all images
+					img_size_info1=size(image1);
+					img_size_info2=size(image_to_add1);
+					if img_size_info1(1) ~= img_size_info2(1) || img_size_info1(2) ~= img_size_info2(2)
+						uiwait(warndlg('Error: All images in a session  MUST have the same size!'));
+						break
+					end
 					image1=image1 +image_to_add1;
 					if sequencer==1 %not time-resolved
+						img_size_info1=size(image2);
+						img_size_info2=size(image_to_add2);
+						if img_size_info1(1) ~= img_size_info2(1) || img_size_info1(2) ~= img_size_info2(2)
+							uiwait(warndlg('Error: All images in a session  MUST have the same size!'));
+							break
+						end
 						image2=image2+image_to_add2;
 					end
 				end %of for loop and image summing
@@ -3392,6 +3417,7 @@ end
 vid_import(pathname);
 uiwait
 if getappdata(hgui,'video_selection_done')
+	put('expected_image_size',[])
 	pathname = getappdata(hgui,'pathname');
 	filename = getappdata(hgui,'filename');
 	filepath = getappdata(hgui,'filepath');
@@ -3471,6 +3497,7 @@ if useGUI ==1
 			path=uipickfiles ('FilterSpec', pwd, 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
 		end
 	end
+	put('expected_image_size',[])
 end
 if ~isequal(path,0)
 	setappdata(hgui,'video_selection_done',0);
@@ -5698,6 +5725,7 @@ if ~isequal(FileName,0)
 	read_settings (FileName,PathName) %When UI is set up, read settings.
 	switchui('multip01')
 	try
+		put('expected_image_size',[])
 		handles=gethand;
 		sliderrange
 		set (handles.filenamebox, 'string', fileboxcontents);
@@ -5718,6 +5746,7 @@ function read_settings (FileName,PathName)
 handles=gethand;
 try
 	load(fullfile(PathName,FileName));
+	
 	set(handles.clahe_enable,'value',clahe_enable);
 	set(handles.clahe_size,'string',clahe_size);
 	set(handles.enable_highpass,'value',enable_highpass);
@@ -5873,6 +5902,7 @@ try
 catch
 	disp('repeat_last didnt work')
 end
+put('expected_image_size',[])
 
 
 function curr_settings_Callback(~, ~, ~)
@@ -6000,6 +6030,7 @@ else
 		[FileName,PathName] = uiputfile('*.mat','Save current settings as...','PIVlab_set.mat');
 	end
 end
+
 clear handles hObject eventdata
 if ~isequal(FileName,0)
 	save('-v6', fullfile(PathName,FileName))
@@ -8350,6 +8381,7 @@ end
 [FileName,PathName] = uiputfile('*.mat','Save current session as...',fullfile(sessionpath,'PIVlab_session.mat'));
 if isequal(FileName,0) | isequal(PathName,0)
 else
+	put('expected_image_size',[])
 	put('sessionpath',PathName );
 	savesessionfuntion (PathName,FileName)
 end
@@ -8519,6 +8551,7 @@ end
 [FileName,PathName, filterindex] = uigetfile({'*.mat','MATLAB Files (*.mat)'; '*.mat','mat'},'Load PIVlab session',fullfile(sessionpath, 'PIVlab_session.mat'));
 if isequal(FileName,0) | isequal(PathName,0)
 else
+	put('expected_image_size',[])
 	clear iptPointerManager
 	put('sessionpath',PathName );
 	put('derived',[]);
