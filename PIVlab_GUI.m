@@ -2887,11 +2887,13 @@ if capturing==0
 						coloobj=colorbar (posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')});
 						
 						if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
-							%set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
+							axis image %needs to be called before changing colorbar labels
+							set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
 							ylabel(coloobj,name{retr('displaywhat')},'fontsize',9,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
 						end
 						if strcmp(posichoice{get(handles.colorbarpos,'Value')},'North')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'South')==1
-							%set(coloobj,'XTickLabel',num2str(get(coloobj,'XTick')','%5.5g'))
+							axis image %needs to be called before changing colorbar labels
+							set(coloobj,'XTickLabel',num2str(get(coloobj,'XTick')','%5.5g'))
 							xlabel(coloobj,name{retr('displaywhat')},'fontsize',11,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
 						end
 					end
@@ -8884,11 +8886,13 @@ if formattype==1
 			coloobj=colorbar (posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')});
 			
 			if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
-				%set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
+				axis image
+				set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
 				ylabel(coloobj,name{retr('displaywhat')},'fontsize',9,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
 			end
 			if strcmp(posichoice{get(handles.colorbarpos,'Value')},'North')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'South')==1
-				%set(coloobj,'XTickLabel',num2str(get(coloobj,'XTick')','%5.5g'))
+				axis image
+				set(coloobj,'XTickLabel',num2str(get(coloobj,'XTick')','%5.5g'))
 				xlabel(coloobj,name{retr('displaywhat')},'fontsize',11,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
 			end
 		end
@@ -8951,11 +8955,13 @@ elseif formattype ==2 || formattype==3 || formattype==4 || formattype==5
 			coloobj=colorbar (posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')});
 			
 			if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
-				%set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
+				axis image
+				set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
 				ylabel(coloobj,name{retr('displaywhat')},'fontsize',9,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
 			end
 			if strcmp(posichoice{get(handles.colorbarpos,'Value')},'North')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'South')==1
-				%set(coloobj,'XTickLabel',num2str(get(coloobj,'XTick')','%5.5g'))
+				axis image
+				set(coloobj,'XTickLabel',num2str(get(coloobj,'XTick')','%5.5g'))
 				xlabel(coloobj,name{retr('displaywhat')},'fontsize',11,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
 			end
 		end
