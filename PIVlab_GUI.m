@@ -1,6 +1,6 @@
 % PIVlab - Digital Particle Image Velocimetry Tool for MATLAB
 % developed by Dr. William Thielicke and Prof. Dr. Eize J. Stamhuis
-% programmed with MATLAB Version 7.10 (R2010a) - 9.6 (R2019b)
+% programmed with MATLAB Version 7.10 (R2010a) - latest
 % March 09, 2010 - today
 % http://PIVlab.blogspot.com
 % Third party content, thank you for your contributions!
@@ -308,7 +308,7 @@ if verLessThan('matlab','9.4') %r2018a
 	else
 		try
 			warning off
-			frame_h = get(handle(gcf),'JavaFrame');
+			frame_h = get(handle(gcf),'JavaFrame'); %#ok<*JAVFM> 
 			set(frame_h,'Maximized',1);
 		catch
 		end
@@ -487,10 +487,10 @@ item=[0 item(2)+item(4) parentitem(3) 2];
 handles.filenameshow = uicontrol(handles.tools,'Style','text','units', 'characters','Horizontalalignment', 'center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','N/A','tag','filenameshow');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
-handles.fileselector = uicontrol(handles.tools,'Style','slider','units', 'characters','Horizontalalignment', 'center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'max',4,'min',1,'value',1,'sliderstep',[0.5 1],'Callback',@fileselector_Callback,'tag','fileselector','TooltipString','Step through your frames here');
+handles.fileselector = uicontrol(handles.tools,'Style','slider','units', 'characters','Horizontalalignment', 'center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'max',4,'min',1,'value',1,'sliderstep',[0.5 1],'Callback',@fileselector_Callback,'tag','fileselector','TooltipString','Step through your frames here');%,'Interruptible','off','busyaction','cancel');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.togglepair = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)], 'string','Toggle','Callback',@togglepair_Callback,'tag','togglepair','TooltipString','Toggle images within a frame');
+handles.togglepair = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)], 'string','Toggle','Callback',@togglepair_Callback,'tag','togglepair','TooltipString','Toggle images within a frame');%,'Interruptible','off','busyaction','cancel');
 
 item=[parentitem(3)/2 item(2)+item(4) parentitem(3)/2/2 parentitem(3)/2/2/4];
 handles.zoomon = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@zoomon_Callback,'tag','zoomon','TooltipString','Zoom');
@@ -1928,7 +1928,7 @@ item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
 handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Select configuration:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_configtxt');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 2, 'String',{'PIVlab SimpleSync + pco.pixelfly usb' 'PIVlab SimpleSync + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
+handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 4, 'String',{'PIVlab SimpleSync + pco.pixelfly usb' 'PIVlab SimpleSync + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.ac_comport = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'COM1'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_comport');
@@ -2884,7 +2884,7 @@ if capturing==0
 						end
 						posichoice = get(handles.colorbarpos,'String');
 						colochoice=get(handles.colorbarcolor,'String');
-						coloobj=colorbar (posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')});
+						coloobj=colorbar(posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')},'HitTest','off');
 						
 						if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
 							axis image %needs to be called before changing colorbar labels
@@ -2999,12 +2999,7 @@ if capturing==0
 		if size(maskiererx,2)>=currentframe
 			ximask=maskiererx{1,currentframe};
 			if size(ximask,1)>1
-				if displaywhat == 1 %%when vectors only are display: transparent mask
-					dispMASK(1-str2num(get(handles.masktransp,'String'))/100)
-				else %otherwise: 100% opaque mask.
-					%dispMASK(1)
-					dispMASK(1-str2num(get(handles.masktransp,'String'))/100)
-				end
+				dispMASK(1-str2num(get(handles.masktransp,'String'))/100)
 			end
 		end
 		roirect=retr('roirect');
@@ -5056,8 +5051,7 @@ if ok==1
 				end
 				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 				image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-				
-				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect); %#ok<PFTUSE>
+				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect); 
 				xlist{i}=x;
 				ylist{i}=y;
 				ulist{i}=u;
@@ -5066,7 +5060,6 @@ if ok==1
 				corrlist{i}=zeros(size(typevector)); %no correlation coefficient in DCC.
 				correlation_matrices_list{i}=[];%no correlation matrix output for dcc
 				hbar.iterate(1);
-				
 			end
 		elseif get(handles.fftmulti,'Value')==1
 			passes=1;
@@ -5118,7 +5111,6 @@ if ok==1
 				end
 				
 				%get and save the image size (assuming that every image of a session has the same size)
-				
 				currentimage1(currentimage1<0)=0; %bg subtraction may yield negative
 				currentimage2(currentimage2<0)=0; %bg subtraction may yield negative
 				image1=currentimage1;
@@ -5145,7 +5137,7 @@ if ok==1
 				end
 				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 				image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min); %#ok<PFTUSW,PFTUSE>
+				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min); %#ok<PFTUSW>
 				xlist{i}=x;
 				ylist{i}=y;
 				ulist{i}=u;
@@ -6186,7 +6178,7 @@ if ~isempty(resultslist)
 		video_frame_selection=retr('video_frame_selection');
 		num_frames_to_process=floor(numel(video_frame_selection)/2)+1;
 	end
-	if retr('video_selection_done') == 1 %if post-processing a video, parallelization cannot be used.
+	if retr('video_selection_done') == 1 || retr('parallel')==0 %if post-processing a video, parallelization cannot be used.
 		for i=1:num_frames_to_process
 			filtervectors(i)
 			set (handles.apply_filter_all, 'string', ['Please wait... (' int2str((i-1)/num_frames_to_process*100) '%)']);
@@ -6692,7 +6684,7 @@ if get(handles.optimize_calib_img,'value')==1
 		numberoftiles2=2;
 	end
 	
-	if size(caliimg,3)>1 == 0
+	if size(caliimg,3) == 1
 		caliimg=adapthisteq(imadjust(caliimg),'NumTiles',[numberoftiles1 numberoftiles2],'clipLimit',0.01);
 	else
 		try
@@ -6952,17 +6944,17 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 			
 			u = smoothn(u,smoothfactor/10); %not supported in prehistoric Matlab versions like the one I have to use :'-(
 			v = smoothn(v,smoothfactor/10); %not supported in prehistoric Matlab versions like the one I have to use :'-(
-			clc
-			disp ('Using smoothn.m from Damien Garcia for data smoothing.')
-			disp (['Input smoothing parameter S for smoothn is: ' num2str(smoothfactor/10)])
-			disp ('see the documentation here: https://de.mathworks.com/matlabcentral/fileexchange/25634-smoothn')
+			%clc
+			%disp ('Using smoothn.m from Damien Garcia for data smoothing.')
+			%disp (['Input smoothing parameter S for smoothn is: ' num2str(smoothfactor/10)])
+			%disp ('see the documentation here: https://de.mathworks.com/matlabcentral/fileexchange/25634-smoothn')
 			
 		catch
 			h=fspecial('gaussian',smoothfactor+2,(smoothfactor+2)/7);
 			u=imfilter(u,h,'replicate');
 			v=imfilter(v,h,'replicate');
-			clc
-			disp ('Using Gaussian kernel for data smoothing (your Matlab version is pretty old btw...).')
+			%clc
+			%disp ('Using Gaussian kernel for data smoothing (your Matlab version is pretty old btw...).')
 		end
 		resultslist{10,frame}=u; %smoothed u
 		resultslist{11,frame}=v; %smoothed v
@@ -8883,7 +8875,7 @@ if formattype==1
 			name=get(handles.derivchoice,'string');
 			posichoice = get(handles.colorbarpos,'String');
 			colochoice=get(handles.colorbarcolor,'String');
-			coloobj=colorbar (posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')});
+			coloobj=colorbar(posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')},'HitTest','off');
 			
 			if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
 				axis image
@@ -8952,8 +8944,7 @@ elseif formattype ==2 || formattype==3 || formattype==4 || formattype==5
 			name=get(handles.derivchoice,'string');
 			posichoice = get(handles.colorbarpos,'String');
 			colochoice=get(handles.colorbarcolor,'String');
-			coloobj=colorbar (posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')});
-			
+			coloobj=colorbar(posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')},'HitTest','off');	
 			if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
 				axis image
 				set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
@@ -9649,7 +9640,7 @@ for i=startfr:endfr
 		if isequal(FileName,0) | isequal(PathName,0)
 		else
 			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-				dlmwrite(fullfile(PathName,FileName), [currentframe areaoutput], '-append', 'delimiter', ',', 'precision', 10, 'newline', 'pc');
+				dlmwrite(fullfile(PathName,FileName), [currentframe areaoutput], '-append', 'delimiter', ',', 'precision', 10, 'newline', 'pc'); %#ok<*DLMWT> 
 			end
 		end
 	end
@@ -9997,7 +9988,7 @@ if isempty(resultslist)==0
 					if type==2
 						%standard deviation
 						%ROCHE Modifikation
-						out_mean_u=nanstd(umittelselected,3); %#ok<NODEF>
+						out_mean_u=nanstd(umittelselected,3); %#ok<*NANSTD,NODEF>
 						out_mean_v=nanstd(vmittelselected,3); %#ok<NODEF>
 						out_mean_u(typevectormean>=1.75)=nan; %discard everything that has less than 25% valid measurements
 						out_mean_v(typevectormean>=1.75)=nan;
@@ -10009,7 +10000,7 @@ if isempty(resultslist)==0
 					
 					if type==1
 						%ROCHE Modifikation
-						out_mean_u=nanmean(umittelselected,3);
+						out_mean_u=nanmean(umittelselected,3); %#ok<*NANMEAN> 
 						out_mean_v=nanmean(vmittelselected,3);
 						out_mean_u(typevectormean>=1.75)=nan; %discard everything that has less than 25% valid measurements
 						out_mean_v(typevectormean>=1.75)=nan;
@@ -11118,7 +11109,7 @@ if alreadyconnected
 	warning off
 	%configureTerminator(serpo,'CR/LF');
 	disp('Answer received:')
-	serial_answer=readline(serpo)
+	serial_answer=readline(serpo);
 	warning on
 	sync_setting=serial_answer;
 	if isempty(sync_setting)
@@ -11475,6 +11466,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 			do_realtime=0;
 		end
 		if capture_ok==1
+			put('expected_image_size',[])
 			ac_ROI_general=retr('ac_ROI_general');
 			if isempty(ac_ROI_general)
 				ac_ROI_general=[1 1 5120 5120];
