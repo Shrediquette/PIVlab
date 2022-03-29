@@ -24,7 +24,7 @@ if isempty(fh)
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 	guidata(MainWindow,handles)
 	setappdata(0,'hgui',MainWindow);
-	version = '2.56';
+	version = '2.57';
 	put('PIVver', version);
 	v=ver('MATLAB');
 	%splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','on','handlevisibility','off');movegui(splashscreen,'center');drawnow;
@@ -132,6 +132,9 @@ if isempty(fh)
 			end
 		else
 			disp('ERROR: Image Processing Toolbox not found! PIVlab won''t work like this.')
+			disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
+			commandwindow
+			pause
 		end
 		%% Check parallel computing toolbox availability
 		put('parallel',0);
@@ -1953,25 +1956,25 @@ item=[0 item(2)+item(4) parentitem(3)/4*2.5 1];
 handles.ac_fpstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Frame rate [Hz]:','tag','ac_fpstxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
-handles.ac_fps = uicontrol(handles.uipanelac_laser,'Style','popupmenu','String',{'5' '3' '1.5' '1'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_fps','TooltipString','Double-image frame rate during PIV image capture');
+handles.ac_fps = uicontrol(handles.uipanelac_laser,'Style','popupmenu','String',{'5' '3' '1.5' '1'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_fps','TooltipString','Double-image frame rate during PIV image capture','interruptible','off','busyaction','cancel');
 
 item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2.5 1];
 handles.ac_interpulstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pulse distance [µs]:','tag','ac_interpulstxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
-handles.ac_interpuls = uicontrol(handles.uipanelac_laser,'Style','edit','String','100','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_interpuls','TooltipString','Pulse spacing of the laser');
+handles.ac_interpuls = uicontrol(handles.uipanelac_laser,'Style','edit','String','100','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_interpuls','TooltipString','Pulse spacing of the laser','interruptible','off','busyaction','cancel');
 
 item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2.5 1];
 handles.ac_powertxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Laser energy [%]:','tag','ac_powertxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
-handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String','0','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_power','TooltipString','Laser energy');
+handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String','0','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_power','TooltipString','Laser energy','interruptible','off','busyaction','cancel');
 
 item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2 2];
 handles.ac_laserstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','N/A','tag','ac_laserstatus','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold','TooltipString','Status of the laser');
 
 item=[parentitem(3)/4*2 item(2) parentitem(3)/4*2 2];
-handles.ac_lasertoggle = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Toggle Laser','Fontweight','bold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_lasertoggle_Callback,'Tag','ac_lasertoggle','TooltipString','Toggle laser on and off');
+handles.ac_lasertoggle = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Toggle Laser','Fontweight','bold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_lasertoggle_Callback,'Tag','ac_lasertoggle','TooltipString','Toggle laser on and off','interruptible','off','busyaction','cancel');
 
 item=[0 item(2)+item(4)+margin*0.1 parentitem(3)/2 1.5];
 handles.ac_enable_ext_trigger = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Ext. trigger','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_ext_trigger','TooltipString','Use external trigger input on PIVlab-SimpleSync','Callback', @ac_ext_trigger_settings_Callback);
@@ -3050,7 +3053,7 @@ if capturing==0
 				v=resultslist{4,(currentframe+1)/2};
 				typevector=resultslist{5,(currentframe+1)/2};
 			end
-			if get(handles.highp_vectors, 'value')==1 & strncmp(get(handles.multip08, 'visible'), 'on',2) %#ok<AND2>
+			if get(handles.highp_vectors, 'value')==1 & strncmp(get(handles.multip08, 'visible'), 'on',2) %#ok<AND2> %disable second expression to make highpass filtered data available for export
 				strength=54-round(get(handles.highpass_strength, 'value'));
 				h = fspecial('gaussian',strength,strength) ;
 				h2= fspecial('gaussian',3,3);
@@ -11023,6 +11026,7 @@ catch
 	alreadyconnected=0;
 end
 if alreadyconnected
+	pause(0.1)
 	if laser_running %laser is on
 		control_simple_sync_serial(0);
 		laser_running=0;
@@ -11037,6 +11041,15 @@ end
 
 function ac_sync_settings_Callback(~,~,~)
 serpo=retr('serpo');
+handles=gethand;
+
+	if isnan(str2double(get(handles.ac_power,'String'))) 
+		set(handles.ac_power,'String','0')
+	end
+	if str2double(get(handles.ac_power,'String')) > 100
+		set(handles.ac_power,'String','100')
+	end
+
 try
 	serpo.Port;
 	alreadyconnected=1;
@@ -11106,9 +11119,10 @@ if alreadyconnected
 		%writeline(serpo,'FREQ:5;EXPO:300;CAMDLY:835;LDPULS:300;INTERF:500;LASER:disable');
 		%disp('testing laserdiode')
 	end
+	pause(0.1)
 	warning off
 	%configureTerminator(serpo,'CR/LF');
-	disp('Answer received:')
+	%disp('Answer received:')
 	serial_answer=readline(serpo);
 	warning on
 	sync_setting=serial_answer;
@@ -11527,8 +11541,11 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				las_percent=str2double(get(handles.ac_power,'String'));
 				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
 				f1exp_cam =floor(pulse_sep*las_percent/100)+1; %+1 because in the snychronizer, the cam expo is started 1 us before the ld pulse 
-				disp('laserdiode')
-				disp('on the fly ändern von laser power geht nicht...')
+				disp(['camera exposure time = ' num2str(f1exp_cam)])
+				if f1exp_cam < 6
+					msgbox (['Exposure time of camera too low. Please increase laser energy or pulse distance.' sprintf('\n') 'Pulse_distance[µs] * laser_energy[%] must be >= 6 µs'])
+					uiwait
+				end
 			else
 				f1exp_cam=retr('f1exp_cam');
 			end
