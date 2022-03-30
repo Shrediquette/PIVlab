@@ -229,6 +229,8 @@ if isempty(fh)
 		disp('Could not load default settings. But this doesn''t really matter.')
 	end
 	%%
+		
+	%%
 	CheckUpdates
 	SetFullScreen
 	
@@ -1931,7 +1933,7 @@ item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
 handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Select configuration:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_configtxt');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 4, 'String',{'PIVlab SimpleSync + pco.pixelfly usb' 'PIVlab SimpleSync + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
+handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',{'PIVlab SimpleSync + pco.pixelfly usb' 'PIVlab SimpleSync + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.ac_comport = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'COM1'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_comport');
@@ -2057,6 +2059,16 @@ parentitem=get(handles.multip24, 'Position');
 item=[0 30.5 parentitem(3) 2];
 handles.ac_msgbox = uicontrol(handles.multip24,'Style','edit', 'Fontname','fixedwidth', 'enable','inactive','Max', 3, 'min', 1, 'String',{'Welcome to PIVlab' 'image acquisition!'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_msgbox','TooltipString','Messages','visible','off');
 set(handles.ac_msgbox,'BackgroundColor', get (handles.ac_msgbox,'BackgroundColor')*0.95); %dim msgbox color
+
+%Image acquisition: load last device
+try
+	load('PIVlab_settings_default.mat','last_selected_device');
+
+	set(handles.ac_config, 'value',last_selected_device);
+catch
+	
+end
+
 
 disp('-> UI generated.')
 
@@ -7309,10 +7321,13 @@ try
 catch
 end
 if strcmp(button,'Yes')==1
+	handles=gethand;
 	try
 		homedir=retr('homedir');
 		pathname=retr('pathname');
 		save('PIVlab_settings_default.mat','homedir','pathname','-append');
+		last_selected_device = get(handles.ac_config, 'value');
+		save('PIVlab_settings_default.mat','last_selected_device','-append');
 	catch
 	end
 	try
@@ -11123,55 +11138,79 @@ if alreadyconnected
 	warning off
 	%configureTerminator(serpo,'CR/LF');
 	%disp('Answer received:')
-	serial_answer=readline(serpo);
-	warning on
-	sync_setting=serial_answer;
-	if isempty(sync_setting)
-		sync_setting='No answer from Sync';
-	end
-	update_ac_status(sync_setting);
-	%Settings_logger
-	logger_path = get(handles.ac_project,'String');
-	if exist(logger_path,'dir') %only log when directory has been set up.
-		timestamp=datestr(datetime(now,'ConvertFrom','datenum'));
-		if exist (fullfile(logger_path, 'acquisition_log.txt'),'file')~=2
-			logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'w');
-			fprintf(logger_fid,'Time\tProject_folder\tMaster_frequency\tCamera_divider\tEnergy_us\tFrame_1_exposure_us\tInterframe_us\tExternal_delay_us\tExternal_skip\tLaser_status\tBinning\tROI');
-			fprintf(logger_fid, '\n');
-			fclose(logger_fid);
-		end
-		ac_ROI_general=retr('ac_ROI_general');
-		binning=retr('binning');
-		logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'a');
-		fprintf(logger_fid, '%s', timestamp);
-		fprintf(logger_fid, '\t');
-		fprintf(logger_fid, '%s', logger_path);
-		fprintf(logger_fid, '\t');
-		fprintf(logger_fid, '%s', sync_setting);
-		fprintf(logger_fid, '\t');
-		fprintf(logger_fid, '%s', num2str(binning));
-		fprintf(logger_fid, '\t');
-		fprintf(logger_fid, '%s', mat2str(ac_ROI_general));
-		fprintf(logger_fid, '\n');
-		fclose(logger_fid);
-	end
-	set(handles.ac_laserstatus,'BackgroundColor',[1 1 0]); %yellow=warning
-	set(handles.ac_laserstatus,'String','No Answer');drawnow;
-	C = strsplit(sync_setting,'\t');
-	if ~isempty(C)
-		if size(C,2)==8
-			if strcmp(C{8},'1') %laser is reported to be on
-				set(handles.ac_laserstatus,'BackgroundColor',[0 1 0]); %green = on
-				set(handles.ac_laserstatus,'String','Laser ON');
-			else
-				set(handles.ac_laserstatus,'BackgroundColor',[1 0 0]); %red = off
-				set(handles.ac_laserstatus,'String','Laser OFF');
-			end
-		end
-	end
+	%HIER WAR ALTER CODE
+	serial_answer = ac_process_sync_reply(serpo);
 else
 	no_dongle_msgbox
 end
+
+
+function serial_answer = ac_process_sync_reply(serpo)
+handles=gethand;
+serial_answer=readline(serpo);
+warning on
+sync_setting=serial_answer;
+if isempty(sync_setting)
+	sync_setting='No answer from Sync';
+end
+update_ac_status(sync_setting);
+
+set(handles.ac_laserstatus,'BackgroundColor',[1 1 0]); %yellow=warning
+set(handles.ac_laserstatus,'String','No Answer');drawnow;
+C = strsplit(sync_setting,'\t');
+if ~isempty(C)
+	if size(C,2)==8 %entspricht standard datenpaket
+		if strcmp(C{8},'1') %laser is reported to be on
+			set(handles.ac_laserstatus,'BackgroundColor',[0 1 0]); %green = on
+			set(handles.ac_laserstatus,'String','Laser ON');
+		else
+			set(handles.ac_laserstatus,'BackgroundColor',[1 0 0]); %red = off
+			set(handles.ac_laserstatus,'String','Laser OFF');
+		end
+	end
+	if size(C,2)==12 %entspricht erweitertem datenpaket
+		if strcmp(C{8},'1') %laser is reported to be on
+			set(handles.ac_laserstatus,'BackgroundColor',[0 1 0]); %green = on
+			set(handles.ac_laserstatus,'String','Laser ON');
+		else
+			set(handles.ac_laserstatus,'BackgroundColor',[1 0 0]); %red = off
+			set(handles.ac_laserstatus,'String','Laser OFF');
+		end
+		if strcmp(C{8},'1') %laser is reported to be on
+		disp (['pulse length: ' C{9} ' µs'])
+		end
+	end
+
+end
+
+
+%Settings_logger
+logger_path = get(handles.ac_project,'String');
+if exist(logger_path,'dir') %only log when directory has been set up.
+	timestamp=datestr(datetime(now,'ConvertFrom','datenum'));
+	if exist (fullfile(logger_path, 'acquisition_log.txt'),'file')~=2
+		logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'w');
+		fprintf(logger_fid,'Time\tProject_folder\tMaster_frequency\tCamera_divider\tEnergy_us\tFrame_1_exposure_us\tInterframe_us\tExternal_delay_us\tExternal_skip\tLaser_status\tBinning\tROI');
+		fprintf(logger_fid, '\n');
+		fclose(logger_fid);
+	end
+	ac_ROI_general=retr('ac_ROI_general');
+	binning=retr('binning');
+	logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'a');
+	fprintf(logger_fid, '%s', timestamp);
+	fprintf(logger_fid, '\t');
+	fprintf(logger_fid, '%s', logger_path);
+	fprintf(logger_fid, '\t');
+	fprintf(logger_fid, '%s', sync_setting);
+	fprintf(logger_fid, '\t');
+	fprintf(logger_fid, '%s', num2str(binning));
+	fprintf(logger_fid, '\t');
+	fprintf(logger_fid, '%s', mat2str(ac_ROI_general));
+	fprintf(logger_fid, '\n');
+	fclose(logger_fid);
+end
+
+
 
 function no_dongle_msgbox
 uiwait(msgbox(['No connection to the PIVlab-SimpleSync found.' sprintf('\n') 'Is the USB dongle connected?'],'modal'))
