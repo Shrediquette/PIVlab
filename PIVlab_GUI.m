@@ -2862,7 +2862,8 @@ if capturing==0
 							colormap(avail_maps{selected_index});
 						end
 						%adjust colormap steps
-						cmap = colormap(gca);
+						%cmap = colormap(gca);
+						cmap = colormap;
 						colormap_steps_list=get(handles.colormap_steps,'String');
 						colormap_steps_value=get(handles.colormap_steps,'Value');
 						colormap_steps=str2double(colormap_steps_list{colormap_steps_value});
