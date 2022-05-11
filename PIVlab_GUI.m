@@ -30,7 +30,7 @@ if isempty(fh)
 	%splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','on','handlevisibility','off');movegui(splashscreen,'center');drawnow;
 	disp(['-> Starting PIVlab ' version ' ...'])
 	disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
-	
+
 	margin=1.5;
 	panelwidth=37;
 	panelheighttools=12;
@@ -46,7 +46,7 @@ if isempty(fh)
 	put('quickvisible',1);
 	put('alreadydisplayed',0);
 	put('video_selection_done',0);
-	
+
 	%% check write access
 	try
 		temp=rand(3,3);
@@ -56,7 +56,7 @@ if isempty(fh)
 	catch
 		disp(['-> No write access in ' pwd '. PIVlab won''t work like this.'])
 	end
-	
+
 	%% Load defaults
 	try
 		psdfile=which('PIVlab_settings_default.mat');
@@ -92,14 +92,14 @@ if isempty(fh)
 	%%
 	generateUI
 	generateMenu
-	
+
 	%% Prepare axes
 	switchui('multip01');
 	axes1=axes('units','characters');
 	axis image;
 	set(gca,'ActivePositionProperty','outerposition');%,'Box','off','DataAspectRatioMode','auto','Layer','bottom','Units','normalized');
 	set(MainWindow, 'Name',['PIVlab ' retr('PIVver')])% ' by William Thielicke and Eize J. Stamhuis'])
-	
+
 	%%
 	Lena
 	%% Check Matlab version
@@ -171,7 +171,7 @@ if isempty(fh)
 	catch
 		disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
 	end
-	
+
 	%% Variable initialization
 	put ('toggler',0);
 	put('calu',1);
@@ -182,8 +182,8 @@ if isempty(fh)
 	put('subtr_u', 0);
 	put('subtr_v', 0);
 	put('displaywhat',1);%vectors
-	
-	
+
+
 	%% read current and last directory.....:
 	warning('off','all') %if the variables don't exist, an ugly warning is displayed
 	load('PIVlab_settings_default.mat','homedir');
@@ -216,7 +216,7 @@ if isempty(fh)
 	put('homedir',homedir);
 	put('pathname',pathname);
 	save('PIVlab_settings_default.mat','homedir','pathname','-append');
-	
+
 	%% Read and apply default settings
 	try
 		%XP Wu modification:
@@ -229,11 +229,11 @@ if isempty(fh)
 		disp('Could not load default settings. But this doesn''t really matter.')
 	end
 	%%
-		
+
 	%%
 	CheckUpdates
 	SetFullScreen
-	
+
 	displogo(1);drawnow;
 	set(MainWindow, 'Visible','on');
 else %Figure handle does already exist --> bring PIVlab to foreground.
@@ -313,7 +313,7 @@ if verLessThan('matlab','9.4') %r2018a
 	else
 		try
 			warning off
-			frame_h = get(handle(gcf),'JavaFrame'); %#ok<*JAVFM> 
+			frame_h = get(handle(gcf),'JavaFrame'); %#ok<*JAVFM>
 			set(frame_h,'Maximized',1);
 		catch
 		end
@@ -1933,7 +1933,7 @@ item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
 handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Select configuration:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_configtxt');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',{'PIVlab SimpleSync + pco.pixelfly usb' 'PIVlab SimpleSync + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
+handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',{'PIVlab SimpleSync + pco.pixelfly usb' 'PIVlab SimpleSync + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS' 'PIVlab LD-PS + Chronos'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.ac_comport = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'COM1'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_comport');
@@ -1998,13 +1998,16 @@ parentitem=get(handles.uipanelac_camsettings, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4)-0.25 parentitem(3)/4 1.5];
-handles.ac_calibBinning = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Binning','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_calibBinning_Callback,'Tag','ac_calibBinning','TooltipString','Select pixel binning');
+handles.ac_calibBinning = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Binning','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @ac_calibBinning_Callback,'Tag','ac_calibBinning','TooltipString','Select pixel binning');
 
 item=[parentitem(3)/4*1  item(2) parentitem(3)/4 1.5];
-handles.ac_calibROI = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','ROI','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_calibROI_Callback,'Tag','ac_calibROI','TooltipString','Select ROI in camera image');
+handles.ac_calibROI = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','ROI','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @ac_calibROI_Callback,'Tag','ac_calibROI','TooltipString','Select ROI in camera image');
 
 item=[parentitem(3)/4*2  item(2) parentitem(3)/4 1.5];
-handles.ac_lensctrl = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Lens','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_lensctrl_Callback,'Tag','ac_lensctrl','TooltipString','Control camera lens');
+handles.ac_lensctrl = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Lens','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @ac_lensctrl_Callback,'Tag','ac_lensctrl','TooltipString','Control camera lens');
+
+item=[parentitem(3)/4*3  item(2) parentitem(3)/4 1.5];
+handles.ac_chronosctrl = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Setup','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @ac_chronosctrl_Callback,'Tag','ac_chronosctrl','TooltipString','Setup camera');
 
 
 % Calib capture
@@ -2066,7 +2069,7 @@ try
 
 	set(handles.ac_config, 'value',last_selected_device);
 catch
-	
+
 end
 
 
@@ -2169,7 +2172,7 @@ else %no calibration performed yet
 		video_frame_selection=retr('video_frame_selection');
 		skip = video_frame_selection(2) - video_frame_selection(1);
 		delta_t = 1/(video_reader_object.FrameRate / skip)*1000;
-		
+
 		set(handles.time_inp,'String',num2str(delta_t))
 	end
 	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
@@ -2523,7 +2526,7 @@ if get(handles.bg_subtract,'Value')==1
 	else
 		bg_img = retr('bg_img_B');
 	end
-	
+
 	if isempty(bg_img) %checkbox is enabled, but no bg is present
 		set(handles.bg_subtract,'Value',0);
 	else
@@ -2589,7 +2592,7 @@ if get(handles.bg_subtract,'Value')==1
 					imagesource='from_video';
 				end
 				classimage=class(image1); %memorize the original image format (double, uint8 etc)
-				
+
 				if size(image1,3)>1
 					image1=rgb2gray(image1); %rgb2gray conserves the variable class (single, double, uint8, uint16)
 					image2=rgb2gray(image2);
@@ -2598,7 +2601,7 @@ if get(handles.bg_subtract,'Value')==1
 					colorimg=0;
 				end
 				counter=1;
-				
+
 				%convert all image types to double, ranging from 0...1
 				if strcmp(classimage,'double')==1 %double stays double
 					%do nothing
@@ -2700,13 +2703,13 @@ if get(handles.bg_subtract,'Value')==1
 						image2=image2+image_to_add2;
 					end
 				end %of for loop and image summing
-				
+
 				%divide the sum by the amount of summed images
 				image1_bg=image1/counter;
 				if sequencer==1 %not time-resolved
 					image2_bg=image2/counter;
 				end
-				
+
 				%Convert back to original image class, if not double anyway
 				if strcmp(classimage,'uint8')==1 %#ok<*STISA>
 					image1_bg=uint8(image1_bg*255);
@@ -2726,7 +2729,7 @@ if get(handles.bg_subtract,'Value')==1
 						image2_bg=uint16(image2_bg*65535);
 					end
 				end
-				
+
 				%make results accessible to the rest of the GUI:
 				put('bg_img_A',image1_bg);
 				if sequencer==1 %not time-resolved
@@ -2739,11 +2742,11 @@ if get(handles.bg_subtract,'Value')==1
 			else % user has checkbox enabled, but doesn't want to calculate the background...
 				set(handles.bg_subtract,'Value',0);
 			end
-			
+
 		else
 			%disp('BG exists')
 		end
-		
+
 	else
 		set(handles.bg_subtract,'Value',0);
 		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'])
@@ -2802,7 +2805,7 @@ if capturing==0
 			put('video_reader_object',VideoReader(filepath{1}));
 		end
 	end
-	
+
 	currentframe=2*floor(get(handles.fileselector, 'value'))-1;
 	%display derivatives if available and desired...
 	displaywhat=retr('displaywhat');
@@ -2818,7 +2821,7 @@ if capturing==0
 		end
 		xzoomlimit=retr('xzoomlimit');
 		yzoomlimit=retr('yzoomlimit');
-		
+
 		derived=retr('derived');
 		if isempty(derived)==0   %derivatives were calculated
 			%derived=retr('derived');
@@ -2839,7 +2842,7 @@ if capturing==0
 				%vectorcolor='g';
 				%end
 			else %displaywhat>1
-				
+
 				if size(derived,2)>=(currentframe+1)/2 && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
 					currentimage=derived{displaywhat-1,(currentframe+1)/2};
 					%is currentimage 3d? That would cause problems.-....
@@ -2901,7 +2904,7 @@ if capturing==0
 						posichoice = get(handles.colorbarpos,'String');
 						colochoice=get(handles.colorbarcolor,'String');
 						coloobj=colorbar(posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')},'HitTest','off');
-						
+
 						if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
 							axis image %needs to be called before changing colorbar labels
 							set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
@@ -2933,7 +2936,7 @@ if capturing==0
 		else %not in derivatives panel
 			%try
 			[currentimage,~]=get_img(selected);
-			
+
 			%{
             catch
             disp(['Error: ' filepath{selected} ' --> Image could not be found!']);
@@ -2955,7 +2958,7 @@ if capturing==0
 				catch
 				end
 			end
-			
+
 			colormap('gray');
 			vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
 			%vectorcolor='g';
@@ -2963,7 +2966,7 @@ if capturing==0
 		axis image;
 		set(gca,'ytick',[])
 		set(gca,'xtick',[])
-		
+
 		%% include axis tick labels. Doesnt work with exportfig.....?
 		%{
 		xticks('auto')
@@ -2981,7 +2984,7 @@ if capturing==0
 		set(gca,'xticklabel',num2cell(xticklabel_cal))
 		set(gca,'yticklabel',num2cell(yticklabel_cal))
 		%}
-		
+
 		filename=retr('filename');
 		ismean=retr('ismean');
 		if size(ismean,1)>=(currentframe+1)/2
@@ -2993,7 +2996,7 @@ if capturing==0
 		else
 			currentwasmean=0;
 		end
-		
+
 		if currentwasmean==1
 			set (handles.filenameshow,'BackgroundColor',[0.65 0.65 1]);
 		else
@@ -3036,8 +3039,8 @@ if capturing==0
 				hold off
 			end
 		end
-		
-		
+
+
 		if size(resultslist,2)>=(currentframe+1)/2 && numel(resultslist{1,(currentframe+1)/2})>0
 			x=resultslist{1,(currentframe+1)/2};
 			y=resultslist{2,(currentframe+1)/2};
@@ -3102,7 +3105,7 @@ if capturing==0
 				vecscale=str2num(get(handles.vectorscale,'string')); %#ok<*ST2NM>
 			end
 			hold on;
-			
+
 			vectorcolorintp=[str2double(get(handles.interpr,'string')) str2double(get(handles.interpg,'string')) str2double(get(handles.interpb,'string'))];
 			if vecskip==1
 				q=quiver(x(typevector==1),y(typevector==1),...
@@ -3149,9 +3152,9 @@ if capturing==0
 				contents = get(handles.streamlcolor,'String');
 				set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')});
 			end
-			
+
 			if verLessThan('matlab','8.4')
-				
+
 				set(q, 'ButtonDownFcn', @veclick, 'hittestarea', 'on');
 				set(q2, 'ButtonDownFcn', @veclick, 'hittestarea', 'on');
 			else
@@ -3161,7 +3164,7 @@ if capturing==0
 				set(q, 'ButtonDownFcn', @veclick, 'PickableParts', 'visible');
 				set(q2, 'ButtonDownFcn', @veclick, 'PickableParts', 'visible');
 			end
-			
+
 			if strncmp(get(handles.multip14, 'visible'), 'on',2) %statistics panel visible
 				update_Stats (x,y,u,v);
 			end
@@ -3187,7 +3190,7 @@ if capturing==0
 				end
 			end
 		end
-		
+
 		if isempty(xzoomlimit)==0
 			set(gca,'xlim',xzoomlimit)
 			set(gca,'ylim',yzoomlimit)
@@ -3325,12 +3328,12 @@ if typevector(info(1,1),info(1,2)) ~=0
 	else
 		set(handles.scalar_cp, 'String','N/A');
 	end
-	
+
 	hold on;
 	plot(x(info(1,1),info(1,2)),y(info(1,1),info(1,2)), 'ys', 'tag', 'infopoint','linewidth', 1.5, 'markersize', 20);
 	plot(x(info(1,1),info(1,2)),y(info(1,1),info(1,2)), 'yx', 'tag', 'infopoint','linewidth', 0.5, 'markersize', 20);
 	hold off;
-	
+
 end
 
 function toolsavailable(inpt)
@@ -3524,7 +3527,7 @@ if ~isequal(path,0)
 	end
 	put('xzoomlimit',[]);
 	put('yzoomlimit',[]);
-	
+
 	sequencer=retr('sequencer');
 	if sequencer==1
 		for i=1:size(path,1)
@@ -3598,10 +3601,10 @@ if ~isequal(path,0)
 		put('bg_img_B',[]);
 		set(handles.bg_subtract,'Value',0);
 		set(handles.fileselector, 'value',1);
-		
+
 		set(handles.minintens, 'string', 0);
 		set(handles.maxintens, 'string', 1);
-		
+
 		%Clear all things
 		clear_vel_limit_Callback %clear velocity limits
 		if old_img_size ~= 0%ROI should be cleared only when image size of loaded imgs is different from before...
@@ -3764,7 +3767,7 @@ handles=gethand;
 if get(hObject,'Value')==1
 	set(handles.fftmulti,'value',0)
 	set(handles.ensemble,'value',0)
-	
+
 	set(handles.uipanel42,'visible','off')
 	set(handles.CorrQuality,'visible','off')
 	set(handles.text914,'visible','off')
@@ -3772,7 +3775,7 @@ if get(hObject,'Value')==1
 	%set(handles.AnalyzeAll,'visible','on')
 	set(handles.AnalyzeSingle,'visible','on')
 	set(handles.Settings_Apply_current,'visible','on')
-	
+
 else
 	set(handles.dcc,'value',1)
 end
@@ -3830,7 +3833,7 @@ if isempty(resultslist)==0
 	calxy=retr('calxy');
 	calu=retr('calu');calv=retr('calv');
 	nrframes=size(resultslist,2);
-	
+
 	if size(resultslist,1)< 11
 		resultslist{11,nrframes}=[]; %make sure resultslist has cells for all params
 	end
@@ -3841,7 +3844,7 @@ if isempty(resultslist)==0
 	else
 		derived=cell(11,nrframes);
 	end
-	
+
 	if calxy==1 && (calu==1 ||calu==-1)
 		units='[px] respectively [px/frame]';
 	else
@@ -3873,10 +3876,10 @@ if isempty(resultslist)==0
 	if type==1
 		nrframes=1;
 	end
-	
-	
+
+
 	%hier unterscheiden:nur ein frame oder all?
-	
+
 	for i=1:nrframes
 		if type==2 %all frames
 			currentframe=i;
@@ -3884,7 +3887,7 @@ if isempty(resultslist)==0
 		[x_cal,y_cal]=calibrate_xy (resultslist{1,currentframe},resultslist{2,currentframe});
 		x{i,1}=x_cal;
 		y{i,1}=y_cal;
-		
+
 		u_original{i,1}=resultslist{3,currentframe}*calu;
 		v_original{i,1}=resultslist{4,currentframe}*calv;
 		typevector_original{i,1}=resultslist{5,currentframe};
@@ -3893,7 +3896,7 @@ if isempty(resultslist)==0
 		typevector_filtered{i,1}=resultslist{9,currentframe};
 		u_smoothed{i,1}=resultslist{10,currentframe}*calu;
 		v_smoothed{i,1}=resultslist{11,currentframe}*calv;
-		
+
 		vorticity{i,1}=derived{1,currentframe};
 		velocity_magnitude{i,1}=derived{2,currentframe};
 		u_component{i,1}=derived{3,currentframe};
@@ -3917,7 +3920,7 @@ if isempty(resultslist)==0
 		typevector_filtered=typevector_filtered{i,1};
 		u_smoothed=u_smoothed{i,1};
 		v_smoothed=v_smoothed{i,1};
-		
+
 		vorticity=vorticity{i,1};
 		velocity_magnitude=velocity_magnitude{i,1};
 		u_component=u_component{i,1};
@@ -3947,7 +3950,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	x=resultslist{1,currentframe};
 	y=resultslist{2,currentframe};
 	[x_cal,y_cal]=calibrate_xy (x,y);
-	
+
 	if size(resultslist,1)>6 %filtered exists
 		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
 			u=resultslist{10,currentframe};
@@ -4005,7 +4008,7 @@ if type==1 %ascii file
 			end
 		else
 			if get(handles.export_vort, 'Value') == 1  %alle derivatives exportieren, kalibriert
-				
+
 				header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'dcev [1]' delimiter 'simple shear [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]'];
 			else
 				header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
@@ -4062,7 +4065,7 @@ end
 if type==3 %paraview vtk PARAVIEW DATEN OHNE die ganzen derivatives.... Berechnet man doch eh direkt in Paraview.
 	u=u*calu-subtract_u;
 	v=v*calv-subtract_v;
-	
+
 	nr_of_elements=numel(x_cal);
 	fid = fopen(fullfile(PathName,FileName), 'w');
 	if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
@@ -4078,20 +4081,20 @@ if type==3 %paraview vtk PARAVIEW DATEN OHNE die ganzen derivatives.... Berechne
 	fprintf(fid, ['DIMENSIONS ' num2str(size(x_cal,1)) ' ' num2str(size(x_cal,2)) ' ' num2str(size(x_cal,3)) '\n']);
 	fprintf(fid, ['POINTS ' num2str(nr_of_elements) ' float\n']);
 	fclose(fid);
-	
+
 	%append binary x,y,z data
 	fid = fopen(fullfile(PathName,FileName), 'a');
 	fwrite(fid, [reshape(x_cal,1,nr_of_elements);  reshape(y_cal,1,nr_of_elements); reshape(y_cal,1,nr_of_elements)*0],'float','b');
-	
+
 	%append another ASCII sub header
 	fprintf(fid, ['\nPOINT_DATA ' num2str(nr_of_elements) '\n']);
 	fprintf(fid, 'VECTORS velocity_vectors float\n');
-	
+
 	%append binary u,v,w data
 	fwrite(fid, [reshape(u,1,nr_of_elements);  reshape(v,1,nr_of_elements); reshape(v,1,nr_of_elements)*0],'float','b');
-	
+
 	fclose(fid);
-	
+
 end %type3
 
 if type==4 %tecplot file
@@ -4117,11 +4120,11 @@ if type==4 %tecplot file
 	end
 	header4 = ['TITLE = "PIVlab frame: ' int2str(currentframe) '"'];
 	header6 = ['ZONE I=' int2str(size(x_cal,2)) ', J=' int2str(size(x_cal,1)) ', K=1, F=POINT, T="' int2str(currentframe) '"'];
-	
+
 	fid = fopen(fullfile(PathName,FileName), 'w');
 	fprintf(fid, [header1 '\r\n' header2 '\r\n' header3 '\r\n' header4 '\r\n' header5 '\r\n' header6 '\r\n']);
 	fclose(fid);
-	
+
 	if get(handles.export_vort_tec, 'Value') == 1 %sollen alle derivatives exportiert werden?
 		derivative_calc(currentframe,2,1); %vorticity
 		derivative_calc(currentframe,3,1); %magnitude
@@ -4162,7 +4165,7 @@ if type==4 %tecplot file
 		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1)];
 	end
 	wholeLOT=sortrows(wholeLOT,2);
-	
+
 	dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc');
 end %f√ºr mehrere Zones: einfach header6 nochmal appenden, dann whileLOT f√ºr den n√§chsten frame berechnen und appenden etc...
 % Dr√ºcken von "Save current": put('TecplotMultisave',0);Tecplotcallback.
@@ -4198,7 +4201,7 @@ if size(filepath,1) > 1 || retr('video_selection_done') == 1
 		end
 		put ('roirect',roirect);
 		dispROI
-		
+
 		set(handles.roi_hint, 'String', 'ROI active' , 'backgroundcolor', [0.5 1 0.5]);
 	else
 		text(50,50,'Invalid selection: Click and hold left mouse button to create a rectangle.','color','r','fontsize',8, 'BackgroundColor', 'k','tag','warning');
@@ -4378,10 +4381,10 @@ if size(filepath,1) > 1 || retr('video_selection_done') == 1
 	if selectionok==1
 		currentframe=2*floor(get(handles.fileselector, 'value'))-1;
 		%amount=size(filepath,1);
-		
+
 		maskiererx=retr('maskiererx');
 		maskierery=retr('maskierery');
-		
+
 		for i=1:size(strnum,2)
 			for j=1:size(maskiererx,1)
 				%keyboard
@@ -4390,7 +4393,7 @@ if size(filepath,1) > 1 || retr('video_selection_done') == 1
 				maskiererx{j,strnum(i)*2}=maskiererx{j,currentframe+1};
 				maskierery{j,strnum(i)*2-1}=maskierery{j,currentframe};
 				maskierery{j,strnum(i)*2}=maskierery{j,currentframe+1};
-				
+
 			end
 		end
 		put('maskiererx' ,maskiererx);
@@ -4468,17 +4471,17 @@ if size(filepath,1) > 1 %did the user load images?
 			A2(1:rowshalf,colshalf:end) = A(1:rowshalf,colshalf:end);%top right half
 			A3(rowshalf:end,1:colshalf) = A(rowshalf:end,1:colshalf); % lower left part
 			A4(rowshalf:end,colshalf:end) = A(rowshalf:end,colshalf:end); %lower right part
-			
-			
+
+
 			%A(:,round(size(A,2)/2))=0;
 			%A(round(size(A,1)/2),:)=0;
 			%B=A;
 			%B=im2bw(abs(A-B));
-			
-			
+
+
 			bwbound=[bwboundaries(A1); bwboundaries(A2) ; bwboundaries(A3) ; bwboundaries(A4)];
 			%bwbound=bwboundaries(A);
-			
+
 			importmaskx=cell(size(bwbound,1),1);
 			importmasky=importmaskx;
 			for i=1:size(bwbound,1)
@@ -4489,7 +4492,7 @@ if size(filepath,1) > 1 %did the user load images?
 			end
 			maskiererx=retr('maskiererx');
 			maskierery=retr('maskierery');
-			
+
 			currentframe=2*floor(get(handles.fileselector, 'value'))-1 + 2*(j-1);
 			if isempty(maskiererx)
 				maskiererx=cell(i,currentframe+1);
@@ -4499,19 +4502,19 @@ if size(filepath,1) > 1 %did the user load images?
 			maskiererx(1:i,currentframe+1)=importmaskx;
 			maskierery(1:i,currentframe)=importmasky;
 			maskierery(1:i,currentframe+1)=importmasky;
-			
-			
+
+
 			put('maskiererx' ,maskiererx);
 			put('maskierery' ,maskierery);
 			if j >= AnzahlMasks
 				set(handles.mask_hint, 'String', 'Mask active', 'backgroundcolor', [0.5 1 0.5]);
 				dispMASK(0.5)
 			end
-			
-			
+
+
 		end
 		set (handles.external_mask_progress, 'string', 'External mask(s) loaded.');
-		
+
 		%maskiererxundy abschneiden wenn l√§nger als anderes zeugs
 		if size(maskiererx,2)>size(filepath,1) %user loaded more masks than there are frames
 			maskiererx (:,size(filepath,1)+1:end) = [];
@@ -4539,11 +4542,11 @@ if size(filepath,1) >1 || retr('video_selection_done') == 1
 	highpsize=str2double(get(handles.highp_size, 'string'));
 	wienerwurst=get(handles.wienerwurst, 'value');
 	wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-	
+
 	Autolimit_Callback
 	minintens=str2double(get(handles.minintens, 'string'));
 	maxintens=str2double(get(handles.maxintens, 'string'));
-	
+
 	%clipthresh=str2double(get(handles.clip_thresh, 'string'));
 	roirect=retr('roirect');
 	if size (roirect,2)<4
@@ -4667,7 +4670,7 @@ if numel(filepath)>1
 	delete(findobj(gca,'tag','intareadispl'));
 	centre(1)= size_img(2); %y
 	centre(2)= size_img(1); %x
-	
+
 	intarea1=str2double(get(handles.intarea,'string'))/2;
 	x1=[centre(2)-intarea1 centre(2)+intarea1 centre(2)+intarea1 centre(2)-intarea1 centre(2)-intarea1];
 	y1=[centre(1)-intarea1 centre(1)-intarea1 centre(1)+intarea1 centre(1)+intarea1 centre(1)-intarea1];
@@ -4726,20 +4729,20 @@ if numel(filepath)>1
 		text (centre(2),centre(1)*4/3,['Warning: Interrogation area sizes should be' sprintf('\n') 'gradually decreasing from pass 1 to pass 4.'],'color','r','tag','intareadispl','HorizontalAlignment','center','verticalalignment','top','Fontsize',10,'Backgroundcolor','k') %#ok<*SPRINTFN>
 		sizeerror=0;
 	end
-	
+
 	roirect=retr('roirect');
-	
+
 	if isempty(roirect) == 0 %roi eingeschaltet
 		roirect=retr('roirect');
 		minisize=min([roirect(3) roirect(4)]);
 	else
 		minisize=min([size_img(1) size_img(2)]);
 	end
-	
+
 	if intarea1*2 *2 > minisize
 		text (centre(2),centre(1)*5/3,['Warning: Interrogation area of pass 1 is most likely too big.'],'color','r','tag','intareadispl','HorizontalAlignment','center','verticalalignment','top','Fontsize',10,'Backgroundcolor','k')
 	end
-	
+
 end
 
 function countparticles(~, ~, ~)
@@ -4788,7 +4791,7 @@ if ok==1
 				maxintens = stretcher(2);
 			end
 			B = PIVlab_preproc (B,[],clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-			
+
 			interrogationarea=round(min(size(A))/4);
 			if interrogationarea > 64
 				interrogationarea = 64;
@@ -4822,7 +4825,7 @@ if ok==1
 			uiwait(msgbox({'These are the recommendations for the size of the final interrogation area:';[''];['Based on the displacements: ' num2str(recommended1) ' pixels'];['Based on the particle count: ' num2str(recommended2) ' pixels'];['Based on practical experience: ' num2str(recommended3) ' pixels'];[''];'The settings are automatically updated with the median of the recommendation.'},'Suggestion for PIV settings','modal'));
 			set(handles.fftmulti,'Value', 1)
 			set(handles.ensemble,'Value', 1)
-			
+
 			set(handles.dcc,'Value', 0)
 			set (handles.intarea, 'String', recommendation*2); %two times the minimum recommendation
 			set (handles.step, 'String', recommendation);
@@ -4847,7 +4850,7 @@ if ok==1
 			step_Callback(handles.step)
 			dispinterrog
 			delete(findobj('tag','hint'));
-			
+
 		end
 	end
 	roirect=old_roirect;
@@ -4876,7 +4879,7 @@ try
 catch
 end
 if ok==1
-	
+
 	try
 		if get(handles.update_display_checkbox,'Value')==1
 			put('update_display',1);
@@ -4900,7 +4903,7 @@ if ok==1
 		if ismean(i,1)==1
 			filepath(i*2,:)=[];
 			filename(i*2,:)=[];
-			
+
 			filepath(i*2-1,:)=[];
 			filename(i*2-1,:)=[];
 			if size(maskiererx,2)>=i*2
@@ -4915,7 +4918,7 @@ if ok==1
 	put('filename',filename);
 	put('ismean',[]);
 	sliderrange
-	
+
 	clahe=get(handles.clahe_enable,'value');
 	highp=get(handles.enable_highpass,'value');
 	%clip=get(handles.enable_clip,'value');
@@ -4924,32 +4927,32 @@ if ok==1
 	highpsize=str2double(get(handles.highp_size, 'string'));
 	wienerwurst=get(handles.wienerwurst, 'value');
 	wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-	
+
 	%Autolimit_Callback
 	autolimit=get(handles.Autolimit, 'value');
 	minintens=str2double(get(handles.minintens, 'string'));
 	maxintens=str2double(get(handles.maxintens, 'string'));
 	%clipthresh=str2double(get(handles.clip_thresh, 'string'));
 	roirect=retr('roirect');
-	
+
 	interrogationarea=str2double(get(handles.intarea, 'string'));
 	step=str2double(get(handles.step, 'string'));
 	subpixfinder=get(handles.subpix,'value');
-	
+
 	int2=str2num(get(handles.edit50,'string'));
 	int3=str2num(get(handles.edit51,'string'));
 	int4=str2num(get(handles.edit52,'string'));
 	mask_auto = get(handles.mask_auto_box,'value');
 	[imdeform, repeat, do_pad] = CorrQuality;
-	
-	
+
+
 	if retr('video_selection_done')==0
 		num_frames_to_process = size(filepath,1);
 	else
 		video_frame_selection=retr('video_frame_selection');
 		num_frames_to_process = numel(video_frame_selection);
 	end
-	
+
 	if retr('parallel')==1 && retr('video_selection_done') == 1
 		disp('Parallel processing of video files not yet supported.')
 	end
@@ -5018,12 +5021,12 @@ if ok==1
 					close(hbar);
 					continue
 				end
-				
+
 				[~,~,ext] = fileparts(slicedfilepath1{i});
 				if strcmp(ext,'.b16')
 					currentimage1=f_readB16(slicedfilepath1{i});
 					currentimage2=f_readB16(slicedfilepath2{i});
-					
+
 				else
 					currentimage1=imread(slicedfilepath1{i});
 					currentimage2=imread(slicedfilepath2{i});
@@ -5037,15 +5040,15 @@ if ok==1
 						currentimage2 = currentimage2-bg_img_B;
 					end
 				end
-				
+
 				%get and save the image size (assuming that every image of a session has the same size)
-				
+
 				currentimage1(currentimage1<0)=0; %bg subtraction may yield negative
 				currentimage2(currentimage2<0)=0; %bg subtraction may yield negative
 				image1=currentimage1;
 				image2=currentimage2;
-				
-				
+
+
 				minintenst=minintens;
 				maxintenst=maxintens;
 				if autolimit == 1
@@ -5067,7 +5070,7 @@ if ok==1
 				end
 				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 				image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect); 
+				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect);
 				xlist{i}=x;
 				ylist{i}=y;
 				ulist{i}=u;
@@ -5106,12 +5109,12 @@ if ok==1
 					close(hbar);
 					continue
 				end
-				
+
 				[~,~,ext] = fileparts(slicedfilepath1{i});
 				if strcmp(ext,'.b16')
 					currentimage1=f_readB16(slicedfilepath1{i});
 					currentimage2=f_readB16(slicedfilepath2{i});
-					
+
 				else
 					currentimage1=imread(slicedfilepath1{i});
 					currentimage2=imread(slicedfilepath2{i});
@@ -5125,13 +5128,13 @@ if ok==1
 						currentimage2 = currentimage2-bg_img_B;
 					end
 				end
-				
+
 				%get and save the image size (assuming that every image of a session has the same size)
 				currentimage1(currentimage1<0)=0; %bg subtraction may yield negative
 				currentimage2(currentimage2<0)=0; %bg subtraction may yield negative
 				image1=currentimage1;
 				image2=currentimage2;
-				
+
 				minintenst=minintens;
 				maxintenst=maxintens;
 				if autolimit == 1
@@ -5327,7 +5330,7 @@ if ok==1
 				set(handles.totaltime,'string', ['Time left: ' sprintf('%2.2d', hrs) 'h ' sprintf('%2.2d', mins) 'm ' sprintf('%2.2d', secs) 's']);
 			end %cancel==0
 		end
-		
+
 		delete(findobj('tag', 'annoyingthing'));
 		set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
 		set(handles.totaltime, 'String',['Analysis time: ' num2str(round(toc*10)/10) ' s']);
@@ -5401,7 +5404,7 @@ if ok==1
 	highpsize=str2double(get(handles.highp_size, 'string'));
 	wienerwurst=get(handles.wienerwurst, 'value');
 	wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-	
+
 	Autolimit_Callback
 	minintens1=str2double(get(handles.minintens, 'string'));
 	maxintens1=str2double(get(handles.maxintens, 'string'));
@@ -5441,7 +5444,7 @@ if ok==1
 		video_reader_object = retr('video_reader_object');
 		[x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, video_reader_object ,video_frame_selection,bg_img_A,bg_img_B,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
 	end
-	
+
 	cancel = retr('cancel');
 	if isempty(cancel)==1 || cancel ~=1
 		%Fill all frames with the same result
@@ -5455,7 +5458,7 @@ if ok==1
             resultslist{6,filler}=[];
         end
 		%}
-		
+
 		%fill only first frame with results
 		resultslist{1,1}=x;
 		resultslist{2,1}=y;
@@ -5464,7 +5467,7 @@ if ok==1
 		resultslist{5,1}=typevector;
 		resultslist{6,1}=[];
 		resultslist{12,1}=correlation_map;
-		
+
 		put('resultslist',resultslist);
 		set(handles.fileselector, 'value', 1);
 		set(handles.progress, 'string' , ['Frame progress: 100%'])
@@ -5491,7 +5494,7 @@ if ok==1
 		set(handles.progress, 'string' , ['Frame progress: 100%'])
 		sliderdisp
 	end
-	
+
 	put('cancel',0);
 	toolsavailable(1);
 end
@@ -5586,7 +5589,7 @@ if ok==1
 			minintens = stretcher(1);
 			maxintens = stretcher(2);
 		end
-		
+
 		image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 		maskiererx=retr('maskiererx');
 		maskierery=retr('maskierery');
@@ -5638,7 +5641,7 @@ if ok==1
 			if get(handles.fftmulti,'Value')==1
 				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
 			end
-			
+
 		end
 		toolsavailable(1);
 		resultslist{1,(selected+1)/2}=x;
@@ -5667,7 +5670,7 @@ if ok==1
 		assignin('base','correlation_matrices',correlation_matrices);
 		sliderdisp
 	end
-	
+
 end
 
 function ok=checksettings
@@ -5756,7 +5759,7 @@ function read_settings (FileName,PathName)
 handles=gethand;
 try
 	load(fullfile(PathName,FileName));
-	
+
 	set(handles.clahe_enable,'value',clahe_enable);
 	set(handles.clahe_size,'string',clahe_size);
 	set(handles.enable_highpass,'value',enable_highpass);
@@ -5784,7 +5787,7 @@ try
 	set(handles.delimiter,'value',delimiter);%popup
 	set(handles.img_not_mask,'value',img_not_mask);
 	set(handles.autoscale_vec,'value',autoscale_vec);
-	
+
 	%set(handles.popupmenu16, 'value',imginterpol);
 	set(handles.dcc, 'value',dccmark);
 	set(handles.fftmulti, 'value',fftmark);
@@ -5812,7 +5815,7 @@ try
 	else
 		set(handles.edit52, 'enable','off')
 	end
-	
+
 	set(handles.edit50, 'string',pass2val);
 	set(handles.edit51, 'string',pass3val);
 	set(handles.edit52, 'string',pass4val);
@@ -5823,10 +5826,10 @@ try
 	set(handles.streamlamount, 'string',streamlamount);
 	set(handles.streamlcolor, 'value',streamlcolor);
 	set(handles.streamlwidth, 'value',streamlcolor);
-	
+
 	set(handles.realdist, 'string',realdist);
 	set(handles.time_inp, 'string',time_inp);
-	
+
 	set(handles.nthvect, 'string',nthvect);
 	set(handles.validr,'string',validr);
 	set(handles.validg,'string',validg);
@@ -5843,7 +5846,7 @@ try
 	if exist('offset_y_true','var') == 0
 		offset_y_true=0;
 	end
-	
+
 	try
 		put('points_offsetx',points_offsetx);
 		put('points_offsety',points_offsety);
@@ -5862,7 +5865,7 @@ try
 	put('calxy',calxy);
 	put('calu',calu);
 	put('calv',calv);
-	
+
 catch
 	disp('something went wrong during settings loading')
 end
@@ -6105,7 +6108,7 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 				v=v_backup;
 			end
 		end
-		
+
 		%problem: wenn nur ein frame analysiert, dann gibts probleme wenn display all frames in scatterplot an.
 		datau=reshape(u*calu,1,size(u,1)*size(u,2)*size(u,3));
 		datav=reshape(v*calv,1,size(v,1)*size(v,2)*size(v,3));
@@ -6129,13 +6132,13 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 			xlabel(gca, 'u velocity [m/s]', 'fontsize', 12)
 			ylabel(gca, 'v velocity [m/s]', 'fontsize', 12)
 		end
-		
+
 		grid on
 		%axis equal;
 		set (gca, 'tickdir', 'in');
 		%rangeu=nanmax(nanmax(nanmax(u*calu)))-nanmin(nanmin(nanmin(u*calu)));
 		%rangev=nanmax(nanmax(nanmax(v*calv)))-nanmin(nanmin(nanmin(v*calv)));
-		
+
 		%set(gca,'xlim',[nanmin(nanmin(nanmin(u*caluv)))-rangeu*0.15 nanmax(nanmax(nanmax(u*caluv)))+rangeu*0.15])
 		%set(gca,'ylim',[nanmin(nanmin(nanmin(v*caluv)))-rangev*0.15 nanmax(nanmax(nanmax(v*caluv)))+rangev*0.15])
 		%=range of data +- 15%
@@ -6227,7 +6230,7 @@ if ~isempty(resultslist)
 		typevector=resultslist(5,:);
 		typevector_original=resultslist(5,:);
 		manualdeletion=retr('manualdeletion');
-		
+
 		if numel(manualdeletion)>0
 			for i=1:size(u,2)
 				if size(manualdeletion,2)>=i
@@ -6254,7 +6257,7 @@ if ~isempty(resultslist)
 		do_notch_filter = get(handles.notch_filter, 'value');
 		notch_L_thresh=str2double(get(handles.notch_L_thresh,'String'));
 		notch_H_thresh=str2double(get(handles.notch_H_thresh,'String'));
-		
+
 		hbar = pivprogress(size(slicedfilepath1,2),handles.apply_filter_all);
 		if size(u,2)<num_frames_to_process-1 %If not all frames have been analyzed. Parfor loop crashes otherwise.
 			u(num_frames_to_process-1)={[]};
@@ -6300,7 +6303,7 @@ if ~isempty(resultslist)
 			end
 		end
 		close(hbar);
-		
+
 		%% 3D local median filtering test
 		%{
 		neigh_thresh=3;
@@ -6448,9 +6451,9 @@ if size(resultslist,2)>=frame
 		do_local_median = get(handles.loc_median, 'value');
 		%epsilon=str2double(get(handles.epsilon,'string'));
 		neigh_thresh=str2double(get(handles.loc_med_thresh,'string'));
-		
-		
-		
+
+
+
 		%run postprocessing function
 		if numel(velrect)>0
 			valid_vel(1)=velrect(1); %umin
@@ -6460,7 +6463,7 @@ if size(resultslist,2)>=frame
 		else
 			valid_vel=[];
 		end
-		
+
 		%image-based filtering
 		do_contrast_filter = get(handles.do_contrast_filter, 'value');
 		do_bright_filter = get(handles.do_bright_filter, 'value');
@@ -6471,28 +6474,28 @@ if size(resultslist,2)>=frame
 			y=resultslist{2,frame};
 			contrast_filter_thresh=str2double(get(handles.contrast_filter_thresh, 'String'));
 			bright_filter_thresh=str2double(get(handles.bright_filter_thresh, 'String'));
-			
+
 			[A,rawimageA]=get_img(selected);
 			[B,rawimageB]=get_img(selected+1);
 			[u,v,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
 		end
-		
+
 		%correlation filter
 		do_corr2_filter = get(handles.do_corr2_filter, 'value');
 		if do_corr2_filter == 1
 			corr_filter_thresh=str2double(get(handles.corr_filter_thresh,'String'));
 			[u,v] = PIVlab_correlation_filter (u,v,corr_filter_thresh,resultslist{12,frame});
 		end
-		
+
 		%Notch velocity magnitude filter
 		do_notch_filter = get(handles.notch_filter, 'value');
 		if do_notch_filter == 1
 			[u,v] = PIVlab_notch_filter (u,v,calu,calv,str2double(get(handles.notch_L_thresh,'String')),str2double(get(handles.notch_H_thresh,'String')));
 		end
-		
+
 		%vector-based filtering
 		[u,v] = PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
-		
+
 		typevector(isnan(u))=2;
 		typevector(isnan(v))=2;
 		typevector(typevector_original==0)=0; %restores typevector for mask
@@ -6529,7 +6532,7 @@ if size(resultslist,2)>=frame %2nd dimesnion = frame
 			end
 		end
 	end
-	
+
 	if numel(u)>0
 		delete(findobj(gca,'tag','manualdot'));
 		text(50,10,'Right mouse button exits manual validation mode.','color','g','fontsize',8, 'BackgroundColor', 'k', 'tag', 'hint')
@@ -6551,10 +6554,10 @@ if size(resultslist,2)>=frame %2nd dimesnion = frame
 				idx=size(framemanualdeletion,1);
 				%manualdeletion(idx+1,1)=imagey(1,1);
 				%manualdeletion(idx+1,2)=imagex(1,1);
-				
+
 				framemanualdeletion(idx+1,1)=imagey(1,1);
 				framemanualdeletion(idx+1,2)=imagex(1,1);
-				
+
 				hold on;
 				plot (x(framemanualdeletion(idx+1,1),framemanualdeletion(idx+1,2)),y(framemanualdeletion(idx+1,1),framemanualdeletion(idx+1,2)), 'yo', 'markerfacecolor', 'r', 'markersize', 10,'tag','manualdot')
 				hold off;
@@ -6562,7 +6565,7 @@ if size(resultslist,2)>=frame %2nd dimesnion = frame
 		end
 		manualdeletion{frame}=framemanualdeletion;
 		put('manualdeletion',manualdeletion);
-		
+
 		delete(findobj(gca,'Type','text','color','r'));
 		delete(findobj(gca,'tag','hint'));
 		text(50,50,'Result will be shown after applying vector validation','color','r','fontsize',10, 'fontweight','bold', 'BackgroundColor', 'k')
@@ -6592,7 +6595,7 @@ if size(filepath,1) >1 || numel(caliimg)>0 || retr('video_selection_done') == 1
 		for j=1:i
 			text(xposition(j)+10,yposition(j)+10, ['x:' num2str(round(xposition(j)*10)/10) sprintf('\n') 'y:' num2str(round(yposition(j)*10)/10) ],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'caliline')
 		end
-		
+
 		put('pointscali',[xposition' yposition']);
 	end
 	text(mean(xposition),mean(yposition), ['s = ' num2str(round((sqrt((xposition(1)-xposition(2))^2+(yposition(1)-yposition(2))^2))*100)/100) ' px'],'color','k','fontsize',7, 'BackgroundColor', 'r', 'tag', 'caliline','horizontalalignment','center')
@@ -6641,14 +6644,14 @@ if numel(pointscali)>0
 	else %no offsets applied
 		put('offset_y_true',0);
 	end
-	
+
 	calxy=retr('calxy');
 	calu=retr('calu');calv=retr('calv');
 	offset_x_true = retr('offset_x_true');
 	offset_y_true = retr('offset_y_true');
 	set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(calu*100000)/100000) ' m/s' sprintf('\n') 'x offset: ' round(num2str(offset_x_true)*1000)/1000 ' m' sprintf('\n') 'y offset: ' round(num2str(offset_y_true)*1000)/1000 ' m'],  'backgroundcolor', [0.5 1 0.5]);
 	%sliderdisp
-	
+
 else %no calibration performed yet
 	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
 	set(handles.x_axis_direction,'value',1);
@@ -6699,7 +6702,7 @@ if get(handles.optimize_calib_img,'value')==1
 	if numberoftiles2 < 2
 		numberoftiles2=2;
 	end
-	
+
 	if size(caliimg,3) == 1
 		caliimg=adapthisteq(imadjust(caliimg),'NumTiles',[numberoftiles1 numberoftiles2],'clipLimit',0.01);
 	else
@@ -6758,7 +6761,7 @@ if isempty(resultslist)==0
 	else
 		derived=cell(11,nrframes);
 	end
-	
+
 	if calxy==1 && (calu==1 ||calu==-1)
 		units='[px] respectively [px/frame]';
 	else
@@ -6788,7 +6791,7 @@ if isempty(resultslist)==0
 	LIC=vorticity;
 	vectorangle=vorticity;
 	correlation_map=vorticity;
-	
+
 	for i=1:nrframes
 		[x_cal,y_cal]=calibrate_xy (resultslist{1,i},resultslist{2,i});
 		x{i,1}=x_cal;
@@ -6801,7 +6804,7 @@ if isempty(resultslist)==0
 		typevector_filtered{i,1}=resultslist{9,i};
 		u_smoothed{i,1}=resultslist{10,i}*calu;
 		v_smoothed{i,1}=resultslist{11,i}*calv;
-		
+
 		vorticity{i,1}=derived{1,i};
 		velocity_magnitude{i,1}=derived{2,i};
 		u_component{i,1}=derived{3,i};
@@ -6814,7 +6817,7 @@ if isempty(resultslist)==0
 		vectorangle{i,1}=derived{10,i};
 		correlation_map{i,1}=derived{11,i};
 	end
-	
+
 	assignin('base','x',x);
 	assignin('base','y',y);
 	assignin('base','u_original',u_original);
@@ -6825,9 +6828,9 @@ if isempty(resultslist)==0
 	assignin('base','typevector_filtered',typevector_filtered);
 	assignin('base','u_smoothed',u_smoothed);
 	assignin('base','v_smoothed',v_smoothed);
-	
+
 	assignin('base','vorticity',vorticity);
-	
+
 	assignin('base','velocity_magnitude',velocity_magnitude);
 	assignin('base','u_component',u_component);
 	assignin('base','v_component',v_component);
@@ -6838,13 +6841,13 @@ if isempty(resultslist)==0
 	assignin('base','LIC',LIC);
 	assignin('base','vectorangle',vectorangle);
 	assignin('base','correlation_map',correlation_map);
-	
+
 	assignin('base','calxy',calxy);
 	assignin('base','calu',calu);
 	assignin('base','calv',calv);
 	assignin('base','units',units);
-	
-	
+
+
 	clc
 	disp('EXPLANATIONS:')
 	disp(' ')
@@ -6941,7 +6944,7 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 			resultslist{7, frame} = u;
 			resultslist{8, frame} = v;
 			resultslist{9, frame} = typevector;
-			
+
 		end
 	else
 		if isempty(strfind(get(handles.apply_deriv_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.ascii_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.tecplot_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.save_mat_all,'string'), 'Please'))==1%not in batch
@@ -6957,14 +6960,14 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 	if get(handles.smooth, 'Value') == 1
 		smoothfactor=floor(get(handles.smoothstr, 'Value'));
 		try
-			
+
 			u = smoothn(u,smoothfactor/10); %not supported in prehistoric Matlab versions like the one I have to use :'-(
 			v = smoothn(v,smoothfactor/10); %not supported in prehistoric Matlab versions like the one I have to use :'-(
 			%clc
 			%disp ('Using smoothn.m from Damien Garcia for data smoothing.')
 			%disp (['Input smoothing parameter S for smoothn is: ' num2str(smoothfactor/10)])
 			%disp ('see the documentation here: https://de.mathworks.com/matlabcentral/fileexchange/25634-smoothn')
-			
+
 		catch
 			h=fspecial('gaussian',smoothfactor+2,(smoothfactor+2)/7);
 			u=imfilter(u,h,'replicate');
@@ -7042,13 +7045,13 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 			disp('This operation is not supported in your Matlab version. Sorry...');
 		end
 		%disp('angle')
-		
+
 	end
 	if deriv==12
 		derived{11,frame}=resultslist{12,frame}; % correlation map
 		%disp('corrmap')
 	end
-	
+
 	put('subtr_u', subtr_u);
 	put('subtr_v', subtr_v);
 	put('resultslist', resultslist);
@@ -7115,7 +7118,7 @@ try
 	delete(findobj('tag', 'waitplease'));
 catch
 	h=errordlg(['Could not run the LIC tool.' sprintf('\n') 'Probably the tool is not compiled correctly.' sprintf('\n')  'Please execute the following command in Matlab:' sprintf('\n') sprintf('\n') '     mex fastLICFunction.c     ' sprintf('\n') sprintf('\n') 'Then try again.'],'Error','on');
-	
+
 	uiwait(h);
 	out=zeros(size(vx));
 end
@@ -7494,7 +7497,7 @@ if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 	set (handles.deltax, 'String', [num2str(deltax*calxy) ' [px]']);
 	set (handles.deltay, 'String', [num2str(deltay*calxy) ' [px]']);
 	set (handles.length, 'String', [num2str(length*calxy) ' [px]']);
-	
+
 else
 	set (handles.deltax, 'String', [num2str(deltax*calxy) ' [m]']);
 	set (handles.deltay, 'String', [num2str(deltay*calxy) ' [m]']);
@@ -7657,7 +7660,7 @@ for i=startfr:endfr
 					wholeLOT=[wholeLOT;[linspace(z,z,size(c,2))' distance(z,:)' cx(z,:)' cy(z,:)' c(z,:)']]; %anders.... untereinander
 				end
 			else
-				
+
 				if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 					header=['Distance on line [px], x-coordinate [px], y-coordinate [px], ' current];
 				else
@@ -7703,12 +7706,12 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 				derivative_calc(currentframe,extractwhat+1,0);
 				derived=retr('derived');
 				maptoget=derived{extractwhat,currentframe};
-				
+
 				maptoget=rescale_maps_nan(maptoget,0);
 				[cx, cy, c] = improfile(maptoget,xposition,yposition,round(nrpoints),'bicubic');
-				
+
 				distance=linspace(0,length,size(c,1))';
-				
+
 			case {9,10}
 				% auf stelle 9 steht vector angle. Bei derivatives ist der aber auf platz 11. daher zwei dazu
 				%auf stelle 10 steht correlation coeff, bei derivatives auf
@@ -7716,10 +7719,10 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 				derivative_calc(currentframe,extractwhat+2,0);
 				derived=retr('derived');
 				maptoget=derived{extractwhat+1,currentframe};
-				
+
 				maptoget=rescale_maps_nan(maptoget,0);
 				[cx, cy, c] = improfile(maptoget,xposition,yposition,round(nrpoints),'bicubic');
-				
+
 				distance=linspace(0,length,size(c,1))';
 			case 11 %tangent
 				if size(xposition,1)<=1 %user did not choose circle series
@@ -7750,10 +7753,10 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 					calu=retr('calu');calv=retr('calv');
 					u=u*calu-retr('subtr_u');
 					v=v*calv-retr('subtr_v');
-					
+
 					u=rescale_maps_nan(u,0);
 					v=rescale_maps_nan(v,0);
-					
+
 					[cx, cy, cu] = improfile(u,xposition,yposition,round(nrpoints),'bicubic');
 					cv = improfile(v,xposition,yposition,round(nrpoints),'bicubic');
 					cx=cx';
@@ -7837,7 +7840,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 					if max_x>size(u,2)
 						max_x=size(u,2);
 					end
-					
+
 					uc=u(min_y:max_y,min_x:max_x);
 					vc=v(min_y:max_y,min_x:max_x);
 					for m=1:30
@@ -7873,7 +7876,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 						distance(m,:)=linspace(0,length(m),size(cu,2))'; %in pixeln...
 					end
 				end
-				
+
 		end
 		if size(xposition,1)<=1 %user did not choose circle series
 			h=figure;
@@ -7884,40 +7887,40 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			current=current{extractwhat};
 			set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
 			calxy=retr('calxy');
-			
+
 			%removing nans for integral!
 			distance2=distance(~isnan(c));
 			c2=c(~isnan(c));
-			
+
 			integral=trapz(distance2*calxy,c2);
 			h2=plot(distance*calxy,c);
-			
+
 			%get units
 			if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 				distunit='px^2';
 			else
 				distunit='m^2';
 			end
-			
+
 			unitpar=get(handles.extraction_choice,'string');
 			unitpar=unitpar{get(handles.extraction_choice,'value')};
 			unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
-			
+
 			%text(0+0.05*max(distance*calxy),min(c)+0.05*max(c),['Integral = ' num2str(integral) ' [' unitpar '*' distunit ']'], 'BackgroundColor', 'w','fontsize',7)
 			set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-			
-			
+
+
 			if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 				distunit_2=' [px]';
 			else
 				distunit_2=' [m]';
 			end
-			
+
 			currentstripped=current(1:strfind(current,'[')-1);
-			
+
 			%modified units...
 			xlabel(['Distance on line' distunit_2 sprintf('\n') 'Integral of ' currentstripped ' = ' num2str(integral) ' [' unitpar '*' distunit_2 ']']);
-			
+
 			ylabel(current);
 			put('distance',distance*calxy);
 			put('c',c);
@@ -7971,16 +7974,16 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			hold on;
 			scattergroup1=scatter(1:30, integral, 80, 'ko');
 			hold off;
-			
+
 			if verLessThan('matlab','8.4')
 				set(scattergroup1, 'ButtonDownFcn', @hitcircle, 'hittestarea', 'off');
 			else
 				% >R2014a
 				set(scattergroup1, 'ButtonDownFcn', @hitcircle, 'pickableparts', 'visible');
 			end
-			
-			
-			
+
+
+
 			title('Click the points of the graph to highlight it''s corresponding circle.')
 			set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
 			xlabel('circle series nr. (circle with max. circulation highlighted in blue)');
@@ -8085,10 +8088,10 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			typevector=resultslist{5,currentframe};
 		end
 	end
-	
+
 	u(typevector==0)=nan;
 	v(typevector==0)=nan;
-	
+
 	calu=retr('calu');calv=retr('calv');
 	calxy=retr('calxy');
 	x=reshape(x,size(x,1)*size(x,2),1);
@@ -8172,7 +8175,7 @@ switch flow_sim
 		zaeh=1;
 		t=str2double(get(handles.oseen_time,'string'));
 		r=r/100;
-		
+
 		%uo wird im zwentrum NaN!!
 		uo=(v0./(2*pi*r)).*(1-exp(-r.^2/(4*zaeh*t)));
 		uo(isnan(uo))=0;
@@ -8194,7 +8197,7 @@ switch flow_sim
 		v(1:str2double(get(handles.img_sizey,'string')),1:str2double(get(handles.img_sizex,'string')))=str2double(get(handles.shiftdisplacement,'string'));
 	case 4 % rotation
 		[v,u] = meshgrid(-(str2double(get(handles.img_sizex,'string')))/2:1:(str2double(get(handles.img_sizex,'string')))/2-1,-(str2double(get(handles.img_sizey,'string')))/2:1:(str2double(get(handles.img_sizey,'string')))/2-1);
-		
+
 		u=u/max(max(u));
 		v=-v/max(max(v));
 		u=u*str2double(get(handles.rotationdislacement,'string'));
@@ -8590,15 +8593,15 @@ else
 	end
 	sliderrange
 	handles=gethand;
-	
+
 	set(handles.clahe_enable,'value',retr('clahe_enable'));
 	set(handles.clahe_size,'string',retr('clahe_size'));
 	set(handles.enable_highpass,'value',retr('enable_highpass'));
 	set(handles.highp_size,'string',retr('highp_size'));
-	
+
 	set(handles.wienerwurst,'value',retr('wienerwurst'));
 	set(handles.wienerwurstsize,'string',retr('wienerwurstsize'));
-	
+
 	%set(handles.enable_clip,'value',retr('enable_clip'));
 	%set(handles.clip_thresh,'string',retr('clip_thresh'));
 	set(handles.enable_intenscap,'value',retr('enable_intenscap'));
@@ -8610,7 +8613,7 @@ else
 	set(handles.loc_median,'value',retr('loc_median'));
 	set(handles.loc_med_thresh,'string',retr('loc_med_thresh'));
 	set(handles.interpol_missing,'value',retr('interpol_missing'));
-	
+
 	set(handles.vectorscale,'string',retr('vectorscale'));
 	set(handles.colormap_choice,'value',retr('colormap_choice')); %popup
 	set(handles.colormap_steps,'value',retr('colormap_steps'));
@@ -8620,18 +8623,18 @@ else
 	set(handles.delimiter,'value',retr('delimiter'));%popup
 	set(handles.img_not_mask,'value',retr('img_not_mask'));
 	set(handles.autoscale_vec,'value',retr('autoscale_vec'));
-	
+
 	set(handles.dcc, 'value',vars.dccmark);
 	set(handles.fftmulti, 'value',vars.fftmark);
-	
-	
+
+
 	try
 		set(handles.ensemble, 'value',vars.ensemblemark);
 	catch
 		vars.ensemblemark=0;
 	end
-	
-	
+
+
 	if vars.fftmark==1 || vars.ensemblemark ==1
 		set (handles.uipanel42,'visible','on')
 	else
@@ -8640,7 +8643,7 @@ else
 	set(handles.checkbox26, 'value',vars.pass2);
 	set(handles.checkbox27, 'value',vars.pass3);
 	set(handles.checkbox28, 'value',vars.pass4);
-	
+
 	if vars.pass2 == 1
 		set(handles.edit50, 'enable','on')
 	else
@@ -8666,7 +8669,7 @@ else
 	set(handles.streamlamount, 'string',vars.streamlamount);
 	set(handles.streamlcolor, 'value',vars.streamlcolor);
 	set(handles.streamlwidth, 'value',vars.streamlcolor);
-	
+
 	try
 		%neu v1.5:
 		set(handles.mask_auto_box,'value',vars.mask_auto_box);
@@ -8683,18 +8686,18 @@ else
 		set(handles.interpol_missing2,'value',retr('interpol_missing'));
 	catch
 	end
-	
+
 	try %neu 2.42
 		set (handles.x_axis_direction,'value',vars.x_axis_direction);
 		set (handles.y_axis_direction,'value',vars.y_axis_direction);
-		
+
 		set(handles.contrast_filter_thresh,'string',vars.contrast_filter_thresh);
 		set(handles.bright_filter_thresh,'string',vars.bright_filter_thresh);
 		set(handles.do_bright_filter,'Value',vars.do_bright_filter);
 		set(handles.do_contrast_filter,'Value',vars.do_contrast_filter);
 	catch
 	end
-	
+
 	try
 		%neu v2.54
 		set(handles.do_corr2_filter,'value',vars.do_corr2_filter);
@@ -8705,7 +8708,7 @@ else
 	catch
 		disp('corr filter / notch settings');
 	end
-	
+
 	try
 		if vars.velrect(1,3)~=0 && vars.velrect(1,4)~=0
 			put('velrect', vars.velrect);
@@ -8713,11 +8716,11 @@ else
 		end
 	catch
 	end
-	
+
 	try
 		set(handles.realdist, 'String',vars.realdist_string);
 		set(handles.time_inp, 'String',vars.time_inp_string);
-		
+
 		if isempty(vars.pointscali)==0
 			handles=gethand;
 			calu=retr('calu');calv=retr('calv');
@@ -8737,7 +8740,7 @@ else
 	catch
 		disp('...')
 	end
-	
+
 	try
 		if ~isempty(vars.bg_img_A)
 			set(handles.bg_subtract,'Value',1);
@@ -8747,7 +8750,7 @@ else
 	catch
 		disp('Could not set bg checkbox')
 	end
-	
+
 	%neu v2.52
 	try
 		set (handles.repeat_last,'Value',vars.repeat_last);
@@ -8756,8 +8759,8 @@ else
 	catch
 		disp('repeat_last didnt work4')
 	end
-	
-	
+
+
 	%reset zoom
 	set(handles.panon,'Value',0);
 	set(handles.zoomon,'Value',0);
@@ -8852,8 +8855,8 @@ if formattype==1
 	end
 	put('imgsavepath',pathname );
 	compr=get(handles.usecompr,'value');
-	
-	
+
+
 	if verLessThan('matlab','8.4')
 		if compr==0
 			compr='none';
@@ -8871,7 +8874,7 @@ if formattype==1
 		aviobj.FrameRate = str2double(get(handles.fps_setting,'string'));
 		open(aviobj);
 	end
-	
+
 	for i=startframe:endframe
 		set(handles.fileselector, 'value',i)
 		sliderdisp
@@ -8886,18 +8889,20 @@ if formattype==1
 		axesObject2=copyobj(hgca,newFig);
 		set(axesObject2,'Units',axes_units);
 		set(axesObject2,'Position',[15 5 axes_pos(3) axes_pos(4)]);
+
 		colormap(colo);
-		
-		
-		
+
 		if get(handles.displ_colorbar,'value')==1
 			name=get(handles.derivchoice,'string');
 			posichoice = get(handles.colorbarpos,'String');
 			colochoice=get(handles.colorbarcolor,'String');
 			coloobj=colorbar(posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')},'HitTest','off');
-			
+
 			if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
 				axis image
+				%WITH AXIS IMAGE; THE CLIPPING DOESNT WORK ANYMORE:
+				%https://de.mathworks.com/matlabcentral/answers/164191-clipping-the-quiver-plot#answer_748078
+				%axis equal geht, dann evtl ydir reversen manuell oder so....
 				set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
 				ylabel(coloobj,name{retr('displaywhat')},'fontsize',9,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
 			end
@@ -8942,7 +8947,7 @@ elseif formattype ==2 || formattype==3 || formattype==4 || formattype==5
 			reso=1;
 		end
 	end
-	
+
 	for i=startframe:endframe
 		set(handles.fileselector, 'value',i)
 		sliderdisp
@@ -8963,7 +8968,7 @@ elseif formattype ==2 || formattype==3 || formattype==4 || formattype==5
 			name=get(handles.derivchoice,'string');
 			posichoice = get(handles.colorbarpos,'String');
 			colochoice=get(handles.colorbarcolor,'String');
-			coloobj=colorbar(posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')},'HitTest','off');	
+			coloobj=colorbar(posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')},'HitTest','off');
 			if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
 				axis image
 				set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
@@ -8991,7 +8996,7 @@ elseif formattype ==2 || formattype==3 || formattype==4 || formattype==5
 			pos = get(f,'Position');
 			set(f,'PaperPositionMode','auto','PaperUnits','inches','PaperPosition',[0,0,pos(3),pos(4)],'PaperSize',[pos(3), pos(4)])
 			exportfig(newFig,fullfile(pathname,newfilename),'format','pdf','preview','tiff','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16);
-			
+
 		end
 		close(newFig)
 		if formattype==2
@@ -9043,7 +9048,7 @@ else
 			startfr=findcontent;
 		end
 	end
-	
+
 	endfr=size(resultslist,2);
 end
 selected=0;
@@ -9053,7 +9058,7 @@ for i=startfr:endfr
 	set(handles.fileselector, 'value',i)
 	%sliderdisp
 	currentframe=floor(get(handles.fileselector, 'value'));
-	
+
 	if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		if areaoperation==1
 			%area mean value
@@ -9070,7 +9075,7 @@ for i=startfr:endfr
 			[currentimage,~]=get_img(2*currentframe-1);
 			sizeold=size(currentimage,1);
 			sizenew=size(x,1);
-			
+
 			%{
             extractwhat9 ist vectorangle
             extractwhat10 ist correlation_map
@@ -9080,7 +9085,7 @@ for i=startfr:endfr
             derived10 ist vectorangle
             derived11 ist correlation map
 			%}
-			
+
 			if extractwhat==9 || extractwhat==10
 				maptoget=derived{extractwhat+1,currentframe};
 			else
@@ -9116,8 +9121,8 @@ for i=startfr:endfr
 				unitpar=get(handles.area_para_select,'string');
 				unitpar=unitpar{get(handles.area_para_select,'value')};
 				unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
-				
-				
+
+
 				text(min(ximask),mean(yimask), ['area mean value = ' num2str(average) ' [' unitpar ']'], 'BackgroundColor', 'w','tag','areaint');
 				areaoutput=average;
 				varis='[mean]';
@@ -9140,7 +9145,7 @@ for i=startfr:endfr
 				maptoget=derived{extractwhat,currentframe};
 			end
 			maptoget=rescale_maps_nan(maptoget,0);
-			
+
 			calxy=retr('calxy');
 			[currentimage,~]=get_img(2*currentframe-1);
 			sizeold=size(currentimage,1);
@@ -9169,19 +9174,19 @@ for i=startfr:endfr
 				plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
 				plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
 				hold off;
-				
+
 				%get units
 				if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 					distunit='px^2';
 				else
 					distunit='m^2';
 				end
-				
+
 				unitpar=get(handles.area_para_select,'string');
 				unitpar=unitpar{get(handles.area_para_select,'value')};
 				unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
-				
-				
+
+
 				text(min(ximask),mean(yimask), ['area integral = ' num2str(integral) ' [' unitpar '*' distunit ']'], 'BackgroundColor', 'w','tag','areaint');
 				areaoutput=integral;
 				varis='[integral]';
@@ -9217,15 +9222,15 @@ for i=startfr:endfr
 				plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
 				plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
 				hold off;
-				
+
 				%get units
 				if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 					distunit='px^2';
 				else
 					distunit='m^2';
 				end
-				
-				
+
+
 				text(min(ximask),mean(yimask), ['area = ' num2str(summe) ' [' distunit ']'], 'BackgroundColor', 'w','tag','areaint');
 				areaoutput=summe;
 				varis='[area]';
@@ -9256,7 +9261,7 @@ for i=startfr:endfr
 				u=u*calu-retr('subtr_u');
 				v=v*calv-retr('subtr_v');
 				calxy=retr('calxy');
-				
+
 				extractwhat=get(handles.area_para_select,'Value');
 				if extractwhat==9 || extractwhat==10
 					derivative_calc(currentframe,extractwhat+2,0);
@@ -9264,7 +9269,7 @@ for i=startfr:endfr
 					derivative_calc(currentframe,extractwhat+1,0);
 				end
 				derived=retr('derived');
-				
+
 				if extractwhat==9 || extractwhat==10
 					currentimage=derived{extractwhat+1,currentframe};
 				else
@@ -9274,9 +9279,9 @@ for i=startfr:endfr
 				hgui=getappdata(0,'hgui');
 				figure(hgui);
 				sliderdisp
-				
+
 				delete(findobj('tag','vortarea'));
-				
+
 				%draw ellipse
 				if selected==0
 					for i=1:5
@@ -9312,17 +9317,17 @@ for i=startfr:endfr
 					ra=sqrt((xellip(4)-xellip(5))^2+(yellip(4)-yellip(5))^2)/2;
 					ra=sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)/2;
 					rb=sqrt((xellip(4)-xellip(5))^2+(yellip(4)-yellip(5))^2)/2;
-					
+
 					celllength=1*calxy;
 					%celllength=(x(1,2)-x(1,1))*calxy; %size of one cell
 					cellarea=celllength^2; %area of one cell
 					integralindex=0;
-					
+
 					if get(handles.usethreshold,'value')==1
 						%sign=currentimage(round(yellip(1)),round(xellip(1)));
 						condition=get(handles.smallerlarger, 'value'); %1 is larger, 2 is smaller
 						thresholdareavalue=str2num(get(handles.thresholdarea, 'string'));
-						
+
 						if condition==1
 							currentimage(currentimage>thresholdareavalue)=nan;
 						else
@@ -9355,7 +9360,7 @@ for i=startfr:endfr
 						BW = roipoly(currentimage,outputx,outputy);
 						ra_all(integralindex)=ra+incr;
 						rb_all(integralindex)=rb+incr;
-						
+
 						integral=0;
 						%for i=1:size(u,1)
 						for i=1:size(currentimage,1)
@@ -9378,7 +9383,7 @@ for i=startfr:endfr
 					h2=figure;
 					%plot(integralseries)
 					set(h2, 'tag', 'vortarea');
-					
+
 					plot (1:size(integralseries,2), integralseries);
 					hold on;
 					scattergroup1=scatter(1:size(integralseries,2), integralseries, 80, 'ko');
@@ -9389,31 +9394,31 @@ for i=startfr:endfr
 						% >R2014a
 						set(scattergroup1, 'ButtonDownFcn', @hitcircle2, 'pickableparts', 'visible');
 					end
-					
+
 					title('Click the points of the graph to highlight it''s corresponding circle.')
 					put('integralseries',integralseries);
 					put ('hellipse',h2);
 					screensize=get( 0, 'ScreenSize' );
 					rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
 					set(h2,'position', rect);
-					
+
 					extractwhat=get(handles.area_para_select,'Value');
 					current=get(handles.area_para_select,'string');
 					current=current{extractwhat};
 					set(h2,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ' area integral series, frame ' num2str(currentframe)]);
 					set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
 					xlabel('Ellipse series nr.');
-					
+
 					if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 						units='px^2';
 					else
 						units='m^2';
 					end
-					
+
 					current_2=current(1:strfind(current, '[')-1);
 					current_3=current(strfind(current, '[')+1:end-1);
-					
-					
+
+
 					ylabel([current_2 ' area integral [' current_3 '*' units ']']);
 					areaoutput=integralseries;
 					varis='[integral, starting at ellipse with smallest radius]';
@@ -9453,15 +9458,15 @@ for i=startfr:endfr
 				else
 					derivative_calc(currentframe,extractwhat+1,0);
 				end
-				
+
 				derived=retr('derived');
-				
+
 				if extractwhat==9 || extractwhat==10
 					currentimage=derived{extractwhat+1,currentframe};
 				else
 					currentimage=derived{extractwhat,currentframe};
 				end
-				
+
 				delete(findobj('tag','vortarea'));
 				%keyboard
 				imagesc(currentimage);
@@ -9469,7 +9474,7 @@ for i=startfr:endfr
 				hold on;
 				quiver(u_orig-(retr('subtr_u')/retr('calu')),v_orig-(retr('subtr_v')/retr('calv')),'k','linewidth',str2double(get(handles.vecwidth,'string')))
 				hold off;
-				
+
 				avail_maps=get(handles.colormap_choice,'string');
 				selected_index=get(handles.colormap_choice,'value');
 				if selected_index == 4 %HochschuleBremen map
@@ -9486,11 +9491,11 @@ for i=startfr:endfr
 				end
 				if isempty(BW)
 				else
-					
+
 					delete(findobj('tag', 'extractline'));
 					line(ximask,yimask,'tag', 'extractline');
 					[rows,cols] = size(currentimage);
-					
+
 					x = ones(rows,1)*[1:cols];
 					y = [1:rows]'*ones(1,cols);
 					area=0;
@@ -9514,7 +9519,7 @@ for i=startfr:endfr
 					%+x(1,1)
 					[xecht_cal,yecht_cal]=calibrate_xy(xecht(1,1),yecht(1,1));
 					areaoutput=[xecht_cal+(meanx-1)*step yecht_cal+(meany-1)*step];
-					
+
 					if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 						un=' px';
 					else
@@ -9523,7 +9528,7 @@ for i=startfr:endfr
 					textposix=x(1,round(size(x,2)/4));
 					textposiy=y(round(size(y,1)/4),1);
 					text(textposix, textposiy,  ['x =' num2str(xecht_cal+(meanx-1)*step) un sprintf('\n') 'y =' num2str(yecht_cal+(meany-1)*step) un], 'margin', 0.01, 'fontsize', 10, 'color','w','fontweight','bold','BackgroundColor', [0 0 0],'verticalalignment','top','horizontalalignment','left');
-					
+
 					varis='[x coordinate, y coordinate]';
 				end
 			end
@@ -9592,9 +9597,9 @@ for i=startfr:endfr
 					magg=sqrt(umean^2+vmean^2);
 					areaoutput=[magg angle];
 					varis='[magnitude, angle in degrees, 0 = right, 90 = up, 180 = left, 270 = down, 360 = right]';
-					
+
 					hold on;quiver(mean2(ximask), mean2(yimask), (umean/calu)/sqrt((umean/calu)^2+(vmean/calv)^2)*veclength,(vmean/calv)/sqrt((umean/calu)^2+(vmean/calv)^2)*veclength,'r','autoscale','off', 'autoscalefactor', 100, 'linewidth',2,'MaxHeadSize',3,'tag', 'extractline');hold off;
-					
+
 					if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
 						un=' px/frame';
 					else
@@ -9633,9 +9638,9 @@ for i=startfr:endfr
 			if isempty(imgsavepath)
 				imgsavepath=retr('pathname');
 			end
-			
+
 			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-				
+
 				part1= par(1:strfind(par,'/')-1) ;
 				part2= par(strfind(par,'/')+1:end);
 				if isempty(part1)==1
@@ -9643,7 +9648,7 @@ for i=startfr:endfr
 				else
 					parED=[part1 ' per ' part2];
 				end
-				
+
 				[FileName,PathName] = uiputfile('*.txt','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' whatoperation '_' parED '.txt'])); %framenummer in dateiname
 				selected=1;
 				if isequal(FileName,0) | isequal(PathName,0)
@@ -9659,7 +9664,7 @@ for i=startfr:endfr
 		if isequal(FileName,0) | isequal(PathName,0)
 		else
 			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-				dlmwrite(fullfile(PathName,FileName), [currentframe areaoutput], '-append', 'delimiter', ',', 'precision', 10, 'newline', 'pc'); %#ok<*DLMWT> 
+				dlmwrite(fullfile(PathName,FileName), [currentframe areaoutput], '-append', 'delimiter', ',', 'precision', 10, 'newline', 'pc'); %#ok<*DLMWT>
 			end
 		end
 	end
@@ -9812,7 +9817,7 @@ if isempty(resultslist)==0
 			str = strrep(get(handles.selectedFramesMean,'string'),'end',num2str(max(find(ismean==0)))); %#ok<MXFND>
 		end
 		selectionok=1;
-		
+
 		strnum=str2num(str);
 		if isempty(strnum)==1 || isempty(strfind(str,'.'))==0 || isempty(strfind(str,';'))==0
 			msgbox(['Error in frame selection syntax. Please use the following syntax (examples):' sprintf('\n') '1:3' sprintf('\n') '1,3,7,9' sprintf('\n') '1:3,7,8,9,11:13' ],'Error','error','modal')
@@ -9848,13 +9853,13 @@ if isempty(resultslist)==0
 						v=resultslist{4,count};
 						typevector=resultslist{5,count};
 					end
-					
+
 					%if count==mincount %besser: wenn orgsize nicht existiert
 					if exist('originalsizex','var')==0
 						originalsizex=size(u,2);
 						originalsizey=size(u,1);
 					else
-						
+
 						if size(u,2)~=originalsizex || size(u,1)~=originalsizey
 							sizeerror=1;
 						end
@@ -9867,7 +9872,7 @@ if isempty(resultslist)==0
 						typevectormittel(:,:,count)=typevector;
 					end
 				end
-				
+
 			end
 			if sizeerror==0
 				for i=1:size(strnum,2)
@@ -9895,7 +9900,7 @@ if isempty(resultslist)==0
 						break
 					end
 				end
-				
+
 				if selectionok==1
 					maskiererx=retr('maskiererx');
 					maskierery=retr('maskierery');
@@ -9934,7 +9939,7 @@ if isempty(resultslist)==0
 							end
 						end
 					end
-					
+
 					try
 						newmaskx(cellfun(@isempty,newmaskx))=[];
 					catch
@@ -9973,16 +9978,16 @@ if isempty(resultslist)==0
 					put('maskiererx',maskiererx);
 					put('maskierery',maskierery);
 					typevectoralle=ones(size(typevector));
-					
-					
-					
+
+
+
 					%Hier erst neue matrix erstellen mit ausgew√§hlten frames
 					%typevectoralle ist ausgabe f√ºr gui
 					%typevectormean ist der mittelwert aller types
 					%typevectormittel ist der stapel aus allen typevectors
-					
+
 					eval(['typevectormittelselected=typevectormittel(:,:,[' str ']);']);
-					
+
 					typevectormean=mean(typevectormittelselected,3);  %#ok<USENS>
 					%for i=1:size(typevectormittelselected,3)
 					for i=1:size(typevectormittelselected,1)
@@ -9995,12 +10000,12 @@ if isempty(resultslist)==0
 					%da wo ALLE null sidn auf null setzen.
 					%typevectoralle(typevectormittelselected(:,:,i)==0)=0; %maskierte vektoren sollen im Mean maskiert sein
 					% end
-					
+
 					typevectoralle(typevectormean>1.5)=2; %if more than 50% of vectors are interpolated, then mark vector in mean as interpolated too.
 					resultslist{5,size(filepath,1)/2+1}=typevectoralle;
 					resultslist{1,size(filepath,1)/2+1}=x;
 					resultslist{2,size(filepath,1)/2+1}=y;
-					
+
 					%hier neue matrix mit ausgew√§hlten frames!
 					eval(['umittelselected=umittel(:,:,[' str ']);']);
 					eval(['vmittelselected=vmittel(:,:,[' str ']);']);
@@ -10016,10 +10021,10 @@ if isempty(resultslist)==0
 						%resultslist{3,size(filepath,1)/2+1}=nanstd(umittelselected,3); %#ok<NODEF>
 						%resultslist{4,size(filepath,1)/2+1}=nanstd(vmittelselected,3); %#ok<NODEF>
 					end
-					
+
 					if type==1
 						%ROCHE Modifikation
-						out_mean_u=nanmean(umittelselected,3); %#ok<*NANMEAN> 
+						out_mean_u=nanmean(umittelselected,3); %#ok<*NANMEAN>
 						out_mean_v=nanmean(vmittelselected,3);
 						out_mean_u(typevectormean>=1.75)=nan; %discard everything that has less than 25% valid measurements
 						out_mean_v(typevectormean>=1.75)=nan;
@@ -10028,7 +10033,7 @@ if isempty(resultslist)==0
 						%resultslist{3,size(filepath,1)/2+1}=nanmean(umittelselected,3);
 						%resultslist{4,size(filepath,1)/2+1}=nanmean(vmittelselected,3);
 					end
-					
+
 					if type==0
 						try
 							resultslist{3,size(filepath,1)/2+1}=sum(umittelselected,3,'omitnan');
@@ -10040,7 +10045,7 @@ if isempty(resultslist)==0
 							resultslist{4,size(filepath,1)/2+1}=sum(vmittelselected,3);
 						end
 					end
-					
+
 					filepathselected=filepath(1:2:end);
 					eval(['filepathselected=filepathselected([' str '],:);']);
 					filepath{size(filepath,1)+1,1}=filepathselected{1,1};
@@ -10066,7 +10071,7 @@ if isempty(resultslist)==0
 					end
 					ismean(size(resultslist,2),1)=1;
 					put('ismean',ismean);
-					
+
 					put ('resultslist', resultslist);
 					put ('filepath', filepath);
 					put ('filename', filename);
@@ -10076,7 +10081,7 @@ if isempty(resultslist)==0
 						set (handles.fileselector,'value',get (handles.fileselector,'max'));
 					catch
 					end
-					
+
 					sliderdisp
 				end
 			else %user tried to average analyses with different sizes
@@ -10180,7 +10185,7 @@ if get(hObject,'Value')==1
 	set(handles.usecompr,'value',0);
 	set(handles.usecompr,'enable','off');
 	set(handles.fps_setting,'enable','off');
-	
+
 else
 	set (handles.jpgfilesave, 'value', 1);
 end
@@ -10195,7 +10200,7 @@ if get(hObject,'Value')==1
 	set(handles.usecompr,'value',0);
 	set(handles.usecompr,'enable','off');
 	set(handles.fps_setting,'enable','off');
-	
+
 else
 	set (handles.bmpfilesave, 'value', 1);
 end
@@ -10210,7 +10215,7 @@ if get(hObject,'Value')==1
 	set(handles.usecompr,'value',0);
 	set(handles.usecompr,'enable','off');
 	set(handles.fps_setting,'enable','off');
-	
+
 else
 	set (handles.pdffilesave, 'value', 1);
 end
@@ -10284,7 +10289,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		end
 		xposition(i)=rawx;
 		yposition(i)=rawy;
-		
+
 		h=streamline(mmstream2(x,y,ustream,vstream,xposition(i),yposition(i),'on'));
 		set (h,'tag','streamline');
 		i=i+1;
@@ -10374,7 +10379,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	delete(findobj('tag','streammarker'))
 	rawx=linspace(rawx(1),rawx(2),str2num(get(handles.streamlamount,'string')));
 	rawy=linspace(rawy(1),rawy(2),str2num(get(handles.streamlamount,'string')));
-	
+
 	xposition(i:i+str2num(get(handles.streamlamount,'string'))-1)=rawx;
 	yposition(i:i+str2num(get(handles.streamlamount,'string'))-1)=rawy;
 	h=streamline(mmstream2(x,y,ustream,vstream,xposition(i),yposition(i),'on'));
@@ -10401,7 +10406,7 @@ button=1;
 manmarkersX=retr('manmarkersX');
 manmarkersY=retr('manmarkersY');
 if get(handles.holdmarkers,'value')==1
-	
+
 	if numel(manmarkersX)>0
 		i=size(manmarkersX,2)+1;
 		xposition=manmarkersX;
@@ -10553,7 +10558,7 @@ if get(hObject,'Value')==1
 	set(handles.usecompr,'value',0);
 	set(handles.usecompr,'enable','off');
 	set(handles.fps_setting,'enable','off');
-	
+
 else
 	set (handles.epsfilesave, 'value', 1);
 end
@@ -10584,14 +10589,14 @@ else
 	zoom(gca,'off')
 	put('xzoomlimit', get (gca, 'xlim'));
 	put('yzoomlimit', get (gca, 'ylim'));
-	
+
 end
 
 function panon_Callback(hObject, ~, ~)
 
 handles=gethand;
 if get(hObject,'Value')==1
-	
+
 	hCMP = uicontextmenu;
 	hPMenu = uimenu('Parent',hCMP,'Label','Reset Pan / Zoom','Callback',@zoomcontext);
 	hPan=pan(gcf);
@@ -10602,7 +10607,7 @@ else
 	pan(gca,'off')
 	put('xzoomlimit', get (gca, 'xlim'));
 	put('yzoomlimit', get (gca, 'ylim'));
-	
+
 end
 
 function paraview_current_Callback(~, ~, ~)
@@ -10663,7 +10668,7 @@ if isempty(x)== 0 && isempty(y)== 0 && isempty(w)== 0 && isempty(h)== 0 && isnum
 	roirect(2)=y;
 	roirect(3)=w;
 	roirect(4)=h;
-	
+
 	toggler=retr('toggler');
 	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
 	filepath=retr('filepath');
@@ -10917,7 +10922,7 @@ if size(filepath,1) >1 || numel(caliimg)>0 || retr('video_selection_done') == 1
 		text(xposition+10,yposition+10, ['y reference:' num2str(round(yposition*10)/10) ' px'],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'offset_label_y')
 	end
 	toolsavailable(1)
-	
+
 end
 
 function offset = calculate_offset_axis (axis,pixel_position,true_position)
@@ -11059,12 +11064,15 @@ function ac_sync_settings_Callback(~,~,~)
 serpo=retr('serpo');
 handles=gethand;
 
-	if isnan(str2double(get(handles.ac_power,'String'))) 
-		set(handles.ac_power,'String','0')
-	end
-	if str2double(get(handles.ac_power,'String')) > 100
+if isnan(str2double(get(handles.ac_power,'String')))
+	set(handles.ac_power,'String','0')
+end
+if str2double(get(handles.ac_power,'String')) > 100
+	camera_type=retr('camera_type');
+	if ~strcmp(camera_type,'chronos')
 		set(handles.ac_power,'String','100')
 	end
+end
 
 try
 	serpo.Port;
@@ -11124,7 +11132,12 @@ if alreadyconnected
 	pulse_sep=str2double(get(handles.ac_interpuls,'String'));
 	if switch_it==1
 		flush(serpo)
-		send_string=['FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
+		camera_type=retr('camera_type');
+		if ~strcmp(camera_type,'chronos')
+			send_string=['FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
+		else
+			send_string=['FREQ:' int2str(str2double(ac_fps_str(ac_fps_value))) ';CAM:' int2str(0) ';ENER:' int2str(0) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(0) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(0) ';EXTSKP:' int2str(0) ';LASER:enable'];
+		end
 		%send_string='FREQ:3;EXPO:300;CAMDLY:0;LDPULS:300;INTERF:500;LASER:enable'
 		%disp('testing laserdiode')
 		writeline(serpo,send_string);
@@ -11178,7 +11191,7 @@ if ~isempty(C)
 			set(handles.ac_laserstatus,'String','Laser OFF');
 		end
 		if strcmp(C{8},'1') %laser is reported to be on
-		disp (['pulse length: ' C{9} ' µs'])
+			disp (['pulse length: ' C{9} ' µs'])
 		end
 	end
 
@@ -11248,7 +11261,7 @@ end
 function ac_calibBinning_Callback (~,~,~)
 handles=gethand;
 camera_type=retr('camera_type');
-if strcmp(camera_type,'pco_pixelfly') %ROI selection available only for pco panda
+if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'chronos')  %ROI selection available only for pco panda
 	uiwait(msgbox('Binning is only available for the pco.panda 26 DS.'))
 else
 	binning=retr('binning');
@@ -11288,7 +11301,7 @@ binning=retr('binning');
 if isempty(binning)
 	binning=1;
 end
-if strcmp(camera_type,'pco_pixelfly') %ROI selection available only for pco panda
+if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'chronos') %ROI selection available only for pco panda
 	uiwait(msgbox('ROI selection is only available for the pco.panda 26 DS.'))
 else
 	try
@@ -11307,7 +11320,6 @@ else
 		camera_type=retr('camera_type');
 		try
 			[errorcode, caliimg,~]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,[1,1, 5120/binning,5120/binning],camera_type,0);
-			
 		catch ME
 			disp(ME)
 			uiwait(msgbox('Camera not connected'))
@@ -11326,7 +11338,7 @@ else
 				ac_ROI_general=[0.5,0.5,5120/binning,5120/binning]; %1 Hz default ROI
 			end
 			put('doing_roi',1)
-			
+
 			bla=findobj(gca,'type','image');
 			current_image_size=size(bla.CData);
 			stretched_image=adapthisteq(bla.CData);
@@ -11337,32 +11349,34 @@ else
 			evt.EventName='ROIMoved';
 			evt.CurrentPosition=ac_ROI_general;
 			ROIallevents(ac_ROI_general_handle,evt)
-			
+
 			c_menu = uicontextmenu;
 			ac_ROI_general_handle.UIContextMenu = c_menu;
-			m1 = uimenu(c_menu,'Label','15 Hz','Callback',@setdefaultroi);
-			m2 = uimenu(c_menu,'Label','7.5 Hz','Callback',@setdefaultroi);
-			m3 = uimenu(c_menu,'Label','5 Hz','Callback',@setdefaultroi);
-			m4 = uimenu(c_menu,'Label','3 Hz','Callback',@setdefaultroi);
-			m5 = uimenu(c_menu,'Label','1 Hz','Callback',@setdefaultroi);
-			m6 = uimenu(c_menu,'Label','Enter ROI','Callback',@setdefaultroi);
+			m0 = uimenu(c_menu,'Label','50 Hz','Callback',@setdefaultroi);
+			m1 = uimenu(c_menu,'Label','30 Hz','Callback',@setdefaultroi);
+			m2 = uimenu(c_menu,'Label','15 Hz','Callback',@setdefaultroi);
+			m3 = uimenu(c_menu,'Label','7.5 Hz','Callback',@setdefaultroi);
+			m4 = uimenu(c_menu,'Label','5 Hz','Callback',@setdefaultroi);
+			m5 = uimenu(c_menu,'Label','3 Hz','Callback',@setdefaultroi);
+			m6 = uimenu(c_menu,'Label','1 Hz','Callback',@setdefaultroi);
+			m7 = uimenu(c_menu,'Label','Enter ROI','Callback',@setdefaultroi);
 			position = customWait(ac_ROI_general_handle);
-			
+
 			put('ac_ROI_general_handle',ac_ROI_general_handle);
 			put('doing_roi',0)
 			position=round(position);
-			
+
 			xmin=position(1);
 			ymin=position(2);
 			xmax=position(1)+position(3)-1;
 			ymax=position(2)+position(4)-1;
-			
+
 			% Round so it fits the requirements of the camera ROI
 			xmin=floor(xmin/8)*8+1;
 			ymin=floor(ymin/2)*2+1;
 			xmax=floor(xmax/8)*8;
 			ymax=floor(ymax/2)*2;
-			
+
 			if xmin<1
 				xmin=1;
 			end
@@ -11401,7 +11415,18 @@ end
 
 function ac_calibcapture_Callback(~,~,~)
 [filepath,~,~] = fileparts(mfilename('fullpath'));
-if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_camera_load_defines.m'),'file')
+camera_type=retr('camera_type');
+if ~strcmp(camera_type,'chronos') %calib
+	if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_camera_load_defines.m'),'file')
+		ready=1;
+	else
+		ready=0;
+		pco_error_msgbox
+	end
+else
+	ready=1;
+end
+if ready==1
 	handles=gethand;
 	try
 		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
@@ -11432,11 +11457,20 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 		set(handles.ac_lasertoggle,'enable','on')
 		set(handles.ac_lensctrl,'enable','on')
 		set(handles.ac_power,'enable','on')
-		camera_type=retr('camera_type');
+
+
 		try
 			set(handles.ac_calibcapture,'String','Stop')
-			%[errorcode, caliimg]=PIVlab_Capture_Pixelfly(50000,expos,'Calibration',projectpath,[],0,[]);
-			[errorcode, caliimg,framerate_max]=PIVlab_capture_pco(50000,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
+			if ~strcmp(camera_type,'chronos') %pco cameras
+				[errorcode, caliimg,framerate_max]=PIVlab_capture_pco(50000,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
+			else
+				cameraIP=retr('Chronos_IP');
+				if isempty(cameraIP)
+				uiwait(msgbox({'Chronos Setup not performed.' 'Please click "Setup" in "Camera settings"'}))	
+				else
+				[errorcode, caliimg] = PIVlab_capture_chronos_calibration_image(cameraIP,expos);
+				end
+			end
 			put('caliimg',caliimg);
 			put('fresh_calib_image',1);
 		catch
@@ -11453,8 +11487,6 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 		toolsavailable(1)
 		set(handles.ac_calibsave,'enable','on')
 	end
-else
-	pco_error_msgbox
 end
 %toolsavailable(1)
 
@@ -11472,7 +11504,7 @@ else
 	result=1;
 end
 if strcmp(caller,'double_images')
-	if result==1 && exist(fullfile(projectpath,'PIVlab_0000_A.tif'),'file')
+	if result==1 && exist(fullfile(projectpath,'PIVlab_0000_A.tif'),'file') || exist(fullfile(projectpath,'frame_000001.tiff'),'file')
 		button = questdlg('Overwrite files?','Overwrite?','Yes','Cancel','Yes');
 		if strmatch(button,'Yes')==1
 			result=1;
@@ -11500,7 +11532,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 	button = questdlg('Start Laser and camera?','Warning','Yes','Cancel','Yes');
 	if strmatch(button,'Yes')==1
 		handles=gethand;
-		
+
 		put('cancel_capture',0);
 		projectpath=get(handles.ac_project,'String');
 		if get(handles.ac_pivcapture_save,'Value')==1 %check settings only when user wants to save data
@@ -11531,15 +11563,17 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 			set(handles.togglepair,'enable','on')
 			set(handles.ac_serialstatus,'enable','on')
 			set(handles.ac_laserstatus,'enable','on')
+			set(handles.ac_lasertoggle,'enable','on')
+
 			value=get(handles.ac_config,'value');
-			
-			if value== 3 || value == 4 %setup with LD-PS
+
+			if value== 3 || value == 4 || value ==5  %setups with LD-PS
 				%do nothing... Laser power can not be adjusted on the fly with LD-PS
 			else
 				set(handles.ac_power,'enable','on')
 			end
 			set(handles.ac_lensctrl,'enable','on')
-			
+
 			f = waitbar(0,'Initializing...');
 			%if any external device is activated for automatic control, then...
 			if (~isempty(retr('ac_enable_seeding1')) && retr('ac_enable_seeding1') ~=0) || (~isempty(retr('ac_enable_device1')) && retr('ac_enable_device1') ~=0) || (~isempty(retr('ac_enable_device2')) && retr('ac_enable_device2') ~=0)
@@ -11549,7 +11583,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				waitbar(.33,f,'Starting external devices...');
 				pause(1)
 			end
-			if value~= 3 && value ~= 4 %setup withOUT LD-PS
+			if value~= 3 && value ~= 4 && value ~= 5 %setup withOUT LD-PS
 				%Start-up sequence for normal Q-Switched laser
 				waitbar(.5,f,'Starting laser...');
 				control_simple_sync_serial(1);
@@ -11566,9 +11600,11 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				close(f)
 			else
 				%Start-up sequence for PIVlab LD-PS (much quicker)
-				waitbar(.01,f,'Starting laser...');
-				control_simple_sync_serial(1);
-				put('laser_running',1);
+				if value ~= 5 %not chronos
+					waitbar(.01,f,'Starting laser...');
+					control_simple_sync_serial(1);
+					put('laser_running',1);
+				end
 				close(f)
 			end
 			camera_type=retr('camera_type');
@@ -11577,10 +11613,20 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				binning=1;
 			end
 			value=get(handles.ac_config,'value');
-			if value== 3 || value == 4 %setup with LD-PS
+			if value== 3 || value == 4 %setup with LD-PS and pco
 				las_percent=str2double(get(handles.ac_power,'String'));
 				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
-				f1exp_cam =floor(pulse_sep*las_percent/100)+1; %+1 because in the snychronizer, the cam expo is started 1 us before the ld pulse 
+				f1exp_cam =floor(pulse_sep*las_percent/100)+1; %+1 because in the snychronizer, the cam expo is started 1 us before the ld pulse
+				disp(['camera exposure time = ' num2str(f1exp_cam)])
+				if f1exp_cam < 6
+					msgbox (['Exposure time of camera too low. Please increase laser energy or pulse distance.' sprintf('\n') 'Pulse_distance[µs] * laser_energy[%] must be >= 6 µs'])
+					uiwait
+				end
+			elseif value== 5 %chronos
+				disp('hier muss was ge‰ndert werden glaube ich')
+				las_percent=str2double(get(handles.ac_power,'String'));
+				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
+				f1exp_cam =floor(pulse_sep*las_percent/100)+1; %+1 because in the snychronizer, the cam expo is started 1 us before the ld pulse
 				disp(['camera exposure time = ' num2str(f1exp_cam)])
 				if f1exp_cam < 6
 					msgbox (['Exposure time of camera too low. Please increase laser energy or pulse distance.' sprintf('\n') 'Pulse_distance[µs] * laser_energy[%] must be >= 6 µs'])
@@ -11589,13 +11635,33 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 			else
 				f1exp_cam=retr('f1exp_cam');
 			end
-			PIVlab_capture_pco(imageamount,f1exp_cam,'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI_realtime,binning,ac_ROI_general,camera_type,0);
+			if value == 5 %chronos
+				%capture to camera RAM
+				%zuerst:camera konfigurieren. Dann kamera starten. dann laser. nach laserstart warten und aufnahme beenden.dann laser aus
+				cameraIP=retr('Chronos_IP');
+				[OutputError] = PIVlab_capture_chronos_synced_start(cameraIP,cam_fps); %prepare cam and start camera (waiting for trigger...)
+				control_simple_sync_serial(1); put('laser_running',1); %turn on laser
+				[OutputError,ima,frame_nr_display] = PIVlab_capture_chronos_synced_capture(cameraIP,imageamount,f1exp_cam,cam_fps,do_realtime,ac_ROI_realtime); %capture n images, display livestream
+
+
+			else %pco cameras
+				PIVlab_capture_pco(imageamount,f1exp_cam,'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI_realtime,binning,ac_ROI_general,camera_type,0);
+			end
 			%disable external devices
 			external_device_control(0); % stops all external devices
-			control_simple_sync_serial(0);
+			control_simple_sync_serial(0);pause(0.1);control_simple_sync_serial(0);
 			put('laser_running',0);
+
+			if value == 5
+				%when Chronos:save the images when finished recording to camera ram
+				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
+										PIVlab_capture_chronos_save (cameraIP,imageamount,projectpath,frame_nr_display)
+				end
+			end
+
 			if retr('cancel_capture')==0
-				found_the_data=push_recorded_to_GUI;
+				camera_type=retr('camera_type');
+				found_the_data=push_recorded_to_GUI(camera_type);
 				if found_the_data==1
 					put('sessionpath',projectpath );
 					set(handles.time_inp,'String',num2str(str2num(get(handles.ac_interpuls,'String'))/1000));
@@ -11654,7 +11720,7 @@ end
 
 
 
-function found_the_data = push_recorded_to_GUI
+function found_the_data = push_recorded_to_GUI(camera_type)
 handles=gethand;
 projectpath=get(handles.ac_project,'String');
 imageamount=str2double(get(handles.ac_imgamount,'String'));
@@ -11662,17 +11728,22 @@ pathlist={};
 pathfilelist={};
 file_existing=zeros(imageamount,1);
 for i=1:imageamount
-	pathfileA=fullfile(projectpath,['PIVlab_' sprintf('%4.4d',i-1) '_A.tif']);
-	pathfileB=fullfile(projectpath,['PIVlab_' sprintf('%4.4d',i-1) '_B.tif']);
-	
+	if ~strcmp(camera_type,'chronos')
+		pathfileA=fullfile(projectpath,['PIVlab_' sprintf('%4.4d',i-1) '_A.tif']);
+		pathfileB=fullfile(projectpath,['PIVlab_' sprintf('%4.4d',i-1) '_B.tif']);
+	elseif strcmp(camera_type,'chronos')
+		pathfileA=fullfile(projectpath,['frame_' sprintf('%6.6d',2*i-1) '.tiff']);
+		pathfileB=fullfile(projectpath,['frame_' sprintf('%6.6d',2*i) '.tiff']);
+	end
+
 	pathA=projectpath;
 	pathB=projectpath;
-	
+
 	pathfilelist{i*2-1,1}=pathfileA;
 	pathfilelist{i*2,1}=pathfileB;
-	
+
 	file_existing(i,1) = (isfile(pathfileA) + isfile(pathfileB))/2;
-	
+
 	pathlist{i*2-1,1}=pathA;
 	pathlist{i*2,1}=pathB;
 end
@@ -11753,7 +11824,12 @@ if get(handles.ac_realtime,'Value')==1
 		if capture_ok==1
 			put('cancel_capture',0);
 			put('capturing',1);
-			[errorcode, caliimg]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
+			if ~strcmp(camera_type,'chronos') %calib
+				[errorcode, caliimg]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
+			else
+				%not supported yet....
+
+			end
 		end
 		put('capturing',0);
 		uiwait(msgbox(['Please select the ROI for real-time PIV.'],'modal'))
@@ -11778,7 +11854,7 @@ if ~isempty(serpo)
 	if get(handles.ac_enable_ext_trigger,'Value')==1 %execute only if checkbox was off before it was clicked.
 		old_label=get(handles.ac_enable_ext_trigger,'String');
 		set(handles.ac_enable_ext_trigger,'String','Acquiring...','Enable','off')
-		
+
 		drawnow;
 		flush(serpo)
 		%configureTerminator(serpo,'CR');
@@ -11842,19 +11918,29 @@ if value == 2 || value == 4% pco panda with evergreen or LD-PS
 	%put('f1exp_cam',300)
 	%put('master_freq',3);
 	put('f1exp_cam',350); %exposure time setting first frame
-	put('master_freq',15);
-	avail_freqs={'15' '7.5' '5' '3' '1.5' '1'};
+	put('master_freq',50); %15
+	avail_freqs={'50' '30' '15' '7.5' '5' '3' '1.5' '1'};
 	set(handles.ac_fps,'string',avail_freqs);
 	if get(handles.ac_fps,'value') > numel(avail_freqs)
 		set(handles.ac_fps,'value',1)
 	end
 end
-
-
-
-
-%contents=get(handles.ac_config,'String')
-%contents(value)
+if value == 5 % chronos LD-PS
+	disp('hier die ganzen timings anpassen... wahrscheinlich brauchts die nicht, oder eben andere')
+	put('camera_type','chronos');
+	put('f1exp',352) % Exposure start -> Q1 delay
+	%disp('testing laserdiode')
+	%put('f1exp_cam',300)
+	%put('master_freq',3);
+	put('f1exp_cam',350); %exposure time setting first frame
+	put('master_freq',15);
+	avail_freqs={'1000' '800' '600' '500' '400' '300' '200' '100' '50' '25' '10' '5' '1'};
+	set(handles.ac_fps,'string',avail_freqs);
+	if get(handles.ac_fps,'value') > numel(avail_freqs)
+		set(handles.ac_fps,'value',1)
+	end
+end
+ac_expo_Callback
 
 function ac_expo_Callback(~,~,~)
 handles=gethand;
@@ -11874,9 +11960,15 @@ if strcmp(camera_type,'pco_panda')
 	if str2double(get(handles.ac_expo,'String')) > 350
 		set(handles.ac_expo,'String','350')
 	end
-	
 end
-
+if strcmp(camera_type,'chronos')
+	if str2double(get(handles.ac_expo,'String')) < 0.1
+		set(handles.ac_expo,'String','0.1')
+	end
+	if str2double(get(handles.ac_expo,'String')) > 100000
+		set(handles.ac_expo,'String','100000')
+	end
+end
 
 function bg_subtract_Callback (~,~,~)
 handles=gethand;
@@ -11885,6 +11977,10 @@ if get(handles.bg_subtract,'Value')==0
 	put('bg_img_A',[]);
 	put('bg_img_B',[]);
 end
+
+function ac_chronosctrl_Callback(~,~,~)
+PIVlab_capture_chronos_settings_GUI
+
 
 function ac_lensctrl_Callback (~,~,~)
 handles=gethand;
@@ -11933,6 +12029,12 @@ if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
 	end
 	selection=1; %automatic centering of ROI
 	switch source.Label
+		case '50 Hz'
+			des_x=320;
+			des_y=240;
+		case '30 Hz'
+			des_x=640;
+			des_y=480;
 		case '15 Hz'
 			des_x=1160;
 			des_y=864;
