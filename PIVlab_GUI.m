@@ -48,14 +48,18 @@ if isempty(fh)
 	put('video_selection_done',0);
 
 	%% check write access
-	try
-		temp=rand(3,3);
-		save('temp.mat','temp');
-		delete 'temp.mat'
-		disp('-> Write access in current folder ok.')
-	catch
-		disp(['-> No write access in ' pwd '. PIVlab won''t work like this.'])
-	end
+	
+		try
+			temp=rand(3,3);
+			save('temp.mat','temp');
+			if ispc %Matlab seems to have issues with deleting files on unix systems
+				delete 'temp.mat'
+			end
+			disp('-> Write access in current folder ok.')
+		catch
+			disp(['-> No write access in ' pwd '. PIVlab won''t work like this.'])
+		end
+	
 
 	%% Load defaults
 	try
@@ -369,12 +373,16 @@ try
 	web_version = textscan(fileID_update,'%s');
 	web_version=cell2mat(web_version{1});
 	trash_upd = fclose(fileID_update);
-	recycle('on');
-	delete(filename_update)
+	if ispc %Matlab seems to have issues with deleting files on unix systems
+		recycle('on');
+		delete(filename_update)
+	end
 	%starred feature message
 	starred_feature_text = fileread(filename_starred);
-	recycle('on');
-	delete(filename_starred)
+	if ispc %Matlab seems to have issues with deleting files on unix systems
+		recycle('on');
+		delete(filename_starred)
+	end
 	if strcmp(version,web_version) == 1
 		update_msg = 'You have the latest PIVlab version.';
 		put('update_msg_color',[0 0.75 0]);
@@ -11458,8 +11466,7 @@ if ready==1
 		set(handles.ac_lensctrl,'enable','on')
 		set(handles.ac_power,'enable','on')
 
-
-		try
+		%try
 			set(handles.ac_calibcapture,'String','Stop')
 			if ~strcmp(camera_type,'chronos') %pco cameras
 				[errorcode, caliimg,framerate_max]=PIVlab_capture_pco(50000,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
@@ -11473,6 +11480,7 @@ if ready==1
 			end
 			put('caliimg',caliimg);
 			put('fresh_calib_image',1);
+			%{
 		catch
 			set(handles.ac_calibcapture,'String','Start')
 			uiwait(msgbox('Camera not connected'))
@@ -11480,6 +11488,7 @@ if ready==1
 			put('capturing',0);
 			toolsavailable(1)
 		end
+			%}
 	elseif capture_ok==1 && capturing == 1
 		put('cancel_capture',1);
 		put('capturing',0);
@@ -11655,7 +11664,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 			if value == 5
 				%when Chronos:save the images when finished recording to camera ram
 				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
-										PIVlab_capture_chronos_save (cameraIP,imageamount,projectpath,frame_nr_display)
+					PIVlab_capture_chronos_save (cameraIP,imageamount,projectpath,frame_nr_display)
 				end
 			end
 
