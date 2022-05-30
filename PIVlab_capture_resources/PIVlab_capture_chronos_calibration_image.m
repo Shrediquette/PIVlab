@@ -84,6 +84,136 @@ while getappdata(hgui,'cancel_capture') ~=1
 	else
 		delete(findobj('tag','sharpness_display_text'));
 	end
+
+
+
+
+
+	%% Autofocus
+	%% Lens control
+	%Sowieso machen: Nicht lineare schritte für die anzufahrenden fokuspositionen. Diese Liste vorher ausrechnen und dann nur index anspringen
+
+	autofocus_enabled = getappdata(hgui,'autofocus_enabled');
+
+	if autofocus_enabled == 1
+		try
+			delaycounter=delaycounter+1;
+		catch
+			delaycounter=0;
+			delaycounter2=0;
+			delay_time_1=tic;
+		end
+	else
+		delaycounter=0;
+		delaycounter2=0;
+		delay_time_1=tic;
+
+	end
+	%immer mehrere Bilder abfragen nachdem fokus verstellt wurde.... nicht nur eins, sondern z.B. drei Davon nur das letzte per sharpness beurteilen
+
+	delay_time= 1; %1 seconds delay between measurements %350000 / exposure_time;
+	if autofocus_enabled == 1
+		if delaycounter>4 %wait 10 images before starting autofocus. Needed so that servo can reach target position
+			focus_start = getappdata(hgui,'focus_servo_lower_limit');
+			focus_end = getappdata(hgui,'focus_servo_upper_limit');
+			amount_of_raw_steps=20;
+			fine_step_resolution_increase = 5;
+			focus_step_raw=round(abs(focus_end - focus_start)/amount_of_raw_steps);% in microseconds)
+			focus_step_fine=round(1/fine_step_resolution_increase*(abs(focus_end - focus_start)/amount_of_raw_steps));% in microseconds)
+			if  ~exist('sharpness_focus_table','var') || isempty(sharpness_focus_table) || isempty(sharp_loop_cnt)
+				sharpness_focus_table=zeros(1,2);
+				sharp_loop_cnt=0;
+				focus=focus_start;
+				raw_finished=0;
+				aperture=getappdata(hgui,'aperture');
+				lighting=getappdata(hgui,'lighting');
+				PIVlab_capture_lensctrl(focus,aperture,lighting)
+			end
+			if raw_finished==0
+				if focus < focus_end % maxialer focus = endanschlag. Bis zu dem wert wird von null gefahren
+					if toc(delay_time_1)>=delay_time %only every second image is taken for analysis. This gives more time to the servo to reach position
+						delay_time_1=tic;
+						sharp_loop_cnt=sharp_loop_cnt+1;
+						[sharpness,~] = PIVlab_capture_sharpness_indicator (ima,[],[]);
+						sharpness_focus_table(sharp_loop_cnt,1)=focus;
+						sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
+						focus=focus+focus_step_raw;
+						PIVlab_capture_lensctrl(focus,aperture,lighting)		%kann steuern und aktuelle position ausgeben
+					else
+						%do nothing
+					end
+				else
+					%assignin('base','sharpness_focus_table',sharpness_focus_table)
+					%find best focus
+					[r,~]=find(sharpness_focus_table == max(sharpness_focus_table(:,2)));
+					focus_peak=sharpness_focus_table(r(1),1);
+					disp(['Best raw focus: ' num2str(focus_peak)])
+					raw_finished=1;
+					%focus vs. distance is not linear!
+					focus_start_fine=focus_peak-6*focus_step_raw; %start of finer focussearch
+					focus_end_fine=focus_peak+3*focus_step_raw;
+					if focus_start_fine < focus_start
+						focus_start_fine = focus_start;
+					end
+					if focus_end_fine > focus_end
+						focus_end_fine = focus_end;
+					end
+					focus=focus_end_fine;
+					PIVlab_capture_lensctrl(focus,aperture,lighting)
+					sharp_loop_cnt=0;
+					raw_data=[sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range')];
+					sharpness_focus_table=zeros(1,2);
+				end
+			end
+
+			if raw_finished == 1
+				delaycounter2=delaycounter2+1;
+			else
+				delaycounter2=0;
+			end
+			if raw_finished == 1
+				delay_time= 0.35;
+				if delaycounter2>10
+					%repeat with finer steps
+					if focus > focus_start_fine % maxialer focus = endanschlag. Bis zu dem wert wird von null gefahren
+						if toc(delay_time_1)>=delay_time %only every second image is taken for analysis. This gives more time to the servo to reach position
+							delay_time_1=tic;
+							sharp_loop_cnt=sharp_loop_cnt+1;
+							[sharpness,~] = PIVlab_capture_sharpness_indicator (ima,[],[]);
+							sharpness_focus_table(sharp_loop_cnt,1)=focus;
+							sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
+							focus=focus-focus_step_fine;
+							PIVlab_capture_lensctrl(focus,aperture,lighting)		%kann steuern und aktuelle position ausgeben
+						else
+							%do nothing
+						end
+					else %fine focus search finished
+						%assignin('base','sharpness_focus_table',sharpness_focus_table)
+						%find best focus
+						[r,~]=find(sharpness_focus_table == max(sharpness_focus_table(:,2)));
+						focus_peak=sharpness_focus_table(r(1),1);
+						disp(['Best fine focus: ' num2str(focus_peak)])
+						PIVlab_capture_lensctrl(focus_peak,aperture,lighting) %set to best focus
+						setappdata(hgui,'autofocus_enabled',0); %autofocus am ende ausschalten
+						lens_control_window = getappdata(0,'hlens');
+						focus_edit_field=getappdata(lens_control_window,'handle_to_focus_edit_field');
+						set(focus_edit_field,'String',num2str(focus_peak)); %update
+						%setappdata(hgui,'cancel_capture',1); %stop recording....?
+						figure;plot(raw_data(:,1),raw_data(:,2))
+						hold on;plot(sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range'));hold off
+						title('Focus search')
+						xlabel('Pulsewidth us')
+						ylabel('Sharpness')
+						legend('Coarse search','Fine search')
+						grid on
+					end
+				end
+			end
+		end
+	else
+		sharpness_focus_table=[];
+		sharp_loop_cnt=[];
+	end
 	drawnow limitrate
 	ima_nr=ima_nr+1;
 end

@@ -6,6 +6,15 @@ resx=getappdata(hgui,'Chronos_resx');
 resy=getappdata(hgui,'Chronos_resy');
 bitdepth=getappdata(hgui,'Chronos_bits');
 save_location=getappdata(hgui,'save_location');
+save_type=getappdata(hgui,'save_type');
+
+if matches(save_type,'TIFF')
+	save_type_command='tiff';
+elseif matches(save_type,'H264')
+	save_type_command='h264';
+elseif matches(save_type,'TIFF RAW')
+	save_type_command='tiffraw';
+end
 
 %% save to SMB
 
@@ -28,7 +37,7 @@ if matches(save_location,'Download')
 			end
 		end
 
-		response = webwrite([cameraURL '/control/startFilesave'],'filename','Chronos_PIVlab','format','tiffraw','device','smb','start',1+2,'length',nr_of_images*2-1+2);
+		response = webwrite([cameraURL '/control/startFilesave'],'filename','Chronos_PIVlab','format',save_type_command,'device','smb','start',1+2,'length',nr_of_images*2-1+2);
 
 		pause(1)
 		chronos_state = webread([cameraURL '/control/p/videoState']); %--> chronos_state.videoState 'filesave'
@@ -140,10 +149,10 @@ elseif matches(save_location,'SSD') || matches(save_location,'SD Card')
 		project_name=[ImagePath((dindex(end)+1:end)) '_' datestr(datetime(now,'ConvertFrom','datenum'),'YYYY_dd_mm_HH_MM_SS')];
 
 		if matches(save_location,'SSD')
-			response = webwrite([cameraURL '/control/startFilesave'],'filename',project_name,'format','tiffraw','device','sda1','start',1+2,'length',nr_of_images*2-1+2);
+			response = webwrite([cameraURL '/control/startFilesave'],'filename',project_name,'format',save_type_command,'device','sda1','start',1+2,'length',nr_of_images*2-1+2);
 		end
 		if matches(save_location,'SD Card')
-			response = webwrite([cameraURL '/control/startFilesave'],'filename',project_name,'format','tiffraw','device','mmcblk1p1','start',1+2,'length',nr_of_images*2-1+2);
+			response = webwrite([cameraURL '/control/startFilesave'],'filename',project_name,'format',save_type_command,'device','mmcblk1p1','start',1+2,'length',nr_of_images*2-1+2);
 		end
 
 		pause(1)

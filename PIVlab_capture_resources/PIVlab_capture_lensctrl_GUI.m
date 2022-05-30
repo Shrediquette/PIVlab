@@ -347,7 +347,7 @@ var=getappdata(hgui, name);
 
 function handles=gethand
 hlens=getappdata(0,'hlens');
-handles=guihandles(hlens)
+handles=guihandles(hlens);
 
 function CloseRequestFcn(hObject, ~, ~)
 try
@@ -360,4 +360,5 @@ try
 catch
 	delete(gcf);
 end
+put('autofocus_enabled',0);
 

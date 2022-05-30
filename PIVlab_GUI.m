@@ -11632,15 +11632,10 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 					uiwait
 				end
 			elseif value== 5 %chronos
-				disp('hier muss was geändert werden glaube ich')
 				las_percent=str2double(get(handles.ac_power,'String'));
 				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
 				f1exp_cam =floor(pulse_sep*las_percent/100)+1; %+1 because in the snychronizer, the cam expo is started 1 us before the ld pulse
 				disp(['camera exposure time = ' num2str(f1exp_cam)])
-				if f1exp_cam < 6
-					msgbox (['Exposure time of camera too low. Please increase laser energy or pulse distance.' sprintf('\n') 'Pulse_distance[µs] * laser_energy[%] must be >= 6 µs'])
-					uiwait
-				end
 			else
 				f1exp_cam=retr('f1exp_cam');
 			end
@@ -11651,8 +11646,6 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				[OutputError] = PIVlab_capture_chronos_synced_start(cameraIP,cam_fps); %prepare cam and start camera (waiting for trigger...)
 				control_simple_sync_serial(1); put('laser_running',1); %turn on laser
 				[OutputError,ima,frame_nr_display] = PIVlab_capture_chronos_synced_capture(cameraIP,imageamount,f1exp_cam,cam_fps,do_realtime,ac_ROI_realtime); %capture n images, display livestream
-
-
 			else %pco cameras
 				PIVlab_capture_pco(imageamount,f1exp_cam,'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI_realtime,binning,ac_ROI_general,camera_type,0);
 			end
