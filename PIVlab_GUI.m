@@ -13,7 +13,7 @@
 % Exportfig by Ben Hinkle
 % mmstream2 by Duane Hanselman
 % f_readB16 by Carl Hall
-function PIVlab_GUI(desired_num_cores)
+function PIVlab_GUI(desired_num_cores,batch_session_file)
 %% Make figure
 fh = findobj('tag', 'hgui');
 if isempty(fh)
@@ -48,18 +48,18 @@ if isempty(fh)
 	put('video_selection_done',0);
 
 	%% check write access
-	
-		try
-			temp=rand(3,3);
-			save('temp.mat','temp');
-			if ispc %Matlab seems to have issues with deleting files on unix systems
-				delete 'temp.mat'
-			end
-			disp('-> Write access in current folder ok.')
-		catch
-			disp(['-> No write access in ' pwd '. PIVlab won''t work like this.'])
+
+	try
+		temp=rand(3,3);
+		save('temp.mat','temp');
+		if ispc %Matlab seems to have issues with deleting files on unix systems
+			delete 'temp.mat'
 		end
-	
+		disp('-> Write access in current folder ok.')
+	catch
+		disp(['-> No write access in ' pwd '. PIVlab won''t work like this.'])
+	end
+
 
 	%% Load defaults
 	try
@@ -240,6 +240,29 @@ if isempty(fh)
 
 	displogo(1);drawnow;
 	set(MainWindow, 'Visible','on');
+	%% Batch session  processing in GUI
+	if ~exist('batch_session_file','var') %no input argument --> no GUI batch processing
+		put('batchModeActive',0)
+	else
+		if exist (batch_session_file,'file')
+			[filepath,name,ext] = fileparts(batch_session_file);
+			load_session_Callback (1,batch_session_file)
+			disp(['Batch mode, analyzing ' batch_session_file])
+			batch_session_file_output=fullfile(filepath,[name '_BATCH' ext]);
+			disp(['Output will be saved as:  ' batch_session_file_output ])
+			do_analys_Callback
+			AnalyzeAll_Callback
+			save_session_Callback(1,batch_session_file_output)
+
+			put('batchModeActive',1)
+			disp('done, exiting...')
+			MainWindow_CloseRequestFcn
+		else
+			disp(['NOT FOUND: ' batch_session_file])
+			put('batchModeActive',0)
+		end
+	end
+
 else %Figure handle does already exist --> bring PIVlab to foreground.
 	disp('Only one instance of PIVlab is allowed to run.')
 	figure(fh)
@@ -5078,7 +5101,7 @@ if ok==1
 				end
 				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 				image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect);
+				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect); %#ok<PFTUSW> 
 				xlist{i}=x;
 				ylist{i}=y;
 				ulist{i}=u;
@@ -7327,13 +7350,19 @@ else
 end
 
 function MainWindow_CloseRequestFcn(hObject, ~, ~)
-button = questdlg('Do you want to quit PIVlab?','Quit?','Yes','Cancel','Cancel');
+handles=gethand;
+batchModeActive=retr('batchModeActive');
+if batchModeActive == 0
+	button = questdlg('Do you want to quit PIVlab?','Quit?','Yes','Cancel','Cancel');
+else
+	button = 'Yes';
+end
 try
 	toolsavailable(1)
 catch
 end
 if strcmp(button,'Yes')==1
-	handles=gethand;
+
 	try
 		homedir=retr('homedir');
 		pathname=retr('pathname');
@@ -8397,12 +8426,17 @@ else
 	set(handles.vectorscale,'enable', 'on');
 end
 
-function save_session_Callback(~, ~, ~)
+function save_session_Callback(auto_save_session, auto_save_session_filename)
 sessionpath=retr('sessionpath');
 if isempty(sessionpath)
 	sessionpath=retr('pathname');
 end
-[FileName,PathName] = uiputfile('*.mat','Save current session as...',fullfile(sessionpath,'PIVlab_session.mat'));
+if auto_save_session ~= 1
+	[FileName,PathName] = uiputfile('*.mat','Save current session as...',fullfile(sessionpath,'PIVlab_session.mat'));
+else
+	[PathName,FileName,ext] = fileparts(auto_save_session_filename);
+	FileName = [FileName ext];
+end
 if isequal(FileName,0) | isequal(PathName,0)
 else
 	put('expected_image_size',[])
@@ -8567,12 +8601,17 @@ save(fullfile(PathName,FileName), '-append');
 delete(findobj('tag','savehint'));
 drawnow;
 
-function load_session_Callback(~, ~, ~)
+function load_session_Callback(auto_load_session, auto_load_session_filename)
 sessionpath=retr('sessionpath');
 if isempty(sessionpath)
 	sessionpath=retr('pathname');
 end
-[FileName,PathName, filterindex] = uigetfile({'*.mat','MATLAB Files (*.mat)'; '*.mat','mat'},'Load PIVlab session',fullfile(sessionpath, 'PIVlab_session.mat'));
+if auto_load_session ~= 1
+	[FileName,PathName, filterindex] = uigetfile({'*.mat','MATLAB Files (*.mat)'; '*.mat','mat'},'Load PIVlab session',fullfile(sessionpath, 'PIVlab_session.mat'));
+else
+	[PathName,FileName,ext] = fileparts(auto_load_session_filename);
+	FileName = [FileName ext];
+end
 if isequal(FileName,0) | isequal(PathName,0)
 else
 	put('expected_image_size',[])
@@ -11467,20 +11506,20 @@ if ready==1
 		set(handles.ac_power,'enable','on')
 
 		%try
-			set(handles.ac_calibcapture,'String','Stop')
-			if ~strcmp(camera_type,'chronos') %pco cameras
-				[errorcode, caliimg,framerate_max]=PIVlab_capture_pco(50000,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
+		set(handles.ac_calibcapture,'String','Stop')
+		if ~strcmp(camera_type,'chronos') %pco cameras
+			[errorcode, caliimg,framerate_max]=PIVlab_capture_pco(50000,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
+		else
+			cameraIP=retr('Chronos_IP');
+			if isempty(cameraIP)
+				uiwait(msgbox({'Chronos Setup not performed.' 'Please click "Setup" in "Camera settings"'}))
 			else
-				cameraIP=retr('Chronos_IP');
-				if isempty(cameraIP)
-				uiwait(msgbox({'Chronos Setup not performed.' 'Please click "Setup" in "Camera settings"'}))	
-				else
 				[errorcode, caliimg] = PIVlab_capture_chronos_calibration_image(cameraIP,expos);
-				end
 			end
-			put('caliimg',caliimg);
-			put('fresh_calib_image',1);
-			%{
+		end
+		put('caliimg',caliimg);
+		put('fresh_calib_image',1);
+		%{
 		catch
 			set(handles.ac_calibcapture,'String','Start')
 			uiwait(msgbox('Camera not connected'))
@@ -11488,7 +11527,7 @@ if ready==1
 			put('capturing',0);
 			toolsavailable(1)
 		end
-			%}
+		%}
 	elseif capture_ok==1 && capturing == 1
 		put('cancel_capture',1);
 		put('capturing',0);
