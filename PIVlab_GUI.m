@@ -247,11 +247,16 @@ if isempty(fh)
 		if exist (batch_session_file,'file')
 			[filepath,name,ext] = fileparts(batch_session_file);
 			load_session_Callback (1,batch_session_file)
+			disp('')
 			disp(['Batch mode, analyzing ' batch_session_file])
 			batch_session_file_output=fullfile(filepath,[name '_BATCH' ext]);
 			disp(['Output will be saved as:  ' batch_session_file_output ])
+			disp('...running PIV analysis...')
 			do_analys_Callback
 			AnalyzeAll_Callback
+			disp('...running post processing...')
+			apply_filter_all_Callback
+			disp('...saving output...')
 			save_session_Callback(1,batch_session_file_output)
 
 			put('batchModeActive',1)
@@ -11178,8 +11183,21 @@ if alreadyconnected
 	%Pulse distance
 	pulse_sep=str2double(get(handles.ac_interpuls,'String'));
 	if switch_it==1
+		if exist('laser_device_id.mat','file') == 2
+		else
+			get_laser_id = inputdlg(['Please enter the ID of your laser / synchronizer.' sprintf('\n') 'It can be found on the sticker on the device.']);
+			if ~isempty(get_laser_id)
+				id=get_laser_id{1};
+				[filepath,~,~] = fileparts(mfilename('fullpath'));
+				save (fullfile(filepath, 'PIVlab_capture_resources', 'laser_device_id.mat'),'id')
+			end
+		end
+		laser_device_id = load('laser_device_id.mat','id');
+		laser_device_id = laser_device_id.id;
+		disp(['laser_device_id = ' laser_device_id])
 		flush(serpo)
 		camera_type=retr('camera_type');
+		disp('hier noch die device id hinzufügen')
 		if ~strcmp(camera_type,'chronos')
 			send_string=['FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
 		else
