@@ -523,10 +523,12 @@ for multipass=1:passes-1
 		else
 			%fprintf('.');
 		end
-		
+		try
 		utable=interp2(xtable_old,ytable_old,utable,xtable,ytable,'*spline');
 		vtable=interp2(xtable_old,ytable_old,vtable,xtable,ytable,'*spline');
-		
+		catch
+			msgbox('Error: Most likely, your ROI is too small and/or the interrogation area too large.','modal')
+		end
 		utable_1= padarray(utable, [1,1], 'replicate');
 		vtable_1= padarray(vtable, [1,1], 'replicate');
 		
