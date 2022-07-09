@@ -1,4 +1,6 @@
 function [OutputError,ima,framerate_max] = PIVlab_capture_pco(nr_of_images,exposure_time,TriggerModeString,ImagePath,framerate,do_realtime,ROI_live,binning,ROI_general,camera_type,measure_framerate_max)
+display_warning=0;
+
 if measure_framerate_max == 1
 	OutputError=0;
 	glvar=struct('do_libunload',1,'do_close',0,'camera_open',0,'out_ptr',[]);
@@ -113,8 +115,10 @@ if measure_framerate_max == 1
 		disp(['Double image total time: ' num2str(test_data_write_time + capture_time) ' seconds.'])
 		framerate_max=1/(test_data_write_time + capture_time);
 		disp(['Max. frame rate: ' num2str(framerate_max) ' Hz.'])
+		
 		if framerate_max < framerate
-			disp('Frames will be skipped!')
+			display_warning=1;
+			%disp('Frames will be skipped!')
 		end
 		ima=[];
 		errorCode = calllib('PCO_CAM_SDK', 'PCO_CancelImages', out_ptr);
@@ -122,10 +126,14 @@ if measure_framerate_max == 1
 		glvar.do_close=1;
 		glvar.do_libunload=1;
 		pco_camera_open_close(glvar);
+		if display_warning==1
+			warndlg('Laser frame rate too high. Frames might be skipped.','Warning','modal')
+			uiwait
+		end
 	catch ME
 		disp(ME)
 	end
-	
+
 else
 	framerate_max=[];
 	hgui=getappdata(0,'hgui');
@@ -836,7 +844,12 @@ else
 	if(glvar.camera_open==1)
 		glvar.do_close=1;
 		glvar.do_libunload=1;
-		pco_camera_open_close(glvar);
+		try
+			pco_camera_open_close(glvar);
+		catch
+			warndlg('Camera did not react, please try again.','Error','modal')
+			uiwait
+		end
 	end
 end
 
