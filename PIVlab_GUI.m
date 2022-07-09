@@ -19,7 +19,7 @@ fh = findobj('tag', 'hgui');
 if isempty(fh)
 	MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0.05 0.1 0.9 0.8],'ResizeFcn', @MainWindow_ResizeFcn,'CloseRequestFcn', @MainWindow_CloseRequestFcn,'tag','hgui','visible','off','KeyPressFcn', @key_press);
 	set (MainWindow,'Units','Characters');
-	clc
+	%clc
 	%% Initialize
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 	guidata(MainWindow,handles)
@@ -2000,13 +2000,13 @@ item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2.5 1];
 handles.ac_interpulstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pulse distance [µs]:','tag','ac_interpulstxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
-handles.ac_interpuls = uicontrol(handles.uipanelac_laser,'Style','edit','String','100','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_interpuls','TooltipString','Pulse spacing of the laser','interruptible','off','busyaction','cancel');
+handles.ac_interpuls = uicontrol(handles.uipanelac_laser,'Style','edit','String','1000','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_interpuls','TooltipString','Pulse spacing of the laser','interruptible','off','busyaction','cancel');
 
 item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2.5 1];
 handles.ac_powertxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Laser energy [%]:','tag','ac_powertxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
-handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String','0','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_power','TooltipString','Laser energy','interruptible','off','busyaction','cancel');
+handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String','10','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_power','TooltipString','Laser energy','interruptible','off','busyaction','cancel');
 
 item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2 2];
 handles.ac_laserstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','N/A','tag','ac_laserstatus','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold','TooltipString','Status of the laser');
@@ -5675,7 +5675,11 @@ if ok==1
 			repeat_last_pass = get(handles.repeat_last,'Value');
 			delta_diff_min = str2double(get(handles.edit52x,'String'));
 			if get(handles.fftmulti,'Value')==1
+				try
 				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
+				catch
+					toolsavailable(1);
+				end
 			end
 
 		end
@@ -11120,10 +11124,10 @@ if isnan(str2double(get(handles.ac_power,'String')))
 	set(handles.ac_power,'String','0')
 end
 if str2double(get(handles.ac_power,'String')) > 100
-	camera_type=retr('camera_type');
-	if ~strcmp(camera_type,'chronos')
+	%camera_type=retr('camera_type');
+	%if ~strcmp(camera_type,'chronos')
 		set(handles.ac_power,'String','100')
-	end
+	%end
 end
 
 try
@@ -11182,26 +11186,37 @@ if alreadyconnected
 	end
 	%Pulse distance
 	pulse_sep=str2double(get(handles.ac_interpuls,'String'));
-	if switch_it==1
-		if exist('laser_device_id.mat','file') == 2
-		else
-			get_laser_id = inputdlg(['Please enter the ID of your laser / synchronizer.' sprintf('\n') 'It can be found on the sticker on the device.']);
-			if ~isempty(get_laser_id)
-				id=get_laser_id{1};
-				[filepath,~,~] = fileparts(mfilename('fullpath'));
-				save (fullfile(filepath, 'PIVlab_capture_resources', 'laser_device_id.mat'),'id')
-			end
+	
+	if exist('laser_device_id.mat','file') == 2
+	else
+		get_laser_id = inputdlg(['Please enter the ID of your laser / synchronizer.' sprintf('\n') 'It can be found on the sticker on the device.']);
+		if ~isempty(get_laser_id)
+			id=get_laser_id{1};
+			[filepath,~,~] = fileparts(mfilename('fullpath'));
+			save (fullfile(filepath, 'PIVlab_capture_resources', 'laser_device_id.mat'),'id')
 		end
-		laser_device_id = load('laser_device_id.mat','id');
-		laser_device_id = laser_device_id.id;
-		disp(['laser_device_id = ' laser_device_id])
+	end
+	laser_device_id = load('laser_device_id.mat','id');
+	laser_device_id = laser_device_id.id;
+	%{
+	[filepath,~,~] = fileparts(mfilename('fullpath'));
+	disp([fullfile(filepath, 'PIVlab_capture_resources', 'laser_device_id.mat')]);
+	disp('requested laser_device_id = ')
+		disp(laser_device_id)
+	pause(1)
+	writeline(serpo,'WhoAreYou?');
+	disp(['reported laser_device_id = ' ])
+	disp(readline(serpo))
+	pause(1)
+	%}
+	if switch_it==1
 		flush(serpo)
 		camera_type=retr('camera_type');
-		disp('hier noch die device id hinzufügen')
-		if ~strcmp(camera_type,'chronos')
-			send_string=['FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
+		
+		if ~strcmp(camera_type,'chronos') %not chronos
+			send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
 		else
-			send_string=['FREQ:' int2str(str2double(ac_fps_str(ac_fps_value))) ';CAM:' int2str(0) ';ENER:' int2str(0) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(0) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(0) ';EXTSKP:' int2str(0) ';LASER:enable'];
+			send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(str2double(ac_fps_str(ac_fps_value))) ';CAM:' int2str(0) ';ENER:' int2str(0) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(0) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(0) ';EXTSKP:' int2str(0) ';LASER:enable'];
 		end
 		%send_string='FREQ:3;EXPO:300;CAMDLY:0;LDPULS:300;INTERF:500;LASER:enable'
 		%disp('testing laserdiode')
@@ -11209,7 +11224,7 @@ if alreadyconnected
 	else
 		flush(serpo)
 		%configureTerminator(serpo,'CR');
-		writeline(serpo,['FREQ:1;CAM:1;ENER:' int2str(min_energy) ';ener%:0;F1EXP:100;INTERF:1234;EXTDLY:-1;EXTSKP:0;LASER:disable']);
+		writeline(serpo,['TALKINGTO:' laser_device_id ';FREQ:1;CAM:1;ENER:' int2str(min_energy) ';ener%:0;F1EXP:100;INTERF:1234;EXTDLY:-1;EXTSKP:0;LASER:disable']);
 		%writeline(serpo,'FREQ:5;EXPO:300;CAMDLY:835;LDPULS:300;INTERF:500;LASER:disable');
 		%disp('testing laserdiode')
 	end
@@ -11268,25 +11283,31 @@ logger_path = get(handles.ac_project,'String');
 if exist(logger_path,'dir') %only log when directory has been set up.
 	timestamp=datestr(datetime(now,'ConvertFrom','datenum'));
 	if exist (fullfile(logger_path, 'acquisition_log.txt'),'file')~=2
-		logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'w');
-		fprintf(logger_fid,'Time\tProject_folder\tMaster_frequency\tCamera_divider\tEnergy_us\tFrame_1_exposure_us\tInterframe_us\tExternal_delay_us\tExternal_skip\tLaser_status\tBinning\tROI');
+		try
+			logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'w');
+			fprintf(logger_fid,'Time\tProject_folder\tMaster_frequency\tCamera_divider\tEnergy_us\tFrame_1_exposure_us\tInterframe_us\tExternal_delay_us\tExternal_skip\tLaser_status\tBinning\tROI');
+			fprintf(logger_fid, '\n');
+			fclose(logger_fid);
+		catch
+		end
+	end
+	try
+		ac_ROI_general=retr('ac_ROI_general');
+		binning=retr('binning');
+		logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'a');
+		fprintf(logger_fid, '%s', timestamp);
+		fprintf(logger_fid, '\t');
+		fprintf(logger_fid, '%s', logger_path);
+		fprintf(logger_fid, '\t');
+		fprintf(logger_fid, '%s', sync_setting);
+		fprintf(logger_fid, '\t');
+		fprintf(logger_fid, '%s', num2str(binning));
+		fprintf(logger_fid, '\t');
+		fprintf(logger_fid, '%s', mat2str(ac_ROI_general));
 		fprintf(logger_fid, '\n');
 		fclose(logger_fid);
+	catch
 	end
-	ac_ROI_general=retr('ac_ROI_general');
-	binning=retr('binning');
-	logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'a');
-	fprintf(logger_fid, '%s', timestamp);
-	fprintf(logger_fid, '\t');
-	fprintf(logger_fid, '%s', logger_path);
-	fprintf(logger_fid, '\t');
-	fprintf(logger_fid, '%s', sync_setting);
-	fprintf(logger_fid, '\t');
-	fprintf(logger_fid, '%s', num2str(binning));
-	fprintf(logger_fid, '\t');
-	fprintf(logger_fid, '%s', mat2str(ac_ROI_general));
-	fprintf(logger_fid, '\n');
-	fclose(logger_fid);
 end
 
 
@@ -11966,9 +11987,9 @@ if value==1 || value==3 % ILA.piv nano / pco pixelfly with evergreen or LD-PS
 	put('binning',1);
 	avail_freqs={'5' '3' '1.5' '1'};
 	set(handles.ac_fps,'string',avail_freqs);
-	if get(handles.ac_fps,'value') > numel(avail_freqs)
-		set(handles.ac_fps,'value',1)
-	end
+	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	%end
 end
 if value == 2 || value == 4% pco panda with evergreen or LD-PS
 	put('camera_type','pco_panda');
@@ -11977,15 +11998,14 @@ if value == 2 || value == 4% pco panda with evergreen or LD-PS
 	%put('f1exp_cam',300)
 	%put('master_freq',3);
 	put('f1exp_cam',350); %exposure time setting first frame
-	put('master_freq',50); %15
+	put('master_freq',50); %war auf 50 für noch höhere framerates auf panda
 	avail_freqs={'50' '30' '15' '7.5' '5' '3' '1.5' '1'};
 	set(handles.ac_fps,'string',avail_freqs);
-	if get(handles.ac_fps,'value') > numel(avail_freqs)
-		set(handles.ac_fps,'value',1)
-	end
+	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	%end
 end
 if value == 5 % chronos LD-PS
-	disp('hier die ganzen timings anpassen... wahrscheinlich brauchts die nicht, oder eben andere')
 	put('camera_type','chronos');
 	put('f1exp',352) % Exposure start -> Q1 delay
 	%disp('testing laserdiode')
@@ -11993,11 +12013,11 @@ if value == 5 % chronos LD-PS
 	%put('master_freq',3);
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
-	avail_freqs={'1000' '800' '600' '500' '400' '300' '200' '100' '50' '25' '10' '5' '1'};
+	avail_freqs={'850' '600' '500' '400' '300' '200' '100' '50' '25' '10' '5'};
 	set(handles.ac_fps,'string',avail_freqs);
-	if get(handles.ac_fps,'value') > numel(avail_freqs)
-		set(handles.ac_fps,'value',1)
-	end
+	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	%end
 end
 ac_expo_Callback
 
