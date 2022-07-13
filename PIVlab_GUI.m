@@ -11977,6 +11977,13 @@ PIVlab_capture_devicectrl_GUI
 function select_capture_config_Callback (~,~,~)
 handles=gethand;
 value=get(handles.ac_config,'value');
+
+old_setting=retr('old_setting');
+if isempty(old_setting)
+	put ('old_setting',inf)
+end
+put ('old_setting',value)
+
 put('do_realtime',0);
 set(handles.ac_realtime,'Value',0)
 if value==1 || value==3 % ILA.piv nano / pco pixelfly with evergreen or LD-PS
@@ -11988,7 +11995,9 @@ if value==1 || value==3 % ILA.piv nano / pco pixelfly with evergreen or LD-PS
 	avail_freqs={'5' '3' '1.5' '1'};
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+	if old_setting ~= value
 		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
 	%end
 end
 if value == 2 || value == 4% pco panda with evergreen or LD-PS
@@ -12002,7 +12011,9 @@ if value == 2 || value == 4% pco panda with evergreen or LD-PS
 	avail_freqs={'50' '30' '15' '7.5' '5' '3' '1.5' '1'};
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+	if old_setting ~= value
 		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
 	%end
 end
 if value == 5 % chronos LD-PS
@@ -12013,10 +12024,12 @@ if value == 5 % chronos LD-PS
 	%put('master_freq',3);
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
-	avail_freqs={'850' '600' '500' '400' '300' '200' '100' '50' '25' '10' '5'};
+	avail_freqs={'1000' '850' '600' '500' '400' '300' '200' '100' '50' '25' '10' '5'};
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+	if old_setting ~= value
 		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
 	%end
 end
 ac_expo_Callback
