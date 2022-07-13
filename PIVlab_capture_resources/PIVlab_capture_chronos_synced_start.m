@@ -36,11 +36,12 @@ drawnow;
 response = webwrite([cameraURL '/control/getResolutionTimingLimits'],struct('hRes',1280,'vRes',1024),options);
 max_exp=response.exposureMax;
 max_fr=1/(response.minFramePeriod/1000/1000/1000);
+response2 = webwrite([cameraURL '/control/p'],struct('exposureMode','shutterGating','exposurePeriod', floor(max_exp),'frameRate',max_fr),options);
 response = webwrite([cameraURL '/control/set'],struct('ioMapping',struct('shutter',struct('shutterTriggersFrame',0,'source','io1','debounce',0,'invert',0))),options);
-response = webwrite([cameraURL '/control/p'],struct('exposureMode','shutterGating','exposurePeriod', floor(max_exp),'frameRate',max_fr),options);
+% swapped the two above.
 pause(cmd_delays)
 
-if strcmp(response.exposureMode,'shutterGating')
+if strcmp(response2.exposureMode,'shutterGating')
 	set(frame_nr_display,'String',['setting external trigger OK!']);drawnow;
 else
 	set(frame_nr_display,'String',['Error: External trigger could not be set!']);drawnow;
