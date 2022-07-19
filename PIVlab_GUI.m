@@ -2584,6 +2584,7 @@ else %expected_image_size is not empty, an image has been read before
 		cancelbutt_Callback
 		uiwait(warndlg('Error: All images in a session  MUST have the same size!'));
 		warning off
+		recycle('off');
 		delete('cancel_piv');
 		warning on
 	end
@@ -4909,6 +4910,7 @@ ok=checksettings;
 handles=gethand;
 try
 	warning off
+	recycle('off');
 	delete('cancel_piv');
 	put('cancel',0);
 	warning on
@@ -5381,6 +5383,7 @@ if ok==1
 	put('cancel',0);
 	try
 		warning off
+		recycle('off');
 		delete('cancel_piv')
 		warning on
 	catch
