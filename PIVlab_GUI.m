@@ -4914,10 +4914,13 @@ try
 	delete('cancel_piv');
 	put('cancel',0);
 	warning on
-catch
+catch ME
+	disp('There was an error deleting a temporary file.')
+	disp('Please check if this solves your problem:')
+	disp('https://groups.google.com/g/PIVlab/c/2O2EXgGg6Uc')
+	disp(ME)
 end
 if ok==1
-
 	try
 		if get(handles.update_display_checkbox,'Value')==1
 			put('update_display',1);
@@ -5055,7 +5058,6 @@ if ok==1
 			end
 			parfor i=1:size(slicedfilepath1,2)
 				if exist('cancel_piv','file')
-					%disp('cancelled')
 					close(hbar);
 					continue
 				end
@@ -5143,7 +5145,6 @@ if ok==1
 			parfor i=1:size(slicedfilepath1,2)
 				%------------------------
 				if exist('cancel_piv','file')
-					%disp('cancelled')
 					close(hbar);
 					continue
 				end
@@ -5386,7 +5387,11 @@ if ok==1
 		recycle('off');
 		delete('cancel_piv')
 		warning on
-	catch
+	catch ME
+		disp('There was an error deleting a temporary file.')
+		disp('Please check if this solves your problem:')
+		disp('https://groups.google.com/g/PIVlab/c/2O2EXgGg6Uc')
+		disp(ME)
 	end
 	assignin('base','correlation_matrices',correlation_matrices_list);
 end
@@ -5762,7 +5767,6 @@ put('cancel',1);
 fileID = fopen('cancel_piv','w');
 fwrite(fileID,1);
 fclose(fileID);
-
 
 drawnow;
 toolsavailable(1);
