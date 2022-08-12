@@ -1,7 +1,7 @@
 %synchronizer befehl: FREQ:2;CAM:0;ENER:0;ener%:100;F1EXP:0;INTERF:10000;EXTDLY:0;EXTSKP:0;LASER:enable{013}
 % nur freq und ener% --> pulslänge in us und interf wird verwendet
 
-function [OutputError,ima,frame_nr_display] = PIVlab_capture_chronos_synced_capture(cameraIP,nr_of_images,exposure_time,framerate,do_realtime,ROI_live)
+function [OutputError,ima,frame_nr_display] = PIVlab_capture_chronos_synced_capture(cameraIP,nr_of_images,framerate,do_realtime,ROI_live)
 
 cameraURL = ['http://' cameraIP];
 options = weboptions('MediaType','application/json','HeaderFields',{'Content-Type' 'application/json'});

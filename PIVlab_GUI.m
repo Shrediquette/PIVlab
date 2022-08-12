@@ -1969,7 +1969,7 @@ item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
 handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Select configuration:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_configtxt');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',{'PIVlab SimpleSync + pco.pixelfly usb' 'PIVlab SimpleSync + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS' 'PIVlab LD-PS + Chronos'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
+handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',{'PIVlab SimpleSync + pco.pixelfly usb' 'PIVlab SimpleSync + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS' 'PIVlab LD-PS + Chronos' 'PIVlab LD-PS + Basler'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.ac_comport = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'COM1'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_comport');
@@ -1994,7 +1994,7 @@ item=[0 item(2)+item(4) parentitem(3)/4*2.5 1];
 handles.ac_fpstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Frame rate [Hz]:','tag','ac_fpstxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
-handles.ac_fps = uicontrol(handles.uipanelac_laser,'Style','popupmenu','String',{'5' '3' '1.5' '1'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_fps','TooltipString','Double-image frame rate during PIV image capture','interruptible','off','busyaction','cancel');
+handles.ac_fps = uicontrol(handles.uipanelac_laser,'Style','popupmenu','String',{'5' '3' '1.5' '1'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_fps','TooltipString','Frame rate during PIV image capture','interruptible','off','busyaction','cancel');
 
 item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2.5 1];
 handles.ac_interpulstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pulse distance [µs]:','tag','ac_interpulstxt');
@@ -11189,10 +11189,19 @@ if alreadyconnected
 	end
 	%Pulse distance
 	pulse_sep=str2double(get(handles.ac_interpuls,'String'));
-	
+
 	if exist('laser_device_id.mat','file') == 2
 	else
-		get_laser_id = inputdlg(['Please enter the ID of your laser / synchronizer.' sprintf('\n') 'It can be found on the sticker on the device.']);
+		try
+			writeline(serpo,'WhoAreYou?');
+			pause(0.3)
+			warning off
+			serial_answer=readline(serpo);
+			assignin ('base','serial_answer',serial_answer)
+			warning on
+		catch
+		end
+		get_laser_id = inputdlg(['Please enter the ID of your laser / synchronizer.' sprintf('\n') 'It can be found on the sticker on the device.'],'First time connection',1,{convertStringsToChars(serial_answer)});
 		if ~isempty(get_laser_id)
 			id=get_laser_id{1};
 			[filepath,~,~] = fileparts(mfilename('fullpath'));
@@ -11215,8 +11224,8 @@ if alreadyconnected
 	if switch_it==1
 		flush(serpo)
 		camera_type=retr('camera_type');
-		
-		if ~strcmp(camera_type,'chronos') %not chronos
+
+		if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly')
 			send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
 		else
 			send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(str2double(ac_fps_str(ac_fps_value))) ';CAM:' int2str(0) ';ENER:' int2str(0) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(0) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(0) ';EXTSKP:' int2str(0) ';LASER:enable'];
@@ -11391,14 +11400,20 @@ if isempty(binning)
 	binning=1;
 end
 if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'chronos') %ROI selection available only for pco panda
-	uiwait(msgbox('ROI selection is only available for the pco.panda 26 DS.'))
-else
+	uiwait(msgbox('ROI selection is not available for the selected camera type.'))
+end
+
+if strcmp(camera_type,'basler')
+	uiwait(msgbox('ROI selection for the Basler camera series will be implemented soon!'))
+end
+
+if strcmp(camera_type,'pco_panda') 
 	try
 		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
 	catch
 		set(handles.ac_expo,'String','100');
-		expos=100000;
-	end
+			expos=100000;
+		end
 	projectpath=get(handles.ac_project,'String');
 	capture_ok=check_project_path(projectpath,'calibration');
 	if capture_ok==1
@@ -11549,9 +11564,11 @@ if ready==1
 
 		%try
 		set(handles.ac_calibcapture,'String','Stop')
-		if ~strcmp(camera_type,'chronos') %pco cameras
+		if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') %pco cameras
 			[errorcode, caliimg,framerate_max]=PIVlab_capture_pco(50000,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
-		else
+		elseif strcmp(camera_type,'basler')
+			[errorcode, caliimg]=PIVlab_capture_basler_calibration_image(expos);
+		elseif strcmp(camera_type,'chronos')
 			cameraIP=retr('Chronos_IP');
 			if isempty(cameraIP)
 				uiwait(msgbox({'Chronos Setup not performed.' 'Please click "Setup" in "Camera settings"'}))
@@ -11657,10 +11674,8 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 
 			value=get(handles.ac_config,'value');
 
-			if value== 3 || value == 4 || value ==5  %setups with LD-PS
-				%do nothing... Laser power can not be adjusted on the fly with LD-PS
-			else
-				set(handles.ac_power,'enable','on')
+			if value== 1 || value == 2 %setups without lD-PS
+				set(handles.ac_power,'enable','on') %here, laser power can be adjusted while it is running.
 			end
 			set(handles.ac_lensctrl,'enable','on')
 
@@ -11673,7 +11688,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				waitbar(.33,f,'Starting external devices...');
 				pause(1)
 			end
-			if value~= 3 && value ~= 4 && value ~= 5 %setup withOUT LD-PS
+			if value==1 || value==2 %setup withOUT LD-PS
 				%Start-up sequence for normal Q-Switched laser
 				waitbar(.5,f,'Starting laser...');
 				control_simple_sync_serial(1);
@@ -11688,13 +11703,13 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				waitbar(1,f,'Starting camera...');
 				pause(1)
 				close(f)
-			else
+			elseif value == 3 || value == 4 %pco cameras with laser diode
 				%Start-up sequence for PIVlab LD-PS (much quicker)
-				if value ~= 5 %not chronos
-					waitbar(.01,f,'Starting laser...');
-					control_simple_sync_serial(1);
-					put('laser_running',1);
-				end
+				waitbar(.01,f,'Starting laser...');
+				control_simple_sync_serial(1);
+				put('laser_running',1);
+				close(f)
+			elseif value== 5 || value == 6 %chronos and basler: Camera needs to be started first, afterwards the laser is enabled.
 				close(f)
 			end
 			camera_type=retr('camera_type');
@@ -11704,6 +11719,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 			end
 			value=get(handles.ac_config,'value');
 			if value== 3 || value == 4 %setup with LD-PS and pco
+				%require a calculation of the exposure time which depends on the laser pulse length
 				las_percent=str2double(get(handles.ac_power,'String'));
 				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
 				f1exp_cam =floor(pulse_sep*las_percent/100)+1; %+1 because in the snychronizer, the cam expo is started 1 us before the ld pulse
@@ -11712,12 +11728,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 					msgbox (['Exposure time of camera too low. Please increase laser energy or pulse distance.' sprintf('\n') 'Pulse_distance[µs] * laser_energy[%] must be >= 6 µs'])
 					uiwait
 				end
-			elseif value== 5 %chronos
-				las_percent=str2double(get(handles.ac_power,'String'));
-				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
-				f1exp_cam =floor(pulse_sep*las_percent/100)+1; %+1 because in the snychronizer, the cam expo is started 1 us before the ld pulse
-				disp(['camera exposure time = ' num2str(f1exp_cam)])
-			else
+			else 
 				f1exp_cam=retr('f1exp_cam');
 			end
 			if value == 5 %chronos
@@ -11726,19 +11737,28 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				cameraIP=retr('Chronos_IP');
 				[OutputError] = PIVlab_capture_chronos_synced_start(cameraIP,cam_fps); %prepare cam and start camera (waiting for trigger...)
 				control_simple_sync_serial(1); put('laser_running',1); %turn on laser
-				[OutputError,ima,frame_nr_display] = PIVlab_capture_chronos_synced_capture(cameraIP,imageamount,f1exp_cam,cam_fps,do_realtime,ac_ROI_realtime); %capture n images, display livestream
-			else %pco cameras
+				[OutputError,ima,frame_nr_display] = PIVlab_capture_chronos_synced_capture(cameraIP,imageamount,cam_fps,do_realtime,ac_ROI_realtime); %capture n images, display livestream
+			elseif value == 1 || value == 2 || value == 3 || value == 4  %pco cameras
 				PIVlab_capture_pco(imageamount,f1exp_cam,'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI_realtime,binning,ac_ROI_general,camera_type,0);
+			elseif value == 6  %basler cameras
+				[OutputError,basler_vid,frame_nr_display] = PIVlab_capture_basler_synced_start(imageamount); %prepare cam and start camera (waiting for trigger...)
+				control_simple_sync_serial(1); put('laser_running',1); %turn on laser
+				[OutputError,basler_vid] = PIVlab_capture_basler_synced_capture(basler_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display); %capture n images, display livestream
+				
 			end
 			%disable external devices
 			external_device_control(0); % stops all external devices
 			control_simple_sync_serial(0);pause(0.1);control_simple_sync_serial(0);
 			put('laser_running',0);
-
-			if value == 5
+			if value == 5 %chronos
 				%when Chronos:save the images when finished recording to camera ram
 				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
 					PIVlab_capture_chronos_save (cameraIP,imageamount,projectpath,frame_nr_display)
+				end
+			end
+			if value == 6 %basler
+				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
+					[OutputError] = PIVlab_capture_basler_save(basler_vid,imageamount,projectpath,frame_nr_display); %save the images from ram to disk.
 				end
 			end
 
@@ -12027,7 +12047,7 @@ if value == 5 % chronos LD-PS
 	%put('master_freq',3);
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
-	avail_freqs={'1000' '850' '600' '500' '400' '300' '200' '100' '50' '25' '10' '5'};
+	avail_freqs={'1000' '850' '600' '500' '400' '300' '200' '150' '100' '70' '50' '25' '10' '5'};
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
 	if old_setting ~= value
@@ -12035,6 +12055,23 @@ if value == 5 % chronos LD-PS
 	end
 	%end
 end
+if value == 6 % basler
+	put('camera_type','basler');
+	put('f1exp',352) % Exposure start -> Q1 delay
+	%disp('testing laserdiode')
+	%put('f1exp_cam',300)
+	%put('master_freq',3);
+	put('f1exp_cam',350); %exposure time setting first frame
+	put('master_freq',15);
+	avail_freqs={'168' '100' '75' '50' '25' '10' '5'};
+	set(handles.ac_fps,'string',avail_freqs);
+	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+	if old_setting ~= value
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
+	%end
+end
+
 ac_expo_Callback
 
 function ac_expo_Callback(~,~,~)
@@ -12062,6 +12099,14 @@ if strcmp(camera_type,'chronos')
 	end
 	if str2double(get(handles.ac_expo,'String')) > 100000
 		set(handles.ac_expo,'String','100000')
+	end
+end
+if strcmp(camera_type,'basler')
+	if str2double(get(handles.ac_expo,'String')) < 0.05
+		set(handles.ac_expo,'String','0.05')
+	end
+	if str2double(get(handles.ac_expo,'String')) > 1000
+		set(handles.ac_expo,'String','1000')
 	end
 end
 
