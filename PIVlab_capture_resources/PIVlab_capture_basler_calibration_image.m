@@ -54,104 +54,79 @@ colorbar
 
 
 %% get images
-
 basler_vid.FramesPerTrigger = 1;
 set(frame_nr_display,'String','');
 preview(basler_vid,image_handle_basler)
 while getappdata(hgui,'cancel_capture') ~=1
+	ima = image_handle_basler.CData;
+	%% sharpness indicator
+	sharpness_enabled = getappdata(hgui,'sharpness_enabled');
+	if sharpness_enabled == 1 % sharpness indicator
+		textx=1240;
+		texty=950;
+		[~,~] = PIVlab_capture_sharpness_indicator (ima,textx,texty);
+	else
+		delete(findobj('tag','sharpness_display_text'));
+	end
+	crosshair_enabled = getappdata(hgui,'crosshair_enabled');
+	if crosshair_enabled == 1 %cross-hair
+		%% cross-hair
+		locations=[0.15 0.5 0.85];
+		half_thickness=1;
+		brightness_incr=101;
+		ima_ed=ima;
+		old_max=max(ima(:));
+		for loca=locations
+			%vertical
+			ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)=ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)+brightness_incr;
+			%horizontal
+			ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)=ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)+brightness_incr;
+		end
+		ima_ed(ima_ed>old_max)=old_max;
+		set(image_handle_basler,'CData',ima_ed);
+	end
+	%% HISTOGRAM
+	if getappdata(hgui,'hist_enabled')==1
+		if isvalid(image_handle_basler)
+			hist_fig=findobj('tag','hist_fig');
+			if isempty(hist_fig)
+				hist_fig=figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Live histogram','Toolbar','none','tag','hist_fig','CloseRequestFcn', @HistWindow_CloseRequestFcn);
+			end
+			if ~exist ('old_hist_y_limits','var')
+				old_hist_y_limits =[0 35000];
+			else
+				if isvalid(hist_obj)
+					old_hist_y_limits=get(hist_obj.Parent,'YLim');
+				end
+			end
+			hist_obj=histogram(ima(1:2:end,1:2:end),'Parent',hist_fig,'binlimits',[0 255]);
+		end
+		%lowpass hist y limits for better visibility
+		if ~exist ('new_hist_y_limits','var')
+			new_hist_y_limits =[0 35000];
+		end
+		new_hist_y_limits=get(hist_obj.Parent,'YLim');
+		set(hist_obj.Parent,'YLim',(new_hist_y_limits*0.5 + old_hist_y_limits*0.5))
+	else
+		hist_fig=findobj('tag','hist_fig');
+		if ~isempty(hist_fig)
+			close(hist_fig)
+		end
+	end
 	drawnow limitrate;
-
 	%% Autofocus
 	%% Lens control
 	%to be implemented...
 end
 stoppreview(basler_vid)
-ima = image_handle_basler.CData;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-%{
-
-%% Kamera öffnen
-
-close all
-clear all
-clc
-
-imaqreset
-hwinf = imaqhwinfo;
-info = imaqhwinfo(hwinf.InstalledAdaptors{1});
-
-if strcmp(info.AdaptorName,'gentl')
-	disp('gentl adaptor found.')
-else
-	disp('ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "gentl" to install it.')
+function HistWindow_CloseRequestFcn(hObject,~)
+hgui=getappdata(0,'hgui');
+setappdata(hgui,'hist_enabled',0);
+try
+	delete(hObject);
+catch
+	delete(gcf);
 end
-
-basler_name = info.DeviceInfo.DeviceName;
-disp(['Found camera: ' basler_name])
-basler_supported_formats = info.DeviceInfo.SupportedFormats;
-%basler_vid = videoinput(info.AdaptorName,1,basler_supported_formats{1});
-basler_vid = videoinput(info.AdaptorName);
-basler_settings = get(basler_vid);
-basler_settings.Source.DeviceLinkThroughputLimitMode = 'off';
-
-%% Preview machen
-%preview(vid, hImage); %hImage ist handle zu hImage=imagesc(bla)
-triggerconfig(basler_vid, 'manual');
-basler_settings.TriggerMode ='manual';
-basler_settings.Source.TriggerMode ='Off';
-basler_settings.Source.ExposureMode ='Timed';
-basler_settings.Source.ExposureTime =20000;
-
-%% PIV images capturen
-triggerconfig(basler_vid, 'hardware');
-basler_settings.TriggerSource = 'Line1';
-basler_settings.Source.ExposureMode = 'TriggerWidth';
-basler_settings.Source.TriggerSource ='Line1';
-basler_settings.Source.TriggerSelector='FrameStart';
-basler_settings.Source.TriggerMode ='On';
-basler_settings.Source.ExposureOverlapTimeMax = basler_settings.Source.SensorReadoutTime;
-
-basler_frames_to_capture = 50;
-basler_vid.FramesPerTrigger = basler_frames_to_capture;
-
-start(basler_vid);
-figure;
-while basler_vid.FramesAcquired < (basler_frames_to_capture-1)
-	%frame = getsnapshot(basler_vid);
-	pause(0.1)
-	%das muss eleganter gehen....
-	if islogging(basler_vid)
-		frame = peekdata(basler_vid,1);
-		imagesc(frame(:,:,:,1));
-	end
-
-end
-disp('finished')
-basler_data = getdata(basler_vid); %ruft alle Frames in RAM ab. Frame 1,2,3 sind müll
-stop(basler_vid);
-%preview(basler_vid);
-
-
-%LoggingMode disk, disk+memory.
-%Wenn im Memory ist, dann öfter mal abholen mit getdata, sonst speicher voll.
-
-start(basler_vid);
-isrunning(basler_vid)
-islogging(basler_vid)
-basler_vid.FramesAcquired %checken ob gleich der angeforderten frames -> dann fertig.
-%}
