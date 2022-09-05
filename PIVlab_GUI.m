@@ -8979,16 +8979,14 @@ if formattype==1
 			colochoice=get(handles.colorbarcolor,'String');
 			coloobj=colorbar(posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')},'HitTest','off');
 
+			set(axesObject2,'ydir','reverse')
+			set(axesObject2,'Clipping','on')
+
 			if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
-				axis image
-				%WITH AXIS IMAGE; THE CLIPPING DOESNT WORK ANYMORE:
-				%https://de.mathworks.com/matlabcentral/answers/164191-clipping-the-quiver-plot#answer_748078
-				%axis equal geht, dann evtl ydir reversen manuell oder so....
 				set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
 				ylabel(coloobj,name{retr('displaywhat')},'fontsize',9,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
 			end
 			if strcmp(posichoice{get(handles.colorbarpos,'Value')},'North')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'South')==1
-				axis image
 				set(coloobj,'XTickLabel',num2str(get(coloobj,'XTick')','%5.5g'))
 				xlabel(coloobj,name{retr('displaywhat')},'fontsize',11,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
 			end
