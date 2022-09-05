@@ -7029,12 +7029,30 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 		resultslist{10,frame}=[]; %remove smoothed u
 		resultslist{11,frame}=[]; %remove smoothed v
 	end
+
+	%The direction of the coordinate system influences derivatives with gradients.
+	x_axis_direction=get(handles.x_axis_direction,'value'); %1= increase to right, 2= increase to left
+	y_axis_direction=get(handles.y_axis_direction,'value'); %1= increase to bottom, 2= increase to top
+
+	if x_axis_direction==1
+		x_adjusted=x;
+	else
+		x_adjusted=fliplr(x);
+	end
+
+	if y_axis_direction==1
+		y_adjusted=y;
+	else
+		y_adjusted=flipud(y);
+	end
+
+
 	if deriv==1 %vectors only
 		%do nothing
 		%disp('vectors')
 	end
 	if deriv==2 %vorticity
-		[curlz,~]= curl(x*calxy,y*calxy,u*calu,v*calv);
+		[curlz,~]= curl(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
 		derived{1,frame}=-curlz;
 		%disp('vorticity')
 	end
@@ -7052,19 +7070,19 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 		%disp('v')
 	end
 	if deriv==6
-		derived{5,frame}=divergence(x*calxy,y*calxy,u*calu,v*calv);
+		derived{5,frame}=divergence(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
 		%disp('divergence')
 	end
 	if deriv==7
-		derived{6,frame}=dcev(x*calxy,y*calxy,u*calu,v*calv);
+		derived{6,frame}=dcev(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
 		%disp('dcev')
 	end
 	if deriv==8
-		derived{7,frame}=shear(x*calxy,y*calxy,u*calu,v*calv);
+		derived{7,frame}=shear(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
 		%disp('shear')
 	end
 	if deriv==9
-		derived{8,frame}=strain(x*calxy,y*calxy,u*calu,v*calv);
+		derived{8,frame}=strain(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
 		%disp('strain')
 	end
 	if deriv==10
@@ -12067,7 +12085,7 @@ if value == 6 % basler
 	%put('master_freq',3);
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
-	avail_freqs={'168' '100' '75' '50' '25' '10' '5'};
+	avail_freqs={'168' '100' '75' '60' '50' '25' '10' '5'};
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
 	if old_setting ~= value
