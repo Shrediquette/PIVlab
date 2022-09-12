@@ -24,7 +24,7 @@ if isempty(fh)
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 	guidata(MainWindow,handles)
 	setappdata(0,'hgui',MainWindow);
-	version = '2.58';
+	version = '2.59';
 	put('PIVver', version);
 	v=ver('MATLAB');
 	%splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','on','handlevisibility','off');movegui(splashscreen,'center');drawnow;
@@ -740,6 +740,10 @@ parentitem=get(handles.multip03, 'Position');
 item=[0 0 0 0];
 item=[0 item(2)+item(4)+26 parentitem(3) 2];
 handles.preview_preprocess = uicontrol(handles.multip03,'Style','pushbutton','String','Apply and preview current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preview_preprocess_Callback,'Tag','preview_preprocess','TooltipString','Preview the effect of image pre-processing');
+
+item=[0+item(3)/2 item(2)+item(4) parentitem(3)/2 1.5];
+handles.export_preprocess = uicontrol(handles.multip03,'Style','pushbutton','String','Export preview','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @export_preprocess_Callback,'Tag','export_preprocess','TooltipString','Export the preprocessed image (use toggle button to switch between image A and B)');
+
 
 %% Multip04
 handles.multip04 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','PIV settings (CTRL+S)', 'Tag','multip04','fontweight','bold');
@@ -4606,6 +4610,30 @@ if size(filepath,1) >1 || retr('video_selection_done') == 1
 		if size(ximask,1)>1
 			dispMASK(1-str2num(get(handles.masktransp,'String'))/100)
 		end
+	end
+end
+
+function export_preprocess_Callback(~, ~, ~)
+filepath=retr('filepath');
+if size(filepath,1) > 1 %did the user load images?
+	sessionpath=retr('sessionpath');
+	if isempty(sessionpath)
+		sessionpath=retr('pathname');
+	end
+
+	preview_preprocess_Callback
+	preprocessed_img=findobj(gca,'type','image');
+	preprocessed_img=(preprocessed_img.CData);
+	toggler=retr('toggler');
+	if toggler==0
+		img_idx='_A';
+	else
+		img_idx='_B';
+	end
+	[FileName,PathName] = uiputfile('*.tif','Save preprocessed image as...',fullfile(sessionpath,['PIVlab_preproc' img_idx '.tif']));
+	if isequal(FileName,0) | isequal(PathName,0)
+	else
+		imwrite(preprocessed_img,fullfile(PathName,FileName),'Compression','none');
 	end
 end
 
