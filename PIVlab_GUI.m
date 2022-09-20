@@ -1973,7 +1973,7 @@ item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
 handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Select configuration:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_configtxt');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',{'PIVlab SimpleSync + pco.pixelfly usb' 'PIVlab SimpleSync + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS' 'PIVlab LD-PS + Chronos' 'PIVlab LD-PS + Basler'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
+handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',{'PIVlab SimpleSync + pco.pixelfly usb' 'PIVlab SimpleSync + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS' 'PIVlab LD-PS + Chronos' 'PIVlab LD-PS + Basler' 'PIVlab LD-PS + FLIR'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.ac_comport = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'COM1'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_comport');
@@ -2047,7 +2047,7 @@ item=[parentitem(3)/4*2  item(2) parentitem(3)/4 1.5];
 handles.ac_lensctrl = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Lens','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @ac_lensctrl_Callback,'Tag','ac_lensctrl','TooltipString','Control camera lens');
 
 item=[parentitem(3)/4*3  item(2) parentitem(3)/4 1.5];
-handles.ac_chronosctrl = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Setup','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @ac_chronosctrl_Callback,'Tag','ac_chronosctrl','TooltipString','Setup camera');
+handles.ac_chronosctrl = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Setup','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @ac_chronosctrl_Callback,'Tag','ac_chronosctrl','TooltipString','Setup Chronos camera');
 
 
 % Calib capture
@@ -11407,8 +11407,8 @@ end
 function ac_calibBinning_Callback (~,~,~)
 handles=gethand;
 camera_type=retr('camera_type');
-if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'chronos')  %ROI selection available only for pco panda
-	uiwait(msgbox('Binning is only available for the pco.panda 26 DS.'))
+if ~strcmp(camera_type,'pco_panda')  %ROI selection available only for pco panda
+	uiwait(msgbox('Binning is (up to now) only available for the pco.panda 26 DS.','modal'))
 else
 	binning=retr('binning');
 	if isempty(binning)
@@ -11452,7 +11452,11 @@ if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'chronos') %ROI sele
 end
 
 if strcmp(camera_type,'basler')
-	uiwait(msgbox('ROI selection for the Basler camera series will be implemented soon!'))
+	uiwait(msgbox('ROI selection for the Basler camera series will be implemented soon!','modal'))
+end
+
+if strcmp(camera_type,'flir')
+	uiwait(msgbox('ROI selection for the FLIR camera series will be implemented soon!','modal'))
 end
 
 if strcmp(camera_type,'pco_panda') 
@@ -11616,6 +11620,8 @@ if ready==1
 			[errorcode, caliimg,framerate_max]=PIVlab_capture_pco(50000,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
 		elseif strcmp(camera_type,'basler')
 			[errorcode, caliimg]=PIVlab_capture_basler_calibration_image(expos);
+		elseif strcmp(camera_type,'flir')
+			[errorcode, caliimg]=PIVlab_capture_flir_calibration_image(expos);
 		elseif strcmp(camera_type,'chronos')
 			cameraIP=retr('Chronos_IP');
 			if isempty(cameraIP)
@@ -11687,7 +11693,6 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 	button = questdlg('Start Laser and camera?','Warning','Yes','Cancel','Yes');
 	if strmatch(button,'Yes')==1
 		handles=gethand;
-
 		put('cancel_capture',0);
 		projectpath=get(handles.ac_project,'String');
 		if get(handles.ac_pivcapture_save,'Value')==1 %check settings only when user wants to save data
@@ -11757,7 +11762,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				control_simple_sync_serial(1);
 				put('laser_running',1);
 				close(f)
-			elseif value== 5 || value == 6 %chronos and basler: Camera needs to be started first, afterwards the laser is enabled.
+			elseif value== 5 || value == 6 || value==7 %chronos and basler and flir: Camera needs to be started first, afterwards the laser is enabled.
 				close(f)
 			end
 			camera_type=retr('camera_type');
@@ -11792,7 +11797,11 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				[OutputError,basler_vid,frame_nr_display] = PIVlab_capture_basler_synced_start(imageamount); %prepare cam and start camera (waiting for trigger...)
 				control_simple_sync_serial(1); put('laser_running',1); %turn on laser
 				[OutputError,basler_vid] = PIVlab_capture_basler_synced_capture(basler_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display); %capture n images, display livestream
-				
+			elseif value == 7  %flir cameras
+				[OutputError,flir_vid,frame_nr_display] = PIVlab_capture_flir_synced_start(imageamount,cam_fps); %prepare cam and start camera (waiting for trigger...)
+				control_simple_sync_serial(1); put('laser_running',1); %turn on laser
+				[OutputError,flir_vid] = PIVlab_capture_flir_synced_capture(flir_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display); %capture n images, display livestream
+
 			end
 			%disable external devices
 			external_device_control(0); % stops all external devices
@@ -11807,6 +11816,11 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 			if value == 6 %basler
 				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
 					[OutputError] = PIVlab_capture_basler_save(basler_vid,imageamount,projectpath,frame_nr_display); %save the images from ram to disk.
+				end
+			end
+			if value == 7 %flir
+				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
+					[OutputError] = PIVlab_capture_flir_save(flir_vid,imageamount,projectpath,frame_nr_display); %save the images from ram to disk.
 				end
 			end
 
@@ -12119,6 +12133,24 @@ if value == 6 % basler
 	end
 	%end
 end
+if value == 7 % Flir
+	put('camera_type','flir');
+
+	put('f1exp',352) % Exposure start -> Q1 delay
+	%disp('testing laserdiode')
+	%put('f1exp_cam',300)
+	%put('master_freq',3);
+	put('f1exp_cam',350); %exposure time setting first frame
+	put('master_freq',15);
+	avail_freqs={'60' '50' '40' '30' '20' '10'};
+	set(handles.ac_fps,'string',avail_freqs);
+	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+	if old_setting ~= value
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
+	%end
+end
+
 
 ac_expo_Callback
 
@@ -12167,8 +12199,12 @@ if get(handles.bg_subtract,'Value')==0
 end
 
 function ac_chronosctrl_Callback(~,~,~)
-PIVlab_capture_chronos_settings_GUI
-
+camera_type=retr('camera_type');
+if strcmp(camera_type,'chronos')
+	PIVlab_capture_chronos_settings_GUI
+else
+	uiwait(msgbox('Available for Chronos cameras only.','modal'))
+end
 
 function ac_lensctrl_Callback (~,~,~)
 handles=gethand;
