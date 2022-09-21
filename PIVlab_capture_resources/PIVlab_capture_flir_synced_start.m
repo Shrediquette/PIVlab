@@ -58,7 +58,11 @@ triggerconfig(flir_vid, 'hardware');
 %min blind time between frames is 400 µs
 flir_settings.Source.ExposureTime = floor(1/frame_rate*1000*1000-405);
 
-
+%% Set Line3 to output ExposureActive Signal for debugging:
+flir_settings.Source.LineSelector='Line3';
+flir_settings.Source.LineSource = 'ExposureActive';
+flir_settings.Source.LineMode = 'Output';
+flir_settings.Source.LineInverter='False';
 
 %% start acqusition (waiting for trigger)
 flir_frames_to_capture = nr_of_images*2;
