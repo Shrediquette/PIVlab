@@ -1988,31 +1988,35 @@ handles.ac_serialstatus = uicontrol(handles.uipanelac_general,'Style','edit','un
 
 % Sync control
 parentitem=get(handles.multip24, 'Position');
-item=[0 8.5 parentitem(3) 10.75];
+item=[0 8.5 parentitem(3) 10.75+1];
 handles.uipanelac_laser = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Synchronizer control', 'Tag','uipanelac_laser','fontweight','bold');
 
 parentitem=get(handles.uipanelac_laser, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4) parentitem(3)/4*2.5 1];
+item=[0 0 parentitem(3)/4*2.5 1];
 handles.ac_fpstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Frame rate [Hz]:','tag','ac_fpstxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
 handles.ac_fps = uicontrol(handles.uipanelac_laser,'Style','popupmenu','String',{'5' '3' '1.5' '1'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_fps','TooltipString','Frame rate during PIV image capture','interruptible','off','busyaction','cancel');
 
-item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2.5 1];
+item=[0 item(2)+item(4)+margin*0.2 parentitem(3)/4*2.5 1];
 handles.ac_interpulstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pulse distance [탎]:','tag','ac_interpulstxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
 handles.ac_interpuls = uicontrol(handles.uipanelac_laser,'Style','edit','String','1000','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_interpuls','TooltipString','Pulse spacing of the laser','interruptible','off','busyaction','cancel');
 
-item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2.5 1];
+item=[0 item(2)+item(4)+margin*0.2 parentitem(3)/4*2.5 1];
 handles.ac_powertxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Laser energy [%]:','tag','ac_powertxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
 handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String','10','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_power','TooltipString','Laser energy','interruptible','off','busyaction','cancel');
 
-item=[0 item(2)+item(4)+margin*0.5 parentitem(3)/4*2 2];
+item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
+handles.ac_pulselengthtxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pulse length: 0 탎','tag','ac_pulselengthtxt');
+
+
+item=[0 item(2)+item(4)+margin*0.2 parentitem(3)/4*2 2];
 handles.ac_laserstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','N/A','tag','ac_laserstatus','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold','TooltipString','Status of the laser');
 
 item=[parentitem(3)/4*2 item(2) parentitem(3)/4*2 2];
@@ -2031,7 +2035,7 @@ handles.ac_device_control = uicontrol(handles.uipanelac_laser,'Style','pushbutto
 
 % Camera settings
 parentitem=get(handles.multip24, 'Position');
-item=[0 19.25 parentitem(3) 3.25];
+item=[0 19.25+1 parentitem(3) 3.25];
 handles.uipanelac_camsettings = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Camera settings', 'Tag','uipanelac_camsettings','fontweight','bold');
 
 parentitem=get(handles.uipanelac_camsettings, 'Position');
@@ -2053,7 +2057,7 @@ handles.ac_chronosctrl = uicontrol(handles.uipanelac_camsettings,'Style','pushbu
 % Calib capture
 
 parentitem=get(handles.multip24, 'Position');
-item=[0 22.5 parentitem(3) 4.5];
+item=[0 22.5+1 parentitem(3) 4.5];
 
 handles.uipanelac_calib = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Live image', 'Tag','uipanelac_calib','fontweight','bold');
 
@@ -2064,7 +2068,7 @@ item=[0 item(2)+item(4) parentitem(3)/2 1];
 handles.ac_expotxt = uicontrol(handles.uipanelac_calib,'Style','text', 'String','Exposure [ms]: ','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_expotxt');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
-handles.ac_expo = uicontrol(handles.uipanelac_calib,'Style','edit','units','characters','HorizontalAlignment','right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','350','tag','ac_expo','TooltipString','Exposure of the camera during calibration image capture','Callback', @ac_expo_Callback);
+handles.ac_expo = uicontrol(handles.uipanelac_calib,'Style','edit','units','characters','HorizontalAlignment','right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','50','tag','ac_expo','TooltipString','Exposure of the camera during calibration image capture','Callback', @ac_expo_Callback);
 
 item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/4 1.5];
 handles.ac_calibcapture = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Start','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @ac_calibcapture_Callback,'Tag','ac_calibcapture','TooltipString','Start live view of the camera');
@@ -2074,7 +2078,7 @@ handles.ac_calibsave = uicontrol(handles.uipanelac_calib,'Style','pushbutton','S
 
 % PIV capture
 parentitem=get(handles.multip24, 'Position');
-item=[0 27.25 parentitem(3) 5];
+item=[0 27.25+1 parentitem(3) 5];
 handles.uipanelac_capture = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Capture PIV images', 'Tag','uipanelac_capture','fontweight','bold');
 
 parentitem=get(handles.uipanelac_capture, 'Position');
@@ -11329,9 +11333,13 @@ if ~isempty(C)
 		else
 			set(handles.ac_laserstatus,'BackgroundColor',[1 0 0]); %red = off
 			set(handles.ac_laserstatus,'String','Laser OFF');
+			pl_msg=['Pulse length: 0 탎'];
+			set (handles.ac_pulselengthtxt,'String', pl_msg);
 		end
 		if strcmp(C{8},'1') %laser is reported to be on
-			disp (['pulse length: ' C{9} ' 탎'])
+			pl_msg=['Pulse length: ' C{9} ' 탎'];
+			set (handles.ac_pulselengthtxt,'String', pl_msg);
+			disp (pl_msg)
 		end
 	end
 
@@ -12125,7 +12133,7 @@ if value == 6 % basler
 	%put('master_freq',3);
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
-	avail_freqs={'168' '100' '75' '60' '50' '25' '10' '5'};
+	avail_freqs={'168' '100' '75' '60' '50' '25' '10'};
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
 	if old_setting ~= value
