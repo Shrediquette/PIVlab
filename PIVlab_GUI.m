@@ -11175,6 +11175,17 @@ function ac_sync_settings_Callback(~,~,~)
 serpo=retr('serpo');
 handles=gethand;
 
+if str2double(get(handles.ac_interpuls,'String')) < retr('min_allowed_interframe')
+	old_bg=get(handles.ac_interpuls,'BackgroundColor');
+	for i=1:3
+		set(handles.ac_interpuls,'BackgroundColor',[1 0 0]);
+		pause(0.1)
+		set(handles.ac_interpuls,'BackgroundColor',old_bg);
+		pause(0.1)
+	end
+	set(handles.ac_interpuls,'String',num2str(retr('min_allowed_interframe')))
+end
+
 if isnan(str2double(get(handles.ac_power,'String')))
 	set(handles.ac_power,'String','0')
 end
@@ -12086,6 +12097,7 @@ if value==1 || value==3 % ILA.piv nano / pco pixelfly with evergreen or LD-PS
 	put('master_freq',15);
 	put('binning',1);
 	avail_freqs={'5' '3' '1.5' '1'};
+	put('min_allowed_interframe',10);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
 	if old_setting ~= value
@@ -12102,6 +12114,7 @@ if value == 2 || value == 4% pco panda with evergreen or LD-PS
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',50); %war auf 50 für noch höhere framerates auf panda
 	avail_freqs={'50' '30' '15' '7.5' '5' '3' '1.5' '1'};
+	put('min_allowed_interframe',10);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
 	if old_setting ~= value
@@ -12118,6 +12131,7 @@ if value == 5 % chronos LD-PS
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
 	avail_freqs={'1000' '850' '600' '500' '400' '300' '200' '150' '100' '70' '50' '25' '10' '5'};
+	put('min_allowed_interframe',10);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
 	if old_setting ~= value
@@ -12134,6 +12148,7 @@ if value == 6 % basler
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
 	avail_freqs={'168' '100' '75' '60' '50' '25' '10'};
+	put('min_allowed_interframe',150);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
 	if old_setting ~= value
@@ -12143,7 +12158,6 @@ if value == 6 % basler
 end
 if value == 7 % Flir
 	put('camera_type','flir');
-
 	put('f1exp',352) % Exposure start -> Q1 delay
 	%disp('testing laserdiode')
 	%put('f1exp_cam',300)
@@ -12151,6 +12165,7 @@ if value == 7 % Flir
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
 	avail_freqs={'60' '50' '40' '30' '20' '10'};
+	put('min_allowed_interframe',470);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
 	if old_setting ~= value
