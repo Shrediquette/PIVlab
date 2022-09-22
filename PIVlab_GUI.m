@@ -11210,6 +11210,48 @@ if alreadyconnected
 	control_simple_sync_serial(laser_running);
 end
 
+function laser_device_id = find_laser_device
+handles=gethand;
+serpo=retr('serpo');
+try
+	serpo.Port;
+	alreadyconnected=1;
+catch
+	alreadyconnected=0;
+end
+if alreadyconnected
+	
+	if exist('laser_device_id.mat','file') == 2
+		old_laser_device_id = load('laser_device_id.mat','id');
+		old_laser_device_id = old_laser_device_id.id;
+	else
+		old_laser_device_id='%';
+	end
+	try
+		writeline(serpo,'WhoAreYou?');
+		pause(0.3)
+		warning off
+		serial_answer=readline(serpo);
+		warning on
+	catch
+	end
+	if isempty(serial_answer)
+		uiwait(msgbox(['No laser found.' sprintf('\n') 'Is the laser turned on?' sprintf('\n') 'Please try again.'],'modal'))
+	end
+	if strncmp(old_laser_device_id,serial_answer,20)==0 %if last laser ID DOES NOT equal current laser ID
+		get_laser_id = inputdlg(['Please enter the ID of your laser / synchronizer.' sprintf('\n') 'It can be found on the sticker on the device.'],'First time connection',1,{convertStringsToChars(serial_answer)});
+		if ~isempty(get_laser_id)
+			id=get_laser_id{1};
+			[filepath,~,~] = fileparts(mfilename('fullpath'));
+			save (fullfile(filepath, 'PIVlab_capture_resources', 'laser_device_id.mat'),'id')
+		end
+	end
+	laser_device_id = load('laser_device_id.mat','id');
+	laser_device_id = laser_device_id.id;
+else
+	no_dongle_msgbox
+end
+
 function serial_answer = control_simple_sync_serial(switch_it)
 try %try to switch of camera angle report
 	stop(timerfind)
@@ -11252,9 +11294,9 @@ if alreadyconnected
 	end
 	%Pulse distance
 	pulse_sep=str2double(get(handles.ac_interpuls,'String'));
-
-	if exist('laser_device_id.mat','file') == 2
-	else
+	laser_device_id=retr('laser_device_id');
+%{
+	if ~exist('laser_device_id.mat','file') == 2
 		try
 			writeline(serpo,'WhoAreYou?');
 			pause(0.3)
@@ -11273,6 +11315,7 @@ if alreadyconnected
 	end
 	laser_device_id = load('laser_device_id.mat','id');
 	laser_device_id = laser_device_id.id;
+	%}
 	%{
 	[filepath,~,~] = fileparts(mfilename('fullpath'));
 	disp([fullfile(filepath, 'PIVlab_capture_resources', 'laser_device_id.mat')]);
@@ -11416,6 +11459,10 @@ else
 		set(handles.ac_serialstatus,'Backgroundcolor',[0 1 0]);
 		update_ac_status(['Connected to ' selected_port]);
 		put('laser_running',0);
+
+	laser_device_id = find_laser_device;
+	put('laser_device_id',laser_device_id);
+
 		control_simple_sync_serial(0);
 	catch ME
 		update_ac_status(ME.message);
