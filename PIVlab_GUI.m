@@ -2385,12 +2385,26 @@ else
 	set(handles.ac_comport,'String',serports);
 	set(handles.ac_serialstatus,'Backgroundcolor',[1 0 0]);
 end
+
+
 % Set default image colormap limits
 put('ac_lower_clim',0);
 put('ac_upper_clim',2^16);
 delete(findobj('tag','shortcutlist'));
 %Keyboard shortcuts
 text(10,10,['Image acquisition keyboard shortcuts' sprintf('\n') 'CTRL SHIFT C : Toggle crosshair' sprintf('\n') 'CTRL SHIFT X : Toggle sharpness measure' sprintf('\n') 'CTRL SHIFT + : Increase display brightness' sprintf('\n') 'CTRL SHIFT - : Decrease display brightness' sprintf('\n') 'CTRL SHIFT K : Toggle between log and lin color scale' sprintf('\n') 'CTRL SHIFT H : Toggle histogram display'],'tag','shortcutlist','Color','black','BackgroundColor','white','VerticalAlignment','top');
+try
+	if ~alreadyconnected
+		if ispref('PIVlab_ad','enable_ad') &&  getpref('PIVlab_ad','enable_ad') ==0
+			%do not display ad
+		else
+			if exist('laser_device_id.mat','file') ~= 2
+				hardware_Ad
+			end
+		end
+	end
+catch
+end
 
 
 function preferences_Callback (~,~)
@@ -8471,6 +8485,9 @@ string={...
 	'';...
 	'http://PIVlab.blogspot.com';...
 	'contact: PIVlab@gmx.com';...
+	'';...
+	'Lasers, synchronizers and cameras for PIVlab:';...
+	'www.optolution.com';...
 	};
 helpdlg(string,'About')
 
