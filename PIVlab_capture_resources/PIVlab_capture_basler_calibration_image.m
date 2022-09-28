@@ -1,4 +1,4 @@
-function [OutputError,ima,frame_nr_display] = PIVlab_capture_basler_calibration_image(exposure_time)
+function [OutputError,ima,frame_nr_display] = PIVlab_capture_basler_calibration_image(img_amount,exposure_time,ROI_basler)
 OutputError=0;
 %% Prepare camera
 delete(imaqfind); %clears all previous videoinputs
@@ -32,13 +32,18 @@ basler_settings.Source.TriggerMode ='Off';
 basler_settings.Source.ExposureMode ='Timed';
 basler_settings.Source.ExposureTime =exposure_time;
 
+ROI_basler=[ROI_basler(1)-1,ROI_basler(2)-1,ROI_basler(3),ROI_basler(4)]; %unfortunaletly different definitions of ROI in pco and basler.
+basler_vid.ROIPosition=ROI_basler;
+
 %% prapare axis
 hgui=getappdata(0,'hgui');
 crosshair_enabled = getappdata(hgui,'crosshair_enabled');
 sharpness_enabled = getappdata(hgui,'sharpness_enabled');
 PIVlab_axis = findobj(hgui,'Type','Axes');
 
-image_handle_basler=imagesc(zeros(basler_settings.VideoResolution(2),basler_settings.VideoResolution(1)),'Parent',PIVlab_axis,[0 2^8]);
+%image_handle_basler=imagesc(zeros(basler_settings.VideoResolution(2),basler_settings.VideoResolution(1)),'Parent',PIVlab_axis,[0 2^8]);
+
+image_handle_basler=imagesc(zeros(ROI_basler(4),ROI_basler(3)),'Parent',PIVlab_axis,[0 2^8]);
 
 setappdata(hgui,'image_handle_basler',image_handle_basler);
 
@@ -57,7 +62,8 @@ colorbar
 basler_vid.FramesPerTrigger = 1;
 set(frame_nr_display,'String','');
 preview(basler_vid,image_handle_basler)
-while getappdata(hgui,'cancel_capture') ~=1
+displayed_img_amount=0;
+while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
 	ima = image_handle_basler.CData;
 	%% sharpness indicator
 	sharpness_enabled = getappdata(hgui,'sharpness_enabled');
@@ -111,6 +117,11 @@ while getappdata(hgui,'cancel_capture') ~=1
 		hist_fig=findobj('tag','hist_fig');
 		if ~isempty(hist_fig)
 			close(hist_fig)
+		end
+	end
+	if img_amount == 1
+		if sum(ima(1:10,1,1)) ~=10 %check if the display was updated, if there is real camera data. I didnt find a more elegant way...
+			displayed_img_amount=displayed_img_amount+1;
 		end
 	end
 	drawnow limitrate;

@@ -1973,7 +1973,7 @@ item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
 handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Select configuration:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_configtxt');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',{'PIVlab SimpleSync + pco.pixelfly usb' 'PIVlab SimpleSync + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS' 'PIVlab LD-PS + Chronos' 'PIVlab LD-PS + Basler' 'PIVlab LD-PS + FLIR'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
+handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',{'PIVlab SimpleSync + pco.pixelfly usb' 'PIVlab SimpleSync + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS' 'PIVlab LD-PS + Chronos' 'PIVlab LD-PS + Basler acA2000-165um' 'PIVlab LD-PS + FLIR FFY-U3-16S2M'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.ac_comport = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'COM1'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_comport');
@@ -2109,9 +2109,13 @@ set(handles.ac_msgbox,'BackgroundColor', get (handles.ac_msgbox,'BackgroundColor
 
 %Image acquisition: load last device
 try
+	warning off
 	load('PIVlab_settings_default.mat','last_selected_device');
 
-	set(handles.ac_config, 'value',last_selected_device);
+if exist('last_selected_device','var')	
+set(handles.ac_config, 'value',last_selected_device);
+end
+	warning on
 catch
 
 end
@@ -11530,19 +11534,16 @@ binning=retr('binning');
 if isempty(binning)
 	binning=1;
 end
-if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'chronos') %ROI selection available only for pco panda
-	uiwait(msgbox('ROI selection is not available for the selected camera type.'))
+if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'chronos') %ROI selection not yet available for pixelfly and chronos
+	uiwait(msgbox('ROI selection is not (yet) available for the selected camera type.'))
 end
 
-if strcmp(camera_type,'basler')
-	uiwait(msgbox('ROI selection for the Basler camera series will be implemented soon!','modal'))
-end
 
 if strcmp(camera_type,'flir')
 	uiwait(msgbox('ROI selection for the FLIR camera series will be implemented soon!','modal'))
 end
 
-if strcmp(camera_type,'pco_panda') 
+if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler')
 	try
 		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
 	catch
@@ -11554,18 +11555,21 @@ if strcmp(camera_type,'pco_panda')
 	if capture_ok==1
 		put('cancel_capture',0);
 		put('capturing',1);
-		%disp('NUR HIER WIRD DIE KAMERA AUF 5120x5120 gesetzt und ignoriert ROI')
-		%disp('ANSONSTEN WIRD IMMER ROI BERÜCKSICHTIGT')
-		camera_type=retr('camera_type');
+		max_cam_res=retr('max_cam_res');
+		if strcmp(camera_type,'pco_panda')
 		try
-			[errorcode, caliimg,~]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,[1,1, 5120/binning,5120/binning],camera_type,0);
+			[errorcode, caliimg,~]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,[1,1, max_cam_res(1)/binning,max_cam_res(2)/binning],camera_type,0);
 		catch ME
 			disp(ME)
 			uiwait(msgbox('Camera not connected'))
 			displogo
 			capture_ok=0;
 		end
+		elseif strcmp(camera_type,'basler')
+			[errorcode, caliimg]=PIVlab_capture_basler_calibration_image(1,expos,[1,1,max_cam_res]);
+		end
 		put('capturing',0);
+
 		if capture_ok==1
 			displaysize_x=floor(get(gca,'XLim'));
 			displaysize_y=floor(get(gca,'YLim'));
@@ -11573,13 +11577,14 @@ if strcmp(camera_type,'pco_panda')
 			warning off
 			load('PIVlab_settings_default.mat','ac_ROI_general');
 			warning on
-			if isempty(ac_ROI_general)
-				ac_ROI_general=[0.5,0.5,5120/binning,5120/binning]; %1 Hz default ROI
-			end
-			put('doing_roi',1)
-
+			
 			bla=findobj(gca,'type','image');
 			current_image_size=size(bla.CData);
+
+			if isempty(ac_ROI_general)
+				ac_ROI_general=[0.5,0.5,current_image_size(2)/binning,current_image_size(1)/binning]; %1 Hz default ROI
+			end
+			put('doing_roi',1)
 			stretched_image=adapthisteq(bla.CData);
 			bla.CData=stretched_image;
 			ac_ROI_general_handle = drawrectangle(gca,'Position',ac_ROI_general,'LabelVisible','hover','Deletable',0,'DrawingArea',[1 1 current_image_size(2) current_image_size(1)],'tag','new_ROImethod','StripeColor','y');
@@ -11591,14 +11596,25 @@ if strcmp(camera_type,'pco_panda')
 
 			c_menu = uicontextmenu;
 			ac_ROI_general_handle.UIContextMenu = c_menu;
-			m0 = uimenu(c_menu,'Label','50 Hz','Callback',@setdefaultroi);
-			m1 = uimenu(c_menu,'Label','30 Hz','Callback',@setdefaultroi);
-			m2 = uimenu(c_menu,'Label','15 Hz','Callback',@setdefaultroi);
-			m3 = uimenu(c_menu,'Label','7.5 Hz','Callback',@setdefaultroi);
-			m4 = uimenu(c_menu,'Label','5 Hz','Callback',@setdefaultroi);
-			m5 = uimenu(c_menu,'Label','3 Hz','Callback',@setdefaultroi);
-			m6 = uimenu(c_menu,'Label','1 Hz','Callback',@setdefaultroi);
-			m7 = uimenu(c_menu,'Label','Enter ROI','Callback',@setdefaultroi);
+
+			if strcmp(camera_type,'pco_panda')
+				m0 = uimenu(c_menu,'Label','pco.panda 50 Hz','Callback',@setdefaultroi);
+				m1 = uimenu(c_menu,'Label','pco.panda 30 Hz','Callback',@setdefaultroi);
+				m2 = uimenu(c_menu,'Label','pco.panda 15 Hz','Callback',@setdefaultroi);
+				m3 = uimenu(c_menu,'Label','pco.panda 7.5 Hz','Callback',@setdefaultroi);
+				m4 = uimenu(c_menu,'Label','pco.panda 5 Hz','Callback',@setdefaultroi);
+				m5 = uimenu(c_menu,'Label','pco.panda 3 Hz','Callback',@setdefaultroi);
+				m6 = uimenu(c_menu,'Label','pco.panda 1 Hz','Callback',@setdefaultroi);
+				m7 = uimenu(c_menu,'Label','Enter ROI','Callback',@setdefaultroi);
+			end
+			if strcmp(camera_type,'basler')
+				m0 = uimenu(c_menu,'Label','Basler 2048x1088','Callback',@setdefaultroi);
+				m1 = uimenu(c_menu,'Label','Basler 1280x720','Callback',@setdefaultroi);
+				m2 = uimenu(c_menu,'Label','Basler 1024x1024','Callback',@setdefaultroi);
+				m3 = uimenu(c_menu,'Label','Basler 640x480','Callback',@setdefaultroi);
+				m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@setdefaultroi);
+			end
+
 			position = customWait(ac_ROI_general_handle);
 
 			put('ac_ROI_general_handle',ac_ROI_general_handle);
@@ -11622,11 +11638,11 @@ if strcmp(camera_type,'pco_panda')
 			if ymin<1
 				ymin=1;
 			end
-			if xmax>5120
-				xmax=5120;
+			if xmax>max_cam_res(1)
+				xmax=max_cam_res(1);
 			end
-			if ymax>5120
-				ymax=5120;
+			if ymax>max_cam_res(2)
+				ymax=max_cam_res(2);
 			end
 			position(1)=xmin;
 			position(2)=ymin;
@@ -11637,15 +11653,17 @@ if strcmp(camera_type,'pco_panda')
 			save('PIVlab_settings_default.mat','ac_ROI_general','-append');
 			delete(ac_ROI_general_handle)
 			rectangle('Position',position,'EdgeColor','y','linewidth',2)
-			%% jetzt nochmal mit finalen einstellungen bild capturen zum messen der framerate...
-			%Camera fps
-			ac_fps_value=get(handles.ac_fps,'Value');
-			ac_fps_str=get(handles.ac_fps,'String');
-			cam_fps=str2double(ac_fps_str(ac_fps_value));
-			ac_ROI_general=retr('ac_ROI_general');
-			[~,~,framerate_max]=PIVlab_capture_pco(1,retr('f1exp_cam'),'Synchronizer',projectpath,cam_fps,0,[],binning,ac_ROI_general,camera_type,1);
-			delete(findobj('tag','roitxt'));
-			text(50,50,['Max framerate: ' num2str(round(framerate_max,2)) ' Hz'],'tag','roitxt','Color','yellow','FontSize',14,'FontWeight','bold')
+			if strcmp(camera_type,'pco_panda')
+				%% jetzt nochmal mit finalen einstellungen bild capturen zum messen der framerate...
+				%Camera fps
+				ac_fps_value=get(handles.ac_fps,'Value');
+				ac_fps_str=get(handles.ac_fps,'String');
+				cam_fps=str2double(ac_fps_str(ac_fps_value));
+				ac_ROI_general=retr('ac_ROI_general');
+				[~,~,framerate_max]=PIVlab_capture_pco(1,retr('f1exp_cam'),'Synchronizer',projectpath,cam_fps,0,[],binning,ac_ROI_general,camera_type,1);
+				delete(findobj('tag','roitxt'));
+				text(50,50,['Max framerate: ' num2str(round(framerate_max,2)) ' Hz'],'tag','roitxt','Color','yellow','FontSize',14,'FontWeight','bold')
+			end
 			set(handles.ac_realtime,'Value',0);%reset realtime roi
 			put('do_realtime',0);
 		end
@@ -11682,7 +11700,8 @@ if ready==1
 		binning=1;
 	end
 	if isempty(ac_ROI_general)
-		ac_ROI_general=[1,1,5120/binning,5120/binning];
+		max_cam_res=retr('max_cam_res');
+		ac_ROI_general=[1,1,max_cam_res(1)/binning,max_cam_res(2)/binning];
 	end
 	capturing=retr('capturing');
 	if isempty(capturing);capturing=0;end
@@ -11702,7 +11721,7 @@ if ready==1
 		if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') %pco cameras
 			[errorcode, caliimg,framerate_max]=PIVlab_capture_pco(50000,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
 		elseif strcmp(camera_type,'basler')
-			[errorcode, caliimg]=PIVlab_capture_basler_calibration_image(expos);
+			[errorcode, caliimg]=PIVlab_capture_basler_calibration_image(inf,expos,ac_ROI_general);
 		elseif strcmp(camera_type,'flir')
 			[errorcode, caliimg]=PIVlab_capture_flir_calibration_image(expos);
 		elseif strcmp(camera_type,'chronos')
@@ -11798,7 +11817,8 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 			put('expected_image_size',[])
 			ac_ROI_general=retr('ac_ROI_general');
 			if isempty(ac_ROI_general)
-				ac_ROI_general=[1 1 5120 5120];
+				max_cam_res=retr('max_cam_res');
+				ac_ROI_general=[1 1 max_cam_res(1) max_cam_res(2)];
 			end
 			put('capturing',1);
 			toolsavailable(0)
@@ -11877,7 +11897,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 			elseif value == 1 || value == 2 || value == 3 || value == 4  %pco cameras
 				PIVlab_capture_pco(imageamount,f1exp_cam,'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI_realtime,binning,ac_ROI_general,camera_type,0);
 			elseif value == 6  %basler cameras
-				[OutputError,basler_vid,frame_nr_display] = PIVlab_capture_basler_synced_start(imageamount); %prepare cam and start camera (waiting for trigger...)
+				[OutputError,basler_vid,frame_nr_display] = PIVlab_capture_basler_synced_start(imageamount,ac_ROI_general); %prepare cam and start camera (waiting for trigger...)
 				control_simple_sync_serial(1); put('laser_running',1); %turn on laser
 				[OutputError,basler_vid] = PIVlab_capture_basler_synced_capture(basler_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display); %capture n images, display livestream
 			elseif value == 7  %flir cameras
@@ -12065,7 +12085,8 @@ if get(handles.ac_realtime,'Value')==1
 		binning=1;
 	end
 	if isempty(ac_ROI_general)
-		ac_ROI_general=[1,1,5120/binning,5120/binning];
+		max_cam_res=retr('max_cam_res');
+		ac_ROI_general=[1,1,max_cam_res(1)/binning,max_cam_res(2)/binning];
 	end
 	camera_type=retr('camera_type');
 	try
@@ -12161,6 +12182,7 @@ if value==1 || value==3 % ILA.piv nano / pco pixelfly with evergreen or LD-PS
 	put('master_freq',15);
 	put('binning',1);
 	avail_freqs={'5' '3' '1.5' '1'};
+	put('max_cam_res',[1392,1040]);
 	put('min_allowed_interframe',10);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
@@ -12178,6 +12200,7 @@ if value == 2 || value == 4% pco panda with evergreen or LD-PS
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',50); %war auf 50 für noch höhere framerates auf panda
 	avail_freqs={'50' '30' '15' '7.5' '5' '3' '1.5' '1'};
+	put('max_cam_res',[5120,5120]);
 	put('min_allowed_interframe',10);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
@@ -12195,6 +12218,7 @@ if value == 5 % chronos LD-PS
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
 	avail_freqs={'1000' '850' '600' '500' '400' '300' '200' '150' '100' '70' '50' '25' '10' '5'};
+	put('max_cam_res',[1280,1024]);
 	put('min_allowed_interframe',10);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
@@ -12212,6 +12236,7 @@ if value == 6 % basler
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
 	avail_freqs={'168' '100' '75' '60' '50' '25' '10'};
+	put('max_cam_res',[2048,1088]);
 	put('min_allowed_interframe',150);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
@@ -12229,6 +12254,7 @@ if value == 7 % Flir
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
 	avail_freqs={'60' '50' '40' '30' '20' '10'};
+	put('max_cam_res',[1440,1080]);
 	put('min_allowed_interframe',470);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
@@ -12335,32 +12361,48 @@ function setdefaultroi(source,~)
 if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
 	ac_ROI_general_handle = findobj('tag','new_ROImethod');
 	binning=retr('binning');
+	max_cam_res =retr('max_cam_res');
 	if isempty(binning)
 		binning=1;
 	end
 	selection=1; %automatic centering of ROI
 	switch source.Label
-		case '50 Hz'
+		case 'pco.panda 50 Hz'
 			des_x=320;
 			des_y=240;
-		case '30 Hz'
+		case 'pco.panda 30 Hz'
 			des_x=640;
 			des_y=480;
-		case '15 Hz'
+		case 'pco.panda 15 Hz'
 			des_x=1160;
 			des_y=864;
-		case '7.5 Hz'
+		case 'pco.panda 7.5 Hz'
 			des_x=2352;
 			des_y=1824;
-		case '5 Hz'
+		case 'pco.panda 5 Hz'
 			des_x=3464;
 			des_y=2728;%2624;
-		case '3 Hz'
+		case 'pco.panda 3 Hz'
 			des_x=4488;
 			des_y=3320;
-		case '1 Hz'
+		case 'pco.panda 1 Hz'
 			des_x=5120;
 			des_y=5120;
+
+		case 'Basler 2048x1088'
+			des_x=2048;
+			des_y=1088;
+		case 'Basler 1280x720'
+			des_x=1280;
+			des_y=720;
+		case 'Basler 1024x1024'
+			des_x=1024;
+			des_y=1024;
+		case 'Basler 640x480'
+			des_x=640;
+			des_y=480;
+
+
 		case 'Enter ROI'
 			prompt = {'x','y','w','h'};
 			dlgtitle = 'ROI';
@@ -12376,14 +12418,14 @@ if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
 				min_y=str2num(answer{2});
 				img_size=[des_x des_y];
 			else
-				des_x=5120;
-				des_y=5120;
+				des_x=max_cam_res(1);
+				des_y=max_cam_res(2);
 			end
 	end
 	if selection==1
 		img_size=[des_x/binning des_y/binning]; %must be even, %X Y
-		min_x=(5120/binning-img_size(1))/2+1;
-		min_y=(5120/binning-img_size(2))/2+1;
+		min_x=(max_cam_res(1)/binning-img_size(1))/2+1;
+		min_y=(max_cam_res(2)/binning-img_size(2))/2+1;
 	end
 	set(findobj('tag','new_ROImethod'), 'Position',[min_x,min_y,img_size(1),img_size(2)])
 	evt.EventName='ROIMoved';

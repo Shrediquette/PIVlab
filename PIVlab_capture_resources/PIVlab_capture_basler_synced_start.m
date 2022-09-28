@@ -1,4 +1,4 @@
-function [OutputError,basler_vid,frame_nr_display] = PIVlab_capture_basler_synced_start(nr_of_images)
+function [OutputError,basler_vid,frame_nr_display] = PIVlab_capture_basler_synced_start(nr_of_images,ROI_basler)
 
 hgui=getappdata(0,'hgui');
 crosshair_enabled = getappdata(hgui,'crosshair_enabled');
@@ -31,9 +31,10 @@ basler_vid = videoinput(info.AdaptorName);
 basler_settings = get(basler_vid);
 basler_settings.Source.DeviceLinkThroughputLimitMode = 'off';
 
+
 %% prepare axes
 PIVlab_axis = findobj(hgui,'Type','Axes');
-image_handle_basler=imagesc(zeros(basler_settings.VideoResolution(2),basler_settings.VideoResolution(1)),'Parent',PIVlab_axis,[0 2^8]);
+image_handle_basler=imagesc(zeros(ROI_basler(4),ROI_basler(3)),'Parent',PIVlab_axis,[0 2^8]);
 setappdata(hgui,'image_handle_basler',image_handle_basler);
 
 frame_nr_display=text(100,100,'Initializing...','Color',[1 1 0]);
@@ -55,6 +56,9 @@ basler_settings.Source.TriggerSource ='Line3';
 basler_settings.Source.TriggerSelector='FrameStart';
 basler_settings.Source.TriggerMode ='On';
 basler_settings.Source.ExposureOverlapTimeMax = basler_settings.Source.SensorReadoutTime;
+
+ROI_basler=[ROI_basler(1)-1,ROI_basler(2)-1,ROI_basler(3),ROI_basler(4)]; %unfortunaletly different definitions of ROI in pco and basler.
+basler_vid.ROIPosition=ROI_basler;
 
 %% start acqusition (waiting for trigger)
 basler_frames_to_capture = nr_of_images*2;
