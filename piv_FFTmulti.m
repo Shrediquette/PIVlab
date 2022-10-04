@@ -120,23 +120,9 @@ image2_cut = image2_roi(ss1);
 
 do_pad = do_linear_correlation==1 && passes == 1;	 %only on first pass
 if do_pad
-	%subtract mean to avoid high frequencies at border of correlation:
-	try
-		image1_cut=image1_cut-mean(image1_cut,[1 2]);
-		image2_cut=image2_cut-mean(image2_cut,[1 2]);
-	catch
-		mean_image1_cut=zeros(size(image1_cut));
-		mean_image2_cut=zeros(size(image2_cut));
-		for oldmatlab=1:size(image2_cut,3)
-			mean_image1_cut(:,:,oldmatlab)=mean(mean(image1_cut(:,:,oldmatlab)));
-			mean_image2_cut(:,:,oldmatlab)=mean(mean(image2_cut(:,:,oldmatlab)));
-		end
-		image1_cut=image1_cut-mean_image1_cut;
-		image2_cut=image2_cut-mean_image2_cut;
-	end
-	% padding (faster than padarray) to get the linear correlation:
-	image1_cut=[image1_cut zeros(interrogationarea,interrogationarea-1,size(image1_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cut,3))];
-	image2_cut=[image2_cut zeros(interrogationarea,interrogationarea-1,size(image2_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cut,3))];
+	% pad and subtract mean to avoid high frequencies at border of correlation
+	image1_cut = meanzeropad(image1_cut, interrogationarea);
+	image2_cut = meanzeropad(image2_cut, interrogationarea);
 end
 
 %% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
@@ -162,8 +148,8 @@ result_conv = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_c
 %	result_conv(:,:,i) = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut(:,:,i))).*fft2(image2_cut(:,:,i)))), 1), 2);
 %end
 if do_pad
-	%cropping of correlation matrix:
-	result_conv =result_conv((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
+	% cropping of correlation matrix:
+	result_conv = result_conv((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 end
 
 %% repeated  Correlation in the first pass (might make sense to repeat more often to make it even more robust...)
@@ -178,23 +164,9 @@ if repeat == 1 && passes == 1
 	image1_cutB = image1_roi(ss1B);
 	image2_cutB = image2_roi(ss1B);
 	if do_pad
-		%subtract mean to avoid high frequencies at border of correlation:
-		try
-			image1_cutB=image1_cutB-mean(image1_cutB,[1 2]);
-			image2_cutB=image2_cutB-mean(image2_cutB,[1 2]);
-		catch
-			mean_image1_cutB=zeros(size(image1_cutB));
-			mean_image2_cutB=zeros(size(image2_cutB));
-			for oldmatlab=1:size(image2_cutB,3)
-				mean_image1_cutB(:,:,oldmatlab)=mean(mean(image1_cutB(:,:,oldmatlab)));
-				mean_image2_cutB(:,:,oldmatlab)=mean(mean(image2_cutB(:,:,oldmatlab)));
-			end
-			image1_cutB=image1_cutB-mean_image1_cutB;
-			image2_cutB=image2_cutB-mean_image2_cutB;
-		end
-		% padding (faster than padarray) to get the linear correlation:
-		image1_cutB=[image1_cutB zeros(interrogationarea,interrogationarea-1,size(image1_cutB,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cutB,3))];
-		image2_cutB=[image2_cutB zeros(interrogationarea,interrogationarea-1,size(image2_cutB,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cutB,3))];
+		% pad and subtract mean to avoid high frequencies at border of correlation
+		image1_cutB = meanzeropad(image1_cutB, interrogationarea);
+		image2_cutB = meanzeropad(image2_cutB, interrogationarea);
 	end
 	%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
 	image1_cutB = convert_image_class(image1_cutB,convert_image_class_type);
@@ -202,8 +174,8 @@ if repeat == 1 && passes == 1
 	result_convB=zeros(size(image1_cutB),convert_image_class_type); %#ok<PREALL>
 	result_convB = fftshift(fftshift(real(ifft2(conj(fft2(image1_cutB)).*fft2(image2_cutB))), 1), 2);
 	if do_pad
-		%cropping of correlation matrix:
-		result_convB =result_convB((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
+		% cropping of correlation matrix:
+		result_convB = result_convB((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 	end
 	
 	%Shift right bot
@@ -214,23 +186,9 @@ if repeat == 1 && passes == 1
 	image1_cutC = image1_roi(ss1C);
 	image2_cutC = image2_roi(ss1C);
 	if do_pad
-		%subtract mean to avoid high frequencies at border of correlation:
-		try
-			image1_cutC=image1_cutC-mean(image1_cutC,[1 2]);
-			image2_cutC=image2_cutC-mean(image2_cutC,[1 2]);
-		catch
-			mean_image1_cutC=zeros(size(image1_cutC));
-			mean_image2_cutC=zeros(size(image2_cutC));
-			for oldmatlab=1:size(image2_cutC,3)
-				mean_image1_cutC(:,:,oldmatlab)=mean(mean(image1_cutC(:,:,oldmatlab)));
-				mean_image2_cutC(:,:,oldmatlab)=mean(mean(image2_cutC(:,:,oldmatlab)));
-			end
-			image1_cutC=image1_cutC-mean_image1_cutC;
-			image2_cutC=image2_cutC-mean_image2_cutC;
-		end
-		% padding (faster than padarray) to get the linear correlation:
-		image1_cutC=[image1_cutC zeros(interrogationarea,interrogationarea-1,size(image1_cutC,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cutC,3))];
-		image2_cutC=[image2_cutC zeros(interrogationarea,interrogationarea-1,size(image2_cutC,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cutC,3))];
+		% pad and subtract mean to avoid high frequencies at border of correlation
+		image1_cutC = meanzeropad(image1_cutC, interrogationarea);
+		image2_cutC = meanzeropad(image2_cutC, interrogationarea);
 	end
 	%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
 	image1_cutC = convert_image_class(image1_cutC,convert_image_class_type);
@@ -238,8 +196,8 @@ if repeat == 1 && passes == 1
 	result_convC=zeros(size(image1_cutC),convert_image_class_type); %#ok<PREALL>
 	result_convC = fftshift(fftshift(real(ifft2(conj(fft2(image1_cutC)).*fft2(image2_cutC))), 1), 2);
 	if do_pad
-		%cropping of correlation matrix:
-		result_convC =result_convC((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
+		% cropping of correlation matrix:
+		result_convC = result_convC((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 	end
 	
 	%Shift left top
@@ -251,23 +209,9 @@ if repeat == 1 && passes == 1
 	image2_cutD = image2_roi(ss1D);
 	
 	if do_pad
-		%subtract mean to avoid high frequencies at border of correlation:
-		try
-			image1_cutD=image1_cutD-mean(image1_cutD,[1 2]);
-			image2_cutD=image2_cutD-mean(image2_cutD,[1 2]);
-		catch
-			mean_image1_cutD=zeros(size(image1_cutD));
-			mean_image2_cutD=zeros(size(image2_cutD));
-			for oldmatlab=1:size(image2_cutD,3)
-				mean_image1_cutD(:,:,oldmatlab)=mean(mean(image1_cutD(:,:,oldmatlab)));
-				mean_image2_cutD(:,:,oldmatlab)=mean(mean(image2_cutD(:,:,oldmatlab)));
-			end
-			image1_cutD=image1_cutD-mean_image1_cutD;
-			image2_cutD=image2_cutD-mean_image2_cutD;
-		end
-		% padding (faster than padarray) to get the linear correlation:
-		image1_cutD=[image1_cutD zeros(interrogationarea,interrogationarea-1,size(image1_cutD,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cutD,3))];
-		image2_cutD=[image2_cutD zeros(interrogationarea,interrogationarea-1,size(image2_cutD,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cutD,3))];
+		% pad and subtract mean to avoid high frequencies at border of correlation
+		image1_cutD = meanzeropad(image1_cutD, interrogationarea);
+		image2_cutD = meanzeropad(image2_cutD, interrogationarea);
 	end
 	%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
 	image1_cutD = convert_image_class(image1_cutD,convert_image_class_type);
@@ -275,8 +219,8 @@ if repeat == 1 && passes == 1
 	result_convD=zeros(size(image1_cutD),convert_image_class_type); %#ok<PREALL>
 	result_convD = fftshift(fftshift(real(ifft2(conj(fft2(image1_cutD)).*fft2(image2_cutD))), 1), 2);
 	if do_pad
-		%cropping of correlation matrix:
-		result_convD =result_convD((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
+		% cropping of correlation matrix:
+		result_convD = result_convD((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 	end
 	
 	%Shift right top
@@ -287,23 +231,9 @@ if repeat == 1 && passes == 1
 	image1_cutE = image1_roi(ss1E);
 	image2_cutE = image2_roi(ss1E);
 	if do_pad
-		%subtract mean to avoid high frequencies at border of correlation:
-		try
-			image1_cutE=image1_cutE-mean(image1_cutE,[1 2]);
-			image2_cutE=image2_cutE-mean(image2_cutE,[1 2]);
-		catch
-			mean_image1_cutE=zeros(size(image1_cutE));
-			mean_image2_cutE=zeros(size(image2_cutE));
-			for oldmatlab=1:size(image2_cutE,3)
-				mean_image1_cutE(:,:,oldmatlab)=mean(mean(image1_cutE(:,:,oldmatlab)));
-				mean_image2_cutE(:,:,oldmatlab)=mean(mean(image2_cutE(:,:,oldmatlab)));
-			end
-			image1_cutE=image1_cutE-mean_image1_cutE;
-			image2_cutE=image2_cutE-mean_image2_cutE;
-		end
-		% padding (faster than padarray) to get the linear correlation:
-		image1_cutE=[image1_cutE zeros(interrogationarea,interrogationarea-1,size(image1_cutE,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cutE,3))];
-		image2_cutE=[image2_cutE zeros(interrogationarea,interrogationarea-1,size(image2_cutE,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cutE,3))];
+		% pad and subtract mean to avoid high frequencies at border of correlation
+		image1_cutE = meanzeropad(image1_cutE, interrogationarea);
+		image2_cutE = meanzeropad(image2_cutE, interrogationarea);
 	end
 	%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
 	image1_cutE = convert_image_class(image1_cutE,convert_image_class_type);
@@ -311,8 +241,8 @@ if repeat == 1 && passes == 1
 	result_convE=zeros(size(image1_cutE),convert_image_class_type); %#ok<PREALL>
 	result_convE = fftshift(fftshift(real(ifft2(conj(fft2(image1_cutE)).*fft2(image2_cutE))), 1), 2);
 	if do_pad
-		%cropping of correlation matrix:
-		result_convE =result_convE((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
+		% cropping of correlation matrix:
+		result_convE = result_convE((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 	end
 	result_conv=result_conv.*result_convB.*result_convC.*result_convD.*result_convE;
 end
@@ -576,22 +506,9 @@ for multipass=1:passes-1
 		image1_cut = image1_roi(ss1);
 		image2_cut = image2_crop_i1(ss2);
 		if do_pad
-			%subtract mean to avoid high frequencies at border of correlation:
-			try
-				image1_cut=image1_cut-mean(image1_cut,[1 2]);
-				image2_cut=image2_cut-mean(image2_cut,[1 2]);
-			catch %old Matlab release
-				
-				for oldmatlab=1:size(image1_cut,3);
-					image1_cut(:,:,oldmatlab)=image1_cut(:,:,oldmatlab)-mean(mean(image1_cut(:,:,oldmatlab)));
-					image2_cut(:,:,oldmatlab)=image2_cut(:,:,oldmatlab)-mean(mean(image2_cut(:,:,oldmatlab)));
-				end
-			end
-			
-			% padding (faster than padarray) to get the linear correlation:
-			
-			image1_cut=[image1_cut zeros(interrogationarea,interrogationarea-1,size(image1_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cut,3))];
-			image2_cut=[image2_cut zeros(interrogationarea,interrogationarea-1,size(image2_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cut,3))];
+			% pad and subtract mean to avoid high frequencies at border of correlation
+			image1_cut = meanzeropad(image1_cut, interrogationarea);
+			image2_cut = meanzeropad(image2_cut, interrogationarea);
 		end
 		%do fft2:
 		%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
@@ -600,8 +517,8 @@ for multipass=1:passes-1
 		result_conv=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 		result_conv = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
 		if do_pad
-			%cropping of correlation matrix:
-			result_conv =result_conv((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
+			% cropping of correlation matrix:
+			result_conv = result_conv((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 		end
 		
 		%% repeated correlation
@@ -623,19 +540,9 @@ for multipass=1:passes-1
 			image1_cut = image1_roi(ss1);
 			image2_cut = image2_crop_i1(ss2);
 			if do_pad
-				%subtract mean to avoid high frequencies at border of correlation:
-				try
-					image1_cut=image1_cut-mean(image1_cut,[1 2]);
-					image2_cut=image2_cut-mean(image2_cut,[1 2]);
-				catch
-					for oldmatlab=1:size(image1_cut,3);
-						image1_cut(:,:,oldmatlab)=image1_cut(:,:,oldmatlab)-mean(mean(image1_cut(:,:,oldmatlab)));
-						image2_cut(:,:,oldmatlab)=image2_cut(:,:,oldmatlab)-mean(mean(image2_cut(:,:,oldmatlab)));
-					end
-				end
-				% padding (faster than padarray) to get the linear correlation:
-				image1_cut=[image1_cut zeros(interrogationarea,interrogationarea-1,size(image1_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cut,3))];
-				image2_cut=[image2_cut zeros(interrogationarea,interrogationarea-1,size(image2_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cut,3))];
+				% pad and subtract mean to avoid high frequencies at border of correlation
+				image1_cut = meanzeropad(image1_cut, interrogationarea);
+				image2_cut = meanzeropad(image2_cut, interrogationarea);
 			end
 			%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
 			image1_cut = convert_image_class(image1_cut,convert_image_class_type);
@@ -643,8 +550,8 @@ for multipass=1:passes-1
 			result_convB=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 			result_convB = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
 			if do_pad
-				%cropping of correlation matrix:
-				result_convB =result_convB((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
+				% cropping of correlation matrix:
+				result_convB = result_convB((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 			end
 			%figure;imagesc(image1_cut(:,:,100));colormap('gray');figure;imagesc(image2_cut(:,:,100));colormap('gray')
 			
@@ -664,19 +571,9 @@ for multipass=1:passes-1
 			image1_cut = image1_roi(ss1);
 			image2_cut = image2_crop_i1(ss2);
 			if do_pad
-				%subtract mean to avoid high frequencies at border of correlation:
-				try
-					image1_cut=image1_cut-mean(image1_cut,[1 2]);
-					image2_cut=image2_cut-mean(image2_cut,[1 2]);
-				catch
-					for oldmatlab=1:size(image1_cut,3)
-						image1_cut(:,:,oldmatlab)=image1_cut(:,:,oldmatlab)-mean(mean(image1_cut(:,:,oldmatlab)));
-						image2_cut(:,:,oldmatlab)=image2_cut(:,:,oldmatlab)-mean(mean(image2_cut(:,:,oldmatlab)));
-					end
-				end
-				% padding (faster than padarray) to get the linear correlation:
-				image1_cut=[image1_cut zeros(interrogationarea,interrogationarea-1,size(image1_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cut,3))];
-				image2_cut=[image2_cut zeros(interrogationarea,interrogationarea-1,size(image2_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cut,3))];
+				% pad and subtract mean to avoid high frequencies at border of correlation
+				image1_cut = meanzeropad(image1_cut, interrogationarea);
+				image2_cut = meanzeropad(image2_cut, interrogationarea);
 			end
 			%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
 			image1_cut = convert_image_class(image1_cut,convert_image_class_type);
@@ -684,8 +581,8 @@ for multipass=1:passes-1
 			result_convC=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 			result_convC = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
 			if do_pad
-				%cropping of correlation matrix:
-				result_convC =result_convC((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
+				% cropping of correlation matrix:
+				result_convC = result_convC((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 			end
 			%Shift left top
 			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X1+U1-ms,Y1+V1-ms,imdeform); %linear is 3x faster and looks ok...
@@ -702,19 +599,9 @@ for multipass=1:passes-1
 			image1_cut = image1_roi(ss1);
 			image2_cut = image2_crop_i1(ss2);
 			if do_pad
-				%subtract mean to avoid high frequencies at border of correlation:
-				try
-					image1_cut=image1_cut-mean(image1_cut,[1 2]);
-					image2_cut=image2_cut-mean(image2_cut,[1 2]);
-				catch
-					for oldmatlab=1:size(image1_cut,3)
-						image1_cut(:,:,oldmatlab)=image1_cut(:,:,oldmatlab)-mean(mean(image1_cut(:,:,oldmatlab)));
-						image2_cut(:,:,oldmatlab)=image2_cut(:,:,oldmatlab)-mean(mean(image2_cut(:,:,oldmatlab)));
-					end
-				end
-				% padding (faster than padarray) to get the linear correlation:
-				image1_cut=[image1_cut zeros(interrogationarea,interrogationarea-1,size(image1_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cut,3))];
-				image2_cut=[image2_cut zeros(interrogationarea,interrogationarea-1,size(image2_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cut,3))];
+				% pad and subtract mean to avoid high frequencies at border of correlation
+				image1_cut = meanzeropad(image1_cut, interrogationarea);
+				image2_cut = meanzeropad(image2_cut, interrogationarea);
 			end
 			%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
 			image1_cut = convert_image_class(image1_cut,convert_image_class_type);
@@ -722,8 +609,8 @@ for multipass=1:passes-1
 			result_convD=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 			result_convD = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
 			if do_pad
-				%cropping of correlation matrix:
-				result_convD =result_convD((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
+				% cropping of correlation matrix:
+				result_convD = result_convD((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 			end
 			%Shift right top
 			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X1+U1+ms,Y1+V1-ms,imdeform); %linear is 3x faster and looks ok...
@@ -740,19 +627,9 @@ for multipass=1:passes-1
 			image1_cut = image1_roi(ss1);
 			image2_cut = image2_crop_i1(ss2);
 			if do_pad
-				%subtract mean to avoid high frequencies at border of correlation:
-				try
-					image1_cut=image1_cut-mean(image1_cut,[1 2]);
-					image2_cut=image2_cut-mean(image2_cut,[1 2]);
-				catch
-					for oldmatlab=1:size(image1_cut,3)
-						image1_cut(:,:,oldmatlab)=image1_cut(:,:,oldmatlab)-mean(mean(image1_cut(:,:,oldmatlab)));
-						image2_cut(:,:,oldmatlab)=image2_cut(:,:,oldmatlab)-mean(mean(image2_cut(:,:,oldmatlab)));
-					end
-				end
-				% padding (faster than padarray) to get the linear correlation:
-				image1_cut=[image1_cut zeros(interrogationarea,interrogationarea-1,size(image1_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image1_cut,3))];
-				image2_cut=[image2_cut zeros(interrogationarea,interrogationarea-1,size(image2_cut,3)); zeros(interrogationarea-1,2*interrogationarea-1,size(image2_cut,3))];
+				% pad and subtract mean to avoid high frequencies at border of correlation
+				image1_cut = meanzeropad(image1_cut, interrogationarea);
+				image2_cut = meanzeropad(image2_cut, interrogationarea);
 			end
 			%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
 			image1_cut = convert_image_class(image1_cut,convert_image_class_type);
@@ -760,8 +637,8 @@ for multipass=1:passes-1
 			result_convE=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 			result_convE = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
 			if do_pad
-				%cropping of correlation matrix:
-				result_convE =result_convE((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
+				% cropping of correlation matrix:
+				result_convE = result_convE((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 			end
 			result_conv=result_conv.*result_convB.*result_convC.*result_convD.*result_convE;
 		end
@@ -1163,3 +1040,20 @@ end
     end
 end
 %}
+
+
+%% Pad each image in a stack of images with the mean image value
+function padded_image = meanzeropad(image, padsize)
+	% Subtract mean to avoid high frequencies at border of correlation
+	try
+		image = image - mean(image, [1 2]);
+	catch %old Matlab release
+		image_mean = zeros(size(image));
+		for oldmatlab = 1:size(image,3)
+			image_mean(:,:,oldmatlab) = mean(mean(image(:,:,oldmatlab)));
+		end
+		image = image - image_mean;
+	end
+	% Padding (faster than padarray) to get the linear correlation
+	padded_image = [image zeros(size(image,1),padsize-1,size(image,3)); zeros(padsize-1,size(image,1)+padsize-1,size(image,3))];
+end
