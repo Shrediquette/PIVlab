@@ -119,7 +119,7 @@ end
 s0 = (repmat((miniy:step:maxiy)'-1, 1,numelementsx) + repmat(((minix:step:maxix)-1)*size(image1_roi, 1), numelementsy,1))';
 s0 = permute(s0(:), [2 3 1]);
 s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
-ss1 = repmat(s1, [1, 1, size(s0,3)])+repmat(s0, [interrogationarea, interrogationarea, 1]);
+ss1 = bsxfun(@plus, s1, s0);
 
 image1_cut = image1_roi(ss1);
 image2_cut = image2_roi(ss1);
@@ -166,7 +166,7 @@ if repeat == 1 && passes == 1
 	s0B = (repmat((miniy+ms:step:maxiy+ms)'-1, 1,numelementsx) + repmat(((minix-ms:step:maxix-ms)-1)*size(image1_roi, 1), numelementsy,1))';
 	s0B = permute(s0B(:), [2 3 1]);
 	s1B = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
-	ss1B = repmat(s1B, [1, 1, size(s0B,3)])+repmat(s0B, [interrogationarea, interrogationarea, 1]);
+	ss1B = bsxfun(@plus, s1B, s0B);
 	image1_cutB = image1_roi(ss1B);
 	image2_cutB = image2_roi(ss1B);
 	if do_pad
@@ -188,7 +188,7 @@ if repeat == 1 && passes == 1
 	s0C = (repmat((miniy+ms:step:maxiy+ms)'-1, 1,numelementsx) + repmat(((minix+ms:step:maxix+ms)-1)*size(image1_roi, 1), numelementsy,1))';
 	s0C = permute(s0C(:), [2 3 1]);
 	s1C = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
-	ss1C = repmat(s1C, [1, 1, size(s0C,3)])+repmat(s0C, [interrogationarea, interrogationarea, 1]);
+	ss1C = bsxfun(@plus, s1C, s0C);
 	image1_cutC = image1_roi(ss1C);
 	image2_cutC = image2_roi(ss1C);
 	if do_pad
@@ -210,7 +210,7 @@ if repeat == 1 && passes == 1
 	s0D = (repmat((miniy-ms:step:maxiy-ms)'-1, 1,numelementsx) + repmat(((minix-ms:step:maxix-ms)-1)*size(image1_roi, 1), numelementsy,1))';
 	s0D = permute(s0D(:), [2 3 1]);
 	s1D = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
-	ss1D = repmat(s1D, [1, 1, size(s0D,3)])+repmat(s0D, [interrogationarea, interrogationarea, 1]);
+	ss1D = bsxfun(@plus, s1D, s0D);
 	image1_cutD = image1_roi(ss1D);
 	image2_cutD = image2_roi(ss1D);
 	
@@ -233,7 +233,7 @@ if repeat == 1 && passes == 1
 	s0E = (repmat((miniy-ms:step:maxiy-ms)'-1, 1,numelementsx) + repmat(((minix+ms:step:maxix+ms)-1)*size(image1_roi, 1), numelementsy,1))';
 	s0E = permute(s0E(:), [2 3 1]);
 	s1E = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
-	ss1E = repmat(s1E, [1, 1, size(s0E,3)])+repmat(s0E, [interrogationarea, interrogationarea, 1]);
+	ss1E = bsxfun(@plus, s1E, s0E);
 	image1_cutE = image1_roi(ss1E);
 	image2_cutE = image2_roi(ss1E);
 	if do_pad
@@ -498,14 +498,13 @@ for multipass=1:passes-1
 		s0 = (repmat((miniy:step:maxiy)'-1, 1,numelementsx) + repmat(((minix:step:maxix)-1)*size(image1_roi, 1), numelementsy,1))';
 		s0 = permute(s0(:), [2 3 1]);
 		s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
-		ss1 = repmat(s1, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
+		ss1 = bsxfun(@plus, s1, s0);
 		% new index for image2_crop_i1
 		s0 = (repmat(step*(1:numelementsy)'-step, 1,numelementsx) + repmat((step*(1:numelementsx)-step)*size(image2_crop_i1, 1), numelementsy,1))';
 		s0 = permute(s0(:), [2 3 1]);
 		s2 = repmat((1:2*step)',1,2*step) + repmat(((1:2*step)-1)*size(image2_crop_i1, 1),2*step,1);
-		ss2 = repmat(s2, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
-		
-		
+		ss2 = bsxfun(@plus, s2, s0);
+
 		image1_cut = image1_roi(ss1);
 		image2_cut = image2_crop_i1(ss2);
 		if do_pad
@@ -533,11 +532,11 @@ for multipass=1:passes-1
 			s0 = (repmat((miniy+ms:step:maxiy+ms)'-1, 1,numelementsx) + repmat(((minix-ms:step:maxix-ms)-1)*size(image1_roi, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
-			ss1 = repmat(s1, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
+			ss1 = bsxfun(@plus, s1, s0);
 			s0 = (repmat(step*(1:numelementsy)'-step, 1,numelementsx) + repmat((step*(1:numelementsx)-step)*size(image2_crop_i1, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s2 = repmat((1:2*step)',1,2*step) + repmat(((1:2*step)-1)*size(image2_crop_i1, 1),2*step,1);
-			ss2 = repmat(s2, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
+			ss2 = bsxfun(@plus, s2, s0);
 			image1_cut = image1_roi(ss1);
 			image2_cut = image2_crop_i1(ss2);
 			if do_pad
@@ -562,11 +561,11 @@ for multipass=1:passes-1
 			s0 = (repmat((miniy+ms:step:maxiy+ms)'-1, 1,numelementsx) + repmat(((minix+ms:step:maxix+ms)-1)*size(image1_roi, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
-			ss1 = repmat(s1, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
+			ss1 = bsxfun(@plus, s1, s0);
 			s0 = (repmat(step*(1:numelementsy)'-step, 1,numelementsx) + repmat((step*(1:numelementsx)-step)*size(image2_crop_i1, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s2 = repmat((1:2*step)',1,2*step) + repmat(((1:2*step)-1)*size(image2_crop_i1, 1),2*step,1);
-			ss2 = repmat(s2, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
+			ss2 = bsxfun(@plus, s2, s0);
 			image1_cut = image1_roi(ss1);
 			image2_cut = image2_crop_i1(ss2);
 			if do_pad
@@ -588,11 +587,11 @@ for multipass=1:passes-1
 			s0 = (repmat((miniy-ms:step:maxiy-ms)'-1, 1,numelementsx) + repmat(((minix-ms:step:maxix-ms)-1)*size(image1_roi, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
-			ss1 = repmat(s1, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
+			ss1 = bsxfun(@plus, s1, s0);
 			s0 = (repmat(step*(1:numelementsy)'-step, 1,numelementsx) + repmat((step*(1:numelementsx)-step)*size(image2_crop_i1, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s2 = repmat((1:2*step)',1,2*step) + repmat(((1:2*step)-1)*size(image2_crop_i1, 1),2*step,1);
-			ss2 = repmat(s2, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
+			ss2 = bsxfun(@plus, s2, s0);
 			image1_cut = image1_roi(ss1);
 			image2_cut = image2_crop_i1(ss2);
 			if do_pad
@@ -614,11 +613,11 @@ for multipass=1:passes-1
 			s0 = (repmat((miniy-ms:step:maxiy-ms)'-1, 1,numelementsx) + repmat(((minix+ms:step:maxix+ms)-1)*size(image1_roi, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
-			ss1 = repmat(s1, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
+			ss1 = bsxfun(@plus, s1, s0);
 			s0 = (repmat(step*(1:numelementsy)'-step, 1,numelementsx) + repmat((step*(1:numelementsx)-step)*size(image2_crop_i1, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s2 = repmat((1:2*step)',1,2*step) + repmat(((1:2*step)-1)*size(image2_crop_i1, 1),2*step,1);
-			ss2 = repmat(s2, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
+			ss2 = bsxfun(@plus, s2, s0);
 			image1_cut = image1_roi(ss1);
 			image2_cut = image2_crop_i1(ss2);
 			if do_pad
