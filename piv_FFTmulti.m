@@ -493,9 +493,6 @@ for multipass=1:passes-1
 		
 		image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X1+U1,Y1+V1,imdeform); %linear is 3x faster and looks ok...
 		
-		xb = find(X1(1,:) == xtable_1(1,1));
-		yb = find(Y1(:,1) == ytable_1(1,1));
-		
 		% divide images by small pictures
 		% new index for image1_roi
 		s0 = (repmat((miniy:step:maxiy)'-1, 1,numelementsx) + repmat(((minix:step:maxix)-1)*size(image1_roi, 1), numelementsy,1))';
@@ -503,8 +500,8 @@ for multipass=1:passes-1
 		s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
 		ss1 = repmat(s1, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
 		% new index for image2_crop_i1
-		s0 = (repmat(yb-step+step*(1:numelementsy)'-1, 1,numelementsx) + repmat((xb-step+step*(1:numelementsx)-1)*size(image2_crop_i1, 1), numelementsy,1))';
-		s0 = permute(s0(:), [2 3 1]) - s0(1);
+		s0 = (repmat(step*(1:numelementsy)'-step, 1,numelementsx) + repmat((step*(1:numelementsx)-step)*size(image2_crop_i1, 1), numelementsy,1))';
+		s0 = permute(s0(:), [2 3 1]);
 		s2 = repmat((1:2*step)',1,2*step) + repmat(((1:2*step)-1)*size(image2_crop_i1, 1),2*step,1);
 		ss2 = repmat(s2, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
 		
@@ -533,14 +530,12 @@ for multipass=1:passes-1
 			
 			%Shift left bot
 			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X1+U1-ms,Y1+V1+ms,imdeform); %linear is 3x faster and looks ok...
-			xb = find(X1(1,:) == xtable_1(1,1));
-			yb = find(Y1(:,1) == ytable_1(1,1));
 			s0 = (repmat((miniy+ms:step:maxiy+ms)'-1, 1,numelementsx) + repmat(((minix-ms:step:maxix-ms)-1)*size(image1_roi, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
 			ss1 = repmat(s1, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
-			s0 = (repmat(yb-step+step*(1:numelementsy)'-1, 1,numelementsx) + repmat((xb-step+step*(1:numelementsx)-1)*size(image2_crop_i1, 1), numelementsy,1))';
-			s0 = permute(s0(:), [2 3 1]) - s0(1);
+			s0 = (repmat(step*(1:numelementsy)'-step, 1,numelementsx) + repmat((step*(1:numelementsx)-step)*size(image2_crop_i1, 1), numelementsy,1))';
+			s0 = permute(s0(:), [2 3 1]);
 			s2 = repmat((1:2*step)',1,2*step) + repmat(((1:2*step)-1)*size(image2_crop_i1, 1),2*step,1);
 			ss2 = repmat(s2, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
 			image1_cut = image1_roi(ss1);
@@ -564,14 +559,12 @@ for multipass=1:passes-1
 			
 			%Shift right bot
 			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X1+U1+ms,Y1+V1+ms,imdeform); %linear is 3x faster and looks ok...
-			xb = find(X1(1,:) == xtable_1(1,1));
-			yb = find(Y1(:,1) == ytable_1(1,1));
 			s0 = (repmat((miniy+ms:step:maxiy+ms)'-1, 1,numelementsx) + repmat(((minix+ms:step:maxix+ms)-1)*size(image1_roi, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
 			ss1 = repmat(s1, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
-			s0 = (repmat(yb-step+step*(1:numelementsy)'-1, 1,numelementsx) + repmat((xb-step+step*(1:numelementsx)-1)*size(image2_crop_i1, 1), numelementsy,1))';
-			s0 = permute(s0(:), [2 3 1]) - s0(1);
+			s0 = (repmat(step*(1:numelementsy)'-step, 1,numelementsx) + repmat((step*(1:numelementsx)-step)*size(image2_crop_i1, 1), numelementsy,1))';
+			s0 = permute(s0(:), [2 3 1]);
 			s2 = repmat((1:2*step)',1,2*step) + repmat(((1:2*step)-1)*size(image2_crop_i1, 1),2*step,1);
 			ss2 = repmat(s2, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
 			image1_cut = image1_roi(ss1);
@@ -592,14 +585,12 @@ for multipass=1:passes-1
 			end
 			%Shift left top
 			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X1+U1-ms,Y1+V1-ms,imdeform); %linear is 3x faster and looks ok...
-			xb = find(X1(1,:) == xtable_1(1,1));
-			yb = find(Y1(:,1) == ytable_1(1,1));
 			s0 = (repmat((miniy-ms:step:maxiy-ms)'-1, 1,numelementsx) + repmat(((minix-ms:step:maxix-ms)-1)*size(image1_roi, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
 			ss1 = repmat(s1, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
-			s0 = (repmat(yb-step+step*(1:numelementsy)'-1, 1,numelementsx) + repmat((xb-step+step*(1:numelementsx)-1)*size(image2_crop_i1, 1), numelementsy,1))';
-			s0 = permute(s0(:), [2 3 1]) - s0(1);
+			s0 = (repmat(step*(1:numelementsy)'-step, 1,numelementsx) + repmat((step*(1:numelementsx)-step)*size(image2_crop_i1, 1), numelementsy,1))';
+			s0 = permute(s0(:), [2 3 1]);
 			s2 = repmat((1:2*step)',1,2*step) + repmat(((1:2*step)-1)*size(image2_crop_i1, 1),2*step,1);
 			ss2 = repmat(s2, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
 			image1_cut = image1_roi(ss1);
@@ -620,14 +611,12 @@ for multipass=1:passes-1
 			end
 			%Shift right top
 			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X1+U1+ms,Y1+V1-ms,imdeform); %linear is 3x faster and looks ok...
-			xb = find(X1(1,:) == xtable_1(1,1));
-			yb = find(Y1(:,1) == ytable_1(1,1));
 			s0 = (repmat((miniy-ms:step:maxiy-ms)'-1, 1,numelementsx) + repmat(((minix+ms:step:maxix+ms)-1)*size(image1_roi, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
 			ss1 = repmat(s1, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
-			s0 = (repmat(yb-step+step*(1:numelementsy)'-1, 1,numelementsx) + repmat((xb-step+step*(1:numelementsx)-1)*size(image2_crop_i1, 1), numelementsy,1))';
-			s0 = permute(s0(:), [2 3 1]) - s0(1);
+			s0 = (repmat(step*(1:numelementsy)'-step, 1,numelementsx) + repmat((step*(1:numelementsx)-step)*size(image2_crop_i1, 1), numelementsy,1))';
+			s0 = permute(s0(:), [2 3 1]);
 			s2 = repmat((1:2*step)',1,2*step) + repmat(((1:2*step)-1)*size(image2_crop_i1, 1),2*step,1);
 			ss2 = repmat(s2, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
 			image1_cut = image1_roi(ss1);
