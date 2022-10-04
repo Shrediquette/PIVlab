@@ -1,4 +1,10 @@
 function [xtable, ytable, utable, vtable, typevector, correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask_inpt, roi_inpt,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_linear_correlation,do_correlation_matrices,repeat_last_pass,delta_diff_min)
+% For unittests
+if nargin == 0
+	xtable = localfunctions;
+	return
+end
+
 %profile on
 %this funtion performs the  PIV analysis.
 limit_peak_search_area=1; %new in 2.41: Default is to limit the peak search area in pass 2-4.
@@ -773,12 +779,9 @@ end
 %Correlation strength
 correlation_map=zeros(size(typevector));
 if do_corr2 == 1
-	for cor_i=1:size(image1_cut,3)
-		correlation_map(cor_i)=corr2(image1_cut(:,:,cor_i),image2_cut(:,:,cor_i));
-	end
+	correlation_map = calculate_correlation_map(image1_cut, image2_cut);
+	correlation_map = reshape(correlation_map, size(xtable'))';
 end
-
-correlation_map = permute(reshape(correlation_map, [size(xtable')]), [2 1 3]);
 correlation_map(jj) = 0;
 %correlation_map=peak_height; %replace correlation coefficient with peak height
 xtable=xtable-ceil(interrogationarea/2);
@@ -1056,4 +1059,31 @@ function padded_image = meanzeropad(image, padsize)
 	end
 	% Padding (faster than padarray) to get the linear correlation
 	padded_image = [image zeros(size(image,1),padsize-1,size(image,3)); zeros(padsize-1,size(image,1)+padsize-1,size(image,3))];
+end
+
+
+%% Calculate correlation coeficients for a stack of image pairs
+function corr_map = calculate_correlation_map(img1, img2)
+	N = size(img1, 3);
+	corr_map = zeros(N, 1);
+	for i=1:N
+		a = img1(:,:,i);
+		b = img2(:,:,i);
+		a_ = a - sum(a(:)) / numel(a);
+		b_ = b - sum(b(:)) / numel(b);
+		corr_map(i) = sum(sum(a_.*b_)) / sqrt(sum(sum(a_.*a_)) * sum(sum(b_.*b_)));
+	end
+end
+
+%% Checks for calculate_correlation_map()
+function test_calculate_correlation_map(testCase)
+rng(0);
+A = rand(100);
+% Test correlation of matrix with itself is 1.0
+testCase.verifyEqual(calculate_correlation_map(A, A), 1);
+B = eye(100);
+% Test correlation coefficient is independent of matrix scaling and offset
+testCase.verifyEqual(calculate_correlation_map(A, B), calculate_correlation_map(3*A-2, B));
+% Test calculate_correlation_map() is equal to the corr2() function it replaces
+testCase.verifyEqual(corr2(A, B), calculate_correlation_map(A, B));
 end
