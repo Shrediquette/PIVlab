@@ -1003,6 +1003,8 @@ if do_correlation_matrices==1
 else
 	correlation_matrices = [];
 end
+end
+
 
 %%{
 function [vector] = SUBPIXGAUSS(result_conv, interrogationarea, x, y, z, SubPixOffset)
@@ -1030,8 +1032,7 @@ if(numel(x)~=0)
 	vector(z, :) = [SubpixelX, SubpixelY];
 	
 end
-
-
+end
 
 function [peakx, peaky] = multispot_SUBPIXGAUSS(image_data, x, y, z)
 %{
@@ -1054,12 +1055,9 @@ if(numel(x)~=0)
 	f2 = log(image_data(ip+xmax));
 	peakx = x + (f1-f2)./(2*f1-4*f0+2*f2);
 end
-
-
-
-
-
+end
 %}
+
 function [vector] = SUBPIX2DGAUSS(result_conv, interrogationarea, x, y, z, SubPixOffset)
 xi = find(~((x <= (size(result_conv,2)-1)) & (y <= (size(result_conv,1)-1)) & (x >= 2) & (y >= 2)));
 x(xi) = [];
@@ -1108,17 +1106,21 @@ if(numel(x)~=0)
 	
 	vector(z, :) = [SubpixelX, SubpixelY];
 end
+end
+
 
 function out = convert_image_class(in,type)
-if strcmp(type,'double')
-	out=in; %images arrive in double format
-elseif strcmp(type,'single')
-	out=im2single(in);
-elseif strcmp(type,'uint8')
-	out=im2uint8(in);
-elseif strcmp(type,'uint16')
-	out=im2uint16(in);
+	if strcmp(type,'double')
+		out=in; %images arrive in double format
+	elseif strcmp(type,'single')
+		out=im2single(in);
+	elseif strcmp(type,'uint8')
+		out=im2uint8(in);
+	elseif strcmp(type,'uint16')
+		out=im2uint16(in);
+	end
 end
+
 %{
 %Problem ist nicht das subpixel-finden. Sondern das integer-finden.....
 function [vector] = SUBPIXCENTROID(result_conv, interrogationarea, x, y, z, SubPixOffset)
