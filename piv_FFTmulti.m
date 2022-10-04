@@ -275,9 +275,7 @@ end
 %peakheight
 %peak_height=max(max(result_conv)) ./ mean(mean(result_conv)) ;
 %peak_height = permute(reshape(peak_height, [size(xtable')]), [2 1 3]);
-minres = permute(repmat(squeeze(min(min(result_conv))), [1, size(result_conv, 1), size(result_conv, 2)]), [2 3 1]);
-deltares = permute(repmat(squeeze(max(max(result_conv))-min(min(result_conv))),[ 1, size(result_conv, 1), size(result_conv, 2)]), [2 3 1]);
-result_conv = ((result_conv-minres)./deltares)*255;
+result_conv = rescale_array(result_conv);
 %apply mask
 ii = find(mask(ss1(round(interrogationarea/2+1), round(interrogationarea/2+1), :)));
 jj = find(mask((miniy:step:maxiy)+round(interrogationarea/2), (minix:step:maxix)+round(interrogationarea/2)));
@@ -667,8 +665,6 @@ for multipass=1:passes-1
 		end
 		
 		%do fft2
-		minres = permute(repmat(squeeze(min(min(result_conv))), [1, size(result_conv, 1), size(result_conv, 2)]), [2 3 1]);
-		deltares = permute(repmat(squeeze(max(max(result_conv))-min(min(result_conv))), [1, size(result_conv, 1), size(result_conv, 2)]), [2 3 1]);
 		%peakheight
 		%peak_height=max(max(result_conv))./mean(mean(result_conv));
 		%peak_height = permute(reshape(peak_height, [size(xtable')]), [2 1 3]);
@@ -690,7 +686,7 @@ for multipass=1:passes-1
     peak_height = permute(reshape(ratio, [size(xtable')]), [2 1 3]);
     figure;imagesc(peak_height);axis image
 		%}
-		result_conv = ((result_conv-minres)./deltares)*255;
+		result_conv = rescale_array(result_conv);
 		
 		%apply mask
 		ii = find(mask(ss1(round(interrogationarea/2+1), round(interrogationarea/2+1), :)));
@@ -1018,6 +1014,16 @@ end
     end
 end
 %}
+
+
+%% Scale an array linearly between 0 and 255 along the third axis.
+function A = rescale_array(A)
+	minA = min(min(A));
+	maxA = max(max(A));
+	deltaA = maxA - minA;
+	% A = ((A-minA) ./ deltaA) * 255
+	A = bsxfun(@rdivide, bsxfun(@minus, A, minA), deltaA) * 255;
+end
 
 
 %% Pad each image in a stack of images with the mean image value
