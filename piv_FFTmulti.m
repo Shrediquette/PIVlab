@@ -1,4 +1,4 @@
-function [xtable, ytable, utable, vtable, typevector, correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask_inpt, roi_inpt,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min)
+function [xtable, ytable, utable, vtable, typevector, correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask_inpt, roi_inpt,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_linear_correlation,do_correlation_matrices,repeat_last_pass,delta_diff_min)
 %profile on
 %this funtion performs the  PIV analysis.
 limit_peak_search_area=1; %new in 2.41: Default is to limit the peak search area in pass 2-4.
@@ -118,7 +118,8 @@ ss1 = repmat(s1, [1, 1, size(s0,3)])+repmat(s0, [interrogationarea, interrogatio
 image1_cut = image1_roi(ss1);
 image2_cut = image2_roi(ss1);
 
-if do_pad==1 && passes == 1 %only on first pass
+do_pad = do_linear_correlation==1 && passes == 1;	 %only on first pass
+if do_pad
 	%subtract mean to avoid high frequencies at border of correlation:
 	try
 		image1_cut=image1_cut-mean(image1_cut,[1 2]);
@@ -160,7 +161,7 @@ result_conv = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_c
 %for i=1:size(image1_cut,3)
 %	result_conv(:,:,i) = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut(:,:,i))).*fft2(image2_cut(:,:,i)))), 1), 2);
 %end
-if do_pad==1 && passes == 1
+if do_pad
 	%cropping of correlation matrix:
 	result_conv =result_conv((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 end
@@ -176,7 +177,7 @@ if repeat == 1 && passes == 1
 	ss1B = repmat(s1B, [1, 1, size(s0B,3)])+repmat(s0B, [interrogationarea, interrogationarea, 1]);
 	image1_cutB = image1_roi(ss1B);
 	image2_cutB = image2_roi(ss1B);
-	if do_pad==1 && passes == 1
+	if do_pad
 		%subtract mean to avoid high frequencies at border of correlation:
 		try
 			image1_cutB=image1_cutB-mean(image1_cutB,[1 2]);
@@ -200,7 +201,7 @@ if repeat == 1 && passes == 1
 	image2_cutB = convert_image_class(image2_cutB,convert_image_class_type);
 	result_convB=zeros(size(image1_cutB),convert_image_class_type); %#ok<PREALL>
 	result_convB = fftshift(fftshift(real(ifft2(conj(fft2(image1_cutB)).*fft2(image2_cutB))), 1), 2);
-	if do_pad==1 && passes == 1
+	if do_pad
 		%cropping of correlation matrix:
 		result_convB =result_convB((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 	end
@@ -212,7 +213,7 @@ if repeat == 1 && passes == 1
 	ss1C = repmat(s1C, [1, 1, size(s0C,3)])+repmat(s0C, [interrogationarea, interrogationarea, 1]);
 	image1_cutC = image1_roi(ss1C);
 	image2_cutC = image2_roi(ss1C);
-	if do_pad==1 && passes == 1
+	if do_pad
 		%subtract mean to avoid high frequencies at border of correlation:
 		try
 			image1_cutC=image1_cutC-mean(image1_cutC,[1 2]);
@@ -236,7 +237,7 @@ if repeat == 1 && passes == 1
 	image2_cutC = convert_image_class(image2_cutC,convert_image_class_type);
 	result_convC=zeros(size(image1_cutC),convert_image_class_type); %#ok<PREALL>
 	result_convC = fftshift(fftshift(real(ifft2(conj(fft2(image1_cutC)).*fft2(image2_cutC))), 1), 2);
-	if do_pad==1 && passes == 1
+	if do_pad
 		%cropping of correlation matrix:
 		result_convC =result_convC((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 	end
@@ -249,7 +250,7 @@ if repeat == 1 && passes == 1
 	image1_cutD = image1_roi(ss1D);
 	image2_cutD = image2_roi(ss1D);
 	
-	if do_pad==1 && passes == 1
+	if do_pad
 		%subtract mean to avoid high frequencies at border of correlation:
 		try
 			image1_cutD=image1_cutD-mean(image1_cutD,[1 2]);
@@ -273,7 +274,7 @@ if repeat == 1 && passes == 1
 	image2_cutD = convert_image_class(image2_cutD,convert_image_class_type);
 	result_convD=zeros(size(image1_cutD),convert_image_class_type); %#ok<PREALL>
 	result_convD = fftshift(fftshift(real(ifft2(conj(fft2(image1_cutD)).*fft2(image2_cutD))), 1), 2);
-	if do_pad==1 && passes == 1
+	if do_pad
 		%cropping of correlation matrix:
 		result_convD =result_convD((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 	end
@@ -285,7 +286,7 @@ if repeat == 1 && passes == 1
 	ss1E = repmat(s1E, [1, 1, size(s0E,3)])+repmat(s0E, [interrogationarea, interrogationarea, 1]);
 	image1_cutE = image1_roi(ss1E);
 	image2_cutE = image2_roi(ss1E);
-	if do_pad==1 && passes == 1
+	if do_pad
 		%subtract mean to avoid high frequencies at border of correlation:
 		try
 			image1_cutE=image1_cutE-mean(image1_cutE,[1 2]);
@@ -309,7 +310,7 @@ if repeat == 1 && passes == 1
 	image2_cutE = convert_image_class(image2_cutE,convert_image_class_type);
 	result_convE=zeros(size(image1_cutE),convert_image_class_type); %#ok<PREALL>
 	result_convE = fftshift(fftshift(real(ifft2(conj(fft2(image1_cutE)).*fft2(image2_cutE))), 1), 2);
-	if do_pad==1 && passes == 1
+	if do_pad
 		%cropping of correlation matrix:
 		result_convE =result_convE((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 	end
@@ -427,11 +428,9 @@ for multipass=1:passes-1
 			if multipass<passes-1
 				utable = smoothn(utable,0.9); %stronger smoothing for first passes
 				vtable = smoothn(vtable,0.9);
-				lastpass=0;
 			else
 				utable = smoothn(utable); %weaker smoothing for last pass(nb: BEFORE the image deformation. So the output is not smoothed!)
 				vtable = smoothn(vtable);
-				lastpass=1;
 			end
 		catch
 			
@@ -440,6 +439,7 @@ for multipass=1:passes-1
 			utable=imfilter(utable,h,'replicate');
 			vtable=imfilter(vtable,h,'replicate');
 		end
+		do_pad = do_linear_correlation==1 && multipass==passes-1;
 		
 		if multipass==1
 			interrogationarea=round(int2/2)*2;
@@ -575,7 +575,7 @@ for multipass=1:passes-1
 		
 		image1_cut = image1_roi(ss1);
 		image2_cut = image2_crop_i1(ss2);
-		if do_pad==1 && multipass==passes-1
+		if do_pad
 			%subtract mean to avoid high frequencies at border of correlation:
 			try
 				image1_cut=image1_cut-mean(image1_cut,[1 2]);
@@ -599,7 +599,7 @@ for multipass=1:passes-1
 		image2_cut = convert_image_class(image2_cut,convert_image_class_type);
 		result_conv=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 		result_conv = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
-		if do_pad==1 && multipass==passes-1
+		if do_pad
 			%cropping of correlation matrix:
 			result_conv =result_conv((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 		end
@@ -622,7 +622,7 @@ for multipass=1:passes-1
 			ss2 = repmat(s2, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
 			image1_cut = image1_roi(ss1);
 			image2_cut = image2_crop_i1(ss2);
-			if do_pad==1 && multipass==passes-1
+			if do_pad
 				%subtract mean to avoid high frequencies at border of correlation:
 				try
 					image1_cut=image1_cut-mean(image1_cut,[1 2]);
@@ -642,7 +642,7 @@ for multipass=1:passes-1
 			image2_cut = convert_image_class(image2_cut,convert_image_class_type);
 			result_convB=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 			result_convB = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
-			if do_pad==1 && multipass==passes-1
+			if do_pad
 				%cropping of correlation matrix:
 				result_convB =result_convB((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 			end
@@ -663,7 +663,7 @@ for multipass=1:passes-1
 			ss2 = repmat(s2, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
 			image1_cut = image1_roi(ss1);
 			image2_cut = image2_crop_i1(ss2);
-			if do_pad==1 && multipass==passes-1
+			if do_pad
 				%subtract mean to avoid high frequencies at border of correlation:
 				try
 					image1_cut=image1_cut-mean(image1_cut,[1 2]);
@@ -683,7 +683,7 @@ for multipass=1:passes-1
 			image2_cut = convert_image_class(image2_cut,convert_image_class_type);
 			result_convC=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 			result_convC = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
-			if do_pad==1 && multipass==passes-1
+			if do_pad
 				%cropping of correlation matrix:
 				result_convC =result_convC((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 			end
@@ -701,7 +701,7 @@ for multipass=1:passes-1
 			ss2 = repmat(s2, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
 			image1_cut = image1_roi(ss1);
 			image2_cut = image2_crop_i1(ss2);
-			if do_pad==1 && multipass==passes-1
+			if do_pad
 				%subtract mean to avoid high frequencies at border of correlation:
 				try
 					image1_cut=image1_cut-mean(image1_cut,[1 2]);
@@ -721,7 +721,7 @@ for multipass=1:passes-1
 			image2_cut = convert_image_class(image2_cut,convert_image_class_type);
 			result_convD=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 			result_convD = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
-			if do_pad==1 && multipass==passes-1
+			if do_pad
 				%cropping of correlation matrix:
 				result_convD =result_convD((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 			end
@@ -739,7 +739,7 @@ for multipass=1:passes-1
 			ss2 = repmat(s2, [1, 1, size(s0,3)]) + repmat(s0, [interrogationarea, interrogationarea, 1]);
 			image1_cut = image1_roi(ss1);
 			image2_cut = image2_crop_i1(ss2);
-			if do_pad==1 && multipass==passes-1
+			if do_pad
 				%subtract mean to avoid high frequencies at border of correlation:
 				try
 					image1_cut=image1_cut-mean(image1_cut,[1 2]);
@@ -759,7 +759,7 @@ for multipass=1:passes-1
 			image2_cut = convert_image_class(image2_cut,convert_image_class_type);
 			result_convE=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 			result_convE = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
-			if do_pad==1 && multipass==passes-1
+			if do_pad
 				%cropping of correlation matrix:
 				result_convE =result_convE((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 			end
