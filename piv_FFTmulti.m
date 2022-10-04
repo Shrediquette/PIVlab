@@ -465,33 +465,20 @@ for multipass=1:passes-1
 		catch
 			msgbox('Error: Most likely, your ROI is too small and/or the interrogation area too large.','modal')
 		end
-		utable_1= padarray(utable, [1,1], 'replicate');
-		vtable_1= padarray(vtable, [1,1], 'replicate');
 		
 		%add 1 line around image for border regions... linear extrap
+		X = interp1(1:1:size(xtable,2),xtable(1,:),0:1:size(xtable,2)+1,'linear','extrap');
+		Y = interp1(1:1:size(ytable,1),ytable(:,1),0:1:size(ytable,1)+1,'linear','extrap')';
+		U = padarray(utable, [1,1], 'replicate'); %interesting portion of u
+		V = padarray(vtable, [1,1], 'replicate'); % "" of v
 		
-		firstlinex=xtable(1,:);
-		firstlinex_intp=interp1(1:1:size(firstlinex,2),firstlinex,0:1:size(firstlinex,2)+1,'linear','extrap');
-		xtable_1=repmat(firstlinex_intp,size(xtable,1)+2,1);
+		X1 = (X(1):1:X(end)-1);
+		Y1 = (Y(1):1:Y(end)-1)';
+		X2 = interp2(X,Y,U,X1,Y1,'*linear') + repmat(X1,size(Y1, 1),1);
+		Y2 = interp2(X,Y,V,X1,Y1,'*linear') + repmat(Y1,1,size(X1, 2));
+
 		
-		firstliney=ytable(:,1);
-		firstliney_intp=interp1(1:1:size(firstliney,1),firstliney,0:1:size(firstliney,1)+1,'linear','extrap')';
-		ytable_1=repmat(firstliney_intp,1,size(ytable,2)+2);
-		
-		X=xtable_1; %original locations of vectors in whole image
-		Y=ytable_1;
-		U=utable_1; %interesting portion of u
-		V=vtable_1; % "" of v
-		
-		X1=X(1,1):1:X(1,end)-1;
-		Y1=(Y(1,1):1:Y(end,1)-1)';
-		X1=repmat(X1,size(Y1, 1),1);
-		Y1=repmat(Y1,1,size(X1, 2));
-		
-		U1 = interp2(X,Y,U,X1,Y1,'*linear');
-		V1 = interp2(X,Y,V,X1,Y1,'*linear');
-		
-		image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X1+U1,Y1+V1,imdeform); %linear is 3x faster and looks ok...
+		image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X2,Y2,imdeform); %linear is 3x faster and looks ok...
 		
 		% divide images by small pictures
 		% new index for image1_roi
@@ -528,7 +515,7 @@ for multipass=1:passes-1
 			ms=round(step/4); %multishift parameter so groß wie viertel int window
 			
 			%Shift left bot
-			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X1+U1-ms,Y1+V1+ms,imdeform); %linear is 3x faster and looks ok...
+			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X2-ms,Y2+ms,imdeform); %linear is 3x faster and looks ok...
 			s0 = (repmat((miniy+ms:step:maxiy+ms)'-1, 1,numelementsx) + repmat(((minix-ms:step:maxix-ms)-1)*size(image1_roi, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
@@ -557,7 +544,7 @@ for multipass=1:passes-1
 			
 			
 			%Shift right bot
-			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X1+U1+ms,Y1+V1+ms,imdeform); %linear is 3x faster and looks ok...
+			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X2+ms,Y2+ms,imdeform); %linear is 3x faster and looks ok...
 			s0 = (repmat((miniy+ms:step:maxiy+ms)'-1, 1,numelementsx) + repmat(((minix+ms:step:maxix+ms)-1)*size(image1_roi, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
@@ -583,7 +570,7 @@ for multipass=1:passes-1
 				result_convC = result_convC((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 			end
 			%Shift left top
-			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X1+U1-ms,Y1+V1-ms,imdeform); %linear is 3x faster and looks ok...
+			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X2-ms,Y2-ms,imdeform); %linear is 3x faster and looks ok...
 			s0 = (repmat((miniy-ms:step:maxiy-ms)'-1, 1,numelementsx) + repmat(((minix-ms:step:maxix-ms)-1)*size(image1_roi, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
@@ -609,7 +596,7 @@ for multipass=1:passes-1
 				result_convD = result_convD((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 			end
 			%Shift right top
-			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X1+U1+ms,Y1+V1-ms,imdeform); %linear is 3x faster and looks ok...
+			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X2+ms,Y2-ms,imdeform); %linear is 3x faster and looks ok...
 			s0 = (repmat((miniy-ms:step:maxiy-ms)'-1, 1,numelementsx) + repmat(((minix+ms:step:maxix+ms)-1)*size(image1_roi, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
