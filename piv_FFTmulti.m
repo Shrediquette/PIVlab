@@ -630,37 +630,27 @@ for multipass=1:passes-1
 		%generally more likely to be correct.
 		if limit_peak_search_area == 1
 			if floor(size(result_conv,1)/3) >= 3 %if the interrogation area becomes too small, then further limiting of the search area doesnt make sense, because the peak may become as big as the search area
-				emptymatrix=zeros(size(result_conv,1),size(result_conv,2),size(result_conv,3));
 				if mask_auto == 1 %more restricted when "disable autocorrelation" is enabled
-					sizeones=4;
+					sizeones = 4;
 				else %less restrictive for standard correlation settings
-					sizeones=floor(size(result_conv,1)/3);
+					sizeones = floor(size(result_conv,1)/3);
 				end
-				h=fspecial('disk',sizeones);
-				h=h/max(max(h));
+
+				emptymatrix = zeros(size(result_conv,1),size(result_conv,2));
+				emptymatrix((interrogationarea/2)+SubPixOffset+(-sizeones:sizeones), ...
+				            (interrogationarea/2)+SubPixOffset+(-sizeones:sizeones)) = fspecial('disk', sizeones);
+				emptymatrix = emptymatrix / max(max(emptymatrix));
+
 				try
-					h=repmat(h,1,1,size(result_conv,3));
+					% result_conv in middle, average correlation value in the remaining space
+					mean_result_conv = mean(result_conv, 1:2);
+					result_conv = result_conv .* emptymatrix + mean_result_conv .* (1-emptymatrix);
 				catch %old matlab releases fail
-					h_repl=zeros([size(h,1),size(h,2),size(result_conv,3)]);
-					for repli=1:size(result_conv,3)
-						h_repl(:,:,repli)=h;
-					end
-					h=h_repl;
-				end
-				emptymatrix((interrogationarea/2)+SubPixOffset-sizeones:(interrogationarea/2)+SubPixOffset+sizeones,(interrogationarea/2)+SubPixOffset-sizeones:(interrogationarea/2)+SubPixOffset+sizeones,:)=h;
-				try
-					bg_sig=(1-emptymatrix).*mean(result_conv,1:2); %zeros in middle, average correlation value in the remaining space
-				catch %old matlab releases fail
-					mean_result_conv=zeros(1,1,size(result_conv,3));
 					for oldmatlab=1:size(result_conv,3)
-						mean_result_conv(:,:,oldmatlab)=mean(mean(result_conv(:,:,oldmatlab)));
-					end
-					bg_sig=zeros(size(result_conv));
-					for oldmatlab=1:size(result_conv,3)
-						bg_sig(:,:,oldmatlab) = (1-emptymatrix(:,:,oldmatlab)) .*mean_result_conv(:,:,oldmatlab);
+						mean_result_conv = mean(mean(result_conv(:,:,oldmatlab)));
+						result_conv(:,:,oldmatlab) = result_conv(:,:,oldmatlab) .* emptymatrix + mean_result_conv .* (1-emptymatrix);
 					end
 				end
-				result_conv = result_conv .* emptymatrix + bg_sig;
 			end
 		end
 		
