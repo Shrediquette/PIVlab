@@ -29,6 +29,9 @@ else
 	image1_roi=double(image1);
 	image2_roi=double(image2);
 end
+%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
+image1_roi = convert_image_class(image1_roi, convert_image_class_type);
+image2_roi = convert_image_class(image2_roi, convert_image_class_type);
 gen_image1_roi = image1_roi;
 gen_image2_roi = image2_roi;
 
@@ -131,10 +134,6 @@ if do_pad
 	image2_cut = meanzeropad(image2_cut, interrogationarea);
 end
 
-%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
-image1_cut = convert_image_class(image1_cut,convert_image_class_type);
-image2_cut = convert_image_class(image2_cut,convert_image_class_type);
-
 
 result_conv=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 
@@ -162,7 +161,7 @@ end
 
 if repeat == 1 && passes == 1
 	ms=round(step/4); %multishift parameter so groß wie viertel int window
-	%Shift left bot
+	%% Shift left bot
 	s0B = (repmat((miniy+ms:step:maxiy+ms)'-1, 1,numelementsx) + repmat(((minix-ms:step:maxix-ms)-1)*size(image1_roi, 1), numelementsy,1))';
 	s0B = permute(s0B(:), [2 3 1]);
 	s1B = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
@@ -174,17 +173,13 @@ if repeat == 1 && passes == 1
 		image1_cutB = meanzeropad(image1_cutB, interrogationarea);
 		image2_cutB = meanzeropad(image2_cutB, interrogationarea);
 	end
-	%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
-	image1_cutB = convert_image_class(image1_cutB,convert_image_class_type);
-	image2_cutB = convert_image_class(image2_cutB,convert_image_class_type);
 	result_convB=zeros(size(image1_cutB),convert_image_class_type); %#ok<PREALL>
 	result_convB = fftshift(fftshift(real(ifft2(conj(fft2(image1_cutB)).*fft2(image2_cutB))), 1), 2);
 	if do_pad
 		% cropping of correlation matrix:
 		result_convB = result_convB((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 	end
-	
-	%Shift right bot
+	%% Shift right bot
 	s0C = (repmat((miniy+ms:step:maxiy+ms)'-1, 1,numelementsx) + repmat(((minix+ms:step:maxix+ms)-1)*size(image1_roi, 1), numelementsy,1))';
 	s0C = permute(s0C(:), [2 3 1]);
 	s1C = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
@@ -196,40 +191,31 @@ if repeat == 1 && passes == 1
 		image1_cutC = meanzeropad(image1_cutC, interrogationarea);
 		image2_cutC = meanzeropad(image2_cutC, interrogationarea);
 	end
-	%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
-	image1_cutC = convert_image_class(image1_cutC,convert_image_class_type);
-	image2_cutC = convert_image_class(image2_cutC,convert_image_class_type);
 	result_convC=zeros(size(image1_cutC),convert_image_class_type); %#ok<PREALL>
 	result_convC = fftshift(fftshift(real(ifft2(conj(fft2(image1_cutC)).*fft2(image2_cutC))), 1), 2);
 	if do_pad
 		% cropping of correlation matrix:
 		result_convC = result_convC((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 	end
-	
-	%Shift left top
+	%% Shift left top
 	s0D = (repmat((miniy-ms:step:maxiy-ms)'-1, 1,numelementsx) + repmat(((minix-ms:step:maxix-ms)-1)*size(image1_roi, 1), numelementsy,1))';
 	s0D = permute(s0D(:), [2 3 1]);
 	s1D = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
 	ss1D = bsxfun(@plus, s1D, s0D);
 	image1_cutD = image1_roi(ss1D);
 	image2_cutD = image2_roi(ss1D);
-	
 	if do_pad
 		% pad and subtract mean to avoid high frequencies at border of correlation
 		image1_cutD = meanzeropad(image1_cutD, interrogationarea);
 		image2_cutD = meanzeropad(image2_cutD, interrogationarea);
 	end
-	%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
-	image1_cutD = convert_image_class(image1_cutD,convert_image_class_type);
-	image2_cutD = convert_image_class(image2_cutD,convert_image_class_type);
 	result_convD=zeros(size(image1_cutD),convert_image_class_type); %#ok<PREALL>
 	result_convD = fftshift(fftshift(real(ifft2(conj(fft2(image1_cutD)).*fft2(image2_cutD))), 1), 2);
 	if do_pad
 		% cropping of correlation matrix:
 		result_convD = result_convD((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 	end
-	
-	%Shift right top
+	%% Shift right top
 	s0E = (repmat((miniy-ms:step:maxiy-ms)'-1, 1,numelementsx) + repmat(((minix+ms:step:maxix+ms)-1)*size(image1_roi, 1), numelementsy,1))';
 	s0E = permute(s0E(:), [2 3 1]);
 	s1E = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
@@ -241,16 +227,14 @@ if repeat == 1 && passes == 1
 		image1_cutE = meanzeropad(image1_cutE, interrogationarea);
 		image2_cutE = meanzeropad(image2_cutE, interrogationarea);
 	end
-	%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
-	image1_cutE = convert_image_class(image1_cutE,convert_image_class_type);
-	image2_cutE = convert_image_class(image2_cutE,convert_image_class_type);
 	result_convE=zeros(size(image1_cutE),convert_image_class_type); %#ok<PREALL>
 	result_convE = fftshift(fftshift(real(ifft2(conj(fft2(image1_cutE)).*fft2(image2_cutE))), 1), 2);
 	if do_pad
 		% cropping of correlation matrix:
 		result_convE = result_convE((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 	end
-	result_conv=result_conv.*result_convB.*result_convC.*result_convD.*result_convE;
+	%% Combine results
+	result_conv = result_conv.*result_convB.*result_convC.*result_convD.*result_convE;
 end
 
 %%{
@@ -477,6 +461,7 @@ for multipass=1:passes-1
 
 		
 		image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X2,Y2,imdeform); %linear is 3x faster and looks ok...
+		image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 		
 		% divide images by small pictures
 		% new index for image1_roi
@@ -498,10 +483,7 @@ for multipass=1:passes-1
 			image2_cut = meanzeropad(image2_cut, interrogationarea);
 		end
 		%do fft2:
-		%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
-		image1_cut = convert_image_class(image1_cut,convert_image_class_type);
-		image2_cut = convert_image_class(image2_cut,convert_image_class_type);
-		result_conv=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
+		result_conv = zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 		result_conv = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
 		if do_pad
 			% cropping of correlation matrix:
@@ -511,9 +493,9 @@ for multipass=1:passes-1
 		%% repeated correlation
 		if repeat == 1 && multipass==passes-1
 			ms=round(step/4); %multishift parameter so groß wie viertel int window
-			
-			%Shift left bot
+			%% Shift left bot
 			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X2-ms,Y2+ms,imdeform); %linear is 3x faster and looks ok...
+			image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 			s0 = (repmat((miniy+ms:step:maxiy+ms)'-1, 1,numelementsx) + repmat(((minix-ms:step:maxix-ms)-1)*size(image1_roi, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
@@ -529,20 +511,16 @@ for multipass=1:passes-1
 				image1_cut = meanzeropad(image1_cut, interrogationarea);
 				image2_cut = meanzeropad(image2_cut, interrogationarea);
 			end
-			%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
-			image1_cut = convert_image_class(image1_cut,convert_image_class_type);
-			image2_cut = convert_image_class(image2_cut,convert_image_class_type);
-			result_convB=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
+			result_convB = zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 			result_convB = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
 			if do_pad
 				% cropping of correlation matrix:
 				result_convB = result_convB((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 			end
 			%figure;imagesc(image1_cut(:,:,100));colormap('gray');figure;imagesc(image2_cut(:,:,100));colormap('gray')
-			
-			
-			%Shift right bot
+			%% Shift right bot
 			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X2+ms,Y2+ms,imdeform); %linear is 3x faster and looks ok...
+			image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 			s0 = (repmat((miniy+ms:step:maxiy+ms)'-1, 1,numelementsx) + repmat(((minix+ms:step:maxix+ms)-1)*size(image1_roi, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
@@ -558,17 +536,15 @@ for multipass=1:passes-1
 				image1_cut = meanzeropad(image1_cut, interrogationarea);
 				image2_cut = meanzeropad(image2_cut, interrogationarea);
 			end
-			%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
-			image1_cut = convert_image_class(image1_cut,convert_image_class_type);
-			image2_cut = convert_image_class(image2_cut,convert_image_class_type);
-			result_convC=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
+			result_convC = zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 			result_convC = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
 			if do_pad
 				% cropping of correlation matrix:
 				result_convC = result_convC((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 			end
-			%Shift left top
+			%% Shift left top
 			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X2-ms,Y2-ms,imdeform); %linear is 3x faster and looks ok...
+			image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 			s0 = (repmat((miniy-ms:step:maxiy-ms)'-1, 1,numelementsx) + repmat(((minix-ms:step:maxix-ms)-1)*size(image1_roi, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
@@ -584,17 +560,15 @@ for multipass=1:passes-1
 				image1_cut = meanzeropad(image1_cut, interrogationarea);
 				image2_cut = meanzeropad(image2_cut, interrogationarea);
 			end
-			%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
-			image1_cut = convert_image_class(image1_cut,convert_image_class_type);
-			image2_cut = convert_image_class(image2_cut,convert_image_class_type);
-			result_convD=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
+			result_convD = zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 			result_convD = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
 			if do_pad
 				% cropping of correlation matrix:
 				result_convD = result_convD((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 			end
-			%Shift right top
+			%% Shift right top
 			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X2+ms,Y2-ms,imdeform); %linear is 3x faster and looks ok...
+			image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 			s0 = (repmat((miniy-ms:step:maxiy-ms)'-1, 1,numelementsx) + repmat(((minix+ms:step:maxix+ms)-1)*size(image1_roi, 1), numelementsy,1))';
 			s0 = permute(s0(:), [2 3 1]);
 			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
@@ -610,16 +584,14 @@ for multipass=1:passes-1
 				image1_cut = meanzeropad(image1_cut, interrogationarea);
 				image2_cut = meanzeropad(image2_cut, interrogationarea);
 			end
-			%% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
-			image1_cut = convert_image_class(image1_cut,convert_image_class_type);
-			image2_cut = convert_image_class(image2_cut,convert_image_class_type);
-			result_convE=zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
+			result_convE = zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
 			result_convE = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
 			if do_pad
 				% cropping of correlation matrix:
 				result_convE = result_convE((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
 			end
-			result_conv=result_conv.*result_convB.*result_convC.*result_convD.*result_convE;
+			%% Combine results
+			result_conv = result_conv.*result_convB.*result_convC.*result_convD.*result_convE;
 		end
 		
 		%limiting the peak search are in later passes makes sense: Earlier
