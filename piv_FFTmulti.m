@@ -8,7 +8,6 @@ end
 %profile on
 %this funtion performs the  PIV analysis.
 limit_peak_search_area=1; %new in 2.41: Default is to limit the peak search area in pass 2-4.
-do_corr2 = 1; %set to zero to disable calculation of correlation map to save time
 if repeat == 0
 	convert_image_class_type = 'single'; % 'single', 'double': do the cross-correlation with single and not double precision. Saves 50% memory.
 else %repeted correlation needs double as type
@@ -272,6 +271,11 @@ for multipass = 1:passes
 		ss2 = bsxfun(@plus, s2, s0);
 		image1_cut = image1_roi(ss1);
 		image2_cut = image2_crop_i1(ss2);
+		% Calculate correlation strength on the last pass
+		if multipass == passes
+			correlation_map = calculate_correlation_map(image1_cut, image2_cut);
+			correlation_map = reshape(correlation_map, size(xtable'))';
+		end
 		if do_pad
 			% pad and subtract mean to avoid high frequencies at border of correlation
 			image1_cut = meanzeropad(image1_cut, interrogationarea);
@@ -497,6 +501,9 @@ for multipass = 1:passes
 		jj = find(mask((miniy:step:maxiy)+round(interrogationarea/2), (minix:step:maxix)+round(interrogationarea/2)));
 		typevector(jj) = 0;
 		result_conv(:,:, ii) = 0;
+		if multipass == passes
+			correlation_map(jj) = 0;
+		end
 
 		[y, x, z] = ind2sub(size(result_conv), find(result_conv==255));
 
@@ -549,14 +556,7 @@ for multipass = 1:passes
 	end
 	
 end
-%Correlation strength
-correlation_map=zeros(size(typevector));
-if do_corr2 == 1
-	correlation_map = calculate_correlation_map(image1_cut, image2_cut);
-	correlation_map = reshape(correlation_map, size(xtable'))';
-end
-correlation_map(jj) = 0;
-%correlation_map=peak_height; %replace correlation coefficient with peak height
+
 xtable=xtable-ceil(interrogationarea/2);
 ytable=ytable-ceil(interrogationarea/2);
 
