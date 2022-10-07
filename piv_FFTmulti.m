@@ -35,18 +35,15 @@ image2_roi = convert_image_class(image2_roi, convert_image_class_type);
 gen_image1_roi = image1_roi;
 gen_image2_roi = image2_roi;
 
+%% Construct mask as logical array
+mask = zeros(size(image1_roi), 'logical');
 if numel(mask_inpt)>0
-	cellmask=mask_inpt;
-	mask=zeros(size(image1_roi));
-	for i=1:size(cellmask,1)
-		masklayerx=cellmask{i,1};
-		masklayery=cellmask{i,2};
-		mask = mask + poly2mask(masklayerx-xroi,masklayery-yroi,size(image1_roi,1),size(image1_roi,2)); %kleineres eingangsbild und maske geshiftet
+	for i=1:size(mask_inpt,1)
+		masklayerx = mask_inpt{i,1};
+		masklayery = mask_inpt{i,2};
+		mask = mask | poly2mask(masklayerx-xroi,masklayery-yroi,size(image1_roi,1),size(image1_roi,2)); %kleineres eingangsbild und maske geshiftet
 	end
-else
-	mask=zeros(size(image1_roi));
 end
-mask(mask>1)=1;
 gen_mask = mask;
 
 miniy=1+(ceil(interrogationarea/2));
@@ -260,6 +257,7 @@ end
 %peak_height=max(max(result_conv)) ./ mean(mean(result_conv)) ;
 %peak_height = permute(reshape(peak_height, [size(xtable')]), [2 1 3]);
 result_conv = rescale_array(result_conv);
+
 %apply mask
 ii = find(mask(ss1(round(interrogationarea/2+1), round(interrogationarea/2+1), :)));
 jj = find(mask((miniy:step:maxiy)+round(interrogationarea/2), (minix:step:maxix)+round(interrogationarea/2)));
@@ -655,6 +653,7 @@ for multipass=1:passes-1
 		jj = find(mask((miniy:step:maxiy)+round(interrogationarea/2), (minix:step:maxix)+round(interrogationarea/2)));
 		typevector(jj) = 0;
 		result_conv(:,:, ii) = 0;
+
 		[y, x, z] = ind2sub(size(result_conv), find(result_conv==255));
 		[z1, zi] = sort(z);
 		% we need only one peak from each couple pictures
