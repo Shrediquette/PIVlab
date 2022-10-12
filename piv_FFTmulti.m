@@ -200,8 +200,7 @@ for multipass = 1:passes
 		if multipass == 1
 			image2_crop_i1 = image2_roi(miniy:maxiy+interrogationarea-1, minix:maxix+interrogationarea-1);
 		else
-			image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2,Y2,imdeform); %linear is 3x faster and looks ok...
-			image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
+			image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,image2_roi,X2,Y2,imdeform); %linear is 3x faster and looks ok...
 		end
 		% divide images into N small pictures
 		N = numelementsx * numelementsy;
@@ -232,8 +231,7 @@ for multipass = 1:passes
 			if multipass == 1
 				image2_crop_i1 = image2_roi(miniy+ms:maxiy+interrogationarea-1+ms, minix-ms:maxix+interrogationarea-1-ms);
 			else
-				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2-ms,Y2+ms,imdeform); %linear is 3x faster and looks ok...
-				image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
+				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,image2_roi,X2-ms,Y2+ms,imdeform); %linear is 3x faster and looks ok...
 			end
 			for ix = 1:numelementsx
 				for iy = 1:numelementsy
@@ -250,8 +248,7 @@ for multipass = 1:passes
 			if multipass == 1
 				image2_crop_i1 = image2_roi(miniy+ms:maxiy+interrogationarea-1+ms, minix+ms:maxix+interrogationarea-1+ms);
 			else
-				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2+ms,Y2+ms,imdeform); %linear is 3x faster and looks ok...
-				image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
+				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,image2_roi,X2+ms,Y2+ms,imdeform); %linear is 3x faster and looks ok...
 			end
 			for ix = 1:numelementsx
 				for iy = 1:numelementsy
@@ -267,8 +264,7 @@ for multipass = 1:passes
 			if multipass == 1
 				image2_crop_i1 = image2_roi(miniy-ms:maxiy+interrogationarea-1-ms, minix-ms:maxix+interrogationarea-1-ms);
 			else
-				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2-ms,Y2-ms,imdeform); %linear is 3x faster and looks ok...
-				image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
+				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,image2_roi,X2-ms,Y2-ms,imdeform); %linear is 3x faster and looks ok...
 			end
 			for ix = 1:numelementsx
 				for iy = 1:numelementsy
@@ -284,8 +280,7 @@ for multipass = 1:passes
 			if multipass == 1
 				image2_crop_i1 = image2_roi(miniy-ms:maxiy+interrogationarea-1-ms, minix+ms:maxix+interrogationarea-1+ms);
 			else
-				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2+ms,Y2-ms,imdeform); %linear is 3x faster and looks ok...
-				image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
+				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,image2_roi,X2+ms,Y2-ms,imdeform); %linear is 3x faster and looks ok...
 			end
 			for ix = 1:numelementsx
 				for iy = 1:numelementsy
