@@ -266,31 +266,9 @@ for multipass = 1:passes
 			correlation_map = calculate_correlation_map(image1_cut, image2_cut);
 			correlation_map = reshape(correlation_map, size(xtable'))';
 		end
-		if do_pad
-			% pad and subtract mean to avoid high frequencies at border of correlation
-			image1_cut = meanzeropad(image1_cut, interrogationarea);
-			image2_cut = meanzeropad(image2_cut, interrogationarea);
-		end
-
 		% do fft2:
-		result_conv = zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
-		result_conv = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
-		%GPU computing performance test
-		%image1_cut_gpu=gpuArray(image1_cut);
-		%image2_cut_gpu=gpuArray(image2_cut);
-		%tic
-		%result_conv_gpu = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut_gpu)).*fft2(image2_cut_gpu))), 1), 2);
-		%toc
-		%result_conv2=gather(result_conv_gpu);
-		%result_conv=result_conv2;
-		%for i=1:size(image1_cut,3)
-		%	result_conv(:,:,i) = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut(:,:,i))).*fft2(image2_cut(:,:,i)))), 1), 2);
-		%end
-		if do_pad
-			% cropping of correlation matrix:
-			result_conv = result_conv((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
-		end
-		
+		result_conv = do_correlations(image1_cut, image2_cut, do_pad, interrogationarea);
+
 		%% repeated correlation
 		if repeat == 1 && multipass==passes
 			ms=round(step/4); %multishift parameter so groß wie viertel int window
@@ -311,17 +289,7 @@ for multipass = 1:passes
 			ss2 = bsxfun(@plus, s2, s0);
 			image1_cut = image1_roi(ss1);
 			image2_cut = image2_crop_i1(ss2);
-			if do_pad
-				% pad and subtract mean to avoid high frequencies at border of correlation
-				image1_cut = meanzeropad(image1_cut, interrogationarea);
-				image2_cut = meanzeropad(image2_cut, interrogationarea);
-			end
-			result_convB = zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
-			result_convB = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
-			if do_pad
-				% cropping of correlation matrix:
-				result_convB = result_convB((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
-			end
+			result_convB = do_correlations(image1_cut, image2_cut, do_pad, interrogationarea);
 			%figure;imagesc(image1_cut(:,:,100));colormap('gray');figure;imagesc(image2_cut(:,:,100));colormap('gray')
 			%% Shift right bot
 			if multipass == 1
@@ -340,17 +308,7 @@ for multipass = 1:passes
 			ss2 = bsxfun(@plus, s2, s0);
 			image1_cut = image1_roi(ss1);
 			image2_cut = image2_crop_i1(ss2);
-			if do_pad
-				% pad and subtract mean to avoid high frequencies at border of correlation
-				image1_cut = meanzeropad(image1_cut, interrogationarea);
-				image2_cut = meanzeropad(image2_cut, interrogationarea);
-			end
-			result_convC = zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
-			result_convC = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
-			if do_pad
-				% cropping of correlation matrix:
-				result_convC = result_convC((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
-			end
+			result_convC = do_correlations(image1_cut, image2_cut, do_pad, interrogationarea);
 			%% Shift left top
 			if multipass == 1
 				image2_crop_i1 = image2_roi(miniy-ms:maxiy+interrogationarea-1-ms, minix-ms:maxix+interrogationarea-1-ms);
@@ -368,17 +326,7 @@ for multipass = 1:passes
 			ss2 = bsxfun(@plus, s2, s0);
 			image1_cut = image1_roi(ss1);
 			image2_cut = image2_crop_i1(ss2);
-			if do_pad
-				% pad and subtract mean to avoid high frequencies at border of correlation
-				image1_cut = meanzeropad(image1_cut, interrogationarea);
-				image2_cut = meanzeropad(image2_cut, interrogationarea);
-			end
-			result_convD = zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
-			result_convD = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
-			if do_pad
-				% cropping of correlation matrix:
-				result_convD = result_convD((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
-			end
+			result_convD = do_correlations(image1_cut, image2_cut, do_pad, interrogationarea);
 			%% Shift right top
 			if multipass == 1
 				image2_crop_i1 = image2_roi(miniy-ms:maxiy+interrogationarea-1-ms, minix+ms:maxix+interrogationarea-1+ms);
@@ -396,17 +344,7 @@ for multipass = 1:passes
 			ss2 = bsxfun(@plus, s2, s0);
 			image1_cut = image1_roi(ss1);
 			image2_cut = image2_crop_i1(ss2);
-			if do_pad
-				% pad and subtract mean to avoid high frequencies at border of correlation
-				image1_cut = meanzeropad(image1_cut, interrogationarea);
-				image2_cut = meanzeropad(image2_cut, interrogationarea);
-			end
-			result_convE = zeros(size(image1_cut),convert_image_class_type); %#ok<PREALL>
-			result_convE = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut))), 1), 2);
-			if do_pad
-				% cropping of correlation matrix:
-				result_convE = result_convE((interrogationarea/2):(3*interrogationarea/2)-1,(interrogationarea/2):(3*interrogationarea/2)-1,:);
-			end
+			result_convE = do_correlations(image1_cut, image2_cut, do_pad, interrogationarea);
 			%% Combine results
 			result_conv = result_conv.*result_convB.*result_convC.*result_convD.*result_convE;
 		end
@@ -829,6 +767,47 @@ function padded_image = meanzeropad(image, padsize)
 	end
 	% Padding (faster than padarray) to get the linear correlation
 	padded_image = [image zeros(size(image,1),padsize-1,size(image,3)); zeros(padsize-1,size(image,1)+padsize-1,size(image,3))];
+end
+
+%% Correlate two stacks of images using FFT-based convolution
+function result_conv = do_correlations(image1_cut, image2_cut, do_pad, padsize)
+	orig_size = size(image1_cut);
+	if do_pad
+		% pad and subtract mean to avoid high frequencies at border of correlation
+		image1_cut = meanzeropad(image1_cut, padsize);
+		image2_cut = meanzeropad(image2_cut, padsize);
+	end
+	% 2D FFT to calculate correlation matrix
+	result_conv = real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut)));
+	result_conv = fftshift(fftshift(result_conv, 1), 2);
+	if do_pad
+		% cropping of correlation matrix
+		result_conv = result_conv(padsize/2:orig_size(1)-1+padsize/2,padsize/2:orig_size(2)-1+padsize/2,:);
+	end
+end
+	%GPU computing performance test
+	%image1_cut_gpu=gpuArray(image1_cut);
+	%image2_cut_gpu=gpuArray(image2_cut);
+	%tic
+	%result_conv_gpu = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut_gpu)).*fft2(image2_cut_gpu))), 1), 2);
+	%toc
+	%result_conv2=gather(result_conv_gpu);
+	%result_conv=result_conv2;
+	%for i=1:size(image1_cut,3)
+	%	result_conv(:,:,i) = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut(:,:,i))).*fft2(image2_cut(:,:,i)))), 1), 2);
+	%end
+
+%% Check whether a shifted version of an array is correctly detected
+function test_do_correlations(testCase)
+shift_amount = [6 1];
+rng(0);
+A = rand(20);
+B = circshift(A, shift_amount);
+result = fftshift(fftshift(do_correlations(A, B, false, 0), 1), 2);
+[~, l] = max(result(:));
+[i, j] = ind2sub(size(A), l);
+% After fftshift, the location [1 1] in the result denotes the unshifted correlation
+testCase.verifyEqual([i j], shift_amount + [1 1]);
 end
 
 
