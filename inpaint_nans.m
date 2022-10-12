@@ -168,7 +168,7 @@ switch method
   end
   
   % eliminate knowns
-  rhs=-fda(:,known_list)*A(known_list);
+  rhs=-fda(:,known_list)*double(A(known_list));
   k=find(any(fda(:,nan_list(:,1)),2));
   
   % and solve...
@@ -198,7 +198,7 @@ switch method
       repmat([1 -2 1],np,1),nm,nm);
   
   % eliminate knowns
-  rhs=-fda(:,known_list)*A(known_list);
+  rhs=-fda(:,known_list)*double(A(known_list));
   k=find(any(fda(:,nan_list),2));
   
   % and solve...
@@ -246,7 +246,7 @@ switch method
   end
   
   % eliminate knowns
-  rhs=-fda(:,known_list)*A(known_list);
+  rhs=-fda(:,known_list)*double(A(known_list));
   
   % and solve...
   B=A;
@@ -325,7 +325,7 @@ switch method
   end
   
   % eliminate knowns
-  rhs=-fda(:,known_list)*A(known_list);
+  rhs=-fda(:,known_list)*double(A(known_list));
   k=find(any(fda(:,nan_list(:,1)),2));
   
   % and solve...
@@ -357,7 +357,7 @@ switch method
      repmat([1 -1],nhv,1),nhv,nm);
   
   % eliminate knowns
-  rhs=-springs(:,known_list)*A(known_list);
+  rhs=-springs(:,known_list)*double(A(known_list));
   
   % and solve...
   B=A;
@@ -443,7 +443,7 @@ switch method
   end
   
   % eliminate knowns
-  rhs=-fda(:,known_list)*A(known_list);
+  rhs=-fda(:,known_list)*double(A(known_list));
   
   % and solve...
   B=A;

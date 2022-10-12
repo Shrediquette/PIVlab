@@ -116,8 +116,8 @@ for multipass = 1:passes
 		%roi=[];
 
 		if multipass > 1    % TODO: remove for better results
-			xtable = xtable + double(padx-ceil(interrogationarea/2));
-			ytable = ytable + double(pady-ceil(interrogationarea/2));
+			xtable = xtable + single(padx-ceil(interrogationarea/2));
+			ytable = ytable + single(pady-ceil(interrogationarea/2));
 		end                 % END TODO: remove for better results
 		pady = ceil(interrogationarea/2);
 		padx = ceil(interrogationarea/2);
@@ -165,15 +165,15 @@ for multipass = 1:passes
 
 		typevector = ones(numelementsy, numelementsx, 'uint8');
 		if multipass == 1
-			xtable = zeros(numelementsy,numelementsx);
-			ytable = zeros(numelementsy,numelementsx);
-			utable = zeros(numelementsy,numelementsx);
-			vtable = zeros(numelementsy,numelementsx);
+			xtable = zeros(numelementsy,numelementsx, 'single');
+			ytable = zeros(numelementsy,numelementsx, 'single');
+			utable = zeros(numelementsy,numelementsx, 'single');
+			vtable = zeros(numelementsy,numelementsx, 'single');
 		end
 		xtable_old = xtable(1,:);
 		ytable_old = ytable(:,1);
-		xtable = double(repmat((minix:step:maxix)  + xroi - padx_orig + interrogationarea/2, numelementsy, 1));
-		ytable = double(repmat((miniy:step:maxiy)' + yroi - pady_orig + interrogationarea/2, 1, numelementsx));
+		xtable = single(repmat((minix:step:maxix)  + xroi - padx_orig + interrogationarea/2, numelementsy, 1));
+		ytable = single(repmat((miniy:step:maxiy)' + yroi - pady_orig + interrogationarea/2, 1, numelementsx));
 		if multipass > 1
 			%xtable alt und neu geben koordinaten wo die vektoren herkommen.
 			%d.h. u und v auf die gewÃ¯Â¿Â½nschte grÃ¯Â¿Â½Ã¯Â¿Â½e bringen+interpolieren
@@ -405,7 +405,7 @@ for multipass = 1:passes
 		elseif subpixfinder==2
 			[vector] = SUBPIX2DGAUSS(result_conv, interrogationarea_center, x1, y1, z1);
 		end
-		vector = reshape(vector, [size(xtable) 2]);
+		vector = single(reshape(vector, [size(xtable) 2]));
 
 		utable = utable + vector(:,:,1);
 		vtable = vtable + vector(:,:,2);
