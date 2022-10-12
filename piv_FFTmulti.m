@@ -155,23 +155,25 @@ for multipass = 1:passes
 			interrogationarea = round(int4/2)*2;
 			step = interrogationarea/2;
 		end
+		interrogationarea = uint32(interrogationarea);
+		step = uint32(step);
 		
 		%bildkoordinaten neu errechnen:
 		%roi=[];
 		
 		pady = ceil(interrogationarea/2);
 		padx = ceil(interrogationarea/2);
-		image1_roi = padarray(gen_image1_roi, [pady padx], min(min(gen_image1_roi)));
-		image2_roi = padarray(gen_image2_roi, [pady padx], min(min(gen_image1_roi)));
-		mask = padarray(gen_mask, [pady padx], 0);
+		image1_roi = padarray(gen_image1_roi, double([pady padx]), min(min(gen_image1_roi)));
+		image2_roi = padarray(gen_image2_roi, double([pady padx]), min(min(gen_image1_roi)));
+		mask = padarray(gen_mask, double([pady padx]), 0);
 
 		miniy = 1 + pady;
 		minix = 1 + padx;
-		maxiy = step*floor(size(image1_roi,1)/step) - (interrogationarea-1) - pady; %statt size deltax von ROI nehmen
-		maxix = step*floor(size(image1_roi,2)/step) - (interrogationarea-1) - padx;
+		maxiy = step*idivide(size(image1_roi,1),step) - (interrogationarea-1) - pady; %statt size deltax von ROI nehmen
+		maxix = step*idivide(size(image1_roi,2),step) - (interrogationarea-1) - padx;
 
-		numelementsy = floor((maxiy-miniy)/step+1);
-		numelementsx = floor((maxix-minix)/step+1);
+		numelementsy = idivide(maxiy-miniy, step) + 1;
+		numelementsx = idivide(maxix-minix, step) + 1;
 
 		shift4centery = round((size(gen_image1_roi,1)-maxiy-miniy)/2);
 		shift4centerx = round((size(gen_image1_roi,2)-maxix-minix)/2);
@@ -197,9 +199,9 @@ for multipass = 1:passes
 		%}
 		
 		if (rem(interrogationarea,2) == 0) %for the subpixel displacement measurement
-			interrogationarea_center = interrogationarea/2 + 1;
+			interrogationarea_center = double(interrogationarea/2 + 1);
 		else
-			interrogationarea_center = (interrogationarea+1)/2;
+			interrogationarea_center = double((interrogationarea+1)/2);
 		end
 
 		if GUI_avail==1
@@ -209,7 +211,7 @@ for multipass = 1:passes
 			%fprintf('.');
 		end
 
-		typevector=ones(numelementsy,numelementsx);
+		typevector = ones(numelementsy, numelementsx, 'uint8');
 		if multipass == 1
 			xtable=zeros(numelementsy,numelementsx);
 			ytable=xtable; %#ok<*NASGU>
@@ -218,8 +220,8 @@ for multipass = 1:passes
 		else
 			xtable_old=xtable;
 			ytable_old=ytable;
-			xtable = repmat((minix:step:maxix), numelementsy, 1) + interrogationarea/2;
-			ytable = repmat((miniy:step:maxiy)', 1, numelementsx) + interrogationarea/2;
+			xtable = double(repmat((minix:step:maxix), numelementsy, 1) + interrogationarea/2);
+			ytable = double(repmat((miniy:step:maxiy)', 1, numelementsx) + interrogationarea/2);
 
 			%xtable alt und neu geben koordinaten wo die vektoren herkommen.
 			%d.h. u und v auf die gewï¿½nschte grï¿½ï¿½e bringen+interpolieren
@@ -271,7 +273,7 @@ for multipass = 1:passes
 
 		%% repeated correlation
 		if repeat == 1 && multipass==passes
-			ms=round(step/4); %multishift parameter so groß wie viertel int window
+			ms = round(double(step)/4); %multishift parameter so groß wie viertel int window
 			%% Shift left bot
 			if multipass == 1
 				image2_crop_i1 = image2_roi(miniy+ms:maxiy+interrogationarea-1+ms, minix-ms:maxix+interrogationarea-1-ms);
@@ -449,8 +451,8 @@ for multipass = 1:passes
 		z1 = z(zi(i0));
 
 		%new xtable and ytable
-		xtable = repmat((minix:step:maxix)+interrogationarea/2, length(miniy:step:maxiy), 1);
-		ytable = repmat(((miniy:step:maxiy)+interrogationarea/2)', 1, length(minix:step:maxix));
+		xtable = double(repmat((minix:step:maxix)+interrogationarea/2, length(miniy:step:maxiy), 1));
+		ytable = double(repmat(((miniy:step:maxiy)+interrogationarea/2)', 1, length(minix:step:maxix)));
 		
 		if subpixfinder==1
 			[vector] = SUBPIXGAUSS(result_conv, interrogationarea_center, x1, y1, z1);
@@ -485,8 +487,8 @@ for multipass = 1:passes
 	
 end
 
-xtable = xtable - padx + xroi;
-ytable = ytable - pady + yroi;
+xtable = xtable - double(padx) + xroi;
+ytable = ytable - double(pady) + yroi;
 
 
 %{
