@@ -197,9 +197,9 @@ for multipass = 1:passes
 		%}
 		
 		if (rem(interrogationarea,2) == 0) %for the subpixel displacement measurement
-			SubPixOffset=1;
+			interrogationarea_center = interrogationarea/2 + 1;
 		else
-			SubPixOffset=0.5;
+			interrogationarea_center = (interrogationarea+1)/2;
 		end
 
 		if GUI_avail==1
@@ -364,8 +364,8 @@ for multipass = 1:passes
 					end
 					h=h_repl;
 				end
-				h=h.*result_conv((interrogationarea/2)+SubPixOffset-1:(interrogationarea/2)+SubPixOffset+1,(interrogationarea/2)+SubPixOffset-1:(interrogationarea/2)+SubPixOffset+1,:);
-				result_conv((interrogationarea/2)+SubPixOffset-1:(interrogationarea/2)+SubPixOffset+1,(interrogationarea/2)+SubPixOffset-1:(interrogationarea/2)+SubPixOffset+1,:)=h;
+				h = h .* result_conv(interrogationarea_center+(-1:1),interrogationarea_center+(-1:1),:);
+				result_conv(interrogationarea_center+(-1:1),interrogationarea_center+(-1:1),:) = h;
 			end
 		else
 			%limiting the peak search are in later passes makes sense: Earlier
@@ -383,8 +383,8 @@ for multipass = 1:passes
 					end
 
 					emptymatrix = zeros(size(result_conv,1),size(result_conv,2));
-					emptymatrix((interrogationarea/2)+SubPixOffset+(-sizeones:sizeones), ...
-				            	(interrogationarea/2)+SubPixOffset+(-sizeones:sizeones)) = fspecial('disk', sizeones);
+					emptymatrix(interrogationarea_center + (-sizeones:sizeones), ...
+					            interrogationarea_center + (-sizeones:sizeones)) = fspecial('disk', sizeones);
 					emptymatrix = emptymatrix / max(max(emptymatrix));
 
 					try
@@ -453,9 +453,9 @@ for multipass = 1:passes
 		ytable = repmat(((miniy:step:maxiy)+interrogationarea/2)', 1, length(minix:step:maxix));
 		
 		if subpixfinder==1
-			[vector] = SUBPIXGAUSS (result_conv,interrogationarea, x1, y1, z1,SubPixOffset);
+			[vector] = SUBPIXGAUSS(result_conv, interrogationarea_center, x1, y1, z1);
 		elseif subpixfinder==2
-			[vector] = SUBPIX2DGAUSS (result_conv,interrogationarea, x1, y1, z1,SubPixOffset);
+			[vector] = SUBPIX2DGAUSS(result_conv, interrogationarea_center, x1, y1, z1);
 		end
 		vector = permute(reshape(vector, [size(xtable') 2]), [2 1 3]);
 
@@ -585,7 +585,7 @@ end
 
 
 %%{
-function [vector] = SUBPIXGAUSS(result_conv, interrogationarea, x, y, z, SubPixOffset)
+function [vector] = SUBPIXGAUSS(result_conv, interrogationarea_center, x, y, z)
 xi = find(~((x <= (size(result_conv,2)-1)) & (y <= (size(result_conv,1)-1)) & (x >= 2) & (y >= 2)));
 x(xi) = [];
 y(xi) = [];
@@ -605,8 +605,8 @@ if(numel(x)~=0)
 	f2 = log(result_conv(ip+xmax));
 	peakx = x + (f1-f2)./(2*f1-4*f0+2*f2);
 	
-	SubpixelX=peakx-(interrogationarea/2)-SubPixOffset;
-	SubpixelY=peaky-(interrogationarea/2)-SubPixOffset;
+	SubpixelX = peakx - interrogationarea_center;
+	SubpixelY = peaky - interrogationarea_center;
 	vector(z, :) = [SubpixelX, SubpixelY];
 	
 end
@@ -636,7 +636,7 @@ end
 end
 %}
 
-function [vector] = SUBPIX2DGAUSS(result_conv, interrogationarea, x, y, z, SubPixOffset)
+function [vector] = SUBPIX2DGAUSS(result_conv, interrogationarea_center, x, y, z)
 xi = find(~((x <= (size(result_conv,2)-1)) & (y <= (size(result_conv,1)-1)) & (x >= 2) & (y >= 2)));
 x(xi) = [];
 y(xi) = [];
@@ -679,8 +679,8 @@ if(numel(x)~=0)
 	peakx = x+deltax;
 	peaky = y+deltay;
 	
-	SubpixelX = peakx-(interrogationarea/2)-SubPixOffset;
-	SubpixelY = peaky-(interrogationarea/2)-SubPixOffset;
+	SubpixelX = peakx - interrogationarea_center;
+	SubpixelY = peaky - interrogationarea_center;
 	
 	vector(z, :) = [SubpixelX, SubpixelY];
 end
@@ -701,7 +701,7 @@ end
 
 %{
 %Problem ist nicht das subpixel-finden. Sondern das integer-finden.....
-function [vector] = SUBPIXCENTROID(result_conv, interrogationarea, x, y, z, SubPixOffset)
+function [vector] = SUBPIXCENTROID(result_conv, interrogationarea_center, x, y, z)
 %was hat peak nr.1 für einen Durchmesser?
 %figure;imagesc((1-im2bw(uint8(result_conv(:,:,155)),0.9)).*result_conv(:,:,101))
 xi = find(~((x <= (size(result_conv,2)-1)) & (y <= (size(result_conv,1)-1)) & (x >= 2) & (y >= 2)));
@@ -733,7 +733,7 @@ try
             SubpixelX= nan;
             SubpixelY= nan
         end
-        vector(i, :) = [SubpixelX-(interrogationarea/2)-SubPixOffset, SubpixelY-(interrogationarea/2)-SubPixOffset];
+        vector(i, :) = [SubpixelX-interrogationarea_center, SubpixelY-interrogationarea_center];
 catch
     keyboard
 end
