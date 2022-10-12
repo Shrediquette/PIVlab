@@ -159,38 +159,28 @@ for multipass = 1:passes
 		%bildkoordinaten neu errechnen:
 		%roi=[];
 		
-		image1_roi = gen_image1_roi;
-		image2_roi = gen_image2_roi;
-		mask = gen_mask;
+		pady = ceil(interrogationarea/2);
+		padx = ceil(interrogationarea/2);
+		image1_roi = padarray(gen_image1_roi, [pady padx], min(min(gen_image1_roi)));
+		image2_roi = padarray(gen_image2_roi, [pady padx], min(min(gen_image1_roi)));
+		mask = padarray(gen_mask, [pady padx], 0);
 
-		miniy=1+(ceil(interrogationarea/2));
-		minix=1+(ceil(interrogationarea/2));
-		maxiy=step*(floor(size(image1_roi,1)/step))-(interrogationarea-1)+(ceil(interrogationarea/2)); %statt size deltax von ROI nehmen
-		maxix=step*(floor(size(image1_roi,2)/step))-(interrogationarea-1)+(ceil(interrogationarea/2));
+		miniy = 1 + pady;
+		minix = 1 + padx;
+		maxiy = step*floor(size(image1_roi,1)/step) - (interrogationarea-1) - pady; %statt size deltax von ROI nehmen
+		maxix = step*floor(size(image1_roi,2)/step) - (interrogationarea-1) - padx;
 
-		numelementsy=floor((maxiy-miniy)/step+1);
-		numelementsx=floor((maxix-minix)/step+1);
+		numelementsy = floor((maxiy-miniy)/step+1);
+		numelementsx = floor((maxix-minix)/step+1);
 
-		LAy=miniy;
-		LAx=minix;
-		LUy=size(image1_roi,1)-maxiy;
-		LUx=size(image1_roi,2)-maxix;
-		shift4centery=round((LUy-LAy)/2);
-		shift4centerx=round((LUx-LAx)/2);
-		if shift4centery<0 %shift4center will be negative if in the unshifted case the left border is bigger than the right border. the vectormatrix is hence not centered on the image. the matrix cannot be shifted more towards the left border because then image2_crop would have a negative index. The only way to center the matrix would be to remove a column of vectors on the right side. but then we weould have less data....
-			shift4centery=0;
-		end
-		if shift4centerx<0 %shift4center will be negative if in the unshifted case the left border is bigger than the right border. the vectormatrix is hence not centered on the image. the matrix cannot be shifted more towards the left border because then image2_crop would have a negative index. The only way to center the matrix would be to remove a column of vectors on the right side. but then we weould have less data....
-			shift4centerx=0;
-		end
-		miniy=miniy+shift4centery;
-		minix=minix+shift4centerx;
-		maxix=maxix+shift4centerx;
-		maxiy=maxiy+shift4centery;
+		shift4centery = round((size(gen_image1_roi,1)-maxiy-miniy)/2);
+		shift4centerx = round((size(gen_image1_roi,2)-maxix-minix)/2);
+		%shift4center will be negative if in the unshifted case the left border is bigger than the right border. the vectormatrix is hence not centered on the image. the matrix cannot be shifted more towards the left border because then image2_crop would have a negative index. The only way to center the matrix would be to remove a column of vectors on the right side. but then we would have less data....
+		miniy = miniy + max(shift4centery, 0);
+		minix = minix + max(shift4centerx, 0);
+		maxix = maxix + max(shift4centerx, 0);
+		maxiy = maxiy + max(shift4centery, 0);
 
-		image1_roi=padarray(image1_roi,[ceil(interrogationarea/2) ceil(interrogationarea/2)], min(min(image1_roi)));
-		image2_roi=padarray(image2_roi,[ceil(interrogationarea/2) ceil(interrogationarea/2)], min(min(image1_roi)));
-		mask=padarray(mask,[ceil(interrogationarea/2) ceil(interrogationarea/2)],0);
 		%{
 		%Improve masking?
 		max_img_value=(max(image1_roi(:))+max(image2_roi(:)))/2;
@@ -557,11 +547,8 @@ for multipass = 1:passes
 	
 end
 
-xtable=xtable-ceil(interrogationarea/2);
-ytable=ytable-ceil(interrogationarea/2);
-
-xtable=xtable+xroi;
-ytable=ytable+yroi;
+xtable = xtable - padx + xroi;
+ytable = ytable - pady + yroi;
 
 
 %{
