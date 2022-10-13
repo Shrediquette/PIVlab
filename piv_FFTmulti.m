@@ -430,7 +430,7 @@ for multipass = 1:passes
 		masked_xs = (minix:step:maxix) + round(interrogationarea/2);
 		masked_ys = (miniy:step:maxiy) + round(interrogationarea/2);
 		typevector(mask(masked_ys, masked_xs)) = 0;
-		result_conv(:, :, mask(masked_ys-1, masked_xs+1)') = 0;
+		result_conv(:, :, mask(masked_ys, masked_xs)') = 0;
 		if multipass == passes
 			correlation_map(mask(masked_ys, masked_xs)) = 0;
 		end
