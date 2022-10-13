@@ -31,8 +31,13 @@ end
 %% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
 image1_roi = convert_image_class(image1_roi, convert_image_class_type);
 image2_roi = convert_image_class(image2_roi, convert_image_class_type);
-gen_image1_roi = image1_roi;
-gen_image2_roi = image2_roi;
+% Pad to the first (largest) interrogationarea
+pady = ceil(interrogationarea/2);
+padx = ceil(interrogationarea/2);
+image1_roi = padarray(image1_roi, [pady padx], min(min(image1_roi)));
+image2_roi = padarray(image2_roi, [pady padx], min(min(image1_roi)));
+image_roi_xs = (1:size(image2_roi,2)) - padx;
+image_roi_ys = (1:size(image2_roi,1))' - pady;
 
 %% Construct mask as logical array
 mask = zeros(size(image1_roi), 'logical');
@@ -40,11 +45,9 @@ if numel(mask_inpt)>0
 	for i=1:size(mask_inpt,1)
 		masklayerx = mask_inpt{i,1};
 		masklayery = mask_inpt{i,2};
-		mask = mask | poly2mask(masklayerx-xroi,masklayery-yroi,size(image1_roi,1),size(image1_roi,2)); %kleineres eingangsbild und maske geshiftet
+		mask = mask | poly2mask(masklayerx-xroi+padx,masklayery-yroi+pady,size(image1_roi,1),size(image1_roi,2)); %kleineres eingangsbild und maske geshiftet
 	end
 end
-gen_mask = mask;
-
 
 
 %% MAINLOOP
@@ -163,20 +166,21 @@ for multipass = 1:passes
 		
 		pady = ceil(interrogationarea/2);
 		padx = ceil(interrogationarea/2);
-		image1_roi = padarray(gen_image1_roi, double([pady padx]), min(min(gen_image1_roi)));
-		image2_roi = padarray(gen_image2_roi, double([pady padx]), min(min(gen_image1_roi)));
-		mask = padarray(gen_mask, double([pady padx]), 0);
+		if multipass==1
+			padx_orig = padx;
+			pady_orig = pady;
+		end
 
-		miniy = 1 + pady;
-		minix = 1 + padx;
-		maxiy = step*idivide(size(image1_roi,1),step) - (interrogationarea-1) - pady; %statt size deltax von ROI nehmen
-		maxix = step*idivide(size(image1_roi,2),step) - (interrogationarea-1) - padx;
+		miniy = 1 + pady_orig;
+		minix = 1 + padx_orig;
+		maxiy = step*idivide(size(image1_roi,1)-2*pady_orig,step) - (interrogationarea-1) + pady_orig; %statt size deltax von ROI nehmen
+		maxix = step*idivide(size(image1_roi,2)-2*padx_orig,step) - (interrogationarea-1) + padx_orig;
 
 		numelementsy = idivide(maxiy-miniy, step) + 1;
 		numelementsx = idivide(maxix-minix, step) + 1;
 
-		shift4centery = round((size(gen_image1_roi,1)-maxiy-miniy)/2);
-		shift4centerx = round((size(gen_image1_roi,2)-maxix-minix)/2);
+		shift4centery = round((size(image1_roi,1)-maxiy-miniy-2*padx)/2);
+		shift4centerx = round((size(image1_roi,2)-maxix-minix-2*padx)/2);
 		%shift4center will be negative if in the unshifted case the left border is bigger than the right border. the vectormatrix is hence not centered on the image. the matrix cannot be shifted more towards the left border because then image2_crop would have a negative index. The only way to center the matrix would be to remove a column of vectors on the right side. but then we would have less data....
 		miniy = miniy + max(shift4centery, 0);
 		minix = minix + max(shift4centerx, 0);
@@ -213,16 +217,16 @@ for multipass = 1:passes
 
 		typevector = ones(numelementsy, numelementsx, 'uint8');
 		if multipass == 1
-			xtable=zeros(numelementsy,numelementsx);
-			ytable=xtable; %#ok<*NASGU>
-			utable=xtable;
-			vtable=xtable;
-		else
-			xtable_old=xtable;
-			ytable_old=ytable;
-			xtable = double(repmat((minix:step:maxix), numelementsy, 1) + interrogationarea/2);
-			ytable = double(repmat((miniy:step:maxiy)', 1, numelementsx) + interrogationarea/2);
-
+			xtable = zeros(numelementsy,numelementsx);
+			ytable = zeros(numelementsy,numelementsx);
+			utable = zeros(numelementsy,numelementsx);
+			vtable = zeros(numelementsy,numelementsx);
+		end
+		xtable_old = xtable(1,:);
+		ytable_old = ytable(:,1);
+		xtable = double(repmat((minix:step:maxix)  - (padx_orig-padx) + interrogationarea/2, numelementsy, 1));
+		ytable = double(repmat((miniy:step:maxiy)' - (pady_orig-pady) + interrogationarea/2, 1, numelementsx));
+		if multipass > 1
 			%xtable alt und neu geben koordinaten wo die vektoren herkommen.
 			%d.h. u und v auf die gewï¿½nschte grï¿½ï¿½e bringen+interpolieren
 			try
@@ -233,8 +237,8 @@ for multipass = 1:passes
 			end
 
 			%add 1 line around image for border regions... linear extrap
-			X = interp1(1:1:size(xtable,2),xtable(1,:),0:1:size(xtable,2)+1,'linear','extrap');
-			Y = interp1(1:1:size(ytable,1),ytable(:,1),0:1:size(ytable,1)+1,'linear','extrap')';
+			X = interp1(1:size(xtable,2), xtable(1,:), 0:size(xtable,2)+1, 'linear', 'extrap') - double(padx);
+			Y = interp1(1:size(ytable,1), ytable(:,1), 0:size(ytable,1)+1, 'linear', 'extrap')' - double(pady);
 			U = padarray(utable, [1,1], 'replicate'); %interesting portion of u
 			V = padarray(vtable, [1,1], 'replicate'); % "" of v
 			
@@ -247,7 +251,7 @@ for multipass = 1:passes
 		if multipass == 1
 			image2_crop_i1 = image2_roi(miniy:maxiy+interrogationarea-1, minix:maxix+interrogationarea-1);
 		else
-			image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X2,Y2,imdeform); %linear is 3x faster and looks ok...
+			image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2,Y2,imdeform); %linear is 3x faster and looks ok...
 			image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 		end
 		% divide images by small pictures
@@ -278,7 +282,7 @@ for multipass = 1:passes
 			if multipass == 1
 				image2_crop_i1 = image2_roi(miniy+ms:maxiy+interrogationarea-1+ms, minix-ms:maxix+interrogationarea-1-ms);
 			else
-				image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X2-ms,Y2+ms,imdeform); %linear is 3x faster and looks ok...
+				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2-ms,Y2+ms,imdeform); %linear is 3x faster and looks ok...
 				image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 			end
 			s0 = (repmat((miniy+ms:step:maxiy+ms)'-1, 1,numelementsx) + repmat(((minix-ms:step:maxix-ms)-1)*size(image1_roi, 1), numelementsy,1))';
@@ -297,7 +301,7 @@ for multipass = 1:passes
 			if multipass == 1
 				image2_crop_i1 = image2_roi(miniy+ms:maxiy+interrogationarea-1+ms, minix+ms:maxix+interrogationarea-1+ms);
 			else
-				image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X2+ms,Y2+ms,imdeform); %linear is 3x faster and looks ok...
+				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2+ms,Y2+ms,imdeform); %linear is 3x faster and looks ok...
 				image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 			end
 			s0 = (repmat((miniy+ms:step:maxiy+ms)'-1, 1,numelementsx) + repmat(((minix+ms:step:maxix+ms)-1)*size(image1_roi, 1), numelementsy,1))';
@@ -315,7 +319,7 @@ for multipass = 1:passes
 			if multipass == 1
 				image2_crop_i1 = image2_roi(miniy-ms:maxiy+interrogationarea-1-ms, minix-ms:maxix+interrogationarea-1-ms);
 			else
-				image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X2-ms,Y2-ms,imdeform); %linear is 3x faster and looks ok...
+				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2-ms,Y2-ms,imdeform); %linear is 3x faster and looks ok...
 				image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 			end
 			s0 = (repmat((miniy-ms:step:maxiy-ms)'-1, 1,numelementsx) + repmat(((minix-ms:step:maxix-ms)-1)*size(image1_roi, 1), numelementsy,1))';
@@ -333,7 +337,7 @@ for multipass = 1:passes
 			if multipass == 1
 				image2_crop_i1 = image2_roi(miniy-ms:maxiy+interrogationarea-1-ms, minix+ms:maxix+interrogationarea-1+ms);
 			else
-				image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X2+ms,Y2-ms,imdeform); %linear is 3x faster and looks ok...
+				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2+ms,Y2-ms,imdeform); %linear is 3x faster and looks ok...
 				image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 			end
 			s0 = (repmat((miniy-ms:step:maxiy-ms)'-1, 1,numelementsx) + repmat(((minix+ms:step:maxix+ms)-1)*size(image1_roi, 1), numelementsy,1))';
@@ -450,10 +454,6 @@ for multipass = 1:passes
 		y1 = y(zi(i0));
 		z1 = z(zi(i0));
 
-		%new xtable and ytable
-		xtable = double(repmat((minix:step:maxix)+interrogationarea/2, length(miniy:step:maxiy), 1));
-		ytable = double(repmat(((miniy:step:maxiy)+interrogationarea/2)', 1, length(minix:step:maxix)));
-		
 		if subpixfinder==1
 			[vector] = SUBPIXGAUSS(result_conv, interrogationarea_center, x1, y1, z1);
 		elseif subpixfinder==2
