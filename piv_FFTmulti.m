@@ -329,7 +329,7 @@ for multipass = 1:passes
 						sizeones = floor(size(result_conv,1)/3);
 					end
 
-					emptymatrix = zeros(size(result_conv,1),size(result_conv,2));
+					emptymatrix = zeros(size(result_conv,1),size(result_conv,2), convert_image_class_type);
 					emptymatrix(interrogationarea_center + (-sizeones:sizeones), ...
 					            interrogationarea_center + (-sizeones:sizeones)) = fspecial('disk', sizeones);
 					emptymatrix = emptymatrix / max(max(emptymatrix));
