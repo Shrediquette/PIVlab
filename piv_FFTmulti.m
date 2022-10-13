@@ -427,12 +427,12 @@ for multipass = 1:passes
 		result_conv = rescale_array(result_conv);
 
 		%apply mask
-		ii = find(mask(ss1(round(interrogationarea/2+1), round(interrogationarea/2+1), :)));
-		jj = find(mask((miniy:step:maxiy)+round(interrogationarea/2), (minix:step:maxix)+round(interrogationarea/2)));
-		typevector(jj) = 0;
-		result_conv(:,:, ii) = 0;
+		masked_xs = (minix:step:maxix) + round(interrogationarea/2);
+		masked_ys = (miniy:step:maxiy) + round(interrogationarea/2);
+		typevector(mask(masked_ys, masked_xs)) = 0;
+		result_conv(:, :, mask(masked_ys-1, masked_xs+1)') = 0;
 		if multipass == passes
-			correlation_map(jj) = 0;
+			correlation_map(mask(masked_ys, masked_xs)) = 0;
 		end
 
 		[y, x, z] = ind2sub(size(result_conv), find(result_conv==255));
