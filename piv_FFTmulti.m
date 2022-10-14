@@ -36,8 +36,8 @@ pady = ceil(interrogationarea/2);
 padx = ceil(interrogationarea/2);
 image1_roi = padarray(image1_roi, [pady padx], min(min(image1_roi)));
 image2_roi = padarray(image2_roi, [pady padx], min(min(image1_roi)));
-image_roi_xs = (1:size(image2_roi,2)) - padx;
-image_roi_ys = (1:size(image2_roi,1))' - pady;
+image_roi_xs = (1:size(image2_roi,2))  - padx + xroi;
+image_roi_ys = (1:size(image2_roi,1))' - pady + yroi;
 
 %% Construct mask as logical array
 mask = zeros(size(image1_roi), 'logical');
@@ -119,8 +119,8 @@ for multipass = 1:passes
 				vecscale=str2double(get(handles.vectorscale,'string'));
 				%Problem: wenn colorbar an, zï¿½hlt das auch als aexes...
 				colorbar('off')
-				quiver ((findobj(getappdata(0,'hgui'),'type', 'axes')),xtable(isnan(utable)==0)+xroi-interrogationarea/2,ytable(isnan(utable)==0)+yroi-interrogationarea/2,utable_orig(isnan(utable)==0)*vecscale,vtable_orig(isnan(utable)==0)*vecscale,'Color', [0.15 0.7 0.15],'autoscale','off')
-				quiver ((findobj(getappdata(0,'hgui'),'type', 'axes')),xtable(isnan(utable)==1)+xroi-interrogationarea/2,ytable(isnan(utable)==1)+yroi-interrogationarea/2,utable_orig(isnan(utable)==1)*vecscale,vtable_orig(isnan(utable)==1)*vecscale,'Color',[0.7 0.15 0.15], 'autoscale','off')
+				quiver ((findobj(getappdata(0,'hgui'),'type', 'axes')),xtable(isnan(utable)==0)+padx-interrogationarea/2,ytable(isnan(utable)==0)+pady-interrogationarea/2,utable_orig(isnan(utable)==0)*vecscale,vtable_orig(isnan(utable)==0)*vecscale,'Color', [0.15 0.7 0.15],'autoscale','off')
+				quiver ((findobj(getappdata(0,'hgui'),'type', 'axes')),xtable(isnan(utable)==1)+padx-interrogationarea/2,ytable(isnan(utable)==1)+pady-interrogationarea/2,utable_orig(isnan(utable)==1)*vecscale,vtable_orig(isnan(utable)==1)*vecscale,'Color',[0.7 0.15 0.15], 'autoscale','off')
 				drawnow
 				hold off
 			end
@@ -163,7 +163,11 @@ for multipass = 1:passes
 		
 		%bildkoordinaten neu errechnen:
 		%roi=[];
-		
+
+		if multipass > 1    % TODO: remove for better results
+			xtable = xtable + double(padx-ceil(interrogationarea/2));
+			ytable = ytable + double(pady-ceil(interrogationarea/2));
+		end                 % END TODO: remove for better results
 		pady = ceil(interrogationarea/2);
 		padx = ceil(interrogationarea/2);
 		if multipass==1
@@ -224,8 +228,8 @@ for multipass = 1:passes
 		end
 		xtable_old = xtable(1,:);
 		ytable_old = ytable(:,1);
-		xtable = double(repmat((minix:step:maxix)  - (padx_orig-padx) + interrogationarea/2, numelementsy, 1));
-		ytable = double(repmat((miniy:step:maxiy)' - (pady_orig-pady) + interrogationarea/2, 1, numelementsx));
+		xtable = double(repmat((minix:step:maxix)  + xroi - padx_orig + interrogationarea/2, numelementsy, 1));
+		ytable = double(repmat((miniy:step:maxiy)' + yroi - pady_orig + interrogationarea/2, 1, numelementsx));
 		if multipass > 1
 			%xtable alt und neu geben koordinaten wo die vektoren herkommen.
 			%d.h. u und v auf die gewï¿½nschte grï¿½ï¿½e bringen+interpolieren
@@ -237,8 +241,8 @@ for multipass = 1:passes
 			end
 
 			%add 1 line around image for border regions... linear extrap
-			X = interp1(1:size(xtable,2), xtable(1,:), 0:size(xtable,2)+1, 'linear', 'extrap') - double(padx);
-			Y = interp1(1:size(ytable,1), ytable(:,1), 0:size(ytable,1)+1, 'linear', 'extrap')' - double(pady);
+			X = interp1(1:size(xtable,2), xtable(1,:), 0:size(xtable,2)+1, 'linear', 'extrap');
+			Y = interp1(1:size(ytable,1), ytable(:,1), 0:size(ytable,1)+1, 'linear', 'extrap')';
 			U = padarray(utable, [1,1], 'replicate'); %interesting portion of u
 			V = padarray(vtable, [1,1], 'replicate'); % "" of v
 			
@@ -486,9 +490,6 @@ for multipass = 1:passes
 	end
 	
 end
-
-xtable = xtable - double(padx) + xroi;
-ytable = ytable - double(pady) + yroi;
 
 
 %{
