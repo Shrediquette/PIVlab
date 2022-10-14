@@ -252,25 +252,26 @@ for multipass = 1:passes
 			Y2 = interp2(X,Y,V,X1,Y1,'*linear') + repmat(Y1,1,size(X1, 2));
 		end
 
+		% interpolate image2_roi
 		if multipass == 1
 			image2_crop_i1 = image2_roi(miniy:maxiy+interrogationarea-1, minix:maxix+interrogationarea-1);
 		else
 			image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2,Y2,imdeform); %linear is 3x faster and looks ok...
 			image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 		end
-		% divide images by small pictures
-		% new index for image1_roi
-		s0 = (repmat((miniy:step:maxiy)'-1, 1,numelementsx) + repmat(((minix:step:maxix)-1)*size(image1_roi, 1), numelementsy,1))';
-		s0 = permute(s0(:), [2 3 1]);
-		s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
-		ss1 = bsxfun(@plus, s1, s0);
-		% new index for image2_crop_i1
-		s0 = (repmat(step*(1:numelementsy)'-step, 1,numelementsx) + repmat((step*(1:numelementsx)-step)*size(image2_crop_i1, 1), numelementsy,1))';
-		s0 = permute(s0(:), [2 3 1]);
-		s2 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image2_crop_i1, 1),interrogationarea,1);
-		ss2 = bsxfun(@plus, s2, s0);
-		image1_cut = image1_roi(ss1);
-		image2_cut = image2_crop_i1(ss2);
+		% divide images into N small pictures
+		N = numelementsx * numelementsy;
+		image1_cut = zeros([interrogationarea interrogationarea N], convert_image_class_type);
+		image2_cut = zeros([interrogationarea interrogationarea N], convert_image_class_type);
+		for iy = 1:numelementsy
+			for ix = 1:numelementsx
+				l = ix + numelementsx * (iy-1);
+				xs = (1:interrogationarea) + (ix-1) * step;
+				ys = (1:interrogationarea) + (iy-1) * step;
+				image1_cut(:,:,l) = image1_roi(miniy-1+ys, minix-1+xs);
+				image2_cut(:,:,l) = image2_crop_i1(ys, xs);
+			end
+		end
 		% Calculate correlation strength on the last pass
 		if multipass == passes
 			correlation_map = calculate_correlation_map(image1_cut, image2_cut);
@@ -289,16 +290,15 @@ for multipass = 1:passes
 				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2-ms,Y2+ms,imdeform); %linear is 3x faster and looks ok...
 				image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 			end
-			s0 = (repmat((miniy+ms:step:maxiy+ms)'-1, 1,numelementsx) + repmat(((minix-ms:step:maxix-ms)-1)*size(image1_roi, 1), numelementsy,1))';
-			s0 = permute(s0(:), [2 3 1]);
-			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
-			ss1 = bsxfun(@plus, s1, s0);
-			s0 = (repmat(step*(1:numelementsy)'-step, 1,numelementsx) + repmat((step*(1:numelementsx)-step)*size(image2_crop_i1, 1), numelementsy,1))';
-			s0 = permute(s0(:), [2 3 1]);
-			s2 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image2_crop_i1, 1),interrogationarea,1);
-			ss2 = bsxfun(@plus, s2, s0);
-			image1_cut = image1_roi(ss1);
-			image2_cut = image2_crop_i1(ss2);
+			for iy = 1:numelementsy
+				for ix = 1:numelementsx
+					l = ix + numelementsx * (iy-1);
+					xs = (1:interrogationarea) + (ix-1) * step;
+					ys = (1:interrogationarea) + (iy-1) * step;
+					image1_cut(:,:,l) = image1_roi(miniy-1+ys+ms, minix-1+xs-ms);
+					image2_cut(:,:,l) = image2_crop_i1(ys, xs);
+				end
+			end
 			result_convB = do_correlations(image1_cut, image2_cut, do_pad, interrogationarea);
 			%figure;imagesc(image1_cut(:,:,100));colormap('gray');figure;imagesc(image2_cut(:,:,100));colormap('gray')
 			%% Shift right bot
@@ -308,16 +308,15 @@ for multipass = 1:passes
 				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2+ms,Y2+ms,imdeform); %linear is 3x faster and looks ok...
 				image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 			end
-			s0 = (repmat((miniy+ms:step:maxiy+ms)'-1, 1,numelementsx) + repmat(((minix+ms:step:maxix+ms)-1)*size(image1_roi, 1), numelementsy,1))';
-			s0 = permute(s0(:), [2 3 1]);
-			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
-			ss1 = bsxfun(@plus, s1, s0);
-			s0 = (repmat(step*(1:numelementsy)'-step, 1,numelementsx) + repmat((step*(1:numelementsx)-step)*size(image2_crop_i1, 1), numelementsy,1))';
-			s0 = permute(s0(:), [2 3 1]);
-			s2 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image2_crop_i1, 1),interrogationarea,1);
-			ss2 = bsxfun(@plus, s2, s0);
-			image1_cut = image1_roi(ss1);
-			image2_cut = image2_crop_i1(ss2);
+			for iy = 1:numelementsy
+				for ix = 1:numelementsx
+					l = ix + numelementsx * (iy-1);
+					xs = (1:interrogationarea) + (ix-1) * step;
+					ys = (1:interrogationarea) + (iy-1) * step;
+					image1_cut(:,:,l) = image1_roi(miniy-1+ys+ms, minix-1+xs+ms);
+					image2_cut(:,:,l) = image2_crop_i1(ys, xs);
+				end
+			end
 			result_convC = do_correlations(image1_cut, image2_cut, do_pad, interrogationarea);
 			%% Shift left top
 			if multipass == 1
@@ -326,16 +325,15 @@ for multipass = 1:passes
 				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2-ms,Y2-ms,imdeform); %linear is 3x faster and looks ok...
 				image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 			end
-			s0 = (repmat((miniy-ms:step:maxiy-ms)'-1, 1,numelementsx) + repmat(((minix-ms:step:maxix-ms)-1)*size(image1_roi, 1), numelementsy,1))';
-			s0 = permute(s0(:), [2 3 1]);
-			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
-			ss1 = bsxfun(@plus, s1, s0);
-			s0 = (repmat(step*(1:numelementsy)'-step, 1,numelementsx) + repmat((step*(1:numelementsx)-step)*size(image2_crop_i1, 1), numelementsy,1))';
-			s0 = permute(s0(:), [2 3 1]);
-			s2 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image2_crop_i1, 1),interrogationarea,1);
-			ss2 = bsxfun(@plus, s2, s0);
-			image1_cut = image1_roi(ss1);
-			image2_cut = image2_crop_i1(ss2);
+			for iy = 1:numelementsy
+				for ix = 1:numelementsx
+					l = ix + numelementsx * (iy-1);
+					xs = (1:interrogationarea) + (ix-1) * step;
+					ys = (1:interrogationarea) + (iy-1) * step;
+					image1_cut(:,:,l) = image1_roi(miniy-1+ys-ms, minix-1+xs-ms);
+					image2_cut(:,:,l) = image2_crop_i1(ys, xs);
+				end
+			end
 			result_convD = do_correlations(image1_cut, image2_cut, do_pad, interrogationarea);
 			%% Shift right top
 			if multipass == 1
@@ -344,16 +342,15 @@ for multipass = 1:passes
 				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2+ms,Y2-ms,imdeform); %linear is 3x faster and looks ok...
 				image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 			end
-			s0 = (repmat((miniy-ms:step:maxiy-ms)'-1, 1,numelementsx) + repmat(((minix+ms:step:maxix+ms)-1)*size(image1_roi, 1), numelementsy,1))';
-			s0 = permute(s0(:), [2 3 1]);
-			s1 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image1_roi, 1),interrogationarea,1);
-			ss1 = bsxfun(@plus, s1, s0);
-			s0 = (repmat(step*(1:numelementsy)'-step, 1,numelementsx) + repmat((step*(1:numelementsx)-step)*size(image2_crop_i1, 1), numelementsy,1))';
-			s0 = permute(s0(:), [2 3 1]);
-			s2 = repmat((1:interrogationarea)',1,interrogationarea) + repmat(((1:interrogationarea)-1)*size(image2_crop_i1, 1),interrogationarea,1);
-			ss2 = bsxfun(@plus, s2, s0);
-			image1_cut = image1_roi(ss1);
-			image2_cut = image2_crop_i1(ss2);
+			for iy = 1:numelementsy
+				for ix = 1:numelementsx
+					l = ix + numelementsx * (iy-1);
+					xs = (1:interrogationarea) + (ix-1) * step;
+					ys = (1:interrogationarea) + (iy-1) * step;
+					image1_cut(:,:,l) = image1_roi(miniy-1+ys-ms, minix-1+xs+ms);
+					image2_cut(:,:,l) = image2_crop_i1(ys, xs);
+				end
+			end
 			result_convE = do_correlations(image1_cut, image2_cut, do_pad, interrogationarea);
 			%% Combine results
 			result_conv = result_conv.*result_convB.*result_convC.*result_convD.*result_convE;
