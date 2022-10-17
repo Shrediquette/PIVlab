@@ -51,33 +51,6 @@ end
 
 
 %% MAINLOOP
-GUI_avail=0;
-hgui=getappdata(0,'hgui'); %check if GUI is open
-try
-	if ~isempty(hgui)
-		figure_exists=isvalid(hgui);
-		if figure_exists==1
-			update_display=getappdata(hgui, 'update_display');
-			if ~isempty(update_display)
-				if update_display == 1
-					GUI_avail=1;
-					handles=guihandles(hgui);
-				end
-			else %the variable has not been found, but a gui is existing for sure. The display has not been explicitely disabled, so it should be enabled by default.
-				GUI_avail=1;
-				handles=guihandles(hgui);
-			end
-		end
-	end
-catch
-	try
-		handles=guihandles(getappdata(0,'hgui'));
-		GUI_avail=1;
-	catch
-		GUI_avail=0;
-	end
-end
-
 max_repetitions=6; %maximum amount of repetitions of the last pass
 repetition=0;
 %repeat_last_pass=0; %set in GUI: enable repetition of last pass
@@ -91,12 +64,6 @@ for multipass = 1:passes
 		end
 		do_pad = do_linear_correlation==1 && multipass==passes;
 
-		if GUI_avail==1
-			set(handles.progress, 'string' , ['Frame progress: ' int2str(j/maxiy*100/passes+((multipass-1)*(100/passes))) '%' sprintf('\n') 'Validating velocity field']);drawnow;
-		else
-			%fprintf('.');
-		end
-
 		if multipass > 1
 			%multipass validation, smoothing
 			utable_orig=utable;
@@ -108,22 +75,6 @@ for multipass = 1:passes
 			%amountnans=numel(find(isnan(utable)==1))-maskedpoints;
 			%discarded=amountnans/(size(utable,1)*size(utable,2))*100;
 			%disp(['Discarded: ' num2str(amountnans) ' vectors = ' num2str(discarded) ' %'])
-			
-			if GUI_avail==1
-				if verLessThan('matlab','8.4')
-					delete (findobj(getappdata(0,'hgui'),'type', 'hggroup'))
-				else
-					delete (findobj(getappdata(0,'hgui'),'type', 'quiver'))
-				end
-				hold on;
-				vecscale=str2double(get(handles.vectorscale,'string'));
-				%Problem: wenn colorbar an, zï¿½hlt das auch als aexes...
-				colorbar('off')
-				quiver ((findobj(getappdata(0,'hgui'),'type', 'axes')),xtable(isnan(utable)==0)+padx-interrogationarea/2,ytable(isnan(utable)==0)+pady-interrogationarea/2,utable_orig(isnan(utable)==0)*vecscale,vtable_orig(isnan(utable)==0)*vecscale,'Color', [0.15 0.7 0.15],'autoscale','off')
-				quiver ((findobj(getappdata(0,'hgui'),'type', 'axes')),xtable(isnan(utable)==1)+padx-interrogationarea/2,ytable(isnan(utable)==1)+pady-interrogationarea/2,utable_orig(isnan(utable)==1)*vecscale,vtable_orig(isnan(utable)==1)*vecscale,'Color',[0.7 0.15 0.15], 'autoscale','off')
-				drawnow
-				hold off
-			end
 
 			%replace nans
 			utable=inpaint_nans(utable,4);
@@ -212,13 +163,6 @@ for multipass = 1:passes
 			interrogationarea_center = double((interrogationarea+1)/2);
 		end
 
-		if GUI_avail==1
-			set(handles.progress, 'string' , ['Frame progress: ' int2str(j/maxiy*100/passes+((multipass-2)*(100/passes))) '%' sprintf('\n') 'Interpolating velocity field']);drawnow;
-			%set(handles.progress, 'string' , 'Interpolating velocity field');drawnow;
-		else
-			%fprintf('.');
-		end
-
 		typevector = ones(numelementsy, numelementsx, 'uint8');
 		if multipass == 1
 			xtable = zeros(numelementsy,numelementsx);
@@ -232,7 +176,7 @@ for multipass = 1:passes
 		ytable = double(repmat((miniy:step:maxiy)' + yroi - pady_orig + interrogationarea/2, 1, numelementsx));
 		if multipass > 1
 			%xtable alt und neu geben koordinaten wo die vektoren herkommen.
-			%d.h. u und v auf die gewï¿½nschte grï¿½ï¿½e bringen+interpolieren
+			%d.h. u und v auf die gewÃ¯Â¿Â½nschte grÃ¯Â¿Â½Ã¯Â¿Â½e bringen+interpolieren
 			try
 				utable=interp2(xtable_old,ytable_old,utable,xtable,ytable,'*spline');
 				vtable=interp2(xtable_old,ytable_old,vtable,xtable,ytable,'*spline');
@@ -282,7 +226,7 @@ for multipass = 1:passes
 
 		%% repeated correlation
 		if repeat == 1 && multipass==passes
-			ms = round(double(step)/4); %multishift parameter so groß wie viertel int window
+			ms = round(double(step)/4); %multishift parameter so groÃ wie viertel int window
 			%% Shift left bot
 			if multipass == 1
 				image2_crop_i1 = image2_roi(miniy+ms:maxiy+interrogationarea-1+ms, minix-ms:maxix+interrogationarea-1-ms);
@@ -493,7 +437,7 @@ end
 %mal alle daten die ich brauche speichern. Als Beispielsatz. Dann damit experimentieren wie in echt...
 %% Hier uncertainty...?
 %Die Werte sind viel zu hoch, im Prinzip folgen sie aber den Erwartungen.
-Das Problem wird meine Partikelp�archenfinder sein. Evtl. doch aus dem Beispiel klauen...
+Das Problem wird meine Partikelpäarchenfinder sein. Evtl. doch aus dem Beispiel klauen...
 %lowpass filter
 image1_cut = imfilter(image1_cut,fspecial('gaussian',[3 3]));
 image2_cut = imfilter(image2_cut,fspecial('gaussian',[3 3]));
@@ -510,7 +454,7 @@ multiplied_images_binary(:,1,:)=0;multiplied_images_binary(:,end,:)=0;
 multiplied_images_binary(1,:,:)=0;multiplied_images_binary(end,:,:)=0;
 amount_of_particles_pairs_per_IA = squeeze(sum(multiplied_images_binary,[1 2]));
 
-%meine koordinaten zeigen nicht zwingend partikel p�archen. wenn es keine partikel p�archen sind, dann wird disparity gro� sein
+%meine koordinaten zeigen nicht zwingend partikel päarchen. wenn es keine partikel päarchen sind, dann wird disparity groß sein
 
 %find all coordinates of particle pairs
 [y_img, x_img, z_img] = ind2sub(size(multiplied_images_binary), find(multiplied_images_binary==1));
@@ -594,7 +538,7 @@ xmax = size(result_conv, 2);
 vector = NaN(size(result_conv,3), 2);
 if(numel(x)~=0)
 	ip = sub2ind(size(result_conv), y, x, z);
-	%the following 8 lines are copyright (c) 1998, Uri Shavit, Roi Gurka, Alex Liberzon, Technion ï¿½ Israel Institute of Technology
+	%the following 8 lines are copyright (c) 1998, Uri Shavit, Roi Gurka, Alex Liberzon, Technion Ã¯Â¿Â½ Israel Institute of Technology
 	%http://urapiv.wordpress.com
 	f0 = log(result_conv(ip));
 	f1 = log(result_conv(ip-1));
@@ -622,7 +566,7 @@ z(xi) = [];
 xmax = size(image_data, 2);
 if(numel(x)~=0)
 	ip = sub2ind(size(image_data), y, x, z);
-	%the following 8 lines are copyright (c) 1998, Uri Shavit, Roi Gurka, Alex Liberzon, Technion ï¿½ Israel Institute of Technology
+	%the following 8 lines are copyright (c) 1998, Uri Shavit, Roi Gurka, Alex Liberzon, Technion Ã¯Â¿Â½ Israel Institute of Technology
 	%http://urapiv.wordpress.com
 	f0 = log(image_data(ip));
 	f1 = log(image_data(ip-1));
@@ -654,11 +598,11 @@ if(numel(x)~=0)
 	for i = -1:1
 		for j = -1:1
 			%following 15 lines based on
-			%H. Nobach ï¿½ M. Honkanen (2005)
+			%H. Nobach Ã¯Â¿Â½ M. Honkanen (2005)
 			%Two-dimensional Gaussian regression for sub-pixel displacement
 			%estimation in particle image velocimetry or particle position
 			%estimation in particle tracking velocimetry
-			%Experiments in Fluids (2005) 38: 511ï¿½515
+			%Experiments in Fluids (2005) 38: 511Ã¯Â¿Â½515
 			c10(j+2,i+2, :) = i*log(result_conv(ip+xmax*i+j));
 			c01(j+2,i+2, :) = j*log(result_conv(ip+xmax*i+j));
 			c11(j+2,i+2, :) = i*j*log(result_conv(ip+xmax*i+j));
@@ -702,7 +646,7 @@ end
 %{
 %Problem ist nicht das subpixel-finden. Sondern das integer-finden.....
 function [vector] = SUBPIXCENTROID(result_conv, interrogationarea_center, x, y, z)
-%was hat peak nr.1 für einen Durchmesser?
+%was hat peak nr.1 fÃ¼r einen Durchmesser?
 %figure;imagesc((1-im2bw(uint8(result_conv(:,:,155)),0.9)).*result_conv(:,:,101))
 xi = find(~((x <= (size(result_conv,2)-1)) & (y <= (size(result_conv,1)-1)) & (x >= 2) & (y >= 2)));
 x(xi) = [];
