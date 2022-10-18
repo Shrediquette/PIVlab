@@ -1973,7 +1973,7 @@ item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
 handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Select configuration:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_configtxt');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',{'PIVlab SimpleSync + pco.pixelfly usb' 'PIVlab SimpleSync + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS' 'PIVlab LD-PS + Chronos' 'PIVlab LD-PS + Basler acA2000-165um' 'PIVlab LD-PS + FLIR FFY-U3-16S2M'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
+handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',{'PIVlab SimpleSync + pco.pixelfly usb' 'PIVlab SimpleSync + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS' 'PIVlab LD-PS + Chronos' 'PIVlab LD-PS + Basler acA2000-165um' 'PIVlab LD-PS + FLIR FFY-U3-16S2M' 'PIVlab LD-PS + OPTOcam 2/80'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.ac_comport = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'COM1'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_comport');
@@ -5096,6 +5096,8 @@ if ok==1
 		drawnow;
 		calc_time_start=tic;
 		hbar = pivprogress(size(slicedfilepath1,2),handles.overall);
+set(handles.totaltime,'String','');
+
 		if get(handles.dcc,'Value')==1
 			if get(handles.bg_subtract,'Value')==1
 				bg_img_A = retr('bg_img_A');
@@ -11543,7 +11545,7 @@ if strcmp(camera_type,'flir')
 	uiwait(msgbox('ROI selection for the FLIR camera series will be implemented soon!','modal'))
 end
 
-if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler')
+if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(camera_type,'OPTOcam')
 	try
 		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
 	catch
@@ -11722,6 +11724,8 @@ if ready==1
 			[errorcode, caliimg,framerate_max]=PIVlab_capture_pco(50000,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
 		elseif strcmp(camera_type,'basler')
 			[errorcode, caliimg]=PIVlab_capture_basler_calibration_image(inf,expos,ac_ROI_general);
+		elseif strcmp(camera_type,'OPTOcam')
+			[errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(inf,expos,ac_ROI_general);
 		elseif strcmp(camera_type,'flir')
 			[errorcode, caliimg]=PIVlab_capture_flir_calibration_image(expos);
 		elseif strcmp(camera_type,'chronos')
@@ -12256,6 +12260,21 @@ if value == 7 % Flir
 	avail_freqs={'60' '50' '40' '30' '20' '10'};
 	put('max_cam_res',[1440,1080]);
 	put('min_allowed_interframe',470);
+	set(handles.ac_fps,'string',avail_freqs);
+	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+	if old_setting ~= value
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
+	%end
+end
+if value == 8 % OPTOcam
+	put('camera_type','OPTOcam');
+	put('f1exp',352) % Exposure start -> Q1 delay
+	put('f1exp_cam',350); %exposure time setting first frame
+	put('master_freq',15);
+	avail_freqs={'160' '100' '75' '60' '50' '25' '10'};
+	put('max_cam_res',[1936,1216]);
+	put('min_allowed_interframe',50);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
 	if old_setting ~= value
