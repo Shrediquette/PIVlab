@@ -2051,7 +2051,7 @@ item=[parentitem(3)/4*2  item(2) parentitem(3)/4 1.5];
 handles.ac_lensctrl = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Lens','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @ac_lensctrl_Callback,'Tag','ac_lensctrl','TooltipString','Control camera lens');
 
 item=[parentitem(3)/4*3  item(2) parentitem(3)/4 1.5];
-handles.ac_chronosctrl = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Setup','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @ac_chronosctrl_Callback,'Tag','ac_chronosctrl','TooltipString','Setup Chronos camera');
+handles.ac_camera_setup = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Setup','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @ac_camera_setup_Callback,'Tag','ac_camera_setup','TooltipString','Setup Chronos camera');
 
 
 % Calib capture
@@ -3415,6 +3415,17 @@ if inpt==0
 	end
 end
 
+
+%additionally display banner that PIVlab is busy
+%but this should only be displayed in some situations... not during mask selsction...
+%{
+if inpt==0
+	postix=get(gca,'XLim');postiy=get(gca,'YLim');text(postix(2)/2,postiy(2)/2,'Busy...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',48, 'BackgroundColor', [0.25 0.25 0.25],'tag','busyhint','margin',50,'Clipping','on');
+else
+	delete(findobj('tag','busyhint'));
+end
+%}
+
 elementsOfCrime=findobj(hgui, 'type', 'uicontrol');
 elementsOfCrime2=findobj(hgui, 'type', 'uimenu');
 statuscell=get (elementsOfCrime, 'enable');
@@ -3439,6 +3450,7 @@ set(handles.progress, 'enable', 'on');
 set(handles.overall, 'enable', 'on');
 set(handles.totaltime, 'enable', 'on');
 set(handles.messagetext, 'enable', 'on');
+
 
 function clear_user_content
 handles=gethand;
@@ -11219,6 +11231,26 @@ if str2double(get(handles.ac_power,'String')) > 100
 	%end
 end
 
+%check that interpuls is not larger than frame period
+selected_interpulse = str2double(get(handles.ac_interpuls,'String'));
+selected_fps_value = get(handles.ac_fps,'Value');
+selected_fps_string = get(handles.ac_fps,'String');
+selected_fps=str2double(selected_fps_string{selected_fps_value});
+selected_frame_period_us = 1/selected_fps*1000*1000;
+
+if selected_interpulse > selected_frame_period_us
+	old_bg=get(handles.ac_interpuls,'BackgroundColor');
+	for i=1:3
+		set(handles.ac_interpuls,'BackgroundColor',[1 0 0]);
+		pause(0.1)
+		set(handles.ac_interpuls,'BackgroundColor',old_bg);
+		pause(0.1)
+	end
+	set(handles.ac_interpuls,'String',selected_frame_period_us)
+end
+
+
+
 try
 	serpo.Port;
 	alreadyconnected=1;
@@ -11550,8 +11582,8 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
 	catch
 		set(handles.ac_expo,'String','100');
-			expos=100000;
-		end
+		expos=100000;
+	end
 	projectpath=get(handles.ac_project,'String');
 	capture_ok=check_project_path(projectpath,'calibration');
 	if capture_ok==1
@@ -11559,16 +11591,19 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 		put('capturing',1);
 		max_cam_res=retr('max_cam_res');
 		if strcmp(camera_type,'pco_panda')
-		try
-			[errorcode, caliimg,~]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,[1,1, max_cam_res(1)/binning,max_cam_res(2)/binning],camera_type,0);
-		catch ME
-			disp(ME)
-			uiwait(msgbox('Camera not connected'))
-			displogo
-			capture_ok=0;
-		end
+			try
+				[errorcode, caliimg,~]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,[1,1, max_cam_res(1)/binning,max_cam_res(2)/binning],camera_type,0);
+			catch ME
+				disp(ME)
+				uiwait(msgbox('Camera not connected'))
+				displogo
+				capture_ok=0;
+			end
 		elseif strcmp(camera_type,'basler')
 			[errorcode, caliimg]=PIVlab_capture_basler_calibration_image(1,expos,[1,1,max_cam_res]);
+
+		elseif strcmp(camera_type,'OPTOcam')
+			[errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(1,expos,[1,1,max_cam_res]);
 		end
 		put('capturing',0);
 
@@ -11579,7 +11614,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 			warning off
 			load('PIVlab_settings_default.mat','ac_ROI_general');
 			warning on
-			
+
 			bla=findobj(gca,'type','image');
 			current_image_size=size(bla.CData);
 
@@ -11616,6 +11651,12 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 				m3 = uimenu(c_menu,'Label','Basler 640x480','Callback',@setdefaultroi);
 				m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@setdefaultroi);
 			end
+			if strcmp(camera_type,'OPTOcam')
+				m0 = uimenu(c_menu,'Label','OPTOcam 1936x1216 (8bit: 160 fps, 12bit: 80 fps)','Callback',@setdefaultroi);
+				m1 = uimenu(c_menu,'Label','OPTOcam 1600x600 (8bit: 320 fps)','Callback',@setdefaultroi);
+				m2 = uimenu(c_menu,'Label','OPTOcam 1600x480 (8bit: 400 fps)','Callback',@setdefaultroi);
+				m3 = uimenu(c_menu,'Label','Enter ROI','Callback',@setdefaultroi);
+			end			
 
 			position = customWait(ac_ROI_general_handle);
 
@@ -11869,7 +11910,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				control_simple_sync_serial(1);
 				put('laser_running',1);
 				close(f)
-			elseif value== 5 || value == 6 || value==7 %chronos and basler and flir: Camera needs to be started first, afterwards the laser is enabled.
+			elseif value== 5 || value == 6 || value==7 || value==8 %chronos and basler and flir and OPTOcam: Camera needs to be started first, afterwards the laser is enabled.
 				close(f)
 			end
 			camera_type=retr('camera_type');
@@ -11908,7 +11949,49 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				[OutputError,flir_vid,frame_nr_display] = PIVlab_capture_flir_synced_start(imageamount,cam_fps); %prepare cam and start camera (waiting for trigger...)
 				control_simple_sync_serial(1); put('laser_running',1); %turn on laser
 				[OutputError,flir_vid] = PIVlab_capture_flir_synced_capture(flir_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display); %capture n images, display livestream
+			elseif value == 8  %OPTOcam
 
+				
+				OPTOcam_bits =retr('OPTOcam_bits');
+				if isempty (OPTOcam_bits)
+					OPTOcam_bits=8;
+				end
+
+				[OutputError,OPTOcam_vid,frame_nr_display] = PIVlab_capture_OPTOcam_synced_start(imageamount,ac_ROI_general,cam_fps,OPTOcam_bits); %prepare cam and start camera (waiting for trigger...)
+
+
+				Error_Reason={};
+				OPTOcam_settings_check = 1;
+
+				max_fps_with_current_settings = 1/((get(OPTOcam_vid.Source,'SensorReadoutTime') + get(OPTOcam_vid.Source,'BslExposureStartDelay'))/1000/1000);
+				if cam_fps > max_fps_with_current_settings
+					OPTOcam_settings_check = 0;
+					Error_Reason{end+1,1}='Frame rate too high for selected ROI and/or bit rate.';
+					Error_Reason{end+1,1}=['With current settings, sensor max. fps is ' num2str(round(max_fps_with_current_settings,1)) ' fps'];
+						Error_Reason{end+1,1}='Please make the ROI smaller, or decrease the frame rate.';
+				end
+
+				% in 8 bit: muss groesser als 61 sein
+				%in 12 bit mode: muss greosser als 128 us sein.
+				min_allowed_interframe = retr('min_allowed_interframe');
+				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
+				if pulse_sep < min_allowed_interframe
+					OPTOcam_settings_check = 0;
+					Error_Reason{end+1,1}='Pulse distance too small for current bit mode.';
+					Error_Reason{end+1,1}=['In ' num2str(OPTOcam_bits) ' bit mode, the puse distance must be at least ' num2str(min_allowed_interframe) ' µs.'];
+					Error_Reason{end+1,1}='Please increase the pulse distance, or decrease the bit mode.';
+				end
+
+
+				if OPTOcam_settings_check == 1
+					control_simple_sync_serial(1); put('laser_running',1); %turn on laser
+					[OutputError,OPTOcam_vid] = PIVlab_capture_OPTOcam_synced_capture(OPTOcam_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTOcam_bits); %capture n images, display livestream
+				else
+					msgbox(Error_Reason,'modal')
+					uiwait
+					put('cancel_capture',1);
+					imageamount=inf; %will prevent saving of images
+				end
 			end
 			%disable external devices
 			external_device_control(0); % stops all external devices
@@ -11928,6 +12011,11 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 			if value == 7 %flir
 				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
 					[OutputError] = PIVlab_capture_flir_save(flir_vid,imageamount,projectpath,frame_nr_display); %save the images from ram to disk.
+				end
+			end
+			if value == 8 %OPTOcam
+				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
+					[OutputError] = PIVlab_capture_OPTOcam_save(OPTOcam_vid,imageamount,projectpath,frame_nr_display,OPTOcam_bits); %save the images from ram to disk.
 				end
 			end
 
@@ -12272,9 +12360,19 @@ if value == 8 % OPTOcam
 	put('f1exp',352) % Exposure start -> Q1 delay
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
-	avail_freqs={'160' '100' '75' '60' '50' '25' '10'};
+	avail_freqs={'400' '320' '160' '100' '80' '60' '50' '25' '10'};
 	put('max_cam_res',[1936,1216]);
-	put('min_allowed_interframe',50);
+	%default min_interframe is for 8 bits.
+	OPTOcam_bits =retr('OPTOcam_bits');
+	if isempty (OPTOcam_bits)
+		OPTOcam_bits=8;
+	end
+
+	if OPTOcam_bits==8
+		put('min_allowed_interframe',61); %8bit
+	elseif OPTOcam_bits==12
+		put('min_allowed_interframe',128); %12bit
+	end
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
 	if old_setting ~= value
@@ -12330,12 +12428,14 @@ if get(handles.bg_subtract,'Value')==0
 	put('bg_img_B',[]);
 end
 
-function ac_chronosctrl_Callback(~,~,~)
+function ac_camera_setup_Callback(~,~,~)
 camera_type=retr('camera_type');
 if strcmp(camera_type,'chronos')
 	PIVlab_capture_chronos_settings_GUI
+elseif strcmp(camera_type,'OPTOcam')
+	PIVlab_capture_OPTOcam_settings_GUI
 else
-	uiwait(msgbox('Available for Chronos cameras only.','modal'))
+	uiwait(msgbox('Available for OPTOcam and Chronos cameras only.','modal'))
 end
 
 function ac_lensctrl_Callback (~,~,~)
@@ -12419,6 +12519,23 @@ if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
 			des_y=1024;
 		case 'Basler 640x480'
 			des_x=640;
+			des_y=480;
+
+
+
+			m0 = uimenu(c_menu,'Label','OPTOcam 1936x1216 (8bit: 160 fps, 12bit: 80 fps)','Callback',@setdefaultroi);
+			m1 = uimenu(c_menu,'Label','OPTOcam 1600x600 (8bit: 320 fps)','Callback',@setdefaultroi);
+			m2 = uimenu(c_menu,'Label','OPTOcam 1600x480 (8bit: 400 fps)','Callback',@setdefaultroi);
+
+
+		case 'OPTOcam 1936x1216 (8bit: 160 fps, 12bit: 80 fps)'
+			des_x=1936;
+			des_y=1216;
+		case 'OPTOcam 1600x600 (8bit: 320 fps)'
+			des_x=1600;
+			des_y=600;
+		case 'OPTOcam 1600x480 (8bit: 400 fps)'
+			des_x=1600;
 			des_y=480;
 
 
