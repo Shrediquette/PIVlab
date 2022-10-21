@@ -207,9 +207,9 @@ for multipass = 1:passes
 		N = numelementsx * numelementsy;
 		image1_cut = zeros([interrogationarea interrogationarea N], convert_image_class_type);
 		image2_cut = zeros([interrogationarea interrogationarea N], convert_image_class_type);
-		for iy = 1:numelementsy
-			for ix = 1:numelementsx
-				l = ix + numelementsx * (iy-1);
+		for ix = 1:numelementsx
+			for iy = 1:numelementsy
+				l = iy + numelementsy * (ix-1);
 				xs = (1:interrogationarea) + (ix-1) * step;
 				ys = (1:interrogationarea) + (iy-1) * step;
 				image1_cut(:,:,l) = image1_roi(miniy-1+ys, minix-1+xs);
@@ -218,9 +218,10 @@ for multipass = 1:passes
 		end
 		% Calculate correlation strength on the last pass
 		if multipass == passes
-			correlation_map = calculate_correlation_map(image1_cut, image2_cut);
-			correlation_map = reshape(correlation_map, size(xtable'))';
+			correlation_map = zeros(size(xtable));
+			correlation_map(:) = calculate_correlation_map(image1_cut, image2_cut);
 		end
+
 		% do fft2:
 		result_conv = do_correlations(image1_cut, image2_cut, do_pad, interrogationarea);
 
@@ -234,9 +235,9 @@ for multipass = 1:passes
 				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2-ms,Y2+ms,imdeform); %linear is 3x faster and looks ok...
 				image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 			end
-			for iy = 1:numelementsy
-				for ix = 1:numelementsx
-					l = ix + numelementsx * (iy-1);
+			for ix = 1:numelementsx
+				for iy = 1:numelementsy
+					l = iy + numelementsy * (ix-1);
 					xs = (1:interrogationarea) + (ix-1) * step;
 					ys = (1:interrogationarea) + (iy-1) * step;
 					image1_cut(:,:,l) = image1_roi(miniy-1+ys+ms, minix-1+xs-ms);
@@ -252,9 +253,9 @@ for multipass = 1:passes
 				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2+ms,Y2+ms,imdeform); %linear is 3x faster and looks ok...
 				image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 			end
-			for iy = 1:numelementsy
-				for ix = 1:numelementsx
-					l = ix + numelementsx * (iy-1);
+			for ix = 1:numelementsx
+				for iy = 1:numelementsy
+					l = iy + numelementsy * (ix-1);
 					xs = (1:interrogationarea) + (ix-1) * step;
 					ys = (1:interrogationarea) + (iy-1) * step;
 					image1_cut(:,:,l) = image1_roi(miniy-1+ys+ms, minix-1+xs+ms);
@@ -269,9 +270,9 @@ for multipass = 1:passes
 				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2-ms,Y2-ms,imdeform); %linear is 3x faster and looks ok...
 				image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 			end
-			for iy = 1:numelementsy
-				for ix = 1:numelementsx
-					l = ix + numelementsx * (iy-1);
+			for ix = 1:numelementsx
+				for iy = 1:numelementsy
+					l = iy + numelementsy * (ix-1);
 					xs = (1:interrogationarea) + (ix-1) * step;
 					ys = (1:interrogationarea) + (iy-1) * step;
 					image1_cut(:,:,l) = image1_roi(miniy-1+ys-ms, minix-1+xs-ms);
@@ -286,9 +287,9 @@ for multipass = 1:passes
 				image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,double(image2_roi),X2+ms,Y2-ms,imdeform); %linear is 3x faster and looks ok...
 				image2_crop_i1 = convert_image_class(image2_crop_i1, convert_image_class_type);
 			end
-			for iy = 1:numelementsy
-				for ix = 1:numelementsx
-					l = ix + numelementsx * (iy-1);
+			for ix = 1:numelementsx
+				for iy = 1:numelementsy
+					l = iy + numelementsy * (ix-1);
 					xs = (1:interrogationarea) + (ix-1) * step;
 					ys = (1:interrogationarea) + (iy-1) * step;
 					image1_cut(:,:,l) = image1_roi(miniy-1+ys-ms, minix-1+xs+ms);
@@ -379,7 +380,7 @@ for multipass = 1:passes
 		masked_xs = (minix:step:maxix) + round(interrogationarea/2);
 		masked_ys = (miniy:step:maxiy) + round(interrogationarea/2);
 		typevector(mask(masked_ys, masked_xs)) = 0;
-		result_conv(:, :, mask(masked_ys, masked_xs)') = 0;
+		result_conv(:, :, mask(masked_ys, masked_xs)) = 0;
 		if multipass == passes
 			correlation_map(mask(masked_ys, masked_xs)) = 0;
 		end
@@ -404,7 +405,7 @@ for multipass = 1:passes
 		elseif subpixfinder==2
 			[vector] = SUBPIX2DGAUSS(result_conv, interrogationarea_center, x1, y1, z1);
 		end
-		vector = permute(reshape(vector, [size(xtable') 2]), [2 1 3]);
+		vector = reshape(vector, [size(xtable) 2]);
 
 		utable = utable + vector(:,:,1);
 		vtable = vtable + vector(:,:,2);
