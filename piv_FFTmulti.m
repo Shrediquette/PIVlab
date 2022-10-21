@@ -115,10 +115,6 @@ for multipass = 1:passes
 		%bildkoordinaten neu errechnen:
 		%roi=[];
 
-		if multipass > 1    % TODO: remove for better results
-			xtable = xtable + single(padx-ceil(interrogationarea/2));
-			ytable = ytable + single(pady-ceil(interrogationarea/2));
-		end                 % END TODO: remove for better results
 		pady = ceil(interrogationarea/2);
 		padx = ceil(interrogationarea/2);
 		if multipass==1
@@ -775,4 +771,34 @@ B = eye(100);
 testCase.verifyEqual(calculate_correlation_map(A, B), calculate_correlation_map(3*A-2, B));
 % Test calculate_correlation_map() is equal to the corr2() function it replaces
 testCase.verifyEqual(corr2(A, B), calculate_correlation_map(A, B));
+end
+
+
+%% Check simple velocity field
+% This test was added to check the improved uvtable interpolation
+function test_piv_FFTmulti_uv_interpolation(testCase)
+rng(0);
+N = 480;
+Np = 200;
+% Generate two N*N images with a Np*Np patch in the middle
+patch = rand(Np);
+A = rand(N); B = A;
+Pstart = (N-Np)/2+1; Pend = (N+Np)/2;
+A(Pstart:Pend, Pstart:Pend) = patch;
+B((Pstart:Pend)-25, (Pstart:Pend)+20) = patch; % The patch is shifted by (-25, 20) for the second image
+% Smooth images
+A = medfilt2(A, [9 9], 'symmetric');
+B = medfilt2(B, [9 9], 'symmetric');
+% Calculate velocity vectors
+[xtable, ytable, utable, vtable] = piv_FFTmulti(A, B, 80, 40, 1, [], [], 3, 40, 20, 0, '*linear', 0, 0, 0, 0, 0, 0);
+testCase.assertFalse(any(isnan(utable(:))));
+testCase.assertFalse(any(isnan(vtable(:))));
+% Verify that velocity vectors are close to actual solution
+center_mask = (Pstart <= xtable) .* (xtable <= Pend) .* (Pstart <= ytable) .* (ytable <= Pend);
+utable_ref = zeros(size(utable)) + 20*center_mask;
+vtable_ref = zeros(size(vtable)) + -25*center_mask;
+utable_rms_error = rms(utable-utable_ref, 'all', 'omitnan');
+vtable_rms_error = rms(vtable-vtable_ref, 'all', 'omitnan');
+testCase.verifyLessThan(utable_rms_error, 5);
+testCase.verifyLessThan(vtable_rms_error, 5);
 end
