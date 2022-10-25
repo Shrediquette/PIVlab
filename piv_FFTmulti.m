@@ -198,27 +198,35 @@ for multipass = 1:passes
 		else
 			image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,image2_roi,X2,Y2,imdeform); %linear is 3x faster and looks ok...
 		end
-		% divide images into N small pictures
-		N = numelementsx * numelementsy;
-		image1_cut = zeros([interrogationarea interrogationarea N], convert_image_class_type);
-		image2_cut = zeros([interrogationarea interrogationarea N], convert_image_class_type);
-		for ix = 1:numelementsx
-			for iy = 1:numelementsy
-				l = iy + numelementsy * (ix-1);
-				xs = (1:interrogationarea) + (ix-1) * step;
-				ys = (1:interrogationarea) + (iy-1) * step;
-				image1_cut(:,:,l) = image1_roi(miniy-1+ys, minix-1+xs);
-				image2_cut(:,:,l) = image2_crop_i1(ys, xs);
-			end
-		end
-		% Calculate correlation strength on the last pass
-		if multipass == passes
-			correlation_map = zeros(size(xtable));
-			correlation_map(:) = calculate_correlation_map(image1_cut, image2_cut);
-		end
 
-		% do fft2:
-		result_conv = do_correlations(image1_cut, image2_cut, do_pad, interrogationarea);
+		N = numelementsx * numelementsy;
+		result_conv = zeros([interrogationarea, interrogationarea, N], convert_image_class_type);
+		correlation_map = zeros([numelementsy, numelementsx], convert_image_class_type);
+
+		BATCHSIZE = 200;
+		image1_cut = zeros([interrogationarea interrogationarea BATCHSIZE], convert_image_class_type);
+		image2_cut = zeros([interrogationarea interrogationarea BATCHSIZE], convert_image_class_type);
+		for batch_offset = 0:BATCHSIZE:N-1
+			batch_len = min(BATCHSIZE, N-batch_offset);
+			if batch_len < BATCHSIZE
+				image1_cut = image1_cut(:,:,1:batch_len);
+				image2_cut = image2_cut(:,:,1:batch_len);
+			end
+			% Divide images into overlapping subimages of fixed size
+			for i = 1:batch_len
+				[y, x] = ind2sub([numelementsy numelementsx], batch_offset+i);
+				xs = (1:interrogationarea) + (x-1) * step;
+				ys = (1:interrogationarea) + (y-1) * step;
+				image1_cut(:,:,i) = image1_roi(miniy-1+ys, minix-1+xs);
+				image2_cut(:,:,i) = image2_crop_i1(ys, xs);
+			end
+			% Calculate correlation strength on the last pass
+			if multipass == passes
+				correlation_map(batch_offset+(1:batch_len)) = calculate_correlation_map(image1_cut, image2_cut);
+			end
+			% Do 2D FFT
+			result_conv(:,:,batch_offset+(1:batch_len)) = do_correlations(image1_cut, image2_cut, do_pad, interrogationarea);
+		end
 
 		%% repeated correlation
 		if repeat == 1 && multipass==passes
