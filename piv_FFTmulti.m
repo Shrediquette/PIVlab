@@ -20,13 +20,13 @@ if numel(roi_inpt)>0
 	yroi=roi_inpt(2);
 	widthroi=roi_inpt(3);
 	heightroi=roi_inpt(4);
-	image1_roi=double(image1(yroi:yroi+heightroi,xroi:xroi+widthroi));
-	image2_roi=double(image2(yroi:yroi+heightroi,xroi:xroi+widthroi));
+	image1_roi = image1(yroi:yroi+heightroi,xroi:xroi+widthroi);
+	image2_roi = image2(yroi:yroi+heightroi,xroi:xroi+widthroi);
 else
 	xroi=0;
 	yroi=0;
-	image1_roi=double(image1);
-	image2_roi=double(image2);
+	image1_roi = image1;
+	image2_roi = image2;
 end
 %% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
 image1_roi = convert_image_class(image1_roi, convert_image_class_type);
@@ -625,7 +625,7 @@ end
 
 function out = convert_image_class(in,type)
 	if strcmp(type,'double')
-		out=in; %images arrive in double format
+		out=im2double(in);
 	elseif strcmp(type,'single')
 		out=im2single(in);
 	elseif strcmp(type,'uint8')
