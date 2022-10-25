@@ -757,14 +757,21 @@ end
 
 %% Calculate correlation coeficients for a stack of image pairs
 function corr_map = calculate_correlation_map(img1, img2)
+	validateattributes(img1, {'numeric'}, {'real','3d'}, mfilename, 'img1', 1);
+	validateattributes(img2, {'numeric'}, {'real','3d'}, mfilename, 'img2', 2);
 	N = size(img1, 3);
+	n = size(img1, 1) * size(img1, 2);
+	a = reshape(img1, [n N]);
+	b = reshape(img2, [n N]);
+	mean_a = sum(a) / n;
+	mean_b = sum(b) / n;
 	corr_map = zeros(N, 1);
 	for i=1:N
-		a = img1(:,:,i);
-		b = img2(:,:,i);
-		a_ = a - sum(a(:)) / numel(a);
-		b_ = b - sum(b(:)) / numel(b);
-		corr_map(i) = sum(sum(a_.*b_)) / sqrt(sum(sum(a_.*a_)) * sum(sum(b_.*b_)));
+		% All this is a long, but fast way of calculating
+		%   corr_map(i) = corr2(img1(:,:,i), img2(:,:,i))
+		a_ = a(:,i) - mean_a(i);
+		b_ = b(:,i) - mean_b(i);
+		corr_map(i) = sum(a_.*b_) / sqrt(sum(a_.*a_) * sum(b_.*b_));
 	end
 end
 
@@ -776,9 +783,9 @@ A = rand(100);
 testCase.verifyEqual(calculate_correlation_map(A, A), 1);
 B = eye(100);
 % Test correlation coefficient is independent of matrix scaling and offset
-testCase.verifyEqual(calculate_correlation_map(A, B), calculate_correlation_map(3*A-2, B));
+testCase.verifyEqual(calculate_correlation_map(A, B), calculate_correlation_map(3*A-2, B), 'AbsTol', 1e-16);
 % Test calculate_correlation_map() is equal to the corr2() function it replaces
-testCase.verifyEqual(corr2(A, B), calculate_correlation_map(A, B));
+testCase.verifyEqual(corr2(A, B), calculate_correlation_map(A, B), 'AbsTol', 1e-16);
 end
 
 
