@@ -360,6 +360,8 @@ while RobustIterativeProcess
     end
 end
 
+z = cast(z, 'like', varargin{1});
+
 %% Warning messages
 %---
 if isauto
