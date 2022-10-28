@@ -11994,7 +11994,9 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				end
 			end
 			%disable external devices
+			if (~isempty(retr('ac_enable_seeding1')) && retr('ac_enable_seeding1') ~=0) || (~isempty(retr('ac_enable_device1')) && retr('ac_enable_device1') ~=0) || (~isempty(retr('ac_enable_device2')) && retr('ac_enable_device2') ~=0)
 			external_device_control(0); % stops all external devices
+			end
 			control_simple_sync_serial(0);pause(0.1);control_simple_sync_serial(0);
 			put('laser_running',0);
 			if value == 5 %chronos
