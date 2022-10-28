@@ -71,7 +71,11 @@ OPTOcam_settings.Source.LineSelector='Line4';
 OPTOcam_settings.Source.LineSource = 'ExposureActive';
 OPTOcam_settings.Source.LineMode = 'Output';
 
-exposure_time= floor(1/frame_rate*1000*1000-44);
+if bitmode==8
+	exposure_time= floor(1/frame_rate*1000*1000-44);
+elseif bitmode==12
+	exposure_time= floor(1/frame_rate*1000*1000-96);
+end
 
 OPTOcam_settings.Source.ExposureTime =exposure_time;
 
