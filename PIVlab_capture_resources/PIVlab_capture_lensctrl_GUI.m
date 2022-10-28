@@ -16,23 +16,34 @@ if isempty(fh)
 	margin=1.5;
 	
 	panelheight=5;
-	handles.aperturepanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight-1.5 parentitem(3)-2 panelheight],'title','Aperture control','fontweight','bold');
-	handles.focuspanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*2-1.5 parentitem(3)-2 panelheight],'title','Focus control','fontweight','bold');
-	handles.lightpanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5 parentitem(3)-2 panelheight],'title','Light control','fontweight','bold');
-	handles.anglepanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5-4 parentitem(3)-2 4],'title','Camera attitude','fontweight','bold');
+	handles.aperturepanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight-1.5 parentitem(3)-2 panelheight],'title','Aperture control','fontweight','bold','tag','aperturepanel');
+	handles.focuspanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*2-1.5 parentitem(3)-2 panelheight],'title','Focus control','fontweight','bold','tag','focuspanel');
+	handles.lightpanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5 parentitem(3)-2 panelheight],'title','Light control','fontweight','bold','tag','lightpanel');
+	handles.anglepanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5-4 parentitem(3)-2 4],'title','Camera attitude','fontweight','bold','tag','anglepanel');
 	
-	%% Setup Configurations
-	if isempty(retr('selected_lens_config'))
-		put('selected_lens_config',2) %set default to zeiss Dimension
+	%% Load last selected setting & setup Configurations
+	warning off
+	load ('PIVlab_capture_resources\PIVlab_capture_lensconfig.mat','lens_configurations','selected_lens_config_nr');
+	warning on
+	if ~exist('selected_lens_config_nr','var')
+		selected_lens_config_nr = 2; %set default to zeiss Dimension
 	end
-	load ('PIVlab_capture_lensconfig.mat','lens_configurations');
+	put('selected_lens_config',selected_lens_config_nr) 
+	save ('PIVlab_capture_resources\PIVlab_capture_lensconfig.mat','lens_configurations','selected_lens_config_nr');
 	% New lens configurations can be added to the table by modifying the variable 'lens_configurations' in the file 'PIVlab_capture_lensconfig.mat :
 	% Example: lens_configurations=addvars(lens_configurations,[500;2500;500;2500],'NewVariableNames','Generic lens')
 	handles.configu = uicontrol(lens_control_window,'Style','popupmenu', 'String',lens_configurations.Properties.VariableNames,'Value',retr('selected_lens_config'),'Units','characters', 'Fontunits','points','Position',[1 parentitem(4)-1.5 parentitem(3)/3*2 1.5],'Tag','configu','TooltipString','Lens configuration. Sets the limits for the servo motors.','Callback',@configu_Callback);
 	parentitem=get(lens_control_window, 'Position');
 	item=[parentitem(3)/3*2 0 parentitem(3)/3 1.5];
 	handles.lens_status = uicontrol(lens_control_window,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin parentitem(4)-1.5 item(3)-margin*1.5 item(4)],'String','N/A','tag', 'lens_status','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold');
-	
+	if selected_lens_config_nr ~=4
+		all_features_visible='on';
+	else
+		all_features_visible='off';
+	end
+	put ('all_features_visible',all_features_visible);
+
+
 	%% APERTURE
 	parentitem=get(handles.aperturepanel, 'Position');
 	item=[0 0 0 0];
@@ -93,11 +104,25 @@ if isempty(fh)
 	
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/3 1.5];
 	handles.roll = uicontrol(handles.anglepanel,'Style','text','String','Roll: 0','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','left','tag','roll');
-
+	limit_displayed_features
 	find_devices
+
+
 else %Figure handle does already exist --> bring UI to foreground.
 	figure(fh)
 end
+
+function limit_displayed_features
+all_features_visible=retr('all_features_visible');
+aperturepanel=findobj('Tag','aperturepanel');
+lightpanel=findobj('Tag','lightpanel');
+anglepanel=findobj('Tag','anglepanel');
+
+
+set(aperturepanel,'Visible',all_features_visible)
+set(lightpanel,'Visible',all_features_visible)
+set(anglepanel,'Visible',all_features_visible)
+
 
 function find_devices
 hgui = getappdata(0,'hgui');
@@ -186,6 +211,9 @@ put('Pitch_Offset',Pitch_Offset)
 put('Roll_Offset',Roll_Offset)
 
 put('selected_lens_config',inpt.Value)
+selected_lens_config_nr=inpt.Value;
+save ('PIVlab_capture_resources\PIVlab_capture_lensconfig.mat','lens_configurations','selected_lens_config_nr');
+
 handles=gethand;
 focus=retr('focus');
 aperture=retr('aperture');
@@ -205,6 +233,13 @@ set (handles.light_edit,'String',num2str(lighting))
 %focus_edit_Callback(handles.aperture_edit,[])
 %pause(0.2)
 %aperture_edit_Callback(handles.focus_edit,[])
+if selected_lens_config_nr ~=4
+	all_features_visible='on';
+else
+	all_features_visible='off';
+end
+put ('all_features_visible',all_features_visible);
+limit_displayed_features
 
 
 
