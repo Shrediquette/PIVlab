@@ -11463,40 +11463,6 @@ if ~isempty(C)
 end
 
 
-%Settings_logger
-logger_path = get(handles.ac_project,'String');
-if exist(logger_path,'dir') %only log when directory has been set up.
-	timestamp=datestr(datetime(now,'ConvertFrom','datenum'));
-	if exist (fullfile(logger_path, 'acquisition_log.txt'),'file')~=2
-		try
-			logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'w');
-			fprintf(logger_fid,'Time\tProject_folder\tMaster_frequency\tCamera_divider\tEnergy_us\tFrame_1_exposure_us\tInterframe_us\tExternal_delay_us\tExternal_skip\tLaser_status\tBinning\tROI');
-			fprintf(logger_fid, '\n');
-			fclose(logger_fid);
-		catch
-		end
-	end
-	try
-		ac_ROI_general=retr('ac_ROI_general');
-		binning=retr('binning');
-		logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'a');
-		fprintf(logger_fid, '%s', timestamp);
-		fprintf(logger_fid, '\t');
-		fprintf(logger_fid, '%s', logger_path);
-		fprintf(logger_fid, '\t');
-		fprintf(logger_fid, '%s', sync_setting);
-		fprintf(logger_fid, '\t');
-		fprintf(logger_fid, '%s', num2str(binning));
-		fprintf(logger_fid, '\t');
-		fprintf(logger_fid, '%s', mat2str(ac_ROI_general));
-		fprintf(logger_fid, '\n');
-		fclose(logger_fid);
-	catch
-	end
-end
-
-
-
 function no_dongle_msgbox
 uiwait(msgbox(['No connection to the PIVlab-SimpleSync found.' sprintf('\n') 'Is the USB dongle connected?'],'modal'))
 
@@ -11883,6 +11849,57 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 
 			value=get(handles.ac_config,'value');
 
+			%save capture configuration to mat file
+			if ~isinf(imageamount)
+				config_strings=get(handles.ac_config,'String');
+				config_strings_selected=cell2mat((config_strings(value)));
+				las_percent=str2double(get(handles.ac_power,'String'));
+				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
+				binning=retr('binning');
+				OPTOcam_bits =retr('OPTOcam_bits');
+				if isempty (OPTOcam_bits)
+					OPTOcam_bits=8;
+				end
+				recording_time=datestr(datetime(now,'ConvertFrom','datenum'));
+				logger_path = get(handles.ac_project,'String');
+				if exist(logger_path,'dir') %only log when directory has been set up.
+					timestamp=datestr(datetime(now,'ConvertFrom','datenum'));
+					if exist (fullfile(logger_path, 'acquisition_log.txt'),'file')~=2
+						try
+							logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'w');
+							fprintf(logger_fid,'recording_time\tconfig_strings_selected\timageamount\tcam_fps\tpulse_sep\tlas_percent\tac_ROI_general\tbinning\tOPTOcam_bits');
+							fprintf(logger_fid, '\n');
+							fclose(logger_fid);
+						catch
+						end
+					end
+					try
+						logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'a');
+						fprintf(logger_fid, '%s', recording_time);
+						fprintf(logger_fid, '\t');
+						fprintf(logger_fid, '%s', config_strings_selected);
+						fprintf(logger_fid, '\t');
+						fprintf(logger_fid, '%s', num2str(imageamount));
+						fprintf(logger_fid, '\t');
+						fprintf(logger_fid, '%s', num2str(cam_fps));
+						fprintf(logger_fid, '\t');
+						fprintf(logger_fid, '%s', num2str(pulse_sep));
+						fprintf(logger_fid, '\t');
+						fprintf(logger_fid, '%s', num2str(las_percent));
+						fprintf(logger_fid, '\t');
+						fprintf(logger_fid, '%s', mat2str(ac_ROI_general));
+						fprintf(logger_fid, '\t');
+						fprintf(logger_fid, '%s', num2str(binning));
+						fprintf(logger_fid, '\t');
+						fprintf(logger_fid, '%s', num2str(OPTOcam_bits));
+						fprintf(logger_fid, '\n');
+						fclose(logger_fid);
+					catch ME
+						disp('Settings logger error:')
+						disp(ME)
+					end
+				end
+			end
 			if value== 1 || value == 2 %setups without lD-PS
 				set(handles.ac_power,'enable','on') %here, laser power can be adjusted while it is running.
 			end
