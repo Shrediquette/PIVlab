@@ -996,9 +996,15 @@ item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
 uicontrol(handles.multip07,'Style','text','String','Setup Scaling','FontWeight','bold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
-handles.draw_line = uicontrol(handles.multip07,'Style','pushbutton','String','Select reference distance','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @draw_line_Callback,'Tag','draw_line','TooltipString','Draw a line as distance reference in the image');
+handles.draw_line = uicontrol(handles.multip07,'Style','pushbutton','String','Select reference length [px]','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @draw_line_Callback,'Tag','draw_line','TooltipString','Draw a line as distance reference in the image');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3)/3*2 1];
+handles.text26b = uicontrol(handles.multip07,'Style','text','String','Reference length [px]','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text26b');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+handles.pixeldist = uicontrol(handles.multip07,'Style','edit','String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','pixeldist','Callback',@pixeldist_changed_Callback,'TooltipString','Reference lenght in pixels. Enter directly here or click ''Select reference distance'' button');
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text26 = uicontrol(handles.multip07,'Style','text','String','Real distance [mm]','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text26');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
@@ -6202,7 +6208,11 @@ try
 	put('calxy',calxy);
 	put('calu',calu);
 	put('calv',calv);
-
+	if exist('pointscali','var')
+		if ~isempty(pointscali)
+			put('pointscali',pointscali);
+		end
+	end
 catch
 	disp('something went wrong during settings loading')
 end
@@ -6253,6 +6263,7 @@ catch
 	disp('repeat_last didnt work')
 end
 put('expected_image_size',[])
+pixeldist_changed_Callback()
 
 
 function curr_settings_Callback(~, ~, ~)
@@ -6369,6 +6380,11 @@ try
 	repeat_last_thresh = get(handles.edit52x,'String');
 catch
 	disp('repeat_last didnt work2')
+end
+
+pointscali=retr('pointscali');
+if isempty(pointscali)
+	clear pointscali
 end
 
 if ispc==1
@@ -6936,8 +6952,43 @@ if size(filepath,1) >1 || numel(caliimg)>0 || retr('video_selection_done') == 1
 		put('pointscali',[xposition' yposition']);
 	end
 	text(mean(xposition),mean(yposition), ['s = ' num2str(round((sqrt((xposition(1)-xposition(2))^2+(yposition(1)-yposition(2))^2))*100)/100) ' px'],'color','k','fontsize',7, 'BackgroundColor', 'r', 'tag', 'caliline','horizontalalignment','center')
+	pixeldist_changed_Callback()
 	toolsavailable(1)
 end
+
+function pixeldist_changed_Callback(src,~)
+
+if exist('src','var')
+	if strcmp(src.Tag,'pixeldist') % Reference distance has been edited in the edit field and not by clicking two points
+		% simulate clicking a distance in a calibration image and draw a line
+		delete(findobj('tag', 'caliline'))
+		spacing_to_border=50;
+		check_comma(src)
+		xposition(1)=spacing_to_border;
+		xposition(2)=spacing_to_border+str2double(src.String);
+
+		yposition(1)=spacing_to_border;
+		yposition(2)=spacing_to_border;
+		hold on;
+		plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'caliline');
+		plot (xposition,yposition,'y+:', 'tag', 'caliline');
+		hold off;
+		text(mean(xposition),mean(yposition), ['s = ' num2str(round((sqrt((xposition(1)-xposition(2))^2+(yposition(1)-yposition(2))^2))*100)/100) ' px'],'color','k','fontsize',7, 'BackgroundColor', 'r', 'tag', 'caliline','horizontalalignment','center')
+		put('pointscali',[xposition' yposition']);
+	end
+else
+	handles=gethand;
+	pointscali=retr('pointscali');
+	if ~isempty(pointscali)
+		xposition=pointscali(:,1);
+		yposition=pointscali(:,2);
+		if numel(pointscali)>0
+			set(handles.pixeldist,'String',num2str(round((sqrt((xposition(1)-xposition(2))^2+(yposition(1)-yposition(2))^2))*100)/100))
+		end
+	end
+end
+
+
 
 function calccali
 put('derived',[]) %calibration makes previously derived params incorrect
@@ -9110,6 +9161,7 @@ else
 				offset_y_true=0;
 			end
 			set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(calu*100000)/100000) ' m/s' sprintf('\n') 'x offset: ' round(num2str(offset_x_true)*1000)/1000 ' m' sprintf('\n') 'y offset: ' round(num2str(offset_y_true)*1000)/1000 ' m'],  'backgroundcolor', [0.5 1 0.5]);
+		pixeldist_changed_Callback()
 		end
 	catch
 		disp('...')
