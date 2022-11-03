@@ -33,6 +33,7 @@ classdef pivprogress < handle
 			end
 			try
 				setappdata(0,'par_start_time',tic)
+				setappdata(0,'par_percent',0)
 			catch
 			end
 
@@ -97,6 +98,7 @@ classdef pivprogress < handle
 			if ishandle(this.hdl)
 				try
 					par_start_time=getappdata(0,'par_start_time');
+					last_par_percent=getappdata(0,'par_percent');
 					elapsd = toc(par_start_time);
 					if this.percent > 0.01
 						remain_t = elapsd / this.percent *(1-this.percent);
@@ -110,12 +112,17 @@ classdef pivprogress < handle
 					mins=floor(mins);
 					secs=floor(secs);
 
-					if elapsd < 10
+					if elapsd < 5
 						remain_string='Remaining time: calculating...';
 					else
 						remain_string=['Remaining time: ' sprintf('%2.2d', hrs) 'h ' sprintf('%2.2d', mins) 'm ' sprintf('%2.2d', secs) 's'];
 					end
-					set(this.hdl, 'string' , ['Total progress: ' num2str(floor(100*this.percent)) '%' sprintf('\n') remain_string ]); %#ok<SPRINTFN>
+					if this.percent ~= last_par_percent
+						if ~isinf(remain_t)
+							set(this.hdl, 'string' , ['Total progress: ' num2str(floor(100*this.percent)) '%' sprintf('\n') remain_string ]); %#ok<SPRINTFN>
+						end
+						setappdata(0,'par_percent',this.percent)
+					end
 				catch
 				end
 				drawnow;
