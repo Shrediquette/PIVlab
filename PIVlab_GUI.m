@@ -2704,7 +2704,7 @@ if get(handles.bg_subtract,'Value')==1
 				%images
 				%if not: generate two background images. One from even frames,
 				%one from odd frames
-				toolsavailable(0)
+				toolsavailable(0,'Busy, please wait...')
 				updatecntr=0;
 
 				%das innere zu einer function machen und außen parfor...?
@@ -2903,7 +2903,7 @@ if get(handles.bg_subtract,'Value')==1
 				%images
 				%if not: generate two background images. One from even frames,
 				%one from odd frames
-				toolsavailable(0)
+				toolsavailable(0,'Busy, please wait...')
 				updatecntr=0;
 
 				%das innere zu einer function machen und außen parfor...?
@@ -3627,7 +3627,7 @@ if typevector(info(1,1),info(1,2)) ~=0
 
 end
 
-function toolsavailable(inpt)
+function toolsavailable(inpt,busy_msg)
 %0: disable all tools
 %1: re-enable tools that were previously also enabled
 hgui=getappdata(0,'hgui');
@@ -3643,17 +3643,16 @@ if inpt==0
 	end
 end
 
-
-%additionally display banner that PIVlab is busy
-%but this should only be displayed in some situations... not during mask selsction...
-%{
-if inpt==0
-	postix=get(gca,'XLim');postiy=get(gca,'YLim');text(postix(2)/2,postiy(2)/2,'Busy...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',48, 'BackgroundColor', [0.25 0.25 0.25],'tag','busyhint','margin',50,'Clipping','on');
-else
+if inpt==1
 	delete(findobj('tag','busyhint'));
 end
-%}
 
+if exist('busy_msg','var') && ~isempty(busy_msg)
+	%additionally display banner that PIVlab is busy
+	if inpt==0
+		postix=get(gca,'XLim');postiy=get(gca,'YLim');text(postix(2)/2,postiy(2)/2,busy_msg,'HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',32, 'BackgroundColor', [0.25 0.25 0.25],'tag','busyhint','margin',30,'Clipping','on');
+	end
+end
 elementsOfCrime=findobj(hgui, 'type', 'uicontrol');
 elementsOfCrime2=findobj(hgui, 'type', 'uimenu');
 statuscell=get (elementsOfCrime, 'enable');
@@ -5220,7 +5219,7 @@ if ok==1
 			put('update_display',1);
 		else
 			put('update_display',0);
-			text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
+			%text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
 		end
 	catch
 		put('update_display',1)
@@ -5229,7 +5228,7 @@ if ok==1
 	filename=retr('filename');
 	toggler=retr('toggler');
 	resultslist=cell(0); %clear old results
-	toolsavailable(0);
+	toolsavailable(0,'Busy, please wait...');
 	set (handles.cancelbutt, 'enable', 'on');
 	ismean=retr('ismean');
 	maskiererx=retr('maskiererx');
@@ -5701,7 +5700,7 @@ try
 		put('update_display',1);
 	else
 		put('update_display',0);
-		text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
+		%text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
 	end
 catch
 	put('update_display',1)
@@ -5712,7 +5711,7 @@ if ok==1
 	filepath=retr('filepath');
 	filename=retr('filename');
 	resultslist=cell(0); %clear old results
-	toolsavailable(0);
+	toolsavailable(0,'Busy, please wait...');
 	set (handles.cancelbutt, 'enable', 'on');
 	ismean=retr('ismean');
 	maskiererx=retr('maskiererx');
@@ -5874,7 +5873,7 @@ if ok==1
 	resultslist=retr('resultslist');
 	set(handles.progress, 'string' , ['Frame progress: 0%']);
 	set(handles.Settings_Apply_current, 'string' , ['Please wait...']);
-	toolsavailable(0);drawnow;
+	toolsavailable(0,'Busy, please wait...');drawnow;
 	handles=gethand;
 	filepath=retr('filepath');
 	selected=2*floor(get(handles.fileselector, 'value'))-1;
@@ -6542,7 +6541,7 @@ resultslist=retr('resultslist');
 if ~isempty(resultslist)
 	handles=gethand;
 	filepath=retr('filepath');
-	toolsavailable(0)
+	toolsavailable(0,'Busy, please wait...')
 	put('derived', []); %clear derived parameters if user modifies source data
 	if retr('video_selection_done') == 0
 		num_frames_to_process=floor(size(filepath,1)/2)+1;
@@ -7703,7 +7702,7 @@ calccali
 function apply_deriv_all_Callback(~, ~, ~)
 handles=gethand;
 filepath=retr('filepath');
-toolsavailable(0)
+toolsavailable(0,'Busy, please wait...')
 for i=1:floor(size(filepath,1)/2)+1
 	deriv=get(handles.derivchoice, 'value');
 	derivative_calc(i,deriv,1)
@@ -7804,7 +7803,7 @@ resultslist=retr('resultslist');
 [FileName,PathName] = uiputfile('*.txt','Save vector data as...','PIVlab.txt'); %framenummer in dateiname
 if isequal(FileName,0) | isequal(PathName,0)
 else
-	toolsavailable(0)
+	toolsavailable(0,'Busy, please wait...')
 	for i=1:floor(size(filepath,1)/2)
 		%if analysis exists
 		if size(resultslist,2)>=i && numel(resultslist{1,i})>0
@@ -7838,7 +7837,7 @@ resultslist=retr('resultslist');
 [FileName,PathName] = uiputfile('*.dat','Save vector data as...','PIVlab.dat'); %framenummer in dateiname
 if isequal(FileName,0) | isequal(PathName,0)
 else
-	toolsavailable(0)
+	toolsavailable(0,'Busy, please wait...')
 	for i=1:floor(size(filepath,1)/2)
 		%if analysis exists
 		if size(resultslist,2)>=i && numel(resultslist{1,i})>0
@@ -11053,7 +11052,7 @@ resultslist=retr('resultslist');
 [FileName,PathName] = uiputfile('*.vtk','Save Paraview binary vtk as...','PIVlab.vtk'); %framenummer in dateiname
 if isequal(FileName,0) | isequal(PathName,0)
 else
-	toolsavailable(0)
+	toolsavailable(0,'Busy, please wait...')
 	for i=1:floor(size(filepath,1)/2)
 		%if analysis exists
 		if size(resultslist,2)>=i && numel(resultslist{1,i})>0
