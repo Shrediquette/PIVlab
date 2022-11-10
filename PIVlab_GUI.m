@@ -2126,9 +2126,9 @@ try
 	warning off
 	load('PIVlab_settings_default.mat','last_selected_device');
 
-if exist('last_selected_device','var')	
-set(handles.ac_config, 'value',last_selected_device);
-end
+	if exist('last_selected_device','var')
+		set(handles.ac_config, 'value',last_selected_device);
+	end
 	warning on
 catch
 
@@ -2724,10 +2724,10 @@ if get(handles.bg_subtract,'Value')==1
 					cntr=cntr+1;
 
 				end
-				
-hbar = pivprogress(numel(imagelist_A),handles.preview_preprocess);
+
+				hbar = pivprogress(numel(imagelist_A),handles.preview_preprocess);
 				parfor	i=1:numel(imagelist_A)
-					
+
 					image_to_add1=[];
 					image_to_add2=[];
 					counter=counter+1; %counts the amount of images --> do that elsewhere
@@ -2753,7 +2753,7 @@ hbar = pivprogress(numel(imagelist_A),handles.preview_preprocess);
 							image_to_add2 = rgb2gray(image_to_add2);
 						end
 					end
-			
+
 					if strcmp(classimage,'single')==1
 						image_to_add1=double(image_to_add1);
 						if sequencer==1 %not time-resolved
@@ -2913,7 +2913,7 @@ if get(handles.bg_subtract,'Value')==1
 				for i=start_bg:skip_bg:size(filepath,1)
 					counter=counter+1; %counts the amount of images --> do that elsewhere
 					%% update progress bar
-					updatecntr=updatecntr+1; 
+					updatecntr=updatecntr+1;
 					if updatecntr==5
 						set(handles.preview_preprocess, 'String', ['Progress: ' num2str(round(i/size(filepath,1)*99)) ' %']);drawnow expose;
 						updatecntr=0;
@@ -2935,7 +2935,7 @@ if get(handles.bg_subtract,'Value')==1
 							image_to_add2 = read(video_reader_object,video_frame_selection(i+1));
 						end
 					end
-					
+
 					%% convert images to a grayscale double
 					%images arrive in their original format here
 					%convert everything to grayscale and double [0...1]
@@ -2971,7 +2971,7 @@ if get(handles.bg_subtract,'Value')==1
 					end
 
 					%now everything is double [0...1]
-					
+
 					%% check if image size matches other images
 					% remove this, takes only time
 					img_size_info1=size(image1);
@@ -4834,7 +4834,7 @@ if size(filepath,1) >1 || retr('video_selection_done') == 1
 	toggler=retr('toggler');
 	filepath=retr('filepath');
 	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-	if retr('video_selection_done') == 0 % this is not nice, duplicated functions, one for parallel and one for video....
+	if retr('video_selection_done') == 0 && retr('parallel')==1% this is not nice, duplicated functions, one for parallel and one for video....
 		generate_BG_img_parallel
 	else
 		generate_BG_img
@@ -5339,7 +5339,7 @@ if ok==1
 		drawnow;
 		calc_time_start=tic;
 		hbar = pivprogress(size(slicedfilepath1,2),handles.overall);
-set(handles.totaltime,'String','');
+		set(handles.totaltime,'String','');
 
 		if get(handles.dcc,'Value')==1
 			if get(handles.bg_subtract,'Value')==1
@@ -5405,7 +5405,7 @@ set(handles.totaltime,'String','');
 				end
 				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 				image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect); %#ok<PFTUSW> 
+				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect); %#ok<PFTUSW>
 				xlist{i}=x;
 				ylist{i}=y;
 				ulist{i}=u;
@@ -5979,7 +5979,7 @@ if ok==1
 			delta_diff_min = str2double(get(handles.edit52x,'String'));
 			if get(handles.fftmulti,'Value')==1
 				try
-				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
+					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
 				catch
 					toolsavailable(1);
 				end
@@ -9160,7 +9160,7 @@ else
 				offset_y_true=0;
 			end
 			set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(calu*100000)/100000) ' m/s' sprintf('\n') 'x offset: ' round(num2str(offset_x_true)*1000)/1000 ' m' sprintf('\n') 'y offset: ' round(num2str(offset_y_true)*1000)/1000 ' m'],  'backgroundcolor', [0.5 1 0.5]);
-		pixeldist_changed_Callback()
+			pixeldist_changed_Callback()
 		end
 	catch
 		disp('...')
@@ -11438,7 +11438,7 @@ if get(handles.bg_subtract,'Value')==1
 	sequencer=retr('sequencer');%Timeresolved or pairwise 0=timeres.; 1=pairwise
 	if sequencer ~= 2 % bg subtraction only makes sense with time-resolved and pairwise sequencing style, not with reference style.
 		if isempty(bg_img_A) || isempty(bg_img_B)
-			if retr('video_selection_done') == 0 % this is not nice, duplicated functions, one for parallel and one for video....
+			if retr('video_selection_done') == 0 && retr('parallel')==1 % this is not nice, duplicated functions, one for parallel and one for video....
 				generate_BG_img_parallel
 			else
 				generate_BG_img
@@ -11509,7 +11509,7 @@ end
 if str2double(get(handles.ac_power,'String')) > 100
 	%camera_type=retr('camera_type');
 	%if ~strcmp(camera_type,'chronos')
-		set(handles.ac_power,'String','100')
+	set(handles.ac_power,'String','100')
 	%end
 end
 
@@ -11557,7 +11557,7 @@ catch
 	alreadyconnected=0;
 end
 if alreadyconnected
-	
+
 	if exist('laser_device_id.mat','file') == 2
 		old_laser_device_id = load('laser_device_id.mat','id');
 		old_laser_device_id = old_laser_device_id.id;
@@ -11632,7 +11632,7 @@ if alreadyconnected
 	%Pulse distance
 	pulse_sep=str2double(get(handles.ac_interpuls,'String'));
 	laser_device_id=retr('laser_device_id');
-%{
+	%{
 	if ~exist('laser_device_id.mat','file') == 2
 		try
 			writeline(serpo,'WhoAreYou?');
@@ -11763,8 +11763,8 @@ else
 		update_ac_status(['Connected to ' selected_port]);
 		put('laser_running',0);
 
-	laser_device_id = find_laser_device;
-	put('laser_device_id',laser_device_id);
+		laser_device_id = find_laser_device;
+		put('laser_device_id',laser_device_id);
 
 		control_simple_sync_serial(0);
 	catch ME
@@ -11904,7 +11904,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 				m1 = uimenu(c_menu,'Label','OPTOcam 1600x600 (8bit: 320 fps)','Callback',@setdefaultroi);
 				m2 = uimenu(c_menu,'Label','OPTOcam 1600x480 (8bit: 400 fps)','Callback',@setdefaultroi);
 				m3 = uimenu(c_menu,'Label','Enter ROI','Callback',@setdefaultroi);
-			end			
+			end
 
 			position = customWait(ac_ROI_general_handle);
 
@@ -12228,7 +12228,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 					msgbox (['Exposure time of camera too low. Please increase laser energy or pulse distance.' sprintf('\n') 'Pulse_distance[µs] * laser_energy[%] must be >= 6 µs'])
 					uiwait
 				end
-			else 
+			else
 				f1exp_cam=retr('f1exp_cam');
 			end
 			if value == 5 %chronos
@@ -12250,7 +12250,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				[OutputError,flir_vid] = PIVlab_capture_flir_synced_capture(flir_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display); %capture n images, display livestream
 			elseif value == 8  %OPTOcam
 
-				
+
 				OPTOcam_bits =retr('OPTOcam_bits');
 				if isempty (OPTOcam_bits)
 					OPTOcam_bits=8;
@@ -12267,7 +12267,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 					OPTOcam_settings_check = 0;
 					Error_Reason{end+1,1}='Frame rate too high for selected ROI and/or bit rate.';
 					Error_Reason{end+1,1}=['With current settings, sensor max. fps is ' num2str(round(max_fps_with_current_settings,1)) ' fps'];
-						Error_Reason{end+1,1}='Please make the ROI smaller, or decrease the frame rate.';
+					Error_Reason{end+1,1}='Please make the ROI smaller, or decrease the frame rate.';
 				end
 
 				% in 8 bit: muss groesser als 61 sein
@@ -12294,7 +12294,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 			end
 			%disable external devices
 			if (~isempty(retr('ac_enable_seeding1')) && retr('ac_enable_seeding1') ~=0) || (~isempty(retr('ac_enable_device1')) && retr('ac_enable_device1') ~=0) || (~isempty(retr('ac_enable_device2')) && retr('ac_enable_device2') ~=0)
-			external_device_control(0); % stops all external devices
+				external_device_control(0); % stops all external devices
 			end
 			control_simple_sync_serial(0);pause(0.1);control_simple_sync_serial(0);
 			put('laser_running',0);
