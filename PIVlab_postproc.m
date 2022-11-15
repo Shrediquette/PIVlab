@@ -11,21 +11,29 @@ if numel(valid_vel)>0 %velocity limits were activated
     v(u*calu<umin)=NaN;
     v(u*calu>umax)=NaN;
     v(v*calv<vmin)=NaN;
-    v(v*calv>vmax)=NaN;
-    u(v*calv<vmin)=NaN;
-    u(v*calv>vmax)=NaN;
+	v(v*calv>vmax)=NaN;
+	u(v*calv<vmin)=NaN;
+	u(v*calv>vmax)=NaN;
 end
 %% local median check
 if do_local_median==1
-    neigh_filt=medfilt2(u,[3,3],'symmetric');
-    neigh_filt=inpaint_nans(neigh_filt);
-    neigh_filt=abs(neigh_filt-u);
-    u(neigh_filt>neigh_thresh)=nan;
-    
-    neigh_filt=medfilt2(v,[3,3],'symmetric');
-    neigh_filt=inpaint_nans(neigh_filt);
-    neigh_filt=abs(neigh_filt-v);
-    v(neigh_filt>neigh_thresh)=nan;
+	neigh_filt=medfilt2(u,[3,3],'symmetric');
+	try
+		neigh_filt=inpaint_nans(neigh_filt);
+	catch %above will fail if all vectos are filtered out before.
+		neigh_filt=NaN(size(neigh_filt));
+	end
+	neigh_filt=abs(neigh_filt-u);
+	u(neigh_filt>neigh_thresh)=nan;
+
+	neigh_filt=medfilt2(v,[3,3],'symmetric');
+	try
+		neigh_filt=inpaint_nans(neigh_filt);
+	catch %above will fail if all vectos are filtered out before.
+		neigh_filt=NaN(size(neigh_filt));
+	end
+	neigh_filt=abs(neigh_filt-v);
+	v(neigh_filt>neigh_thresh)=nan;
 end
 %% stddev check
 if do_stdev_check==1
