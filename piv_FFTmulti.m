@@ -182,15 +182,23 @@ for multipass = 1:passes
 			Y1 = (Y(1):1:Y(end)-1)';
 			X2 = interp2(X,Y,U,X1,Y1,'*linear') + repmat(X1,size(Y1, 1),1);
 			Y2 = interp2(X,Y,V,X1,Y1,'*linear') + repmat(Y1,1,size(X1, 2));
-		end
 
+			%symmetric interpolation of image A and B
+			%X2 = interp2(X,Y,U*0.5,X1,Y1,'*linear') + repmat(X1,size(Y1, 1),1);
+			%Y2 = interp2(X,Y,V*0.5,X1,Y1,'*linear') + repmat(Y1,1,size(X1, 2));
+			%X2_2 = interp2(X,Y,U*-0.5,X1,Y1,'*linear') + repmat(X1,size(Y1, 1),1);
+			%Y2_2 = interp2(X,Y,V*-0.5,X1,Y1,'*linear') + repmat(Y1,1,size(X1, 2));
+		end
 		% interpolate image2_roi
 		if multipass == 1
 			image2_crop_i1 = image2_roi(miniy:maxiy+interrogationarea-1, minix:maxix+interrogationarea-1);
+			%symmetric interpolation of image A and B
+			%image1_crop_i1 = image1_roi(miniy:maxiy+interrogationarea-1, minix:maxix+interrogationarea-1);
 		else
+			%symmetric interpolation of image A and B
+			%image1_crop_i1 = interp2(image_roi_xs,image_roi_ys,image1_roi,X2_2,Y2_2,imdeform); %linear is 3x faster and looks ok...
 			image2_crop_i1 = interp2(image_roi_xs,image_roi_ys,image2_roi,X2,Y2,imdeform); %linear is 3x faster and looks ok...
 		end
-
 		N = numelementsx * numelementsy;
 		result_conv = zeros([interrogationarea, interrogationarea, N], convert_image_class_type);
 		correlation_map = zeros([numelementsy, numelementsx], convert_image_class_type);
@@ -210,6 +218,8 @@ for multipass = 1:passes
 				xs = (1:interrogationarea) + (x-1) * step;
 				ys = (1:interrogationarea) + (y-1) * step;
 				image1_cut(:,:,i) = image1_roi(miniy-1+ys, minix-1+xs);
+				%symmetric interpolation of image A and B
+				%image1_cut(:,:,i) = image1_crop_i1(ys, xs);
 				image2_cut(:,:,i) = image2_crop_i1(ys, xs);
 			end
 			% Calculate correlation strength on the last pass
