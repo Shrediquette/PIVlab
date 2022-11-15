@@ -69,7 +69,7 @@ for multipass = 1:passes
 			utable_orig=utable;
 			vtable_orig=vtable;
 			[utable,vtable] = PIVlab_postproc (utable,vtable,[],[], [], 1,4, 1,1.5);
-			
+
 			%find typevector...
 			%maskedpoints=numel(find((typevector)==0));
 			%amountnans=numel(find(isnan(utable)==1))-maskedpoints;
@@ -81,19 +81,13 @@ for multipass = 1:passes
 			vtable=inpaint_nans(vtable,4);
 
 			%smooth predictor
-			try
-				if multipass < passes
-					utable = smoothn(utable,0.9); %stronger smoothing for first passes
-					vtable = smoothn(vtable,0.9);
-				else
-					utable = smoothn(utable); %weaker smoothing for last pass(nb: BEFORE the image deformation. So the output is not smoothed!)
-					vtable = smoothn(vtable);
-				end
-			catch
-				%old matlab versions: gaussian kernel
-				h=fspecial('gaussian',5,1);
-				utable=imfilter(utable,h,'replicate');
-				vtable=imfilter(vtable,h,'replicate');
+			if multipass < passes
+				keyboard
+				utable = smoothn(utable,0.9); %stronger smoothing for first passes
+				vtable = smoothn(vtable,0.9);
+			else
+				utable = smoothn(utable); %weaker smoothing for last pass(nb: BEFORE the image deformation. So the output is not smoothed!)
+				vtable = smoothn(vtable);
 			end
 		end
 
