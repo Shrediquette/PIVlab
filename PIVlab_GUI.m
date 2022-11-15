@@ -2719,6 +2719,8 @@ if get(handles.bg_subtract,'Value')==1
 					imagelist_A{cntr}=filepath{i};
 					if sequencer==1 %not time-resolved
 						imagelist_B{cntr}=filepath{i+1};
+					else
+						imagelist_B=imagelist_A; %totally strange workaround for Matlab R2022b.... if sequencer == 0 then this variable will never be used. But if it is empty, then an error occurs...
 					end
 
 					cntr=cntr+1;
