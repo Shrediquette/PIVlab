@@ -69,7 +69,6 @@ for multipass = 1:passes
 			utable_orig=utable;
 			vtable_orig=vtable;
 			[utable,vtable] = PIVlab_postproc (utable,vtable,[],[], [], 1,4, 1,1.5);
-
 			%find typevector...
 			%maskedpoints=numel(find((typevector)==0));
 			%amountnans=numel(find(isnan(utable)==1))-maskedpoints;
@@ -82,7 +81,6 @@ for multipass = 1:passes
 
 			%smooth predictor
 			if multipass < passes
-				keyboard
 				utable = smoothn(utable,0.9); %stronger smoothing for first passes
 				vtable = smoothn(vtable,0.9);
 			else
