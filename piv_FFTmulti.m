@@ -159,7 +159,7 @@ for multipass = 1:passes
 			interrogationarea_center = double((interrogationarea+1)/2);
 		end
 
-		typevector = ones(numelementsy, numelementsx, 'uint8');
+		typevector = ones(numelementsy, numelementsx, 'single');
 		if multipass == 1
 			xtable = zeros(numelementsy,numelementsx, 'single');
 			ytable = zeros(numelementsy,numelementsx, 'single');
