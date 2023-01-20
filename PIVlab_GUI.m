@@ -12433,7 +12433,7 @@ set(handles.ac_msgbox,'String',contents);
 function ac_camstop_Callback(~,~,~)
 put('cancel_capture',1);
 control_simple_sync_serial(0);
-external_device_control(0);
+%external_device_control(0);
 put('laser_running',0);
 put('capturing',0);
 toolsavailable(1)
