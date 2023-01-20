@@ -228,28 +228,30 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
 						else
 							%do nothing
 						end
-					else %fine focus search finished
-						%assignin('base','sharpness_focus_table',sharpness_focus_table)
-						%find best focus
-						[r,~]=find(sharpness_focus_table == max(sharpness_focus_table(:,2)));
-						focus_peak=sharpness_focus_table(r(1),1);
-						disp(['Best fine focus: ' num2str(focus_peak)])
-						PIVlab_capture_lensctrl(focus_start_fine,aperture,lighting) %backlash compensation
-						pause(0.3)
-						PIVlab_capture_lensctrl(focus_peak,aperture,lighting) %set to best focus
-						
-						setappdata(hgui,'autofocus_enabled',0); %autofocus am ende ausschalten
+						else %fine focus search finished
+							%assignin('base','sharpness_focus_table',sharpness_focus_table)
+							%find best focus
+							[r,~]=find(sharpness_focus_table == max(sharpness_focus_table(:,2)));
+							focus_peak=sharpness_focus_table(r(1),1);
+							disp(['Best fine focus: ' num2str(focus_peak)])
+							PIVlab_capture_lensctrl(focus_end_fine,aperture,lighting)%backlash compensation
+							pause(0.5)
+							PIVlab_capture_lensctrl(focus_start_fine,aperture,lighting) %backlash compensation
+							pause(0.5)
+							PIVlab_capture_lensctrl(focus_peak,aperture,lighting) %set to best focus
 
-						lens_control_window = getappdata(0,'hlens');
-						focus_edit_field=getappdata(lens_control_window,'handle_to_focus_edit_field');
-						set(focus_edit_field,'String',num2str(focus_peak)); %update
-						%setappdata(hgui,'cancel_capture',1); %stop recording....?
-						figure;plot(raw_data(:,1),raw_data(:,2))
-						hold on;plot(sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range'));hold off
-						title('Focus search')
-						xlabel('Pulsewidth us')
-						ylabel('Sharpness')
-						legend('Coarse search','Fine search')
+							setappdata(hgui,'autofocus_enabled',0); %autofocus am ende ausschalten
+
+							lens_control_window = getappdata(0,'hlens');
+							focus_edit_field=getappdata(lens_control_window,'handle_to_focus_edit_field');
+							set(focus_edit_field,'String',num2str(focus_peak)); %update
+							%setappdata(hgui,'cancel_capture',1); %stop recording....?
+							figure;plot(raw_data(:,1),raw_data(:,2))
+							hold on;plot(sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range'));hold off
+							title('Focus search')
+							xlabel('Pulsewidth us')
+							ylabel('Sharpness')
+							legend('Coarse search','Fine search')
 						grid on
 						
 					end
