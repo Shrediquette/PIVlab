@@ -80,7 +80,7 @@ if isempty(fh)
 	addpath(fullfile(tempfilepath, 'PIVlab_capture_resources'));
 	try
 		ctr=0;
-		pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg' 'PIVlab_capture_pco.m' 'PIVlab_image_filter.m' 'pivparpool.m' 'pivprogress.m' 'piv_analysis.m' 'piv_quick.m' 'PIVlab_notch_filter.m' 'PIVlab_correlation_filter.m' 'PIVlab_capture_devicectrl_GUI.m' 'PIVlab_capture_lensctrl_GUI.m' 'PIVlab_capture_lensctrl.m' 'PIVlab_capture_sharpness_indicator.m'};
+		pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg' 'PIVlab_capture_pco.m' 'PIVlab_image_filter.m' 'pivparpool.m' 'pivprogress.m' 'piv_analysis.m' 'piv_quick.m' 'PIVlab_notch_filter.m' 'PIVlab_correlation_filter.m' 'PIVlab_capture_devicectrl_GUI.m' 'PIVlab_capture_lensctrl_GUI.m' 'PIVlab_capture_lensctrl.m' 'PIVlab_capture_sharpness_indicator.m' 'straddling_graph.m'};
 		for i=1:size(pivFiles,2)
 			if exist(pivFiles{1,i},'file')~=2
 				disp(['ERROR: A required file was not found: ' pivFiles{1,i}]);
@@ -2029,6 +2029,8 @@ handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String','10
 item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
 handles.ac_pulselengthtxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pulse length: 0 µs','tag','ac_pulselengthtxt');
 
+item=[0 item(2)+item(4)+margin*0.2 parentitem(3) 1];
+handles.ac_enable_straddling_figure = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Timing graph','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_straddling_figure','TooltipString','Show a graph with the timing of camera and laser pulses','Callback', @ac_sync_settings_Callback);
 
 item=[0 item(2)+item(4)+margin*0.2 parentitem(3)/4*2 2];
 handles.ac_laserstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','N/A','tag','ac_laserstatus','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold','TooltipString','Status of the laser');
@@ -11533,8 +11535,6 @@ if selected_interpulse > selected_frame_period_us
 	set(handles.ac_interpuls,'String',selected_frame_period_us)
 end
 
-
-
 try
 	serpo.Port;
 	alreadyconnected=1;
@@ -11547,6 +11547,35 @@ if alreadyconnected
 		laser_running=0;
 	end
 	control_simple_sync_serial(laser_running);
+end
+initiate_straddling_graph
+
+
+
+function initiate_straddling_graph
+handles=gethand;
+selected_fps_value = get(handles.ac_fps,'Value');
+selected_fps_string = get(handles.ac_fps,'String');
+selected_fps=str2double(selected_fps_string{selected_fps_value});
+if get(handles.ac_enable_straddling_figure, 'Value')==1
+	blind_time=retr('blind_time');
+	if isempty(blind_time)
+		blind_time=1;
+	end
+	camera_type=retr('camera_type');
+
+	if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly')
+		is_dbl_shutter = 1;
+	else
+		is_dbl_shutter = 0;
+	end
+	pco_first_frame_exposure = floor(str2double(get(handles.ac_interpuls,'String'))*str2double(get(handles.ac_power,'String'))/100)+1;
+	straddling_graph(blind_time,selected_fps,str2double(get(handles.ac_interpuls,'String')),str2double(get(handles.ac_power,'String')),4,is_dbl_shutter,pco_first_frame_exposure)
+else
+	straddling_figure=findobj('tag','straddling_figure');
+	if ~isempty(straddling_figure)
+		close(straddling_figure)
+	end
 end
 
 function laser_device_id = find_laser_device
@@ -12579,6 +12608,7 @@ if value==1 || value==3 % ILA.piv nano / pco pixelfly with evergreen or LD-PS
 	avail_freqs={'5' '3' '1.5' '1'};
 	put('max_cam_res',[1392,1040]);
 	put('min_allowed_interframe',10);
+	put('blind_time',1);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
 	if old_setting ~= value
@@ -12597,6 +12627,7 @@ if value == 2 || value == 4% pco panda with evergreen or LD-PS
 	avail_freqs={'50' '30' '15' '7.5' '5' '3' '1.5' '1'};
 	put('max_cam_res',[5120,5120]);
 	put('min_allowed_interframe',10);
+	put('blind_time',1);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
 	if old_setting ~= value
@@ -12615,6 +12646,7 @@ if value == 5 % chronos LD-PS
 	avail_freqs={'1000' '850' '600' '500' '400' '300' '200' '150' '100' '70' '50' '25' '10' '5'};
 	put('max_cam_res',[1280,1024]);
 	put('min_allowed_interframe',10);
+	put('blind_time',6);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
 	if old_setting ~= value
@@ -12633,6 +12665,7 @@ if value == 6 % basler
 	avail_freqs={'168' '100' '75' '60' '50' '25' '10'};
 	put('max_cam_res',[2048,1088]);
 	put('min_allowed_interframe',150);
+	put('blind_time',130);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
 	if old_setting ~= value
@@ -12651,6 +12684,7 @@ if value == 7 % Flir
 	avail_freqs={'60' '50' '40' '30' '20' '10'};
 	put('max_cam_res',[1440,1080]);
 	put('min_allowed_interframe',470);
+	put('blind_time',425);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
 	if old_setting ~= value
@@ -12673,8 +12707,10 @@ if value == 8 % OPTOcam
 
 	if OPTOcam_bits==8
 		put('min_allowed_interframe',61); %8bit
+		put('blind_time',44);
 	elseif OPTOcam_bits==12
 		put('min_allowed_interframe',128); %12bit
+		put('blind_time',96);
 	end
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
@@ -12683,9 +12719,9 @@ if value == 8 % OPTOcam
 	end
 	%end
 end
-
-
 ac_expo_Callback
+straddling_figure=findobj('tag','straddling_figure');
+initiate_straddling_graph
 
 function ac_expo_Callback(~,~,~)
 handles=gethand;
