@@ -9,8 +9,7 @@ delete(findobj('tag','sharpness_display_text'));
 if ~isempty(textx) && ~isempty(texty)
 	hgui=getappdata(0,'hgui');
 	PIVlab_axis = findobj(hgui,'Type','Axes');
-	text(textx,texty,['Sharpness: ' int2str(sharpness)],'Color',[1 1 0],'tag','sharpness_display_text','Horizontalalignment','right','Parent',PIVlab_axis);
-	text(textx,texty*0.95,['Mean brightness: ' int2str(mean_brightess)],'Color',[1 1 0],'tag','sharpness_display_text','Horizontalalignment','right','Parent',PIVlab_axis);
+	text(textx,texty,{['Sharpness: ' int2str(sharpness)] ['Mean brightness: ' int2str(mean_brightess)]},'Color',[1 1 0] ,'tag','sharpness_display_text','Verticalalignment','bottom','Horizontalalignment','right','Parent',PIVlab_axis,'FontSize',32,'fontweight','bold');
 end
 
 sharpness_map=[];
