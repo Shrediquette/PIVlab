@@ -1,0 +1,37 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: 'PIVlab '
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: 'William '
+    family-names: 'Thielicke '
+    email: w.th@gmx.de
+    affiliation: 'Optolution Messtechnik GmbH '
+    orcid: 'https://orcid.org/0000-0001-8866-9769'
+identifiers:
+  - type: doi
+    value: 10.5334/jors.334
+    description: 'The software paper '
+repository-code: 'https://github.com/Shrediquette/PIVlab'
+url: 'http://PIVlab.blogspot.com'
+abstract: >-
+  PIVlab is a GUI based particle image velocimetry (PIV)
+  software. It does not only calculate the velocity
+  distribution within particle image pairs, but can also be
+  used to derive, display and export multiple parameters of
+  the flow pattern. A user-friendly graphical user interface
+  (GUI) with the ability to control a PIV camera and a laser
+  makes PIV data acquisition and data post-processing fast
+  and efficient.
+keywords:
+  - Piv
+  - 'Particle image velocimetry '
+  - 'Flow visualisation '
+  - 'Image processing '
+  - 'Cross-Correlation '
+license: MIT
