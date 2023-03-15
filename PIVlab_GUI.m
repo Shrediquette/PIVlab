@@ -11595,16 +11595,20 @@ if alreadyconnected
 	else
 		old_laser_device_id='%';
 	end
+	string1='WhoAreYou?';
+	string2='WhichFirmWare?';
+
 	try
-		writeline(serpo,'WhoAreYou?');
+		writeline(serpo,string1);
 		pause(0.3)
 		warning off
 		serial_answer=readline(serpo);
 		warning on
 	catch
+		disp('Error sending WhoAreYou')
 	end
 	try
-		writeline(serpo,'WhichFirmWare?');
+		writeline(serpo,'string2');
 		pause(0.3)
 		warning off
 		firmware_version=readline(serpo);
@@ -11613,7 +11617,18 @@ if alreadyconnected
 			firmware_version='pre feb 22';
 		end
 	catch
+		disp('Error sending WhichFirmware')
 	end
+%%debug messages
+%{
+disp('---------')
+	disp(['Port is: ' serpo.Port])
+	disp(['Terminator set to: ' serpo.Terminator])
+	disp(['String written: ' string1])
+	disp(['String written: ' string2])
+	disp(['Answer: ' convertStringsToChars(serial_answer)])
+disp('---------')
+%}
 
 	if isempty(serial_answer)
 		uiwait(msgbox(['No laser found.' sprintf('\n') 'Is the laser turned on?' sprintf('\n') 'Please try again.'],'modal'))
@@ -11722,16 +11737,22 @@ if alreadyconnected
 	else
 		flush(serpo)
 		%configureTerminator(serpo,'CR');
-		writeline(serpo,['TALKINGTO:' laser_device_id ';FREQ:1;CAM:1;ENER:' int2str(min_energy) ';ener%:0;F1EXP:100;INTERF:1234;EXTDLY:-1;EXTSKP:0;LASER:disable']);
+		send_string=['TALKINGTO:' laser_device_id ';FREQ:1;CAM:1;ENER:' int2str(min_energy) ';ener%:0;F1EXP:100;INTERF:1234;EXTDLY:-1;EXTSKP:0;LASER:disable'];
+		writeline(serpo,send_string);
 		%writeline(serpo,'FREQ:5;EXPO:300;CAMDLY:835;LDPULS:300;INTERF:500;LASER:disable');
 		%disp('testing laserdiode')
 	end
 	pause(0.1)
 	warning off
-	%configureTerminator(serpo,'CR/LF');
-	%disp('Answer received:')
-	%HIER WAR ALTER CODE
 	serial_answer = ac_process_sync_reply(serpo);
+	%% debug messages
+	%{
+	disp('---------')
+	disp(['Terminator set to: ' serpo.Terminator])
+	disp(['String written: ' send_string])
+	disp(['Answer: ' convertStringsToChars(serial_answer)])
+	disp('---------')
+	%}
 else
 	no_dongle_msgbox
 end
