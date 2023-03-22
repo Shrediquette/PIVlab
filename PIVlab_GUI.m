@@ -11603,12 +11603,13 @@ if alreadyconnected
 		pause(0.3)
 		warning off
 		serial_answer=readline(serpo);
+		disp(['Connected to: ' convertStringsToChars(serial_answer)])
 		warning on
 	catch
 		disp('Error sending WhoAreYou')
 	end
 	try
-		writeline(serpo,'string2');
+		writeline(serpo,string2);
 		pause(0.3)
 		warning off
 		firmware_version=readline(serpo);
