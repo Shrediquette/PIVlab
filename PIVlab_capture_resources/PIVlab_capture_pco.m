@@ -20,7 +20,7 @@ if measure_framerate_max == 1
 		if(errorCode)
 			pco_errdisp('PCO_SetDoubleImageMode',errorCode);
 		end
-		
+
 		%% camera description
 		cam_desc=libstruct('PCO_Description');
 		set(cam_desc,'wSize',cam_desc.structsize);
@@ -30,12 +30,12 @@ if measure_framerate_max == 1
 		%binning funktioniert nur wenn gleichzeitig ROI gesetzt wird.
 		h_binning=binning; %1,2,4
 		v_binning=binning; %1,2,4
-		
+
 		xmin=ROI_general(1);
 		ymin=ROI_general(2);
 		xmax=ROI_general(1)+ROI_general(3)-1;
 		ymax=ROI_general(2)+ROI_general(4)-1;
-		
+
 		[errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetBinning', out_ptr,h_binning,v_binning); %2,4, etc.
 		pco_errdisp('PCO_SetBinning',errorCode);
 		%% ROI selection
@@ -45,25 +45,25 @@ if measure_framerate_max == 1
 		end
 		%stop camera
 		subfunc.fh_stop_camera(out_ptr);
-		
+
 		bitpix=uint16(cam_desc.wDynResDESC);
 		%set bitalignment LSB
 		bitalign=uint16(BIT_ALIGNMENT_LSB);
 		errorCode = calllib('PCO_CAM_SDK', 'PCO_SetBitAlignment', out_ptr,bitalign);
 		pco_errdisp('PCO_SetBitAlignment',errorCode);
-		
+
 		errorCode = calllib('PCO_CAM_SDK', 'PCO_SetRecorderSubmode',out_ptr,RECORDER_SUBMODE_RINGBUFFER);
 		pco_errdisp('PCO_SetRecorderSubmode',errorCode);
-		
+
 		%set default Pixelrate
 		subfunc.fh_set_pixelrate(out_ptr,2);
-		
+
 		%set triggermode (auto)
 		subfunc.fh_set_triggermode(out_ptr,0);
-		
+
 		%change timebase for camera
 		subfunc.fh_set_exposure_times(out_ptr,exposure_time,1,0,1); %us 	%subfunc.fh_set_exposure_times(out_ptr,exposure_time,2,0,2); %ms
-		
+
 		%if PCO_ArmCamera does fail no images can be grabbed
 		errorCode = calllib('PCO_CAM_SDK', 'PCO_ArmCamera', out_ptr);
 		if(errorCode~=PCO_NOERROR)
@@ -72,22 +72,22 @@ if measure_framerate_max == 1
 			subfunc.fh_lasterr(errorCode);
 			throw(ME);
 		end
-		
+
 		%adjust transfer parameter if necessary
 		subfunc.fh_set_transferparameter(out_ptr);
-		
+
 		act_xsize=uint16(0);
 		act_ysize=uint16(0);
 		ccd_xsize=uint16(0);
 		ccd_ysize=uint16(0);
-		
+
 		%use PCO_GetSizes because this always returns accurate image size for next recording
 		[errorCode,~,act_xsize,act_ysize]  = calllib('PCO_CAM_SDK', 'PCO_GetSizes', out_ptr,act_xsize,act_ysize,ccd_xsize,ccd_ysize);
 		if(errorCode)
 			pco_errdisp('PCO_GetSizes',errorCode);
 		end
 		disp(['sizes: horizontal ',int2str(act_xsize),' vertical ',int2str(act_ysize)]);
-		
+
 		%% Measure time to acquire 1 image
 		dwSec=uint32(0);
 		dwNanoSec=uint32(0);
@@ -115,7 +115,7 @@ if measure_framerate_max == 1
 		disp(['Double image total time: ' num2str(test_data_write_time + capture_time) ' seconds.'])
 		framerate_max=1/(test_data_write_time + capture_time);
 		disp(['Max. frame rate: ' num2str(framerate_max) ' Hz.'])
-		
+
 		if framerate_max < framerate
 			display_warning=1;
 			%disp('Frames will be skipped!')
@@ -146,11 +146,11 @@ else
 	end
 	OutputError=0;
 	PIVlab_axis = findobj(hgui,'Type','Axes');
-	
+
 	%image_handle=imagesc(zeros(1040,1392),'Parent',PIVlab_axis,[0 2^16]);
 	image_handle_pco=imagesc(zeros(1040,1392),'Parent',PIVlab_axis,[0 2^16]);
 	setappdata(hgui,'image_handle_pco',image_handle_pco);
-	
+
 	if triggermode == 2 && do_realtime==1 %external trigger and realtime
 		[X,Y]=meshgrid(1:32:1392,1:32:1040);
 		hold on;
@@ -175,8 +175,8 @@ else
 	set(gca,'ytick',[])
 	set(gca,'xtick',[])
 	colorbar
-	
-	
+
+
 	image_save_number=0;
 	glvar=struct('do_libunload',1,'do_close',0,'camera_open',0,'out_ptr',[]);
 	pco_camera_load_defines();
@@ -184,7 +184,7 @@ else
 	[errorCode,glvar]=pco_camera_open_close(glvar);
 	pco_errdisp('pco_camera_setup',errorCode);
 	out_ptr=glvar.out_ptr;
-	
+
 	try
 		act_recstate = uint16(10);
 		[errorCode,~,act_recstate] = calllib('PCO_CAM_SDK', 'PCO_GetRecordingState',out_ptr,act_recstate);
@@ -225,7 +225,7 @@ else
 			if(errorCode)
 				pco_errdisp('PCO_GetHWIOSignal',errorCode);
 			end
-			
+
 			%disp(['hardware trigger status: ' num2str(hwio_sig.wEnabled)]);
 		elseif strcmp(camera_type,'pco_pixelfly')
 			%no special treatment
@@ -235,12 +235,12 @@ else
 		set(cam_desc,'wSize',cam_desc.structsize);
 		[errorCode,~,cam_desc] = calllib('PCO_CAM_SDK', 'PCO_GetCameraDescription', out_ptr,cam_desc);
 		pco_errdisp('PCO_GetCameraDescription',errorCode);
-		
+
 		%% Pixel Binning
 		%binning funktioniert nur wenn gleichzeitig ROI gesetzt wird.
 		h_binning=binning; %1,2,4
 		v_binning=binning; %1,2,4
-		
+
 		[errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetBinning', out_ptr,h_binning,v_binning); %2,4, etc.
 		pco_errdisp('PCO_SetBinning',errorCode);
 		%% ROI selection
@@ -258,16 +258,16 @@ else
 		%set(cam_desc,'wSize',cam_desc.structsize);
 		%[errorCode,~,cam_desc] = calllib('PCO_CAM_SDK', 'PCO_GetCameraDescription', out_ptr,cam_desc);
 		%pco_errdisp('PCO_GetCameraDescription',errorCode);
-		
+
 		bitpix=uint16(cam_desc.wDynResDESC);
 		%set bitalignment LSB
 		bitalign=uint16(BIT_ALIGNMENT_LSB);
 		errorCode = calllib('PCO_CAM_SDK', 'PCO_SetBitAlignment', out_ptr,bitalign);
 		pco_errdisp('PCO_SetBitAlignment',errorCode);
-		
+
 		errorCode = calllib('PCO_CAM_SDK', 'PCO_SetRecorderSubmode',out_ptr,RECORDER_SUBMODE_RINGBUFFER);
 		pco_errdisp('PCO_SetRecorderSubmode',errorCode);
-		
+
 		%disnable ASCII and binary timestamp
 		if(bitand(cam_desc.dwGeneralCapsDESC1,GENERALCAPS1_NO_TIMESTAMP)==0)
 			subfunc.fh_enable_timestamp(out_ptr,TIMESTAMP_MODE_OFF);
@@ -276,16 +276,16 @@ else
 		if(bitand(cam_desc.dwGeneralCapsDESC1,GENERALCAPS1_METADATA))
 			subfunc.fh_set_metadata_mode(out_ptr,0);
 		end
-		
+
 		%set default Pixelrate
 		subfunc.fh_set_pixelrate(out_ptr,2);
-		
+
 		%set triggermode (auto vs. external trigger)
 		subfunc.fh_set_triggermode(out_ptr,triggermode);
-		
+
 		%change timebase for camera
 		subfunc.fh_set_exposure_times(out_ptr,exposure_time,1,0,1); %us 	%subfunc.fh_set_exposure_times(out_ptr,exposure_time,2,0,2); %ms
-		
+
 		%if PCO_ArmCamera does fail no images can be grabbed
 		errorCode = calllib('PCO_CAM_SDK', 'PCO_ArmCamera', out_ptr);
 		if(errorCode~=PCO_NOERROR)
@@ -294,7 +294,7 @@ else
 			subfunc.fh_lasterr(errorCode);
 			throw(ME);
 		end
-		
+
 		%adjust transfer parameter if necessary
 		subfunc.fh_set_transferparameter(out_ptr);
 		triggermode=subfunc.fh_get_triggermode(out_ptr);
@@ -303,7 +303,7 @@ else
 			wMetaDataMode=uint16(0);
 			wMetaDataSize=uint16(0);
 			wMetaDataVersion=uint16(0);
-			
+
 			[errorCode,~,wMetaDataMode,wMetaDataSize,wMetaDataVersion] = calllib('PCO_CAM_SDK', 'PCO_GetMetaDataMode',out_ptr,wMetaDataMode,wMetaDataSize,wMetaDataVersion);
 			pco_errdisp('PCO_GetMetaDataMode',errorCode);
 			if(errorCode)
@@ -314,22 +314,22 @@ else
 				metadatasize=wMetaDataSize;
 			end
 		end
-		
+
 		act_xsize=uint16(0);
 		act_ysize=uint16(0);
 		ccd_xsize=uint16(0);
 		ccd_ysize=uint16(0);
-		
+
 		%use PCO_GetSizes because this always returns accurate image size for next recording
 		[errorCode,~,act_xsize,act_ysize]  = calllib('PCO_CAM_SDK', 'PCO_GetSizes', out_ptr,act_xsize,act_ysize,ccd_xsize,ccd_ysize);
 		if(errorCode)
 			pco_errdisp('PCO_GetSizes',errorCode);
 		end
-		
+
 		flags=2; %IMAGEPARAMETERS_READ_WHILE_RECORDING;
 		errorCode = calllib('PCO_CAM_SDK', 'PCO_SetImageParameters', out_ptr,act_xsize,act_ysize,flags,[],0);
 		pco_errdisp('PCO_SetImageParameters',errorCode);
-		
+
 		lineadd=0;
 		if(metadatasize>0)
 			xs=uint32(fix((double(bitpix)+7)/8));
@@ -337,21 +337,21 @@ else
 			i=uint16(floor((metadatasize*2)/double(xs)));
 			lineadd=i+1;
 		end
-		
+
 		%allocate memory for display, 4 buffers are used
 		bufcount=4;
 		bufnum=zeros(4,1,'int16');
-		
+
 		imas=uint32(fix((double(bitpix)+7)/8));
 		imas= imas*uint32(act_xsize)* uint32(act_ysize);
 		imasize=imas;
-		
+
 		image_stack=zeros(act_xsize,(act_ysize+lineadd),bufcount,'uint16');
-		
+
 		%Allocate 4 SDK buffer and set address of buffers from image_stack
 		ev_ptr(bufcount) = libpointer('voidPtr');
 		im_ptr(bufcount) = libpointer('voidPtr');
-		
+
 		buflist=libstruct('PCO_Buflist');
 		names=fieldnames(buflist);
 		x=1:4:length(names);
@@ -360,12 +360,12 @@ else
 		statusdll=names(x);
 		x=4:4:length(names);
 		statusdrv=names(x);
-		
+
 		for n=1:bufcount
 			sBufNri=int16(-1);
 			im_ptr(n) = libpointer('uint16Ptr',image_stack(:,:,n));
 			ev_ptr(n) = libpointer('voidPtr');
-			
+
 			[errorCode,~,sBufNri]  = calllib('PCO_CAM_SDK','PCO_AllocateBuffer', out_ptr,sBufNri,imasize,im_ptr(n),ev_ptr(n));
 			if(errorCode~=PCO_NOERROR)
 				pco_errdisp('PCO_AllocateBuffer',errorCode);
@@ -378,11 +378,11 @@ else
 			e=bitor(buflist.(statusdll{n}),uint32(PCO_BUFFER_EVAUTORES),'uint32');
 			buflist.(statusdll{n})=e;
 		end
-		
+
 		ima=image_stack(:,1:act_ysize,1);
 		ima=ima';
 		pause(0.005);
-		
+
 		%this will remove all pending buffers in the queue and does reset grabber
 		errorCode = calllib('PCO_CAM_SDK', 'PCO_CancelImages', out_ptr);
 		pco_errdisp('PCO_CancelImages',errorCode);
@@ -392,7 +392,7 @@ else
 			subfunc.fh_lasterr(errorCode);
 			throw(ME);
 		end
-		
+
 		%setup loop
 		for n=1:bufcount
 			errorCode = calllib('PCO_CAM_SDK','PCO_AddBufferEx', out_ptr,0,0,bufnum(n),act_xsize,act_ysize,bitpix);
@@ -403,12 +403,12 @@ else
 				throw(ME);
 			end
 		end
-		
+
 		[errorCode,~,act_recstate] = calllib('PCO_CAM_SDK', 'PCO_GetRecordingState',glvar.out_ptr,act_recstate);
 		if(errorCode)
 			pco_errdisp('PCO_GetRecordingState',errorCode);
 		end
-		
+
 		if(act_recstate==1)
 			trigdone=int16(1);
 			trigcount=0;
@@ -422,7 +422,7 @@ else
 			end
 			pause(0.0001);
 			tic;
-			
+
 			%grab and display loop
 			ima_nr=0;
 			last_ok=0;
@@ -464,7 +464,7 @@ else
 						ima=get(im_ptr(next),'Value');
 						ima_nr=ima_nr+1;
 						multi=multi+1;
-						
+
 						if(metadatasize>0)
 							ima=ima(:,1:act_ysize);
 						end
@@ -538,34 +538,34 @@ else
 							else
 								delete(findobj('tag','sharpness_display_text'));
 							end
-							
-							
-								crosshair_enabled = getappdata(hgui,'crosshair_enabled');
-								if crosshair_enabled == 1 %cross-hair
-									%% cross-hair
-									locations=[0.15 0.5 0.85];
-									if numel(ima)<10000000
-										half_thickness=2;
-									else
-										half_thickness=4;
-									end
-									brightness_incr=10000;
-									ima_ed=ima;
-									old_max=max(ima(:));
-									for loca=locations
-										%vertical
-										ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)=ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)+brightness_incr;
-										%horizontal
-										ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)=ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)+brightness_incr;
-									end
-									ima_ed(ima_ed>old_max)=old_max;
-									set(image_handle_pco,'CData',ima_ed);
+
+
+							crosshair_enabled = getappdata(hgui,'crosshair_enabled');
+							if crosshair_enabled == 1 %cross-hair
+								%% cross-hair
+								locations=[0.15 0.5 0.85];
+								if numel(ima)<10000000
+									half_thickness=2;
 								else
-									set(image_handle_pco,'CData',ima);
+									half_thickness=4;
 								end
-								set(frame_nr_display,'String','');
+								brightness_incr=10000;
+								ima_ed=ima;
+								old_max=max(ima(:));
+								for loca=locations
+									%vertical
+									ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)=ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)+brightness_incr;
+									%horizontal
+									ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)=ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)+brightness_incr;
+								end
+								ima_ed(ima_ed>old_max)=old_max;
+								set(image_handle_pco,'CData',ima_ed);
+							else
+								set(image_handle_pco,'CData',ima);
+							end
+							set(frame_nr_display,'String','');
 						end
-						
+
 						%% HISTOGRAM
 						if getappdata(hgui,'hist_enabled')==1
 							if isvalid(image_handle_pco)
@@ -577,10 +577,10 @@ else
 									old_hist_y_limits =[0 35000];
 								else
 									if isvalid(hist_obj)
-									old_hist_y_limits=get(hist_obj.Parent,'YLim');
+										old_hist_y_limits=get(hist_obj.Parent,'YLim');
 									end
 								end
-								
+
 								if triggermode == 2
 									if toggle_image_state == 0
 										hist_obj=histogram(ima(1:2:act_ysize/2  ,  1:2:act_xsize),'Parent',hist_fig,'binlimits',[0 65535]);
@@ -591,7 +591,7 @@ else
 									%if exist('hist_obj','var') && isvalid(hist_obj) %so koennte man CPU sparen. muss aber limtis selber updaten...
 									%	hist_obj.Data=ima(1:2:end,1:2:end);
 									%else
-										hist_obj=histogram(ima(1:2:end,1:2:end),'Parent',hist_fig,'binlimits',[0 65535]);
+									hist_obj=histogram(ima(1:2:end,1:2:end),'Parent',hist_fig,'binlimits',[0 65535]);
 									%end
 								end
 							end
@@ -600,7 +600,7 @@ else
 								new_hist_y_limits =[0 35000];
 							end
 							new_hist_y_limits=get(hist_obj.Parent,'YLim');
-							
+
 							set(hist_obj.Parent,'YLim',(new_hist_y_limits*0.5 + old_hist_y_limits*0.5))
 						else
 							hist_fig=findobj('tag','hist_fig');
@@ -612,29 +612,28 @@ else
 						%% Autofocus
 						%% Lens control
 						%Sowieso machen: Nicht lineare schritte für die anzufahrenden fokuspositionen. Diese Liste vorher ausrechnen und dann nur index anspringen
-						
+
 						autofocus_enabled = getappdata(hgui,'autofocus_enabled');
-						
+
 						if autofocus_enabled == 1
 							delaycounter=delaycounter+1;
 						else
 							delaycounter=0;
 							delaycounter2=0;
 							delay_time_1=tic;
-
 						end
 						%immer mehrere Bilder abfragen nachdem fokus verstellt wurde.... nicht nur eins, sondern z.B. drei Davon nur das letzte per sharpness beurteilen
-						
+
 						delay_time= 0.5; %1 seconds delay between measurements %350000 / exposure_time;
 						if autofocus_enabled == 1
 							if delaycounter>10 %wait 10 images before starting autofocus. Needed so that servo can reach target position
 								focus_start = getappdata(hgui,'focus_servo_lower_limit');
 								focus_end = getappdata(hgui,'focus_servo_upper_limit');
 								amount_of_raw_steps=20;
-								fine_step_resolution_increase = 5;
+								fine_step_resolution_increase = 8;
 								focus_step_raw=round(abs(focus_end - focus_start)/amount_of_raw_steps);% in microseconds)
 								focus_step_fine=round(1/fine_step_resolution_increase*(abs(focus_end - focus_start)/amount_of_raw_steps));% in microseconds)
-								if ~exist('sharpness_focus_table','var') || ~exist('sharpness_focus_table','var') || isempty(sharpness_focus_table) || isempty(sharp_loop_cnt)
+								if ~exist('sharpness_focus_table','var') || isempty(sharpness_focus_table) || isempty(sharp_loop_cnt)
 									sharpness_focus_table=zeros(1,2);
 									sharp_loop_cnt=0;
 									focus=focus_start;
@@ -653,6 +652,7 @@ else
 											sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
 											focus=focus+focus_step_raw;
 											PIVlab_capture_lensctrl(focus,aperture,lighting)		%kann steuern und aktuelle position ausgeben
+											autofocus_notification(1)
 										else
 											%do nothing
 										end
@@ -672,34 +672,38 @@ else
 										if focus_end_fine > focus_end
 											focus_end_fine = focus_end;
 										end
-										focus=focus_end_fine;
+										%original focus=focus_end_fine;
+										focus=focus_start_fine;
 										PIVlab_capture_lensctrl(focus,aperture,lighting)
 										sharp_loop_cnt=0;
 										raw_data=[sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range')];
 										sharpness_focus_table=zeros(1,2);
 									end
 								end
-								
+
 								if raw_finished == 1
 									delaycounter2=delaycounter2+1;
 								else
 									delaycounter2=0;
 								end
-								
-								
+
+
 								if raw_finished == 1
 									delay_time= 0.35;
 									if delaycounter2>10
 										%repeat with finer steps
-										if focus > focus_start_fine % maxialer focus = endanschlag. Bis zu dem wert wird von null gefahren
+										%original if focus > focus_start_fine % maxialer focus = endanschlag. Bis zu dem wert wird von null gefahren
+										if focus < focus_end_fine % maxialer focus = endanschlag. Bis zu dem wert wird von null gefahren
 											if toc(delay_time_1)>=delay_time %only every second image is taken for analysis. This gives more time to the servo to reach position
 												delay_time_1=tic;
 												sharp_loop_cnt=sharp_loop_cnt+1;
 												[sharpness,~] = PIVlab_capture_sharpness_indicator (ima,[],[]);
 												sharpness_focus_table(sharp_loop_cnt,1)=focus;
 												sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
-												focus=focus-focus_step_fine;
+												%original focus=focus-focus_step_fine;
+												focus=focus+focus_step_fine;
 												PIVlab_capture_lensctrl(focus,aperture,lighting)		%kann steuern und aktuelle position ausgeben
+												autofocus_notification(1)
 											else
 												%do nothing
 											end
@@ -709,11 +713,17 @@ else
 											[r,~]=find(sharpness_focus_table == max(sharpness_focus_table(:,2)));
 											focus_peak=sharpness_focus_table(r(1),1);
 											disp(['Best fine focus: ' num2str(focus_peak)])
+											PIVlab_capture_lensctrl(focus_end_fine,aperture,lighting)%backlash compensation
+											pause(0.5)
+											PIVlab_capture_lensctrl(focus_start_fine,aperture,lighting) %backlash compensation
+											pause(0.5)
 											PIVlab_capture_lensctrl(focus_peak,aperture,lighting) %set to best focus
+
 											setappdata(hgui,'autofocus_enabled',0); %autofocus am ende ausschalten
+
 											lens_control_window = getappdata(0,'hlens');
 											focus_edit_field=getappdata(lens_control_window,'handle_to_focus_edit_field');
-											set(focus_edit_field,'String',num2str(focus_peak)); %update 
+											set(focus_edit_field,'String',num2str(focus_peak)); %update
 											%setappdata(hgui,'cancel_capture',1); %stop recording....?
 											figure;plot(raw_data(:,1),raw_data(:,2))
 											hold on;plot(sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range'));hold off
@@ -722,15 +732,17 @@ else
 											ylabel('Sharpness')
 											legend('Coarse search','Fine search')
 											grid on
+
 										end
 									end
 								end
 							end
 						else
+							autofocus_notification(0)
 							sharpness_focus_table=[];
 							sharp_loop_cnt=[];
 						end
-						
+
 						pause(0.0001);
 						%% Live preview
 						if triggermode == 2 && do_realtime==1%external trigger
@@ -775,7 +787,7 @@ else
 							int_area=performance_settings_int_area(performance_preset);
 							step=performance_settings_step(performance_preset);
 						end
-						
+
 					end
 					next=next+1;
 				end
@@ -788,25 +800,25 @@ else
 			if triggermode==0 %calibration
 				set(image_handle_pco,'CData',ima);
 			end
-			
+
 			%this will remove all pending buffers in the queue
 			errorCode = calllib('PCO_CAM_SDK', 'PCO_CancelImages', out_ptr);
 			pco_errdisp('PCO_CancelImages',errorCode);
-			
+
 			[errorCode,~,buflist] = calllib('PCO_CAM_SDK','PCO_WaitforBuffer', out_ptr,bufcount,buflist,500);
 			pco_errdisp('PCO_WaitforBuffer',errorCode);
 		end
-		
+
 		%end %% jump here when user only wants to measure framerate...
 		subfunc.fh_stop_camera(out_ptr);
-		
+
 		for n=1:bufcount
 			errorCode = calllib('PCO_CAM_SDK','PCO_FreeBuffer',out_ptr,bufnum(n));
 			if(errorCode)
 				pco_errdisp('PCO_FreeBuffer',errorCode);
 			end
 		end
-		
+
 	catch ME
 		disp(ME)
 		errorCode=subfunc.fh_lasterr();
@@ -840,7 +852,7 @@ else
 			disp('Could not start camera.')
 		end
 	end
-	
+
 	if(glvar.camera_open==1)
 		glvar.do_close=1;
 		glvar.do_libunload=1;
@@ -860,4 +872,31 @@ try
 	delete(hObject);
 catch
 	delete(gcf);
+end
+function autofocus_notification(running)
+auto_focus_active_hint=findobj('tag', 'auto_focus_active');
+if running == 1
+	
+	hgui=getappdata(0,'hgui');
+	PIVlab_axis = findobj(hgui,'Type','Axes');
+	%image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam');
+	postix=get(PIVlab_axis,'XLim');
+	postiy=get(PIVlab_axis,'YLim');
+	bg_col=get(auto_focus_active_hint,'BackgroundColor'); % Toggle background color while autofocus is active
+
+	if ~isempty(bg_col)
+		if  sum(bg_col)==0.75 %hint is currently displayed
+			bg_col = [0.05 0.05 0.05];
+		else
+			bg_col = [0.25 0.25 0.25];
+		end
+		set(auto_focus_active_hint,'BackgroundColor',bg_col);
+	else
+		bg_col= [0.25 0.25 0.25];
+		axes(PIVlab_axis);
+		text(postix(2)/2,postiy(2)/2,'Autofocus running, please wait...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',24, 'BackgroundColor', bg_col,'tag','auto_focus_active','margin',10,'Clipping','on');
+		
+	end
+else
+	delete(auto_focus_active_hint);
 end

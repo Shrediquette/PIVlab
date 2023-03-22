@@ -16,10 +16,15 @@ info = imaqhwinfo(hwinf.InstalledAdaptors{1});
 if strcmp(info.AdaptorName,'gentl')
     disp('gentl adaptor found.')
 else
-    disp('ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "gentl" to install it.')
+    disp('ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.')
+	errordlg('ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.','Error!','modal')
 end
 
-OPTOcam_name = info.DeviceInfo.DeviceName;
+try
+	OPTOcam_name = info.DeviceInfo.DeviceName;
+catch
+	errordlg('Error: Camera not found! Is it connected?','Error!','modal')
+end
 disp(['Found camera: ' OPTOcam_name])
 OPTOcam_supported_formats = info.DeviceInfo.SupportedFormats;
 OPTOcam_vid = videoinput(info.AdaptorName,info.DeviceInfo.DeviceID,'Mono12'); %calibration image in 12 bit always.
@@ -144,7 +149,6 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
         delaycounter=0;
         delaycounter2=0;
         delay_time_1=tic;
-
     end
     %immer mehrere Bilder abfragen nachdem fokus verstellt wurde.... nicht nur eins, sondern z.B. drei Davon nur das letzte per sharpness beurteilen
 
@@ -176,6 +180,7 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
                         sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
                         focus=focus+focus_step_raw;
                         PIVlab_capture_lensctrl(focus,aperture,lighting)		%kann steuern und aktuelle position ausgeben
+						autofocus_notification(1)
                     else
                         %do nothing
                     end
@@ -226,6 +231,7 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
                             %original focus=focus-focus_step_fine;
                             focus=focus+focus_step_fine;
                             PIVlab_capture_lensctrl(focus,aperture,lighting)		%kann steuern und aktuelle position ausgeben
+							autofocus_notification(1)
                         else
                             %do nothing
                         end
@@ -259,23 +265,51 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
                 end
             end
         end
-    else
+	else
+		autofocus_notification(0)
         sharpness_focus_table=[];
         sharp_loop_cnt=[];
     end
 
 
 
-    if img_amount == 1
-        if sum(ima(1:10,1,1)) ~=10 %check if the display was updated, if there is real camera data. I didnt find a more elegant way...
-            displayed_img_amount=displayed_img_amount+1;
-        end
-    end
+	if img_amount == 1
+		if sum(ima(1:10,1,1)) ~=10 %check if the display was updated, if there is real camera data. I didnt find a more elegant way...
+			displayed_img_amount=displayed_img_amount+1;
+		end
+	end
 
 
 end
 stoppreview(OPTOcam_vid)
 
+function autofocus_notification(running)
+auto_focus_active_hint=findobj('tag', 'auto_focus_active');
+if running == 1
+	
+	hgui=getappdata(0,'hgui');
+	PIVlab_axis = findobj(hgui,'Type','Axes');
+	%image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam');
+	postix=get(PIVlab_axis,'XLim');
+	postiy=get(PIVlab_axis,'YLim');
+	bg_col=get(auto_focus_active_hint,'BackgroundColor'); % Toggle background color while autofocus is active
+
+	if ~isempty(bg_col)
+		if  sum(bg_col)==0.75 %hint is currently displayed
+			bg_col = [0.05 0.05 0.05];
+		else
+			bg_col = [0.25 0.25 0.25];
+		end
+		set(auto_focus_active_hint,'BackgroundColor',bg_col);
+	else
+		bg_col= [0.25 0.25 0.25];
+		axes(PIVlab_axis);
+		text(postix(2)/2,postiy(2)/2,'Autofocus running, please wait...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',24, 'BackgroundColor', bg_col,'tag','auto_focus_active','margin',10,'Clipping','on');
+		
+	end
+else
+	delete(auto_focus_active_hint);
+end
 
 function HistWindow_CloseRequestFcn(hObject,~)
 hgui=getappdata(0,'hgui');
