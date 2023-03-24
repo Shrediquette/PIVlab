@@ -63,7 +63,7 @@ imshow(imread('hardware_Ad.jpg'));drawnow
 	end
 
 	function gotovideo(~,~)
-		web('https://www.youtube.com/watch?v=54lOx2s2uBU')
+		web('https://www.youtube.com/watch?v=8B5M31NWlJc')
 		pause(1)
 		close(fig_handle)
 	end
