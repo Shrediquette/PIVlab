@@ -11617,6 +11617,7 @@ if alreadyconnected
 		if isempty(firmware_version)
 			firmware_version='pre feb 22';
 		end
+		disp(['Firmware: ' convertStringsToChars(firmware_version)])
 	catch
 		disp('Error sending WhichFirmware')
 	end
