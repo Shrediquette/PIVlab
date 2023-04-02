@@ -740,7 +740,7 @@ handles.uipanel351 = uipanel(handles.multip03, 'Units','characters', 'Position',
 parentitem=get(handles.uipanel351, 'Position');
 item=[0 0 0 0];
 item=[0 item(2)+item(4) parentitem(3) 1];
-handles.bg_subtract = uicontrol(handles.uipanel351,'Style','checkbox', 'value',0, 'String','Subtract mean intensity','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bg_subtract','Callback',@bg_subtract_Callback, 'TooltipString','Automatic stretching of the image intensity histogram. Important for 16-bit images.');
+handles.bg_subtract = uicontrol(handles.uipanel351,'Style','checkbox', 'value',0, 'String','Subtract mean intensity','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bg_subtract','Callback',@bg_subtract_Callback, 'TooltipString','Calculates an average image out of all images, then subtracts that from every image.');
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
 handles.bg_view = uicontrol(handles.uipanel351,'Style','pushbutton','String','View background image','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @bg_view_Callback,'Tag','bg_view','TooltipString','Display the generated background image. Click again to toggle between background A and B.');
 
