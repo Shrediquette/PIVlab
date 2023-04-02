@@ -24,7 +24,7 @@ if isempty(fh)
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 	guidata(MainWindow,handles)
 	setappdata(0,'hgui',MainWindow);
-	version = '2.61';
+	version = '2.62';
 	put('PIVver', version);
 	v=ver('MATLAB');
 	%splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','on','handlevisibility','off');movegui(splashscreen,'center');drawnow;
