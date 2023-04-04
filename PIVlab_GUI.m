@@ -17,6 +17,16 @@ function PIVlab_GUI(desired_num_cores,batch_session_file)
 %% Make figure
 fh = findobj('tag', 'hgui');
 if isempty(fh)
+
+	%{
+	splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','Loading...','Toolbar','none','Units','pixels','Position',[10 10 480 360],'tag','splashscreen','visible','off','handlevisibility','on');
+	splash_ax=axes(splashscreen,'units','pixels');
+	imshow(imread('pivlab_logo1.jpg'),"Parent",splash_ax,'border','tight');
+	movegui(splashscreen,'center');
+	set(splashscreen,'visible','on')
+	drawnow
+	text(splash_ax,10,10,'Loading, please wait...')
+	%}
 	MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0.05 0.1 0.9 0.8],'ResizeFcn', @MainWindow_ResizeFcn,'CloseRequestFcn', @MainWindow_CloseRequestFcn,'tag','hgui','visible','off','KeyPressFcn', @key_press);
 	set (MainWindow,'Units','Characters');
 	%clc
@@ -27,7 +37,8 @@ if isempty(fh)
 	version = '2.62';
 	put('PIVver', version);
 	v=ver('MATLAB');
-	%splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','on','handlevisibility','off');movegui(splashscreen,'center');drawnow;
+	
+	
 	disp(['-> Starting PIVlab ' version ' ...'])
 	disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
 
@@ -247,7 +258,12 @@ if isempty(fh)
 	SetFullScreen
 
 	displogo(1);drawnow;
+	try
+	close(splashscreen)
+	catch
+	end
 	set(MainWindow, 'Visible','on');
+
 	%% Batch session  processing in GUI
 	if ~exist('batch_session_file','var') %no input argument --> no GUI batch processing
 		put('batchModeActive',0)
