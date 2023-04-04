@@ -19,7 +19,8 @@ info = imaqhwinfo(hwinf.InstalledAdaptors{1});
 if strcmp(info.AdaptorName,'gentl')
 	disp('gentl adaptor found.')
 else
-	disp('ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "gentl" to install it.')
+	disp('ERROR: gentl adaptor not found. Please install the GenICam / GenTL support package from here:')
+	disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
 end
 
 OPTOcam_name = info.DeviceInfo.DeviceName;
@@ -98,6 +99,7 @@ OPTOcam_frames_to_capture = nr_of_images*2;
 OPTOcam_vid.FramesPerTrigger = OPTOcam_frames_to_capture;
 if ~isinf(nr_of_images) %only start capturing if save box is ticked.
 	flushdata(OPTOcam_vid);
+	OPTOcam_vid.ErrorFcn = @CustomIMAQErrorFcn;
 	start(OPTOcam_vid);
 end
 preview(OPTOcam_vid,image_handle_OPTOcam);
@@ -109,3 +111,51 @@ elseif bitmode==12
 	clim([0 2^12]); %seems to be a workaround to force preview to show full data range...
 end
 drawnow;
+
+function CustomIMAQErrorFcn(obj, event, varargin)
+stop(obj)
+hgui=getappdata(0,'hgui');
+setappdata(hgui,'cancel_capture',1)
+
+% Define error identifiers.
+errID = 'imaq:imaqcallback:invalidSyntax';
+errID2 = 'imaq:imaqcallback:zeroInputs';
+
+switch nargin
+	case 0
+		error(message(errID2));
+	case 1
+		error(message(errID));
+	case 2
+		if ~isa(obj, 'imaqdevice') || ~isa(event, 'struct')
+			error(message(errID));
+		end
+		if ~(isfield(event, 'Type') && isfield(event, 'Data'))
+			error(message(errID));
+		end
+end
+
+% Determine the type of event.
+EventType = event.Type;
+
+% Determine the time of the error event.
+EventData = event.Data;
+EventDataTime = EventData.AbsTime;
+
+% Create a display indicating the type of event, the time of the event and
+% the name of the object.
+name = get(obj, 'Name');
+fprintf('%s event occurred at %s for video input object: %s.\n', ...
+	EventType, datestr(datetime(EventDataTime),13), name);
+
+% Display the error string.
+if strcmpi(EventType, 'error')
+	fprintf('%s\n', EventData.Message);
+end
+
+
+if strcmpi(event.Data.MessageID,'imaq:imaqmex:outofmemory')
+	msgbox('Out of memory. RAM is full, most likely, you need to lower the amount of frames to capture to fix this error.','modal');
+else
+	msgbox('Image capture timeout. Most likely, memory is full and you need to lower the amount of frames to capture to fix this error. It is also possible that the synchronization cable is not plugged in correctly.','modal');
+end
