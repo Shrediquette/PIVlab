@@ -9,65 +9,70 @@ OPTOcam_frames_to_capture = nr_of_images*2;
 %% capture data
 
 while OPTOcam_vid.FramesAcquired < (OPTOcam_frames_to_capture) &&  getappdata(hgui,'cancel_capture') ~=1
-	ima = image_handle_OPTOcam.CData;
-	set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTOcam_vid.FramesAcquired/2))]);
-	drawnow limitrate
-	%% sharpness indicator
-	sharpness_enabled = getappdata(hgui,'sharpness_enabled');
-	if sharpness_enabled == 1 % sharpness indicator
-		textx=1240;
-		texty=950;
-		[~,~] = PIVlab_capture_sharpness_indicator (ima,textx,texty);
-	else
-		delete(findobj('tag','sharpness_display_text'));
-	end
-	crosshair_enabled = getappdata(hgui,'crosshair_enabled');
-	if crosshair_enabled == 1 %cross-hair
-		%% cross-hair
-		locations=[0.15 0.5 0.85];
-		half_thickness=1;
-		brightness_incr=101;
-		ima_ed=ima;
-		old_max=max(ima(:));
-		for loca=locations
-			%vertical
-			ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)=ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)+brightness_incr;
-			%horizontal
-			ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)=ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)+brightness_incr;
-		end
-		ima_ed(ima_ed>old_max)=old_max;
-		set(image_handle_OPTOcam,'CData',ima_ed);
-	end
-	%% HISTOGRAM
-	if getappdata(hgui,'hist_enabled')==1
-		if isvalid(image_handle_OPTOcam)
-			hist_fig=findobj('tag','hist_fig');
-			if isempty(hist_fig)
-				hist_fig=figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Live histogram','Toolbar','none','tag','hist_fig','CloseRequestFcn', @HistWindow_CloseRequestFcn);
-			end
-			if ~exist ('old_hist_y_limits','var')
-				old_hist_y_limits =[0 35000];
-			else
-				if isvalid(hist_obj)
-					old_hist_y_limits=get(hist_obj.Parent,'YLim');
-				end
-			end
-			hist_obj=histogram(ima(1:2:end,1:2:end),'Parent',hist_fig,'binlimits',[0 OPTOcam_climits]);
-		end
-		%lowpass hist y limits for better visibility
-		if ~exist ('new_hist_y_limits','var')
-			new_hist_y_limits =[0 35000];
-		end
-		new_hist_y_limits=get(hist_obj.Parent,'YLim');
-		set(hist_obj.Parent,'YLim',(new_hist_y_limits*0.5 + old_hist_y_limits*0.5))
-	else
-		hist_fig=findobj('tag','hist_fig');
-		if ~isempty(hist_fig)
-			close(hist_fig)
-		end
-	end
-	drawnow limitrate;
-	 %% Autofocus
+    ima = image_handle_OPTOcam.CData;
+    if ~isinf(OPTOcam_frames_to_capture)
+        set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTOcam_vid.FramesAcquired/2))]);
+    else
+        set(frame_nr_display,'String','PIV preview');
+    end
+
+    drawnow limitrate
+    %% sharpness indicator
+    sharpness_enabled = getappdata(hgui,'sharpness_enabled');
+    if sharpness_enabled == 1 % sharpness indicator
+        textx=1240;
+        texty=950;
+        [~,~] = PIVlab_capture_sharpness_indicator (ima,textx,texty);
+    else
+        delete(findobj('tag','sharpness_display_text'));
+    end
+    crosshair_enabled = getappdata(hgui,'crosshair_enabled');
+    if crosshair_enabled == 1 %cross-hair
+        %% cross-hair
+        locations=[0.15 0.5 0.85];
+        half_thickness=1;
+        brightness_incr=101;
+        ima_ed=ima;
+        old_max=max(ima(:));
+        for loca=locations
+            %vertical
+            ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)=ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)+brightness_incr;
+            %horizontal
+            ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)=ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)+brightness_incr;
+        end
+        ima_ed(ima_ed>old_max)=old_max;
+        set(image_handle_OPTOcam,'CData',ima_ed);
+    end
+    %% HISTOGRAM
+    if getappdata(hgui,'hist_enabled')==1
+        if isvalid(image_handle_OPTOcam)
+            hist_fig=findobj('tag','hist_fig');
+            if isempty(hist_fig)
+                hist_fig=figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Live histogram','Toolbar','none','tag','hist_fig','CloseRequestFcn', @HistWindow_CloseRequestFcn);
+            end
+            if ~exist ('old_hist_y_limits','var')
+                old_hist_y_limits =[0 35000];
+            else
+                if isvalid(hist_obj)
+                    old_hist_y_limits=get(hist_obj.Parent,'YLim');
+                end
+            end
+            hist_obj=histogram(ima(1:2:end,1:2:end),'Parent',hist_fig,'binlimits',[0 OPTOcam_climits]);
+        end
+        %lowpass hist y limits for better visibility
+        if ~exist ('new_hist_y_limits','var')
+            new_hist_y_limits =[0 35000];
+        end
+        new_hist_y_limits=get(hist_obj.Parent,'YLim');
+        set(hist_obj.Parent,'YLim',(new_hist_y_limits*0.5 + old_hist_y_limits*0.5))
+    else
+        hist_fig=findobj('tag','hist_fig');
+        if ~isempty(hist_fig)
+            close(hist_fig)
+        end
+    end
+    drawnow limitrate;
+    %% Autofocus
     %% Lens control
     %Sowieso machen: Nicht lineare schritte für die anzufahrenden fokuspositionen. Diese Liste vorher ausrechnen und dann nur index anspringen
 
@@ -110,7 +115,7 @@ while OPTOcam_vid.FramesAcquired < (OPTOcam_frames_to_capture) &&  getappdata(hg
                         sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
                         focus=focus+focus_step_raw;
                         PIVlab_capture_lensctrl(focus,aperture,lighting)		%kann steuern und aktuelle position ausgeben
-						autofocus_notification(1)
+                        autofocus_notification(1)
                     else
                         %do nothing
                     end
@@ -161,7 +166,7 @@ while OPTOcam_vid.FramesAcquired < (OPTOcam_frames_to_capture) &&  getappdata(hg
                             %original focus=focus-focus_step_fine;
                             focus=focus+focus_step_fine;
                             PIVlab_capture_lensctrl(focus,aperture,lighting)		%kann steuern und aktuelle position ausgeben
-							autofocus_notification(1)
+                            autofocus_notification(1)
                         else
                             %do nothing
                         end
@@ -195,49 +200,55 @@ while OPTOcam_vid.FramesAcquired < (OPTOcam_frames_to_capture) &&  getappdata(hg
                 end
             end
         end
-	else
-		autofocus_notification(0)
+    else
+        autofocus_notification(0)
         sharpness_focus_table=[];
         sharp_loop_cnt=[];
     end
 end
 
+
 stoppreview(OPTOcam_vid)
 stop(OPTOcam_vid);
-set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTOcam_vid.FramesAcquired/2))]);
+
+if ~isinf(OPTOcam_frames_to_capture)
+    set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTOcam_vid.FramesAcquired/2))]);
+else
+    set(frame_nr_display,'String','PIV preview stopped.');
+end
 drawnow;
+
 function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');
 if running == 1
-	
-	hgui=getappdata(0,'hgui');
-	PIVlab_axis = findobj(hgui,'Type','Axes');
-	%image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam');
-	postix=get(PIVlab_axis,'XLim');
-	postiy=get(PIVlab_axis,'YLim');
-	bg_col=get(auto_focus_active_hint,'BackgroundColor'); % Toggle background color while autofocus is active
+    hgui=getappdata(0,'hgui');
+    PIVlab_axis = findobj(hgui,'Type','Axes');
+    %image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam');
+    postix=get(PIVlab_axis,'XLim');
+    postiy=get(PIVlab_axis,'YLim');
+    bg_col=get(auto_focus_active_hint,'BackgroundColor'); % Toggle background color while autofocus is active
 
-	if ~isempty(bg_col)
-		if  sum(bg_col)==0.75 %hint is currently displayed
-			bg_col = [0.05 0.05 0.05];
-		else
-			bg_col = [0.25 0.25 0.25];
-		end
-		set(auto_focus_active_hint,'BackgroundColor',bg_col);
-	else
-		bg_col= [0.25 0.25 0.25];
-		axes(PIVlab_axis);
-		text(postix(2)/2,postiy(2)/2,'Autofocus running, please wait...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',24, 'BackgroundColor', bg_col,'tag','auto_focus_active','margin',10,'Clipping','on');
-		
-	end
+    if ~isempty(bg_col)
+        if  sum(bg_col)==0.75 %hint is currently displayed
+            bg_col = [0.05 0.05 0.05];
+        else
+            bg_col = [0.25 0.25 0.25];
+        end
+        set(auto_focus_active_hint,'BackgroundColor',bg_col);
+    else
+        bg_col= [0.25 0.25 0.25];
+        axes(PIVlab_axis);
+        text(postix(2)/2,postiy(2)/2,'Autofocus running, please wait...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',24, 'BackgroundColor', bg_col,'tag','auto_focus_active','margin',10,'Clipping','on');
+
+    end
 else
-	delete(auto_focus_active_hint);
+    delete(auto_focus_active_hint);
 end
 function HistWindow_CloseRequestFcn(hObject,~)
 hgui=getappdata(0,'hgui');
 setappdata(hgui,'hist_enabled',0);
 try
-	delete(hObject);
+    delete(hObject);
 catch
-	delete(gcf);
+    delete(gcf);
 end
