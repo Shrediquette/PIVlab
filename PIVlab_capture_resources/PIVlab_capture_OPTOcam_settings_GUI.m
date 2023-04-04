@@ -8,6 +8,10 @@ if isempty(fh)
 	catch
 		mainpos=[0    2.8571  240.0000   50.9524];
 	end
+    if isempty(mainpos)
+        mainpos=[0    2.8571  240.0000   50.9524];
+    end
+
 	OPTOcam_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','OPTOcam settings','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4+4 35 11+1.5],'tag','OPTOcam_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
 	set (OPTOcam_control_window,'Units','Characters');
 
@@ -39,6 +43,22 @@ if isempty(fh)
 
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/2 1];
 	handles.gain = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'0','10','20','30'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','gain');
+
+	try
+		OPTOcam_videoinput = imaqfind('Type', 'videoinput');
+		OPTOcam_videoinput=OPTOcam_videoinput{1};
+		OPTOcam_videoinput=OPTOcam_videoinput.Source;
+		DeviceTemperature=num2str(round(OPTOcam_videoinput.DeviceTemperature));
+	catch
+		DeviceTemperature = 'N/A';
+	end
+	if isempty(DeviceTemperature)
+		DeviceTemperature='N/A';
+	end
+	cam_temperature_string=['Camera temperature: ' DeviceTemperature '°C'];
+
+	item=[0 item(2)+item(4)+margin parentitem(3) 1];
+	handles.temp_txt = uicontrol(handles.mainpanel,'Style','text','String',cam_temperature_string,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 	item=[parentitem(3)/2 item(2)+item(4)+margin parentitem(3)/2 2];
 	handles.apply_btn = uicontrol(handles.mainpanel,'Style','pushbutton','String','Apply','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@Apply_settings,'tag','apply_btn');
