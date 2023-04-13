@@ -5,7 +5,7 @@ addpath('C:\Users\trash\Documents\MATLAB\PIVlab')
 
 %% Settings
 image_sizes=[600 1200 2500];
-cores_to_use=[1 3  5 7 9];
+cores_to_use=[1 3  5 7 8];
 nr_of_image_pairs=50;
 
 %% 1: generate piv images with different sizes
