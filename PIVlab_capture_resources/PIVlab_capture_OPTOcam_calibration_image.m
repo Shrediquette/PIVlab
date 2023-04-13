@@ -3,8 +3,10 @@ OutputError=0;
 hgui=getappdata(0,'hgui');
 %% Prepare camera
 try
-    delete(imaqfind); %clears all previous videoinputs
-    hwinf = imaqhwinfo;
+	delete(imaqfind); %clears all previous videoinputs
+	warning off
+	hwinf = imaqhwinfo;
+	warning on
     %imaqreset
 catch
     errordlg('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','Error!','modal')
