@@ -69,11 +69,29 @@ for multipass = 1:passes
 			utable_orig=utable;
 			vtable_orig=vtable;
 			[utable,vtable] = PIVlab_postproc (utable,vtable,[],[], [], 1,4, 1,1.5);
-			%find typevector...
-			%maskedpoints=numel(find((typevector)==0));
-			%amountnans=numel(find(isnan(utable)==1))-maskedpoints;
-			%discarded=amountnans/(size(utable,1)*size(utable,2))*100;
-			%disp(['Discarded: ' num2str(amountnans) ' vectors = ' num2str(discarded) ' %'])
+			
+			maskedpoints=numel(find((typevector)==0));
+			amountnans=numel(find(isnan(utable)))-maskedpoints;
+			discarded=amountnans/(size(utable,1)*size(utable,2))*100;
+			if multipass==2 %only display warning after first pass, because later passes are just the interpolation of the interpolation which isn't very informative
+				if discarded > 33 && discarded < 75
+					disp(['WARNING: Problematic image data, interpass-validation discarded ' num2str(round(discarded)) '% of the vectors in pass nr. ' num2str(multipass) '!'])
+					beep on
+					beep
+				end
+				if discarded >= 75 && discarded < 95
+					disp(['WARNING: Very bad image data, interpass-validation discarded ' num2str(round(discarded)) '% of the vectors in pass nr. ' num2str(multipass) '!'])
+					beep on
+					beep
+					commandwindow
+				end
+				if discarded >= 95
+					disp(['Error: Catastrophic image data, interpass-validation discarded ' num2str(round(discarded)) '% of the vectors in pass nr. ' num2str(multipass) '!'])
+					beep on
+					beep
+					commandwindow
+				end
+			end
 
 			%replace nans
 			utable=inpaint_nans(utable,4);
