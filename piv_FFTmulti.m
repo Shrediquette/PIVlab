@@ -74,36 +74,44 @@ for multipass = 1:passes
 			amountnans=numel(find(isnan(utable)))-maskedpoints;
 			discarded=amountnans/(size(utable,1)*size(utable,2))*100;
 			if multipass==2 %only display warning after first pass, because later passes are just the interpolation of the interpolation which isn't very informative
+				display_warning_msg=[];
+				serious_issue=0;
 				if discarded > 33 && discarded < 75
-					disp(['WARNING: Problematic image data, interpass-validation discarded ' num2str(round(discarded)) '% of the vectors in pass nr. ' num2str(multipass) '!'])
-					beep on
-					beep
+					display_warning_msg='Problematic';
 				end
 				if discarded >= 75 && discarded < 95
-					disp(['WARNING: Very bad image data, interpass-validation discarded ' num2str(round(discarded)) '% of the vectors in pass nr. ' num2str(multipass) '!'])
-					beep on
-					beep
-					commandwindow
+					display_warning_msg='Very bad';
+					serious_issue=1;
 				end
 				if discarded >= 95
-					disp(['Error: Catastrophic image data, interpass-validation discarded ' num2str(round(discarded)) '% of the vectors in pass nr. ' num2str(multipass) '!'])
-					beep on
-					beep
-					commandwindow
+					display_warning_msg='Catastrophic';
+					serious_issue=1;
+				end
+				if ~isempty (display_warning_msg)
+					disp(['WARNING: ' display_warning_msg ' image data, interpass-validation discarded ' num2str(round(discarded)) '% of the vectors in pass nr. ' num2str(multipass) '!'])
+					disp(['Try increasing the Pass 1 interrogation area size to ' num2str(interrogationarea*2) ' pixels.'])
+					if serious_issue
+						beep on
+						beep
+						commandwindow
+					end
 				end
 			end
 
 			%replace nans
-			utable=inpaint_nans(utable,4);
-			vtable=inpaint_nans(vtable,4);
-
-			%smooth predictor
-			if multipass < passes
-				utable = smoothn(utable,0.9); %stronger smoothing for first passes
-				vtable = smoothn(vtable,0.9);
-			else
-				utable = smoothn(utable); %weaker smoothing for last pass(nb: BEFORE the image deformation. So the output is not smoothed!)
-				vtable = smoothn(vtable);
+			try
+				utable=inpaint_nans(utable,4);
+				vtable=inpaint_nans(vtable,4);
+				%smooth predictor
+				if multipass < passes
+					utable = smoothn(utable,0.9); %stronger smoothing for first passes
+					vtable = smoothn(vtable,0.9);
+				else
+					utable = smoothn(utable); %weaker smoothing for last pass(nb: BEFORE the image deformation. So the output is not smoothed!)
+					vtable = smoothn(vtable);
+				end
+			catch
+				disp('Error: Could not validate vector data, too few valid vectors.')
 			end
 		end
 
