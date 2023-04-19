@@ -29,7 +29,8 @@ if isempty(fh)
 		selected_lens_config_nr = 2; %set default to zeiss Dimension
 	end
 	put('selected_lens_config',selected_lens_config_nr) 
-	save ('PIVlab_capture_resources\PIVlab_capture_lensconfig.mat','lens_configurations','selected_lens_config_nr');
+	[tempfilepath,~,~] = fileparts(mfilename('fullpath'));
+	save (fullfile (tempfilepath,'PIVlab_capture_lensconfig.mat'),'lens_configurations','selected_lens_config_nr');
 	% New lens configurations can be added to the table by modifying the variable 'lens_configurations' in the file 'PIVlab_capture_lensconfig.mat :
 	% Example: lens_configurations=addvars(lens_configurations,[500;2500;500;2500],'NewVariableNames','Generic lens')
 	handles.configu = uicontrol(lens_control_window,'Style','popupmenu', 'String',lens_configurations.Properties.VariableNames,'Value',retr('selected_lens_config'),'Units','characters', 'Fontunits','points','Position',[1 parentitem(4)-1.5 parentitem(3)/3*2 1.5],'Tag','configu','TooltipString','Lens configuration. Sets the limits for the servo motors.','Callback',@configu_Callback);
@@ -212,7 +213,9 @@ put('Roll_Offset',Roll_Offset)
 
 put('selected_lens_config',inpt.Value)
 selected_lens_config_nr=inpt.Value;
-save ('PIVlab_capture_resources\PIVlab_capture_lensconfig.mat','lens_configurations','selected_lens_config_nr');
+
+[tempfilepath,~,~] = fileparts(mfilename('fullpath'));
+save (fullfile (tempfilepath,'PIVlab_capture_lensconfig.mat'),'lens_configurations','selected_lens_config_nr');
 
 handles=gethand;
 focus=retr('focus');
