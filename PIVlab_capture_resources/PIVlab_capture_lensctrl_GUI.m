@@ -4,23 +4,24 @@ if isempty(fh)
 	hgui=getappdata(0,'hgui');
 	mainpos=get(hgui,'Position');
 	[focus,aperture,lighting]=get_lens_status;
-	lens_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Lens control','Toolbar','none','Units','characters','Position',[mainpos(1)+mainpos(3)-35 mainpos(2) 35 15+1.5+4],'tag','lens_control_window','visible','on','KeyPressFcn', @key_press,'resize','off','CloseRequestFcn',@CloseRequestFcn);
+	lens_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Lens control','Toolbar','none','Units','characters','Position',[mainpos(1)+mainpos(3)-35 mainpos(2) 35 15+1.5+4+5.5],'tag','lens_control_window','visible','on','KeyPressFcn', @key_press,'resize','off','CloseRequestFcn',@CloseRequestFcn);
 	set (lens_control_window,'Units','Characters');
-	
+
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 	guidata(lens_control_window,handles)
 	setappdata(0,'hlens',lens_control_window);
-	
+
 	parentitem = get(lens_control_window, 'Position');
-	
+
 	margin=1.5;
-	
+
 	panelheight=5;
 	handles.aperturepanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight-1.5 parentitem(3)-2 panelheight],'title','Aperture control','fontweight','bold','tag','aperturepanel');
 	handles.focuspanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*2-1.5 parentitem(3)-2 panelheight],'title','Focus control','fontweight','bold','tag','focuspanel');
 	handles.lightpanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5 parentitem(3)-2 panelheight],'title','Light control','fontweight','bold','tag','lightpanel');
 	handles.anglepanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5-4 parentitem(3)-2 4],'title','Camera attitude','fontweight','bold','tag','anglepanel');
-	
+	handles.settingspanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5-9 parentitem(3)-2 5],'title','Settings','fontweight','bold','tag','settingspanel');
+
 	%% Load last selected setting & setup Configurations
 	warning off
 	load ('PIVlab_capture_resources\PIVlab_capture_lensconfig.mat','lens_configurations','selected_lens_config_nr');
@@ -28,7 +29,7 @@ if isempty(fh)
 	if ~exist('selected_lens_config_nr','var')
 		selected_lens_config_nr = 2; %set default to zeiss Dimension
 	end
-	put('selected_lens_config',selected_lens_config_nr) 
+	put('selected_lens_config',selected_lens_config_nr)
 	[tempfilepath,~,~] = fileparts(mfilename('fullpath'));
 	save (fullfile (tempfilepath,'PIVlab_capture_lensconfig.mat'),'lens_configurations','selected_lens_config_nr');
 	% New lens configurations can be added to the table by modifying the variable 'lens_configurations' in the file 'PIVlab_capture_lensconfig.mat :
@@ -49,62 +50,74 @@ if isempty(fh)
 	parentitem=get(handles.aperturepanel, 'Position');
 	item=[0 0 0 0];
 	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2*1 1.5];
-	handles.aperture_open = uicontrol(handles.aperturepanel,'Style','pushbutton','String','Iris open','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@aperture_set,'open'} ,'TooltipString','Load image data');
-	
+	handles.aperture_open = uicontrol(handles.aperturepanel,'Style','pushbutton','String','Iris open','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@aperture_set,'open'} ,'TooltipString','Open aperture');
+
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/2*1 1.5];
-	handles.aperture_close = uicontrol(handles.aperturepanel,'Style','pushbutton','String','Iris close','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@aperture_set,'close'} ,'TooltipString','Load image data');
-	
+	handles.aperture_close = uicontrol(handles.aperturepanel,'Style','pushbutton','String','Iris close','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@aperture_set,'close'} ,'TooltipString','Close aperture');
+
 	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
 	handles.aperture_label = uicontrol(handles.aperturepanel,'Style','text','String','Iris [us]','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','right');
-	
+
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/3 1];
 	handles.aperture_edit = uicontrol(handles.aperturepanel,'Style','edit','String',num2str(aperture),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@aperture_edit_Callback,'tag','aperture_edit');
-	
+
 	%% FOCUS
 	parentitem=get(handles.focuspanel, 'Position');
 	item=[0 0 0 0];
 	item=[0 item(2)+item(4) parentitem(3)/3 1.5];
-	handles.focus_close = uicontrol(handles.focuspanel,'Style','pushbutton','String','Near','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@focus_set,'near'} ,'TooltipString','Load image data');
-	
+	handles.focus_close = uicontrol(handles.focuspanel,'Style','pushbutton','String','Near','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@focus_set,'near'} ,'TooltipString','Focus near');
+
 	item=[parentitem(3)/3*1 item(2) parentitem(3)/3 1.5];
-	handles.focus_auto = uicontrol(handles.focuspanel,'Style','pushbutton','String','Auto','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@focus_set,'auto'} ,'TooltipString','Load image data');
-	
+	handles.focus_auto = uicontrol(handles.focuspanel,'Style','pushbutton','String','Auto','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@focus_set,'auto'} ,'TooltipString','Auto focus');
+
 	item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
-	handles.focus_far = uicontrol(handles.focuspanel,'Style','pushbutton','String','Far','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@focus_set,'far'} ,'TooltipString','Load image data');
-	
+	handles.focus_far = uicontrol(handles.focuspanel,'Style','pushbutton','String','Far','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@focus_set,'far'} ,'TooltipString','Focus far');
+
 	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
 	handles.focus_label = uicontrol(handles.focuspanel,'Style','text','String','Focus [us]','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','right');
-	
+
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/3 1];
 	handles.focus_edit = uicontrol(handles.focuspanel,'Style','edit','String',num2str(focus),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@focus_edit_Callback,'tag','focus_edit');
 	setappdata(lens_control_window,'handle_to_focus_edit_field',handles.focus_edit); %needed so other files can edit the contents.
-	
+
 	%% LIGHT
 	parentitem=get(handles.lightpanel, 'Position');
 	item=[0 0 0 0];
 	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2*1 1.5];
 	handles.light_on = uicontrol(handles.lightpanel,'Style','pushbutton','String','Light on','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@light_switch,'on'} ,'TooltipString','Load image data');
-	
+
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/2*1 1.5];
 	handles.light_off = uicontrol(handles.lightpanel,'Style','pushbutton','String','Light off','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@light_switch,'off'},'TooltipString','Load image data');
-	
+
 	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
 	handles.light_label = uicontrol(handles.lightpanel,'Style','text','String','Light status','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','right');
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/3 1];
 	handles.light_edit = uicontrol(handles.lightpanel,'Style','edit','String',num2str(lighting),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@focus_edit_Callback,'tag','light_edit','enable','off');
-	
+
 	configu_Callback(handles.configu,[]) %execute callback and set servo limits
-	
+
 	%% Angle feedback
 	parentitem=get(handles.anglepanel, 'Position');
 	item=[0 0 parentitem(3) 1];
 	handles.angle_measure = uicontrol(handles.anglepanel,'Style','checkbox','String','Measure angle','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','left','Callback',@angle_measure_Callback,'tag','angle_measure');
-	
+
 	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/3 1.5];
 	handles.pitch = uicontrol(handles.anglepanel,'Style','text','String','Pitch: 0','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','left','tag','pitch');
-	
+
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/3 1.5];
 	handles.roll = uicontrol(handles.anglepanel,'Style','text','String','Roll: 0','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','left','tag','roll');
+
+	%% Settings
+	parentitem=get(handles.settingspanel, 'Position');
+	item=[0 0 0 0];
+	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2*1 1.5];
+	handles.calibrate = uicontrol(handles.settingspanel,'Style','pushbutton','String','Calibrate level','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @calibrate_level_Callback ,'TooltipString','Calibrate level sensor','tag','calibrate');
+	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/3*2 1];
+	handles.step_label = uicontrol(handles.settingspanel,'Style','text','String','Focus / aperture step','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','right');
+
+	item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
+	handles.step_edit = uicontrol(handles.settingspanel,'Style','edit','String',num2str(100),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','step_edit');
+
 	limit_displayed_features
 	find_devices
 
@@ -118,11 +131,13 @@ all_features_visible=retr('all_features_visible');
 aperturepanel=findobj('Tag','aperturepanel');
 lightpanel=findobj('Tag','lightpanel');
 anglepanel=findobj('Tag','anglepanel');
+calibrate_button=findobj('Tag','calibrate');
 
 
 set(aperturepanel,'Visible',all_features_visible)
 set(lightpanel,'Visible',all_features_visible)
 set(anglepanel,'Visible',all_features_visible)
+set(calibrate_button,'Visible',all_features_visible)
 
 
 function find_devices
@@ -161,8 +176,11 @@ if inpt.Value == 1 %on
 	start(t)
 	setappdata(0,'handle_to_lens_timer_checkbox',inpt);
 else
-	stop(timerfind)
-	delete(timerfind)
+	timers_avail=timerfind;
+	if ~isempty(timers_avail)
+		stop(timers_avail)
+		delete(timers_avail)
+	end
 end
 
 function lens_timer_tick_fcn(~,~)
@@ -247,8 +265,15 @@ limit_displayed_features
 
 
 function focus_set (~,~,inpt)
+handles=gethand;
+try
+	focus_step=str2double(get(handles.step_edit,'String'));
+catch
+	focus_step=100;
+	set(handles.step_edit,'String','100');
+end
 
-focus_step=100;
+
 [focus,aperture,lighting]=get_lens_status;
 if strmatch(inpt,'auto')
 	put('sharpness_enabled',0);
@@ -308,7 +333,14 @@ end
 
 function aperture_set (~,~,inpt)
 [focus,aperture,lighting]=get_lens_status;
-aperture_step=100;
+handles=gethand;
+try
+	aperture_step=str2double(get(handles.step_edit,'String'));
+catch
+	aperture_step=100;
+	set(handles.step_edit,'String','100');
+end
+
 if strmatch(inpt,'open')
 	if aperture>=retr('aperture_servo_lower_limit')+aperture_step
 		aperture=aperture-aperture_step;
@@ -398,5 +430,80 @@ try
 catch
 	delete(gcf);
 end
-put('autofocus_enabled',0);
+try
+	put('autofocus_enabled',0);
+catch
+end
 
+function calibrate_level_Callback(caller,~)
+do_calib=0;
+answer = questdlg({'Please level the camera and press "Start".' 'This only needs to be done once after the installation of PIVlab.'}, 'Level calibration', 'Start','Cancel','Start');
+switch answer
+	case 'Start'
+		do_calib=1;
+	case 'Cancel'
+		do_calib=0;
+end
+if do_calib==1
+	hgui = getappdata(0,'hgui');
+	serpo=getappdata(hgui,'serpo');
+	try
+		serpo.Port; %is there no other way to determine if serialport is working...?
+		alreadyconnected=1;
+	catch
+		alreadyconnected=0;
+		delete(serpo)
+	end
+	if alreadyconnected==1
+		handles = gethand;
+		set(handles.angle_measure,'Value',0);
+		temp_set.Value=0;
+		angle_measure_Callback (temp_set);
+		flush(serpo)
+		Roll=zeros(1,10);
+		Pitch=zeros(1,10);
+		set(handles.calibrate,'String','Please wait...')
+		std_bg=get(handles.calibrate,'Background');
+		for i=1:10
+			writeline(serpo,'WhatIsTheAngle?');
+			set(handles.calibrate,'Background',[0.9 0.9 0.1]);
+			pause(0.25)
+			warning off
+			serial_answer=readline(serpo);
+			set(handles.calibrate,'Background',std_bg);
+			pause(0.25)
+			warning on
+			handles=gethand;
+			if ~isempty (serial_answer) & strfind(serial_answer,'Measured_Roll:')==1
+				Roll(i)=str2double(serial_answer{1}(strfind(serial_answer,'Measured_Roll:')+14:strfind(serial_answer,char(9))-1));
+				Pitch(i)= str2double(serial_answer{1}(strfind(serial_answer,'Measured_Pitch:')+15:end));
+			else
+				set(handles.pitch,'String','No reply')
+				set(handles.roll,'String','No reply')
+			end
+		end
+		meanRoll=mean(Roll)/100;
+		meanPitch=mean(Pitch)/100;
+		stdRoll=std(Roll)/100;
+		stdPitch=std(Pitch)/100;
+		if (stdRoll + stdPitch) > 0.1
+			msgbox('Camera was shaking too much!','modal')
+		else
+			set(handles.calibrate,'Background',[0 1 0.1]);
+			set(handles.calibrate,'String','Calibration ok!');drawnow;pause(0.5)
+			warning off
+			load ('PIVlab_capture_resources\PIVlab_capture_lensconfig.mat','lens_configurations','selected_lens_config_nr');
+			warning on
+			if ~exist('selected_lens_config_nr','var')
+				selected_lens_config_nr = 2; %set default to zeiss Dimension
+			end
+			lens_configurations("Pitch_Offset",selected_lens_config_nr) = {-meanPitch};
+			lens_configurations("Roll_Offset",selected_lens_config_nr) = {-meanRoll};
+			[tempfilepath,~,~] = fileparts(mfilename('fullpath'));
+			save (fullfile (tempfilepath,'PIVlab_capture_lensconfig.mat'),'lens_configurations','selected_lens_config_nr');
+			configu_Callback(handles.configu,[])
+		end
+		set(handles.calibrate,'String','Calibrate level')
+		set(handles.calibrate,'Background',std_bg);
+	end
+end
