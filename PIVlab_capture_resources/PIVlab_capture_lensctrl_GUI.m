@@ -101,11 +101,11 @@ if isempty(fh)
 	item=[0 0 parentitem(3) 1];
 	handles.angle_measure = uicontrol(handles.anglepanel,'Style','checkbox','String','Measure angle','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','left','Callback',@angle_measure_Callback,'tag','angle_measure');
 
-	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/3 1.5];
-	handles.pitch = uicontrol(handles.anglepanel,'Style','text','String','Pitch: 0','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','left','tag','pitch');
+	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1.5];
+	handles.pitch = uicontrol(handles.anglepanel,'Style','text','String','Pitch: 0','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0 item(4)],'horizontalalignment','left','tag','pitch');
 
-	item=[parentitem(3)/2*1 item(2) parentitem(3)/3 1.5];
-	handles.roll = uicontrol(handles.anglepanel,'Style','text','String','Roll: 0','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','left','tag','roll');
+	item=[parentitem(3)/2*1 item(2) parentitem(3)/2 1.5];
+	handles.roll = uicontrol(handles.anglepanel,'Style','text','String','Roll: 0','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0 item(4)],'horizontalalignment','left','tag','roll');
 
 	%% Settings
 	parentitem=get(handles.settingspanel, 'Position');
@@ -171,7 +171,7 @@ if inpt.Value == 1 %on
 	t.Tag='lens_timer';
 	t.StartDelay = 0.1;
 	t.ExecutionMode = 'fixedRate';
-	t.Period = 0.5;
+	t.Period = 0.2;
 	t.TimerFcn = @lens_timer_tick_fcn;
 	start(t)
 	setappdata(0,'handle_to_lens_timer_checkbox',inpt);
@@ -205,8 +205,10 @@ if alreadyconnected==1
 		Pitch=serial_answer{1}(strfind(serial_answer,'Measured_Pitch:')+15:end);
 		Roll=str2double(Roll)/100+retr('Roll_Offset');
 		Pitch=str2double(Pitch)/100+retr('Pitch_Offset');
-		set(handles.pitch,'String',['P: ' num2str(Pitch)])
-		set(handles.roll,'String',['R: ' num2str(Roll)])
+		Roll=round(Roll,1);
+		Pitch=round(Pitch,1);
+		set(handles.pitch,'String',['Pitch: ' num2str(Pitch)])
+		set(handles.roll,'String',['Roll: ' num2str(Roll)])
 	else
 		set(handles.pitch,'String','No reply')
 		set(handles.roll,'String','No reply')
@@ -437,7 +439,7 @@ end
 
 function calibrate_level_Callback(caller,~)
 do_calib=0;
-answer = questdlg({'Please level the camera and press "Start".' 'This only needs to be done once after the installation of PIVlab.'}, 'Level calibration', 'Start','Cancel','Start');
+answer = questdlg({'Please level the camera (using a precision spirit level) and press "Start".' ' ' 'The sensor is factory calibrated, so manual calibration is usually not necessary.'}, 'Level calibration', 'Start','Cancel','Start');
 switch answer
 	case 'Start'
 		do_calib=1;
