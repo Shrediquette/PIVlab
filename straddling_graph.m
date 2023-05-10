@@ -123,7 +123,7 @@ else
 end
 
 %info top left
-text(period/10,0.99,{['Laser duty cycle: ' num2str(round(duty_cycle*100,2)) ' %'] ['PIV data rate: ' num2str(frame_rate/2) ' Hz']},'HorizontalAlignment','left','VerticalAlignment','top')
+text(period/10,0.99,{['Laser duty cycle: ' num2str(round(duty_cycle*100,4)) ' %'] ['PIV data rate: ' num2str(frame_rate/2) ' Hz']},'HorizontalAlignment','left','VerticalAlignment','top')
 %info top right
 text(num_exposures_to_show*period,0.99,{' Use zoom buttons to see the details '},'HorizontalAlignment','right','VerticalAlignment','top')
 
