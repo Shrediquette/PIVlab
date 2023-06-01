@@ -2003,7 +2003,7 @@ item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
 handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Select configuration:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_configtxt');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',{'PIVlab SimpleSync + pco.pixelfly usb' 'PIVlab SimpleSync + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS' 'PIVlab LD-PS + Chronos' 'PIVlab LD-PS + Basler acA2000-165um' 'PIVlab LD-PS + FLIR FFY-U3-16S2M' 'PIVlab LD-PS + OPTOcam 2/80'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
+handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',{'Nd:YAG (SimpleSync) + pco.pixelfly usb' 'Nd:YAG (SimpleSync) + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS' 'PIVlab LD-PS + Chronos' 'PIVlab LD-PS + Basler acA2000-165um' 'PIVlab LD-PS + FLIR FFY-U3-16S2M' 'PIVlab LD-PS + OPTOcam 2/80'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.ac_comport = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'COM1'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_comport');
@@ -11696,7 +11696,8 @@ if alreadyconnected
 	%Camera fps
 	ac_fps_value=get(handles.ac_fps,'Value');
 	ac_fps_str=get(handles.ac_fps,'String');
-	cam_prescaler=master_freq/str2double(ac_fps_str(ac_fps_value));
+	cam_prescaler=round(master_freq/str2double(ac_fps_str(ac_fps_value)));
+
 	%Laser power
 	las_percent=str2double(get(handles.ac_power,'String'));
 	%specific laser power polynom for converting Q-switch delay to laser energy
@@ -11965,8 +11966,8 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 			ac_ROI_general_handle.UIContextMenu = c_menu;
 
 			if strcmp(camera_type,'pco_panda')
-				m0 = uimenu(c_menu,'Label','pco.panda 50 Hz','Callback',@setdefaultroi);
-				m1 = uimenu(c_menu,'Label','pco.panda 30 Hz','Callback',@setdefaultroi);
+				m0 = uimenu(c_menu,'Label','pco.panda 45 Hz','Callback',@setdefaultroi);
+				m1 = uimenu(c_menu,'Label','pco.panda 22.5 Hz','Callback',@setdefaultroi);
 				m2 = uimenu(c_menu,'Label','pco.panda 15 Hz','Callback',@setdefaultroi);
 				m3 = uimenu(c_menu,'Label','pco.panda 7.5 Hz','Callback',@setdefaultroi);
 				m4 = uimenu(c_menu,'Label','pco.panda 5 Hz','Callback',@setdefaultroi);
@@ -12352,8 +12353,6 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 					Error_Reason{end+1,1}='Please make the ROI smaller, or decrease the frame rate.';
 				end
 
-				% in 8 bit: muss groesser als 61 sein
-				%in 12 bit mode: muss greosser als 128 us sein.
 				min_allowed_interframe = retr('min_allowed_interframe');
 				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
 				if pulse_sep < min_allowed_interframe
@@ -12674,8 +12673,15 @@ if value == 2 || value == 4% pco panda with evergreen or LD-PS
 	%put('f1exp_cam',300)
 	%put('master_freq',3);
 	put('f1exp_cam',350); %exposure time setting first frame
-	put('master_freq',50); %war auf 50 für noch höhere framerates auf panda
-	avail_freqs={'50' '30' '15' '7.5' '5' '3' '1.5' '1'};
+	if value == 2 % Nd:YAG laser with panda : limited to 15 Hz
+		put('master_freq',15); %master frequency driving the Nd:YAG laser
+		avail_freqs={'15' '7.5' '5' '3' '1.5' '1'};
+	end
+	if value == 4 %LD-PS laser with panda : limited to 50 Hz
+		put('master_freq',45); %was 50, but gives inaccurate capture frequencies at lower numbers.
+		avail_freqs={'45' '22.5' '15' '7.5' '5' '3' '1.5' '1'};
+	end
+
 	put('max_cam_res',[5120,5120]);
 	put('min_allowed_interframe',10);
 	put('blind_time',1);
@@ -12876,12 +12882,12 @@ if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
 	end
 	selection=1; %automatic centering of ROI
 	switch source.Label
-		case 'pco.panda 50 Hz'
-			des_x=320;
-			des_y=240;
-		case 'pco.panda 30 Hz'
-			des_x=640;
-			des_y=480;
+		case 'pco.panda 45 Hz'
+			des_x=360;
+			des_y=256;
+		case 'pco.panda 22.5 Hz'
+			des_x=720;
+			des_y=576;
 		case 'pco.panda 15 Hz'
 			des_x=1160;
 			des_y=864;
