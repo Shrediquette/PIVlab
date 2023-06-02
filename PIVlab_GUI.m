@@ -37,8 +37,10 @@ if isempty(fh)
 	version = '2.62';
 	put('PIVver', version);
 	v=ver('MATLAB');
-	
-	
+
+	if ~exist('desired_num_cores','var')
+		disp('-> Use the command "PIVlab_GUI(Nr_of_cores)" to select the amount of computation cores.')
+	end
 	disp(['-> Starting PIVlab ' version ' ...'])
 	disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
 
