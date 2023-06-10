@@ -2606,6 +2606,7 @@ if retr('video_selection_done') == 0
 		currentimage=f_readB16(filepath{selected});
 		rawimage=currentimage;
 	else
+		%disp(filepath{selected})
 		currentimage=imread(filepath{selected});
 		rawimage=currentimage;
 	end
@@ -5470,7 +5471,6 @@ if ok==1
 				if strcmp(ext,'.b16')
 					currentimage1=f_readB16(slicedfilepath1{i});
 					currentimage2=f_readB16(slicedfilepath2{i});
-
 				else
 					currentimage1=imread(slicedfilepath1{i});
 					currentimage2=imread(slicedfilepath2{i});

@@ -195,7 +195,11 @@ for multipass = 1:passes
 				utable=interp2(xtable_old,ytable_old,utable,xtable,ytable,'*spline');
 				vtable=interp2(xtable_old,ytable_old,vtable,xtable,ytable,'*spline');
 			catch
-				msgbox('Error: Most likely, your ROI is too small and/or the interrogation area too large.','modal')
+				%msgbox('Error: Most likely, your ROI is too small and/or the interrogation area too large.','modal')
+				disp('Error: Most likely, your ROI is too small and/or the interrogation area too large.')
+				commandwindow
+				utable=zeros(size(xtable));
+				vtable=zeros(size(xtable));
 			end
 
 			%add 1 line around image for border regions... linear extrap
