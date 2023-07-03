@@ -2637,13 +2637,18 @@ end
 %get and save the image size (assuming that every image of a session has the same size)
 size_of_the_image=size(currentimage);
 expected_image_size=retr('expected_image_size');
+
+if isempty(retr('size_warning_has_been_shown'))
+	put('size_warning_has_been_shown',0);
+end
 if isempty(expected_image_size) %expected_image_size is empty, we have not read an image before
 	expected_image_size = size_of_the_image;
 	put('expected_image_size',expected_image_size);
 else %expected_image_size is not empty, an image has been read before
-	if 	expected_image_size(1) ~= size_of_the_image(1) || expected_image_size(2) ~= size_of_the_image(2)
+	if 	(expected_image_size(1) ~= size_of_the_image(1) || expected_image_size(2) ~= size_of_the_image(2)) && retr('size_warning_has_been_shown') == 0
 		cancelbutt_Callback
 		uiwait(warndlg('Error: All images in a session  MUST have the same size!'));
+		put('size_warning_has_been_shown',1);
 		warning off
 		recycle('off');
 		delete('cancel_piv');
