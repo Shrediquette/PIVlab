@@ -2057,7 +2057,7 @@ item=[parentitem(3)/4*2 item(2) parentitem(3)/4*2 2];
 handles.ac_lasertoggle = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Toggle Laser','Fontweight','bold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_lasertoggle_Callback,'Tag','ac_lasertoggle','TooltipString','Toggle laser on and off','interruptible','off','busyaction','cancel');
 
 item=[0 item(2)+item(4)+margin*0.1 parentitem(3)/2 1.5];
-handles.ac_enable_ext_trigger = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Ext. trigger','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_ext_trigger','TooltipString','Use external trigger input on PIVlab-SimpleSync','Callback', @ac_ext_trigger_settings_Callback);
+handles.ac_enable_ext_trigger = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Ext. trigger','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_ext_trigger','TooltipString','Use external trigger input on PIVlab-SimpleSync','Callback', @ac_ext_trigger_settings_Callback,'Visible','off');
 
 item=[item(3) item(2) parentitem(3)/2 1.5];
 handles.ac_device_control = uicontrol(handles.uipanelac_laser,'Style','pushbutton','String','Devices','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_device_control','TooltipString','Setup external devices (such as remote controlled seeding generator etc.)','Callback',@ac_device_control_Callback);
@@ -12664,6 +12664,13 @@ put ('old_setting',value)
 
 put('do_realtime',0);
 set(handles.ac_realtime,'Value',0)
+if value==1 || value ==2
+    set(handles.ac_enable_ext_trigger , 'Visible', 'on')
+else
+    set(handles.ac_enable_ext_trigger , 'Visible', 'off')
+    set(handles.ac_enable_ext_trigger , 'value', 0)
+end
+
 if value==1 || value==3 % ILA.piv nano / pco pixelfly with evergreen or LD-PS
 	put('camera_type','pco_pixelfly'); % Exposure start -> Q1 delay
 	put('f1exp',406); % Exposure start -> Q1 delay
