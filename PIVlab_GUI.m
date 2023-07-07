@@ -12790,7 +12790,7 @@ if value == 8 % OPTOcam
 	end
 
 	if OPTOcam_bits==8
-		put('min_allowed_interframe',61); %8bit
+		put('min_allowed_interframe',62); %8bit
 		put('blind_time',44);
 	elseif OPTOcam_bits==12
 		put('min_allowed_interframe',128); %12bit
