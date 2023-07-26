@@ -543,7 +543,8 @@ else
 							crosshair_enabled = getappdata(hgui,'crosshair_enabled');
 							if crosshair_enabled == 1 %cross-hair
 								%% cross-hair
-								locations=[0.15 0.5 0.85];
+								%locations=[0.15 0.5 0.85];
+								locations=[0.1:0.1:0.9];
 								if numel(ima)<10000000
 									half_thickness=2;
 								else
