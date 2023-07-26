@@ -58,4 +58,5 @@ if strcmp(response.state,'recording')
 else
 	set(frame_nr_display,'String',['Error: Recording could not be started!!']);drawnow;
 end
+pause(1) %make sure chronos is really in recording mode when laser pulses start.
 delete(frame_nr_display)
