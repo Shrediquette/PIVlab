@@ -261,7 +261,7 @@ if isempty(fh)
 
 	displogo(1);drawnow;
 	try
-	close(splashscreen)
+		close(splashscreen)
 	catch
 	end
 	set(MainWindow, 'Visible','on');
@@ -2170,6 +2170,7 @@ delete(findobj('tag','hinting'))
 
 function img_mask_Callback(~, ~, ~)
 switchui('multip02')
+dispMASK(0.333)
 
 function pre_proc_Callback(~, ~, ~)
 switchui('multip03')
@@ -4733,9 +4734,14 @@ end
 
 function save_mask_Callback(~, ~, ~)
 filepath=retr('filepath');
+
 handles=gethand;
 if size(filepath,1) > 1 %did the user load images?
-	[maskfile,maskpath] = uiputfile('*.mat','Save PIVlab mask','PIVlab_mask.mat');
+	sessionpath=retr('sessionpath');
+	if isempty(sessionpath)
+		sessionpath=retr('pathname');
+	end
+	[maskfile,maskpath] = uiputfile('*.mat','Save PIVlab mask',fullfile(sessionpath, 'PIVlab_mask.mat'));
 	if isequal(maskfile,0) | isequal(maskpath,0)
 		%do nothing
 	else
@@ -4749,7 +4755,12 @@ function load_mask_Callback(~, ~, ~)
 filepath=retr('filepath');
 handles=gethand;
 if size(filepath,1) > 1 %did the user load images?
-	[maskfile,maskpath] = uigetfile('*.mat','Load PIVlab mask','PIVlab_mask.mat');
+	sessionpath=retr('sessionpath');
+	if isempty(sessionpath)
+		sessionpath=retr('pathname');
+	end
+	[maskfile,maskpath] = uigetfile('*.mat','Load PIVlab mask',fullfile(sessionpath, 'PIVlab_mask.mat'));
+	toolsavailable(0,'Busy, loading masks');drawnow
 	if isequal(maskfile,0) | isequal(maskpath,0)
 		%do nothing
 	else
@@ -4763,6 +4774,7 @@ if size(filepath,1) > 1 %did the user load images?
 		sliderdisp
 	end
 end
+toolsavailable(1)
 
 
 function external_mask_Callback(~, ~, ~)
@@ -8831,6 +8843,7 @@ else
 end
 
 function save_session_Callback(auto_save_session, auto_save_session_filename)
+
 sessionpath=retr('sessionpath');
 if isempty(sessionpath)
 	sessionpath=retr('pathname');
@@ -8841,6 +8854,8 @@ else
 	[PathName,FileName,ext] = fileparts(auto_save_session_filename);
 	FileName = [FileName ext];
 end
+
+
 if isequal(FileName,0) | isequal(PathName,0)
 else
 	put('expected_image_size',[])
@@ -8848,12 +8863,16 @@ else
 	savesessionfuntion (PathName,FileName)
 end
 
+
 function savesessionfuntion (PathName,FileName)
+
 hgui=getappdata(0,'hgui');
 handles=gethand;
 app=getappdata(hgui);
-text(150,150,'Please wait, saving session. This might take a while.','color','y','fontsize',13, 'BackgroundColor', 'k','tag','savehint')
-drawnow;
+toolsavailable(1)
+toolsavailable(0,'Busy, saving session...');drawnow
+%disp('hier was aendrn mit savehint')
+%text(150,150,'Please wait, saving session. This might take a while.','color','y','fontsize',13, 'BackgroundColor', 'k','tag','savehint')
 %Newer versions of Matlab do really funny things when the following vars are not empty...:
 app.GUIDEOptions =[];
 app.GUIOnScreen  =[];
@@ -9002,7 +9021,8 @@ clear handles
 %save(fullfile(PathName,FileName), '-append');
 save(fullfile(PathName,FileName), '-append');
 
-delete(findobj('tag','savehint'));
+%delete(findobj('tag','savehint'));
+toolsavailable(1)
 drawnow;
 
 function load_session_Callback(auto_load_session, auto_load_session_filename)
@@ -9012,10 +9032,12 @@ if isempty(sessionpath)
 end
 if auto_load_session ~= 1
 	[FileName,PathName, filterindex] = uigetfile({'*.mat','MATLAB Files (*.mat)'; '*.mat','mat'},'Load PIVlab session',fullfile(sessionpath, 'PIVlab_session.mat'));
+	toolsavailable(0,'Busy, loading session...');drawnow
 else
 	[PathName,FileName,ext] = fileparts(auto_load_session_filename);
 	FileName = [FileName ext];
 end
+
 if isequal(FileName,0) | isequal(PathName,0)
 else
 	put('expected_image_size',[])
@@ -9234,6 +9256,7 @@ else
 	catch
 	end
 end
+toolsavailable(1)
 
 
 function save_only_one_Callback(~, ~, ~)
@@ -11658,7 +11681,7 @@ if alreadyconnected
 		disp('Error sending WhichFirmware')
 	end
 	%%debug messages
-%{
+	%{
 disp('---------')
 	disp(['Port is: ' serpo.Port])
 	disp(['Terminator set to: ' serpo.Terminator])
@@ -11666,7 +11689,7 @@ disp('---------')
 	disp(['String written: ' string2])
 	disp(['Answer: ' convertStringsToChars(serial_answer)])
 disp('---------')
-%}
+	%}
 
 	if isempty(serial_answer)
 		uiwait(msgbox(['No laser found.' sprintf('\n') 'Is the laser turned on?' sprintf('\n') 'Please try again.'],'modal'))
@@ -12338,6 +12361,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				%capture to camera RAM
 				%zuerst:camera konfigurieren. Dann kamera starten. dann laser. nach laserstart warten und aufnahme beenden.dann laser aus
 				cameraIP=retr('Chronos_IP');
+				control_simple_sync_serial(0) %stop triggering when already running.
 				[OutputError] = PIVlab_capture_chronos_synced_start(cameraIP,cam_fps); %prepare cam and start camera (waiting for trigger...)
 				control_simple_sync_serial(1); put('laser_running',1); %turn on laser
 				[OutputError,ima,frame_nr_display] = PIVlab_capture_chronos_synced_capture(cameraIP,imageamount,cam_fps,do_realtime,ac_ROI_realtime); %capture n images, display livestream
@@ -12670,10 +12694,10 @@ put ('old_setting',value)
 put('do_realtime',0);
 set(handles.ac_realtime,'Value',0)
 if value==1 || value ==2
-    set(handles.ac_enable_ext_trigger , 'Visible', 'on')
+	set(handles.ac_enable_ext_trigger , 'Visible', 'on')
 else
-    set(handles.ac_enable_ext_trigger , 'Visible', 'off')
-    set(handles.ac_enable_ext_trigger , 'value', 0)
+	set(handles.ac_enable_ext_trigger , 'Visible', 'off')
+	set(handles.ac_enable_ext_trigger , 'value', 0)
 end
 
 if value==1 || value==3 % ILA.piv nano / pco pixelfly with evergreen or LD-PS
@@ -12727,9 +12751,9 @@ if value == 5 % chronos LD-PS
 	%put('master_freq',3);
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
-	avail_freqs={'1000' '850' '600' '500' '400' '300' '200' '150' '100' '70' '50' '25' '10' '5'};
+	avail_freqs={'850' '600' '500' '400' '300' '200' '150' '100' '70' '50' '25' '10'};
 	put('max_cam_res',[1280,1024]);
-	put('min_allowed_interframe',10);
+	put('min_allowed_interframe',20);
 	put('blind_time',6);
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
