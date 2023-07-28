@@ -327,7 +327,7 @@ uimenu(m6,'Label','PIV settings','Callback',@piv_sett_Callback,'Accelerator','S'
 uimenu(m6,'Label','ANALYZE!','Callback',@do_analys_Callback,'Accelerator','A');
 m7 = uimenu('Label','Calibration');
 uimenu(m7,'Label','Calibrate using current or external image','Callback',@cal_actual_Callback,'Accelerator','Z');
-m8 = uimenu('Label','Post-processing');
+m8 = uimenu('Label','Validation');
 uimenu(m8,'Label','Velocity based validation','Callback',@vector_val_Callback,'Accelerator','V');
 uimenu(m8,'Label','Image based validation','Callback',@image_val_Callback);
 m9 = uimenu('Label','Plot');
@@ -600,10 +600,13 @@ parentitem=get(handles.multip01, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.loadimgsbutton = uicontrol(handles.multip01,'Style','pushbutton','String','Load images','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@loadimgsbutton_Callback,1,[]},'Tag','loadimgsbutton','TooltipString','Load image data');
+handles.loadimgsbutton = uicontrol(handles.multip01,'Style','pushbutton','String','Import images','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@loadimgsbutton_Callback,1,[]},'Tag','loadimgsbutton','TooltipString','Load image data');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
-handles.loadvideobutton = uicontrol(handles.multip01,'Style','pushbutton','String','Load video','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @loadvideobutton_Callback,'Tag','loadvideobutton','TooltipString','Load video file');
+handles.loadvideobutton = uicontrol(handles.multip01,'Style','pushbutton','String','Import video','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @loadvideobutton_Callback,'Tag','loadvideobutton','TooltipString','Load video file');
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
+handles.loadsessionbutton = uicontrol(handles.multip01,'Style','pushbutton','String','Load session','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @load_session_Callback,'Tag','loadsessionbutton','TooltipString','Load previously saved session file');
 
 item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 1];
 handles.text2 = uicontrol(handles.multip01,'Style','text','units', 'characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Image list:');
@@ -998,6 +1001,9 @@ handles.apply_filter_all = uicontrol(handles.multip06,'Style','pushbutton','Stri
 
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.restore_all = uicontrol(handles.multip06,'Style','pushbutton','String','Undo all validations (all frames)','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @restore_all_Callback,'Tag','restore_all','TooltipString','Remove all velocity filters for all frames');
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
+handles.amount_nans = uicontrol(handles.multip06,'Style','text','String','Filtered data: 0 %','HorizontalAlignment','center','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','amount_nans');
 
 %% Multip07
 handles.multip07 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Calibration (CTRL+Z)', 'Tag','multip07','fontweight','bold');
@@ -1978,6 +1984,9 @@ handles.apply_filter_all = uicontrol(handles.multip23,'Style','pushbutton','Stri
 
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.restore_all = uicontrol(handles.multip23,'Style','pushbutton','String','Undo all validations (all frames)','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @restore_all_Callback,'Tag','restore_all','TooltipString','Remove all velocity filters for all frames');
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
+handles.amount_nans = uicontrol(handles.multip23,'Style','text','String','Filtered data: 0 %','HorizontalAlignment','center','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','amount_nans');
 
 %% Multip24
 % General
@@ -3331,6 +3340,9 @@ if capturing==0
 			%set (handles.filenameshow, 'string', ['Frame (' int2str(floor(get(handles.fileselector, 'value'))) '/' int2str(numel(video_frame_selection)/2) '):' sprintf('\n') filename]);
 			set (handles.filenameshow, 'tooltipstring', filepath{selected});
 		end
+		if strncmp(get(handles.multip06, 'visible'), 'on',2) || strncmp(get(handles.multip23, 'visible'), 'on',2) %if in data validation panel
+			count_discarded_data
+		end
 		if strncmp(get(handles.multip01, 'visible'), 'on',2)
 			set(handles.imsize, 'string', ['Image size: ' int2str(size(currentimage,2)) '*' int2str(size(currentimage,1)) 'px' ])
 		end
@@ -3960,6 +3972,8 @@ if ~isequal(path,0)
 		sliderdisp %displays raw image when slider moves
 		zoom reset
 		set(getappdata(0,'hgui'), 'Name',['PIVlab ' retr('PIVver') '   [Path: ' pathname ']']) %for people like me that always forget what dataset they are currently working on...
+		set (handles.amount_nans, 'BackgroundColor',[0.9 0.9 0.9])
+		set (handles.amount_nans,'string','')
 	else
 		errordlg('Please select at least two images ( = 1 pair of images)','Error','on')
 	end
@@ -6574,6 +6588,34 @@ filtervectors(currentframe)
 %put('manualdeletion',[]); %only valid one time, why...? Could work without this line.
 sliderdisp;
 
+function count_discarded_data (~,~,~)
+handles=gethand;
+resultslist=retr('resultslist');
+currentframe=2*floor(get(handles.fileselector, 'value'))-1;
+if ~isempty(resultslist)
+	if size(resultslist,2) >= ((currentframe+1)/2)
+		typevector=resultslist{9,(currentframe+1)/2};
+		nan_amount=numel(typevector(typevector==2));
+		total_amount=numel(typevector(typevector==1)) + nan_amount;
+		nan_percent=nan_amount/total_amount*100;
+	else
+		nan_percent=0;
+	end
+else
+	nan_percent=0;
+end
+if isnan(nan_percent)
+	nan_percent=0;
+end
+set (handles.amount_nans,'string',['Filtered data: ' num2str(round(nan_percent,1)) ' %'])
+if nan_percent <= 10
+	set (handles.amount_nans, 'BackgroundColor',[0 1 0])
+elseif nan_percent > 10 && nan_percent <= 25
+	set (handles.amount_nans, 'BackgroundColor',[1 1 0])
+elseif nan_percent > 25
+	set (handles.amount_nans, 'BackgroundColor',[1 0 0])
+end
+
 function apply_filter_all_Callback(~, ~, ~)
 resultslist=retr('resultslist');
 
@@ -8832,6 +8874,8 @@ set(handles.progress, 'String','Frame progress: N/A');
 set(handles.overall, 'String','Total progress: N/A');
 set(handles.totaltime, 'String','Time left: N/A');
 set(handles.messagetext, 'String','');
+set (handles.amount_nans, 'BackgroundColor',[0.9 0.9 0.9])
+set (handles.amount_nans,'string','')
 sliderdisp
 
 function autoscale_vec_Callback(~, ~, ~)
