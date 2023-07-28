@@ -32,4 +32,6 @@ https://youtu.be/8B5M31NWlJc
 **   **
 We would like to acknowledge Uri Shavit, Roi Gurka &amp; Alex Liberzon for sharing their code for 3-point Gaussian sub-pixel estimation. Thanks to Nima Bigdely Shamlo for allowing me to include the LIC function. Thanks to Raffel et al. for writing the book "Particle Image Velocimetry, A Practical Guide", which was a very good help. Thanks to the [thousands of publications that use PIVlab for research](https://scholar.google.de/scholar?cites=819244312015141543)!
 
+PIVlab can be run online using MATLAB online. MATLAB online is free (after registration) with a limited usage time per user.
+
 Visit Matlabs File exchange site for PIVlab: [![View PIVlab - particle image velocimetry (PIV) tool on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://de.mathworks.com/matlabcentral/fileexchange/27659-pivlab-particle-image-velocimetry-piv-tool)
