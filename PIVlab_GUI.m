@@ -3094,47 +3094,7 @@ if isempty(capturing)
 	capturing=0;
 end
 if capturing==0
-	%if the images are not found on the current path, then let user choose new path
-	%not found: assign new path to all following elements.
-	%check next file. not found -> assign new path to all following.
-	%and so on...
-	%if retr('video_selection_done') == 0 && isempty(filepath) == 0 && exist(filepath{selected},'file') ~=2
-	if isempty(filepath) == 0 && exist(filepath{selected},'file') ~=2
-		for i=1:size(filepath,1)
-			while exist(filepath{i,1},'file') ~=2
-				errordlg(['The image ' sprintf('\n') filepath{i,1} sprintf('\n') '(and probably some more...) could not be found.' sprintf('\n') 'Please select the path where the images are located.'],'File not found!','on')
-				uiwait
-				new_dir = uigetdir(pwd,'Please specify the path to all the images');
-				if new_dir==0
-					break
-				else
-					for j=i:size(filepath,1) %apply new path to all following imgs.
-						if ispc==1
-							zeichen=strfind(filepath{j,1},'\');
-						else
-							zeichen=strfind(filepath{j,1},'/');
-						end
-						currentobject=filepath{j,1};
-						currentpath=currentobject(1:(zeichen(1,size(zeichen,2))));
-						currentfile=currentobject(zeichen(1,size(zeichen,2))+1:end);
-						if ispc==1
-							filepath{j,1}=[new_dir '\' currentfile];
-						else
-							filepath{j,1}=[new_dir '/' currentfile];
-						end
-					end
-				end
-				put('filepath',filepath);
-			end
-			if new_dir==0
-				break
-			end
-		end
-		if retr('video_selection_done') == 1 %create new video object with the updated file location.
-			put('video_reader_object',VideoReader(filepath{1}));
-		end
-	end
-
+	filepath = Check_if_image_files_exist(filepath, selected);
 	currentframe=2*floor(get(handles.fileselector, 'value'))-1;
 	%display derivatives if available and desired...
 	displaywhat=retr('displaywhat');
@@ -3150,187 +3110,12 @@ if capturing==0
 		end
 		xzoomlimit=retr('xzoomlimit');
 		yzoomlimit=retr('yzoomlimit');
-
-		derived=retr('derived');
-		if isempty(derived)==0   %derivatives were calculated
-			%derived=retr('derived');
-			%1=vectors only
-			if displaywhat==1 %vectors only
-				[currentimage,~]=get_img(selected);
-				if get(handles.enhance_images, 'Value') == 0
-					image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
-				else
-					if size(currentimage,3)==1 % grayscale image
-						image(imadjust(currentimage), 'parent',gca, 'cdatamapping', 'scaled');
-					else
-						image(imadjust(currentimage,stretchlim(rgb2gray(currentimage))), 'parent',gca, 'cdatamapping', 'scaled');
-					end
-				end
-				colormap('gray');
-				vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
-				%vectorcolor='g';
-				%end
-			else %displaywhat>1
-
-				if size(derived,2)>=(currentframe+1)/2 && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
-					currentimage=derived{displaywhat-1,(currentframe+1)/2};
-					%is currentimage 3d? That would cause problems.-....
-					%pcolor(resultslist{1,(currentframe+1)/2},resultslist{2,(currentframe+1)/2},currentimage);shading interp;
-					if displaywhat ~=11 % 11 ist vector direction
-						image(rescale_maps(currentimage,0), 'parent',gca, 'cdatamapping', 'scaled');
-					else
-						image(rescale_maps(currentimage,1), 'parent',gca, 'cdatamapping', 'scaled');
-					end
-					if displaywhat ~=10 %10 is LIC
-						avail_maps=get(handles.colormap_choice,'string');
-						selected_index=get(handles.colormap_choice,'value');
-						if selected_index == 4 %HochschuleBremen map
-							load hsbmap.mat;
-							colormap(hsb);
-						elseif selected_index== 1 %parula
-							load parula.mat;
-							colormap (parula);
-						else
-							colormap(avail_maps{selected_index});
-						end
-						%adjust colormap steps
-						%cmap = colormap(gca);
-						cmap = colormap;
-						colormap_steps_list=get(handles.colormap_steps,'String');
-						colormap_steps_value=get(handles.colormap_steps,'Value');
-						colormap_steps=str2double(colormap_steps_list{colormap_steps_value});
-						cmap_new=interp1(1:size(cmap,1),cmap,linspace(1,size(cmap,1),colormap_steps));
-						colormap(cmap_new);
-					else %LIC can only be gray
-						colormap('gray');
-					end
-					if get(handles.autoscaler,'value')==1
-						minscale=min(min(currentimage));
-						maxscale=max(max(currentimage));
-						set (handles.mapscale_min, 'string', num2str(minscale))
-						set (handles.mapscale_max, 'string', num2str(maxscale))
-					else
-						minscale=str2double(get(handles.mapscale_min, 'string'));
-						maxscale=str2double(get(handles.mapscale_max, 'string'));
-					end
-					caxis([minscale maxscale])
-					vectorcolor=[str2double(get(handles.validdr,'string')) str2double(get(handles.validdg,'string')) str2double(get(handles.validdb,'string'))];
-					%vectorcolor='k';
-					if get(handles.displ_colorbar,'value')==1
-						name=get(handles.derivchoice,'string');
-						if strcmp(name,'N/A') %user hasn't visited the derived panel before
-							if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
-								set(handles.derivchoice,'String',{'Vectors [px/frame]';'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Simple shear rate [1/frame]';'Simple strain rate [1/frame]';'Line integral convolution (LIC) [1]' ; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
-								set(handles.text35,'String','u [px/frame]:')
-								set(handles.text36,'String','v [px/frame]:')
-							else
-								set(handles.derivchoice,'String',{'Vectors [m/s]';'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Simple shear rate [1/s]';'Simple strain rate [1/s]';'Line integral convolution (LIC) [1]'; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
-								set(handles.text35,'String','u [m/s]:')
-								set(handles.text36,'String','v [m/s]:')
-							end
-							name=get(handles.derivchoice,'String');
-						end
-						posichoice = get(handles.colorbarpos,'String');
-						colochoice=get(handles.colorbarcolor,'String');
-						coloobj=colorbar(posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')},'HitTest','off');
-
-						if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
-							axis image %needs to be called before changing colorbar labels
-							set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
-							ylabel(coloobj,name{retr('displaywhat')},'fontsize',9,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
-						end
-						if strcmp(posichoice{get(handles.colorbarpos,'Value')},'North')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'South')==1
-							axis image %needs to be called before changing colorbar labels
-							set(coloobj,'XTickLabel',num2str(get(coloobj,'XTick')','%5.5g'))
-							xlabel(coloobj,name{retr('displaywhat')},'fontsize',11,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
-						end
-					end
-				else %no deriv available
-					[currentimage,~]=get_img(selected);
-					if get(handles.enhance_images, 'Value') == 0
-						image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
-					else
-						if size(currentimage,3)==1 % grayscale image
-							image(imadjust(currentimage), 'parent',gca, 'cdatamapping', 'scaled');
-						else
-							image(imadjust(currentimage,stretchlim(rgb2gray(currentimage))), 'parent',gca, 'cdatamapping', 'scaled');
-						end
-					end
-					colormap('gray');
-					vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
-					%vectorcolor='g';
-					text(10,10,'This parameter needs to be calculated for this frame first. Go to Plot -> Derive Parameters and click "Apply to current frame".','color','r','fontsize',9, 'BackgroundColor', 'k', 'tag', 'derivhint')
-				end
-			end
-		else %not in derivatives panel
-			%try
-			[currentimage,~]=get_img(selected);
-
-			%{
-            catch
-            disp(['Error: ' filepath{selected} ' --> Image could not be found!']);
-            resultslist=retr('resultslist');
-            maximgx=max(max(resultslist{1,1}))+min(min(resultslist{1,1}));
-            maximgy=max(max(resultslist{2,1}))+min(min(resultslist{2,1}));
-            currentimage=zeros(maximgy,maximgx);
-        end
-			%}
-			if get(handles.enhance_images, 'Value') == 0
-				image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
-			else
-				try % if user presses 'Toggle' button too fast, a strange error occurs
-					if size(currentimage,3)==1 % grayscale image
-						image(imadjust(currentimage), 'parent',gca, 'cdatamapping', 'scaled');
-					else
-						image(imadjust(currentimage,stretchlim(rgb2gray(currentimage))), 'parent',gca, 'cdatamapping', 'scaled');
-					end
-				catch
-				end
-			end
-
-			colormap('gray');
-			vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
-			%vectorcolor='g';
-		end
+		[currentimage, vectorcolor] = draw_pixel_background(displaywhat, selected, handles, currentframe);
 		axis image;
 		set(gca,'ytick',[])
 		set(gca,'xtick',[])
-
-		%% include axis tick labels. Doesnt work with exportfig.....?
-		%{
-		xticks('auto')
-		yticks('auto')
-		xticklabels('auto')
-		yticklabels('auto')
-		pixelxticks=xticklabels(gca);
-		pixelyticks=yticklabels(gca);
-		pixelxticks_S = sprintf('%s ', pixelxticks{:});
-		pixelxticks = sscanf(pixelxticks_S, '%f');
-		pixelyticks_S = sprintf('%s ', pixelyticks{:});
-		pixelyticks = sscanf(pixelyticks_S, '%f');
-		
-		[xticklabel_cal,yticklabel_cal] = calibrate_xy(pixelxticks,pixelyticks);
-		set(gca,'xticklabel',num2cell(xticklabel_cal))
-		set(gca,'yticklabel',num2cell(yticklabel_cal))
-		%}
-
 		filename=retr('filename');
-		ismean=retr('ismean');
-		if size(ismean,1)>=(currentframe+1)/2
-			if ismean((currentframe+1)/2,1) ==1
-				currentwasmean=1;
-			else
-				currentwasmean=0;
-			end
-		else
-			currentwasmean=0;
-		end
-
-		if currentwasmean==1
-			set (handles.filenameshow,'BackgroundColor',[0.65 0.65 1]);
-		else
-			set (handles.filenameshow,'BackgroundColor',[0.9412 0.9412 0.9412]);
-		end
+		set_bg_color_for_mean_imgs(currentframe, handles);
 		if retr('video_selection_done') == 0
 			set (handles.filenameshow, 'string', ['Frame (' int2str(floor(get(handles.fileselector, 'value'))) '/' int2str(size(filepath,1)/2) '):' sprintf('\n') filename{selected}]);
 			set (handles.filenameshow, 'tooltipstring', filepath{selected});
@@ -3346,147 +3131,16 @@ if capturing==0
 		if strncmp(get(handles.multip01, 'visible'), 'on',2)
 			set(handles.imsize, 'string', ['Image size: ' int2str(size(currentimage,2)) '*' int2str(size(currentimage,1)) 'px' ])
 		end
-		maskiererx=retr('maskiererx');
-		if size(maskiererx,2)>=currentframe
-			ximask=maskiererx{1,currentframe};
-			if size(ximask,1)>1
-				dispMASK(1-str2num(get(handles.masktransp,'String'))/100)
-			end
-		end
-		roirect=retr('roirect');
-		if size(roirect,2)>1
-			dispROI
-		end
+		update_mask_display(currentframe, handles);
 		resultslist=retr('resultslist');
-		delete(findobj('tag', 'smoothhint'));
-		%manualmarkers
-		if get(handles.displmarker,'value')==1
-			manmarkersX=retr('manmarkersX');
-			manmarkersY=retr('manmarkersY');
-			delete(findobj('tag','manualmarker'));
-			if numel(manmarkersX)>0
-				hold on
-				plot(manmarkersX,manmarkersY, 'o','MarkerEdgeColor','k','MarkerFaceColor',[.2 .2 1], 'MarkerSize',9, 'tag', 'manualmarker');
-				plot(manmarkersX,manmarkersY, '*','MarkerEdgeColor','w', 'tag', 'manualmarker');
-				hold off
-			end
-		end
-
-
+		display_manual_markers(handles);
 		if size(resultslist,2)>=(currentframe+1)/2 && numel(resultslist{1,(currentframe+1)/2})>0
-			x=resultslist{1,(currentframe+1)/2};
-			y=resultslist{2,(currentframe+1)/2};
-			if size(resultslist,1)>6 %filtered exists
-				if size(resultslist,1)>10 && numel(resultslist{10,(currentframe+1)/2}) > 0 %smoothed exists
-					u=resultslist{10,(currentframe+1)/2};
-					v=resultslist{11,(currentframe+1)/2};
-					typevector=resultslist{9,(currentframe+1)/2};
-					%text(3,size(currentimage,1)-4, 'Smoothed dataset','tag', 'smoothhint', 'backgroundcolor', 'k', 'color', 'y','fontsize',6);
-					if numel(typevector)==0 %happens if user smoothes sth without NaN and without validation
-						typevector=resultslist{5,(currentframe+1)/2};
-					end
-				else
-					u=resultslist{7,(currentframe+1)/2};
-					if size(u,1)>1
-						v=resultslist{8,(currentframe+1)/2};
-						typevector=resultslist{9,(currentframe+1)/2};
-					else %filter was applied for other frames but not for this one
-						u=resultslist{3,(currentframe+1)/2};
-						v=resultslist{4,(currentframe+1)/2};
-						typevector=resultslist{5,(currentframe+1)/2};
-					end
-				end
-			else
-				u=resultslist{3,(currentframe+1)/2};
-				v=resultslist{4,(currentframe+1)/2};
-				typevector=resultslist{5,(currentframe+1)/2};
-			end
-			if get(handles.highp_vectors, 'value')==1 & strncmp(get(handles.multip08, 'visible'), 'on',2) %#ok<AND2> %disable second expression to make highpass filtered data available for export
-				strength=54-round(get(handles.highpass_strength, 'value'));
-				h = fspecial('gaussian',strength,strength) ;
-				h2= fspecial('gaussian',3,3);
-				ubg=imfilter(u,h,'replicate');
-				vbg=imfilter(v,h,'replicate');
-				ufilt=u-ubg;
-				vfilt=v-vbg;
-				u=imfilter(ufilt,h2,'replicate');
-				v=imfilter(vfilt,h2,'replicate');
-			end
-			autoscale_vec=get(handles.autoscale_vec, 'Value');
-			vecskip=str2double(get(handles.nthvect,'String'));
-			if autoscale_vec == 1
-				autoscale=1;
-				%from quiver autoscale function:
-				if min(size(x))==1, n=sqrt(numel(x)); m=n; else; [m,n]=size(x); end
-				delx = diff([min(x(:)) max(x(:))])/n;
-				dely = diff([min(y(:)) max(y(:))])/m;
-				del = delx.^2 + dely.^2;
-				if del>0
-					len = sqrt((u.^2 + v.^2)/del);
-					maxlen = max(len(:));
-				else
-					maxlen = 0;
-				end
-				if maxlen>0
-					autoscale = autoscale/ maxlen * vecskip;
-				else
-					autoscale = autoscale; %#ok<*ASGSL>
-				end
-				vecscale=autoscale;
-			else %autoscale off
-				vecscale=str2num(get(handles.vectorscale,'string')); %#ok<*ST2NM>
-			end
-			hold on;
-
-			vectorcolorintp=[str2double(get(handles.interpr,'string')) str2double(get(handles.interpg,'string')) str2double(get(handles.interpb,'string'))];
-			if vecskip==1
-				q=quiver(x(typevector==1),y(typevector==1),...
-					(u(typevector==1)-(retr('subtr_u')/retr('calu')))*vecscale,...
-					(v(typevector==1)-(retr('subtr_v')/retr('calv')))*vecscale,...
-					'Color', vectorcolor,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
-				q2=quiver(x(typevector==2),y(typevector==2),...
-					(u(typevector==2)-(retr('subtr_u')/retr('calu')))*vecscale,...
-					(v(typevector==2)-(retr('subtr_v')/retr('calv')))*vecscale,...
-					'Color', vectorcolorintp,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
-				if str2num(get(handles.masktransp,'String')) < 100
-					scatter(x(typevector==0),y(typevector==0),'rx') %masked
-				end
-			else
-				typevector_reduced=typevector(1:vecskip:end,1:vecskip:end);
-				x_reduced=x(1:vecskip:end,1:vecskip:end);
-				y_reduced=y(1:vecskip:end,1:vecskip:end);
-				u_reduced=u(1:vecskip:end,1:vecskip:end);
-				v_reduced=v(1:vecskip:end,1:vecskip:end);
-				q=quiver(x_reduced(typevector_reduced==1),y_reduced(typevector_reduced==1),...
-					(u_reduced(typevector_reduced==1)-(retr('subtr_u')/retr('calu')))*vecscale,...
-					(v_reduced(typevector_reduced==1)-(retr('subtr_v')/retr('calv')))*vecscale,...
-					'Color', vectorcolor,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
-				q2=quiver(x_reduced(typevector_reduced==2),y_reduced(typevector_reduced==2),...
-					(u_reduced(typevector_reduced==2)-(retr('subtr_u')/retr('calu')))*vecscale,...
-					(v_reduced(typevector_reduced==2)-(retr('subtr_v')/retr('calv')))*vecscale,...
-					'Color', vectorcolorintp,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
-				if str2num(get(handles.masktransp,'String')) < 100
-					scatter(x_reduced(typevector_reduced==0),y_reduced(typevector_reduced==0),'rx') %masked
-				end
-			end
-			hold off;
-			%streamlines:
-			streamlinesX=retr('streamlinesX');
-			streamlinesY=retr('streamlinesY');
-			delete(findobj('tag','streamline'));
-			if numel(streamlinesX)>0
-				ustream=u-(retr('subtr_u')/retr('calu'));
-				vstream=v-(retr('subtr_v')/retr('calv'));
-				ustream(typevector==0)=nan;
-				vstream(typevector==0)=nan;
-				h=streamline(mmstream2(x,y,ustream,vstream,streamlinesX,streamlinesY,'on'));
-				set (h,'tag','streamline');
-				contents = get(handles.streamlcolor,'String');
-				set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')});
-			end
-
+			[x, y, u, v, typevector] = get_desired_u_and_v(resultslist, currentframe);
+			[u, v] = get_highpassed_vectors(handles, u, v);
+			[vecskip, vecscale] = scale_vector_display(handles, x, y, u, v);
+			[q, q2] = plot_vectors(handles, vecskip, x, typevector, y, u, vecscale, v, vectorcolor);
+			plot_streamlines(u, v, typevector, x, y, handles);
 			if verLessThan('matlab','8.4')
-
 				set(q, 'ButtonDownFcn', @veclick, 'hittestarea', 'on');
 				set(q2, 'ButtonDownFcn', @veclick, 'hittestarea', 'on');
 			else
@@ -3496,33 +3150,11 @@ if capturing==0
 				set(q, 'ButtonDownFcn', @veclick, 'PickableParts', 'visible');
 				set(q2, 'ButtonDownFcn', @veclick, 'PickableParts', 'visible');
 			end
-
 			if strncmp(get(handles.multip14, 'visible'), 'on',2) %statistics panel visible
 				update_Stats (x,y,u,v);
 			end
-			if strncmp(get(handles.multip06, 'visible'), 'on',2) %validation panel visible
-				manualdeletion=retr('manualdeletion');
-				frame=floor(get(handles.fileselector, 'value'));
-				framemanualdeletion=[];
-				if numel(manualdeletion)>0
-					if size(manualdeletion,2)>=frame
-						if isempty(manualdeletion{1,frame}) ==0
-							framemanualdeletion=manualdeletion{frame};
-						end
-					end
-				end
-				if isempty(framemanualdeletion)==0
-					hold on;
-					if str2num(get(handles.masktransp,'String')) < 100
-						for i=1:size(framemanualdeletion,1)
-							scatter (x(framemanualdeletion(i,1),framemanualdeletion(i,2)),y(framemanualdeletion(i,1),framemanualdeletion(i,2)), 'rx', 'tag','manualdot')
-						end
-					end
-					hold off;
-				end
-			end
+			plot_manually_discarded_vectors(handles, x, y);
 		end
-
 		if isempty(xzoomlimit)==0
 			set(gca,'xlim',xzoomlimit)
 			set(gca,'ylim',yzoomlimit)
@@ -9429,7 +9061,7 @@ if formattype==1
 				xlabel(coloobj,name{retr('displaywhat')},'fontsize',11,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
 			end
 		end
-		delete(findobj('tag','smoothhint'));
+
 		F=getframe(axesObject2);
 		close(newFig)
 		if verLessThan('matlab','8.4')
@@ -9497,7 +9129,7 @@ elseif formattype ==2 || formattype==3 || formattype==4 || formattype==5
 				xlabel(coloobj,name{retr('displaywhat')},'fontsize',11,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
 			end
 		end
-		delete(findobj('tag','smoothhint'));
+
 		[Dir, Name, Ext] = fileparts(filename);
 		newfilename=[Name sprintf('_%03d',i) Ext];
 		drawnow
@@ -13058,4 +12690,359 @@ if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
 	evt.EventName='ROIMoved';
 	evt.CurrentPosition=[min_x,min_y,img_size(1),img_size(2)];
 	ROIallevents(ac_ROI_general_handle,evt)
+end
+
+function filepath = Check_if_image_files_exist(filepath, selected)
+%if the images are not found on the current path, then let user choose new path
+%not found: assign new path to all following elements.
+%check next file. not found -> assign new path to all following.
+%and so on...
+if isempty(filepath) == 0 && exist(filepath{selected},'file') ~=2
+	for i=1:size(filepath,1)
+		while exist(filepath{i,1},'file') ~=2
+			errordlg(['The image ' sprintf('\n') filepath{i,1} sprintf('\n') '(and probably some more...) could not be found.' sprintf('\n') 'Please select the path where the images are located.'],'File not found!','on')
+			uiwait
+			new_dir = uigetdir(pwd,'Please specify the path to all the images');
+			if new_dir==0
+				break
+			else
+				for j=i:size(filepath,1) %apply new path to all following imgs.
+					if ispc==1
+						zeichen=strfind(filepath{j,1},'\');
+					else
+						zeichen=strfind(filepath{j,1},'/');
+					end
+					currentobject=filepath{j,1};
+					currentpath=currentobject(1:(zeichen(1,size(zeichen,2))));
+					currentfile=currentobject(zeichen(1,size(zeichen,2))+1:end);
+					if ispc==1
+						filepath{j,1}=[new_dir '\' currentfile];
+					else
+						filepath{j,1}=[new_dir '/' currentfile];
+					end
+				end
+			end
+			put('filepath',filepath);
+		end
+		if new_dir==0
+			break
+		end
+	end
+	if retr('video_selection_done') == 1 %create new video object with the updated file location.
+		put('video_reader_object',VideoReader(filepath{1}));
+	end
+end
+
+function set_bg_color_for_mean_imgs(currentframe, handles)
+ismean=retr('ismean');
+if size(ismean,1)>=(currentframe+1)/2
+	if ismean((currentframe+1)/2,1) ==1
+		currentwasmean=1;
+	else
+		currentwasmean=0;
+	end
+else
+	currentwasmean=0;
+end
+
+if currentwasmean==1
+	set (handles.filenameshow,'BackgroundColor',[0.65 0.65 1]);
+else
+	set (handles.filenameshow,'BackgroundColor',[0.9412 0.9412 0.9412]);
+end
+
+function update_mask_display(currentframe, handles)
+maskiererx=retr('maskiererx');
+if size(maskiererx,2)>=currentframe
+	ximask=maskiererx{1,currentframe};
+	if size(ximask,1)>1
+		dispMASK(1-str2num(get(handles.masktransp,'String'))/100)
+	end
+end
+roirect=retr('roirect');
+if size(roirect,2)>1
+	dispROI
+end
+
+function display_manual_markers(handles)
+%manualmarkers
+if get(handles.displmarker,'value')==1
+	manmarkersX=retr('manmarkersX');
+	manmarkersY=retr('manmarkersY');
+	delete(findobj('tag','manualmarker'));
+	if numel(manmarkersX)>0
+		hold on
+		plot(manmarkersX,manmarkersY, 'o','MarkerEdgeColor','k','MarkerFaceColor',[.2 .2 1], 'MarkerSize',9, 'tag', 'manualmarker');
+		plot(manmarkersX,manmarkersY, '*','MarkerEdgeColor','w', 'tag', 'manualmarker');
+		hold off
+	end
+end
+
+function [x, y, u, v, typevector] = get_desired_u_and_v(resultslist, currentframe)
+x=resultslist{1,(currentframe+1)/2};
+y=resultslist{2,(currentframe+1)/2};
+if size(resultslist,1)>6 %filtered exists
+	if size(resultslist,1)>10 && numel(resultslist{10,(currentframe+1)/2}) > 0 %smoothed exists
+		u=resultslist{10,(currentframe+1)/2};
+		v=resultslist{11,(currentframe+1)/2};
+		typevector=resultslist{9,(currentframe+1)/2};
+		%text(3,size(currentimage,1)-4, 'Smoothed dataset','tag', 'smoothhint', 'backgroundcolor', 'k', 'color', 'y','fontsize',6);
+		if numel(typevector)==0 %happens if user smoothes sth without NaN and without validation
+			typevector=resultslist{5,(currentframe+1)/2};
+		end
+	else
+		u=resultslist{7,(currentframe+1)/2};
+		if size(u,1)>1
+			v=resultslist{8,(currentframe+1)/2};
+			typevector=resultslist{9,(currentframe+1)/2};
+		else %filter was applied for other frames but not for this one
+			u=resultslist{3,(currentframe+1)/2};
+			v=resultslist{4,(currentframe+1)/2};
+			typevector=resultslist{5,(currentframe+1)/2};
+		end
+	end
+else
+	u=resultslist{3,(currentframe+1)/2};
+	v=resultslist{4,(currentframe+1)/2};
+	typevector=resultslist{5,(currentframe+1)/2};
+end
+
+function [u, v] = get_highpassed_vectors(handles, u, v)
+if get(handles.highp_vectors, 'value')==1 & strncmp(get(handles.multip08, 'visible'), 'on',2) %#ok<AND2> %disable second expression to make highpass filtered data available for export
+	strength=54-round(get(handles.highpass_strength, 'value'));
+	h = fspecial('gaussian',strength,strength) ;
+	h2= fspecial('gaussian',3,3);
+	ubg=imfilter(u,h,'replicate');
+	vbg=imfilter(v,h,'replicate');
+	ufilt=u-ubg;
+	vfilt=v-vbg;
+	u=imfilter(ufilt,h2,'replicate');
+	v=imfilter(vfilt,h2,'replicate');
+end
+
+function [vecskip, vecscale] = scale_vector_display(handles, x, y, u, v)
+autoscale_vec=get(handles.autoscale_vec, 'Value');
+vecskip=str2double(get(handles.nthvect,'String'));
+if autoscale_vec == 1
+	autoscale=1;
+	%from quiver autoscale function:
+	if min(size(x))==1, n=sqrt(numel(x)); m=n; else; [m,n]=size(x); end
+	delx = diff([min(x(:)) max(x(:))])/n;
+	dely = diff([min(y(:)) max(y(:))])/m;
+	del = delx.^2 + dely.^2;
+	if del>0
+		len = sqrt((u.^2 + v.^2)/del);
+		maxlen = max(len(:));
+	else
+		maxlen = 0;
+	end
+	if maxlen>0
+		autoscale = autoscale/ maxlen * vecskip;
+	else
+		autoscale = autoscale; %#ok<*ASGSL>
+	end
+	vecscale=autoscale;
+else %autoscale off
+	vecscale=str2num(get(handles.vectorscale,'string')); %#ok<*ST2NM>
+end
+
+function [q, q2] = plot_vectors(handles, vecskip, x, typevector, y, u, vecscale, v, vectorcolor)
+hold on;
+vectorcolorintp=[str2double(get(handles.interpr,'string')) str2double(get(handles.interpg,'string')) str2double(get(handles.interpb,'string'))];
+if vecskip==1
+	q=quiver(x(typevector==1),y(typevector==1),...
+		(u(typevector==1)-(retr('subtr_u')/retr('calu')))*vecscale,...
+		(v(typevector==1)-(retr('subtr_v')/retr('calv')))*vecscale,...
+		'Color', vectorcolor,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
+	q2=quiver(x(typevector==2),y(typevector==2),...
+		(u(typevector==2)-(retr('subtr_u')/retr('calu')))*vecscale,...
+		(v(typevector==2)-(retr('subtr_v')/retr('calv')))*vecscale,...
+		'Color', vectorcolorintp,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
+	if str2num(get(handles.masktransp,'String')) < 100
+		scatter(x(typevector==0),y(typevector==0),'rx') %masked
+	end
+else
+	typevector_reduced=typevector(1:vecskip:end,1:vecskip:end);
+	x_reduced=x(1:vecskip:end,1:vecskip:end);
+	y_reduced=y(1:vecskip:end,1:vecskip:end);
+	u_reduced=u(1:vecskip:end,1:vecskip:end);
+	v_reduced=v(1:vecskip:end,1:vecskip:end);
+	q=quiver(x_reduced(typevector_reduced==1),y_reduced(typevector_reduced==1),...
+		(u_reduced(typevector_reduced==1)-(retr('subtr_u')/retr('calu')))*vecscale,...
+		(v_reduced(typevector_reduced==1)-(retr('subtr_v')/retr('calv')))*vecscale,...
+		'Color', vectorcolor,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
+	q2=quiver(x_reduced(typevector_reduced==2),y_reduced(typevector_reduced==2),...
+		(u_reduced(typevector_reduced==2)-(retr('subtr_u')/retr('calu')))*vecscale,...
+		(v_reduced(typevector_reduced==2)-(retr('subtr_v')/retr('calv')))*vecscale,...
+		'Color', vectorcolorintp,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')));
+	if str2num(get(handles.masktransp,'String')) < 100
+		scatter(x_reduced(typevector_reduced==0),y_reduced(typevector_reduced==0),'rx') %masked
+	end
+end
+hold off;
+
+function plot_streamlines(u, v, typevector, x, y, handles)
+%streamlines:
+streamlinesX=retr('streamlinesX');
+streamlinesY=retr('streamlinesY');
+delete(findobj('tag','streamline'));
+if numel(streamlinesX)>0
+	ustream=u-(retr('subtr_u')/retr('calu'));
+	vstream=v-(retr('subtr_v')/retr('calv'));
+	ustream(typevector==0)=nan;
+	vstream(typevector==0)=nan;
+	h=streamline(mmstream2(x,y,ustream,vstream,streamlinesX,streamlinesY,'on'));
+	set (h,'tag','streamline');
+	contents = get(handles.streamlcolor,'String');
+	set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')});
+end
+
+function plot_manually_discarded_vectors(handles, x, y)
+if strncmp(get(handles.multip06, 'visible'), 'on',2) %validation panel visible
+	manualdeletion=retr('manualdeletion');
+	frame=floor(get(handles.fileselector, 'value'));
+	framemanualdeletion=[];
+	if numel(manualdeletion)>0
+		if size(manualdeletion,2)>=frame
+			if isempty(manualdeletion{1,frame}) ==0
+				framemanualdeletion=manualdeletion{frame};
+			end
+		end
+	end
+	if isempty(framemanualdeletion)==0
+		hold on;
+		if str2num(get(handles.masktransp,'String')) < 100
+			for i=1:size(framemanualdeletion,1)
+				scatter (x(framemanualdeletion(i,1),framemanualdeletion(i,2)),y(framemanualdeletion(i,1),framemanualdeletion(i,2)), 'rx', 'tag','manualdot')
+			end
+		end
+		hold off;
+	end
+end
+
+function [currentimage, vectorcolor] = draw_pixel_background(displaywhat, selected, handles, currentframe)
+derived=retr('derived');
+if isempty(derived)==0   %derivatives were calculated
+	%derived=retr('derived');
+	%1=vectors only
+	if displaywhat==1 %vectors only
+		[currentimage,~]=get_img(selected);
+		if get(handles.enhance_images, 'Value') == 0
+			image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
+		else
+			if size(currentimage,3)==1 % grayscale image
+				image(imadjust(currentimage), 'parent',gca, 'cdatamapping', 'scaled');
+			else
+				image(imadjust(currentimage,stretchlim(rgb2gray(currentimage))), 'parent',gca, 'cdatamapping', 'scaled');
+			end
+		end
+		colormap('gray');
+		vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
+		%vectorcolor='g';
+		%end
+	else %displaywhat>1
+		if size(derived,2)>=(currentframe+1)/2 && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
+			currentimage=derived{displaywhat-1,(currentframe+1)/2};
+			%is currentimage 3d? That would cause problems.-....
+			%pcolor(resultslist{1,(currentframe+1)/2},resultslist{2,(currentframe+1)/2},currentimage);shading interp;
+			if displaywhat ~=11 % 11 ist vector direction
+				image(rescale_maps(currentimage,0), 'parent',gca, 'cdatamapping', 'scaled');
+			else
+				image(rescale_maps(currentimage,1), 'parent',gca, 'cdatamapping', 'scaled');
+			end
+			if displaywhat ~=10 %10 is LIC
+				avail_maps=get(handles.colormap_choice,'string');
+				selected_index=get(handles.colormap_choice,'value');
+				if selected_index == 4 %HochschuleBremen map
+					load('hsbmap.mat','hsb');
+					colormap(hsb);
+				elseif selected_index== 1 %parula
+					load('parula.mat','parula')
+					colormap (parula);
+				else
+					colormap(avail_maps{selected_index});
+				end
+				%adjust colormap steps
+				cmap = colormap;
+				colormap_steps_list=get(handles.colormap_steps,'String');
+				colormap_steps_value=get(handles.colormap_steps,'Value');
+				colormap_steps=str2double(colormap_steps_list{colormap_steps_value});
+				cmap_new=interp1(1:size(cmap,1),cmap,linspace(1,size(cmap,1),colormap_steps));
+				colormap(cmap_new);
+			else %LIC can only be gray
+				colormap('gray');
+			end
+			if get(handles.autoscaler,'value')==1
+				minscale=min(min(currentimage));
+				maxscale=max(max(currentimage));
+				set (handles.mapscale_min, 'string', num2str(minscale))
+				set (handles.mapscale_max, 'string', num2str(maxscale))
+			else
+				minscale=str2double(get(handles.mapscale_min, 'string'));
+				maxscale=str2double(get(handles.mapscale_max, 'string'));
+			end
+			caxis([minscale maxscale])
+			vectorcolor=[str2double(get(handles.validdr,'string')) str2double(get(handles.validdg,'string')) str2double(get(handles.validdb,'string'))];
+			%vectorcolor='k';
+			if get(handles.displ_colorbar,'value')==1
+				name=get(handles.derivchoice,'string');
+				if strcmp(name,'N/A') %user hasn't visited the derived panel before
+					if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
+						set(handles.derivchoice,'String',{'Vectors [px/frame]';'Vorticity [1/frame]';'Velocity magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Simple shear rate [1/frame]';'Simple strain rate [1/frame]';'Line integral convolution (LIC) [1]' ; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
+						set(handles.text35,'String','u [px/frame]:')
+						set(handles.text36,'String','v [px/frame]:')
+					else
+						set(handles.derivchoice,'String',{'Vectors [m/s]';'Vorticity [1/s]';'Velocity magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Simple shear rate [1/s]';'Simple strain rate [1/s]';'Line integral convolution (LIC) [1]'; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
+						set(handles.text35,'String','u [m/s]:')
+						set(handles.text36,'String','v [m/s]:')
+					end
+					name=get(handles.derivchoice,'String');
+				end
+				posichoice = get(handles.colorbarpos,'String');
+				colochoice=get(handles.colorbarcolor,'String');
+				coloobj=colorbar(posichoice{get(handles.colorbarpos,'Value')},'FontWeight','bold','Fontsize',12,'color',colochoice{get(handles.colorbarcolor,'Value')},'HitTest','off');
+				if strcmp(posichoice{get(handles.colorbarpos,'Value')},'East')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'West')==1
+					axis image %needs to be called before changing colorbar labels
+					set(coloobj,'YTickLabel',num2str(get(coloobj,'YTick')','%5.5g'))
+					ylabel(coloobj,name{retr('displaywhat')},'fontsize',9,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
+				end
+				if strcmp(posichoice{get(handles.colorbarpos,'Value')},'North')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'South')==1
+					axis image %needs to be called before changing colorbar labels
+					set(coloobj,'XTickLabel',num2str(get(coloobj,'XTick')','%5.5g'))
+					xlabel(coloobj,name{retr('displaywhat')},'fontsize',11,'fontweight','bold','color',colochoice{get(handles.colorbarcolor,'Value')});
+				end
+			end
+		else %no deriv available
+			[currentimage,~]=get_img(selected);
+			if get(handles.enhance_images, 'Value') == 0
+				image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
+			else
+				if size(currentimage,3)==1 % grayscale image
+					image(imadjust(currentimage), 'parent',gca, 'cdatamapping', 'scaled');
+				else
+					image(imadjust(currentimage,stretchlim(rgb2gray(currentimage))), 'parent',gca, 'cdatamapping', 'scaled');
+				end
+			end
+			colormap('gray');
+			vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
+			%vectorcolor='g';
+			text(10,10,'This parameter needs to be calculated for this frame first. Go to Plot -> Derive Parameters and click "Apply to current frame".','color','r','fontsize',9, 'BackgroundColor', 'k', 'tag', 'derivhint')
+		end
+	end
+else %not in derivatives panel
+	[currentimage,~]=get_img(selected);
+	if get(handles.enhance_images, 'Value') == 0
+		image(currentimage, 'parent',gca, 'cdatamapping', 'scaled');
+	else
+		try % if user presses 'Toggle' button too fast, a strange error occurs
+			if size(currentimage,3)==1 % grayscale image
+				image(imadjust(currentimage), 'parent',gca, 'cdatamapping', 'scaled');
+			else
+				image(imadjust(currentimage,stretchlim(rgb2gray(currentimage))), 'parent',gca, 'cdatamapping', 'scaled');
+			end
+		catch
+		end
+	end
+	colormap('gray');
+	vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
 end
