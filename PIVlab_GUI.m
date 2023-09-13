@@ -11398,8 +11398,9 @@ serpo=retr('serpo');
 try
 	serpo.Port;
 	alreadyconnected=1;
-catch
+catch ME
 	alreadyconnected=0;
+	disp('hier ist serialport deleted nach dem ersten erfolgreichen aufzeichnen')
 end
 if alreadyconnected
 	%Master frequency in Hz
@@ -11978,6 +11979,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 					end
 				end
 			end
+			
 			if value== 1 || value == 2 %setups without lD-PS
 				set(handles.ac_power,'enable','on') %here, laser power can be adjusted while it is running.
 			end
@@ -12061,8 +12063,8 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 					OPTOcam_bits=8;
 				end
 
-				[OutputError,OPTOcam_vid,frame_nr_display] = PIVlab_capture_OPTOcam_synced_start(imageamount,ac_ROI_general,cam_fps,OPTOcam_bits); %prepare cam and start camera (waiting for trigger...)
 
+				[OutputError,OPTOcam_vid,frame_nr_display] = PIVlab_capture_OPTOcam_synced_start(imageamount,ac_ROI_general,cam_fps,OPTOcam_bits); %prepare cam and start camera (waiting for trigger...)
 
 				Error_Reason={};
 				OPTOcam_settings_check = 1;
@@ -12129,7 +12131,10 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				if found_the_data==1
 					put('sessionpath',projectpath );
 					set(handles.time_inp,'String',num2str(str2num(get(handles.ac_interpuls,'String'))/1000));
+					hgui=getappdata(0,'hgui');
+					serpo=getappdata(hgui,'serpo');
 					savesessionfuntion (projectpath,'PIVlab_Capture_Session.mat');
+					put('serpo',serpo); %Serpo gets inaccessible after savesession. Probably because there are a number of variables cleared to allow saving without crashing.
 				else
 					displogo
 				end
