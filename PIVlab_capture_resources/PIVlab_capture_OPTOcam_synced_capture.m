@@ -244,6 +244,7 @@ if running == 1
 else
     delete(auto_focus_active_hint);
 end
+
 function HistWindow_CloseRequestFcn(hObject,~)
 hgui=getappdata(0,'hgui');
 setappdata(hgui,'hist_enabled',0);
