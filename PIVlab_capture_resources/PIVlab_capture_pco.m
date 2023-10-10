@@ -181,7 +181,12 @@ else
 	glvar=struct('do_libunload',1,'do_close',0,'camera_open',0,'out_ptr',[]);
 	pco_camera_load_defines();
 	subfunc=pco_camera_subfunction();
-	[errorCode,glvar]=pco_camera_open_close(glvar);
+	try
+		[errorCode,glvar]=pco_camera_open_close(glvar);
+	catch
+		disp(['Camera not set up correctly. Please follow the instructions on:' newline 'https://github.com/Shrediquette/PIVlab/wiki/Setup-pco-cameras'])
+		commandwindow
+	end
 	pco_errdisp('pco_camera_setup',errorCode);
 	out_ptr=glvar.out_ptr;
 
