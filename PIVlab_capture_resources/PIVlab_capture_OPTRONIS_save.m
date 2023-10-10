@@ -1,4 +1,5 @@
 function [OutputError] = PIVlab_capture_OPTRONIS_save(OPTRONIS_vid,nr_of_images,ImagePath,frame_nr_display,bitmode)
+fix_Optronis_skipped_frame=0;
 if bitmode==8
 	bitmultiplicator=1;
 elseif bitmode==10
@@ -8,13 +9,12 @@ elseif bitmode==10
 end
 hgui=getappdata(0,'hgui');
 OutputError=0;
-OPTRONIS_frames_to_capture = nr_of_images*2;
+OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame;
 if getappdata(hgui,'cancel_capture') ~=1 %capture was not cancelled --> save images from RAM to disk
 	OPTRONIS_data = getdata(OPTRONIS_vid,OPTRONIS_frames_to_capture);
 	cntr=0;
 	starttime=tic;
-	disp('hier einfach machen: ein bild später starten wenn kameratyp=2-2000...')
-	for image_save_number=1:2:size(OPTRONIS_data,4)
+	for image_save_number=(1+fix_Optronis_skipped_frame) : 2 : size(OPTRONIS_data,4)
 		if getappdata(hgui,'cancel_capture') ~=1
 			imgA_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',cntr) '_A.tif']);
 			imgB_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',cntr) '_B.tif']);

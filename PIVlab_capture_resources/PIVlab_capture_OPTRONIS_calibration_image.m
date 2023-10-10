@@ -181,7 +181,8 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
 			close(hist_fig)
 		end
 	end
-	drawnow limitrate;
+	%drawnow limitrate;
+	drawnow limitrate
 	%% Autofocus
 	%% Lens control
 	%Sowieso machen: Nicht lineare schritte für die anzufahrenden fokuspositionen. Diese Liste vorher ausrechnen und dann nur index anspringen

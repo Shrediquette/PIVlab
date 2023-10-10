@@ -1,10 +1,11 @@
 function [OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_synced_capture(OPTRONIS_vid,nr_of_images,do_realtime,ROI_live,frame_nr_display,bitmode)
+fix_Optronis_skipped_frame=0;
 OPTRONIS_climits=2^bitmode;
 hgui=getappdata(0,'hgui');
 image_handle_OPTRONIS=getappdata(hgui,'image_handle_OPTRONIS');
 OutputError=0;
 
-OPTRONIS_frames_to_capture = nr_of_images*2;
+OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame;
 
 %% capture data
 

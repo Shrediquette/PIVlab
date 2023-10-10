@@ -1,5 +1,5 @@
 function [OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_synced_start(nr_of_images,ROI_OPTRONIS,frame_rate,bitmode)
-
+fix_Optronis_skipped_frame=0;
 hgui=getappdata(0,'hgui');
 crosshair_enabled = getappdata(hgui,'crosshair_enabled');
 sharpness_enabled = getappdata(hgui,'sharpness_enabled');
@@ -98,8 +98,7 @@ OPTRONIS_src.ExposureTime = minexpo;
 OPTRONIS_src.AcquisitionFrameRate = frame_rate;
 
 %% start acqusition (waiting for trigger)
-OPTRONIS_frames_to_capture = nr_of_images*2;
-disp('hier: wenn 2-2000, dann ein bild mehr aufnehmen...')
+OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame;
 OPTRONIS_vid.FramesPerTrigger = OPTRONIS_frames_to_capture;
 if ~isinf(nr_of_images) %only start capturing if save box is ticked.
 	flushdata(OPTRONIS_vid);
