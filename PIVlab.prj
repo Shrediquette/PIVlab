@@ -1,8 +1,8 @@
 <deployment-project plugin="plugin.apptool" plugin-version="1.0">
-  <configuration build-checksum="1364226421" file="C:\Users\trash\Documents\MATLAB\PIVlab 2.36\RELEASE\PIVlab.prj" location="C:\Users\trash\Documents\MATLAB\PIVlab 2.36\RELEASE" name="PIVlab" target="target.mlapps" target-name="Package App">
+  <configuration build-checksum="1364226421" file="C:\Users\trash\Documents\MATLAB\PIVlab\PIVlab.prj" location="C:\Users\trash\Documents\MATLAB\PIVlab" name="PIVlab" target="target.mlapps" target-name="Package App">
     <param.appname>PIVlab</param.appname>
     <param.authnamewatermark>William Thielicke and Eize J. Stamhuis</param.authnamewatermark>
-    <param.email>w.th@gmx.de</param.email>
+    <param.email />
     <param.company />
     <param.icon>${PROJECT_ROOT}\PIVlab_resources\icon_24.png</param.icon>
     <param.icons>
@@ -23,8 +23,8 @@
       <item>17</item>
     </param.products.id>
     <param.products.version>
-      <item>9.7</item>
-      <item>11.0</item>
+      <item>9.13</item>
+      <item>11.6</item>
     </param.products.version>
     <param.platforms />
     <param.output>${PROJECT_ROOT}</param.output>
@@ -84,11 +84,11 @@
     </fileset.resources>
     <fileset.package />
     <build-deliverables>
-      <file location="C:\Users\trash\Documents\MATLAB\PIVlab 2.36" name="RELEASE" optional="false">C:\Users\trash\Documents\MATLAB\PIVlab 2.36\RELEASE</file>
+      <file location="C:\Users\trash\Documents\MATLAB" name="PIVlab" optional="false">C:\Users\trash\Documents\MATLAB\PIVlab</file>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>C:\Program Files\MATLAB\R2019b</root>
+      <root>C:\Program Files\MATLAB\R2022b</root>
       <toolboxes />
     </matlab>
     <platform>
