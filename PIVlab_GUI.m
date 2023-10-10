@@ -34,7 +34,7 @@ if isempty(fh)
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 	guidata(MainWindow,handles)
 	setappdata(0,'hgui',MainWindow);
-	version = '2.62';
+	version = '2.63';
 	put('PIVver', version);
 	v=ver('MATLAB');
 
@@ -45,7 +45,7 @@ if isempty(fh)
 	disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
 
 	margin=1.5;
-	panelwidth=37;
+	panelwidth=45;%was 37 must also be changed in PIVlab_settings_default.mat
 	panelheighttools=12;
 	panelheightpanels=35;
 	do_correlation_matrices=0; % enable or disable the output of raw correlation matrices
@@ -559,7 +559,10 @@ handles.fileselector = uicontrol(handles.tools,'Style','slider','units', 'charac
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
 handles.togglepair = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)], 'string','Toggle','Callback',@togglepair_Callback,'tag','togglepair','TooltipString','Toggle images within a frame');%,'Interruptible','off','busyaction','cancel');
 
-item=[parentitem(3)/2 item(2)+item(4) parentitem(3)/2/2 parentitem(3)/2/2/4];
+item=[0  item(2)+item(4) parentitem(3)/2/2 parentitem(3)/2/2/4];
+handles.toggle_parallel = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@toggle_parallel_Callback,'tag','toggle_parallel');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2/2 parentitem(3)/2/2/4];
 handles.zoomon = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@zoomon_Callback,'tag','zoomon','TooltipString','Zoom');
 
 item=[parentitem(3)/2+parentitem(3)/2/2 item(2) parentitem(3)/2/2 parentitem(3)/2/2/4];
@@ -568,6 +571,15 @@ handles.panon = uicontrol(handles.tools,'Style','togglebutton','units', 'charact
 load icons.mat
 set(handles.zoomon, 'cdata',zoompic);
 set(handles.panon, 'cdata',panpic);
+
+if retr('parallel') == 1
+	set(handles.toggle_parallel, 'cdata',parallel_on,'TooltipString','Parallel processing on. Click to turn off.');
+else
+	set(handles.toggle_parallel, 'cdata',parallel_off,'TooltipString','Parallel processing off. Click to turn on.');
+end
+%also new is icons.mat content
+%and icons_PIVlab.xcf
+%end
 
 
 %% Quick access
@@ -1994,7 +2006,7 @@ handles.multip24 = uipanel(MainWindow, 'Units','characters', 'Position', [0+marg
 parentitem=get(handles.multip24, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4) parentitem(3) 8.5];
+item=[0 item(2)+item(4) parentitem(3) 8.75];
 handles.uipanelac_general = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','General settings', 'Tag','uipanelac_general','fontweight','bold');
 
 parentitem=get(handles.uipanelac_general, 'Position');
@@ -2010,13 +2022,13 @@ set(handles.ac_project,'Fontsize', get(handles.ac_project,'Fontsize')-1);
 item=[parentitem(3)/1.5 item(2) parentitem(3)/3 1.5];
 handles.ac_browse = uicontrol(handles.uipanelac_general,'Style','pushbutton','String','Browse...','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_browse_Callback,'Tag','ac_browse','TooltipString','Browse for project folder. Images and configurations will be stored here.');
 
-item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
+item=[0 item(2)+item(4)+margin*0.05 parentitem(3) 1];
 handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Select configuration:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_configtxt');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',{'Nd:YAG (SimpleSync) + pco.pixelfly usb' 'Nd:YAG (SimpleSync) + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS' 'PIVlab LD-PS + Chronos' 'PIVlab LD-PS + Basler acA2000-165um' 'PIVlab LD-PS + FLIR FFY-U3-16S2M' 'PIVlab LD-PS + OPTOcam 2/80'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
+handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',{'Nd:YAG (SimpleSync) + pco.pixelfly usb' 'Nd:YAG (SimpleSync) + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS' 'PIVlab LD-PS + Chronos' 'PIVlab LD-PS + Basler acA2000-165um' 'PIVlab LD-PS + FLIR FFY-U3-16S2M' 'PIVlab LD-PS + OPTOcam 2/80' 'PIVlab LD-PS + OPTRONIS Cyclone'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@select_capture_config_Callback);
 
-item=[0 item(2)+item(4) parentitem(3)/2 1.5];
+item=[0 item(2)+item(4)+0.25 parentitem(3)/2 1.5];
 handles.ac_comport = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'COM1'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_comport');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2*0.9 1.5];
@@ -2045,13 +2057,13 @@ item=[0 item(2)+item(4)+margin*0.2 parentitem(3)/4*2.5 1];
 handles.ac_interpulstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pulse distance [µs]:','tag','ac_interpulstxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
-handles.ac_interpuls = uicontrol(handles.uipanelac_laser,'Style','edit','String','1000','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_interpuls','TooltipString','Pulse spacing of the laser','interruptible','off','busyaction','cancel');
+handles.ac_interpuls = uicontrol(handles.uipanelac_laser,'Style','edit','String','250','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_interpuls','TooltipString','Pulse spacing of the laser','interruptible','off','busyaction','cancel');
 
 item=[0 item(2)+item(4)+margin*0.2 parentitem(3)/4*2.5 1];
 handles.ac_powertxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Laser energy [%]:','tag','ac_powertxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
-handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String','10','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_power','TooltipString','Laser energy','interruptible','off','busyaction','cancel');
+handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String','100','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_sync_settings_Callback,'Tag','ac_power','TooltipString','Laser energy','interruptible','off','busyaction','cancel');
 
 item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
 handles.ac_pulselengthtxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pulse length: 0 µs','tag','ac_pulselengthtxt');
@@ -2131,10 +2143,11 @@ item=[0 item(2)+item(4) parentitem(3)/2 1];
 handles.ac_imgamounttxt = uicontrol(handles.uipanelac_capture,'Style','text', 'String','Image amount: ','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_imgamounttxt');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/4 1];
-handles.ac_imgamount = uicontrol(handles.uipanelac_capture,'Style','edit','units','characters','HorizontalAlignment','right', 'enable','off','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','100','tag','ac_imgamount','TooltipString','Amount of double images to capture');
+handles.ac_imgamount = uicontrol(handles.uipanelac_capture,'Style','edit','units','characters','HorizontalAlignment','right', 'enable','off','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','100','tag','ac_imgamount','TooltipString','Amount of double images to capture. If red: RAM most likely not sufficient.','Callback',@ac_imgamount_Callback);
 
+%live PIV preview disabled
 item=[parentitem(3)/2+parentitem(3)/4 item(2) parentitem(3)/4 1];
-handles.ac_realtime = uicontrol(handles.uipanelac_capture,'Style','checkbox','units','characters','HorizontalAlignment','right','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3) item(4)],'Value',0,'String','Live','tag','ac_realtime','TooltipString','Enable real-time PIV','Callback',@ac_realtime_Callback);
+handles.ac_realtime = uicontrol(handles.uipanelac_capture,'Style','checkbox','units','characters','HorizontalAlignment','right','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3) item(4)],'Value',0,'String','Live','tag','ac_realtime','TooltipString','Enable real-time PIV','Callback',@ac_realtime_Callback,'Visible','off');
 
 item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/3 1.5];
 handles.ac_pivcapture = uicontrol(handles.uipanelac_capture,'Style','pushbutton','String','Start','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_pivcapture_Callback,'Tag','ac_pivcapture','TooltipString','Start PIV image capture and laser');
@@ -2453,6 +2466,14 @@ try
 	end
 catch
 end
+if retr('parallel')==1
+	button = questdlg('It is highly recommended to turn off parallel processing during image capture to save RAM.','Shut down parallel pool?','OK','Cancel','OK');
+	if strncmp(button,'OK',3)==1
+		put('parallel',1); %sets to "parallel on" and then presses the toggle button --> will turn off.
+		toggle_parallel_Callback
+	end
+end
+
 
 
 function preferences_Callback (~,~)
@@ -2531,7 +2552,13 @@ end
 %% Other Callback
 
 function displogo(~)
-logoimg=imread('PIVlablogo.jpg');
+try
+	logoimg=imread('PIVlablogo.jpg');
+catch
+	[filepath,name,ext]=fileparts([mfilename('fullpath') '.m']);
+	cd (filepath); %if current directory is not where PIVlab_GUI.m is located, then change directory.
+	logoimg=imread('PIVlablogo.jpg');
+end
 %{
 if zoom==1
 	h=image(logoimg+255, 'parent', gca);
@@ -11205,10 +11232,10 @@ end
 if alreadyconnected
 	pause(0.1)
 	if laser_running %laser is on
-		control_simple_sync_serial(0);
+		control_simple_sync_serial(0,0);
 		laser_running=0;
 	else %laser is off
-		control_simple_sync_serial(1);
+		control_simple_sync_serial(1,0);
 		laser_running=1;
 	end
 	put('laser_running',laser_running);
@@ -11230,6 +11257,7 @@ if str2double(get(handles.ac_interpuls,'String')) < retr('min_allowed_interframe
 	end
 	set(handles.ac_interpuls,'String',num2str(retr('min_allowed_interframe')))
 end
+
 
 if isnan(str2double(get(handles.ac_power,'String')))
 	set(handles.ac_power,'String','0')
@@ -11256,7 +11284,7 @@ if selected_interpulse > selected_frame_period_us
 		set(handles.ac_interpuls,'BackgroundColor',old_bg);
 		pause(0.1)
 	end
-	set(handles.ac_interpuls,'String',selected_frame_period_us)
+	set(handles.ac_interpuls,'String',round(selected_frame_period_us))
 end
 
 try
@@ -11270,7 +11298,7 @@ if alreadyconnected
 	if isempty(laser_running)
 		laser_running=0;
 	end
-	control_simple_sync_serial(laser_running);
+	control_simple_sync_serial(laser_running,0);
 end
 initiate_straddling_graph
 
@@ -11386,7 +11414,12 @@ else
 	no_dongle_msgbox
 end
 
-function serial_answer = control_simple_sync_serial(switch_it)
+function serial_answer = control_simple_sync_serial(switch_it,calibration_pulse)
+%first argument 0 = turn synchronized laser diode off
+%first argument 1 = turn synchronized laser diode on
+%second argument 0 = don't care about calibration camera signal
+%second argument 1 = turn calibration camera signal on
+%second argument 2 = turn calibration camera signal off
 try %try to switch of camera angle report
 	stop(timerfind)
 	delete(timerfind)
@@ -11431,38 +11464,7 @@ if alreadyconnected
 	%Pulse distance
 	pulse_sep=str2double(get(handles.ac_interpuls,'String'));
 	laser_device_id=retr('laser_device_id');
-	%{
-	if ~exist('laser_device_id.mat','file') == 2
-		try
-			writeline(serpo,'WhoAreYou?');
-			pause(0.3)
-			warning off
-			serial_answer=readline(serpo);
-			assignin ('base','serial_answer',serial_answer)
-			warning on
-		catch
-		end
-		get_laser_id = inputdlg(['Please enter the ID of your laser / synchronizer.' sprintf('\n') 'It can be found on the sticker on the device.'],'First time connection',1,{convertStringsToChars(serial_answer)});
-		if ~isempty(get_laser_id)
-			id=get_laser_id{1};
-			[filepath,~,~] = fileparts(mfilename('fullpath'));
-			save (fullfile(filepath, 'PIVlab_capture_resources', 'laser_device_id.mat'),'id')
-		end
-	end
-	laser_device_id = load('laser_device_id.mat','id');
-	laser_device_id = laser_device_id.id;
-	%}
-	%{
-	[filepath,~,~] = fileparts(mfilename('fullpath'));
-	disp([fullfile(filepath, 'PIVlab_capture_resources', 'laser_device_id.mat')]);
-	disp('requested laser_device_id = ')
-		disp(laser_device_id)
-	pause(1)
-	writeline(serpo,'WhoAreYou?');
-	disp(['reported laser_device_id = ' ])
-	disp(readline(serpo))
-	pause(1)
-	%}
+
 	if switch_it==1
 		flush(serpo)
 		camera_type=retr('camera_type');
@@ -11486,6 +11488,16 @@ if alreadyconnected
 	pause(0.1)
 	warning off
 	serial_answer = ac_process_sync_reply(serpo);
+	if calibration_pulse ~= 0 %this is needed for the OPTRONIS cameras, they cannot be configured to free run internal trigger
+		camera_type=retr('camera_type');
+		if strcmp(camera_type,'OPTRONIS')
+			if calibration_pulse ==1
+				writeline(serpo,'CAMERA_FREERUN_ON!');
+			elseif calibration_pulse ==2
+				writeline(serpo,'CAMERA_FREERUN_OFF!');
+			end
+		end
+	end
 	%% debug messages
 	%{
 	disp('---------')
@@ -11571,7 +11583,7 @@ else
 		laser_device_id = find_laser_device;
 		put('laser_device_id',laser_device_id);
 
-		control_simple_sync_serial(0);
+		control_simple_sync_serial(0,0);
 	catch ME
 		update_ac_status(ME.message);
 		capture_images_Callback;
@@ -11581,7 +11593,7 @@ end
 function ac_calibBinning_Callback (~,~,~)
 handles=gethand;
 camera_type=retr('camera_type');
-if ~strcmp(camera_type,'pco_panda')  %ROI selection available only for pco panda
+if ~strcmp(camera_type,'pco_panda')  %Binning available only for pco panda
 	uiwait(msgbox('Binning is (up to now) only available for the pco.panda 26 DS.','modal'))
 else
 	binning=retr('binning');
@@ -11621,16 +11633,18 @@ binning=retr('binning');
 if isempty(binning)
 	binning=1;
 end
-if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'chronos') %ROI selection not yet available for pixelfly and chronos
+if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'chronos')  %ROI selection not yet available for pixelfly and chronos
 	uiwait(msgbox('ROI selection is not (yet) available for the selected camera type.'))
 end
-
 
 if strcmp(camera_type,'flir')
 	uiwait(msgbox('ROI selection for the FLIR camera series will be implemented soon!','modal'))
 end
 
-if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(camera_type,'OPTOcam')
+if strcmp(camera_type,'OPTRONIS')
+	uiwait(msgbox(['ROI selection for the OPTRONIS camera series will be implemented soon!' newline 'Currently waiting for bug fixes from Mathworks.'],'modal'))
+end
+if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(camera_type,'OPTOcam') %|| strcmp(camera_type,'OPTRONIS')
 	try
 		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
 	catch
@@ -11657,6 +11671,10 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 
 		elseif strcmp(camera_type,'OPTOcam')
 			[errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(1,expos,[1,1,max_cam_res]);
+		elseif strcmp(camera_type,'OPTRONIS')
+			control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
+			[errorcode, caliimg]=PIVlab_capture_OPTRONIS_calibration_image(1,expos,[1,1,max_cam_res]);
+			control_simple_sync_serial(0,2);
 		end
 		put('capturing',0);
 
@@ -11709,6 +11727,34 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 				m1 = uimenu(c_menu,'Label','OPTOcam 1600x600 (8bit: 320 fps)','Callback',@setdefaultroi);
 				m2 = uimenu(c_menu,'Label','OPTOcam 1600x480 (8bit: 400 fps)','Callback',@setdefaultroi);
 				m3 = uimenu(c_menu,'Label','Enter ROI','Callback',@setdefaultroi);
+			end
+
+			if strcmp(camera_type,'OPTRONIS')
+				%die ganzen ROIs bringen noch keine fps Erhöhung, muss erst
+				%im dropdown eine Option hinzugefügt werden... 
+				camera_sub_type=retr('camera_sub_type');
+				switch camera_sub_type
+					case 'Cyclone-2-2000-M'
+						m0 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1920x1080 (max. 2165 fps)','Callback',@setdefaultroi);
+						m1 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x800 (max. 3100 fps)','Callback',@setdefaultroi);
+						m2 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x480 (max. 5142 fps)','Callback',@setdefaultroi);
+						m3 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1024x240 (max. 10150 fps)','Callback',@setdefaultroi);
+						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@setdefaultroi);
+					case 'Cyclone-1HS-3500-M'
+						m0 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x860 (max. 3500 fps)','Callback',@setdefaultroi);
+						m1 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x640 (max. 4700 fps)','Callback',@setdefaultroi);
+						m2 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x320 (max. 9340 fps)','Callback',@setdefaultroi);
+						m3 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x240 (max. 12350 fps)','Callback',@setdefaultroi);
+						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@setdefaultroi);
+					case 'Cyclone-25-150-M'
+						m0 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x5120 (max. 150 fps)','Callback',@setdefaultroi);
+						m1 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x2160 (max. 350 fps)','Callback',@setdefaultroi);
+						m2 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x1080 (max. 695 fps)','Callback',@setdefaultroi);
+						m3 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x720 (max. 1025 fps)','Callback',@setdefaultroi);
+						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@setdefaultroi);
+					otherwise
+
+				end
 			end
 
 			position = customWait(ac_ROI_general_handle);
@@ -11803,7 +11849,7 @@ if ready==1
 	if isempty(capturing);capturing=0;end
 	if capture_ok==1 && capturing == 0
 		put('capturing',1);
-		toolsavailable(0)
+		toolsavailable(0,'Starting camera...')
 		%set(handles.ac_calibsave,'enable','on')
 		set(handles.ac_calibcapture,'enable','on')
 		set(handles.ac_serialstatus,'enable','on')
@@ -11820,6 +11866,10 @@ if ready==1
 			[errorcode, caliimg]=PIVlab_capture_basler_calibration_image(inf,expos,ac_ROI_general);
 		elseif strcmp(camera_type,'OPTOcam')
 			[errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(inf,expos,ac_ROI_general);
+		elseif strcmp(camera_type,'OPTRONIS')
+			control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
+			[errorcode, caliimg]=PIVlab_capture_OPTRONIS_calibration_image(inf,expos,ac_ROI_general);
+			control_simple_sync_serial(0,2);
 		elseif strcmp(camera_type,'flir')
 			[errorcode, caliimg]=PIVlab_capture_flir_calibration_image(expos);
 		elseif strcmp(camera_type,'chronos')
@@ -11876,14 +11926,56 @@ if strcmp(caller,'double_images')
 end
 
 function ac_pivcapture_save_Callback(inpt,~)
+pause(0.1)
 handles=gethand;
 if inpt.Value == 0
 	set (handles.ac_imgamount, 'enable','off')
 else
 	set (handles.ac_imgamount, 'enable','on')
+	ac_imgamount_Callback
 end
 
+function ac_imgamount_Callback(~,~,~)
+handles=gethand;
+% assess how many images can be captured to RAM using the image
+% acquisition toolbox (pco doesn't use the toolbox and writes directly
+% to disk
+warning('off','MATLAB:JavaEDTAutoDelegation');
+imaqreset %resetting to get a good estimate of the free RAM
 
+imageamount=str2double(get(handles.ac_imgamount,'String'));
+ac_ROI_general=retr('ac_ROI_general');
+if isempty(ac_ROI_general)
+	max_cam_res=retr('max_cam_res');
+	ac_ROI_general=[1 1 max_cam_res(1) max_cam_res(2)];
+end
+value=get(handles.ac_config,'value');
+if value == 6  %basler cameras
+	bitmode=8;
+elseif value == 7  %flir cameras
+	bitmode=8;
+elseif value == 8  %OPTOcam
+	bitmode =retr('OPTOcam_bits');
+	if isempty (bitmode)
+		bitmode=8;
+	end
+elseif value == 9  %OPTRONIS
+	bitmode =retr('OPTRONIS_bits');
+	if isempty (bitmode)
+		bitmode=8;
+	end
+end
+
+max_possible_dbl_images = PIVlab_capture_max_possible_images(ac_ROI_general,[],bitmode);
+if imageamount > max_possible_dbl_images
+	if get(handles.ac_pivcapture_save,'Value')==1
+		set(handles.ac_imgamount,'BackgroundColor',[1 0.5 0])
+		beep
+		warning(['RAM most likely not sufficient to capture this amount of double images.' newline 'Please reduce the amount of double images.' newline 'Maximum double images is approx. ' num2str(max_possible_dbl_images)])
+	end
+else
+	set(handles.ac_imgamount,'BackgroundColor',[1 1 1])
+end
 
 
 function ac_pivcapture_Callback(~,~,~)
@@ -11919,7 +12011,11 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				ac_ROI_general=[1 1 max_cam_res(1) max_cam_res(2)];
 			end
 			put('capturing',1);
-			toolsavailable(0)
+			if isinf(imageamount)
+				toolsavailable(0,'Starting PIV preview...')
+			else
+				toolsavailable(0,'Starting PIV capture...')
+			end
 			set(handles.ac_pivstop,'enable','on')
 			set(handles.togglepair,'enable','on')
 			set(handles.ac_serialstatus,'enable','on')
@@ -11946,7 +12042,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 					if exist (fullfile(logger_path, 'acquisition_log.txt'),'file')~=2
 						try
 							logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'w');
-							fprintf(logger_fid,'recording_time\tconfig_strings_selected\timageamount\tcam_fps\tpulse_sep\tlas_percent\tac_ROI_general\tbinning\tOPTOcam_bits');
+							fprintf(logger_fid,'recording_time\tconfig_strings_selected\timageamount\tcam_fps\tpulse_sep\tlas_percent\tac_ROI_general\tbinning\tcam_bits');
 							fprintf(logger_fid, '\n');
 							fclose(logger_fid);
 						catch
@@ -11979,7 +12075,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 					end
 				end
 			end
-			
+
 			if value== 1 || value == 2 %setups without lD-PS
 				set(handles.ac_power,'enable','on') %here, laser power can be adjusted while it is running.
 			end
@@ -11997,7 +12093,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 			if value==1 || value==2 %setup withOUT LD-PS
 				%Start-up sequence for normal Q-Switched laser
 				waitbar(.5,f,'Starting laser...');
-				control_simple_sync_serial(1);
+				control_simple_sync_serial(1,0);
 				put('laser_running',1);
 				pause(1)
 				waitbar(.6,f,'Starting laser...');
@@ -12012,10 +12108,10 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 			elseif value == 3 || value == 4 %pco cameras with laser diode
 				%Start-up sequence for PIVlab LD-PS (much quicker)
 				waitbar(.01,f,'Starting laser...');
-				control_simple_sync_serial(1);
+				control_simple_sync_serial(1,0);
 				put('laser_running',1);
 				close(f)
-			elseif value== 5 || value == 6 || value==7 || value==8 %chronos and basler and flir and OPTOcam: Camera needs to be started first, afterwards the laser is enabled.
+			elseif value== 5 || value == 6 || value==7 || value==8 || value==9%chronos and basler and flir and OPTOcam: Camera needs to be started first, afterwards the laser is enabled.
 				close(f)
 			end
 			camera_type=retr('camera_type');
@@ -12041,34 +12137,28 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				%capture to camera RAM
 				%zuerst:camera konfigurieren. Dann kamera starten. dann laser. nach laserstart warten und aufnahme beenden.dann laser aus
 				cameraIP=retr('Chronos_IP');
-				control_simple_sync_serial(0) %stop triggering when already running.
+				control_simple_sync_serial(0,0) %stop triggering when already running.
 				[OutputError] = PIVlab_capture_chronos_synced_start(cameraIP,cam_fps); %prepare cam and start camera (waiting for trigger...)
-				control_simple_sync_serial(1); put('laser_running',1); %turn on laser
+				control_simple_sync_serial(1,0); put('laser_running',1); %turn on laser
 				[OutputError,ima,frame_nr_display] = PIVlab_capture_chronos_synced_capture(cameraIP,imageamount,cam_fps,do_realtime,ac_ROI_realtime); %capture n images, display livestream
 			elseif value == 1 || value == 2 || value == 3 || value == 4  %pco cameras
 				PIVlab_capture_pco(imageamount,f1exp_cam,'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI_realtime,binning,ac_ROI_general,camera_type,0);
 			elseif value == 6  %basler cameras
 				[OutputError,basler_vid,frame_nr_display] = PIVlab_capture_basler_synced_start(imageamount,ac_ROI_general); %prepare cam and start camera (waiting for trigger...)
-				control_simple_sync_serial(1); put('laser_running',1); %turn on laser
+				control_simple_sync_serial(1,0); put('laser_running',1); %turn on laser
 				[OutputError,basler_vid] = PIVlab_capture_basler_synced_capture(basler_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display); %capture n images, display livestream
 			elseif value == 7  %flir cameras
 				[OutputError,flir_vid,frame_nr_display] = PIVlab_capture_flir_synced_start(imageamount,cam_fps); %prepare cam and start camera (waiting for trigger...)
-				control_simple_sync_serial(1); put('laser_running',1); %turn on laser
+				control_simple_sync_serial(1,0); put('laser_running',1); %turn on laser
 				[OutputError,flir_vid] = PIVlab_capture_flir_synced_capture(flir_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display); %capture n images, display livestream
 			elseif value == 8  %OPTOcam
-
-
 				OPTOcam_bits =retr('OPTOcam_bits');
 				if isempty (OPTOcam_bits)
 					OPTOcam_bits=8;
 				end
-
-
 				[OutputError,OPTOcam_vid,frame_nr_display] = PIVlab_capture_OPTOcam_synced_start(imageamount,ac_ROI_general,cam_fps,OPTOcam_bits); %prepare cam and start camera (waiting for trigger...)
-
 				Error_Reason={};
 				OPTOcam_settings_check = 1;
-
 				max_fps_with_current_settings = 1/((get(OPTOcam_vid.Source,'SensorReadoutTime') + get(OPTOcam_vid.Source,'BslExposureStartDelay'))/1000/1000);
 				if cam_fps > max_fps_with_current_settings
 					OPTOcam_settings_check = 0;
@@ -12076,7 +12166,6 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 					Error_Reason{end+1,1}=['With current settings, sensor max. fps is ' num2str(round(max_fps_with_current_settings,1)) ' fps'];
 					Error_Reason{end+1,1}='Please make the ROI smaller, or decrease the frame rate.';
 				end
-
 				min_allowed_interframe = retr('min_allowed_interframe');
 				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
 				if pulse_sep < min_allowed_interframe
@@ -12085,10 +12174,8 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 					Error_Reason{end+1,1}=['In ' num2str(OPTOcam_bits) ' bit mode, the puse distance must be at least ' num2str(min_allowed_interframe) ' µs.'];
 					Error_Reason{end+1,1}='Please increase the pulse distance, or decrease the bit mode.';
 				end
-
-
 				if OPTOcam_settings_check == 1
-					control_simple_sync_serial(1); put('laser_running',1); %turn on laser
+					control_simple_sync_serial(1,0); put('laser_running',1); %turn on laser
 					[OutputError,OPTOcam_vid] = PIVlab_capture_OPTOcam_synced_capture(OPTOcam_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTOcam_bits); %capture n images, display livestream
 				else
 					msgbox(Error_Reason,'modal')
@@ -12096,12 +12183,66 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 					put('cancel_capture',1);
 					imageamount=inf; %will prevent saving of images
 				end
+			elseif value == 9  %OPTRONIS
+				OPTRONIS_bits =retr('OPTRONIS_bits');
+				if isempty (OPTRONIS_bits)
+					OPTRONIS_bits=8;
+				end
+				[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits); %prepare cam and start camera (waiting for trigger...)
+				Error_Reason={};
+				OPTRONIS_settings_check = 1;
+				%2166 mit 8 bit
+				%1750 mit 10 bit
+
+				camera_sub_type=retr('camera_sub_type');
+				if OPTRONIS_bits==8
+					switch camera_sub_type
+						case 'Cyclone-2-2000-M'
+							max_fps_with_current_settings = 2165;
+						case 'Cyclone-1HS-3500-M'
+							max_fps_with_current_settings = 3500;
+						case 'Cyclone-25-150-M'
+							max_fps_with_current_settings = 150;
+						otherwise
+							max_fps_with_current_settings=1111;
+					end
+	
+				elseif OPTRONIS_bits==10
+						switch camera_sub_type
+						case 'Cyclone-2-2000-M'
+							max_fps_with_current_settings = 1750;
+						case 'Cyclone-1HS-3500-M'
+							max_fps_with_current_settings = 3175;
+						case 'Cyclone-25-150-M'
+							max_fps_with_current_settings = 149; 
+						otherwise
+							max_fps_with_current_settings=1111;
+					end
+				end
+				
+				if cam_fps > max_fps_with_current_settings
+					OPTRONIS_settings_check = 0;
+					Error_Reason{end+1,1}='Frame rate too high for selected bit rate.';
+					Error_Reason{end+1,1}=['With current settings, sensor max. fps is ' num2str(round(max_fps_with_current_settings,1)) ' fps'];
+					Error_Reason{end+1,1}='Please select a lower frame rate.';
+				end
+				min_allowed_interframe = retr('min_allowed_interframe');
+				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
+				if OPTRONIS_settings_check == 1
+					control_simple_sync_serial(1,0); put('laser_running',1); %turn on laser
+					[OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits); %capture n images, display livestream
+				else
+					msgbox(Error_Reason,'modal')
+					uiwait
+					put('cancel_capture',1);
+					imageamount=inf; %will prevent saving of images
+				end				
 			end
 			%disable external devices
 			if (~isempty(retr('ac_enable_seeding1')) && retr('ac_enable_seeding1') ~=0) || (~isempty(retr('ac_enable_device1')) && retr('ac_enable_device1') ~=0) || (~isempty(retr('ac_enable_device2')) && retr('ac_enable_device2') ~=0)
 				external_device_control(0); % stops all external devices
 			end
-			control_simple_sync_serial(0);pause(0.1);control_simple_sync_serial(0);
+			control_simple_sync_serial(0,0);pause(0.1);control_simple_sync_serial(0,0);
 			put('laser_running',0);
 			if value == 5 %chronos
 				%when Chronos:save the images when finished recording to camera ram
@@ -12122,6 +12263,11 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 			if value == 8 %OPTOcam
 				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
 					[OutputError] = PIVlab_capture_OPTOcam_save(OPTOcam_vid,imageamount,projectpath,frame_nr_display,OPTOcam_bits); %save the images from ram to disk.
+				end
+			end
+			if value == 9 %OPTRONIS
+				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
+					[OutputError] = PIVlab_capture_OPTRONIS_save(OPTRONIS_vid,imageamount,projectpath,frame_nr_display,OPTRONIS_bits); %save the images from ram to disk.
 				end
 			end
 
@@ -12236,29 +12382,30 @@ end
 set(handles.ac_msgbox,'String',contents);
 
 
-function ac_camstop_Callback(~,~,~)
+function ac_camstop_Callback(~,evt,~)
 put('cancel_capture',1);
-control_simple_sync_serial(0);
+control_simple_sync_serial(0,0);
 %external_device_control(0);
 put('laser_running',0);
 put('capturing',0);
 toolsavailable(1)
 fresh_calib_image=retr('fresh_calib_image');
-if ~isempty(fresh_calib_image) && fresh_calib_image == 1
-	put('fresh_calib_image',0);
-	handles=gethand;
-	projectpath=get(handles.ac_project,'String');
-	numbi = 0;
-	imgA_path = fullfile(projectpath, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']);
-	while exist(imgA_path, 'file')
-		numbi = numbi+1;
+if strncmp(evt.Source.Tag,'ac_calibsave',20) %only when "save" button is pressed, then save the calibration image.
+	if ~isempty(fresh_calib_image) && fresh_calib_image == 1
+		put('fresh_calib_image',0);
+		handles=gethand;
+		projectpath=get(handles.ac_project,'String');
+		numbi = 0;
 		imgA_path = fullfile(projectpath, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']);
+		while exist(imgA_path, 'file')
+			numbi = numbi+1;
+			imgA_path = fullfile(projectpath, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']);
+		end
+		imwrite(retr('caliimg'),imgA_path);
+		set(handles.ac_calibsave,'enable','off')
 	end
-	imwrite(retr('caliimg'),imgA_path);
-	set(handles.ac_calibsave,'enable','off')
+	drawnow;
 end
-drawnow;
-
 
 function ac_browse_Callback(~,~,~)
 handles=gethand;
@@ -12320,7 +12467,7 @@ function ac_ext_trigger_settings_Callback (~,~,~)
 handles=gethand;
 serpo=retr('serpo');
 if ~isempty(serpo)
-	control_simple_sync_serial(0);
+	control_simple_sync_serial(0,0);
 	if get(handles.ac_enable_ext_trigger,'Value')==1 %execute only if checkbox was off before it was clicked.
 		old_label=get(handles.ac_enable_ext_trigger,'String');
 		set(handles.ac_enable_ext_trigger,'String','Acquiring...','Enable','off')
@@ -12510,6 +12657,55 @@ if value == 8 % OPTOcam
 	end
 	%end
 end
+if value == 9 % OPTRONIS
+	put('camera_type','OPTRONIS');
+	camera_sub_type=retr('camera_sub_type');
+	if isempty (camera_sub_type) %this means that hotplugging camera type will not be possible: Camera type will only be detected at first start of PIVlab.
+		try
+			toolsavailable(0,'Detecting OPTRONIS camera type...')
+			[~,camera_sub_type] = PIVlab_capture_OPTRONIS_cam_detect();
+			put('camera_sub_type',camera_sub_type);
+		catch ME
+			toolsavailable(1)
+			disp (ME.message)
+		end
+		toolsavailable(1)
+		postix=get(gca,'XLim');postiy=get(gca,'YLim');text(postix(2)/2,postiy(2)/2,['Detected: ' camera_sub_type],'HorizontalAlignment','center','VerticalAlignment','middle','color','g','fontsize',16, 'BackgroundColor', [0.25 0.25 0.25],'tag','busyhint','margin',10,'Clipping','on');
+	end
+	put('f1exp',352) % Exposure start -> Q1 delay
+	put('f1exp_cam',350); %exposure time setting first frame
+	put('master_freq',15);
+
+	switch camera_sub_type
+		case 'Cyclone-2-2000-M'
+			avail_freqs={'2165' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
+			put('max_cam_res',[1920,1080]);
+			put('min_allowed_interframe',20);
+			put('blind_time',3);
+		case 'Cyclone-1HS-3500-M'
+			avail_freqs={'3500' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
+			put('max_cam_res',[1280,860]);
+			put('min_allowed_interframe',20);
+			put('blind_time',3);
+		case 'Cyclone-25-150-M'
+			avail_freqs={'150' '100' '75' '50' '20' '10'};
+			put('max_cam_res',[5120,5120]);
+			put('min_allowed_interframe',30);
+			put('blind_time',25);
+		otherwise
+			disp('Camera detection unsuccesful.')
+			avail_freqs={'5' '4' '3' '2' '1'};
+			put('max_cam_res',[100,100]);
+			put('min_allowed_interframe',222);
+			put('blind_time',111);
+	end
+	set(handles.ac_fps,'string',avail_freqs);
+	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+	if old_setting ~= value
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
+	%end
+end
 ac_expo_Callback
 straddling_figure=findobj('tag','straddling_figure');
 initiate_straddling_graph
@@ -12651,13 +12847,6 @@ if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
 			des_x=640;
 			des_y=480;
 
-
-
-			m0 = uimenu(c_menu,'Label','OPTOcam 1936x1216 (8bit: 160 fps, 12bit: 80 fps)','Callback',@setdefaultroi);
-			m1 = uimenu(c_menu,'Label','OPTOcam 1600x600 (8bit: 320 fps)','Callback',@setdefaultroi);
-			m2 = uimenu(c_menu,'Label','OPTOcam 1600x480 (8bit: 400 fps)','Callback',@setdefaultroi);
-
-
 		case 'OPTOcam 1936x1216 (8bit: 160 fps, 12bit: 80 fps)'
 			des_x=1936;
 			des_y=1216;
@@ -12667,7 +12856,45 @@ if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
 		case 'OPTOcam 1600x480 (8bit: 400 fps)'
 			des_x=1600;
 			des_y=480;
+		
+		case 'Cyclone-2-2000-M 1920x1080 (max. 2165 fps)'
+			des_x=1920;
+			des_y=1080;
+		case 'Cyclone-2-2000-M 1792x800 (max. 3100 fps)'
+			des_x=1792;
+			des_y=800;
+		case 'Cyclone-2-2000-M 1792x480 (max. 5142 fps)'
+			des_x=1792;
+			des_y=480;
+		case 'Cyclone-2-2000-M 1024x240 (max. 10150 fps)'
+			des_x=1024;
+			des_y=240;
 
+		case 'Cyclone-1HS-3500-M 1280x860 (max. 3500 fps)'
+			des_x=1280;
+			des_y=860;
+		case 'Cyclone-1HS-3500-M 1280x640 (max. 4700 fps)'
+			des_x=1280;
+			des_y=640;
+		case 'Cyclone-1HS-3500-M 1280x320 (max. 9340 fps)'
+			des_x=1280;
+			des_y=320;
+		case 'Cyclone-1HS-3500-M 1280x240 (max. 12350 fps)'
+			des_x=1280;
+			des_y=240;
+
+		case 'Cyclone-25-150-M 5120x5120 (max. 150 fps)'
+			des_x=5120;
+			des_y=5120;
+		case 'Cyclone-25-150-M 5120x2160 (max. 350 fps)'
+			des_x=5120;
+			des_y=2160;
+		case 'Cyclone-25-150-M 5120x1080 (max. 695 fps)'
+			des_x=5120;
+			des_y=1080;
+		case 'Cyclone-25-150-M 5120x720 (max. 1025 fps)'
+			des_x=5120;
+			des_y=720;
 
 		case 'Enter ROI'
 			prompt = {'x','y','w','h'};
@@ -13052,4 +13279,29 @@ else %not in derivatives panel
 	end
 	colormap('gray');
 	vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
+end
+
+function toggle_parallel_Callback(~, ~, ~)
+hgui=getappdata(0,'hgui');
+handles=gethand;
+load icons.mat
+try
+	parallel=retr('parallel');
+	if parallel==0
+		put ('parallel',1);
+		toolsavailable(0,'Please wait, opening parallel pool...')
+		pause(0.1)
+		desired_num_cores=feature('numCores');
+		pivparpool('close')
+		pivparpool('open',desired_num_cores)
+		set(handles.toggle_parallel, 'cdata',parallel_on,'TooltipString','Parallel processing on. Click to turn off.');
+	else
+		put ('parallel',0);
+		toolsavailable(0,'Please wait, closing parallel pool...')
+		pivparpool('close')
+		set(handles.toggle_parallel, 'cdata',parallel_off,'TooltipString','Parallel processing off. Click to turn on.');
+	end
+	toolsavailable(1);
+catch
+	set(handles.toggle_parallel, 'cdata',parallel_off,'enable','off', 'TooltipString','Parallel processing not avilable.');
 end
