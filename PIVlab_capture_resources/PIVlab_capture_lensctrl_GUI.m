@@ -4,7 +4,7 @@ if isempty(fh)
 	hgui=getappdata(0,'hgui');
 	mainpos=get(hgui,'Position');
 	[focus,aperture,lighting]=get_lens_status;
-	lens_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Lens control','Toolbar','none','Units','characters','Position',[mainpos(1)+mainpos(3)-35 mainpos(2) 35 15+1.5+4+5.5],'tag','lens_control_window','visible','on','KeyPressFcn', @key_press,'resize','off','CloseRequestFcn',@CloseRequestFcn);
+	lens_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Lens control','Toolbar','none','Units','characters','Position',[mainpos(1)+mainpos(3)-37 mainpos(2) 37 15+1.5+4+5.5],'tag','lens_control_window','visible','on','KeyPressFcn', @key_press,'resize','off','CloseRequestFcn',@CloseRequestFcn);
 	set (lens_control_window,'Units','Characters');
 
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen

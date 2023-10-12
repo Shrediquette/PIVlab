@@ -1,9 +1,7 @@
 function PIVlab_capture_devicectrl_GUI
 fh = findobj('tag', 'device_control_window');
-
 %abgefragt in main GUI werden muss:
 %ac_enable_seeding1 0 oder 1
-
 if isempty(retr('ext_dev_01_pwm'))
 	put('ext_dev_01_pwm',1)
 end
@@ -13,7 +11,9 @@ end
 if isempty(retr('ext_dev_03_pwm'))
 	put('ext_dev_03_pwm',1)
 end
-
+if isempty(retr('flowlab_percent'))
+	put('flowlab_percent',0)
+end
 if isempty(retr('ac_enable_seeding1'))
 	put('ac_enable_seeding1',0)
 end
@@ -23,25 +23,25 @@ end
 if isempty(retr('ac_enable_device2'))
 	put('ac_enable_device2',0)
 end
+if isempty(retr('ac_enable_flowlab'))
+	put('ac_enable_flowlab',0)
+end
 if isempty(fh)
 	hgui=getappdata(0,'hgui');
 	mainpos=get(hgui,'Position');
-	device_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Device control','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4+4 35 15+1.5],'tag','device_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
+	device_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Device control','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-37 mainpos(2)+15+4+4+5.5 37 15+5+1.5+1],'tag','device_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
 	set (device_control_window,'Units','Characters');
-
 
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 	guidata(device_control_window,handles)
 	setappdata(0,'hseeding',device_control_window);
-
 	parentitem = get(device_control_window, 'Position');
-
 	margin=1.5;
-
 	panelheight=5;
-	handles.seeder1panel = uipanel(device_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight-1.5 parentitem(3)-2 panelheight],'title','Seeder 1','fontweight','bold');
-	handles.device1panel = uipanel(device_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*2-1.5 parentitem(3)-2 panelheight],'title','Device 1','fontweight','bold');
-	handles.device2panel = uipanel(device_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5 parentitem(3)-2 panelheight],'title','Device 2','fontweight','bold');
+	handles.seeder1panel = uipanel(device_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight-1.5-1 parentitem(3)-2 panelheight],'title','Seeder 1','fontweight','bold');
+	handles.device1panel = uipanel(device_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*2-1.5-1 parentitem(3)-2 panelheight],'title','Device 1','fontweight','bold');
+	handles.device2panel = uipanel(device_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5-1 parentitem(3)-2 panelheight],'title','Device 2','fontweight','bold');
+	handles.flowlabpanel = uipanel(device_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*4-1.5-1 parentitem(3)-2 panelheight],'title','FLOWlab','fontweight','bold');
 
 	%% Status symbols
 	parentitem=get(device_control_window, 'Position');
@@ -51,6 +51,8 @@ if isempty(fh)
 	handles.Device1_status = uicontrol(device_control_window,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin*0.25-item(2) item(3)-margin*0.25 item(4)],'String','Device1','tag', 'Device1_status','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold');
 	item=[parentitem(3)/3*2 0 parentitem(3)/3 1];
 	handles.Device2_status = uicontrol(device_control_window,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin*0.25-item(2) item(3)-margin*0.25 item(4)],'String','Device2','tag', 'Device2_status','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold');
+	item=[parentitem(3)/3*0 1 parentitem(3)/3 1];
+	handles.Flowlab_status = uicontrol(device_control_window,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin*0.25-item(2) item(3)-margin*0.25 item(4)],'String','FLOWlab','tag', 'Flowlab_status','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold');
 
 	%% Seeder
 	parentitem=get(handles.seeder1panel, 'Position');
@@ -70,7 +72,6 @@ if isempty(fh)
 	item=[parentitem(3)/2+7 item(2) 15 1];
 	handles.seeder_active = uicontrol(handles.seeder1panel,'Style','checkbox','String','active','value',retr('ac_enable_seeding1'),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@checkbox_set,1},'tag','seeder_active','Tooltipstring','Enable this device when a PIV capture starts');
 
-
 	%% Device1
 	parentitem=get(handles.device1panel, 'Position');
 	item=[0 0 0 0];
@@ -89,8 +90,6 @@ if isempty(fh)
 	item=[parentitem(3)/2+7 item(2) 15 1];
 	handles.device1_active = uicontrol(handles.device1panel,'Style','checkbox','String','active','value',retr('ac_enable_device1'),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@checkbox_set,2},'tag','device1_active','Tooltipstring','Enable this device when a PIV capture starts');
 
-
-
 	%% Device2
 	parentitem=get(handles.device2panel, 'Position');
 	item=[0 0 0 0];
@@ -108,10 +107,31 @@ if isempty(fh)
 
 	item=[parentitem(3)/2+7 item(2) 15 1];
 	handles.device2_active = uicontrol(handles.device2panel,'Style','checkbox','String','active','value',retr('ac_enable_device2'),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@checkbox_set,3},'tag','device2_active','Tooltipstring','Enable this device when a PIV capture starts');
+
+	%% FLOWlab
+	parentitem=get(handles.flowlabpanel, 'Position');
+	item=[0 0 0 0];
+	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2*1 1.5];
+	handles.flowlab_on = uicontrol(handles.flowlabpanel,'Style','pushbutton','String','On','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,4,'on'} );
+
+	item=[parentitem(3)/2*1 item(2) parentitem(3)/2*1 1.5];
+	handles.flowlab_off = uicontrol(handles.flowlabpanel,'Style','pushbutton','String','Off','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,4,'off'} );
+
+	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
+	handles.flowlab_label = uicontrol(handles.flowlabpanel,'Style','text','String','Percent','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','right');
+
+	item=[parentitem(3)/2*1 item(2) 8 1];
+	handles.flowlab_edit = uicontrol(handles.flowlabpanel,'Style','edit','String',num2str(retr('flowlab_percent')),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@editfield_edit_Callback,4},'tag','flowlab_edit');
+
+	item=[parentitem(3)/2+7 item(2) 15 1];
+	handles.flowlab_active = uicontrol(handles.flowlabpanel,'Style','checkbox','String','active','value',retr('ac_enable_flowlab'),'units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@checkbox_set,4},'tag','flowlab_active','Tooltipstring','Enable this device when a PIV capture starts');
+
 	drawnow;
+	%% Detect devices when window opens
 	find_devices('seeder_01');pause(0.1)
 	find_devices('device_01');pause(0.1)
-	find_devices('device_02');
+	find_devices('device_02');pause(0.1)
+	find_devices('flowlab');
 else %Figure handle does already exist --> bring UI to foreground.
 	figure(fh)
 end
@@ -119,7 +139,6 @@ end
 function status_device = find_devices(device)
 hgui = getappdata(0,'hgui');
 serpo=getappdata(hgui,'serpo');
-%serpo.configureTerminator ("CR/LF");
 try
 	serpo.Port; %is there no other way to determine if serialport is working...?
 	alreadyconnected=1;
@@ -167,12 +186,21 @@ try
 					status_device=str2double(serial_answer(device2_available+11:end));
 					set(handles.Device2_status, 'Backgroundcolor',[0 1 0])
 				end
+			case 'flowlab'
+				writeline(serpo,'DEVICE_STATUS_FLOWLAB?');
+				warning off
+				serial_answer=readline(serpo);
+				serial_answer=convertStringsToChars(serial_answer);
+				warning on
+				flowlab_available=strfind(serial_answer,'status_FLOWLAB=');
+				if ~isempty(flowlab_available) &&  flowlab_available~=0
+					status_device=round(str2double(serial_answer(flowlab_available+15:end))*100);
+					set(handles.Flowlab_status, 'Backgroundcolor',[0 1 0])
+				end
 		end
 	end
 catch
 end
-
-
 
 function checkbox_set(caller,~,device)
 if device==1
@@ -193,6 +221,12 @@ elseif device==3
 	else
 		put('ac_enable_device2',0)
 	end
+elseif device==4
+	if caller.Value == 1
+		put('ac_enable_flowlab',1)
+	else
+		put('ac_enable_flowlab',0)
+	end
 end
 
 function editfield_edit_Callback(caller,~,device)
@@ -206,6 +240,9 @@ elseif device==2
 elseif device==3
 	put('ext_dev_03_pwm',pwm);
 	external_device_control(device,retr('ac_device2_status'))
+elseif device==4
+	put('flowlab_percent',pwm);
+	external_device_control(device,retr('ac_flowlab_status'))
 end
 
 function device_set (~,~,device,inpt)
@@ -224,13 +261,17 @@ if device == 3
 	put('ext_dev_03_pwm',pwm);
 end
 
+if device == 4
+	pwm=str2double(get(handles.flowlab_edit,'String'));
+	put('flowlab_percent',pwm);
+end
+
 if strmatch(inpt,'on')
 	external_device_control(device,1)
 end
 if strmatch(inpt,'off')
 	external_device_control(device,0)
 end
-
 
 function external_device_control(device,status)
 hgui = getappdata(0,'hgui');
@@ -300,6 +341,24 @@ try
 					set(handles.Device2_status, 'Backgroundcolor',[0 1 0])
 				else
 					set(handles.Device2_status, 'Backgroundcolor',[1 0 0])
+				end
+			case 4
+				if status==1
+					flowlab_percent = retr('flowlab_percent');
+					line_to_write=['FLOWLAB:' num2str(flowlab_percent/100)];
+					put('ac_flowlab_status',1);
+				else
+					line_to_write='FLOWLAB:0';
+					put('ac_flowlab_status',0);
+				end
+				writeline(serpo,line_to_write);
+				status_device = find_devices('flowlab');
+				if ~isempty(status_device)
+					set(handles.flowlab_status, 'Backgroundcolor',[0 1 1])
+					drawnow;pause(0.2)
+					set(handles.flowlab_status, 'Backgroundcolor',[0 1 0])
+				else
+					set(handles.flowlab_status, 'Backgroundcolor',[1 0 0])
 				end
 		end
 	end

@@ -25,7 +25,7 @@ if isempty(fh)
 	movegui(splashscreen,'center');
 	set(splashscreen,'visible','on')
 	drawnow
-	text(splash_ax,10,10,'Loading, please wait...')
+	handle_splash_text = text(splash_ax,10,10,'Loading, please wait...');
 	%}
 	MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0.05 0.1 0.9 0.8],'ResizeFcn', @MainWindow_ResizeFcn,'CloseRequestFcn', @MainWindow_CloseRequestFcn,'tag','hgui','visible','off','KeyPressFcn', @key_press);
 	set (MainWindow,'Units','Characters');
@@ -41,8 +41,14 @@ if isempty(fh)
 	if ~exist('desired_num_cores','var')
 		disp('-> Use the command "PIVlab_GUI(Nr_of_cores)" to select the amount of computation cores.')
 	end
-	disp(['-> Starting PIVlab ' version ' ...'])
-	disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
+
+	if ~exist('splash_ax','var')
+		disp(['-> Starting PIVlab ' version ' ...'])
+		disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
+	else
+		text_content=get(handle_splash_text,'String');
+		set (handle_splash_text, 'String',[text_content newline '-> Starting PIVlab ' version ' ...' newline '-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.']);
+	end
 
 	margin=1.5;
 	panelwidth=45;%was 37 must also be changed in PIVlab_settings_default.mat
@@ -11731,7 +11737,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 
 			if strcmp(camera_type,'OPTRONIS')
 				%die ganzen ROIs bringen noch keine fps Erhöhung, muss erst
-				%im dropdown eine Option hinzugefügt werden... 
+				%im dropdown eine Option hinzugefügt werden...
 				camera_sub_type=retr('camera_sub_type');
 				switch camera_sub_type
 					case 'Cyclone-2-2000-M'
@@ -12083,12 +12089,20 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 
 			f = waitbar(0,'Initializing...');
 			%if any external device is activated for automatic control, then...
-			if (~isempty(retr('ac_enable_seeding1')) && retr('ac_enable_seeding1') ~=0) || (~isempty(retr('ac_enable_device1')) && retr('ac_enable_device1') ~=0) || (~isempty(retr('ac_enable_device2')) && retr('ac_enable_device2') ~=0)
-				external_device_control(1); %starts selected devices
+			if (~isempty(retr('ac_enable_seeding1')) && retr('ac_enable_seeding1') ~=0) || (~isempty(retr('ac_enable_device1')) && retr('ac_enable_device1') ~=0) || (~isempty(retr('ac_enable_device2')) && retr('ac_enable_device2') ~=0) || (~isempty(retr('ac_enable_flowlab')) && retr('ac_enable_flowlab') ~=0)
+				external_device_control(1); %starts activated devices
 				waitbar(.15,f,'Starting external devices...');
 				pause(1)
 				waitbar(.33,f,'Starting external devices...');
 				pause(1)
+				if (~isempty(retr('ac_enable_flowlab')) && retr('ac_enable_flowlab') ~=0) %flowlab is activated
+					%ask if flowlab was already running
+					%if yes --> proceed, if not --> pause to wait for uniform flow velocity.
+					if retr('flowlab_percent') == 0
+						waitbar(.4,f,'Waiting for FLOWlab...');
+						pause(4)
+					end
+				end
 			end
 			if value==1 || value==2 %setup withOUT LD-PS
 				%Start-up sequence for normal Q-Switched laser
@@ -12111,7 +12125,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 				control_simple_sync_serial(1,0);
 				put('laser_running',1);
 				close(f)
-			elseif value== 5 || value == 6 || value==7 || value==8 || value==9%chronos and basler and flir and OPTOcam: Camera needs to be started first, afterwards the laser is enabled.
+			elseif value== 5 || value == 6 || value==7 || value==8 || value==9%chronos and basler and flir and OPTOcam and OPTRONIS: Camera needs to be started first, afterwards the laser is enabled.
 				close(f)
 			end
 			camera_type=retr('camera_type');
@@ -12189,6 +12203,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 					OPTRONIS_bits=8;
 				end
 				[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits); %prepare cam and start camera (waiting for trigger...)
+				pause(1) %make sure OPTRONIS is ready to capture.
 				Error_Reason={};
 				OPTRONIS_settings_check = 1;
 				%2166 mit 8 bit
@@ -12206,20 +12221,20 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 						otherwise
 							max_fps_with_current_settings=1111;
 					end
-	
+
 				elseif OPTRONIS_bits==10
-						switch camera_sub_type
+					switch camera_sub_type
 						case 'Cyclone-2-2000-M'
 							max_fps_with_current_settings = 1750;
 						case 'Cyclone-1HS-3500-M'
 							max_fps_with_current_settings = 3175;
 						case 'Cyclone-25-150-M'
-							max_fps_with_current_settings = 149; 
+							max_fps_with_current_settings = 149;
 						otherwise
 							max_fps_with_current_settings=1111;
 					end
 				end
-				
+
 				if cam_fps > max_fps_with_current_settings
 					OPTRONIS_settings_check = 0;
 					Error_Reason{end+1,1}='Frame rate too high for selected bit rate.';
@@ -12236,10 +12251,10 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 					uiwait
 					put('cancel_capture',1);
 					imageamount=inf; %will prevent saving of images
-				end				
+				end
 			end
 			%disable external devices
-			if (~isempty(retr('ac_enable_seeding1')) && retr('ac_enable_seeding1') ~=0) || (~isempty(retr('ac_enable_device1')) && retr('ac_enable_device1') ~=0) || (~isempty(retr('ac_enable_device2')) && retr('ac_enable_device2') ~=0)
+			if (~isempty(retr('ac_enable_seeding1')) && retr('ac_enable_seeding1') ~=0) || (~isempty(retr('ac_enable_device1')) && retr('ac_enable_device1') ~=0) || (~isempty(retr('ac_enable_device2')) && retr('ac_enable_device2') ~=0) || (~isempty(retr('ac_enable_flowlab')) && retr('ac_enable_flowlab') ~=0)
 				external_device_control(0); % stops all external devices
 			end
 			control_simple_sync_serial(0,0);pause(0.1);control_simple_sync_serial(0,0);
@@ -12320,15 +12335,25 @@ if ~isempty(serpo)
 			put('ac_device2_status',1);
 			pause(0.2)
 		end
+		if ~isempty(retr('ac_enable_flowlab')) && retr('ac_enable_flowlab') == 1
+			flowlab_percent = retr('flowlab_percent');
+			line_to_write=['FLOWLAB:' num2str(flowlab_percent)/100];
+			writeline(serpo,line_to_write);
+			put('ac_flowlab_status',1);
+			pause(0.2)
+		end
 	else
 		writeline(serpo,'SEEDER_01:0');
 		pause(0.1)
 		writeline(serpo,'DEVICE_01:0');
 		pause(0.1)
 		writeline(serpo,'DEVICE_02:0');
+		pause(0.1)
+		writeline(serpo,'FLOWLAB:0');
 		put('ac_seeding1_status',0);
 		put('ac_device1_status',0);
 		put('ac_device2_status',0);
+		put('ac_flowlab_status',0);
 	end
 end
 
@@ -12665,12 +12690,12 @@ if value == 9 % OPTRONIS
 			toolsavailable(0,'Detecting OPTRONIS camera type...')
 			[~,camera_sub_type] = PIVlab_capture_OPTRONIS_cam_detect();
 			put('camera_sub_type',camera_sub_type);
+			postix=get(gca,'XLim');postiy=get(gca,'YLim');text(postix(2)/2,postiy(2)/2,['Detected: ' camera_sub_type],'HorizontalAlignment','center','VerticalAlignment','middle','color','g','fontsize',16, 'BackgroundColor', [0.25 0.25 0.25],'tag','busyhint','margin',10,'Clipping','on');
 		catch ME
 			toolsavailable(1)
-			disp (ME.message)
+			camera_sub_type=' ';
 		end
 		toolsavailable(1)
-		postix=get(gca,'XLim');postiy=get(gca,'YLim');text(postix(2)/2,postiy(2)/2,['Detected: ' camera_sub_type],'HorizontalAlignment','center','VerticalAlignment','middle','color','g','fontsize',16, 'BackgroundColor', [0.25 0.25 0.25],'tag','busyhint','margin',10,'Clipping','on');
 	end
 	put('f1exp',352) % Exposure start -> Q1 delay
 	put('f1exp_cam',350); %exposure time setting first frame
@@ -12856,7 +12881,7 @@ if ~isempty(retr('doing_roi')) && retr('doing_roi')==1
 		case 'OPTOcam 1600x480 (8bit: 400 fps)'
 			des_x=1600;
 			des_y=480;
-		
+
 		case 'Cyclone-2-2000-M 1920x1080 (max. 2165 fps)'
 			des_x=1920;
 			des_y=1080;
