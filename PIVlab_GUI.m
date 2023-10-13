@@ -11956,6 +11956,7 @@ if isempty(ac_ROI_general)
 	ac_ROI_general=[1 1 max_cam_res(1) max_cam_res(2)];
 end
 value=get(handles.ac_config,'value');
+bitmode=8;
 if value == 6  %basler cameras
 	bitmode=8;
 elseif value == 7  %flir cameras
