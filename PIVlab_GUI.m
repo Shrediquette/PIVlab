@@ -12093,15 +12093,22 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 			if (~isempty(retr('ac_enable_seeding1')) && retr('ac_enable_seeding1') ~=0) || (~isempty(retr('ac_enable_device1')) && retr('ac_enable_device1') ~=0) || (~isempty(retr('ac_enable_device2')) && retr('ac_enable_device2') ~=0) || (~isempty(retr('ac_enable_flowlab')) && retr('ac_enable_flowlab') ~=0)
 				external_device_control(1); %starts activated devices
 				waitbar(.15,f,'Starting external devices...');
-				pause(1)
+				pause(0.5)
 				waitbar(.33,f,'Starting external devices...');
-				pause(1)
+				pause(0.5)
 				if (~isempty(retr('ac_enable_flowlab')) && retr('ac_enable_flowlab') ~=0) %flowlab is activated
 					%ask if flowlab was already running
 					%if yes --> proceed, if not --> pause to wait for uniform flow velocity.
-					if retr('flowlab_percent') == 0
-						waitbar(.4,f,'Waiting for FLOWlab...');
-						pause(4)
+					flowlab_percent=retr('flowlab_percent');
+					if flowlab_percent ~= 0
+						external_device_control(1);
+						%wait a variable time untl capturing...
+						%slower velocities require more time to settle.
+						time_to_wait = round(-7*flowlab_percent/100 + 10);
+						for i=1:time_to_wait
+							waitbar(.4 + 0.6*(i/time_to_wait),f,'Waiting for flow stabilization...');
+							pause(1)
+						end
 					end
 				end
 			end
@@ -12338,7 +12345,7 @@ if ~isempty(serpo)
 		end
 		if ~isempty(retr('ac_enable_flowlab')) && retr('ac_enable_flowlab') == 1
 			flowlab_percent = retr('flowlab_percent');
-			line_to_write=['FLOWLAB:' num2str(flowlab_percent)/100];
+			line_to_write=['FLOWLAB:' num2str(flowlab_percent/100)]
 			writeline(serpo,line_to_write);
 			put('ac_flowlab_status',1);
 			pause(0.2)
