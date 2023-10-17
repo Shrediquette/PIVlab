@@ -128,10 +128,10 @@ if isempty(fh)
 
 	drawnow;
 	%% Detect devices when window opens
+	find_devices('flowlab');pause(0.1)
 	find_devices('seeder_01');pause(0.1)
 	find_devices('device_01');pause(0.1)
-	find_devices('device_02');pause(0.1)
-	find_devices('flowlab');
+	find_devices('device_02');
 else %Figure handle does already exist --> bring UI to foreground.
 	figure(fh)
 end
