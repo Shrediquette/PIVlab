@@ -110,6 +110,7 @@ if bitmode ==8
 elseif bitmode==12
 	clim([0 2^12]); %seems to be a workaround to force preview to show full data range...
 end
+pause(1); %make sure OPTOcam is ready...
 drawnow;
 
 function CustomIMAQErrorFcn(obj, event, varargin)
