@@ -1,6 +1,5 @@
 function [OutputError,ima,framerate_max] = PIVlab_capture_pco(nr_of_images,exposure_time,TriggerModeString,ImagePath,framerate,do_realtime,ROI_live,binning,ROI_general,camera_type,measure_framerate_max)
 display_warning=0;
-
 if measure_framerate_max == 1
 	OutputError=0;
 	glvar=struct('do_libunload',1,'do_close',0,'camera_open',0,'out_ptr',[]);
@@ -273,9 +272,20 @@ else
 		errorCode = calllib('PCO_CAM_SDK', 'PCO_SetRecorderSubmode',out_ptr,RECORDER_SUBMODE_RINGBUFFER);
 		pco_errdisp('PCO_SetRecorderSubmode',errorCode);
 
-		%disnable ASCII and binary timestamp
+		%Enable or disable timestamps in image
+		panda_timestamp=retr('panda_timestamp');
+		if isempty (panda_timestamp)
+			panda_timestamp='none';
+		end
 		if(bitand(cam_desc.dwGeneralCapsDESC1,GENERALCAPS1_NO_TIMESTAMP)==0)
-			subfunc.fh_enable_timestamp(out_ptr,TIMESTAMP_MODE_OFF);
+			if strcmp(panda_timestamp,'none')
+				subfunc.fh_enable_timestamp(out_ptr,TIMESTAMP_MODE_OFF);
+			elseif strcmp(panda_timestamp,'ASCII')
+				subfunc.fh_enable_timestamp(out_ptr,TIMESTAMP_MODE_ASCII);
+			elseif strcmp(panda_timestamp,'binary')
+				subfunc.fh_enable_timestamp(out_ptr,TIMESTAMP_MODE_BINARY);
+			end
+			disp(['setting timestamp=' panda_timestamp]);
 		end
 		%disable MetaData if available
 		if(bitand(cam_desc.dwGeneralCapsDESC1,GENERALCAPS1_METADATA))
@@ -882,7 +892,7 @@ end
 function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');
 if running == 1
-	
+
 	hgui=getappdata(0,'hgui');
 	PIVlab_axis = findobj(hgui,'Type','Axes');
 	%image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam');
@@ -901,7 +911,7 @@ if running == 1
 		bg_col= [0.25 0.25 0.25];
 		axes(PIVlab_axis);
 		text(postix(2)/2,postiy(2)/2,'Autofocus running, please wait...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',24, 'BackgroundColor', bg_col,'tag','auto_focus_active','margin',10,'Clipping','on');
-		
+
 	end
 else
 	delete(auto_focus_active_hint);

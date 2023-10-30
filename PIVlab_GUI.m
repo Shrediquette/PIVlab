@@ -6702,7 +6702,6 @@ if size(filepath,1) >1 || numel(caliimg)>0 || retr('video_selection_done') == 1
 end
 
 function pixeldist_changed_Callback(src,~)
-
 if exist('src','var')
 	if strcmp(src.Tag,'pixeldist') % Reference distance has been edited in the edit field and not by clicking two points
 		% simulate clicking a distance in a calibration image and draw a line
@@ -12793,8 +12792,10 @@ if strcmp(camera_type,'chronos')
 	PIVlab_capture_chronos_settings_GUI
 elseif strcmp(camera_type,'OPTOcam')
 	PIVlab_capture_OPTOcam_settings_GUI
+elseif strcmp(camera_type,'pco_panda')
+	PIVlab_capture_panda_settings_GUI
 else
-	uiwait(msgbox('Available for OPTOcam and Chronos cameras only.','modal'))
+	uiwait(msgbox('Available for OPTOcam, Chronos and pco.panda cameras only.','modal'))
 end
 
 function ac_lensctrl_Callback (~,~,~)
@@ -13335,6 +13336,9 @@ try
 		set(handles.toggle_parallel, 'cdata',parallel_off,'TooltipString','Parallel processing off. Click to turn on.');
 	end
 	toolsavailable(1);
-catch
+catch ME
+	put ('parallel',0);
 	set(handles.toggle_parallel, 'cdata',parallel_off,'enable','off', 'TooltipString','Parallel processing not avilable.');
+	toolsavailable(1);
+	disp (ME.message)
 end
