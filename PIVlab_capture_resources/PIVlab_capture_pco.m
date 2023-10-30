@@ -280,8 +280,8 @@ else
 		if(bitand(cam_desc.dwGeneralCapsDESC1,GENERALCAPS1_NO_TIMESTAMP)==0)
 			if strcmp(panda_timestamp,'none')
 				subfunc.fh_enable_timestamp(out_ptr,TIMESTAMP_MODE_OFF);
-			elseif strcmp(panda_timestamp,'ASCII')
-				subfunc.fh_enable_timestamp(out_ptr,TIMESTAMP_MODE_ASCII);
+			elseif strcmp(panda_timestamp,'ASCII and binary')
+				subfunc.fh_enable_timestamp(out_ptr,TIMESTAMP_MODE_BINARYANDASCII);
 			elseif strcmp(panda_timestamp,'binary')
 				subfunc.fh_enable_timestamp(out_ptr,TIMESTAMP_MODE_BINARY);
 			end

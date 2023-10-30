@@ -36,7 +36,7 @@ if isempty(fh)
 	handles.timestamp_txt = uicontrol(handles.mainpanel,'Style','text','String','Time stamp:','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/2 1];
-	handles.timestamp = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'none','ASCII','binary'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','timestamp');
+	handles.timestamp = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'none','binary','ASCII and binary'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','timestamp');
 
 	item=[parentitem(3)/2 item(2)+item(4)+margin parentitem(3)/2 2];
 	handles.apply_btn = uicontrol(handles.mainpanel,'Style','pushbutton','String','Apply','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@Apply_settings,'tag','apply_btn');
