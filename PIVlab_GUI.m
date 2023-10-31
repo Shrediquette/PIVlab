@@ -7260,7 +7260,7 @@ noiseImage=rand(width,height);
 % Making LIC Image
 try
 	for m = 1:iterations
-		[LICImage, intensity,normvx,normvy] = fastLICFunction(vx,vy,noiseImage,kernel); % External Fast LIC implemennted in C language
+		[LICImage, intensity,normvx,normvy] = fastLICFunction(double(vx),double(vy),noiseImage,kernel); % External Fast LIC implemennted in C language
 		LICImage = imadjust(LICImage); % Adjust the value range
 		noiseImage = LICImage;
 	end
@@ -7268,7 +7268,6 @@ try
 	delete(findobj('tag', 'waitplease'));
 catch
 	h=errordlg(['Could not run the LIC tool.' sprintf('\n') 'Probably the tool is not compiled correctly.' sprintf('\n')  'Please execute the following command in Matlab:' sprintf('\n') sprintf('\n') '     mex fastLICFunction.c     ' sprintf('\n') sprintf('\n') 'Then try again.'],'Error','on');
-
 	uiwait(h);
 	out=zeros(size(vx));
 end
