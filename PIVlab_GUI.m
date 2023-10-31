@@ -3522,6 +3522,7 @@ if useGUI ==1
 		end
 	end
 	put('expected_image_size',[])
+
 end
 if ~isequal(path,0)
 	setappdata(hgui,'video_selection_done',0);
@@ -3536,7 +3537,24 @@ if ~isequal(path,0)
 	put('xzoomlimit',[]);
 	put('yzoomlimit',[]);
 
-	sequencer=retr('sequencer');
+	sequencer=retr('sequencer');% 0=time resolved, 1 = pairwise, 2=reference
+
+% check if filenames end with "A" and "B", if yes: warn the user that he probably wants to use pairwise sequencing and not timeresolved.
+	[~,checkname_1,~]=fileparts(path(1).name);
+	[~,checkname_2,~]=fileparts(path(2).name);
+	if (strcmp(checkname_1(end),'A') || strcmp(checkname_1(end),'a')) && (strcmp(checkname_2(end),'B') || strcmp(checkname_2(end),'b'))
+		proposed_sequencing = 1;
+	else
+		proposed_sequencing = 2;
+	end
+	if sequencer==0 && proposed_sequencing==1
+		ans_w=questdlg(['File name ending "A" and "B" detected. This indicates that you should use the "Pairwise" sequencing style instead of "Time resolved".' newline newline 'Should I fix this for you?'],'Sure?','Yes','No','Yes');
+		if strcmp(ans_w,'Yes')
+			sequencer=1;
+			put('sequencer',sequencer);
+		end
+	end
+
 	if sequencer==1
 		for i=1:size(path,1)
 			if path(i).isdir == 0 %remove directories from selection
