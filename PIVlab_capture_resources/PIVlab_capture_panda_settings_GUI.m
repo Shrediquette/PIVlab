@@ -8,9 +8,9 @@ if isempty(fh)
 	catch
 		mainpos=[0    2.8571  240.0000   50.9524];
 	end
-    if isempty(mainpos)
-        mainpos=[0    2.8571  240.0000   50.9524];
-    end
+	if isempty(mainpos)
+		mainpos=[0    2.8571  240.0000   50.9524];
+	end
 
 	panda_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','pco.panda settings','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4+4 35 11+1.5],'tag','panda_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
 	set (panda_control_window,'Units','Characters');
@@ -31,18 +31,30 @@ if isempty(fh)
 	%% mainpanel
 	parentitem=get(handles.mainpanel, 'Position');
 	item=[0 0 0 0];
-	
+
 	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
 	handles.timestamp_txt = uicontrol(handles.mainpanel,'Style','text','String','Time stamp:','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/2 1];
-	handles.timestamp = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'none','binary','ASCII and binary'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','timestamp');
+	handles.timestamp = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'none','ASCII','binary'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','timestamp');
 
 	item=[parentitem(3)/2 item(2)+item(4)+margin parentitem(3)/2 2];
 	handles.apply_btn = uicontrol(handles.mainpanel,'Style','pushbutton','String','Apply','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@Apply_settings,'tag','apply_btn');
 
 else %Figure handle does already exist --> bring UI to foreground.
 	figure(fh)
+end
+handles=gethand;
+panda_timestamp=getappdata(hgui,'panda_timestamp');
+if isempty (panda_timestamp)
+	panda_timestamp='none';
+end
+if strcmp(panda_timestamp,'none')
+	set(handles.timestamp,'value',1);
+elseif strcmp(panda_timestamp,'ASCII')
+	set(handles.timestamp,'value',2);
+elseif strcmp(panda_timestamp,'binary')
+	set(handles.timestamp,'value',3);
 end
 
 
