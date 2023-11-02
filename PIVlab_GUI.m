@@ -1226,7 +1226,11 @@ handles.text200 = uicontrol(handles.multip09,'Style','text','String','Mask trans
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1];
 handles.masktransp = uicontrol(handles.multip09,'Style','edit','String','50','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','masktransp','Callback',@masktransp_Callback,'TooltipString','Transparency of the masking area display (red)');
 
-item=[0 item(2)+item(4)+margin/3 parentitem(3) 9.5];
+item=[0 item(2)+item(4) parentitem(3) 1];
+handles.uniform_vector_scale = uicontrol(handles.multip09,'Style','checkbox','String','uniform vector scale','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','uniform_vector_scale','TooltipString','Draw all vectors with the same size, independent of velocity');
+
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 8];
 handles.uipanel37 = uipanel(handles.multip09, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Vector colors', 'Tag','uipanel37','fontweight','bold');
 
 parentitem=get(handles.uipanel37, 'Position');
@@ -1244,9 +1248,9 @@ item=[parentitem(3)/5*2 item(2) parentitem(3)/5 1.5];
 handles.validb = uicontrol(handles.uipanel37,'Style','edit','String','0','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','validb');
 
 item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
-handles.text139 = uicontrol(handles.uipanel37,'Style','text','String','valid vectors','Units','characters','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text139', 'fontsize', 6);
+handles.text139 = uicontrol(handles.uipanel37,'Style','text','String','valid vectors','Units','characters','HorizontalAlignment','left','Position',[item(1)+margin/2 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text139', 'fontsize', 6);
 
-item=[0 item(2)+item(4) parentitem(3)/5 1.5];
+item=[0 item(2)+item(4)-0.4 parentitem(3)/5 1.5];
 handles.validdr = uicontrol(handles.uipanel37,'Style','edit','String','0','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','validdr');
 
 item=[parentitem(3)/5*1 item(2) parentitem(3)/5 1.5];
@@ -1258,7 +1262,7 @@ handles.validdb = uicontrol(handles.uipanel37,'Style','edit','String','0','Units
 item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
 handles.text142 = uicontrol(handles.uipanel37,'Style','text','String','vectors on derivatives','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text142', 'fontsize', 6);
 
-item=[0 item(2)+item(4) parentitem(3)/5 1.5];
+item=[0 item(2)+item(4)-0.4 parentitem(3)/5 1.5];
 handles.interpr = uicontrol(handles.uipanel37,'Style','edit','String','1','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpr');
 
 item=[parentitem(3)/5*1 item(2) parentitem(3)/5 1.5];
@@ -13139,6 +13143,13 @@ end
 function [q, q2] = plot_vectors(handles, vecskip, x, typevector, y, u, vecscale, v, vectorcolor)
 hold on;
 vectorcolorintp=[str2double(get(handles.interpr,'string')) str2double(get(handles.interpg,'string')) str2double(get(handles.interpb,'string'))];
+
+%normalize vector lengths so we can better see flow directions of small velocities:
+if (get (handles.uniform_vector_scale,'Value'))==1
+	u = u(:,:,1)./sqrt((u(:,:,1).^2+v(:,:,1).^2)); % normalized u
+	v = v(:,:,1)./sqrt((u(:,:,1).^2+v(:,:,1).^2)); % normalized v
+end
+
 if vecskip==1
 	q=quiver(x(typevector==1),y(typevector==1),...
 		(u(typevector==1)-(retr('subtr_u')/retr('calu')))*vecscale,...
