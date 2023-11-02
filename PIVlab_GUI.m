@@ -99,7 +99,7 @@ if isempty(fh)
 	addpath(fullfile(tempfilepath, 'PIVlab_capture_resources'));
 	try
 		ctr=0;
-		pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.fig' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg' 'PIVlab_capture_pco.m' 'PIVlab_image_filter.m' 'pivparpool.m' 'pivprogress.m' 'piv_analysis.m' 'piv_quick.m' 'PIVlab_notch_filter.m' 'PIVlab_correlation_filter.m' 'PIVlab_capture_devicectrl_GUI.m' 'PIVlab_capture_lensctrl_GUI.m' 'PIVlab_capture_lensctrl.m' 'PIVlab_capture_sharpness_indicator.m' 'straddling_graph.m'};
+		pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg' 'PIVlab_capture_pco.m' 'PIVlab_image_filter.m' 'pivparpool.m' 'pivprogress.m' 'piv_analysis.m' 'piv_quick.m' 'PIVlab_notch_filter.m' 'PIVlab_correlation_filter.m' 'PIVlab_capture_devicectrl_GUI.m' 'PIVlab_capture_lensctrl_GUI.m' 'PIVlab_capture_lensctrl.m' 'PIVlab_capture_sharpness_indicator.m' 'straddling_graph.m'};
 		for i=1:size(pivFiles,2)
 			if exist(pivFiles{1,i},'file')~=2
 				disp(['ERROR: A required file was not found: ' pivFiles{1,i}]);
