@@ -1,34 +1,51 @@
 function [OutputError,ima,frame_nr_display] = PIVlab_capture_OPTOcam_calibration_image(img_amount,exposure_time,ROI_OPTOcam)
+
 OutputError=0;
 hgui=getappdata(0,'hgui');
 %% Prepare camera
+imaq_error=0;
 try
 	delete(imaqfind); %clears all previous videoinputs
 	warning off
 	hwinf = imaqhwinfo;
 	warning on
-    %imaqreset
+	%imaqreset
 catch
-    errordlg('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','Error!','modal')
-    disp('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.')
+	imaq_error=1;
 end
-
-info = imaqhwinfo(hwinf.InstalledAdaptors{1});
-
-if strcmp(info.AdaptorName,'gentl')
-    disp('gentl adaptor found.')
-else
-    disp('ERROR: gentl adaptor not found. Please install the GenICam / GenTL support package from here:')
+if imaq_error==0
+	if isempty(hwinf.InstalledAdaptors)
+		imaq_error=2;
+	end
+end
+if imaq_error==0
+	info = imaqhwinfo(hwinf.InstalledAdaptors{1});
+	if strcmp(info.AdaptorName,'gentl')
+		disp('gentl adaptor found.')
+	else
+		imaq_error=2;
+	end
+end
+if imaq_error==0
+	try
+		OPTOcam_name = info.DeviceInfo.DeviceName;
+	catch
+		imaq_error=3;
+	end
+end
+if imaq_error==1
+	errordlg('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','Error!','modal')
+	disp('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.')
+elseif imaq_error==2
+	disp('ERROR: gentl adaptor not found. Please install the GenICam / GenTL support package from here:')
 	disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
 	errordlg({'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'Error, support package missing','modal')
-end
-
-try
-	OPTOcam_name = info.DeviceInfo.DeviceName;
-catch
+elseif imaq_error==3
 	errordlg('Error: Camera not found! Is it connected?','Error!','modal')
 end
+
 disp(['Found camera: ' OPTOcam_name])
+
 OPTOcam_supported_formats = info.DeviceInfo.SupportedFormats;
 OPTOcam_vid = videoinput(info.AdaptorName,info.DeviceInfo.DeviceID,'Mono12'); %calibration image in 12 bit always.
 
