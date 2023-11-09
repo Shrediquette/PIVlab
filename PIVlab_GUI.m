@@ -7255,6 +7255,8 @@ else
 	scalefactor=axessize(2)/yextend;
 end
 
+vx=inpaint_nans(vx); %otherwise LIC will make Matlab crash
+vy=inpaint_nans(vy);
 vx=imresize(vx,scalefactor*LICreso,'bicubic');
 vy=imresize(vy,scalefactor*LICreso,'bicubic');
 
