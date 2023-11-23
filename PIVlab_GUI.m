@@ -1,9 +1,6 @@
 %% TODO für release 3.0:
 %{
-Autocrop anpassen für alte releases: von oben runterwander bis erste nicht weiße zeile kommt.
-
 Hinzufügen: Achsskalierung und referenzvektor?
-
 Pixelmaske implementieren...
 Neues example Video (copter durch wald / Beine)
 fancy splash screen mit Pixelbildern die gezeigt werden die Status anzeigen? Aus Mat datei laden... Und bei Fehler / warnung auf commandwindow verweisen.
@@ -9101,7 +9098,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 
 	pivlab_axis=retr('pivlab_axis');
 	%cant make this invisible, because matlab then doesnt render properly... :-(
-	export_figure=figure('Name','Exporting, please wait. Please don''t close or resize this window.','NumberTitle','off','visible','on','units','pixels','Toolbar','none','DockControls','off','WindowState','maximized','Color','w');
+	export_figure=figure('Name','Exporting, please wait. Please don''t close or resize this window.','NumberTitle','off','visible','on','units','pixels','Toolbar','none','DockControls','off','WindowState','maximized','Color','w','WindowStyle','modal');
 
 	if verLessThan('matlab','9.8')  %2020a and up contains exportgraphics
 		use_exportfig =1;
@@ -9130,6 +9127,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 
 	%~isempty(findobj(export_figure,'type','figure')) %figure still exists
 	for i=startframe:endframe
+		set(export_figure,'Name',[num2str(round((i-1)/(endframe-startframe)*100)) ' % Exporting, please wait. Please don''t close or resize this window.']);
 		newfilename=[Name sprintf('_%03d',i) Ext];
 		set(handles.fileselector, 'value',i)
 		sliderdisp(export_axis)
