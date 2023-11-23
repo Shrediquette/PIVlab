@@ -9107,6 +9107,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 	end
 
 	%change the aspect ratio of the figure window to match the aspect of the underlying data. Needs to deal with colorbars and axes resizing.
+	%{
 	axes_childs=get(pivlab_axis,'Children');
 	pixel_height=size(axes_childs(end).CData,1); %lowest layer is pixel image
 	pixel_width=size(axes_childs(end).CData,2);
@@ -9122,6 +9123,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 		set(export_figure,'position',[current_figure_size(1),current_figure_size(2),current_figure_size(3),current_figure_size(4)/data_aspect_ratio]);
 	end
 	set(export_figure,'Units',last_units);
+	%}
 	export_axis=axes('parent',export_figure);
 	put('export_axis',export_axis);
 
