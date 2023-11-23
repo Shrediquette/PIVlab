@@ -135,13 +135,10 @@ function varargout = exportfig(varargin)
 %       text in 10 point fonts and with height 5 inches.
 %
 %   See also PREVIEWFIG, APPLYTOFIG, RESTOREFIG, PRINT.
-
 %  Copyright 2000-2009 The MathWorks, Inc.
-
 if (nargin < 2)
   error('Too few input arguments');
 end
-
 % exportfig(H, filename, [options,] ...)
 H = varargin{1};
 if ~LocalIsHG(H,'figure')
@@ -172,13 +169,11 @@ if ~isempty(defaults)
   dcell = LocalToCell(defaults);
   paramPairs = {dcell{:}, paramPairs{:}};
 end
-
 % Do some validity checking on param-value pairs
 if (rem(length(paramPairs),2) ~= 0)
   error(['Invalid input syntax. Optional parameters and values' ...
 	 ' must be in pairs.']);
 end
-
 auto.format = 'eps';
 auto.preview = 'none';
 auto.width = -1;
@@ -206,7 +201,6 @@ explicitbounds = 0;
 auto.lockaxes = 1;
 auto.separatetext = 0;
 opts = auto;
-
 % Process param-value pairs
 args = {};
 for k = 1:2:length(paramPairs)
@@ -370,10 +364,8 @@ for k = 1:2:length(paramPairs)
     error(['Unrecognized option ' param '.']);
   end
 end
-
 % make sure figure is up-to-date
 drawnow;
-
 allLines  = findall(H, 'type', 'line');
 allText   = findall(H, 'type', 'text');
 allAxes   = findall(H, 'type', 'axes');
@@ -387,30 +379,24 @@ allColor  = [allLines; allText; allAxes; allLights];
 allMarker = [allLines; allPatch; allSurf];
 allEdge   = [allPatch; allSurf];
 allCData  = [allImages; allSurf];
-
 % need to explicitly get ticks for some invisible figures
 get(allAxes,'yticklabel'); 
-
 old.objs = {};
 old.prop = {};
 old.values = {};
-
 % Process format
 if strncmp(opts.format,'eps',3) & ~strcmp(opts.preview,'none')
   args = {args{:}, ['-' opts.preview]};
 end
-
 hadError = 0;
 oldwarn = warning;
 try
-
   % lock axes limits, ticks and labels if requested
   if opts.lockaxes
     old = LocalManualAxesMode(old, allAxes, 'TickMode');
     old = LocalManualAxesMode(old, allAxes, 'TickLabelMode');
     old = LocalManualAxesMode(old, allAxes, 'LimMode');
   end  
-
   % Process size parameters
   figurePaperUnits = get(H, 'PaperUnits');
   oldFigureUnits = get(H, 'Units');
@@ -444,11 +430,9 @@ try
 	    wscale*figPos(3) hscale*figPos(4)];
   set(H, 'Position', newPos);
   set(H, 'Units', oldFigureUnits);
-
   old = LocalPushOldData(old,H,'Color', ...
 			 get(H,'Color'));
   set(H,'Color','w');
-
   % process line-style map
   if ~isempty(opts.stylemap) & ~isempty(allLines)
     oldlstyle = LocalGetAsCell(allLines,'LineStyle');
@@ -466,7 +450,6 @@ try
     end
     set(allLines,{'LineStyle'},newlstyle);
   end
-
   % Process rendering parameters
   switch (opts.color)
    case {'bw', 'gray'}
@@ -481,7 +464,6 @@ try
     newcmap = [newgrays newgrays newgrays];
     old = LocalPushOldData(old, H, 'Colormap', oldcmap);
     set(H, 'Colormap', newcmap);
-
     %compute and set ColorSpec and CData properties
     old = LocalUpdateColors(allColor, 'color', old);
     old = LocalUpdateColors(allAxes, 'xcolor', old);
@@ -492,7 +474,6 @@ try
     old = LocalUpdateColors(allEdge, 'EdgeColor', old);
     old = LocalUpdateColors(allEdge, 'FaceColor', old);
     old = LocalUpdateColors(allCData, 'CData', old);
-
     if strcmp(opts.color,'bw')
       lcolor = LocalGetAsCell(allLines,'color');
       n = length(lcolor);
@@ -524,7 +505,6 @@ try
     end
     args = {args{:}, ['-r' int2str(opts.resolution)]};
   end
-
   % Process font parameters
   if ~isempty(opts.fontmode)
     oldfonts = LocalGetAsCell(allFont,'FontSize');
@@ -554,7 +534,6 @@ try
   if strcmp(opts.fontencoding,'adobe') & strncmp(opts.format,'eps',3)
     args = {args{:}, '-adobecset'};
   end
-
   % Process line parameters
   if ~isempty(opts.linemode)
     oldlines = LocalGetAsCell(allMarker,'LineWidth');
@@ -576,7 +555,6 @@ try
       set(allMarker,{'LineWidth'},newlines);
     end
   end
-
   % adjust figure bounds to surround axes
   if strcmp(opts.bounds,'tight')
     if (~strncmp(opts.format,'eps',3) & LocalHas3DPlot(allAxes)) | ...
@@ -726,7 +704,6 @@ catch
   warning(oldwarn);
   hadError = 1;
 end
-
 % Restore figure settings
 if opts.applystyle
   varargout{1} = old;
@@ -738,20 +715,16 @@ else
     set(old.objs{n}, old.prop{n}, old.values{n});
   end
 end
-
 if hadError
   error(deblank(lasterr));
 end
-
 %
 %  Local Functions
 %
-
 function outData = LocalPushOldData(inData, objs, prop, values)
 outData.objs = {objs, inData.objs{:}};
 outData.prop = {prop, inData.prop{:}};
 outData.values = {values, inData.values{:}};
-
 function cellArray = LocalGetAsCell(fig,prop,allowemptycell);
 cellArray = get(fig,prop);
 if nargin < 3
@@ -760,14 +733,12 @@ end
 if ~iscell(cellArray) & (allowemptycell | ~isempty(cellArray))
   cellArray = {cellArray};
 end
-
 function newArray = LocalScale(inArray, scale, minv, maxv)
 n = length(inArray);
 newArray = cell(n,1);
 for k=1:n
   newArray{k} = min(maxv,max(minv,scale*inArray{k}(1)));
 end
-
 function gray = LocalMapToGray1(color)
 gray = color;
 if ischar(color)
@@ -793,7 +764,6 @@ end
 if ~ischar(color)
   gray = 0.30*color(1) + 0.59*color(2) + 0.11*color(3);
 end
-
 function newArray = LocalMapToGray(inArray);
 n = length(inArray);
 newArray = cell(n,1);
@@ -808,7 +778,6 @@ for k=1:n
     newArray{k} = [color color color];
   end
 end
-
 function newArray = LocalMapColorToStyle(inArray);
 inArray = LocalGetAsCell(inArray,'Color');
 n = length(inArray);
@@ -830,7 +799,6 @@ for k=1:n
     newArray{k} = styles{mod(ind-1,nstyles)+1};
   end
 end
-
 function newArray = LocalMapCData(inArray);
 n = length(inArray);
 newArray = cell(n,1);
@@ -844,7 +812,6 @@ for k=1:n
   end
   newArray{k} = color;
 end
-
 function outData = LocalUpdateColors(inArray, prop, inData)
 value = LocalGetAsCell(inArray,prop);
 outData.objs = {inData.objs{:}, inArray};
@@ -858,12 +825,10 @@ if (~isempty(value))
   end
   set(inArray,{prop},value);
 end
-
 function bool = LocalIsPositiveScalar(value)
 bool = isnumeric(value) & ...
        prod(size(value)) == 1 & ...
        value > 0;
-
 function value = LocalToNum(value,auto)
 if ischar(value)
   if strcmp(value,'auto')
@@ -872,7 +837,6 @@ if ischar(value)
     value = str2num(value);
   end
 end
-
 %convert a struct to {field1,val1,field2,val2,...}
 function c = LocalToCell(s)
 f = fieldnames(s);
@@ -881,13 +845,11 @@ opts = cell(2,length(f));
 opts(1,:) = f;
 opts(2,:) = v;
 c = {opts{:}};
-
 function c = LocalIsHG(obj,hgtype)
 c = 0;
 if (length(obj) == 1) & ishandle(obj) 
   c = strcmp(get(obj,'type'),hgtype);
 end
-
 function c = LocalHas3DPlot(a)
 zticks = LocalGetAsCell(a,'ZTickLabel');
 c = 0;
@@ -897,7 +859,6 @@ for k=1:length(zticks)
     return;
   end
 end
-
 function r = LocalUnionRect(r1,r2)
 if isempty(r1)
   r = r2;
@@ -912,7 +873,6 @@ elseif max(r2(3:4)) > 0
 else
   r = r1;
 end
-
 function r = LocalAxesTightBoundingBox(axesR, a)
 if strcmp(get(a,'handlevisibility'),'on')
   r = get(a,'position');
@@ -939,7 +899,6 @@ if strcmp(get(a,'visible'),'on')
 	       'fontangle',get(a,'fontangle'),...
 	       'visible','off');
   fs = get(a,'fontsize');
-
   % handle y axis tick labels
   ry = [0 0 0 axesR(4)];
   ylabs = get(a,'yticklabels');
@@ -976,7 +935,6 @@ if strcmp(get(a,'visible'),'on')
     end
     r = LocalUnionRect(r,ry);
   end
-
   % handle x axis tick labels
   rx = [0 0 axesR(3) 0];
   xlabs = get(a,'xticklabels');
@@ -1021,7 +979,6 @@ if strcmp(get(a,'visible'),'on')
   set(a,'fontunits',oldunits);
   delete(label);
 end
-
 function c = LocalManualAxesMode(old, allAxes, base)
 xs = ['X' base];
 ys = ['Y' base];
@@ -1050,7 +1007,6 @@ set(allNonLogXAxes,xs,'manual');
 set(allNonLogYAxes,ys,'manual');
 set(allNonLogZAxes,zs,'manual');
 c = old;
-
 function val = LocalCheckAuto(val, auto)
 if ischar(val) & strcmp(val,'auto')
   val = auto;
