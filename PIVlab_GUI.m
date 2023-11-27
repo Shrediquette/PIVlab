@@ -11493,17 +11493,25 @@ if alreadyconnected
 	pulse_sep=str2double(get(handles.ac_interpuls,'String'));
 	laser_device_id=retr('laser_device_id');
 
+	%potential bug fixes go here:
+	bugfix_factor=1;
+	try
+		if strncmp(laser_device_id,'LDPS_BAS1',12)
+			disp('Bug fix for LDPS_BAS1 activated');
+			bugfix_factor=2;
+		end
+	catch
+		bugfix_factor=1;
+	end
+
 	if switch_it==1
 		flush(serpo)
 		camera_type=retr('camera_type');
-
 		if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly')
 			send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
 		else
-			send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(str2double(ac_fps_str(ac_fps_value))) ';CAM:' int2str(0) ';ENER:' int2str(0) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(0) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(0) ';EXTSKP:' int2str(0) ';LASER:enable'];
+			send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(str2double(ac_fps_str(ac_fps_value))*bugfix_factor) ';CAM:' int2str(0) ';ENER:' int2str(0) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(0) ';INTERF:' int2str(round(pulse_sep/bugfix_factor)) ';EXTDLY:' int2str(0) ';EXTSKP:' int2str(0) ';LASER:enable'];
 		end
-		%send_string='FREQ:3;EXPO:300;CAMDLY:0;LDPULS:300;INTERF:500;LASER:enable'
-		%disp('testing laserdiode')
 		writeline(serpo,send_string);
 	else
 		flush(serpo)
