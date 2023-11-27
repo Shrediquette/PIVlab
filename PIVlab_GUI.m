@@ -1762,19 +1762,19 @@ handles.lastframe = uicontrol(handles.multip16,'Style','edit','String','N/A','Un
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
 
-handles.export_still_or_animation = uicontrol(handles.multip16,'Style','popupmenu','String',{'tbd'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@export_still_or_animation_Callback,'Tag','export_still_or_animation','TooltipString','Select type of export.');
+handles.export_still_or_animation = uicontrol(handles.multip16,'Style','popupmenu','String',{'Please wait...'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@export_still_or_animation_Callback,'Tag','export_still_or_animation','TooltipString','Select type of export.');
 
 item=[0 item(2)+item(4)+margin parentitem(3)/3*2 1];
 handles.qualstring = uicontrol(handles.multip16,'Style','text','String','Quality (%)','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','qualstring');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.quality_setting = uicontrol(handles.multip16,'Style','edit','String','20','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','quality_setting','TooltipString','Quality setting of exported file');
+handles.quality_setting = uicontrol(handles.multip16,'Style','edit','String','100','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','quality_setting','TooltipString','Quality setting of exported file');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.fpsstring = uicontrol(handles.multip16,'Style','text','String','Frames per second (Hz)','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','fpsstring');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.fps_setting = uicontrol(handles.multip16,'Style','edit','String','20','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','fps_setting','TooltipString','Frame rate of the video file');
+handles.fps_setting = uicontrol(handles.multip16,'Style','edit','String','30','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','fps_setting','TooltipString','Frame rate of the video file');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.resolutionstring = uicontrol(handles.multip16,'Style','text','String','Resolution (dpi)','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','resolutionstring');
@@ -1951,6 +1951,9 @@ item=[0 item(2)+item(4) parentitem(3) 2];
 handles.selectedFramesMean = uicontrol(handles.multip22,'Style','edit','String','1:end','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','selectedFramesMean','TooltipString','Select which frames to include for calculating the mean velocity. E.g. "1,3,4,8:10"');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
+handles.append_replace = uicontrol(handles.multip22,'Style','popupmenu', 'Value', 1, 'String',{'append to dataset' 'replace existing'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','append_replace','TooltipString','Append the newly calculated vector field to the current session, or replace previously calculated vector fields');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 handles.meanmaker = uicontrol(handles.multip22,'Style','pushbutton','String','Calculate mean','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@temporal_operation_Callback, 1}, 'Tag','meanmaker','TooltipString','Calculate mean velocities and append an extra frame with the results');
 
 item=[0 item(2)+item(4) parentitem(3) 2];
@@ -1958,6 +1961,7 @@ handles.summaker = uicontrol(handles.multip22,'Style','pushbutton','String','Cal
 
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.stdmaker = uicontrol(handles.multip22,'Style','pushbutton','String','Calculate stdev','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@temporal_operation_Callback, 2}, 'Tag','stdmaker','TooltipString','Calculate standard deviation of displacements and append an extra frame with the results');
+
 
 %% multip23
 handles.multip23 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Image based validation', 'Tag','multip23','fontweight','bold');
@@ -5019,6 +5023,7 @@ if ok==1
 	put('derived', [])
 	toolsavailable(0,'Busy, please wait...');
 	set (handles.cancelbutt, 'enable', 'on');
+	
 	ismean=retr('ismean');
 	maskiererx=retr('maskiererx');
 	maskierery=retr('maskierery');
@@ -9986,7 +9991,9 @@ end
 function temporal_operation_Callback(~, ~, type)
 handles=gethand;
 filepath=retr('filepath');
+filename=retr('filename');
 resultslist=retr('resultslist');
+	
 if isempty(resultslist)==0
 	if size(filepath,1)>0
 		sizeerror=0;
@@ -9995,6 +10002,39 @@ if isempty(resultslist)==0
 		if isempty(ismean)==1
 			ismean=zeros(size(resultslist,2),1);
 		end
+
+		if get (handles.append_replace,'Value')==2
+			maskiererx=retr('maskiererx');
+			maskierery=retr('maskierery');
+
+			for i=size(ismean,1):-1:1 %remove averaged results
+				if ismean(i,1)==1
+					filepath(i*2,:)=[];
+					filename(i*2,:)=[];
+
+					filepath(i*2-1,:)=[];
+					filename(i*2-1,:)=[];
+					resultslist(:,i)=[];
+
+
+					if size(maskiererx,2)>=i*2
+						maskiererx(:,i*2)=[];
+						maskierery(:,i*2)=[];
+						maskiererx(:,i*2-1)=[];
+						maskierery(:,i*2-1)=[];
+					end
+				end
+			end
+			put('filepath',filepath);
+			put('filename',filename);
+			put('resultslist',resultslist);
+			put('ismean',[]);
+			sliderrange
+		end
+		
+				
+	
+		
 		str = strrep(get(handles.selectedFramesMean,'string'),'-',':');
 		endinside=strfind(str, 'end');
 		if isempty(endinside)==0 %#ok<*STREMP>
