@@ -13380,7 +13380,7 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 			xlabel(coloobj,name{retr('displaywhat')},'fontsize',11,'fontweight','bold');
 		end
 
-		tickamount=11;
+		tickamount=min([colormap_steps 8])+1; % depends on the amount of colormap steps
 		coloobj.Ticks=linspace(0,colormap_steps,tickamount);
 		ticklabels=linspace(minscale,maxscale,tickamount);
 		ticklabels_string=num2str(ticklabels(:),'%0.3e');
