@@ -3373,11 +3373,23 @@ if typevector(info(1,1),info(1,2)) ~=0
 				map=derived{displaywhat-1,(currentframe+1)/2};
 				name=get(handles.derivchoice,'string');
 				try
-					set(handles.scalar_cp, 'String', [name{displaywhat} ': ' num2str(round(map(info(1,1),info(1,2))*10000)/10000)]);
+					scalar_to_plot=map(info(1,1),info(1,2));
+					if scalar_to_plot >100 || scalar_to_plot < 0.001
+						scalar_to_plot_string = sprintf('%0.4e',scalar_to_plot);
+					else
+						scalar_to_plot_string = sprintf('%0.4f',scalar_to_plot);
+					end
+					set(handles.scalar_cp, 'String', [name{displaywhat} ': ' scalar_to_plot_string]);
 				catch
 					plot_derivs_Callback
 					name=get(handles.derivchoice,'string');
-					set(handles.scalar_cp, 'String', [name{displaywhat} ': ' num2str(round(map(info(1,1),info(1,2))*10000)/10000)]);
+					scalar_to_plot=map(info(1,1),info(1,2));
+					if scalar_to_plot >100 || scalar_to_plot < 0.001
+						scalar_to_plot_string = sprintf('%0.4e',scalar_to_plot);
+					else
+						scalar_to_plot_string = sprintf('%0.4f',scalar_to_plot);
+					end
+					set(handles.scalar_cp, 'String', [name{displaywhat} ': ' scalar_to_plot_string]);
 				end
 			else
 				set(handles.scalar_cp, 'String','N/A');
