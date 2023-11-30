@@ -3342,10 +3342,28 @@ if typevector(info(1,1),info(1,2)) ~=0
 		set(handles.x_cp, 'String', ['x:' num2str(round((x_cal(info(1,1),info(1,2)))*10000)/10000) ' px']);
 		set(handles.y_cp, 'String', ['y:' num2str(round((y_cal(info(1,1),info(1,2)))*10000)/10000) ' px']);
 	else %calibrated
-		set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*retr('calu')-retr('subtr_u'))*100000)/100000) ' m/s']);
-		set(handles.v_cp, 'String', ['v:' num2str(round((v(info(1,1),info(1,2))*retr('calv')-retr('subtr_v'))*100000)/100000) ' m/s']);
-		set(handles.x_cp, 'String', ['x:' num2str(round((x_cal(info(1,1),info(1,2)))*10000)/10000) ' m']);
-		set(handles.y_cp, 'String', ['y:' num2str(round((y_cal(info(1,1),info(1,2)))*10000)/10000) ' m']);
+
+		u_cp_string_velocity=u(info(1,1),info(1,2))*retr('calu')-retr('subtr_u');
+		v_cp_string_velocity=v(info(1,1),info(1,2))*retr('calv')-retr('subtr_v');
+		x_cp_string = x_cal(info(1,1),info(1,2));
+		y_cp_string = y_cal(info(1,1),info(1,2));
+
+		magnitude_of_current_point = (u_cp_string_velocity^2 + v_cp_string_velocity^2)^0.5;
+
+		if  magnitude_of_current_point > 100 || magnitude_of_current_point < 0.01
+			set(handles.u_cp, 'String',  ['u:' sprintf('%0.4e',u_cp_string_velocity) ' m/s']);
+			set(handles.v_cp, 'String',  ['v:' sprintf('%0.4e',v_cp_string_velocity) ' m/s']);
+		else
+			set(handles.u_cp, 'String',  ['u:' sprintf('%0.4f',u_cp_string_velocity) ' m/s']);
+			set(handles.v_cp, 'String',  ['v:' sprintf('%0.4f',v_cp_string_velocity) ' m/s']);
+		end
+		if x_cp_string > 100 || x_cp_string < 0.01 || y_cp_string > 100 || y_cp_string < 0.01
+			set(handles.x_cp, 'String', ['x:' sprintf('%0.4e',x_cp_string)  ' m']);
+			set(handles.y_cp, 'String', ['y:' sprintf('%0.4e',y_cp_string)  ' m']);
+		else
+			set(handles.x_cp, 'String', ['x:' sprintf('%0.4f',x_cp_string)  ' m']);
+			set(handles.y_cp, 'String', ['y:' sprintf('%0.4f',y_cp_string)  ' m']);
+		end
 	end
 	derived=retr('derived');
 	displaywhat=retr('displaywhat');
@@ -4353,6 +4371,18 @@ hold off;
 function draw_mask_Callback(~, ~, ~)
 filepath=retr('filepath');
 handles=gethand;
+%{
+roi = images.roi.Polygon
+draw(roi)
+%malen in bild.....
+roi_positions{1}=roi.Position;
+%das da oben abspeichern.
+drawpolygon('Position',roi_positions{1})
+
+%maskiererX hat andere datenstruktur. aber könnte man ja ineinander überführen...
+man malt die masken. So viele man will mit "Add" button" Dann klickt man "Apply". Maskenpositionen werden dann gespeichert.
+%}
+
 if size(filepath,1) > 1 || retr('video_selection_done') == 1
 	toolsavailable(0);
 	currentframe=2*floor(get(handles.fileselector, 'value'))-1;
@@ -6288,6 +6318,18 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 		%set(gca,'ylim',[nanmin(nanmin(nanmin(v*caluv)))-rangev*0.15 nanmax(nanmax(nanmax(v*caluv)))+rangev*0.15])
 		%=range of data +- 15%
 		%%}
+
+		%{
+		keyboard
+		figure;
+		datax=rand(1000000,1);
+		datay=rand(1000000,1);
+		plottl=scatter(datax,datay)
+		roi = images.roi.Freehand;
+		draw(roi)
+		tf = inROI(roi,datax,datay);
+		plottl.CData=double([1-tf tf*0 tf*0]); %makes markers outside red.
+		%}
 		velrect = getrect(gca);
 		if velrect(1,3)~=0 && velrect(1,4)~=0
 			put('velrect', velrect);
@@ -6835,7 +6877,6 @@ if numel(pointscali)>0
 	put('calu',calu);
 	put('calv',calv);
 	put('calxy',calxy);
-	%set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(caluv*100000)/100000) ' m/s'],  'backgroundcolor', [0.5 1 0.5]);
 	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','on')
 	points_offsetx=retr('points_offsetx');
 	if numel(points_offsetx)>0
@@ -6856,7 +6897,38 @@ if numel(pointscali)>0
 	calu=retr('calu');calv=retr('calv');
 	offset_x_true = retr('offset_x_true');
 	offset_y_true = retr('offset_y_true');
-	set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(calu*100000)/100000) ' m/s' sprintf('\n') 'x offset: ' round(num2str(offset_x_true)*1000)/1000 ' m' sprintf('\n') 'y offset: ' round(num2str(offset_y_true)*1000)/1000 ' m'],  'backgroundcolor', [0.5 1 0.5]);
+
+	if calxy > 1000 || calxy <0.001
+		px_per_m_display=sprintf('%0.4e',calxy);
+	else
+		px_per_m_display=sprintf('%0.4f',calxy);
+	end
+
+	if calu > 1000 || calu < 0.001
+		px_per_frame_display=sprintf('%0.4e',calu);
+	else
+		px_per_frame_display=sprintf('%0.4f',calu);
+	end
+
+	if abs(offset_x_true) > 1000 || abs(offset_x_true) < 0.001
+		x_offset_display=sprintf('%0.4e',offset_x_true);
+		if offset_x_true == 0
+			x_offset_display='0';
+		end
+	else
+		x_offset_display=sprintf('%0.4f',offset_x_true);
+	end
+
+	if abs(offset_y_true) > 1000 || abs(offset_y_true) < 0.001
+		y_offset_display=sprintf('%0.4e',offset_y_true);
+		if offset_y_true == 0
+			y_offset_display='0';
+		end
+	else
+		y_offset_display=sprintf('%0.4f',offset_y_true);
+	end
+
+	set(handles.calidisp, 'string', ['1 px = ' px_per_m_display ' m' sprintf('\n') '1 px/frame = ' px_per_frame_display ' m/s' sprintf('\n') 'x offset: ' x_offset_display ' m' sprintf('\n') 'y offset: ' y_offset_display ' m'],  'backgroundcolor', [0.5 1 0.5]);
 	%sliderdisp(retr('pivlab_axis'))
 
 else %no calibration performed yet
