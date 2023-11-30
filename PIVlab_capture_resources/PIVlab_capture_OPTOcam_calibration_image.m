@@ -98,7 +98,7 @@ colorbar
 OPTOcam_vid.FramesPerTrigger = 1;
 set(frame_nr_display,'String','');
 preview(OPTOcam_vid,image_handle_OPTOcam)
-clim([0 2^12]); %seems to be a workaround to force preview to show full data range...
+caxis([0 2^12]); %seems to be a workaround to force preview to show full data range...
 displayed_img_amount=0;
 while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
     ima = image_handle_OPTOcam.CData;%*16; %stretch 12 bit to 16 bit

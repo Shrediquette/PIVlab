@@ -123,7 +123,7 @@ preview(OPTRONIS_vid,image_handle_OPTRONIS)
 OPTRONIS_src.AcquisitionFrameRate = 20; % needs to be set again on the optronis after starting preview or acquisition
 OPTRONIS_src.ExposureTime =exposure_time;
 
-clim([0 2^bitmode]); %seems to be a workaround to force preview to show full data range...
+caxis([0 2^bitmode]); %seems to be a workaround to force preview to show full data range...
 displayed_img_amount=0;
 while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
 	ima = image_handle_OPTRONIS.CData;%*16; %stretch 12 bit to 16 bit
