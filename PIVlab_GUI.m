@@ -27,9 +27,15 @@ fh = findobj('tag', 'hgui');
 if isempty(fh)
 
 	%{
-	splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','Loading...','Toolbar','none','Units','pixels','Position',[10 10 480 360],'tag','splashscreen','visible','off','handlevisibility','on');
-	splash_ax=axes(splashscreen,'units','pixels');
+	splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','Loading...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','off','handlevisibility','on');
+	splash_ax=axes(splashscreen,'units','normalized');
 	imshow(imread('pivlab_logo1.jpg'),"Parent",splash_ax,'border','tight');
+set(splash_ax,'Position',[0 0 1 1])
+ 
+set(gca,'DataAspectRatioMode','auto')
+
+
+
 	movegui(splashscreen,'center');
 	set(splashscreen,'visible','on')
 	drawnow
@@ -335,6 +341,7 @@ m51 = uimenu('Label','Image acquisition');
 uimenu(m51,'Label','Capture PIV images','Callback',@capture_images_Callback);
 m5 = uimenu('Label','Image settings');
 uimenu(m5,'Label','Exclusions (ROI, mask)','Callback',@img_mask_Callback,'Accelerator','E');
+uimenu(m5,'Label','New type of mask (in active development)','Callback',@img_mask_new_Callback);
 uimenu(m5,'Label','Image pre-processing','Callback',@pre_proc_Callback,'Accelerator','I');
 m6 = uimenu('Label','Analysis');
 uimenu(m6,'Label','PIV settings','Callback',@piv_sett_Callback,'Accelerator','S');
@@ -732,6 +739,65 @@ item=[0 item(2)+item(4) parentitem(3) 1.5];
 handles.external_mask_progress = uicontrol(handles.uipanel6,'Style','text','Horizontalalignment', 'left','String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','external_mask_progress');
 
 
+
+
+%% Multip25 (new mask)
+handles.multip25 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Mask generation', 'Tag','multip25','fontweight','bold');
+parentitem=get(handles.multip25, 'Position');
+item=[0 0 0 0];
+
+
+item=[0 item(2)+item(4) parentitem(3) 12];
+handles.uipanel25_1 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Mask items', 'Tag','uipanel25_1','fontweight','bold');
+
+parentitem=get(handles.uipanel25_1, 'Position');
+item=[0 0 0 0];
+
+
+
+item=[0 item(2)+item(4) parentitem(3)/2 1.5];
+handles.mask_add_freehand = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Free hand','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@mask_add_Callback,'freehand'},'Tag','mask_add_freehand','TooltipString','');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
+handles.mask_add_polygon = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Polygon','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@mask_add_Callback,'polygon'},'Tag','mask_add_polygon','TooltipString','');
+
+item=[0 item(2)+item(4) parentitem(3)/2 1.5];
+handles.mask_add_circle = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Circle','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@mask_add_Callback,'circle'},'Tag','mask_add_circle','TooltipString','');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
+handles.mask_add_rectangle = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Rectangle','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@mask_add_Callback,'rectangle'},'Tag','mask_add_rectangle','TooltipString','');
+
+item=[0 item(2)+item(4) parentitem(3)/2 1.5];
+handles.mask_import = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Import mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_import_Callback,'Tag','mask_import','TooltipString','');
+
+
+
+
+item=[0 item(2)+item(4) parentitem(3)/2 1.5];
+handles.mask_delete_current = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Delete all','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_delete_current_Callback,'Tag','mask_delete_all','TooltipString','');
+
+%item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
+%handles.mask_add_rectangle = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Rectangle','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_add_rectangle_Callback,'Tag','mask_add_rectangle','TooltipString','');
+
+
+
+
+
+item=[0 0 0 0];
+parentitem=get(handles.multip25, 'Position');
+item=[0 12+margin/2 parentitem(3) 20];
+handles.uipanel25_2 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Mask application', 'Tag','uipanel25_2','fontweight','bold');
+
+item=[0 0 0 0];
+parentitem=get(handles.uipanel25_2, 'Position');
+item=[0 item(2)+item(4) parentitem(3) 1.5];
+handles.mask_apply_to_current = uicontrol(handles.uipanel25_2,'Style','pushbutton','String','Copy mask to all frames','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_copy_to_all_Callback,'Tag','mask_apply_to_current','TooltipString','');
+
+item=[0 item(2)+item(4) parentitem(3) 1.5];
+handles.mask_delete_all = uicontrol(handles.uipanel25_2,'Style','pushbutton','String','Delete all masks','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_delete_all_Callback,'Tag','mask_delete_all','TooltipString','');
+
+
+
 %% Multip03
 handles.multip03 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Image pre-processing (CTRL+I)', 'Tag','multip03','fontweight','bold');
 parentitem=get(handles.multip03, 'Position');
@@ -1091,7 +1157,7 @@ handles.set_y_offset = uicontrol(handles.uipanel_offsets,'Style','pushbutton','S
 item=[0 0 0 0];
 parentitem=get(handles.multip07, 'Position');
 
-item=[0 19.5 parentitem(3) 4];
+item=[0 19.5 parentitem(3) 5];
 handles.calidisp = uicontrol(handles.multip07,'Style','text','String','inactive','HorizontalAlignment','center','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calidisp');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
@@ -2210,6 +2276,9 @@ function img_mask_Callback(~, ~, ~)
 switchui('multip02')
 dispMASK(retr('pivlab_axis'),0.333)
 
+function img_mask_new_Callback(~, ~, ~)
+switchui('multip25')
+
 function pre_proc_Callback(~, ~, ~)
 switchui('multip03')
 Autolimit_Callback
@@ -3218,6 +3287,9 @@ if capturing==0
 			set(handles.imsize, 'string', ['Image size: ' int2str(size(currentimage,2)) '*' int2str(size(currentimage,1)) 'px' ])
 		end
 		update_mask_display(target_axis,currentframe, handles);
+		disp('redrawing masks from sliderdisp')
+		redraw_masks
+
 		resultslist=retr('resultslist');
 		display_manual_markers(target_axis,handles);
 		if size(resultslist,2)>=(currentframe+1)/2 && numel(resultslist{1,(currentframe+1)/2})>0
@@ -3596,9 +3668,9 @@ if useGUI ==1
 		end
 	end
 	put('expected_image_size',[])
-
 end
 if ~isequal(path,0)
+	cla(retr('pivlab_axis'))
 	setappdata(hgui,'video_selection_done',0);
 	if get(handles.zoomon,'Value')==1
 		set(handles.zoomon,'Value',0);
@@ -3626,6 +3698,7 @@ if ~isequal(path,0)
 		if strcmp(ans_w,'Yes')
 			sequencer=1;
 			put('sequencer',sequencer);
+			save('PIVlab_settings_default.mat','sequencer','-append');
 		end
 	end
 
@@ -3883,7 +3956,8 @@ else
 end
 dispinterrog
 
-function imagedata=autocrop (file,fmt)
+function [imagedata,croprect]=autocrop (file,fmt)
+%problem, entweder Verfahren nicht geeignet oder irgendein Matlab bug...
 if fmt ~=3
 	A=imread(file);
 else
@@ -3903,6 +3977,7 @@ if isempty (endcropy)
 	endcropy=size(B,1);
 end
 
+%disp([num2str(startcropy) '  '  num2str(endcropy)])
 
 %cols (y) detect white borders
 val=mean(B,1);
@@ -3915,6 +3990,8 @@ endcropx = find(val~=255,1,'last');
 if isempty (endcropx)
 	endcropx=size(B,2);
 end
+%disp([num2str(startcropx) '  '  num2str(endcropx)])
+
 
 %crop image data
 A=A(startcropy:endcropy,startcropx:endcropx,:);
@@ -3927,6 +4004,7 @@ elseif fmt == 0 %png
 elseif fmt == 3 %video
 	imagedata=A;
 end
+croprect=[startcropy endcropy startcropx endcropx];
 
 
 function mat_file_save (currentframe,FileName,PathName,type)
@@ -5065,7 +5143,7 @@ if ok==1
 	put('derived', [])
 	toolsavailable(0,'Busy, please wait...');
 	set (handles.cancelbutt, 'enable', 'on');
-	
+
 	ismean=retr('ismean');
 	maskiererx=retr('maskiererx');
 	maskierery=retr('maskierery');
@@ -6033,9 +6111,11 @@ try
 	catch %ME
 		%disp(ME)
 	end
-	if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
+	calu=retr('calu');
+	calxy=retr('calxy');
+	if (calu==1 || calu==-1) && calxy==1
 	else
-		set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(calu*100000)/100000) ' m/s' sprintf('\n') 'x offset: ' round(num2str(offset_x_true)*1000)/1000 ' m' sprintf('\n') 'y offset: ' round(num2str(offset_y_true)*1000)/1000 ' m'],  'backgroundcolor', [0.5 1 0.5]);
+		update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles)
 	end
 	put('offset_x_true',offset_x_true);
 	put('offset_y_true',offset_y_true);
@@ -6910,37 +6990,7 @@ if numel(pointscali)>0
 	offset_x_true = retr('offset_x_true');
 	offset_y_true = retr('offset_y_true');
 
-	if calxy > 1000 || calxy <0.001
-		px_per_m_display=sprintf('%0.4e',calxy);
-	else
-		px_per_m_display=sprintf('%0.4f',calxy);
-	end
-
-	if calu > 1000 || calu < 0.001
-		px_per_frame_display=sprintf('%0.4e',calu);
-	else
-		px_per_frame_display=sprintf('%0.4f',calu);
-	end
-
-	if abs(offset_x_true) > 1000 || abs(offset_x_true) < 0.001
-		x_offset_display=sprintf('%0.4e',offset_x_true);
-		if offset_x_true == 0
-			x_offset_display='0';
-		end
-	else
-		x_offset_display=sprintf('%0.4f',offset_x_true);
-	end
-
-	if abs(offset_y_true) > 1000 || abs(offset_y_true) < 0.001
-		y_offset_display=sprintf('%0.4e',offset_y_true);
-		if offset_y_true == 0
-			y_offset_display='0';
-		end
-	else
-		y_offset_display=sprintf('%0.4f',offset_y_true);
-	end
-
-	set(handles.calidisp, 'string', ['1 px = ' px_per_m_display ' m' sprintf('\n') '1 px/frame = ' px_per_frame_display ' m/s' sprintf('\n') 'x offset: ' x_offset_display ' m' sprintf('\n') 'y offset: ' y_offset_display ' m'],  'backgroundcolor', [0.5 1 0.5]);
+	update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles);
 	%sliderdisp(retr('pivlab_axis'))
 
 else %no calibration performed yet
@@ -9085,7 +9135,7 @@ else
 			else
 				offset_y_true=0;
 			end
-			set(handles.calidisp, 'string', ['1 px = ' num2str(round(calxy*100000)/100000) ' m' sprintf('\n') '1 px/frame = ' num2str(round(calu*100000)/100000) ' m/s' sprintf('\n') 'x offset: ' round(num2str(offset_x_true)*1000)/1000 ' m' sprintf('\n') 'y offset: ' round(num2str(offset_y_true)*1000)/1000 ' m'],  'backgroundcolor', [0.5 1 0.5]);
+			update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles)
 			pixeldist_changed_Callback()
 		end
 	catch
@@ -9110,7 +9160,6 @@ else
 	catch
 		disp('repeat_last didnt work4')
 	end
-
 
 	%reset zoom
 	set(handles.panon,'Value',0);
@@ -9187,16 +9236,18 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 
 	pivlab_axis=retr('pivlab_axis');
 	%cant make this invisible, because matlab then doesnt render properly... :-(
-	export_figure=figure('Name','Exporting, please wait. Please don''t close or resize this window.','NumberTitle','off','visible','on','units','pixels','Toolbar','none','DockControls','off','WindowState','maximized','Color','w','WindowStyle','modal');
+	export_figure=figure('Name','Exporting, please wait. Please don''t close or resize this window.','NumberTitle','off','visible','on','units','pixels','Toolbar','none','DockControls','off','WindowState','normal','Color','w','WindowStyle','modal');
+	set(export_figure,'units','normalized','outerposition',[0 0 1 1]) %unfortunately, setting figure to fullscreen still reports a non-fullscreen position in matlab...
 
 	if verLessThan('matlab','9.8')  %2020a and up contains exportgraphics
 		use_exportfig =1;
 	else
 		use_exportfig =0;
 	end
-
+	%use_exportfig =1;
 	%change the aspect ratio of the figure window to match the aspect of the underlying data. Needs to deal with colorbars and axes resizing.
 	%{
+	%testweise ausgeschaltet
 	axes_childs=get(pivlab_axis,'Children');
 	pixel_height=size(axes_childs(end).CData,1); %lowest layer is pixel image
 	pixel_width=size(axes_childs(end).CData,2);
@@ -9215,65 +9266,82 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 	%}
 	export_axis=axes('parent',export_figure);
 	put('export_axis',export_axis);
-
-	%~isempty(findobj(export_figure,'type','figure')) %figure still exists
-	for i=startframe:endframe
-		set(export_figure,'Name',[num2str(round((i-1)/(endframe-startframe)*100)) ' % Exporting, please wait. Please don''t close or resize this window.']);
-		newfilename=[Name sprintf('_%03d',i) Ext];
-		set(handles.fileselector, 'value',i)
-		sliderdisp(export_axis)
-		switch selected_format
-			case 'PNG'
-				if use_exportfig
-					exportfig(export_figure,fullfile(pathname,newfilename),'Format','bmp','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
-					autocrop(fullfile(pathname,newfilename),0);
-				else
-					exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution)
-				end
-			case 'JPG'
-				if use_exportfig
-					exportfig(export_figure,fullfile(pathname,newfilename),'Format','bmp','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
-					autocrop(fullfile(pathname,newfilename),1);
-				else
-					exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution);
-				end
-			case 'PDF'
-				if use_exportfig
-					set(export_figure,'Units','inches');
-					pos = get(export_figure,'Position');
-					set(export_figure,'PaperPositionMode','auto','PaperUnits','inches','PaperPosition',[0,0,pos(3),pos(4)],'PaperSize',[pos(3), pos(4)])
-					exportfig(export_figure,fullfile(pathname,newfilename),'Format','pdf','color','CMYK','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
-				else
-					exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','vector','resolution',resolution);
-				end
-			case 'Archival AVI'
-				pixeldata=getframe(export_figure);
-				export_image=frame2im(pixeldata);
-				export_image = autocrop(export_image,3);
-				if i==startframe
-					v = VideoWriter(fullfile(pathname,filename),'Uncompressed AVI'); %#ok<TNMLP>
-					v.FrameRate=fps;
-					open(v);
-				end
-				writeVideo(v,export_image);
-				if i==endframe
-					close(v);
-				end
-			case 'MPEG-4'
-				pixeldata=getframe(export_figure);
-				export_image=frame2im(pixeldata);
-				export_image = autocrop(export_image,3);
-				if i==startframe
-					v = VideoWriter(fullfile(pathname,filename),'MPEG-4'); %#ok<TNMLP>
-					v.FrameRate=fps;
-					v.Quality=quality;
-					open(v);
-				end
-				writeVideo(v,export_image);
-				if i==endframe
-					close(v);
-				end
+	pause(0.01)
+	try
+		%~isempty(findobj(export_figure,'type','figure')) %figure still exists
+		for i=startframe:endframe
+			set(export_figure,'Name',[num2str(round((i-1)/(endframe-startframe)*100)) ' % Exporting, please wait. Please don''t close or resize this window.']);
+			newfilename=[Name sprintf('_%03d',i) Ext];
+			set(handles.fileselector, 'value',i)
+			sliderdisp(export_axis)
+			%set(export_axis,'box','on','LineWidth',1,'Color','k')
+			switch selected_format
+				case 'PNG'
+					if use_exportfig
+						exportfig(export_figure,fullfile(pathname,newfilename),'Format','bmp','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
+						autocrop(fullfile(pathname,newfilename),0);
+					else
+						exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution)
+					end
+				case 'JPG'
+					if use_exportfig
+						exportfig(export_figure,fullfile(pathname,newfilename),'Format','bmp','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
+						autocrop(fullfile(pathname,newfilename),1);
+					else
+						exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution);
+					end
+				case 'PDF'
+					if use_exportfig
+						set(export_figure,'Units','inches');
+						pos = get(export_figure,'Position');
+						set(export_figure,'PaperPositionMode','auto','PaperUnits','inches','PaperPosition',[0,0,pos(3),pos(4)],'PaperSize',[pos(3), pos(4)])
+						exportfig(export_figure,fullfile(pathname,newfilename),'Format','pdf','color','CMYK','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
+					else
+						exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','vector','resolution',resolution);
+					end
+				case 'Archival AVI'
+					pixeldata=getframe(export_figure);
+					export_image=frame2im(pixeldata);
+					if i==startframe %this makes sure that frame sizes keep the same size
+						[export_image,croprect] = autocrop(export_image,3);
+					else
+						export_image=export_image(croprect(1):croprect(2),croprect(3):croprect(4),:);
+					end
+					if i==startframe
+						v = VideoWriter(fullfile(pathname,filename),'Uncompressed AVI'); %#ok<TNMLP>
+						v.FrameRate=fps;
+						open(v);
+					end
+					writeVideo(v,export_image);
+					if i==endframe
+						close(v);
+					end
+				case 'MPEG-4'
+					pixeldata=getframe(export_figure);
+					export_image=frame2im(pixeldata);
+					if i==startframe %this makes sure that frame sizes keep the same size
+						[export_image,croprect] = autocrop(export_image,3);
+					else
+						export_image=export_image(croprect(1):croprect(2),croprect(3):croprect(4),:);
+					end
+					if i==startframe
+						v = VideoWriter(fullfile(pathname,filename),'MPEG-4'); %#ok<TNMLP>
+						v.FrameRate=fps;
+						v.Quality=quality;
+						open(v);
+					end
+					writeVideo(v,export_image);
+					if i==endframe
+						close(v);
+					end
+			end
 		end
+	catch ME
+		set (export_figure,'WindowStyle','normal')
+		close(export_figure)
+		disp(ME.identifier)
+		disp(ME.message)
+		commandwindow;
 	end
 	close(export_figure)
 	set(handles.fileselector, 'value',startframe)
@@ -10077,7 +10145,7 @@ handles=gethand;
 filepath=retr('filepath');
 filename=retr('filename');
 resultslist=retr('resultslist');
-	
+
 if isempty(resultslist)==0
 	if size(filepath,1)>0
 		sizeerror=0;
@@ -10115,10 +10183,10 @@ if isempty(resultslist)==0
 			put('ismean',[]);
 			sliderrange
 		end
-		
-				
-	
-		
+
+
+
+
 		str = strrep(get(handles.selectedFramesMean,'string'),'-',':');
 		endinside=strfind(str, 'end');
 		if isempty(endinside)==0 %#ok<*STREMP>
@@ -13528,3 +13596,303 @@ switch selected_format
 		set(handles.fps_setting,'Enable','On')
 		set(handles.resolution_setting,'Enable','Off')
 end
+
+function mask_add_Callback(~,~,type)
+%masken sollten nur im Maskenpanel als ROIs angezeigt werden ud editierbar sein. Ansonsten als Pixeloverlay. Oder als schnell zecihnendes Polygon. bzw. auch gerne als ROI objekt ohne hittest und editable
+handles=gethand;
+
+%variable masks_in_frame ist cell mit inhalt mask_positions für jeden frame (nicht doppelt machen...)
+
+currentframe=floor(get(handles.fileselector, 'value'));
+masks_in_frame=retr('masks_in_frame');
+if isempty(masks_in_frame)
+	masks_in_frame=cell(currentframe,1);
+end
+
+if numel(masks_in_frame)<currentframe
+	mask_positions=cell(0);
+else
+	mask_positions=masks_in_frame{currentframe};
+end
+
+if isempty(mask_positions)
+	mask_positions=cell(0);
+end
+masknums=size(mask_positions,1);
+if strcmp(type,'freehand')
+	roi = images.roi.Freehand;
+	roi.Multiclick=0;
+elseif strcmp(type,'rectangle')
+	roi = images.roi.Rectangle;
+elseif strcmp(type,'polygon')
+	roi = images.roi.Polygon;
+elseif strcmp(type,'circle')
+	roi = images.roi.Circle;
+end
+recommended_colors=parula(7);
+roi.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
+roi.FaceAlpha=0.75;
+roi.LabelVisible = 'off';
+roi.UserData=['ROI_object_' type];
+
+[~,guid] = fileparts(tempname);
+roi.Tag = guid; %unique id for every ROImask object.
+%addlistener(roi,'MovingROI',@ROIevents);
+toolsavailable(0)
+draw(roi);
+addlistener(roi,'ROIMoved',@ROIevents);
+addlistener(roi,'DeletingROI',@ROIevents);
+addlistener(roi,'ROIClicked',@ROIevents);
+toolsavailable(1)
+update_mask_memory(roi)
+
+
+function update_mask_memory(roi)
+handles=gethand;
+currentframe=floor(get(handles.fileselector, 'value'));
+
+masks_in_frame=retr('masks_in_frame');
+if isempty(masks_in_frame)
+	masks_in_frame=cell(currentframe,1);
+end
+
+if numel(masks_in_frame)<currentframe
+	mask_positions=cell(0);
+else
+	mask_positions=masks_in_frame{currentframe};
+end
+if isempty(mask_positions)
+	mask_positions=cell(0);
+end
+
+mask_positions{end+1,1}=roi.UserData;
+if strcmp(roi.UserData,'ROI_object_circle')
+	mask_positions{end,2}=[roi.Center roi.Radius];
+else
+	mask_positions{end,2}=roi.Position;
+end
+mask_positions{end,3}=roi.Color;
+mask_positions{end,4}=roi.Label;
+mask_positions{end,5}=roi.Tag;
+masks_in_frame{currentframe}=mask_positions;
+put('masks_in_frame',masks_in_frame)
+assignin('base',"masks_in_frame",masks_in_frame)
+
+function redraw_masks
+
+%redraws all masks that are saved in mask_positions
+handles=gethand;
+currentframe=floor(get(handles.fileselector, 'value'));
+masks_in_frame=retr('masks_in_frame');
+if isempty(masks_in_frame)
+	masks_in_frame=cell(currentframe,1);
+end
+
+if numel(masks_in_frame)<currentframe
+	mask_positions=cell(0);
+else
+	mask_positions=masks_in_frame{currentframe};
+end
+
+delete(findobj('UserData','ROI_object_freehand'));% deletes visible ROIs before redrawing.
+delete(findobj('UserData','ROI_object_rectangle'));
+delete(findobj('UserData','ROI_object_circle'));
+delete(findobj('UserData','ROI_object_polygon'));
+delete(findobj('UserData','ROI_object_external'));
+
+masknums=size(mask_positions,1);
+for i=1:masknums
+	type=mask_positions(i,1);
+	if strcmp(type,'ROI_object_freehand')
+		roi = drawfreehand('Position', mask_positions{i,2});
+		roi.Multiclick=0;
+	elseif strcmp(type,'ROI_object_rectangle')
+		roi = drawrectangle('Position', mask_positions{i,2});
+	elseif strcmp(type,'ROI_object_polygon')
+		roi = drawpolygon('Position', mask_positions{i,2});
+	elseif strcmp(type,'ROI_object_circle')
+		circledata=mask_positions{i,2}; %whyTF does the circle needs to have center and radius.....?!? Why not Position like all other ROIs....?!?
+		roi = drawcircle('Center',circledata(1:2),'Radius',circledata(3));
+	elseif strcmp(type,'ROI_object_external')
+		roi = drawfreehand('Position', mask_positions{i,2});
+	end
+	roi.UserData=mask_positions{i,1};
+	roi.Color=mask_positions{i,3};
+	roi.Label=mask_positions{i,4};
+	roi.Tag=mask_positions{i,5};
+	addlistener(roi,'ROIMoved',@ROIevents);
+	addlistener(roi,'DeletingROI',@ROIevents);
+	addlistener(roi,'ROIClicked',@ROIevents);
+	roi.FaceAlpha=0.75;
+	roi.LabelVisible = 'off';
+end
+disp('redrawing')
+
+
+
+function mask_delete_all_Callback(~,~,~)
+put('masks_in_frame',[])
+delete(findobj('UserData','ROI_object_freehand'));
+delete(findobj('UserData','ROI_object_rectangle'));
+delete(findobj('UserData','ROI_object_circle'));
+delete(findobj('UserData','ROI_object_polygon'));
+delete(findobj('UserData','ROI_object_external'));
+
+function ROIevents(src,evt)
+evname = evt.EventName;
+handles=gethand;
+currentframe=floor(get(handles.fileselector, 'value'));
+masks_in_frame=retr('masks_in_frame');
+mask_positions=masks_in_frame{currentframe};
+switch(evname)
+	%case{'MovingROI'}
+	%disp(['ROI moving previous position: ' mat2str(evt.PreviousPosition)]);
+	%disp(['ROI moving current position: ' mat2str(evt.CurrentPosition)]);
+	case{'ROIMoved'}
+		if ~isempty(mask_positions)
+			[r,~]=find(strcmp(src.Tag,mask_positions(:,5)));
+			if ~isempty(r)
+				if strcmp(src.UserData,'ROI_object_circle')
+					mask_positions{r,2} = [src.Position src.Radius];
+				else
+					mask_positions{r,2}=src.Position; %update position of the moved ROI
+				end
+				assignin('base',"mask_positions",mask_positions)
+				masks_in_frame{currentframe}=mask_positions;
+				put('masks_in_frame',masks_in_frame)
+			end
+		end
+	case{'DeletingROI'}
+		%Find the mask with the unique guid and delete it
+		[r,~]=find(strcmp(src.Tag,mask_positions(:,5)));
+		mask_positions(r,:)=[];
+		masks_in_frame{currentframe}=mask_positions;
+		put('masks_in_frame',masks_in_frame)
+	case{'ROIClicked'}
+		bringToFront(src);
+end
+
+function mask_import_Callback (~,~,~)
+filepath=retr('filepath');
+handles=gethand;
+%if size(filepath,1) > 1 %did the user load images?
+[FileName,PathName] = uigetfile('*.tif','Select the binary image mask file(s)','multiselect','on');
+if ~isequal(FileName,0) && ~isequal(PathName,0)
+	if ischar(FileName)==1
+		AnzahlMasks=1;
+	else
+		AnzahlMasks=numel(FileName);
+	end
+	pivlab_axis=retr('pivlab_axis');
+	if AnzahlMasks==1
+		A=imread(fullfile(PathName,FileName));
+	else
+		if AnzahlMasks > size(filepath/2)
+			disp('mehr masken als Frames!!')
+		end
+		disp('muliple masken laden');
+	end
+	A=im2bw(A);
+	CC = bwconncomp(A);
+	CC2 = bwconncomp(1-A);
+	numconnected=CC.NumObjects + CC2.NumObjects;
+	if numconnected > 100
+		disp('filtering the mask input images ')
+		A = imclose(A,strel('disk',5)); %remove small holes
+		A = bwareaopen(A,25); %remove areas with less than 25 pixels area
+	end
+	A = bwareafilt(A, 100); %only try to get the 100 largest blobs.
+	blocations = bwboundaries(A,'holes');
+	%imshow(A, 'Parent',pivlab_axis);
+
+	recommended_colors=parula(7);
+	for ind = 1:numel(blocations)
+		currentframe=floor(get(handles.fileselector, 'value'));
+		masks_in_frame=retr('masks_in_frame');
+		if numel(masks_in_frame)<currentframe
+			mask_positions=cell(0);
+		else
+			mask_positions=masks_in_frame{currentframe};
+		end
+		if isempty(mask_positions)
+			mask_positions=cell(0);
+		end
+
+
+		% Convert to x,y order.
+		pos = blocations{ind};
+		pos = fliplr(pos);
+		% Create a freehand ROI.
+		roi = drawfreehand('Position', pos);
+		roi.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
+		roi.FaceAlpha=0.75;
+		roi.LabelVisible = 'off';
+		roi.UserData=['ROI_object_' 'external'];
+
+		[~,guid] = fileparts(tempname);
+		roi.Tag = guid;
+		%addlistener(roi,'MovingROI',@ROIevents);
+		addlistener(roi,'ROIMoved',@ROIevents);
+		addlistener(roi,'DeletingROI',@ROIevents);
+		addlistener(roi,'ROIClicked',@ROIevents);
+		update_mask_memory(roi)
+	end
+	redraw_masks
+end
+%end
+
+function convert_masks_to_binary(~,~,~)
+pivlab_axis=retr('pivlab_axis');
+% Convert edited ROI back to masks.
+%ROIs müssen wahrscheinlich aus der variablen mask_position neu gezeichnet werden bevor man die konvertieren kann...?
+%wie findet man am besten alle masken?
+hfhs = findobj(pivlab_axis, 'tag', 'externalmask');
+editedMask = false(size(A));
+
+for ind = 1:numel(hfhs)
+	% Accumulate the mask from each ROI
+	editedMask = editedMask | hfhs(ind).createMask();
+
+	% Include the boundary of the ROI in the final mask.
+	% Ref: https://blogs.mathworks.com/steve/2014/03/27/comparing-the-geometries-of-bwboundaries-and-poly2mask/
+	% Here, we have a dense boundary, so we can take the slightly more
+	% performant approach of just including the boundary pixels directly in
+	% the mask.
+	boundaryLocation = hfhs(ind).Position;
+	bInds = sub2ind(size(A), boundaryLocation(:,2), boundaryLocation(:,1));
+	editedMask(bInds) = true;
+end
+
+
+function update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles)
+if calxy > 1000 || calxy <0.001
+	px_per_m_display=sprintf('%0.4e',calxy);
+else
+	px_per_m_display=sprintf('%0.4f',calxy);
+end
+
+if calu > 1000 || calu < 0.001
+	px_per_frame_display=sprintf('%0.4e',calu);
+else
+	px_per_frame_display=sprintf('%0.4f',calu);
+end
+
+if abs(offset_x_true) > 1000 || abs(offset_x_true) < 0.001
+	x_offset_display=sprintf('%0.4e',offset_x_true);
+	if offset_x_true == 0
+		x_offset_display='0';
+	end
+else
+	x_offset_display=sprintf('%0.4f',offset_x_true);
+end
+
+if abs(offset_y_true) > 1000 || abs(offset_y_true) < 0.001
+	y_offset_display=sprintf('%0.4e',offset_y_true);
+	if offset_y_true == 0
+		y_offset_display='0';
+	end
+else
+	y_offset_display=sprintf('%0.4f',offset_y_true);
+end
+
+set(handles.calidisp, 'string', ['1 px = ' px_per_m_display ' m' sprintf('\n') '1 px/frame = ' px_per_frame_display ' m/s' sprintf('\n') 'x offset: ' x_offset_display ' m' sprintf('\n') 'y offset: ' y_offset_display ' m'],  'backgroundcolor', [0.5 1 0.5]);
