@@ -22,12 +22,15 @@ if numel(roi_inpt)>0
 	heightroi=roi_inpt(4);
 	image1_roi = image1(yroi:yroi+heightroi,xroi:xroi+widthroi);
 	image2_roi = image2(yroi:yroi+heightroi,xroi:xroi+widthroi);
+	mask_inpt_roi = mask_inpt(yroi:yroi+heightroi,xroi:xroi+widthroi);
 else
 	xroi=0;
 	yroi=0;
 	image1_roi = image1;
 	image2_roi = image2;
+	mask_inpt_roi = mask_inpt;
 end
+
 %% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
 image1_roi = convert_image_class(image1_roi, convert_image_class_type);
 image2_roi = convert_image_class(image2_roi, convert_image_class_type);
@@ -36,19 +39,11 @@ pady = ceil(interrogationarea/2);
 padx = ceil(interrogationarea/2);
 image1_roi = padarray(image1_roi, [pady padx], min(min(image1_roi)));
 image2_roi = padarray(image2_roi, [pady padx], min(min(image1_roi)));
+mask_inpt_roi = padarray(mask_inpt_roi, [pady padx], 0);
 image_roi_xs = (1:size(image2_roi,2))  - padx + xroi;
 image_roi_ys = (1:size(image2_roi,1))' - pady + yroi;
 
-%% Construct mask as logical array
-mask = zeros(size(image1_roi), 'logical');
-if numel(mask_inpt)>0
-	for i=1:size(mask_inpt,1)
-		masklayerx = mask_inpt{i,1};
-		masklayery = mask_inpt{i,2};
-		mask = mask | poly2mask(masklayerx-xroi+padx,masklayery-yroi+pady,size(image1_roi,1),size(image1_roi,2)); %kleineres eingangsbild und maske geshiftet
-	end
-end
-
+mask = mask_inpt_roi;
 
 %% MAINLOOP
 max_repetitions=6; %maximum amount of repetitions of the last pass
@@ -339,14 +334,9 @@ for multipass = 1:passes
 				h = fspecial('gaussian', 3, 1.5);
 				h=h/h(2,2);
 				h=1-h;
-				try
-					h=repmat(h,1,1,size(result_conv,3));
-				catch %old matlab releases fail
-					for repli=1:size(result_conv,3)
-						h_repl(:,:,repli)=h;
-					end
-					h=h_repl;
-				end
+
+				h=repmat(h,1,1,size(result_conv,3));
+
 				h = h .* result_conv(interrogationarea_center+(-1:1),interrogationarea_center+(-1:1),:);
 				result_conv(interrogationarea_center+(-1:1),interrogationarea_center+(-1:1),:) = h;
 			end
@@ -367,19 +357,14 @@ for multipass = 1:passes
 
 					emptymatrix = zeros(size(result_conv,1),size(result_conv,2), convert_image_class_type);
 					emptymatrix(interrogationarea_center + (-sizeones:sizeones), ...
-					            interrogationarea_center + (-sizeones:sizeones)) = fspecial('disk', sizeones);
+						interrogationarea_center + (-sizeones:sizeones)) = fspecial('disk', sizeones);
 					emptymatrix = emptymatrix / max(max(emptymatrix));
 
-					try
-						% result_conv in middle, average correlation value in the remaining space
-						mean_result_conv = mean(result_conv, 1:2);
-						result_conv = result_conv .* emptymatrix + mean_result_conv .* (1-emptymatrix);
-					catch %old matlab releases fail
-						for oldmatlab=1:size(result_conv,3)
-							mean_result_conv = mean(mean(result_conv(:,:,oldmatlab)));
-							result_conv(:,:,oldmatlab) = result_conv(:,:,oldmatlab) .* emptymatrix + mean_result_conv .* (1-emptymatrix);
-						end
-					end
+
+					% result_conv in middle, average correlation value in the remaining space
+					mean_result_conv = mean(result_conv, 1:2);
+					result_conv = result_conv .* emptymatrix + mean_result_conv .* (1-emptymatrix);
+
 				end
 			end
 		end

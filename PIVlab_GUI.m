@@ -1,5 +1,7 @@
 %% TODO für release 3.0:
 %{
+piv_DCC neue maske implementieren
+command line neue maske implementieren
 Pixelmaske implementieren...
 zusätzlich ein paar funktionen für Bearbeitung der Pixelmaske, imbinarize from currently displayed image (checkbox: use PIV image to generate mask), dann auch wie z.b. dilate, imclose, etc. Muss optional für jedes Bild in session neuberechnet werden.
 wäre gut: ROI drawline nutzen für Calibration: Editierbar und besser sichtbar.
@@ -657,8 +659,9 @@ handles.loadsessionbutton = uicontrol(handles.multip01,'Style','pushbutton','Str
 item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 1];
 handles.text2 = uicontrol(handles.multip01,'Style','text','units', 'characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Image list:');
 
+PIVver=retr('PIVver');
 item=[0 item(2)+item(4) parentitem(3) 12];
-handles.filenamebox = uicontrol(handles.multip01,'Style','ListBox','units','characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','-empty-','Callback',@filenamebox_Callback,'tag','filenamebox','TooltipString','This list displays the frames that you currently loaded');
+handles.filenamebox = uicontrol(handles.multip01,'Style','ListBox','units','characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String',{['Welcome to PIVlab ' PIVver '.'] 'Add images by clicking the' '"Import images" button above.'},'Callback',@filenamebox_Callback,'tag','filenamebox','TooltipString','This list displays the frames that you currently loaded');
 
 item=[0 item(2)+item(4) parentitem(3) 7];
 handles.text4 = uicontrol(handles.multip01,'Style','text','units','characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Use the scrollbar in the "Tools" panel to cycle through the images.');
@@ -755,18 +758,24 @@ handles.external_mask_progress = uicontrol(handles.uipanel6,'Style','text','Hori
 
 
 %% Multip25 (new mask)
-handles.multip25 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Mask generation', 'Tag','multip25','fontweight','bold');
+handles.multip25 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Image masking', 'Tag','multip25','fontweight','bold');
 parentitem=get(handles.multip25, 'Position');
 item=[0 0 0 0];
 
+%basic or expert mask capabilities
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 1.5];
+handles.text251 = uicontrol(handles.multip25,'Style','text','String','Mode:','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text251');
 
-item=[0 item(2)+item(4) parentitem(3) 12];
-handles.uipanel25_1 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Mask items', 'Tag','uipanel25_1','fontweight','bold');
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
+handles.mask_basic_expert = uicontrol(handles.multip25,'Style','popupmenu','String',{'Basic','Expert'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_basic_expert','Callback',@mask_basic_expert_Callback, 'TooltipString','');
+
+
+%panel Polygon mask items
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 8];
+handles.uipanel25_1 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Polygon mask items', 'Tag','uipanel25_1','fontweight','bold');
 
 parentitem=get(handles.uipanel25_1, 'Position');
 item=[0 0 0 0];
-
-
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.mask_add_freehand = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Free hand','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@mask_add_Callback,'freehand'},'Tag','mask_add_freehand','TooltipString','');
@@ -780,37 +789,56 @@ handles.mask_add_circle = uicontrol(handles.uipanel25_1,'Style','pushbutton','St
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
 handles.mask_add_rectangle = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Rectangle','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@mask_add_Callback,'rectangle'},'Tag','mask_add_rectangle','TooltipString','');
 
-item=[0 item(2)+item(4) parentitem(3)/2 1.5];
-handles.mask_import = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Import mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_import_Callback,'Tag','mask_import','TooltipString','');
 
-item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.preview_mask = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Preview mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @convert_masks_to_binary,'Tag','preview_mask','TooltipString','');
-
-
-
-item=[0 item(2)+item(4) parentitem(3)/2 1.5];
-handles.mask_delete_current = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Delete all','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_delete_current_Callback,'Tag','mask_delete_all','TooltipString','');
-
-%item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-%handles.mask_add_rectangle = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Rectangle','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_add_rectangle_Callback,'Tag','mask_add_rectangle','TooltipString','');
-
-
-
-
-
+%panel Pixel masks
 item=[0 0 0 0];
 parentitem=get(handles.multip25, 'Position');
-item=[0 12+margin/2 parentitem(3) 20];
-handles.uipanel25_2 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Mask application', 'Tag','uipanel25_2','fontweight','bold');
-
+item=[0 0 0 0];
+item=[0 8 parentitem(3) 10];
+handles.uipanel25_2 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Pixel masks', 'Tag','uipanel25_2','fontweight','bold','Visible','off');
 item=[0 0 0 0];
 parentitem=get(handles.uipanel25_2, 'Position');
-item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.mask_apply_to_current = uicontrol(handles.uipanel25_2,'Style','pushbutton','String','Copy mask to all frames','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_copy_to_all_Callback,'Tag','mask_apply_to_current','TooltipString','');
+
+
+item=[0 item(2)+item(4) parentitem(3) 1];
+handles.text252_1 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Process pixel mask with code:','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text252_1');
+
+standard_code={ ...
+	'pixel_mask=imbinarize(pixel_mask);'...
+	'se = strel(''disk'',5);'...
+	'pixel_mask = imopen(pixel_mask,se);'...
+	'pixel_mask = imclose(pixel_mask,se);'...
+	};
+
+item=[0 item(2)+item(4) parentitem(3) 3];
+handles.mask_operations = uicontrol(handles.uipanel25_2,'Style','edit', 'Fontsize',8,'Fontname','fixedwidth', 'Max', 100, 'min', 1, 'String',standard_code,'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_operations','TooltipString','');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.mask_delete_all = uicontrol(handles.uipanel25_2,'Style','pushbutton','String','Delete all masks','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_delete_all_Callback,'Tag','mask_delete_all','TooltipString','');
+handles.mask_import = uicontrol(handles.uipanel25_2,'Style','pushbutton','String','Import pixel mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_import_Callback,'Tag','mask_import','TooltipString','');
 
+
+%panel mask operations
+item=[0 0 0 0];
+parentitem=get(handles.multip25, 'Position');
+item=[0 18 parentitem(3) 8];
+handles.uipanel25_3 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Mask operations', 'Tag','uipanel25_3','fontweight','bold');
+
+item=[0 0 0 0];
+parentitem=get(handles.uipanel25_3, 'Position');
+item=[0 item(2)+item(4) parentitem(3) 1.5];
+handles.mask_apply_to_current = uicontrol(handles.uipanel25_3,'Style','pushbutton','String','Copy mask to all frames','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_copy_to_all_Callback,'Tag','mask_apply_to_current','TooltipString','');
+
+item=[0 item(2)+item(4) parentitem(3) 1.5];
+handles.mask_delete_all = uicontrol(handles.uipanel25_3,'Style','pushbutton','String','Clear all masks','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_delete_all_Callback,'Tag','mask_delete_all','TooltipString','');
+
+item=[0 item(2)+item(4) parentitem(3)/2 1.5];
+handles.preview_mask = uicontrol(handles.uipanel25_3,'Style','pushbutton','String','Preview mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preview_mask_Callback,'Tag','preview_mask','TooltipString','');
+
+item=[0 item(2)+item(4) parentitem(3)/2 1.5];
+handles.mask_save = uicontrol(handles.uipanel25_3,'Style','pushbutton','String','Save all masks','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_save_Callback,'Tag','mask_save','TooltipString','');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
+handles.mask_load = uicontrol(handles.uipanel25_3,'Style','pushbutton','String','Load mask(s)','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_load_Callback,'Tag','mask_load','TooltipString','');
 
 
 %% Multip03
@@ -3308,9 +3336,11 @@ if capturing==0
 		if strncmp(get(handles.multip01, 'visible'), 'on',2)
 			set(handles.imsize, 'string', ['Image size: ' int2str(size(currentimage,2)) '*' int2str(size(currentimage,1)) 'px' ])
 		end
-		update_mask_display(target_axis,currentframe, handles);
-		disp('redrawing masks from sliderdisp')
-		redraw_masks
+
+		roirect=retr('roirect');
+		if size(roirect,2)>1
+			dispROI(target_axis);
+		end
 
 		resultslist=retr('resultslist');
 		display_manual_markers(target_axis,handles);
@@ -3332,6 +3362,9 @@ if capturing==0
 			end
 			plot_manually_discarded_vectors(target_axis,handles, x, y);
 		end
+
+		redraw_masks
+
 		if isempty(xzoomlimit)==0
 			set(target_axis,'xlim',xzoomlimit)
 			set(target_axis,'ylim',yzoomlimit)
@@ -4438,26 +4471,6 @@ set(handles.ROI_Man_y,'String',int2str(roirect(2)));
 set(handles.ROI_Man_w,'String',int2str(roirect(3)));
 set(handles.ROI_Man_h,'String',int2str(roirect(4)));
 
-function convert_mask_poly_to_pixel
-handles=gethand;
-currentframe=2*floor(get(handles.fileselector, 'value'))-1;
-maskiererx=retr('maskiererx');
-maskierery=retr('maskierery');
-[currentimage,~]=get_img(currentframe);
-mask_poly_to_pixel = zeros(size(currentimage,1),size(currentimage,2), 'logical');
-for j=1:min([size(maskiererx,1) size(maskierery,1)])
-	if (size(maskiererx,2) >= currentframe) && (~isempty(maskiererx{j,currentframe}))
-		%convert polymask to pixelmask
-		ximask=maskiererx{j,currentframe};
-		yimask=maskierery{j,currentframe};
-		mask_poly_to_pixel = mask_poly_to_pixel | poly2mask(ximask,yimask,size(currentimage,1),size(currentimage,2)); %kleineres eingangsbild und maske geshiftet
-	else
-		break;
-	end
-end
-put('mask_poly_to_pixel',mask_poly_to_pixel)
-
-
 function dispMASK(target_axis,opaqueness)
 maskcolor = [0.75 0.25 0.25];
 handles=gethand;
@@ -5162,6 +5175,7 @@ if ok==1
 	filename=retr('filename');
 	toggler=retr('toggler');
 	resultslist=cell(0); %clear old results
+
 	put('derived', [])
 	toolsavailable(0,'Busy, please wait...');
 	set (handles.cancelbutt, 'enable', 'on');
@@ -5187,6 +5201,11 @@ if ok==1
 	put('filepath',filepath);
 	put('filename',filename);
 	put('ismean',[]);
+	masks_in_frame=retr('masks_in_frame');
+	if isempty(masks_in_frame)
+		masks_in_frame=cell(floor(size(filepath,1)/2),1);
+	end
+
 	sliderrange
 
 	clahe=get(handles.clahe_enable,'value');
@@ -5232,12 +5251,10 @@ if ok==1
 		set(handles.progress, 'string' , ['Frame progress: 100%']);
 		set(handles.overall, 'string' , ['Total progress: 0%']);
 		drawnow; %#ok<*NBRAK>
-		maskiererx=retr('maskiererx');
-		maskierery=retr('maskierery');
+
 		do_correlation_matrices=retr('do_correlation_matrices');
 		slicedfilepath1=cell(0);
 		slicedfilepath2=cell(0);
-		mask=cell(0);
 		xlist=cell(0);
 		ylist=cell(0);
 		ulist=cell(0);
@@ -5247,25 +5264,6 @@ if ok==1
 		correlation_matrices_list=cell(0);
 		for i=1:2:num_frames_to_process
 			k=(i+1)/2;
-			ximask={};
-			yimask={};
-			if size(maskiererx,2)>=i
-				for j=1:size(maskiererx,1)
-					if isempty(maskiererx{j,i})==0
-						ximask{j,1}=maskiererx{j,i}; %#ok<*AGROW>
-						yimask{j,1}=maskierery{j,i};
-					else
-						break
-					end
-				end
-				if size(ximask,1)>0
-					mask{k}=[ximask yimask];
-				else
-					mask{k}=[];
-				end
-			else
-				mask{k}=[];
-			end
 			slicedfilepath1{k}=filepath{i};
 			slicedfilepath2{k}=filepath{i+1};
 		end
@@ -5287,6 +5285,12 @@ if ok==1
 				bg_img_B=[];
 				bg_sub=0;
 			end
+
+			masks_in_frame=retr('masks_in_frame');
+			if isempty(masks_in_frame)
+				masks_in_frame=cell(size(slicedfilepath1,2),1);
+			end
+
 			parfor i=1:size(slicedfilepath1,2)
 				if exist('cancel_piv','file')
 					close(hbar);
@@ -5341,7 +5345,17 @@ if ok==1
 				end
 				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 				image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect); %#ok<PFTUSW>
+
+
+				if numel(masks_in_frame)< i
+					mask_positions=cell(0);
+				else
+					mask_positions=masks_in_frame{i};
+				end
+
+				converted_mask=convert_masks_to_binary(size(currentimage1(:,:,1)),mask_positions);
+
+				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect); %#ok<PFTUSW>
 				xlist{i}=x;
 				ylist{i}=y;
 				ulist{i}=u;
@@ -5373,6 +5387,12 @@ if ok==1
 				bg_img_B=[];
 				bg_sub=0;
 			end
+			masks_in_frame=retr('masks_in_frame');
+			if isempty(masks_in_frame)
+				masks_in_frame=cell(size(slicedfilepath1,2),1);
+			end
+
+
 			parfor i=1:size(slicedfilepath1,2)
 				%------------------------
 				if exist('cancel_piv','file')
@@ -5388,6 +5408,14 @@ if ok==1
 					currentimage1=imread(slicedfilepath1{i});
 					currentimage2=imread(slicedfilepath2{i});
 				end
+
+				if numel(masks_in_frame)< i
+					mask_positions=cell(0);
+				else
+					mask_positions=masks_in_frame{i};
+				end
+				converted_mask=convert_masks_to_binary(size(currentimage1(:,:,1)),mask_positions);
+
 				if bg_sub==1
 					if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
 						currentimage1 = rgb2gray(currentimage1)-bg_img_A;
@@ -5425,7 +5453,7 @@ if ok==1
 				end
 				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 				image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask{i}, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min); %#ok<PFTUSW>
+				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min); %#ok<PFTUSW>
 				xlist{i}=x;
 				ylist{i}=y;
 				ulist{i}=u;
@@ -5466,6 +5494,12 @@ if ok==1
 	%% serial (standard) calculation
 	if retr('parallel')==0 ||  retr('video_selection_done') == 1
 		set (handles.cancelbutt, 'enable', 'on');
+
+		masks_in_frame=retr('masks_in_frame');
+		if isempty(masks_in_frame)
+			masks_in_frame=cell(floor((num_frames_to_process+1)/2),1);
+		end
+
 		for i=1:2:num_frames_to_process
 			if i==1
 				tic
@@ -5538,8 +5572,19 @@ if ok==1
 				interrogationarea=str2double(get(handles.intarea, 'string'));
 				step=str2double(get(handles.step, 'string'));
 				subpixfinder=get(handles.subpix,'value');
+
+				currentmask=floor((i+1)/2);
+
+				if numel(masks_in_frame)< currentmask
+					mask_positions=cell(0);
+				else
+					mask_positions=masks_in_frame{currentmask};
+				end
+
+				converted_mask=convert_masks_to_binary(size(image1(:,:,1)),mask_positions);
+
 				if get(handles.dcc,'Value')==1
-					[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask, roirect);
+					[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
 					correlation_matrices=[];%not available for DCC
 				elseif get(handles.fftmulti,'Value')==1
 					passes=1;
@@ -5559,7 +5604,7 @@ if ok==1
 					repeat_last_pass = get(handles.repeat_last,'Value');
 					delta_diff_min = str2double(get(handles.edit52x,'String'));
 					[imdeform, repeat, do_pad] = CorrQuality;
-					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
+					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
 					%u=real(u)
 					%v=real(v)
 				end
@@ -5649,20 +5694,13 @@ if ok==1
 	toolsavailable(0,'Busy, please wait...');
 	set (handles.cancelbutt, 'enable', 'on');
 	ismean=retr('ismean');
-	maskiererx=retr('maskiererx');
-	maskierery=retr('maskierery');
+
 	for i=size(ismean,1):-1:1 %remove averaged results
 		if ismean(i,1)==1
 			filepath(i*2,:)=[];
 			filename(i*2,:)=[];
 			filepath(i*2-1,:)=[];
 			filename(i*2-1,:)=[];
-			if size(maskiererx,2)>=i*2
-				maskiererx(:,i*2)=[];
-				maskierery(:,i*2)=[];
-				maskiererx(:,i*2-1)=[];
-				maskierery(:,i*2-1)=[];
-			end
 		end
 	end
 	put('filepath',filepath);
@@ -5687,8 +5725,9 @@ if ok==1
 	%clipthresh=str2double(get(handles.clip_thresh, 'string'));
 	roirect=retr('roirect');
 	autolimit = get(handles.Autolimit, 'value');
-	maskiererx=retr('maskiererx');
-	maskierery=retr('maskierery');
+
+
+
 	interrogationarea=str2double(get(handles.intarea, 'string'));
 	step=str2double(get(handles.step, 'string'));
 	subpixfinder=get(handles.subpix,'value');
@@ -5710,13 +5749,30 @@ if ok==1
 	bg_img_A = retr('bg_img_A'); %contains bg image, or is empty array
 	bg_img_B = retr('bg_img_B');
 	%übergeben: Video frame selection
+
+	%ensemble correlation ist anders... Hier müsste für alle frames bereits eine pixelmaske berechnet und übergeben werden.
+	tmp=imread(filepath{1});
+
+	masks_in_frame=retr('masks_in_frame');
+	if isempty(masks_in_frame)
+		masks_in_frame=cell(floor(size(filepath,1)/2),1);
+	end
+	converted_mask=cell(floor(size(filepath,1)/2),1);
+	for ii=1:floor(size(filepath,1)/2)
+		if numel(masks_in_frame) < ii
+			masks_in_frame{ii}=cell(0);
+		end
+		mask_positions=masks_in_frame{ii};
+		converted_mask{ii}=convert_masks_to_binary(size(tmp(:,:,1)),mask_positions);
+	end
+
 	if retr('video_selection_done') == 0
 		video_frame_selection=[];
-		[x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, filepath,video_frame_selection,bg_img_A,bg_img_B,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
+		[x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, filepath,video_frame_selection,bg_img_A,bg_img_B,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,converted_mask,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
 	else
 		video_frame_selection=retr('video_frame_selection');
 		video_reader_object = retr('video_reader_object');
-		[x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, video_reader_object ,video_frame_selection,bg_img_A,bg_img_B,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,maskiererx,maskierery,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
+		[x, y, u, v, typevector,correlation_map] = piv_FFTensemble (autolimit, video_reader_object ,video_frame_selection,bg_img_A,bg_img_B,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,converted_mask,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
 	end
 
 	cancel = retr('cancel');
@@ -5865,33 +5921,25 @@ if ok==1
 		end
 
 		image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-		maskiererx=retr('maskiererx');
-		maskierery=retr('maskierery');
-		ximask={};
-		yimask={};
-		if size(maskiererx,2)>=selected
-			for i=1:size(maskiererx,1)
-				if isempty(maskiererx{i,selected})==0
-					ximask{i,1}=maskiererx{i,selected};
-					yimask{i,1}=maskierery{i,selected};
-				else
-					break
-				end
-			end
-			if size(ximask,1)>0
-				mask=[ximask yimask];
-			else
-				mask=[];
-			end
-		else
-			mask=[];
+
+		current_mask_nr=floor(get(handles.fileselector, 'value'));
+		masks_in_frame=retr('masks_in_frame');
+		if isempty(masks_in_frame)
+			masks_in_frame=cell(current_mask_nr,1);
 		end
+		if numel(masks_in_frame)<current_mask_nr
+			mask_positions=cell(0);
+		else
+			mask_positions=masks_in_frame{current_mask_nr};
+		end
+		converted_mask=convert_masks_to_binary(size(image1(:,:,1)),mask_positions);
+
 		interrogationarea=str2double(get(handles.intarea, 'string'));
 		step=str2double(get(handles.step, 'string'));
 		subpixfinder=get(handles.subpix,'value');
 		do_correlation_matrices=retr('do_correlation_matrices');
 		if get(handles.dcc,'Value')==1
-			[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask, roirect);
+			[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
 			correlation_map=zeros(size(u)); %nor correlation map available with DCC
 			correlation_matrices=[];
 		elseif get(handles.fftmulti,'Value')==1 || get(handles.ensemble,'Value')==1
@@ -5914,8 +5962,9 @@ if ok==1
 			delta_diff_min = str2double(get(handles.edit52x,'String'));
 			if get(handles.fftmulti,'Value')==1
 				try
-					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
-				catch
+					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
+				catch ME
+					disp(getReport(ME))
 					toolsavailable(1);
 				end
 			end
@@ -13247,19 +13296,6 @@ else
 	set (handles.filenameshow,'BackgroundColor',[0.9412 0.9412 0.9412]);
 end
 
-function update_mask_display(target_axis,currentframe, handles)
-maskiererx=retr('maskiererx');
-if size(maskiererx,2)>=currentframe
-	ximask=maskiererx{1,currentframe};
-	if size(ximask,1)>1
-		dispMASK(target_axis,1-str2num(get(handles.masktransp,'String'))/100)
-	end
-end
-roirect=retr('roirect');
-if size(roirect,2)>1
-	dispROI(target_axis);
-end
-
 function display_manual_markers(target_axis,handles)
 %manualmarkers
 if get(handles.displmarker,'value')==1
@@ -13454,7 +13490,6 @@ else
 	end
 end
 
-
 if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
 	currentimage=derived{displaywhat-1,(currentframe+1)/2};
 	if displaywhat ==11 % 11 ist vector direction
@@ -13514,12 +13549,21 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 	currentimage = uint8(floor(currentimage * colormap_steps));
 	%currentimage_RGB = ind2rgb(currentimage, MAP);
 
-	convert_mask_poly_to_pixel
-	mask_poly_to_pixel = retr('mask_poly_to_pixel');
-	if isempty(mask_poly_to_pixel)
-		mask_poly_to_pixel=zeros(size(currentimage,1),size(currentimage,2),'logical');
+	if strcmp(get(handles.multip25,'Visible'),'off') %user is currently operating in the mask edit panel
+		masks_in_frame=retr('masks_in_frame');
+		if isempty(masks_in_frame)
+			masks_in_frame=cell(floor((currentframe+1)/2),1);
+		end
+		if numel(masks_in_frame)<floor((currentframe+1)/2)
+			mask_positions=cell(0);
+		else
+			mask_positions=masks_in_frame{floor((currentframe+1)/2)};
+		end
+		converted_mask=convert_masks_to_binary(size(currentimage(:,:,1)),mask_positions);
+		alpha_pixel_map=1-converted_mask; %regions that are mask get zero opaqueness.
+	else
+		alpha_pixel_map=ones(size(currentimage,1),size(currentimage,2),'logical');
 	end
-	alpha_pixel_map=1-mask_poly_to_pixel; %regions that are mask get zero opaqueness.
 	roirect=retr('roirect');
 	alpha_ROI_map=zeros(size(currentimage,1),size(currentimage,2),'logical');
 	if ~isempty(roirect) && size(roirect,2)>1
@@ -13684,6 +13728,9 @@ masknums=size(mask_positions,1);
 if strcmp(type,'freehand')
 	roi = images.roi.Freehand;
 	roi.Multiclick=0;
+elseif strcmp(type,'assistedfreehand')
+	roi = images.roi.AssistedFreehand;
+	type='freehand';
 elseif strcmp(type,'rectangle')
 	roi = images.roi.Rectangle;
 elseif strcmp(type,'polygon')
@@ -13741,28 +13788,26 @@ put('masks_in_frame',masks_in_frame)
 
 
 function redraw_masks
-
 %redraws all masks that are saved in mask_positions
 handles=gethand;
+if strcmp(get(handles.multip25,'Visible'),'on')
+	mask_editing_possible=1;
+else
+	mask_editing_possible=0;
+end
 currentframe=floor(get(handles.fileselector, 'value'));
 masks_in_frame=retr('masks_in_frame');
 if isempty(masks_in_frame)
 	masks_in_frame=cell(currentframe,1);
 end
-
 if numel(masks_in_frame)<currentframe
 	mask_positions=cell(0);
 else
 	mask_positions=masks_in_frame{currentframe};
 end
-
-delete(findobj('UserData','ROI_object_freehand'));% deletes visible ROIs before redrawing.
-delete(findobj('UserData','ROI_object_rectangle'));
-delete(findobj('UserData','ROI_object_circle'));
-delete(findobj('UserData','ROI_object_polygon'));
-delete(findobj('UserData','ROI_object_external'));
-
+delete(findobj({'UserData','ROI_object_freehand','-or','UserData','ROI_object_rectangle','-or','UserData','ROI_object_circle','-or','UserData','ROI_object_polygon','-or','UserData','ROI_object_external'})); % deletes visible ROIs before redrawing.
 masknums=size(mask_positions,1);
+
 for i=1:masknums
 	type=mask_positions(i,1);
 	if strcmp(type,'ROI_object_freehand')
@@ -13779,16 +13824,29 @@ for i=1:masknums
 		roi = drawfreehand('Position', mask_positions{i,2});
 	end
 	roi.UserData=mask_positions{i,1};
-	roi.Color=mask_positions{i,3};
 	roi.Label=mask_positions{i,4};
 	roi.Tag=mask_positions{i,5};
-	addlistener(roi,'ROIMoved',@ROIevents);
-	addlistener(roi,'DeletingROI',@ROIevents);
-	addlistener(roi,'ROIClicked',@ROIevents);
-	roi.FaceAlpha=0.75;
+	if mask_editing_possible==1
+		roi.Color=mask_positions{i,3};
+		addlistener(roi,'ROIMoved',@ROIevents);
+		addlistener(roi,'DeletingROI',@ROIevents);
+		addlistener(roi,'ROIClicked',@ROIevents);
+		roi.FaceAlpha=0.75;
+	else
+		disp('das ist ja ganz schön, aber ich muss schon ein Pixelbild als overlay nehmen um maske anzuzeigen.... Ansonsten weiß man nicht was man am ende bekommt bei überlappenden ROIS...!')
+		roi.Deletable=0;
+		roi.InteractionsAllowed='none';
+		roi.FaceSelectable=0;
+		roi.FaceAlpha=0.8;
+		roi.EdgeAlpha=0;
+		roi.Color=[0.33 0 0];
+		%roi.LineWidth=0.1;
+	end
+	
 	roi.LabelVisible = 'off';
 end
-disp('redrawing')
+
+
 
 function mask_delete_all_Callback(~,~,~)
 put('masks_in_frame',[])
@@ -13817,7 +13875,7 @@ switch(evname)
 				else
 					mask_positions{r,2}=src.Position; %update position of the moved ROI
 				end
-				assignin('base',"mask_positions",mask_positions)
+				%assignin('base',"mask_positions",mask_positions)
 				masks_in_frame{currentframe}=mask_positions;
 				put('masks_in_frame',masks_in_frame)
 			end
@@ -13836,7 +13894,7 @@ function mask_import_Callback (~,~,~)
 filepath=retr('filepath');
 handles=gethand;
 %if size(filepath,1) > 1 %did the user load images?
-[FileName,PathName] = uigetfile('*.tif','Select the binary image mask file(s)','multiselect','on');
+[FileName,PathName] = uigetfile({'*.bmp;*.tif;*.tiff;*.jpg;*.png;','Image Files (*.bmp,*.tif,*.tiff,*.jpg,*.png)'; '*.tif','tif'; '*.tiff','tiff'; '*.jpg','jpg'; '*.bmp','bmp'; '*.png','png'},'Select the binary image mask file(s)','multiselect','on');
 if ~isequal(FileName,0) && ~isequal(PathName,0)
 	if ischar(FileName)==1
 		AnzahlMasks=1;
@@ -13845,24 +13903,36 @@ if ~isequal(FileName,0) && ~isequal(PathName,0)
 	end
 	pivlab_axis=retr('pivlab_axis');
 	if AnzahlMasks==1
-		A=imread(fullfile(PathName,FileName));
+		pixel_mask=imread(fullfile(PathName,FileName));
 	else
 		if AnzahlMasks > size(filepath/2)
 			disp('mehr masken als Frames!!')
 		end
 		disp('muliple masken laden');
 	end
-	A=im2bw(A);
-	CC = bwconncomp(A);
-	CC2 = bwconncomp(1-A);
+
+	code_content=get(handles.mask_operations,'String');
+
+	pixel_mask=pixel_mask(:,:,1);
+	[row, column] = size(code_content);
+	for i = 1:row
+		eval(code_content{i,:})                   %evaluate each line as in MATLAB command prompt
+	end
+
+	if ~islogical(pixel_mask)
+		pixel_mask=imbinarize(pixel_mask); %if user didnt convert to BW...
+	end
+
+	CC = bwconncomp(pixel_mask);
+	CC2 = bwconncomp(1-pixel_mask);
 	numconnected=CC.NumObjects + CC2.NumObjects;
 	if numconnected > 100
 		disp('filtering the mask input images ')
-		A = imclose(A,strel('disk',5)); %remove small holes
-		A = bwareaopen(A,25); %remove areas with less than 25 pixels area
+		pixel_mask = imclose(pixel_mask,strel('disk',5)); %remove small holes
+		pixel_mask = bwareaopen(pixel_mask,25); %remove areas with less than 25 pixels area
 	end
-	A = bwareafilt(A, 100); %only try to get the 100 largest blobs.
-	blocations = bwboundaries(A,'holes');
+	pixel_mask = bwareafilt(pixel_mask, 100); %only try to get the 100 largest blobs.
+	blocations = bwboundaries(pixel_mask,'holes');
 	%imshow(A, 'Parent',pivlab_axis);
 
 	recommended_colors=parula(7);
@@ -13883,6 +13953,7 @@ if ~isequal(FileName,0) && ~isequal(PathName,0)
 		pos = fliplr(pos);
 		% Create a freehand ROI.
 		roi = drawfreehand('Position', pos);
+		reduce(roi,0.005)
 		roi.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
 		roi.FaceAlpha=0.75;
 		roi.LabelVisible = 'off';
@@ -13900,11 +13971,10 @@ if ~isequal(FileName,0) && ~isequal(PathName,0)
 end
 %end
 
-function convert_masks_to_binary(~,~,~)
+function preview_mask_Callback(~,~,~)
 handles=gethand;
 pivlab_axis=retr('pivlab_axis');
 expected_image_size=retr('expected_image_size');
-
 currentframe=floor(get(handles.fileselector, 'value'));
 masks_in_frame=retr('masks_in_frame');
 if isempty(masks_in_frame)
@@ -13916,27 +13986,28 @@ if numel(masks_in_frame)<currentframe
 else
 	mask_positions=masks_in_frame{currentframe};
 end
+converted_mask=convert_masks_to_binary(expected_image_size,mask_positions);
+%figure;imagesc(converted_mask);axis image;
 
-editedMask = zeros(expected_image_size(1:2),'uint16');
-for i=1:size(mask_positions,1)
-	if 	strcmp(mask_positions{i,1},'ROI_object_freehand')	|| strcmp(mask_positions{i,1},'ROI_object_polygon') || strcmp(mask_positions{i,1},'ROI_object_external')
-		xi=mask_positions{i,2}(:,1);
-		yi=mask_positions{i,2}(:,2);
-		editedMask = editedMask + uint16(poly2mask(xi,yi,expected_image_size(1),expected_image_size(2)));
-	elseif strcmp(mask_positions{i,1},'ROI_object_rectangle')
-		rectangle_coords=bbox2points(mask_positions{i,2});
-		editedMask = editedMask + uint16(poly2mask(rectangle_coords(:,1),rectangle_coords(:,2),expected_image_size(1),expected_image_size(2)));
-	elseif strcmp(mask_positions{i,1},'ROI_object_circle')
-		nsides_that_make_sense = floor(sqrt(2*pi()*mask_positions{i,2}(3)/1));
-		pgon = nsidedpoly(nsides_that_make_sense,'Center',mask_positions{i,2}(1:2),'Radius',mask_positions{i,2}(3));
-		editedMask = editedMask + uint16(poly2mask(pgon.Vertices(:,1),pgon.Vertices(:,2),expected_image_size(1),expected_image_size(2)));
+function converted_mask=convert_masks_to_binary(mask_size,mask_positions)
+editedMask = zeros(mask_size,'uint16');
+if ~isempty(mask_positions)
+	for i=1:size(mask_positions,1)
+		if 	strcmp(mask_positions{i,1},'ROI_object_freehand')	|| strcmp(mask_positions{i,1},'ROI_object_polygon') || strcmp(mask_positions{i,1},'ROI_object_external')
+			xi=mask_positions{i,2}(:,1);
+			yi=mask_positions{i,2}(:,2);
+			editedMask = editedMask + uint16(poly2mask(xi,yi,mask_size(1),mask_size(2)));
+		elseif strcmp(mask_positions{i,1},'ROI_object_rectangle')
+			rectangle_coords=bbox2points(mask_positions{i,2});
+			editedMask = editedMask + uint16(poly2mask(rectangle_coords(:,1),rectangle_coords(:,2),mask_size(1),mask_size(2)));
+		elseif strcmp(mask_positions{i,1},'ROI_object_circle')
+			nsides_that_make_sense = floor(sqrt(2*pi()*mask_positions{i,2}(3)/1));
+			pgon = nsidedpoly(nsides_that_make_sense,'Center',mask_positions{i,2}(1:2),'Radius',mask_positions{i,2}(3));
+			editedMask = editedMask + uint16(poly2mask(pgon.Vertices(:,1),pgon.Vertices(:,2),mask_size(1),mask_size(2)));
+		end
 	end
 end
-editedMask = bitget(editedMask,1);
-
-figure;imagesc(editedMask);axis image;
-
-
+converted_mask = logical(bitget(editedMask,1));
 
 
 function mask_copy_to_all_Callback(~,~,~)
@@ -13961,4 +14032,51 @@ if ~isempty (mask_positions)
 end
 put('masks_in_frame',masks_in_frame);
 
+function mask_save_Callback(~,~,~)
+masks_in_frame=retr('masks_in_frame');
+sessionpath=retr('sessionpath');
+if isempty(sessionpath)
+	sessionpath=retr('pathname');
+end
+if  ~isempty(masks_in_frame)
+	[maskfile,maskpath] = uiputfile('*.mat','Save mask polygon(s)',fullfile(sessionpath, 'PIVlab_mask.mat'));
+	if ~isequal(maskfile,0) && ~isequal(maskpath,0)
+		save(fullfile(maskpath,maskfile),'masks_in_frame');
+	end
+end
 
+function mask_load_Callback(~,~,~)
+filepath=retr('filepath');
+handles=gethand;
+if size(filepath,1) > 1 %did the user load images?
+	sessionpath=retr('sessionpath');
+	if isempty(sessionpath)
+		sessionpath=retr('pathname');
+	end
+	[maskfile,maskpath] = uigetfile('*.mat','Load PIVlab mask',fullfile(sessionpath, 'PIVlab_mask.mat'));
+	if ~isequal(maskfile,0) && ~isequal(maskpath,0)
+		warning('off','MATLAB:load:variableNotFound');
+		toolsavailable(0,'Busy, loading masks');drawnow
+		load(fullfile(maskpath,maskfile),'masks_in_frame');
+		warning('on','MATLAB:load:variableNotFound');
+		if exist('masks_in_frame','var')
+			put('masks_in_frame',masks_in_frame);
+			sliderdisp(retr('pivlab_axis'))
+			toolsavailable(1)
+		else
+			toolsavailable(1)
+			msgbox('No masks found in file.','modal');
+		end
+	end
+else
+	msgbox('Before loading masks, you need to import images for your analyses.','modal');
+end
+
+function mask_basic_expert_Callback(~,~,~)
+handles=gethand;
+modus=get(handles.mask_basic_expert,'Value');
+if modus==1 %basic
+	set(handles.uipanel25_2,'Visible','off');
+elseif modus==2 %expert
+	set(handles.uipanel25_2,'Visible','on');
+end

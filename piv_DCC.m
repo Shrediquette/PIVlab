@@ -1,4 +1,4 @@
-function [xtable ytable utable vtable typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask, roi)
+function [xtable, ytable, utable, vtable, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, mask_inpt, roi)
 %this funtion performs the DCC PIV analysis. Recent window-deformation
 %methods perform better and will maybe be implemented in the future.
 
@@ -10,25 +10,16 @@ if numel(roi)>0
     heightroi=roi(4);
     image1_roi=double(image1(yroi:yroi+heightroi,xroi:xroi+widthroi));
     image2_roi=double(image2(yroi:yroi+heightroi,xroi:xroi+widthroi));
+	mask_inpt_roi = mask_inpt(yroi:yroi+heightroi,xroi:xroi+widthroi);
 else
     xroi=0;
     yroi=0;
     image1_roi=double(image1);
     image2_roi=double(image2);
+	mask_inpt_roi = mask_inpt;
 end
 
-if numel(mask)>0
-    cellmask=mask;
-    mask=zeros(size(image1_roi));
-    for i=1:size(cellmask,1);
-        masklayerx=cellmask{i,1};
-        masklayery=cellmask{i,2};
-        mask = mask + poly2mask(masklayerx-xroi,masklayery-yroi,size(image1_roi,1),size(image1_roi,2)); %kleineres eingangsbild und maske geshiftet
-    end
-else
-    mask=zeros(size(image1_roi));
-end
-mask(mask>1)=1;
+mask = mask_inpt_roi;
 
 miniy=1+(ceil(interrogationarea/2));
 minix=1+(ceil(interrogationarea/2));
