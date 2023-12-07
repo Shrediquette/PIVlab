@@ -1,7 +1,9 @@
 %% TODO für release 3.0:
 %{
-Hinzufügen: Achsskalierung und referenzvektor?
 Pixelmaske implementieren...
+zusätzlich ein paar funktionen für Bearbeitung der Pixelmaske, imbinarize from currently displayed image (checkbox: use PIV image to generate mask), dann auch wie z.b. dilate, imclose, etc. Muss optional für jedes Bild in session neuberechnet werden.
+wäre gut: ROI drawline nutzen für Calibration: Editierbar und besser sichtbar.
+
 Neues example Video (copter durch wald / Beine)
 fancy splash screen mit Pixelbildern die gezeigt werden die Status anzeigen? Aus Mat datei laden... Und bei Fehler / warnung auf commandwindow verweisen.
 %}
@@ -50,6 +52,16 @@ set(gca,'DataAspectRatioMode','auto')
 	setappdata(0,'hgui',MainWindow);
 	version = '3.00';
 	put('PIVver', version);
+	try
+		load('PIVlab_settings_default.mat','build_date');
+	catch
+		build_date='';
+	end
+	if isempty(build_date)
+		build_date='';
+	else
+	end
+
 	v=ver('MATLAB');
 
 	if ~exist('desired_num_cores','var')
@@ -57,7 +69,8 @@ set(gca,'DataAspectRatioMode','auto')
 	end
 
 	if ~exist('splash_ax','var')
-		disp(['-> Starting PIVlab ' version ' ...'])
+		disp(['-> Starting PIVlab ' version ', built on: ' char(datetime(build_date)) ' ...'])
+
 		disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
 	else
 		text_content=get(handle_splash_text,'String');
@@ -770,6 +783,8 @@ handles.mask_add_rectangle = uicontrol(handles.uipanel25_1,'Style','pushbutton',
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.mask_import = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Import mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_import_Callback,'Tag','mask_import','TooltipString','');
 
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
+handles.preview_mask = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Preview mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @convert_masks_to_binary,'Tag','preview_mask','TooltipString','');
 
 
 
@@ -2606,7 +2621,14 @@ quickwidth=retr('quickwidth');
 quickheight=retr('quickheight');
 %starts lower left
 %                            X    Y    WIDTH    HEIGHT
-if get(handles.colorbarpos,'value')==1
+
+try
+	colorbarpos=get(handles.colorbarpos,'value');
+catch
+	colorbarpos=1;
+end
+
+if colorbarpos==1
 	width_reduct=0;x_shift=0;
 	height_reduct=0;y_shift=0;
 else
@@ -9337,13 +9359,19 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 			end
 		end
 	catch ME
-		set (export_figure,'WindowStyle','normal')
-		close(export_figure)
+		try
+			set (export_figure,'WindowStyle','normal')
+			close(export_figure)
+		catch
+		end
 		disp(ME.identifier)
 		disp(ME.message)
 		commandwindow;
 	end
-	close(export_figure)
+	try
+		close(export_figure)
+	catch
+	end
 	set(handles.fileselector, 'value',startframe)
 	sliderdisp(pivlab_axis)
 end
@@ -13597,6 +13625,40 @@ switch selected_format
 		set(handles.resolution_setting,'Enable','Off')
 end
 
+function update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles)
+if calxy > 1000 || calxy <0.001
+	px_per_m_display=sprintf('%0.4e',calxy);
+else
+	px_per_m_display=sprintf('%0.4f',calxy);
+end
+
+if calu > 1000 || calu < 0.001
+	px_per_frame_display=sprintf('%0.4e',calu);
+else
+	px_per_frame_display=sprintf('%0.4f',calu);
+end
+
+if abs(offset_x_true) > 1000 || abs(offset_x_true) < 0.001
+	x_offset_display=sprintf('%0.4e',offset_x_true);
+	if offset_x_true == 0
+		x_offset_display='0';
+	end
+else
+	x_offset_display=sprintf('%0.4f',offset_x_true);
+end
+
+if abs(offset_y_true) > 1000 || abs(offset_y_true) < 0.001
+	y_offset_display=sprintf('%0.4e',offset_y_true);
+	if offset_y_true == 0
+		y_offset_display='0';
+	end
+else
+	y_offset_display=sprintf('%0.4f',offset_y_true);
+end
+
+set(handles.calidisp, 'string', ['1 px = ' px_per_m_display ' m' sprintf('\n') '1 px/frame = ' px_per_frame_display ' m/s' sprintf('\n') 'x offset: ' x_offset_display ' m' sprintf('\n') 'y offset: ' y_offset_display ' m'],  'backgroundcolor', [0.5 1 0.5]);
+
+
 function mask_add_Callback(~,~,type)
 %masken sollten nur im Maskenpanel als ROIs angezeigt werden ud editierbar sein. Ansonsten als Pixeloverlay. Oder als schnell zecihnendes Polygon. bzw. auch gerne als ROI objekt ohne hittest und editable
 handles=gethand;
@@ -13676,7 +13738,7 @@ mask_positions{end,4}=roi.Label;
 mask_positions{end,5}=roi.Tag;
 masks_in_frame{currentframe}=mask_positions;
 put('masks_in_frame',masks_in_frame)
-assignin('base',"masks_in_frame",masks_in_frame)
+
 
 function redraw_masks
 
@@ -13727,8 +13789,6 @@ for i=1:masknums
 	roi.LabelVisible = 'off';
 end
 disp('redrawing')
-
-
 
 function mask_delete_all_Callback(~,~,~)
 put('masks_in_frame',[])
@@ -13818,7 +13878,6 @@ if ~isequal(FileName,0) && ~isequal(PathName,0)
 			mask_positions=cell(0);
 		end
 
-
 		% Convert to x,y order.
 		pos = blocations{ind};
 		pos = fliplr(pos);
@@ -13842,57 +13901,64 @@ end
 %end
 
 function convert_masks_to_binary(~,~,~)
+handles=gethand;
 pivlab_axis=retr('pivlab_axis');
-% Convert edited ROI back to masks.
-%ROIs müssen wahrscheinlich aus der variablen mask_position neu gezeichnet werden bevor man die konvertieren kann...?
-%wie findet man am besten alle masken?
-hfhs = findobj(pivlab_axis, 'tag', 'externalmask');
-editedMask = false(size(A));
+expected_image_size=retr('expected_image_size');
 
-for ind = 1:numel(hfhs)
-	% Accumulate the mask from each ROI
-	editedMask = editedMask | hfhs(ind).createMask();
-
-	% Include the boundary of the ROI in the final mask.
-	% Ref: https://blogs.mathworks.com/steve/2014/03/27/comparing-the-geometries-of-bwboundaries-and-poly2mask/
-	% Here, we have a dense boundary, so we can take the slightly more
-	% performant approach of just including the boundary pixels directly in
-	% the mask.
-	boundaryLocation = hfhs(ind).Position;
-	bInds = sub2ind(size(A), boundaryLocation(:,2), boundaryLocation(:,1));
-	editedMask(bInds) = true;
+currentframe=floor(get(handles.fileselector, 'value'));
+masks_in_frame=retr('masks_in_frame');
+if isempty(masks_in_frame)
+	masks_in_frame=cell(currentframe,1);
 end
 
-
-function update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles)
-if calxy > 1000 || calxy <0.001
-	px_per_m_display=sprintf('%0.4e',calxy);
+if numel(masks_in_frame)<currentframe
+	mask_positions=cell(0);
 else
-	px_per_m_display=sprintf('%0.4f',calxy);
+	mask_positions=masks_in_frame{currentframe};
 end
 
-if calu > 1000 || calu < 0.001
-	px_per_frame_display=sprintf('%0.4e',calu);
-else
-	px_per_frame_display=sprintf('%0.4f',calu);
-end
-
-if abs(offset_x_true) > 1000 || abs(offset_x_true) < 0.001
-	x_offset_display=sprintf('%0.4e',offset_x_true);
-	if offset_x_true == 0
-		x_offset_display='0';
+editedMask = zeros(expected_image_size(1:2),'uint16');
+for i=1:size(mask_positions,1)
+	if 	strcmp(mask_positions{i,1},'ROI_object_freehand')	|| strcmp(mask_positions{i,1},'ROI_object_polygon') || strcmp(mask_positions{i,1},'ROI_object_external')
+		xi=mask_positions{i,2}(:,1);
+		yi=mask_positions{i,2}(:,2);
+		editedMask = editedMask + uint16(poly2mask(xi,yi,expected_image_size(1),expected_image_size(2)));
+	elseif strcmp(mask_positions{i,1},'ROI_object_rectangle')
+		rectangle_coords=bbox2points(mask_positions{i,2});
+		editedMask = editedMask + uint16(poly2mask(rectangle_coords(:,1),rectangle_coords(:,2),expected_image_size(1),expected_image_size(2)));
+	elseif strcmp(mask_positions{i,1},'ROI_object_circle')
+		nsides_that_make_sense = floor(sqrt(2*pi()*mask_positions{i,2}(3)/1));
+		pgon = nsidedpoly(nsides_that_make_sense,'Center',mask_positions{i,2}(1:2),'Radius',mask_positions{i,2}(3));
+		editedMask = editedMask + uint16(poly2mask(pgon.Vertices(:,1),pgon.Vertices(:,2),expected_image_size(1),expected_image_size(2)));
 	end
-else
-	x_offset_display=sprintf('%0.4f',offset_x_true);
+end
+editedMask = bitget(editedMask,1);
+
+figure;imagesc(editedMask);axis image;
+
+
+
+
+function mask_copy_to_all_Callback(~,~,~)
+handles=gethand;
+currentframe=floor(get(handles.fileselector, 'value'));
+masks_in_frame=retr('masks_in_frame');
+if isempty(masks_in_frame)
+	masks_in_frame=cell(currentframe,1);
 end
 
-if abs(offset_y_true) > 1000 || abs(offset_y_true) < 0.001
-	y_offset_display=sprintf('%0.4e',offset_y_true);
-	if offset_y_true == 0
-		y_offset_display='0';
+if numel(masks_in_frame)<currentframe
+	mask_positions=cell(0);
+else
+	mask_positions=masks_in_frame{currentframe};
+end
+
+if ~isempty (mask_positions)
+	filepath=retr('filepath');
+	for i=1:floor(numel(filepath)/2)
+		masks_in_frame{i} = mask_positions;
 	end
-else
-	y_offset_display=sprintf('%0.4f',offset_y_true);
 end
+put('masks_in_frame',masks_in_frame);
 
-set(handles.calidisp, 'string', ['1 px = ' px_per_m_display ' m' sprintf('\n') '1 px/frame = ' px_per_frame_display ' m/s' sprintf('\n') 'x offset: ' x_offset_display ' m' sprintf('\n') 'y offset: ' y_offset_display ' m'],  'backgroundcolor', [0.5 1 0.5]);
+
