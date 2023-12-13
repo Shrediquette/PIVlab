@@ -1,10 +1,21 @@
 %% TODO für release 3.0:
 %{
-piv_DCC neue maske implementieren
-command line neue maske implementieren
-Pixelmaske implementieren...
+nach oben schieben von binarize editbox. weil das bestimmt ob maske generiert wird.
+Außerdem braucht man noch etwas um masken ausweiten zu können (imdilate)
+testen ob masken richtig gezeichnet werden unter den verschiedenen bedingungen (derivatives da, maske da, etc)
+Masken ausweiten, wo soll das gemacht werden? Müsste ja für jedes Objekt gemacht werden können... Am besten dann doch nur für die aus PIV bildern generierten masken? Die anderen, von hand gezeichneten masken kann ja jeder selber ausweiten.
+... aber dann ist imdilate wahrscheinlich die bessere Variante, besonders bei sich überschneidenden ROI objekten.....
+statt imclose am besten? Weil das macht ja eh fast nix anderes als löcher füllen, und das mache ich schon mit imfill...
+
+
+
+command line neue maske implementieren (DCC und FFT)
+...-> und dazu gleich ein livescript...
+
 zusätzlich ein paar funktionen für Bearbeitung der Pixelmaske, imbinarize from currently displayed image (checkbox: use PIV image to generate mask), dann auch wie z.b. dilate, imclose, etc. Muss optional für jedes Bild in session neuberechnet werden.
 wäre gut: ROI drawline nutzen für Calibration: Editierbar und besser sichtbar.
+wäre gut: ROI sollte auch ein editierbares ROI objekt nutzen um ROI auszuwählen. funktion roi_select_Callback und darunter.
+wäre gut: nanmin, nanmax, nanstd, nanmean aus Projekt entfernen. Editorsuche nach dateien die das beinhalten. Breakpoints setzen und testen ob gleiches Ergebnis kommt mit "omitnan".
 
 Neues example Video (copter durch wald / Beine)
 fancy splash screen mit Pixelbildern die gezeigt werden die Status anzeigen? Aus Mat datei laden... Und bei Fehler / warnung auf commandwindow verweisen.
@@ -355,8 +366,8 @@ m4 = uimenu(m1,'Label','Exit','Separator','on','Callback',@exitpivlab_Callback);
 m51 = uimenu('Label','Image acquisition');
 uimenu(m51,'Label','Capture PIV images','Callback',@capture_images_Callback);
 m5 = uimenu('Label','Image settings');
-uimenu(m5,'Label','Exclusions (ROI, mask)','Callback',@img_mask_Callback,'Accelerator','E');
-uimenu(m5,'Label','New type of mask (in active development)','Callback',@img_mask_new_Callback);
+uimenu(m5,'Label','Define region of interest (ROI)','Callback',@img_ROI_Callback,'Accelerator','E');
+uimenu(m5,'Label','Define masks to exclude regions from analysis','Callback',@img_mask_new_Callback);
 uimenu(m5,'Label','Image pre-processing','Callback',@pre_proc_Callback,'Accelerator','I');
 m6 = uimenu('Label','Analysis');
 uimenu(m6,'Label','PIV settings','Callback',@piv_sett_Callback,'Accelerator','S');
@@ -712,66 +723,30 @@ handles.ROI_Man_w = uicontrol(handles.uipanel5,'Style','edit','units','character
 item=[parentitem(3)/4*3+margin item(2) parentitem(3)/4 1.5];
 handles.ROI_Man_h = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_h','Callback',@ROI_Man_h_Callback);
 
-item=[0 0 0 0];
-parentitem=get(handles.multip02, 'Position');
-item=[0 12+margin/2 parentitem(3) 20];
-handles.uipanel6 = uipanel(handles.multip02, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Object mask', 'Tag','uipanel6','fontweight','bold');
-
-parentitem=get(handles.uipanel6, 'Position');
-item=[0 0 0 0];
-item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.mask_hint = uicontrol(handles.uipanel6,'Style','text','units','characters','Horizontalalignment', 'center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Mask inactive','tag','mask_hint');
-
-item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.draw_mask = uicontrol(handles.uipanel6,'Style','pushbutton','String','Draw mask(s) for current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @draw_mask_Callback,'Tag','draw_mask','TooltipString','Draw a mask for the current frame');
-
-item=[0 item(2)+item(4)+margin/1.5 parentitem(3) 1.5];
-handles.maskToSelected = uicontrol(handles.uipanel6,'Style','pushbutton','String','Apply current mask(s) to frames...','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @maskToSelected_Callback,'Tag','maskToSelected','TooltipString','Apply the mask that is currently displayed to other frames');
-
-item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
-handles.text154 = uicontrol(handles.uipanel6,'Style','text','units','characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Apply to frames:');
-
-item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
-handles.maskapplyselect = uicontrol(handles.uipanel6,'Style','edit','units','characters','Horizontalalignment', 'center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','1:end','tag','maskapplyselect','TooltipString','e.g. 1:10,15:17');
-
-item=[0 item(2)+item(4)+margin parentitem(3) 1.5];
-handles.clear_current_mask = uicontrol(handles.uipanel6,'Style','pushbutton','String','Clear current mask(s)','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @clear_current_mask_Callback,'Tag','clear_current_mask','TooltipString','Remove all masks of the current frame');
-
-item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.clear_mask = uicontrol(handles.uipanel6,'Style','pushbutton','String','Clear all masks','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @clear_mask_Callback,'Tag','clear_mask','TooltipString','Remove all masks of the whole session');
-
-%--
-item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 1.5];
-handles.save_mask = uicontrol(handles.uipanel6,'Style','pushbutton','String','Save mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @save_mask_Callback,'Tag','save_mask','TooltipString','Save all masks of the current session to a single file');
-
-item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.load_mask = uicontrol(handles.uipanel6,'Style','pushbutton','String','Load mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @load_mask_Callback,'Tag','load_mask','TooltipString','Load PIVlab mask(s) and replace all masks in the current session. Can also be used to extract existing masks from previously saved PIVlab sessions.');
-
-%--
-item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
-handles.external_mask = uicontrol(handles.uipanel6,'Style','pushbutton','String','Load external masks','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @external_mask_Callback,'Tag','external_mask','TooltipString','Load a series of black and white TIF images');
-
-item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.external_mask_progress = uicontrol(handles.uipanel6,'Style','text','Horizontalalignment', 'left','String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','external_mask_progress');
-
-
-
 
 %% Multip25 (new mask)
 handles.multip25 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Image masking', 'Tag','multip25','fontweight','bold');
 parentitem=get(handles.multip25, 'Position');
 item=[0 0 0 0];
 
-%basic or expert mask capabilities
+
+%Edit or preview mode
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 1.5];
-handles.text251 = uicontrol(handles.multip25,'Style','text','String','Mode:','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text251');
+handles.text252 = uicontrol(handles.multip25,'Style','text','String','Mode:','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text252');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
+handles.mask_edit_mode = uicontrol(handles.multip25,'Style','popupmenu','String',{'Edit mask','Preview mask'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_edit_mode','Callback',@mask_edit_mode_Callback, 'TooltipString','');
+
+
+%basic or expert mask capabilities
+item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 1.5];
+handles.text251 = uicontrol(handles.multip25,'Style','text','String','Capabilities:','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text251');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
 handles.mask_basic_expert = uicontrol(handles.multip25,'Style','popupmenu','String',{'Basic','Expert'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_basic_expert','Callback',@mask_basic_expert_Callback, 'TooltipString','');
 
-
 %panel Polygon mask items
-item=[0 item(2)+item(4)+margin/2 parentitem(3) 8];
+item=[0 item(2)+item(4)+margin/8 parentitem(3) 8];
 handles.uipanel25_1 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Polygon mask items', 'Tag','uipanel25_1','fontweight','bold');
 
 parentitem=get(handles.uipanel25_1, 'Position');
@@ -781,7 +756,7 @@ item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.mask_add_freehand = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Free hand','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@mask_add_Callback,'freehand'},'Tag','mask_add_freehand','TooltipString','');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.mask_add_polygon = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Polygon','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@mask_add_Callback,'polygon'},'Tag','mask_add_polygon','TooltipString','');
+handles.mask_add_assisted = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Assisted f.h.','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@mask_add_Callback,'assisted'},'Tag','mask_add_freehand','TooltipString','');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.mask_add_circle = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Circle','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@mask_add_Callback,'circle'},'Tag','mask_add_circle','TooltipString','');
@@ -789,38 +764,211 @@ handles.mask_add_circle = uicontrol(handles.uipanel25_1,'Style','pushbutton','St
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
 handles.mask_add_rectangle = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Rectangle','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@mask_add_Callback,'rectangle'},'Tag','mask_add_rectangle','TooltipString','');
 
+item=[0 item(2)+item(4) parentitem(3)/2 1.5];
+handles.mask_add_polygon = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Polygon','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@mask_add_Callback,'polygon'},'Tag','mask_add_polygon','TooltipString','');
 
-%panel Pixel masks
-item=[0 0 0 0];
+
+
+
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
+handles.extend_mask = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','extend_temp','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @extend_mask_Callback,'Tag','extend_mask','TooltipString','');
+
+
+
+
+
+
+item=[0 item(2)+item(4) parentitem(3) 1.5];
+handles.mask_import = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Import pixel mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_import_Callback,'Tag','mask_import','TooltipString','');
+
+%panel expert mask
+
 parentitem=get(handles.multip25, 'Position');
-item=[0 0 0 0];
-item=[0 8 parentitem(3) 10];
-handles.uipanel25_2 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Pixel masks', 'Tag','uipanel25_2','fontweight','bold','Visible','off');
+
+item=[0 3.75 parentitem(3) 23];
+handles.uipanel25_2 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Generate masks from PIV images', 'Tag','uipanel25_2','fontweight','bold','Visible','off');
 item=[0 0 0 0];
 parentitem=get(handles.uipanel25_2, 'Position');
 
 
+%% bright area mask generator
+
 item=[0 item(2)+item(4) parentitem(3) 1];
-handles.text252_1 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Process pixel mask with code:','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text252_1');
+handles.text252_1_x = uicontrol(handles.uipanel25_2,'Style','text', 'String','Bright area mask generator','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text252_1_x','FontAngle','italic');
 
-standard_code={ ...
-	'pixel_mask=imbinarize(pixel_mask);'...
-	'se = strel(''disk'',5);'...
-	'pixel_mask = imopen(pixel_mask,se);'...
-	'pixel_mask = imclose(pixel_mask,se);'...
-	};
+checkbox_width = parentitem(3)/10*1;
+filter_text_width=parentitem(3)/10*4;
+size_text_width=parentitem(3)/10*3;
+size_width=parentitem(3)/10*1.5;
 
-item=[0 item(2)+item(4) parentitem(3) 3];
-handles.mask_operations = uicontrol(handles.uipanel25_2,'Style','edit', 'Fontsize',8,'Fontname','fixedwidth', 'Max', 100, 'min', 1, 'String',standard_code,'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_operations','TooltipString','');
+%binarize
+item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
+handles.binarize_enable = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@binarize_enable_Callback,'Tag','binarize_enable','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1];
+handles.binarize_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Binarize','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_text');
+
+item=[checkbox_width+filter_text_width item(2) size_text_width 1];
+handles.binarize_threshold_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Threshold:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold_text');
+
+item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
+handles.binarize_threshold = uicontrol(handles.uipanel25_2,'Style','edit', 'String','0.1','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold','TooltipString','');
+
+
+%medfilt
+item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
+handles.mask_medfilt_enable = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_medfilt_enable','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1];
+handles.median_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Median filter','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_text');
+
+item=[checkbox_width+filter_text_width item(2) size_text_width 1];
+handles.median_size_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size_text');
+
+item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
+handles.median_size = uicontrol(handles.uipanel25_2,'Style','edit', 'String','30','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size','TooltipString','');
+
+
+%Imopen
+item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
+handles.mask_imopen_enable = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imopen_enable','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1];
+handles.imopen_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','imopen','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_text');
+
+item=[checkbox_width+filter_text_width item(2) size_text_width 1];
+handles.imopen_size_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_size_text');
+
+item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
+handles.imopen_size = uicontrol(handles.uipanel25_2,'Style','edit', 'String','30','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_size','TooltipString','');
+
+%Imclose
+item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
+handles.mask_imclose_enable = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imclose_enable','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1];
+handles.imclose_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','imclose','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imclose_text');
+
+item=[checkbox_width+filter_text_width item(2) size_text_width 1];
+handles.imclose_size_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imclose_size_text');
+
+item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
+handles.imclose_size = uicontrol(handles.uipanel25_2,'Style','edit', 'String','30','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imclose_size','TooltipString','');
+
+%remove small
+item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
+handles.mask_remove_enable = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_remove_enable','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1];
+handles.remove_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Remove blots','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_text');
+
+item=[checkbox_width+filter_text_width item(2) size_text_width 1];
+handles.remove_size_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size_text');
+
+item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
+handles.remove_size = uicontrol(handles.uipanel25_2,'Style','edit', 'String','30','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size','TooltipString','');
+
+%fillholes
+item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
+handles.mask_fill_enable = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_fill_enable','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1];
+handles.fill_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Fill holes','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','fill_text');
+
+
+%% Dark area mask generator
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1];
+handles.text252_1_y = uicontrol(handles.uipanel25_2,'Style','text', 'String','Dark area mask generator','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text252_1_y','FontAngle','italic');
+%binarize
+item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
+handles.binarize_enable_2 = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@binarize_enable_2_Callback,'Tag','binarize_enable_2','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1];
+handles.binarize_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Binarize','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_text_2');
+
+item=[checkbox_width+filter_text_width item(2) size_text_width 1];
+handles.binarize_threshold_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Threshold:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold_text_2');
+
+item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
+handles.binarize_threshold_2 = uicontrol(handles.uipanel25_2,'Style','edit', 'String','0.1','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold_2','TooltipString','');
+
+%medfilt
+item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
+handles.mask_medfilt_enable_2 = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_medfilt_enable_2','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1];
+handles.median_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Median filter','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_text_2');
+
+item=[checkbox_width+filter_text_width item(2) size_text_width 1];
+handles.median_size_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size_text_2');
+
+item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
+handles.median_size_2 = uicontrol(handles.uipanel25_2,'Style','edit', 'String','30','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size_2','TooltipString','');
+
+
+%Imopen
+item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
+handles.mask_imopen_enable_2 = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imopen_enable_2','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1];
+handles.imopen_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','imopen','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_text_2');
+
+item=[checkbox_width+filter_text_width item(2) size_text_width 1];
+handles.imopen_size_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_size_text_2');
+
+item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
+handles.imopen_size_2 = uicontrol(handles.uipanel25_2,'Style','edit', 'String','30','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_size_2','TooltipString','');
+
+%Imclose
+item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
+handles.mask_imclose_enable_2 = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imclose_enable_2','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1];
+handles.imclose_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','imclose','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imclose_text_2');
+
+item=[checkbox_width+filter_text_width item(2) size_text_width 1];
+handles.imclose_size_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imclose_size_text_2');
+
+item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
+handles.imclose_size_2 = uicontrol(handles.uipanel25_2,'Style','edit', 'String','30','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imclose_size_2','TooltipString','');
+
+%remove small
+item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
+handles.mask_remove_enable_2 = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_remove_enable_2','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1];
+handles.remove_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Remove blots','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_text_2');
+
+item=[checkbox_width+filter_text_width item(2) size_text_width 1];
+handles.remove_size_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size_text_2');
+
+item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
+handles.remove_size_2 = uicontrol(handles.uipanel25_2,'Style','edit', 'String','30','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size_2','TooltipString','');
+
+%fillholes
+item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
+handles.mask_fill_enable_2 = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_fill_enable_2','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1];
+handles.fill_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Fill holes','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','fill_text_2');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
+handles.automask_preview = uicontrol(handles.uipanel25_2,'Style','pushbutton','String','Preview current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @automask_preview_Callback,'Tag','automask_preview','TooltipString','');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.mask_import = uicontrol(handles.uipanel25_2,'Style','pushbutton','String','Import pixel mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_import_Callback,'Tag','mask_import','TooltipString','');
+handles.automask_generate_current = uicontrol(handles.uipanel25_2,'Style','pushbutton','String','Make mask for current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @automask_generate_current_Callback,'Tag','automask_generate_current','TooltipString','');
+
+item=[0 item(2)+item(4) parentitem(3) 1.5];
+handles.automask_generate_all = uicontrol(handles.uipanel25_2,'Style','pushbutton','String','Make mask for all frames','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @automask_generate_all_Callback,'Tag','automask_generate_all','TooltipString','');
+
 
 
 %panel mask operations
 item=[0 0 0 0];
 parentitem=get(handles.multip25, 'Position');
-item=[0 18 parentitem(3) 8];
+item=[0 27 parentitem(3) 6.5];
 handles.uipanel25_3 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Mask operations', 'Tag','uipanel25_3','fontweight','bold');
 
 item=[0 0 0 0];
@@ -830,9 +978,6 @@ handles.mask_apply_to_current = uicontrol(handles.uipanel25_3,'Style','pushbutto
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
 handles.mask_delete_all = uicontrol(handles.uipanel25_3,'Style','pushbutton','String','Clear all masks','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_delete_all_Callback,'Tag','mask_delete_all','TooltipString','');
-
-item=[0 item(2)+item(4) parentitem(3)/2 1.5];
-handles.preview_mask = uicontrol(handles.uipanel25_3,'Style','pushbutton','String','Preview mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preview_mask_Callback,'Tag','preview_mask','TooltipString','');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.mask_save = uicontrol(handles.uipanel25_3,'Style','pushbutton','String','Save all masks','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_save_Callback,'Tag','mask_save','TooltipString','');
@@ -2315,9 +2460,9 @@ delete(findobj('tag','hinting'))
 %end
 %loadimgsbutton_Callback
 
-function img_mask_Callback(~, ~, ~)
+function img_ROI_Callback(~, ~, ~)
 switchui('multip02')
-dispMASK(retr('pivlab_axis'),0.333)
+
 
 function img_mask_new_Callback(~, ~, ~)
 switchui('multip25')
@@ -2789,6 +2934,15 @@ turnoff=findobj('-regexp','Tag','multip');
 set(turnoff, 'visible', 'off');
 turnon=findobj('-regexp','Tag',who);
 set(turnon, 'visible', 'on');
+
+if strcmp(who,'multip25') %mask panel is active --> enable mask editing
+	set(handles.mask_edit_mode,'Value',1)
+	sliderdisp(retr('pivlab_axis'));
+else
+	set(handles.mask_edit_mode,'Value',2)
+end
+
+
 drawnow;
 
 function put(name, what)
@@ -3609,11 +3763,7 @@ set(handles.maxintens, 'string', 1);
 clear_vel_limit_Callback %clear velocity limits
 clear_roi_Callback
 %clear_mask_Callback:
-delete(findobj(gca,'tag', 'maskplot'));
-put ('maskiererx',{});
-put ('maskierery',{});
-set(handles.mask_hint, 'String', 'Mask inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
-set (handles.external_mask_progress, 'string', '');
+		put('masks_in_frame',[]);
 
 %reset zoom
 set(handles.panon,'Value',0);
@@ -3677,11 +3827,7 @@ if getappdata(hgui,'video_selection_done')
 	clear_vel_limit_Callback %clear velocity limits
 	clear_roi_Callback
 	%clear_mask_Callback:
-	delete(findobj(gca,'tag', 'maskplot'));
-	put ('maskiererx',{});
-	put ('maskierery',{});
-	set(handles.mask_hint, 'String', 'Mask inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
-	set (handles.external_mask_progress, 'string', '');
+	put('masks_in_frame',[]);
 	%reset zoom
 	set(handles.panon,'Value',0);
 	set(handles.zoomon,'Value',0);
@@ -3841,12 +3987,9 @@ if ~isequal(path,0)
 				clear_roi_Callback
 			end
 		end
-		%clear_mask_Callback:
-		delete(findobj(gca,'tag', 'maskplot'));
-		put ('maskiererx',{});
-		put ('maskierery',{});
-		set(handles.mask_hint, 'String', 'Mask inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
-		set (handles.external_mask_progress, 'string', '');
+		
+		put('masks_in_frame',[]);
+		
 		%reset zoom
 		set(handles.panon,'Value',0);
 		set(handles.zoomon,'Value',0);
@@ -4418,7 +4561,8 @@ if size(filepath,1) > 1 || retr('video_selection_done') == 1
 	toggler=retr('toggler');
 	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
 	filepath=retr('filepath');
-	roirect = round(getrect(gca));
+
+	roirect = round(getrect(retr('pivlab_axis')));
 	if roirect(1,3)~=0 && roirect(1,4)~=0
 		[currentimage_dummy,~]=get_img(selected);
 		imagesize(1)=size(currentimage_dummy,1);
@@ -4471,307 +4615,6 @@ set(handles.ROI_Man_y,'String',int2str(roirect(2)));
 set(handles.ROI_Man_w,'String',int2str(roirect(3)));
 set(handles.ROI_Man_h,'String',int2str(roirect(4)));
 
-function dispMASK(target_axis,opaqueness)
-maskcolor = [0.75 0.25 0.25];
-handles=gethand;
-currentframe=2*floor(get(handles.fileselector, 'value'))-1;
-maskiererx=retr('maskiererx');
-maskierery=retr('maskierery');
-delete(findobj(target_axis,'tag', 'maskplot'));
-[currentimage,~]=get_img(currentframe);
-
-hold on;
-for j=1:min([size(maskiererx,1) size(maskierery,1)])
-	if isempty(maskiererx{j,currentframe})==0
-		ximask=maskiererx{j,currentframe};
-		yimask=maskierery{j,currentframe};
-		h=fill(ximask,yimask,'r','facecolor', maskcolor,'linestyle','none','tag','maskplot','Facealpha',opaqueness,'parent',target_axis);
-	else
-		break;
-	end
-end
-hold off;
-
-
-function draw_mask_Callback(~, ~, ~)
-filepath=retr('filepath');
-handles=gethand;
-%{
-roi = images.roi.Polygon
-draw(roi)
-%malen in bild.....
-roi_positions{1}=roi.Position;
-%das da oben abspeichern.
-drawpolygon('Position',roi_positions{1})
-
-%maskiererX hat andere datenstruktur. aber könnte man ja ineinander überführen...
-man malt die masken. So viele man will mit "Add" button" Dann klickt man "Apply". Maskenpositionen werden dann gespeichert.
-%}
-
-if size(filepath,1) > 1 || retr('video_selection_done') == 1
-	toolsavailable(0);
-	currentframe=2*floor(get(handles.fileselector, 'value'))-1;
-	filepath=retr('filepath');
-	amount=size(filepath,1);
-	%currentframe and currentframe+1 =is a pair with identical mask.
-	%maskiererx&y contains masks. 3rd dimension is frame nr.
-	maskiererx=retr('maskiererx');
-	maskierery=retr('maskierery');
-	[mask,ximask,yimask]=roipoly;
-	insertion=1;
-	for j=size(maskiererx,1):-1:1
-		try
-			if isempty(maskiererx{j,currentframe})==0
-				insertion=j+1;
-				break
-			end
-		catch
-			maskiererx{1,currentframe}=[];
-			maskierery{1,currentframe}=[];
-			insertion=1;
-		end
-	end
-	maskiererx{insertion,currentframe}=ximask;
-	maskiererx{insertion,currentframe+1}=ximask;
-	maskierery{insertion,currentframe}=yimask;
-	maskierery{insertion,currentframe+1}=yimask;
-	put('maskiererx' ,maskiererx);
-	put('maskierery' ,maskierery);
-	dispMASK(retr('pivlab_axis'),0.333) %hier so lassen, damit nach dem zeichnen die Maske angezeigt wird
-	set(handles.mask_hint, 'String', 'Mask active', 'backgroundcolor', [0.5 1 0.5]);
-	toolsavailable(1);
-end
-
-function clear_mask_Callback(~, ~, ~)
-button = questdlg('Do you want to remove all masks?','Delete?','Yes','Cancel','Cancel');
-if strncmp(button,'Yes',3)==1
-	handles=gethand;
-	delete(findobj(gca,'tag', 'maskplot'));
-	put ('maskiererx',{});
-	put ('maskierery',{});
-	set(handles.mask_hint, 'String', 'Mask inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
-	set (handles.external_mask_progress, 'string', '');
-end
-
-function clear_current_mask_Callback(~, ~, ~)
-filepath=retr('filepath');
-handles=gethand;
-if size(filepath,1) > 1
-	delete(findobj(gca,'tag', 'maskplot'));
-	currentframe=2*floor(get(handles.fileselector, 'value'))-1;
-	maskiererx=retr('maskiererx');
-	maskierery=retr('maskierery');
-	for i=1:size(maskiererx,1)
-		maskiererx{i,currentframe}=[];
-		maskiererx{i,currentframe+1}=[];
-		maskierery{i,currentframe}=[];
-		maskierery{i,currentframe+1}=[];
-	end
-	try
-		emptycells=cellfun('isempty',maskiererx);
-	catch
-		disp('Problems with old Matlab version... Please update Matlab or unexpected things might happen...')
-	end
-	if mean(double(emptycells))==1 %not very sophisticated way to determine if all cells are empty
-		set(handles.mask_hint, 'String', 'Mask inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
-		set (handles.external_mask_progress, 'string', '');
-	end
-	put('maskiererx' ,maskiererx);
-	put('maskierery' ,maskierery);
-end
-
-function maskToSelected_Callback(~, ~, ~)
-handles=gethand;
-filepath=retr('filepath');
-if size(filepath,1) > 1 || retr('video_selection_done') == 1
-	str = strrep(get(handles.maskapplyselect,'string'),'-',':');
-	endinside=strfind(str, 'end');
-	if isempty(endinside)==0
-		if retr('video_selection_done') == 0
-			str = strrep(str,'end',num2str(size(filepath,1)/2));
-		else
-			video_frame_selection=retr('video_frame_selection');
-			str = strrep(str,'end',num2str(numel(video_frame_selection)/2));
-		end
-	end
-	selectionok=1;
-	strnum=str2num(str);
-	if isempty(strnum)==1 || isempty(strfind(str,'.'))==0 || isempty(strfind(str,';'))==0
-		msgbox(['Error in frame selection syntax. Please use the following syntax (examples):' sprintf('\n') '1:3' sprintf('\n') '1,3,7,9' sprintf('\n') '1:3,7,8,9,11:13' ],'Error','error','modal')
-		selectionok=0;
-	end
-	amount=max(strnum);
-	if retr('video_selection_done') == 0
-		if amount*2>size(filepath,1)
-			msgbox(['Selected frames out of range.'],'Error','error','modal')
-			selectionok=0;
-		end
-	else
-		video_frame_selection=retr('video_frame_selection');
-		if amount*2>numel(video_frame_selection)
-			msgbox(['Selected frames out of range.'],'Error','error','modal')
-			selectionok=0;
-		end
-	end
-	mini=min(strnum);
-	%checken ob nicht grÃ¶ÃŸer als geladene frame anzahl.
-	if selectionok==1
-		currentframe=2*floor(get(handles.fileselector, 'value'))-1;
-		%amount=size(filepath,1);
-
-		maskiererx=retr('maskiererx');
-		maskierery=retr('maskierery');
-
-		for i=1:size(strnum,2)
-			for j=1:size(maskiererx,1)
-				%keyboard
-				%in frame 1=maskiererx 1und2
-				maskiererx{j,strnum(i)*2-1}=maskiererx{j,currentframe};
-				maskiererx{j,strnum(i)*2}=maskiererx{j,currentframe+1};
-				maskierery{j,strnum(i)*2-1}=maskierery{j,currentframe};
-				maskierery{j,strnum(i)*2}=maskierery{j,currentframe+1};
-
-			end
-		end
-		put('maskiererx' ,maskiererx);
-		put('maskierery' ,maskierery);
-	end
-end
-
-function save_mask_Callback(~, ~, ~)
-filepath=retr('filepath');
-
-handles=gethand;
-if size(filepath,1) > 1 %did the user load images?
-	sessionpath=retr('sessionpath');
-	if isempty(sessionpath)
-		sessionpath=retr('pathname');
-	end
-	[maskfile,maskpath] = uiputfile('*.mat','Save PIVlab mask',fullfile(sessionpath, 'PIVlab_mask.mat'));
-	if isequal(maskfile,0) | isequal(maskpath,0)
-		%do nothing
-	else
-		maskiererx=retr('maskiererx');
-		maskierery=retr('maskierery');
-		save(fullfile(maskpath,maskfile),'maskiererx','maskierery');
-	end
-end
-
-function load_mask_Callback(~, ~, ~)
-filepath=retr('filepath');
-handles=gethand;
-if size(filepath,1) > 1 %did the user load images?
-	sessionpath=retr('sessionpath');
-	if isempty(sessionpath)
-		sessionpath=retr('pathname');
-	end
-	[maskfile,maskpath] = uigetfile('*.mat','Load PIVlab mask',fullfile(sessionpath, 'PIVlab_mask.mat'));
-	toolsavailable(0,'Busy, loading masks');drawnow
-	if isequal(maskfile,0) | isequal(maskpath,0)
-		%do nothing
-	else
-		load(fullfile(maskpath,maskfile),'maskiererx','maskierery');
-		try
-			put('maskiererx' ,maskiererx);
-			put('maskierery' ,maskierery);
-		catch
-			disp(['Error. No mask data found in ' fullfile(maskpath,maskfile)])
-		end
-		sliderdisp(retr('pivlab_axis'))
-	end
-end
-toolsavailable(1)
-
-
-function external_mask_Callback(~, ~, ~)
-uiwait(helpdlg(['You can load grayscale *.tif image(s) here:' sprintf('\n') 'White = masked, black = no mask.' sprintf('\n') 'If you select multiple mask files, they will be sorted alphabetically and inserted starting from the currently active frame.']));
-
-filepath=retr('filepath');
-handles=gethand;
-if size(filepath,1) > 1 %did the user load images?
-	[FileName,PathName] = uigetfile('*.tif','Select the binary image mask file','multiselect','on');
-	if isequal(FileName,0) | isequal(PathName,0)
-	else
-		if ischar(FileName)==1
-			AnzahlMasks=1;
-		else
-			AnzahlMasks=numel(FileName);
-		end
-		for j=1:AnzahlMasks
-			if AnzahlMasks>1
-				A=imread(fullfile(PathName,FileName{j}));
-				set (handles.external_mask_progress, 'string', ['Please wait... (' int2str((j-1)/AnzahlMasks*100) '%)']);
-				drawnow;
-			else
-				A=imread(fullfile(PathName,FileName));
-			end
-			A=im2bw(A,0.5); %#ok<*IM2BW>
-			A1=zeros(size(A));
-			A2=A1;A3=A1;A4=A1;
-			%cut mask in 4 pieces to minimize parent / child / hole problems in masks
-			rowshalf=round(size(A,1)/2);
-			colshalf=round(size(A,2)/2);
-			%A1(1:rowshalf,1:colshalf) = A(1:rowshalf,1:colshalf);%top left part
-			%A2(1:rowshalf,colshalf+1:end) = A(1:rowshalf,colshalf+1:end);%top right half
-			%A3(rowshalf+1:end,1:colshalf) = A(rowshalf+1:end,1:colshalf); % lower left part
-			%A4(rowshalf+1:end,colshalf+1:end) = A(rowshalf+1:end,colshalf+1:end); %lower right part
-			A1(1:rowshalf,1:colshalf) = A(1:rowshalf,1:colshalf);%top left part
-			A2(1:rowshalf,colshalf:end) = A(1:rowshalf,colshalf:end);%top right half
-			A3(rowshalf:end,1:colshalf) = A(rowshalf:end,1:colshalf); % lower left part
-			A4(rowshalf:end,colshalf:end) = A(rowshalf:end,colshalf:end); %lower right part
-
-
-			%A(:,round(size(A,2)/2))=0;
-			%A(round(size(A,1)/2),:)=0;
-			%B=A;
-			%B=im2bw(abs(A-B));
-
-
-			bwbound=[bwboundaries(A1); bwboundaries(A2) ; bwboundaries(A3) ; bwboundaries(A4)];
-			%bwbound=bwboundaries(A);
-
-			importmaskx=cell(size(bwbound,1),1);
-			importmasky=importmaskx;
-			for i=1:size(bwbound,1)
-				temp=bwbound{i,1};
-				importmasky{i,1}=temp(1:10:end,1);
-				temp=bwbound{i,1};
-				importmaskx{i,1}=temp(1:10:end,2);
-			end
-			maskiererx=retr('maskiererx');
-			maskierery=retr('maskierery');
-
-			currentframe=2*floor(get(handles.fileselector, 'value'))-1 + 2*(j-1);
-			if isempty(maskiererx)
-				maskiererx=cell(i,currentframe+1);
-				maskierery=maskiererx;
-			end
-			maskiererx(1:i,currentframe)=importmaskx;
-			maskiererx(1:i,currentframe+1)=importmaskx;
-			maskierery(1:i,currentframe)=importmasky;
-			maskierery(1:i,currentframe+1)=importmasky;
-
-
-			put('maskiererx' ,maskiererx);
-			put('maskierery' ,maskierery);
-			if j >= AnzahlMasks
-				set(handles.mask_hint, 'String', 'Mask active', 'backgroundcolor', [0.5 1 0.5]);
-				dispMASK(retr('pivlab_axis'),0.5);
-			end
-
-
-		end
-		set (handles.external_mask_progress, 'string', 'External mask(s) loaded.');
-
-		%maskiererxundy abschneiden wenn lÃ¤nger als anderes zeugs
-		if size(maskiererx,2)>size(filepath,1) %user loaded more masks than there are frames
-			maskiererx (:,size(filepath,1)+1:end) = [];
-			maskierery  (:,size(filepath,1)+1:end) = [];
-			put('maskiererx' ,maskiererx);
-			put('maskierery' ,maskierery);
-		end
-	end
-end
 
 function preview_preprocess_Callback(~, ~, ~)
 filepath=retr('filepath');
@@ -4816,13 +4659,6 @@ if size(filepath,1) >1 || retr('video_selection_done') == 1
 		dispROI(retr('pivlab_axis'))
 	end
 	currentframe=2*floor(get(handles.fileselector, 'value'))-1;
-	maskiererx=retr('maskiererx');
-	if size(maskiererx,2)>=currentframe
-		ximask=maskiererx{currentframe};
-		if size(ximask,1)>1
-			dispMASK(retr('pivlab_axis'),1-str2num(get(handles.masktransp,'String'))/100)
-		end
-	end
 end
 
 function export_preprocess_Callback(~, ~, ~)
@@ -7795,7 +7631,6 @@ end
 
 function masktransp_Callback(~, ~, ~)
 handles=gethand;
-
 try
 	if isempty(str2num(get(handles.masktransp,'String'))) == 1
 		set(handles.masktransp,'String','0');
@@ -8841,7 +8676,6 @@ else
 end
 
 function save_session_Callback(auto_save_session, auto_save_session_filename)
-
 sessionpath=retr('sessionpath');
 if isempty(sessionpath)
 	sessionpath=retr('pathname');
@@ -8858,11 +8692,11 @@ if isequal(FileName,0) | isequal(PathName,0)
 else
 	put('expected_image_size',[])
 	put('sessionpath',PathName );
-	savesessionfuntion (PathName,FileName)
+	save_session_function (PathName,FileName)
 end
 
 
-function savesessionfuntion (PathName,FileName)
+function save_session_function (PathName,FileName)
 
 hgui=getappdata(0,'hgui');
 handles=gethand;
@@ -9043,8 +8877,7 @@ else
 	put('sessionpath',PathName );
 	put('derived',[]);
 	put('resultslist',[]);
-	put('maskiererx',[]);
-	put('maskierery',[]);
+	put('masks_in_frame',[]);
 	put('roirect',[]);
 	put('velrect',[]);
 	put('filename',[]);
@@ -9053,7 +8886,7 @@ else
 	warning off all
 	try
 		%even if a variable doesn't exist, this doesn't throw an error...
-		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu', 'calv','calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'colormap_steps', 'colormap_interpolation', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B','x_axis_direction','y_axis_direction','size_of_the_image','points_offsetx','points_offsety','offset_x_true','offset_y_true','bright_filter_thresh','contrast_filter_thresh','do_bright_filter','do_contrast_filter','repeat_last','repeat_last_thresh','do_corr2_filter','corr_filter_thresh','notch_L_thresh','notch_H_thresh','notch_filter');
+		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu', 'calv','calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'colormap_steps', 'colormap_interpolation', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B','x_axis_direction','y_axis_direction','size_of_the_image','points_offsetx','points_offsety','offset_x_true','offset_y_true','bright_filter_thresh','contrast_filter_thresh','do_bright_filter','do_contrast_filter','repeat_last','repeat_last_thresh','do_corr2_filter','corr_filter_thresh','notch_L_thresh','notch_H_thresh','notch_filter','masks_in_frame');
 	catch
 		disp('Old version compatibility.')
 		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu','calv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_steps','colormap_choice', 'colormap_interpolation', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'maskiererx', 'maskierery', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
@@ -11243,7 +11076,7 @@ loadimgs_Callback
 function quick2_Callback (~,~)
 handles=gethand;
 set(handles.quick2,'Value',0)
-img_mask_Callback
+img_mask_new_Callback
 
 function quick3_Callback (~,~)
 handles=gethand;
@@ -12578,7 +12411,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 					set(handles.time_inp,'String',num2str(str2num(get(handles.ac_interpuls,'String'))/1000));
 					hgui=getappdata(0,'hgui');
 					serpo=getappdata(hgui,'serpo');
-					savesessionfuntion (projectpath,'PIVlab_Capture_Session.mat');
+					save_session_function (projectpath,'PIVlab_Capture_Session.mat');
 					put('serpo',serpo); %Serpo gets inaccessible after savesession. Probably because there are a number of variables cleared to allow saving without crashing.
 				else
 					displogo
@@ -13490,6 +13323,22 @@ else
 	end
 end
 
+%% load masks, convert to binary image
+if get(handles.mask_edit_mode,'Value')==2 %Mask mode is "Preview"
+	masks_in_frame=retr('masks_in_frame');
+	if isempty(masks_in_frame)
+		masks_in_frame=cell(floor((currentframe+1)/2),1);
+	end
+	if numel(masks_in_frame)<floor((currentframe+1)/2)
+		mask_positions=cell(0);
+	else
+		mask_positions=masks_in_frame{floor((currentframe+1)/2)};
+	end
+	converted_mask=convert_masks_to_binary(size(currentimage(:,:,1)),mask_positions);
+else
+	converted_mask=zeros(size(currentimage(:,:,1)));
+end
+
 if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
 	currentimage=derived{displaywhat-1,(currentframe+1)/2};
 	if displaywhat ==11 % 11 ist vector direction
@@ -13548,18 +13397,7 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 	currentimage=(currentimage-minscale) / (maxscale - minscale) ;
 	currentimage = uint8(floor(currentimage * colormap_steps));
 	%currentimage_RGB = ind2rgb(currentimage, MAP);
-
-	if strcmp(get(handles.multip25,'Visible'),'off') %user is currently operating in the mask edit panel
-		masks_in_frame=retr('masks_in_frame');
-		if isempty(masks_in_frame)
-			masks_in_frame=cell(floor((currentframe+1)/2),1);
-		end
-		if numel(masks_in_frame)<floor((currentframe+1)/2)
-			mask_positions=cell(0);
-		else
-			mask_positions=masks_in_frame{floor((currentframe+1)/2)};
-		end
-		converted_mask=convert_masks_to_binary(size(currentimage(:,:,1)),mask_positions);
+	if get(handles.mask_edit_mode,'Value')==2 %Mask mode is "Preview"
 		alpha_pixel_map=1-converted_mask; %regions that are mask get zero opaqueness.
 	else
 		alpha_pixel_map=ones(size(currentimage,1),size(currentimage,2),'logical');
@@ -13611,6 +13449,11 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 		coloobj.TickLabels =ticklabels_string;
 	end
 end
+%% plot masks in preview mode (not in edit mode)
+hold on;
+image(cat(3, converted_mask*0.7, converted_mask*0.1, converted_mask*0.1), 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',converted_mask*(1-(str2num(get(handles.masktransp,'String'))/100)));
+hold off
+
 
 function toggle_parallel_Callback(~, ~, ~)
 hgui=getappdata(0,'hgui');
@@ -13709,52 +13552,55 @@ handles=gethand;
 
 %variable masks_in_frame ist cell mit inhalt mask_positions für jeden frame (nicht doppelt machen...)
 
-currentframe=floor(get(handles.fileselector, 'value'));
-masks_in_frame=retr('masks_in_frame');
-if isempty(masks_in_frame)
-	masks_in_frame=cell(currentframe,1);
-end
+filepath=retr('filepath');
+if size(filepath,1) > 1 %did the user load images?
 
-if numel(masks_in_frame)<currentframe
-	mask_positions=cell(0);
-else
-	mask_positions=masks_in_frame{currentframe};
-end
+	currentframe=floor(get(handles.fileselector, 'value'));
+	masks_in_frame=retr('masks_in_frame');
+	if isempty(masks_in_frame)
+		masks_in_frame=cell(currentframe,1);
+	end
 
-if isempty(mask_positions)
-	mask_positions=cell(0);
-end
-masknums=size(mask_positions,1);
-if strcmp(type,'freehand')
-	roi = images.roi.Freehand;
-	roi.Multiclick=0;
-elseif strcmp(type,'assistedfreehand')
-	roi = images.roi.AssistedFreehand;
-	type='freehand';
-elseif strcmp(type,'rectangle')
-	roi = images.roi.Rectangle;
-elseif strcmp(type,'polygon')
-	roi = images.roi.Polygon;
-elseif strcmp(type,'circle')
-	roi = images.roi.Circle;
-end
-recommended_colors=parula(7);
-roi.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
-roi.FaceAlpha=0.75;
-roi.LabelVisible = 'off';
-roi.UserData=['ROI_object_' type];
+	if numel(masks_in_frame)<currentframe
+		mask_positions=cell(0);
+	else
+		mask_positions=masks_in_frame{currentframe};
+	end
 
-[~,guid] = fileparts(tempname);
-roi.Tag = guid; %unique id for every ROImask object.
-%addlistener(roi,'MovingROI',@ROIevents);
-toolsavailable(0)
-draw(roi);
-addlistener(roi,'ROIMoved',@ROIevents);
-addlistener(roi,'DeletingROI',@ROIevents);
-addlistener(roi,'ROIClicked',@ROIevents);
-toolsavailable(1)
-update_mask_memory(roi)
+	if isempty(mask_positions)
+		mask_positions=cell(0);
+	end
+	masknums=size(mask_positions,1);
+	if strcmp(type,'freehand')
+		roi = images.roi.Freehand;
+		roi.Multiclick=0;
+	elseif strcmp(type,'assisted')
+		roi = images.roi.AssistedFreehand;
+		type='freehand';
+	elseif strcmp(type,'rectangle')
+		roi = images.roi.Rectangle;
+	elseif strcmp(type,'polygon')
+		roi = images.roi.Polygon;
+	elseif strcmp(type,'circle')
+		roi = images.roi.Circle;
+	end
+	recommended_colors=parula(7);
+	roi.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
+	roi.FaceAlpha=0.75;
+	roi.LabelVisible = 'off';
+	roi.UserData=['ROI_object_' type];
 
+	[~,guid] = fileparts(tempname);
+	roi.Tag = guid; %unique id for every ROImask object.
+	%addlistener(roi,'MovingROI',@ROIevents);
+	toolsavailable(0)
+	draw(roi);
+	addlistener(roi,'ROIMoved',@ROIevents);
+	addlistener(roi,'DeletingROI',@ROIevents);
+	addlistener(roi,'ROIClicked',@ROIevents);
+	toolsavailable(1)
+	update_mask_memory(roi)
+end
 
 function update_mask_memory(roi)
 handles=gethand;
@@ -13790,7 +13636,8 @@ put('masks_in_frame',masks_in_frame)
 function redraw_masks
 %redraws all masks that are saved in mask_positions
 handles=gethand;
-if strcmp(get(handles.multip25,'Visible'),'on')
+
+if get(handles.mask_edit_mode,'Value')==1 %Mask mode is "Edit"
 	mask_editing_possible=1;
 else
 	mask_editing_possible=0;
@@ -13807,45 +13654,35 @@ else
 end
 delete(findobj({'UserData','ROI_object_freehand','-or','UserData','ROI_object_rectangle','-or','UserData','ROI_object_circle','-or','UserData','ROI_object_polygon','-or','UserData','ROI_object_external'})); % deletes visible ROIs before redrawing.
 masknums=size(mask_positions,1);
-
-for i=1:masknums
-	type=mask_positions(i,1);
-	if strcmp(type,'ROI_object_freehand')
-		roi = drawfreehand('Position', mask_positions{i,2});
-		roi.Multiclick=0;
-	elseif strcmp(type,'ROI_object_rectangle')
-		roi = drawrectangle('Position', mask_positions{i,2});
-	elseif strcmp(type,'ROI_object_polygon')
-		roi = drawpolygon('Position', mask_positions{i,2});
-	elseif strcmp(type,'ROI_object_circle')
-		circledata=mask_positions{i,2}; %whyTF does the circle needs to have center and radius.....?!? Why not Position like all other ROIs....?!?
-		roi = drawcircle('Center',circledata(1:2),'Radius',circledata(3));
-	elseif strcmp(type,'ROI_object_external')
-		roi = drawfreehand('Position', mask_positions{i,2});
-	end
-	roi.UserData=mask_positions{i,1};
-	roi.Label=mask_positions{i,4};
-	roi.Tag=mask_positions{i,5};
-	if mask_editing_possible==1
+if mask_editing_possible==1
+	for i=1:masknums
+		type=mask_positions(i,1);
+		if strcmp(type,'ROI_object_freehand')
+			roi = drawfreehand('Position', mask_positions{i,2});
+			roi.Multiclick=0;
+		elseif strcmp(type,'ROI_object_rectangle')
+			roi = drawrectangle('Position', mask_positions{i,2});
+		elseif strcmp(type,'ROI_object_polygon')
+			roi = drawpolygon('Position', mask_positions{i,2});
+		elseif strcmp(type,'ROI_object_circle')
+			circledata=mask_positions{i,2}; %whyTF does the circle needs to have center and radius.....?!? Why not Position like all other ROIs....?!?
+			roi = drawcircle('Center',circledata(1:2),'Radius',circledata(3));
+		elseif strcmp(type,'ROI_object_external')
+			roi = drawfreehand('Position', mask_positions{i,2});
+		end
+		roi.UserData=mask_positions{i,1};
+		roi.Label=mask_positions{i,4};
+		roi.Tag=mask_positions{i,5};
 		roi.Color=mask_positions{i,3};
 		addlistener(roi,'ROIMoved',@ROIevents);
 		addlistener(roi,'DeletingROI',@ROIevents);
 		addlistener(roi,'ROIClicked',@ROIevents);
-		roi.FaceAlpha=0.75;
-	else
-		disp('das ist ja ganz schön, aber ich muss schon ein Pixelbild als overlay nehmen um maske anzuzeigen.... Ansonsten weiß man nicht was man am ende bekommt bei überlappenden ROIS...!')
-		roi.Deletable=0;
-		roi.InteractionsAllowed='none';
-		roi.FaceSelectable=0;
-		roi.FaceAlpha=0.8;
-		roi.EdgeAlpha=0;
-		roi.Color=[0.33 0 0];
-		%roi.LineWidth=0.1;
+		roi.FaceAlpha=0.5;
+		roi.EdgeAlpha=0.75;
+		roi.LineWidth=1;
+		roi.LabelVisible = 'off';
 	end
-	
-	roi.LabelVisible = 'off';
 end
-
 
 
 function mask_delete_all_Callback(~,~,~)
@@ -13892,84 +13729,43 @@ end
 
 function mask_import_Callback (~,~,~)
 filepath=retr('filepath');
-handles=gethand;
-%if size(filepath,1) > 1 %did the user load images?
-[FileName,PathName] = uigetfile({'*.bmp;*.tif;*.tiff;*.jpg;*.png;','Image Files (*.bmp,*.tif,*.tiff,*.jpg,*.png)'; '*.tif','tif'; '*.tiff','tiff'; '*.jpg','jpg'; '*.bmp','bmp'; '*.png','png'},'Select the binary image mask file(s)','multiselect','on');
-if ~isequal(FileName,0) && ~isequal(PathName,0)
-	if ischar(FileName)==1
-		AnzahlMasks=1;
-	else
-		AnzahlMasks=numel(FileName);
-	end
-	pivlab_axis=retr('pivlab_axis');
-	if AnzahlMasks==1
-		pixel_mask=imread(fullfile(PathName,FileName));
-	else
-		if AnzahlMasks > size(filepath/2)
-			disp('mehr masken als Frames!!')
-		end
-		disp('muliple masken laden');
-	end
-
-	code_content=get(handles.mask_operations,'String');
-
-	pixel_mask=pixel_mask(:,:,1);
-	[row, column] = size(code_content);
-	for i = 1:row
-		eval(code_content{i,:})                   %evaluate each line as in MATLAB command prompt
-	end
-
-	if ~islogical(pixel_mask)
-		pixel_mask=imbinarize(pixel_mask); %if user didnt convert to BW...
-	end
-
-	CC = bwconncomp(pixel_mask);
-	CC2 = bwconncomp(1-pixel_mask);
-	numconnected=CC.NumObjects + CC2.NumObjects;
-	if numconnected > 100
-		disp('filtering the mask input images ')
-		pixel_mask = imclose(pixel_mask,strel('disk',5)); %remove small holes
-		pixel_mask = bwareaopen(pixel_mask,25); %remove areas with less than 25 pixels area
-	end
-	pixel_mask = bwareafilt(pixel_mask, 100); %only try to get the 100 largest blobs.
-	blocations = bwboundaries(pixel_mask,'holes');
-	%imshow(A, 'Parent',pivlab_axis);
-
-	recommended_colors=parula(7);
-	for ind = 1:numel(blocations)
-		currentframe=floor(get(handles.fileselector, 'value'));
-		masks_in_frame=retr('masks_in_frame');
-		if numel(masks_in_frame)<currentframe
-			mask_positions=cell(0);
+if size(filepath,1) > 1 %did the user load images?
+	[FileName,PathName] = uigetfile({'*.bmp;*.tif;*.tiff;*.jpg;*.png;','Image Files (*.bmp,*.tif,*.tiff,*.jpg,*.png)'; '*.tif','tif'; '*.tiff','tiff'; '*.jpg','jpg'; '*.bmp','bmp'; '*.png','png'},'Select the binary image mask file(s)','multiselect','on');
+	if ~isequal(FileName,0) && ~isequal(PathName,0)
+		if ischar(FileName)==1
+			AnzahlMasks=1;
 		else
-			mask_positions=masks_in_frame{currentframe};
+			AnzahlMasks=numel(FileName);
 		end
-		if isempty(mask_positions)
-			mask_positions=cell(0);
+		pivlab_axis=retr('pivlab_axis');
+		if AnzahlMasks==1
+			pixel_mask=imread(fullfile(PathName,FileName));
+		else
+			if AnzahlMasks > size(filepath/2)
+				disp('mehr masken als Frames!!')
+			end
+			disp('muliple masken laden');
 		end
 
-		% Convert to x,y order.
-		pos = blocations{ind};
-		pos = fliplr(pos);
-		% Create a freehand ROI.
-		roi = drawfreehand('Position', pos);
-		reduce(roi,0.005)
-		roi.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
-		roi.FaceAlpha=0.75;
-		roi.LabelVisible = 'off';
-		roi.UserData=['ROI_object_' 'external'];
+		pixel_mask=pixel_mask(:,:,1);
+		pixel_mask=imbinarize(pixel_mask);
+		CC = bwconncomp(pixel_mask);
+		CC2 = bwconncomp(1-pixel_mask);
+		numconnected=CC.NumObjects + CC2.NumObjects;
+		if numconnected > 100
+			disp('Many mask blobs detected. Now filtering the mask input images.')
+			pixel_mask = imclose(pixel_mask,strel('disk',5)); %remove small holes
+			pixel_mask = bwareaopen(pixel_mask,25); %remove areas with less than 25 pixels area
+		end
+		pixel_mask = bwareafilt(pixel_mask,[400 inf]); %only try to get blobs with more than 400 pixels
+		pixel_mask = bwareafilt(pixel_mask, 100);
+		blocations = bwboundaries(pixel_mask,'holes');
+		%imshow(A, 'Parent',pivlab_axis);
 
-		[~,guid] = fileparts(tempname);
-		roi.Tag = guid;
-		%addlistener(roi,'MovingROI',@ROIevents);
-		addlistener(roi,'ROIMoved',@ROIevents);
-		addlistener(roi,'DeletingROI',@ROIevents);
-		addlistener(roi,'ROIClicked',@ROIevents);
-		update_mask_memory(roi)
+		px_to_rois(blocations);
+		redraw_masks
 	end
-	redraw_masks
 end
-%end
 
 function preview_mask_Callback(~,~,~)
 handles=gethand;
@@ -13987,7 +13783,8 @@ else
 	mask_positions=masks_in_frame{currentframe};
 end
 converted_mask=convert_masks_to_binary(expected_image_size,mask_positions);
-%figure;imagesc(converted_mask);axis image;
+imagesc(converted_mask)
+
 
 function converted_mask=convert_masks_to_binary(mask_size,mask_positions)
 editedMask = zeros(mask_size,'uint16');
@@ -14076,7 +13873,218 @@ function mask_basic_expert_Callback(~,~,~)
 handles=gethand;
 modus=get(handles.mask_basic_expert,'Value');
 if modus==1 %basic
+	set(handles.uipanel25_1,'Visible','on');
 	set(handles.uipanel25_2,'Visible','off');
 elseif modus==2 %expert
+	set(handles.uipanel25_1,'Visible','off');
 	set(handles.uipanel25_2,'Visible','on');
 end
+
+function mask_edit_mode_Callback(~,~,~)
+%changes the display mode of the masks.
+%in sliderdisp, the status of the popupmenu is checked, then decides how to plot masks.
+sliderdisp(retr('pivlab_axis'));
+
+
+function binarize_enable_Callback(~,~,~)
+handles=gethand;
+if get(handles.binarize_enable,'Value')==0
+	set(handles.mask_medfilt_enable,'enable','off');
+	set(handles.median_size,'enable','off');
+	set(handles.binarize_threshold,'enable','off');
+	set(handles.mask_imopen_enable,'enable','off');
+	set(handles.imopen_size,'enable','off');
+	set(handles.mask_imclose_enable,'enable','off');
+	set(handles.imclose_size,'enable','off');
+	set(handles.mask_remove_enable,'enable','off');
+	set(handles.remove_size,'enable','off');
+	set(handles.mask_fill_enable,'enable','off');
+else
+	set(handles.mask_medfilt_enable,'enable','on');
+	set(handles.median_size,'enable','on');
+	set(handles.binarize_threshold,'enable','on');
+	set(handles.mask_imopen_enable,'enable','on');
+	set(handles.imopen_size,'enable','on');
+	set(handles.mask_imclose_enable,'enable','on');
+	set(handles.imclose_size,'enable','on');
+	set(handles.mask_remove_enable,'enable','on');
+	set(handles.remove_size,'enable','on');
+	set(handles.mask_fill_enable,'enable','on');
+end
+
+function binarize_enable_2_Callback(~,~,~)
+handles=gethand;
+if get(handles.binarize_enable_2,'Value')==0
+	set(handles.mask_medfilt_enable_2,'enable','off');
+	set(handles.median_size_2,'enable','off');
+	set(handles.binarize_threshold_2,'enable','off');
+	set(handles.mask_imopen_enable_2,'enable','off');
+	set(handles.imopen_size_2,'enable','off');
+	set(handles.mask_imclose_enable_2,'enable','off');
+	set(handles.imclose_size_2,'enable','off');
+	set(handles.mask_remove_enable_2,'enable','off');
+	set(handles.remove_size_2,'enable','off');
+	set(handles.mask_fill_enable_2,'enable','off');
+else
+	set(handles.mask_medfilt_enable_2,'enable','on');
+	set(handles.median_size_2,'enable','on');
+	set(handles.binarize_threshold_2,'enable','on');
+	set(handles.mask_imopen_enable_2,'enable','on');
+	set(handles.imopen_size_2,'enable','on');
+	set(handles.mask_imclose_enable_2,'enable','on');
+	set(handles.imclose_size_2,'enable','on');
+	set(handles.mask_remove_enable_2,'enable','on');
+	set(handles.remove_size_2,'enable','on');
+	set(handles.mask_fill_enable_2,'enable','on');
+end
+
+function automask_preview_Callback(~,~,~)
+filepath=retr('filepath');
+if size(filepath,1) > 1 %did the user load images?
+	handles=gethand;
+	selected=2*floor(get(handles.fileselector, 'value'))-1;
+	pixel_mask=pixel_mask_from_piv_image(selected);
+	imshow(pixel_mask);disp('das muss geändert werden')
+end
+
+function automask_generate_current_Callback (~,~,~)
+filepath=retr('filepath');
+if size(filepath,1) > 1 %did the user load images?
+	handles=gethand;
+	selected=2*floor(get(handles.fileselector, 'value'))-1;
+	pixel_mask=pixel_mask_from_piv_image(selected);
+	blocations = bwboundaries(pixel_mask,'holes');
+	px_to_rois(blocations);
+	redraw_masks
+end
+
+function pixel_mask=pixel_mask_from_piv_image(selected)
+handles=gethand;
+%% bright mask
+[piv_image_A,~]=get_img(selected);
+if size(piv_image_A,3)>1
+	piv_image_A=piv_image_A(:,:,1);
+end
+[piv_image_B,~]=get_img(selected+1);
+if size(piv_image_B,3)>1
+	piv_image_B=piv_image_B(:,:,1);
+end
+piv_image=im2double(piv_image_A)/2 + im2double(piv_image_B)/2;
+
+piv_image_2=piv_image;
+
+if get(handles.binarize_enable,'Value')
+	if get(handles.mask_medfilt_enable,'Value')
+		median_size = str2double(get(handles.median_size,'String'));
+		piv_image=medfilt2(piv_image,[median_size median_size]);
+	end
+	piv_image=im2bw(piv_image,str2double(get(handles.binarize_threshold,'String')));
+	if get(handles.mask_imopen_enable,'Value')
+		SE=strel('disk',str2double(get(handles.imopen_size,'String')));
+		piv_image=imopen(piv_image,SE);
+	end
+	if get(handles.mask_imclose_enable ,'Value')
+		SE=strel('disk',str2double(get(handles.imclose_size,'String')));
+		piv_image=imclose(piv_image,SE);
+	end
+	if get(handles.mask_remove_enable,'Value')
+		range=[str2double(get(handles.remove_size,'String')) inf];
+		piv_image = bwareafilt(piv_image,range);
+	end
+	if get(handles.mask_fill_enable,'Value')
+		piv_image = imfill(piv_image,"holes");
+	end
+else
+	piv_image=zeros(size(piv_image));
+end
+
+%% dark mask
+if get(handles.binarize_enable_2,'Value')
+	if get(handles.mask_medfilt_enable_2,'Value')
+		median_size = str2double(get(handles.median_size_2,'String'));
+		piv_image_2=medfilt2(piv_image_2,[median_size median_size]);
+	end
+	piv_image_2=im2bw(piv_image_2,str2double(get(handles.binarize_threshold_2,'String')));
+	piv_image_2=~piv_image_2;
+	if get(handles.mask_imopen_enable_2,'Value')
+		SE=strel('disk',str2double(get(handles.imopen_size_2,'String')));
+		piv_image_2=imopen(piv_image_2,SE);
+	end
+	if get(handles.mask_imclose_enable_2 ,'Value')
+		SE=strel('disk',str2double(get(handles.imclose_size_2,'String')));
+		piv_image_2=imclose(piv_image_2,SE);
+	end
+	if get(handles.mask_remove_enable_2,'Value')
+		range=[str2double(get(handles.remove_size_2,'String')) inf];
+		piv_image_2 = bwareafilt(piv_image_2,range);
+	end
+	if get(handles.mask_fill_enable_2,'Value')
+		piv_image_2 = imfill(piv_image_2,"holes");
+	end
+else
+	piv_image_2=zeros(size(piv_image));
+end
+pixel_mask = piv_image | piv_image_2;
+
+function px_to_rois(blocations)
+handles=gethand;
+recommended_colors=parula(7);
+for ind = 1:numel(blocations)
+	currentframe=floor(get(handles.fileselector, 'value'));
+	masks_in_frame=retr('masks_in_frame');
+	if numel(masks_in_frame)<currentframe
+		mask_positions=cell(0);
+	else
+		mask_positions=masks_in_frame{currentframe};
+	end
+	if isempty(mask_positions)
+		mask_positions=cell(0);
+	end
+
+	% Convert to x,y order.
+	pos = blocations{ind};
+	pos = fliplr(pos);
+	% Create a freehand ROI.
+	roi = drawfreehand('Position', pos);
+	reduce(roi,0.005)
+	roi.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
+	roi.FaceAlpha=0.75;
+	roi.LabelVisible = 'off';
+	roi.UserData=['ROI_object_' 'external'];
+
+	[~,guid] = fileparts(tempname);
+	roi.Tag = guid;
+	%addlistener(roi,'MovingROI',@ROIevents);
+	addlistener(roi,'ROIMoved',@ROIevents);
+	addlistener(roi,'DeletingROI',@ROIevents);
+	addlistener(roi,'ROIClicked',@ROIevents);
+	update_mask_memory(roi)
+end
+
+function extend_mask_Callback(~,~,~)
+handles=gethand;
+currentframe=floor(get(handles.fileselector, 'value'));
+masks_in_frame=retr('masks_in_frame');
+if isempty(masks_in_frame)
+	masks_in_frame=cell(currentframe,1);
+end
+
+if numel(masks_in_frame)<currentframe
+	mask_positions=cell(0);
+else
+	mask_positions=masks_in_frame{currentframe};
+end
+%poly_obj=polyshape(mask_positions{2}(1:end-1,:));
+
+poly_obj=polyshape(mask_positions{2});
+
+
+polyout1 = polybuffer(poly_obj,10,'JointType','miter','MiterLimit',2);
+
+
+mask_positions{2}=polyout1.Vertices;
+
+masks_in_frame{1}=mask_positions;
+put('masks_in_frame',masks_in_frame)
+sliderdisp(retr('pivlab_axis'))
+disp('')
