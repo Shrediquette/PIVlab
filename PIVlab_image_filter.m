@@ -1,5 +1,7 @@
 %Filter velocity vector based on the local image quality
-function [u,v,threshold_suggestion] = PIVlab_image_filter (do_contrast,do_bright,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB)
+function [u,v,threshold_suggestion,filter_map_contrast,filter_map_bright] = PIVlab_image_filter (do_contrast,do_bright,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB)
+filter_map_contrast=[];
+filter_map_bright=[];
 if do_contrast==1
 	if size(A,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
 		A = rgb2gray(A);
@@ -24,7 +26,9 @@ if do_contrast==1
 	[X,Y] = meshgrid(x_orig,y_orig);
 	gq = interp2(X,Y,gb,x,y,'nearest'); %scale down result to match size of u and v
 	
+	warning off
 	lowhigh = stretchlim(gq,[0.1 1]); %finds limits for 10% of data and 100% of data
+	warning on
 	threshold_suggestion=lowhigh(1); %the 10% limit is returned as suggestion.
 	
 	u(gq<contrast_filter_thresh)=nan; %remove vectors where image texture is low.
@@ -35,7 +39,7 @@ figure;
 imagesc(gq)
 figure(mainhandle)
 	%}
-
+filter_map_contrast=gb;
 end
 
 %bright area filter
@@ -80,5 +84,6 @@ if do_bright==1
 	D_bwbq = interp2(X,Y,D_bwb,x,y,'nearest'); %scale down result to match size of u and v
 	u(D_bwbq>0)=nan; %remove vectors where brightness is high.
 	v(D_bwbq>0)=nan;
+	filter_map_bright=D_bwb;
 end
 

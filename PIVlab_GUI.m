@@ -1,19 +1,14 @@
 %% TODO für release 3.0:
 %{
-nach oben schieben von binarize editbox. weil das bestimmt ob maske generiert wird.
-Außerdem braucht man noch etwas um masken ausweiten zu können (imdilate)
+Bei low contrast mask generator: alle dilates etc hinzufügen.
+ROI drawline nutzen für Calibration: Editierbar und besser sichtbar: draw_line_Callback
 testen ob masken richtig gezeichnet werden unter den verschiedenen bedingungen (derivatives da, maske da, etc)
-Masken ausweiten, wo soll das gemacht werden? Müsste ja für jedes Objekt gemacht werden können... Am besten dann doch nur für die aus PIV bildern generierten masken? Die anderen, von hand gezeichneten masken kann ja jeder selber ausweiten.
-... aber dann ist imdilate wahrscheinlich die bessere Variante, besonders bei sich überschneidenden ROI objekten.....
-statt imclose am besten? Weil das macht ja eh fast nix anderes als löcher füllen, und das mache ich schon mit imfill...
-
-
+tooltips für alles neue
 
 command line neue maske implementieren (DCC und FFT)
 ...-> und dazu gleich ein livescript...
 
-zusätzlich ein paar funktionen für Bearbeitung der Pixelmaske, imbinarize from currently displayed image (checkbox: use PIV image to generate mask), dann auch wie z.b. dilate, imclose, etc. Muss optional für jedes Bild in session neuberechnet werden.
-wäre gut: ROI drawline nutzen für Calibration: Editierbar und besser sichtbar.
+
 wäre gut: ROI sollte auch ein editierbares ROI objekt nutzen um ROI auszuwählen. funktion roi_select_Callback und darunter.
 wäre gut: nanmin, nanmax, nanstd, nanmean aus Projekt entfernen. Editorsuche nach dateien die das beinhalten. Breakpoints setzen und testen ob gleiches Ergebnis kommt mit "omitnan".
 
@@ -767,18 +762,6 @@ handles.mask_add_rectangle = uicontrol(handles.uipanel25_1,'Style','pushbutton',
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.mask_add_polygon = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Polygon','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@mask_add_Callback,'polygon'},'Tag','mask_add_polygon','TooltipString','');
 
-
-
-
-
-item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.extend_mask = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','extend_temp','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @extend_mask_Callback,'Tag','extend_mask','TooltipString','');
-
-
-
-
-
-
 item=[0 item(2)+item(4) parentitem(3) 1.5];
 handles.mask_import = uicontrol(handles.uipanel25_1,'Style','pushbutton','String','Import pixel mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_import_Callback,'Tag','mask_import','TooltipString','');
 
@@ -786,16 +769,21 @@ handles.mask_import = uicontrol(handles.uipanel25_1,'Style','pushbutton','String
 
 parentitem=get(handles.multip25, 'Position');
 
-item=[0 3.75 parentitem(3) 23];
+item=[0 3.75 parentitem(3) 23.25];
 handles.uipanel25_2 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Generate masks from PIV images', 'Tag','uipanel25_2','fontweight','bold','Visible','off');
 item=[0 0 0 0];
 parentitem=get(handles.uipanel25_2, 'Position');
 
 
-%% bright area mask generator
+item=[0 0 parentitem(3) 1.5];
+handles.mask_bright_or_dark = uicontrol(handles.uipanel25_2,'Style','popupmenu','String',{'Bright area mask generator','Dark area mask generator','Low contrast area mask generator'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_bright_or_dark','Callback',@mask_bright_or_dark_Callback, 'TooltipString','');
 
-item=[0 item(2)+item(4) parentitem(3) 1];
-handles.text252_1_x = uicontrol(handles.uipanel25_2,'Style','text', 'String','Bright area mask generator','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text252_1_x','FontAngle','italic');
+
+%% bright area mask generator
+item=[0 1.5+margin/2 parentitem(3) 14];
+handles.uipanel25_3 = uipanel(handles.uipanel25_2, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Bright area mask generator', 'Tag','uipanel25_3','fontweight','bold','Visible','on');
+item=[0 0 0 0];
+parentitem=get(handles.uipanel25_3, 'Position');
 
 checkbox_width = parentitem(3)/10*1;
 filter_text_width=parentitem(3)/10*4;
@@ -803,158 +791,204 @@ size_text_width=parentitem(3)/10*3;
 size_width=parentitem(3)/10*1.5;
 
 %binarize
-item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
-handles.binarize_enable = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@binarize_enable_Callback,'Tag','binarize_enable','TooltipString','');
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
+handles.binarize_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@binarize_enable_Callback,'Tag','binarize_enable','TooltipString','');
 
 item=[checkbox_width item(2) filter_text_width 1];
-handles.binarize_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Binarize','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_text');
+handles.binarize_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Binarize','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_text');
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
-handles.binarize_threshold_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Threshold:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold_text');
+handles.binarize_threshold_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Threshold:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold_text');
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.binarize_threshold = uicontrol(handles.uipanel25_2,'Style','edit', 'String','0.1','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold','TooltipString','');
+handles.binarize_threshold = uicontrol(handles.uipanel25_3,'Style','edit', 'String','0.8','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold','TooltipString','');
 
 
 %medfilt
-item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
-handles.mask_medfilt_enable = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_medfilt_enable','TooltipString','');
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
+handles.mask_medfilt_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_medfilt_enable','TooltipString','');
 
 item=[checkbox_width item(2) filter_text_width 1];
-handles.median_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Median filter','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_text');
+handles.median_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Median filter','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_text');
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
-handles.median_size_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size_text');
+handles.median_size_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size_text');
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.median_size = uicontrol(handles.uipanel25_2,'Style','edit', 'String','30','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size','TooltipString','');
+handles.median_size = uicontrol(handles.uipanel25_3,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size','TooltipString','');
 
 
-%Imopen
-item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
-handles.mask_imopen_enable = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imopen_enable','TooltipString','');
 
-item=[checkbox_width item(2) filter_text_width 1];
-handles.imopen_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','imopen','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_text');
+%Imopen/imclose
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.5];
+handles.mask_imopen_imclose_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imopen_imclose_enable','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1.5];
+%handles.imopen_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','imopen','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_text');
+handles.imopen_imclose_selection = uicontrol(handles.uipanel25_3,'Style','popupmenu', 'String',{'Morphologically open image','Morphologically close image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_selection','TooltipString','');
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
-handles.imopen_size_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_size_text');
+handles.imopen_imclose_size_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_size_text');
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.imopen_size = uicontrol(handles.uipanel25_2,'Style','edit', 'String','30','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_size','TooltipString','');
+handles.imopen_imclose_size = uicontrol(handles.uipanel25_3,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_size','TooltipString','');
 
-%Imclose
-item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
-handles.mask_imclose_enable = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imclose_enable','TooltipString','');
 
-item=[checkbox_width item(2) filter_text_width 1];
-handles.imclose_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','imclose','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imclose_text');
+
+%imdilate/imerode
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.5];
+handles.mask_imdilate_imerode_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imdilate_imerode_enable','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1.5];
+%handles.imclose_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','imclose','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imclose_text');
+handles.imdilate_imerode_selection = uicontrol(handles.uipanel25_3,'Style','popupmenu', 'String',{'Dilate image','Erode image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_selection','TooltipString','');
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
-handles.imclose_size_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imclose_size_text');
+handles.imdilate_imerode_size_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_size_text');
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.imclose_size = uicontrol(handles.uipanel25_2,'Style','edit', 'String','30','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imclose_size','TooltipString','');
+handles.imdilate_imerode_size = uicontrol(handles.uipanel25_3,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_size','TooltipString','');
+
+
 
 %remove small
-item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
-handles.mask_remove_enable = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_remove_enable','TooltipString','');
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
+handles.mask_remove_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_remove_enable','TooltipString','');
 
 item=[checkbox_width item(2) filter_text_width 1];
-handles.remove_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Remove blots','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_text');
+handles.remove_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Remove blots','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_text');
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
-handles.remove_size_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size_text');
+handles.remove_size_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size_text');
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.remove_size = uicontrol(handles.uipanel25_2,'Style','edit', 'String','30','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size','TooltipString','');
+handles.remove_size = uicontrol(handles.uipanel25_3,'Style','edit', 'String','1000','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size','TooltipString','');
 
 %fillholes
-item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
-handles.mask_fill_enable = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_fill_enable','TooltipString','');
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
+handles.mask_fill_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_fill_enable','TooltipString','');
 
 item=[checkbox_width item(2) filter_text_width 1];
-handles.fill_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','Fill holes','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','fill_text');
+handles.fill_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Fill holes','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','fill_text');
 
 
-%% Dark area mask generator
 
-item=[0 item(2)+item(4)+margin/4 parentitem(3) 1];
-handles.text252_1_y = uicontrol(handles.uipanel25_2,'Style','text', 'String','Dark area mask generator','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text252_1_y','FontAngle','italic');
+%% dark area mask generator
+parentitem=get(handles.uipanel25_2, 'Position');
+item=[0 1.5+margin/2 parentitem(3) 14];
+handles.uipanel25_5 = uipanel(handles.uipanel25_2, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Dark area mask generator', 'Tag','uipanel25_5','fontweight','bold','Visible','off');
+item=[0 0 0 0];
+
+parentitem=get(handles.uipanel25_5, 'Position');
+
 %binarize
-item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
-handles.binarize_enable_2 = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@binarize_enable_2_Callback,'Tag','binarize_enable_2','TooltipString','');
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
+handles.binarize_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@binarize_enable_2_Callback,'Tag','binarize_enable_2','TooltipString','');
 
 item=[checkbox_width item(2) filter_text_width 1];
-handles.binarize_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Binarize','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_text_2');
+handles.binarize_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Binarize','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_text_2');
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
-handles.binarize_threshold_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Threshold:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold_text_2');
+handles.binarize_threshold_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Threshold:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold_text_2');
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.binarize_threshold_2 = uicontrol(handles.uipanel25_2,'Style','edit', 'String','0.1','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold_2','TooltipString','');
+handles.binarize_threshold_2 = uicontrol(handles.uipanel25_5,'Style','edit', 'String','0.01','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold_2','TooltipString','');
 
 %medfilt
-item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
-handles.mask_medfilt_enable_2 = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_medfilt_enable_2','TooltipString','');
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
+handles.mask_medfilt_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_medfilt_enable_2','TooltipString','');
 
 item=[checkbox_width item(2) filter_text_width 1];
-handles.median_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Median filter','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_text_2');
+handles.median_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Median filter','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_text_2');
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
-handles.median_size_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size_text_2');
+handles.median_size_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size_text_2');
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.median_size_2 = uicontrol(handles.uipanel25_2,'Style','edit', 'String','30','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size_2','TooltipString','');
+handles.median_size_2 = uicontrol(handles.uipanel25_5,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size_2','TooltipString','');
 
 
-%Imopen
-item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
-handles.mask_imopen_enable_2 = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imopen_enable_2','TooltipString','');
+%Imopen/imclose
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.5];
+handles.mask_imopen_imclose_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imopen_imclose_enable_2','TooltipString','');
 
-item=[checkbox_width item(2) filter_text_width 1];
-handles.imopen_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','imopen','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_text_2');
+item=[checkbox_width item(2) filter_text_width 1.5];
+%handles.imopen_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','imopen','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_text_2');
+handles.imopen_imclose_selection_2 = uicontrol(handles.uipanel25_5,'Style','popupmenu', 'String',{'Morphologically open image','Morphologically close image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_selection_2','TooltipString','');
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
-handles.imopen_size_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_size_text_2');
+handles.imopen_imclose_size_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_size_text_2');
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.imopen_size_2 = uicontrol(handles.uipanel25_2,'Style','edit', 'String','30','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_size_2','TooltipString','');
+handles.imopen_imclose_size_2 = uicontrol(handles.uipanel25_5,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_size_2','TooltipString','');
 
-%Imclose
-item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
-handles.mask_imclose_enable_2 = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imclose_enable_2','TooltipString','');
+%imdilate/imerode
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.5];
+handles.mask_imdilate_imerode_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imdilate_imerode_enable_2','TooltipString','');
 
-item=[checkbox_width item(2) filter_text_width 1];
-handles.imclose_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','imclose','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imclose_text_2');
+item=[checkbox_width item(2) filter_text_width 1.5];
+%handles.imclose_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','imclose','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imclose_text_2');
+handles.imdilate_imerode_selection_2 = uicontrol(handles.uipanel25_5,'Style','popupmenu', 'String',{'Dilate image','Erode image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_selection_2','TooltipString','');
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
-handles.imclose_size_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imclose_size_text_2');
+handles.imdilate_imerode_size_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_size_text_2');
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.imclose_size_2 = uicontrol(handles.uipanel25_2,'Style','edit', 'String','30','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imclose_size_2','TooltipString','');
+handles.imdilate_imerode_size_2 = uicontrol(handles.uipanel25_5,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_size_2','TooltipString','');
 
 %remove small
-item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
-handles.mask_remove_enable_2 = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_remove_enable_2','TooltipString','');
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
+handles.mask_remove_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_remove_enable_2','TooltipString','');
 
 item=[checkbox_width item(2) filter_text_width 1];
-handles.remove_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Remove blots','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_text_2');
+handles.remove_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Remove blots','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_text_2');
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
-handles.remove_size_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size_text_2');
+handles.remove_size_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size_text_2');
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.remove_size_2 = uicontrol(handles.uipanel25_2,'Style','edit', 'String','30','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size_2','TooltipString','');
+handles.remove_size_2 = uicontrol(handles.uipanel25_5,'Style','edit', 'String','1000','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size_2','TooltipString','');
 
 %fillholes
-item=[margin/4 item(2)+item(4)+margin/8 checkbox_width 1];
-handles.mask_fill_enable_2 = uicontrol(handles.uipanel25_2,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_fill_enable_2','TooltipString','');
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
+handles.mask_fill_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_fill_enable_2','TooltipString','');
 
 item=[checkbox_width item(2) filter_text_width 1];
-handles.fill_text_2 = uicontrol(handles.uipanel25_2,'Style','text', 'String','Fill holes','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','fill_text_2');
+handles.fill_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Fill holes','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','fill_text_2');
 
-item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
+
+
+%% low contrast mask generator
+disp('hier müssen noch alle funktionen hinzugefügt weren... dilate, medfilt, etc...')
+parentitem=get(handles.uipanel25_2, 'Position');
+item=[0 1.5+margin/2 parentitem(3) 14];
+handles.uipanel25_7 = uipanel(handles.uipanel25_2, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Low contrast mask generator', 'Tag','uipanel25_7','fontweight','bold','Visible','off');
+item=[0 0 0 0];
+
+parentitem=get(handles.uipanel25_7, 'Position');
+
+%low contrast
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
+handles.low_contrast_mask_enable = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','low_contrast_mask_enable','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width-3 1];
+handles.low_contrast_mask_text = uicontrol(handles.uipanel25_7,'Style','text', 'String','Enable','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','low_contrast_mask_text');
+
+item=[checkbox_width+filter_text_width-3 item(2) size_text_width 1];
+handles.low_contrast_mask_text_2 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Threshold:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','low_contrast_mask_text');
+
+item=[checkbox_width+filter_text_width-3+size_text_width item(2) size_width+3 1];
+handles.low_contrast_mask_threshold = uicontrol(handles.uipanel25_7,'Style','edit', 'String','0.01','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','low_contrast_mask_threshold','TooltipString','');
+
+item=[parentitem(3)/3  item(2)+item(4)+margin/8 parentitem(3)/3*2 1.5];
+handles.low_contrast_mask_threshold_suggest = uicontrol(handles.uipanel25_7,'Style','pushbutton','String','Suggest threshold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @low_contrast_mask_threshold_suggest_Callback,'Tag','low_contrast_mask_threshold_suggest','TooltipString','');
+
+
+%% mask operations apply etc
+
+parentitem=get(handles.uipanel25_2, 'Position');
+
+item=[0 16.5 parentitem(3) 1.5];
 handles.automask_preview = uicontrol(handles.uipanel25_2,'Style','pushbutton','String','Preview current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @automask_preview_Callback,'Tag','automask_preview','TooltipString','');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
@@ -969,21 +1003,21 @@ handles.automask_generate_all = uicontrol(handles.uipanel25_2,'Style','pushbutto
 item=[0 0 0 0];
 parentitem=get(handles.multip25, 'Position');
 item=[0 27 parentitem(3) 6.5];
-handles.uipanel25_3 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Mask operations', 'Tag','uipanel25_3','fontweight','bold');
+handles.uipanel25_6 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Mask operations', 'Tag','uipanel25_6','fontweight','bold');
 
 item=[0 0 0 0];
-parentitem=get(handles.uipanel25_3, 'Position');
+parentitem=get(handles.uipanel25_6, 'Position');
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.mask_apply_to_current = uicontrol(handles.uipanel25_3,'Style','pushbutton','String','Copy mask to all frames','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_copy_to_all_Callback,'Tag','mask_apply_to_current','TooltipString','');
+handles.mask_apply_to_current = uicontrol(handles.uipanel25_6,'Style','pushbutton','String','Copy mask to all frames','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_copy_to_all_Callback,'Tag','mask_apply_to_current','TooltipString','');
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.mask_delete_all = uicontrol(handles.uipanel25_3,'Style','pushbutton','String','Clear all masks','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_delete_all_Callback,'Tag','mask_delete_all','TooltipString','');
+handles.mask_delete_all = uicontrol(handles.uipanel25_6,'Style','pushbutton','String','Clear all masks','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_delete_all_Callback,'Tag','mask_delete_all','TooltipString','');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
-handles.mask_save = uicontrol(handles.uipanel25_3,'Style','pushbutton','String','Save all masks','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_save_Callback,'Tag','mask_save','TooltipString','');
+handles.mask_save = uicontrol(handles.uipanel25_6,'Style','pushbutton','String','Save all masks','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_save_Callback,'Tag','mask_save','TooltipString','');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.mask_load = uicontrol(handles.uipanel25_3,'Style','pushbutton','String','Load mask(s)','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_load_Callback,'Tag','mask_load','TooltipString','');
+handles.mask_load = uicontrol(handles.uipanel25_6,'Style','pushbutton','String','Load mask(s)','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_load_Callback,'Tag','mask_load','TooltipString','');
 
 
 %% Multip03
@@ -2196,7 +2230,6 @@ item=[0 0 0 0];
 
 %item=[0 item(2)+item(4)+margin/3*2 parentitem(3) 7];
 %handles.uipanel43 = uipanel(handles.multip22, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Calculate mean / sum', 'Tag','uipanel43','fontweight','bold');
-
 
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.text153 = uicontrol(handles.multip22,'Style','text','String','Frames to process:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text153');
@@ -3455,7 +3488,6 @@ if capturing==0
 		vectorcolor=[str2double(get(handles.validdr,'string')) str2double(get(handles.validdg,'string')) str2double(get(handles.validdb,'string'))];
 	else
 		vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
-
 	end
 	delete(findobj('tag', 'derivhint'));
 	if size(filepath,1)>0
@@ -3763,7 +3795,7 @@ set(handles.maxintens, 'string', 1);
 clear_vel_limit_Callback %clear velocity limits
 clear_roi_Callback
 %clear_mask_Callback:
-		put('masks_in_frame',[]);
+put('masks_in_frame',[]);
 
 %reset zoom
 set(handles.panon,'Value',0);
@@ -3987,9 +4019,9 @@ if ~isequal(path,0)
 				clear_roi_Callback
 			end
 		end
-		
+
 		put('masks_in_frame',[]);
-		
+
 		%reset zoom
 		set(handles.panon,'Value',0);
 		set(handles.zoomon,'Value',0);
@@ -6601,7 +6633,7 @@ end
 %do_contrast_filter=1
 if ~isempty(x)
 	if do_contrast_filter == 1 || do_bright_filter == 1
-		[u,v,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
+		[u,v,~,~,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
 	end
 else
 	u=[];v=[];
@@ -6691,7 +6723,7 @@ if size(resultslist,2)>=frame
 
 			[A,rawimageA]=get_img(selected);
 			[B,rawimageB]=get_img(selected+1);
-			[u,v,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
+			[u,v,~,~,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
 		end
 
 		%correlation filter
@@ -6798,6 +6830,11 @@ if size(filepath,1) >1 || numel(caliimg)>0 || retr('video_selection_done') == 1
 	toolsavailable(0)
 	delete(findobj('tag', 'caliline'))
 	for i=1:2
+		%roi = drawline(retr('pivlab_axis'));
+		%label mit aktueller länge anzeigen
+		%roi speichern und auch wieder anzeigen wenn in calibration panel. sonst nicht.
+		%listener mit änderungen. Aber nur der Button auf Apply wendet es wirklich an.
+		
 		[xposition(i),yposition(i)] = ginput(1);
 		if numel(caliimg)==0
 			sliderdisp(retr('pivlab_axis'))
@@ -11114,9 +11151,9 @@ if size(resultslist,2)>=frame
 	bright_filter_thresh=str2double(get(handles.bright_filter_thresh, 'String'));
 	[A,rawimageA]=get_img(selected);
 	[B,rawimageB]=get_img(selected+1);
-	[~,~,threshold_suggestion] = PIVlab_image_filter (0,1,x,y,u,v,0,bright_filter_thresh,A,B,rawimageA,rawimageB);
+	[~,~,threshold_suggestion,~,~] = PIVlab_image_filter (0,1,x,y,u,v,0,bright_filter_thresh,A,B,rawimageA,rawimageB);
 	set(handles.bright_filter_thresh, 'String',num2str(threshold_suggestion));
-	[u,v,~] = PIVlab_image_filter (0,1,x,y,u,v,0,threshold_suggestion,A,B,rawimageA,rawimageB);
+	[u,v,~,~,~] = PIVlab_image_filter (0,1,x,y,u,v,0,threshold_suggestion,A,B,rawimageA,rawimageB);
 end
 
 function suggest_contrast_filter_Callback (~,~,~)
@@ -11135,9 +11172,9 @@ if size(resultslist,2)>=frame
 	contrast_filter_thresh=str2double(get(handles.contrast_filter_thresh, 'String'));
 	[A,rawimageA]=get_img(selected);
 	[B,rawimageB]=get_img(selected+1);
-	[~,~,threshold_suggestion] = PIVlab_image_filter (1,0,x,y,u,v,contrast_filter_thresh,0,A,B,rawimageA,rawimageB);
+	[~,~,threshold_suggestion,~,~] = PIVlab_image_filter (1,0,x,y,u,v,contrast_filter_thresh,0,A,B,rawimageA,rawimageB);
 	set(handles.contrast_filter_thresh, 'String',num2str(threshold_suggestion));
-	[u,v,~] = PIVlab_image_filter (1,0,x,y,u,v,threshold_suggestion,0,A,B,rawimageA,rawimageB);
+	[u,v,~,~,~] = PIVlab_image_filter (1,0,x,y,u,v,threshold_suggestion,0,A,B,rawimageA,rawimageB);
 end
 
 function set_other_interpol_checkbox(hObject,~,~) %synchronizes the two existing "interpoalte missing data" checkboxes
@@ -13309,10 +13346,8 @@ if get(handles.enhance_images, 'Value')
 end
 
 image(cat(3, currentimage, currentimage, currentimage), 'parent',target_axis, 'cdatamapping', 'scaled');
-hold on;
 colormap('gray');
 axis image
-
 
 derived=retr('derived');
 
@@ -13324,6 +13359,8 @@ else
 end
 
 %% load masks, convert to binary image
+
+render_mask=1; % should the mask be rendered in the image display?
 if get(handles.mask_edit_mode,'Value')==2 %Mask mode is "Preview"
 	masks_in_frame=retr('masks_in_frame');
 	if isempty(masks_in_frame)
@@ -13331,12 +13368,17 @@ if get(handles.mask_edit_mode,'Value')==2 %Mask mode is "Preview"
 	end
 	if numel(masks_in_frame)<floor((currentframe+1)/2)
 		mask_positions=cell(0);
+		render_mask=0;
 	else
 		mask_positions=masks_in_frame{floor((currentframe+1)/2)};
+		if isempty (mask_positions)
+			render_mask=0;
+		end
 	end
 	converted_mask=convert_masks_to_binary(size(currentimage(:,:,1)),mask_positions);
 else
 	converted_mask=zeros(size(currentimage(:,:,1)));
+	render_mask=0;
 end
 
 if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
@@ -13409,6 +13451,7 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 	else
 		alpha_ROI_map(:)=1;
 	end
+	hold on;
 	image(currentimage, 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',derivative_alpha.*alpha_pixel_map.*alpha_ROI_map);
 	hold off;
 
@@ -13450,10 +13493,21 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 	end
 end
 %% plot masks in preview mode (not in edit mode)
-hold on;
-image(cat(3, converted_mask*0.7, converted_mask*0.1, converted_mask*0.1), 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',converted_mask*(1-(str2num(get(handles.masktransp,'String'))/100)));
-hold off
-
+if 	render_mask==1 && get(handles.mask_edit_mode,'Value')==2 %mask preview mode
+	mask_dimensions=size(converted_mask);
+	x=[1 mask_dimensions(2)];
+	y=[1,mask_dimensions(1)];
+	skip_mask_pixels = round(0.0000020*mask_dimensions(1)*mask_dimensions(2) - 7); %reduce the amount of pixels displayed for the mask to save render time.
+if skip_mask_pixels>5
+	skip_mask_pixels=5;
+end
+if skip_mask_pixels<1
+	skip_mask_pixels=1;
+end
+	hold on;
+	image(x,y,cat(3, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.7, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1), 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*(1-(str2num(get(handles.masktransp,'String'))/100)));
+	hold off
+end
 
 function toggle_parallel_Callback(~, ~, ~)
 hgui=getappdata(0,'hgui');
@@ -13549,12 +13603,11 @@ set(handles.calidisp, 'string', ['1 px = ' px_per_m_display ' m' sprintf('\n') '
 function mask_add_Callback(~,~,type)
 %masken sollten nur im Maskenpanel als ROIs angezeigt werden ud editierbar sein. Ansonsten als Pixeloverlay. Oder als schnell zecihnendes Polygon. bzw. auch gerne als ROI objekt ohne hittest und editable
 handles=gethand;
-
 %variable masks_in_frame ist cell mit inhalt mask_positions für jeden frame (nicht doppelt machen...)
-
 filepath=retr('filepath');
 if size(filepath,1) > 1 %did the user load images?
-
+	set(handles.mask_edit_mode,'Value',1) %switch to edit mask mode when drawing a new mask.
+	sliderdisp(retr('pivlab_axis'));
 	currentframe=floor(get(handles.fileselector, 'value'));
 	masks_in_frame=retr('masks_in_frame');
 	if isempty(masks_in_frame)
@@ -13566,7 +13619,6 @@ if size(filepath,1) > 1 %did the user load images?
 	else
 		mask_positions=masks_in_frame{currentframe};
 	end
-
 	if isempty(mask_positions)
 		mask_positions=cell(0);
 	end
@@ -13594,27 +13646,28 @@ if size(filepath,1) > 1 %did the user load images?
 	roi.Tag = guid; %unique id for every ROImask object.
 	%addlistener(roi,'MovingROI',@ROIevents);
 	toolsavailable(0)
+	
 	draw(roi);
 	addlistener(roi,'ROIMoved',@ROIevents);
 	addlistener(roi,'DeletingROI',@ROIevents);
 	addlistener(roi,'ROIClicked',@ROIevents);
 	toolsavailable(1)
-	update_mask_memory(roi)
+	handles=gethand;
+	currentframe=floor(get(handles.fileselector, 'value'));
+	masks_in_frame = update_mask_memory(roi,currentframe,masks_in_frame);
+	put('masks_in_frame',masks_in_frame);
 end
 
-function update_mask_memory(roi)
-handles=gethand;
-currentframe=floor(get(handles.fileselector, 'value'));
+function masks_in_frame = update_mask_memory(roi,frame,masks_in_frame)
 
-masks_in_frame=retr('masks_in_frame');
 if isempty(masks_in_frame)
-	masks_in_frame=cell(currentframe,1);
+	masks_in_frame=cell(frame,1);
 end
 
-if numel(masks_in_frame)<currentframe
+if numel(masks_in_frame)<frame
 	mask_positions=cell(0);
 else
-	mask_positions=masks_in_frame{currentframe};
+	mask_positions=masks_in_frame{frame};
 end
 if isempty(mask_positions)
 	mask_positions=cell(0);
@@ -13629,8 +13682,8 @@ end
 mask_positions{end,3}=roi.Color;
 mask_positions{end,4}=roi.Label;
 mask_positions{end,5}=roi.Tag;
-masks_in_frame{currentframe}=mask_positions;
-put('masks_in_frame',masks_in_frame)
+masks_in_frame{frame}=mask_positions;
+%put('masks_in_frame',masks_in_frame)
 
 
 function redraw_masks
@@ -13692,6 +13745,7 @@ delete(findobj('UserData','ROI_object_rectangle'));
 delete(findobj('UserData','ROI_object_circle'));
 delete(findobj('UserData','ROI_object_polygon'));
 delete(findobj('UserData','ROI_object_external'));
+sliderdisp(retr('pivlab_axis'));
 
 function ROIevents(src,evt)
 evname = evt.EventName;
@@ -13730,7 +13784,12 @@ end
 function mask_import_Callback (~,~,~)
 filepath=retr('filepath');
 if size(filepath,1) > 1 %did the user load images?
-	[FileName,PathName] = uigetfile({'*.bmp;*.tif;*.tiff;*.jpg;*.png;','Image Files (*.bmp,*.tif,*.tiff,*.jpg,*.png)'; '*.tif','tif'; '*.tiff','tiff'; '*.jpg','jpg'; '*.bmp','bmp'; '*.png','png'},'Select the binary image mask file(s)','multiselect','on');
+
+sessionpath=retr('sessionpath');
+	if isempty(sessionpath)
+		sessionpath=retr('pathname');
+	end
+	[FileName,PathName] = uigetfile({'*.bmp;*.tif;*.tiff;*.jpg;*.png;','Image Files (*.bmp,*.tif,*.tiff,*.jpg,*.png)'; '*.tif','tif'; '*.tiff','tiff'; '*.jpg','jpg'; '*.bmp','bmp'; '*.png','png'},'Select the binary image mask file(s)',sessionpath, 'multiselect','on');
 	if ~isequal(FileName,0) && ~isequal(PathName,0)
 		if ischar(FileName)==1
 			AnzahlMasks=1;
@@ -13738,34 +13797,43 @@ if size(filepath,1) > 1 %did the user load images?
 			AnzahlMasks=numel(FileName);
 		end
 		pivlab_axis=retr('pivlab_axis');
-		if AnzahlMasks==1
-			pixel_mask=imread(fullfile(PathName,FileName));
-		else
-			if AnzahlMasks > size(filepath/2)
-				disp('mehr masken als Frames!!')
+		handles=gethand;
+		toolsavailable(0,'Busy, please wait...')
+		for i= 1:AnzahlMasks
+			set (handles.mask_import,'String', ['Progress: ' num2str(round(i/AnzahlMasks*100)) ' %']);
+			drawnow limitrate
+			if AnzahlMasks==1
+				pixel_mask=imread(fullfile(PathName,FileName));
+			else
+				pixel_mask=imread(fullfile(PathName,FileName{i}));
 			end
-			disp('muliple masken laden');
-		end
+			pixel_mask=pixel_mask(:,:,1);
+			pixel_mask=imbinarize(pixel_mask);
+			CC = bwconncomp(pixel_mask);
+			CC2 = bwconncomp(1-pixel_mask);
+			numconnected=CC.NumObjects + CC2.NumObjects;
+			if numconnected > 100
+				disp('Many mask blobs detected. Now filtering the mask input images.')
+				pixel_mask = imclose(pixel_mask,strel('disk',5)); %remove small holes
+				pixel_mask = bwareaopen(pixel_mask,25); %remove areas with less than 25 pixels area
+			end
+			pixel_mask = bwareafilt(pixel_mask,[400 inf]); %only try to get blobs with more than 400 pixels
+			pixel_mask = bwareafilt(pixel_mask, 100);
+			blocations = bwboundaries(pixel_mask,'holes');
+			%imshow(A, 'Parent',pivlab_axis);
+			handles=gethand;
+			masks_in_frame=retr('masks_in_frame');
+			masks_in_frame=px_to_rois(blocations,i,masks_in_frame);
+			put('masks_in_frame',masks_in_frame);
 
-		pixel_mask=pixel_mask(:,:,1);
-		pixel_mask=imbinarize(pixel_mask);
-		CC = bwconncomp(pixel_mask);
-		CC2 = bwconncomp(1-pixel_mask);
-		numconnected=CC.NumObjects + CC2.NumObjects;
-		if numconnected > 100
-			disp('Many mask blobs detected. Now filtering the mask input images.')
-			pixel_mask = imclose(pixel_mask,strel('disk',5)); %remove small holes
-			pixel_mask = bwareaopen(pixel_mask,25); %remove areas with less than 25 pixels area
 		end
-		pixel_mask = bwareafilt(pixel_mask,[400 inf]); %only try to get blobs with more than 400 pixels
-		pixel_mask = bwareafilt(pixel_mask, 100);
-		blocations = bwboundaries(pixel_mask,'holes');
-		%imshow(A, 'Parent',pivlab_axis);
-
-		px_to_rois(blocations);
 		redraw_masks
+		sliderdisp(retr('pivlab_axis'))
+		set (handles.mask_import,'String', 'Import pixel mask');
+		toolsavailable(1)
 	end
 end
+
 
 function preview_mask_Callback(~,~,~)
 handles=gethand;
@@ -13783,7 +13851,7 @@ else
 	mask_positions=masks_in_frame{currentframe};
 end
 converted_mask=convert_masks_to_binary(expected_image_size,mask_positions);
-imagesc(converted_mask)
+imagesc(converted_mask)%,'Parent',)
 
 
 function converted_mask=convert_masks_to_binary(mask_size,mask_positions)
@@ -13805,6 +13873,7 @@ if ~isempty(mask_positions)
 	end
 end
 converted_mask = logical(bitget(editedMask,1));
+
 
 
 function mask_copy_to_all_Callback(~,~,~)
@@ -13892,10 +13961,12 @@ if get(handles.binarize_enable,'Value')==0
 	set(handles.mask_medfilt_enable,'enable','off');
 	set(handles.median_size,'enable','off');
 	set(handles.binarize_threshold,'enable','off');
-	set(handles.mask_imopen_enable,'enable','off');
-	set(handles.imopen_size,'enable','off');
-	set(handles.mask_imclose_enable,'enable','off');
-	set(handles.imclose_size,'enable','off');
+	set(handles.mask_imopen_imclose_enable,'enable','off');
+	set(handles.imopen_imclose_size,'enable','off');
+	set(handles.mask_imdilate_imerode_enable,'enable','off');
+	set(handles.imopen_imclose_selection,'enable','off');
+	set(handles.imdilate_imerode_size,'enable','off');
+	set(handles.imdilate_imerode_selection,'enable','off');
 	set(handles.mask_remove_enable,'enable','off');
 	set(handles.remove_size,'enable','off');
 	set(handles.mask_fill_enable,'enable','off');
@@ -13903,10 +13974,12 @@ else
 	set(handles.mask_medfilt_enable,'enable','on');
 	set(handles.median_size,'enable','on');
 	set(handles.binarize_threshold,'enable','on');
-	set(handles.mask_imopen_enable,'enable','on');
-	set(handles.imopen_size,'enable','on');
-	set(handles.mask_imclose_enable,'enable','on');
-	set(handles.imclose_size,'enable','on');
+	set(handles.mask_imopen_imclose_enable,'enable','on');
+	set(handles.imopen_imclose_size,'enable','on');
+	set(handles.mask_imdilate_imerode_enable,'enable','on');
+	set(handles.imopen_imclose_selection,'enable','on');
+	set(handles.imdilate_imerode_size,'enable','on');
+	set(handles.imdilate_imerode_selection,'enable','on');
 	set(handles.mask_remove_enable,'enable','on');
 	set(handles.remove_size,'enable','on');
 	set(handles.mask_fill_enable,'enable','on');
@@ -13918,10 +13991,12 @@ if get(handles.binarize_enable_2,'Value')==0
 	set(handles.mask_medfilt_enable_2,'enable','off');
 	set(handles.median_size_2,'enable','off');
 	set(handles.binarize_threshold_2,'enable','off');
-	set(handles.mask_imopen_enable_2,'enable','off');
-	set(handles.imopen_size_2,'enable','off');
-	set(handles.mask_imclose_enable_2,'enable','off');
-	set(handles.imclose_size_2,'enable','off');
+	set(handles.mask_imopen_imclose_enable_2,'enable','off');
+	set(handles.imopen_imclose_size_2,'enable','off');
+	set(handles.mask_imdilate_imerode_enable_2,'enable','off');
+	set(handles.imopen_imclose_selection_2,'enable','off');
+	set(handles.imdilate_imerode_size_2,'enable','off');
+	set(handles.imdilate_imerode_selection_2,'enable','off');
 	set(handles.mask_remove_enable_2,'enable','off');
 	set(handles.remove_size_2,'enable','off');
 	set(handles.mask_fill_enable_2,'enable','off');
@@ -13929,10 +14004,12 @@ else
 	set(handles.mask_medfilt_enable_2,'enable','on');
 	set(handles.median_size_2,'enable','on');
 	set(handles.binarize_threshold_2,'enable','on');
-	set(handles.mask_imopen_enable_2,'enable','on');
-	set(handles.imopen_size_2,'enable','on');
-	set(handles.mask_imclose_enable_2,'enable','on');
-	set(handles.imclose_size_2,'enable','on');
+	set(handles.mask_imopen_imclose_enable_2,'enable','on');
+	set(handles.imopen_imclose_size_2,'enable','on');
+	set(handles.mask_imdilate_imerode_enable_2,'enable','on');
+	set(handles.imopen_imclose_selection_2,'enable','on');
+	set(handles.imdilate_imerode_size_2,'enable','on');
+	set(handles.imdilate_imerode_selection_2,'enable','on');
 	set(handles.mask_remove_enable_2,'enable','on');
 	set(handles.remove_size_2,'enable','on');
 	set(handles.mask_fill_enable_2,'enable','on');
@@ -13940,11 +14017,35 @@ end
 
 function automask_preview_Callback(~,~,~)
 filepath=retr('filepath');
+handles=gethand;
 if size(filepath,1) > 1 %did the user load images?
 	handles=gethand;
 	selected=2*floor(get(handles.fileselector, 'value'))-1;
-	pixel_mask=pixel_mask_from_piv_image(selected);
-	imshow(pixel_mask);disp('das muss geändert werden')
+	mask_generator_settings=get_mask_generator_settings();
+	[~,piv_image_A]=get_img(selected);%[piv_image_A,~]=get_img(selected); would respect background subtraction
+	[~,piv_image_B]=get_img(selected+1);
+
+	if size(piv_image_A,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+		piv_image_A = rgb2gray(piv_image_A);
+		piv_image_B = rgb2gray(piv_image_B);
+	end
+
+	pixel_mask=pixel_mask_from_piv_image(piv_image_A,piv_image_B,mask_generator_settings);
+	piv_image=im2double(piv_image_A)/2 + im2double(piv_image_B)/2;
+	if size(piv_image,3)>1 % color image
+		piv_image=rgb2gray(piv_image); %convert to gray, always.
+	end
+	if get(handles.enhance_images, 'Value')
+		piv_image=imadjust(piv_image);
+	end
+	image(cat(3, piv_image, piv_image, piv_image), 'parent',retr('pivlab_axis'), 'cdatamapping', 'scaled');
+	hold on;
+	colormap('gray');
+	axis image
+	set(retr('pivlab_axis'),'ytick',[])
+	set(retr('pivlab_axis'),'xtick',[])
+	image(cat(3, pixel_mask*0.7, pixel_mask*0.1, pixel_mask*0.1), 'parent',retr('pivlab_axis'), 'cdatamapping', 'direct','AlphaData',pixel_mask*0.9);
+	hold off
 end
 
 function automask_generate_current_Callback (~,~,~)
@@ -13952,46 +14053,178 @@ filepath=retr('filepath');
 if size(filepath,1) > 1 %did the user load images?
 	handles=gethand;
 	selected=2*floor(get(handles.fileselector, 'value'))-1;
-	pixel_mask=pixel_mask_from_piv_image(selected);
+	mask_generator_settings=get_mask_generator_settings();
+	[~,piv_image_A]=get_img(selected);
+	[~,piv_image_B]=get_img(selected+1);
+	if size(piv_image_A,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+		piv_image_A = rgb2gray(piv_image_A);
+		piv_image_B = rgb2gray(piv_image_B);
+	end
+	pixel_mask=pixel_mask_from_piv_image(piv_image_A,piv_image_B,mask_generator_settings);
 	blocations = bwboundaries(pixel_mask,'holes');
-	px_to_rois(blocations);
+	currentframe=floor(get(handles.fileselector, 'value'));
+	masks_in_frame=retr('masks_in_frame');
+	masks_in_frame{currentframe}=[];%remove any pre-existing mask in the curretn frame
+	masks_in_frame=px_to_rois(blocations,currentframe,masks_in_frame);
+	put('masks_in_frame',masks_in_frame);
 	redraw_masks
+	sliderdisp(retr('pivlab_axis'));
 end
 
-function pixel_mask=pixel_mask_from_piv_image(selected)
+function automask_generate_all_Callback (~,~,~)
 handles=gethand;
+filepath=retr('filepath');
+if size(filepath,1) > 1 %did the user load images?
+	handles=gethand;
+	if retr('video_selection_done') == 0
+		num_frames_to_process=floor(size(filepath,1)/2)+1;
+	else
+		video_frame_selection=retr('video_frame_selection');
+		num_frames_to_process=floor(numel(video_frame_selection)/2)+1;
+	end
+	mask_generator_settings=get_mask_generator_settings();
+	put('masks_in_frame',[]);%remove existing masks before calculating new ones.
+	%masks_in_frame=retr('masks_in_frame');
+	%resulting_masks_in_frame_cell=cell(0);
+	%if retr('video_selection_done') == 1 || retr('parallel')==0 %if post-processing a video, parallelization cannot be used.
+	if retr('video_selection_done')==0
+		num_frames_to_process = size(filepath,1);
+	else
+		video_frame_selection=retr('video_frame_selection');
+		num_frames_to_process = numel(video_frame_selection);
+	end
+	toolsavailable(0,'Busy, please wait...')
+	for i=1:2:num_frames_to_process
+		[~,piv_image_A]=get_img(i);
+		[~,piv_image_B]=get_img(i+1);
+		if size(piv_image_A,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+			piv_image_A = rgb2gray(piv_image_A);
+			piv_image_B = rgb2gray(piv_image_B);
+		end
+		pixel_mask=pixel_mask_from_piv_image(piv_image_A,piv_image_B,mask_generator_settings);
+		set (handles.automask_generate_all,'String', ['Progress: ' num2str(round(i/num_frames_to_process*100)) ' %']);
+		drawnow limitrate
+		blocations = bwboundaries(pixel_mask,'holes');
+		masks_in_frame=retr('masks_in_frame');
+		masks_in_frame=px_to_rois(blocations,(i+1)/2,masks_in_frame);
+		put('masks_in_frame',masks_in_frame);
+		redraw_masks
+	end
+	set (handles.automask_generate_all,'String', 'Make mask for all frames');
+	toolsavailable(1)
+	%{
+	else %not using a video file --> parallel processing possible
+		slicedfilepath1=cell(0);
+		slicedfilepath2=cell(0);
+		for i=1:2:size(filepath,1)%num_frames_to_process
+			k=(i+1)/2;
+			slicedfilepath1{k}=filepath{i};
+			slicedfilepath2{k}=filepath{i+1};
+		end
+		parfor i=1:num_frames_to_process-1
+			%% load images in a parfor loop
+			[~,~,ext] = fileparts(slicedfilepath1{i});
+			if strcmp(ext,'.b16')
+				currentimage1=f_readB16(slicedfilepath1{i});
+				currentimage2=f_readB16(slicedfilepath2{i});
+			else
+				currentimage1=imread(slicedfilepath1{i});
+				currentimage2=imread(slicedfilepath2{i});
+			end
+			pixel_mask=pixel_mask_from_piv_image(currentimage1,currentimage2,mask_generator_settings);
+			blocations = bwboundaries(pixel_mask,'holes');
+			resulting_masks_in_frame_cell{i}=px_to_rois(blocations,i,masks_in_frame);
+		end
+		for i=1:num_frames_to_process-1
+		masks_in_frame{i,1}=resulting_masks_in_frame_cell{i}{i};
+	end
+	end
+	%}
+	%	put('masks_in_frame',masks_in_frame);
+	%	redraw_masks
+end
+sliderdisp(retr('pivlab_axis'));
+
+
+function mask_generator_settings=get_mask_generator_settings()
+handles=gethand;
+
+mask_generator_settings.binarize_enable = get(handles.binarize_enable,'Value');
+mask_generator_settings.mask_medfilt_enable=get(handles.mask_medfilt_enable,'Value');
+mask_generator_settings.median_size=get(handles.median_size,'String');
+mask_generator_settings.binarize_threshold=get(handles.binarize_threshold,'String');
+mask_generator_settings.mask_imopen_imclose_enable=get(handles.mask_imopen_imclose_enable,'Value');
+mask_generator_settings.imopen_imclose_size=get(handles.imopen_imclose_size,'String');
+mask_generator_settings.imopen_imclose_selection=get(handles.imopen_imclose_selection,'Value');
+mask_generator_settings.mask_imdilate_imerode_enable=get(handles.mask_imdilate_imerode_enable ,'Value');
+mask_generator_settings.imdilate_imerode_size=get(handles.imdilate_imerode_size,'String');
+mask_generator_settings.imdilate_imerode_selection=get(handles.imdilate_imerode_selection,'Value');
+mask_generator_settings.mask_remove_enable=get(handles.mask_remove_enable,'Value');
+mask_generator_settings.remove_size=get(handles.remove_size,'String');
+mask_generator_settings.mask_fill_enable=get(handles.mask_fill_enable,'Value');
+
+mask_generator_settings.binarize_enable_2 = get(handles.binarize_enable_2,'Value');
+mask_generator_settings.mask_medfilt_enable_2=get(handles.mask_medfilt_enable_2,'Value');
+mask_generator_settings.median_size_2=get(handles.median_size_2,'String');
+mask_generator_settings.binarize_threshold_2=get(handles.binarize_threshold_2,'String');
+mask_generator_settings.mask_imopen_imclose_enable_2=get(handles.mask_imopen_imclose_enable_2,'Value');
+mask_generator_settings.imopen_imclose_size_2=get(handles.imopen_imclose_size_2,'String');
+mask_generator_settings.imopen_imclose_selection_2=get(handles.imopen_imclose_selection_2,'Value');
+mask_generator_settings.mask_imdilate_imerode_enable_2=get(handles.mask_imdilate_imerode_enable_2 ,'Value');
+mask_generator_settings.imdilate_imerode_size_2=get(handles.imdilate_imerode_size_2,'String');
+mask_generator_settings.imdilate_imerode_selection_2=get(handles.imdilate_imerode_selection_2,'Value');
+mask_generator_settings.mask_remove_enable_2=get(handles.mask_remove_enable_2,'Value');
+mask_generator_settings.remove_size_2=get(handles.remove_size_2,'String');
+mask_generator_settings.mask_fill_enable_2=get(handles.mask_fill_enable_2,'Value');
+
+mask_generator_settings.low_contrast_mask_threshold=get(handles.low_contrast_mask_threshold,'String');
+mask_generator_settings.low_contrast_mask_enable=get(handles.low_contrast_mask_enable,'Value');
+
+
+function pixel_mask=pixel_mask_from_piv_image(piv_image_A,piv_image_B,mask_generator_settings)
+
 %% bright mask
-[piv_image_A,~]=get_img(selected);
 if size(piv_image_A,3)>1
 	piv_image_A=piv_image_A(:,:,1);
 end
-[piv_image_B,~]=get_img(selected+1);
+
 if size(piv_image_B,3)>1
 	piv_image_B=piv_image_B(:,:,1);
 end
 piv_image=im2double(piv_image_A)/2 + im2double(piv_image_B)/2;
 
 piv_image_2=piv_image;
+piv_image_3=piv_image;
 
-if get(handles.binarize_enable,'Value')
-	if get(handles.mask_medfilt_enable,'Value')
-		median_size = str2double(get(handles.median_size,'String'));
+if mask_generator_settings.binarize_enable
+	if mask_generator_settings.mask_medfilt_enable
+		median_size = str2double(mask_generator_settings.median_size);
 		piv_image=medfilt2(piv_image,[median_size median_size]);
 	end
-	piv_image=im2bw(piv_image,str2double(get(handles.binarize_threshold,'String')));
-	if get(handles.mask_imopen_enable,'Value')
-		SE=strel('disk',str2double(get(handles.imopen_size,'String')));
-		piv_image=imopen(piv_image,SE);
+	piv_image=im2bw(piv_image,str2double(mask_generator_settings.binarize_threshold));
+
+	if mask_generator_settings.mask_imopen_imclose_enable
+		SE=strel('disk',str2double(mask_generator_settings.imopen_imclose_size));
+		if mask_generator_settings.imopen_imclose_selection==1 %imopen
+			piv_image=imopen(piv_image,SE);
+		else
+			piv_image=imclose(piv_image,SE);
+		end
 	end
-	if get(handles.mask_imclose_enable ,'Value')
-		SE=strel('disk',str2double(get(handles.imclose_size,'String')));
-		piv_image=imclose(piv_image,SE);
+
+	if mask_generator_settings.mask_imdilate_imerode_enable
+		SE=strel('disk',str2double(mask_generator_settings.imdilate_imerode_size));
+		if mask_generator_settings.imdilate_imerode_selection==1 %dilate
+			piv_image=imdilate(piv_image,SE);
+		else
+			piv_image=imerode(piv_image,SE);
+		end
 	end
-	if get(handles.mask_remove_enable,'Value')
-		range=[str2double(get(handles.remove_size,'String')) inf];
+	if mask_generator_settings.mask_remove_enable
+		range=[str2double(mask_generator_settings.remove_size) inf];
 		piv_image = bwareafilt(piv_image,range);
 	end
-	if get(handles.mask_fill_enable,'Value')
+	if mask_generator_settings.mask_fill_enable
 		piv_image = imfill(piv_image,"holes");
 	end
 else
@@ -13999,43 +14232,70 @@ else
 end
 
 %% dark mask
-if get(handles.binarize_enable_2,'Value')
-	if get(handles.mask_medfilt_enable_2,'Value')
-		median_size = str2double(get(handles.median_size_2,'String'));
+if mask_generator_settings.binarize_enable_2
+	if mask_generator_settings.mask_medfilt_enable_2
+		median_size = str2double(mask_generator_settings.median_size_2);
 		piv_image_2=medfilt2(piv_image_2,[median_size median_size]);
 	end
-	piv_image_2=im2bw(piv_image_2,str2double(get(handles.binarize_threshold_2,'String')));
+	piv_image_2=im2bw(piv_image_2,str2double(mask_generator_settings.binarize_threshold_2));
 	piv_image_2=~piv_image_2;
-	if get(handles.mask_imopen_enable_2,'Value')
-		SE=strel('disk',str2double(get(handles.imopen_size_2,'String')));
-		piv_image_2=imopen(piv_image_2,SE);
+
+
+	if mask_generator_settings.mask_imopen_imclose_enable_2
+		SE=strel('disk',str2double(mask_generator_settings.imopen_imclose_size_2));
+		if mask_generator_settings.imopen_imclose_selection_2==1 %imopen
+			piv_image_2=imopen(piv_image_2,SE);
+		else
+			piv_image_2=imclose(piv_image_2,SE);
+		end
 	end
-	if get(handles.mask_imclose_enable_2 ,'Value')
-		SE=strel('disk',str2double(get(handles.imclose_size_2,'String')));
-		piv_image_2=imclose(piv_image_2,SE);
+
+	if mask_generator_settings.mask_imdilate_imerode_enable_2
+		SE=strel('disk',str2double(mask_generator_settings.imdilate_imerode_size_2));
+		if mask_generator_settings.imdilate_imerode_selection_2==1 %dilate
+			piv_image_2=imdilate(piv_image_2,SE);
+		else
+			piv_image_2=imerode(piv_image_2,SE);
+		end
 	end
-	if get(handles.mask_remove_enable_2,'Value')
-		range=[str2double(get(handles.remove_size_2,'String')) inf];
+
+
+	if mask_generator_settings.mask_remove_enable_2
+		range=[str2double(mask_generator_settings.remove_size_2) inf];
 		piv_image_2 = bwareafilt(piv_image_2,range);
 	end
-	if get(handles.mask_fill_enable_2,'Value')
+	if mask_generator_settings.mask_fill_enable_2
 		piv_image_2 = imfill(piv_image_2,"holes");
 	end
 else
 	piv_image_2=zeros(size(piv_image));
 end
-pixel_mask = piv_image | piv_image_2;
 
-function px_to_rois(blocations)
-handles=gethand;
+%% low contrast mask
+if mask_generator_settings.low_contrast_mask_enable
+	x_orig = 1:size(piv_image,2);
+	y_orig = 1:size(piv_image,1);
+	[x,y] = meshgrid(x_orig,y_orig);
+	u=zeros(size(x));
+	v=u;
+	[~,~,~,piv_image_3,~] = PIVlab_image_filter (1,0,x,y,u,v,0,0,piv_image_3,piv_image_3,piv_image_3,piv_image_3);
+piv_image_3=medfilt2(piv_image_3,[15 15]);
+disp('dieses medfilt muss dann raus')
+piv_image_3=~im2bw(piv_image_3,str2double(mask_generator_settings.low_contrast_mask_threshold));
+else
+	piv_image_3=zeros(size(piv_image));
+end
+
+
+pixel_mask = piv_image | piv_image_2 | piv_image_3;
+
+function masks_in_frame=px_to_rois(blocations,frame,masks_in_frame)
 recommended_colors=parula(7);
 for ind = 1:numel(blocations)
-	currentframe=floor(get(handles.fileselector, 'value'));
-	masks_in_frame=retr('masks_in_frame');
-	if numel(masks_in_frame)<currentframe
+	if numel(masks_in_frame)<frame
 		mask_positions=cell(0);
 	else
-		mask_positions=masks_in_frame{currentframe};
+		mask_positions=masks_in_frame{frame};
 	end
 	if isempty(mask_positions)
 		mask_positions=cell(0);
@@ -14058,9 +14318,10 @@ for ind = 1:numel(blocations)
 	addlistener(roi,'ROIMoved',@ROIevents);
 	addlistener(roi,'DeletingROI',@ROIevents);
 	addlistener(roi,'ROIClicked',@ROIevents);
-	update_mask_memory(roi)
+	masks_in_frame = update_mask_memory(roi,frame,masks_in_frame);
 end
 
+%{
 function extend_mask_Callback(~,~,~)
 handles=gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
@@ -14068,23 +14329,61 @@ masks_in_frame=retr('masks_in_frame');
 if isempty(masks_in_frame)
 	masks_in_frame=cell(currentframe,1);
 end
-
 if numel(masks_in_frame)<currentframe
 	mask_positions=cell(0);
 else
 	mask_positions=masks_in_frame{currentframe};
 end
 %poly_obj=polyshape(mask_positions{2}(1:end-1,:));
-
 poly_obj=polyshape(mask_positions{2});
-
-
 polyout1 = polybuffer(poly_obj,10,'JointType','miter','MiterLimit',2);
-
-
 mask_positions{2}=polyout1.Vertices;
-
 masks_in_frame{1}=mask_positions;
 put('masks_in_frame',masks_in_frame)
 sliderdisp(retr('pivlab_axis'))
 disp('')
+%}
+
+
+function mask_bright_or_dark_Callback(~,~,~)
+handles=gethand;
+if get(handles.mask_bright_or_dark,'Value')==1
+	set (handles.uipanel25_3,'Visible','on')
+	set (handles.uipanel25_5,'Visible','off')
+	set (handles.uipanel25_7,'Visible','off')
+elseif get(handles.mask_bright_or_dark,'Value')==2
+	set (handles.uipanel25_3,'Visible','off')
+	set (handles.uipanel25_5,'Visible','on')
+	set (handles.uipanel25_7,'Visible','off')
+elseif get(handles.mask_bright_or_dark,'Value')==3
+	set (handles.uipanel25_3,'Visible','off')
+	set (handles.uipanel25_5,'Visible','off')
+	set (handles.uipanel25_7,'Visible','on')
+end
+
+function low_contrast_mask_threshold_suggest_Callback(~,~,~)
+handles=gethand;
+filepath=retr('filepath');
+if size(filepath,1) > 1 %did the user load images?
+	selected=2*floor(get(handles.fileselector, 'value'))-1;
+	[~,rawimageA]=get_img(selected);
+	[~,rawimageB]=get_img(selected+1);
+
+	if size(rawimageA,3)>1
+		rawimageA=rawimageA(:,:,1);
+	end
+
+	if size(rawimageA,3)>1
+		rawimageA=rawimageA(:,:,1);
+	end
+	rawimage=im2double(rawimageA)/2 + im2double(rawimageB)/2;
+
+	x_orig = 1:size(rawimage,2);
+	y_orig = 1:size(rawimage,1);
+	[x,y] = meshgrid(x_orig,y_orig);
+	u=zeros(size(x));
+	v=u;
+
+	[~,~,tresh_suggest,~,~] = PIVlab_image_filter (1,0,x,y,u,v,0,0,rawimage,rawimage,rawimage,rawimage);
+	set (handles.low_contrast_mask_threshold,'String',num2str(tresh_suggest));
+end
