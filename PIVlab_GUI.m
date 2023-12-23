@@ -1,6 +1,6 @@
 %% TODO für release 3.0:
 %{
-Bei low contrast mask generator: alle dilates etc hinzufügen.
+
 ROI drawline nutzen für Calibration: Editierbar und besser sichtbar: draw_line_Callback
 testen ob masken richtig gezeichnet werden unter den verschiedenen bedingungen (derivatives da, maske da, etc)
 tooltips für alles neue
@@ -35,17 +35,12 @@ function PIVlab_GUI(desired_num_cores,batch_session_file)
 %% Make figure
 fh = findobj('tag', 'hgui');
 if isempty(fh)
-
 	%{
 	splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','Loading...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','off','handlevisibility','on');
 	splash_ax=axes(splashscreen,'units','normalized');
 	imshow(imread('pivlab_logo1.jpg'),"Parent",splash_ax,'border','tight');
-set(splash_ax,'Position',[0 0 1 1])
- 
-set(gca,'DataAspectRatioMode','auto')
-
-
-
+	set(splash_ax,'Position',[0 0 1 1])
+	set(gca,'DataAspectRatioMode','auto')
 	movegui(splashscreen,'center');
 	set(splashscreen,'visible','on')
 	drawnow
@@ -524,7 +519,7 @@ if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(even
 		end
 		put('ac_upper_clim',ac_upper_clim);
 		put('ac_lower_clim',0);
-		caxis([0 ac_upper_clim])
+		caxis([0 ac_upper_clim]) %#ok<*CAXIS>
 	elseif strcmp(event.Key,'0') %plus
 		ac_upper_clim = retr('ac_upper_clim');
 		if ac_upper_clim > 5000
@@ -633,7 +628,7 @@ quickheight = retr('quickheight');
 
 handles.quick = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin*0.5 0+margin*0.5+panelheighttools quickwidth quickheight],'title','Main tasks quick access', 'Tag','quick','fontweight','bold','Visible','on');
 handles.quick1 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[1*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@quick1_Callback,'tag','quick1','TooltipString','Load images');
-handles.quick2 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[2*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@quick2_Callback,'tag','quick2','TooltipString','ROI, Mask');
+handles.quick2 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[2*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@quick2_Callback,'tag','quick2','TooltipString','Mask generation');
 handles.quick3 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[3*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@quick3_Callback,'tag','quick3','TooltipString','Pre-processing');
 handles.quick4 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[4*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@quick4_Callback,'tag','quick4','TooltipString','PIV settings');
 handles.quick5 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[5*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@quick5_Callback,'tag','quick5','TooltipString','Analyze');
@@ -959,7 +954,6 @@ handles.fill_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Fi
 
 
 %% low contrast mask generator
-disp('hier müssen noch alle funktionen hinzugefügt weren... dilate, medfilt, etc...')
 parentitem=get(handles.uipanel25_2, 'Position');
 item=[0 1.5+margin/2 parentitem(3) 14];
 handles.uipanel25_7 = uipanel(handles.uipanel25_2, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Low contrast mask generator', 'Tag','uipanel25_7','fontweight','bold','Visible','off');
@@ -969,7 +963,7 @@ parentitem=get(handles.uipanel25_7, 'Position');
 
 %low contrast
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
-handles.low_contrast_mask_enable = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','low_contrast_mask_enable','TooltipString','');
+handles.low_contrast_mask_enable = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@low_contrast_mask_enable_Callback,'Tag','low_contrast_mask_enable','TooltipString','');
 
 item=[checkbox_width item(2) filter_text_width-3 1];
 handles.low_contrast_mask_text = uicontrol(handles.uipanel25_7,'Style','text', 'String','Enable','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','low_contrast_mask_text');
@@ -982,6 +976,107 @@ handles.low_contrast_mask_threshold = uicontrol(handles.uipanel25_7,'Style','edi
 
 item=[parentitem(3)/3  item(2)+item(4)+margin/8 parentitem(3)/3*2 1.5];
 handles.low_contrast_mask_threshold_suggest = uicontrol(handles.uipanel25_7,'Style','pushbutton','String','Suggest threshold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @low_contrast_mask_threshold_suggest_Callback,'Tag','low_contrast_mask_threshold_suggest','TooltipString','');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+disp('alle elemente hier funktional machen')
+disp('und auch ausblenden wenn enable ausgeschaltet.')
+
+
+%medfilt
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
+handles.mask_medfilt_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_medfilt_enable_3','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1];
+handles.median_text_3 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Median filter','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_text_3');
+
+item=[checkbox_width+filter_text_width item(2) size_text_width 1];
+handles.median_size_text_3 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size_text_3');
+
+item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
+handles.median_size_3 = uicontrol(handles.uipanel25_7,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size_3','TooltipString','');
+
+
+%Imopen/imclose
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.5];
+handles.mask_imopen_imclose_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imopen_imclose_enable_3','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1.5];
+%handles.imopen_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','imopen','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_text_2');
+handles.imopen_imclose_selection_3 = uicontrol(handles.uipanel25_7,'Style','popupmenu', 'String',{'Morphologically open image','Morphologically close image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_selection_3','TooltipString','');
+
+item=[checkbox_width+filter_text_width item(2) size_text_width 1];
+handles.imopen_imclose_size_text_3 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_size_text_3');
+
+item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
+handles.imopen_imclose_size_3 = uicontrol(handles.uipanel25_7,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_size_3','TooltipString','');
+
+%imdilate/imerode
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.5];
+handles.mask_imdilate_imerode_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imdilate_imerode_enable_3','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1.5];
+%handles.imclose_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','imclose','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imclose_text_2');
+handles.imdilate_imerode_selection_3 = uicontrol(handles.uipanel25_7,'Style','popupmenu', 'String',{'Dilate image','Erode image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_selection_3','TooltipString','');
+
+item=[checkbox_width+filter_text_width item(2) size_text_width 1];
+handles.imdilate_imerode_size_text_3 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_size_text_3');
+
+item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
+handles.imdilate_imerode_size_3 = uicontrol(handles.uipanel25_7,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_size_3','TooltipString','');
+
+%remove small
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
+handles.mask_remove_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_remove_enable_3','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1];
+handles.remove_text_3 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Remove blots','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_text_3');
+
+item=[checkbox_width+filter_text_width item(2) size_text_width 1];
+handles.remove_size_text_3 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size_text_3');
+
+item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
+handles.remove_size_3 = uicontrol(handles.uipanel25_7,'Style','edit', 'String','1000','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size_3','TooltipString','');
+
+%fillholes
+item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
+handles.mask_fill_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_fill_enable_3','TooltipString','');
+
+item=[checkbox_width item(2) filter_text_width 1];
+handles.fill_text_3 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Fill holes','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','fill_text_3');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 %% mask operations apply etc
@@ -14015,6 +14110,41 @@ else
 	set(handles.mask_fill_enable_2,'enable','on');
 end
 
+
+function low_contrast_mask_enable_Callback(~,~,~)
+handles=gethand;
+if get(handles.low_contrast_mask_enable,'Value')==0
+	set(handles.low_contrast_mask_threshold_suggest,'enable','off')
+	set(handles.mask_medfilt_enable_3,'enable','off');
+	set(handles.median_size_3,'enable','off');
+	set(handles.low_contrast_mask_threshold,'enable','off');
+	set(handles.mask_imopen_imclose_enable_3,'enable','off');
+	set(handles.imopen_imclose_size_3,'enable','off');
+	set(handles.mask_imdilate_imerode_enable_3,'enable','off');
+	set(handles.imopen_imclose_selection_3,'enable','off');
+	set(handles.imdilate_imerode_size_3,'enable','off');
+	set(handles.imdilate_imerode_selection_3,'enable','off');
+	set(handles.mask_remove_enable_3,'enable','off');
+	set(handles.remove_size_3,'enable','off');
+	set(handles.mask_fill_enable_3,'enable','off');
+else
+	set(handles.low_contrast_mask_threshold_suggest,'enable','on')
+	set(handles.mask_medfilt_enable_3,'enable','on');
+	set(handles.median_size_3,'enable','on');
+	set(handles.low_contrast_mask_threshold,'enable','on');
+	set(handles.mask_imopen_imclose_enable_3,'enable','on');
+	set(handles.imopen_imclose_size_3,'enable','on');
+	set(handles.mask_imdilate_imerode_enable_3,'enable','on');
+	set(handles.imopen_imclose_selection_3,'enable','on');
+	set(handles.imdilate_imerode_size_3,'enable','on');
+	set(handles.imdilate_imerode_selection_3,'enable','on');
+	set(handles.mask_remove_enable_3,'enable','on');
+	set(handles.remove_size_3,'enable','on');
+	set(handles.mask_fill_enable_3,'enable','on');
+end
+
+
+
 function automask_preview_Callback(~,~,~)
 filepath=retr('filepath');
 handles=gethand;
@@ -14179,7 +14309,17 @@ mask_generator_settings.mask_fill_enable_2=get(handles.mask_fill_enable_2,'Value
 
 mask_generator_settings.low_contrast_mask_threshold=get(handles.low_contrast_mask_threshold,'String');
 mask_generator_settings.low_contrast_mask_enable=get(handles.low_contrast_mask_enable,'Value');
-
+mask_generator_settings.mask_medfilt_enable_3=get(handles.mask_medfilt_enable_3,'Value');
+mask_generator_settings.median_size_3=get(handles.median_size_3,'String');
+mask_generator_settings.mask_imopen_imclose_enable_3=get(handles.mask_imopen_imclose_enable_3,'Value');
+mask_generator_settings.imopen_imclose_size_3=get(handles.imopen_imclose_size_3,'String');
+mask_generator_settings.imopen_imclose_selection_3=get(handles.imopen_imclose_selection_3,'Value');
+mask_generator_settings.mask_imdilate_imerode_enable_3=get(handles.mask_imdilate_imerode_enable_3 ,'Value');
+mask_generator_settings.imdilate_imerode_size_3=get(handles.imdilate_imerode_size_3,'String');
+mask_generator_settings.imdilate_imerode_selection_3=get(handles.imdilate_imerode_selection_3,'Value');
+mask_generator_settings.mask_remove_enable_3=get(handles.mask_remove_enable_3,'Value');
+mask_generator_settings.remove_size_3=get(handles.remove_size_3,'String');
+mask_generator_settings.mask_fill_enable_3=get(handles.mask_fill_enable_3,'Value');
 
 function pixel_mask=pixel_mask_from_piv_image(piv_image_A,piv_image_B,mask_generator_settings)
 
@@ -14279,9 +14419,58 @@ if mask_generator_settings.low_contrast_mask_enable
 	u=zeros(size(x));
 	v=u;
 	[~,~,~,piv_image_3,~] = PIVlab_image_filter (1,0,x,y,u,v,0,0,piv_image_3,piv_image_3,piv_image_3,piv_image_3);
-piv_image_3=medfilt2(piv_image_3,[15 15]);
-disp('dieses medfilt muss dann raus')
-piv_image_3=~im2bw(piv_image_3,str2double(mask_generator_settings.low_contrast_mask_threshold));
+
+	
+	
+	
+	
+	if mask_generator_settings.mask_medfilt_enable_3
+		median_size = str2double(mask_generator_settings.median_size_3);
+		piv_image_3=medfilt2(piv_image_3,[median_size median_size]);
+	end
+	piv_image_3=im2bw(piv_image_3,str2double(mask_generator_settings.low_contrast_mask_threshold));
+	piv_image_3=~piv_image_3;
+
+
+	if mask_generator_settings.mask_imopen_imclose_enable_3
+		SE=strel('disk',str2double(mask_generator_settings.imopen_imclose_size_3));
+		if mask_generator_settings.imopen_imclose_selection_3==1 %imopen
+			piv_image_3=imopen(piv_image_3,SE);
+		else
+			piv_image_3=imclose(piv_image_3,SE);
+		end
+	end
+
+	if mask_generator_settings.mask_imdilate_imerode_enable_3
+		SE=strel('disk',str2double(mask_generator_settings.imdilate_imerode_size_3));
+		if mask_generator_settings.imdilate_imerode_selection_3==1 %dilate
+			piv_image_3=imdilate(piv_image_3,SE);
+		else
+			piv_image_3=imerode(piv_image_3,SE);
+		end
+	end
+
+
+	if mask_generator_settings.mask_remove_enable_3
+		range=[str2double(mask_generator_settings.remove_size_3) inf];
+		piv_image_3 = bwareafilt(piv_image_3,range);
+	end
+	if mask_generator_settings.mask_fill_enable_3
+		piv_image_3 = imfill(piv_image_3,"holes");
+	end
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+
 else
 	piv_image_3=zeros(size(piv_image));
 end
