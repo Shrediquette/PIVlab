@@ -15,6 +15,9 @@ else %repeted correlation needs double as type
 end
 
 warning off %#ok<*WNOFF> %MATLAB:log:logOfZero
+if isempty(mask_inpt)
+	mask_inpt=zeros(size(image1(:,:,1)),'logical');
+end
 if numel(roi_inpt)>0
 	xroi=roi_inpt(1);
 	yroi=roi_inpt(2);

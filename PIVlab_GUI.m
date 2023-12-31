@@ -1,7 +1,10 @@
 %% TODO für release 3.0:
 %{
 
-ROI drawline nutzen für Calibration: Editierbar und besser sichtbar: draw_line_Callback
+X offset und Y offset werden nicht richtig angezeigt.
+manuelles ändern von reference length funktioniert noch h nicht richtig.
+Testen ob nach laden von seession bzw. settings die Kalibrierung richtig funktioniert.
+
 testen ob masken richtig gezeichnet werden unter den verschiedenen bedingungen (derivatives da, maske da, etc)
 tooltips für alles neue
 
@@ -790,7 +793,7 @@ item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
 handles.binarize_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@binarize_enable_Callback,'Tag','binarize_enable','TooltipString','');
 
 item=[checkbox_width item(2) filter_text_width 1];
-handles.binarize_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Binarize','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_text');
+handles.binarize_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Enable','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_text');
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
 handles.binarize_threshold_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Threshold:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold_text');
@@ -881,7 +884,7 @@ item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
 handles.binarize_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@binarize_enable_2_Callback,'Tag','binarize_enable_2','TooltipString','');
 
 item=[checkbox_width item(2) filter_text_width 1];
-handles.binarize_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Binarize','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_text_2');
+handles.binarize_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Enable','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_text_2');
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
 handles.binarize_threshold_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Threshold:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold_text_2');
@@ -978,22 +981,6 @@ item=[parentitem(3)/3  item(2)+item(4)+margin/8 parentitem(3)/3*2 1.5];
 handles.low_contrast_mask_threshold_suggest = uicontrol(handles.uipanel25_7,'Style','pushbutton','String','Suggest threshold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @low_contrast_mask_threshold_suggest_Callback,'Tag','low_contrast_mask_threshold_suggest','TooltipString','');
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-disp('alle elemente hier funktional machen')
-disp('und auch ausblenden wenn enable ausgeschaltet.')
-
-
 %medfilt
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
 handles.mask_medfilt_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_medfilt_enable_3','TooltipString','');
@@ -1055,28 +1042,6 @@ handles.mask_fill_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', '
 
 item=[checkbox_width item(2) filter_text_width 1];
 handles.fill_text_3 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Fill holes','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','fill_text_3');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 %% mask operations apply etc
@@ -2636,8 +2601,6 @@ pointscali=retr('pointscali');
 points_offsetx=retr('points_offsetx');
 points_offsety=retr('points_offsety');
 if numel(pointscali)>0
-	xposition=pointscali(:,1);
-	yposition=pointscali(:,2);
 	caliimg=retr('caliimg');
 	if numel(caliimg)>0
 		pivlab_axis=retr('pivlab_axis');
@@ -2649,14 +2612,10 @@ if numel(pointscali)>0
 	else
 		sliderdisp(retr('pivlab_axis'))
 	end
-	hold on;
-	plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3 , 'tag', 'caliline');
-	plot (xposition,yposition,'y+:', 'tag', 'caliline');
-	hold off;
-	for j=1:2
-		text(xposition(j)+10,yposition(j)+10, ['x:' num2str(round(xposition(j)*10)/10) sprintf('\n') 'y:' num2str(round(yposition(j)*10)/10) ],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'caliline')
-	end
-	text(mean(xposition),mean(yposition), ['s = ' num2str(round((sqrt((xposition(1)-xposition(2))^2+(yposition(1)-yposition(2))^2))*100)/100) ' px'],'color','k','fontsize',7, 'BackgroundColor', 'r', 'tag', 'caliline','horizontalalignment','center')
+
+draw_line_Callback
+
+
 	if numel(points_offsetx)>0 &&  numel(points_offsety)>0
 		delete(findobj('tag','offset_label_x'))
 		delete(findobj('tag','offset_label_y'))
@@ -5714,7 +5673,7 @@ if ok==1
 	%übergeben: Video frame selection
 
 	%ensemble correlation ist anders... Hier müsste für alle frames bereits eine pixelmaske berechnet und übergeben werden.
-	tmp=imread(filepath{1});
+	[tmp,~]=get_img(1);
 
 	masks_in_frame=retr('masks_in_frame');
 	if isempty(masks_in_frame)
@@ -6924,28 +6883,40 @@ if size(filepath,1) >1 || numel(caliimg)>0 || retr('video_selection_done') == 1
 	handles=gethand;
 	toolsavailable(0)
 	delete(findobj('tag', 'caliline'))
-	for i=1:2
-		%roi = drawline(retr('pivlab_axis'));
-		%label mit aktueller länge anzeigen
-		%roi speichern und auch wieder anzeigen wenn in calibration panel. sonst nicht.
-		%listener mit änderungen. Aber nur der Button auf Apply wendet es wirklich an.
-		
-		[xposition(i),yposition(i)] = ginput(1);
-		if numel(caliimg)==0
-			sliderdisp(retr('pivlab_axis'))
+	roi = images.roi.Line;
+	roi.EdgeAlpha=0.75;
+	roi.LabelVisible = 'on';
+	roi.Tag = 'caliline';
+	roi.Color = 'y';
+	roi.StripeColor = 'g';
+	roi.LineWidth = roi.LineWidth*2;
+	Cali_coords = retr('pointscali');
+	if ~isempty(Cali_coords)
+		roi=drawline(retr('pivlab_axis'),'Position',Cali_coords);
+		roi.EdgeAlpha=0.75;
+		roi.LabelVisible = 'on';
+		roi.Tag = 'caliline';
+		original_linewidth=roi.LineWidth;
+		roi.LineWidth = original_linewidth*2;
+		for rep=1:2 %bring users attention to already existing line
+			roi.Color = 'g'; roi.StripeColor = 'y';
+			pause(0.1)
+			roi.Color = 'y'; roi.StripeColor = 'g';
+			pause(0.1)
 		end
-		hold on;
-		plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'caliline');
-		plot (xposition,yposition,'y+:', 'tag', 'caliline');
-		hold off;
-		for j=1:i
-			text(xposition(j)+10,yposition(j)+10, ['x:' num2str(round(xposition(j)*10)/10) sprintf('\n') 'y:' num2str(round(yposition(j)*10)/10) ],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'caliline')
-		end
-
-		put('pointscali',[xposition' yposition']);
+		roi.Color = 'y';
+		roi.StripeColor = 'g';
+		roi.LineWidth = original_linewidth*2;
+		pause(0.1)
+	else
+		axes(retr('pivlab_axis'))
+		draw(roi);
 	end
-	text(mean(xposition),mean(yposition), ['s = ' num2str(round((sqrt((xposition(1)-xposition(2))^2+(yposition(1)-yposition(2))^2))*100)/100) ' px'],'color','k','fontsize',7, 'BackgroundColor', 'r', 'tag', 'caliline','horizontalalignment','center')
-	pixeldist_changed_Callback()
+	addlistener(roi,'MovingROI',@Calibrationevents);
+	addlistener(roi,'DeletingROI',@Calibrationevents);
+	
+	dummyevt.EventName = 'MovingROI';
+	Calibrationevents(roi,dummyevt); %run the moving event once to update displayed length
 	toolsavailable(1)
 end
 
@@ -6977,6 +6948,8 @@ else
 		if numel(pointscali)>0
 			set(handles.pixeldist,'String',num2str(round((sqrt((xposition(1)-xposition(2))^2+(yposition(1)-yposition(2))^2))*100)/100))
 		end
+	else
+		set(handles.pixeldist,'String','1');
 	end
 end
 
@@ -6985,6 +6958,7 @@ end
 function calccali
 put('derived',[]) %calibration makes previously derived params incorrect
 handles=gethand;
+
 pointscali=retr('pointscali');
 if numel(pointscali)>0
 	xposition=pointscali(:,1);
@@ -7059,6 +7033,7 @@ set(handles.time_inp, 'String','1');
 set(handles.x_axis_direction,'value',1);
 set(handles.y_axis_direction,'value',1);
 set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
+pixeldist_changed_Callback
 if size(filepath,1) >1 || retr('video_selection_done') == 1
 	sliderdisp(retr('pivlab_axis'))
 else
@@ -13876,6 +13851,7 @@ switch(evname)
 		bringToFront(src);
 end
 
+
 function mask_import_Callback (~,~,~)
 filepath=retr('filepath');
 if size(filepath,1) > 1 %did the user load images?
@@ -14048,6 +14024,7 @@ function mask_edit_mode_Callback(~,~,~)
 %changes the display mode of the masks.
 %in sliderdisp, the status of the popupmenu is checked, then decides how to plot masks.
 sliderdisp(retr('pivlab_axis'));
+
 
 
 function binarize_enable_Callback(~,~,~)
@@ -14540,14 +14517,17 @@ if get(handles.mask_bright_or_dark,'Value')==1
 	set (handles.uipanel25_3,'Visible','on')
 	set (handles.uipanel25_5,'Visible','off')
 	set (handles.uipanel25_7,'Visible','off')
+	binarize_enable_Callback
 elseif get(handles.mask_bright_or_dark,'Value')==2
 	set (handles.uipanel25_3,'Visible','off')
 	set (handles.uipanel25_5,'Visible','on')
 	set (handles.uipanel25_7,'Visible','off')
+	binarize_enable_2_Callback
 elseif get(handles.mask_bright_or_dark,'Value')==3
 	set (handles.uipanel25_3,'Visible','off')
 	set (handles.uipanel25_5,'Visible','off')
 	set (handles.uipanel25_7,'Visible','on')
+	low_contrast_mask_enable_Callback
 end
 
 function low_contrast_mask_threshold_suggest_Callback(~,~,~)
@@ -14575,4 +14555,30 @@ if size(filepath,1) > 1 %did the user load images?
 
 	[~,~,tresh_suggest,~,~] = PIVlab_image_filter (1,0,x,y,u,v,0,0,rawimage,rawimage,rawimage,rawimage);
 	set (handles.low_contrast_mask_threshold,'String',num2str(tresh_suggest));
+end
+
+function Calibrationevents(src,evt)
+evname = evt.EventName;
+handles=gethand;
+switch(evname)
+	%case{'MovingROI'}
+	%disp(['ROI moving previous position: ' mat2str(evt.PreviousPosition)]);
+	%disp(['ROI moving current position: ' mat2str(evt.CurrentPosition)]);
+	case{'MovingROI'}
+		Cali_coords = src.Position;
+		Cali_length = sqrt((Cali_coords(1,1)-Cali_coords(2,1))^2+(Cali_coords(1,2)-Cali_coords(2,2))^2);
+		
+		if Cali_length < 0.1
+			src.Label = ['Click and drag with the mouse to draw a line'];
+		else
+			src.Label = ['Length :' num2str(Cali_length) ' px'];
+		end
+		put('pointscali',Cali_coords);
+		pixeldist_changed_Callback()
+		if retr('calu') ~=1
+			calccali
+		end
+	case{'DeletingROI'}
+		delete(findobj('tag', 'caliline'))
+		clear_cali_Callback
 end
