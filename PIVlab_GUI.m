@@ -1,9 +1,9 @@
 %% TODO für release 3.0:
 %{
 
-X offset und Y offset werden nicht richtig angezeigt.
-manuelles ändern von reference length funktioniert noch h nicht richtig.
 Testen ob nach laden von seession bzw. settings die Kalibrierung richtig funktioniert.
+Testen ob kalibrierung, offset und achsenumkehr so funktioniert wie in altem pivlab. inkl. Laden und speichern.
+
 
 testen ob masken richtig gezeichnet werden unter den verschiedenen bedingungen (derivatives da, maske da, etc)
 tooltips für alles neue
@@ -1431,11 +1431,9 @@ handles.text27b = uicontrol(handles.uipanel_offsets,'Style','text','String','y i
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 handles.y_axis_direction = uicontrol(handles.uipanel_offsets,'Style','popupmenu','String',{'bottom','top'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','y_axis_direction','TooltipString','Direction of the y axis');
 
-item=[0 item(2)+item(4)+margin/2 parentitem(3)/2 2];
-handles.set_x_offset = uicontrol(handles.uipanel_offsets,'Style','pushbutton','String','Set x offset','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @set_offset_Callback,'Tag','set_x_offset','TooltipString','Click into your calibration image and tell PIVlab what physical x-coordinate this point represents.');
+item=[0 item(2)+item(4)+margin/2 parentitem(3)/1.5 2];
+handles.set_x_offset = uicontrol(handles.uipanel_offsets,'Style','pushbutton','String','Set x & y offsets','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @set_offset_Callback,'Tag','set_x_offset','TooltipString','Click into your calibration image and tell PIVlab what physical x and y coordinates this point represents.');
 
-item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
-handles.set_y_offset = uicontrol(handles.uipanel_offsets,'Style','pushbutton','String','Set y offset','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @set_offset_Callback,'Tag','set_y_offset','TooltipString','Click into your calibration image and tell PIVlab what physical y-coordinate this point represents.');
 item=[0 0 0 0];
 parentitem=get(handles.multip07, 'Position');
 
@@ -2598,8 +2596,7 @@ switchui('multip23')
 function cal_actual_Callback(~, ~, ~) %executed when calibration panel is made visible
 switchui('multip07')
 pointscali=retr('pointscali');
-points_offsetx=retr('points_offsetx');
-points_offsety=retr('points_offsety');
+
 if numel(pointscali)>0
 	caliimg=retr('caliimg');
 	if numel(caliimg)>0
@@ -2613,21 +2610,9 @@ if numel(pointscali)>0
 		sliderdisp(retr('pivlab_axis'))
 	end
 
-draw_line_Callback
+	draw_line_Callback
 
-
-	if numel(points_offsetx)>0 &&  numel(points_offsety)>0
-		delete(findobj('tag','offset_label_x'))
-		delete(findobj('tag','offset_label_y'))
-		hold on;
-		plot (points_offsetx(1),points_offsetx(2),'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'offset_label_x');
-		plot (points_offsetx(1),points_offsetx(2),'y+:', 'tag', 'offset_label_x');
-		plot (points_offsety(1),points_offsety(2),'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'offset_label_y');
-		plot (points_offsety(1),points_offsety(2),'y+:', 'tag', 'offset_label_y');
-		hold off;
-		text(points_offsetx(1)+10,points_offsetx(2)+10, ['x reference:' num2str(round(points_offsetx(1)*10)/10) ' px'],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'offset_label_x')
-		text(points_offsety(1)+10,points_offsety(2)+10, ['y reference:' num2str(round(points_offsety(2)*10)/10) ' px'],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'offset_label_y')
-	end
+	Update_Offset_Display;
 	handles=gethand;
 	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','on')
 else %no calibration performed yet
@@ -6932,12 +6917,12 @@ if exist('src','var')
 
 		yposition(1)=spacing_to_border;
 		yposition(2)=spacing_to_border;
-		hold on;
-		plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'caliline');
-		plot (xposition,yposition,'y+:', 'tag', 'caliline');
-		hold off;
-		text(mean(xposition),mean(yposition), ['s = ' num2str(round((sqrt((xposition(1)-xposition(2))^2+(yposition(1)-yposition(2))^2))*100)/100) ' px'],'color','k','fontsize',7, 'BackgroundColor', 'r', 'tag', 'caliline','horizontalalignment','center')
+		
+		
 		put('pointscali',[xposition' yposition']);
+		
+		draw_line_Callback
+
 	end
 else
 	handles=gethand;
@@ -6952,9 +6937,6 @@ else
 		set(handles.pixeldist,'String','1');
 	end
 end
-
-
-
 function calccali
 put('derived',[]) %calibration makes previously derived params incorrect
 handles=gethand;
@@ -7004,6 +6986,7 @@ if numel(pointscali)>0
 	offset_y_true = retr('offset_y_true');
 
 	update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles);
+	
 	%sliderdisp(retr('pivlab_axis'))
 
 else %no calibration performed yet
@@ -7670,6 +7653,7 @@ end
 
 function apply_cali_Callback(~, ~, ~)
 calccali
+Update_Offset_Display
 
 function apply_deriv_all_Callback(~, ~, ~)
 handles=gethand;
@@ -10960,13 +10944,14 @@ function zoomcontext(~,~)
 handles=gethand;
 setappdata(getappdata(0,'hgui'),'xzoomlimit',[]);
 setappdata(getappdata(0,'hgui'),'yzoomlimit',[]);
-zoom reset
+%zoom reset
+zoom out
 set(handles.zoomon,'Value',0);
 set(handles.panon,'Value',0);
 zoom(gca,'off')
 pan(gca,'off')
 
-sliderdisp(retr('pivlab_axis'));
+%sliderdisp(retr('pivlab_axis'));
 
 function zoomon_Callback(hObject, ~, ~)
 hgui=getappdata(0,'hgui');
@@ -10976,31 +10961,28 @@ if get(hObject,'Value')==1
 	hZMenu = uimenu('Parent',hCMZ,'Label','Reset Zoom / Pan','Callback',@zoomcontext);
 	hZoom=zoom(gcf);
 	hZoom.UIContextMenu = hCMZ;
-	zoom(gca,'on')
+	zoom(retr('pivlab_axis'),'on')
 	set(handles.panon,'Value',0);
 else
-	zoom(gca,'off')
-	put('xzoomlimit', get (gca, 'xlim'));
-	put('yzoomlimit', get (gca, 'ylim'));
-
+	zoom(retr('pivlab_axis'),'off')
+	put('xzoomlimit', get (retr('pivlab_axis'), 'xlim'));
+	put('yzoomlimit', get (retr('pivlab_axis'), 'ylim'));
 end
 
 function panon_Callback(hObject, ~, ~)
 
 handles=gethand;
 if get(hObject,'Value')==1
-
 	hCMP = uicontextmenu;
 	hPMenu = uimenu('Parent',hCMP,'Label','Reset Pan / Zoom','Callback',@zoomcontext);
 	hPan=pan(gcf);
 	hPan.UIContextMenu = hCMP;
-	pan(gca,'on')
+	pan(retr('pivlab_axis'),'on')
 	set(handles.zoomon,'Value',0);
 else
-	pan(gca,'off')
-	put('xzoomlimit', get (gca, 'xlim'));
-	put('yzoomlimit', get (gca, 'ylim'));
-
+	pan(retr('pivlab_axis'),'off')
+	put('xzoomlimit', get (retr('pivlab_axis'), 'xlim'));
+	put('yzoomlimit', get (retr('pivlab_axis'), 'ylim'));
 end
 
 function paraview_current_Callback(~, ~, ~)
@@ -11252,7 +11234,7 @@ handles=gethand;
 set(handles.interpol_missing,'Value',get(hObject,'Value'));
 set(handles.interpol_missing2,'Value',get(hObject,'Value'));
 
-function set_offset_Callback (hObject,~,~)
+function set_offset_Callback (~,~,~)
 %calxy=retr('calxy');
 filepath=retr('filepath');
 caliimg=retr('caliimg');
@@ -11261,54 +11243,53 @@ if numel(caliimg)==0 && size(filepath,1) >1
 end
 if size(filepath,1) >1 || numel(caliimg)>0 || retr('video_selection_done') == 1
 	handles=gethand;
+	delete(findobj('tag', 'offsetroi'))
 	toolsavailable(0)
-	[xposition,yposition] = ginput(1);
-	hold on;
-	plot (xposition,yposition,'y.', 'markersize', 20,'LineWidth',3, 'tag', 'offset_label_x');
-	hold off;
-	if numel(caliimg)==0
-		sliderdisp(retr('pivlab_axis'))
-	end
-	if strcmp(get(hObject,'tag'),'set_x_offset')
-		offset_dim='x';
-	else
-		offset_dim='y';
-	end
-	prompt =['Enter true ' offset_dim ' coordinate in mm:'];
-	dlgtitle = ['Set ' offset_dim ' offset'];
-	definput = {'0'};
-	answer = inputdlg(prompt,dlgtitle,[1 40],definput);
-	if ~isempty(answer)
-		answer{1} = regexprep(answer{1}, ',', '.');
-		if strcmp(get(hObject,'tag'),'set_x_offset')
-			points_offsetx = [xposition,yposition,str2num(answer{1})];
-			put('points_offsetx',points_offsetx);
-		else
-			points_offsety = [xposition,yposition,str2num(answer{1})];
-			put('points_offsety',points_offsety);
-		end
-	end
-	if strcmp(get(hObject,'tag'),'set_x_offset')
-		delete(findobj('tag','offset_label_x'))
-		y_limits=get(gca,'ylim');
-		hold on;
-		plot([xposition xposition],y_limits, 'y-','tag', 'offset_label_x')
-		%plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'offset_label_x');
-		plot (xposition,yposition,'r+:', 'tag', 'offset_label_x');
-		hold off;
-		text(xposition+10,yposition+10, ['x reference:' num2str(round(xposition*10)/10) ' px'],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'offset_label_x')
-	else
-		delete(findobj('tag','offset_label_y'))
-		x_limits=get(gca,'xlim');
-		hold on;
-		plot(x_limits,[yposition yposition], 'y-','tag', 'offset_label_y')
-		%plot (xposition,yposition,'ro-', 'markersize', 10,'LineWidth',3, 'tag', 'offset_label_y');
-		plot (xposition,yposition,'r+:', 'tag', 'offset_label_y');
-		hold off;
-		text(xposition+10,yposition+10, ['y reference:' num2str(round(yposition*10)/10) ' px'],'color','y','fontsize',7, 'BackgroundColor', 'k', 'tag', 'offset_label_y')
-	end
-	toolsavailable(1)
 
+	points_offsetx = retr('points_offsetx');
+	points_offsety = retr('points_offsety');
+
+	
+	roi = images.roi.Crosshair;
+	roi.EdgeAlpha=0.75;
+	roi.LabelVisible = 'on';
+	roi.Tag = 'offsetroi';
+	roi.Color = 'y';
+	roi.LineWidth = 1;
+	axes(retr('pivlab_axis'))
+	draw(roi);
+
+	addlistener(roi,'MovingROI',@Offsetselectionevents);
+	addlistener(roi,'DeletingROI',@Offsetselectionevents);
+
+	prompt =['Enter true X coordinate in mm:'];
+	dlgtitle = ['Set X offset'];
+	if isempty (points_offsetx)
+		definput = {'0'};
+	else
+		definput = {num2str(points_offsetx(3))};
+	end
+	answer_x = inputdlg(prompt,dlgtitle,[1 40],definput);
+	prompt =['Enter true Y coordinate in mm:'];
+	dlgtitle = ['Set Y offset'];
+	if isempty (points_offsety)
+		definput = {'0'};
+	else
+		definput = {num2str(points_offsety(3))};
+	end
+	answer_y = inputdlg(prompt,dlgtitle,[1 40],definput);
+	if ~isempty(answer_x) && ~isempty(answer_y)
+		answer_x{1} = regexprep(answer_x{1}, ',', '.');
+		answer_y{1} = regexprep(answer_y{1}, ',', '.');
+		points_offsetx = [roi.Position(1),roi.Position(2),str2num(answer_x{1})];
+		put('points_offsetx',points_offsetx);
+		points_offsety = [roi.Position(1),roi.Position(2),str2num(answer_y{1})];
+		put('points_offsety',points_offsety);
+	end
+	dummyevt.EventName = 'MovingROI';
+	Offsetselectionevents(roi,dummyevt); %run the moving event once to update displayed length
+	calccali
+	toolsavailable(1)
 end
 
 function offset = calculate_offset_axis (axis,pixel_position,true_position)
@@ -14581,4 +14562,60 @@ switch(evname)
 	case{'DeletingROI'}
 		delete(findobj('tag', 'caliline'))
 		clear_cali_Callback
+end
+
+function Offsetselectionevents(src,evt)
+evname = evt.EventName;
+handles=gethand;
+switch(evname)
+	%case{'MovingROI'}
+	%disp(['ROI moving previous position: ' mat2str(evt.PreviousPosition)]);
+	%disp(['ROI moving current position: ' mat2str(evt.CurrentPosition)]);
+	case{'MovingROI'}
+		Offset_coords = src.Position;
+			points_offsetx=retr('points_offsetx');
+			points_offsety=retr('points_offsety');
+			if numel(points_offsetx)==0
+				old_true_offsetx=0;
+			else
+				old_true_offsetx=points_offsetx(3);
+			end
+			if numel(points_offsety)==0
+				old_true_offsety=0;
+			else
+				old_true_offsety=points_offsety(3);
+			end
+
+			if ~isempty(points_offsetx)
+				src.Label = ['X: ' num2str(round(src.Position(1),1)) ' px = ' num2str(old_true_offsetx) ' mm ; Y: ' num2str(round(src.Position(2),1)) ' px = ' num2str(old_true_offsety) ' mm'];
+			end
+			put('points_offsetx',[src.Position(1),src.Position(2),old_true_offsetx]);
+			put('points_offsety',[src.Position(1),src.Position(2),old_true_offsety]);
+		if retr('calu') ~=1
+			calccali
+		end
+	case{'DeletingROI'}
+		delete(findobj('tag', 'offsetroi'))
+		put('points_offsetx',[]);
+		put('points_offsety',[]);
+		calccali
+end
+
+function Update_Offset_Display
+delete(findobj('tag', 'offsetroi'))
+points_offsetx=retr('points_offsetx');
+points_offsety=retr('points_offsety');
+if numel(points_offsetx)>0 &&  numel(points_offsety)>0
+	roi=drawcrosshair(retr('pivlab_axis'),'Position',[points_offsetx(1), points_offsetx(2)]);
+	roi.EdgeAlpha=0.75;
+	roi.LabelVisible = 'on';
+	roi.Tag = 'offsetroi';
+	roi.Color = 'y';
+	roi.LineWidth = 1;
+	%roi.InteractionsAllowed='none';
+	
+	addlistener(roi,'MovingROI',@Offsetselectionevents);
+	addlistener(roi,'DeletingROI',@Offsetselectionevents);
+	dummyevt.EventName = 'MovingROI';
+	Offsetselectionevents(roi,dummyevt); %run the moving event once to update displayed length
 end
