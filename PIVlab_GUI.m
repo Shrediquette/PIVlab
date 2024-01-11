@@ -4,16 +4,17 @@
 
 Bugs:
 ------
+Zoom: Soll ohne finales sliderdisp auskommen, weil sonst die gerade bearbeiteten ROIs verschwinden. Wie...?
+Apply preferences geht nicht, wahrscheinlich wegen handles die nicht refreshen.
 Wenn man mittelwert berechnet von bildern mit maske, wird keine maske angezeigt. in den derivatives --> OK
 Wenn man session mit masken lädt werden die masken nicht angezeigt --> OK
-
-Import pixel mask: Wird nicht in den aktuellen Frame geladen, sondern in ersten Frame immer.
+Import pixel mask: Wird nicht in den aktuellen Frame geladen, sondern in ersten Frame immer. --> OK
 
 Tests:
 -------
 Testen ob nach laden von seession bzw. settings die Kalibrierung richtig funktioniert.  --> OK
 Testen ob kalibrierung, offset und achsenumkehr so funktioniert wie in altem pivlab. inkl. Laden und speichern. --> OK
-testen ob masken richtig gezeichnet werden unter den verschiedenen bedingungen (derivatives da, maske da, etc) --> NOT OK
+testen ob masken richtig gezeichnet werden unter den verschiedenen bedingungen (derivatives da, maske da, etc) --> OK
 
 Features:
 ----------
@@ -23,9 +24,10 @@ tooltips für alles neue
 command line neue maske implementieren (DCC und FFT)
 ...-> und dazu gleich ein livescript...
 wäre gut: nanmin, nanmax, nanstd, nanmean aus Projekt entfernen. Editorsuche nach dateien die das beinhalten. Breakpoints setzen und testen ob gleiches Ergebnis kommt mit "omitnan".
+Alle Funktionen umbenennen mit sinnvollen namen. Apply_Cali_Callback z.B. zu calibration_apply,  autocrop zu exportimage_autocrop vlear_roi zu roi_clear   dispStaticRoi zu roi_displaystatic etc...
 Neues example Video (copter durch wald / Beine)
 fancy splash screen mit Pixelbildern die gezeigt werden die Status anzeigen? Aus Mat datei laden... Und bei Fehler / warnung auf commandwindow verweisen.
-
+logo richtig animiert programmatisch..
 %}
 
 % PIVlab - Digital Particle Image Velocimetry Tool for MATLAB
@@ -714,16 +716,16 @@ item=[parentitem(3)/4*3 item(2) parentitem(3)/3 1.5];
 handles.text158 = uicontrol(handles.uipanel5,'Style','text','units','characters','Horizontalalignment', 'left','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','height:');
 
 item=[parentitem(3)/4*0+margin item(2)+item(4) parentitem(3)/4 1.5];
-handles.ROI_Man_x = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_x','Callback',@ROI_Man_x_Callback);
+handles.ROI_Man_x = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_x','Callback',@Man_ROI_Callback);
 
 item=[parentitem(3)/4*1+margin item(2) parentitem(3)/4 1.5];
-handles.ROI_Man_y = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_y','Callback',@ROI_Man_y_Callback);
+handles.ROI_Man_y = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_y','Callback',@Man_ROI_Callback);
 
 item=[parentitem(3)/4*2+margin item(2) parentitem(3)/4 1.5];
-handles.ROI_Man_w = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_w','Callback',@ROI_Man_w_Callback);
+handles.ROI_Man_w = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_w','Callback',@Man_ROI_Callback);
 
 item=[parentitem(3)/4*3+margin item(2) parentitem(3)/4 1.5];
-handles.ROI_Man_h = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_h','Callback',@ROI_Man_h_Callback);
+handles.ROI_Man_h = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_h','Callback',@Man_ROI_Callback);
 
 
 %% Multip25 (new mask)
@@ -1166,7 +1168,7 @@ item=[0 item(2)+item(4) parentitem(3)/4 1.5];
 handles.textSuggest = uicontrol(handles.multip04,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Help:','tag','textSuggest');
 
 item=[parentitem(3)/4 item(2) parentitem(3)/1.85 1.5];
-handles.SuggestSettings = uicontrol(handles.multip04,'Style','pushbutton','String','Suggest settings','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @countparticles,'Tag','SuggestSettings','TooltipString','Suggest PIV settings based on image data in current frame');
+handles.SuggestSettings = uicontrol(handles.multip04,'Style','pushbutton','String','Suggest settings','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @SuggestPIVsettings,'Tag','SuggestSettings','TooltipString','Suggest PIV settings based on image data in current frame');
 
 item=[0 item(2)+item(4) parentitem(3) 6.5];
 handles.uipanel35 = uipanel(handles.multip04, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','PIV algorithm', 'Tag','uipanel35','fontweight','bold');
@@ -3592,7 +3594,7 @@ if capturing==0
 
 		roirect=retr('roirect');
 		if size(roirect,2)>1
-			dispROI(target_axis);
+			dispStaticROI(target_axis);
 		end
 
 		resultslist=retr('resultslist');
@@ -4661,39 +4663,40 @@ if size(filepath,1) > 1 || retr('video_selection_done') == 1
 	toggler=retr('toggler');
 	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
 	filepath=retr('filepath');
-
-	roirect = round(getrect(retr('pivlab_axis')));
-	if roirect(1,3)~=0 && roirect(1,4)~=0
-		[currentimage_dummy,~]=get_img(selected);
-		imagesize(1)=size(currentimage_dummy,1);
-		imagesize(2)=size(currentimage_dummy,2);
-		if roirect(1)<1
-			roirect(1)=1;
-		end
-		if roirect(2)<1
-			roirect(2)=1;
-		end
-		if roirect(3)>imagesize(2)-roirect(1)
-			roirect(3)=imagesize(2)-roirect(1);
-		end
-		if roirect(4)>imagesize(1)-roirect(2)
-			roirect(4)=imagesize(1)-roirect(2);
-		end
-		put ('roirect',roirect);
-		dispROI(retr('pivlab_axis'))
-
-		set(handles.roi_hint, 'String', 'ROI active' , 'backgroundcolor', [0.5 1 0.5]);
+	delete(findobj('tag', 'RegionOfInterest'));
+	roi = images.roi.Rectangle;
+	roi.EdgeAlpha=0.75;
+	roi.FaceAlpha=0.05;
+	roi.LabelVisible = 'on';
+	roi.Tag = 'RegionOfInterest';
+	roi.Color = 'g';
+	roi.StripeColor = 'k';
+	roirect = retr('roirect');
+	delete(findobj('tag', 'roiplot'));
+	if ~isempty(roirect)
+		roi=drawrectangle(retr('pivlab_axis'),'Position',roirect);
+		roi.EdgeAlpha=0.75;
+			roi.FaceAlpha=0.05;
+		roi.LabelVisible = 'on';
+		roi.Tag = 'RegionOfInterest';
+		roi.Color = 'g';
+		roi.StripeColor = 'k';
 	else
-		text(50,50,'Invalid selection: Click and hold left mouse button to create a rectangle.','color','r','fontsize',8, 'BackgroundColor', 'k','tag','warning');
+		axes(retr('pivlab_axis'))
+		draw(roi);
 	end
+	addlistener(roi,'MovingROI',@RegionOfInterestevents);
+	addlistener(roi,'DeletingROI',@RegionOfInterestevents);
+	dummyevt.EventName = 'MovingROI';
+	RegionOfInterestevents(roi,dummyevt); %run the moving event once to update displayed length
+	%put ('roirect',roi.Position);
 	toolsavailable(1);
 end
 
 function clear_roi_Callback(~, ~, ~)
 handles=gethand;
-delete(findobj(gca,'tag', 'roiplot'));
-delete(findobj(gca,'tag', 'roitext'));
-delete(findobj('tag','warning'));
+delete(findobj('tag', 'RegionOfInterest'))
+delete(findobj('tag', 'roiplot'));
 put ('roirect',[]);
 set(handles.roi_hint, 'String', 'ROI inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
 set(handles.ROI_Man_x,'String','');
@@ -4701,19 +4704,24 @@ set(handles.ROI_Man_y,'String','');
 set(handles.ROI_Man_w,'String','');
 set(handles.ROI_Man_h,'String','');
 
-function dispROI(target_axis)
+
+function updateROIinfo
 handles=gethand;
 roirect=retr('roirect');
-x=[roirect(1)  roirect(1)+roirect(3) roirect(1)+roirect(3)  roirect(1)            roirect(1) ];
-y=[roirect(2)  roirect(2)            roirect(2)+roirect(4)  roirect(2)+roirect(4) roirect(2) ];
-delete(findobj(target_axis,'tag', 'roiplot'));
-delete(findobj(target_axis,'tag', 'roitext'));
-rectangle('Position',roirect,'LineWidth',1,'LineStyle','-','edgecolor','b','tag','roiplot','parent',target_axis)
-rectangle('Position',roirect,'LineWidth',1,'LineStyle',':','edgecolor','y','tag','roiplot','parent',target_axis)
 set(handles.ROI_Man_x,'String',int2str(roirect(1)));
 set(handles.ROI_Man_y,'String',int2str(roirect(2)));
 set(handles.ROI_Man_w,'String',int2str(roirect(3)));
 set(handles.ROI_Man_h,'String',int2str(roirect(4)));
+set(handles.roi_hint, 'String', 'ROI active' , 'backgroundcolor', [0.5 1 0.5]);
+
+function dispStaticROI(target_axis)
+handles=gethand;
+delete(findobj(target_axis,'tag', {'RegionOfInterest' 'roiplot'}));
+roirect=retr('roirect');
+x=[roirect(1)  roirect(1)+roirect(3) roirect(1)+roirect(3)  roirect(1)            roirect(1) ];
+y=[roirect(2)  roirect(2)            roirect(2)+roirect(4)  roirect(2)+roirect(4) roirect(2) ];
+rectangle('Position',roirect,'LineWidth',1,'LineStyle','-','edgecolor','b','tag','roiplot')
+rectangle('Position',roirect,'LineWidth',1,'LineStyle',':','edgecolor','y','tag','roiplot')
 
 
 function preview_preprocess_Callback(~, ~, ~)
@@ -4756,7 +4764,7 @@ if size(filepath,1) >1 || retr('video_selection_done') == 1
 	set(gca,'xtick',[]);
 	roirect=retr('roirect');
 	if size(roirect,2)>1
-		dispROI(retr('pivlab_axis'))
+		dispStaticROI(retr('pivlab_axis'))
 	end
 	currentframe=2*floor(get(handles.fileselector, 'value'))-1;
 end
@@ -4958,20 +4966,23 @@ if numel(filepath)>1
 
 end
 
-function countparticles(~, ~, ~)
+function SuggestPIVsettings(~, ~, ~)
 handles=gethand;
-
 selected=2*floor(get(handles.fileselector, 'value'))-1;
 filepath=retr('filepath');
 ok=checksettings;
 if ok==1
 	uiwait(msgbox({'Please select a rectangle';'that encloses the area that';'you want to analyze.'},'Suggestion for PIV settings','modal'));
-	roirect=retr('roirect');
-	old_roirect=roirect;
-	roirect=[];
-	put ('roirect',roirect);
-	roi_select_Callback()
-	roirect=retr('roirect');
+	roi = images.roi.Rectangle;
+	roi.EdgeAlpha=0.75;
+	roi.LabelVisible = 'on';
+	roi.Tag = 'suggestRect';
+	roi.Color = 'r';
+	roi.StripeColor = 'k';
+	axes(retr('pivlab_axis'))
+	draw(roi);
+	roirect=roi.Position;
+
 	if numel(roirect) == 4
 		%roirect(1,3)~=0 && roirect(1,4)~=0
 		if roirect(3) < 50 || roirect(4)< 50
@@ -5006,8 +5017,8 @@ if ok==1
 			B = PIVlab_preproc (B,[],clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 
 			interrogationarea=round(min(size(A))/4);
-			if interrogationarea > 64
-				interrogationarea = 64;
+			if interrogationarea > 128
+				interrogationarea = 128;
 			end
 			step=round(interrogationarea/4);
 			if step < 6
@@ -5063,14 +5074,9 @@ if ok==1
 			step_Callback(handles.step)
 			dispinterrog
 			delete(findobj('tag','hint'));
-
 		end
 	end
-	roirect=old_roirect;
-	put ('roirect',roirect);
-	if size(roirect,2)>1
-		dispROI(retr('pivlab_axis'))
-	end
+	delete(findobj('Tag','suggestRect'));
 end
 
 function intarea_Callback(~, ~, ~)
@@ -6906,7 +6912,7 @@ if size(filepath,1) >1 || numel(caliimg)>0 || retr('video_selection_done') == 1
 	end
 	addlistener(roi,'MovingROI',@Calibrationevents);
 	addlistener(roi,'DeletingROI',@Calibrationevents);
-	
+
 	dummyevt.EventName = 'MovingROI';
 	Calibrationevents(roi,dummyevt); %run the moving event once to update displayed length
 	toolsavailable(1)
@@ -6924,10 +6930,10 @@ if exist('src','var')
 
 		yposition(1)=spacing_to_border;
 		yposition(2)=spacing_to_border;
-		
-		
+
+
 		put('pointscali',[xposition' yposition']);
-		
+
 		draw_line_Callback
 
 	end
@@ -6993,7 +6999,7 @@ if numel(pointscali)>0
 	offset_y_true = retr('offset_y_true');
 
 	update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles);
-	
+
 	%sliderdisp(retr('pivlab_axis'))
 
 else %no calibration performed yet
@@ -10859,7 +10865,7 @@ else
 	set (handles.epsfilesave, 'value', 1);
 end
 
-function zoomcontext(~,~)
+function zoom_reset_zoom(~,~)
 handles=gethand;
 setappdata(getappdata(0,'hgui'),'xzoomlimit',[]);
 setappdata(getappdata(0,'hgui'),'yzoomlimit',[]);
@@ -10869,15 +10875,16 @@ set(handles.zoomon,'Value',0);
 set(handles.panon,'Value',0);
 zoom(gca,'off')
 pan(gca,'off')
-
-%sliderdisp(retr('pivlab_axis'));
+expected_image_size=retr('expected_image_size');
+set(retr('pivlab_axis'),'xlim',[0.5 expected_image_size(2)+0.5])
+set(retr('pivlab_axis'),'ylim',[0.5 expected_image_size(1)+0.5])
 
 function zoomon_Callback(hObject, ~, ~)
 hgui=getappdata(0,'hgui');
 handles=gethand;
 if get(hObject,'Value')==1
 	hCMZ = uicontextmenu;
-	hZMenu = uimenu('Parent',hCMZ,'Label','Reset Zoom / Pan','Callback',@zoomcontext);
+	hZMenu = uimenu('Parent',hCMZ,'Label','Reset Zoom / Pan','Callback',@zoom_reset_zoom);
 	hZoom=zoom(gcf);
 	hZoom.UIContextMenu = hCMZ;
 	zoom(retr('pivlab_axis'),'on')
@@ -10889,11 +10896,10 @@ else
 end
 
 function panon_Callback(hObject, ~, ~)
-
 handles=gethand;
 if get(hObject,'Value')==1
 	hCMP = uicontextmenu;
-	hPMenu = uimenu('Parent',hCMP,'Label','Reset Pan / Zoom','Callback',@zoomcontext);
+	hPMenu = uimenu('Parent',hCMP,'Label','Reset Pan / Zoom','Callback',@zoom_reset_zoom);
 	hPan=pan(gcf);
 	hPan.UIContextMenu = hCMP;
 	pan(retr('pivlab_axis'),'on')
@@ -10948,7 +10954,7 @@ catch
 	disp('http://PIVlab.blogspot.de')
 end
 
-function Man_ROI_Callback
+function Man_ROI_Callback(~,~,~)
 handles=gethand;
 try
 	x=round(str2num(get(handles.ROI_Man_x,'String')));
@@ -10962,13 +10968,7 @@ if isempty(x)== 0 && isempty(y)== 0 && isempty(w)== 0 && isempty(h)== 0 && isnum
 	roirect(2)=y;
 	roirect(3)=w;
 	roirect(4)=h;
-
-	toggler=retr('toggler');
-	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-	filepath=retr('filepath');
-	[dummy_image,~]=get_img(selected);
-	imagesize(1)=size(dummy_image,1);
-	imagesize(2)=size(dummy_image,2);
+	imagesize=retr('expected_image_size');
 	if roirect(1)<1
 		roirect(1)=1;
 	end
@@ -10982,21 +10982,9 @@ if isempty(x)== 0 && isempty(y)== 0 && isempty(w)== 0 && isempty(h)== 0 && isnum
 		roirect(4)=imagesize(1)-roirect(2);
 	end
 	put ('roirect',roirect);
-	dispROI(retr('pivlab_axis'))
-	set(handles.roi_hint, 'String', 'ROI active' , 'backgroundcolor', [0.5 1 0.5]);
+	roi_select_Callback
 end
 
-function ROI_Man_x_Callback(~, ~, ~)
-Man_ROI_Callback
-
-function ROI_Man_y_Callback(~, ~, ~)
-Man_ROI_Callback
-
-function ROI_Man_w_Callback(~, ~, ~)
-Man_ROI_Callback
-
-function ROI_Man_h_Callback(~, ~, ~)
-Man_ROI_Callback
 
 function howtocite_Callback(~, ~, ~)
 PIVlab_citing
@@ -11168,7 +11156,7 @@ if size(filepath,1) >1 || numel(caliimg)>0 || retr('video_selection_done') == 1
 	points_offsetx = retr('points_offsetx');
 	points_offsety = retr('points_offsety');
 
-	
+
 	roi = images.roi.Crosshair;
 	roi.EdgeAlpha=0.75;
 	roi.LabelVisible = 'on';
@@ -13471,12 +13459,12 @@ if 	render_mask==1 && get(handles.mask_edit_mode,'Value')==2 %mask preview mode
 	x=[1 mask_dimensions(2)];
 	y=[1,mask_dimensions(1)];
 	skip_mask_pixels = round(0.0000020*mask_dimensions(1)*mask_dimensions(2) - 7); %reduce the amount of pixels displayed for the mask to save render time.
-if skip_mask_pixels>5
-	skip_mask_pixels=5;
-end
-if skip_mask_pixels<1
-	skip_mask_pixels=1;
-end
+	if skip_mask_pixels>5
+		skip_mask_pixels=5;
+	end
+	if skip_mask_pixels<1
+		skip_mask_pixels=1;
+	end
 	hold on;
 	image(x,y,cat(3, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.7, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1), 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*(1-(str2num(get(handles.masktransp,'String'))/100)));
 	hold off
@@ -13620,7 +13608,7 @@ if size(filepath,1) > 1 %did the user load images?
 	roi.Tag = guid; %unique id for every ROImask object.
 	%addlistener(roi,'MovingROI',@ROIevents);
 	toolsavailable(0)
-	
+
 	draw(roi);
 	addlistener(roi,'ROIMoved',@ROIevents);
 	addlistener(roi,'DeletingROI',@ROIevents);
@@ -14299,7 +14287,7 @@ if mask_generator_settings.low_contrast_mask_enable
 	u=zeros(size(x));
 	v=u;
 	[~,~,~,piv_image_3,~] = PIVlab_image_filter (1,0,x,y,u,v,0,0,piv_image_3,piv_image_3,piv_image_3,piv_image_3);
-	
+
 	if mask_generator_settings.mask_medfilt_enable_3
 		median_size = str2double(mask_generator_settings.median_size_3);
 		piv_image_3=medfilt2(piv_image_3,[median_size median_size]);
@@ -14452,7 +14440,7 @@ switch(evname)
 	case{'MovingROI'}
 		Cali_coords = src.Position;
 		Cali_length = sqrt((Cali_coords(1,1)-Cali_coords(2,1))^2+(Cali_coords(1,2)-Cali_coords(2,2))^2);
-		
+
 		if Cali_length < 0.1
 			src.Label = ['Click and drag with the mouse to draw a line'];
 		else
@@ -14477,24 +14465,24 @@ switch(evname)
 	%disp(['ROI moving current position: ' mat2str(evt.CurrentPosition)]);
 	case{'MovingROI'}
 		Offset_coords = src.Position;
-			points_offsetx=retr('points_offsetx');
-			points_offsety=retr('points_offsety');
-			if numel(points_offsetx)==0
-				old_true_offsetx=0;
-			else
-				old_true_offsetx=points_offsetx(3);
-			end
-			if numel(points_offsety)==0
-				old_true_offsety=0;
-			else
-				old_true_offsety=points_offsety(3);
-			end
+		points_offsetx=retr('points_offsetx');
+		points_offsety=retr('points_offsety');
+		if numel(points_offsetx)==0
+			old_true_offsetx=0;
+		else
+			old_true_offsetx=points_offsetx(3);
+		end
+		if numel(points_offsety)==0
+			old_true_offsety=0;
+		else
+			old_true_offsety=points_offsety(3);
+		end
 
-			if ~isempty(points_offsetx)
-				src.Label = ['X: ' num2str(round(src.Position(1),1)) ' px = ' num2str(old_true_offsetx) ' mm ; Y: ' num2str(round(src.Position(2),1)) ' px = ' num2str(old_true_offsety) ' mm'];
-			end
-			put('points_offsetx',[src.Position(1),src.Position(2),old_true_offsetx]);
-			put('points_offsety',[src.Position(1),src.Position(2),old_true_offsety]);
+		if ~isempty(points_offsetx)
+			src.Label = ['X: ' num2str(round(src.Position(1),1)) ' px = ' num2str(old_true_offsetx) ' mm ; Y: ' num2str(round(src.Position(2),1)) ' px = ' num2str(old_true_offsety) ' mm'];
+		end
+		put('points_offsetx',[src.Position(1),src.Position(2),old_true_offsetx]);
+		put('points_offsety',[src.Position(1),src.Position(2),old_true_offsety]);
 		if retr('calu') ~=1
 			calccali
 		end
@@ -14503,6 +14491,47 @@ switch(evname)
 		put('points_offsetx',[]);
 		put('points_offsety',[]);
 		calccali
+end
+
+function RegionOfInterestevents(src,evt)
+evname = evt.EventName;
+handles=gethand;
+switch(evname)
+	%case{'MovingROI'}
+	%disp(['ROI moving previous position: ' mat2str(evt.PreviousPosition)]);
+	%disp(['ROI moving current position: ' mat2str(evt.CurrentPosition)]);
+	case{'MovingROI'}
+		imagesize=retr('expected_image_size');
+		roirect = round(src.Position);
+
+		if roirect(1)<1
+			roirect(1)=1;
+		end
+		if roirect(2)<1
+			roirect(2)=1;
+		end
+		if roirect(3)>imagesize(2)-roirect(1)
+			roirect(3)=imagesize(2)-roirect(1);
+		end
+		if roirect(4)>imagesize(1)-roirect(2)
+			roirect(4)=imagesize(1)-roirect(2);
+		end
+		if roirect(3)==0 || roirect(4)==0
+			src.Label = ['Click and drag with the mouse to draw a rectangle'];
+			src.Position(3)=50;
+			src.Position(4)=50;
+			pause(1)
+			delete(findobj('tag', 'RegionOfInterest'))
+			clear_roi_Callback
+		else
+			src.Label = ['x: ' num2str(roirect(1)) '   y: ' num2str(roirect(2)) '   w: ' num2str(roirect(3)) '   h: ' num2str(roirect(4))];
+			put('roirect',roirect);
+			updateROIinfo
+		end
+
+	case{'DeletingROI'}
+		delete(findobj('tag', 'RegionOfInterest'))
+		clear_roi_Callback
 end
 
 function Update_Offset_Display
@@ -14517,7 +14546,7 @@ if numel(points_offsetx)>0 &&  numel(points_offsety)>0
 	roi.Color = 'y';
 	roi.LineWidth = 1;
 	%roi.InteractionsAllowed='none';
-	
+
 	addlistener(roi,'MovingROI',@Offsetselectionevents);
 	addlistener(roi,'DeletingROI',@Offsetselectionevents);
 	dummyevt.EventName = 'MovingROI';
