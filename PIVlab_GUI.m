@@ -4,7 +4,7 @@
 
 Bugs:
 ------
-Zoom: Soll ohne finales sliderdisp auskommen, weil sonst die gerade bearbeiteten ROIs verschwinden. Wie...?
+Zoom: Soll ohne finales sliderdisp auskommen, weil sonst die gerade bearbeiteten ROIs verschwinden. Wie...? --> OK
 Apply preferences geht nicht, wahrscheinlich wegen handles die nicht refreshen.
 Wenn man mittelwert berechnet von bildern mit maske, wird keine maske angezeigt. in den derivatives --> OK
 Wenn man session mit masken lädt werden die masken nicht angezeigt --> OK
@@ -18,7 +18,7 @@ testen ob masken richtig gezeichnet werden unter den verschiedenen bedingungen (
 
 Features:
 ----------
-ROI selection mit neuem ROI object typus. funktion roi_select_Callback und darunter.
+ROI selection mit neuem ROI object typus. funktion roi_select_Callback und darunter. --> OK
 Mask modifications in basic mask operation: Smooth, add more waypoints, shrink / extend (extend_mask_Callback)
 tooltips für alles neue
 command line neue maske implementieren (DCC und FFT)
@@ -1067,6 +1067,34 @@ handles.automask_generate_current = uicontrol(handles.uipanel25_2,'Style','pushb
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
 handles.automask_generate_all = uicontrol(handles.uipanel25_2,'Style','pushbutton','String','Make mask for all frames','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @automask_generate_all_Callback,'Tag','automask_generate_all','TooltipString','');
+
+
+
+
+
+
+
+%panel mask modifications
+item=[0 0 0 0];
+parentitem=get(handles.multip25, 'Position');
+item=[0 18 parentitem(3) 6.5];
+handles.uipanel25_9 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Mask modifications', 'Tag','uipanel25_9','fontweight','bold');
+
+item=[0 0 0 0];
+parentitem=get(handles.uipanel25_9, 'Position');
+item=[0 0 parentitem(3)/2 1.5];
+handles.mask_shrink = uicontrol(handles.uipanel25_9,'Style','pushbutton','String','Shrink mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_shrink_grow_Callback,'Tag','mask_shrink','TooltipString','');
+
+item=[0+item(3) item(2) parentitem(3)/2 1.5];
+handles.mask_grow = uicontrol(handles.uipanel25_9,'Style','pushbutton','String','Grow mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_shrink_grow_Callback,'Tag','mask_grow','TooltipString','');
+
+item=[0 item(2)+item(4) parentitem(3)/2 1.5];
+handles.mask_subdivide = uicontrol(handles.uipanel25_9,'Style','pushbutton','String','Subdivide','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_subdivide_simplify_Callback,'Tag','mask_subdivide','TooltipString','');
+
+item=[0+item(3) item(2) parentitem(3)/2 1.5];
+handles.mask_simplify = uicontrol(handles.uipanel25_9,'Style','pushbutton','String','Simplify','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_subdivide_simplify_Callback,'Tag','mask_simplify','TooltipString','');
+
+
 
 
 
@@ -13909,9 +13937,11 @@ handles=gethand;
 modus=get(handles.mask_basic_expert,'Value');
 if modus==1 %basic
 	set(handles.uipanel25_1,'Visible','on');
+	set(handles.uipanel25_9,'Visible','on');
 	set(handles.uipanel25_2,'Visible','off');
 elseif modus==2 %expert
 	set(handles.uipanel25_1,'Visible','off');
+	set(handles.uipanel25_9,'Visible','off');
 	set(handles.uipanel25_2,'Visible','on');
 end
 
@@ -14359,30 +14389,6 @@ for ind = 1:numel(blocations)
 	masks_in_frame = update_mask_memory(roi,frame,masks_in_frame);
 end
 
-%{
-function extend_mask_Callback(~,~,~)
-handles=gethand;
-currentframe=floor(get(handles.fileselector, 'value'));
-masks_in_frame=retr('masks_in_frame');
-if isempty(masks_in_frame)
-	%masks_in_frame=cell(currentframe,1);
-	masks_in_frame=cell(1,currentframe);
-end
-if numel(masks_in_frame)<currentframe
-	mask_positions=cell(0);
-else
-	mask_positions=masks_in_frame{currentframe};
-end
-%poly_obj=polyshape(mask_positions{2}(1:end-1,:));
-poly_obj=polyshape(mask_positions{2});
-polyout1 = polybuffer(poly_obj,10,'JointType','miter','MiterLimit',2);
-mask_positions{2}=polyout1.Vertices;
-masks_in_frame{1}=mask_positions;
-put('masks_in_frame',masks_in_frame)
-sliderdisp(retr('pivlab_axis'))
-disp('')
-%}
-
 
 function mask_bright_or_dark_Callback(~,~,~)
 handles=gethand;
@@ -14552,3 +14558,63 @@ if numel(points_offsetx)>0 &&  numel(points_offsety)>0
 	dummyevt.EventName = 'MovingROI';
 	Offsetselectionevents(roi,dummyevt); %run the moving event once to update displayed length
 end
+
+function mask_shrink_grow_Callback (~,caller,~)
+disp('mit mehreren masken muss es gehen. Evtl. bei ROICklicked einstellen, dass dieser grad aktiv? ALso die unique nummer setzen als aktives ding. Oder abfragen wer im Vordergrund ist')
+handles=gethand;
+currentframe=floor(get(handles.fileselector, 'value'));
+masks_in_frame=retr('masks_in_frame');
+if isempty(masks_in_frame)
+	%masks_in_frame=cell(currentframe,1);
+	masks_in_frame=cell(1,currentframe);
+end
+if numel(masks_in_frame)<currentframe
+	mask_positions=cell(0);
+else
+	mask_positions=masks_in_frame{currentframe};
+end
+%poly_obj=polyshape(mask_positions{2}(1:end-1,:));
+poly_obj=polyshape(mask_positions{2});
+
+if strcmp (caller.Source.Tag,'mask_shrink')
+	buf=-10;
+end
+if strcmp (caller.Source.Tag,'mask_grow')
+	buf=+10;
+end
+
+
+polyout1 = polybuffer(poly_obj,buf,'JointType','miter','MiterLimit',2);
+mask_positions{2}=polyout1.Vertices;
+masks_in_frame{1}=mask_positions;
+put('masks_in_frame',masks_in_frame)
+sliderdisp(retr('pivlab_axis'))
+disp('')
+
+
+
+
+function mask_subdivide_simplify_Callback (~,caller,~)
+
+
+fpos = roi.Position;
+reduce(roi)
+roi.Waypoints(:) = true;
+roi.UserData.fpos = fpos;
+roi.UserData.tol = 0;
+
+roi.Position = roi.UserData.fpos;
+tol = roi.UserData.tol + 0.01 * (evt.VerticalScrollCount);
+
+reduce(roi,tol);
+roi.UserData.tol = tol;
+roi.Waypoints(:) = true;
+
+%roi.Waypoints(:)=true bei subdivide einfach immer mehr waypoints aktivieren.
+
+
+
+
+
+strcmp (caller.Source.Tag,'mask_subdivide')
+strcmp (caller.Source.Tag,'mask_simplify')
