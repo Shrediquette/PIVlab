@@ -4,8 +4,8 @@
 
 Bugs:
 ------
-Wenn man mittelwert berechnet von bildern mit maske, wird keine maske angezeigt. in den derivatives
---> temporal_operation_Callback
+Wenn man mittelwert berechnet von bildern mit maske, wird keine maske angezeigt. in den derivatives --> OK
+
 
 Wenn man session mit masken lädt werden die masken nicht angezeigt --> doch, warum erst nicht...?
 Import pixel mask: Wird nicht in den aktuellen Frame geladen, sondern in ersten Frame immer.
@@ -355,7 +355,7 @@ m2 = uimenu(m1,'Label','Load');
 uimenu(m2,'Label','Import PIVlab settings','Callback',@load_settings_Callback);
 uimenu(m2,'Label','Load PIVlab session','Separator','on','Callback',@load_session_Callback);
 m3 = uimenu(m1,'Label','Save');
-uimenu(m3,'Label','Save current PIVlab settings','Callback',@curr_settings_Callback);
+uimenu(m3,'Label','Save current PIVlab settings','Callback',@save_settings_Callback);
 uimenu(m3,'Label','Save PIVlab session','Separator','on','Callback',@save_session_Callback);
 m14 = uimenu(m1,'Label','Export');
 uimenu(m14,'Label','Still image or animation','Callback',@export_pixel_data);
@@ -3036,11 +3036,25 @@ var=getappdata(hgui, name);
 
 function handles=gethand
 hgui=getappdata(0,'hgui');
-handles=retr('existing_handles');
-if isempty(handles)
+num_handle_calls=retr('num_handle_calls');
+if ~isempty(num_handle_calls)
+	if num_handle_calls<20
+		num_handle_calls = num_handle_calls + 1;
+		put('num_handle_calls',num_handle_calls);
+	end
+else
+	num_handle_calls=0;
+	put('num_handle_calls',num_handle_calls);
+end
+if num_handle_calls<20
 	handles=guihandles(hgui);
 	put('existing_handles',handles);
+	disp('getting fresh handles')
+else
+	handles=retr('existing_handles');
+	disp('_getting old handles')
 end
+
 
 
 function [currentimage,rawimage] = get_img(selected)
@@ -6152,7 +6166,7 @@ put('expected_image_size',[])
 pixeldist_changed_Callback()
 
 
-function curr_settings_Callback(~, ~, ~)
+function save_settings_Callback(~, ~, ~)
 handles=gethand;
 clahe_enable=get(handles.clahe_enable,'value');
 clahe_size=get(handles.clahe_size,'string');
@@ -8751,6 +8765,8 @@ if isequal(FileName,0) | isequal(PathName,0)
 else
 	put('expected_image_size',[])
 	put('sessionpath',PathName );
+	put('existing_handles',[]);put('num_handle_calls',[])
+	clear ('existing_handles','num_handle_calls');
 	save_session_function (PathName,FileName)
 end
 
@@ -8777,12 +8793,14 @@ app.ZoomFigureState=[];
 app.ZoomOnState=[];
 app.PanFigureState=[];
 app.uitools_FigureToolManager=[];
+app.existing_handles=[];
+app.num_handle_calls=[];
 
 try
 	iptPointerManager(gcf, 'disable');
 catch
 end
-clear hgui iptPointerManager GUIDEOptions GUIOnScreen Listeners SavedVisible ScribePloteditEnable UsedByGUIData_m ZoomObject
+clear hgui iptPointerManager GUIDEOptions GUIOnScreen Listeners SavedVisible ScribePloteditEnable UsedByGUIData_m ZoomObject existing_handles num_handle_calls
 deli={'UsedByGUIData_m', 'uitools_FigureToolManager','PanFigureState','ZoomOnState','ZoomFigureState','ZoomObject','lastValidTag','SavedVisible','Listeners','GUIOnScreen','GUIDEOptions','ScribePloteditEnable','nonexistingfield'};
 for i=1:size(deli,2)
 	try
@@ -8906,6 +8924,8 @@ catch
 end
 
 clear handles
+clear existing_handles
+clear num_handle_calls
 
 %save('-v6', fullfile(PathName,FileName), '-append');
 %save(fullfile(PathName,FileName), '-append');
