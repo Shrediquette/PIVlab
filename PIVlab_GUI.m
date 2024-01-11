@@ -4126,7 +4126,9 @@ if size(filepath,1) > 1 || retr('video_selection_done') == 1
 	toggler=retr('toggler');
 	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
 	if retr('video_selection_done') == 0
-		set(handles.filenamebox,'value',selected);
+		if numel(handles.filenamebox.String) >= selected
+			set(handles.filenamebox,'value',selected);
+		end
 	else
 		set(handles.filenamebox,'value',1);
 	end
