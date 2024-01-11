@@ -5,9 +5,8 @@
 Bugs:
 ------
 Wenn man mittelwert berechnet von bildern mit maske, wird keine maske angezeigt. in den derivatives --> OK
+Wenn man session mit masken lädt werden die masken nicht angezeigt --> OK
 
-
-Wenn man session mit masken lädt werden die masken nicht angezeigt --> doch, warum erst nicht...?
 Import pixel mask: Wird nicht in den aktuellen Frame geladen, sondern in ersten Frame immer.
 
 Tests:
@@ -3049,10 +3048,10 @@ end
 if num_handle_calls<20
 	handles=guihandles(hgui);
 	put('existing_handles',handles);
-	disp('getting fresh handles')
+	%disp('getting fresh handles')
 else
 	handles=retr('existing_handles');
-	disp('_getting old handles')
+	%disp('_getting old handles')
 end
 
 
@@ -13761,9 +13760,10 @@ end
 
 function mask_import_Callback (~,~,~)
 filepath=retr('filepath');
+
 if size(filepath,1) > 1 %did the user load images?
 
-sessionpath=retr('sessionpath');
+	sessionpath=retr('sessionpath');
 	if isempty(sessionpath)
 		sessionpath=retr('pathname');
 	end
@@ -13801,9 +13801,8 @@ sessionpath=retr('sessionpath');
 			%imshow(A, 'Parent',pivlab_axis);
 			handles=gethand;
 			masks_in_frame=retr('masks_in_frame');
-			masks_in_frame=px_to_rois(blocations,i,masks_in_frame);
+			masks_in_frame=px_to_rois(blocations,floor(get(handles.fileselector, 'value'))-1+i,masks_in_frame);%apply mask at the current frame and the following frames.
 			put('masks_in_frame',masks_in_frame);
-
 		end
 		redraw_masks
 		sliderdisp(retr('pivlab_axis'))
@@ -13898,9 +13897,10 @@ if size(filepath,1) > 1 %did the user load images?
 		sessionpath=retr('pathname');
 	end
 	[maskfile,maskpath] = uigetfile('*.mat','Load PIVlab mask',fullfile(sessionpath, 'PIVlab_mask.mat'));
+	pause(0.01)
 	if ~isequal(maskfile,0) && ~isequal(maskpath,0)
 		warning('off','MATLAB:load:variableNotFound');
-		toolsavailable(0,'Busy, loading masks');drawnow
+		toolsavailable(0,'Busy, loading masks');drawnow nocallbacks
 		load(fullfile(maskpath,maskfile),'masks_in_frame');
 		warning('on','MATLAB:load:variableNotFound');
 		if exist('masks_in_frame','var')
