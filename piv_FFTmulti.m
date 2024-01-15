@@ -438,7 +438,7 @@ for multipass = 1:passes
 			deltav=0;
 			old_mean_delta=1;
 		end
-		mean_delta=nanmean(deltau(:)+deltav(:));
+		mean_delta=mean(deltau(:)+deltav(:),'omitnan');
 		delta_diff=abs(old_mean_delta-mean_delta);%/abs(mean_delta) %0 --> no improvement, 1 --> 100% improvement
 		old_mean_delta=mean_delta;
 
