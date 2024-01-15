@@ -2149,17 +2149,6 @@ handles.multip16 = uipanel(MainWindow, 'Units','characters', 'Position', [0+marg
 parentitem=get(handles.multip16, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4) parentitem(3)/2 1];
-handles.text87 = uicontrol(handles.multip16,'Style','text','String','First frame','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text87');
-
-item=[ parentitem(3)/2 item(2) parentitem(3)/2 1];
-handles.text88 = uicontrol(handles.multip16,'Style','text','String','Last frame','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text87');
-
-item=[0 item(2)+item(4) parentitem(3)/3 1];
-handles.firstframe = uicontrol(handles.multip16,'Style','edit','String','N/A','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','firstframe','TooltipString','First frame to export');
-
-item=[parentitem(3)/2 item(2) parentitem(3)/3 1];
-handles.lastframe = uicontrol(handles.multip16,'Style','edit','String','N/A','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','lastframe','TooltipString','Last frame to export');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
 
@@ -2183,8 +2172,23 @@ handles.resolutionstring = uicontrol(handles.multip16,'Style','text','String','R
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
 handles.resolution_setting = uicontrol(handles.multip16,'Style','edit','String','150','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','resolution_setting','TooltipString','Resolution of the output file');
 
+item=[0 item(2)+item(4)+margin*2 parentitem(3) 2];
+handles.do_export_pixel_data_single = uicontrol(handles.multip16,'Style','pushbutton','String','Export single frame','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@do_export_pixel_data_Callback,'Tag','do_export_pixel_data_single','TooltipString','Save image for currently active frame');
+
+item=[0 item(2)+item(4)+margin*2 parentitem(3)/2 1];
+handles.text87 = uicontrol(handles.multip16,'Style','text','String','First frame','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text87');
+
+item=[ parentitem(3)/2 item(2) parentitem(3)/2 1];
+handles.text88 = uicontrol(handles.multip16,'Style','text','String','Last frame','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text87');
+
+item=[0 item(2)+item(4) parentitem(3)/3 1];
+handles.firstframe = uicontrol(handles.multip16,'Style','edit','String','N/A','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','firstframe','TooltipString','First frame to export');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/3 1];
+handles.lastframe = uicontrol(handles.multip16,'Style','edit','String','N/A','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','lastframe','TooltipString','Last frame to export');
+
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
-handles.do_export_pixel_data = uicontrol(handles.multip16,'Style','pushbutton','String','Export','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@do_export_pixel_data_Callback,'Tag','do_export_pixel_data','TooltipString','Save image sequence for the selected frames');
+handles.do_export_pixel_data = uicontrol(handles.multip16,'Style','pushbutton','String','Export multiple frames','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@do_export_pixel_data_Callback,'Tag','do_export_pixel_data','TooltipString','Save image sequence for the selected frames');
 
 %% Multip17
 handles.multip17 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Extract parameters from area', 'Tag','multip17','fontweight','bold');
@@ -9214,24 +9218,28 @@ else
 end
 toolsavailable(1)
 
-function do_export_pixel_data_Callback(~, ~, ~)
+function do_export_pixel_data_Callback(~, src, ~)
 handles=gethand;
 filepath=retr('filepath');
-startframe=str2num(get(handles.firstframe,'string'));
-if startframe <1
-	startframe=1;
-elseif startframe>size(filepath,1)/2
-	startframe=size(filepath,1)/2;
-end
-set(handles.firstframe,'string',int2str(startframe));
-endframe=str2num(get(handles.lastframe,'string'));
-if endframe <startframe
+if strmatch(src.Source.Tag,'do_export_pixel_data')
+	startframe=str2num(get(handles.firstframe,'string'));
+	if startframe <1
+		startframe=1;
+	elseif startframe>size(filepath,1)/2
+		startframe=size(filepath,1)/2;
+	end
+	set(handles.firstframe,'string',int2str(startframe));
+	endframe=str2num(get(handles.lastframe,'string'));
+	if endframe <startframe
+		endframe=startframe;
+	elseif endframe>size(filepath,1)/2
+		endframe=size(filepath,1)/2;
+	end
+	set(handles.lastframe,'string',int2str(endframe));
+else
+	startframe=floor(get(handles.fileselector, 'value'));
 	endframe=startframe;
-elseif endframe>size(filepath,1)/2
-	endframe=size(filepath,1)/2;
 end
-set(handles.lastframe,'string',int2str(endframe));
-
 imgsavepath=retr('imgsavepath');
 if isempty(imgsavepath)
 	imgsavepath=retr('pathname');
