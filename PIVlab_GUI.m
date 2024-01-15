@@ -5,7 +5,7 @@
 Bugs:
 ------
 Zoom: Soll ohne finales sliderdisp auskommen, weil sonst die gerade bearbeiteten ROIs verschwinden. Wie...? --> OK
-Apply preferences geht nicht, wahrscheinlich wegen handles die nicht refreshen.
+Apply preferences geht nicht, wahrscheinlich wegen handles die nicht refreshen. --> OK
 Wenn man mittelwert berechnet von bildern mit maske, wird keine maske angezeigt. in den derivatives --> OK
 Wenn man session mit masken lädt werden die masken nicht angezeigt --> OK
 Import pixel mask: Wird nicht in den aktuellen Frame geladen, sondern in ersten Frame immer. --> OK
@@ -18,13 +18,24 @@ testen ob masken richtig gezeichnet werden unter den verschiedenen bedingungen (
 
 Features:
 ----------
-ROI selection mit neuem ROI object typus. funktion roi_select_Callback und darunter. --> OK
-Mask modifications in basic mask operation: Smooth, add more waypoints, shrink / extend (extend_mask_Callback)
+Neue Grafik: Transparenz, Masken ausgespart, Nur ROI mit Colormap --> OK
+Neue Colormapposition: Auserhalb Grafik --> OK
+Neuer Export: MP4 und png --> OK
+Neue Maskenfunktionalität: Kann immer editiert werden. Verschiedene Arten von Formen.  Aussparungen in Masken viel einfacher geworden--> OK
+Masken import von PIxelmasken deutlich verbesssert --> OK
+Maskengenerator: Helle objekte, dunkle objekte, Wenig kontrastierte Objekte. Löcher schließen, ausweiten, Median filter etc. --> OK
+Maskenoperationen für alle masken: Shrink/grow/simplify/subdivide/optimize --> OK
+Neue Art Region of interest zu zecihenn. Bleibt editierrbr, live update der koordinaten --> OK
+Neue Art zu kalibrieren. Linie bleibt editierbar, zoomen möglich. Liveupdate der Kalibrierwerte --> OK
+Neue Art Koordinatesystem Offset zu zeichen --> OK
+Neue Livescript examples --> OK
+
 tooltips für alles neue
-command line neue maske implementieren (DCC und FFT)
-...-> und dazu gleich ein livescript...
+command line neue maske implementieren (DCC und FFT) --> OK
+...-> und dazu gleich ein livescript... --> OK
 wäre gut: nanmin, nanmax, nanstd, nanmean aus Projekt entfernen. Editorsuche nach dateien die das beinhalten. Breakpoints setzen und testen ob gleiches Ergebnis kommt mit "omitnan".
 Alle Funktionen umbenennen mit sinnvollen namen. Apply_Cali_Callback z.B. zu calibration_apply,  autocrop zu exportimage_autocrop vlear_roi zu roi_clear   dispStaticRoi zu roi_displaystatic etc...
+^^ die ganzen funktionsnamen kann man in matlab direkt auswählen wenn man PIVlab_GUI markiert
 Neues example Video (copter durch wald / Beine)
 fancy splash screen mit Pixelbildern die gezeigt werden die Status anzeigen? Aus Mat datei laden... Und bei Fehler / warnung auf commandwindow verweisen.
 logo richtig animiert programmatisch..
@@ -143,7 +154,7 @@ if isempty(fh)
 	addpath(fullfile(tempfilepath, 'PIVlab_capture_resources'));
 	try
 		ctr=0;
-		pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'nanmax.m' 'nanmin.m' 'nanstd.m' 'nanmean.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg' 'PIVlab_capture_pco.m' 'PIVlab_image_filter.m' 'pivparpool.m' 'pivprogress.m' 'piv_analysis.m' 'piv_quick.m' 'PIVlab_notch_filter.m' 'PIVlab_correlation_filter.m' 'PIVlab_capture_devicectrl_GUI.m' 'PIVlab_capture_lensctrl_GUI.m' 'PIVlab_capture_lensctrl.m' 'PIVlab_capture_sharpness_indicator.m' 'straddling_graph.m'};
+		pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'ellipse.m' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg' 'PIVlab_capture_pco.m' 'PIVlab_image_filter.m' 'pivparpool.m' 'pivprogress.m' 'piv_analysis.m' 'piv_quick.m' 'PIVlab_notch_filter.m' 'PIVlab_correlation_filter.m' 'PIVlab_capture_devicectrl_GUI.m' 'PIVlab_capture_lensctrl_GUI.m' 'PIVlab_capture_lensctrl.m' 'PIVlab_capture_sharpness_indicator.m' 'straddling_graph.m'};
 		for i=1:size(pivFiles,2)
 			if exist(pivFiles{1,i},'file')~=2
 				disp(['ERROR: A required file was not found: ' pivFiles{1,i}]);
@@ -1088,12 +1099,18 @@ handles.mask_shrink = uicontrol(handles.uipanel25_9,'Style','pushbutton','String
 item=[0+item(3) item(2) parentitem(3)/2 1.5];
 handles.mask_grow = uicontrol(handles.uipanel25_9,'Style','pushbutton','String','Grow mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_shrink_grow_Callback,'Tag','mask_grow','TooltipString','');
 
-item=[0 item(2)+item(4) parentitem(3)/2 1.5];
-handles.mask_subdivide = uicontrol(handles.uipanel25_9,'Style','pushbutton','String','Subdivide','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_subdivide_simplify_Callback,'Tag','mask_subdivide','TooltipString','');
 
-item=[0+item(3) item(2) parentitem(3)/2 1.5];
+item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.mask_simplify = uicontrol(handles.uipanel25_9,'Style','pushbutton','String','Simplify','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_subdivide_simplify_Callback,'Tag','mask_simplify','TooltipString','');
 
+
+
+item=[0+item(3) item(2) parentitem(3)/2 1.5];
+handles.mask_subdivide = uicontrol(handles.uipanel25_9,'Style','pushbutton','String','Subdivide','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_subdivide_simplify_Callback,'Tag','mask_subdivide','TooltipString','');
+
+
+item=[0 item(2)+item(4) parentitem(3)/2 1.5];
+handles.mask_optimize = uicontrol(handles.uipanel25_9,'Style','pushbutton','String','Optimize','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask_subdivide_simplify_Callback,'Tag','mask_optimize','TooltipString','');
 
 
 
@@ -3665,11 +3682,11 @@ y=reshape(y,size(y,1)*size(y,2),1);
 u=reshape(u,size(u,1)*size(u,2),1);
 v=reshape(v,size(v,1)*size(v,2),1);
 if (retr('calu')==1 || retr('calu')==-1) && retr('calxy')==1
-	set (handles.meanu,'string', [num2str(nanmean(u*calu)) ' ± ' num2str(nanstd(u*calu)) ' [px/frame]'])
-	set (handles.meanv,'string', [num2str(nanmean(v*calv)) ' ± ' num2str(nanstd(v*calv)) ' [px/frame]'])
+	set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' [px/frame]'])
+	set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' [px/frame]'])
 else
-	set (handles.meanu,'string', [num2str(nanmean(u*calu)) ' ± ' num2str(nanstd(u*calu)) ' [m/s]'])
-	set (handles.meanv,'string', [num2str(nanmean(v*calv)) ' ± ' num2str(nanstd(v*calv)) ' [m/s]'])
+	set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' [m/s]'])
+	set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' [m/s]'])
 end
 
 function [x_cal,y_cal] = calibrate_xy(x,y)
@@ -4252,6 +4269,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 end
 
 function pref_apply_Callback (~, ~)
+put('num_handle_calls',0);
 hgui=getappdata(0,'hgui');
 handles=gethand;
 panelwidth=round(get(handles.panelslider,'Value'));
@@ -7252,7 +7270,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0 %an
 		u=resultslist{3,currentframe};
 	end
 	calu=retr('calu');calv=retr('calv');
-	set(handles.subtr_u, 'string', num2str(nanmean(u(:)*calu)));
+	set(handles.subtr_u, 'string', num2str(mean(u(:)*calu,'omitnan')));
 else
 	set(handles.subtr_u, 'string', '0');
 end
@@ -7268,7 +7286,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0 %an
 		v=resultslist{4,currentframe};
 	end
 	calu=retr('calu');calv=retr('calv');
-	set(handles.subtr_v, 'string', num2str(nanmean(v(:)*calv)));
+	set(handles.subtr_v, 'string', num2str(mean(v(:)*calv,'omitnan')));
 else
 	set(handles.subtr_v, 'string', '0');
 end
@@ -10342,26 +10360,22 @@ if isempty(resultslist)==0
 					if type==2
 						%standard deviation
 						%ROCHE Modifikation
-						out_mean_u=nanstd(umittelselected,3); %#ok<*NANSTD,NODEF>
-						out_mean_v=nanstd(vmittelselected,3); %#ok<NODEF>
+						out_mean_u=std(umittelselected,3,'omitnan'); %#ok<*NANSTD,NODEF>
+						out_mean_v=std(vmittelselected,3,'omitnan'); %#ok<NODEF>
 						out_mean_u(typevectormean>=1.75)=nan; %discard everything that has less than 25% valid measurements
 						out_mean_v(typevectormean>=1.75)=nan;
 						resultslist{3,size(filepath,1)/2+1}=out_mean_u;
 						resultslist{4,size(filepath,1)/2+1}=out_mean_v;
-						%resultslist{3,size(filepath,1)/2+1}=nanstd(umittelselected,3); %#ok<NODEF>
-						%resultslist{4,size(filepath,1)/2+1}=nanstd(vmittelselected,3); %#ok<NODEF>
 					end
 
 					if type==1
 						%ROCHE Modifikation
-						out_mean_u=nanmean(umittelselected,3); %#ok<*NANMEAN>
-						out_mean_v=nanmean(vmittelselected,3);
+						out_mean_u=mean(umittelselected,3,'omitnan');
+						out_mean_v=mean(vmittelselected,3,'omitnan');
 						out_mean_u(typevectormean>=1.75)=nan; %discard everything that has less than 25% valid measurements
 						out_mean_v(typevectormean>=1.75)=nan;
 						resultslist{3,size(filepath,1)/2+1}=out_mean_u;
 						resultslist{4,size(filepath,1)/2+1}=out_mean_v;
-						%resultslist{3,size(filepath,1)/2+1}=nanmean(umittelselected,3);
-						%resultslist{4,size(filepath,1)/2+1}=nanmean(vmittelselected,3);
 					end
 
 					if type==0
@@ -10984,35 +10998,37 @@ end
 
 function Man_ROI_Callback(~,~,~)
 handles=gethand;
-try
-	x=round(str2num(get(handles.ROI_Man_x,'String')));
-	y=round(str2num(get(handles.ROI_Man_y,'String')));
-	w=round(str2num(get(handles.ROI_Man_w,'String')));
-	h=round(str2num(get(handles.ROI_Man_h,'String')));
-catch
+filepath=retr('filepath');
+if size(filepath,1) >1 || retr('video_selection_done') == 1
+	try
+		x=round(str2num(get(handles.ROI_Man_x,'String')));
+		y=round(str2num(get(handles.ROI_Man_y,'String')));
+		w=round(str2num(get(handles.ROI_Man_w,'String')));
+		h=round(str2num(get(handles.ROI_Man_h,'String')));
+	catch
+	end
+	if isempty(x)== 0 && isempty(y)== 0 && isempty(w)== 0 && isempty(h)== 0 && isnumeric(x) && isnumeric(y) && isnumeric(w) && isnumeric(h)
+		roirect(1)=x;
+		roirect(2)=y;
+		roirect(3)=w;
+		roirect(4)=h;
+		imagesize=retr('expected_image_size');
+		if roirect(1)<1
+			roirect(1)=1;
+		end
+		if roirect(2)<1
+			roirect(2)=1;
+		end
+		if roirect(3)>imagesize(2)-roirect(1)
+			roirect(3)=imagesize(2)-roirect(1);
+		end
+		if roirect(4)>imagesize(1)-roirect(2)
+			roirect(4)=imagesize(1)-roirect(2);
+		end
+		put ('roirect',roirect);
+		roi_select_Callback
+	end
 end
-if isempty(x)== 0 && isempty(y)== 0 && isempty(w)== 0 && isempty(h)== 0 && isnumeric(x) && isnumeric(y) && isnumeric(w) && isnumeric(h)
-	roirect(1)=x;
-	roirect(2)=y;
-	roirect(3)=w;
-	roirect(4)=h;
-	imagesize=retr('expected_image_size');
-	if roirect(1)<1
-		roirect(1)=1;
-	end
-	if roirect(2)<1
-		roirect(2)=1;
-	end
-	if roirect(3)>imagesize(2)-roirect(1)
-		roirect(3)=imagesize(2)-roirect(1);
-	end
-	if roirect(4)>imagesize(1)-roirect(2)
-		roirect(4)=imagesize(1)-roirect(2);
-	end
-	put ('roirect',roirect);
-	roi_select_Callback
-end
-
 
 function howtocite_Callback(~, ~, ~)
 PIVlab_citing
@@ -12800,7 +12816,7 @@ if value == 8 % OPTOcam
 	put('f1exp',352) % Exposure start -> Q1 delay
 	put('f1exp_cam',350); %exposure time setting first frame
 	put('master_freq',15);
-	avail_freqs={'400' '320' '160' '100' '80' '60' '50' '25' '10'};
+	avail_freqs={'400' '320' '160' '100' '80' '60' '50' '25'}; %10 fps removed, camera might skip frames.
 	put('max_cam_res',[1936,1216]);
 	%default min_interframe is for 8 bits.
 	OPTOcam_bits =retr('OPTOcam_bits');
@@ -14560,61 +14576,86 @@ if numel(points_offsetx)>0 &&  numel(points_offsety)>0
 end
 
 function mask_shrink_grow_Callback (~,caller,~)
-disp('mit mehreren masken muss es gehen. Evtl. bei ROICklicked einstellen, dass dieser grad aktiv? ALso die unique nummer setzen als aktives ding. Oder abfragen wer im Vordergrund ist')
-handles=gethand;
-currentframe=floor(get(handles.fileselector, 'value'));
-masks_in_frame=retr('masks_in_frame');
-if isempty(masks_in_frame)
-	%masks_in_frame=cell(currentframe,1);
-	masks_in_frame=cell(1,currentframe);
+pivlab_axis=retr('pivlab_axis');
+objects_in_axis=pivlab_axis.Children;
+found=0;
+for i=1:numel(objects_in_axis)
+	if strncmp(objects_in_axis(i).UserData,'ROI_object_',11) %finds all Mask ROI objects, the first found is the one in the foreground
+		found=1;
+		break
+	end
 end
-if numel(masks_in_frame)<currentframe
-	mask_positions=cell(0);
-else
-	mask_positions=masks_in_frame{currentframe};
+if found
+	if strcmp (caller.Source.Tag,'mask_shrink')
+		buf=-5;
+	end
+	if strcmp (caller.Source.Tag,'mask_grow')
+		buf=+5;
+	end
+	if strcmp(objects_in_axis(i).UserData,'ROI_object_freehand') || strcmp(objects_in_axis(i).UserData,'ROI_object_polygon') || strcmp(objects_in_axis(i).UserData,'ROI_object_external')
+		warning off
+		poly_obj=polyshape(objects_in_axis(i).Position);
+		warning on
+
+		polyout1 = polybuffer(poly_obj,buf,'JointType','miter','MiterLimit',2);
+		try
+			objects_in_axis(i).Position=polyout1.Vertices;
+		catch ME
+			warning('Operation failed, most likely because shape is self-intersecting.')
+		end
+	elseif strcmp(objects_in_axis(i).UserData,'ROI_object_circle')
+		objects_in_axis(i).Radius = objects_in_axis(i).Radius+buf;
+	elseif strcmp(objects_in_axis(i).UserData,'ROI_object_rectangle')
+		objects_in_axis(i).Position(1)=objects_in_axis(i).Position(1)-buf/2;
+		objects_in_axis(i).Position(2)=objects_in_axis(i).Position(2)-buf/2;
+		objects_in_axis(i).Position(3)=objects_in_axis(i).Position(3)+buf;
+		objects_in_axis(i).Position(4)=objects_in_axis(i).Position(4)+buf;
+	end
+	evt.EventName='ROIMoved';
+	ROIevents(objects_in_axis(i),evt); %saves the modified position.
 end
-%poly_obj=polyshape(mask_positions{2}(1:end-1,:));
-poly_obj=polyshape(mask_positions{2});
-
-if strcmp (caller.Source.Tag,'mask_shrink')
-	buf=-10;
-end
-if strcmp (caller.Source.Tag,'mask_grow')
-	buf=+10;
-end
-
-
-polyout1 = polybuffer(poly_obj,buf,'JointType','miter','MiterLimit',2);
-mask_positions{2}=polyout1.Vertices;
-masks_in_frame{1}=mask_positions;
-put('masks_in_frame',masks_in_frame)
-sliderdisp(retr('pivlab_axis'))
-disp('')
-
-
-
 
 function mask_subdivide_simplify_Callback (~,caller,~)
-
-
-fpos = roi.Position;
-reduce(roi)
-roi.Waypoints(:) = true;
-roi.UserData.fpos = fpos;
-roi.UserData.tol = 0;
-
-roi.Position = roi.UserData.fpos;
-tol = roi.UserData.tol + 0.01 * (evt.VerticalScrollCount);
-
-reduce(roi,tol);
-roi.UserData.tol = tol;
-roi.Waypoints(:) = true;
-
-%roi.Waypoints(:)=true bei subdivide einfach immer mehr waypoints aktivieren.
-
-
-
-
-
-strcmp (caller.Source.Tag,'mask_subdivide')
-strcmp (caller.Source.Tag,'mask_simplify')
+pivlab_axis=retr('pivlab_axis');
+objects_in_axis=pivlab_axis.Children;
+found=0;
+for i=1:numel(objects_in_axis)
+	if strncmp(objects_in_axis(i).UserData,'ROI_object_',11) %finds all Mask ROI objects, the first found is the one in the foreground
+		found=1;
+		break
+	end
+end
+if found
+	if strcmp(objects_in_axis(i).UserData,'ROI_object_freehand') || strcmp(objects_in_axis(i).UserData,'ROI_object_polygon')|| strcmp(objects_in_axis(i).UserData,'ROI_object_external')
+		if strcmp (caller.Source.Tag,'mask_optimize')
+			%objects_in_axis(i).Waypoints(:) = true;
+			reduce(objects_in_axis(i))
+		else
+			cx=objects_in_axis(i).Position(:,1);
+			cy=objects_in_axis(i).Position(:,2);
+			x=linspace(1,numel(cx),numel(cx))';
+			if strcmp (caller.Source.Tag,'mask_subdivide')
+				if numel(x) < 512 %limit over interpolation.
+					multiplier=2;
+				else
+					multiplier=1;
+				end
+			elseif strcmp (caller.Source.Tag,'mask_simplify')
+				if numel(x) > 3 %limit simplification.
+					multiplier=0.75;
+				else
+					multiplier=1;
+				end
+			end
+			xq=linspace(1,x(end),round(numel(cx)*multiplier))';
+			cxq = interp1(x,cx,xq,'spline')	;
+			cyq = interp1(x,cy,xq,'spline')	;
+			objects_in_axis(i).Position=[cxq cyq];
+			if strcmp(objects_in_axis(i).UserData,'ROI_object_freehand')
+				objects_in_axis(i).Waypoints(:) = true;
+			end
+		end
+		evt.EventName='ROIMoved';
+		ROIevents(objects_in_axis(i),evt); %saves the modified position.
+	end
+end
