@@ -37,10 +37,10 @@ if do_local_median==1
 end
 %% stddev check
 if do_stdev_check==1
-    meanu=nanmean(u(:));
-    meanv=nanmean(v(:));
-    std2u=nanstd(reshape(u,size(u,1)*size(u,2),1));
-    std2v=nanstd(reshape(v,size(v,1)*size(v,2),1));
+    meanu=mean(u(:),'omitnan');
+    meanv=mean(v(:),'omitnan');
+    std2u=std(reshape(u,size(u,1)*size(u,2),1),'omitnan');
+    std2v=std(reshape(v,size(v,1)*size(v,2),1),'omitnan');
     minvalu=meanu-stdthresh*std2u;
     maxvalu=meanu+stdthresh*std2u;
     minvalv=meanv-stdthresh*std2v;
