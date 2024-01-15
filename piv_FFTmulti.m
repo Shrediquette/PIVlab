@@ -572,7 +572,8 @@ if(numel(x)~=0)
 	SubpixelX = peakx - interrogationarea_center;
 	SubpixelY = peaky - interrogationarea_center;
 	vector(z, :) = [SubpixelX, SubpixelY];
-	
+	max_displace=size(result_conv,1)/2;
+	vector(vector > max_displace)=nan;
 end
 end
 
@@ -647,6 +648,8 @@ if(numel(x)~=0)
 	SubpixelY = peaky - interrogationarea_center;
 	
 	vector(z, :) = [SubpixelX, SubpixelY];
+	max_displace=size(result_conv,1)/2;
+	vector(vector > max_displace)=nan;
 end
 end
 
