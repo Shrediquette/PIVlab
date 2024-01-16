@@ -16,6 +16,8 @@ video_pathname=[];
 video_loaded = 0;
 %% Make figure
 fig_handle = figure('MenuBar','none', 'Toolbar','none', 'Units','characters', 'WindowButtonDownFcn',@button_down, 'WindowButtonUpFcn',@button_up,  'WindowButtonMotionFcn', @on_click,'KeyPressFcn', @key_press,'Name','Video preview','numbertitle','off','Visible','off','Windowstyle','modal','resize','off','dockcontrol','off');
+fig_handle.Position(3)=100;
+fig_handle.Position(4)=30;
 warning('off','MATLAB:TIMER:RATEPRECISION')
 
 %% Initialize
