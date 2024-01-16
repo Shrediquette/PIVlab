@@ -29,22 +29,22 @@ amount = length(filenames);
 
 %% Standard PIV Settings
 s = cell(15,2); % To make it more readable, let's create a "settings table"
-%Parameter                          %Setting           %Options
-s{1,1}= 'Int. area 1';              s{1,2}=64;         % window size of first pass
-s{2,1}= 'Step size 1';              s{2,2}=32;         % step of first pass
-s{3,1}= 'Subpix. finder';           s{3,2}=1;          % 1 = 3point Gauss, 2 = 2D Gauss
-s{4,1}= 'Mask';                     s{4,2}=[];         % If needed, generate via: imagesc(image); [temp,Mask{1,1},Mask{1,2}]=roipoly;
-s{5,1}= 'ROI';                      s{5,2}=[];         % Region of interest: [x,y,width,height] in pixels, may be left empty
-s{6,1}= 'Nr. of passes';            s{6,2}=2;          % 1-4 nr. of passes
-s{7,1}= 'Int. area 2';              s{7,2}=32;         % second pass window size
-s{8,1}= 'Int. area 3';              s{8,2}=16;         % third pass window size
-s{9,1}= 'Int. area 4';              s{9,2}=16;         % fourth pass window size
-s{10,1}='Window deformation';       s{10,2}='*linear'; % '*spline' is more accurate, but slower
-s{11,1}='Repeated Correlation';     s{11,2}=0;         % 0 or 1 : Repeat the correlation four times and multiply the correlation matrices.
-s{12,1}='Disable Autocorrelation';  s{12,2}=0;         % 0 or 1 : Disable Autocorrelation in the first pass.
-s{13,1}='Correlation style';        s{13,2}=0;         % 0 or 1 : Use circular correlation (0) or linear correlation (1).
-s{14,1}='Repeat last pass';   s{14,2}=0; % 0 or 1 : Repeat the last pass of a multipass analyis
-s{15,1}='Last pass quality slope';   s{15,2}=0.025; % Repetitions of last pass will stop when the average difference to the previous pass is less than this number.
+%Parameter                          %Setting			%Options
+s{1,1}= 'Int. area 1';              s{1,2}=64;			% window size of first pass
+s{2,1}= 'Step size 1';              s{2,2}=32;			% step of first pass
+s{3,1}= 'Subpix. finder';           s{3,2}=1;			% 1 = 3point Gauss, 2 = 2D Gauss
+s{4,1}= 'Mask';                     s{4,2}=[];			% If needed, supply a binary image mask with the same size as the PIV images
+s{5,1}= 'ROI';                      s{5,2}=[];			% Region of interest: [x,y,width,height] in pixels, may be left empty to process the whole image
+s{6,1}= 'Nr. of passes';            s{6,2}=2;			% 1-4 nr. of passes
+s{7,1}= 'Int. area 2';              s{7,2}=32;			% second pass window size
+s{8,1}= 'Int. area 3';              s{8,2}=16;			% third pass window size
+s{9,1}= 'Int. area 4';              s{9,2}=16;			% fourth pass window size
+s{10,1}='Window deformation';       s{10,2}='*linear';	% '*spline' is more accurate, but slower
+s{11,1}='Repeated Correlation';     s{11,2}=0;			% 0 or 1 : Repeat the correlation four times and multiply the correlation matrices.
+s{12,1}='Disable Autocorrelation';  s{12,2}=0;			% 0 or 1 : Disable Autocorrelation in the first pass.
+s{13,1}='Correlation style';        s{13,2}=0;			% 0 or 1 : Use circular correlation (0) or linear correlation (1).
+s{14,1}='Repeat last pass';			s{14,2}=0;			% 0 or 1 : Repeat the last pass of a multipass analyis
+s{15,1}='Last pass quality slope';  s{15,2}=0.025;		% Repetitions of last pass will stop when the average difference to the previous pass is less than this number.
 
 
 %% Standard image preprocessing settings
@@ -72,7 +72,7 @@ if pairwise == 1
 		amount=amount-1;
 		filenames(size(filenames,1))=[];
 	end
-	
+
 	disp(['Found ' num2str(amount) ' images (' num2str(amount/2) ' image pairs).'])
 	x=cell(amount/2,1);
 	y=x;
@@ -99,32 +99,31 @@ for i=1:1+pairwise:amount-1
 	j = j+1;
 end
 
-
 %% Main PIV analysis loop:
 % parallel
 if nr_of_cores > 1
-	
 	if pivparpool('size')<nr_of_cores
 		pivparpool('open',nr_of_cores);
 	end
-	
+
 	parfor i=1:size(slicedfilename1,2)  % index must increment by 1
-		
+
 		[x{i}, y{i}, u{i}, v{i}, typevector{i},correlation_map{i}] = ...
 			piv_analysis(directory, slicedfilename1{i}, slicedfilename2{i},p,s,nr_of_cores,false);
 	end
 else % sequential loop
-	
+
 	for i=1:size(slicedfilename1,2)  % index must increment by 1
-		
+
 		[x{i}, y{i}, u{i}, v{i}, typevector{i},correlation_map{i}] = ...
 			piv_analysis(directory, slicedfilename1{i}, slicedfilename2{i},p,s,nr_of_cores,true);
-		
+
 		disp([int2str((i+1)/amount*100) ' %']);
-		
+
 	end
 end
 
+% The most important results are x,y,u,v. These can now be validated
 
 %% PIV postprocessing loop
 % Standard image post processing settings
@@ -143,33 +142,31 @@ u_filt=cell(size(u));
 v_filt=cell(size(v));
 typevector_filt=typevector;
 
-if nr_of_cores >1 % parallel
-	
-	
+if nr_of_cores >1 % parallel loop
+
 	if pivparpool('size')<nr_of_cores
 		pivparpool('open',nr_of_cores);
 	end
-	
-	
+
 	parfor PIVresult=1:size(x,1)
-		
+
 		[u_filt{PIVresult,1}, v_filt{PIVresult,1},typevector_filt{PIVresult,1}]= ...
 			post_proc_wrapper(u{PIVresult,1},v{PIVresult,1},typevector{PIVresult,1},r,true);
-		
+
 	end
-	
+
 else % sequential loop
-	
+
 	for PIVresult=1:size(x,1)
-		
+
 		[u_filt{PIVresult,1}, v_filt{PIVresult,1},typevector_filt{PIVresult,1}]= ...
 			post_proc_wrapper(u{PIVresult,1},v{PIVresult,1},typevector{PIVresult,1},r,true);
-		
+
 	end
-	
+
 end
 
-%% clean up parallel pool, and cluster
+%% clean up parallel pool, and cluster (if required, will save RAM)
 %{
 if nr_of_cores >1 % parallel
 	poolobj = gcp('nocreate'); % GET the current parallel pool
@@ -178,6 +175,7 @@ if nr_of_cores >1 % parallel
 end
 %}
 %%
+% Save the data to a Matlab file
 save(fullfile(directory, [filenames{1} '_' filenames{end} '_' num2str(amount) '_frames_result_.mat']));
 
 %%
