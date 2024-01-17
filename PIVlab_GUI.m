@@ -9,6 +9,7 @@ Apply preferences geht nicht, wahrscheinlich wegen handles die nicht refreshen. 
 Wenn man mittelwert berechnet von bildern mit maske, wird keine maske angezeigt. in den derivatives --> OK
 Wenn man session mit masken lädt werden die masken nicht angezeigt --> OK
 Import pixel mask: Wird nicht in den aktuellen Frame geladen, sondern in ersten Frame immer. --> OK
+Matlab Online GUI issues --> OK
 
 Tests:
 -------
@@ -10510,63 +10511,6 @@ check_comma(hObject)
 function corr_filter_thresh_Callback(hObject, ~, ~)
 check_comma(hObject)
 
-function avifilesave_Callback(hObject, ~, ~)
-handles=gethand;
-if get(hObject,'Value')==1
-	set (handles.jpgfilesave, 'value', 0);
-	set (handles.bmpfilesave, 'value', 0);
-	set (handles.epsfilesave, 'value', 0);
-	set (handles.pdffilesave, 'value', 0);
-	set(handles.usecompr,'enable','on');
-	set(handles.fps_setting,'enable','on');
-else
-	set (handles.avifilesave, 'value', 1);
-end
-
-function jpgfilesave_Callback(hObject, ~, ~)
-handles=gethand;
-if get(hObject,'Value')==1
-	set (handles.avifilesave, 'value', 0);
-	set (handles.bmpfilesave, 'value', 0);
-	set (handles.epsfilesave, 'value', 0);
-	set (handles.pdffilesave, 'value', 0);
-	set(handles.usecompr,'value',0);
-	set(handles.usecompr,'enable','off');
-	set(handles.fps_setting,'enable','off');
-
-else
-	set (handles.jpgfilesave, 'value', 1);
-end
-
-function bmpfilesave_Callback(hObject, ~, ~)
-handles=gethand;
-if get(hObject,'Value')==1
-	set (handles.avifilesave, 'value', 0);
-	set (handles.jpgfilesave, 'value', 0);
-	set (handles.epsfilesave, 'value', 0);
-	set (handles.pdffilesave, 'value', 0);
-	set(handles.usecompr,'value',0);
-	set(handles.usecompr,'enable','off');
-	set(handles.fps_setting,'enable','off');
-
-else
-	set (handles.bmpfilesave, 'value', 1);
-end
-
-function pdffilesave_Callback(hObject, ~, ~)
-handles=gethand;
-if get(hObject,'Value')==1
-	set (handles.avifilesave, 'value', 0);
-	set (handles.jpgfilesave, 'value', 0);
-	set (handles.epsfilesave, 'value', 0);
-	set (handles.bmpfilesave, 'value', 0);
-	set(handles.usecompr,'value',0);
-	set(handles.usecompr,'enable','off');
-	set(handles.fps_setting,'enable','off');
-
-else
-	set (handles.pdffilesave, 'value', 1);
-end
 
 function drawstreamlines_Callback(~, ~, ~)
 handles=gethand;
@@ -10895,21 +10839,6 @@ currstring=currstring(strfind(currstring,'['):end);
 set(handles.text39,'String', ['min ' currstring ':']);
 set(handles.text40,'String', ['max ' currstring ':']);
 derivdropdown(hObject);
-
-function epsfilesave_Callback(hObject, ~, ~)
-handles=gethand;
-if get(hObject,'Value')==1
-	set (handles.avifilesave, 'value', 0);
-	set (handles.jpgfilesave, 'value', 0);
-	set (handles.bmpfilesave, 'value', 0);
-	set (handles.pdffilesave, 'value', 0);
-	set(handles.usecompr,'value',0);
-	set(handles.usecompr,'enable','off');
-	set(handles.fps_setting,'enable','off');
-
-else
-	set (handles.epsfilesave, 'value', 1);
-end
 
 function zoom_reset_zoom(~,~)
 handles=gethand;
