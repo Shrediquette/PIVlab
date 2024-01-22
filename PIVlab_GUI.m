@@ -5031,7 +5031,7 @@ if ok==1
 	roi.StripeColor = 'k';
 	axes(gui_retr('pivlab_axis'))
 	draw(roi);
-	roirect=roi.Position;
+	roirect=round(roi.Position);
 
 	if numel(roirect) == 4
 		%roirect(1,3)~=0 && roirect(1,4)~=0
