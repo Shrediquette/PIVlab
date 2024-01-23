@@ -377,7 +377,7 @@ uimenu(m14,'Label','Tecplot file','Callback',@export_tecplot_file_Callback);
 uimenu(m14,'Label','Paraview binary VTK','Callback',@export_paraview_Callback);
 uimenu(m14,'Label','All results to Matlab workspace','Callback',@export_write_workspace_Callback);
 uimenu(m1,'Label','Preferences','Callback',@gui_preferences_Callback);
-m4 = uimenu(m1,'Label','Exit','Separator','on','Callback',@exitpivlab_Callback);
+m4 = uimenu(m1,'Label','Exit','Separator','on','Callback',@gui_exitpivlab_Callback);
 m51 = uimenu('Label','Image acquisition');
 uimenu(m51,'Label','Capture PIV images','Callback',@acquisition_capture_images_Callback);
 m5 = uimenu('Label','Image settings');
@@ -7728,7 +7728,6 @@ try
 catch
 end
 if strcmp(button,'Yes')==1
-
 	try
 		homedir=gui_retr('homedir');
 		pathname=gui_retr('pathname');
@@ -7744,7 +7743,7 @@ if strcmp(button,'Yes')==1
 	try
 		delete(hObject);
 	catch
-		delete(gcf);
+		delete(gcf,'force');
 	end
 end
 
@@ -10967,7 +10966,7 @@ function misc_howtocite_Callback(~, ~, ~)
 PIVlab_citing
 
 function gui_exitpivlab_Callback(~, ~, ~)
-close(gcf)
+close(gcf,'force')
 
 function misc_Forum_Callback(~, ~, ~)
 try
