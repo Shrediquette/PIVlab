@@ -1911,6 +1911,30 @@ handles.text60 = uicontrol(handles.multip14,'Style','text','String','mean v:','U
 item=[parentitem(3)/3*1 item(2) parentitem(3)/3*2 1];
 handles.meanv = uicontrol(handles.multip14,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','meanv');
 
+item=[0 item(2)+item(4) parentitem(3)/3*1 1];
+handles.text59a = uicontrol(handles.multip14,'Style','text','String','max u:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text59a');
+
+item=[parentitem(3)/3*1 item(2) parentitem(3)/3*2 1];
+handles.maxu = uicontrol(handles.multip14,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','maxu');
+
+item=[0 item(2)+item(4) parentitem(3)/3*1 1];
+handles.text60a = uicontrol(handles.multip14,'Style','text','String','min u:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text60a');
+
+item=[parentitem(3)/3*1 item(2) parentitem(3)/3*2 1];
+handles.minu = uicontrol(handles.multip14,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','minu');
+
+item=[0 item(2)+item(4) parentitem(3)/3*1 1];
+handles.text59b = uicontrol(handles.multip14,'Style','text','String','max v:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text59a');
+
+item=[parentitem(3)/3*1 item(2) parentitem(3)/3*2 1];
+handles.maxv = uicontrol(handles.multip14,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','maxv');
+
+item=[0 item(2)+item(4) parentitem(3)/3*1 1];
+handles.text60b = uicontrol(handles.multip14,'Style','text','String','min v:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text60a');
+
+item=[parentitem(3)/3*1 item(2) parentitem(3)/3*2 1];
+handles.minv = uicontrol(handles.multip14,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','minv');
+
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.text67 = uicontrol(handles.multip14,'Style','text','String','Histogram plot','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text67');
 
@@ -3686,11 +3710,19 @@ y=reshape(y,size(y,1)*size(y,2),1);
 u=reshape(u,size(u,1)*size(u,2),1);
 v=reshape(v,size(v,1)*size(v,2),1);
 if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-	set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' [px/frame]'])
-	set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' [px/frame]'])
+	set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' px/frame'])
+	set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' px/frame'])
+	set (handles.maxu,'string', [num2str(max(u*calu,[],'omitnan')) ' px/frame'])
+	set (handles.minu,'string', [num2str(min(u*calu,[],'omitnan')) ' px/frame'])
+	set (handles.maxv,'string', [num2str(max(v*calv,[],'omitnan')) ' px/frame'])
+	set (handles.minv,'string', [num2str(min(v*calv,[],'omitnan')) ' px/frame'])
 else
-	set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' [m/s]'])
-	set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' [m/s]'])
+	set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' m/s'])
+	set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' m/s'])
+	set (handles.maxu,'string', [num2str(max(u*calu,[],'omitnan')) ' m/s'])
+	set (handles.minu,'string', [num2str(min(u*calu,[],'omitnan')) ' m/s'])
+	set (handles.maxv,'string', [num2str(max(v*calv,[],'omitnan')) ' m/s'])
+	set (handles.minv,'string', [num2str(min(v*calv,[],'omitnan')) ' m/s'])
 end
 
 function [x_cal,y_cal] = calibrate_xy(x,y)
