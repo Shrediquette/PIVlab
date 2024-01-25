@@ -633,9 +633,12 @@ filter_ed = uicontrol('Style','edit',...
 		
 		
 		ah1 = axes('units', 'pixels', 'Position',[388 308 350 270], 'xtick', [],'ytick',[]);
-		imshow(zeros(27,35)+0.75,'parent',ah1);
-		%imshow(rand(27,35)+0.75,'parent',ah1);
-		
+		try
+			imshow(imread('pivlab_logo1.jpg'),'parent',ah1,'interpolation','bilinear');
+		catch
+			imshow(zeros(27,35)+0.75,'parent',ah1);
+		end
+
 		%new folder selection
 		dirbrowse = uicontrol('Style','pushbutton',...
 			'Position',[263 350 60 20],...
