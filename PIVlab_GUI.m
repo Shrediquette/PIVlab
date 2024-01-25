@@ -71,7 +71,7 @@ if isempty(fh)
 	drawnow
 	handle_splash_text = text(splash_ax,10,10,'Loading, please wait...');
 	%}
-	MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0.05 0.1 0.9 0.8],'ResizeFcn', @gui_MainWindow_ResizeFcn,'CloseRequestFcn', @gui_MainWindow_CloseRequestFcn,'tag','hgui','visible','off','KeyPressFcn', @gui_key_press);
+	MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0 0.1 1 0.8],'ResizeFcn', @gui_MainWindow_ResizeFcn,'CloseRequestFcn', @gui_MainWindow_CloseRequestFcn,'tag','hgui','visible','off','KeyPressFcn', @gui_key_press);
 	set (MainWindow,'Units','Characters');
 	%clc
 	%% Initialize
