@@ -440,7 +440,9 @@ if verLessThan('matlab','9.4') %r2018a
 	end
 else
 	try
-		set(MainWindow,'WindowState','maximized');
+		if ~isunix %unfortunately, setting the figure to fullscreen doesn't work properly in matlab online...
+			set(MainWindow,'WindowState','maximized');
+		end
 	catch
 	end
 end
