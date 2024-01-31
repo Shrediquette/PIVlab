@@ -127,7 +127,8 @@ else %Figure handle does already exist --> bring UI to foreground.
 end
 
 function limit_displayed_features
-all_features_visible=retr('all_features_visible');
+
+all_features_visible=retr('all_features_visible')
 aperturepanel=findobj('Tag','aperturepanel');
 lightpanel=findobj('Tag','lightpanel');
 anglepanel=findobj('Tag','anglepanel');

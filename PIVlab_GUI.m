@@ -1,3 +1,14 @@
+%% ToDo
+%{
+extract data: polyline seems ok
+Note that xposition is now transposed! Columns are the coordinates
+Save / Load coords machen
+Verschiedene extraction types machen
+extract and save for all machen.
+Plot data button: am besten das roi neu zeichnen, damit es wieder sichtbar / editierbar wird nachdem evtl. frame gewechselt wurde?
+%}
+%% ToDo
+
 % PIVlab - Digital Particle Image Velocimetry Tool for MATLAB
 % initiated by by Dr. William Thielicke and Prof. Dr. Eize J. Stamhuis
 % developed by William Thielicke
@@ -7902,6 +7913,7 @@ gui_sliderdisp(gui_retr('pivlab_axis'));
 handles=gui_gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
 resultslist=gui_retr('resultslist');
+disp('wenn linie außerhalb ROI, dann evtl. nicht richtig angezeigt...')
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	gui_toolsavailable(0);
 	xposition=[];
@@ -7910,6 +7922,16 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	but = 1;
 	hold on;
 	if get(handles.draw_what,'value')==1 %polyline
+		extract_poly = images.roi.Polyline;
+		extract_poly.LabelVisible = 'off';
+		extract_poly.Tag='extract_poly';
+		draw(extract_poly);
+		addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+		addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
+		xposition=extract_poly.Position(:,1);
+		yposition=extract_poly.Position(:,2);
+%xposition = extract_poly
+		%{
 		while but == 1
 			[xi,yi,but] = ginput(1);
 			if but~=1
@@ -7925,6 +7947,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			line(xposition,yposition,'LineWidth',3, 'Color', [0,0,0.95],'tag','extractline');
 			line(xposition,yposition,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','extractline');
 		end
+		%}
 	elseif get(handles.draw_what,'value')==2 %circle
 		for i=1:2
 			[xi,yi,but] = ginput(1);
@@ -8078,9 +8101,9 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	xposition=gui_retr('xposition'); %not conflicting...?
 	yposition=gui_retr('yposition'); %not conflicting...?
 	if numel(xposition)>1
-		for i=1:size(xposition,2)-1
+		for i=1:size(xposition,1)-1
 			%length of one segment:
-			laenge(i)=sqrt((xposition(1,i+1)-xposition(1,i))^2+(yposition(1,i+1)-yposition(1,i))^2); %#ok<AGROW>
+			laenge(i)=sqrt((xposition(i+1,1)-xposition(i,1))^2+(yposition(i+1,1)-yposition(i,1))^2); %#ok<AGROW>
 		end
 		length=sum(laenge);
 		percentagex=xposition/max(max(x));
@@ -8116,7 +8139,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 
 				distance=linspace(0,length,size(c,1))';
 			case 11 %tangent
-				if size(xposition,1)<=1 %user did not choose circle series
+				if size(xposition,2)<=1 %user did not choose circle series
 					if size(resultslist,1)>6 %filtered exists
 						if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
 							u=resultslist{10,currentframe};
@@ -8269,7 +8292,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 				end
 
 		end
-		if size(xposition,1)<=1 %user did not choose circle series
+		if size(xposition,2)<=1 %user did not choose circle series
 			h=figure;
 			screensize=get( 0, 'ScreenSize' );
 			rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
@@ -8441,9 +8464,13 @@ for i=1:size(h_extractionplot,1)
 end
 gui_put ('h_extractionplot', []);
 gui_put ('h_extractionplot2', []);
-delete(findobj('tag', 'extractpoint'));
-delete(findobj('tag', 'extractline'));
-delete(findobj('tag', 'circstring'));
+delete(findobj(gui_retr('pivlab_axis'),'tag', 'extractpoint'));
+delete(findobj(gui_retr('pivlab_axis'),'tag', 'extractline'));
+delete(findobj(gui_retr('pivlab_axis'),'tag', 'circstring'));
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly'))
+gui_put('xposition',[]);
+gui_put('yposition',[]);
+
 
 function plot_histdraw_Callback(~, ~, ~)
 handles=gui_gethand;
@@ -14578,4 +14605,17 @@ if found
 		evt.EventName='ROIMoved';
 		mask_ROIevents(objects_in_axis(i),evt); %saves the modified position.
 	end
+end
+
+function extract_poly_ROIevents(src,evt)
+evname = evt.EventName;
+handles=gui_gethand;
+switch(evname)
+	case{'ROIMoved'}
+		gui_put('xposition',src.Position(:,1));
+		gui_put('yposition',src.Position(:,2));
+	case{'DeletingROI'}
+		delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly'))
+		gui_put('xposition',[]);
+		gui_put('yposition',[]);
 end
