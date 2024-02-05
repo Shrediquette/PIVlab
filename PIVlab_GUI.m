@@ -4716,7 +4716,7 @@ if size(filepath,1) > 1 || gui_retr('video_selection_done') == 1
 	filepath=gui_retr('filepath');
 	delete(findobj('tag', 'RegionOfInterest'));
 	roi = images.roi.Rectangle;
-	roi.EdgeAlpha=0.75;
+	%roi.EdgeAlpha=0.75;
 	roi.FaceAlpha=0.05;
 	roi.LabelVisible = 'on';
 	roi.Tag = 'RegionOfInterest';
@@ -4726,7 +4726,7 @@ if size(filepath,1) > 1 || gui_retr('video_selection_done') == 1
 	delete(findobj('tag', 'roiplot'));
 	if ~isempty(roirect)
 		roi=drawrectangle(gui_retr('pivlab_axis'),'Position',roirect);
-		roi.EdgeAlpha=0.75;
+		%roi.EdgeAlpha=0.75;
 		roi.FaceAlpha=0.05;
 		roi.LabelVisible = 'on';
 		roi.Tag = 'RegionOfInterest';
@@ -5025,7 +5025,7 @@ ok=gui_checksettings;
 if ok==1
 	uiwait(msgbox({'Please select a rectangle';'that encloses the area that';'you want to analyze.'},'Suggestion for PIV settings','modal'));
 	roi = images.roi.Rectangle;
-	roi.EdgeAlpha=0.75;
+	%roi.EdgeAlpha=0.75;
 	roi.LabelVisible = 'on';
 	roi.Tag = 'suggestRect';
 	roi.Color = 'r';
@@ -6935,7 +6935,7 @@ if size(filepath,1) >1 || numel(caliimg)>0 || gui_retr('video_selection_done') =
 	gui_toolsavailable(0)
 	delete(findobj('tag', 'caliline'))
 	roi = images.roi.Line;
-	roi.EdgeAlpha=0.75;
+	%roi.EdgeAlpha=0.75;
 	roi.LabelVisible = 'on';
 	roi.Tag = 'caliline';
 	roi.Color = 'y';
@@ -6944,7 +6944,7 @@ if size(filepath,1) >1 || numel(caliimg)>0 || gui_retr('video_selection_done') =
 	Cali_coords = gui_retr('pointscali');
 	if ~isempty(Cali_coords)
 		roi=drawline(gui_retr('pivlab_axis'),'Position',Cali_coords);
-		roi.EdgeAlpha=0.75;
+		%roi.EdgeAlpha=0.75;
 		roi.LabelVisible = 'on';
 		roi.Tag = 'caliline';
 		original_linewidth=roi.LineWidth;
@@ -11174,7 +11174,7 @@ if size(filepath,1) >1 || numel(caliimg)>0 || gui_retr('video_selection_done') =
 
 
 	roi = images.roi.Crosshair;
-	roi.EdgeAlpha=0.75;
+	%roi.EdgeAlpha=0.75;
 	roi.LabelVisible = 'on';
 	roi.Tag = 'offsetroi';
 	roi.Color = 'y';
@@ -13729,7 +13729,7 @@ if mask_editing_possible==1
 		addlistener(roi,'DeletingROI',@mask_ROIevents);
 		addlistener(roi,'ROIClicked',@mask_ROIevents);
 		roi.FaceAlpha=0.5;
-		roi.EdgeAlpha=0.75;
+		%roi.EdgeAlpha=0.75;
 		roi.LineWidth=1;
 		roi.LabelVisible = 'off';
 	end
@@ -14532,7 +14532,7 @@ points_offsetx=gui_retr('points_offsetx');
 points_offsety=gui_retr('points_offsety');
 if numel(points_offsetx)>0 &&  numel(points_offsety)>0
 	roi=drawcrosshair(gui_retr('pivlab_axis'),'Position',[points_offsetx(1), points_offsetx(2)]);
-	roi.EdgeAlpha=0.75;
+	%roi.EdgeAlpha=0.75;
 	roi.LabelVisible = 'on';
 	roi.Tag = 'offsetroi';
 	roi.Color = 'y';
