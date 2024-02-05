@@ -1760,7 +1760,7 @@ item=[0 item(2)+item(4) parentitem(3) 1];
 handles.draw_what = uicontrol(handles.multip12,'Style','popupmenu','String',{'polyline','circle','circle series (tangent vel. only)'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_draw_what_Callback,'Tag','draw_what','TooltipString','Select the type of object that you want to draw and extract data from');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
-handles.draw_stuff = uicontrol(handles.multip12,'Style','pushbutton','String','Draw!','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_draw_stuff_Callback,'Tag','draw_stuff','TooltipString','Draw the object that you selected above');
+handles.draw_stuff = uicontrol(handles.multip12,'Style','pushbutton','String','Draw!','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_draw_extraction_coordinates_Callback,'Tag','draw_stuff','TooltipString','Draw the object that you selected above');
 
 %%new buttons, load and save polylines
 item=[0 item(2)+item(4) parentitem(3)/2 2];
@@ -6045,6 +6045,7 @@ if ~isequal(FileName,0)
 end
 
 function import_read_panel_width (FileName,PathName)
+gui_put('num_handle_calls',0);
 handles=gui_gethand;
 try
 	load(fullfile(PathName,FileName)); %#ok<*LOAD>
@@ -6053,6 +6054,7 @@ catch
 end
 
 function import_read_settings (FileName,PathName)
+gui_put('num_handle_calls',0);
 handles=gui_gethand;
 try
 	load(fullfile(PathName,FileName));
@@ -7687,6 +7689,21 @@ catch
 	A=out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1));
 	out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar(1:size(A,1),1:size(A,2));
 end
+%% remove data from masked areas
+current_mask_nr=floor(get(handles.fileselector, 'value'));
+masks_in_frame=gui_retr('masks_in_frame');
+if isempty(masks_in_frame)
+	%masks_in_frame=cell(current_mask_nr,1);
+	masks_in_frame=cell(1,current_mask_nr);
+end
+if numel(masks_in_frame)<current_mask_nr
+	mask_positions=cell(0);
+else
+	mask_positions=masks_in_frame{current_mask_nr};
+end
+expected_image_size=gui_retr('expected_image_size');
+converted_mask=mask_convert_masks_to_binary(expected_image_size,mask_positions);
+out(converted_mask==1)=nan;
 
 function calibrate_apply_cali_Callback(~, ~, ~)
 calibrate_calccali
@@ -7908,12 +7925,12 @@ end
 set (handles.alpha, 'String', num2str(alpha));
 set (handles.beta, 'String', num2str(beta));
 
-function extract_draw_stuff_Callback(~, ~, ~)
+function extract_draw_extraction_coordinates_Callback(~, ~, ~)
 gui_sliderdisp(gui_retr('pivlab_axis'));
 handles=gui_gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
 resultslist=gui_retr('resultslist');
-disp('wenn linie außerhalb ROI, dann evtl. nicht richtig angezeigt...')
+gui_put('extract_type',[]);
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	gui_toolsavailable(0);
 	xposition=[];
@@ -7922,9 +7939,10 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	but = 1;
 	hold on;
 	if get(handles.draw_what,'value')==1 %polyline
+		extract_type='extract_poly';
 		extract_poly = images.roi.Polyline;
 		extract_poly.LabelVisible = 'off';
-		extract_poly.Tag='extract_poly';
+		extract_poly.Tag=extract_type;
 		draw(extract_poly);
 		addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
 		addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
@@ -7949,6 +7967,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		end
 		%}
 	elseif get(handles.draw_what,'value')==2 %circle
+		extract_type='extract_circle';
 		for i=1:2
 			[xi,yi,but] = ginput(1);
 			if i==1;delete(findobj('tag', 'extractpoint'));end
@@ -7974,6 +7993,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		text(xposition(1,1)-radius-8,yposition(1,1)-radius,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag','extractline')
 		text(xposition(1,1)+radius+8,yposition(1,1)-radius,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag','extractline')
 	elseif get(handles.draw_what,'value')==3 %circle series
+		extract_type='extract_circle_series';
 		set(handles.extraction_choice,'Value',11);
 		for i=1:2
 			[xi,yi,but] = ginput(1);
@@ -8006,6 +8026,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	hold off;
 	gui_put('xposition',xposition)
 	gui_put('yposition',yposition)
+	gui_put('extract_type',extract_type);
 	gui_toolsavailable(1);
 end
 
@@ -8100,6 +8121,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	y=resultslist{2,currentframe};
 	xposition=gui_retr('xposition'); %not conflicting...?
 	yposition=gui_retr('yposition'); %not conflicting...?
+	extract_type=gui_retr('extract_type');
 	if numel(xposition)>1
 		for i=1:size(xposition,1)-1
 			%length of one segment:
@@ -8470,7 +8492,7 @@ delete(findobj(gui_retr('pivlab_axis'),'tag', 'circstring'));
 delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly'))
 gui_put('xposition',[]);
 gui_put('yposition',[]);
-
+gui_put('extract_type',[]);
 
 function plot_histdraw_Callback(~, ~, ~)
 handles=gui_gethand;
@@ -9004,6 +9026,7 @@ gui_toolsavailable(1)
 drawnow;
 
 function import_load_session_Callback(auto_load_session, auto_load_session_filename)
+gui_put('num_handle_calls',0);
 sessionpath=gui_retr('sessionpath');
 if isempty(sessionpath)
 	sessionpath=gui_retr('pathname');
