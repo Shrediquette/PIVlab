@@ -8361,7 +8361,6 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 					end
 				end
 		end
-		disp('ok')
 		%% Plotting
 		if ~strcmp(extract_type,'extract_circle_series') %user did not choose circle series
 			h=figure;
