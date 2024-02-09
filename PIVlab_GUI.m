@@ -1,14 +1,3 @@
-%% ToDo
-%{
-extract data: polyline seems ok
-Note that xposition is now transposed! Columns are the coordinates
-Save / Load coords machen
-Verschiedene extraction types machen
-extract and save for all machen.
-Plot data button: am besten das roi neu zeichnen, damit es wieder sichtbar / editierbar wird nachdem evtl. frame gewechselt wurde?
-%}
-%% ToDo
-
 % PIVlab - Digital Particle Image Velocimetry Tool for MATLAB
 % initiated by by Dr. William Thielicke and Prof. Dr. Eize J. Stamhuis
 % developed by William Thielicke
@@ -326,6 +315,5276 @@ else %Figure handle does already exist --> bring PIVlab to foreground.
 	disp('Only one instance of PIVlab is allowed to run.')
 	figure(fh)
 end
+function acquisition_browse_Callback(~,~,~)
+handles=gui_gethand;
+folder_name = uigetdir(gui_retr('pathname'),'Select image folder for saving');
+if ~isequal(folder_name,0)
+	set(handles.ac_project,'String',folder_name);
+	gui_put('pathname',folder_name);
+end
+
+function acquisition_calibBinning_Callback (~,~,~)
+handles=gui_gethand;
+camera_type=gui_retr('camera_type');
+if ~strcmp(camera_type,'pco_panda')  %Binning available only for pco panda
+	uiwait(msgbox('Binning is (up to now) only available for the pco.panda 26 DS.','modal'))
+else
+	binning=gui_retr('binning');
+	if isempty(binning)
+		binning=1;
+	end
+	definput = {num2str(binning)};
+	prompt = {'Pixel binning (1, 2, 4)'};
+	dlgtitle = 'Pixel binning Configuration';
+	dims = [1 50];
+	answer = inputdlg(prompt,dlgtitle,dims,definput);
+	if ~isempty(answer)
+		if str2double(answer{1}) ~= 1 && str2double(answer{1}) ~= 2 && str2double(answer{1}) ~= 4
+			msgbox('Not a valid binning option.','modal')
+			gui_put('binning',1)
+		else
+			gui_put('binning',str2double(answer{1}));
+			roi_clear_roi_Callback %PIV-ROI must be cleared when camera resolution is chnaged.
+		end
+		if answer{1} ~= definput{1}
+			set(handles.ac_realtime,'Value',0);%reset realtime roi
+			gui_put('do_realtime',0);
+			%reset roi too
+			ac_ROI_general=[];
+			gui_put('ac_ROI_general',ac_ROI_general);
+			save('PIVlab_settings_default.mat','ac_ROI_general','-append');
+		end
+	end
+end
+
+function acquisition_calibROI_Callback (~,~,~)
+handles=gui_gethand;
+gui_put('capturing',0);
+gui_put('hist_enabled',0);
+camera_type=gui_retr('camera_type');
+binning=gui_retr('binning');
+if isempty(binning)
+	binning=1;
+end
+if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'chronos')  %ROI selection not yet available for pixelfly and chronos
+	uiwait(msgbox('ROI selection is not (yet) available for the selected camera type.'))
+end
+
+if strcmp(camera_type,'flir')
+	uiwait(msgbox('ROI selection for the FLIR camera series will be implemented soon!','modal'))
+end
+
+if strcmp(camera_type,'OPTRONIS')
+	uiwait(msgbox(['ROI selection for the OPTRONIS camera series will be implemented soon!' newline 'Currently waiting for bug fixes from Mathworks.'],'modal'))
+end
+if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(camera_type,'OPTOcam') %|| strcmp(camera_type,'OPTRONIS')
+	try
+		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
+	catch
+		set(handles.ac_expo,'String','100');
+		expos=100000;
+	end
+	projectpath=get(handles.ac_project,'String');
+	capture_ok=acquisition_check_project_path(projectpath,'calibration');
+	if capture_ok==1
+		gui_put('cancel_capture',0);
+		gui_put('capturing',1);
+		max_cam_res=gui_retr('max_cam_res');
+		if strcmp(camera_type,'pco_panda')
+			try
+				[errorcode, caliimg,~]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,[1,1, max_cam_res(1)/binning,max_cam_res(2)/binning],camera_type,0);
+			catch ME
+				disp(ME)
+				uiwait(msgbox('Camera not connected'))
+				gui_displogo
+				capture_ok=0;
+			end
+		elseif strcmp(camera_type,'basler')
+			[errorcode, caliimg]=PIVlab_capture_basler_calibration_image(1,expos,[1,1,max_cam_res]);
+
+		elseif strcmp(camera_type,'OPTOcam')
+			[errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(1,expos,[1,1,max_cam_res]);
+		elseif strcmp(camera_type,'OPTRONIS')
+			acquisition_control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
+			[errorcode, caliimg]=PIVlab_capture_OPTRONIS_calibration_image(1,expos,[1,1,max_cam_res]);
+			acquisition_control_simple_sync_serial(0,2);
+		end
+		gui_put('capturing',0);
+
+		if capture_ok==1
+			displaysize_x=floor(get(gca,'XLim'));
+			displaysize_y=floor(get(gca,'YLim'));
+			ac_ROI_general=[];
+			warning off
+			load('PIVlab_settings_default.mat','ac_ROI_general');
+			warning on
+
+			bla=findobj(gca,'type','image');
+			current_image_size=size(bla.CData);
+
+			if isempty(ac_ROI_general)
+				ac_ROI_general=[0.5,0.5,current_image_size(2)/binning,current_image_size(1)/binning]; %1 Hz default ROI
+			end
+			gui_put('doing_roi',1)
+			stretched_image=adapthisteq(bla.CData);
+			bla.CData=stretched_image;
+			ac_ROI_general_handle = drawrectangle(gca,'Position',ac_ROI_general,'LabelVisible','hover','Deletable',0,'DrawingArea',[1 1 current_image_size(2) current_image_size(1)],'tag','new_ROImethod','StripeColor','y');
+			addlistener(ac_ROI_general_handle,'MovingROI',@roi_ROIallevents);
+			addlistener(ac_ROI_general_handle,'ROIMoved',@roi_ROIallevents);
+			evt.EventName='ROIMoved';
+			evt.CurrentPosition=ac_ROI_general;
+			roi_ROIallevents(ac_ROI_general_handle,evt)
+
+			c_menu = uicontextmenu;
+			ac_ROI_general_handle.UIContextMenu = c_menu;
+
+			if strcmp(camera_type,'pco_panda')
+				m0 = uimenu(c_menu,'Label','pco.panda 45 Hz','Callback',@roi_setdefaultroi);
+				m1 = uimenu(c_menu,'Label','pco.panda 22.5 Hz','Callback',@roi_setdefaultroi);
+				m2 = uimenu(c_menu,'Label','pco.panda 15 Hz','Callback',@roi_setdefaultroi);
+				m3 = uimenu(c_menu,'Label','pco.panda 7.5 Hz','Callback',@roi_setdefaultroi);
+				m4 = uimenu(c_menu,'Label','pco.panda 5 Hz','Callback',@roi_setdefaultroi);
+				m5 = uimenu(c_menu,'Label','pco.panda 3 Hz','Callback',@roi_setdefaultroi);
+				m6 = uimenu(c_menu,'Label','pco.panda 1 Hz','Callback',@roi_setdefaultroi);
+				m7 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_setdefaultroi);
+			end
+			if strcmp(camera_type,'basler')
+				m0 = uimenu(c_menu,'Label','Basler 2048x1088','Callback',@roi_setdefaultroi);
+				m1 = uimenu(c_menu,'Label','Basler 1280x720','Callback',@roi_setdefaultroi);
+				m2 = uimenu(c_menu,'Label','Basler 1024x1024','Callback',@roi_setdefaultroi);
+				m3 = uimenu(c_menu,'Label','Basler 640x480','Callback',@roi_setdefaultroi);
+				m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_setdefaultroi);
+			end
+			if strcmp(camera_type,'OPTOcam')
+				m0 = uimenu(c_menu,'Label','OPTOcam 1936x1216 (8bit: 160 fps, 12bit: 80 fps)','Callback',@roi_setdefaultroi);
+				m1 = uimenu(c_menu,'Label','OPTOcam 1600x600 (8bit: 320 fps)','Callback',@roi_setdefaultroi);
+				m2 = uimenu(c_menu,'Label','OPTOcam 1600x480 (8bit: 400 fps)','Callback',@roi_setdefaultroi);
+				m3 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_setdefaultroi);
+			end
+
+			if strcmp(camera_type,'OPTRONIS')
+				%die ganzen ROIs bringen noch keine fps Erhöhung, muss erst
+				%im dropdown eine Option hinzugefügt werden...
+				camera_sub_type=gui_retr('camera_sub_type');
+				switch camera_sub_type
+					case 'Cyclone-2-2000-M'
+						m0 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1920x1080 (max. 2165 fps)','Callback',@roi_setdefaultroi);
+						m1 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x800 (max. 3100 fps)','Callback',@roi_setdefaultroi);
+						m2 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x480 (max. 5142 fps)','Callback',@roi_setdefaultroi);
+						m3 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1024x240 (max. 10150 fps)','Callback',@roi_setdefaultroi);
+						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_setdefaultroi);
+					case 'Cyclone-1HS-3500-M'
+						m0 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x860 (max. 3500 fps)','Callback',@roi_setdefaultroi);
+						m1 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x640 (max. 4700 fps)','Callback',@roi_setdefaultroi);
+						m2 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x320 (max. 9340 fps)','Callback',@roi_setdefaultroi);
+						m3 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x240 (max. 12350 fps)','Callback',@roi_setdefaultroi);
+						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_setdefaultroi);
+					case 'Cyclone-25-150-M'
+						m0 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x5120 (max. 150 fps)','Callback',@roi_setdefaultroi);
+						m1 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x2160 (max. 350 fps)','Callback',@roi_setdefaultroi);
+						m2 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x1080 (max. 695 fps)','Callback',@roi_setdefaultroi);
+						m3 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x720 (max. 1025 fps)','Callback',@roi_setdefaultroi);
+						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_setdefaultroi);
+					otherwise
+
+				end
+			end
+
+			position = acquisition_customWait(ac_ROI_general_handle);
+
+			gui_put('ac_ROI_general_handle',ac_ROI_general_handle);
+			gui_put('doing_roi',0)
+			position=round(position);
+
+			xmin=position(1);
+			ymin=position(2);
+			xmax=position(1)+position(3)-1;
+			ymax=position(2)+position(4)-1;
+
+			% Round so it fits the requirements of the camera ROI
+			xmin=floor(xmin/8)*8+1;
+			ymin=floor(ymin/2)*2+1;
+			xmax=floor(xmax/8)*8;
+			ymax=floor(ymax/2)*2;
+
+			if xmin<1
+				xmin=1;
+			end
+			if ymin<1
+				ymin=1;
+			end
+			if xmax>max_cam_res(1)
+				xmax=max_cam_res(1);
+			end
+			if ymax>max_cam_res(2)
+				ymax=max_cam_res(2);
+			end
+			position(1)=xmin;
+			position(2)=ymin;
+			position(3)=xmax-xmin+1;
+			position(4)=ymax-ymin+1;
+			ac_ROI_general=position;
+			gui_put('ac_ROI_general',ac_ROI_general);
+			save('PIVlab_settings_default.mat','ac_ROI_general','-append');
+			delete(ac_ROI_general_handle)
+			rectangle('Position',position,'EdgeColor','y','linewidth',2)
+			if strcmp(camera_type,'pco_panda')
+				%% jetzt nochmal mit finalen einstellungen bild capturen zum messen der framerate...
+				%Camera fps
+				ac_fps_value=get(handles.ac_fps,'Value');
+				ac_fps_str=get(handles.ac_fps,'String');
+				cam_fps=str2double(ac_fps_str(ac_fps_value));
+				ac_ROI_general=gui_retr('ac_ROI_general');
+				[~,~,framerate_max]=PIVlab_capture_pco(1,gui_retr('f1exp_cam'),'Synchronizer',projectpath,cam_fps,0,[],binning,ac_ROI_general,camera_type,1);
+				delete(findobj('tag','roitxt'));
+				text(50,50,['Max framerate: ' num2str(round(framerate_max,2)) ' Hz'],'tag','roitxt','Color','yellow','FontSize',14,'FontWeight','bold')
+			end
+			set(handles.ac_realtime,'Value',0);%reset realtime roi
+			gui_put('do_realtime',0);
+		end
+	end
+end
+
+function acquisition_calibcapture_Callback(~,~,~)
+[filepath,~,~] = fileparts(mfilename('fullpath'));
+camera_type=gui_retr('camera_type');
+if ~strcmp(camera_type,'chronos') %calib
+	if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_camera_load_defines.m'),'file')
+		ready=1;
+	else
+		ready=0;
+		acquisition_pco_error_msgbox
+	end
+else
+	ready=1;
+end
+if ready==1
+	handles=gui_gethand;
+	try
+		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
+	catch
+		set(handles.ac_expo,'String','100');
+		expos=100000;
+	end
+	gui_put('cancel_capture',0);
+	projectpath=get(handles.ac_project,'String');
+	capture_ok=acquisition_check_project_path(projectpath,'calibration');
+	ac_ROI_general=gui_retr('ac_ROI_general');
+	binning=gui_retr('binning');
+	if isempty(binning)
+		binning=1;
+	end
+	if isempty(ac_ROI_general)
+		max_cam_res=gui_retr('max_cam_res');
+		ac_ROI_general=[1,1,max_cam_res(1)/binning,max_cam_res(2)/binning];
+	end
+	capturing=gui_retr('capturing');
+	if isempty(capturing);capturing=0;end
+	if capture_ok==1 && capturing == 0
+		gui_put('capturing',1);
+		gui_toolsavailable(0,'Starting camera...')
+		%set(handles.ac_calibsave,'enable','on')
+		set(handles.ac_calibcapture,'enable','on')
+		set(handles.ac_serialstatus,'enable','on')
+		set(handles.ac_laserstatus,'enable','on')
+		set(handles.ac_lasertoggle,'enable','on')
+		set(handles.ac_lensctrl,'enable','on')
+		set(handles.ac_power,'enable','on')
+
+		%try
+		set(handles.ac_calibcapture,'String','Stop')
+		if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') %pco cameras
+			[errorcode, caliimg,framerate_max]=PIVlab_capture_pco(50000,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
+		elseif strcmp(camera_type,'basler')
+			[errorcode, caliimg]=PIVlab_capture_basler_calibration_image(inf,expos,ac_ROI_general);
+		elseif strcmp(camera_type,'OPTOcam')
+			[errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(inf,expos,ac_ROI_general);
+		elseif strcmp(camera_type,'OPTRONIS')
+			acquisition_control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
+			[errorcode, caliimg]=PIVlab_capture_OPTRONIS_calibration_image(inf,expos,ac_ROI_general);
+			acquisition_control_simple_sync_serial(0,2);
+		elseif strcmp(camera_type,'flir')
+			[errorcode, caliimg]=PIVlab_capture_flir_calibration_image(expos);
+		elseif strcmp(camera_type,'chronos')
+			cameraIP=gui_retr('Chronos_IP');
+			if isempty(cameraIP)
+				uiwait(msgbox({'Chronos Setup not performed.' 'Please click "Setup" in "Camera settings"'}))
+			else
+				[errorcode, caliimg] = PIVlab_capture_chronos_calibration_image(cameraIP,expos);
+			end
+		end
+		gui_put('caliimg',caliimg);
+		gui_put('fresh_calib_image',1);
+		%{
+		catch
+			set(handles.ac_calibcapture,'String','Start')
+			uiwait(msgbox('Camera not connected'))
+			displogo
+			put('capturing',0);
+			toolsavailable(1)
+		end
+		%}
+	elseif capture_ok==1 && capturing == 1
+		gui_put('cancel_capture',1);
+		gui_put('capturing',0);
+		set(handles.ac_calibcapture,'String','Start')
+		gui_toolsavailable(1)
+		set(handles.ac_calibsave,'enable','on')
+	end
+end
+
+function acquisition_camera_setup_Callback(~,~,~)
+camera_type=gui_retr('camera_type');
+if strcmp(camera_type,'chronos')
+	PIVlab_capture_chronos_settings_GUI
+elseif strcmp(camera_type,'OPTOcam')
+	PIVlab_capture_OPTOcam_settings_GUI
+elseif strcmp(camera_type,'pco_panda')
+	PIVlab_capture_panda_settings_GUI
+else
+	uiwait(msgbox('Available for OPTOcam, Chronos and pco.panda cameras only.','modal'))
+end
+
+function acquisition_camera_stop_Callback(~,evt,~)
+gui_put('cancel_capture',1);
+acquisition_control_simple_sync_serial(0,0);
+%external_device_control(0);
+gui_put('laser_running',0);
+gui_put('capturing',0);
+gui_toolsavailable(1)
+fresh_calib_image=gui_retr('fresh_calib_image');
+if strncmp(evt.Source.Tag,'ac_calibsave',20) %only when "save" button is pressed, then save the calibration image.
+	if ~isempty(fresh_calib_image) && fresh_calib_image == 1
+		gui_put('fresh_calib_image',0);
+		handles=gui_gethand;
+		projectpath=get(handles.ac_project,'String');
+		numbi = 0;
+		imgA_path = fullfile(projectpath, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']);
+		while exist(imgA_path, 'file')
+			numbi = numbi+1;
+			imgA_path = fullfile(projectpath, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']);
+		end
+		imwrite(gui_retr('caliimg'),imgA_path);
+		set(handles.ac_calibsave,'enable','off')
+	end
+	drawnow;
+end
+
+function acquisition_capture_images_Callback(~,~,~) %Menu item is called
+[filepath,~,~] = fileparts(mfilename('fullpath'));
+gui_switchui('multip24')
+acquisition_select_capture_config_Callback
+if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources'),'dir')==7
+	%addpath(genpath(fullfile(filepath, 'PCO_resources')));
+	addpath(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts'));
+	%PCO setup_files.m copies required dlls and headers to dir.
+	%subfolders might not be necessary. Check!
+else
+	acquisition_pco_error_msgbox
+end
+if verLessThan('matlab','9.7') %R2019b
+	uiwait(msgbox('Image capture and synchronizer control in PIVlab requires at least MATLAB version 9.7 (R2019b).','modal'))
+end
+handles=gui_gethand;
+if isempty(get(handles.ac_project,'String')) %if user hasnt entered a project path...
+	if ~isempty(gui_retr('pathname'))
+		set(handles.ac_project,'String',fullfile(gui_retr('pathname'),['PIVlabCapture_' char(datetime('today'))]));
+	else
+		set(handles.ac_project,'String',fullfile(pwd,['PIVlabCapture_' char(datetime('today'))]));
+	end
+end
+serpo=gui_retr('serpo');
+try
+	serpo.Port; %is there no other way to determine if serialport is working...?
+	alreadyconnected=1;
+catch
+	alreadyconnected=0;
+	delete(serpo)
+	gui_put('serpo',[]);
+	set(handles.ac_comport,'Value',1);
+	set(handles.ac_laserstatus,'String','N/A','BackgroundColor',[1 0 0])
+end
+if alreadyconnected
+	serports=serialportlist('available');
+	set(handles.ac_comport,'String',[serpo.Port serports]); %fill dropdown with connected port on top, and other available ports at bottom
+	set(handles.ac_connect,'String','Connect');
+	set(handles.ac_serialstatus,'Backgroundcolor',[0 1 0]);
+else
+	try
+		serports=serialportlist('available');
+	catch
+		serports=[];
+	end
+	if isempty(serports)
+		serports='No available serial ports found!';
+		set(handles.ac_connect,'String','Refresh');
+	else
+		set(handles.ac_connect,'String','Connect');
+	end
+	set(handles.ac_comport,'String',serports);
+	set(handles.ac_serialstatus,'Backgroundcolor',[1 0 0]);
+end
+
+
+% Set default image colormap limits
+gui_put('ac_lower_clim',0);
+gui_put('ac_upper_clim',2^16);
+delete(findobj('tag','shortcutlist'));
+%Keyboard shortcuts
+text(10,10,['Image acquisition keyboard shortcuts' sprintf('\n') 'CTRL SHIFT C : Toggle crosshair' sprintf('\n') 'CTRL SHIFT X : Toggle sharpness measure' sprintf('\n') 'CTRL SHIFT + : Increase display brightness' sprintf('\n') 'CTRL SHIFT - : Decrease display brightness' sprintf('\n') 'CTRL SHIFT K : Toggle between log and lin color scale' sprintf('\n') 'CTRL SHIFT H : Toggle histogram display'],'tag','shortcutlist','Color','black','BackgroundColor','white','VerticalAlignment','top');
+try
+	if ~alreadyconnected
+		if ispref('PIVlab_ad','enable_ad') &&  getpref('PIVlab_ad','enable_ad') ==0
+			%do not display ad
+		else
+			if exist('laser_device_id.mat','file') ~= 2
+				hardware_Ad
+			end
+		end
+	end
+catch
+end
+if gui_retr('parallel')==1
+	button = questdlg('It is highly recommended to turn off parallel processing during image capture to save RAM.','Shut down parallel pool?','OK','Cancel','OK');
+	if strncmp(button,'OK',3)==1
+		gui_put('parallel',1); %sets to "parallel on" and then presses the toggle button --> will turn off.
+		misc_toggle_parallel_Callback
+	end
+end
+
+function result=acquisition_check_project_path(projectpath,caller)
+handles=gui_gethand;
+result=0;
+if ~exist(projectpath,'dir')
+	button = questdlg('Folder does not exist. Create?','Create?','Yes','Cancel','Yes');
+	if strmatch(button,'Yes')==1
+		mkdir(projectpath);
+		result=1;
+		acquisition_update_ac_status(['Created folder ' projectpath]);
+	end
+else
+	result=1;
+end
+if strcmp(caller,'double_images')
+	if result==1 && exist(fullfile(projectpath,'PIVlab_0000_A.tif'),'file') || exist(fullfile(projectpath,'frame_000001.tiff'),'file')
+		button = questdlg('Overwrite files?','Overwrite?','Yes','Cancel','Yes');
+		if strmatch(button,'Yes')==1
+			result=1;
+		else
+			result=0;
+		end
+	end
+end
+
+function acquisition_connect_Callback (~,~,~)
+handles=gui_gethand;
+set(handles.ac_serialstatus,'Backgroundcolor',[1 0 0]);
+if strcmp(get(handles.ac_comport,'String'),'No available serial ports found!')
+	acquisition_capture_images_Callback; %will also refresh the comport list
+else
+	try
+		delete(gui_retr('serpo')); %delete old serialport
+		selected_item=get(handles.ac_comport,'Value');
+		avail_ports=get(handles.ac_comport,'String');
+		if size(avail_ports,1)>1
+			selected_port=avail_ports{selected_item};
+		else
+			selected_port=avail_ports;
+		end
+		serpo = serialport(selected_port,9600,'Timeout',1);
+		configureTerminator(serpo,'CR/LF');
+		gui_put('serpo',serpo);
+		set(handles.ac_serialstatus,'Backgroundcolor',[0 1 0]);
+		acquisition_update_ac_status(['Connected to ' selected_port]);
+		gui_put('laser_running',0);
+
+		laser_device_id = acquisition_find_laser_device;
+		gui_put('laser_device_id',laser_device_id);
+
+		acquisition_control_simple_sync_serial(0,0);
+	catch ME
+		acquisition_update_ac_status(ME.message);
+		acquisition_capture_images_Callback;
+	end
+end
+
+function serial_answer = acquisition_control_simple_sync_serial(switch_it,calibration_pulse)
+%first argument 0 = turn synchronized laser diode off
+%first argument 1 = turn synchronized laser diode on
+%second argument 0 = don't care about calibration camera signal
+%second argument 1 = turn calibration camera signal on
+%second argument 2 = turn calibration camera signal off
+try %try to switch of camera angle report
+	stop(timerfind)
+	delete(timerfind)
+	set(getappdata(0,'handle_to_lens_timer_checkbox'),'Value',0)
+catch
+end
+handles=gui_gethand;
+serpo=gui_retr('serpo');
+try
+	serpo.Port;
+	alreadyconnected=1;
+catch ME
+	alreadyconnected=0;
+	disp('hier ist serialport deleted nach dem ersten erfolgreichen aufzeichnen')
+end
+if alreadyconnected
+	%Master frequency in Hz
+	master_freq =gui_retr('master_freq'); %will depend on the laser system (frequency with best beam quality)
+	%frame 1 exposure time incl. readout time in µs
+	f1exp = gui_retr('f1exp'); % will depend on camera model
+	%External trigger input settings
+	if get(handles.ac_enable_ext_trigger,'Value') == 0
+		extdly = -1; % external trigger input delay. -1 disables external trigger
+		extskp = 0; %external trigger amount of signals to skip.
+	else
+		extdly = gui_retr('selectedtriggerdelay'); % external trigger input delay. -1 disables external trigger
+		extskp = gui_retr('selectedtriggerskip'); %external trigger amount of signals to skip.
+	end
+	%Camera fps
+	ac_fps_value=get(handles.ac_fps,'Value');
+	ac_fps_str=get(handles.ac_fps,'String');
+	cam_prescaler=round(master_freq/str2double(ac_fps_str(ac_fps_value)));
+
+	%Laser power
+	las_percent=str2double(get(handles.ac_power,'String'));
+	%specific laser power polynom for converting Q-switch delay to laser energy
+	load q_delay_to_laser_power_polynom.mat %loads q and min_energy
+	energy_us = round(polyval(p,las_percent));
+	if energy_us > min_energy
+		energy_us = min_energy;
+	end
+	%Pulse distance
+	pulse_sep=str2double(get(handles.ac_interpuls,'String'));
+	laser_device_id=gui_retr('laser_device_id');
+
+	%potential bug fixes go here:
+	bugfix_factor=1;
+	try
+		if strncmp(laser_device_id,'LDPS_BAS1',12)
+			disp('Bug fix for LDPS_BAS1 activated');
+			bugfix_factor=2;
+		end
+	catch
+		bugfix_factor=1;
+	end
+
+	if switch_it==1
+		flush(serpo)
+		camera_type=gui_retr('camera_type');
+		if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly')
+			send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
+		else
+			send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(str2double(ac_fps_str(ac_fps_value))*bugfix_factor) ';CAM:' int2str(0) ';ENER:' int2str(0) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(0) ';INTERF:' int2str(round(pulse_sep/bugfix_factor)) ';EXTDLY:' int2str(0) ';EXTSKP:' int2str(0) ';LASER:enable'];
+		end
+		writeline(serpo,send_string);
+	else
+		flush(serpo)
+		%configureTerminator(serpo,'CR');
+		send_string=['TALKINGTO:' laser_device_id ';FREQ:1;CAM:1;ENER:' int2str(min_energy) ';ener%:0;F1EXP:100;INTERF:1234;EXTDLY:-1;EXTSKP:0;LASER:disable'];
+		writeline(serpo,send_string);
+		%writeline(serpo,'FREQ:5;EXPO:300;CAMDLY:835;LDPULS:300;INTERF:500;LASER:disable');
+		%disp('testing laserdiode')
+	end
+	pause(0.1)
+	warning off
+	serial_answer = acquisition_process_sync_reply(serpo);
+	if calibration_pulse ~= 0 %this is needed for the OPTRONIS cameras, they cannot be configured to free run internal trigger
+		camera_type=gui_retr('camera_type');
+		if strcmp(camera_type,'OPTRONIS')
+			if calibration_pulse ==1
+				writeline(serpo,'CAMERA_FREERUN_ON!');
+			elseif calibration_pulse ==2
+				writeline(serpo,'CAMERA_FREERUN_OFF!');
+			end
+		end
+	end
+	%% debug messages
+	%{
+	disp('---------')
+	disp(['Terminator set to: ' serpo.Terminator])
+	disp(['String written: ' send_string])
+	disp(['Answer: ' convertStringsToChars(serial_answer)])
+	disp('---------')
+	%}
+else
+	acquisition_no_dongle_msgbox
+end
+
+function pos = acquisition_customWait(hROI)
+% Listen for mouse clicks on the ROI
+l = addlistener(hROI,'ROIClicked',@roi_ROIclickCallback);
+% Block program execution
+uiwait;
+% Remove listener
+delete(l);
+% Return the current position
+pos = hROI.Position;
+
+function acquisition_device_control_Callback (~,~,~)
+try %try to switch of camera angle report
+	stop(timerfind)
+	delete(timerfind)
+	set(getappdata(0,'handle_to_lens_timer_checkbox'),'Value',0)
+catch
+end
+PIVlab_capture_devicectrl_GUI
+
+function acquisition_exposure_Callback(~,~,~)
+handles=gui_gethand;
+camera_type=gui_retr('camera_type');
+if strcmp(camera_type,'pco_pixelfly')
+	if str2double(get(handles.ac_expo,'String')) < 1
+		set(handles.ac_expo,'String','1')
+	end
+	if str2double(get(handles.ac_expo,'String')) > 2000
+		set(handles.ac_expo,'String','2000')
+	end
+end
+if strcmp(camera_type,'pco_panda')
+	if str2double(get(handles.ac_expo,'String')) < 6
+		set(handles.ac_expo,'String','6')
+	end
+	if str2double(get(handles.ac_expo,'String')) > 350
+		set(handles.ac_expo,'String','350')
+	end
+end
+if strcmp(camera_type,'chronos')
+	if str2double(get(handles.ac_expo,'String')) < 0.1
+		set(handles.ac_expo,'String','0.1')
+	end
+	if str2double(get(handles.ac_expo,'String')) > 100000
+		set(handles.ac_expo,'String','100000')
+	end
+end
+if strcmp(camera_type,'basler')
+	if str2double(get(handles.ac_expo,'String')) < 0.05
+		set(handles.ac_expo,'String','0.05')
+	end
+	if str2double(get(handles.ac_expo,'String')) > 1000
+		set(handles.ac_expo,'String','1000')
+	end
+end
+
+function acquisition_ext_trigger_settings_Callback (~,~,~)
+handles=gui_gethand;
+serpo=gui_retr('serpo');
+if ~isempty(serpo)
+	acquisition_control_simple_sync_serial(0,0);
+	if get(handles.ac_enable_ext_trigger,'Value')==1 %execute only if checkbox was off before it was clicked.
+		old_label=get(handles.ac_enable_ext_trigger,'String');
+		set(handles.ac_enable_ext_trigger,'String','Acquiring...','Enable','off')
+
+		drawnow;
+		flush(serpo)
+		%configureTerminator(serpo,'CR');
+		writeline(serpo,'TrigFreq?');
+		pause(1.25);
+		warning off
+		%configureTerminator(serpo,'CR/LF');
+		serial_answer=readline(serpo);
+		warning on
+		set(handles.ac_enable_ext_trigger,'String',old_label,'Enable','on');
+		selectedtriggerdelay=gui_retr('selectedtriggerdelay');
+		if isempty(selectedtriggerdelay)
+			selectedtriggerdelay=100;
+		end
+		selectedtriggerskip=gui_retr('selectedtriggerskip');
+		if isempty(selectedtriggerskip)
+			selectedtriggerdelay=0;
+		end
+		prompt = {['Detected frequency on trigger input: ' num2str(serial_answer) ' Hz.' sprintf('\n\n') 'Trigger delay in µs (must be > 100):'],'Nr. of trigger signals to skip:'};
+		dlgtitle = 'External Trigger Configuration';
+		dims = [1 50];
+		definput = {num2str(selectedtriggerdelay),num2str(selectedtriggerskip)};
+		answer = inputdlg(prompt,dlgtitle,dims,definput);
+		if ~isempty(answer)
+			gui_put('selectedtriggerdelay',str2double(answer{1}));
+			gui_put('selectedtriggerskip',str2double(answer{2}));
+		end
+	end
+end
+
+function acquisition_external_device_control(switch_it)
+handles=gui_gethand;
+serpo=gui_retr('serpo');
+if ~isempty(serpo)
+	flush(serpo)
+	if switch_it==1
+		if ~isempty(gui_retr('ac_enable_seeding1')) && gui_retr('ac_enable_seeding1') == 1
+			ext_dev_01_pwm = gui_retr('ext_dev_01_pwm');
+			line_to_write=['SEEDER_01:' num2str(ext_dev_01_pwm)];
+			writeline(serpo,line_to_write);
+			gui_put('ac_seeding1_status',1);
+			pause(0.2)
+		end
+		if ~isempty(gui_retr('ac_enable_device1')) && gui_retr('ac_enable_device1') == 1
+			ext_dev_02_pwm = gui_retr('ext_dev_02_pwm');
+			line_to_write=['DEVICE_01:' num2str(ext_dev_02_pwm)];
+			writeline(serpo,line_to_write);
+			gui_put('ac_device1_status',1);
+			pause(0.2)
+		end
+		if ~isempty(gui_retr('ac_enable_device2')) && gui_retr('ac_enable_device2') == 1
+			ext_dev_03_pwm = gui_retr('ext_dev_03_pwm');
+			line_to_write=['DEVICE_02:' num2str(ext_dev_03_pwm)];
+			writeline(serpo,line_to_write);
+			gui_put('ac_device2_status',1);
+			pause(0.2)
+		end
+		if ~isempty(gui_retr('ac_enable_flowlab')) && gui_retr('ac_enable_flowlab') == 1
+			flowlab_percent = gui_retr('flowlab_percent');
+			line_to_write=['FLOWLAB:' num2str(flowlab_percent/100)];
+			writeline(serpo,line_to_write);
+			gui_put('ac_flowlab_status',1);
+			pause(0.2)
+		end
+	else
+		writeline(serpo,'SEEDER_01:0');
+		pause(0.1)
+		writeline(serpo,'DEVICE_01:0');
+		pause(0.1)
+		writeline(serpo,'DEVICE_02:0');
+		pause(0.1)
+		writeline(serpo,'FLOWLAB:0');
+		gui_put('ac_seeding1_status',0);
+		gui_put('ac_device1_status',0);
+		gui_put('ac_device2_status',0);
+		gui_put('ac_flowlab_status',0);
+	end
+end
+
+function laser_device_id = acquisition_find_laser_device
+handles=gui_gethand;
+serpo=gui_retr('serpo');
+try
+	serpo.Port;
+	alreadyconnected=1;
+catch
+	alreadyconnected=0;
+end
+if alreadyconnected
+
+	if exist('laser_device_id.mat','file') == 2
+		old_laser_device_id = load('laser_device_id.mat','id');
+		old_laser_device_id = old_laser_device_id.id;
+	else
+		old_laser_device_id='%';
+	end
+	string1='WhoAreYou?';
+	string2='WhichFirmWare?';
+
+	try
+		writeline(serpo,string1);
+		pause(0.3)
+		warning off
+		serial_answer=readline(serpo);
+		disp(['Connected to: ' convertStringsToChars(serial_answer)])
+		warning on
+	catch
+		disp('Error sending WhoAreYou')
+	end
+	try
+		writeline(serpo,string2);
+		pause(0.3)
+		warning off
+		firmware_version=readline(serpo);
+		warning on
+		if isempty(firmware_version)
+			firmware_version='pre feb 22';
+		end
+		disp(['Firmware: ' convertStringsToChars(firmware_version)])
+
+		delete(findobj('tag','laser_info_box'));
+		try
+			Kinder=get(gca,'Children');
+			for k=1:size(Kinder,1)
+				if isprop(Kinder(k),'CData')
+					img_size=size(Kinder(k).CData,1);
+					break
+				end
+			end
+			text(10,img_size*0.95,['Connected to:  ' convertStringsToChars(serial_answer) sprintf('\n') 'Firmware:  ' convertStringsToChars(firmware_version)],'tag','laser_info_box','Color','black','BackgroundColor','green','VerticalAlignment','bottom','interpreter','none');
+		catch
+		end
+	catch
+		disp('Error sending WhichFirmware')
+	end
+	%%debug messages
+	%{
+disp('---------')
+	disp(['Port is: ' serpo.Port])
+	disp(['Terminator set to: ' serpo.Terminator])
+	disp(['String written: ' string1])
+	disp(['String written: ' string2])
+	disp(['Answer: ' convertStringsToChars(serial_answer)])
+disp('---------')
+	%}
+
+	if isempty(serial_answer)
+		uiwait(msgbox(['No laser found.' sprintf('\n') 'Is the laser turned on?' sprintf('\n') 'Please try again.'],'modal'))
+	end
+	if strncmp(old_laser_device_id,serial_answer,20)==0 %if last laser ID DOES NOT equal current laser ID
+		get_laser_id = inputdlg(['Please enter the ID of your laser / synchronizer.' sprintf('\n') 'It can be found on the sticker on the device.' sprintf('\n') 'Firmware: ' convertStringsToChars(firmware_version)],'First time connection',1,{convertStringsToChars(serial_answer)});
+		if ~isempty(get_laser_id)
+			id=get_laser_id{1};
+			[filepath,~,~] = fileparts(mfilename('fullpath'));
+			save (fullfile(filepath, 'PIVlab_capture_resources', 'laser_device_id.mat'),'id')
+		end
+	end
+	laser_device_id = load('laser_device_id.mat','id');
+	laser_device_id = laser_device_id.id;
+else
+	acquisition_no_dongle_msgbox
+end
+
+function acquisition_image_amount_Callback(~,~,~)
+camera_type=gui_retr('camera_type');
+if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'chronos') || strcmp(camera_type,'pco_pixelfly')
+	%these cameras do not capture into RAM
+else
+	handles=gui_gethand;
+	% assess how many images can be captured to RAM using the image
+	% acquisition toolbox (pco doesn't use the toolbox and writes directly
+	% to disk
+	warning('off','MATLAB:JavaEDTAutoDelegation');
+	imaqreset %resetting to get a good estimate of the free RAM
+
+	imageamount=str2double(get(handles.ac_imgamount,'String'));
+	ac_ROI_general=gui_retr('ac_ROI_general');
+	if isempty(ac_ROI_general)
+		max_cam_res=gui_retr('max_cam_res');
+		ac_ROI_general=[1 1 max_cam_res(1) max_cam_res(2)];
+	end
+	value=get(handles.ac_config,'value');
+	bitmode=8;
+	if value == 6  %basler cameras
+		bitmode=8;
+	elseif value == 7  %flir cameras
+		bitmode=8;
+	elseif value == 8  %OPTOcam
+		bitmode =gui_retr('OPTOcam_bits');
+		if isempty (bitmode)
+			bitmode=8;
+		end
+	elseif value == 9  %OPTRONIS
+		bitmode =gui_retr('OPTRONIS_bits');
+		if isempty (bitmode)
+			bitmode=8;
+		end
+	end
+
+	max_possible_dbl_images = PIVlab_capture_max_possible_images(ac_ROI_general,[],bitmode);
+	if imageamount > max_possible_dbl_images
+		if get(handles.ac_pivcapture_save,'Value')==1
+			set(handles.ac_imgamount,'BackgroundColor',[1 0.5 0])
+			beep
+			warning(['RAM most likely not sufficient to capture this amount of double images.' newline 'Please reduce the amount of double images.' newline 'Maximum double images is approx. ' num2str(max_possible_dbl_images)])
+		end
+	else
+		set(handles.ac_imgamount,'BackgroundColor',[1 1 1])
+	end
+end
+
+function acquisition_initiate_straddling_graph
+handles=gui_gethand;
+selected_fps_value = get(handles.ac_fps,'Value');
+selected_fps_string = get(handles.ac_fps,'String');
+selected_fps=str2double(selected_fps_string{selected_fps_value});
+if get(handles.ac_enable_straddling_figure, 'Value')==1
+	blind_time=gui_retr('blind_time');
+	if isempty(blind_time)
+		blind_time=1;
+	end
+	camera_type=gui_retr('camera_type');
+
+	if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly')
+		is_dbl_shutter = 1;
+	else
+		is_dbl_shutter = 0;
+	end
+	pco_first_frame_exposure = floor(str2double(get(handles.ac_interpuls,'String'))*str2double(get(handles.ac_power,'String'))/100)+1;
+	straddling_graph(blind_time,selected_fps,str2double(get(handles.ac_interpuls,'String')),str2double(get(handles.ac_power,'String')),4,is_dbl_shutter,pco_first_frame_exposure)
+else
+	straddling_figure=findobj('tag','straddling_figure');
+	if ~isempty(straddling_figure)
+		close(straddling_figure)
+	end
+end
+
+function acquisition_lasertoggle_Callback(~,~,~)
+handles=gui_gethand;
+serpo=gui_retr('serpo');
+laser_running = gui_retr('laser_running');
+if isempty(laser_running)
+	laser_running=0;
+end
+try
+	serpo.Port;
+	alreadyconnected=1;
+catch
+	alreadyconnected=0;
+end
+if alreadyconnected
+	pause(0.1)
+	if laser_running %laser is on
+		acquisition_control_simple_sync_serial(0,0);
+		laser_running=0;
+	else %laser is off
+		acquisition_control_simple_sync_serial(1,0);
+		laser_running=1;
+	end
+	gui_put('laser_running',laser_running);
+else
+	acquisition_no_dongle_msgbox
+end
+
+function acquisition_lens_control_Callback (~,~,~)
+handles=gui_gethand;
+PIVlab_capture_lensctrl_GUI
+
+function acquisition_no_dongle_msgbox
+uiwait(msgbox(['No connection to the PIVlab-SimpleSync found.' sprintf('\n') 'Is the USB dongle connected?'],'modal'))
+
+function acquisition_pco_error_msgbox
+[filepath,~,~] = fileparts(mfilename('fullpath'));
+uiwait(msgbox(['PCO camera drivers not found in this directory:' sprintf('\n') fullfile(filepath, 'PIVlab_capture_resources\PCO_resources') sprintf('\n\n') 'The free pco toolbox for Matlab can be downloaded here:' sprintf('\n') 'https://www.pco.de/de/software/third-party/matlab/' sprintf('\n\n') 'Please download and install this toolbox to use your pco camera in PIVlab.'],'modal'))
+
+function acquisition_piv_capture_Callback(~,~,~)
+gui_put('capturing',0);
+[filepath,~,~] = fileparts(mfilename('fullpath'));
+if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_camera_load_defines.m'),'file')
+	button = questdlg('Start Laser and camera?','Warning','Yes','Cancel','Yes');
+	if strmatch(button,'Yes')==1
+		handles=gui_gethand;
+		gui_put('cancel_capture',0);
+		projectpath=get(handles.ac_project,'String');
+		if get(handles.ac_pivcapture_save,'Value')==1 %check settings only when user wants to save data
+			imageamount=str2double(get(handles.ac_imgamount,'String'));
+			capture_ok=acquisition_check_project_path(projectpath,'double_images');
+		else
+			imageamount=inf; %run forever if user doesnt want to save images
+			capture_ok=1;
+		end
+		%Camera fps
+		ac_fps_value=get(handles.ac_fps,'Value');
+		ac_fps_str=get(handles.ac_fps,'String');
+		cam_fps=str2double(ac_fps_str(ac_fps_value));
+		ac_ROI_realtime=gui_retr('ac_ROI_realtime');
+		do_realtime=gui_retr('do_realtime');
+		if isempty(do_realtime)
+			do_realtime=0;
+		end
+		if capture_ok==1
+			gui_put('expected_image_size',[])
+			ac_ROI_general=gui_retr('ac_ROI_general');
+			if isempty(ac_ROI_general)
+				max_cam_res=gui_retr('max_cam_res');
+				ac_ROI_general=[1 1 max_cam_res(1) max_cam_res(2)];
+			end
+			gui_put('capturing',1);
+			if isinf(imageamount)
+				gui_toolsavailable(0,'Starting PIV preview...')
+			else
+				gui_toolsavailable(0,'Starting PIV capture...')
+			end
+			set(handles.ac_pivstop,'enable','on')
+			set(handles.togglepair,'enable','on')
+			set(handles.ac_serialstatus,'enable','on')
+			set(handles.ac_laserstatus,'enable','on')
+			set(handles.ac_lasertoggle,'enable','on')
+
+			value=get(handles.ac_config,'value');
+
+			%save capture configuration to mat file
+			if ~isinf(imageamount)
+				config_strings=get(handles.ac_config,'String');
+				config_strings_selected=cell2mat((config_strings(value)));
+				las_percent=str2double(get(handles.ac_power,'String'));
+				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
+				binning=gui_retr('binning');
+				OPTOcam_bits =gui_retr('OPTOcam_bits');
+				if isempty (OPTOcam_bits)
+					OPTOcam_bits=8;
+				end
+				recording_time=char(datetime('now'));
+				logger_path = get(handles.ac_project,'String');
+				if exist(logger_path,'dir') %only log when directory has been set up.
+					timestamp=char(datetime('now'));
+					if exist (fullfile(logger_path, 'acquisition_log.txt'),'file')~=2
+						try
+							logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'w');
+							fprintf(logger_fid,'recording_time\tconfig_strings_selected\timageamount\tcam_fps\tpulse_sep\tlas_percent\tac_ROI_general\tbinning\tcam_bits');
+							fprintf(logger_fid, '\n');
+							fclose(logger_fid);
+						catch
+						end
+					end
+					try
+						logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'a');
+						fprintf(logger_fid, '%s', recording_time);
+						fprintf(logger_fid, '\t');
+						fprintf(logger_fid, '%s', config_strings_selected);
+						fprintf(logger_fid, '\t');
+						fprintf(logger_fid, '%s', num2str(imageamount));
+						fprintf(logger_fid, '\t');
+						fprintf(logger_fid, '%s', num2str(cam_fps));
+						fprintf(logger_fid, '\t');
+						fprintf(logger_fid, '%s', num2str(pulse_sep));
+						fprintf(logger_fid, '\t');
+						fprintf(logger_fid, '%s', num2str(las_percent));
+						fprintf(logger_fid, '\t');
+						fprintf(logger_fid, '%s', mat2str(ac_ROI_general));
+						fprintf(logger_fid, '\t');
+						fprintf(logger_fid, '%s', num2str(binning));
+						fprintf(logger_fid, '\t');
+						fprintf(logger_fid, '%s', num2str(OPTOcam_bits));
+						fprintf(logger_fid, '\n');
+						fclose(logger_fid);
+					catch ME
+						disp('Settings logger error:')
+						disp(ME)
+					end
+				end
+			end
+
+			if value== 1 || value == 2 %setups without lD-PS
+				set(handles.ac_power,'enable','on') %here, laser power can be adjusted while it is running.
+			end
+			set(handles.ac_lensctrl,'enable','on')
+
+			f = waitbar(0,'Initializing...');
+			%if any external device is activated for automatic control, then...
+			if (~isempty(gui_retr('ac_enable_seeding1')) && gui_retr('ac_enable_seeding1') ~=0) || (~isempty(gui_retr('ac_enable_device1')) && gui_retr('ac_enable_device1') ~=0) || (~isempty(gui_retr('ac_enable_device2')) && gui_retr('ac_enable_device2') ~=0) || (~isempty(gui_retr('ac_enable_flowlab')) && gui_retr('ac_enable_flowlab') ~=0)
+				acquisition_external_device_control(1); %starts activated devices
+				waitbar(.15,f,'Starting external devices...');
+				pause(0.5)
+				waitbar(.33,f,'Starting external devices...');
+				pause(0.5)
+				if (~isempty(gui_retr('ac_enable_flowlab')) && gui_retr('ac_enable_flowlab') ~=0) %flowlab is activated
+					%ask if flowlab was already running
+					%if yes --> proceed, if not --> pause to wait for uniform flow velocity.
+					flowlab_percent=gui_retr('flowlab_percent');
+					if flowlab_percent ~= 0
+						acquisition_external_device_control(1);
+						%wait a variable time untl capturing...
+						%slower velocities require more time to settle.
+						time_to_wait = round(-7*flowlab_percent/100 + 10);
+						for i=1:time_to_wait
+							waitbar(.4 + 0.6*(i/time_to_wait),f,'Waiting for flow stabilization...');
+							pause(1)
+						end
+					end
+				end
+			end
+			if value==1 || value==2 %setup withOUT LD-PS
+				%Start-up sequence for normal Q-Switched laser
+				waitbar(.5,f,'Starting laser...');
+				acquisition_control_simple_sync_serial(1,0);
+				gui_put('laser_running',1);
+				pause(1)
+				waitbar(.6,f,'Starting laser...');
+				pause(1)
+				waitbar(.7,f,'Laser stabilization...');
+				pause(1)
+				waitbar(.85,f,'Starting camera...');
+				pause(1)
+				waitbar(1,f,'Starting camera...');
+				pause(1)
+				close(f)
+			elseif value == 3 || value == 4 %pco cameras with laser diode
+				%Start-up sequence for PIVlab LD-PS (much quicker)
+				waitbar(.01,f,'Starting laser...');
+				acquisition_control_simple_sync_serial(1,0);
+				gui_put('laser_running',1);
+				close(f)
+			elseif value== 5 || value == 6 || value==7 || value==8 || value==9%chronos and basler and flir and OPTOcam and OPTRONIS: Camera needs to be started first, afterwards the laser is enabled.
+				close(f)
+			end
+			camera_type=gui_retr('camera_type');
+			binning=gui_retr('binning');
+			if isempty(binning)
+				binning=1;
+			end
+			value=get(handles.ac_config,'value');
+			if value== 3 || value == 4 %setup with LD-PS and pco
+				%require a calculation of the exposure time which depends on the laser pulse length
+				las_percent=str2double(get(handles.ac_power,'String'));
+				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
+				f1exp_cam =floor(pulse_sep*las_percent/100)+1; %+1 because in the snychronizer, the cam expo is started 1 us before the ld pulse
+				disp(['camera exposure time = ' num2str(f1exp_cam)])
+				if f1exp_cam < 6
+					msgbox (['Exposure time of camera too low. Please increase laser energy or pulse distance.' sprintf('\n') 'Pulse_distance[µs] * laser_energy[%] must be >= 6 µs'])
+					uiwait
+				end
+			else
+				f1exp_cam=gui_retr('f1exp_cam');
+			end
+			if value == 5 %chronos
+				%capture to camera RAM
+				%zuerst:camera konfigurieren. Dann kamera starten. dann laser. nach laserstart warten und aufnahme beenden.dann laser aus
+				cameraIP=gui_retr('Chronos_IP');
+				acquisition_control_simple_sync_serial(0,0) %stop triggering when already running.
+				[OutputError] = PIVlab_capture_chronos_synced_start(cameraIP,cam_fps); %prepare cam and start camera (waiting for trigger...)
+				acquisition_control_simple_sync_serial(1,0); gui_put('laser_running',1); %turn on laser
+				[OutputError,ima,frame_nr_display] = PIVlab_capture_chronos_synced_capture(cameraIP,imageamount,cam_fps,do_realtime,ac_ROI_realtime); %capture n images, display livestream
+			elseif value == 1 || value == 2 || value == 3 || value == 4  %pco cameras
+				PIVlab_capture_pco(imageamount,f1exp_cam,'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI_realtime,binning,ac_ROI_general,camera_type,0);
+			elseif value == 6  %basler cameras
+				[OutputError,basler_vid,frame_nr_display] = PIVlab_capture_basler_synced_start(imageamount,ac_ROI_general); %prepare cam and start camera (waiting for trigger...)
+				acquisition_control_simple_sync_serial(1,0); gui_put('laser_running',1); %turn on laser
+				[OutputError,basler_vid] = PIVlab_capture_basler_synced_capture(basler_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display); %capture n images, display livestream
+			elseif value == 7  %flir cameras
+				[OutputError,flir_vid,frame_nr_display] = PIVlab_capture_flir_synced_start(imageamount,cam_fps); %prepare cam and start camera (waiting for trigger...)
+				acquisition_control_simple_sync_serial(1,0); gui_put('laser_running',1); %turn on laser
+				[OutputError,flir_vid] = PIVlab_capture_flir_synced_capture(flir_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display); %capture n images, display livestream
+			elseif value == 8  %OPTOcam
+				OPTOcam_bits =gui_retr('OPTOcam_bits');
+				if isempty (OPTOcam_bits)
+					OPTOcam_bits=8;
+				end
+				[OutputError,OPTOcam_vid,frame_nr_display] = PIVlab_capture_OPTOcam_synced_start(imageamount,ac_ROI_general,cam_fps,OPTOcam_bits); %prepare cam and start camera (waiting for trigger...)
+				Error_Reason={};
+				OPTOcam_settings_check = 1;
+				max_fps_with_current_settings = 1/((get(OPTOcam_vid.Source,'SensorReadoutTime') + get(OPTOcam_vid.Source,'BslExposureStartDelay'))/1000/1000);
+				if cam_fps > max_fps_with_current_settings
+					OPTOcam_settings_check = 0;
+					Error_Reason{end+1,1}='Frame rate too high for selected ROI and/or bit rate.';
+					Error_Reason{end+1,1}=['With current settings, sensor max. fps is ' num2str(round(max_fps_with_current_settings,1)) ' fps'];
+					Error_Reason{end+1,1}='Please make the ROI smaller, or decrease the frame rate.';
+				end
+				min_allowed_interframe = gui_retr('min_allowed_interframe');
+				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
+				if pulse_sep < min_allowed_interframe
+					OPTOcam_settings_check = 0;
+					Error_Reason{end+1,1}='Pulse distance too small for current bit mode.';
+					Error_Reason{end+1,1}=['In ' num2str(OPTOcam_bits) ' bit mode, the puse distance must be at least ' num2str(min_allowed_interframe) ' µs.'];
+					Error_Reason{end+1,1}='Please increase the pulse distance, or decrease the bit mode.';
+				end
+				if OPTOcam_settings_check == 1
+					acquisition_control_simple_sync_serial(1,0); gui_put('laser_running',1); %turn on laser
+					[OutputError,OPTOcam_vid] = PIVlab_capture_OPTOcam_synced_capture(OPTOcam_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTOcam_bits); %capture n images, display livestream
+				else
+					msgbox(Error_Reason,'modal')
+					uiwait
+					gui_put('cancel_capture',1);
+					imageamount=inf; %will prevent saving of images
+				end
+			elseif value == 9  %OPTRONIS
+				OPTRONIS_bits =gui_retr('OPTRONIS_bits');
+				if isempty (OPTRONIS_bits)
+					OPTRONIS_bits=8;
+				end
+				[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits); %prepare cam and start camera (waiting for trigger...)
+				pause(1) %make sure OPTRONIS is ready to capture.
+				Error_Reason={};
+				OPTRONIS_settings_check = 1;
+				%2166 mit 8 bit
+				%1750 mit 10 bit
+
+				camera_sub_type=gui_retr('camera_sub_type');
+				if OPTRONIS_bits==8
+					switch camera_sub_type
+						case 'Cyclone-2-2000-M'
+							max_fps_with_current_settings = 2165;
+						case 'Cyclone-1HS-3500-M'
+							max_fps_with_current_settings = 3500;
+						case 'Cyclone-25-150-M'
+							max_fps_with_current_settings = 150;
+						otherwise
+							max_fps_with_current_settings=1111;
+					end
+
+				elseif OPTRONIS_bits==10
+					switch camera_sub_type
+						case 'Cyclone-2-2000-M'
+							max_fps_with_current_settings = 1750;
+						case 'Cyclone-1HS-3500-M'
+							max_fps_with_current_settings = 3175;
+						case 'Cyclone-25-150-M'
+							max_fps_with_current_settings = 149;
+						otherwise
+							max_fps_with_current_settings=1111;
+					end
+				end
+
+				if cam_fps > max_fps_with_current_settings
+					OPTRONIS_settings_check = 0;
+					Error_Reason{end+1,1}='Frame rate too high for selected bit rate.';
+					Error_Reason{end+1,1}=['With current settings, sensor max. fps is ' num2str(round(max_fps_with_current_settings,1)) ' fps'];
+					Error_Reason{end+1,1}='Please select a lower frame rate.';
+				end
+				min_allowed_interframe = gui_retr('min_allowed_interframe');
+				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
+				if OPTRONIS_settings_check == 1
+					acquisition_control_simple_sync_serial(1,0); gui_put('laser_running',1); %turn on laser
+					[OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits); %capture n images, display livestream
+				else
+					msgbox(Error_Reason,'modal')
+					uiwait
+					gui_put('cancel_capture',1);
+					imageamount=inf; %will prevent saving of images
+				end
+			end
+			%disable external devices
+			if (~isempty(gui_retr('ac_enable_seeding1')) && gui_retr('ac_enable_seeding1') ~=0) || (~isempty(gui_retr('ac_enable_device1')) && gui_retr('ac_enable_device1') ~=0) || (~isempty(gui_retr('ac_enable_device2')) && gui_retr('ac_enable_device2') ~=0) || (~isempty(gui_retr('ac_enable_flowlab')) && gui_retr('ac_enable_flowlab') ~=0)
+				acquisition_external_device_control(0); % stops all external devices
+			end
+			acquisition_control_simple_sync_serial(0,0);pause(0.1);acquisition_control_simple_sync_serial(0,0);
+			gui_put('laser_running',0);
+			if value == 5 %chronos
+				%when Chronos:save the images when finished recording to camera ram
+				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
+					PIVlab_capture_chronos_save (cameraIP,imageamount,projectpath,frame_nr_display)
+				end
+			end
+			if value == 6 %basler
+				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
+					[OutputError] = PIVlab_capture_basler_save(basler_vid,imageamount,projectpath,frame_nr_display); %save the images from ram to disk.
+				end
+			end
+			if value == 7 %flir
+				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
+					[OutputError] = PIVlab_capture_flir_save(flir_vid,imageamount,projectpath,frame_nr_display); %save the images from ram to disk.
+				end
+			end
+			if value == 8 %OPTOcam
+				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
+					[OutputError] = PIVlab_capture_OPTOcam_save(OPTOcam_vid,imageamount,projectpath,frame_nr_display,OPTOcam_bits); %save the images from ram to disk.
+				end
+			end
+			if value == 9 %OPTRONIS
+				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
+					[OutputError] = PIVlab_capture_OPTRONIS_save(OPTRONIS_vid,imageamount,projectpath,frame_nr_display,OPTRONIS_bits); %save the images from ram to disk.
+				end
+			end
+
+			if gui_retr('cancel_capture')==0
+				camera_type=gui_retr('camera_type');
+				found_the_data=acquisition_push_recorded_to_GUI(camera_type);
+				if found_the_data==1
+					gui_put('sessionpath',projectpath );
+					set(handles.time_inp,'String',num2str(str2num(get(handles.ac_interpuls,'String'))/1000));
+					hgui=getappdata(0,'hgui');
+					serpo=getappdata(hgui,'serpo');
+					export_save_session_function (projectpath,'PIVlab_Capture_Session.mat');
+					gui_put('serpo',serpo); %Serpo gets inaccessible after savesession. Probably because there are a number of variables cleared to allow saving without crashing.
+				else
+					gui_displogo
+				end
+			end
+		end
+	end
+else
+	acquisition_pco_error_msgbox
+end
+gui_put('capturing',0);
+gui_toolsavailable(1)
+
+function acquisition_pivcapture_save_Callback(inpt,~)
+pause(0.1)
+handles=gui_gethand;
+if inpt.Value == 0
+	set (handles.ac_imgamount, 'enable','off')
+else
+	set (handles.ac_imgamount, 'enable','on')
+	acquisition_image_amount_Callback
+end
+
+function serial_answer = acquisition_process_sync_reply(serpo)
+handles=gui_gethand;
+serial_answer=readline(serpo);
+warning on
+sync_setting=serial_answer;
+if isempty(sync_setting)
+	sync_setting='No answer from Sync';
+end
+acquisition_update_ac_status(sync_setting);
+
+set(handles.ac_laserstatus,'BackgroundColor',[1 1 0]); %yellow=warning
+set(handles.ac_laserstatus,'String','No Answer');drawnow;
+C = strsplit(sync_setting,'\t');
+if ~isempty(C)
+	if size(C,2)==8 %entspricht standard datenpaket
+		if strcmp(C{8},'1') %laser is reported to be on
+			set(handles.ac_laserstatus,'BackgroundColor',[0 1 0]); %green = on
+			set(handles.ac_laserstatus,'String','Laser ON');
+		else
+			set(handles.ac_laserstatus,'BackgroundColor',[1 0 0]); %red = off
+			set(handles.ac_laserstatus,'String','Laser OFF');
+		end
+	end
+	if size(C,2)==12 %entspricht erweitertem datenpaket
+		if strcmp(C{8},'1') %laser is reported to be on
+			set(handles.ac_laserstatus,'BackgroundColor',[0 1 0]); %green = on
+			set(handles.ac_laserstatus,'String','Laser ON');
+		else
+			set(handles.ac_laserstatus,'BackgroundColor',[1 0 0]); %red = off
+			set(handles.ac_laserstatus,'String','Laser OFF');
+			pl_msg=['Pulse length: 0 µs'];
+			set (handles.ac_pulselengthtxt,'String', pl_msg);
+		end
+		if strcmp(C{8},'1') %laser is reported to be on
+			pl_msg=['Pulse length: ' C{9} ' µs'];
+			set (handles.ac_pulselengthtxt,'String', pl_msg);
+			disp (pl_msg)
+		end
+	end
+
+end
+
+function found_the_data = acquisition_push_recorded_to_GUI(camera_type)
+handles=gui_gethand;
+projectpath=get(handles.ac_project,'String');
+imageamount=str2double(get(handles.ac_imgamount,'String'));
+pathlist={};
+pathfilelist={};
+file_existing=zeros(imageamount,1);
+for i=1:imageamount
+	if ~strcmp(camera_type,'chronos')
+		pathfileA=fullfile(projectpath,['PIVlab_' sprintf('%4.4d',i-1) '_A.tif']);
+		pathfileB=fullfile(projectpath,['PIVlab_' sprintf('%4.4d',i-1) '_B.tif']);
+	elseif strcmp(camera_type,'chronos')
+		pathfileA=fullfile(projectpath,['frame_' sprintf('%6.6d',2*i-1) '.tiff']);
+		pathfileB=fullfile(projectpath,['frame_' sprintf('%6.6d',2*i) '.tiff']);
+	end
+
+	pathA=projectpath;
+	pathB=projectpath;
+
+	pathfilelist{i*2-1,1}=pathfileA; %#ok<AGROW>
+	pathfilelist{i*2,1}=pathfileB; %#ok<AGROW>
+
+	file_existing(i,1) = (isfile(pathfileA) + isfile(pathfileB))/2;
+
+	pathlist{i*2-1,1}=pathA; %#ok<AGROW>
+	pathlist{i*2,1}=pathB; %#ok<AGROW>
+end
+if all(file_existing)
+	s = struct('name',pathfilelist,'folder',pathlist,'isdir',0);
+	gui_put('sequencer',1);
+	gui_put('capturing',0);
+	import_loadimgsbutton_Callback([],[],0,s);
+	found_the_data=1;
+else
+	found_the_data=0;
+end
+
+function acquisition_realtime_Callback(~,~,~)
+handles=gui_gethand;
+if get(handles.ac_realtime,'Value')==1
+	gui_put('capturing',0);
+	try
+		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
+	catch
+		set(handles.ac_expo,'String','100');
+		expos=100000;
+	end
+	projectpath=get(handles.ac_project,'String');
+	capture_ok=acquisition_check_project_path(projectpath,'calibration');
+	ac_ROI_general=gui_retr('ac_ROI_general');
+	binning=gui_retr('binning');
+	if isempty(binning)
+		binning=1;
+	end
+	if isempty(ac_ROI_general)
+		max_cam_res=gui_retr('max_cam_res');
+		ac_ROI_general=[1,1,max_cam_res(1)/binning,max_cam_res(2)/binning];
+	end
+	camera_type=gui_retr('camera_type');
+	try
+		if capture_ok==1
+			gui_put('cancel_capture',0);
+			gui_put('capturing',1);
+			if ~strcmp(camera_type,'chronos') %calib
+				[errorcode, caliimg]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
+			else
+				%not supported yet....
+
+			end
+		end
+		gui_put('capturing',0);
+		uiwait(msgbox(['Please select the ROI for real-time PIV.'],'modal'))
+		roirect = round(getrect(gca));
+		if roirect(1,3)~=0 && roirect(1,4)~=0
+			gui_put('ac_ROI_realtime',roirect);
+			gui_put('do_realtime',1);
+		end
+	catch
+		gui_put('do_realtime',0);
+		set(handles.ac_realtime,'Value',0)
+	end
+else
+	gui_put('do_realtime',0);
+end
+
+function acquisition_select_capture_config_Callback (~,~,~)
+handles=gui_gethand;
+value=get(handles.ac_config,'value');
+
+old_setting=gui_retr('old_setting');
+if isempty(old_setting)
+	gui_put ('old_setting',inf)
+end
+gui_put ('old_setting',value)
+
+gui_put('do_realtime',0);
+set(handles.ac_realtime,'Value',0)
+if value==1 || value ==2
+	set(handles.ac_enable_ext_trigger , 'Visible', 'on')
+else
+	set(handles.ac_enable_ext_trigger , 'Visible', 'off')
+	set(handles.ac_enable_ext_trigger , 'value', 0)
+end
+
+if value==1 || value==3 % ILA.piv nano / pco pixelfly with evergreen or LD-PS
+	gui_put('camera_type','pco_pixelfly'); % Exposure start -> Q1 delay
+	gui_put('f1exp',406); % Exposure start -> Q1 delay
+	gui_put('f1exp_cam',400); %exposure time setting first frame
+	gui_put('master_freq',15);
+	gui_put('binning',1);
+	avail_freqs={'5' '3' '1.5' '1'};
+	gui_put('max_cam_res',[1392,1040]);
+	gui_put('min_allowed_interframe',10);
+	gui_put('blind_time',1);
+	set(handles.ac_fps,'string',avail_freqs);
+	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+	if old_setting ~= value
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
+	%end
+end
+if value == 2 || value == 4% pco panda with evergreen or LD-PS
+	gui_put('camera_type','pco_panda');
+	gui_put('f1exp',352) % Exposure start -> Q1 delay
+	%disp('testing laserdiode')
+	%put('f1exp_cam',300)
+	%put('master_freq',3);
+	gui_put('f1exp_cam',350); %exposure time setting first frame
+	if value == 2 % Nd:YAG laser with panda : limited to 15 Hz
+		gui_put('master_freq',15); %master frequency driving the Nd:YAG laser
+		avail_freqs={'15' '7.5' '5' '3' '1.5' '1'};
+	end
+	if value == 4 %LD-PS laser with panda : limited to 50 Hz
+		gui_put('master_freq',45); %was 50, but gives inaccurate capture frequencies at lower numbers.
+		avail_freqs={'45' '22.5' '15' '7.5' '5' '3' '1.5' '1'};
+	end
+
+	gui_put('max_cam_res',[5120,5120]);
+	gui_put('min_allowed_interframe',10);
+	gui_put('blind_time',1);
+	set(handles.ac_fps,'string',avail_freqs);
+	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+	if old_setting ~= value
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
+	%end
+end
+if value == 5 % chronos LD-PS
+	gui_put('camera_type','chronos');
+	gui_put('f1exp',352) % Exposure start -> Q1 delay
+	%disp('testing laserdiode')
+	%put('f1exp_cam',300)
+	%put('master_freq',3);
+	gui_put('f1exp_cam',350); %exposure time setting first frame
+	gui_put('master_freq',15);
+	avail_freqs={'850' '600' '500' '400' '300' '200' '150' '100' '70' '50' '25' '10'};
+	gui_put('max_cam_res',[1280,1024]);
+	gui_put('min_allowed_interframe',20);
+	gui_put('blind_time',6);
+	set(handles.ac_fps,'string',avail_freqs);
+	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+	if old_setting ~= value
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
+	%end
+end
+if value == 6 % basler
+	gui_put('camera_type','basler');
+	gui_put('f1exp',352) % Exposure start -> Q1 delay
+	%disp('testing laserdiode')
+	%put('f1exp_cam',300)
+	%put('master_freq',3);
+	gui_put('f1exp_cam',350); %exposure time setting first frame
+	gui_put('master_freq',15);
+	avail_freqs={'168' '100' '75' '60' '50' '25' '10'};
+	gui_put('max_cam_res',[2048,1088]);
+	gui_put('min_allowed_interframe',150);
+	gui_put('blind_time',130);
+	set(handles.ac_fps,'string',avail_freqs);
+	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+	if old_setting ~= value
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
+	%end
+end
+if value == 7 % Flir
+	gui_put('camera_type','flir');
+	gui_put('f1exp',352) % Exposure start -> Q1 delay
+	%disp('testing laserdiode')
+	%put('f1exp_cam',300)
+	%put('master_freq',3);
+	gui_put('f1exp_cam',350); %exposure time setting first frame
+	gui_put('master_freq',15);
+	avail_freqs={'60' '50' '40' '30' '20' '10'};
+	gui_put('max_cam_res',[1440,1080]);
+	gui_put('min_allowed_interframe',470);
+	gui_put('blind_time',425);
+	set(handles.ac_fps,'string',avail_freqs);
+	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+	if old_setting ~= value
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
+	%end
+end
+if value == 8 % OPTOcam
+	gui_put('camera_type','OPTOcam');
+	gui_put('f1exp',352) % Exposure start -> Q1 delay
+	gui_put('f1exp_cam',350); %exposure time setting first frame
+	gui_put('master_freq',15);
+	avail_freqs={'400' '320' '160' '100' '80' '60' '50' '25'}; %10 fps removed, camera might skip frames.
+	gui_put('max_cam_res',[1936,1216]);
+	%default min_interframe is for 8 bits.
+	OPTOcam_bits =gui_retr('OPTOcam_bits');
+	if isempty (OPTOcam_bits)
+		OPTOcam_bits=8;
+	end
+
+	if OPTOcam_bits==8
+		gui_put('min_allowed_interframe',62); %8bit
+		gui_put('blind_time',44);
+	elseif OPTOcam_bits==12
+		gui_put('min_allowed_interframe',128); %12bit
+		gui_put('blind_time',96);
+	end
+	set(handles.ac_fps,'string',avail_freqs);
+	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+	if old_setting ~= value
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
+	%end
+end
+if value == 9 % OPTRONIS
+	gui_put('camera_type','OPTRONIS');
+	camera_sub_type=gui_retr('camera_sub_type');
+	if isempty (camera_sub_type) %this means that hotplugging camera type will not be possible: Camera type will only be detected at first start of PIVlab.
+		try
+			gui_toolsavailable(0,'Detecting OPTRONIS camera type...')
+			[~,camera_sub_type] = PIVlab_capture_OPTRONIS_cam_detect();
+			gui_put('camera_sub_type',camera_sub_type);
+			postix=get(gca,'XLim');postiy=get(gca,'YLim');text(postix(2)/2,postiy(2)/2,['Detected: ' camera_sub_type],'HorizontalAlignment','center','VerticalAlignment','middle','color','g','fontsize',16, 'BackgroundColor', [0.25 0.25 0.25],'tag','busyhint','margin',10,'Clipping','on');
+		catch ME
+			gui_toolsavailable(1)
+			camera_sub_type=' ';
+		end
+		gui_toolsavailable(1)
+	end
+	gui_put('f1exp',352) % Exposure start -> Q1 delay
+	gui_put('f1exp_cam',350); %exposure time setting first frame
+	gui_put('master_freq',15);
+
+	switch camera_sub_type
+		case 'Cyclone-2-2000-M'
+			avail_freqs={'2165' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
+			gui_put('max_cam_res',[1920,1080]);
+			gui_put('min_allowed_interframe',20);
+			gui_put('blind_time',3);
+		case 'Cyclone-1HS-3500-M'
+			avail_freqs={'3500' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
+			gui_put('max_cam_res',[1280,860]);
+			gui_put('min_allowed_interframe',20);
+			gui_put('blind_time',3);
+		case 'Cyclone-25-150-M'
+			avail_freqs={'150' '100' '75' '50' '20' '10'};
+			gui_put('max_cam_res',[5120,5120]);
+			gui_put('min_allowed_interframe',30);
+			gui_put('blind_time',25);
+		otherwise
+			disp('Camera detection unsuccesful.')
+			avail_freqs={'5' '4' '3' '2' '1'};
+			gui_put('max_cam_res',[100,100]);
+			gui_put('min_allowed_interframe',222);
+			gui_put('blind_time',111);
+	end
+	set(handles.ac_fps,'string',avail_freqs);
+	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+	if old_setting ~= value
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
+	%end
+end
+acquisition_exposure_Callback
+straddling_figure=findobj('tag','straddling_figure');
+acquisition_initiate_straddling_graph
+
+function acquisition_sync_settings_Callback(~,~,~)
+serpo=gui_retr('serpo');
+handles=gui_gethand;
+
+if str2double(get(handles.ac_interpuls,'String')) < gui_retr('min_allowed_interframe')
+	old_bg=get(handles.ac_interpuls,'BackgroundColor');
+	for i=1:3
+		set(handles.ac_interpuls,'BackgroundColor',[1 0 0]);
+		pause(0.1)
+		set(handles.ac_interpuls,'BackgroundColor',old_bg);
+		pause(0.1)
+	end
+	set(handles.ac_interpuls,'String',num2str(gui_retr('min_allowed_interframe')))
+end
+
+
+if isnan(str2double(get(handles.ac_power,'String')))
+	set(handles.ac_power,'String','0')
+end
+if str2double(get(handles.ac_power,'String')) > 100
+	%camera_type=retr('camera_type');
+	%if ~strcmp(camera_type,'chronos')
+	set(handles.ac_power,'String','100')
+	%end
+end
+
+%check that interpuls is not larger than frame period
+selected_interpulse = str2double(get(handles.ac_interpuls,'String'));
+selected_fps_value = get(handles.ac_fps,'Value');
+selected_fps_string = get(handles.ac_fps,'String');
+selected_fps=str2double(selected_fps_string{selected_fps_value});
+selected_frame_period_us = 1/selected_fps*1000*1000;
+
+if selected_interpulse > selected_frame_period_us
+	old_bg=get(handles.ac_interpuls,'BackgroundColor');
+	for i=1:3
+		set(handles.ac_interpuls,'BackgroundColor',[1 0 0]);
+		pause(0.1)
+		set(handles.ac_interpuls,'BackgroundColor',old_bg);
+		pause(0.1)
+	end
+	set(handles.ac_interpuls,'String',round(selected_frame_period_us))
+end
+
+try
+	serpo.Port;
+	alreadyconnected=1;
+catch
+	alreadyconnected=0;
+end
+if alreadyconnected
+	laser_running=gui_retr('laser_running');
+	if isempty(laser_running)
+		laser_running=0;
+	end
+	acquisition_control_simple_sync_serial(laser_running,0);
+end
+acquisition_initiate_straddling_graph
+
+function acquisition_update_ac_status(status)
+handles=gui_gethand;
+contents=get(handles.ac_msgbox,'String');
+try
+	contents=[status;contents];
+catch
+end
+set(handles.ac_msgbox,'String',contents);
+
+function calibrate_Calibrationevents(src,evt)
+evname = evt.EventName;
+handles=gui_gethand;
+switch(evname)
+	%case{'MovingROI'}
+	%disp(['ROI moving previous position: ' mat2str(evt.PreviousPosition)]);
+	%disp(['ROI moving current position: ' mat2str(evt.CurrentPosition)]);
+	case{'MovingROI'}
+		Cali_coords = src.Position;
+		Cali_length = sqrt((Cali_coords(1,1)-Cali_coords(2,1))^2+(Cali_coords(1,2)-Cali_coords(2,2))^2);
+
+		if Cali_length < 0.1
+			src.Label = ['Click and drag with the mouse to draw a line'];
+		else
+			src.Label = ['Length :' num2str(Cali_length) ' px'];
+		end
+		gui_put('pointscali',Cali_coords);
+		calibrate_pixeldist_changed_Callback()
+		if gui_retr('calu') ~=1
+			calibrate_calccali
+		end
+	case{'DeletingROI'}
+		delete(findobj('tag', 'caliline'))
+		calibrate_clear_cali_Callback
+end
+
+function calibrate_Offsetselectionevents(src,evt)
+evname = evt.EventName;
+handles=gui_gethand;
+switch(evname)
+	%case{'MovingROI'}
+	%disp(['ROI moving previous position: ' mat2str(evt.PreviousPosition)]);
+	%disp(['ROI moving current position: ' mat2str(evt.CurrentPosition)]);
+	case{'MovingROI'}
+		Offset_coords = src.Position;
+		points_offsetx=gui_retr('points_offsetx');
+		points_offsety=gui_retr('points_offsety');
+		if numel(points_offsetx)==0
+			old_true_offsetx=0;
+		else
+			old_true_offsetx=points_offsetx(3);
+		end
+		if numel(points_offsety)==0
+			old_true_offsety=0;
+		else
+			old_true_offsety=points_offsety(3);
+		end
+
+		if ~isempty(points_offsetx)
+			src.Label = ['X: ' num2str(round(src.Position(1),1)) ' px = ' num2str(old_true_offsetx) ' mm ; Y: ' num2str(round(src.Position(2),1)) ' px = ' num2str(old_true_offsety) ' mm'];
+		end
+		gui_put('points_offsetx',[src.Position(1),src.Position(2),old_true_offsetx]);
+		gui_put('points_offsety',[src.Position(1),src.Position(2),old_true_offsety]);
+		if gui_retr('calu') ~=1
+			calibrate_calccali
+		end
+	case{'DeletingROI'}
+		delete(findobj('tag', 'offsetroi'))
+		gui_put('points_offsetx',[]);
+		gui_put('points_offsety',[]);
+		calibrate_calccali
+end
+
+function calibrate_Update_Offset_Display
+delete(findobj('tag', 'offsetroi'))
+points_offsetx=gui_retr('points_offsetx');
+points_offsety=gui_retr('points_offsety');
+if numel(points_offsetx)>0 &&  numel(points_offsety)>0
+	roi=drawcrosshair(gui_retr('pivlab_axis'),'Position',[points_offsetx(1), points_offsetx(2)]);
+	%roi.EdgeAlpha=0.75;
+	roi.LabelVisible = 'on';
+	roi.Tag = 'offsetroi';
+	roi.Color = 'y';
+	roi.LineWidth = 1;
+	%roi.InteractionsAllowed='none';
+
+	addlistener(roi,'MovingROI',@calibrate_Offsetselectionevents);
+	addlistener(roi,'DeletingROI',@calibrate_Offsetselectionevents);
+	dummyevt.EventName = 'MovingROI';
+	calibrate_Offsetselectionevents(roi,dummyevt); %run the moving event once to update displayed length
+end
+
+function calibrate_apply_cali_Callback(~, ~, ~)
+calibrate_calccali
+calibrate_Update_Offset_Display
+
+function calibrate_cal_actual_Callback(~, ~, ~) %executed when calibration panel is made visible
+gui_switchui('multip07')
+pointscali=gui_retr('pointscali');
+
+if numel(pointscali)>0
+	caliimg=gui_retr('caliimg');
+	if numel(caliimg)>0
+		pivlab_axis=gui_retr('pivlab_axis');
+		image(caliimg, 'parent',pivlab_axis, 'cdatamapping', 'scaled');
+		colormap('gray');
+		axis image;
+		set(gca,'ytick',[])
+		set(gca,'xtick',[])
+	else
+		gui_sliderdisp(gui_retr('pivlab_axis'))
+	end
+
+	calibrate_draw_line_Callback
+
+	calibrate_Update_Offset_Display;
+	handles=gui_gethand;
+	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','on')
+else %no calibration performed yet
+	handles=gui_gethand;
+	if gui_retr('video_selection_done') == 1 %video file loaded
+		%enter a guess for the time step, based on video file frame rate.
+		video_reader_object = gui_retr('video_reader_object');
+		video_frame_selection=gui_retr('video_frame_selection');
+		skip = video_frame_selection(2) - video_frame_selection(1);
+		delta_t = 1/(video_reader_object.FrameRate / skip)*1000;
+
+		set(handles.time_inp,'String',num2str(delta_t))
+	end
+	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
+end
+
+function calibrate_calccali
+gui_put('derived',[]) %calibration makes previously derived params incorrect
+handles=gui_gethand;
+
+pointscali=gui_retr('pointscali');
+if numel(pointscali)>0
+	xposition=pointscali(:,1);
+	yposition=pointscali(:,2);
+	dist=sqrt((xposition(1)-xposition(2))^2 + (yposition(1)-yposition(2))^2);
+	realdist=str2double(get(handles.realdist, 'String'));
+	time=str2double(get(handles.time_inp, 'String'));
+	calxy=(realdist/1000)/dist; %m/px %realdist=realdistance in m; dist=distance in px
+	x_axis_direction=get(handles.x_axis_direction,'value'); %1= increase to right, 2= increase to left
+	y_axis_direction=get(handles.y_axis_direction,'value'); %1= increase to bottom, 2= increase to top
+	if x_axis_direction==1
+		calu=calxy/(time/1000);
+	else
+		calu=-1*(calxy/(time/1000));
+	end
+	if y_axis_direction==1
+		calv=calxy/(time/1000);
+	else
+		calv=-1*(calxy/(time/1000));
+	end
+	gui_put('calu',calu);
+	gui_put('calv',calv);
+	gui_put('calxy',calxy);
+	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','on')
+	points_offsetx=gui_retr('points_offsetx');
+	if numel(points_offsetx)>0
+		offsetx = calibrate_calculate_offset_axis('x',points_offsetx(1),points_offsetx(3));
+		gui_put('offset_x_true',offsetx);
+	else %no offsets applied
+		gui_put('offset_x_true',0);
+	end
+	points_offsety=gui_retr('points_offsety');
+	if numel(points_offsety)>0
+		offsety = calibrate_calculate_offset_axis('y',points_offsety(2),points_offsety(3));
+		gui_put('offset_y_true',offsety);
+	else %no offsets applied
+		gui_put('offset_y_true',0);
+	end
+
+	calxy=gui_retr('calxy');
+	calu=gui_retr('calu');calv=gui_retr('calv');
+	offset_x_true = gui_retr('offset_x_true');
+	offset_y_true = gui_retr('offset_y_true');
+
+	calibrate_update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles);
+
+	%sliderdisp(retr('pivlab_axis'))
+
+else %no calibration performed yet
+	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
+	set(handles.x_axis_direction,'value',1);
+	set(handles.y_axis_direction,'value',1);
+	msgbox ('You need to select a reference distance befor applying a calibration.','modal')
+end
+
+function offset = calibrate_calculate_offset_axis (axis,pixel_position,true_position)
+handles=gui_gethand;
+calxy=gui_retr('calxy');
+size_of_the_image=gui_retr('size_of_the_image');
+if isempty(size_of_the_image)%user applies calibration before loading images
+	caliimg=gui_retr('caliimg');
+	size_of_the_image=size(caliimg);
+	gui_put('size_of_the_image',size_of_the_image);
+end
+if strcmp(axis,'x')
+	axis_direction=get(handles.x_axis_direction,'value');
+	size_dim=size_of_the_image(2);
+end
+if strcmp(axis,'y')
+	axis_direction=get(handles.y_axis_direction,'value');
+	size_dim=size_of_the_image(1);
+end
+if axis_direction ==1
+	offset = pixel_position*calxy - true_position/1000;
+else
+	offset = (size_dim-pixel_position)*calxy - true_position/1000;
+end
+
+function calibrate_clear_cali_Callback(~, ~, ~)
+handles=gui_gethand;
+gui_put('pointscali',[]);
+gui_put('points_offsetx',[]);
+gui_put('points_offsety',[]);
+gui_put('calu',1);
+gui_put('calv',1);
+gui_put('calxy',1);
+gui_put('offset_x_true',0);
+gui_put('offset_y_true',0);
+gui_put('caliimg', []);
+filepath=gui_retr('filepath');
+set(handles.calidisp, 'string', ['inactive'], 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
+delete(findobj('tag', 'caliline'));
+set(handles.realdist, 'String','1');
+set(handles.time_inp, 'String','1');
+set(handles.x_axis_direction,'value',1);
+set(handles.y_axis_direction,'value',1);
+set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
+calibrate_pixeldist_changed_Callback
+if size(filepath,1) >1 || gui_retr('video_selection_done') == 1
+	gui_sliderdisp(gui_retr('pivlab_axis'))
+else
+	gui_displogo(0)
+end
+
+function calibrate_display_cali_img (caliimg)
+handles=gui_gethand;
+if get(handles.optimize_calib_img,'value')==1
+	numberoftiles1=round(size(caliimg,1)/40);
+	numberoftiles2=round(size(caliimg,2)/40);
+	if numberoftiles1 < 2
+		numberoftiles1=2;
+	end
+	if numberoftiles2 < 2
+		numberoftiles2=2;
+	end
+
+	if size(caliimg,3) == 1
+		caliimg=adapthisteq(imadjust(caliimg),'NumTiles',[numberoftiles1 numberoftiles2],'clipLimit',0.01);
+	else
+		try
+			caliimg=adapthisteq(imadjust(rgb2gray(caliimg)),'NumTiles',[numberoftiles1 numberoftiles2],'clipLimit',0.01);
+		catch
+		end
+	end
+end
+pivlab_axis=gui_retr('pivlab_axis');
+image(caliimg, 'parent',pivlab_axis, 'cdatamapping', 'scaled');
+colormap('gray');
+axis image;
+set(gca,'ytick',[])
+set(gca,'xtick',[])
+
+function calibrate_draw_line_Callback(~, ~, ~)
+filepath=gui_retr('filepath');
+caliimg=gui_retr('caliimg');
+if numel(caliimg)==0 && size(filepath,1) >1
+	gui_sliderdisp(gui_retr('pivlab_axis'))
+end
+if size(filepath,1) >1 || numel(caliimg)>0 || gui_retr('video_selection_done') == 1
+	handles=gui_gethand;
+	gui_toolsavailable(0)
+	delete(findobj('tag', 'caliline'))
+	roi = images.roi.Line;
+	%roi.EdgeAlpha=0.75;
+	roi.LabelVisible = 'on';
+	roi.Tag = 'caliline';
+	roi.Color = 'y';
+	roi.StripeColor = 'g';
+	roi.LineWidth = roi.LineWidth*2;
+	Cali_coords = gui_retr('pointscali');
+	if ~isempty(Cali_coords)
+		roi=drawline(gui_retr('pivlab_axis'),'Position',Cali_coords);
+		%roi.EdgeAlpha=0.75;
+		roi.LabelVisible = 'on';
+		roi.Tag = 'caliline';
+		original_linewidth=roi.LineWidth;
+		roi.LineWidth = original_linewidth*2;
+		for rep=1:2 %bring users attention to already existing line
+			roi.Color = 'g'; roi.StripeColor = 'y';
+			pause(0.1)
+			roi.Color = 'y'; roi.StripeColor = 'g';
+			pause(0.1)
+		end
+		roi.Color = 'y';
+		roi.StripeColor = 'g';
+		roi.LineWidth = original_linewidth*2;
+		pause(0.1)
+	else
+		axes(gui_retr('pivlab_axis'))
+		draw(roi);
+	end
+	addlistener(roi,'MovingROI',@calibrate_Calibrationevents);
+	addlistener(roi,'DeletingROI',@calibrate_Calibrationevents);
+
+	dummyevt.EventName = 'MovingROI';
+	calibrate_Calibrationevents(roi,dummyevt); %run the moving event once to update displayed length
+	gui_toolsavailable(1)
+end
+
+function calibrate_load_ext_img_Callback(~, ~, ~) %load extra calibration image
+cali_folder=gui_retr('cali_folder');
+if isempty (cali_folder)==1
+	if ispc==1
+		cali_folder=[gui_retr('pathname') '\'];
+	else
+		cali_folder=[gui_retr('pathname') '/'];
+	end
+end
+try
+	[filename, pathname, filterindex] = uigetfile({'*.bmp;*.tif;*.jpg;*.tiff;*.b16;','Image Files (*.bmp,*.tif,*.jpg,*.tiff,*.b16)'; '*.tif','tif'; '*.jpg','jpg'; '*.bmp','bmp'; '*.tiff','tiff';'*.b16','b16'; },'Select calibration image',cali_folder);
+catch
+	[filename, pathname, filterindex] = uigetfile({'*.bmp;*.tif;*.jpg;*.tiff;*.b16;','Image Files (*.bmp,*.tif,*.jpg,*.tiff,*.b16)'; '*.tif','tif'; '*.jpg','jpg'; '*.bmp','bmp';  '*.tiff','tiff';'*.b16','b16';},'Select calibration image'); %unix/mac system may cause problems, can't be checked due to lack of unix/mac systems...
+end
+if ~isequal(filename,0)
+	[~,~,ext] = fileparts(fullfile(pathname, filename));
+	if strcmp(ext,'.b16')
+		caliimg=f_readB16(fullfile(pathname, filename));
+	else
+		caliimg=imread(fullfile(pathname, filename));
+	end
+	gui_put('caliimg', caliimg);
+	gui_put('cali_folder', pathname);
+	calibrate_display_cali_img (caliimg)
+end
+
+function calibrate_optimize_calib_img_Callback(~,~,~) %optimize display of calibration image
+caliimg=gui_retr('caliimg');
+if ~isempty(caliimg)
+	calibrate_display_cali_img (caliimg)
+end
+
+function calibrate_pixeldist_changed_Callback(src,~)
+if exist('src','var')
+	if strcmp(src.Tag,'pixeldist') % Reference distance has been edited in the edit field and not by clicking two points
+		% simulate clicking a distance in a calibration image and draw a line
+		delete(findobj('tag', 'caliline'))
+		spacing_to_border=50;
+		misc_check_comma(src)
+		xposition(1)=spacing_to_border;
+		xposition(2)=spacing_to_border+str2double(src.String);
+
+		yposition(1)=spacing_to_border;
+		yposition(2)=spacing_to_border;
+
+
+		gui_put('pointscali',[xposition' yposition']);
+
+		calibrate_draw_line_Callback
+
+	end
+else
+	handles=gui_gethand;
+	pointscali=gui_retr('pointscali');
+	if ~isempty(pointscali)
+		xposition=pointscali(:,1);
+		yposition=pointscali(:,2);
+		if numel(pointscali)>0
+			set(handles.pixeldist,'String',num2str(round((sqrt((xposition(1)-xposition(2))^2+(yposition(1)-yposition(2))^2))*100)/100))
+		end
+	else
+		set(handles.pixeldist,'String','1');
+	end
+end
+
+function calibrate_realdist_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function calibrate_set_offset_Callback (~,~,~)
+%calxy=retr('calxy');
+filepath=gui_retr('filepath');
+caliimg=gui_retr('caliimg');
+if numel(caliimg)==0 && size(filepath,1) >1
+	gui_sliderdisp(gui_retr('pivlab_axis'))
+end
+if size(filepath,1) >1 || numel(caliimg)>0 || gui_retr('video_selection_done') == 1
+	handles=gui_gethand;
+	delete(findobj('tag', 'offsetroi'))
+	gui_toolsavailable(0)
+
+	points_offsetx = gui_retr('points_offsetx');
+	points_offsety = gui_retr('points_offsety');
+
+
+	roi = images.roi.Crosshair;
+	%roi.EdgeAlpha=0.75;
+	roi.LabelVisible = 'on';
+	roi.Tag = 'offsetroi';
+	roi.Color = 'y';
+	roi.LineWidth = 1;
+	axes(gui_retr('pivlab_axis'))
+	draw(roi);
+
+	addlistener(roi,'MovingROI',@calibrate_Offsetselectionevents);
+	addlistener(roi,'DeletingROI',@calibrate_Offsetselectionevents);
+
+	prompt =['Enter true X coordinate in mm:'];
+	dlgtitle = ['Set X offset'];
+	if isempty (points_offsetx)
+		definput = {'0'};
+	else
+		definput = {num2str(points_offsetx(3))};
+	end
+	answer_x = inputdlg(prompt,dlgtitle,[1 40],definput);
+	prompt =['Enter true Y coordinate in mm:'];
+	dlgtitle = ['Set Y offset'];
+	if isempty (points_offsety)
+		definput = {'0'};
+	else
+		definput = {num2str(points_offsety(3))};
+	end
+	answer_y = inputdlg(prompt,dlgtitle,[1 40],definput);
+	if ~isempty(answer_x) && ~isempty(answer_y)
+		answer_x{1} = regexprep(answer_x{1}, ',', '.');
+		answer_y{1} = regexprep(answer_y{1}, ',', '.');
+		points_offsetx = [roi.Position(1),roi.Position(2),str2num(answer_x{1})];
+		gui_put('points_offsetx',points_offsetx);
+		points_offsety = [roi.Position(1),roi.Position(2),str2num(answer_y{1})];
+		gui_put('points_offsety',points_offsety);
+	end
+	dummyevt.EventName = 'MovingROI';
+	calibrate_Offsetselectionevents(roi,dummyevt); %run the moving event once to update displayed length
+	calibrate_calccali
+	gui_toolsavailable(1)
+end
+
+function calibrate_time_inp_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function calibrate_update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles)
+if calxy > 1000 || calxy <0.001
+	px_per_m_display=sprintf('%0.4e',calxy);
+else
+	px_per_m_display=sprintf('%0.4f',calxy);
+end
+
+if calu > 1000 || calu < 0.001
+	px_per_frame_display=sprintf('%0.4e',calu);
+else
+	px_per_frame_display=sprintf('%0.4f',calu);
+end
+
+if abs(offset_x_true) > 1000 || abs(offset_x_true) < 0.001
+	x_offset_display=sprintf('%0.4e',offset_x_true);
+	if offset_x_true == 0
+		x_offset_display='0';
+	end
+else
+	x_offset_display=sprintf('%0.4f',offset_x_true);
+end
+
+if abs(offset_y_true) > 1000 || abs(offset_y_true) < 0.001
+	y_offset_display=sprintf('%0.4e',offset_y_true);
+	if offset_y_true == 0
+		y_offset_display='0';
+	end
+else
+	y_offset_display=sprintf('%0.4f',offset_y_true);
+end
+
+set(handles.calidisp, 'string', ['1 px = ' px_per_m_display ' m' sprintf('\n') '1 px/frame = ' px_per_frame_display ' m/s' sprintf('\n') 'x offset: ' x_offset_display ' m' sprintf('\n') 'y offset: ' y_offset_display ' m'],  'backgroundcolor', [0.5 1 0.5]);
+
+function [x_cal,y_cal] = calibrate_xy(x,y)
+handles=gui_gethand;
+x_axis_direction=get(handles.x_axis_direction,'value'); %1= increase to right, 2= increase to left
+y_axis_direction=get(handles.y_axis_direction,'value'); %1= increase to bottom, 2= increase to top
+size_of_the_image=gui_retr('size_of_the_image');
+sizex=size_of_the_image(2);
+sizey=size_of_the_image(1);
+if x_axis_direction == 1
+	x_cal=x;
+else
+	x_cal=sizex-x;
+end
+if y_axis_direction == 1
+	y_cal=y;
+else
+	y_cal=sizey-y;
+end
+x_cal=x_cal*gui_retr('calxy');
+y_cal=y_cal*gui_retr('calxy');
+x_cal=x_cal-gui_retr('offset_x_true');
+y_cal=y_cal-gui_retr('offset_y_true');
+
+function export_ascii_all_Callback(~, ~, ~)
+handles=gui_gethand;
+filepath=gui_retr('filepath');
+resultslist=gui_retr('resultslist');
+[FileName,PathName] = uiputfile('*.txt','Save vector data as...','PIVlab.txt'); %framenummer in dateiname
+if isequal(FileName,0) | isequal(PathName,0)
+else
+	gui_toolsavailable(0,'Busy, please wait...')
+	for i=1:floor(size(filepath,1)/2)
+		%if analysis exists
+		if size(resultslist,2)>=i && numel(resultslist{1,i})>0
+			[Dir, Name, Ext] = fileparts(FileName);
+			FileName_nr=[Name sprintf('_%.4d', i) Ext];
+			export_file_save(i,FileName_nr,PathName,1)
+			set (handles.ascii_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
+			drawnow;
+		end
+	end
+	gui_toolsavailable(1)
+	set (handles.ascii_all, 'string', 'Export all frames');
+end
+
+function export_ascii_chart_Callback(~, ~, ~)
+gui_switchui('multip10')
+
+function export_ascii_current_Callback(~, ~, ~)
+handles=gui_gethand;
+resultslist=gui_retr('resultslist');
+currentframe=floor(get(handles.fileselector, 'value'));
+if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+	[FileName,PathName] = uiputfile('*.txt','Save vector data as...','PIVlab.txt'); %framenummer in dateiname
+	if isequal(FileName,0) | isequal(PathName,0) %#ok<*OR2>
+	else
+		export_file_save(currentframe,FileName,PathName,1);
+	end
+end
+
+function [imagedata,croprect]=export_autocrop (file,fmt)
+%problem, entweder Verfahren nicht geeignet oder irgendein Matlab bug...
+if fmt ~=3
+	A=imread(file);
+else
+	A=file;
+end
+B=rgb2gray(A);
+
+%rows (y) detect white borders
+val=mean(B,2);
+startcropy = find(val~=255,1,'first');
+if isempty (startcropy)
+	startcropy=1;
+end
+
+endcropy = find(val~=255,1,'last');
+if isempty (endcropy)
+	endcropy=size(B,1);
+end
+
+%disp([num2str(startcropy) '  '  num2str(endcropy)])
+
+%cols (y) detect white borders
+val=mean(B,1);
+startcropx = find(val~=255,1,'first');
+if isempty (startcropx)
+	startcropx=1;
+end
+
+endcropx = find(val~=255,1,'last');
+if isempty (endcropx)
+	endcropx=size(B,2);
+end
+%disp([num2str(startcropx) '  '  num2str(endcropx)])
+
+
+%crop image data
+A=A(startcropy:endcropy,startcropx:endcropx,:);
+
+%overwrite file
+if fmt==1 %jpg
+	imwrite(A,file,'quality', 100);
+elseif fmt == 0 %png
+	imwrite(A,file);
+elseif fmt == 3 %video
+	imagedata=A;
+end
+croprect=[startcropy endcropy startcropx endcropx];
+
+function export_do_export_pixel_data_Callback(~, src, ~)
+handles=gui_gethand;
+filepath=gui_retr('filepath');
+if strmatch(src.Source.Tag,'do_export_pixel_data')
+	startframe=str2num(get(handles.firstframe,'string'));
+	if startframe <1
+		startframe=1;
+	elseif startframe>size(filepath,1)/2
+		startframe=size(filepath,1)/2;
+	end
+	set(handles.firstframe,'string',int2str(startframe));
+	endframe=str2num(get(handles.lastframe,'string'));
+	if endframe <startframe
+		endframe=startframe;
+	elseif endframe>size(filepath,1)/2
+		endframe=size(filepath,1)/2;
+	end
+	set(handles.lastframe,'string',int2str(endframe));
+else
+	startframe=floor(get(handles.fileselector, 'value'));
+	endframe=startframe;
+end
+imgsavepath=gui_retr('imgsavepath');
+if isempty(imgsavepath)
+	imgsavepath=gui_retr('pathname');
+end
+
+str=get(handles.export_still_or_animation,'String');
+value=get(handles.export_still_or_animation,'Value');
+selected_format=str{value};
+
+switch selected_format
+	case 'PNG'
+		formatstring={ '*.png','uncompressed image(s) (*.png)'};
+	case 'JPG'
+		formatstring={ '*.jpg','compressed image(s) (*.jpg)'};
+	case 'PDF'
+		formatstring={ '*.pdf','vector images (*.pdf)'};
+	case 'Archival AVI'
+		formatstring={ '*.avi','uncompressed animation (*.avi)'};
+	case 'MPEG-4'
+		formatstring={ '*.mp4','compressed animation (*.mp4)'};
+end
+
+[filename, pathname] = uiputfile(formatstring, 'Save images as',fullfile(imgsavepath, 'PIVlab_out'));
+
+if ~isequal(filename,0) && ~isequal(pathname,0)
+	gui_put('imgsavepath',pathname );
+	[Dir, Name, Ext] = fileparts(filename);
+
+	resolution=str2double(get(handles.resolution_setting,'String'));
+	quality=str2double(get(handles.quality_setting,'String'));
+	fps=str2double(get(handles.fps_setting,'String'));
+
+	pivlab_axis=gui_retr('pivlab_axis');
+	%cant make this invisible, because matlab then doesnt render properly... :-(
+	export_figure=figure('Name','Exporting, please wait. Please don''t close or resize this window.','NumberTitle','off','visible','on','units','pixels','Toolbar','none','DockControls','off','WindowState','normal','Color','w','WindowStyle','modal');
+	set(export_figure,'units','normalized','outerposition',[0 0 1 1]) %unfortunately, setting figure to fullscreen still reports a non-fullscreen position in matlab...
+
+	if verLessThan('matlab','9.8')  %2020a and up contains exportgraphics
+		use_exportfig =1;
+	else
+		use_exportfig =0;
+	end
+	%use_exportfig =1;
+	%change the aspect ratio of the figure window to match the aspect of the underlying data. Needs to deal with colorbars and axes resizing.
+	%{
+	%testweise ausgeschaltet
+	axes_childs=get(pivlab_axis,'Children');
+	pixel_height=size(axes_childs(end).CData,1); %lowest layer is pixel image
+	pixel_width=size(axes_childs(end).CData,2);
+	data_aspect_ratio=pixel_width/pixel_height;
+	last_units=get(export_figure,'Units');
+	set(export_figure,'Units','pixels');
+	drawnow
+	current_figure_size=get(export_figure,'position');
+	current_figure_aspect_ratio=current_figure_size(3)/current_figure_size(4);
+	if data_aspect_ratio<current_figure_aspect_ratio
+		set(export_figure,'position',[current_figure_size(1),current_figure_size(2),current_figure_size(4)*data_aspect_ratio,current_figure_size(4)]);
+	else %higher than wide
+		set(export_figure,'position',[current_figure_size(1),current_figure_size(2),current_figure_size(3),current_figure_size(4)/data_aspect_ratio]);
+	end
+	set(export_figure,'Units',last_units);
+	%}
+	export_axis=axes('parent',export_figure);
+	gui_put('export_axis',export_axis);
+	pause(0.01)
+	try
+		%~isempty(findobj(export_figure,'type','figure')) %figure still exists
+		for i=startframe:endframe
+			set(export_figure,'Name',[num2str(round((i-1)/(endframe-startframe)*100)) ' % Exporting, please wait. Please don''t close or resize this window.']);
+			newfilename=[Name sprintf('_%03d',i) Ext];
+			set(handles.fileselector, 'value',i)
+			gui_sliderdisp(export_axis)
+			%set(export_axis,'box','on','LineWidth',1,'Color','k')
+			switch selected_format
+				case 'PNG'
+					if use_exportfig
+						exportfig(export_figure,fullfile(pathname,newfilename),'Format','bmp','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
+						export_autocrop(fullfile(pathname,newfilename),0);
+					else
+						exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution)
+					end
+				case 'JPG'
+					if use_exportfig
+						exportfig(export_figure,fullfile(pathname,newfilename),'Format','bmp','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
+						export_autocrop(fullfile(pathname,newfilename),1);
+					else
+						exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution);
+					end
+				case 'PDF'
+					if use_exportfig
+						set(export_figure,'Units','inches');
+						pos = get(export_figure,'Position');
+						set(export_figure,'PaperPositionMode','auto','PaperUnits','inches','PaperPosition',[0,0,pos(3),pos(4)],'PaperSize',[pos(3), pos(4)])
+						exportfig(export_figure,fullfile(pathname,newfilename),'Format','pdf','color','CMYK','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
+					else
+						exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','vector','resolution',resolution);
+					end
+				case 'Archival AVI'
+					pixeldata=getframe(export_figure);
+					export_image=frame2im(pixeldata);
+					if i==startframe %this makes sure that frame sizes keep the same size
+						[export_image,croprect] = export_autocrop(export_image,3);
+					else
+						export_image=export_image(croprect(1):croprect(2),croprect(3):croprect(4),:);
+					end
+					if i==startframe
+						v = VideoWriter(fullfile(pathname,filename),'Uncompressed AVI'); %#ok<TNMLP>
+						v.FrameRate=fps;
+						open(v);
+					end
+					writeVideo(v,export_image);
+					if i==endframe
+						close(v);
+					end
+				case 'MPEG-4'
+					pixeldata=getframe(export_figure);
+					export_image=frame2im(pixeldata);
+					if i==startframe %this makes sure that frame sizes keep the same size
+						[export_image,croprect] = export_autocrop(export_image,3);
+					else
+						export_image=export_image(croprect(1):croprect(2),croprect(3):croprect(4),:);
+					end
+					if i==startframe
+						v = VideoWriter(fullfile(pathname,filename),'MPEG-4'); %#ok<TNMLP>
+						v.FrameRate=fps;
+						v.Quality=quality;
+						open(v);
+					end
+					writeVideo(v,export_image);
+					if i==endframe
+						close(v);
+					end
+			end
+		end
+	catch ME
+		try
+			set (export_figure,'WindowStyle','normal')
+			close(export_figure)
+		catch
+		end
+		disp(ME.identifier)
+		disp(ME.message)
+		commandwindow;
+	end
+	try
+		close(export_figure)
+	catch
+	end
+	set(handles.fileselector, 'value',startframe)
+	gui_sliderdisp(pivlab_axis)
+end
+
+function export_file_save (currentframe,FileName,PathName,type)
+handles=gui_gethand;
+resultslist=gui_retr('resultslist');
+derived=gui_retr('derived');
+filename=gui_retr('filename');
+calu=gui_retr('calu');calv=gui_retr('calv');
+calxy=gui_retr('calxy');
+if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+	x=resultslist{1,currentframe};
+	y=resultslist{2,currentframe};
+	[x_cal,y_cal]=calibrate_xy (x,y);
+
+	if size(resultslist,1)>6 %filtered exists
+		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+			u=resultslist{10,currentframe};
+			v=resultslist{11,currentframe};
+			typevector=resultslist{9,currentframe};
+			if numel(typevector)==0%happens if user smoothes sth without NaN and without validation
+				typevector=resultslist{5,currentframe};
+			end
+		else
+			u=resultslist{7,currentframe};
+			if size(u,1)>1
+				v=resultslist{8,currentframe};
+				typevector=resultslist{9,currentframe};
+			else
+				%filter was applied to some other frame than this
+				%load unfiltered results
+				u=resultslist{3,currentframe};
+				v=resultslist{4,currentframe};
+				typevector=resultslist{5,currentframe};
+			end
+		end
+	else
+		u=resultslist{3,currentframe};
+		v=resultslist{4,currentframe};
+		typevector=resultslist{5,currentframe};
+	end
+end
+u(typevector==0)=NaN;
+v(typevector==0)=NaN;
+subtract_u=gui_retr('subtr_u');
+subtract_v=gui_retr('subtr_v');
+
+if type==1 %ascii file
+	delimiter=get(handles.delimiter, 'value');
+	if delimiter==1
+		delimiter=',';
+	elseif delimiter==2
+		delimiter='\t';
+	elseif delimiter==3
+		delimiter=' ';
+	end
+	if get(handles.addfileinfo, 'value')==1
+		header1=['PIVlab, ASCII chart output - ' char(datetime('today'))];
+		header2=['FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(calu)];
+	else
+		header1=[];
+		header2=[];
+	end
+	if get(handles.add_header, 'value')==1
+		if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+			if get(handles.export_vort, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
+				header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'Vector type [-]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'dcev [1]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
+			else
+				header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'Vector type [-]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
+			end
+		else
+			if get(handles.export_vort, 'Value') == 1  %alle derivatives exportieren, kalibriert
+
+				header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'dcev [1]' delimiter 'simple shear [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]'];
+			else
+				header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
+			end
+		end
+	else
+		header3=[];
+	end
+	if isempty(header1)==0
+		fid = fopen(fullfile(PathName,FileName), 'w');
+		fprintf(fid, [header1 '\r\n']);
+		fclose(fid);
+	end
+	if isempty(header2)==0
+		fid = fopen(fullfile(PathName,FileName), 'a');
+		fprintf(fid, [header2 '\r\n']);
+		fclose(fid);
+	end
+	if isempty(header3)==0
+		fid = fopen(fullfile(PathName,FileName), 'a');
+		fprintf(fid, [header3 '\r\n']);
+		fclose(fid);
+	end
+	if get(handles.export_vort, 'Value') == 1 %sollen alle derivatives exportiert werden?
+		plot_derivative_calc(currentframe,2,1); %vorticity
+		plot_derivative_calc(currentframe,3,1); %magnitude
+		%u und v habe ich ja...
+		plot_derivative_calc(currentframe,6,1); %divergence
+		plot_derivative_calc(currentframe,7,1); %dcev
+		plot_derivative_calc(currentframe,8,1); %shear
+		plot_derivative_calc(currentframe,9,1); %strain
+		plot_derivative_calc(currentframe,11,1); %vectorangle
+		derived=gui_retr('derived');
+		vort=derived{2-1,currentframe};
+		magn=derived{3-1,currentframe};
+		div=derived{6-1,currentframe};
+		dcev=derived{7-1,currentframe};
+		shear=derived{8-1,currentframe};
+		strain=derived{9-1,currentframe};
+		vectorangle=derived{11-1,currentframe};
+		%correlation_map=derived{12-1,currentframe};
+		%wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
+		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
+	else %no derivatives.
+		%wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
+		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
+	end
+	dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc');
+end %type==1
+
+if type==2 %NOT USED ANYMORE matlab file
+end
+
+if type==3 %paraview vtk PARAVIEW DATEN OHNE die ganzen derivatives.... Berechnet man doch eh direkt in Paraview.
+	u=u*calu-subtract_u;
+	v=v*calv-subtract_v;
+
+	nr_of_elements=numel(x_cal);
+	fid = fopen(fullfile(PathName,FileName), 'w');
+	if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+		info='[px/frame]';
+	else
+		info='[m/s]';
+	end
+	%ASCII file header
+	fprintf(fid, '# vtk DataFile Version 3.0\n');
+	fprintf(fid, ['VTK from PIVlab ' info '\n']);
+	fprintf(fid, 'BINARY\n\n');
+	fprintf(fid, 'DATASET STRUCTURED_GRID\n');
+	fprintf(fid, ['DIMENSIONS ' num2str(size(x_cal,1)) ' ' num2str(size(x_cal,2)) ' ' num2str(size(x_cal,3)) '\n']);
+	fprintf(fid, ['POINTS ' num2str(nr_of_elements) ' float\n']);
+	fclose(fid);
+
+	%append binary x,y,z data
+	fid = fopen(fullfile(PathName,FileName), 'a');
+	fwrite(fid, [reshape(x_cal,1,nr_of_elements);  reshape(y_cal,1,nr_of_elements); reshape(y_cal,1,nr_of_elements)*0],'float','b');
+
+	%append another ASCII sub header
+	fprintf(fid, ['\nPOINT_DATA ' num2str(nr_of_elements) '\n']);
+	fprintf(fid, 'VECTORS velocity_vectors float\n');
+
+	%append binary u,v,w data
+	fwrite(fid, [reshape(u,1,nr_of_elements);  reshape(v,1,nr_of_elements); reshape(v,1,nr_of_elements)*0],'float','b');
+
+	fclose(fid);
+
+end %type3
+
+if type==4 %tecplot file
+	delimiter = ' ';
+	header1=['# PIVlab by W.Th. & E.J.S., TECPLOT output - ' char(datetime('today'))];
+	header2=['# FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(calu)];
+	if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+		if get(handles.export_vort_tec, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
+			header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'dcev [1]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
+			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "dcev", "simple_shear", "simple_strain", "vector_direction"';
+		else
+			header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
+			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
+		end
+	else
+		if get(handles.export_vort_tec, 'Value') == 1  %alle derivatives exportieren, kalibriert
+			header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'dcev [1]' delimiter 'simple shear [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]'];
+			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "dcev", "simple_shear", "simple_strain", "vector_direction"';
+		else
+			header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
+			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
+		end
+	end
+	header4 = ['TITLE = "PIVlab frame: ' int2str(currentframe) '"'];
+	header6 = ['ZONE I=' int2str(size(x_cal,2)) ', J=' int2str(size(x_cal,1)) ', K=1, F=POINT, T="' int2str(currentframe) '"'];
+
+	fid = fopen(fullfile(PathName,FileName), 'w');
+	fprintf(fid, [header1 '\r\n' header2 '\r\n' header3 '\r\n' header4 '\r\n' header5 '\r\n' header6 '\r\n']);
+	fclose(fid);
+
+	if get(handles.export_vort_tec, 'Value') == 1 %sollen alle derivatives exportiert werden?
+		plot_derivative_calc(currentframe,2,1); %vorticity
+		plot_derivative_calc(currentframe,3,1); %magnitude
+		%u und v habe ich ja...
+		plot_derivative_calc(currentframe,6,1); %divergence
+		plot_derivative_calc(currentframe,7,1); %dcev
+		plot_derivative_calc(currentframe,8,1); %shear
+		plot_derivative_calc(currentframe,9,1); %strain
+		plot_derivative_calc(currentframe,11,1); %vectorangle
+		%derivative_calc(currentframe,12,1); %correlation coefficient
+		derived=gui_retr('derived');
+		vort=derived{2-1,currentframe};
+		magn=derived{3-1,currentframe};
+		div=derived{6-1,currentframe};
+		dcev=derived{7-1,currentframe};
+		shear=derived{8-1,currentframe};
+		strain=derived{9-1,currentframe};
+		vectorangle=derived{11-1,currentframe};
+		%correlation_map=derived{12-1,currentframe};
+		nanmarker=zeros(size(x));
+		nanmarker(isnan(u))=1;
+		%Nans mit nullen fÃ¼llen
+		u(isnan(u))=0;
+		v(isnan(v))=0;
+		vort(isnan(vort))=0;
+		magn(isnan(magn))=0;
+		div(isnan(div))=0;
+		dcev(isnan(dcev))=0;
+		shear(isnan(shear))=0;
+		strain(isnan(strain))=0;
+		vectorangle(isnan(vectorangle))=0;
+		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
+	else
+		nanmarker=zeros(size(x));
+		nanmarker(isnan(u))=1;
+		u(isnan(u))=0;
+		v(isnan(v))=0;
+		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1)];
+	end
+	wholeLOT=sortrows(wholeLOT,2);
+
+	dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc');
+end %fÃ¼r mehrere Zones: einfach header6 nochmal appenden, dann whileLOT fÃ¼r den nÃ¤chsten frame berechnen und appenden etc...
+
+function export_mat_file_save (currentframe,FileName,PathName,type)
+resultslist=gui_retr('resultslist');
+if isempty(resultslist)==0
+	derived=gui_retr('derived');
+	calxy=gui_retr('calxy');
+	calu=gui_retr('calu');calv=gui_retr('calv');
+	nrframes=size(resultslist,2);
+
+	if size(resultslist,1)< 11
+		resultslist{11,nrframes}=[]; %make sure resultslist has cells for all params
+	end
+	if isempty(derived)==0
+		if size(derived,1)<= 10 || size(derived,2) < nrframes
+			derived{11,nrframes}=[]; %make sure derived has cells for all params
+		end
+	else
+		derived=cell(11,nrframes);
+	end
+
+	if calxy==1 && (calu==1 ||calu==-1)
+		units='[px] respectively [px/frame]';
+	else
+		units='[m] respectively [m/s]';
+	end
+	%ohne alles: 6 hoch
+	%mit filtern: 11 hoch
+	%mit smoothed, 11 hoch und inhalt...
+	u_original=cell(nrframes,1);
+	v_original=u_original;
+	x=u_original;
+	y=u_original;
+	typevector_original=u_original;
+	u_filtered=u_original;
+	v_filtered=v_original;
+	typevector_filtered=u_original;
+	u_smoothed=u_original;
+	v_smoothed=u_original;
+	vorticity=cell(size(derived,2),1);
+	velocity_magnitude=vorticity;
+	u_component=vorticity;
+	v_component=vorticity;
+	divergence=vorticity;
+	vortex_locator=vorticity;
+	shear_rate=vorticity;
+	strain_rate=vorticity;
+	LIC=vorticity;
+	vectorangle=vorticity;
+	if type==1
+		nrframes=1;
+	end
+
+
+	%hier unterscheiden:nur ein frame oder all?
+
+	for i=1:nrframes
+		if type==2 %all frames
+			currentframe=i;
+		end
+		[x_cal,y_cal]=calibrate_xy (resultslist{1,currentframe},resultslist{2,currentframe});
+		x{i,1}=x_cal;
+		y{i,1}=y_cal;
+
+		u_original{i,1}=resultslist{3,currentframe}*calu;
+		v_original{i,1}=resultslist{4,currentframe}*calv;
+		typevector_original{i,1}=resultslist{5,currentframe};
+		u_filtered{i,1}=resultslist{7,currentframe}*calu;
+		v_filtered{i,1}=resultslist{8,currentframe}*calv;
+		typevector_filtered{i,1}=resultslist{9,currentframe};
+		u_smoothed{i,1}=resultslist{10,currentframe}*calu;
+		v_smoothed{i,1}=resultslist{11,currentframe}*calv;
+
+		vorticity{i,1}=derived{1,currentframe};
+		velocity_magnitude{i,1}=derived{2,currentframe};
+		u_component{i,1}=derived{3,currentframe};
+		v_component{i,1}=derived{4,currentframe};
+		divergence{i,1}=derived{5,currentframe};
+		vortex_locator{i,1}=derived{6,currentframe};
+		shear_rate{i,1}=derived{7,currentframe};
+		strain_rate{i,1}=derived{8,currentframe};
+		LIC{i,1}=derived{9,currentframe};
+		vectorangle{i,1}=derived{10,currentframe};
+		correlation_map{i,1}=derived{11,currentframe}; %#ok<AGROW>
+	end
+	if type == 1 %nur ein frame
+		x=x{i,1};
+		y=y{i,1};
+		u_original=u_original{i,1};
+		v_original=v_original{i,1};
+		typevector_original=typevector_original{i,1};
+		u_filtered=u_filtered{i,1};
+		v_filtered=v_filtered{i,1};
+		typevector_filtered=typevector_filtered{i,1};
+		u_smoothed=u_smoothed{i,1};
+		v_smoothed=v_smoothed{i,1};
+
+		vorticity=vorticity{i,1};
+		velocity_magnitude=velocity_magnitude{i,1};
+		u_component=u_component{i,1};
+		v_component=v_component{i,1};
+		divergence=divergence{i,1};
+		vortex_locator=vortex_locator{i,1};
+		shear_rate=shear_rate{i,1};
+		strain_rate=strain_rate{i,1};
+		LIC=LIC{i,1};
+		vectorangle=vectorangle{i,1};
+		correlation_map=correlation_map{i,1};
+	end
+end
+
+information={'The first dimension of the variables is the frame number.';'The variables contain all data that was calculated in the PIVlab GUI.';'If some data was not calculated, the corresponding cell is empty.';'Typevector is 0 for masked vector, 1 for regular vector, 2 for filtered vector';'u_original and v_original are the unmodified velocities from the cross-correlation.';'u_filtered and v_filtered is the above incl. your data validation selection.';'u_smoothed and v_smoothed is the above incl. your smoothing selection.'};
+save(fullfile(PathName,FileName), 'x','y','u_original','v_original','typevector_original','u_filtered','v_filtered','typevector_filtered','u_smoothed','v_smoothed','vorticity','velocity_magnitude','u_component','v_component','divergence','vortex_locator','shear_rate','strain_rate','LIC','calxy','calu', 'calv','units','information','vectorangle','correlation_map');
+
+function export_matlab_file_Callback(~, ~, ~)
+gui_switchui('multip11')
+
+function export_paraview_Callback(~, ~, ~)
+gui_switchui('multip19')
+
+function export_paraview_all_Callback(~, ~, ~)
+handles=gui_gethand;
+filepath=gui_retr('filepath');
+resultslist=gui_retr('resultslist');
+[FileName,PathName] = uiputfile('*.vtk','Save Paraview binary vtk as...','PIVlab.vtk'); %framenummer in dateiname
+if isequal(FileName,0) | isequal(PathName,0)
+else
+	gui_toolsavailable(0,'Busy, please wait...')
+	for i=1:floor(size(filepath,1)/2)
+		%if analysis exists
+		if size(resultslist,2)>=i && numel(resultslist{1,i})>0
+			[Dir, Name, Ext] = fileparts(FileName);
+			FileName_nr=[Name sprintf('_%.4d', i) Ext];
+			export_file_save(i,FileName_nr,PathName,3)
+			set (handles.paraview_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
+			drawnow;
+		end
+	end
+	gui_toolsavailable(1)
+	set (handles.paraview_all, 'string', 'Save all frames');
+end
+
+function export_paraview_current_Callback(~, ~, ~)
+handles=gui_gethand;
+resultslist=gui_retr('resultslist');
+currentframe=floor(get(handles.fileselector, 'value'));
+if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+	[FileName,PathName] = uiputfile('*.vtk','Save Paraview binary vtk as...','PIVlab.vtk'); %framenummer in dateiname
+	if isequal(FileName,0) | isequal(PathName,0)
+	else
+		export_file_save(currentframe,FileName,PathName,3);
+	end
+end
+
+function export_pixel_data(~, ~, ~)
+handles=gui_gethand;
+resultslist=gui_retr('resultslist');
+if size(resultslist,2)>=1
+	startframe=0;
+	endframe=0;
+	for i=1:size(resultslist,2)
+		if numel(resultslist{1,i})>0 && startframe==0
+			startframe=i;
+		end
+		if numel(resultslist{1,i})>0
+			endframe=i;
+		end
+	end
+	set(handles.firstframe, 'String',int2str(startframe));
+	set(handles.lastframe, 'String',int2str(endframe));
+	if strmatch(get(handles.multip08, 'visible'), 'on')
+		gui_put('p8wasvisible',1)
+	else
+		gui_put('p8wasvisible',0)
+	end
+	gui_switchui('multip16');
+else
+	msgbox('No analyses yet...')
+end
+%populate the popup menu
+avail_file_formats={'PNG','JPG','PDF'};
+
+avail_profiles = VideoWriter.getProfiles();
+ArchivalAVI = find(ismember({avail_profiles.Name},'Archival'),1);
+MPEG4 = find(ismember({avail_profiles.Name},'MPEG-4'),1);
+
+if ~isempty(ArchivalAVI)
+	avail_file_formats = [avail_file_formats {'Archival AVI'}];
+end
+if ~isempty(MPEG4)
+	avail_file_formats = [avail_file_formats {'MPEG-4'}];
+end
+set(handles.export_still_or_animation,'String',avail_file_formats)
+export_still_or_animation_Callback()
+
+function export_preprocess_Callback(~, ~, ~)
+filepath=gui_retr('filepath');
+if size(filepath,1) > 1 %did the user load images?
+	sessionpath=gui_retr('sessionpath');
+	if isempty(sessionpath)
+		sessionpath=gui_retr('pathname');
+	end
+
+	preproc_preview_preprocess_Callback
+	preprocessed_img=findobj(gca,'type','image');
+	preprocessed_img=(preprocessed_img.CData);
+	toggler=gui_retr('toggler');
+	if toggler==0
+		img_idx='_A';
+	else
+		img_idx='_B';
+	end
+	[FileName,PathName] = uiputfile('*.tif','Save preprocessed image as...',fullfile(sessionpath,['PIVlab_preproc' img_idx '.tif']));
+	if isequal(FileName,0) | isequal(PathName,0)
+	else
+		imwrite(preprocessed_img,fullfile(PathName,FileName),'Compression','none');
+	end
+end
+
+function export_save_mat_all_Callback(~, ~, ~)
+handles=gui_gethand;
+resultslist=gui_retr('resultslist');
+currentframe=floor(get(handles.fileselector, 'value'));
+if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+	[FileName,PathName] = uiputfile('*.mat','Save MATLAB file as...','PIVlab.mat'); %framenummer in dateiname
+	if isequal(FileName,0) | isequal(PathName,0)
+	else
+		export_mat_file_save(currentframe,FileName,PathName,2); %option2 = all frames
+	end
+end
+
+function export_save_mat_current_Callback(~, ~, ~)
+handles=gui_gethand;
+resultslist=gui_retr('resultslist');
+currentframe=floor(get(handles.fileselector, 'value'));
+if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+	[FileName,PathName] = uiputfile('*.mat','Save MATLAB file as...','PIVlab.mat'); %framenummer in dateiname
+	if isequal(FileName,0) | isequal(PathName,0)
+	else
+		export_mat_file_save(currentframe,FileName,PathName,1); %option 1 = only currentframe
+	end
+end
+
+function export_save_session_Callback(auto_save_session, auto_save_session_filename)
+sessionpath=gui_retr('sessionpath');
+if isempty(sessionpath)
+	sessionpath=gui_retr('pathname');
+end
+if auto_save_session ~= 1
+	[FileName,PathName] = uiputfile('*.mat','Save current session as...',fullfile(sessionpath,'PIVlab_session.mat'));
+else
+	[PathName,FileName,ext] = fileparts(auto_save_session_filename);
+	FileName = [FileName ext];
+end
+
+
+if isequal(FileName,0) | isequal(PathName,0)
+else
+	gui_put('expected_image_size',[])
+	gui_put('sessionpath',PathName );
+	gui_put('existing_handles',[]);gui_put('num_handle_calls',[])
+	clear ('existing_handles','num_handle_calls');
+	export_save_session_function (PathName,FileName)
+end
+
+function export_save_session_function (PathName,FileName)
+hgui=getappdata(0,'hgui');
+handles=gui_gethand;
+app=getappdata(hgui);
+gui_toolsavailable(1)
+gui_toolsavailable(0,'Busy, saving session...');drawnow
+%disp('hier was aendrn mit savehint')
+%text(150,150,'Please wait, saving session. This might take a while.','color','y','fontsize',13, 'BackgroundColor', 'k','tag','savehint')
+%Newer versions of Matlab do really funny things when the following vars are not empty...:
+app.GUIDEOptions =[];
+app.GUIOnScreen  =[];
+app.Listeners  =[];
+app.SavedVisible  =[];
+app.ScribePloteditEnable  =[];
+app.UsedByGUIData_m  =[];
+app.lastValidTag =[];
+iptPointerManager=[];
+app.ZoomObject=[]; %Matlab crashes if this is not empty. Weird...
+app.ZoomFigureState=[];
+app.ZoomOnState=[];
+app.PanFigureState=[];
+app.uitools_FigureToolManager=[];
+app.existing_handles=[];
+app.num_handle_calls=[];
+
+try
+	iptPointerManager(gcf, 'disable');
+catch
+end
+clear hgui iptPointerManager GUIDEOptions GUIOnScreen Listeners SavedVisible ScribePloteditEnable UsedByGUIData_m ZoomObject existing_handles num_handle_calls
+deli={'UsedByGUIData_m', 'uitools_FigureToolManager','PanFigureState','ZoomOnState','ZoomFigureState','ZoomObject','lastValidTag','SavedVisible','Listeners','GUIOnScreen','GUIDEOptions','ScribePloteditEnable','nonexistingfield'};
+for i=1:size(deli,2)
+	try
+		app=rmfield(app,deli{i});
+	catch
+	end
+end
+clear deli
+%save('-v6', fullfile(PathName,FileName), '-struct', 'app')
+%save(fullfile(PathName,FileName), '-struct', 'app') % AKTUELL PUBLIZIERT
+warning off
+save(fullfile(PathName,FileName), '-struct', 'app','-v7.3')% riesig aber nur das geht...
+warning on
+
+clear app %hgui iptPointerManager
+clear hgui iptPointerManager GUIDEOptions GUIOnScreen Listeners SavedVisible ScribePloteditEnable UsedByGUIData_m
+
+clahe_enable=get(handles.clahe_enable,'value');
+clahe_size=get(handles.clahe_size,'string');
+enable_highpass=get(handles.enable_highpass,'value');
+highp_size=get(handles.highp_size,'string');
+wienerwurst=get(handles.wienerwurst,'value');
+wienerwurstsize=get(handles.wienerwurstsize,'string');
+%enable_clip=get(handles.enable_clip,'value');
+%clip_thresh=get(handles.clip_thresh,'string');
+enable_intenscap=get(handles.enable_intenscap,'value');
+intarea=get(handles.intarea,'string');
+stepsize=get(handles.step,'string');
+subpix=get(handles.subpix,'value');  %popup
+stdev_check=get(handles.stdev_check,'value');
+stdev_thresh=get(handles.stdev_thresh,'string');
+loc_median=get(handles.loc_median,'value');
+loc_med_thresh=get(handles.loc_med_thresh,'string');
+%epsilon=get(handles.epsilon,'string');
+interpol_missing=get(handles.interpol_missing,'value');
+vectorscale=get(handles.vectorscale,'string');
+colormap_choice=get(handles.colormap_choice,'value'); %popup
+colormap_steps=get(handles.colormap_steps,'value');
+colormap_interpolation=get(handles.colormap_interpolation,'value');
+addfileinfo=get(handles.addfileinfo,'value');
+add_header=get(handles.add_header,'value');
+delimiter=get(handles.delimiter,'value');%popup
+img_not_mask=get(handles.img_not_mask,'value');
+autoscale_vec=get(handles.autoscale_vec,'value');
+calxy=gui_retr('calxy');
+calu=gui_retr('calu');calv=gui_retr('calv');
+pointscali=gui_retr('pointscali');
+
+x_axis_direction=get(handles.x_axis_direction,'value');
+y_axis_direction=get(handles.y_axis_direction,'value');
+size_of_the_image=gui_retr('size_of_the_image');
+points_offsetx=gui_retr('points_offsetx');
+points_offsety=gui_retr('points_offsety');
+offset_x_true=gui_retr('offset_x_true');
+offset_y_true=gui_retr('offset_y_true');
+
+realdist_string=get(handles.realdist, 'String');
+time_inp_string=get(handles.time_inp, 'String');
+
+%imginterpol=get(handles.popupmenu16, 'value');
+dccmark=get(handles.dcc, 'value');
+fftmark=get(handles.fftmulti, 'value');
+ensemblemark=get(handles.ensemble, 'value');
+pass2=get(handles.checkbox26, 'value');
+pass3=get(handles.checkbox27, 'value');
+pass4=get(handles.checkbox28, 'value');
+pass2val=get(handles.edit50, 'string');
+pass3val=get(handles.edit51, 'string');
+pass4val=get(handles.edit52, 'string');
+step2=get(handles.text126, 'string');
+step3=get(handles.text127, 'string');
+step4=get(handles.text128, 'string');
+holdstream=get(handles.holdstream, 'value');
+streamlamount=get(handles.streamlamount, 'string');
+streamlcolor=get(handles.streamlcolor, 'value');
+
+try
+	%neu v1.5:
+	%Repeated_box=get(handles.Repeated_box,'value');
+	mask_auto_box=get(handles.mask_auto_box,'value');
+	Autolimit=get(handles.Autolimit,'value');
+	minintens=get(handles.minintens,'string');
+	maxintens=get(handles.maxintens,'string');
+	%neu v2.11
+	CorrQuality_nr=get(handles.CorrQuality,'value');
+	%neu v2.37
+	enhance_disp=get(handles.enhance_images, 'Value');
+catch
+	disp('Old version compatibility|');
+end
+try
+	contrast_filter_thresh=get(handles.contrast_filter_thresh,'string');
+	bright_filter_thresh=get(handles.bright_filter_thresh,'string');
+	do_bright_filter=get(handles.do_bright_filter,'Value');
+	do_contrast_filter=get(handles.do_contrast_filter,'Value');
+catch
+end
+try
+	%neu v2.54
+	do_corr2_filter=get(handles.do_corr2_filter,'value');
+	corr_filter_thresh=get(handles.corr_filter_thresh,'string');
+	notch_L_thresh=get(handles.notch_L_thresh,'string');
+	notch_H_thresh=get(handles.notch_H_thresh,'string');
+	notch_filter=get(handles.notch_filter,'Value');
+catch
+	disp('corr filter / notch settings');
+end
+%neu v2.52
+try
+	repeat_last = get (handles.repeat_last,'Value');
+	repeat_last_thresh = get(handles.edit52x,'String');
+catch
+	disp('repeat_last didnt work3')
+end
+
+try
+	bg_img_A=gui_retr('bg_img_A');
+	bg_img_B=gui_retr('bg_img_B');
+catch
+	disp('Could not fetch bg imgs')
+end
+
+clear handles
+clear existing_handles
+clear num_handle_calls
+
+%save('-v6', fullfile(PathName,FileName), '-append');
+%save(fullfile(PathName,FileName), '-append');
+save(fullfile(PathName,FileName), '-append');
+
+%delete(findobj('tag','savehint'));
+gui_toolsavailable(1)
+drawnow;
+
+function export_save_settings_Callback(~, ~, ~)
+handles=gui_gethand;
+clahe_enable=get(handles.clahe_enable,'value');
+clahe_size=get(handles.clahe_size,'string');
+enable_highpass=get(handles.enable_highpass,'value');
+highp_size=get(handles.highp_size,'string');
+wienerwurst=get(handles.wienerwurst,'value');
+wienerwurstsize=get(handles.wienerwurstsize,'string');
+
+%enable_clip=get(handles.enable_clip,'value');
+%clip_thresh=get(handles.clip_thresh,'string');
+enable_intenscap=get(handles.enable_intenscap,'value');
+intarea=get(handles.intarea,'string');
+stepsize=get(handles.step,'string');
+subpix=get(handles.subpix,'value');  %popup
+stdev_check=get(handles.stdev_check,'value');
+stdev_thresh=get(handles.stdev_thresh,'string');
+loc_median=get(handles.loc_median,'value');
+loc_med_thresh=get(handles.loc_med_thresh,'string');
+%epsilon=get(handles.epsilon,'string');
+interpol_missing=get(handles.interpol_missing,'value');
+vectorscale=get(handles.vectorscale,'string');
+colormap_choice=get(handles.colormap_choice,'value'); %popup
+colormap_steps=get(handles.colormap_steps,'value');
+colormap_interpolation=get(handles.colormap_interpolation,'value');
+addfileinfo=get(handles.addfileinfo,'value');
+add_header=get(handles.add_header,'value');
+delimiter=get(handles.delimiter,'value');%popup
+img_not_mask=get(handles.img_not_mask,'value');
+autoscale_vec=get(handles.autoscale_vec,'value');
+
+%imginterpol=get(handles.popupmenu16, 'value');
+dccmark=get(handles.dcc, 'value');
+fftmark=get(handles.fftmulti, 'value');
+ensemblemark=get(handles.ensemble, 'value');
+
+pass2=get(handles.checkbox26, 'value');
+
+pass3=get(handles.checkbox27, 'value');
+pass4=get(handles.checkbox28, 'value');
+pass2val=get(handles.edit50, 'string');
+pass3val=get(handles.edit51, 'string');
+pass4val=get(handles.edit52, 'string');
+step2=get(handles.text126, 'string');
+step3=get(handles.text127, 'string');
+step4=get(handles.text128, 'string');
+holdstream=get(handles.holdstream, 'value');
+streamlamount=get(handles.streamlamount, 'string');
+streamlcolor=get(handles.streamlcolor, 'value');
+streamlcolor=get(handles.streamlwidth, 'value');
+realdist=get(handles.realdist, 'string');
+time_inp=get(handles.time_inp, 'string');
+
+nthvect=get(handles.nthvect, 'string');
+validr=get(handles.validr,'string');
+validg=get(handles.validg,'string');
+validb=get(handles.validb,'string');
+validdr=get(handles.validdr,'string');
+validdg=get(handles.validdg,'string');
+validdb=get(handles.validdb,'string');
+interpr=get(handles.interpr,'string');
+interpg=get(handles.interpg,'string');
+interpb=get(handles.interpb,'string');
+
+calxy=gui_retr('calxy');
+calu=gui_retr('calu');calv=gui_retr('calv');
+
+try
+	%neu v1.5:
+	%Repeated_box=get(handles.Repeated_box,'value');
+	mask_auto_box=get(handles.mask_auto_box,'value');
+	Autolimit=get(handles.Autolimit,'value');
+	minintens=get(handles.minintens,'string');
+	maxintens=get(handles.maxintens,'string');
+	%neu v2.0:
+	panelwidth=get(handles.panelslider,'Value');
+	%neu v2.11
+	CorrQuality_nr=get(handles.CorrQuality, 'value');
+	%neu v2.37
+	enhance_disp=get(handles.enhance_images, 'Value');
+catch
+	disp('Old version compatibility_');
+end
+try
+	%v2.41
+	x_axis_direction=get(handles.x_axis_direction,'value');
+	y_axis_direction=get(handles.y_axis_direction,'value');
+	size_of_the_image=gui_retr('size_of_the_image');
+	points_offsetx=gui_retr('points_offsetx');
+	points_offsety=gui_retr('points_offsety');
+	offset_x_true=gui_retr('offset_x_true');
+	offset_y_true=gui_retr('offset_y_true');
+	contrast_filter_thresh=get(handles.contrast_filter_thresh,'string');
+	bright_filter_thresh=get(handles.bright_filter_thresh,'string');
+	do_bright_filter=get(handles.do_bright_filter,'Value');
+	do_contrast_filter=get(handles.do_contrast_filter,'Value');
+catch
+end
+try
+	%neu v2.54
+	do_corr2_filter=get(handles.do_corr2_filter,'value');
+	corr_filter_thresh=get(handles.corr_filter_thresh,'string');
+	notch_L_thresh=get(handles.notch_L_thresh,'string');
+	notch_H_thresh=get(handles.notch_H_thresh,'string');
+	notch_filter=get(handles.notch_filter,'Value');
+catch
+	disp('corr filter / notch settings');
+end
+%neu v2.52
+try
+	repeat_last = get (handles.repeat_last,'Value');
+	repeat_last_thresh = get(handles.edit52x,'String');
+catch
+	disp('repeat_last didnt work2')
+end
+
+pointscali=gui_retr('pointscali');
+if isempty(pointscali)
+	clear pointscali
+end
+
+if ispc==1
+	[FileName,PathName] = uiputfile('*.mat','Save current settings as...',['PIVlab_set_' getenv('USERNAME') '.mat']);
+else
+	try
+		[FileName,PathName] = uiputfile('*.mat','Save current settings as...',['PIVlab_set_' getenv('USER') '.mat']);
+	catch
+		[FileName,PathName] = uiputfile('*.mat','Save current settings as...','PIVlab_set.mat');
+	end
+end
+
+clear handles hObject eventdata
+if ~isequal(FileName,0)
+	save('-v6', fullfile(PathName,FileName))
+end
+
+function export_still_or_animation_Callback(~,~,~)
+handles=gui_gethand;
+str=get(handles.export_still_or_animation,'String');
+value=get(handles.export_still_or_animation,'Value');
+selected_format=str{value};
+
+switch selected_format
+	case 'PNG'
+		set(handles.quality_setting,'Enable','Off')
+		set(handles.fps_setting,'Enable','Off')
+		set(handles.resolution_setting,'Enable','On')
+	case 'JPG'
+		set(handles.quality_setting,'Enable','Off')
+		set(handles.fps_setting,'Enable','Off')
+		set(handles.resolution_setting,'Enable','On')
+	case 'PDF'
+		set(handles.quality_setting,'Enable','Off')
+		set(handles.fps_setting,'Enable','Off')
+		set(handles.resolution_setting,'Enable','On')
+	case 'Archival AVI'
+		set(handles.quality_setting,'Enable','Off')
+		set(handles.fps_setting,'Enable','On')
+		set(handles.resolution_setting,'Enable','Off')
+	case 'MPEG-4'
+		set(handles.quality_setting,'Enable','On')
+		set(handles.fps_setting,'Enable','On')
+		set(handles.resolution_setting,'Enable','Off')
+end
+
+function export_tecplot_all_Callback(~, ~, ~)
+handles=gui_gethand;
+filepath=gui_retr('filepath');
+resultslist=gui_retr('resultslist');
+[FileName,PathName] = uiputfile('*.dat','Save vector data as...','PIVlab.dat'); %framenummer in dateiname
+if isequal(FileName,0) | isequal(PathName,0)
+else
+	gui_toolsavailable(0,'Busy, please wait...')
+	for i=1:floor(size(filepath,1)/2)
+		%if analysis exists
+		if size(resultslist,2)>=i && numel(resultslist{1,i})>0
+			[Dir, Name, Ext] = fileparts(FileName);
+			FileName_nr=[Name sprintf('_%.4d', i) Ext];
+			export_file_save(i,FileName_nr,PathName,4)
+			set (handles.tecplot_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
+			drawnow;
+		end
+	end
+	gui_toolsavailable(1)
+	set (handles.tecplot_all, 'string', 'Export all frames');
+end
+
+function export_tecplot_current_Callback(~, ~, ~)
+handles=gui_gethand;
+resultslist=gui_retr('resultslist');
+currentframe=floor(get(handles.fileselector, 'value'));
+if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+	[FileName,PathName] = uiputfile('*.dat','Save vector data as...','PIVlab.dat'); %framenummer in dateiname
+	if isequal(FileName,0) | isequal(PathName,0) %#ok<*OR2>
+	else
+		export_file_save(currentframe,FileName,PathName,4);
+	end
+end
+
+function export_tecplot_file_Callback(~, ~, ~)
+gui_switchui('multip20')
+
+function export_write_workspace_Callback(~, ~, ~)
+resultslist=gui_retr('resultslist');
+if isempty(resultslist)==0
+	derived=gui_retr('derived');
+	calxy=gui_retr('calxy');
+	calu=gui_retr('calu');calv=gui_retr('calv');
+	nrframes=size(resultslist,2);
+	if size(resultslist,1)< 11
+		resultslist{11,nrframes}=[]; %make sure resultslist has cells for all params
+	end
+	if isempty(derived)==0
+		if size(derived,1)<= 10|| size(derived,2) < nrframes
+			derived{11,nrframes}=[]; %make sure derived has cells for all params
+		end
+	else
+		derived=cell(11,nrframes);
+	end
+
+	if calxy==1 && (calu==1 ||calu==-1)
+		units='[px] respectively [px/frame]';
+	else
+		units='[m] respectively [m/s]';
+	end
+	%ohne alles: 6 hoch
+	%mit filtern: 11 hoch
+	%mit smoothed, 11 hoch und inhalt...
+	u_original=cell(size(resultslist,2),1);
+	v_original=u_original;
+	x=u_original;
+	y=u_original;
+	typevector_original=u_original;
+	u_filtered=u_original;
+	v_filtered=v_original;
+	typevector_filtered=u_original;
+	u_smoothed=u_original;
+	v_smoothed=u_original;
+	vorticity=cell(size(derived,2),1);
+	velocity_magnitude=vorticity;
+	u_component=vorticity;
+	v_component=vorticity;
+	divergence=vorticity;
+	vortex_locator=vorticity;
+	shear_rate=vorticity;
+	strain_rate=vorticity;
+	LIC=vorticity;
+	vectorangle=vorticity;
+	correlation_map=vorticity;
+
+	for i=1:nrframes
+		[x_cal,y_cal]=calibrate_xy (resultslist{1,i},resultslist{2,i});
+		x{i,1}=x_cal;
+		y{i,1}=y_cal;
+		u_original{i,1}=resultslist{3,i}*calu;
+		v_original{i,1}=resultslist{4,i}*calv;
+		typevector_original{i,1}=resultslist{5,i};
+		u_filtered{i,1}=resultslist{7,i}*calu;
+		v_filtered{i,1}=resultslist{8,i}*calv;
+		typevector_filtered{i,1}=resultslist{9,i};
+		u_smoothed{i,1}=resultslist{10,i}*calu;
+		v_smoothed{i,1}=resultslist{11,i}*calv;
+
+		vorticity{i,1}=derived{1,i};
+		velocity_magnitude{i,1}=derived{2,i};
+		u_component{i,1}=derived{3,i};
+		v_component{i,1}=derived{4,i};
+		divergence{i,1}=derived{5,i};
+		vortex_locator{i,1}=derived{6,i};
+		shear_rate{i,1}=derived{7,i};
+		strain_rate{i,1}=derived{8,i};
+		LIC{i,1}=derived{9,i};
+		vectorangle{i,1}=derived{10,i};
+		correlation_map{i,1}=derived{11,i};
+	end
+
+	assignin('base','x',x);
+	assignin('base','y',y);
+	assignin('base','u_original',u_original);
+	assignin('base','v_original',v_original);
+	assignin('base','typevector_original',typevector_original);
+	assignin('base','u_filtered',u_filtered);
+	assignin('base','v_filtered',v_filtered);
+	assignin('base','typevector_filtered',typevector_filtered);
+	assignin('base','u_smoothed',u_smoothed);
+	assignin('base','v_smoothed',v_smoothed);
+
+	assignin('base','vorticity',vorticity);
+
+	assignin('base','velocity_magnitude',velocity_magnitude);
+	assignin('base','u_component',u_component);
+	assignin('base','v_component',v_component);
+	assignin('base','divergence',divergence);
+	assignin('base','vortex_locator',vortex_locator);
+	assignin('base','shear_rate',shear_rate);
+	assignin('base','strain_rate',strain_rate);
+	assignin('base','LIC',LIC);
+	assignin('base','vectorangle',vectorangle);
+	assignin('base','correlation_map',correlation_map);
+
+	assignin('base','calxy',calxy);
+	assignin('base','calu',calu);
+	assignin('base','calv',calv);
+	assignin('base','units',units);
+
+
+	clc
+	disp('EXPLANATIONS:')
+	disp(' ')
+	disp('The first dimension of the variables is the frame number.')
+	disp('The variables contain all data that was calculated in the PIVlab GUI.')
+	disp('If some data was not calculated, the corresponding cell is empty.')
+	disp('Typevector is 0 for masked vector, 1 for regular vector, 2 for filtered vector')
+	disp(' ')
+	disp('u_original and v_original are the unmodified velocities from the cross-correlation.')
+	disp('u_filtered and v_filtered is the above incl. your data validation selection.')
+	disp('u_smoothed and v_smoothed is the above incl. your smoothing selection.')
+end
+
+function extract_area_all_Callback(hObject, ~, ~)
+handles=gui_gethand;
+if get(hObject,'Value')==1
+	set(handles.savearea,'enable','off');
+	set(handles.savearea,'value',1);
+else
+	set(handles.savearea,'enable','on');
+end
+
+function extract_area_extract_Callback(~, ~, ~)
+handles=gui_gethand;
+gui_switchui('multip17');
+if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+	set(handles.area_para_select,'string', {'Vorticity [1/frame]';'Magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Correlation coefficient [-]'});
+else
+	set(handles.area_para_select,'string', {'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]'});
+end
+
+function extract_areatype_Callback(hObject, ~, ~)
+handles=gui_gethand;
+if get(hObject,'value')==4
+	set(handles.text93, 'visible', 'on')
+	set(handles.smallerlarger, 'visible', 'on')
+	set(handles.text94, 'visible', 'on')
+	set(handles.radiusincrease, 'visible', 'on')
+	set(handles.thresholdarea, 'visible', 'on')
+	set(handles.usethreshold, 'visible', 'on')
+	set(handles.text95, 'visible', 'on')
+else
+	set(handles.text93, 'visible', 'off')
+	set(handles.smallerlarger, 'visible', 'off')
+	set(handles.text94, 'visible', 'off')
+	set(handles.radiusincrease, 'visible', 'off')
+	set(handles.thresholdarea, 'visible', 'off')
+	set(handles.usethreshold, 'visible', 'off')
+	set(handles.text95, 'visible', 'off')
+end
+if get(hObject,'value')==3 || get(hObject,'value')==6
+	set(handles.area_para_select,'visible','off');
+	set(handles.text89,'visible','off');
+else
+	set(handles.area_para_select,'visible','on');
+	set(handles.text89,'visible','on');
+end
+
+function extract_clear_plot_Callback(~, ~, ~)
+h_extractionplot=gui_retr('h_extractionplot');
+h_extractionplot2=gui_retr('h_extractionplot2');
+for i=1:size(h_extractionplot,1)
+	try
+		close (h_extractionplot(i));
+	catch
+	end
+	try
+		close (h_extractionplot2(i));
+	catch
+	end
+end
+gui_put ('h_extractionplot', []);
+gui_put ('h_extractionplot2', []);
+delete(findobj(gui_retr('pivlab_axis'),'tag', 'extractpoint'));
+delete(findobj(gui_retr('pivlab_axis'),'tag', 'extractline'));
+delete(findobj(gui_retr('pivlab_axis'),'tag', 'circstring'));
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_displayed_smaller_radii'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_max_circulation'))
+gui_put('xposition',[]);
+gui_put('yposition',[]);
+gui_put('extract_type',[]);
+
+function extract_dist_angle_Callback(~, ~, ~)
+gui_switchui('multip13')
+
+function extract_draw_area_Callback(~, ~, ~)
+%noch probleme wenn erster frame leer...
+%dann geht er sofort zu datei asuwahl...
+handles=gui_gethand;
+currentframe=floor(get(handles.fileselector, 'value'));
+resultslist=gui_retr('resultslist');
+
+%NEU
+if get(handles.extractareaall, 'value')==0
+	startfr=currentframe;
+	endfr=currentframe;
+else
+	%sollte erstes element sein mit inhalt...
+	for findcontent=size(resultslist,2):-1:1
+		if numel(resultslist{1,findcontent}) > 0
+			startfr=findcontent;
+		end
+	end
+
+	endfr=size(resultslist,2);
+end
+selected=0;
+areaoperation=get(handles.areatype, 'value');
+gui_toolsavailable(0)
+for i=startfr:endfr
+	set(handles.fileselector, 'value',i)
+	%sliderdisp(retr('pivlab_axis'))
+	currentframe=floor(get(handles.fileselector, 'value'));
+
+	if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+		if areaoperation==1
+			%area mean value
+			gui_sliderdisp(gui_retr('pivlab_axis'))
+			filepath=gui_retr('filepath');
+			x=resultslist{1,currentframe};
+			extractwhat=get(handles.area_para_select,'Value');
+			if extractwhat==9 || extractwhat==10
+				plot_derivative_calc(currentframe,extractwhat+2,0);
+			else
+				plot_derivative_calc(currentframe,extractwhat+1,0);
+			end
+			derived=gui_retr('derived');
+			[currentimage,~]=import_get_img(2*currentframe-1);
+			sizeold=size(currentimage,1);
+			sizenew=size(x,1);
+
+			%{
+            extractwhat9 ist vectorangle
+            extractwhat10 ist correlation_map
+            
+            
+            derived 9 ist LIC
+            derived10 ist vectorangle
+            derived11 ist correlation map
+			%}
+
+			if extractwhat==9 || extractwhat==10
+				maptoget=derived{extractwhat+1,currentframe};
+			else
+				maptoget=derived{extractwhat,currentframe};
+			end
+			maptoget=plot_rescale_maps_nan(maptoget,0);
+			if selected==0
+				[BW,ximask,yimask]=roipoly;
+			end
+			if isempty(BW)
+			else
+				delete(findobj('tag','areaint'));
+				delete(findobj('tag', 'extractline'))
+				delete(findobj('tag', 'extractpoint'))
+				numcells=0;
+				summe=0;
+				for i=1:size(BW,1) %#ok<*FXSET>
+					for j=1:size(BW,2)
+						if BW(i,j)==1
+							if ~isnan(maptoget(i,j))
+								summe=summe+maptoget(i,j);
+								numcells=numcells+1;
+							end
+						end
+					end
+				end
+				average=summe/numcells;
+				hold on;
+				plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
+				plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
+				hold off;
+				%get units
+				unitpar=get(handles.area_para_select,'string');
+				unitpar=unitpar{get(handles.area_para_select,'value')};
+				unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
+
+
+				text(min(ximask),mean(yimask), ['area mean value = ' num2str(average) ' [' unitpar ']'], 'BackgroundColor', 'w','tag','areaint');
+				areaoutput=average;
+				varis='[mean]';
+			end
+		elseif areaoperation==2
+			%area integral
+			gui_sliderdisp(gui_retr('pivlab_axis'))
+			filepath=gui_retr('filepath');
+			x=resultslist{1,currentframe};
+			extractwhat=get(handles.area_para_select,'Value');
+			if extractwhat==9 || extractwhat==10
+				plot_derivative_calc(currentframe,extractwhat+2,0);
+			else
+				plot_derivative_calc(currentframe,extractwhat+1,0);
+			end
+			derived=gui_retr('derived');
+			if extractwhat==9 || extractwhat==10
+				maptoget=derived{extractwhat+1,currentframe};
+			else
+				maptoget=derived{extractwhat,currentframe};
+			end
+			maptoget=plot_rescale_maps_nan(maptoget,0);
+
+			calxy=gui_retr('calxy');
+			[currentimage,~]=import_get_img(2*currentframe-1);
+			sizeold=size(currentimage,1);
+			sizenew=size(x,1);
+			if selected==0
+				[BW,ximask,yimask]=roipoly; %select in currently displayed image
+			end
+			if isempty(BW)
+			else
+				delete(findobj('tag','areaint'));
+				delete(findobj('tag', 'extractline'))
+				delete(findobj('tag', 'extractpoint'))
+				celllength=1*calxy; %size of one pixel
+				cellarea=celllength^2; %area of one cell
+				integral=0;
+				for i=1:size(BW,1)
+					for j=1:size(BW,2)
+						if BW(i,j)==1
+							if ~isnan(maptoget(i,j)) %do not include nans and nan area in integral.
+								integral=integral+cellarea*maptoget(i,j);
+							end
+						end
+					end
+				end
+				hold on;
+				plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
+				plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
+				hold off;
+
+				%get units
+				if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+					distunit='px^2';
+				else
+					distunit='m^2';
+				end
+
+				unitpar=get(handles.area_para_select,'string');
+				unitpar=unitpar{get(handles.area_para_select,'value')};
+				unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
+
+
+				text(min(ximask),mean(yimask), ['area integral = ' num2str(integral) ' [' unitpar '*' distunit ']'], 'BackgroundColor', 'w','tag','areaint');
+				areaoutput=integral;
+				varis='[integral]';
+			end
+		elseif areaoperation==3
+			% area only
+			gui_sliderdisp(gui_retr('pivlab_axis'))
+			filepath=gui_retr('filepath');
+			[currentimage,~]=import_get_img(2*currentframe-1);
+			x=resultslist{1,currentframe};
+			sizeold=size(currentimage,1);
+			sizenew=size(x,1);
+			if selected==0
+				[BW,ximask,yimask]=roipoly;
+			end
+			if isempty(BW)
+			else
+				delete(findobj('tag','areaint'));
+				delete(findobj('tag', 'extractline'))
+				delete(findobj('tag', 'extractpoint'))
+				calxy=gui_retr('calxy');
+				celllength=1*calxy;
+				cellarea=celllength^2;
+				summe=0;
+				for i=1:size(BW,1)
+					for j=1:size(BW,2)
+						if BW(i,j)==1
+							summe=summe+cellarea;
+						end
+					end
+				end
+				hold on;
+				plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
+				plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
+				hold off;
+
+				%get units
+				if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+					distunit='px^2';
+				else
+					distunit='m^2';
+				end
+
+
+				text(min(ximask),mean(yimask), ['area = ' num2str(summe) ' [' distunit ']'], 'BackgroundColor', 'w','tag','areaint');
+				areaoutput=summe;
+				varis='[area]';
+			end
+		elseif areaoperation==4
+			%area series
+			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+				x=resultslist{1,currentframe};
+				y=resultslist{2,currentframe};
+				if size(resultslist,1)>6 %filtered exists
+					if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+						u=resultslist{10,currentframe};
+						v=resultslist{11,currentframe};
+					else
+						u=resultslist{7,currentframe};
+						if size(u,1)>1
+							v=resultslist{8,currentframe};
+						else
+							u=resultslist{3,currentframe};
+							v=resultslist{4,currentframe};
+						end
+					end
+				else
+					u=resultslist{3,currentframe};
+					v=resultslist{4,currentframe};
+				end
+				calu=gui_retr('calu');calv=gui_retr('calv');
+				u=u*calu-gui_retr('subtr_u');
+				v=v*calv-gui_retr('subtr_v');
+				calxy=gui_retr('calxy');
+
+				extractwhat=get(handles.area_para_select,'Value');
+				if extractwhat==9 || extractwhat==10
+					plot_derivative_calc(currentframe,extractwhat+2,0);
+				else
+					plot_derivative_calc(currentframe,extractwhat+1,0);
+				end
+				derived=gui_retr('derived');
+
+				if extractwhat==9 || extractwhat==10
+					currentimage=derived{extractwhat+1,currentframe};
+				else
+					currentimage=derived{extractwhat,currentframe};
+				end
+				currentimage=plot_rescale_maps_nan(currentimage,0);
+				hgui=getappdata(0,'hgui');
+				figure(hgui);
+				gui_sliderdisp(gui_retr('pivlab_axis'))
+
+				delete(findobj('tag','vortarea'));
+
+				%draw ellipse
+				if selected==0
+					for i=1:5
+						[xellip(i),yellip(i),but] = ginput(1); %#ok<AGROW>
+						if but~=1
+							break
+						end
+						hold on;
+						plot (xellip(i),yellip(i),'w*')
+						hold off;
+						if i==3
+							line(xellip(2:3),yellip(2:3))
+						end
+						if i==5
+							line(xellip(4:5),yellip(4:5))
+						end
+					end
+				end
+				if size(xellip,2)==5
+					%click1=centre of vortical structure
+					%click2=top of vortical structure
+					%click3=bottom of vortical structure
+					%click4=left of vortical structure
+					%click5=right of vortical structure
+					x0=(mean(xellip)+xellip(1))/2;
+					y0=(mean(yellip)+yellip(1))/2;
+					if xellip(2)<xellip(3)
+						ang=acos((yellip(2)-yellip(3))/(sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)))-pi/2;
+					else
+						ang=asin((yellip(2)-yellip(3))/(sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)));
+					end
+					rb=sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)/2;
+					ra=sqrt((xellip(4)-xellip(5))^2+(yellip(4)-yellip(5))^2)/2;
+					ra=sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)/2;
+					rb=sqrt((xellip(4)-xellip(5))^2+(yellip(4)-yellip(5))^2)/2;
+
+					celllength=1*calxy;
+					%celllength=(x(1,2)-x(1,1))*calxy; %size of one cell
+					cellarea=celllength^2; %area of one cell
+					integralindex=0;
+
+					if get(handles.usethreshold,'value')==1
+						%sign=currentimage(round(yellip(1)),round(xellip(1)));
+						condition=get(handles.smallerlarger, 'value'); %1 is larger, 2 is smaller
+						thresholdareavalue=str2num(get(handles.thresholdarea, 'string'));
+
+						if condition==1
+							currentimage(currentimage>thresholdareavalue)=nan;
+						else
+							currentimage(currentimage<thresholdareavalue)=nan;
+						end
+						%{
+                    %redraw map to show excluded areas
+                    [xhelper,yhelper]=meshgrid(1:size(u,2),1:size(u,1));
+                    areaincluded=ones(size(u));
+                    areaincluded(isnan(currentimage)==1)=0;
+                    imagesc(currentimage);
+                    axis image
+                    hold on;
+                    quiver(xhelper(areaincluded==1),yhelper(areaincluded==1),u(areaincluded==1),v(areaincluded==1),'k','linewidth',str2double(get(handles.vecwidth,'string')))
+                    scatter(xhelper(areaincluded==0),yhelper(areaincluded==0),'rx')
+                    hold off;
+						%}
+					end
+					increasefactor=str2num(get(handles.radiusincrease,'string'))/100;
+					if ra<rb
+						minimumrad=ra;
+					else
+						minimumrad=rb;
+					end
+					%for incr = -(minimumrad)/1.5 :0.5: (ra+rb)/2*increasefactor
+					for incr = -(minimumrad)/1.5 :5: (ra+rb)/2*increasefactor
+						integralindex=integralindex+1;
+						[outputx, outputy]=ellipse(ra+incr,rb+incr,ang,x0,y0,'w');
+						%BW = roipoly(u,outputx,outputy);
+						BW = roipoly(currentimage,outputx,outputy);
+						ra_all(integralindex)=ra+incr; %#ok<AGROW>
+						rb_all(integralindex)=rb+incr; %#ok<AGROW>
+
+						integral=0;
+						%for i=1:size(u,1)
+						for i=1:size(currentimage,1)
+							%for j=1:size(u,2)
+							for j=1:size(currentimage,2)
+								if BW(i,j)==1
+									if ~isnan(currentimage(i,j))
+										integral=integral+cellarea*currentimage(i,j);
+									end
+								end
+							end
+						end
+						integralseries(integralindex)=integral; %#ok<AGROW>
+					end
+					gui_put('ra',ra_all);
+					gui_put('rb',rb_all)
+					gui_put('ang',ang)
+					gui_put('x0',x0)
+					gui_put('y0',y0)
+					h2=figure;
+					%plot(integralseries)
+					set(h2, 'tag', 'vortarea');
+
+					plot (1:size(integralseries,2), integralseries);
+					hold on;
+					scattergroup1=scatter(1:size(integralseries,2), integralseries, 80, 'ko');
+					hold off;
+					if verLessThan('matlab','8.4')
+						set(scattergroup1, 'ButtonDownFcn', @extract_hitcircle2, 'hittestarea', 'off');
+					else
+						% >R2014a
+						set(scattergroup1, 'ButtonDownFcn', @extract_hitcircle2, 'pickableparts', 'visible');
+					end
+
+					title('Click the points of the graph to highlight it''s corresponding circle.')
+					gui_put('integralseries',integralseries);
+					gui_put ('hellipse',h2);
+					screensize=get( 0, 'ScreenSize' );
+					rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
+					set(h2,'position', rect);
+
+					extractwhat=get(handles.area_para_select,'Value');
+					current=get(handles.area_para_select,'string');
+					current=current{extractwhat};
+					set(h2,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ' area integral series, frame ' num2str(currentframe)]);
+					set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
+					xlabel('Ellipse series nr.');
+
+					if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+						units='px^2';
+					else
+						units='m^2';
+					end
+
+					current_2=current(1:strfind(current, '[')-1);
+					current_3=current(strfind(current, '[')+1:end-1);
+
+
+					ylabel([current_2 ' area integral [' current_3 '*' units ']']);
+					areaoutput=integralseries;
+					varis='[integral, starting at ellipse with smallest radius]';
+				end
+			end
+		elseif areaoperation==5
+			%weighted centroid
+			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+				x=resultslist{1,currentframe};
+				y=resultslist{2,currentframe};
+				if size(resultslist,1)>6 %filtered exists
+					if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+						u=resultslist{10,currentframe};
+						v=resultslist{11,currentframe};
+					else
+						u=resultslist{7,currentframe};
+						if size(u,1)>1
+							v=resultslist{8,currentframe};
+						else
+							u=resultslist{3,currentframe};
+							v=resultslist{4,currentframe};
+						end
+					end
+				else
+					u=resultslist{3,currentframe};
+					v=resultslist{4,currentframe};
+				end
+				calu=gui_retr('calu');calv=gui_retr('calv');
+				u_orig=u;
+				v_orig=v;
+				u=u*calu-gui_retr('subtr_u');
+				v=v*calv-gui_retr('subtr_v');
+				calxy=gui_retr('calxy');
+				extractwhat=get(handles.area_para_select,'Value');
+				if extractwhat==9 || extractwhat==10
+					plot_derivative_calc(currentframe,extractwhat+2,0);
+				else
+					plot_derivative_calc(currentframe,extractwhat+1,0);
+				end
+
+				derived=gui_retr('derived');
+
+				if extractwhat==9 || extractwhat==10
+					currentimage=derived{extractwhat+1,currentframe};
+				else
+					currentimage=derived{extractwhat,currentframe};
+				end
+
+				delete(findobj('tag','vortarea'));
+				%keyboard
+				imagesc(currentimage);
+				axis image
+				hold on;
+				quiver(u_orig-(gui_retr('subtr_u')/gui_retr('calu')),v_orig-(gui_retr('subtr_v')/gui_retr('calv')),'k','linewidth',str2double(get(handles.vecwidth,'string')))
+				hold off;
+
+				avail_maps=get(handles.colormap_choice,'string');
+				selected_index=get(handles.colormap_choice,'value');
+				if selected_index == 4 %HochschuleBremen map
+					load hsbmap.mat;
+					colormap(hsb);
+				elseif selected_index== 1 %rainbow
+					%load rainbow.mat;
+					colormap (parula);
+				else
+					colormap(avail_maps{selected_index});
+				end
+				if selected==0
+					[BW,ximask,yimask]=roipoly;
+				end
+				if isempty(BW)
+				else
+
+					delete(findobj('tag', 'extractline'));
+					line(ximask,yimask,'tag', 'extractline');
+					[rows,cols] = size(currentimage);
+
+					x = ones(rows,1)*[1:cols];
+					y = [1:rows]'*ones(1,cols);
+					area=0;
+					meanx=0;
+					meany=0;
+					for i=1:size(currentimage,1)
+						for j=1:size(currentimage,2)
+							if BW(i,j)==1
+								area=area+double(currentimage(i,j));%sum image intesity
+								meanx=meanx+x(i,j)*double(currentimage(i,j));%sum position*intensity
+								meany=meany+y(i,j)*double(currentimage(i,j));
+							end
+						end
+					end
+					meanx=meanx/area;%*(sizeold/sizenew)
+					meany=meany/area;%*(sizeold/sizenew)
+					hold on; plot(meanx,meany,'w*','markersize',20,'tag', 'extractline');hold off;
+					xecht=resultslist{1,currentframe};
+					yecht=resultslist{2,currentframe};
+					step=(xecht(1,2)-xecht(1,1))*calxy;
+					%+x(1,1)
+					[xecht_cal,yecht_cal]=calibrate_xy(xecht(1,1),yecht(1,1));
+					areaoutput=[xecht_cal+(meanx-1)*step yecht_cal+(meany-1)*step];
+
+					if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+						un=' px';
+					else
+						un=' m';
+					end
+					textposix=x(1,round(size(x,2)/4));
+					textposiy=y(round(size(y,1)/4),1);
+					text(textposix, textposiy,  ['x =' num2str(xecht_cal+(meanx-1)*step) un sprintf('\n') 'y =' num2str(yecht_cal+(meany-1)*step) un], 'margin', 0.01, 'fontsize', 10, 'color','w','fontweight','bold','BackgroundColor', [0 0 0],'verticalalignment','top','horizontalalignment','left');
+
+					varis='[x coordinate, y coordinate]';
+				end
+			end
+		elseif areaoperation==6
+			%mean flow direction
+			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+				x=resultslist{1,currentframe};
+				y=resultslist{2,currentframe};
+				if size(resultslist,1)>6 %filtered exists
+					if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+						u=resultslist{10,currentframe};
+						v=resultslist{11,currentframe};
+					else
+						u=resultslist{7,currentframe};
+						if size(u,1)>1
+							v=resultslist{8,currentframe};
+						else
+							u=resultslist{3,currentframe};
+							v=resultslist{4,currentframe};
+						end
+					end
+				else
+					u=resultslist{3,currentframe};
+					v=resultslist{4,currentframe};
+				end
+				gui_sliderdisp(gui_retr('pivlab_axis'))
+				calu=gui_retr('calu');calv=gui_retr('calv');
+				u=u*calu-gui_retr('subtr_u');
+				v=v*calv-gui_retr('subtr_v');
+				calxy=gui_retr('calxy');
+				delete(findobj('tag','vortarea'));
+				filepath=gui_retr('filepath');
+				x=resultslist{1,currentframe};
+				y=resultslist{2,currentframe};
+				if selected==0
+					[BW,ximask,yimask]=roipoly;
+				end
+				if isempty(BW)
+				else
+					delete(findobj('tag', 'extractline'));
+					line(ximask,yimask,'tag', 'extractline');
+					umean=0;
+					vmean=0;
+					uamount=0;
+					u=plot_rescale_maps_nan(u,0);
+					v=plot_rescale_maps_nan(v,0);
+					for i=1:size(u,1)
+						for j=1:size(u,2)
+							if BW(i,j)==1
+								if ~isnan(u(i,j)) && ~isnan(v(i,j))
+									umean=umean+u(i,j);
+									vmean=vmean+v(i,j);
+									uamount=uamount+1;
+								end
+							end
+						end
+					end
+					umean=umean/uamount;
+					vmean=vmean/uamount;
+					veclength=(x(1,2)-x(1,1))*6;
+					if vmean/calv<=0
+						angle=-atan2(vmean/calv,umean/calu)*180/pi; %divided by calibration to remove sign resulting from calibration. because the angle should not depend on the coordinate system.
+					else
+						angle=360-atan2(vmean/calv,umean/calu)*180/pi;
+					end
+					magg=sqrt(umean^2+vmean^2);
+					areaoutput=[magg angle];
+					varis='[magnitude, angle in degrees, 0 = right, 90 = up, 180 = left, 270 = down, 360 = right]';
+
+					hold on;quiver(mean2(ximask), mean2(yimask), (umean/calu)/sqrt((umean/calu)^2+(vmean/calv)^2)*veclength,(vmean/calv)/sqrt((umean/calu)^2+(vmean/calv)^2)*veclength,'r','autoscale','off', 'autoscalefactor', 100, 'linewidth',2,'MaxHeadSize',3,'tag', 'extractline');hold off;
+
+					if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+						un=' px/frame';
+					else
+						un=' m/s';
+					end
+					textposix=x(1,round(size(x,2)/4));
+					textposiy=y(round(size(y,1)/4),1);
+					text(textposix, textposiy, ['angle=' num2str(angle) '°' sprintf('\n') 'magnitude=' num2str(magg) un], 'margin', 0.01, 'fontsize', 10, 'color','w','fontweight','bold','BackgroundColor', [0 0 0],'verticalalignment','top','horizontalalignment','left');
+				end
+			end
+		end %areaoperation
+	end
+	if get(handles.savearea,'Value')==1
+		%nur wenn man es auch speichern will...
+		if selected==0
+			switch areaoperation
+				case 1
+					whatoperation = 'mean_value';
+				case 2
+					whatoperation = 'integral';
+				case 3
+					whatoperation = 'area';
+				case 4
+					whatoperation = 'integral_series';
+				case 5
+					whatoperation = 'weighted centroid';
+				case 6
+					whatoperation = 'mean_flow';
+			end
+			par = get(handles.area_para_select,'string');
+			par=par{get(handles.area_para_select,'Value')};
+			if areaoperation==3 || areaoperation==6
+				par=[];
+			end
+			imgsavepath=gui_retr('imgsavepath');
+			if isempty(imgsavepath)
+				imgsavepath=gui_retr('pathname');
+			end
+
+			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+
+				part1= par(1:strfind(par,'/')-1) ;
+				part2= par(strfind(par,'/')+1:end);
+				if isempty(part1)==1
+					parED=par;
+				else
+					parED=[part1 ' per ' part2];
+				end
+
+				[FileName,PathName] = uiputfile('*.txt','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' whatoperation '_' parED '.txt'])); %framenummer in dateiname
+				selected=1;
+				if isequal(FileName,0) | isequal(PathName,0)
+					break
+				else
+					gui_put ('imgsavepath',PathName);
+					fid = fopen(fullfile(PathName,FileName), 'w');
+					fprintf(fid, ['Frame Nr.,' par ': ' whatoperation ' ' varis '\r\n']);
+					fclose(fid);
+				end
+			end
+		end
+		if isequal(FileName,0) | isequal(PathName,0)
+		else
+			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+				dlmwrite(fullfile(PathName,FileName), [currentframe areaoutput], '-append', 'delimiter', ',', 'precision', 10, 'newline', 'pc'); %#ok<*DLMWT>
+			end
+		end
+	end
+	%areaoutput
+end
+
+gui_toolsavailable(1)
+
+function extract_draw_extraction_coordinates_Callback(~, ~, ~)
+gui_sliderdisp(gui_retr('pivlab_axis'));
+handles=gui_gethand;
+currentframe=floor(get(handles.fileselector, 'value'));
+resultslist=gui_retr('resultslist');
+gui_put('extract_type',[]);
+if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+	gui_toolsavailable(0);
+	xposition=[];
+	yposition=[];
+	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly')); %delete pre-existing
+	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle')); %delete pre-existing
+	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series')); %delete pre-existing
+	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_displayed_smaller_radii')) %delete pre-existing
+	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_max_circulation')) %delete pre-existing
+	if get(handles.draw_what,'value')==1 %polyline
+		extract_type='extract_poly';
+		extract_poly = images.roi.Polyline;
+		extract_poly.Tag=extract_type;
+		draw(extract_poly);
+		addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+		addlistener(extract_poly,'MovingROI',@extract_poly_ROIevents);
+		addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
+		xposition=extract_poly.Position(:,1);
+		yposition=extract_poly.Position(:,2);
+
+		extract_poly.LabelVisible = 'hover';
+		extract_poly.LabelAlpha = 0.5;
+		extract_poly.LabelTextColor = 'w';
+		if size(extract_poly.Position,1)<6
+			labelstring=[];
+			for i = 1:size(extract_poly.Position,1)
+				labelstring=[labelstring num2str(round(extract_poly.Position(i,1))) ',' num2str(round(extract_poly.Position(i,2))) ' ; ']; %#ok<AGROW>
+			end
+			extract_poly.Label = labelstring;
+		else
+			extract_poly.LabelVisible = 'off';
+		end
+	elseif get(handles.draw_what,'value')==2 %circle
+		extract_type='extract_circle';
+		extract_poly = images.roi.Circle;
+		extract_poly.LabelVisible = 'off';
+		extract_poly.Tag=extract_type;
+		draw(extract_poly);
+		if extract_poly.Radius < 25 %check if circle is large enough or if user accidentally clicked once
+			extract_poly.Radius = 25;
+		end
+		addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+		addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
+		xposition=extract_poly.Center;
+		yposition=extract_poly.Radius;		
+	elseif get(handles.draw_what,'value')==3 %circle series
+		extract_type='extract_circle_series';
+		set(handles.extraction_choice,'Value',11);
+		extract_poly = images.roi.Circle;
+		extract_poly.LabelVisible = 'off';
+		extract_poly.Tag=extract_type;
+		draw(extract_poly);
+		if extract_poly.Radius < 25 %check if circle is large enough or if user accidentally clicked once
+			extract_poly.Radius = 25;
+		end
+		addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+		addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
+		xposition=extract_poly.Center;
+		yposition=extract_poly.Radius;		
+		x=resultslist{1,currentframe};
+		stepsize=ceil((x(1,2)-x(1,1))/1);
+		radii=linspace(stepsize,extract_poly.Radius-stepsize,round(((extract_poly.Radius-stepsize)/stepsize)));
+		for radius=radii
+			extract_poly_series=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',radius,'Tag',[extract_type '_displayed_smaller_radii'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none');
+		end
+		x_center=extract_poly.Center(1);
+		y_center=extract_poly.Center(2);
+		radius=extract_poly.Radius;
+		text(x_center,y_center+radius,' start/end','FontSize',7, 'Rotation', 90, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
+		text(x_center,y_center+radius+8,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
+		text(x_center,y_center-radius-8,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
+		text(x_center-radius-8,y_center,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[extract_type '_displayed_smaller_radii'])
+		text(x_center+radius+8,y_center,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[extract_type '_displayed_smaller_radii'])
+	end
+	gui_put('xposition',xposition)
+	gui_put('yposition',yposition)
+	gui_put('extract_type',extract_type);
+	gui_toolsavailable(1);
+end
+
+function extract_draw_what_Callback(hObject, ~, ~)
+handles=gui_gethand;
+if get(hObject, 'value') == 3
+	handles=gui_gethand;
+	set (handles.extraction_choice, 'value', 11);
+	set (handles.extraction_choice, 'enable', 'off');
+else
+	set (handles.extraction_choice, 'enable', 'on');
+end
+
+function extract_extraction_choice_Callback(hObject, ~, ~)
+if get(hObject, 'value') ~= 11
+	handles=gui_gethand;
+	if get(handles.draw_what, 'value')==3
+		set(handles.draw_what, 'value', 1)
+	end
+end
+
+function extract_hitcircle(~,~)
+posreal=get(gca,'CurrentPoint');
+delete(findobj('tag','circstring'));
+pos=round(posreal(1,1));
+xposition=gui_retr('xposition');
+yposition=gui_retr('yposition');
+integral=gui_retr('integral');
+hgui=getappdata(0,'hgui');
+h3plot=gui_retr('h3plot');
+figure(hgui);
+delete(findobj('tag', 'extractline'))
+for m=1:30
+	line(xposition(m,:),yposition(m,:),'LineWidth',1.5, 'Color', [0.95,0.5,0.01],'tag','extractline');
+end
+line(xposition(pos,:),yposition(pos,:),'LineWidth',2.5, 'Color',[0.2,0.5,0.7],'tag','extractline');
+figure(h3plot);
+marksize=linspace(80,80,30)';
+marksize(pos)=150;
+set(gco, 'SizeData', marksize);
+if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+	units='px^2/frame';
+else
+	units='m^2/s';
+end
+text(posreal(1,1)+0.75,posreal(2,2),['\leftarrow ' num2str(integral(pos)) ' ' units],'tag','circstring','BackgroundColor', [1 1 1], 'margin', 0.01, 'fontsize', 7, 'HitTest', 'off')
+
+function extract_hitcircle2(~,~)
+posreal=get(gca,'CurrentPoint');
+delete(findobj('tag','circstring'));
+pos=round(posreal(1,1));
+integralseries=gui_retr('integralseries');
+hgui=getappdata(0,'hgui');
+h3plot=gui_retr('hellipse');
+figure(hgui);
+delete(findobj('type', 'line', 'color', 'w')) %delete white ellipses
+ra=gui_retr('ra');
+rb=gui_retr('rb');
+ang=gui_retr('ang');
+x0= gui_retr('x0');
+y0=gui_retr('y0');
+
+for m=1:size(ra,2)
+	ellipse(ra(1,m),rb(1,m),ang,x0,y0,'w');
+end
+ellipse(ra(1,pos),rb(1,pos),ang,x0,y0,'b');
+figure(h3plot);
+marksize=linspace(80,80,size(ra,2))';
+marksize(pos)=150;
+set(gco, 'SizeData', marksize);
+%units
+handles=gui_gethand;
+extractwhat=get(handles.area_para_select,'Value');
+current=get(handles.area_para_select,'string');
+current=current{extractwhat};
+if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+	units='px^2';
+else
+	units='m^2';
+end
+current_3=current(strfind(current, '[')+1:end-1);
+text(posreal(1,1)+0.25,posreal(2,2),['\leftarrow ' num2str(integralseries(pos)) ' ' current_3 '*' units],'tag','circstring','BackgroundColor', [1 1 1], 'margin', 0.01, 'fontsize', 7, 'HitTest', 'off')
+
+function extract_load_polyline_Callback (~,~)
+filepath=gui_retr('filepath');
+handles=gui_gethand;
+if size(filepath,1) > 1 %did the user load images?
+	[polyfile,polypath] = uigetfile('*.mat','Load coordinate','PIVlab_coordinates.mat');
+	if isequal(polyfile,0) | isequal(polypath,0)
+		%do nothing
+	else
+		load(fullfile(polypath,polyfile),'xposition','yposition','extract_type');
+		if ~isempty(xposition) && ~isempty(yposition) && ~isempty(extract_type)
+			extract_clear_plot_Callback
+			gui_put('xposition',xposition);
+			gui_put('yposition',yposition);
+			gui_put('extract_type',extract_type);
+			delete(findobj('tag', 'extractline'))
+			delete(findobj('tag','areaint'));
+			extract_update_display(extract_type, xposition, yposition);
+		else
+			disp ('No polyline coordinate data found in selected file.')
+		end
+	end
+end
+
+function extract_plot_data_Callback(~, ~, ~)
+handles=gui_gethand;
+currentframe=floor(get(handles.fileselector, 'value'));
+resultslist=gui_retr('resultslist');
+if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+	x=resultslist{1,currentframe};
+	y=resultslist{2,currentframe};
+	xposition=gui_retr('xposition'); 
+	yposition=gui_retr('yposition');
+	extract_type=gui_retr('extract_type');
+	if get(handles.draw_what,'value')==3 %circle series
+		set(handles.extraction_choice,'Value',11); %set to tangent
+	end
+	extractwhat=get(handles.extraction_choice,'Value');
+	if ~isempty(xposition)
+		if strcmp(extract_type,'extract_poly')
+			for i=1:size(xposition,1)-1
+				%length of one segment:
+				laenge(i)=sqrt((xposition(i+1,1)-xposition(i,1))^2+(yposition(i+1,1)-yposition(i,1))^2); %#ok<AGROW>
+			end
+			length=sum(laenge);
+			extraction_coordinates_x = xposition; %coordinates in rows
+			extraction_coordinates_y = yposition;
+		elseif strcmp(extract_type,'extract_circle')
+			length = 2*yposition*pi;
+			%cenvert circular roi object to series of coordinates
+			valtable=linspace(0,2*pi,361)';
+			extraction_coordinates_x=zeros(size(valtable));
+			extraction_coordinates_y=zeros(size(valtable));
+			for i=1:size(valtable,1)
+				extraction_coordinates_x (i,1)=sin(valtable(i,1))*yposition+xposition(1);
+				extraction_coordinates_y (i,1)=cos(valtable(i,1))*yposition+xposition(2);
+			end
+		end
+		%percentagex=xposition/max(max(x));
+		%xaufderivative=percentagex*size(x,2);
+		%percentagey=yposition/max(max(y));
+		%yaufderivative=percentagey*size(y,1);
+		nrpoints=str2num(get(handles.nrpoints,'string'));
+		
+		switch extractwhat
+			case {1,2,3,4,5,6,7,8}
+				plot_derivative_calc(currentframe,extractwhat+1,0);
+				derived=gui_retr('derived');
+				maptoget=derived{extractwhat,currentframe};
+				maptoget=plot_rescale_maps_nan(maptoget,0);
+				[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
+				distance=linspace(0,length,size(c,1))';
+			case {9,10}
+				% auf stelle 9 steht vector angle. Bei derivatives ist der aber auf platz 11. daher zwei dazu
+				%auf stelle 10 steht correlation coeff, bei derivatives auf
+				%12, daher zwei dazu
+				plot_derivative_calc(currentframe,extractwhat+2,0);
+				derived=gui_retr('derived');
+				maptoget=derived{extractwhat+1,currentframe};
+				maptoget=plot_rescale_maps_nan(maptoget,0);
+				[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
+				distance=linspace(0,length,size(c,1))';
+			case 11 %tangent
+				if ~strcmp(extract_type,'extract_circle_series')
+					if size(resultslist,1)>6 %filtered exists
+						if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+							u=resultslist{10,currentframe};
+							v=resultslist{11,currentframe};
+							typevector=resultslist{9,currentframe};
+							if numel(typevector)==0%happens if user smoothes sth without NaN and without validation
+								typevector=resultslist{5,currentframe};
+							end
+						else
+							u=resultslist{7,currentframe};
+							if size(u,1)>1
+								v=resultslist{8,currentframe};
+								typevector=resultslist{9,currentframe};
+							else
+								u=resultslist{3,currentframe};
+								v=resultslist{4,currentframe};
+								typevector=resultslist{5,currentframe};
+							end
+						end
+					else
+						u=resultslist{3,currentframe};
+						v=resultslist{4,currentframe};
+						typevector=resultslist{5,currentframe};
+					end
+					calu=gui_retr('calu');calv=gui_retr('calv');
+					u=u*calu-gui_retr('subtr_u');
+					v=v*calv-gui_retr('subtr_v');
+
+					u=plot_rescale_maps_nan(u,0);
+					v=plot_rescale_maps_nan(v,0);
+
+					[cx, cy, cu] = improfile(u,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
+					cv = improfile(v,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
+					cx=cx';
+					cy=cy';
+					deltax=zeros(1,size(cx,2)-1);
+					deltay=zeros(1,size(cx,2)-1);
+					laenge=zeros(1,size(cx,2)-1);
+					alpha=zeros(1,size(cx,2)-1);
+					sinalpha=zeros(1,size(cx,2)-1);
+					cosalpha=zeros(1,size(cx,2)-1);
+					for i=2:size(cx,2)
+						deltax(1,i)=cx(1,i)-cx(1,i-1);
+						deltay(1,i)=cy(1,i)-cy(1,i-1);
+						laenge(1,i)=sqrt(deltax(1,i)*deltax(1,i)+deltay(1,i)*deltay(1,i));
+						alpha(1,i)=(acos(deltax(1,i)/laenge(1,i)));
+						if deltay(1,i) < 0
+							sinalpha(1,i)=sin(alpha(1,i));
+						else
+							sinalpha(1,i)=sin(alpha(1,i))*-1;
+						end
+						cosalpha(1,i)=cos(alpha(1,i));
+					end
+					sinalpha(1,1)=sinalpha(1,2);
+					cosalpha(1,1)=cosalpha(1,2);
+					cu=cu.*cosalpha';
+					cv=cv.*sinalpha';
+					c=cu-cv;
+					cx=cx';
+					cy=cy';
+					distance=linspace(0,length,size(cu,1))';
+				end
+				%% circle series --> can only be tangent velocity
+				if strcmp(extract_type,'extract_circle_series') %user chose circle series
+
+					%draw circles as displayed
+
+					x=resultslist{1,currentframe};
+					stepsize=ceil((x(1,2)-x(1,1))/1);
+					radii=[linspace(stepsize,yposition-stepsize,round(((yposition-stepsize)/stepsize))) yposition];
+					length = 2*radii*pi; %column vector with the lengths of the circle series
+					%convert circular roi object to series of coordinates
+					valtable=linspace(0,2*pi,361)';
+					extraction_coordinates_x=zeros(size(valtable,1),numel(length)); %rows=coordinates of one circle, cols = the different circles of the series
+					extraction_coordinates_y=zeros(size(valtable,1),numel(length));
+					for i=1:size(valtable,1)
+						for j=1:numel(length)
+							extraction_coordinates_x (i,j)=sin(valtable(i,1))*radii(j)+xposition(1);
+							extraction_coordinates_y (i,j)=cos(valtable(i,1))*radii(j)+xposition(2);
+						end
+					end
+
+					if size(resultslist,1)>6 %filtered exists
+						if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+							u=resultslist{10,currentframe};
+							v=resultslist{11,currentframe};
+							typevector=resultslist{9,currentframe};
+							if numel(typevector)==0%happens if user smoothes sth without NaN and without validation
+								typevector=resultslist{5,currentframe};
+							end
+						else
+							u=resultslist{7,currentframe};
+							if size(u,1)>1
+								v=resultslist{8,currentframe};
+								typevector=resultslist{9,currentframe};
+							else
+								u=resultslist{3,currentframe};
+								v=resultslist{4,currentframe};
+								typevector=resultslist{5,currentframe};
+							end
+						end
+					else
+						u=resultslist{3,currentframe};
+						v=resultslist{4,currentframe};
+						typevector=resultslist{5,currentframe};
+					end
+					calu=gui_retr('calu');calv=gui_retr('calv');
+					u=u*calu-gui_retr('subtr_u');
+					v=v*calv-gui_retr('subtr_v');
+					u=plot_rescale_maps_nan(u,0);
+					v=plot_rescale_maps_nan(v,0);
+
+					min_y=floor(min(extraction_coordinates_y(:)))-1;
+					max_y=ceil(max(extraction_coordinates_y(:)))+1;
+					min_x=floor(min(extraction_coordinates_x(:)))-1;
+					max_x=ceil(max(extraction_coordinates_x(:)))+1;
+					if min_y<1
+						min_y=1;
+					end
+					if max_y>size(u,1)
+						max_y=size(u,1);
+					end
+					if min_x<1
+						min_x=1;
+					end
+					if max_x>size(u,2)
+						max_x=size(u,2);
+					end
+
+					uc=u(min_y:max_y,min_x:max_x);
+					vc=v(min_y:max_y,min_x:max_x);
+
+					for m=1:numel(length)
+						[cx(m,:),cy(m,:),cu(m,:)] = improfile(uc,extraction_coordinates_x(:,m)-min_x,extraction_coordinates_y(:,m)-min_y,100,'nearest');
+						cv(m,:) =improfile(vc,extraction_coordinates_x(:,m)-min_x,extraction_coordinates_y(:,m)-min_y,100,'nearest');
+					end
+					deltax=zeros(1,size(cx,2)-1);
+					deltay=zeros(1,size(cx,2)-1);
+					laenge=zeros(1,size(cx,2)-1);
+					alpha=zeros(1,size(cx,2)-1);
+					sinalpha=zeros(1,size(cx,2)-1);
+					cosalpha=zeros(1,size(cx,2)-1);
+					for m=1:numel(length)
+						for i=2:size(cx,2)
+							deltax(m,i)=cx(m,i)-cx(m,i-1);
+							deltay(m,i)=cy(m,i)-cy(m,i-1);
+							laenge(m,i)=sqrt(deltax(m,i)*deltax(m,i)+deltay(m,i)*deltay(m,i));
+							alpha(m,i)=(acos(deltax(m,i)/laenge(m,i)));
+							if deltay(m,i) < 0
+								sinalpha(m,i)=sin(alpha(m,i));
+							else
+								sinalpha(m,i)=sin(alpha(m,i))*-1;
+							end
+							cosalpha(m,i)=cos(alpha(m,i));
+						end
+						sinalpha(m,1)=sinalpha(m,2); %ersten winkel fÃ¼llen
+						cosalpha(m,1)=cosalpha(m,2);
+					end
+					cu=cu.*cosalpha;
+					cv=cv.*sinalpha;
+					c=cu-cv;
+					for m=1:numel(length)
+						distance(m,:)=linspace(0,length(m),size(cu,2))'; % %in pixeln...
+					end
+				end
+		end
+		%% Plotting
+		if ~strcmp(extract_type,'extract_circle_series') %user did not choose circle series
+			h=figure;
+			screensize=get( 0, 'ScreenSize' );
+			rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
+			set(h,'position', rect);
+			current=get(handles.extraction_choice,'string');
+			current=current{extractwhat};
+			set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
+			calxy=gui_retr('calxy');
+
+			%removing nans for integral!
+			distance2=distance(~isnan(c));
+			c2=c(~isnan(c));
+
+			integral=trapz(distance2*calxy,c2);
+			h2=plot(distance*calxy,c);
+
+			%get units
+			if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+				distunit='px^2';
+			else
+				distunit='m^2';
+			end
+
+			unitpar=get(handles.extraction_choice,'string');
+			unitpar=unitpar{get(handles.extraction_choice,'value')};
+			unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
+
+			%text(0+0.05*max(distance*calxy),min(c)+0.05*max(c),['Integral = ' num2str(integral) ' [' unitpar '*' distunit ']'], 'BackgroundColor', 'w','fontsize',7)
+			set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
+
+
+			if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+				distunit_2=' [px]';
+			else
+				distunit_2=' [m]';
+			end
+
+			currentstripped=current(1:strfind(current,'[')-1);
+
+			%modified units...
+			xlabel(['Distance on line' distunit_2 sprintf('\n') 'Integral of ' currentstripped ' = ' num2str(integral) ' [' unitpar '*' distunit_2 ']']);
+			ylabel(current);
+			gui_put('distance',distance*calxy);
+			gui_put('c',c);
+			[cx_cal,cy_cal] = calibrate_xy(cx,cy);
+			gui_put('cx',cx_cal);
+			gui_put('cy',cy_cal);
+			h_extractionplot=gui_retr('h_extractionplot');
+			h_extractionplot(size(h_extractionplot,1)+1,1)=h;
+			gui_put ('h_extractionplot', h_extractionplot);
+		end
+		if strcmp(extract_type,'extract_circle_series') %user chose circle series
+			calxy=gui_retr('calxy');
+			for m=1:numel(length)
+				integral(m)=trapz(distance(m,:)*calxy,c(m,:));
+			end
+			%highlight circle with highest circ
+			delete(findobj('tag', 'extractline'))
+			[r,col]=find(max(abs(integral))==abs(integral)); %find absolute max of integral
+			if ~isempty(radii(col))
+				extract_poly_maximum_circ=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',radii(col),'Tag',[extract_type '_max_circulation'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none','Color','r','StripeColor','y');
+				h=figure;
+				screensize=get( 0, 'ScreenSize' );
+				rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
+				set(h,'position', rect);
+				current=get(handles.extraction_choice,'string');
+				current=current{extractwhat};
+				set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
+				calxy=gui_retr('calxy');
+
+				plot (1:numel(length), integral);
+				hold on;
+				scattergroup1=scatter(1:numel(length), integral, 80, 'ko');
+				hold off;
+				%	set(scattergroup1, 'ButtonDownFcn', @extract_hitcircle, 'pickableparts', 'visible');
+				%title('Click the points of the graph to highlight it''s corresponding circle.')
+				set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
+				xlabel('circle series nr. (circle with max. circulation highlighted)');
+				if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+					ylabel('tangent velocity loop integral (circulation) [px^2/frame]');
+				else
+					ylabel('tangent velocity loop integral (circulation) [m^2/s]');
+				end
+				gui_put('distance',distance*calxy);
+				gui_put('c',c);
+				[cx_cal,cy_cal] = calibrate_xy(cx,cy);
+				gui_put('cx',cx_cal);
+				gui_put('cy',cy_cal);
+				gui_put('integral', integral);
+				h_extractionplot=gui_retr('h_extractionplot');
+				h_extractionplot(size(h_extractionplot,1)+1,1)=h;
+				gui_put ('h_extractionplot', h_extractionplot);
+			end
+		end
+	end
+end
+
+function extract_poly_ROIevents(src,evt)
+evname = evt.EventName;
+handles=gui_gethand;
+switch(evname)
+	case{'MovingROI'}
+		if strcmp(src.Tag,'extract_poly')
+			if size(src.Position,1)<6
+				labelstring=[];
+				for i = 1:size(src.Position,1)
+					labelstring=[labelstring num2str(round(src.Position(i,1))) ',' num2str(round(src.Position(i,2))) ' ; ']; %#ok<AGROW>
+				end
+				src.Label = labelstring;
+				if strcmp (src.LabelVisible,'off')
+					src.LabelVisible = 'hover';
+				end
+			else
+				if strcmp (src.LabelVisible,'hover')
+					src.LabelVisible = 'off';
+				end
+			end
+		end
+	case{'ROIMoved'}
+		if strcmp(src.Tag,'extract_poly')
+			gui_put('xposition',src.Position(:,1));
+			gui_put('yposition',src.Position(:,2));
+		end
+		if strcmp(src.Tag,'extract_circle')
+			gui_put('xposition',src.Center);
+			gui_put('yposition',src.Radius);
+		end
+		if strcmp(src.Tag,'extract_circle_series')
+			delete(findobj(gui_retr('pivlab_axis'),'Tag',[src.Tag '_displayed_smaller_radii']))
+			delete(findobj(gui_retr('pivlab_axis'),'Tag',[src.Tag '_max_circulation']))
+			currentframe=floor(get(handles.fileselector, 'value'));
+			pivlab_axis=gui_retr('pivlab_axis');
+			resultslist=gui_retr('resultslist');
+			x=resultslist{1,currentframe};
+			stepsize=ceil((x(1,2)-x(1,1))/1);
+			radii=linspace(stepsize,src.Radius-stepsize,round(((src.Radius-stepsize)/stepsize)));
+			for radius=radii
+				extract_poly_series=drawcircle(gui_retr('pivlab_axis'),'Center',src.Center,'Radius',radius,'Tag',[src.Tag '_displayed_smaller_radii'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none');
+			end
+			x_center=src.Center(1);
+			y_center=src.Center(2);
+			radius=src.Radius;
+			text(pivlab_axis,x_center,y_center+radius,' start/end','FontSize',7, 'Rotation', 90, 'BackgroundColor',[1 1 1],'tag',[src.Tag '_displayed_smaller_radii'])
+			text(pivlab_axis,x_center,y_center+radius+8,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[src.Tag '_displayed_smaller_radii'])
+			text(pivlab_axis,x_center,y_center-radius-8,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[src.Tag '_displayed_smaller_radii'])
+			text(pivlab_axis,x_center-radius-8,y_center,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[src.Tag '_displayed_smaller_radii'])
+			text(pivlab_axis,x_center+radius+8,y_center,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[src.Tag '_displayed_smaller_radii'])
+			gui_put('xposition',src.Center);
+			gui_put('yposition',src.Radius);
+		end
+	case{'DeletingROI'}
+		if strcmp(src.Tag,'extract_circle_series')
+			delete(findobj(gui_retr('pivlab_axis'),'Tag',[src.Tag '_displayed_smaller_radii']))
+		end
+		delete(findobj(gui_retr('pivlab_axis'),'Tag',src.Tag))
+		gui_put('xposition',[]);
+		gui_put('yposition',[]);
+		gui_put('extract_type',[]);
+end
+
+function extract_poly_extract_Callback(~, ~, ~)
+handles=gui_gethand;
+gui_switchui('multip12')
+if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+	set(handles.extraction_choice,'string', {'Vorticity [1/frame]';'Magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Correlation coefficient [-]';'Tangent velocity [px/frame]'});
+else
+	set(handles.extraction_choice,'string', {'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]';'Tangent velocity [m/s]'});
+end
+%draw extraction polygon when frame was changed.
+pivlab_axis=gui_retr('pivlab_axis');
+delete(findobj(pivlab_axis,'tag', 'extractpoint'));
+delete(findobj(pivlab_axis,'tag', 'extractline'));
+delete(findobj(pivlab_axis,'tag', 'circstring'));
+delete(findobj(pivlab_axis,'Tag', 'extract_poly'))
+xposition = gui_retr('xposition');
+yposition = gui_retr('yposition');
+extract_type = gui_retr('extract_type');
+if ~isempty(xposition) && ~isempty(yposition) && ~isempty(extract_type)
+	extract_update_display(extract_type, xposition, yposition)
+end
+
+function extract_radiusincrease_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+val=get(hObject,'string');
+if str2double(val)>500
+	set(hObject,'string',500);
+end
+if str2double(val)<0 || isempty(val)==1 || isnan(str2double(val))
+	set(hObject,'string',0);
+end
+
+function extract_save_data_Callback(~, ~, ~)
+handles=gui_gethand;
+resultslist=gui_retr('resultslist');
+currentframe=floor(get(handles.fileselector, 'value'));
+if get(handles.extractLineAll, 'value')==0
+	startfr=currentframe;
+	endfr=currentframe;
+else
+	startfr=1;
+	endfr=size(resultslist,2);
+end
+selected=0;
+for i=startfr:endfr
+	set(handles.fileselector, 'value',i)
+	%sliderdisp(retr('pivlab_axis'))
+	currentframe=floor(get(handles.fileselector, 'value'));
+	if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+		delete(findobj('tag', 'derivplotwindow'));
+		extract_plot_data_Callback %make sure that data was calculated
+		%close figure...
+		delete(findobj('tag', 'derivplotwindow'));
+		extractwhat=get(handles.extraction_choice,'Value');
+		current=get(handles.extraction_choice,'string');
+		current=current{extractwhat};
+		if selected==0
+			imgsavepath=gui_retr('imgsavepath');
+			if isempty(imgsavepath)
+				imgsavepath=gui_retr('pathname');
+			end
+			%find '\', replace with 'per'
+			part1= current(1:strfind(current,'/')-1) ;
+			part2= current(strfind(current,'/')+1:end);
+			if isempty(part1)==1
+				currentED=current;
+			else
+				currentED=[part1 ' per ' part2];
+			end
+			[FileName,PathName] = uiputfile('*.txt','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' currentED '.txt'])); %framenummer in dateiname
+			selected=1;
+		end
+		if isequal(FileName,0) | isequal(PathName,0)
+			%exit for
+			break;
+		else
+			gui_put('imgsavepath',PathName);
+			pointpos=strfind(FileName, '.');
+			pointpos=pointpos(end);
+			FileName_final=[FileName(1:pointpos-1) '_' num2str(currentframe) '.' FileName(pointpos+1:end)];
+			c=gui_retr('c');
+			distance=gui_retr('distance');
+			%also retrieve coordinates of polyline points if possible
+			cx=gui_retr('cx');
+			cy=gui_retr('cy');
+			%normal : 300 x 1
+			if size(c,2)>1 %circle series
+				if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+					header=['circle nr., Distance on line [px], x-coordinate [px], y-coordinate [px], ' current];
+				else
+					header=['circle nr., Distance on line [m], x-coordinate [m], y-coordinate [m], ' current];
+				end
+				wholeLOT=[];
+				for z=1:size(c,1)
+					wholeLOT=[wholeLOT;[linspace(z,z,size(c,2))' distance(z,:)' cx(z,:)' cy(z,:)' c(z,:)']]; %#ok<AGROW> %anders.... untereinander
+				end
+			else
+
+				if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+					header=['Distance on line [px], x-coordinate [px], y-coordinate [px], ' current];
+				else
+					header=['Distance on line [m], x-coordinate [m], y-coordinate [m], ' current];
+				end
+				wholeLOT=[distance cx cy c];
+			end
+			fid = fopen(fullfile(PathName,FileName_final), 'w');
+			fprintf(fid, [header '\r\n']);
+			fclose(fid);
+			dlmwrite(fullfile(PathName,FileName_final), wholeLOT, '-append', 'delimiter', ',', 'precision', 10, 'newline', 'pc');
+		end
+	end
+end
+gui_sliderdisp(gui_retr('pivlab_axis'))
+
+function extract_save_polyline_Callback (~,~)
+xposition=gui_retr('xposition');
+yposition=gui_retr('yposition');
+extract_type = gui_retr('extract_type');
+
+if ~isempty(xposition) && ~isempty(yposition)
+	[polyfile,polypath] = uiputfile('*.mat','Save coordinates','PIVlab_coordinates.mat');
+	if isequal(polyfile,0) | isequal(polypath,0)
+		%do nothing
+	else
+		save(fullfile(polypath,polyfile),'xposition','yposition','extract_type');
+	end
+end
+
+function extract_set_points_Callback(~, ~, ~)
+gui_sliderdisp(gui_retr('pivlab_axis'))
+hold on;
+gui_toolsavailable(0)
+delete(findobj('tag', 'measure'));
+n=0;
+for i=1:2
+	[xi,yi,but] = ginput(1);
+	n=n+1;
+	xposition(n)=xi; %#ok<AGROW>
+	yposition(n)=yi; %#ok<AGROW>
+	plot(xposition(n),yposition(n), 'r*','Color', [0.55,0.75,0.9], 'tag', 'measure');
+	line(xposition,yposition,'LineWidth',3, 'Color', [0.05,0,0], 'tag', 'measure');
+	line(xposition,yposition,'LineWidth',1, 'Color', [0.05,0.75,0.05], 'tag', 'measure');
+end
+line([xposition(1,1) xposition(1,2)],[yposition(1,1) yposition(1,1)], 'LineWidth',3, 'Color', [0.05,0.0,0.0], 'tag', 'measure');
+line([xposition(1,1) xposition(1,2)],[yposition(1,1) yposition(1,1)], 'LineWidth',1, 'Color', [0.95,0.05,0.01], 'tag', 'measure');
+line([xposition(1,2) xposition(1,2)], yposition,'LineWidth',3, 'Color',[0.05,0.0,0], 'tag', 'measure');
+line([xposition(1,2) xposition(1,2)], yposition,'LineWidth',1, 'Color',[0.35,0.35,1], 'tag', 'measure');
+hold off;
+gui_toolsavailable(1)
+deltax=abs(xposition(1,1)-xposition(1,2));
+deltay=abs(yposition(1,1)-yposition(1,2));
+length=sqrt(deltax^2+deltay^2);
+alpha=(180/pi) *(acos(deltax/length));
+beta=(180/pi) *(asin(deltax/length));
+handles=gui_gethand;
+calxy=gui_retr('calxy');
+if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+	set (handles.deltax, 'String', [num2str(deltax*calxy) ' [px]']);
+	set (handles.deltay, 'String', [num2str(deltay*calxy) ' [px]']);
+	set (handles.length, 'String', [num2str(length*calxy) ' [px]']);
+
+else
+	set (handles.deltax, 'String', [num2str(deltax*calxy) ' [m]']);
+	set (handles.deltay, 'String', [num2str(deltay*calxy) ' [m]']);
+	set (handles.length, 'String', [num2str(length*calxy) ' [m]']);
+end
+set (handles.alpha, 'String', num2str(alpha));
+set (handles.beta, 'String', num2str(beta));
+
+function extract_thresholdarea_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function extract_update_display(extract_type, xposition, yposition)
+if strcmp(extract_type,'extract_poly') %polyline
+	extract_poly=drawpolyline(gui_retr('pivlab_axis'),'Position',[xposition yposition]);
+	extract_poly.LabelVisible = 'off';
+	extract_poly.Tag=extract_type;
+	addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+	addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
+end
+if strcmp(extract_type,'extract_circle') %circle
+	extract_poly=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',yposition);
+	extract_poly.LabelVisible = 'off';
+	extract_poly.Tag=extract_type;
+	addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+	addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
+end
+if strcmp(extract_type,'extract_circle_series') %circle series
+	extract_poly=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',yposition);
+	extract_poly.LabelVisible = 'off';
+	extract_poly.Tag=extract_type;
+	addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+	addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
+	handles=gui_gethand;
+	currentframe=floor(get(handles.fileselector, 'value'));
+	resultslist=gui_retr('resultslist');
+	xposition=extract_poly.Center;
+	yposition=extract_poly.Radius;
+	try
+	x=resultslist{1,currentframe};
+	catch
+		msgbox('You cannot load coordinates for non-analyzed frames.','Error','error','modal')
+	end
+	stepsize=ceil((x(1,2)-x(1,1))/1);
+	radii=linspace(stepsize,extract_poly.Radius-stepsize,round(((extract_poly.Radius-stepsize)/stepsize)));
+	for radius=radii
+		extract_poly_series=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',radius,'Tag',[extract_type '_displayed_smaller_radii'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none');
+	end
+	x_center=extract_poly.Center(1);
+	y_center=extract_poly.Center(2);
+	radius=extract_poly.Radius;
+	text(x_center,y_center+radius,' start/end','FontSize',7, 'Rotation', 90, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
+	text(x_center,y_center+radius+8,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
+	text(x_center,y_center-radius-8,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
+	text(x_center-radius-8,y_center,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[extract_type '_displayed_smaller_radii'])
+	text(x_center+radius+8,y_center,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[extract_type '_displayed_smaller_radii'])
+end
+
+function gui_MainWindow_CloseRequestFcn(hObject, ~, ~)
+handles=gui_gethand;
+batchModeActive=gui_retr('batchModeActive');
+if batchModeActive == 0
+	button = questdlg('Do you want to quit PIVlab?','Quit?','Yes','Cancel','Cancel');
+else
+	button = 'Yes';
+end
+try
+	gui_toolsavailable(1)
+catch
+end
+if strcmp(button,'Yes')==1
+	try
+		homedir=gui_retr('homedir');
+		pathname=gui_retr('pathname');
+		save('PIVlab_settings_default.mat','homedir','pathname','-append');
+		last_selected_device = get(handles.ac_config, 'value');
+		save('PIVlab_settings_default.mat','last_selected_device','-append');
+	catch
+	end
+	try
+		PIVlab_capture_lensctrl (1400,1400,0) %lens needs to be set to neutral otherwise re-enabling power might cause issues
+	catch
+	end
+	try
+		delete(hObject);
+	catch
+		delete(gcf,'force');
+	end
+end
+
+function gui_MainWindow_ResizeFcn(hObject, ~)
+handles=guihandles(hObject);
+originalunits=get(hObject,'units');
+set(hObject,'Units','Characters');
+Figure_Size = get(hObject, 'Position');
+set(hObject,'Units',originalunits);
+margin=1.5;
+panelwidth=gui_retr('panelwidth');
+%panelwidth=37;
+panelheighttools=12;
+panelheightpanels=35;
+quickwidth=gui_retr('quickwidth');
+quickheight=gui_retr('quickheight');
+%starts lower left
+%                            X    Y    WIDTH    HEIGHT
+
+try
+	colorbarpos=get(handles.colorbarpos,'value');
+catch
+	colorbarpos=1;
+end
+
+if colorbarpos==1
+	width_reduct=0;x_shift=0;
+	height_reduct=0;y_shift=0;
+else
+	posichoice = get(handles.colorbarpos,'String');
+	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'EastOutside')
+		width_reduct=25;x_shift=0;
+		height_reduct=0;y_shift=0;
+	end
+	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'WestOutside')
+		width_reduct=25;x_shift=25;
+		height_reduct=0;y_shift=0;
+	end
+	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'NorthOutside')
+		width_reduct=6;x_shift=3;
+		height_reduct=4;y_shift=0;
+	end
+	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'SouthOutside')
+		width_reduct=6;x_shift=3;
+		height_reduct=4;y_shift=5;
+	end
+end
+if (panelheighttools+panelheightpanels+margin*0.25+margin*0.25) <= Figure_Size(4)
+	%panels + tools DO fit vertically
+	try
+		set (findobj('-regexp','Tag','multip'), 'position', [0+margin*0.5 Figure_Size(4)-panelheightpanels-margin*0.25 panelwidth panelheightpanels]);
+		set (handles.tools, 'position', [0+margin*0.5 0+margin*0.5 panelwidth panelheighttools]);
+
+		%X                           %Y                             %WIDTH                                               %HEIGHT
+		set (gca, 'position', [x_shift+panelwidth+margin             y_shift+margin        Figure_Size(3)-panelwidth-margin-width_reduct         Figure_Size(4)-quickheight-height_reduct]);
+	catch ME
+		disp('PIVLAB: Unexpected figure resize behaviour. Please report this issue here:')
+		disp('https://groups.google.com/forum/#!forum/pivlab ')
+		disp(ME)
+	end
+else
+	%panels + tools DO NOT fit vertically
+	%--> put them side by side
+	try
+		set (findobj('-regexp','Tag','multip'), 'position', [0+margin*0.5 Figure_Size(4)-panelheightpanels-margin*0.25 panelwidth panelheightpanels]);
+		set (handles.tools, 'position', [0+margin*0.5+panelwidth+margin 0+margin*0.5 panelwidth panelheighttools]);
+		set (gca, 'position', [x_shift+margin+panelwidth+margin+panelwidth y_shift+margin Figure_Size(3)-panelwidth-panelwidth-margin-margin-width_reduct Figure_Size(4)-margin-quickheight-height_reduct]);
+	catch ME
+		disp('PIVLAB: Unexpected figure resize behaviour. Please report this issue here:')
+		disp('https://groups.google.com/forum/#!forum/pivlab ')
+		disp(ME)
+	end
+end
+if (panelheighttools+panelheightpanels+margin*0.25+margin*0.5) <= Figure_Size(4)-quickheight
+	try
+		set (handles.quick,'Visible','on');
+		set (handles.quick, 'position',[0+margin*0.5 0+margin*0.5+panelheighttools quickwidth quickheight])
+	catch ME
+		disp('PIVLAB: Unexpected figure resize behaviour. Please report this issue here:')
+		disp('https://groups.google.com/forum/#!forum/pivlab ')
+		disp(ME)
+	end
+else % not enough space for quick access box
+	set (handles.quick,'Visible','off');
+end
+
+function gui_SetFullScreen
+MainWindow=getappdata(0,'hgui');
+if verLessThan('matlab','9.4') %r2018a
+	if verLessThan('matlab','9.2') %dont know exactly in which release this was supported, 9.2 is a safe assumption
+		set (MainWindow,'Units','pixels');
+		set(0,'Units','pixels')
+		scnsize = get(0,'ScreenSize');
+		position = get(MainWindow,'Position');
+		outerpos = get(MainWindow,'OuterPosition');
+		borders = outerpos - position;
+		edge = -borders(1)/2;
+		pos1 = [edge, edge+25, scnsize(3) - edge,scnsize(4)-25];
+		set(MainWindow,'OuterPosition',pos1)
+		set (MainWindow,'Units','Characters');
+	else
+		try
+			warning off
+			frame_h = get(handle(gcf),'JavaFrame'); %#ok<*JAVFM>
+			set(frame_h,'Maximized',1);
+		catch
+		end
+	end
+else
+	try
+		if ~isunix %unfortunately, setting the figure to fullscreen doesn't work properly in matlab online...
+			set(MainWindow,'WindowState','maximized');
+		end
+	catch
+	end
+end
+warning on
+
+function gui_aboutpiv_Callback(~, ~, ~)
+string={...
+	'PIVlab - Time-Resolved Digital Particle Image Velocimetry Tool for MATLAB';...
+	['version: ' gui_retr('PIVver')];...
+	'';...
+	'developed by Dr. William Thielicke and Prof. Dr. Eize J. Stamhuis';...
+	'published under the MIT licence.';...
+	'';...
+	'';...
+	'first released March 09, 2010';...
+	'';...
+	'http://PIVlab.blogspot.com';...
+	'contact: PIVlab@gmx.com';...
+	'';...
+	'The development happened mostly in Williams free time.';...
+	'But since he is now working for a company developing PIV equipment,';...
+	'some of his work time is dedicated to improving PIVlab. Therefore,';...
+	'the development is partly sponsored by www.OPTOLUTION.com.';
+
+	};
+helpdlg(string,'About')
+
+function ok=gui_checksettings
+handles=gui_gethand;
+mess={};
+filepath=gui_retr('filepath');
+if size(filepath,1) <2 && gui_retr('video_selection_done') == 0
+	mess{size(mess,2)+1}='No images were loaded';
+end
+if get(handles.clahe_enable, 'value')==1
+	if isnan(str2double(get(handles.clahe_size, 'string')))
+		mess{size(mess,2)+1}='CLAHE window size contains NaN';
+	end
+end
+if get(handles.enable_highpass, 'value')==1
+	if isnan(str2double(get(handles.highp_size, 'string')))
+		mess{size(mess,2)+1}='Highpass filter size contains NaN';
+	end
+end
+if get(handles.wienerwurst, 'value')==1
+	if isnan(str2double(get(handles.wienerwurstsize, 'string')))
+		mess{size(mess,2)+1}='Wiener2 filter size contains NaN';
+	end
+end
+%if get(handles.enable_clip, 'value')==1
+%    if isnan(str2double(get(handles.clip_thresh, 'string')))==1
+%        mess{size(mess,2)+1}='Clipping threshold contains NaN';
+%    end
+%end
+if isnan(str2double(get(handles.intarea, 'string')))
+	mess{size(mess,2)+1}='Interrogation area size contains NaN';
+end
+if isnan(str2double(get(handles.step, 'string')))
+	mess{size(mess,2)+1}='Step size contains NaN';
+end
+if size(mess,2)>0 %error somewhere
+	msgbox(['Errors found:' mess],'Errors detected.','warn','modal')
+	ok=0;
+else
+	ok=1;
+end
+
+function gui_clear_user_content
+handles=gui_gethand;
+gui_put('pathname',[]); %last path
+gui_put ('filename',[]); %only for displaying
+gui_put ('filepath',[]); %full path and filename for analyses
+set (handles.filenamebox, 'string', 'N/A');
+gui_put ('resultslist', []); %clears old results
+gui_put ('derived',[]);
+gui_put('displaywhat',1);%vectors
+gui_put('ismean',[]);
+gui_put('framemanualdeletion',[]);
+gui_put('manualdeletion',[]);
+gui_put('streamlinesX',[]);
+gui_put('streamlinesY',[]);
+set(handles.fileselector, 'value',1);
+
+set(handles.minintens, 'string', 0);
+set(handles.maxintens, 'string', 1);
+
+%Clear all things
+validate_clear_vel_limit_Callback %clear velocity limits
+roi_clear_roi_Callback
+%clear_mask_Callback:
+gui_put('masks_in_frame',[]);
+
+%reset zoom
+set(handles.panon,'Value',0);
+set(handles.zoomon,'Value',0);
+gui_put('xzoomlimit', []);
+gui_put('yzoomlimit', []);
+
+gui_sliderrange(1)
+gui_sliderdisp(gui_retr('pivlab_axis'))
+zoom reset
+
+function gui_destroyUI
+handles = guihandles; %alle handles mit tag laden und ansprechbar machen
+MainWindow=getappdata(0,'hgui');
+guidata(MainWindow,handles)
+controls = findall(MainWindow,'type','uicontrol');
+panels = findall(MainWindow,'type','uipanel');
+delete(controls)
+delete(panels)
+disp('-> UI deleted.')
+
+function gui_displogo(~)
+try
+	logoimg=imread('PIVlablogo.jpg');
+catch
+	[filepath,name,ext]=fileparts([mfilename('fullpath') '.m']);
+	cd (filepath); %if current directory is not where PIVlab_GUI.m is located, then change directory.
+	logoimg=imread('PIVlablogo.jpg');
+end
+%{
+if zoom==1
+	h=image(logoimg+255, 'parent', gca);
+	axis image;
+	set(gca,'ytick',[])
+	set(gca,'xtick',[])
+	set(gca, 'xlim', [1 size(logoimg,2)]);
+	set(gca, 'ylim', [1 size(logoimg,1)]);
+	set(gca, 'ydir', 'reverse');
+	set(gca, 'xcolor', [0.94 0.94 0.94], 'ycolor', [0.94 0.94 0.94]) ;
+	for i=0.5:0.1:1
+		RGB2=logoimg*i;
+		try
+			set (h, 'cdata', RGB2);
+			pause(0.01)
+		catch %#ok<*CTCH>
+			disp('..')
+		end
+		drawnow %limitrate;
+	end
+end
+%}
+
+try
+	pivlab_axis=gui_retr('pivlab_axis');
+	image(logoimg, 'parent', pivlab_axis,'interpolation','bilinear');
+catch
+	pivlab_axis=gui_retr('pivlab_axis');
+	image(logoimg, 'parent', pivlab_axis);
+end
+set(gca, 'xcolor', [0.94 0.94 0.94], 'ycolor', [0.94 0.94 0.94]) ;
+
+axis image;
+set(gca,'ytick',[])
+set(gca,'xtick',[])
+set(gca, 'xlim', [1 size(logoimg,2)]);
+set(gca, 'ylim', [1 size(logoimg,1)]);
+
+set(gca, 'ydir', 'reverse'); %750%582
+text (1025,800,['version: ' gui_retr('PIVver')], 'fontsize', 10,'horizontalalignment','right');
+text (1025,800,['   ' sprintf('\n') gui_retr('update_msg')], 'fontsize', 10,'fontangle','italic','horizontalalignment','right','Color',gui_retr('update_msg_color'),'verticalalignment','top');
+imgproctoolbox=gui_retr('imgproctoolbox');
+gui_put('imgproctoolbox',[]);
+if imgproctoolbox==0
+	text (90,200,'Image processing toolbox not found!', 'fontsize', 16, 'color', [1 0 0], 'backgroundcolor', [0 0 0]);
+end
+
+function gui_exitpivlab_Callback(~, ~, ~)
+close(gcf,'force')
+
+function gui_filenamebox_Callback (~, ~)
+handles=gui_gethand;
+box_select=get(handles.filenamebox,'value');
+set(handles.fileselector, 'value',ceil(box_select/2));
+if mod(box_select,2) == 1 %ungerade
+	toggler=0;
+else
+	toggler=1;
+end
+
+set(handles.togglepair, 'Value',toggler);
+gui_put('toggler',toggler);
+try %if user presses buttons too quickly, error occurs.
+	gui_sliderdisp(gui_retr('pivlab_axis'))
+catch
+end
+
+function gui_fileselector_Callback(~, ~, ~)
+filepath=gui_retr('filepath');
+if size(filepath,1) > 1 || gui_retr('video_selection_done') == 1
+	try
+		gui_sliderdisp(gui_retr('pivlab_axis'))
+	catch
+	end
+	handles=gui_gethand;
+	toggler=gui_retr('toggler');
+	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
+	if gui_retr('video_selection_done') == 0
+		if numel(handles.filenamebox.String) >= selected
+			set(handles.filenamebox,'value',selected);
+		end
+	else
+		set(handles.filenamebox,'value',1);
+	end
+end
+
+function gui_font_size_change (~,~,magnifier)
+objects=findobj('Type','uicontrol');
+objects=[objects; findobj('Type','uipanel')];
+A=get (objects,'fontsize');
+A=cellfun(@(x) x+magnifier, A);
+
+for i=1:size(A,1)
+	try
+		set(objects(i), 'FontSize',A(i));
+	catch
+	end
+end
+
 function gui_generateMenu
 %% Menu items
 m1 = uimenu('Label','File');
@@ -382,170 +5641,6 @@ uimenu(m13,'Label','Website','Callback',@misc_Website_Callback);
 menuhandles = findall(getappdata(0,'hgui'),'type','uimenu'); %das soll gemacht werden laut Hilfe
 set(menuhandles,'HandleVisibility','off');
 disp('-> Menu generated.')
-
-function gui_SetFullScreen
-MainWindow=getappdata(0,'hgui');
-if verLessThan('matlab','9.4') %r2018a
-	if verLessThan('matlab','9.2') %dont know exactly in which release this was supported, 9.2 is a safe assumption
-		set (MainWindow,'Units','pixels');
-		set(0,'Units','pixels')
-		scnsize = get(0,'ScreenSize');
-		position = get(MainWindow,'Position');
-		outerpos = get(MainWindow,'OuterPosition');
-		borders = outerpos - position;
-		edge = -borders(1)/2;
-		pos1 = [edge, edge+25, scnsize(3) - edge,scnsize(4)-25];
-		set(MainWindow,'OuterPosition',pos1)
-		set (MainWindow,'Units','Characters');
-	else
-		try
-			warning off
-			frame_h = get(handle(gcf),'JavaFrame'); %#ok<*JAVFM>
-			set(frame_h,'Maximized',1);
-		catch
-		end
-	end
-else
-	try
-		if ~isunix %unfortunately, setting the figure to fullscreen doesn't work properly in matlab online...
-			set(MainWindow,'WindowState','maximized');
-		end
-	catch
-	end
-end
-warning on
-
-function misc_Lena
-MainWindow=getappdata(0,'hgui');
-if strncmp (char(datetime('today')),'15-Oct',6)
-	yr=char(datetime('today'));
-	since=str2num(yr(8:11))-2005;
-	questdlg(['Loving Lena since ' num2str(since) ' years today!'],'It''s 15th of October!','Congratulations!','Congratulations!'); % #FallsNochRelevant
-	set(MainWindow, 'Name','Today it''s Lena-day!!')
-end
-
-function misc_CheckUpdates
-% Check for updates
-version=gui_retr('PIVver');
-filename_update = 'latest_version.txt';
-if gui_retr('parallel')==1
-	current_url = 'http://william.thielicke.org/PIVlab/latest_version_p.txt';
-else
-	current_url = 'http://william.thielicke.org/PIVlab/latest_version.txt';
-end
-starred_feature_url='http://william.thielicke.org/PIVlab/starred_feature.txt';
-filename_starred='starred_feature.txt';
-% Update checking inspired by: https://www.mathworks.com/matlabcentral/fileexchange/64294-photoannotation
-update_msg = 'Could not check for updates'; %default message will be overwritten by the following lines
-starred_feature_text='';
-gui_put('update_msg_color',[0 0 0.75]);
-try
-	if exist('websave','builtin')||exist('websave','file')
-		outfilename=websave(filename_update,current_url,weboptions('Timeout',10));
-		try
-			outfilename2=websave(filename_starred,starred_feature_url,weboptions('Timeout',2));
-		catch
-		end
-	else
-		outfilename=urlwrite(current_url,filename_update); %#ok<*URLWR>
-		try
-			outfilename2=urlwrite(starred_feature_url,filename_starred); %#ok<*URLWR>
-		catch
-		end
-	end
-	%version number
-	fileID_update = fopen(filename_update);
-	web_version = textscan(fileID_update,'%s');
-	web_version=cell2mat(web_version{1});
-	trash_upd = fclose(fileID_update);
-	if ispc %Matlab seems to have issues with deleting files on unix systems
-		recycle('on');
-		delete(filename_update)
-	end
-	%starred feature message
-	starred_feature_text = fileread(filename_starred);
-	if ispc %Matlab seems to have issues with deleting files on unix systems
-		recycle('on');
-		delete(filename_starred)
-	end
-	if strcmp(version,web_version) == 1
-		update_msg = 'You have the latest PIVlab version.';
-		gui_put('update_msg_color',[0 0.75 0]);
-	elseif str2num (strrep(version,'.','')) < str2num(strrep(web_version,'.',''))
-		update_msg = ['PIVlab is outdated. Please update to version ' web_version sprintf('\n') starred_feature_text];
-		gui_put('update_msg_color',[0.85 0 0]);
-	elseif str2num (strrep(version,'.','')) > str2num(strrep(web_version,'.',''))
-		update_msg = ['Your PIVlab version is newer than the latest official release.'];
-		gui_put('update_msg_color',[0.5 0.5 0]);
-	end
-catch
-	%Either the download failed, or the file downloaded is empty.
-	update_msg = 'Could not check for updates';
-	gui_put('update_msg_color',[0.75 0.75 0]);
-end
-clear filename_update current_url fileID_update outfilename web_version trash_upd
-disp (['-> ' update_msg])
-gui_put('update_msg',update_msg);
-
-%close(splashscreen)
-%movegui(MainWindow,'center')
-
-function gui_key_press(~, event) %General (currently hidden, respectively not documented) keyboard shortcuts in PIVlab
-%display currently pressed key name:
-%disp(event.Key)
-if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(event.Modifier{2},'control') %ctrl and shift modifiers
-	if strcmp(event.Key,'c')
-		crosshair_enabled=gui_retr('crosshair_enabled');
-		if isempty(crosshair_enabled)
-			crosshair_enabled=0;
-		end
-		gui_put('crosshair_enabled',1-crosshair_enabled);
-	elseif strcmp(event.Key,'x')
-		sharpness_enabled=gui_retr('sharpness_enabled');
-		if isempty(sharpness_enabled)
-			sharpness_enabled=0;
-		end
-		gui_put('sharpness_enabled',1-sharpness_enabled); % only autofocs OR sharpness display must be enabled at a time
-	elseif strcmp(event.Key,'hyphen') %minus key
-		ac_upper_clim = gui_retr('ac_upper_clim');
-		if ac_upper_clim < 2^16
-			ac_upper_clim = ac_upper_clim + 5000;
-		end
-		gui_put('ac_upper_clim',ac_upper_clim);
-		gui_put('ac_lower_clim',0);
-		caxis([0 ac_upper_clim]) %#ok<*CAXIS>
-	elseif strcmp(event.Key,'0') %plus
-		ac_upper_clim = gui_retr('ac_upper_clim');
-		if ac_upper_clim > 5000
-			ac_upper_clim = ac_upper_clim - 5000;
-		end
-		gui_put('ac_upper_clim',ac_upper_clim);
-		gui_put('ac_lower_clim',0);
-		caxis([0 ac_upper_clim])
-	elseif strcmp(event.Key,'k')
-		if strmatch (get(gca,'ColorScale'),'log') %#ok<*MATCH2>
-			set(gca,'ColorScale','linear')
-		else
-			set(gca,'ColorScale','log')
-		end
-	elseif strcmp(event.Key,'h') %
-		hist_enabled=gui_retr('hist_enabled');
-		if isempty(hist_enabled)
-			hist_enabled=0;
-		end
-		gui_put('hist_enabled',1-hist_enabled);
-	end
-end
-
-function gui_destroyUI
-handles = guihandles; %alle handles mit tag laden und ansprechbar machen
-MainWindow=getappdata(0,'hgui');
-guidata(MainWindow,handles)
-controls = findall(MainWindow,'type','uicontrol');
-panels = findall(MainWindow,'type','uipanel');
-delete(controls)
-delete(panels)
-disp('-> UI deleted.')
 
 function gui_generateUI % All the GUI elements are created here
 handles = guihandles; %alle handles mit tag laden und ansprechbar machen
@@ -2596,502 +7691,6 @@ end
 
 disp('-> UI generated.')
 
-%% Menu items callbacks
-function import_loadimgs_Callback(~, ~, ~)
-gui_switchui('multip01')
-delete(findobj('tag','hinting'))
-
-
-function roi_img_ROI_Callback(~, ~, ~)
-gui_switchui('multip02')
-
-
-function mask_img_mask_new_Callback(~, ~, ~)
-gui_switchui('multip25')
-
-function preproc_Uielement_Callback(~, ~, ~)
-gui_switchui('multip03')
-preproc_Autolimit_Callback
-
-function piv_sett_Callback(~, ~, ~)
-gui_switchui('multip04')
-pause(0.01) %otherwise display isn't updated... ?!?
-drawnow;drawnow;
-piv_dispinterrog
-handles=gui_gethand;
-piv_overlappercent
-
-function piv_do_analys_Callback(~, ~, ~)
-handles=gui_gethand;
-set(handles.progress, 'String','Frame progress: N/A');
-set(handles.overall, 'String','Total progress: N/A');
-set(handles.totaltime, 'String','Time left: N/A');
-set(handles.messagetext, 'String','');
-if get(handles.fftmulti,'Value') == 1 || get(handles.dcc,'Value') == 1
-	set(handles.AnalyzeAll,'String','Analyze all frames');
-end
-if get(handles.ensemble,'Value') == 1
-	set(handles.AnalyzeAll,'String','Start ensemble analysis');
-end
-if gui_retr('parallel')==1
-	set(handles.update_display_checkbox,'Visible','Off')
-end
-gui_switchui('multip05')
-
-function validate_vector_val_Callback(~, ~, ~)
-gui_switchui('multip06')
-
-function validate_image_val_Callback(~, ~, ~)
-gui_switchui('multip23')
-
-function calibrate_cal_actual_Callback(~, ~, ~) %executed when calibration panel is made visible
-gui_switchui('multip07')
-pointscali=gui_retr('pointscali');
-
-if numel(pointscali)>0
-	caliimg=gui_retr('caliimg');
-	if numel(caliimg)>0
-		pivlab_axis=gui_retr('pivlab_axis');
-		image(caliimg, 'parent',pivlab_axis, 'cdatamapping', 'scaled');
-		colormap('gray');
-		axis image;
-		set(gca,'ytick',[])
-		set(gca,'xtick',[])
-	else
-		gui_sliderdisp(gui_retr('pivlab_axis'))
-	end
-
-	calibrate_draw_line_Callback
-
-	calibrate_Update_Offset_Display;
-	handles=gui_gethand;
-	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','on')
-else %no calibration performed yet
-	handles=gui_gethand;
-	if gui_retr('video_selection_done') == 1 %video file loaded
-		%enter a guess for the time step, based on video file frame rate.
-		video_reader_object = gui_retr('video_reader_object');
-		video_frame_selection=gui_retr('video_frame_selection');
-		skip = video_frame_selection(2) - video_frame_selection(1);
-		delta_t = 1/(video_reader_object.FrameRate / skip)*1000;
-
-		set(handles.time_inp,'String',num2str(delta_t))
-	end
-	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
-end
-
-function plot_derivs_Callback(~, ~, ~)
-handles=gui_gethand;
-gui_switchui('multip08');
-if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-	set(handles.derivchoice,'String',{'Vectors [px/frame]';'Vorticity [1/frame]';'Magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Simple shear rate [1/frame]';'Simple strain rate [1/frame]';'Line integral convolution (LIC) [1]' ; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
-	set(handles.text35,'String','u [px/frame]:')
-	set(handles.text36,'String','v [px/frame]:')
-else
-	set(handles.derivchoice,'String',{'Vectors [m/s]';'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Simple shear rate [1/s]';'Simple strain rate [1/s]';'Line integral convolution (LIC) [1]'; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
-	set(handles.text35,'String','u [m/s]:')
-	set(handles.text36,'String','v [m/s]:')
-end
-plot_derivchoice_Callback(handles.derivchoice)
-
-function plot_temporal_derivs_Callback(~, ~, ~)
-handles=gui_gethand;
-gui_switchui('multip22');
-
-function plot_modif_plot_Callback(~, ~, ~)
-gui_switchui('multip09');
-
-function export_ascii_chart_Callback(~, ~, ~)
-gui_switchui('multip10')
-
-function export_matlab_file_Callback(~, ~, ~)
-gui_switchui('multip11')
-
-function extract_poly_extract_Callback(~, ~, ~)
-handles=gui_gethand;
-gui_switchui('multip12')
-if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-	set(handles.extraction_choice,'string', {'Vorticity [1/frame]';'Magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Correlation coefficient [-]';'Tangent velocity [px/frame]'});
-else
-	set(handles.extraction_choice,'string', {'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]';'Tangent velocity [m/s]'});
-end
-%draw extraction polygon when frame was changed.
-pivlab_axis=gui_retr('pivlab_axis');
-delete(findobj(pivlab_axis,'tag', 'extractpoint'));
-delete(findobj(pivlab_axis,'tag', 'extractline'));
-delete(findobj(pivlab_axis,'tag', 'circstring'));
-delete(findobj(pivlab_axis,'Tag', 'extract_poly'))
-xposition = gui_retr('xposition');
-yposition = gui_retr('yposition');
-extract_type = gui_retr('extract_type');
-if ~isempty(xposition) && ~isempty(yposition) && ~isempty(extract_type)
-	extract_update_display(extract_type, xposition, yposition)
-end
-
-
-
-
-
-function extract_dist_angle_Callback(~, ~, ~)
-gui_switchui('multip13')
-
-function plot_statistics_Callback(~, ~, ~)
-gui_switchui('multip14')
-filepath=gui_retr('filepath');
-if size(filepath,1) > 1
-	gui_sliderdisp(gui_retr('pivlab_axis'))
-end
-
-function simulate_part_img_sett_Callback(~, ~, ~)
-gui_switchui('multip15')
-
-function export_pixel_data(~, ~, ~)
-handles=gui_gethand;
-resultslist=gui_retr('resultslist');
-if size(resultslist,2)>=1
-	startframe=0;
-	endframe=0;
-	for i=1:size(resultslist,2)
-		if numel(resultslist{1,i})>0 && startframe==0
-			startframe=i;
-		end
-		if numel(resultslist{1,i})>0
-			endframe=i;
-		end
-	end
-	set(handles.firstframe, 'String',int2str(startframe));
-	set(handles.lastframe, 'String',int2str(endframe));
-	if strmatch(get(handles.multip08, 'visible'), 'on')
-		gui_put('p8wasvisible',1)
-	else
-		gui_put('p8wasvisible',0)
-	end
-	gui_switchui('multip16');
-else
-	msgbox('No analyses yet...')
-end
-%populate the popup menu
-avail_file_formats={'PNG','JPG','PDF'};
-
-avail_profiles = VideoWriter.getProfiles();
-ArchivalAVI = find(ismember({avail_profiles.Name},'Archival'),1);
-MPEG4 = find(ismember({avail_profiles.Name},'MPEG-4'),1);
-
-if ~isempty(ArchivalAVI)
-	avail_file_formats = [avail_file_formats {'Archival AVI'}];
-end
-if ~isempty(MPEG4)
-	avail_file_formats = [avail_file_formats {'MPEG-4'}];
-end
-set(handles.export_still_or_animation,'String',avail_file_formats)
-export_still_or_animation_Callback()
-
-
-%dort kann man auch die zugelassenen filextensions bekommen. Und wenn das Feld Quality existiert kann man das anzeigen lassen.
-
-
-function extract_area_extract_Callback(~, ~, ~)
-handles=gui_gethand;
-gui_switchui('multip17');
-if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-	set(handles.area_para_select,'string', {'Vorticity [1/frame]';'Magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Correlation coefficient [-]'});
-else
-	set(handles.area_para_select,'string', {'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]'});
-end
-
-function plot_streamlines_Callback(~, ~, ~)
-gui_switchui('multip18');
-
-function export_paraview_Callback(~, ~, ~)
-gui_switchui('multip19')
-
-function export_tecplot_file_Callback(~, ~, ~)
-gui_switchui('multip20')
-
-function acquisition_pco_error_msgbox
-[filepath,~,~] = fileparts(mfilename('fullpath'));
-uiwait(msgbox(['PCO camera drivers not found in this directory:' sprintf('\n') fullfile(filepath, 'PIVlab_capture_resources\PCO_resources') sprintf('\n\n') 'The free pco toolbox for Matlab can be downloaded here:' sprintf('\n') 'https://www.pco.de/de/software/third-party/matlab/' sprintf('\n\n') 'Please download and install this toolbox to use your pco camera in PIVlab.'],'modal'))
-
-function acquisition_capture_images_Callback(~,~,~) %Menu item is called
-[filepath,~,~] = fileparts(mfilename('fullpath'));
-gui_switchui('multip24')
-acquisition_select_capture_config_Callback
-if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources'),'dir')==7
-	%addpath(genpath(fullfile(filepath, 'PCO_resources')));
-	addpath(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts'));
-	%PCO setup_files.m copies required dlls and headers to dir.
-	%subfolders might not be necessary. Check!
-else
-	acquisition_pco_error_msgbox
-end
-if verLessThan('matlab','9.7') %R2019b
-	uiwait(msgbox('Image capture and synchronizer control in PIVlab requires at least MATLAB version 9.7 (R2019b).','modal'))
-end
-handles=gui_gethand;
-if isempty(get(handles.ac_project,'String')) %if user hasnt entered a project path...
-	if ~isempty(gui_retr('pathname'))
-		set(handles.ac_project,'String',fullfile(gui_retr('pathname'),['PIVlabCapture_' char(datetime('today'))]));
-	else
-		set(handles.ac_project,'String',fullfile(pwd,['PIVlabCapture_' char(datetime('today'))]));
-	end
-end
-serpo=gui_retr('serpo');
-try
-	serpo.Port; %is there no other way to determine if serialport is working...?
-	alreadyconnected=1;
-catch
-	alreadyconnected=0;
-	delete(serpo)
-	gui_put('serpo',[]);
-	set(handles.ac_comport,'Value',1);
-	set(handles.ac_laserstatus,'String','N/A','BackgroundColor',[1 0 0])
-end
-if alreadyconnected
-	serports=serialportlist('available');
-	set(handles.ac_comport,'String',[serpo.Port serports]); %fill dropdown with connected port on top, and other available ports at bottom
-	set(handles.ac_connect,'String','Connect');
-	set(handles.ac_serialstatus,'Backgroundcolor',[0 1 0]);
-else
-	try
-		serports=serialportlist('available');
-	catch
-		serports=[];
-	end
-	if isempty(serports)
-		serports='No available serial ports found!';
-		set(handles.ac_connect,'String','Refresh');
-	else
-		set(handles.ac_connect,'String','Connect');
-	end
-	set(handles.ac_comport,'String',serports);
-	set(handles.ac_serialstatus,'Backgroundcolor',[1 0 0]);
-end
-
-
-% Set default image colormap limits
-gui_put('ac_lower_clim',0);
-gui_put('ac_upper_clim',2^16);
-delete(findobj('tag','shortcutlist'));
-%Keyboard shortcuts
-text(10,10,['Image acquisition keyboard shortcuts' sprintf('\n') 'CTRL SHIFT C : Toggle crosshair' sprintf('\n') 'CTRL SHIFT X : Toggle sharpness measure' sprintf('\n') 'CTRL SHIFT + : Increase display brightness' sprintf('\n') 'CTRL SHIFT - : Decrease display brightness' sprintf('\n') 'CTRL SHIFT K : Toggle between log and lin color scale' sprintf('\n') 'CTRL SHIFT H : Toggle histogram display'],'tag','shortcutlist','Color','black','BackgroundColor','white','VerticalAlignment','top');
-try
-	if ~alreadyconnected
-		if ispref('PIVlab_ad','enable_ad') &&  getpref('PIVlab_ad','enable_ad') ==0
-			%do not display ad
-		else
-			if exist('laser_device_id.mat','file') ~= 2
-				hardware_Ad
-			end
-		end
-	end
-catch
-end
-if gui_retr('parallel')==1
-	button = questdlg('It is highly recommended to turn off parallel processing during image capture to save RAM.','Shut down parallel pool?','OK','Cancel','OK');
-	if strncmp(button,'OK',3)==1
-		gui_put('parallel',1); %sets to "parallel on" and then presses the toggle button --> will turn off.
-		misc_toggle_parallel_Callback
-	end
-end
-
-
-
-function gui_preferences_Callback (~,~)
-hgui=getappdata(0,'hgui');
-handles=gui_gethand;
-panelwidth=gui_retr('panelwidth');
-set(handles.panelslider,'Value',panelwidth);
-gui_switchui('multip21')
-
-function gui_font_size_change (~,~,magnifier)
-objects=findobj('Type','uicontrol');
-objects=[objects; findobj('Type','uipanel')];
-A=get (objects,'fontsize');
-A=cellfun(@(x) x+magnifier, A);
-
-for i=1:size(A,1)
-	try
-		set(objects(i), 'FontSize',A(i));
-	catch
-	end
-end
-
-
-%% Resize functionality
-function gui_MainWindow_ResizeFcn(hObject, ~)
-handles=guihandles(hObject);
-originalunits=get(hObject,'units');
-set(hObject,'Units','Characters');
-Figure_Size = get(hObject, 'Position');
-set(hObject,'Units',originalunits);
-margin=1.5;
-panelwidth=gui_retr('panelwidth');
-%panelwidth=37;
-panelheighttools=12;
-panelheightpanels=35;
-quickwidth=gui_retr('quickwidth');
-quickheight=gui_retr('quickheight');
-%starts lower left
-%                            X    Y    WIDTH    HEIGHT
-
-try
-	colorbarpos=get(handles.colorbarpos,'value');
-catch
-	colorbarpos=1;
-end
-
-if colorbarpos==1
-	width_reduct=0;x_shift=0;
-	height_reduct=0;y_shift=0;
-else
-	posichoice = get(handles.colorbarpos,'String');
-	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'EastOutside')
-		width_reduct=25;x_shift=0;
-		height_reduct=0;y_shift=0;
-	end
-	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'WestOutside')
-		width_reduct=25;x_shift=25;
-		height_reduct=0;y_shift=0;
-	end
-	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'NorthOutside')
-		width_reduct=6;x_shift=3;
-		height_reduct=4;y_shift=0;
-	end
-	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'SouthOutside')
-		width_reduct=6;x_shift=3;
-		height_reduct=4;y_shift=5;
-	end
-end
-if (panelheighttools+panelheightpanels+margin*0.25+margin*0.25) <= Figure_Size(4)
-	%panels + tools DO fit vertically
-	try
-		set (findobj('-regexp','Tag','multip'), 'position', [0+margin*0.5 Figure_Size(4)-panelheightpanels-margin*0.25 panelwidth panelheightpanels]);
-		set (handles.tools, 'position', [0+margin*0.5 0+margin*0.5 panelwidth panelheighttools]);
-
-		%X                           %Y                             %WIDTH                                               %HEIGHT
-		set (gca, 'position', [x_shift+panelwidth+margin             y_shift+margin        Figure_Size(3)-panelwidth-margin-width_reduct         Figure_Size(4)-quickheight-height_reduct]);
-	catch ME
-		disp('PIVLAB: Unexpected figure resize behaviour. Please report this issue here:')
-		disp('https://groups.google.com/forum/#!forum/pivlab ')
-		disp(ME)
-	end
-else
-	%panels + tools DO NOT fit vertically
-	%--> put them side by side
-	try
-		set (findobj('-regexp','Tag','multip'), 'position', [0+margin*0.5 Figure_Size(4)-panelheightpanels-margin*0.25 panelwidth panelheightpanels]);
-		set (handles.tools, 'position', [0+margin*0.5+panelwidth+margin 0+margin*0.5 panelwidth panelheighttools]);
-		set (gca, 'position', [x_shift+margin+panelwidth+margin+panelwidth y_shift+margin Figure_Size(3)-panelwidth-panelwidth-margin-margin-width_reduct Figure_Size(4)-margin-quickheight-height_reduct]);
-	catch ME
-		disp('PIVLAB: Unexpected figure resize behaviour. Please report this issue here:')
-		disp('https://groups.google.com/forum/#!forum/pivlab ')
-		disp(ME)
-	end
-end
-if (panelheighttools+panelheightpanels+margin*0.25+margin*0.5) <= Figure_Size(4)-quickheight
-	try
-		set (handles.quick,'Visible','on');
-		set (handles.quick, 'position',[0+margin*0.5 0+margin*0.5+panelheighttools quickwidth quickheight])
-	catch ME
-		disp('PIVLAB: Unexpected figure resize behaviour. Please report this issue here:')
-		disp('https://groups.google.com/forum/#!forum/pivlab ')
-		disp(ME)
-	end
-else % not enough space for quick access box
-	set (handles.quick,'Visible','off');
-end
-
-
-function gui_displogo(~)
-try
-	logoimg=imread('PIVlablogo.jpg');
-catch
-	[filepath,name,ext]=fileparts([mfilename('fullpath') '.m']);
-	cd (filepath); %if current directory is not where PIVlab_GUI.m is located, then change directory.
-	logoimg=imread('PIVlablogo.jpg');
-end
-%{
-if zoom==1
-	h=image(logoimg+255, 'parent', gca);
-	axis image;
-	set(gca,'ytick',[])
-	set(gca,'xtick',[])
-	set(gca, 'xlim', [1 size(logoimg,2)]);
-	set(gca, 'ylim', [1 size(logoimg,1)]);
-	set(gca, 'ydir', 'reverse');
-	set(gca, 'xcolor', [0.94 0.94 0.94], 'ycolor', [0.94 0.94 0.94]) ;
-	for i=0.5:0.1:1
-		RGB2=logoimg*i;
-		try
-			set (h, 'cdata', RGB2);
-			pause(0.01)
-		catch %#ok<*CTCH>
-			disp('..')
-		end
-		drawnow %limitrate;
-	end
-end
-%}
-
-try
-	pivlab_axis=gui_retr('pivlab_axis');
-	image(logoimg, 'parent', pivlab_axis,'interpolation','bilinear');
-catch
-	pivlab_axis=gui_retr('pivlab_axis');
-	image(logoimg, 'parent', pivlab_axis);
-end
-set(gca, 'xcolor', [0.94 0.94 0.94], 'ycolor', [0.94 0.94 0.94]) ;
-
-axis image;
-set(gca,'ytick',[])
-set(gca,'xtick',[])
-set(gca, 'xlim', [1 size(logoimg,2)]);
-set(gca, 'ylim', [1 size(logoimg,1)]);
-
-set(gca, 'ydir', 'reverse'); %750%582
-text (1025,800,['version: ' gui_retr('PIVver')], 'fontsize', 10,'horizontalalignment','right');
-text (1025,800,['   ' sprintf('\n') gui_retr('update_msg')], 'fontsize', 10,'fontangle','italic','horizontalalignment','right','Color',gui_retr('update_msg_color'),'verticalalignment','top');
-imgproctoolbox=gui_retr('imgproctoolbox');
-gui_put('imgproctoolbox',[]);
-if imgproctoolbox==0
-	text (90,200,'Image processing toolbox not found!', 'fontsize', 16, 'color', [1 0 0], 'backgroundcolor', [0 0 0]);
-end
-
-function gui_switchui (who)
-handles=guihandles(getappdata(0,'hgui')); %#ok<*NASGU>
-
-if get(handles.zoomon,'Value')==1
-	set(handles.zoomon,'Value',0);
-	gui_zoomon_Callback(handles.zoomon)
-end
-if get(handles.panon,'Value')==1
-	set(handles.panon,'Value',0);
-	gui_panon_Callback(handles.panon)
-end
-
-turnoff=findobj('-regexp','Tag','multip');
-set(turnoff, 'visible', 'off');
-turnon=findobj('-regexp','Tag',who);
-set(turnon, 'visible', 'on');
-
-if strcmp(who,'multip25') %mask panel is active --> enable mask editing
-	set(handles.mask_edit_mode,'Value',1)
-	gui_sliderdisp(gui_retr('pivlab_axis'));
-else
-	set(handles.mask_edit_mode,'Value',2)
-end
-
-
-drawnow;
-
-function gui_put(name, what)
-hgui=getappdata(0,'hgui');
-setappdata(hgui, name, what);
-
-function var = gui_retr(name)
-hgui=getappdata(0,'hgui');
-var=getappdata(hgui, name);
-
 function handles=gui_gethand
 hgui=getappdata(0,'hgui');
 num_handle_calls=gui_retr('num_handle_calls');
@@ -3113,484 +7712,154 @@ else
 	%disp('_getting old handles')
 end
 
+function gui_key_press(~, event) %General (currently hidden, respectively not documented) keyboard shortcuts in PIVlab
+%display currently pressed key name:
+%disp(event.Key)
+if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(event.Modifier{2},'control') %ctrl and shift modifiers
+	if strcmp(event.Key,'c')
+		crosshair_enabled=gui_retr('crosshair_enabled');
+		if isempty(crosshair_enabled)
+			crosshair_enabled=0;
+		end
+		gui_put('crosshair_enabled',1-crosshair_enabled);
+	elseif strcmp(event.Key,'x')
+		sharpness_enabled=gui_retr('sharpness_enabled');
+		if isempty(sharpness_enabled)
+			sharpness_enabled=0;
+		end
+		gui_put('sharpness_enabled',1-sharpness_enabled); % only autofocs OR sharpness display must be enabled at a time
+	elseif strcmp(event.Key,'hyphen') %minus key
+		ac_upper_clim = gui_retr('ac_upper_clim');
+		if ac_upper_clim < 2^16
+			ac_upper_clim = ac_upper_clim + 5000;
+		end
+		gui_put('ac_upper_clim',ac_upper_clim);
+		gui_put('ac_lower_clim',0);
+		caxis([0 ac_upper_clim]) %#ok<*CAXIS>
+	elseif strcmp(event.Key,'0') %plus
+		ac_upper_clim = gui_retr('ac_upper_clim');
+		if ac_upper_clim > 5000
+			ac_upper_clim = ac_upper_clim - 5000;
+		end
+		gui_put('ac_upper_clim',ac_upper_clim);
+		gui_put('ac_lower_clim',0);
+		caxis([0 ac_upper_clim])
+	elseif strcmp(event.Key,'k')
+		if strmatch (get(gca,'ColorScale'),'log') %#ok<*MATCH2>
+			set(gca,'ColorScale','linear')
+		else
+			set(gca,'ColorScale','log')
+		end
+	elseif strcmp(event.Key,'h') %
+		hist_enabled=gui_retr('hist_enabled');
+		if isempty(hist_enabled)
+			hist_enabled=0;
+		end
+		gui_put('hist_enabled',1-hist_enabled);
+	end
+end
 
-
-function [currentimage,rawimage] = import_get_img(selected)
+function gui_panon_Callback(hObject, ~, ~)
 handles=gui_gethand;
-filepath = gui_retr('filepath');
-if gui_retr('video_selection_done') == 0
-	[~,~,ext] = fileparts(filepath{selected});
-	if strcmp(ext,'.b16')
-		currentimage=f_readB16(filepath{selected});
-		rawimage=currentimage;
+if get(hObject,'Value')==1
+	hCMP = uicontextmenu;
+	hPMenu = uimenu('Parent',hCMP,'Label','Reset Pan / Zoom','Callback',@gui_zoom_reset_zoom);
+	hPan=pan(gcf);
+	hPan.UIContextMenu = hCMP;
+	pan(gui_retr('pivlab_axis'),'on')
+	set(handles.zoomon,'Value',0);
+else
+	pan(gui_retr('pivlab_axis'),'off')
+	gui_put('xzoomlimit', get (gui_retr('pivlab_axis'), 'xlim'));
+	gui_put('yzoomlimit', get (gui_retr('pivlab_axis'), 'ylim'));
+end
+
+function gui_pivlabhelp_Callback(~, ~, ~)
+try
+	web('http://pivlab.blogspot.de/p/blog-page_19.html','-browser')
+catch
+	%why does 'web' not work in v 7.1.0.246 ...?
+	disp('Ooops, MATLAB couldn''t open the website.')
+	disp('You''ll have to open the website manually:')
+	disp('http://pivlab.blogspot.de/p/blog-page_19.html')
+end
+
+function gui_pref_apply_Callback (~, ~)
+gui_put('num_handle_calls',0);
+hgui=getappdata(0,'hgui');
+handles=gui_gethand;
+panelwidth=round(get(handles.panelslider,'Value'));
+gui_put('panelwidth',panelwidth);
+gui_put('quickwidth',panelwidth);
+gui_destroyUI
+gui_generateUI
+gui_MainWindow_ResizeFcn(gcf)
+gui_preferences_Callback
+gui_clear_user_content
+gui_displogo(1)
+
+function gui_preferences_Callback (~,~)
+hgui=getappdata(0,'hgui');
+handles=gui_gethand;
+panelwidth=gui_retr('panelwidth');
+set(handles.panelslider,'Value',panelwidth);
+gui_switchui('multip21')
+
+function gui_put(name, what)
+hgui=getappdata(0,'hgui');
+setappdata(hgui, name, what);
+
+function gui_quick1_Callback (~,~)
+handles=gui_gethand;
+set(handles.quick1,'Value',0)
+import_loadimgs_Callback
+
+function gui_quick2_Callback (~,~)
+handles=gui_gethand;
+set(handles.quick2,'Value',0)
+mask_img_mask_new_Callback
+
+function gui_quick3_Callback (~,~)
+handles=gui_gethand;
+set(handles.quick3,'Value',0)
+preproc_Uielement_Callback
+
+function gui_quick4_Callback (~,~)
+handles=gui_gethand;
+set(handles.quick4,'Value',0)
+piv_sett_Callback
+
+function gui_quick5_Callback (~,~)
+handles=gui_gethand;
+set(handles.quick5,'Value',0)
+piv_do_analys_Callback
+
+function gui_quick6_Callback (~,~)
+handles=gui_gethand;
+set(handles.quick6,'Value',0)
+calibrate_cal_actual_Callback
+
+function var = gui_retr(name)
+hgui=getappdata(0,'hgui');
+var=getappdata(hgui, name);
+
+function gui_set_bg_color_for_mean_imgs(currentframe, handles)
+ismean=gui_retr('ismean');
+if size(ismean,1)>=(currentframe+1)/2
+	if ismean((currentframe+1)/2,1) ==1
+		currentwasmean=1;
 	else
-		%disp(filepath{selected})
-		currentimage=imread(filepath{selected});
-		rawimage=currentimage;
+		currentwasmean=0;
 	end
 else
-	video_reader_object = gui_retr('video_reader_object');
-	video_frame_selection=gui_retr('video_frame_selection');
-	currentimage = read(video_reader_object,video_frame_selection(selected));
-	rawimage=currentimage;
+	currentwasmean=0;
 end
 
-if get(handles.bg_subtract,'Value')==1
-	if mod(selected,2)==1 %uneven image nr.
-		bg_img = gui_retr('bg_img_A');
-	else
-		bg_img = gui_retr('bg_img_B');
-	end
-
-	if isempty(bg_img) %checkbox is enabled, but no bg is present
-		set(handles.bg_subtract,'Value',0);
-	else
-		if size(currentimage,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
-			currentimage = rgb2gray(currentimage)-bg_img;
-		else
-			currentimage = currentimage-bg_img;
-		end
-	end
+if currentwasmean==1
+	set (handles.filenameshow,'BackgroundColor',[0.65 0.65 1]);
+else
+	set (handles.filenameshow,'BackgroundColor',[0.9412 0.9412 0.9412]);
 end
-%get and save the image size (assuming that every image of a session has the same size)
-size_of_the_image=size(currentimage);
-expected_image_size=gui_retr('expected_image_size');
-
-if isempty(gui_retr('size_warning_has_been_shown'))
-	gui_put('size_warning_has_been_shown',0);
-end
-if isempty(expected_image_size) %expected_image_size is empty, we have not read an image before
-	expected_image_size = size_of_the_image;
-	gui_put('expected_image_size',expected_image_size);
-else %expected_image_size is not empty, an image has been read before
-	if 	(expected_image_size(1) ~= size_of_the_image(1) || expected_image_size(2) ~= size_of_the_image(2)) && gui_retr('size_warning_has_been_shown') == 0
-		piv_cancelbutt_Callback
-		uiwait(warndlg('Error: All images in a session  MUST have the same size!'));
-		gui_put('size_warning_has_been_shown',1);
-		warning off
-		recycle('off');
-		delete('cancel_piv');
-		warning on
-	end
-end
-gui_put('size_of_the_image',size_of_the_image);
-currentimage(currentimage<0)=0; %bg subtraction may yield negative
-%results. I am unsure about the best way to deal with this data. Is
-%negative data useful, or just trash? Doesn't seem to make any difference
-%in the results however.
-
-
-function preproc_generate_BG_img_parallel
-handles=gui_gethand;
-if get(handles.bg_subtract,'Value')==1
-	bg_img_A = gui_retr('bg_img_A');
-	bg_img_B = gui_retr('bg_img_B');
-	sequencer=gui_retr('sequencer');%Timeresolved or pairwise 0=timeres.; 1=pairwise
-	if sequencer ~= 2 % bg subtraction only makes sense with time-resolved and pairwise sequencing style, not with reference style.
-		if isempty(bg_img_A) || isempty(bg_img_B)
-			answer = questdlg('Mean intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
-			if strcmp(answer , 'OK')
-				%disp('BG not present, calculating now')
-				%% Calculate BG for all images....
-				% read first image to determine properties
-				filepath = gui_retr('filepath');
-				if gui_retr('video_selection_done') == 0
-					[~,~,ext] = fileparts(filepath{1});
-					if strcmp(ext,'.b16')
-						image1=f_readB16(filepath{1});
-						image2=f_readB16(filepath{2});
-						imagesource='b16_image';
-					else
-						image1=imread(filepath{1});
-						image2=imread(filepath{2});
-						imagesource='normal_pixel_image';
-					end
-				else
-					video_reader_object = gui_retr('video_reader_object');
-					video_frame_selection=gui_retr('video_frame_selection');
-					image1 = read(video_reader_object,video_frame_selection(1));
-					image2 = read(video_reader_object,video_frame_selection(2));
-					imagesource='from_video';
-				end
-				classimage=class(image1); %memorize the original image format (double, uint8 etc)
-
-				if size(image1,3)>1
-					image1=rgb2gray(image1); %rgb2gray conserves the variable class (single, double, uint8, uint16)
-					image2=rgb2gray(image2);
-					colorimg=1;
-				else
-					colorimg=0;
-				end
-				counter=1;
-
-				%convert all image types to double, ranging from 0...1
-				if strcmp(classimage,'double')==1 %double stays double
-					%do nothing
-				elseif strcmp(classimage,'single')==1 %e.g. 32bit tif, ranges from 0...1
-					image1=double(image1);
-					image2=double(image2);
-				elseif strcmp(classimage,'uint16')==1 %e.g. 16bit tif, ranges from 0...65535
-					image1=double(image1)/65535;
-					image2=double(image2)/65535;
-				elseif strcmp(classimage,'uint8')==1 %0...255
-					image1=double(image1)/255;
-					image2=double(image2)/255;
-				end
-				if sequencer==0 %time-resolved
-					start_bg=2;
-					skip_bg=1;
-				else
-					start_bg=3;
-					skip_bg=2;
-				end
-				%perform image addition
-				%if timeresolved: generate only one background image from all
-				%images
-				%if not: generate two background images. One from even frames,
-				%one from odd frames
-				gui_toolsavailable(0,'Busy, please wait...')
-				updatecntr=0;
-
-				%das innere zu einer function machen und außen parfor...?
-				%als erstes: normaler for loop erstellt feste Liste mit Dateinamen.
-				%aus denen holt sich parfor loop die infos
-				%loop unten kann so bleiben wie er ist, lädt aber nicht bilder, sondern schreibt dateinamen in liste
-				cntr=1;
-				imagelist_A=cell(0);
-				imagelist_B=cell(0);
-				for i=start_bg:skip_bg:size(filepath,1)
-
-					imagelist_A{cntr}=filepath{i};
-					if sequencer==1 %not time-resolved
-						imagelist_B{cntr}=filepath{i+1};
-					else
-						imagelist_B=imagelist_A; %totally strange workaround for Matlab R2022b.... if sequencer == 0 then this variable will never be used. But if it is empty, then an error occurs...
-					end
-
-					cntr=cntr+1;
-
-				end
-
-				hbar = pivprogress(numel(imagelist_A),handles.preview_preprocess);
-				parfor	i=1:numel(imagelist_A)
-
-					image_to_add1=[];
-					image_to_add2=[];
-					counter=counter+1; %counts the amount of images --> do that elsewhere
-					if strcmp('b16_image',imagesource)
-						image_to_add1 = f_readB16(imagelist_A{i}); %will be double
-						if sequencer==1 %not time-resolved
-							image_to_add2 = f_readB16(imagelist_B{i});
-						end
-					elseif strcmp('normal_pixel_image',imagesource)
-						image_to_add1 = imread(imagelist_A{i});
-						if sequencer==1 %not time-resolved
-							image_to_add2 = imread(imagelist_B{i}); %will be double or uint8
-						end
-					elseif strcmp('from_video',imagesource)
-						disp('parallel bg calculation wird mit videoframes nicht gehen....')
-					end
-					%% convert images to a grayscale double
-					%images arrive in their original format here
-					%convert everything to grayscale and double [0...1]
-					if colorimg==1
-						image_to_add1 = rgb2gray(image_to_add1); %will conserve image class
-						if sequencer==1 %not time-resolved
-							image_to_add2 = rgb2gray(image_to_add2);
-						end
-					end
-
-					if strcmp(classimage,'single')==1
-						image_to_add1=double(image_to_add1);
-						if sequencer==1 %not time-resolved
-							image_to_add2=double(image_to_add2);
-						end
-					end
-					if strcmp(classimage,'uint8')==1
-						image_to_add1=double(image_to_add1)/255;
-						if sequencer==1 %not time-resolved
-							image_to_add2=double(image_to_add2)/255;
-						end
-					end
-					if strcmp(classimage,'uint16')==1
-						image_to_add1=double(image_to_add1)/65535;
-						if sequencer==1 %not time-resolved
-							image_to_add2=double(image_to_add2)/65535;
-						end
-					end
-
-					%now everything is double [0...1]
-
-					%% sum images
-					image1=image1 +image_to_add1;
-					if sequencer==1 %not time-resolved
-						image2=image2+image_to_add2;
-					end
-					hbar.iterate(1); %#ok<*PFBNS>
-				end %of for loop and image summing
-				close(hbar);
-
-				set (handles.preview_preprocess, 'string', 'Apply and preview current frame');
-				%divide the sum by the amount of summed images
-				image1_bg=image1/counter;
-				if sequencer==1 %not time-resolved
-					image2_bg=image2/counter;
-				end
-
-				%Convert back to original image class, if not double anyway
-				if strcmp(classimage,'uint8')==1 %#ok<*STISA>
-					image1_bg=uint8(image1_bg*255);
-					if sequencer==1 %not time-resolved
-						image2_bg=uint8(image2_bg*255);
-					end
-				end
-				if strcmp(classimage,'single')==1
-					image1_bg=single(image1_bg);
-					if sequencer==1 %not time-resolved
-						image2_bg=single(image2_bg);
-					end
-				end
-				if strcmp(classimage,'uint16')==1
-					image1_bg=uint16(image1_bg*65535);
-					if sequencer==1 %not time-resolved
-						image2_bg=uint16(image2_bg*65535);
-					end
-				end
-
-				%make results accessible to the rest of the GUI:
-				gui_put('bg_img_A',image1_bg);
-				if sequencer==1 %not time-resolved
-					gui_put('bg_img_B',image2_bg);
-				else
-					gui_put('bg_img_B',image1_bg); %timeresolved --> same bg image for a and b
-				end
-				set(handles.preview_preprocess, 'String', 'Apply and preview current frame');drawnow;
-				gui_toolsavailable(1)
-			else % user has checkbox enabled, but doesn't want to calculate the background...
-				set(handles.bg_subtract,'Value',0);
-			end
-		else
-			%disp('BG exists')
-		end
-
-	else
-		set(handles.bg_subtract,'Value',0);
-		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'])
-		uiwait
-	end
-end
-
-
-function preproc_generate_BG_img
-handles=gui_gethand;
-if get(handles.bg_subtract,'Value')==1
-	bg_img_A = gui_retr('bg_img_A');
-	bg_img_B = gui_retr('bg_img_B');
-	sequencer=gui_retr('sequencer');%Timeresolved or pairwise 0=timeres.; 1=pairwise
-	if sequencer ~= 2 % bg subtraction only makes sense with time-resolved and pairwise sequencing style, not with reference style.
-		if isempty(bg_img_A) || isempty(bg_img_B)
-			answer = questdlg('Mean intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
-			if strcmp(answer , 'OK')
-				%disp('BG not present, calculating now')
-				%% Calculate BG for all images....
-				% read first image to determine properties
-				filepath = gui_retr('filepath');
-				if gui_retr('video_selection_done') == 0
-					[~,~,ext] = fileparts(filepath{1});
-					if strcmp(ext,'.b16')
-						image1=f_readB16(filepath{1});
-						image2=f_readB16(filepath{2});
-						imagesource='b16_image';
-					else
-						image1=imread(filepath{1});
-						image2=imread(filepath{2});
-						imagesource='normal_pixel_image';
-					end
-				else
-					video_reader_object = gui_retr('video_reader_object');
-					video_frame_selection=gui_retr('video_frame_selection');
-					image1 = read(video_reader_object,video_frame_selection(1));
-					image2 = read(video_reader_object,video_frame_selection(2));
-					imagesource='from_video';
-				end
-				classimage=class(image1); %memorize the original image format (double, uint8 etc)
-
-				if size(image1,3)>1
-					image1=rgb2gray(image1); %rgb2gray conserves the variable class (single, double, uint8, uint16)
-					image2=rgb2gray(image2);
-					colorimg=1;
-				else
-					colorimg=0;
-				end
-				counter=1;
-
-				%convert all image types to double, ranging from 0...1
-				if strcmp(classimage,'double')==1 %double stays double
-					%do nothing
-				elseif strcmp(classimage,'single')==1 %e.g. 32bit tif, ranges from 0...1
-					image1=double(image1);
-					image2=double(image2);
-				elseif strcmp(classimage,'uint16')==1 %e.g. 16bit tif, ranges from 0...65535
-					image1=double(image1)/65535;
-					image2=double(image2)/65535;
-				elseif strcmp(classimage,'uint8')==1 %0...255
-					image1=double(image1)/255;
-					image2=double(image2)/255;
-				end
-				if sequencer==0 %time-resolved
-					start_bg=2;
-					skip_bg=1;
-				else
-					start_bg=3;
-					skip_bg=2;
-				end
-				%perform image addition
-				%if timeresolved: generate only one background image from all
-				%images
-				%if not: generate two background images. One from even frames,
-				%one from odd frames
-				gui_toolsavailable(0,'Busy, please wait...')
-				updatecntr=0;
-
-				%das innere zu einer function machen und außen parfor...?
-				%als erstes: normaler for loop erstellt feste Liste mit Dateinamen.
-				%aus denen holt sich parfor loop die infos
-				%loop unten kann so bleiben wie er ist, lädt aber nicht bilder, sondern schreibt dateinamen in liste
-				for i=start_bg:skip_bg:size(filepath,1)
-					counter=counter+1; %counts the amount of images --> do that elsewhere
-					%% update progress bar
-					updatecntr=updatecntr+1;
-					if updatecntr==5
-						set(handles.preview_preprocess, 'String', ['Progress: ' num2str(round(i/size(filepath,1)*99)) ' %']);drawnow expose;
-						updatecntr=0;
-					end
-					%% read image 1 and 2, different functions for different image types
-					if strcmp('b16_image',imagesource)
-						image_to_add1 = f_readB16(filepath{i}); %will be double
-						if sequencer==1 %not time-resolved
-							image_to_add2 = f_readB16(filepath{i+1});
-						end
-					elseif strcmp('normal_pixel_image',imagesource)
-						image_to_add1 = imread(filepath{i});
-						if sequencer==1 %not time-resolved
-							image_to_add2 = imread(filepath{i+1}); %will be double or uint8
-						end
-					elseif strcmp('from_video',imagesource)
-						image_to_add1 = read(video_reader_object,video_frame_selection(i));
-						if sequencer==1 %not time-resolved
-							image_to_add2 = read(video_reader_object,video_frame_selection(i+1));
-						end
-					end
-
-					%% convert images to a grayscale double
-					%images arrive in their original format here
-					%convert everything to grayscale and double [0...1]
-					if colorimg==1
-						image_to_add1 = rgb2gray(image_to_add1); %will conserve image class
-						if sequencer==1 %not time-resolved
-							image_to_add2 = rgb2gray(image_to_add2);
-						end
-					end
-					if strcmp(classimage,'double')==1
-						image_to_add1=image_to_add1;
-						if sequencer==1 %not time-resolved
-							image_to_add2=image_to_add2;
-						end
-					end
-					if strcmp(classimage,'single')==1
-						image_to_add1=double(image_to_add1);
-						if sequencer==1 %not time-resolved
-							image_to_add2=double(image_to_add2);
-						end
-					end
-					if strcmp(classimage,'uint8')==1
-						image_to_add1=double(image_to_add1)/255;
-						if sequencer==1 %not time-resolved
-							image_to_add2=double(image_to_add2)/255;
-						end
-					end
-					if strcmp(classimage,'uint16')==1
-						image_to_add1=double(image_to_add1)/65535;
-						if sequencer==1 %not time-resolved
-							image_to_add2=double(image_to_add2)/65535;
-						end
-					end
-
-					%now everything is double [0...1]
-
-					%% check if image size matches other images
-					% remove this, takes only time
-					img_size_info1=size(image1);
-					img_size_info2=size(image_to_add1);
-					if img_size_info1(1) ~= img_size_info2(1) || img_size_info1(2) ~= img_size_info2(2)
-						uiwait(warndlg('Error: All images in a session  MUST have the same size!'));
-						break
-					end
-
-					%% sum images
-					image1=image1 +image_to_add1;
-					if sequencer==1 %not time-resolved
-						img_size_info1=size(image2);
-						img_size_info2=size(image_to_add2);
-						if img_size_info1(1) ~= img_size_info2(1) || img_size_info1(2) ~= img_size_info2(2)
-							uiwait(warndlg('Error: All images in a session  MUST have the same size!'));
-							break
-						end
-						image2=image2+image_to_add2;
-					end
-				end %of for loop and image summing
-
-
-				%divide the sum by the amount of summed images
-				image1_bg=image1/counter;
-				if sequencer==1 %not time-resolved
-					image2_bg=image2/counter;
-				end
-
-				%Convert back to original image class, if not double anyway
-				if strcmp(classimage,'uint8')==1 %#ok<*STISA>
-					image1_bg=uint8(image1_bg*255);
-					if sequencer==1 %not time-resolved
-						image2_bg=uint8(image2_bg*255);
-					end
-				end
-				if strcmp(classimage,'single')==1
-					image1_bg=single(image1_bg);
-					if sequencer==1 %not time-resolved
-						image2_bg=single(image2_bg);
-					end
-				end
-				if strcmp(classimage,'uint16')==1
-					image1_bg=uint16(image1_bg*65535);
-					if sequencer==1 %not time-resolved
-						image2_bg=uint16(image2_bg*65535);
-					end
-				end
-
-				%make results accessible to the rest of the GUI:
-				gui_put('bg_img_A',image1_bg);
-				if sequencer==1 %not time-resolved
-					gui_put('bg_img_B',image2_bg);
-				else
-					gui_put('bg_img_B',image1_bg); %timeresolved --> same bg image for a and b
-				end
-				set(handles.preview_preprocess, 'String', 'Apply and preview current frame');drawnow;
-				gui_toolsavailable(1)
-			else % user has checkbox enabled, but doesn't want to calculate the background...
-				set(handles.bg_subtract,'Value',0);
-			end
-
-		else
-			%disp('BG exists')
-		end
-
-	else
-		set(handles.bg_subtract,'Value',0);
-		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'])
-		uiwait
-	end
-end
-
 
 function gui_sliderdisp(target_axis) %this is the most important function, doing all the displaying
 handles=gui_gethand;
@@ -3698,52 +7967,142 @@ if capturing==0
 	end
 end
 
-
-function plot_update_Stats(x,y,u,v)
+function gui_sliderrange(reset)
+filepath=gui_retr('filepath');
 handles=gui_gethand;
-calu=gui_retr('calu');calv=gui_retr('calv');
-calxy=gui_retr('calxy');
-x=reshape(x,size(x,1)*size(x,2),1);
-y=reshape(y,size(y,1)*size(y,2),1);
-u=reshape(u,size(u,1)*size(u,2),1);
-v=reshape(v,size(v,1)*size(v,2),1);
-if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-	set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' px/frame'])
-	set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' px/frame'])
-	set (handles.maxu,'string', [num2str(max(u*calu,[],'omitnan')) ' px/frame'])
-	set (handles.minu,'string', [num2str(min(u*calu,[],'omitnan')) ' px/frame'])
-	set (handles.maxv,'string', [num2str(max(v*calv,[],'omitnan')) ' px/frame'])
-	set (handles.minv,'string', [num2str(min(v*calv,[],'omitnan')) ' px/frame'])
-else
-	set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' m/s'])
-	set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' m/s'])
-	set (handles.maxu,'string', [num2str(max(u*calu,[],'omitnan')) ' m/s'])
-	set (handles.minu,'string', [num2str(min(u*calu,[],'omitnan')) ' m/s'])
-	set (handles.maxv,'string', [num2str(max(v*calv,[],'omitnan')) ' m/s'])
-	set (handles.minv,'string', [num2str(min(v*calv,[],'omitnan')) ' m/s'])
+if gui_retr('video_selection_done') == 0
+	if size(filepath,1)>2
+		sliderstepcount=size(filepath,1)/2;
+		set(handles.fileselector, 'enable', 'on');
+		if reset==1
+			set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
+		else
+			set (handles.fileselector, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
+		end
+	else
+		sliderstepcount=1;
+		set(handles.fileselector, 'enable', 'off');
+		if reset==1
+			set (handles.fileselector,'value',1, 'min', 1,'max',2,'sliderstep', [0.5 0.5]);
+		else
+			set (handles.fileselector, 'min', 1,'max',2,'sliderstep', [0.5 0.5]);
+		end
+	end
+else % a video has been imported
+	%video_frame_selection=retr('video_frame_selection');
+	%sliderstepcount=numel(video_frame_selection)/2;
+	%set(handles.fileselector, 'enable', 'on');
+	%set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
+	sliderstepcount=size(filepath,1)/2;
+	set(handles.fileselector, 'enable', 'on');
+	if reset==1
+		set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
+	else
+		set (handles.fileselector, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
+	end
 end
 
-function [x_cal,y_cal] = calibrate_xy(x,y)
+function gui_switchui (who)
+handles=guihandles(getappdata(0,'hgui')); %#ok<*NASGU>
+
+if get(handles.zoomon,'Value')==1
+	set(handles.zoomon,'Value',0);
+	gui_zoomon_Callback(handles.zoomon)
+end
+if get(handles.panon,'Value')==1
+	set(handles.panon,'Value',0);
+	gui_panon_Callback(handles.panon)
+end
+
+turnoff=findobj('-regexp','Tag','multip');
+set(turnoff, 'visible', 'off');
+turnon=findobj('-regexp','Tag',who);
+set(turnon, 'visible', 'on');
+
+if strcmp(who,'multip25') %mask panel is active --> enable mask editing
+	set(handles.mask_edit_mode,'Value',1)
+	gui_sliderdisp(gui_retr('pivlab_axis'));
+else
+	set(handles.mask_edit_mode,'Value',2)
+end
+
+
+drawnow;
+
+function gui_togglepair_Callback(~, ~, ~)
+toggler=get(gco, 'value');
+gui_put ('toggler',toggler);
+filepath=gui_retr('filepath');
+capturing=gui_retr('capturing');
+if isempty(capturing)
+	capturing=0;
+end
+if capturing==0
+	if size(filepath,1) > 1 || gui_retr('video_selection_done') == 1
+		gui_sliderdisp(gui_retr('pivlab_axis'))
+		handles=gui_gethand;
+		if strncmp(get(handles.multip03, 'visible'), 'on',2)
+			preproc_preview_preprocess_Callback
+		end
+		selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
+		if gui_retr('video_selection_done') == 0
+			set(handles.filenamebox,'value',selected);
+		else
+			set(handles.filenamebox,'value',1);
+		end
+	end
+end
+
+function gui_toolsavailable(inpt,busy_msg)
+%0: disable all tools
+%1: re-enable tools that were previously also enabled
+hgui=getappdata(0,'hgui');
 handles=gui_gethand;
-x_axis_direction=get(handles.x_axis_direction,'value'); %1= increase to right, 2= increase to left
-y_axis_direction=get(handles.y_axis_direction,'value'); %1= increase to bottom, 2= increase to top
-size_of_the_image=gui_retr('size_of_the_image');
-sizex=size_of_the_image(2);
-sizey=size_of_the_image(1);
-if x_axis_direction == 1
-	x_cal=x;
-else
-	x_cal=sizex-x;
+if inpt==0
+	if get(handles.zoomon,'Value')==1
+		set(handles.zoomon,'Value',0);
+		gui_zoomon_Callback(handles.zoomon)
+	end
+	if get(handles.panon,'Value')==1
+		set(handles.panon,'Value',0);
+		gui_panon_Callback(handles.panon)
+	end
 end
-if y_axis_direction == 1
-	y_cal=y;
-else
-	y_cal=sizey-y;
+
+if inpt==1
+	delete(findobj('tag','busyhint'));
 end
-x_cal=x_cal*gui_retr('calxy');
-y_cal=y_cal*gui_retr('calxy');
-x_cal=x_cal-gui_retr('offset_x_true');
-y_cal=y_cal-gui_retr('offset_y_true');
+
+if exist('busy_msg','var') && ~isempty(busy_msg)
+	%additionally display banner that PIVlab is busy
+	if inpt==0
+		postix=get(gca,'XLim');postiy=get(gca,'YLim');text(postix(2)/2,postiy(2)/2,busy_msg,'HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',32, 'BackgroundColor', [0.25 0.25 0.25],'tag','busyhint','margin',30,'Clipping','on');
+	end
+end
+elementsOfCrime=findobj(hgui, 'type', 'uicontrol');
+elementsOfCrime2=findobj(hgui, 'type', 'uimenu');
+statuscell=get (elementsOfCrime, 'enable');
+wasdisabled=zeros(size(statuscell),'uint8');
+
+if inpt==0
+	set(elementsOfCrime, 'enable', 'off');
+	for i=1:size(statuscell,1)
+		if strncmp(statuscell{i,1}, 'off',3) ==1
+			wasdisabled(i)=1;
+		end
+	end
+	gui_put('wasdisabled', wasdisabled);
+	set(elementsOfCrime2, 'enable', 'off');
+else
+	wasdisabled=gui_retr('wasdisabled');
+	set(elementsOfCrime, 'enable', 'on');
+	set(elementsOfCrime(wasdisabled==1), 'enable', 'off');
+	set(elementsOfCrime2, 'enable', 'on');
+end
+set(handles.progress, 'enable', 'on');
+set(handles.overall, 'enable', 'on');
+set(handles.totaltime, 'enable', 'on');
+set(handles.messagetext, 'enable', 'on');
 
 function gui_veclick(~,~)
 %only active if vectors are displayed.
@@ -3867,156 +8226,398 @@ if typevector(info(1,1),info(1,2)) ~=0
 
 end
 
-function gui_toolsavailable(inpt,busy_msg)
-%0: disable all tools
-%1: re-enable tools that were previously also enabled
+function gui_zoom_reset_zoom(~,~)
+handles=gui_gethand;
+setappdata(getappdata(0,'hgui'),'xzoomlimit',[]);
+setappdata(getappdata(0,'hgui'),'yzoomlimit',[]);
+%zoom reset
+zoom out
+set(handles.zoomon,'Value',0);
+set(handles.panon,'Value',0);
+zoom(gca,'off')
+pan(gca,'off')
+expected_image_size=gui_retr('expected_image_size');
+set(gui_retr('pivlab_axis'),'xlim',[0.5 expected_image_size(2)+0.5])
+set(gui_retr('pivlab_axis'),'ylim',[0.5 expected_image_size(1)+0.5])
+
+function gui_zoomon_Callback(hObject, ~, ~)
 hgui=getappdata(0,'hgui');
 handles=gui_gethand;
-if inpt==0
-	if get(handles.zoomon,'Value')==1
-		set(handles.zoomon,'Value',0);
-		gui_zoomon_Callback(handles.zoomon)
-	end
-	if get(handles.panon,'Value')==1
-		set(handles.panon,'Value',0);
-		gui_panon_Callback(handles.panon)
-	end
+if get(hObject,'Value')==1
+	hCMZ = uicontextmenu;
+	hZMenu = uimenu('Parent',hCMZ,'Label','Reset Zoom / Pan','Callback',@gui_zoom_reset_zoom);
+	hZoom=zoom(gcf);
+	hZoom.UIContextMenu = hCMZ;
+	zoom(gui_retr('pivlab_axis'),'on')
+	set(handles.panon,'Value',0);
+else
+	zoom(gui_retr('pivlab_axis'),'off')
+	gui_put('xzoomlimit', get (gui_retr('pivlab_axis'), 'xlim'));
+	gui_put('yzoomlimit', get (gui_retr('pivlab_axis'), 'ylim'));
 end
 
-if inpt==1
-	delete(findobj('tag','busyhint'));
-end
-
-if exist('busy_msg','var') && ~isempty(busy_msg)
-	%additionally display banner that PIVlab is busy
-	if inpt==0
-		postix=get(gca,'XLim');postiy=get(gca,'YLim');text(postix(2)/2,postiy(2)/2,busy_msg,'HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',32, 'BackgroundColor', [0.25 0.25 0.25],'tag','busyhint','margin',30,'Clipping','on');
-	end
-end
-elementsOfCrime=findobj(hgui, 'type', 'uicontrol');
-elementsOfCrime2=findobj(hgui, 'type', 'uimenu');
-statuscell=get (elementsOfCrime, 'enable');
-wasdisabled=zeros(size(statuscell),'uint8');
-
-if inpt==0
-	set(elementsOfCrime, 'enable', 'off');
-	for i=1:size(statuscell,1)
-		if strncmp(statuscell{i,1}, 'off',3) ==1
-			wasdisabled(i)=1;
+function filepath = import_Check_if_image_files_exist(filepath, selected)
+%if the images are not found on the current path, then let user choose new path
+%not found: assign new path to all following elements.
+%check next file. not found -> assign new path to all following.
+%and so on...
+if isempty(filepath) == 0 && exist(filepath{selected},'file') ~=2
+	for i=1:size(filepath,1)
+		while exist(filepath{i,1},'file') ~=2
+			errordlg(['The image ' sprintf('\n') filepath{i,1} sprintf('\n') '(and probably some more...) could not be found.' sprintf('\n') 'Please select the path where the images are located.'],'File not found!','on')
+			uiwait
+			new_dir = uigetdir(pwd,'Please specify the path to all the images');
+			if new_dir==0
+				break
+			else
+				for j=i:size(filepath,1) %apply new path to all following imgs.
+					if ispc==1
+						zeichen=strfind(filepath{j,1},'\');
+					else
+						zeichen=strfind(filepath{j,1},'/');
+					end
+					currentobject=filepath{j,1};
+					currentpath=currentobject(1:(zeichen(1,size(zeichen,2))));
+					currentfile=currentobject(zeichen(1,size(zeichen,2))+1:end);
+					if ispc==1
+						filepath{j,1}=[new_dir '\' currentfile];
+					else
+						filepath{j,1}=[new_dir '/' currentfile];
+					end
+				end
+			end
+			gui_put('filepath',filepath);
+		end
+		if new_dir==0
+			break
 		end
 	end
-	gui_put('wasdisabled', wasdisabled);
-	set(elementsOfCrime2, 'enable', 'off');
-else
-	wasdisabled=gui_retr('wasdisabled');
-	set(elementsOfCrime, 'enable', 'on');
-	set(elementsOfCrime(wasdisabled==1), 'enable', 'off');
-	set(elementsOfCrime2, 'enable', 'on');
+	if gui_retr('video_selection_done') == 1 %create new video object with the updated file location.
+		gui_put('video_reader_object',VideoReader(filepath{1}));
+	end
 end
-set(handles.progress, 'enable', 'on');
-set(handles.overall, 'enable', 'on');
-set(handles.totaltime, 'enable', 'on');
-set(handles.messagetext, 'enable', 'on');
 
-
-function gui_clear_user_content
+function [currentimage,rawimage] = import_get_img(selected)
 handles=gui_gethand;
-gui_put('pathname',[]); %last path
-gui_put ('filename',[]); %only for displaying
-gui_put ('filepath',[]); %full path and filename for analyses
-set (handles.filenamebox, 'string', 'N/A');
-gui_put ('resultslist', []); %clears old results
-gui_put ('derived',[]);
-gui_put('displaywhat',1);%vectors
-gui_put('ismean',[]);
-gui_put('framemanualdeletion',[]);
-gui_put('manualdeletion',[]);
-gui_put('streamlinesX',[]);
-gui_put('streamlinesY',[]);
-set(handles.fileselector, 'value',1);
-
-set(handles.minintens, 'string', 0);
-set(handles.maxintens, 'string', 1);
-
-%Clear all things
-validate_clear_vel_limit_Callback %clear velocity limits
-roi_clear_roi_Callback
-%clear_mask_Callback:
-gui_put('masks_in_frame',[]);
-
-%reset zoom
-set(handles.panon,'Value',0);
-set(handles.zoomon,'Value',0);
-gui_put('xzoomlimit', []);
-gui_put('yzoomlimit', []);
-
-gui_sliderrange(1)
-gui_sliderdisp(gui_retr('pivlab_axis'))
-zoom reset
-
-function import_loadvideobutton_Callback(~,~,~)
-hgui=getappdata(0,'hgui');
-if ispc==1
-	pathname=[gui_retr('pathname') '\'];
+filepath = gui_retr('filepath');
+if gui_retr('video_selection_done') == 0
+	[~,~,ext] = fileparts(filepath{selected});
+	if strcmp(ext,'.b16')
+		currentimage=f_readB16(filepath{selected});
+		rawimage=currentimage;
+	else
+		%disp(filepath{selected})
+		currentimage=imread(filepath{selected});
+		rawimage=currentimage;
+	end
 else
-	pathname=[gui_retr('pathname') '/'];
+	video_reader_object = gui_retr('video_reader_object');
+	video_frame_selection=gui_retr('video_frame_selection');
+	currentimage = read(video_reader_object,video_frame_selection(selected));
+	rawimage=currentimage;
 end
-handles=gui_gethand;
-gui_displogo(0)
-setappdata(hgui,'video_selection_done',0);
-if gui_retr('parallel')==1 %videos are not yet supported in parallel processing. But an opened parallel pool (that is not used) slows down video processing
-	pivparpool('close')
-	disp('Parallel video processing is not yet supported by PIVlab. Parallel pool was therefore closed.')
+
+if get(handles.bg_subtract,'Value')==1
+	if mod(selected,2)==1 %uneven image nr.
+		bg_img = gui_retr('bg_img_A');
+	else
+		bg_img = gui_retr('bg_img_B');
+	end
+
+	if isempty(bg_img) %checkbox is enabled, but no bg is present
+		set(handles.bg_subtract,'Value',0);
+	else
+		if size(currentimage,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+			currentimage = rgb2gray(currentimage)-bg_img;
+		else
+			currentimage = currentimage-bg_img;
+		end
+	end
 end
-vid_import(pathname);
-uiwait
-if getappdata(hgui,'video_selection_done')
+%get and save the image size (assuming that every image of a session has the same size)
+size_of_the_image=size(currentimage);
+expected_image_size=gui_retr('expected_image_size');
+
+if isempty(gui_retr('size_warning_has_been_shown'))
+	gui_put('size_warning_has_been_shown',0);
+end
+if isempty(expected_image_size) %expected_image_size is empty, we have not read an image before
+	expected_image_size = size_of_the_image;
+	gui_put('expected_image_size',expected_image_size);
+else %expected_image_size is not empty, an image has been read before
+	if 	(expected_image_size(1) ~= size_of_the_image(1) || expected_image_size(2) ~= size_of_the_image(2)) && gui_retr('size_warning_has_been_shown') == 0
+		piv_cancelbutt_Callback
+		uiwait(warndlg('Error: All images in a session  MUST have the same size!'));
+		gui_put('size_warning_has_been_shown',1);
+		warning off
+		recycle('off');
+		delete('cancel_piv');
+		warning on
+	end
+end
+gui_put('size_of_the_image',size_of_the_image);
+currentimage(currentimage<0)=0; %bg subtraction may yield negative
+
+function import_load_session_Callback(auto_load_session, auto_load_session_filename)
+gui_put('num_handle_calls',0);
+sessionpath=gui_retr('sessionpath');
+if isempty(sessionpath)
+	sessionpath=gui_retr('pathname');
+end
+if auto_load_session ~= 1
+	[FileName,PathName, filterindex] = uigetfile({'*.mat','MATLAB Files (*.mat)'; '*.mat','mat'},'Load PIVlab session',fullfile(sessionpath, 'PIVlab_session.mat'));
+	gui_toolsavailable(0,'Busy, loading session...');drawnow
+else
+	[PathName,FileName,ext] = fileparts(auto_load_session_filename);
+	FileName = [FileName ext];
+end
+
+if isequal(FileName,0) | isequal(PathName,0)
+else
 	gui_put('expected_image_size',[])
-	pathname = getappdata(hgui,'pathname');
-	filename = getappdata(hgui,'filename');
-	filepath = getappdata(hgui,'filepath');
-	%save video file object in GUI
-	gui_put('video_reader_object',VideoReader(filepath{1}));
-	if get(handles.zoomon,'Value')==1
-		set(handles.zoomon,'Value',0);
-		gui_zoomon_Callback(handles.zoomon)
-	end
-	if get(handles.panon,'Value')==1
-		set(handles.panon,'Value',0);
-		gui_panon_Callback(handles.zoomon)
-	end
-	gui_put('xzoomlimit',[]);
-	gui_put('yzoomlimit',[]);
-	gui_sliderrange(1)
-	set (handles.filenamebox, 'string', filename);
-	gui_put('bg_img_A',[]);
-	gui_put('bg_img_B',[]);
-	gui_put ('resultslist', []); %clears old results
-	gui_put ('derived',[]);
-	gui_put('displaywhat',1);%vectors
-	gui_put('ismean',[]);
-	gui_put('framemanualdeletion',[]);
-	gui_put('manualdeletion',[]);
-	gui_put('streamlinesX',[]);
-	gui_put('streamlinesY',[]);
-	set(handles.fileselector, 'value',1);
-	set(handles.minintens, 'string', 0);
-	set(handles.maxintens, 'string', 1);
-	%Clear all things
-	validate_clear_vel_limit_Callback %clear velocity limits
-	roi_clear_roi_Callback
-	%clear_mask_Callback:
+	clear iptPointerManager
+	gui_put('sessionpath',PathName );
+	gui_put('derived',[]);
+	gui_put('resultslist',[]);
 	gui_put('masks_in_frame',[]);
+	gui_put('roirect',[]);
+	gui_put('velrect',[]);
+	gui_put('filename',[]);
+	gui_put('filepath',[]);
+	hgui=getappdata(0,'hgui');
+	warning off all
+	try
+		%even if a variable doesn't exist, this doesn't throw an error...
+		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu', 'calv','calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'colormap_steps', 'colormap_interpolation', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B','x_axis_direction','y_axis_direction','size_of_the_image','points_offsetx','points_offsety','offset_x_true','offset_y_true','bright_filter_thresh','contrast_filter_thresh','do_bright_filter','do_contrast_filter','repeat_last','repeat_last_thresh','do_corr2_filter','corr_filter_thresh','notch_L_thresh','notch_H_thresh','notch_filter','masks_in_frame');
+	catch
+		disp('Old version compatibility.')
+		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu','calv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_steps','colormap_choice', 'colormap_interpolation', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
+	end
+	names=fieldnames(vars);
+	for i=1:size(names,1)
+		setappdata(hgui,names{i},vars.(names{i}))
+	end
+	gui_put('existing_handles',[]);
+	gui_sliderrange(1)
+	handles=gui_gethand;
+
+	set(handles.clahe_enable,'value',gui_retr('clahe_enable'));
+	set(handles.clahe_size,'string',gui_retr('clahe_size'));
+	set(handles.enable_highpass,'value',gui_retr('enable_highpass'));
+	set(handles.highp_size,'string',gui_retr('highp_size'));
+
+	set(handles.wienerwurst,'value',gui_retr('wienerwurst'));
+	set(handles.wienerwurstsize,'string',gui_retr('wienerwurstsize'));
+
+	%set(handles.enable_clip,'value',retr('enable_clip'));
+	%set(handles.clip_thresh,'string',retr('clip_thresh'));
+	set(handles.enable_intenscap,'value',gui_retr('enable_intenscap'));
+	set(handles.intarea,'string',gui_retr('intarea'));
+	set(handles.step,'string',gui_retr('stepsize'));
+	set(handles.subpix,'value',gui_retr('subpix'));  %popup
+	set(handles.stdev_check,'value',gui_retr('stdev_check'));
+	set(handles.stdev_thresh,'string',gui_retr('stdev_thresh'));
+	set(handles.loc_median,'value',gui_retr('loc_median'));
+	set(handles.loc_med_thresh,'string',gui_retr('loc_med_thresh'));
+	set(handles.interpol_missing,'value',gui_retr('interpol_missing'));
+
+	set(handles.vectorscale,'string',gui_retr('vectorscale'));
+	set(handles.colormap_choice,'value',gui_retr('colormap_choice')); %popup
+	set(handles.colormap_steps,'value',gui_retr('colormap_steps'));
+	set(handles.colormap_interpolation,'value',gui_retr('colormap_interpolation'));
+	set(handles.addfileinfo,'value',gui_retr('addfileinfo'));
+	set(handles.add_header,'value',gui_retr('add_header'));
+	set(handles.delimiter,'value',gui_retr('delimiter'));%popup
+	set(handles.img_not_mask,'value',gui_retr('img_not_mask'));
+	set(handles.autoscale_vec,'value',gui_retr('autoscale_vec'));
+
+	set(handles.dcc, 'value',vars.dccmark);
+	set(handles.fftmulti, 'value',vars.fftmark);
+
+
+	try
+		set(handles.ensemble, 'value',vars.ensemblemark);
+	catch
+		vars.ensemblemark=0;
+	end
+
+
+	if vars.fftmark==1 || vars.ensemblemark ==1
+		set (handles.uipanel42,'visible','on')
+	else
+		set (handles.uipanel42,'visible','off')
+	end
+	set(handles.checkbox26, 'value',vars.pass2);
+	set(handles.checkbox27, 'value',vars.pass3);
+	set(handles.checkbox28, 'value',vars.pass4);
+
+	if vars.pass2 == 1
+		set(handles.edit50, 'enable','on')
+	else
+		set(handles.edit50, 'enable','off')
+	end
+	if vars.pass3 == 1
+		set(handles.edit51, 'enable','on')
+	else
+		set(handles.edit51, 'enable','off')
+	end
+	if vars.pass4 == 1
+		set(handles.edit52, 'enable','on')
+	else
+		set(handles.edit52, 'enable','off')
+	end
+	set(handles.edit50, 'string',vars.pass2val);
+	set(handles.edit51, 'string',vars.pass3val);
+	set(handles.edit52, 'string',vars.pass4val);
+	set(handles.text126, 'string',vars.step2);
+	set(handles.text127, 'string',vars.step3);
+	set(handles.text128, 'string',vars.step4);
+	set(handles.holdstream, 'value',vars.holdstream);
+	set(handles.streamlamount, 'string',vars.streamlamount);
+	set(handles.streamlcolor, 'value',vars.streamlcolor);
+	set(handles.streamlwidth, 'value',vars.streamlcolor);
+
+	try
+		%neu v1.5:
+		set(handles.mask_auto_box,'value',vars.mask_auto_box);
+		set(handles.Autolimit,'value',vars.Autolimit);
+		set(handles.minintens,'string',vars.minintens);
+		set(handles.maxintens,'string',vars.maxintens);
+		set(handles.CorrQuality,'Value',vars.CorrQuality_nr);
+		%neu v2.37
+		set(handles.enhance_images, 'Value',vars.enhance_disp);
+	catch
+		disp('Old version compatibility,')
+	end
+	try %neu v2.42
+		set(handles.interpol_missing2,'value',gui_retr('interpol_missing'));
+	catch
+	end
+
+	try %neu 2.42
+		set (handles.x_axis_direction,'value',vars.x_axis_direction);
+		set (handles.y_axis_direction,'value',vars.y_axis_direction);
+
+		set(handles.contrast_filter_thresh,'string',vars.contrast_filter_thresh);
+		set(handles.bright_filter_thresh,'string',vars.bright_filter_thresh);
+		set(handles.do_bright_filter,'Value',vars.do_bright_filter);
+		set(handles.do_contrast_filter,'Value',vars.do_contrast_filter);
+	catch
+	end
+
+	try
+		%neu v2.54
+		set(handles.do_corr2_filter,'value',vars.do_corr2_filter);
+		set(handles.corr_filter_thresh,'string',vars.corr_filter_thresh);
+		set(handles.notch_L_thresh,'string',vars.notch_L_thresh);
+		set(handles.notch_H_thresh,'string',vars.notch_H_thresh);
+		set(handles.notch_filter,'Value',vars.notch_filter);
+	catch
+		disp('corr filter / notch settings');
+	end
+
+	try
+		if vars.velrect(1,3)~=0 && vars.velrect(1,4)~=0
+			gui_put('velrect', vars.velrect);
+			validate_update_velocity_limits_information
+		end
+	catch
+	end
+
+	try
+		set(handles.realdist, 'String',vars.realdist_string);
+		set(handles.time_inp, 'String',vars.time_inp_string);
+
+		if isempty(vars.pointscali)==0
+			handles=gui_gethand;
+			calu=gui_retr('calu');calv=gui_retr('calv');
+			calxy=gui_retr('calxy');
+			if isfield(vars,'offset_x_true') == 1
+				offset_x_true = gui_retr('offset_x_true');
+			else
+				offset_x_true=0;
+			end
+			if isfield(vars,'offset_y_true') == 1
+				offset_y_true = gui_retr('offset_y_true');
+			else
+				offset_y_true=0;
+			end
+			calibrate_update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles)
+			calibrate_pixeldist_changed_Callback()
+		end
+	catch
+		disp('...')
+	end
+
+	try
+		if ~isempty(vars.bg_img_A)
+			set(handles.bg_subtract,'Value',1);
+		else
+			set(handles.bg_subtract,'Value',0);
+		end
+	catch
+		disp('Could not set bg checkbox')
+	end
+
+	%neu v2.52
+	try
+		set (handles.repeat_last,'Value',vars.repeat_last);
+		set(handles.edit52x,'String',vars.repeat_last_thresh);
+		piv_repeat_last_Callback
+	catch
+		disp('repeat_last didnt work4')
+	end
+
 	%reset zoom
 	set(handles.panon,'Value',0);
 	set(handles.zoomon,'Value',0);
 	gui_put('xzoomlimit', []);
 	gui_put('yzoomlimit', []);
-	set(handles.filenamebox,'value',1);
-	gui_sliderdisp(gui_retr('pivlab_axis')) %displays raw image when slider moves
+	gui_sliderdisp(gui_retr('pivlab_axis'))
+	try
+		if gui_retr('parallel')==1
+			modestr=' (parallel)';
+		else
+			modestr=' (serial)';
+		end
+		set(getappdata(0,'hgui'), 'Name',['PIVlab ' gui_retr('PIVver')  modestr '   [Path: ' vars.pathname ']']) %for people like me that always forget what dataset they are currently working on...
+	catch
+	end
 	zoom reset
-	gui_put('sequencer',0);%time-resolved = only possibility for video
+	try
+		set (handles.filenamebox, 'string', vars.filename);
+	catch
+	end
 end
+gui_toolsavailable(1)
+
+function import_load_settings_Callback(~, ~, ~)
+[FileName,PathName] = uigetfile('*.mat','Load PIVlab settings','PIVlab_settings.mat');
+if ~isequal(FileName,0)
+	handles=gui_gethand;
+	try
+		fileboxcontents=get (handles.filenamebox, 'string');
+	catch
+	end
+	import_read_panel_width (FileName,PathName) %read panel settings, apply, rebuild UI
+	gui_destroyUI %needed to adapt panel width etc. to changed values in the settings file.
+	gui_generateUI
+	import_read_settings (FileName,PathName) %When UI is set up, read settings.
+	gui_switchui('multip01')
+	try
+		gui_put('expected_image_size',[])
+		gui_put('existing_handles',[]);
+		handles=gui_gethand;
+		gui_sliderrange(1)
+		set (handles.filenamebox, 'string', fileboxcontents);
+		gui_sliderdisp(gui_retr('pivlab_axis'))
+	catch
+	end
+end
+
+function import_loadimgs_Callback(~, ~, ~)
+gui_switchui('multip01')
+delete(findobj('tag','hinting'))
 
 function import_loadimgsbutton_Callback(~,~,useGUI,path)
 hgui=getappdata(0,'hgui');
@@ -4187,998 +8788,1490 @@ if ~isequal(path,0)
 	end
 end
 
-function gui_sliderrange(reset)
-filepath=gui_retr('filepath');
+function import_loadvideobutton_Callback(~,~,~)
+hgui=getappdata(0,'hgui');
+if ispc==1
+	pathname=[gui_retr('pathname') '\'];
+else
+	pathname=[gui_retr('pathname') '/'];
+end
 handles=gui_gethand;
-if gui_retr('video_selection_done') == 0
-	if size(filepath,1)>2
-		sliderstepcount=size(filepath,1)/2;
-		set(handles.fileselector, 'enable', 'on');
-		if reset==1
-			set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
-		else
-			set (handles.fileselector, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
-		end
-	else
-		sliderstepcount=1;
-		set(handles.fileselector, 'enable', 'off');
-		if reset==1
-			set (handles.fileselector,'value',1, 'min', 1,'max',2,'sliderstep', [0.5 0.5]);
-		else
-			set (handles.fileselector, 'min', 1,'max',2,'sliderstep', [0.5 0.5]);
-		end
+gui_displogo(0)
+setappdata(hgui,'video_selection_done',0);
+if gui_retr('parallel')==1 %videos are not yet supported in parallel processing. But an opened parallel pool (that is not used) slows down video processing
+	pivparpool('close')
+	disp('Parallel video processing is not yet supported by PIVlab. Parallel pool was therefore closed.')
+end
+vid_import(pathname);
+uiwait
+if getappdata(hgui,'video_selection_done')
+	gui_put('expected_image_size',[])
+	pathname = getappdata(hgui,'pathname');
+	filename = getappdata(hgui,'filename');
+	filepath = getappdata(hgui,'filepath');
+	%save video file object in GUI
+	gui_put('video_reader_object',VideoReader(filepath{1}));
+	if get(handles.zoomon,'Value')==1
+		set(handles.zoomon,'Value',0);
+		gui_zoomon_Callback(handles.zoomon)
 	end
-else % a video has been imported
-	%video_frame_selection=retr('video_frame_selection');
-	%sliderstepcount=numel(video_frame_selection)/2;
-	%set(handles.fileselector, 'enable', 'on');
-	%set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
-	sliderstepcount=size(filepath,1)/2;
-	set(handles.fileselector, 'enable', 'on');
-	if reset==1
-		set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
-	else
-		set (handles.fileselector, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
+	if get(handles.panon,'Value')==1
+		set(handles.panon,'Value',0);
+		gui_panon_Callback(handles.zoomon)
 	end
+	gui_put('xzoomlimit',[]);
+	gui_put('yzoomlimit',[]);
+	gui_sliderrange(1)
+	set (handles.filenamebox, 'string', filename);
+	gui_put('bg_img_A',[]);
+	gui_put('bg_img_B',[]);
+	gui_put ('resultslist', []); %clears old results
+	gui_put ('derived',[]);
+	gui_put('displaywhat',1);%vectors
+	gui_put('ismean',[]);
+	gui_put('framemanualdeletion',[]);
+	gui_put('manualdeletion',[]);
+	gui_put('streamlinesX',[]);
+	gui_put('streamlinesY',[]);
+	set(handles.fileselector, 'value',1);
+	set(handles.minintens, 'string', 0);
+	set(handles.maxintens, 'string', 1);
+	%Clear all things
+	validate_clear_vel_limit_Callback %clear velocity limits
+	roi_clear_roi_Callback
+	%clear_mask_Callback:
+	gui_put('masks_in_frame',[]);
+	%reset zoom
+	set(handles.panon,'Value',0);
+	set(handles.zoomon,'Value',0);
+	gui_put('xzoomlimit', []);
+	gui_put('yzoomlimit', []);
+	set(handles.filenamebox,'value',1);
+	gui_sliderdisp(gui_retr('pivlab_axis')) %displays raw image when slider moves
+	zoom reset
+	gui_put('sequencer',0);%time-resolved = only possibility for video
 end
 
-function gui_fileselector_Callback(~, ~, ~)
-filepath=gui_retr('filepath');
-if size(filepath,1) > 1 || gui_retr('video_selection_done') == 1
+function import_read_panel_width (FileName,PathName)
+gui_put('num_handle_calls',0);
+handles=gui_gethand;
+try
+	load(fullfile(PathName,FileName)); %#ok<*LOAD>
+	gui_put ('panelwidth',panelwidth);
+catch
+end
+
+function import_read_settings (FileName,PathName)
+gui_put('num_handle_calls',0);
+handles=gui_gethand;
+try
+	load(fullfile(PathName,FileName));
+
+	set(handles.clahe_enable,'value',clahe_enable);
+	set(handles.clahe_size,'string',clahe_size);
+	set(handles.enable_highpass,'value',enable_highpass);
+	set(handles.highp_size,'string',highp_size);
+	set(handles.wienerwurst,'value',wienerwurst);
+	set(handles.wienerwurstsize,'string',wienerwurstsize);
+	%set(handles.enable_clip,'value',enable_clip);
+	%set(handles.clip_thresh,'string',clip_thresh);
+	set(handles.enable_intenscap,'value',enable_intenscap);
+	set(handles.intarea,'string',intarea);
+	set(handles.step,'string',stepsize);
+	set(handles.subpix,'value',subpix);  %popup
+	set(handles.stdev_check,'value',stdev_check);
+	set(handles.stdev_thresh,'string',stdev_thresh);
+	set(handles.loc_median,'value',loc_median);
+	set(handles.loc_med_thresh,'string',loc_med_thresh);
+	%set(handles.epsilon,'string',epsilon);
+	set(handles.interpol_missing,'value',interpol_missing);
+	set(handles.vectorscale,'string',vectorscale);
+	set(handles.colormap_choice,'value',colormap_choice); %popup
+	set(handles.colormap_steps,'value',colormap_steps);
+	set(handles.colormap_interpolation,'value',colormap_interpolation);
+	set(handles.addfileinfo,'value',addfileinfo);
+	set(handles.add_header,'value',add_header);
+	set(handles.delimiter,'value',delimiter);%popup
+	set(handles.img_not_mask,'value',img_not_mask);
+	set(handles.autoscale_vec,'value',autoscale_vec);
+
+	%set(handles.popupmenu16, 'value',imginterpol);
+	set(handles.dcc, 'value',dccmark);
+	set(handles.fftmulti, 'value',fftmark);
+	set(handles.ensemble, 'value',ensemblemark);
+	if fftmark==1 || ensemblemark == 1
+		set (handles.uipanel42,'visible','on')
+	else
+		set (handles.uipanel42,'visible','off')
+	end
+	set(handles.checkbox26, 'value',pass2);
+	set(handles.checkbox27, 'value',pass3);
+	set(handles.checkbox28, 'value',pass4);
+	if pass2 == 1
+		set(handles.edit50, 'enable','on')
+	else
+		set(handles.edit50, 'enable','off')
+	end
+	if pass3 == 1
+		set(handles.edit51, 'enable','on')
+	else
+		set(handles.edit51, 'enable','off')
+	end
+	if pass4 == 1
+		set(handles.edit52, 'enable','on')
+	else
+		set(handles.edit52, 'enable','off')
+	end
+
+	set(handles.edit50, 'string',pass2val);
+	set(handles.edit51, 'string',pass3val);
+	set(handles.edit52, 'string',pass4val);
+	set(handles.text126, 'string',step2);
+	set(handles.text127, 'string',step3);
+	set(handles.text128, 'string',step4);
+	set(handles.holdstream, 'value',holdstream);
+	set(handles.streamlamount, 'string',streamlamount);
+	set(handles.streamlcolor, 'value',streamlcolor);
+	set(handles.streamlwidth, 'value',streamlcolor);
+
+	set(handles.realdist, 'string',realdist);
+	set(handles.time_inp, 'string',time_inp);
+
+	set(handles.nthvect, 'string',nthvect);
+	set(handles.validr,'string',validr);
+	set(handles.validg,'string',validg);
+	set(handles.validb,'string',validb);
+	set(handles.validdr,'string',validdr);
+	set(handles.validdg,'string',validdg);
+	set(handles.validdb,'string',validdb);
+	set(handles.interpr,'string',interpr);
+	set(handles.interpg,'string',interpg);
+	set(handles.interpb,'string',interpb);
+	if exist('offset_x_true','var') == 0
+		offset_x_true=0;
+	end
+	if exist('offset_y_true','var') == 0
+		offset_y_true=0;
+	end
+
 	try
-		gui_sliderdisp(gui_retr('pivlab_axis'))
-	catch
+		gui_put('points_offsetx',points_offsetx);
+		gui_put('points_offsety',points_offsety);
+		gui_put('size_of_the_image',size_of_the_image);
+		set(handles.x_axis_direction,'value',x_axis_direction);
+		set(handles.y_axis_direction,'value',y_axis_direction);
+	catch %ME
+		%disp(ME)
 	end
-	handles=gui_gethand;
-	toggler=gui_retr('toggler');
-	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-	if gui_retr('video_selection_done') == 0
-		if numel(handles.filenamebox.String) >= selected
-			set(handles.filenamebox,'value',selected);
-		end
+	calu=gui_retr('calu');
+	calxy=gui_retr('calxy');
+	if (calu==1 || calu==-1) && calxy==1
 	else
-		set(handles.filenamebox,'value',1);
+		calibrate_update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles)
 	end
-end
-
-
-function gui_togglepair_Callback(~, ~, ~)
-toggler=get(gco, 'value');
-gui_put ('toggler',toggler);
-filepath=gui_retr('filepath');
-capturing=gui_retr('capturing');
-if isempty(capturing)
-	capturing=0;
-end
-if capturing==0
-	if size(filepath,1) > 1 || gui_retr('video_selection_done') == 1
-		gui_sliderdisp(gui_retr('pivlab_axis'))
-		handles=gui_gethand;
-		if strncmp(get(handles.multip03, 'visible'), 'on',2)
-			preproc_preview_preprocess_Callback
-		end
-		selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-		if gui_retr('video_selection_done') == 0
-			set(handles.filenamebox,'value',selected);
-		else
-			set(handles.filenamebox,'value',1);
+	gui_put('offset_x_true',offset_x_true);
+	gui_put('offset_y_true',offset_y_true);
+	gui_put('calxy',calxy);
+	gui_put('calu',calu);
+	gui_put('calv',calv);
+	if exist('pointscali','var')
+		if ~isempty(pointscali)
+			gui_put('pointscali',pointscali);
 		end
 	end
+catch
+	disp('something went wrong during settings loading')
 end
+try
+	%neu v1.5:
+	%set(handles.Repeated_box,'value',Repeated_box);
+	set(handles.mask_auto_box,'value',mask_auto_box);
+	set(handles.Autolimit,'value',Autolimit);
+	set(handles.minintens,'string',minintens);
+	set(handles.maxintens,'string',maxintens);
+	%neu v2.0
+	set(handles.panelslider,'Value',panelwidth);
+	gui_put ('panelwidth',panelwidth);
+	%neu v2.11
+	set(handles.CorrQuality,'Value',CorrQuality_nr);
+	%neu v2.37
+	set(handles.enhance_images, 'Value',enhance_disp);
+	%neu v2.42
+	set(handles.interpol_missing2,'value',interpol_missing);
+catch
+	disp('Old version compatibility-');
+end
+try
+	%neu v2.41
+	set(handles.contrast_filter_thresh,'string',contrast_filter_thresh);
+	set(handles.bright_filter_thresh,'string',bright_filter_thresh);
+	set(handles.do_bright_filter,'Value',do_bright_filter);
+	set(handles.do_contrast_filter,'Value',do_contrast_filter);
+catch
+	disp('img_filter_settings');
+end
+try
+	%neu v2.54
+	set(handles.do_corr2_filter,'value',do_corr2_filter);
+	set(handles.corr_filter_thresh,'string',corr_filter_thresh);
+	set(handles.notch_L_thresh,'String',notch_L_thresh);
+	set(handles.notch_H_thresh,'string',notch_H_thresh);
+	set(handles.notch_filter,'Value',notch_filter);
+catch
+	disp('corr filter / notch settings');
+end
+%neu v2.52
+try
+	set (handles.repeat_last,'Value',repeat_last);
+	set(handles.edit52x,'String',repeat_last_thresh);
+	piv_repeat_last_Callback
+catch
+	disp('repeat_last didnt work')
+end
+gui_put('expected_image_size',[])
+calibrate_pixeldist_changed_Callback()
 
-function piv_overlappercent
-handles=gui_gethand;
-perc=100-str2double(get(handles.step,'string'))/str2double(get(handles.intarea,'string'))*100;
-set (handles.steppercentage, 'string', ['= ' int2str(perc) '%']);
-
-function plot_scatterplotter_Callback(~, ~, ~)
+function mask_ROIevents(src,evt)
+evname = evt.EventName;
 handles=gui_gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
-resultslist=gui_retr('resultslist');
-if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-	if size(resultslist,1)>6 %filtered exists
-		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-			u=resultslist{10,currentframe};
-			v=resultslist{11,currentframe};
-		else
-			u=resultslist{7,currentframe};
-			if size(u,1)>1
-				v=resultslist{8,currentframe};
-			else
-				%filter was applied to some other frame than this
-				%load unfiltered results
-				u=resultslist{3,currentframe};
-				v=resultslist{4,currentframe};
+masks_in_frame=gui_retr('masks_in_frame');
+mask_positions=masks_in_frame{currentframe};
+switch(evname)
+	%case{'MovingROI'}
+	%disp(['ROI moving previous position: ' mat2str(evt.PreviousPosition)]);
+	%disp(['ROI moving current position: ' mat2str(evt.CurrentPosition)]);
+	case{'ROIMoved'}
+		if ~isempty(mask_positions)
+			[r,~]=find(strcmp(src.Tag,mask_positions(:,5)));
+			if ~isempty(r)
+				if strcmp(src.UserData,'ROI_object_circle')
+					mask_positions{r,2} = [src.Position src.Radius];
+				else
+					mask_positions{r,2}=src.Position; %update position of the moved ROI
+				end
+				%assignin('base',"mask_positions",mask_positions)
+				masks_in_frame{currentframe}=mask_positions;
+				gui_put('masks_in_frame',masks_in_frame)
 			end
 		end
-	else
-		u=resultslist{3,currentframe};
-		v=resultslist{4,currentframe};
-	end
-	calu=gui_retr('calu');calv=gui_retr('calv');
-	u=reshape(u,size(u,1)*size(u,2),1);
-	v=reshape(v,size(v,1)*size(v,2),1);
-	h=figure;
-	screensize=get( 0, 'ScreenSize' );
-	%rect = [screensize(3)/2-300, screensize(4)/2-250, 600, 500];
-	rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
-	set(h,'position', rect);
-	set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',['Scatter plot u & v, frame ' num2str(currentframe)],'tag', 'derivplotwindow');
-	h2=scatter(u*calu-gui_retr('subtr_u'),v*calv-gui_retr('subtr_v'),'r.');
-	set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-	if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-		xlabel('u [px/frame]');
-		ylabel('v [px/frame]');
-	else
-		xlabel('u [m/s]');
-		ylabel('v [m/s]');
-	end
+	case{'DeletingROI'}
+		%Find the mask with the unique guid and delete it
+		[r,~]=find(strcmp(src.Tag,mask_positions(:,5)));
+		mask_positions(r,:)=[];
+		masks_in_frame{currentframe}=mask_positions;
+		gui_put('masks_in_frame',masks_in_frame)
+	case{'ROIClicked'}
+		bringToFront(src);
 end
 
-function gui_pref_apply_Callback (~, ~)
-gui_put('num_handle_calls',0);
-hgui=getappdata(0,'hgui');
+function mask_add_Callback(~,~,type)
+%masken sollten nur im Maskenpanel als ROIs angezeigt werden ud editierbar sein. Ansonsten als Pixeloverlay. Oder als schnell zecihnendes Polygon. bzw. auch gerne als ROI objekt ohne hittest und editable
 handles=gui_gethand;
-panelwidth=round(get(handles.panelslider,'Value'));
-gui_put('panelwidth',panelwidth);
-gui_put('quickwidth',panelwidth);
-gui_destroyUI
-gui_generateUI
-gui_MainWindow_ResizeFcn(gcf)
-gui_preferences_Callback
-gui_clear_user_content
-gui_displogo(1)
-%PIVlab should clear all user data here...
-
-function piv_dcc_Callback(hObject, ~, ~)
-handles=gui_gethand;
-if get(hObject,'Value')==1
-	set(handles.fftmulti,'value',0)
-	set(handles.ensemble,'value',0)
-
-	set(handles.uipanel42,'visible','off')
-	set(handles.CorrQuality,'visible','off')
-	set(handles.text914,'visible','off')
-	set(handles.mask_auto_box,'visible','off')
-	%set(handles.AnalyzeAll,'visible','on')
-	set(handles.AnalyzeSingle,'visible','on')
-	set(handles.Settings_Apply_current,'visible','on')
-
-else
-	set(handles.dcc,'value',1)
-end
-piv_dispinterrog
-
-function [imagedata,croprect]=export_autocrop (file,fmt)
-%problem, entweder Verfahren nicht geeignet oder irgendein Matlab bug...
-if fmt ~=3
-	A=imread(file);
-else
-	A=file;
-end
-B=rgb2gray(A);
-
-%rows (y) detect white borders
-val=mean(B,2);
-startcropy = find(val~=255,1,'first');
-if isempty (startcropy)
-	startcropy=1;
-end
-
-endcropy = find(val~=255,1,'last');
-if isempty (endcropy)
-	endcropy=size(B,1);
-end
-
-%disp([num2str(startcropy) '  '  num2str(endcropy)])
-
-%cols (y) detect white borders
-val=mean(B,1);
-startcropx = find(val~=255,1,'first');
-if isempty (startcropx)
-	startcropx=1;
-end
-
-endcropx = find(val~=255,1,'last');
-if isempty (endcropx)
-	endcropx=size(B,2);
-end
-%disp([num2str(startcropx) '  '  num2str(endcropx)])
-
-
-%crop image data
-A=A(startcropy:endcropy,startcropx:endcropx,:);
-
-%overwrite file
-if fmt==1 %jpg
-	imwrite(A,file,'quality', 100);
-elseif fmt == 0 %png
-	imwrite(A,file);
-elseif fmt == 3 %video
-	imagedata=A;
-end
-croprect=[startcropy endcropy startcropx endcropx];
-
-
-function export_mat_file_save (currentframe,FileName,PathName,type)
-resultslist=gui_retr('resultslist');
-if isempty(resultslist)==0
-	derived=gui_retr('derived');
-	calxy=gui_retr('calxy');
-	calu=gui_retr('calu');calv=gui_retr('calv');
-	nrframes=size(resultslist,2);
-
-	if size(resultslist,1)< 11
-		resultslist{11,nrframes}=[]; %make sure resultslist has cells for all params
-	end
-	if isempty(derived)==0
-		if size(derived,1)<= 10 || size(derived,2) < nrframes
-			derived{11,nrframes}=[]; %make sure derived has cells for all params
-		end
-	else
-		derived=cell(11,nrframes);
-	end
-
-	if calxy==1 && (calu==1 ||calu==-1)
-		units='[px] respectively [px/frame]';
-	else
-		units='[m] respectively [m/s]';
-	end
-	%ohne alles: 6 hoch
-	%mit filtern: 11 hoch
-	%mit smoothed, 11 hoch und inhalt...
-	u_original=cell(nrframes,1);
-	v_original=u_original;
-	x=u_original;
-	y=u_original;
-	typevector_original=u_original;
-	u_filtered=u_original;
-	v_filtered=v_original;
-	typevector_filtered=u_original;
-	u_smoothed=u_original;
-	v_smoothed=u_original;
-	vorticity=cell(size(derived,2),1);
-	velocity_magnitude=vorticity;
-	u_component=vorticity;
-	v_component=vorticity;
-	divergence=vorticity;
-	vortex_locator=vorticity;
-	shear_rate=vorticity;
-	strain_rate=vorticity;
-	LIC=vorticity;
-	vectorangle=vorticity;
-	if type==1
-		nrframes=1;
-	end
-
-
-	%hier unterscheiden:nur ein frame oder all?
-
-	for i=1:nrframes
-		if type==2 %all frames
-			currentframe=i;
-		end
-		[x_cal,y_cal]=calibrate_xy (resultslist{1,currentframe},resultslist{2,currentframe});
-		x{i,1}=x_cal;
-		y{i,1}=y_cal;
-
-		u_original{i,1}=resultslist{3,currentframe}*calu;
-		v_original{i,1}=resultslist{4,currentframe}*calv;
-		typevector_original{i,1}=resultslist{5,currentframe};
-		u_filtered{i,1}=resultslist{7,currentframe}*calu;
-		v_filtered{i,1}=resultslist{8,currentframe}*calv;
-		typevector_filtered{i,1}=resultslist{9,currentframe};
-		u_smoothed{i,1}=resultslist{10,currentframe}*calu;
-		v_smoothed{i,1}=resultslist{11,currentframe}*calv;
-
-		vorticity{i,1}=derived{1,currentframe};
-		velocity_magnitude{i,1}=derived{2,currentframe};
-		u_component{i,1}=derived{3,currentframe};
-		v_component{i,1}=derived{4,currentframe};
-		divergence{i,1}=derived{5,currentframe};
-		vortex_locator{i,1}=derived{6,currentframe};
-		shear_rate{i,1}=derived{7,currentframe};
-		strain_rate{i,1}=derived{8,currentframe};
-		LIC{i,1}=derived{9,currentframe};
-		vectorangle{i,1}=derived{10,currentframe};
-		correlation_map{i,1}=derived{11,currentframe}; %#ok<AGROW>
-	end
-	if type == 1 %nur ein frame
-		x=x{i,1};
-		y=y{i,1};
-		u_original=u_original{i,1};
-		v_original=v_original{i,1};
-		typevector_original=typevector_original{i,1};
-		u_filtered=u_filtered{i,1};
-		v_filtered=v_filtered{i,1};
-		typevector_filtered=typevector_filtered{i,1};
-		u_smoothed=u_smoothed{i,1};
-		v_smoothed=v_smoothed{i,1};
-
-		vorticity=vorticity{i,1};
-		velocity_magnitude=velocity_magnitude{i,1};
-		u_component=u_component{i,1};
-		v_component=v_component{i,1};
-		divergence=divergence{i,1};
-		vortex_locator=vortex_locator{i,1};
-		shear_rate=shear_rate{i,1};
-		strain_rate=strain_rate{i,1};
-		LIC=LIC{i,1};
-		vectorangle=vectorangle{i,1};
-		correlation_map=correlation_map{i,1};
-	end
-end
-
-information={'The first dimension of the variables is the frame number.';'The variables contain all data that was calculated in the PIVlab GUI.';'If some data was not calculated, the corresponding cell is empty.';'Typevector is 0 for masked vector, 1 for regular vector, 2 for filtered vector';'u_original and v_original are the unmodified velocities from the cross-correlation.';'u_filtered and v_filtered is the above incl. your data validation selection.';'u_smoothed and v_smoothed is the above incl. your smoothing selection.'};
-save(fullfile(PathName,FileName), 'x','y','u_original','v_original','typevector_original','u_filtered','v_filtered','typevector_filtered','u_smoothed','v_smoothed','vorticity','velocity_magnitude','u_component','v_component','divergence','vortex_locator','shear_rate','strain_rate','LIC','calxy','calu', 'calv','units','information','vectorangle','correlation_map');
-%}
-
-function export_file_save (currentframe,FileName,PathName,type)
-handles=gui_gethand;
-resultslist=gui_retr('resultslist');
-derived=gui_retr('derived');
-filename=gui_retr('filename');
-calu=gui_retr('calu');calv=gui_retr('calv');
-calxy=gui_retr('calxy');
-if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-	x=resultslist{1,currentframe};
-	y=resultslist{2,currentframe};
-	[x_cal,y_cal]=calibrate_xy (x,y);
-
-	if size(resultslist,1)>6 %filtered exists
-		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-			u=resultslist{10,currentframe};
-			v=resultslist{11,currentframe};
-			typevector=resultslist{9,currentframe};
-			if numel(typevector)==0%happens if user smoothes sth without NaN and without validation
-				typevector=resultslist{5,currentframe};
-			end
-		else
-			u=resultslist{7,currentframe};
-			if size(u,1)>1
-				v=resultslist{8,currentframe};
-				typevector=resultslist{9,currentframe};
-			else
-				%filter was applied to some other frame than this
-				%load unfiltered results
-				u=resultslist{3,currentframe};
-				v=resultslist{4,currentframe};
-				typevector=resultslist{5,currentframe};
-			end
-		end
-	else
-		u=resultslist{3,currentframe};
-		v=resultslist{4,currentframe};
-		typevector=resultslist{5,currentframe};
-	end
-end
-u(typevector==0)=NaN;
-v(typevector==0)=NaN;
-subtract_u=gui_retr('subtr_u');
-subtract_v=gui_retr('subtr_v');
-
-if type==1 %ascii file
-	delimiter=get(handles.delimiter, 'value');
-	if delimiter==1
-		delimiter=',';
-	elseif delimiter==2
-		delimiter='\t';
-	elseif delimiter==3
-		delimiter=' ';
-	end
-	if get(handles.addfileinfo, 'value')==1
-		header1=['PIVlab, ASCII chart output - ' char(datetime('today'))];
-		header2=['FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(calu)];
-	else
-		header1=[];
-		header2=[];
-	end
-	if get(handles.add_header, 'value')==1
-		if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-			if get(handles.export_vort, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
-				header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'Vector type [-]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'dcev [1]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
-			else
-				header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'Vector type [-]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
-			end
-		else
-			if get(handles.export_vort, 'Value') == 1  %alle derivatives exportieren, kalibriert
-
-				header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'dcev [1]' delimiter 'simple shear [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]'];
-			else
-				header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
-			end
-		end
-	else
-		header3=[];
-	end
-	if isempty(header1)==0
-		fid = fopen(fullfile(PathName,FileName), 'w');
-		fprintf(fid, [header1 '\r\n']);
-		fclose(fid);
-	end
-	if isempty(header2)==0
-		fid = fopen(fullfile(PathName,FileName), 'a');
-		fprintf(fid, [header2 '\r\n']);
-		fclose(fid);
-	end
-	if isempty(header3)==0
-		fid = fopen(fullfile(PathName,FileName), 'a');
-		fprintf(fid, [header3 '\r\n']);
-		fclose(fid);
-	end
-	if get(handles.export_vort, 'Value') == 1 %sollen alle derivatives exportiert werden?
-		plot_derivative_calc(currentframe,2,1); %vorticity
-		plot_derivative_calc(currentframe,3,1); %magnitude
-		%u und v habe ich ja...
-		plot_derivative_calc(currentframe,6,1); %divergence
-		plot_derivative_calc(currentframe,7,1); %dcev
-		plot_derivative_calc(currentframe,8,1); %shear
-		plot_derivative_calc(currentframe,9,1); %strain
-		plot_derivative_calc(currentframe,11,1); %vectorangle
-		derived=gui_retr('derived');
-		vort=derived{2-1,currentframe};
-		magn=derived{3-1,currentframe};
-		div=derived{6-1,currentframe};
-		dcev=derived{7-1,currentframe};
-		shear=derived{8-1,currentframe};
-		strain=derived{9-1,currentframe};
-		vectorangle=derived{11-1,currentframe};
-		%correlation_map=derived{12-1,currentframe};
-		%wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
-		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
-	else %no derivatives.
-		%wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
-		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
-	end
-	dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc');
-end %type==1
-
-if type==2 %NOT USED ANYMORE matlab file
-end
-
-if type==3 %paraview vtk PARAVIEW DATEN OHNE die ganzen derivatives.... Berechnet man doch eh direkt in Paraview.
-	u=u*calu-subtract_u;
-	v=v*calv-subtract_v;
-
-	nr_of_elements=numel(x_cal);
-	fid = fopen(fullfile(PathName,FileName), 'w');
-	if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-		info='[px/frame]';
-	else
-		info='[m/s]';
-	end
-	%ASCII file header
-	fprintf(fid, '# vtk DataFile Version 3.0\n');
-	fprintf(fid, ['VTK from PIVlab ' info '\n']);
-	fprintf(fid, 'BINARY\n\n');
-	fprintf(fid, 'DATASET STRUCTURED_GRID\n');
-	fprintf(fid, ['DIMENSIONS ' num2str(size(x_cal,1)) ' ' num2str(size(x_cal,2)) ' ' num2str(size(x_cal,3)) '\n']);
-	fprintf(fid, ['POINTS ' num2str(nr_of_elements) ' float\n']);
-	fclose(fid);
-
-	%append binary x,y,z data
-	fid = fopen(fullfile(PathName,FileName), 'a');
-	fwrite(fid, [reshape(x_cal,1,nr_of_elements);  reshape(y_cal,1,nr_of_elements); reshape(y_cal,1,nr_of_elements)*0],'float','b');
-
-	%append another ASCII sub header
-	fprintf(fid, ['\nPOINT_DATA ' num2str(nr_of_elements) '\n']);
-	fprintf(fid, 'VECTORS velocity_vectors float\n');
-
-	%append binary u,v,w data
-	fwrite(fid, [reshape(u,1,nr_of_elements);  reshape(v,1,nr_of_elements); reshape(v,1,nr_of_elements)*0],'float','b');
-
-	fclose(fid);
-
-end %type3
-
-if type==4 %tecplot file
-	delimiter = ' ';
-	header1=['# PIVlab by W.Th. & E.J.S., TECPLOT output - ' char(datetime('today'))];
-	header2=['# FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(calu)];
-	if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-		if get(handles.export_vort_tec, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
-			header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'dcev [1]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
-			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "dcev", "simple_shear", "simple_strain", "vector_direction"';
-		else
-			header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
-			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
-		end
-	else
-		if get(handles.export_vort_tec, 'Value') == 1  %alle derivatives exportieren, kalibriert
-			header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'dcev [1]' delimiter 'simple shear [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]'];
-			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "dcev", "simple_shear", "simple_strain", "vector_direction"';
-		else
-			header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
-			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
-		end
-	end
-	header4 = ['TITLE = "PIVlab frame: ' int2str(currentframe) '"'];
-	header6 = ['ZONE I=' int2str(size(x_cal,2)) ', J=' int2str(size(x_cal,1)) ', K=1, F=POINT, T="' int2str(currentframe) '"'];
-
-	fid = fopen(fullfile(PathName,FileName), 'w');
-	fprintf(fid, [header1 '\r\n' header2 '\r\n' header3 '\r\n' header4 '\r\n' header5 '\r\n' header6 '\r\n']);
-	fclose(fid);
-
-	if get(handles.export_vort_tec, 'Value') == 1 %sollen alle derivatives exportiert werden?
-		plot_derivative_calc(currentframe,2,1); %vorticity
-		plot_derivative_calc(currentframe,3,1); %magnitude
-		%u und v habe ich ja...
-		plot_derivative_calc(currentframe,6,1); %divergence
-		plot_derivative_calc(currentframe,7,1); %dcev
-		plot_derivative_calc(currentframe,8,1); %shear
-		plot_derivative_calc(currentframe,9,1); %strain
-		plot_derivative_calc(currentframe,11,1); %vectorangle
-		%derivative_calc(currentframe,12,1); %correlation coefficient
-		derived=gui_retr('derived');
-		vort=derived{2-1,currentframe};
-		magn=derived{3-1,currentframe};
-		div=derived{6-1,currentframe};
-		dcev=derived{7-1,currentframe};
-		shear=derived{8-1,currentframe};
-		strain=derived{9-1,currentframe};
-		vectorangle=derived{11-1,currentframe};
-		%correlation_map=derived{12-1,currentframe};
-		nanmarker=zeros(size(x));
-		nanmarker(isnan(u))=1;
-		%Nans mit nullen fÃ¼llen
-		u(isnan(u))=0;
-		v(isnan(v))=0;
-		vort(isnan(vort))=0;
-		magn(isnan(magn))=0;
-		div(isnan(div))=0;
-		dcev(isnan(dcev))=0;
-		shear(isnan(shear))=0;
-		strain(isnan(strain))=0;
-		vectorangle(isnan(vectorangle))=0;
-		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
-	else
-		nanmarker=zeros(size(x));
-		nanmarker(isnan(u))=1;
-		u(isnan(u))=0;
-		v(isnan(v))=0;
-		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1)];
-	end
-	wholeLOT=sortrows(wholeLOT,2);
-
-	dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc');
-end %fÃ¼r mehrere Zones: einfach header6 nochmal appenden, dann whileLOT fÃ¼r den nÃ¤chsten frame berechnen und appenden etc...
-% DrÃ¼cken von "Save current": put('TecplotMultisave',0);Tecplotcallback.
-%DrÃ¼cken von "Save all": put('TecplotMultisave',1);Tecplotcallback;put('TecplotMultisave',0)
-%type==4
-
-
-function roi_select_Callback(~, ~, ~)
+%variable masks_in_frame ist cell mit inhalt mask_positions für jeden frame (nicht doppelt machen...)
 filepath=gui_retr('filepath');
-handles=gui_gethand;
-if size(filepath,1) > 1 || gui_retr('video_selection_done') == 1
-	delete(findobj('tag','warning'));
-	gui_toolsavailable(0);
-	toggler=gui_retr('toggler');
-	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-	filepath=gui_retr('filepath');
-	delete(findobj('tag', 'RegionOfInterest'));
-	roi = images.roi.Rectangle;
-	%roi.EdgeAlpha=0.75;
-	roi.FaceAlpha=0.05;
-	roi.LabelVisible = 'on';
-	roi.Tag = 'RegionOfInterest';
-	roi.Color = 'g';
-	roi.StripeColor = 'k';
-	roirect = gui_retr('roirect');
-	delete(findobj('tag', 'roiplot'));
-	if ~isempty(roirect)
-		roi=drawrectangle(gui_retr('pivlab_axis'),'Position',roirect);
-		%roi.EdgeAlpha=0.75;
-		roi.FaceAlpha=0.05;
-		roi.LabelVisible = 'on';
-		roi.Tag = 'RegionOfInterest';
-		roi.Color = 'g';
-		roi.StripeColor = 'k';
-	else
-		axes(gui_retr('pivlab_axis'))
-		draw(roi);
+if size(filepath,1) > 1 %did the user load images?
+	set(handles.mask_edit_mode,'Value',1) %switch to edit mask mode when drawing a new mask.
+	gui_sliderdisp(gui_retr('pivlab_axis'));
+	currentframe=floor(get(handles.fileselector, 'value'));
+	masks_in_frame=gui_retr('masks_in_frame');
+	if isempty(masks_in_frame)
+		%masks_in_frame=cell(currentframe,1);
+		masks_in_frame=cell(1,currentframe);
 	end
-	addlistener(roi,'MovingROI',@roi_RegionOfInterestevents);
-	addlistener(roi,'DeletingROI',@roi_RegionOfInterestevents);
-	dummyevt.EventName = 'MovingROI';
-	roi_RegionOfInterestevents(roi,dummyevt); %run the moving event once to update displayed length
-	%put ('roirect',roi.Position);
-	gui_toolsavailable(1);
-end
 
-function roi_clear_roi_Callback(~, ~, ~)
-handles=gui_gethand;
-delete(findobj('tag', 'RegionOfInterest'))
-delete(findobj('tag', 'roiplot'));
-gui_put ('roirect',[]);
-set(handles.roi_hint, 'String', 'ROI inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
-set(handles.ROI_Man_x,'String','');
-set(handles.ROI_Man_y,'String','');
-set(handles.ROI_Man_w,'String','');
-set(handles.ROI_Man_h,'String','');
+	if numel(masks_in_frame)<currentframe
+		mask_positions=cell(0);
+	else
+		mask_positions=masks_in_frame{currentframe};
+	end
+	if isempty(mask_positions)
+		mask_positions=cell(0);
+	end
+	masknums=size(mask_positions,1);
+	if strcmp(type,'freehand')
+		roi = images.roi.Freehand;
+		roi.Multiclick=0;
+	elseif strcmp(type,'assisted')
+		roi = images.roi.AssistedFreehand;
+		type='freehand';
+	elseif strcmp(type,'rectangle')
+		roi = images.roi.Rectangle;
+	elseif strcmp(type,'polygon')
+		roi = images.roi.Polygon;
+	elseif strcmp(type,'circle')
+		roi = images.roi.Circle;
+	end
+	recommended_colors=parula(7);
+	roi.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
+	roi.FaceAlpha=0.75;
+	roi.LabelVisible = 'off';
+	roi.UserData=['ROI_object_' type];
 
+	[~,guid] = fileparts(tempname);
+	roi.Tag = guid; %unique id for every ROImask object.
+	%addlistener(roi,'MovingROI',@ROIevents);
+	gui_toolsavailable(0)
 
-function roi_updateROIinfo
-handles=gui_gethand;
-roirect=gui_retr('roirect');
-set(handles.ROI_Man_x,'String',int2str(roirect(1)));
-set(handles.ROI_Man_y,'String',int2str(roirect(2)));
-set(handles.ROI_Man_w,'String',int2str(roirect(3)));
-set(handles.ROI_Man_h,'String',int2str(roirect(4)));
-set(handles.roi_hint, 'String', 'ROI active' , 'backgroundcolor', [0.5 1 0.5]);
-
-function roi_dispStaticROI(target_axis)
-handles=gui_gethand;
-delete(findobj(target_axis,'tag', {'RegionOfInterest' 'roiplot'}));
-roirect=gui_retr('roirect');
-x=[roirect(1)  roirect(1)+roirect(3) roirect(1)+roirect(3)  roirect(1)            roirect(1) ];
-y=[roirect(2)  roirect(2)            roirect(2)+roirect(4)  roirect(2)+roirect(4) roirect(2) ];
-rectangle('Position',roirect,'LineWidth',1,'LineStyle','-','edgecolor','b','tag','roiplot')
-rectangle('Position',roirect,'LineWidth',1,'LineStyle',':','edgecolor','y','tag','roiplot')
-
-
-function preproc_preview_preprocess_Callback(~, ~, ~)
-filepath=gui_retr('filepath');
-if size(filepath,1) >1 || gui_retr('video_selection_done') == 1
+	draw(roi);
+	addlistener(roi,'ROIMoved',@mask_ROIevents);
+	addlistener(roi,'DeletingROI',@mask_ROIevents);
+	addlistener(roi,'ROIClicked',@mask_ROIevents);
+	gui_toolsavailable(1)
 	handles=gui_gethand;
-	toggler=gui_retr('toggler');
-	filepath=gui_retr('filepath');
-	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-	if gui_retr('video_selection_done') == 0 && gui_retr('parallel')==1% this is not nice, duplicated functions, one for parallel and one for video....
-		preproc_generate_BG_img_parallel
-	else
-		preproc_generate_BG_img
-	end
-	[img,~]=import_get_img(selected);
-	clahe=get(handles.clahe_enable,'value');
-	highp=get(handles.enable_highpass,'value');
-	%clip=get(handles.enable_clip,'value');
-	intenscap=get(handles.enable_intenscap, 'value');
-	clahesize=str2double(get(handles.clahe_size, 'string'));
-	highpsize=str2double(get(handles.highp_size, 'string'));
-	wienerwurst=get(handles.wienerwurst, 'value');
-	wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-
-	preproc_Autolimit_Callback
-	minintens=str2double(get(handles.minintens, 'string'));
-	maxintens=str2double(get(handles.maxintens, 'string'));
-
-	%clipthresh=str2double(get(handles.clip_thresh, 'string'));
-	roirect=gui_retr('roirect');
-	if size (roirect,2)<4
-		roirect=[1,1,size(img,2)-1,size(img,1)-1];
-	end
-	out = PIVlab_preproc (img,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-	pivlab_axis=gui_retr('pivlab_axis');
-	image(out, 'parent',pivlab_axis, 'cdatamapping', 'scaled');
-	colormap('gray');
-	axis image;
-	set(gca,'ytick',[]);
-	set(gca,'xtick',[]);
-	roirect=gui_retr('roirect');
-	if size(roirect,2)>1
-		roi_dispStaticROI(gui_retr('pivlab_axis'))
-	end
-	currentframe=2*floor(get(handles.fileselector, 'value'))-1;
+	currentframe=floor(get(handles.fileselector, 'value'));
+	masks_in_frame = mask_update_mask_memory(roi,currentframe,masks_in_frame);
+	gui_put('masks_in_frame',masks_in_frame);
 end
 
-function export_preprocess_Callback(~, ~, ~)
+function mask_automask_generate_all_Callback (~,~,~)
+handles=gui_gethand;
 filepath=gui_retr('filepath');
+if size(filepath,1) > 1 %did the user load images?
+	handles=gui_gethand;
+	if gui_retr('video_selection_done') == 0
+		num_frames_to_process=floor(size(filepath,1)/2)+1;
+	else
+		video_frame_selection=gui_retr('video_frame_selection');
+		num_frames_to_process=floor(numel(video_frame_selection)/2)+1;
+	end
+	mask_generator_settings=mask_get_mask_generator_settings();
+	gui_put('masks_in_frame',[]);%remove existing masks before calculating new ones.
+	%masks_in_frame=retr('masks_in_frame');
+	%resulting_masks_in_frame_cell=cell(0);
+	%if retr('video_selection_done') == 1 || retr('parallel')==0 %if post-processing a video, parallelization cannot be used.
+	if gui_retr('video_selection_done')==0
+		num_frames_to_process = size(filepath,1);
+	else
+		video_frame_selection=gui_retr('video_frame_selection');
+		num_frames_to_process = numel(video_frame_selection);
+	end
+	gui_toolsavailable(0,'Busy, please wait...')
+	for i=1:2:num_frames_to_process
+		[~,piv_image_A]=import_get_img(i);
+		[~,piv_image_B]=import_get_img(i+1);
+		if size(piv_image_A,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+			piv_image_A = rgb2gray(piv_image_A);
+			piv_image_B = rgb2gray(piv_image_B);
+		end
+		pixel_mask=mask_pixel_mask_from_piv_image(piv_image_A,piv_image_B,mask_generator_settings);
+		set (handles.automask_generate_all,'String', ['Progress: ' num2str(round(i/num_frames_to_process*100)) ' %']);
+		drawnow limitrate
+		blocations = bwboundaries(pixel_mask,'holes');
+		masks_in_frame=gui_retr('masks_in_frame');
+		masks_in_frame=mask_px_to_rois(blocations,(i+1)/2,masks_in_frame);
+		gui_put('masks_in_frame',masks_in_frame);
+		mask_redraw_masks
+	end
+	set (handles.automask_generate_all,'String', 'Make mask for all frames');
+	gui_toolsavailable(1)
+	%{
+	else %not using a video file --> parallel processing possible
+		slicedfilepath1=cell(0);
+		slicedfilepath2=cell(0);
+		for i=1:2:size(filepath,1)%num_frames_to_process
+			k=(i+1)/2;
+			slicedfilepath1{k}=filepath{i};
+			slicedfilepath2{k}=filepath{i+1};
+		end
+		parfor i=1:num_frames_to_process-1
+			%% load images in a parfor loop
+			[~,~,ext] = fileparts(slicedfilepath1{i});
+			if strcmp(ext,'.b16')
+				currentimage1=f_readB16(slicedfilepath1{i});
+				currentimage2=f_readB16(slicedfilepath2{i});
+			else
+				currentimage1=imread(slicedfilepath1{i});
+				currentimage2=imread(slicedfilepath2{i});
+			end
+			pixel_mask=pixel_mask_from_piv_image(currentimage1,currentimage2,mask_generator_settings);
+			blocations = bwboundaries(pixel_mask,'holes');
+			resulting_masks_in_frame_cell{i}=px_to_rois(blocations,i,masks_in_frame);
+		end
+		for i=1:num_frames_to_process-1
+		masks_in_frame{i,1}=resulting_masks_in_frame_cell{i}{i};
+	end
+	end
+	%}
+	%	put('masks_in_frame',masks_in_frame);
+	%	redraw_masks
+end
+gui_sliderdisp(gui_retr('pivlab_axis'));
+
+function mask_automask_generate_current_Callback (~,~,~)
+filepath=gui_retr('filepath');
+if size(filepath,1) > 1 %did the user load images?
+	handles=gui_gethand;
+	selected=2*floor(get(handles.fileselector, 'value'))-1;
+	mask_generator_settings=mask_get_mask_generator_settings();
+	[~,piv_image_A]=import_get_img(selected);
+	[~,piv_image_B]=import_get_img(selected+1);
+	if size(piv_image_A,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+		piv_image_A = rgb2gray(piv_image_A);
+		piv_image_B = rgb2gray(piv_image_B);
+	end
+	pixel_mask=mask_pixel_mask_from_piv_image(piv_image_A,piv_image_B,mask_generator_settings);
+	blocations = bwboundaries(pixel_mask,'holes');
+	currentframe=floor(get(handles.fileselector, 'value'));
+	masks_in_frame=gui_retr('masks_in_frame');
+	masks_in_frame{currentframe}=[];%remove any pre-existing mask in the curretn frame
+	masks_in_frame=mask_px_to_rois(blocations,currentframe,masks_in_frame);
+	gui_put('masks_in_frame',masks_in_frame);
+	mask_redraw_masks
+	gui_sliderdisp(gui_retr('pivlab_axis'));
+end
+
+function mask_automask_preview_Callback(~,~,~)
+filepath=gui_retr('filepath');
+handles=gui_gethand;
+if size(filepath,1) > 1 %did the user load images?
+	handles=gui_gethand;
+	selected=2*floor(get(handles.fileselector, 'value'))-1;
+	mask_generator_settings=mask_get_mask_generator_settings();
+	[~,piv_image_A]=import_get_img(selected);%[piv_image_A,~]=get_img(selected); would respect background subtraction
+	[~,piv_image_B]=import_get_img(selected+1);
+
+	if size(piv_image_A,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+		piv_image_A = rgb2gray(piv_image_A);
+		piv_image_B = rgb2gray(piv_image_B);
+	end
+
+	pixel_mask=mask_pixel_mask_from_piv_image(piv_image_A,piv_image_B,mask_generator_settings);
+	piv_image=im2double(piv_image_A)/2 + im2double(piv_image_B)/2;
+	if size(piv_image,3)>1 % color image
+		piv_image=rgb2gray(piv_image); %convert to gray, always.
+	end
+	if get(handles.enhance_images, 'Value')
+		piv_image=imadjust(piv_image);
+	end
+	image(cat(3, piv_image, piv_image, piv_image), 'parent',gui_retr('pivlab_axis'), 'cdatamapping', 'scaled');
+	hold on;
+	colormap('gray');
+	axis image
+	set(gui_retr('pivlab_axis'),'ytick',[])
+	set(gui_retr('pivlab_axis'),'xtick',[])
+	image(cat(3, pixel_mask*0.7, pixel_mask*0.1, pixel_mask*0.1), 'parent',gui_retr('pivlab_axis'), 'cdatamapping', 'direct','AlphaData',pixel_mask*0.9);
+	hold off
+end
+
+function mask_basic_expert_Callback(~,~,~)
+handles=gui_gethand;
+modus=get(handles.mask_basic_expert,'Value');
+if modus==1 %basic
+	set(handles.uipanel25_1,'Visible','on');
+	set(handles.uipanel25_9,'Visible','on');
+	set(handles.uipanel25_2,'Visible','off');
+elseif modus==2 %expert
+	set(handles.uipanel25_1,'Visible','off');
+	set(handles.uipanel25_9,'Visible','off');
+	set(handles.uipanel25_2,'Visible','on');
+end
+
+function mask_binarize_enable_2_Callback(~,~,~)
+handles=gui_gethand;
+if get(handles.binarize_enable_2,'Value')==0
+	set(handles.mask_medfilt_enable_2,'enable','off');
+	set(handles.median_size_2,'enable','off');
+	set(handles.binarize_threshold_2,'enable','off');
+	set(handles.mask_imopen_imclose_enable_2,'enable','off');
+	set(handles.imopen_imclose_size_2,'enable','off');
+	set(handles.mask_imdilate_imerode_enable_2,'enable','off');
+	set(handles.imopen_imclose_selection_2,'enable','off');
+	set(handles.imdilate_imerode_size_2,'enable','off');
+	set(handles.imdilate_imerode_selection_2,'enable','off');
+	set(handles.mask_remove_enable_2,'enable','off');
+	set(handles.remove_size_2,'enable','off');
+	set(handles.mask_fill_enable_2,'enable','off');
+else
+	set(handles.mask_medfilt_enable_2,'enable','on');
+	set(handles.median_size_2,'enable','on');
+	set(handles.binarize_threshold_2,'enable','on');
+	set(handles.mask_imopen_imclose_enable_2,'enable','on');
+	set(handles.imopen_imclose_size_2,'enable','on');
+	set(handles.mask_imdilate_imerode_enable_2,'enable','on');
+	set(handles.imopen_imclose_selection_2,'enable','on');
+	set(handles.imdilate_imerode_size_2,'enable','on');
+	set(handles.imdilate_imerode_selection_2,'enable','on');
+	set(handles.mask_remove_enable_2,'enable','on');
+	set(handles.remove_size_2,'enable','on');
+	set(handles.mask_fill_enable_2,'enable','on');
+end
+
+function mask_binarize_enable_Callback(~,~,~)
+handles=gui_gethand;
+if get(handles.binarize_enable,'Value')==0
+	set(handles.mask_medfilt_enable,'enable','off');
+	set(handles.median_size,'enable','off');
+	set(handles.binarize_threshold,'enable','off');
+	set(handles.mask_imopen_imclose_enable,'enable','off');
+	set(handles.imopen_imclose_size,'enable','off');
+	set(handles.mask_imdilate_imerode_enable,'enable','off');
+	set(handles.imopen_imclose_selection,'enable','off');
+	set(handles.imdilate_imerode_size,'enable','off');
+	set(handles.imdilate_imerode_selection,'enable','off');
+	set(handles.mask_remove_enable,'enable','off');
+	set(handles.remove_size,'enable','off');
+	set(handles.mask_fill_enable,'enable','off');
+else
+	set(handles.mask_medfilt_enable,'enable','on');
+	set(handles.median_size,'enable','on');
+	set(handles.binarize_threshold,'enable','on');
+	set(handles.mask_imopen_imclose_enable,'enable','on');
+	set(handles.imopen_imclose_size,'enable','on');
+	set(handles.mask_imdilate_imerode_enable,'enable','on');
+	set(handles.imopen_imclose_selection,'enable','on');
+	set(handles.imdilate_imerode_size,'enable','on');
+	set(handles.imdilate_imerode_selection,'enable','on');
+	set(handles.mask_remove_enable,'enable','on');
+	set(handles.remove_size,'enable','on');
+	set(handles.mask_fill_enable,'enable','on');
+end
+
+function mask_bright_or_dark_Callback(~,~,~)
+handles=gui_gethand;
+if get(handles.mask_bright_or_dark,'Value')==1
+	set (handles.uipanel25_3,'Visible','on')
+	set (handles.uipanel25_5,'Visible','off')
+	set (handles.uipanel25_7,'Visible','off')
+	mask_binarize_enable_Callback
+elseif get(handles.mask_bright_or_dark,'Value')==2
+	set (handles.uipanel25_3,'Visible','off')
+	set (handles.uipanel25_5,'Visible','on')
+	set (handles.uipanel25_7,'Visible','off')
+	mask_binarize_enable_2_Callback
+elseif get(handles.mask_bright_or_dark,'Value')==3
+	set (handles.uipanel25_3,'Visible','off')
+	set (handles.uipanel25_5,'Visible','off')
+	set (handles.uipanel25_7,'Visible','on')
+	mask_low_contrast_mask_enable_Callback
+end
+
+function converted_mask=mask_convert_masks_to_binary(mask_size,mask_positions)
+editedMask = zeros(mask_size,'uint8');
+if ~isempty(mask_positions)
+	for i=1:size(mask_positions,1)
+		if 	strcmp(mask_positions{i,1},'ROI_object_freehand')	|| strcmp(mask_positions{i,1},'ROI_object_polygon') || strcmp(mask_positions{i,1},'ROI_object_external')
+			xi=mask_positions{i,2}(:,1);
+			yi=mask_positions{i,2}(:,2);
+			editedMask = editedMask + uint8(poly2mask(xi,yi,mask_size(1),mask_size(2)));
+		elseif strcmp(mask_positions{i,1},'ROI_object_rectangle')
+			rectangle_coords=bbox2points(mask_positions{i,2});
+			editedMask = editedMask + uint8(poly2mask(rectangle_coords(:,1),rectangle_coords(:,2),mask_size(1),mask_size(2)));
+		elseif strcmp(mask_positions{i,1},'ROI_object_circle')
+			nsides_that_make_sense = floor(sqrt(2*pi()*mask_positions{i,2}(3)/1));
+			pgon = nsidedpoly(nsides_that_make_sense,'Center',mask_positions{i,2}(1:2),'Radius',mask_positions{i,2}(3));
+			editedMask = editedMask + uint8(poly2mask(pgon.Vertices(:,1),pgon.Vertices(:,2),mask_size(1),mask_size(2)));
+		end
+	end
+end
+converted_mask = logical(bitget(editedMask,1));
+
+function mask_copy_to_all_Callback(~,~,~)
+handles=gui_gethand;
+currentframe=floor(get(handles.fileselector, 'value'));
+masks_in_frame=gui_retr('masks_in_frame');
+if isempty(masks_in_frame)
+	%masks_in_frame=cell(currentframe,1);
+	masks_in_frame=cell(1,currentframe);
+end
+
+if numel(masks_in_frame)<currentframe
+	mask_positions=cell(0);
+else
+	mask_positions=masks_in_frame{currentframe};
+end
+
+if ~isempty (mask_positions)
+	filepath=gui_retr('filepath');
+	for i=1:floor(numel(filepath)/2)
+		masks_in_frame{i} = mask_positions;
+	end
+end
+gui_put('masks_in_frame',masks_in_frame);
+
+function mask_delete_all_Callback(~,~,~)
+gui_put('masks_in_frame',[])
+delete(findobj('UserData','ROI_object_freehand'));
+delete(findobj('UserData','ROI_object_rectangle'));
+delete(findobj('UserData','ROI_object_circle'));
+delete(findobj('UserData','ROI_object_polygon'));
+delete(findobj('UserData','ROI_object_external'));
+gui_sliderdisp(gui_retr('pivlab_axis'));
+
+function mask_edit_mode_Callback(~,~,~)
+%changes the display mode of the masks.
+%in sliderdisp, the status of the popupmenu is checked, then decides how to plot masks.
+gui_sliderdisp(gui_retr('pivlab_axis'));
+
+function mask_generator_settings=mask_get_mask_generator_settings()
+handles=gui_gethand;
+
+mask_generator_settings.binarize_enable = get(handles.binarize_enable,'Value');
+mask_generator_settings.mask_medfilt_enable=get(handles.mask_medfilt_enable,'Value');
+mask_generator_settings.median_size=get(handles.median_size,'String');
+mask_generator_settings.binarize_threshold=get(handles.binarize_threshold,'String');
+mask_generator_settings.mask_imopen_imclose_enable=get(handles.mask_imopen_imclose_enable,'Value');
+mask_generator_settings.imopen_imclose_size=get(handles.imopen_imclose_size,'String');
+mask_generator_settings.imopen_imclose_selection=get(handles.imopen_imclose_selection,'Value');
+mask_generator_settings.mask_imdilate_imerode_enable=get(handles.mask_imdilate_imerode_enable ,'Value');
+mask_generator_settings.imdilate_imerode_size=get(handles.imdilate_imerode_size,'String');
+mask_generator_settings.imdilate_imerode_selection=get(handles.imdilate_imerode_selection,'Value');
+mask_generator_settings.mask_remove_enable=get(handles.mask_remove_enable,'Value');
+mask_generator_settings.remove_size=get(handles.remove_size,'String');
+mask_generator_settings.mask_fill_enable=get(handles.mask_fill_enable,'Value');
+
+mask_generator_settings.binarize_enable_2 = get(handles.binarize_enable_2,'Value');
+mask_generator_settings.mask_medfilt_enable_2=get(handles.mask_medfilt_enable_2,'Value');
+mask_generator_settings.median_size_2=get(handles.median_size_2,'String');
+mask_generator_settings.binarize_threshold_2=get(handles.binarize_threshold_2,'String');
+mask_generator_settings.mask_imopen_imclose_enable_2=get(handles.mask_imopen_imclose_enable_2,'Value');
+mask_generator_settings.imopen_imclose_size_2=get(handles.imopen_imclose_size_2,'String');
+mask_generator_settings.imopen_imclose_selection_2=get(handles.imopen_imclose_selection_2,'Value');
+mask_generator_settings.mask_imdilate_imerode_enable_2=get(handles.mask_imdilate_imerode_enable_2 ,'Value');
+mask_generator_settings.imdilate_imerode_size_2=get(handles.imdilate_imerode_size_2,'String');
+mask_generator_settings.imdilate_imerode_selection_2=get(handles.imdilate_imerode_selection_2,'Value');
+mask_generator_settings.mask_remove_enable_2=get(handles.mask_remove_enable_2,'Value');
+mask_generator_settings.remove_size_2=get(handles.remove_size_2,'String');
+mask_generator_settings.mask_fill_enable_2=get(handles.mask_fill_enable_2,'Value');
+
+mask_generator_settings.low_contrast_mask_threshold=get(handles.low_contrast_mask_threshold,'String');
+mask_generator_settings.low_contrast_mask_enable=get(handles.low_contrast_mask_enable,'Value');
+mask_generator_settings.mask_medfilt_enable_3=get(handles.mask_medfilt_enable_3,'Value');
+mask_generator_settings.median_size_3=get(handles.median_size_3,'String');
+mask_generator_settings.mask_imopen_imclose_enable_3=get(handles.mask_imopen_imclose_enable_3,'Value');
+mask_generator_settings.imopen_imclose_size_3=get(handles.imopen_imclose_size_3,'String');
+mask_generator_settings.imopen_imclose_selection_3=get(handles.imopen_imclose_selection_3,'Value');
+mask_generator_settings.mask_imdilate_imerode_enable_3=get(handles.mask_imdilate_imerode_enable_3 ,'Value');
+mask_generator_settings.imdilate_imerode_size_3=get(handles.imdilate_imerode_size_3,'String');
+mask_generator_settings.imdilate_imerode_selection_3=get(handles.imdilate_imerode_selection_3,'Value');
+mask_generator_settings.mask_remove_enable_3=get(handles.mask_remove_enable_3,'Value');
+mask_generator_settings.remove_size_3=get(handles.remove_size_3,'String');
+mask_generator_settings.mask_fill_enable_3=get(handles.mask_fill_enable_3,'Value');
+
+function mask_img_mask_new_Callback(~, ~, ~)
+gui_switchui('multip25')
+
+function mask_import_Callback (~,~,~)
+filepath=gui_retr('filepath');
+
+if size(filepath,1) > 1 %did the user load images?
+
+	sessionpath=gui_retr('sessionpath');
+	if isempty(sessionpath)
+		sessionpath=gui_retr('pathname');
+	end
+	[FileName,PathName] = uigetfile({'*.bmp;*.tif;*.tiff;*.jpg;*.png;','Image Files (*.bmp,*.tif,*.tiff,*.jpg,*.png)'; '*.tif','tif'; '*.tiff','tiff'; '*.jpg','jpg'; '*.bmp','bmp'; '*.png','png'},'Select the binary image mask file(s)',sessionpath, 'multiselect','on');
+	if ~isequal(FileName,0) && ~isequal(PathName,0)
+		if ischar(FileName)==1
+			AnzahlMasks=1;
+		else
+			AnzahlMasks=numel(FileName);
+		end
+		pivlab_axis=gui_retr('pivlab_axis');
+		handles=gui_gethand;
+		gui_toolsavailable(0,'Busy, please wait...')
+		for i= 1:AnzahlMasks
+			set (handles.mask_import,'String', ['Progress: ' num2str(round(i/AnzahlMasks*100)) ' %']);
+			drawnow limitrate
+			if AnzahlMasks==1
+				pixel_mask=imread(fullfile(PathName,FileName));
+			else
+				pixel_mask=imread(fullfile(PathName,FileName{i}));
+			end
+			pixel_mask=pixel_mask(:,:,1);
+			pixel_mask=imbinarize(pixel_mask);
+			CC = bwconncomp(pixel_mask);
+			CC2 = bwconncomp(1-pixel_mask);
+			numconnected=CC.NumObjects + CC2.NumObjects;
+			if numconnected > 100
+				disp('Many mask blobs detected. Now filtering the mask input images.')
+				pixel_mask = imclose(pixel_mask,strel('disk',5)); %remove small holes
+				pixel_mask = bwareaopen(pixel_mask,25); %remove areas with less than 25 pixels area
+			end
+			pixel_mask = bwareafilt(pixel_mask,[400 inf]); %only try to get blobs with more than 400 pixels
+			pixel_mask = bwareafilt(pixel_mask, 100);
+			blocations = bwboundaries(pixel_mask,'holes');
+			%imshow(A, 'Parent',pivlab_axis);
+			handles=gui_gethand;
+			masks_in_frame=gui_retr('masks_in_frame');
+			masks_in_frame=mask_px_to_rois(blocations,floor(get(handles.fileselector, 'value'))-1+i,masks_in_frame);%apply mask at the current frame and the following frames.
+			gui_put('masks_in_frame',masks_in_frame);
+		end
+		mask_redraw_masks
+		gui_sliderdisp(gui_retr('pivlab_axis'))
+		set (handles.mask_import,'String', 'Import pixel mask');
+		gui_toolsavailable(1)
+	end
+end
+
+function mask_load_Callback(~,~,~)
+filepath=gui_retr('filepath');
+handles=gui_gethand;
 if size(filepath,1) > 1 %did the user load images?
 	sessionpath=gui_retr('sessionpath');
 	if isempty(sessionpath)
 		sessionpath=gui_retr('pathname');
 	end
-
-	preproc_preview_preprocess_Callback
-	preprocessed_img=findobj(gca,'type','image');
-	preprocessed_img=(preprocessed_img.CData);
-	toggler=gui_retr('toggler');
-	if toggler==0
-		img_idx='_A';
-	else
-		img_idx='_B';
-	end
-	[FileName,PathName] = uiputfile('*.tif','Save preprocessed image as...',fullfile(sessionpath,['PIVlab_preproc' img_idx '.tif']));
-	if isequal(FileName,0) | isequal(PathName,0)
-	else
-		imwrite(preprocessed_img,fullfile(PathName,FileName),'Compression','none');
-	end
-end
-
-function piv_fftmulti_Callback(hObject, ~, ~)
-handles=gui_gethand;
-if get(hObject,'Value') ==1
-	set(handles.dcc,'value',0)
-	set(handles.ensemble,'value',0)
-	set(handles.uipanel42,'visible','on')
-	set(handles.CorrQuality,'visible','on')
-	set(handles.text914,'visible','on')
-	set(handles.mask_auto_box,'visible','on')
-	%set(handles.AnalyzeAll,'visible','on')
-	set(handles.AnalyzeSingle,'visible','on')
-	set(handles.Settings_Apply_current,'visible','on')
-	if get(handles.checkbox26,'value') ~=0
-		set(handles.repeat_last,'Enable','on')
-		set(handles.edit52x,'Enable','on')
+	[maskfile,maskpath] = uigetfile('*.mat','Load PIVlab mask',fullfile(sessionpath, 'PIVlab_mask.mat'));
+	pause(0.01)
+	if ~isequal(maskfile,0) && ~isequal(maskpath,0)
+		warning('off','MATLAB:load:variableNotFound');
+		gui_toolsavailable(0,'Busy, loading masks');drawnow nocallbacks
+		load(fullfile(maskpath,maskfile),'masks_in_frame');
+		warning('on','MATLAB:load:variableNotFound');
+		if exist('masks_in_frame','var')
+			gui_put('masks_in_frame',masks_in_frame);
+			gui_sliderdisp(gui_retr('pivlab_axis'))
+			gui_toolsavailable(1)
+		else
+			gui_toolsavailable(1)
+			msgbox('No masks found in file.','modal');
+		end
 	end
 else
-	set(handles.fftmulti,'value',1)
+	msgbox('Before loading masks, you need to import images for your analyses.','modal');
 end
-piv_dispinterrog
 
-function piv_ensemble_Callback(hObject, ~, ~)
+function mask_low_contrast_mask_enable_Callback(~,~,~)
 handles=gui_gethand;
-if get(hObject,'Value') ==1
-	set(handles.dcc,'value',0)
-	set(handles.fftmulti,'value',0)
-	set(handles.uipanel42,'visible','on')
-	set(handles.CorrQuality,'visible','on')
-	set(handles.text914,'visible','on')
-	set(handles.mask_auto_box,'visible','on')
-	set(handles.repeat_last,'Value',0)
-	set(handles.repeat_last,'Enable','off')
-	set(handles.edit52x,'Enable','off')
-	%set(handles.AnalyzeAll,'visible','off')
-	set(handles.AnalyzeSingle,'visible','off')
-	set(handles.Settings_Apply_current,'visible','off')
+if get(handles.low_contrast_mask_enable,'Value')==0
+	set(handles.low_contrast_mask_threshold_suggest,'enable','off')
+	set(handles.mask_medfilt_enable_3,'enable','off');
+	set(handles.median_size_3,'enable','off');
+	set(handles.low_contrast_mask_threshold,'enable','off');
+	set(handles.mask_imopen_imclose_enable_3,'enable','off');
+	set(handles.imopen_imclose_size_3,'enable','off');
+	set(handles.mask_imdilate_imerode_enable_3,'enable','off');
+	set(handles.imopen_imclose_selection_3,'enable','off');
+	set(handles.imdilate_imerode_size_3,'enable','off');
+	set(handles.imdilate_imerode_selection_3,'enable','off');
+	set(handles.mask_remove_enable_3,'enable','off');
+	set(handles.remove_size_3,'enable','off');
+	set(handles.mask_fill_enable_3,'enable','off');
 else
-	set(handles.ensemble,'value',1)
+	set(handles.low_contrast_mask_threshold_suggest,'enable','on')
+	set(handles.mask_medfilt_enable_3,'enable','on');
+	set(handles.median_size_3,'enable','on');
+	set(handles.low_contrast_mask_threshold,'enable','on');
+	set(handles.mask_imopen_imclose_enable_3,'enable','on');
+	set(handles.imopen_imclose_size_3,'enable','on');
+	set(handles.mask_imdilate_imerode_enable_3,'enable','on');
+	set(handles.imopen_imclose_selection_3,'enable','on');
+	set(handles.imdilate_imerode_size_3,'enable','on');
+	set(handles.imdilate_imerode_selection_3,'enable','on');
+	set(handles.mask_remove_enable_3,'enable','on');
+	set(handles.remove_size_3,'enable','on');
+	set(handles.mask_fill_enable_3,'enable','on');
 end
-piv_dispinterrog
 
-function piv_pass3_checkbox_Callback(hObject, ~, ~)
+function mask_low_contrast_threshold_suggest_Callback(~,~,~)
 handles=gui_gethand;
-if get(hObject,'Value') == 0
-	set(handles.edit51,'enable','off')
-	set(handles.edit52,'enable','off')
-	set(handles.checkbox28,'value',0)
-	set(handles.repeat_last,'Value',0)
-	set(handles.repeat_last,'Enable','off')
-	set(handles.edit52x,'Enable','off')
-else
-	set(handles.edit50,'enable','on')
-	set(handles.edit51,'enable','on')
-	set(handles.checkbox26,'value',1)
-	set(handles.repeat_last,'Enable','on')
-	set(handles.edit52x,'Enable','on')
-end
-if get(handles.checkbox26,'value')==0
-	set(handles.checkbox27,'value',0)
-	set(handles.edit51,'enable','off')
-end
-piv_dispinterrog
-
-function piv_pass4_checkbox_Callback(hObject, ~, ~)
-handles=gui_gethand;
-if get(hObject,'Value') == 0
-	set(handles.edit52,'enable','off')
-	set(handles.repeat_last,'Value',0)
-	set(handles.repeat_last,'Enable','off')
-	set(handles.edit52x,'Enable','off')
-else
-	set(handles.edit52,'enable','on')
-	set(handles.edit50,'enable','on')
-	set(handles.edit51,'enable','on')
-	set(handles.checkbox26,'value',1)
-	set(handles.checkbox27,'value',1)
-	set(handles.repeat_last,'Enable','on')
-	set(handles.edit52x,'Enable','on')
-end
-if get(handles.checkbox27,'value')==0
-	set(handles.checkbox28,'value',0)
-	set(handles.edit52,'enable','off')
-end
-piv_dispinterrog
-
-function piv_dispinterrog
-handles=gui_gethand;
-selected=2*floor(get(handles.fileselector, 'value'))-1;
 filepath=gui_retr('filepath');
-if numel(filepath)>1
-	[image_dummy,~]=import_get_img(selected);
-	size_img(1)=size(image_dummy,2)/2;
-	size_img(2)=size(image_dummy,1)/2;
-	step=str2double(get(handles.step,'string'));
-	delete(findobj(gca,'Type','hggroup')); %=vectors and scatter markers
-	delete(findobj(gca,'tag','intareadispl'));
-	centre(1)= size_img(2); %y
-	centre(2)= size_img(1); %x
+if size(filepath,1) > 1 %did the user load images?
+	selected=2*floor(get(handles.fileselector, 'value'))-1;
+	[~,rawimageA]=import_get_img(selected);
+	[~,rawimageB]=import_get_img(selected+1);
 
-	intarea1=str2double(get(handles.intarea,'string'))/2;
-	x1=[centre(2)-intarea1 centre(2)+intarea1 centre(2)+intarea1 centre(2)-intarea1 centre(2)-intarea1];
-	y1=[centre(1)-intarea1 centre(1)-intarea1 centre(1)+intarea1 centre(1)+intarea1 centre(1)-intarea1];
-	hold on;
-	plot(x1,y1,'c-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
-	if get(handles.fftmulti,'value')==1 || get(handles.ensemble,'value')==1
-		text(x1(1),y1(1), ['pass 1'],'color','c','fontsize',8,'tag','intareadispl','HorizontalAlignment','right','verticalalignment','bottom')
-		if get(handles.checkbox26,'value')==1
-			intarea2=str2double(get(handles.edit50,'string'))/2;
-			x2=[centre(2)-intarea2 centre(2)+intarea2 centre(2)+intarea2 centre(2)-intarea2 centre(2)-intarea2];
-			y2=[centre(1)-intarea2 centre(1)-intarea2 centre(1)+intarea2 centre(1)+intarea2 centre(1)-intarea2];
-			plot(x2,y2,'y-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
-			text(x2(2),y2(1), ['pass 2'],'color','y','fontsize',8,'tag','intareadispl','HorizontalAlignment','left','verticalalignment','bottom')
-		end
-		if get(handles.checkbox27,'value')==1
-			intarea3=str2double(get(handles.edit51,'string'))/2;
-			x3=[centre(2)-intarea3 centre(2)+intarea3 centre(2)+intarea3 centre(2)-intarea3 centre(2)-intarea3];
-			y3=[centre(1)-intarea3 centre(1)-intarea3 centre(1)+intarea3 centre(1)+intarea3 centre(1)-intarea3];
-			plot(x3,y3,'g-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
-			text(x3(2),y3(3), ['pass 3'],'color','g','fontsize',8,'tag','intareadispl','HorizontalAlignment','left','verticalalignment','top')
-		end
-		if get(handles.checkbox28,'value')==1
-			intarea4=str2double(get(handles.edit52,'string'))/2;
-			x4=[centre(2)-intarea4 centre(2)+intarea4 centre(2)+intarea4 centre(2)-intarea4 centre(2)-intarea4];
-			y4=[centre(1)-intarea4 centre(1)-intarea4 centre(1)+intarea4 centre(1)+intarea4 centre(1)-intarea4];
-			plot(x4,y4,'r-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
-			text(x4(1),y4(3), ['pass 4'],'color','r','fontsize',8,'tag','intareadispl','HorizontalAlignment','right','verticalalignment','top')
-		end
-	end
-	hold off;
-	%check if step is ok
-	if step/(intarea1*2) < 0.25
-		text (centre(2),centre(1)/2,'Warning: Step of pass 1 is very small.','color','r','tag','intareadispl','HorizontalAlignment','center','verticalalignment','top','Fontsize',10,'Backgroundcolor','k')
-	end
-	%check if int area sizes are decreasing
-	sizeerror=0;
-	try
-		if intarea4 > intarea3 || intarea4 > intarea2 || intarea4 > intarea1
-			sizeerror=1;
-		end
-	catch
-	end
-	try
-		if intarea3 > intarea2 || intarea3 > intarea1
-			sizeerror=1;
-		end
-	catch
-	end
-	try
-		if intarea2 > intarea1
-			sizeerror=1;
-		end
-	catch
-	end
-	if sizeerror == 1
-		text (centre(2),centre(1)*4/3,['Warning: Interrogation area sizes should be' sprintf('\n') 'gradually decreasing from pass 1 to pass 4.'],'color','r','tag','intareadispl','HorizontalAlignment','center','verticalalignment','top','Fontsize',10,'Backgroundcolor','k') %#ok<*SPRINTFN>
-		sizeerror=0;
+	if size(rawimageA,3)>1
+		rawimageA=rawimageA(:,:,1);
 	end
 
-	roirect=gui_retr('roirect');
-
-	if isempty(roirect) == 0 %roi eingeschaltet
-		roirect=gui_retr('roirect');
-		minisize=min([roirect(3) roirect(4)]);
-	else
-		minisize=min([size_img(1) size_img(2)]);
+	if size(rawimageA,3)>1
+		rawimageA=rawimageA(:,:,1);
 	end
+	rawimage=im2double(rawimageA)/2 + im2double(rawimageB)/2;
 
-	if intarea1*2 *2 > minisize
-		text (centre(2),centre(1)*5/3,['Warning: Interrogation area of pass 1 is most likely too big.'],'color','r','tag','intareadispl','HorizontalAlignment','center','verticalalignment','top','Fontsize',10,'Backgroundcolor','k')
-	end
+	x_orig = 1:size(rawimage,2);
+	y_orig = 1:size(rawimage,1);
+	[x,y] = meshgrid(x_orig,y_orig);
+	u=zeros(size(x));
+	v=u;
 
+	[~,~,tresh_suggest,~,~] = PIVlab_image_filter (1,0,x,y,u,v,0,0,rawimage,rawimage,rawimage,rawimage);
+	set (handles.low_contrast_mask_threshold,'String',num2str(tresh_suggest));
 end
 
-function piv_SuggestPIVsettings(~, ~, ~)
+function pixel_mask=mask_pixel_mask_from_piv_image(piv_image_A,piv_image_B,mask_generator_settings)
+
+%% bright mask
+if size(piv_image_A,3)>1
+	piv_image_A=piv_image_A(:,:,1);
+end
+
+if size(piv_image_B,3)>1
+	piv_image_B=piv_image_B(:,:,1);
+end
+piv_image=im2double(piv_image_A)/2 + im2double(piv_image_B)/2;
+
+piv_image_2=piv_image;
+piv_image_3=piv_image;
+
+if mask_generator_settings.binarize_enable
+	if mask_generator_settings.mask_medfilt_enable
+		median_size = str2double(mask_generator_settings.median_size);
+		piv_image=medfilt2(piv_image,[median_size median_size]);
+	end
+	piv_image=im2bw(piv_image,str2double(mask_generator_settings.binarize_threshold)); %#ok<IM2BW>
+
+	if mask_generator_settings.mask_imopen_imclose_enable
+		SE=strel('disk',str2double(mask_generator_settings.imopen_imclose_size));
+		if mask_generator_settings.imopen_imclose_selection==1 %imopen
+			piv_image=imopen(piv_image,SE);
+		else
+			piv_image=imclose(piv_image,SE);
+		end
+	end
+
+	if mask_generator_settings.mask_imdilate_imerode_enable
+		SE=strel('disk',str2double(mask_generator_settings.imdilate_imerode_size));
+		if mask_generator_settings.imdilate_imerode_selection==1 %dilate
+			piv_image=imdilate(piv_image,SE);
+		else
+			piv_image=imerode(piv_image,SE);
+		end
+	end
+	if mask_generator_settings.mask_remove_enable
+		range=[str2double(mask_generator_settings.remove_size) inf];
+		piv_image = bwareafilt(piv_image,range);
+	end
+	if mask_generator_settings.mask_fill_enable
+		piv_image = imfill(piv_image,"holes");
+	end
+else
+	piv_image=zeros(size(piv_image));
+end
+
+%% dark mask
+if mask_generator_settings.binarize_enable_2
+	if mask_generator_settings.mask_medfilt_enable_2
+		median_size = str2double(mask_generator_settings.median_size_2);
+		piv_image_2=medfilt2(piv_image_2,[median_size median_size]);
+	end
+	piv_image_2=im2bw(piv_image_2,str2double(mask_generator_settings.binarize_threshold_2)); %#ok<IM2BW>
+	piv_image_2=~piv_image_2;
+
+
+	if mask_generator_settings.mask_imopen_imclose_enable_2
+		SE=strel('disk',str2double(mask_generator_settings.imopen_imclose_size_2));
+		if mask_generator_settings.imopen_imclose_selection_2==1 %imopen
+			piv_image_2=imopen(piv_image_2,SE);
+		else
+			piv_image_2=imclose(piv_image_2,SE);
+		end
+	end
+
+	if mask_generator_settings.mask_imdilate_imerode_enable_2
+		SE=strel('disk',str2double(mask_generator_settings.imdilate_imerode_size_2));
+		if mask_generator_settings.imdilate_imerode_selection_2==1 %dilate
+			piv_image_2=imdilate(piv_image_2,SE);
+		else
+			piv_image_2=imerode(piv_image_2,SE);
+		end
+	end
+
+	if mask_generator_settings.mask_remove_enable_2
+		range=[str2double(mask_generator_settings.remove_size_2) inf];
+		piv_image_2 = bwareafilt(piv_image_2,range);
+	end
+	if mask_generator_settings.mask_fill_enable_2
+		piv_image_2 = imfill(piv_image_2,"holes");
+	end
+else
+	piv_image_2=zeros(size(piv_image));
+end
+
+%% low contrast mask
+if mask_generator_settings.low_contrast_mask_enable
+	x_orig = 1:size(piv_image,2);
+	y_orig = 1:size(piv_image,1);
+	[x,y] = meshgrid(x_orig,y_orig);
+	u=zeros(size(x));
+	v=u;
+	[~,~,~,piv_image_3,~] = PIVlab_image_filter (1,0,x,y,u,v,0,0,piv_image_3,piv_image_3,piv_image_3,piv_image_3);
+
+	if mask_generator_settings.mask_medfilt_enable_3
+		median_size = str2double(mask_generator_settings.median_size_3);
+		piv_image_3=medfilt2(piv_image_3,[median_size median_size]);
+	end
+	piv_image_3=im2bw(piv_image_3,str2double(mask_generator_settings.low_contrast_mask_threshold)); %#ok<IM2BW>
+	piv_image_3=~piv_image_3;
+
+	if mask_generator_settings.mask_imopen_imclose_enable_3
+		SE=strel('disk',str2double(mask_generator_settings.imopen_imclose_size_3));
+		if mask_generator_settings.imopen_imclose_selection_3==1 %imopen
+			piv_image_3=imopen(piv_image_3,SE);
+		else
+			piv_image_3=imclose(piv_image_3,SE);
+		end
+	end
+
+	if mask_generator_settings.mask_imdilate_imerode_enable_3
+		SE=strel('disk',str2double(mask_generator_settings.imdilate_imerode_size_3));
+		if mask_generator_settings.imdilate_imerode_selection_3==1 %dilate
+			piv_image_3=imdilate(piv_image_3,SE);
+		else
+			piv_image_3=imerode(piv_image_3,SE);
+		end
+	end
+
+	if mask_generator_settings.mask_remove_enable_3
+		range=[str2double(mask_generator_settings.remove_size_3) inf];
+		piv_image_3 = bwareafilt(piv_image_3,range);
+	end
+	if mask_generator_settings.mask_fill_enable_3
+		piv_image_3 = imfill(piv_image_3,"holes");
+	end
+
+else
+	piv_image_3=zeros(size(piv_image));
+end
+
+pixel_mask = piv_image | piv_image_2 | piv_image_3;
+
+function masks_in_frame=mask_px_to_rois(blocations,frame,masks_in_frame)
+recommended_colors=parula(7);
+for ind = 1:numel(blocations)
+	if numel(masks_in_frame)<frame
+		mask_positions=cell(0);
+	else
+		mask_positions=masks_in_frame{frame};
+	end
+	if isempty(mask_positions)
+		mask_positions=cell(0);
+	end
+
+	% Convert to x,y order.
+	pos = blocations{ind};
+	pos = fliplr(pos);
+	% Create a freehand ROI.
+	roi = drawfreehand('Position', pos);
+	reduce(roi,0.005)
+	roi.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
+	roi.FaceAlpha=0.75;
+	roi.LabelVisible = 'off';
+	roi.UserData=['ROI_object_' 'external'];
+
+	[~,guid] = fileparts(tempname);
+	roi.Tag = guid;
+	%addlistener(roi,'MovingROI',@ROIevents);
+	addlistener(roi,'ROIMoved',@mask_ROIevents);
+	addlistener(roi,'DeletingROI',@mask_ROIevents);
+	addlistener(roi,'ROIClicked',@mask_ROIevents);
+	masks_in_frame = mask_update_mask_memory(roi,frame,masks_in_frame);
+end
+
+function mask_redraw_masks
+%redraws all masks that are saved in mask_positions
 handles=gui_gethand;
-selected=2*floor(get(handles.fileselector, 'value'))-1;
-filepath=gui_retr('filepath');
+
+if get(handles.mask_edit_mode,'Value')==1 %Mask mode is "Edit"
+	mask_editing_possible=1;
+else
+	mask_editing_possible=0;
+end
+currentframe=floor(get(handles.fileselector, 'value'));
+masks_in_frame=gui_retr('masks_in_frame');
+if isempty(masks_in_frame)
+	%masks_in_frame=cell(currentframe,1);
+	masks_in_frame=cell(1,currentframe);
+end
+if numel(masks_in_frame)<currentframe
+	mask_positions=cell(0);
+else
+	mask_positions=masks_in_frame{currentframe};
+end
+delete(findobj({'UserData','ROI_object_freehand','-or','UserData','ROI_object_rectangle','-or','UserData','ROI_object_circle','-or','UserData','ROI_object_polygon','-or','UserData','ROI_object_external'})); % deletes visible ROIs before redrawing.
+masknums=size(mask_positions,1);
+if mask_editing_possible==1
+	for i=1:masknums
+		type=mask_positions(i,1);
+		if strcmp(type,'ROI_object_freehand')
+			roi = drawfreehand('Position', mask_positions{i,2});
+			roi.Multiclick=0;
+		elseif strcmp(type,'ROI_object_rectangle')
+			roi = drawrectangle('Position', mask_positions{i,2});
+		elseif strcmp(type,'ROI_object_polygon')
+			roi = drawpolygon('Position', mask_positions{i,2});
+		elseif strcmp(type,'ROI_object_circle')
+			circledata=mask_positions{i,2}; %whyTF does the circle needs to have center and radius.....?!? Why not Position like all other ROIs....?!?
+			roi = drawcircle('Center',circledata(1:2),'Radius',circledata(3));
+		elseif strcmp(type,'ROI_object_external')
+			roi = drawfreehand('Position', mask_positions{i,2});
+		end
+		roi.UserData=mask_positions{i,1};
+		roi.Label=mask_positions{i,4};
+		roi.Tag=mask_positions{i,5};
+		roi.Color=mask_positions{i,3};
+		addlistener(roi,'ROIMoved',@mask_ROIevents);
+		addlistener(roi,'DeletingROI',@mask_ROIevents);
+		addlistener(roi,'ROIClicked',@mask_ROIevents);
+		roi.FaceAlpha=0.5;
+		%roi.EdgeAlpha=0.75;
+		roi.LineWidth=1;
+		roi.LabelVisible = 'off';
+	end
+end
+
+function mask_save_Callback(~,~,~)
+masks_in_frame=gui_retr('masks_in_frame');
+sessionpath=gui_retr('sessionpath');
+if isempty(sessionpath)
+	sessionpath=gui_retr('pathname');
+end
+if  ~isempty(masks_in_frame)
+	[maskfile,maskpath] = uiputfile('*.mat','Save mask polygon(s)',fullfile(sessionpath, 'PIVlab_mask.mat'));
+	if ~isequal(maskfile,0) && ~isequal(maskpath,0)
+		save(fullfile(maskpath,maskfile),'masks_in_frame');
+	end
+end
+
+function mask_shrink_grow_Callback (~,caller,~)
+pivlab_axis=gui_retr('pivlab_axis');
+objects_in_axis=pivlab_axis.Children;
+found=0;
+for i=1:numel(objects_in_axis)
+	if strncmp(objects_in_axis(i).UserData,'ROI_object_',11) %finds all Mask ROI objects, the first found is the one in the foreground
+		found=1;
+		break
+	end
+end
+if found
+	if strcmp (caller.Source.Tag,'mask_shrink')
+		buf=-5;
+	end
+	if strcmp (caller.Source.Tag,'mask_grow')
+		buf=+5;
+	end
+	if strcmp(objects_in_axis(i).UserData,'ROI_object_freehand') || strcmp(objects_in_axis(i).UserData,'ROI_object_polygon') || strcmp(objects_in_axis(i).UserData,'ROI_object_external')
+		warning off
+		poly_obj=polyshape(objects_in_axis(i).Position);
+		warning on
+
+		polyout1 = polybuffer(poly_obj,buf,'JointType','miter','MiterLimit',2);
+		try
+			objects_in_axis(i).Position=polyout1.Vertices;
+		catch ME
+			warning('Operation failed, most likely because shape is self-intersecting.')
+		end
+	elseif strcmp(objects_in_axis(i).UserData,'ROI_object_circle')
+		objects_in_axis(i).Radius = objects_in_axis(i).Radius+buf;
+	elseif strcmp(objects_in_axis(i).UserData,'ROI_object_rectangle')
+		objects_in_axis(i).Position(1)=objects_in_axis(i).Position(1)-buf/2;
+		objects_in_axis(i).Position(2)=objects_in_axis(i).Position(2)-buf/2;
+		objects_in_axis(i).Position(3)=objects_in_axis(i).Position(3)+buf;
+		objects_in_axis(i).Position(4)=objects_in_axis(i).Position(4)+buf;
+	end
+	evt.EventName='ROIMoved';
+	mask_ROIevents(objects_in_axis(i),evt); %saves the modified position.
+end
+
+function mask_subdivide_simplify_Callback (~,caller,~)
+pivlab_axis=gui_retr('pivlab_axis');
+objects_in_axis=pivlab_axis.Children;
+found=0;
+for i=1:numel(objects_in_axis)
+	if strncmp(objects_in_axis(i).UserData,'ROI_object_',11) %finds all Mask ROI objects, the first found is the one in the foreground
+		found=1;
+		break
+	end
+end
+if found
+	if strcmp(objects_in_axis(i).UserData,'ROI_object_freehand') || strcmp(objects_in_axis(i).UserData,'ROI_object_polygon')|| strcmp(objects_in_axis(i).UserData,'ROI_object_external')
+		if strcmp (caller.Source.Tag,'mask_optimize')
+			%objects_in_axis(i).Waypoints(:) = true;
+			reduce(objects_in_axis(i))
+		else
+			cx=objects_in_axis(i).Position(:,1);
+			cy=objects_in_axis(i).Position(:,2);
+			x=linspace(1,numel(cx),numel(cx))';
+			if strcmp (caller.Source.Tag,'mask_subdivide')
+				if numel(x) < 512 %limit over interpolation.
+					multiplier=2;
+				else
+					multiplier=1;
+				end
+			elseif strcmp (caller.Source.Tag,'mask_simplify')
+				if numel(x) > 3 %limit simplification.
+					multiplier=0.75;
+				else
+					multiplier=1;
+				end
+			end
+			xq=linspace(1,x(end),round(numel(cx)*multiplier))';
+			cxq = interp1(x,cx,xq,'spline')	;
+			cyq = interp1(x,cy,xq,'spline')	;
+			objects_in_axis(i).Position=[cxq cyq];
+			if strcmp(objects_in_axis(i).UserData,'ROI_object_freehand')
+				objects_in_axis(i).Waypoints(:) = true;
+			end
+		end
+		evt.EventName='ROIMoved';
+		mask_ROIevents(objects_in_axis(i),evt); %saves the modified position.
+	end
+end
+
+function mask_transp_Callback(~, ~, ~)
+handles=gui_gethand;
+try
+	if isempty(str2num(get(handles.masktransp,'String'))) == 1
+		set(handles.masktransp,'String','0');
+	end
+catch
+	set(handles.masktransp,'String','0');
+end
+misc_check_comma(handles.masktransp)
+set(handles.masktransp,'String',round(str2num(get(handles.masktransp,'String'))))
+if str2num(get(handles.masktransp,'String')) > 100
+	set(handles.masktransp,'String','100');
+end
+if str2num(get(handles.masktransp,'String')) < 0
+	set(handles.masktransp,'String','0');
+end
+
+function masks_in_frame = mask_update_mask_memory(roi,frame,masks_in_frame)
+
+if isempty(masks_in_frame)
+	%masks_in_frame=cell(frame,1);
+	masks_in_frame=cell(1,frame);%das hier muss
+end
+
+if numel(masks_in_frame)<frame
+	mask_positions=cell(0);
+else
+	mask_positions=masks_in_frame{frame};
+end
+if isempty(mask_positions)
+	mask_positions=cell(0);
+end
+
+mask_positions{end+1,1}=roi.UserData;
+if strcmp(roi.UserData,'ROI_object_circle')
+	mask_positions{end,2}=[roi.Center roi.Radius];
+else
+	mask_positions{end,2}=roi.Position;
+end
+mask_positions{end,3}=roi.Color;
+mask_positions{end,4}=roi.Label;
+mask_positions{end,5}=roi.Tag;
+masks_in_frame{frame}=mask_positions;
+
+function misc_CheckUpdates
+% Check for updates
+version=gui_retr('PIVver');
+filename_update = 'latest_version.txt';
+if gui_retr('parallel')==1
+	current_url = 'http://william.thielicke.org/PIVlab/latest_version_p.txt';
+else
+	current_url = 'http://william.thielicke.org/PIVlab/latest_version.txt';
+end
+starred_feature_url='http://william.thielicke.org/PIVlab/starred_feature.txt';
+filename_starred='starred_feature.txt';
+% Update checking inspired by: https://www.mathworks.com/matlabcentral/fileexchange/64294-photoannotation
+update_msg = 'Could not check for updates'; %default message will be overwritten by the following lines
+starred_feature_text='';
+gui_put('update_msg_color',[0 0 0.75]);
+try
+	if exist('websave','builtin')||exist('websave','file')
+		outfilename=websave(filename_update,current_url,weboptions('Timeout',10));
+		try
+			outfilename2=websave(filename_starred,starred_feature_url,weboptions('Timeout',2));
+		catch
+		end
+	else
+		outfilename=urlwrite(current_url,filename_update); %#ok<*URLWR>
+		try
+			outfilename2=urlwrite(starred_feature_url,filename_starred); %#ok<*URLWR>
+		catch
+		end
+	end
+	%version number
+	fileID_update = fopen(filename_update);
+	web_version = textscan(fileID_update,'%s');
+	web_version=cell2mat(web_version{1});
+	trash_upd = fclose(fileID_update);
+	if ispc %Matlab seems to have issues with deleting files on unix systems
+		recycle('on');
+		delete(filename_update)
+	end
+	%starred feature message
+	starred_feature_text = fileread(filename_starred);
+	if ispc %Matlab seems to have issues with deleting files on unix systems
+		recycle('on');
+		delete(filename_starred)
+	end
+	if strcmp(version,web_version) == 1
+		update_msg = 'You have the latest PIVlab version.';
+		gui_put('update_msg_color',[0 0.75 0]);
+	elseif str2num (strrep(version,'.','')) < str2num(strrep(web_version,'.',''))
+		update_msg = ['PIVlab is outdated. Please update to version ' web_version sprintf('\n') starred_feature_text];
+		gui_put('update_msg_color',[0.85 0 0]);
+	elseif str2num (strrep(version,'.','')) > str2num(strrep(web_version,'.',''))
+		update_msg = ['Your PIVlab version is newer than the latest official release.'];
+		gui_put('update_msg_color',[0.5 0.5 0]);
+	end
+catch
+	%Either the download failed, or the file downloaded is empty.
+	update_msg = 'Could not check for updates';
+	gui_put('update_msg_color',[0.75 0.75 0]);
+end
+clear filename_update current_url fileID_update outfilename web_version trash_upd
+disp (['-> ' update_msg])
+gui_put('update_msg',update_msg);
+
+function misc_Forum_Callback(~, ~, ~)
+try
+	web('http://pivlab.blogspot.de/p/forum.html','-browser')
+catch
+	%why does 'web' not work in v 7.1.0.246 ...?
+	disp('Ooops, MATLAB couldn''t open the website.')
+	disp('You''ll have to open the website manually:')
+	disp('http://pivlab.blogspot.de/p/forum.html')
+end
+
+function misc_Lena
+MainWindow=getappdata(0,'hgui');
+if strncmp (char(datetime('today')),'15-Oct',6)
+	yr=char(datetime('today'));
+	since=str2num(yr(8:11))-2005;
+	questdlg(['Loving Lena since ' num2str(since) ' years today!'],'It''s 15th of October!','Congratulations!','Congratulations!'); % #FallsNochRelevant
+	set(MainWindow, 'Name','Today it''s Lena-day!!')
+end
+
+function misc_Website_Callback(~, ~, ~)
+try
+	web('http://pivlab.blogspot.com','-browser')
+catch
+	%why does 'web' not work in v 7.1.0.246 ...?
+	disp('Ooops, MATLAB couldn''t open the website.')
+	disp('You''ll have to open the website manually:')
+	disp('http://PIVlab.blogspot.de')
+end
+
+function misc_check_comma(who)
+boxcontent=get(who,'String');% returns contents of time_inp as text
+s = regexprep(boxcontent, ',', '.');
+set(who,'String',s);
+
+function misc_clear_everything_Callback(~, ~, ~)
+gui_put ('resultslist', []); %clears old results
+gui_put ('derived', []);
+handles=gui_gethand;
+set(handles.progress, 'String','Frame progress: N/A');
+set(handles.overall, 'String','Total progress: N/A');
+set(handles.totaltime, 'String','Time left: N/A');
+set(handles.messagetext, 'String','');
+set (handles.amount_nans, 'BackgroundColor',[0.9 0.9 0.9])
+set (handles.amount_nans,'string','')
+gui_sliderdisp(gui_retr('pivlab_axis'))
+
+function misc_howtocite_Callback(~, ~, ~)
+PIVlab_citing
+
+function misc_shortcuts_Callback (~, ~)
+try
+	open('PIVlab_shortcuts.pdf')
+catch
+	msgbox('Could not open "PIVlab_Shortcuts.pdf".')
+end
+
+function misc_toggle_parallel_Callback(~, ~, ~)
+hgui=getappdata(0,'hgui');
+handles=gui_gethand;
+load icons.mat
+try
+	parallel=gui_retr('parallel');
+	if parallel==0
+		gui_put ('parallel',1);
+		gui_toolsavailable(0,'Please wait, opening parallel pool...')
+		pause(0.1)
+		desired_num_cores=feature('numCores');
+		pivparpool('close')
+		pivparpool('open',desired_num_cores)
+		set(handles.toggle_parallel, 'cdata',parallel_on,'TooltipString','Parallel processing on. Click to turn off.');
+	else
+		gui_put ('parallel',0);
+		gui_toolsavailable(0,'Please wait, closing parallel pool...')
+		pivparpool('close')
+		set(handles.toggle_parallel, 'cdata',parallel_off,'TooltipString','Parallel processing off. Click to turn on.');
+	end
+	gui_toolsavailable(1);
+catch ME
+	gui_put ('parallel',0);
+	set(handles.toggle_parallel, 'cdata',parallel_off,'enable','off', 'TooltipString','Parallel processing not avilable.');
+	gui_toolsavailable(1);
+	disp (ME.message)
+end
+
+function piv_AnalyzeAll_Callback(~, ~, ~)
+handles=gui_gethand;
+if get(handles.ensemble,'value')==0
+	piv_DCC_and_DFT_analyze_all
+else
+	piv_ensemble_piv_analyze_all
+end
+
+function piv_AnalyzeSingle_Callback(~, ~, ~)
+handles=gui_gethand;
 ok=gui_checksettings;
 if ok==1
-	uiwait(msgbox({'Please select a rectangle';'that encloses the area that';'you want to analyze.'},'Suggestion for PIV settings','modal'));
-	roi = images.roi.Rectangle;
-	%roi.EdgeAlpha=0.75;
-	roi.LabelVisible = 'on';
-	roi.Tag = 'suggestRect';
-	roi.Color = 'r';
-	roi.StripeColor = 'k';
-	axes(gui_retr('pivlab_axis'))
-	draw(roi);
-	roirect=round(roi.Position);
-
-	if numel(roirect) == 4
-		%roirect(1,3)~=0 && roirect(1,4)~=0
-		if roirect(3) < 50 || roirect(4)< 50
-			uiwait(msgbox({'The rectangle you selected is too small.';'Please select a larger rectangle.';'(should be larger than 50 x 50 pixels)'},'Suggestion for PIV settings','modal'));
+	resultslist=gui_retr('resultslist');
+	set(handles.progress, 'string' , ['Frame progress: 0%']);
+	set(handles.Settings_Apply_current, 'string' , ['Please wait...']);
+	gui_toolsavailable(0,'Busy, please wait...');drawnow;
+	handles=gui_gethand;
+	filepath=gui_retr('filepath');
+	selected=2*floor(get(handles.fileselector, 'value'))-1;
+	ismean=gui_retr('ismean');
+	if size(ismean,1)>=(selected+1)/2
+		if ismean((selected+1)/2,1) ==1
+			currentwasmean=1;
 		else
-			text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
-			drawnow
-			[A,~] = import_get_img(selected);
-			[B,~] = import_get_img(selected+1);
-			A=A(roirect(2):roirect(2)+roirect(4),roirect(1):roirect(1)+roirect(3));
-			B=B(roirect(2):roirect(2)+roirect(4),roirect(1):roirect(1)+roirect(3));
-			clahe=get(handles.clahe_enable,'value');
-			highp=get(handles.enable_highpass,'value');
-			intenscap=get(handles.enable_intenscap, 'value');
-			clahesize=str2double(get(handles.clahe_size, 'string'))*2; % faster...
-			highpsize=str2double(get(handles.highp_size, 'string'));
-			wienerwurst=get(handles.wienerwurst, 'value');
-			wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-			do_correlation_matrices=gui_retr('do_correlation_matrices');
-			roirect=gui_retr('roirect');
-			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-				stretcher = stretchlim(A);
-				minintens = stretcher(1);
-				maxintens = stretcher(2);
-			end
-			A = PIVlab_preproc (A,[],clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-				stretcher = stretchlim(B);
-				minintens = stretcher(1);
-				maxintens = stretcher(2);
-			end
-			B = PIVlab_preproc (B,[],clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-
-			interrogationarea=round(min(size(A))/4);
-			if interrogationarea > 128
-				interrogationarea = 128;
-			end
-			step=round(interrogationarea/4);
-			if step < 6
-				step=6;
-			end
-			[x, y, u, v, typevector,~,correlation_matrices] = piv_FFTmulti (A,B,interrogationarea, step,1,[],[],1,32,16,16,'*linear',1,0,0,do_correlation_matrices,0,0);
-			u=medfilt2(u);
-			v=medfilt2(v);
-			u=inpaint_nans(u,4);
-			v=inpaint_nans(v,4);
-			maxvel=max(max(sqrt(u.^2+v.^2)));
-			%minimum size recommendation based on displacement
-			recommended1=ceil(4*maxvel/2)*2;
-			A(A<=80)=0;
-			A(A>80)=255;
-			B(B<=80)=0;
-			B(B>80)=255;
-			[spots,numA]=bwlabeln(A,8);
-			[spots,numB]=bwlabeln(B,8);
-			XA=((numA+numB)/2)/(size(A,1)*size(A,2));
-			YA=8/XA;
-			%minimum size recommendation based on particle density
-			recommended2=round(sqrt(YA)/2)*2; % 8 peaks are in Z*Z area
-			%minimum size recommendation based on experience with "normal PIV images"
-			recommended3= 32; %relativ allgemeingÃ¼ltiger Erfahrungswert
-			recommendation = median([recommended1 recommended2 recommended3]);
-			%[recommended1 recommended2 recommended3]
-			uiwait(msgbox({'These are the recommendations for the size of the final interrogation area:';[''];['Based on the displacements: ' num2str(recommended1) ' pixels'];['Based on the particle count: ' num2str(recommended2) ' pixels'];['Based on practical experience: ' num2str(recommended3) ' pixels'];[''];'The settings are automatically updated with the median of the recommendation.'},'Suggestion for PIV settings','modal'));
-			set(handles.fftmulti,'Value', 1)
-			set(handles.ensemble,'Value', 1)
-
-			set(handles.dcc,'Value', 0)
-			set (handles.intarea, 'String', recommendation*2); %two times the minimum recommendation
-			set (handles.step, 'String', recommendation);
-			set(handles.checkbox26,'Value',1); %pass2
-			set(handles.edit50,'String',recommendation); %pass2 size
-			set(handles.checkbox27, 'Value',0); %pass3
-			set(handles.edit51,'String',recommendation); %pass3 size
-			set(handles.checkbox28, 'Value',0); %pass4
-			set(handles.edit52,'String',recommendation); %pass4 size
-			%set(handles.popupmenu16,'Value',1);
-			set(handles.subpix,'value',1);
-			%set(handles.Repeated_box,'value',0);
-			set(handles.CorrQuality,'value',1)
-			set(handles.mask_auto_box,'value',0);
-			piv_pass2_checkbox_Callback(handles.checkbox26)
-			piv_pass3_checkbox_Callback(handles.checkbox27)
-			piv_pass4_checkbox_Callback(handles.checkbox28)
-			piv_pass2_size_Callback(handles.edit50)
-			piv_pass3_size_Callback(handles.edit51)
-			piv_pass4_size_Callback(handles.edit52)
-			piv_fftmulti_Callback(handles.fftmulti)
-			piv_step_Callback(handles.step)
-			piv_dispinterrog
-			delete(findobj('tag','hint'));
+			currentwasmean=0;
 		end
+	else
+		currentwasmean=0;
 	end
-	delete(findobj('Tag','suggestRect'));
+	if currentwasmean==0
+		tic;
+		[image1,~]=import_get_img(selected);
+		[image2,~]=import_get_img(selected+1);
+		%if size(image1,3)>1
+		%image1=uint8(mean(image1,3));
+		%image2=uint8(mean(image2,3));
+		%disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
+		%end
+		clahe=get(handles.clahe_enable,'value');
+		highp=get(handles.enable_highpass,'value');
+		%clip=get(handles.enable_clip,'value');
+		intenscap=get(handles.enable_intenscap, 'value');
+		clahesize=str2double(get(handles.clahe_size, 'string'));
+		highpsize=str2double(get(handles.highp_size, 'string'));
+		wienerwurst=get(handles.wienerwurst, 'value');
+		wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
+		preproc_Autolimit_Callback
+		minintens=str2double(get(handles.minintens, 'string'));
+		maxintens=str2double(get(handles.maxintens, 'string'));
+		%clipthresh=str2double(get(handles.clip_thresh, 'string'));
+		roirect=gui_retr('roirect');
+		if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+			if size(image1,3)>1
+				stretcher = stretchlim(rgb2gray(image1));
+			else
+				stretcher = stretchlim(image1);
+			end
+			minintens = stretcher(1);
+			maxintens = stretcher(2);
+		end
+		image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+		if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+			if size(image2,3)>1
+				stretcher = stretchlim(rgb2gray(image2));
+			else
+				stretcher = stretchlim(image2);
+			end
+			minintens = stretcher(1);
+			maxintens = stretcher(2);
+		end
+
+		image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+
+		current_mask_nr=floor(get(handles.fileselector, 'value'));
+		masks_in_frame=gui_retr('masks_in_frame');
+		if isempty(masks_in_frame)
+			%masks_in_frame=cell(current_mask_nr,1);
+			masks_in_frame=cell(1,current_mask_nr);
+		end
+		if numel(masks_in_frame)<current_mask_nr
+			mask_positions=cell(0);
+		else
+			mask_positions=masks_in_frame{current_mask_nr};
+		end
+		converted_mask=mask_convert_masks_to_binary(size(image1(:,:,1)),mask_positions);
+
+		interrogationarea=str2double(get(handles.intarea, 'string'));
+		step=str2double(get(handles.step, 'string'));
+		subpixfinder=get(handles.subpix,'value');
+		do_correlation_matrices=gui_retr('do_correlation_matrices');
+		if get(handles.dcc,'Value')==1
+			[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
+			correlation_map=zeros(size(u)); %nor correlation map available with DCC
+			correlation_matrices=[];
+		elseif get(handles.fftmulti,'Value')==1 || get(handles.ensemble,'Value')==1
+			passes=1;
+			if get(handles.checkbox26,'value')==1
+				passes=2;
+			end
+			if get(handles.checkbox27,'value')==1
+				passes=3;
+			end
+			if get(handles.checkbox28,'value')==1
+				passes=4;
+			end
+			int2=str2num(get(handles.edit50,'string'));
+			int3=str2num(get(handles.edit51,'string'));
+			int4=str2num(get(handles.edit52,'string'));
+			[imdeform, repeat, do_pad] = piv_CorrQuality;
+			mask_auto = get(handles.mask_auto_box,'value');
+			repeat_last_pass = get(handles.repeat_last,'Value');
+			delta_diff_min = str2double(get(handles.edit52x,'String'));
+			if get(handles.fftmulti,'Value')==1
+				try
+					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
+				catch ME
+					disp(getReport(ME))
+					gui_toolsavailable(1);
+				end
+			end
+
+		end
+		gui_toolsavailable(1);
+		resultslist{1,(selected+1)/2}=x;
+		resultslist{2,(selected+1)/2}=y;
+		resultslist{3,(selected+1)/2}=u;
+		resultslist{4,(selected+1)/2}=v;
+		resultslist{5,(selected+1)/2}=typevector;
+		resultslist{6,(selected+1)/2}=[];
+		%clear previous interpolation results
+		resultslist{7, (selected+1)/2} = [];
+		resultslist{8, (selected+1)/2} = [];
+		resultslist{9, (selected+1)/2} = [];
+		resultslist{10, (selected+1)/2} = [];
+		resultslist{11, (selected+1)/2} = [];
+		resultslist{12,(selected+1)/2}=correlation_map;
+		gui_put('derived', [])
+		gui_put('resultslist',resultslist);
+		set(handles.progress, 'string' , ['Frame progress: 100%'])
+		set(handles.overall, 'string' , ['Total progress: 100%'])
+		set(handles.Settings_Apply_current, 'string' , ['Analyze current frame']);
+		time1frame=toc;
+		set(handles.totaltime, 'String',['Analysis time: ' num2str(round(time1frame*100)/100) ' s']);
+		set(handles.messagetext, 'String','');
+		gui_put('subtr_u', 0);
+		gui_put('subtr_v', 0);
+		assignin('base','correlation_matrices',correlation_matrices);
+		gui_sliderdisp(gui_retr('pivlab_axis'))
+	end
+
 end
 
-function piv_intarea_Callback(~, ~, ~)
-piv_overlappercent
-piv_dispinterrog
-
-function piv_step_Callback(~, ~, ~)
-piv_overlappercent
-piv_dispinterrog
+function [imdeform, repeat, do_pad]=piv_CorrQuality(~,~)
+handles=gui_gethand;
+quali = get(handles.CorrQuality,'Value');
+if quali==1 % normal quality
+	imdeform='*linear';
+	repeat = 0;
+	do_pad = 0;
+end
+if quali==2 % high quality
+	imdeform='*spline';
+	repeat = 0;
+	do_pad = 1;
+end
+if quali==3 % ultra quality
+	imdeform='*spline';
+	repeat = 1;
+	do_pad = 1;
+end
 
 function piv_DCC_and_DFT_analyze_all
 ok=gui_checksettings;
@@ -5683,6 +10776,273 @@ end
 gui_toolsavailable(1);
 gui_sliderdisp(gui_retr('pivlab_axis'))
 
+function piv_SuggestPIVsettings(~, ~, ~)
+handles=gui_gethand;
+selected=2*floor(get(handles.fileselector, 'value'))-1;
+filepath=gui_retr('filepath');
+ok=gui_checksettings;
+if ok==1
+	uiwait(msgbox({'Please select a rectangle';'that encloses the area that';'you want to analyze.'},'Suggestion for PIV settings','modal'));
+	roi = images.roi.Rectangle;
+	%roi.EdgeAlpha=0.75;
+	roi.LabelVisible = 'on';
+	roi.Tag = 'suggestRect';
+	roi.Color = 'r';
+	roi.StripeColor = 'k';
+	axes(gui_retr('pivlab_axis'))
+	draw(roi);
+	roirect=round(roi.Position);
+
+	if numel(roirect) == 4
+		%roirect(1,3)~=0 && roirect(1,4)~=0
+		if roirect(3) < 50 || roirect(4)< 50
+			uiwait(msgbox({'The rectangle you selected is too small.';'Please select a larger rectangle.';'(should be larger than 50 x 50 pixels)'},'Suggestion for PIV settings','modal'));
+		else
+			text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
+			drawnow
+			[A,~] = import_get_img(selected);
+			[B,~] = import_get_img(selected+1);
+			A=A(roirect(2):roirect(2)+roirect(4),roirect(1):roirect(1)+roirect(3));
+			B=B(roirect(2):roirect(2)+roirect(4),roirect(1):roirect(1)+roirect(3));
+			clahe=get(handles.clahe_enable,'value');
+			highp=get(handles.enable_highpass,'value');
+			intenscap=get(handles.enable_intenscap, 'value');
+			clahesize=str2double(get(handles.clahe_size, 'string'))*2; % faster...
+			highpsize=str2double(get(handles.highp_size, 'string'));
+			wienerwurst=get(handles.wienerwurst, 'value');
+			wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
+			do_correlation_matrices=gui_retr('do_correlation_matrices');
+			roirect=gui_retr('roirect');
+			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+				stretcher = stretchlim(A);
+				minintens = stretcher(1);
+				maxintens = stretcher(2);
+			end
+			A = PIVlab_preproc (A,[],clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+				stretcher = stretchlim(B);
+				minintens = stretcher(1);
+				maxintens = stretcher(2);
+			end
+			B = PIVlab_preproc (B,[],clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+
+			interrogationarea=round(min(size(A))/4);
+			if interrogationarea > 128
+				interrogationarea = 128;
+			end
+			step=round(interrogationarea/4);
+			if step < 6
+				step=6;
+			end
+			[x, y, u, v, typevector,~,correlation_matrices] = piv_FFTmulti (A,B,interrogationarea, step,1,[],[],1,32,16,16,'*linear',1,0,0,do_correlation_matrices,0,0);
+			u=medfilt2(u);
+			v=medfilt2(v);
+			u=inpaint_nans(u,4);
+			v=inpaint_nans(v,4);
+			maxvel=max(max(sqrt(u.^2+v.^2)));
+			%minimum size recommendation based on displacement
+			recommended1=ceil(4*maxvel/2)*2;
+			A(A<=80)=0;
+			A(A>80)=255;
+			B(B<=80)=0;
+			B(B>80)=255;
+			[spots,numA]=bwlabeln(A,8);
+			[spots,numB]=bwlabeln(B,8);
+			XA=((numA+numB)/2)/(size(A,1)*size(A,2));
+			YA=8/XA;
+			%minimum size recommendation based on particle density
+			recommended2=round(sqrt(YA)/2)*2; % 8 peaks are in Z*Z area
+			%minimum size recommendation based on experience with "normal PIV images"
+			recommended3= 32; %relativ allgemeingÃ¼ltiger Erfahrungswert
+			recommendation = median([recommended1 recommended2 recommended3]);
+			%[recommended1 recommended2 recommended3]
+			uiwait(msgbox({'These are the recommendations for the size of the final interrogation area:';[''];['Based on the displacements: ' num2str(recommended1) ' pixels'];['Based on the particle count: ' num2str(recommended2) ' pixels'];['Based on practical experience: ' num2str(recommended3) ' pixels'];[''];'The settings are automatically updated with the median of the recommendation.'},'Suggestion for PIV settings','modal'));
+			set(handles.fftmulti,'Value', 1)
+			set(handles.ensemble,'Value', 1)
+
+			set(handles.dcc,'Value', 0)
+			set (handles.intarea, 'String', recommendation*2); %two times the minimum recommendation
+			set (handles.step, 'String', recommendation);
+			set(handles.checkbox26,'Value',1); %pass2
+			set(handles.edit50,'String',recommendation); %pass2 size
+			set(handles.checkbox27, 'Value',0); %pass3
+			set(handles.edit51,'String',recommendation); %pass3 size
+			set(handles.checkbox28, 'Value',0); %pass4
+			set(handles.edit52,'String',recommendation); %pass4 size
+			%set(handles.popupmenu16,'Value',1);
+			set(handles.subpix,'value',1);
+			%set(handles.Repeated_box,'value',0);
+			set(handles.CorrQuality,'value',1)
+			set(handles.mask_auto_box,'value',0);
+			piv_pass2_checkbox_Callback(handles.checkbox26)
+			piv_pass3_checkbox_Callback(handles.checkbox27)
+			piv_pass4_checkbox_Callback(handles.checkbox28)
+			piv_pass2_size_Callback(handles.edit50)
+			piv_pass3_size_Callback(handles.edit51)
+			piv_pass4_size_Callback(handles.edit52)
+			piv_fftmulti_Callback(handles.fftmulti)
+			piv_step_Callback(handles.step)
+			piv_dispinterrog
+			delete(findobj('tag','hint'));
+		end
+	end
+	delete(findobj('Tag','suggestRect'));
+end
+
+function piv_cancelbutt_Callback(~, ~, ~)
+gui_put('cancel',1);
+
+fileID = fopen('cancel_piv','w');
+fwrite(fileID,1);
+fclose(fileID);
+
+drawnow;
+gui_toolsavailable(1);
+
+function piv_dcc_Callback(hObject, ~, ~)
+handles=gui_gethand;
+if get(hObject,'Value')==1
+	set(handles.fftmulti,'value',0)
+	set(handles.ensemble,'value',0)
+
+	set(handles.uipanel42,'visible','off')
+	set(handles.CorrQuality,'visible','off')
+	set(handles.text914,'visible','off')
+	set(handles.mask_auto_box,'visible','off')
+	%set(handles.AnalyzeAll,'visible','on')
+	set(handles.AnalyzeSingle,'visible','on')
+	set(handles.Settings_Apply_current,'visible','on')
+
+else
+	set(handles.dcc,'value',1)
+end
+piv_dispinterrog
+
+function piv_dispinterrog
+handles=gui_gethand;
+selected=2*floor(get(handles.fileselector, 'value'))-1;
+filepath=gui_retr('filepath');
+if numel(filepath)>1
+	[image_dummy,~]=import_get_img(selected);
+	size_img(1)=size(image_dummy,2)/2;
+	size_img(2)=size(image_dummy,1)/2;
+	step=str2double(get(handles.step,'string'));
+	delete(findobj(gca,'Type','hggroup')); %=vectors and scatter markers
+	delete(findobj(gca,'tag','intareadispl'));
+	centre(1)= size_img(2); %y
+	centre(2)= size_img(1); %x
+
+	intarea1=str2double(get(handles.intarea,'string'))/2;
+	x1=[centre(2)-intarea1 centre(2)+intarea1 centre(2)+intarea1 centre(2)-intarea1 centre(2)-intarea1];
+	y1=[centre(1)-intarea1 centre(1)-intarea1 centre(1)+intarea1 centre(1)+intarea1 centre(1)-intarea1];
+	hold on;
+	plot(x1,y1,'c-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
+	if get(handles.fftmulti,'value')==1 || get(handles.ensemble,'value')==1
+		text(x1(1),y1(1), ['pass 1'],'color','c','fontsize',8,'tag','intareadispl','HorizontalAlignment','right','verticalalignment','bottom')
+		if get(handles.checkbox26,'value')==1
+			intarea2=str2double(get(handles.edit50,'string'))/2;
+			x2=[centre(2)-intarea2 centre(2)+intarea2 centre(2)+intarea2 centre(2)-intarea2 centre(2)-intarea2];
+			y2=[centre(1)-intarea2 centre(1)-intarea2 centre(1)+intarea2 centre(1)+intarea2 centre(1)-intarea2];
+			plot(x2,y2,'y-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
+			text(x2(2),y2(1), ['pass 2'],'color','y','fontsize',8,'tag','intareadispl','HorizontalAlignment','left','verticalalignment','bottom')
+		end
+		if get(handles.checkbox27,'value')==1
+			intarea3=str2double(get(handles.edit51,'string'))/2;
+			x3=[centre(2)-intarea3 centre(2)+intarea3 centre(2)+intarea3 centre(2)-intarea3 centre(2)-intarea3];
+			y3=[centre(1)-intarea3 centre(1)-intarea3 centre(1)+intarea3 centre(1)+intarea3 centre(1)-intarea3];
+			plot(x3,y3,'g-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
+			text(x3(2),y3(3), ['pass 3'],'color','g','fontsize',8,'tag','intareadispl','HorizontalAlignment','left','verticalalignment','top')
+		end
+		if get(handles.checkbox28,'value')==1
+			intarea4=str2double(get(handles.edit52,'string'))/2;
+			x4=[centre(2)-intarea4 centre(2)+intarea4 centre(2)+intarea4 centre(2)-intarea4 centre(2)-intarea4];
+			y4=[centre(1)-intarea4 centre(1)-intarea4 centre(1)+intarea4 centre(1)+intarea4 centre(1)-intarea4];
+			plot(x4,y4,'r-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
+			text(x4(1),y4(3), ['pass 4'],'color','r','fontsize',8,'tag','intareadispl','HorizontalAlignment','right','verticalalignment','top')
+		end
+	end
+	hold off;
+	%check if step is ok
+	if step/(intarea1*2) < 0.25
+		text (centre(2),centre(1)/2,'Warning: Step of pass 1 is very small.','color','r','tag','intareadispl','HorizontalAlignment','center','verticalalignment','top','Fontsize',10,'Backgroundcolor','k')
+	end
+	%check if int area sizes are decreasing
+	sizeerror=0;
+	try
+		if intarea4 > intarea3 || intarea4 > intarea2 || intarea4 > intarea1
+			sizeerror=1;
+		end
+	catch
+	end
+	try
+		if intarea3 > intarea2 || intarea3 > intarea1
+			sizeerror=1;
+		end
+	catch
+	end
+	try
+		if intarea2 > intarea1
+			sizeerror=1;
+		end
+	catch
+	end
+	if sizeerror == 1
+		text (centre(2),centre(1)*4/3,['Warning: Interrogation area sizes should be' sprintf('\n') 'gradually decreasing from pass 1 to pass 4.'],'color','r','tag','intareadispl','HorizontalAlignment','center','verticalalignment','top','Fontsize',10,'Backgroundcolor','k') %#ok<*SPRINTFN>
+		sizeerror=0;
+	end
+
+	roirect=gui_retr('roirect');
+
+	if isempty(roirect) == 0 %roi eingeschaltet
+		roirect=gui_retr('roirect');
+		minisize=min([roirect(3) roirect(4)]);
+	else
+		minisize=min([size_img(1) size_img(2)]);
+	end
+
+	if intarea1*2 *2 > minisize
+		text (centre(2),centre(1)*5/3,['Warning: Interrogation area of pass 1 is most likely too big.'],'color','r','tag','intareadispl','HorizontalAlignment','center','verticalalignment','top','Fontsize',10,'Backgroundcolor','k')
+	end
+
+end
+
+function piv_do_analys_Callback(~, ~, ~)
+handles=gui_gethand;
+set(handles.progress, 'String','Frame progress: N/A');
+set(handles.overall, 'String','Total progress: N/A');
+set(handles.totaltime, 'String','Time left: N/A');
+set(handles.messagetext, 'String','');
+if get(handles.fftmulti,'Value') == 1 || get(handles.dcc,'Value') == 1
+	set(handles.AnalyzeAll,'String','Analyze all frames');
+end
+if get(handles.ensemble,'Value') == 1
+	set(handles.AnalyzeAll,'String','Start ensemble analysis');
+end
+if gui_retr('parallel')==1
+	set(handles.update_display_checkbox,'Visible','Off')
+end
+gui_switchui('multip05')
+
+function piv_ensemble_Callback(hObject, ~, ~)
+handles=gui_gethand;
+if get(hObject,'Value') ==1
+	set(handles.dcc,'value',0)
+	set(handles.fftmulti,'value',0)
+	set(handles.uipanel42,'visible','on')
+	set(handles.CorrQuality,'visible','on')
+	set(handles.text914,'visible','on')
+	set(handles.mask_auto_box,'visible','on')
+	set(handles.repeat_last,'Value',0)
+	set(handles.repeat_last,'Enable','off')
+	set(handles.edit52x,'Enable','off')
+	%set(handles.AnalyzeAll,'visible','off')
+	set(handles.AnalyzeSingle,'visible','off')
+	set(handles.Settings_Apply_current,'visible','off')
+else
+	set(handles.ensemble,'value',1)
+end
+piv_dispinterrog
+
 function piv_ensemble_piv_analyze_all
 handles=gui_gethand;
 try
@@ -5840,1505 +11200,272 @@ if ok==1
 	gui_toolsavailable(1);
 end
 
-
-function piv_AnalyzeAll_Callback(~, ~, ~)
+function piv_fftmulti_Callback(hObject, ~, ~)
 handles=gui_gethand;
-if get(handles.ensemble,'value')==0
-	piv_DCC_and_DFT_analyze_all
+if get(hObject,'Value') ==1
+	set(handles.dcc,'value',0)
+	set(handles.ensemble,'value',0)
+	set(handles.uipanel42,'visible','on')
+	set(handles.CorrQuality,'visible','on')
+	set(handles.text914,'visible','on')
+	set(handles.mask_auto_box,'visible','on')
+	%set(handles.AnalyzeAll,'visible','on')
+	set(handles.AnalyzeSingle,'visible','on')
+	set(handles.Settings_Apply_current,'visible','on')
+	if get(handles.checkbox26,'value') ~=0
+		set(handles.repeat_last,'Enable','on')
+		set(handles.edit52x,'Enable','on')
+	end
 else
-	piv_ensemble_piv_analyze_all
+	set(handles.fftmulti,'value',1)
 end
+piv_dispinterrog
 
-function [imdeform, repeat, do_pad]=piv_CorrQuality(~,~)
-handles=gui_gethand;
-quali = get(handles.CorrQuality,'Value');
-if quali==1 % normal quality
-	imdeform='*linear';
-	repeat = 0;
-	do_pad = 0;
-end
-if quali==2 % high quality
-	imdeform='*spline';
-	repeat = 0;
-	do_pad = 1;
-end
-if quali==3 % ultra quality
-	imdeform='*spline';
-	repeat = 1;
-	do_pad = 1;
-end
+function piv_intarea_Callback(~, ~, ~)
+piv_overlappercent
+piv_dispinterrog
 
-function piv_AnalyzeSingle_Callback(~, ~, ~)
+function piv_overlappercent
 handles=gui_gethand;
-ok=gui_checksettings;
-if ok==1
-	resultslist=gui_retr('resultslist');
-	set(handles.progress, 'string' , ['Frame progress: 0%']);
-	set(handles.Settings_Apply_current, 'string' , ['Please wait...']);
-	gui_toolsavailable(0,'Busy, please wait...');drawnow;
-	handles=gui_gethand;
-	filepath=gui_retr('filepath');
-	selected=2*floor(get(handles.fileselector, 'value'))-1;
-	ismean=gui_retr('ismean');
-	if size(ismean,1)>=(selected+1)/2
-		if ismean((selected+1)/2,1) ==1
-			currentwasmean=1;
-		else
-			currentwasmean=0;
-		end
+perc=100-str2double(get(handles.step,'string'))/str2double(get(handles.intarea,'string'))*100;
+set (handles.steppercentage, 'string', ['= ' int2str(perc) '%']);
+
+function piv_pass2_checkbox_Callback(hObject, ~, ~)
+handles=gui_gethand;
+if get(hObject,'Value') == 0
+	set(handles.edit50,'enable','off')
+	set(handles.edit51,'enable','off')
+	set(handles.edit52,'enable','off')
+	set(handles.checkbox27,'value',0)
+	set(handles.checkbox28,'value',0)
+	set(handles.repeat_last,'Value',0)
+	set(handles.repeat_last,'Enable','off')
+	set(handles.edit52x,'Enable','off')
+else
+	set(handles.edit50,'enable','on')
+	set(handles.repeat_last,'Enable','on')
+	set(handles.edit52x,'Enable','on')
+end
+piv_dispinterrog
+
+function piv_pass2_size_Callback(hObject, ~, ~)
+handles=gui_gethand;
+step=str2double(get(hObject,'String'));
+set (handles.text126, 'string', int2str(step/2));
+piv_dispinterrog
+
+function piv_pass3_checkbox_Callback(hObject, ~, ~)
+handles=gui_gethand;
+if get(hObject,'Value') == 0
+	set(handles.edit51,'enable','off')
+	set(handles.edit52,'enable','off')
+	set(handles.checkbox28,'value',0)
+	set(handles.repeat_last,'Value',0)
+	set(handles.repeat_last,'Enable','off')
+	set(handles.edit52x,'Enable','off')
+else
+	set(handles.edit50,'enable','on')
+	set(handles.edit51,'enable','on')
+	set(handles.checkbox26,'value',1)
+	set(handles.repeat_last,'Enable','on')
+	set(handles.edit52x,'Enable','on')
+end
+if get(handles.checkbox26,'value')==0
+	set(handles.checkbox27,'value',0)
+	set(handles.edit51,'enable','off')
+end
+piv_dispinterrog
+
+function piv_pass3_size_Callback(hObject, ~, ~)
+handles=gui_gethand;
+step=str2double(get(hObject,'String'));
+set (handles.text127, 'string', int2str(step/2));
+piv_dispinterrog
+
+function piv_pass4_checkbox_Callback(hObject, ~, ~)
+handles=gui_gethand;
+if get(hObject,'Value') == 0
+	set(handles.edit52,'enable','off')
+	set(handles.repeat_last,'Value',0)
+	set(handles.repeat_last,'Enable','off')
+	set(handles.edit52x,'Enable','off')
+else
+	set(handles.edit52,'enable','on')
+	set(handles.edit50,'enable','on')
+	set(handles.edit51,'enable','on')
+	set(handles.checkbox26,'value',1)
+	set(handles.checkbox27,'value',1)
+	set(handles.repeat_last,'Enable','on')
+	set(handles.edit52x,'Enable','on')
+end
+if get(handles.checkbox27,'value')==0
+	set(handles.checkbox28,'value',0)
+	set(handles.edit52,'enable','off')
+end
+piv_dispinterrog
+
+function piv_pass4_size_Callback(hObject, ~, ~)
+handles=gui_gethand;
+step=str2double(get(hObject,'String'));
+set (handles.text128, 'string', int2str(step/2));
+piv_dispinterrog
+
+function piv_repeat_last_Callback (~,~,~)
+handles=gui_gethand;
+if get (handles.checkbox26,'Value')==1
+	if get(handles.repeat_last,'Value')
+		set(handles.edit52x,'Enable','on')
 	else
-		currentwasmean=0;
+		set(handles.edit52x,'Enable','off')
 	end
-	if currentwasmean==0
-		tic;
-		[image1,~]=import_get_img(selected);
-		[image2,~]=import_get_img(selected+1);
-		%if size(image1,3)>1
-		%image1=uint8(mean(image1,3));
-		%image2=uint8(mean(image2,3));
-		%disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
-		%end
-		clahe=get(handles.clahe_enable,'value');
-		highp=get(handles.enable_highpass,'value');
-		%clip=get(handles.enable_clip,'value');
-		intenscap=get(handles.enable_intenscap, 'value');
-		clahesize=str2double(get(handles.clahe_size, 'string'));
-		highpsize=str2double(get(handles.highp_size, 'string'));
-		wienerwurst=get(handles.wienerwurst, 'value');
-		wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-		preproc_Autolimit_Callback
-		minintens=str2double(get(handles.minintens, 'string'));
-		maxintens=str2double(get(handles.maxintens, 'string'));
-		%clipthresh=str2double(get(handles.clip_thresh, 'string'));
-		roirect=gui_retr('roirect');
-		if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-			if size(image1,3)>1
-				stretcher = stretchlim(rgb2gray(image1));
-			else
-				stretcher = stretchlim(image1);
-			end
-			minintens = stretcher(1);
-			maxintens = stretcher(2);
-		end
-		image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-		if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-			if size(image2,3)>1
-				stretcher = stretchlim(rgb2gray(image2));
-			else
-				stretcher = stretchlim(image2);
-			end
-			minintens = stretcher(1);
-			maxintens = stretcher(2);
-		end
-
-		image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-
-		current_mask_nr=floor(get(handles.fileselector, 'value'));
-		masks_in_frame=gui_retr('masks_in_frame');
-		if isempty(masks_in_frame)
-			%masks_in_frame=cell(current_mask_nr,1);
-			masks_in_frame=cell(1,current_mask_nr);
-		end
-		if numel(masks_in_frame)<current_mask_nr
-			mask_positions=cell(0);
-		else
-			mask_positions=masks_in_frame{current_mask_nr};
-		end
-		converted_mask=mask_convert_masks_to_binary(size(image1(:,:,1)),mask_positions);
-
-		interrogationarea=str2double(get(handles.intarea, 'string'));
-		step=str2double(get(handles.step, 'string'));
-		subpixfinder=get(handles.subpix,'value');
-		do_correlation_matrices=gui_retr('do_correlation_matrices');
-		if get(handles.dcc,'Value')==1
-			[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
-			correlation_map=zeros(size(u)); %nor correlation map available with DCC
-			correlation_matrices=[];
-		elseif get(handles.fftmulti,'Value')==1 || get(handles.ensemble,'Value')==1
-			passes=1;
-			if get(handles.checkbox26,'value')==1
-				passes=2;
-			end
-			if get(handles.checkbox27,'value')==1
-				passes=3;
-			end
-			if get(handles.checkbox28,'value')==1
-				passes=4;
-			end
-			int2=str2num(get(handles.edit50,'string'));
-			int3=str2num(get(handles.edit51,'string'));
-			int4=str2num(get(handles.edit52,'string'));
-			[imdeform, repeat, do_pad] = piv_CorrQuality;
-			mask_auto = get(handles.mask_auto_box,'value');
-			repeat_last_pass = get(handles.repeat_last,'Value');
-			delta_diff_min = str2double(get(handles.edit52x,'String'));
-			if get(handles.fftmulti,'Value')==1
-				try
-					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
-				catch ME
-					disp(getReport(ME))
-					gui_toolsavailable(1);
-				end
-			end
-
-		end
-		gui_toolsavailable(1);
-		resultslist{1,(selected+1)/2}=x;
-		resultslist{2,(selected+1)/2}=y;
-		resultslist{3,(selected+1)/2}=u;
-		resultslist{4,(selected+1)/2}=v;
-		resultslist{5,(selected+1)/2}=typevector;
-		resultslist{6,(selected+1)/2}=[];
-		%clear previous interpolation results
-		resultslist{7, (selected+1)/2} = [];
-		resultslist{8, (selected+1)/2} = [];
-		resultslist{9, (selected+1)/2} = [];
-		resultslist{10, (selected+1)/2} = [];
-		resultslist{11, (selected+1)/2} = [];
-		resultslist{12,(selected+1)/2}=correlation_map;
-		gui_put('derived', [])
-		gui_put('resultslist',resultslist);
-		set(handles.progress, 'string' , ['Frame progress: 100%'])
-		set(handles.overall, 'string' , ['Total progress: 100%'])
-		set(handles.Settings_Apply_current, 'string' , ['Analyze current frame']);
-		time1frame=toc;
-		set(handles.totaltime, 'String',['Analysis time: ' num2str(round(time1frame*100)/100) ' s']);
-		set(handles.messagetext, 'String','');
-		gui_put('subtr_u', 0);
-		gui_put('subtr_v', 0);
-		assignin('base','correlation_matrices',correlation_matrices);
-		gui_sliderdisp(gui_retr('pivlab_axis'))
-	end
-
-end
-
-function ok=gui_checksettings
-handles=gui_gethand;
-mess={};
-filepath=gui_retr('filepath');
-if size(filepath,1) <2 && gui_retr('video_selection_done') == 0
-	mess{size(mess,2)+1}='No images were loaded';
-end
-if get(handles.clahe_enable, 'value')==1
-	if isnan(str2double(get(handles.clahe_size, 'string')))
-		mess{size(mess,2)+1}='CLAHE window size contains NaN';
-	end
-end
-if get(handles.enable_highpass, 'value')==1
-	if isnan(str2double(get(handles.highp_size, 'string')))
-		mess{size(mess,2)+1}='Highpass filter size contains NaN';
-	end
-end
-if get(handles.wienerwurst, 'value')==1
-	if isnan(str2double(get(handles.wienerwurstsize, 'string')))
-		mess{size(mess,2)+1}='Wiener2 filter size contains NaN';
-	end
-end
-%if get(handles.enable_clip, 'value')==1
-%    if isnan(str2double(get(handles.clip_thresh, 'string')))==1
-%        mess{size(mess,2)+1}='Clipping threshold contains NaN';
-%    end
-%end
-if isnan(str2double(get(handles.intarea, 'string')))
-	mess{size(mess,2)+1}='Interrogation area size contains NaN';
-end
-if isnan(str2double(get(handles.step, 'string')))
-	mess{size(mess,2)+1}='Step size contains NaN';
-end
-if size(mess,2)>0 %error somewhere
-	msgbox(['Errors found:' mess],'Errors detected.','warn','modal')
-	ok=0;
 else
-	ok=1;
+	set(handles.edit52x,'Enable','off')
 end
 
-function piv_cancelbutt_Callback(~, ~, ~)
-gui_put('cancel',1);
+function piv_repeated_thesh_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
 
-fileID = fopen('cancel_piv','w');
-fwrite(fileID,1);
-fclose(fileID);
+function piv_sett_Callback(~, ~, ~)
+gui_switchui('multip04')
+pause(0.01) %otherwise display isn't updated... ?!?
+drawnow;drawnow;
+piv_dispinterrog
+handles=gui_gethand;
+piv_overlappercent
 
+function piv_step_Callback(~, ~, ~)
+piv_overlappercent
+piv_dispinterrog
+
+function out=plot_LIC(vx,vy,frame)
+handles=gui_gethand;
+LICreso=round(get (handles.licres, 'value')*10)/10;
+resultslist=gui_retr('resultslist');
+x=resultslist{1,frame};
+y=resultslist{2,frame};
+text(mean(x(1,:)/1.5),mean(y(:,1)), ['Please wait. LIC in progress...' sprintf('\n') 'If this message stays here for > 20s,' sprintf('\n') 'check MATLABs command window.' sprintf('\n') 'The function might need to be compiled first.'],'tag', 'waitplease', 'backgroundcolor', 'k', 'color', 'r','fontsize',10);
 drawnow;
-gui_toolsavailable(1);
-
-function import_load_settings_Callback(~, ~, ~)
-[FileName,PathName] = uigetfile('*.mat','Load PIVlab settings','PIVlab_settings.mat');
-if ~isequal(FileName,0)
-	handles=gui_gethand;
-	try
-		fileboxcontents=get (handles.filenamebox, 'string');
-	catch
-	end
-	import_read_panel_width (FileName,PathName) %read panel settings, apply, rebuild UI
-	gui_destroyUI %needed to adapt panel width etc. to changed values in the settings file.
-	gui_generateUI
-	import_read_settings (FileName,PathName) %When UI is set up, read settings.
-	gui_switchui('multip01')
-	try
-		gui_put('expected_image_size',[])
-		gui_put('existing_handles',[]);
-		handles=gui_gethand;
-		gui_sliderrange(1)
-		set (handles.filenamebox, 'string', fileboxcontents);
-		gui_sliderdisp(gui_retr('pivlab_axis'))
-	catch
-	end
-end
-
-function import_read_panel_width (FileName,PathName)
-gui_put('num_handle_calls',0);
-handles=gui_gethand;
-try
-	load(fullfile(PathName,FileName)); %#ok<*LOAD>
-	gui_put ('panelwidth',panelwidth);
-catch
-end
-
-function import_read_settings (FileName,PathName)
-gui_put('num_handle_calls',0);
-handles=gui_gethand;
-try
-	load(fullfile(PathName,FileName));
-
-	set(handles.clahe_enable,'value',clahe_enable);
-	set(handles.clahe_size,'string',clahe_size);
-	set(handles.enable_highpass,'value',enable_highpass);
-	set(handles.highp_size,'string',highp_size);
-	set(handles.wienerwurst,'value',wienerwurst);
-	set(handles.wienerwurstsize,'string',wienerwurstsize);
-	%set(handles.enable_clip,'value',enable_clip);
-	%set(handles.clip_thresh,'string',clip_thresh);
-	set(handles.enable_intenscap,'value',enable_intenscap);
-	set(handles.intarea,'string',intarea);
-	set(handles.step,'string',stepsize);
-	set(handles.subpix,'value',subpix);  %popup
-	set(handles.stdev_check,'value',stdev_check);
-	set(handles.stdev_thresh,'string',stdev_thresh);
-	set(handles.loc_median,'value',loc_median);
-	set(handles.loc_med_thresh,'string',loc_med_thresh);
-	%set(handles.epsilon,'string',epsilon);
-	set(handles.interpol_missing,'value',interpol_missing);
-	set(handles.vectorscale,'string',vectorscale);
-	set(handles.colormap_choice,'value',colormap_choice); %popup
-	set(handles.colormap_steps,'value',colormap_steps);
-	set(handles.colormap_interpolation,'value',colormap_interpolation);
-	set(handles.addfileinfo,'value',addfileinfo);
-	set(handles.add_header,'value',add_header);
-	set(handles.delimiter,'value',delimiter);%popup
-	set(handles.img_not_mask,'value',img_not_mask);
-	set(handles.autoscale_vec,'value',autoscale_vec);
-
-	%set(handles.popupmenu16, 'value',imginterpol);
-	set(handles.dcc, 'value',dccmark);
-	set(handles.fftmulti, 'value',fftmark);
-	set(handles.ensemble, 'value',ensemblemark);
-	if fftmark==1 || ensemblemark == 1
-		set (handles.uipanel42,'visible','on')
-	else
-		set (handles.uipanel42,'visible','off')
-	end
-	set(handles.checkbox26, 'value',pass2);
-	set(handles.checkbox27, 'value',pass3);
-	set(handles.checkbox28, 'value',pass4);
-	if pass2 == 1
-		set(handles.edit50, 'enable','on')
-	else
-		set(handles.edit50, 'enable','off')
-	end
-	if pass3 == 1
-		set(handles.edit51, 'enable','on')
-	else
-		set(handles.edit51, 'enable','off')
-	end
-	if pass4 == 1
-		set(handles.edit52, 'enable','on')
-	else
-		set(handles.edit52, 'enable','off')
-	end
-
-	set(handles.edit50, 'string',pass2val);
-	set(handles.edit51, 'string',pass3val);
-	set(handles.edit52, 'string',pass4val);
-	set(handles.text126, 'string',step2);
-	set(handles.text127, 'string',step3);
-	set(handles.text128, 'string',step4);
-	set(handles.holdstream, 'value',holdstream);
-	set(handles.streamlamount, 'string',streamlamount);
-	set(handles.streamlcolor, 'value',streamlcolor);
-	set(handles.streamlwidth, 'value',streamlcolor);
-
-	set(handles.realdist, 'string',realdist);
-	set(handles.time_inp, 'string',time_inp);
-
-	set(handles.nthvect, 'string',nthvect);
-	set(handles.validr,'string',validr);
-	set(handles.validg,'string',validg);
-	set(handles.validb,'string',validb);
-	set(handles.validdr,'string',validdr);
-	set(handles.validdg,'string',validdg);
-	set(handles.validdb,'string',validdb);
-	set(handles.interpr,'string',interpr);
-	set(handles.interpg,'string',interpg);
-	set(handles.interpb,'string',interpb);
-	if exist('offset_x_true','var') == 0
-		offset_x_true=0;
-	end
-	if exist('offset_y_true','var') == 0
-		offset_y_true=0;
-	end
-
-	try
-		gui_put('points_offsetx',points_offsetx);
-		gui_put('points_offsety',points_offsety);
-		gui_put('size_of_the_image',size_of_the_image);
-		set(handles.x_axis_direction,'value',x_axis_direction);
-		set(handles.y_axis_direction,'value',y_axis_direction);
-	catch %ME
-		%disp(ME)
-	end
-	calu=gui_retr('calu');
-	calxy=gui_retr('calxy');
-	if (calu==1 || calu==-1) && calxy==1
-	else
-		calibrate_update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles)
-	end
-	gui_put('offset_x_true',offset_x_true);
-	gui_put('offset_y_true',offset_y_true);
-	gui_put('calxy',calxy);
-	gui_put('calu',calu);
-	gui_put('calv',calv);
-	if exist('pointscali','var')
-		if ~isempty(pointscali)
-			gui_put('pointscali',pointscali);
-		end
-	end
-catch
-	disp('something went wrong during settings loading')
-end
-try
-	%neu v1.5:
-	%set(handles.Repeated_box,'value',Repeated_box);
-	set(handles.mask_auto_box,'value',mask_auto_box);
-	set(handles.Autolimit,'value',Autolimit);
-	set(handles.minintens,'string',minintens);
-	set(handles.maxintens,'string',maxintens);
-	%neu v2.0
-	set(handles.panelslider,'Value',panelwidth);
-	gui_put ('panelwidth',panelwidth);
-	%neu v2.11
-	set(handles.CorrQuality,'Value',CorrQuality_nr);
-	%neu v2.37
-	set(handles.enhance_images, 'Value',enhance_disp);
-	%neu v2.42
-	set(handles.interpol_missing2,'value',interpol_missing);
-catch
-	disp('Old version compatibility-');
-end
-try
-	%neu v2.41
-	set(handles.contrast_filter_thresh,'string',contrast_filter_thresh);
-	set(handles.bright_filter_thresh,'string',bright_filter_thresh);
-	set(handles.do_bright_filter,'Value',do_bright_filter);
-	set(handles.do_contrast_filter,'Value',do_contrast_filter);
-catch
-	disp('img_filter_settings');
-end
-try
-	%neu v2.54
-	set(handles.do_corr2_filter,'value',do_corr2_filter);
-	set(handles.corr_filter_thresh,'string',corr_filter_thresh);
-	set(handles.notch_L_thresh,'String',notch_L_thresh);
-	set(handles.notch_H_thresh,'string',notch_H_thresh);
-	set(handles.notch_filter,'Value',notch_filter);
-catch
-	disp('corr filter / notch settings');
-end
-%neu v2.52
-try
-	set (handles.repeat_last,'Value',repeat_last);
-	set(handles.edit52x,'String',repeat_last_thresh);
-	piv_repeat_last_Callback
-catch
-	disp('repeat_last didnt work')
-end
-gui_put('expected_image_size',[])
-calibrate_pixeldist_changed_Callback()
-
-
-function export_save_settings_Callback(~, ~, ~)
-handles=gui_gethand;
-clahe_enable=get(handles.clahe_enable,'value');
-clahe_size=get(handles.clahe_size,'string');
-enable_highpass=get(handles.enable_highpass,'value');
-highp_size=get(handles.highp_size,'string');
-wienerwurst=get(handles.wienerwurst,'value');
-wienerwurstsize=get(handles.wienerwurstsize,'string');
-
-%enable_clip=get(handles.enable_clip,'value');
-%clip_thresh=get(handles.clip_thresh,'string');
-enable_intenscap=get(handles.enable_intenscap,'value');
-intarea=get(handles.intarea,'string');
-stepsize=get(handles.step,'string');
-subpix=get(handles.subpix,'value');  %popup
-stdev_check=get(handles.stdev_check,'value');
-stdev_thresh=get(handles.stdev_thresh,'string');
-loc_median=get(handles.loc_median,'value');
-loc_med_thresh=get(handles.loc_med_thresh,'string');
-%epsilon=get(handles.epsilon,'string');
-interpol_missing=get(handles.interpol_missing,'value');
-vectorscale=get(handles.vectorscale,'string');
-colormap_choice=get(handles.colormap_choice,'value'); %popup
-colormap_steps=get(handles.colormap_steps,'value');
-colormap_interpolation=get(handles.colormap_interpolation,'value');
-addfileinfo=get(handles.addfileinfo,'value');
-add_header=get(handles.add_header,'value');
-delimiter=get(handles.delimiter,'value');%popup
-img_not_mask=get(handles.img_not_mask,'value');
-autoscale_vec=get(handles.autoscale_vec,'value');
-
-%imginterpol=get(handles.popupmenu16, 'value');
-dccmark=get(handles.dcc, 'value');
-fftmark=get(handles.fftmulti, 'value');
-ensemblemark=get(handles.ensemble, 'value');
-
-pass2=get(handles.checkbox26, 'value');
-
-pass3=get(handles.checkbox27, 'value');
-pass4=get(handles.checkbox28, 'value');
-pass2val=get(handles.edit50, 'string');
-pass3val=get(handles.edit51, 'string');
-pass4val=get(handles.edit52, 'string');
-step2=get(handles.text126, 'string');
-step3=get(handles.text127, 'string');
-step4=get(handles.text128, 'string');
-holdstream=get(handles.holdstream, 'value');
-streamlamount=get(handles.streamlamount, 'string');
-streamlcolor=get(handles.streamlcolor, 'value');
-streamlcolor=get(handles.streamlwidth, 'value');
-realdist=get(handles.realdist, 'string');
-time_inp=get(handles.time_inp, 'string');
-
-nthvect=get(handles.nthvect, 'string');
-validr=get(handles.validr,'string');
-validg=get(handles.validg,'string');
-validb=get(handles.validb,'string');
-validdr=get(handles.validdr,'string');
-validdg=get(handles.validdg,'string');
-validdb=get(handles.validdb,'string');
-interpr=get(handles.interpr,'string');
-interpg=get(handles.interpg,'string');
-interpb=get(handles.interpb,'string');
-
-calxy=gui_retr('calxy');
-calu=gui_retr('calu');calv=gui_retr('calv');
-
-try
-	%neu v1.5:
-	%Repeated_box=get(handles.Repeated_box,'value');
-	mask_auto_box=get(handles.mask_auto_box,'value');
-	Autolimit=get(handles.Autolimit,'value');
-	minintens=get(handles.minintens,'string');
-	maxintens=get(handles.maxintens,'string');
-	%neu v2.0:
-	panelwidth=get(handles.panelslider,'Value');
-	%neu v2.11
-	CorrQuality_nr=get(handles.CorrQuality, 'value');
-	%neu v2.37
-	enhance_disp=get(handles.enhance_images, 'Value');
-catch
-	disp('Old version compatibility_');
-end
-try
-	%v2.41
-	x_axis_direction=get(handles.x_axis_direction,'value');
-	y_axis_direction=get(handles.y_axis_direction,'value');
-	size_of_the_image=gui_retr('size_of_the_image');
-	points_offsetx=gui_retr('points_offsetx');
-	points_offsety=gui_retr('points_offsety');
-	offset_x_true=gui_retr('offset_x_true');
-	offset_y_true=gui_retr('offset_y_true');
-	contrast_filter_thresh=get(handles.contrast_filter_thresh,'string');
-	bright_filter_thresh=get(handles.bright_filter_thresh,'string');
-	do_bright_filter=get(handles.do_bright_filter,'Value');
-	do_contrast_filter=get(handles.do_contrast_filter,'Value');
-catch
-end
-try
-	%neu v2.54
-	do_corr2_filter=get(handles.do_corr2_filter,'value');
-	corr_filter_thresh=get(handles.corr_filter_thresh,'string');
-	notch_L_thresh=get(handles.notch_L_thresh,'string');
-	notch_H_thresh=get(handles.notch_H_thresh,'string');
-	notch_filter=get(handles.notch_filter,'Value');
-catch
-	disp('corr filter / notch settings');
-end
-%neu v2.52
-try
-	repeat_last = get (handles.repeat_last,'Value');
-	repeat_last_thresh = get(handles.edit52x,'String');
-catch
-	disp('repeat_last didnt work2')
-end
-
-pointscali=gui_retr('pointscali');
-if isempty(pointscali)
-	clear pointscali
-end
-
-if ispc==1
-	[FileName,PathName] = uiputfile('*.mat','Save current settings as...',['PIVlab_set_' getenv('USERNAME') '.mat']);
-else
-	try
-		[FileName,PathName] = uiputfile('*.mat','Save current settings as...',['PIVlab_set_' getenv('USER') '.mat']);
-	catch
-		[FileName,PathName] = uiputfile('*.mat','Save current settings as...','PIVlab_set.mat');
-	end
-end
-
-clear handles hObject eventdata
-if ~isequal(FileName,0)
-	save('-v6', fullfile(PathName,FileName))
-end
-
-function validate_vel_limit_Callback(~, ~, ~)
-gui_toolsavailable(0)
-%if analys existing
-resultslist=gui_retr('resultslist');
-handles=gui_gethand;
-currentframe=2*floor(get(handles.fileselector, 'value'))-1;
-if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
-	x=resultslist{1,(currentframe+1)/2};
-	if size(x,1)>1
-		if get(handles.meanofall,'value')==1 %calculating mean doesn't mae sense...
-			index=1;
-			foundfirst=0;
-			for i = 1:size(resultslist,2)
-				x=resultslist{1,i};
-				if isempty(x)==0 && foundfirst==0
-					firstsizex=size(x,1);
-					secondsizex=size(x,2);
-					foundfirst=1;
-				end
-				if size(x,1)>1 && size(x,1)==firstsizex && size(x,2) == secondsizex
-					u(:,:,index)=resultslist{3,i}; %#ok<AGROW>
-					v(:,:,index)=resultslist{4,i}; %#ok<AGROW>
-					index=index+1;
-				end
-			end
-		else
-			y=resultslist{2,(currentframe+1)/2};
-			u=resultslist{3,(currentframe+1)/2};
-			v=resultslist{4,(currentframe+1)/2};
-			typevector=resultslist{5,(currentframe+1)/2};
-		end
-		velrect=gui_retr('velrect');
-		calu=gui_retr('calu');calv=gui_retr('calv');
-		if numel(velrect)>0
-			%user already selected window before...
-			%"filter u+v" and display scatterplot
-			%problem: if user selects limits and then wants to refine vel
-			%limits, all data is filterd out...
-			umin=velrect(1);
-			umax=velrect(3)+umin;
-			vmin=velrect(2);
-			vmax=velrect(4)+vmin;
-			%check if all results are nan...
-			u_backup=u;
-			v_backup=v;
-			u(u*calu<umin)=NaN;
-			u(u*calu>umax)=NaN;
-			v(u*calu<umin)=NaN;
-			v(u*calu>umax)=NaN;
-			v(v*calv<vmin)=NaN;
-			v(v*calv>vmax)=NaN;
-			u(v*calv<vmin)=NaN;
-			u(v*calv>vmax)=NaN;
-			if mean(mean(mean((isnan(u)))))>0.9 || mean(mean(mean((isnan(v)))))>0.9
-				disp('User calibrated after selecting velocity limits. Discarding limits.')
-				u=u_backup;
-				v=v_backup;
-			end
-		end
-
-		%problem: wenn nur ein frame analysiert, dann gibts probleme wenn display all frames in scatterplot an.
-		datau=reshape(u*calu,1,size(u,1)*size(u,2)*size(u,3));
-		datav=reshape(v*calv,1,size(v,1)*size(v,2)*size(v,3));
-		if size(datau,2)>1000000 %more than one million value pairs are too slow in scatterplot.
-			pos=unique(ceil(rand(1000000,1)*(size(datau,2)-1))); %select random entries...
-			scatter(gca,datau(pos),datav(pos), 0.25,'k.'); %.. and plot them
-			set(gca,'Yaxislocation','right','layer','top');
-		else
-			scatter(gca,datau,datav, 0.25,'k.');
-			set(gca,'Yaxislocation','right','layer','top');
-		end
-		drawnow;%needed from R2021b on... Why...?
-		oldsize=get(gca,'outerposition');
-		newsize=[oldsize(1)+10 0.15 oldsize(3)*0.87 oldsize(4)*0.87];
-		set(gca,'outerposition', newsize)
-		%%{
-		if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-			xlabel(gca, 'u velocity [px/frame]', 'fontsize', 12)
-			ylabel(gca, 'v velocity [px/frame]', 'fontsize', 12)
-		else
-			xlabel(gca, 'u velocity [m/s]', 'fontsize', 12)
-			ylabel(gca, 'v velocity [m/s]', 'fontsize', 12)
-		end
-
-		grid on
-		%axis equal;
-		set (gca, 'tickdir', 'in');
-		%rangeu=nanmax(nanmax(nanmax(u*calu)))-nanmin(nanmin(nanmin(u*calu)));
-		%rangev=nanmax(nanmax(nanmax(v*calv)))-nanmin(nanmin(nanmin(v*calv)));
-
-		%set(gca,'xlim',[nanmin(nanmin(nanmin(u*caluv)))-rangeu*0.15 nanmax(nanmax(nanmax(u*caluv)))+rangeu*0.15])
-		%set(gca,'ylim',[nanmin(nanmin(nanmin(v*caluv)))-rangev*0.15 nanmax(nanmax(nanmax(v*caluv)))+rangev*0.15])
-		%=range of data +- 15%
-		%%}
-
-		%{
-		keyboard
-		figure;
-		datax=rand(1000000,1);
-		datay=rand(1000000,1);
-		plottl=scatter(datax,datay)
-		roi = images.roi.Freehand;
-		draw(roi)
-		tf = inROI(roi,datax,datay);
-		plottl.CData=double([1-tf tf*0 tf*0]); %makes markers outside red.
-		%}
-		velrect = getrect(gca);
-		if velrect(1,3)~=0 && velrect(1,4)~=0
-			gui_put('velrect', velrect);
-			validate_update_velocity_limits_information
-			gui_sliderdisp(gui_retr('pivlab_axis'))
-			delete(findobj(gca,'Type','text','color','r'));
-			text(50,50,'Result will be shown after applying vector validation','color','r','fontsize',10, 'fontweight','bold', 'BackgroundColor', 'k')
-		else
-			gui_sliderdisp(gui_retr('pivlab_axis'))
-			text(50,50,'Invalid selection: Click and hold left mouse button to create a rectangle.','color','r','fontsize',8, 'BackgroundColor', 'k')
-		end
-	end
-end
-gui_toolsavailable(1)
-gui_MainWindow_ResizeFcn(gcf)
-
-function validate_update_velocity_limits_information
-velrect=gui_retr('velrect');
-handles=gui_gethand;
-set (handles.vel_limit_active, 'String', 'Limit active', 'backgroundcolor', [0.5 1 0.5]);
-umin=velrect(1);
-umax=velrect(3)+umin;
-vmin=velrect(2);
-vmax=velrect(4)+vmin;
-if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-	set (handles.limittext, 'String', ['valid u: ' num2str(round(umin*100)/100) ' to ' num2str(round(umax*100)/100) ' [px/frame]' sprintf('\n') 'valid v: ' num2str(round(vmin*100)/100) ' to ' num2str(round(vmax*100)/100) ' [px/frame]']);
-else
-	set (handles.limittext, 'String', ['valid u: ' num2str(round(umin*100)/100) ' to ' num2str(round(umax*100)/100) ' [m/s]' sprintf('\n') 'valid v: ' num2str(round(vmin*100)/100) ' to ' num2str(round(vmax*100)/100) ' [m/s]']);
-end
-set (handles.vel_limit, 'String', 'Refine velocity limits');
-
-
-function validate_apply_filter_current_Callback(~, ~, ~)
-handles=gui_gethand;
-currentframe=floor(get(handles.fileselector, 'value'));
-gui_put('derived', []); %clear derived parameters if user modifies source data
-validate_filtervectors(currentframe)
-%put('manualdeletion',[]); %only valid one time, why...? Could work without this line.
-gui_sliderdisp(gui_retr('pivlab_axis'));
-
-function validate_count_discarded_data (~,~,~)
-handles=gui_gethand;
-resultslist=gui_retr('resultslist');
-currentframe=2*floor(get(handles.fileselector, 'value'))-1;
-if ~isempty(resultslist)
-	if size(resultslist,2) >= ((currentframe+1)/2)
-		typevector=resultslist{9,(currentframe+1)/2};
-		nan_amount=numel(typevector(typevector==2));
-		total_amount=numel(typevector(typevector==1)) + nan_amount;
-		nan_percent=nan_amount/total_amount*100;
-	else
-		nan_percent=0;
-	end
-else
-	nan_percent=0;
-end
-if isnan(nan_percent)
-	nan_percent=0;
-end
-set (handles.amount_nans,'string',['Filtered data: ' num2str(round(nan_percent,1)) ' %'])
-if nan_percent <= 10
-	set (handles.amount_nans, 'BackgroundColor',[0 1 0])
-elseif nan_percent > 10 && nan_percent <= 25
-	set (handles.amount_nans, 'BackgroundColor',[1 1 0])
-elseif nan_percent > 25
-	set (handles.amount_nans, 'BackgroundColor',[1 0 0])
-end
-
-function validate_apply_filter_all_Callback(~, ~, ~)
-resultslist=gui_retr('resultslist');
-
-if ~isempty(resultslist)
-	handles=gui_gethand;
-	filepath=gui_retr('filepath');
-	gui_toolsavailable(0,'Busy, please wait...')
-	gui_put('derived', []); %clear derived parameters if user modifies source data
-	if gui_retr('video_selection_done') == 0
-		num_frames_to_process=floor(size(filepath,1)/2)+1;
-	else
-		video_frame_selection=gui_retr('video_frame_selection');
-		num_frames_to_process=floor(numel(video_frame_selection)/2)+1;
-	end
-	if gui_retr('video_selection_done') == 1 || gui_retr('parallel')==0 %if post-processing a video, parallelization cannot be used.
-		for i=1:num_frames_to_process
-			validate_filtervectors(i)
-			set (handles.apply_filter_all, 'string', ['Please wait... (' int2str((i-1)/num_frames_to_process*100) '%)']);
-			drawnow;
-		end
-	else %not using a video file --> parallel processing possible
-		slicedfilepath1=cell(0);
-		slicedfilepath2=cell(0);
-		for i=1:2:size(filepath,1)%num_frames_to_process
-			k=(i+1)/2;
-			slicedfilepath1{k}=filepath{i};
-			slicedfilepath2{k}=filepath{i+1};
-		end
-		if get(handles.bg_subtract,'Value')==1
-			bg_img_A = gui_retr('bg_img_A');
-			bg_img_B = gui_retr('bg_img_B');
-			bg_sub=1;
-		else
-			bg_img_A=[];
-			bg_img_B=[];
-			bg_sub=0;
-		end
-		resultslist(10,:)={[]}; %remove smoothed results when user modifies original data
-		resultslist(11,:)={[]};
-		calu=gui_retr('calu');calv=gui_retr('calv');
-		x=resultslist(1,:);
-		y=resultslist(2,:);
-		u=resultslist(3,:);
-		v=resultslist(4,:);
-		typevector=resultslist(5,:);
-		typevector_original=resultslist(5,:);
-		manualdeletion=gui_retr('manualdeletion');
-
-		if numel(manualdeletion)>0
-			for i=1:size(u,2)
-				if size(manualdeletion,2)>=i
-					if isempty(manualdeletion{1,i}) ==0
-						framemanualdeletion=manualdeletion{i};
-						[u{i},v{i},typevector{i}]=validate_manual_point_deletion(u{i},v{i},typevector{i},framemanualdeletion);
-					end
-				end
-			end
-		end
-		velrect=gui_retr('velrect');
-		do_stdev_check = get(handles.stdev_check, 'value');
-		stdthresh=str2double(get(handles.stdev_thresh, 'String'));
-		do_local_median = get(handles.loc_median, 'value');
-		neigh_thresh=str2double(get(handles.loc_med_thresh,'string'));
-		%image-based filtering
-		do_contrast_filter = get(handles.do_contrast_filter, 'value');
-		do_bright_filter = get(handles.do_bright_filter, 'value');
-		contrast_filter_thresh=str2double(get(handles.contrast_filter_thresh, 'String'));
-		bright_filter_thresh=str2double(get(handles.bright_filter_thresh, 'String'));
-		interpol_missing= get(handles.interpol_missing, 'value');
-		do_corr2_filter = get(handles.do_corr2_filter, 'value');
-		corr_filter_thresh=str2double(get(handles.corr_filter_thresh,'String'));
-		do_notch_filter = get(handles.notch_filter, 'value');
-		notch_L_thresh=str2double(get(handles.notch_L_thresh,'String'));
-		notch_H_thresh=str2double(get(handles.notch_H_thresh,'String'));
-
-		hbar = pivprogress(size(slicedfilepath1,2),handles.apply_filter_all);
-		if size(u,2)<num_frames_to_process-1 %If not all frames have been analyzed. Parfor loop crashes otherwise.
-			u(num_frames_to_process-1)={[]};
-			v(num_frames_to_process-1)={[]};
-			x(num_frames_to_process-1)={[]};
-			y(num_frames_to_process-1)={[]};
-			typevector_original(num_frames_to_process-1)={[]};
-			resultslist(1,num_frames_to_process-1)={[]};
-		end
-		parfor i=1:num_frames_to_process-1 %without parallel processing toolbox, this is just a normal for loop.
-			if ~isempty(x(i))
-				if do_contrast_filter == 1 || do_bright_filter == 1
-					%% load images in a parfor loop
-					[~,~,ext] = fileparts(slicedfilepath1{i});
-					if strcmp(ext,'.b16')
-						currentimage1=f_readB16(slicedfilepath1{i});
-						currentimage2=f_readB16(slicedfilepath2{i});
-					else
-						currentimage1=imread(slicedfilepath1{i});
-						currentimage2=imread(slicedfilepath2{i});
-					end
-					rawimageA=currentimage1;
-					rawimageB=currentimage2;
-					if bg_sub==1
-						if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
-							currentimage1 = rgb2gray(currentimage1)-bg_img_A;
-							currentimage2 = rgb2gray(currentimage2)-bg_img_B;
-						else
-							currentimage1 = currentimage1-bg_img_A;
-							currentimage2 = currentimage2-bg_img_B;
-						end
-					end
-					currentimage1(currentimage1<0)=0; %bg subtraction may yield negative
-					currentimage2(currentimage2<0)=0; %bg subtraction may yield negative
-					A=currentimage1;
-					B=currentimage2;
-				else
-					A=[];B=[];rawimageA=[];rawimageB=[];
-				end
-				corr2_value=resultslist{12,i};
-				[u_new{i},v_new{i},typevector_new{i}]=validate_filtervectors_all_parallel(x{i},y{i},u{i},v{i},typevector_original{i},calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh);
-				hbar.iterate(1); %#ok<*PFBNS>
-			end
-		end
-		close(hbar);
-
-		%% 3D local median filtering test
-		%{
-		neigh_thresh=3;
-		u=u_new;%resultslist(3,:);
-		v=v_new;%resultslist(4,:);
-
-		u_3d = cat(3,u{:});
-		v_3d = cat(3,v{:});
-	
-		neigh_filt=medfilt3(u_3d);
-		neigh_filt=fillmissing(neigh_filt,'linear');
-		neigh_filt=abs(neigh_filt-u_3d);
-		u_3d(neigh_filt>neigh_thresh)=nan;
-		neigh_filt=medfilt3(v_3d);
-		neigh_filt=fillmissing(neigh_filt,'linear');
-		neigh_filt=abs(neigh_filt-v_3d);
-		v_3d(neigh_filt>neigh_thresh)=nan;
-	
-		u = squeeze(num2cell(u_3d, [1,2]))';
-		v = squeeze(num2cell(v_3d, [1,2]))';
-		
-		u_new=u;
-		v_new=v;
-		%}
-		resultslist(7, :) = u_new;
-		resultslist(8, :) = v_new;
-		resultslist(9, :) = typevector_new;
-		gui_put('resultslist', resultslist);
-	end
-	set (handles.apply_filter_all, 'string', 'Apply to all frames');
-	gui_toolsavailable(1)
-	gui_sliderdisp(gui_retr('pivlab_axis'));
-end
-
-function [u,v,typevector]=validate_manual_point_deletion(u,v,typevector,framemanualdeletion)
-manualdeletion=gui_retr('manualdeletion');
-if numel(manualdeletion)>0
-	if numel(u)>0
-		for i=1:size(framemanualdeletion,1)
-			u(framemanualdeletion(i,1),framemanualdeletion(i,2))=NaN;
-			v(framemanualdeletion(i,1),framemanualdeletion(i,2))=NaN;
-		end
-		typevector(isnan(u))=2;
-		typevector(isnan(v))=2;
-	end
-end
-
-
-function validate_restore_all_Callback(~, ~, ~)
-%clears resultslist at 7,8,9
-resultslist=gui_retr('resultslist');
-
-if size(resultslist,1) > 6
-	resultslist(7:9,:)={[]};
-	if size(resultslist,1) > 9
-		resultslist(10:11,:)={[]};
-	end
-	gui_put('resultslist', resultslist);
-	gui_sliderdisp(gui_retr('pivlab_axis'))
-end
-gui_put('manualdeletion',[]);
-
-function validate_clear_vel_limit_Callback(~, ~, ~)
-gui_put('velrect', []);
-handles=gui_gethand;
-set (handles.vel_limit_active, 'String', 'Limit inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
-set (handles.limittext, 'String', '');
-set (handles.vel_limit, 'String', 'Select velocity limits');
-
-function [u,v,typevector]=validate_filtervectors_all_parallel(x,y,u,v,typevector_original,calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh)
-typevector=typevector_original;
-%run postprocessing function
-if numel(velrect)>0
-	valid_vel(1)=velrect(1); %umin
-	valid_vel(2)=velrect(3)+velrect(1); %umax
-	valid_vel(3)=velrect(2); %vmin
-	valid_vel(4)=velrect(4)+velrect(2); %vmax
-else
-	valid_vel=[];
-end
-%do_contrast_filter=1
-if ~isempty(x)
-	if do_contrast_filter == 1 || do_bright_filter == 1
-		[u,v,~,~,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
-	end
-else
-	u=[];v=[];
-end
-
-%correlation filter
-if ~isempty(x)
-	if do_corr2_filter == 1
-		[u,v] = PIVlab_correlation_filter (u,v,corr_filter_thresh,corr2_value);
-	end
-else
-	u=[];v=[];
-end
-
-%Notch velocity magnitude filter
-if ~isempty(x)
-	if do_notch_filter == 1
-		[u,v] = PIVlab_notch_filter (u,v,calu,calv,notch_L_thresh,notch_H_thresh);
-	end
-end
-
-if ~isempty(x)
-	%vector-based filtering
-	[u,v] = PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
-else
-	u=[];v=[];
-end
-
-typevector(isnan(u))=2;
-typevector(isnan(v))=2;
-typevector(typevector_original==0)=0; %restores typevector for mask
-%interpolation using inpaint_NaNs
-if interpol_missing==1
-	u=inpaint_nans(u,4);
-	v=inpaint_nans(v,4);
-end
-
-function validate_filtervectors(frame)
-%executes filters one after another, writes results to resultslist 7,8,9
-handles=gui_gethand;
-resultslist=gui_retr('resultslist');
-resultslist{10,frame}=[]; %remove smoothed results when user modifies original data
-resultslist{11,frame}=[];
-if size(resultslist,2)>=frame
-	calu=gui_retr('calu');calv=gui_retr('calv');
-	u=resultslist{3,frame};
-	v=resultslist{4,frame};
-	typevector_original=resultslist{5,frame};
-	typevector=typevector_original;
-	manualdeletion=gui_retr('manualdeletion');
-	if size(manualdeletion,2)>=frame
-		if isempty(manualdeletion{1,frame}) ==0
-			framemanualdeletion=manualdeletion{frame};
-			[u,v,typevector]=validate_manual_point_deletion(u,v,typevector,framemanualdeletion);
-		end
-	end
-	if numel(u)>0
-		velrect=gui_retr('velrect');
-		do_stdev_check = get(handles.stdev_check, 'value');
-		stdthresh=str2double(get(handles.stdev_thresh, 'String'));
-		do_local_median = get(handles.loc_median, 'value');
-		%epsilon=str2double(get(handles.epsilon,'string'));
-		neigh_thresh=str2double(get(handles.loc_med_thresh,'string'));
-
-
-
-		%run postprocessing function
-		if numel(velrect)>0
-			valid_vel(1)=velrect(1); %umin
-			valid_vel(2)=velrect(3)+velrect(1); %umax
-			valid_vel(3)=velrect(2); %vmin
-			valid_vel(4)=velrect(4)+velrect(2); %vmax
-		else
-			valid_vel=[];
-		end
-
-		%image-based filtering
-		do_contrast_filter = get(handles.do_contrast_filter, 'value');
-		do_bright_filter = get(handles.do_bright_filter, 'value');
-		%do_contrast_filter=1
-		if do_contrast_filter == 1 || do_bright_filter == 1
-			selected=2*frame-1;
-			x=resultslist{1,frame};
-			y=resultslist{2,frame};
-			contrast_filter_thresh=str2double(get(handles.contrast_filter_thresh, 'String'));
-			bright_filter_thresh=str2double(get(handles.bright_filter_thresh, 'String'));
-
-			[A,rawimageA]=import_get_img(selected);
-			[B,rawimageB]=import_get_img(selected+1);
-			[u,v,~,~,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
-		end
-
-		%correlation filter
-		do_corr2_filter = get(handles.do_corr2_filter, 'value');
-		if do_corr2_filter == 1
-			corr_filter_thresh=str2double(get(handles.corr_filter_thresh,'String'));
-			[u,v] = PIVlab_correlation_filter (u,v,corr_filter_thresh,resultslist{12,frame});
-		end
-
-		%Notch velocity magnitude filter
-		do_notch_filter = get(handles.notch_filter, 'value');
-		if do_notch_filter == 1
-			[u,v] = PIVlab_notch_filter (u,v,calu,calv,str2double(get(handles.notch_L_thresh,'String')),str2double(get(handles.notch_H_thresh,'String')));
-		end
-
-		%vector-based filtering
-		[u,v] = PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
-
-		typevector(isnan(u))=2;
-		typevector(isnan(v))=2;
-		typevector(typevector_original==0)=0; %restores typevector for mask
-		%interpolation using inpaint_NaNs
-		if get(handles.interpol_missing, 'value')==1
-			u=inpaint_nans(u,4);
-			v=inpaint_nans(v,4);
-		end
-		resultslist{7, frame} = u;
-		resultslist{8, frame} = v;
-		resultslist{9, frame} = typevector;
-		gui_put('resultslist', resultslist);
-	end
-end
-%sliderdisp(retr('pivlab_axis'))
-
-function validate_rejectsingle_Callback(~, ~, ~)
-handles=gui_gethand;
-resultslist=gui_retr('resultslist');
-frame=floor(get(handles.fileselector, 'value'));
-if size(resultslist,2)>=frame %2nd dimesnion = frame
-	x=resultslist{1,frame};
-	y=resultslist{2,frame};
-	u=resultslist{3,frame};
-	v=resultslist{4,frame};
-	typevector_original=resultslist{5,frame};
-	typevector=typevector_original;
-	manualdeletion=gui_retr('manualdeletion');
-	framemanualdeletion=[];
-	if numel(manualdeletion)>0
-		if size(manualdeletion,2)>=frame
-			if isempty(manualdeletion{1,frame}) ==0
-				framemanualdeletion=manualdeletion{frame};
-			end
-		end
-	end
-
-	if numel(u)>0
-		delete(findobj(gca,'tag','manualdot'));
-		text(50,10,'Right mouse button exits manual validation mode.','color','g','fontsize',8, 'BackgroundColor', 'k', 'tag', 'hint')
-		gui_toolsavailable(0);
-		button = 1;
-		while button == 1
-			[xposition,yposition,button] = ginput(1);
-			if button~=1
-				break
-			end
-			if numel (xposition)>0 %will be 0 if user presses enter
-				xposition=round(xposition);
-				yposition=round(yposition);
-				%manualdeletion=zeros(size(xposition,1),2);
-				findx=abs(x/xposition-1);
-				[trash, imagex]=find(findx==min(min(findx)));
-				findy=abs(y/yposition-1);
-				[imagey, trash]=find(findy==min(min(findy)));
-				idx=size(framemanualdeletion,1);
-				%manualdeletion(idx+1,1)=imagey(1,1);
-				%manualdeletion(idx+1,2)=imagex(1,1);
-
-				framemanualdeletion(idx+1,1)=imagey(1,1); %#ok<AGROW>
-				framemanualdeletion(idx+1,2)=imagex(1,1); %#ok<AGROW>
-
-				hold on;
-				plot (x(framemanualdeletion(idx+1,1),framemanualdeletion(idx+1,2)),y(framemanualdeletion(idx+1,1),framemanualdeletion(idx+1,2)), 'yo', 'markerfacecolor', 'r', 'markersize', 10,'tag','manualdot')
-				hold off;
-			end
-		end
-		manualdeletion{frame}=framemanualdeletion;
-		gui_put('manualdeletion',manualdeletion);
-
-		delete(findobj(gca,'Type','text','color','r'));
-		delete(findobj(gca,'tag','hint'));
-		text(50,50,'Result will be shown after applying vector validation','color','r','fontsize',10, 'fontweight','bold', 'BackgroundColor', 'k')
-	end
-end
-gui_toolsavailable(1);
-
-function calibrate_draw_line_Callback(~, ~, ~)
-filepath=gui_retr('filepath');
-caliimg=gui_retr('caliimg');
-if numel(caliimg)==0 && size(filepath,1) >1
-	gui_sliderdisp(gui_retr('pivlab_axis'))
-end
-if size(filepath,1) >1 || numel(caliimg)>0 || gui_retr('video_selection_done') == 1
-	handles=gui_gethand;
-	gui_toolsavailable(0)
-	delete(findobj('tag', 'caliline'))
-	roi = images.roi.Line;
-	%roi.EdgeAlpha=0.75;
-	roi.LabelVisible = 'on';
-	roi.Tag = 'caliline';
-	roi.Color = 'y';
-	roi.StripeColor = 'g';
-	roi.LineWidth = roi.LineWidth*2;
-	Cali_coords = gui_retr('pointscali');
-	if ~isempty(Cali_coords)
-		roi=drawline(gui_retr('pivlab_axis'),'Position',Cali_coords);
-		%roi.EdgeAlpha=0.75;
-		roi.LabelVisible = 'on';
-		roi.Tag = 'caliline';
-		original_linewidth=roi.LineWidth;
-		roi.LineWidth = original_linewidth*2;
-		for rep=1:2 %bring users attention to already existing line
-			roi.Color = 'g'; roi.StripeColor = 'y';
-			pause(0.1)
-			roi.Color = 'y'; roi.StripeColor = 'g';
-			pause(0.1)
-		end
-		roi.Color = 'y';
-		roi.StripeColor = 'g';
-		roi.LineWidth = original_linewidth*2;
-		pause(0.1)
-	else
-		axes(gui_retr('pivlab_axis'))
-		draw(roi);
-	end
-	addlistener(roi,'MovingROI',@calibrate_Calibrationevents);
-	addlistener(roi,'DeletingROI',@calibrate_Calibrationevents);
-
-	dummyevt.EventName = 'MovingROI';
-	calibrate_Calibrationevents(roi,dummyevt); %run the moving event once to update displayed length
-	gui_toolsavailable(1)
-end
-
-function calibrate_pixeldist_changed_Callback(src,~)
-if exist('src','var')
-	if strcmp(src.Tag,'pixeldist') % Reference distance has been edited in the edit field and not by clicking two points
-		% simulate clicking a distance in a calibration image and draw a line
-		delete(findobj('tag', 'caliline'))
-		spacing_to_border=50;
-		misc_check_comma(src)
-		xposition(1)=spacing_to_border;
-		xposition(2)=spacing_to_border+str2double(src.String);
-
-		yposition(1)=spacing_to_border;
-		yposition(2)=spacing_to_border;
-
-
-		gui_put('pointscali',[xposition' yposition']);
-
-		calibrate_draw_line_Callback
-
-	end
-else
-	handles=gui_gethand;
-	pointscali=gui_retr('pointscali');
-	if ~isempty(pointscali)
-		xposition=pointscali(:,1);
-		yposition=pointscali(:,2);
-		if numel(pointscali)>0
-			set(handles.pixeldist,'String',num2str(round((sqrt((xposition(1)-xposition(2))^2+(yposition(1)-yposition(2))^2))*100)/100))
-		end
-	else
-		set(handles.pixeldist,'String','1');
-	end
-end
-function calibrate_calccali
-gui_put('derived',[]) %calibration makes previously derived params incorrect
-handles=gui_gethand;
-
-pointscali=gui_retr('pointscali');
-if numel(pointscali)>0
-	xposition=pointscali(:,1);
-	yposition=pointscali(:,2);
-	dist=sqrt((xposition(1)-xposition(2))^2 + (yposition(1)-yposition(2))^2);
-	realdist=str2double(get(handles.realdist, 'String'));
-	time=str2double(get(handles.time_inp, 'String'));
-	calxy=(realdist/1000)/dist; %m/px %realdist=realdistance in m; dist=distance in px
-	x_axis_direction=get(handles.x_axis_direction,'value'); %1= increase to right, 2= increase to left
-	y_axis_direction=get(handles.y_axis_direction,'value'); %1= increase to bottom, 2= increase to top
-	if x_axis_direction==1
-		calu=calxy/(time/1000);
-	else
-		calu=-1*(calxy/(time/1000));
-	end
-	if y_axis_direction==1
-		calv=calxy/(time/1000);
-	else
-		calv=-1*(calxy/(time/1000));
-	end
-	gui_put('calu',calu);
-	gui_put('calv',calv);
-	gui_put('calxy',calxy);
-	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','on')
-	points_offsetx=gui_retr('points_offsetx');
-	if numel(points_offsetx)>0
-		offsetx = calibrate_calculate_offset_axis('x',points_offsetx(1),points_offsetx(3));
-		gui_put('offset_x_true',offsetx);
-	else %no offsets applied
-		gui_put('offset_x_true',0);
-	end
-	points_offsety=gui_retr('points_offsety');
-	if numel(points_offsety)>0
-		offsety = calibrate_calculate_offset_axis('y',points_offsety(2),points_offsety(3));
-		gui_put('offset_y_true',offsety);
-	else %no offsets applied
-		gui_put('offset_y_true',0);
-	end
-
-	calxy=gui_retr('calxy');
-	calu=gui_retr('calu');calv=gui_retr('calv');
-	offset_x_true = gui_retr('offset_x_true');
-	offset_y_true = gui_retr('offset_y_true');
-
-	calibrate_update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles);
-
-	%sliderdisp(retr('pivlab_axis'))
-
-else %no calibration performed yet
-	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
-	set(handles.x_axis_direction,'value',1);
-	set(handles.y_axis_direction,'value',1);
-	msgbox ('You need to select a reference distance befor applying a calibration.','modal')
-end
-
-
-function calibrate_clear_cali_Callback(~, ~, ~)
-handles=gui_gethand;
-gui_put('pointscali',[]);
-gui_put('points_offsetx',[]);
-gui_put('points_offsety',[]);
-gui_put('calu',1);
-gui_put('calv',1);
-gui_put('calxy',1);
-gui_put('offset_x_true',0);
-gui_put('offset_y_true',0);
-gui_put('caliimg', []);
-filepath=gui_retr('filepath');
-set(handles.calidisp, 'string', ['inactive'], 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
-delete(findobj('tag', 'caliline'));
-set(handles.realdist, 'String','1');
-set(handles.time_inp, 'String','1');
-set(handles.x_axis_direction,'value',1);
-set(handles.y_axis_direction,'value',1);
-set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
-calibrate_pixeldist_changed_Callback
-if size(filepath,1) >1 || gui_retr('video_selection_done') == 1
-	gui_sliderdisp(gui_retr('pivlab_axis'))
-else
-	gui_displogo(0)
-end
-
-function calibrate_optimize_calib_img_Callback(~,~,~) %optimize display of calibration image
-caliimg=gui_retr('caliimg');
-if ~isempty(caliimg)
-	calibrate_display_cali_img (caliimg)
-end
-
-function calibrate_display_cali_img (caliimg)
-handles=gui_gethand;
-if get(handles.optimize_calib_img,'value')==1
-	numberoftiles1=round(size(caliimg,1)/40);
-	numberoftiles2=round(size(caliimg,2)/40);
-	if numberoftiles1 < 2
-		numberoftiles1=2;
-	end
-	if numberoftiles2 < 2
-		numberoftiles2=2;
-	end
-
-	if size(caliimg,3) == 1
-		caliimg=adapthisteq(imadjust(caliimg),'NumTiles',[numberoftiles1 numberoftiles2],'clipLimit',0.01);
-	else
-		try
-			caliimg=adapthisteq(imadjust(rgb2gray(caliimg)),'NumTiles',[numberoftiles1 numberoftiles2],'clipLimit',0.01);
-		catch
-		end
-	end
-end
+iterations=2;
 pivlab_axis=gui_retr('pivlab_axis');
-image(caliimg, 'parent',pivlab_axis, 'cdatamapping', 'scaled');
-colormap('gray');
-axis image;
-set(gca,'ytick',[])
-set(gca,'xtick',[])
-
-function calibrate_load_ext_img_Callback(~, ~, ~) %load extra calibration image
-cali_folder=gui_retr('cali_folder');
-if isempty (cali_folder)==1
-	if ispc==1
-		cali_folder=[gui_retr('pathname') '\'];
-	else
-		cali_folder=[gui_retr('pathname') '/'];
-	end
+old_units=get(pivlab_axis,'Units');
+set(pivlab_axis,'Units','Pixels');
+axessize=get(gca,'position');
+set(pivlab_axis,'Units',old_units);
+axessize=axessize(3:4);
+%was ist grÃ¶ÃŸer, x oder y. dann entsprechend die x oder y grÃ¶ÃŸe der axes nehemn
+xextend=size(vx,2);
+yextend=size(vx,1);
+if yextend<xextend
+	scalefactor=axessize(1)/xextend;
+else
+	scalefactor=axessize(2)/yextend;
 end
+
+vx=inpaint_nans(vx); %otherwise LIC will make Matlab crash
+vy=inpaint_nans(vy);
+vx=imresize(vx,scalefactor*LICreso,'bicubic');
+vy=imresize(vy,scalefactor*LICreso,'bicubic');
+
+
+%{
+this function is from:
+Matlab VFV Toolbox 1.0
+by courtesy of:
+Nima Bigdely Shamlo (email: bigdelys-vfv@yahoo.com)
+Computational Science Research Center
+San Diego State University
+%}
+
+[width,height] = size(vx);
+LIClength = round(max([width,height]) / 30);
+
+kernel = ones(2 * LIClength);
+LICImage = zeros(width, height);
+intensity = ones(width, height); %#ok<*PREALL> % array containing vector intensity
+
+% Making white noise
+noiseImage=rand(width,height);
+
+% Making LIC Image
 try
-	[filename, pathname, filterindex] = uigetfile({'*.bmp;*.tif;*.jpg;*.tiff;*.b16;','Image Files (*.bmp,*.tif,*.jpg,*.tiff,*.b16)'; '*.tif','tif'; '*.jpg','jpg'; '*.bmp','bmp'; '*.tiff','tiff';'*.b16','b16'; },'Select calibration image',cali_folder);
+	for m = 1:iterations
+		[LICImage, intensity,normvx,normvy] = fastLICFunction(double(vx),double(vy),noiseImage,kernel); % External Fast LIC implemennted in C language
+		LICImage = imadjust(LICImage); % Adjust the value range
+		noiseImage = LICImage;
+	end
+	out=LICImage;
+	delete(findobj('tag', 'waitplease'));
 catch
-	[filename, pathname, filterindex] = uigetfile({'*.bmp;*.tif;*.jpg;*.tiff;*.b16;','Image Files (*.bmp,*.tif,*.jpg,*.tiff,*.b16)'; '*.tif','tif'; '*.jpg','jpg'; '*.bmp','bmp';  '*.tiff','tiff';'*.b16','b16';},'Select calibration image'); %unix/mac system may cause problems, can't be checked due to lack of unix/mac systems...
-end
-if ~isequal(filename,0)
-	[~,~,ext] = fileparts(fullfile(pathname, filename));
-	if strcmp(ext,'.b16')
-		caliimg=f_readB16(fullfile(pathname, filename));
-	else
-		caliimg=imread(fullfile(pathname, filename));
-	end
-	gui_put('caliimg', caliimg);
-	gui_put('cali_folder', pathname);
-	calibrate_display_cali_img (caliimg)
+	h=errordlg(['Could not run the LIC tool.' sprintf('\n') 'Probably the tool is not compiled correctly.' sprintf('\n')  'Please execute the following command in Matlab:' sprintf('\n') sprintf('\n') '     mex fastLICFunction.c     ' sprintf('\n') sprintf('\n') 'Then try again.'],'Error','on');
+	uiwait(h);
+	out=zeros(size(vx));
 end
 
-function export_write_workspace_Callback(~, ~, ~)
-resultslist=gui_retr('resultslist');
-if isempty(resultslist)==0
-	derived=gui_retr('derived');
-	calxy=gui_retr('calxy');
-	calu=gui_retr('calu');calv=gui_retr('calv');
-	nrframes=size(resultslist,2);
-	if size(resultslist,1)< 11
-		resultslist{11,nrframes}=[]; %make sure resultslist has cells for all params
-	end
-	if isempty(derived)==0
-		if size(derived,1)<= 10|| size(derived,2) < nrframes
-			derived{11,nrframes}=[]; %make sure derived has cells for all params
-		end
-	else
-		derived=cell(11,nrframes);
-	end
-
-	if calxy==1 && (calu==1 ||calu==-1)
-		units='[px] respectively [px/frame]';
-	else
-		units='[m] respectively [m/s]';
-	end
-	%ohne alles: 6 hoch
-	%mit filtern: 11 hoch
-	%mit smoothed, 11 hoch und inhalt...
-	u_original=cell(size(resultslist,2),1);
-	v_original=u_original;
-	x=u_original;
-	y=u_original;
-	typevector_original=u_original;
-	u_filtered=u_original;
-	v_filtered=v_original;
-	typevector_filtered=u_original;
-	u_smoothed=u_original;
-	v_smoothed=u_original;
-	vorticity=cell(size(derived,2),1);
-	velocity_magnitude=vorticity;
-	u_component=vorticity;
-	v_component=vorticity;
-	divergence=vorticity;
-	vortex_locator=vorticity;
-	shear_rate=vorticity;
-	strain_rate=vorticity;
-	LIC=vorticity;
-	vectorangle=vorticity;
-	correlation_map=vorticity;
-
-	for i=1:nrframes
-		[x_cal,y_cal]=calibrate_xy (resultslist{1,i},resultslist{2,i});
-		x{i,1}=x_cal;
-		y{i,1}=y_cal;
-		u_original{i,1}=resultslist{3,i}*calu;
-		v_original{i,1}=resultslist{4,i}*calv;
-		typevector_original{i,1}=resultslist{5,i};
-		u_filtered{i,1}=resultslist{7,i}*calu;
-		v_filtered{i,1}=resultslist{8,i}*calv;
-		typevector_filtered{i,1}=resultslist{9,i};
-		u_smoothed{i,1}=resultslist{10,i}*calu;
-		v_smoothed{i,1}=resultslist{11,i}*calv;
-
-		vorticity{i,1}=derived{1,i};
-		velocity_magnitude{i,1}=derived{2,i};
-		u_component{i,1}=derived{3,i};
-		v_component{i,1}=derived{4,i};
-		divergence{i,1}=derived{5,i};
-		vortex_locator{i,1}=derived{6,i};
-		shear_rate{i,1}=derived{7,i};
-		strain_rate{i,1}=derived{8,i};
-		LIC{i,1}=derived{9,i};
-		vectorangle{i,1}=derived{10,i};
-		correlation_map{i,1}=derived{11,i};
-	end
-
-	assignin('base','x',x);
-	assignin('base','y',y);
-	assignin('base','u_original',u_original);
-	assignin('base','v_original',v_original);
-	assignin('base','typevector_original',typevector_original);
-	assignin('base','u_filtered',u_filtered);
-	assignin('base','v_filtered',v_filtered);
-	assignin('base','typevector_filtered',typevector_filtered);
-	assignin('base','u_smoothed',u_smoothed);
-	assignin('base','v_smoothed',v_smoothed);
-
-	assignin('base','vorticity',vorticity);
-
-	assignin('base','velocity_magnitude',velocity_magnitude);
-	assignin('base','u_component',u_component);
-	assignin('base','v_component',v_component);
-	assignin('base','divergence',divergence);
-	assignin('base','vortex_locator',vortex_locator);
-	assignin('base','shear_rate',shear_rate);
-	assignin('base','strain_rate',strain_rate);
-	assignin('base','LIC',LIC);
-	assignin('base','vectorangle',vectorangle);
-	assignin('base','correlation_map',correlation_map);
-
-	assignin('base','calxy',calxy);
-	assignin('base','calu',calu);
-	assignin('base','calv',calv);
-	assignin('base','units',units);
-
-
-	clc
-	disp('EXPLANATIONS:')
-	disp(' ')
-	disp('The first dimension of the variables is the frame number.')
-	disp('The variables contain all data that was calculated in the PIVlab GUI.')
-	disp('If some data was not calculated, the corresponding cell is empty.')
-	disp('Typevector is 0 for masked vector, 1 for regular vector, 2 for filtered vector')
-	disp(' ')
-	disp('u_original and v_original are the unmodified velocities from the cross-correlation.')
-	disp('u_filtered and v_filtered is the above incl. your data validation selection.')
-	disp('u_smoothed and v_smoothed is the above incl. your smoothing selection.')
-end
-
-function plot_mean_u_Callback(~, ~, ~)
+function plot_apply_deriv_Callback(~, ~, ~)
 handles=gui_gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
-resultslist=gui_retr('resultslist');
-if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0 %analysis exists
-	if size(resultslist,1)>6 && numel(resultslist{7,currentframe})>0 %filtered exists
-		u=resultslist{7,currentframe};
-	else
-		u=resultslist{3,currentframe};
-	end
-	calu=gui_retr('calu');calv=gui_retr('calv');
-	set(handles.subtr_u, 'string', num2str(mean(u(:)*calu,'omitnan')));
+deriv=get(handles.derivchoice, 'value');
+plot_derivative_calc (currentframe,deriv,1)
+gui_sliderdisp(gui_retr('pivlab_axis'))
+
+function plot_apply_deriv_all_Callback(~, ~, ~)
+handles=gui_gethand;
+filepath=gui_retr('filepath');
+gui_toolsavailable(0,'Busy, please wait...')
+for i=1:floor(size(filepath,1)/2)+1
+	deriv=get(handles.derivchoice, 'value');
+	plot_derivative_calc(i,deriv,1)
+	set (handles.apply_deriv_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
+	drawnow;
+end
+set (handles.apply_deriv_all, 'string', 'Apply to all frames');
+gui_toolsavailable(1)
+gui_sliderdisp(gui_retr('pivlab_axis'))
+
+function plot_applycolorwidth_Callback(~, ~, ~)
+gui_sliderdisp(gui_retr('pivlab_axis'))
+
+function plot_autoscale_vec_Callback(~, ~, ~)
+handles=gui_gethand;
+if get(handles.autoscale_vec, 'value')==1
+	set(handles.vectorscale,'enable', 'off');
 else
-	set(handles.subtr_u, 'string', '0');
+	set(handles.vectorscale,'enable', 'on');
 end
 
-function plot_mean_v_Callback(~, ~, ~)
+function plot_autoscaler_Callback(~, ~, ~)
 handles=gui_gethand;
-currentframe=floor(get(handles.fileselector, 'value'));
-resultslist=gui_retr('resultslist');
-if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0 %analysis exists
-	if size(resultslist,1)>6 && numel(resultslist{7,currentframe})>0 %filtered exists
-		v=resultslist{8,currentframe};
-	else
-		v=resultslist{4,currentframe};
-	end
-	calu=gui_retr('calu');calv=gui_retr('calv');
-	set(handles.subtr_v, 'string', num2str(mean(v(:)*calv,'omitnan')));
+if get(handles.autoscaler, 'value')==1
+	set (handles.mapscale_min, 'enable', 'off')
+	set (handles.mapscale_max, 'enable', 'off')
 else
-	set(handles.subtr_v, 'string', '0');
+	set (handles.mapscale_min, 'enable', 'on')
+	set (handles.mapscale_max, 'enable', 'on')
 end
+
+function out=plot_dcev(x,y,u,v)
+dUdX=conv2(u,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid')./...
+	conv2(x,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid');
+dVdX=conv2(v,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid')./...
+	conv2(x,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid');
+dUdY=conv2(u,[ 0,-1, 0; 0, 0, 0; 0, 1, 0],'valid')./...
+	conv2(y,[ 0,-1, 0; 0, 0, 0; 0, 1, 0],'valid');
+dVdY=conv2(v,[ 0,-1, 0; 0, 0, 0; 0, 1, 0],'valid')./...
+	conv2(y,[ 0,-1, 0; 0, 0, 0; 0, 1, 0],'valid');
+res=(dUdX+dVdY)/2+sqrt(0.25*(dUdX+dVdY).^2+dUdY.*dVdX);
+d=zeros(size(x));
+d(2:end-1,2:end-1)=imag(res);
+out=((d/(max(max(d))-(min(min(d)))))+abs(min(min(d))))*255;%normalize
+
+function plot_deletestreamlines_Callback(~, ~, ~)
+gui_put('streamlinesX',[]);
+gui_put('streamlinesY',[]);
+delete(findobj('tag','streamline'));
+
+function plot_delmarkers_Callback(~, ~, ~)
+gui_put('manmarkersX',[]);
+gui_put('manmarkersY',[]);
+delete(findobj('tag','manualmarker'));
 
 function plot_derivative_calc (frame,deriv,update)
 handles=gui_gethand;
@@ -7526,992 +11653,395 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 	end
 end
 
-function out=plot_LIC(vx,vy,frame)
+function plot_derivchoice_Callback(hObject, ~, ~)
 handles=gui_gethand;
-LICreso=round(get (handles.licres, 'value')*10)/10;
-resultslist=gui_retr('resultslist');
-x=resultslist{1,frame};
-y=resultslist{2,frame};
-text(mean(x(1,:)/1.5),mean(y(:,1)), ['Please wait. LIC in progress...' sprintf('\n') 'If this message stays here for > 20s,' sprintf('\n') 'check MATLABs command window.' sprintf('\n') 'The function might need to be compiled first.'],'tag', 'waitplease', 'backgroundcolor', 'k', 'color', 'r','fontsize',10);
-drawnow;
-iterations=2;
-pivlab_axis=gui_retr('pivlab_axis');
-old_units=get(pivlab_axis,'Units');
-set(pivlab_axis,'Units','Pixels');
-axessize=get(gca,'position');
-set(pivlab_axis,'Units',old_units);
-axessize=axessize(3:4);
-%was ist grÃ¶ÃŸer, x oder y. dann entsprechend die x oder y grÃ¶ÃŸe der axes nehemn
-xextend=size(vx,2);
-yextend=size(vx,1);
-if yextend<xextend
-	scalefactor=axessize(1)/xextend;
+contents = get(hObject,'String');
+currstring=contents{get(hObject,'Value')};
+currstring=currstring(strfind(currstring,'['):end);
+set(handles.text39,'String', ['min ' currstring ':']);
+set(handles.text40,'String', ['max ' currstring ':']);
+plot_derivdropdown(hObject);
+
+function plot_derivdropdown(hObject, ~, ~)
+handles=gui_gethand;
+if get(hObject,'value')==10
+	set(handles.LIChint1,'visible','on');
+	set(handles.LIChint2,'visible','on');
+	%set(handles.LIChint3,'visible','on');
+	set(handles.licres,'visible','on');
 else
-	scalefactor=axessize(2)/yextend;
+	set(handles.LIChint1,'visible','off');
+	set(handles.LIChint2,'visible','off');
+	%set(handles.LIChint3,'visible','off');
+	set(handles.licres,'visible','off');
 end
 
-vx=inpaint_nans(vx); %otherwise LIC will make Matlab crash
-vy=inpaint_nans(vy);
-vx=imresize(vx,scalefactor*LICreso,'bicubic');
-vy=imresize(vy,scalefactor*LICreso,'bicubic');
-
-
-%{
-this function is from:
-Matlab VFV Toolbox 1.0
-by courtesy of:
-Nima Bigdely Shamlo (email: bigdelys-vfv@yahoo.com)
-Computational Science Research Center
-San Diego State University
-%}
-
-[width,height] = size(vx);
-LIClength = round(max([width,height]) / 30);
-
-kernel = ones(2 * LIClength);
-LICImage = zeros(width, height);
-intensity = ones(width, height); %#ok<*PREALL> % array containing vector intensity
-
-% Making white noise
-noiseImage=rand(width,height);
-
-% Making LIC Image
-try
-	for m = 1:iterations
-		[LICImage, intensity,normvx,normvy] = fastLICFunction(double(vx),double(vy),noiseImage,kernel); % External Fast LIC implemennted in C language
-		LICImage = imadjust(LICImage); % Adjust the value range
-		noiseImage = LICImage;
-	end
-	out=LICImage;
-	delete(findobj('tag', 'waitplease'));
-catch
-	h=errordlg(['Could not run the LIC tool.' sprintf('\n') 'Probably the tool is not compiled correctly.' sprintf('\n')  'Please execute the following command in Matlab:' sprintf('\n') sprintf('\n') '     mex fastLICFunction.c     ' sprintf('\n') sprintf('\n') 'Then try again.'],'Error','on');
-	uiwait(h);
-	out=zeros(size(vx));
-end
-
-function plot_apply_deriv_Callback(~, ~, ~)
+function plot_derivs_Callback(~, ~, ~)
 handles=gui_gethand;
-currentframe=floor(get(handles.fileselector, 'value'));
-deriv=get(handles.derivchoice, 'value');
-plot_derivative_calc (currentframe,deriv,1)
-gui_sliderdisp(gui_retr('pivlab_axis'))
-
-function out=plot_dcev(x,y,u,v)
-dUdX=conv2(u,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid')./...
-	conv2(x,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid');
-dVdX=conv2(v,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid')./...
-	conv2(x,[ 0, 0, 0;-1, 0, 1; 0, 0, 0],'valid');
-dUdY=conv2(u,[ 0,-1, 0; 0, 0, 0; 0, 1, 0],'valid')./...
-	conv2(y,[ 0,-1, 0; 0, 0, 0; 0, 1, 0],'valid');
-dVdY=conv2(v,[ 0,-1, 0; 0, 0, 0; 0, 1, 0],'valid')./...
-	conv2(y,[ 0,-1, 0; 0, 0, 0; 0, 1, 0],'valid');
-res=(dUdX+dVdY)/2+sqrt(0.25*(dUdX+dVdY).^2+dUdY.*dVdX);
-d=zeros(size(x));
-d(2:end-1,2:end-1)=imag(res);
-out=((d/(max(max(d))-(min(min(d)))))+abs(min(min(d))))*255;%normalize
-
-function out=plot_strain(x,y,u,v)
-hx = x(1,:);
-hy = y(:,1);
-[px, junk] = gradient(u, hx, hy);
-[junk, qy] = gradient(v, hx, hy); %#ok<*ASGLU>
-out = px-qy;
-
-function out=plot_shear(x,y,u,v)
-hx = x(1,:);
-hy = y(:,1);
-[junk, py] = gradient(u, hx, hy);
-[qx, junk] = gradient(v, hx, hy);
-out= qx+py;
-
-function out=plot_rescale_maps(in,isangle)
-%input has same dimensions as x,y,u,v,
-%output has size of the piv image
-handles=gui_gethand;
-filepath=gui_retr('filepath');
-currentframe=floor(get(handles.fileselector, 'value'));
-[currentimage,~]=import_get_img(2*currentframe-1);
-resultslist=gui_retr('resultslist');
-x=resultslist{1,currentframe};
-y=resultslist{2,currentframe};
-out=zeros(size(currentimage));
-if size(out,3)>1
-	out(:,:,2:end)=[];
-end
-out(:,:)=mean(in(:)); %Rand wird auf Mittelwert gesetzt
-step=x(1,2)-x(1,1)+1;
-minx=(min(min(x))-step/2);
-maxx=(max(max(x))+step/2);
-miny=(min(min(y))-step/2);
-maxy=(max(max(y))+step/2);
-width=maxx-minx;
-height=maxy-miny;
-if size(in,3)>1 %why would this actually happen...?
-	in(:,:,2:end)=[];
-end
-if isangle == 1 %angle data is unsteady, needs to interpolated differently
-	X_raw=cos(in/180*pi);
-	Y_raw=sin(in/180*pi);
-	%interpolate
-	X_interp = imresize(X_raw,[height width],'bilinear');
-	Y_interp = imresize(Y_raw,[height width],'bilinear');
-	%reconvert to phase
-	dispvar = angle(complex(X_interp,Y_interp))*180/pi;
-else
-	colormap_interpolation_list=get(handles.colormap_interpolation,'String');
-	colormap_interpolation_value = get(handles.colormap_interpolation,'Value');
-	dispvar = imresize(in,[height width],colormap_interpolation_list{colormap_interpolation_value}); %INTERPOLATION
-end
-
-if miny<1
-	miny=1;
-end
-if minx<1
-	minx=1;
-end
-try
-	out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar;
-catch
-	disp('temp workaround')
-	A=out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1));
-	out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar(1:size(A,1),1:size(A,2));
-end
-
-
-function out=plot_rescale_maps_nan(in,isangle)
-%input has same dimensions as x,y,u,v,
-%output has size of the piv image
-%Rand ist nan statt Mittelwert des derivatives
-handles=gui_gethand;
-filepath=gui_retr('filepath');
-currentframe=floor(get(handles.fileselector, 'value'));
-[currentimage,~]=import_get_img(2*currentframe-1);
-resultslist=gui_retr('resultslist');
-x=resultslist{1,currentframe};
-y=resultslist{2,currentframe};
-out=zeros(size(currentimage));
-if size(out,3)>1
-	out(:,:,2:end)=[];
-end
-out(:,:)=nan; %rand wird auf nan gesetzt
-step=x(1,2)-x(1,1)+1;
-minx=(min(min(x))-step/2);
-maxx=(max(max(x))+step/2);
-miny=(min(min(y))-step/2);
-maxy=(max(max(y))+step/2);
-width=maxx-minx;
-height=maxy-miny;
-if size(in,3)>1 %why would this actually happen...?
-	in(:,:,2:end)=[];
-end
-
-if isangle == 1 %angle data is unsteady, needs to interpolated differently
-	X_raw=cos(in/180*pi);
-	Y_raw=sin(in/180*pi);
-	%interpolate
-	X_interp = imresize(X_raw,[height width],'bilinear');
-	Y_interp = imresize(Y_raw,[height width],'bilinear');
-	%reconvert to phase
-	dispvar = angle(complex(X_interp,Y_interp))*180/pi;
-else
-	dispvar = imresize(in,[height width],'bilinear'); %INTERPOLATION
-end
-
-if miny<1
-	miny=1;
-end
-if minx<1
-	minx=1;
-end
-try
-	out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar;
-catch
-	disp('temp workaround')
-	A=out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1));
-	out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar(1:size(A,1),1:size(A,2));
-end
-%% remove data from masked areas
-current_mask_nr=floor(get(handles.fileselector, 'value'));
-masks_in_frame=gui_retr('masks_in_frame');
-if isempty(masks_in_frame)
-	%masks_in_frame=cell(current_mask_nr,1);
-	masks_in_frame=cell(1,current_mask_nr);
-end
-if numel(masks_in_frame)<current_mask_nr
-	mask_positions=cell(0);
-else
-	mask_positions=masks_in_frame{current_mask_nr};
-end
-expected_image_size=gui_retr('expected_image_size');
-converted_mask=mask_convert_masks_to_binary(expected_image_size,mask_positions);
-out(converted_mask==1)=nan;
-
-function calibrate_apply_cali_Callback(~, ~, ~)
-calibrate_calccali
-calibrate_Update_Offset_Display
-
-function plot_apply_deriv_all_Callback(~, ~, ~)
-handles=gui_gethand;
-filepath=gui_retr('filepath');
-gui_toolsavailable(0,'Busy, please wait...')
-for i=1:floor(size(filepath,1)/2)+1
-	deriv=get(handles.derivchoice, 'value');
-	plot_derivative_calc(i,deriv,1)
-	set (handles.apply_deriv_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
-	drawnow;
-end
-set (handles.apply_deriv_all, 'string', 'Apply to all frames');
-gui_toolsavailable(1)
-gui_sliderdisp(gui_retr('pivlab_axis'))
-
-function plot_autoscaler_Callback(~, ~, ~)
-handles=gui_gethand;
-if get(handles.autoscaler, 'value')==1
-	set (handles.mapscale_min, 'enable', 'off')
-	set (handles.mapscale_max, 'enable', 'off')
-else
-	set (handles.mapscale_min, 'enable', 'on')
-	set (handles.mapscale_max, 'enable', 'on')
-end
-
-function gui_MainWindow_CloseRequestFcn(hObject, ~, ~)
-handles=gui_gethand;
-batchModeActive=gui_retr('batchModeActive');
-if batchModeActive == 0
-	button = questdlg('Do you want to quit PIVlab?','Quit?','Yes','Cancel','Cancel');
-else
-	button = 'Yes';
-end
-try
-	gui_toolsavailable(1)
-catch
-end
-if strcmp(button,'Yes')==1
-	try
-		homedir=gui_retr('homedir');
-		pathname=gui_retr('pathname');
-		save('PIVlab_settings_default.mat','homedir','pathname','-append');
-		last_selected_device = get(handles.ac_config, 'value');
-		save('PIVlab_settings_default.mat','last_selected_device','-append');
-	catch
-	end
-	try
-		PIVlab_capture_lensctrl (1400,1400,0) %lens needs to be set to neutral otherwise re-enabling power might cause issues
-	catch
-	end
-	try
-		delete(hObject);
-	catch
-		delete(gcf,'force');
-	end
-end
-
-function plot_vectorscale_Callback(~, ~, ~)
-handles=gui_gethand;
-resultslist=gui_retr('resultslist');
-currentframe=floor(get(handles.fileselector, 'value'));
-if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-	gui_sliderdisp(gui_retr('pivlab_axis'))
-end
-
-function mask_transp_Callback(~, ~, ~)
-handles=gui_gethand;
-try
-	if isempty(str2num(get(handles.masktransp,'String'))) == 1
-		set(handles.masktransp,'String','0');
-	end
-catch
-	set(handles.masktransp,'String','0');
-end
-misc_check_comma(handles.masktransp)
-set(handles.masktransp,'String',round(str2num(get(handles.masktransp,'String'))))
-if str2num(get(handles.masktransp,'String')) > 100
-	set(handles.masktransp,'String','100');
-end
-if str2num(get(handles.masktransp,'String')) < 0
-	set(handles.masktransp,'String','0');
-end
-
-
-function export_ascii_current_Callback(~, ~, ~)
-handles=gui_gethand;
-resultslist=gui_retr('resultslist');
-currentframe=floor(get(handles.fileselector, 'value'));
-if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-	[FileName,PathName] = uiputfile('*.txt','Save vector data as...','PIVlab.txt'); %framenummer in dateiname
-	if isequal(FileName,0) | isequal(PathName,0) %#ok<*OR2>
-	else
-		export_file_save(currentframe,FileName,PathName,1);
-	end
-end
-
-function export_ascii_all_Callback(~, ~, ~)
-handles=gui_gethand;
-filepath=gui_retr('filepath');
-resultslist=gui_retr('resultslist');
-[FileName,PathName] = uiputfile('*.txt','Save vector data as...','PIVlab.txt'); %framenummer in dateiname
-if isequal(FileName,0) | isequal(PathName,0)
-else
-	gui_toolsavailable(0,'Busy, please wait...')
-	for i=1:floor(size(filepath,1)/2)
-		%if analysis exists
-		if size(resultslist,2)>=i && numel(resultslist{1,i})>0
-			[Dir, Name, Ext] = fileparts(FileName);
-			FileName_nr=[Name sprintf('_%.4d', i) Ext];
-			export_file_save(i,FileName_nr,PathName,1)
-			set (handles.ascii_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
-			drawnow;
-		end
-	end
-	gui_toolsavailable(1)
-	set (handles.ascii_all, 'string', 'Export all frames');
-end
-
-function export_tecplot_current_Callback(~, ~, ~)
-handles=gui_gethand;
-resultslist=gui_retr('resultslist');
-currentframe=floor(get(handles.fileselector, 'value'));
-if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-	[FileName,PathName] = uiputfile('*.dat','Save vector data as...','PIVlab.dat'); %framenummer in dateiname
-	if isequal(FileName,0) | isequal(PathName,0) %#ok<*OR2>
-	else
-		export_file_save(currentframe,FileName,PathName,4);
-	end
-end
-
-function export_tecplot_all_Callback(~, ~, ~)
-handles=gui_gethand;
-filepath=gui_retr('filepath');
-resultslist=gui_retr('resultslist');
-[FileName,PathName] = uiputfile('*.dat','Save vector data as...','PIVlab.dat'); %framenummer in dateiname
-if isequal(FileName,0) | isequal(PathName,0)
-else
-	gui_toolsavailable(0,'Busy, please wait...')
-	for i=1:floor(size(filepath,1)/2)
-		%if analysis exists
-		if size(resultslist,2)>=i && numel(resultslist{1,i})>0
-			[Dir, Name, Ext] = fileparts(FileName);
-			FileName_nr=[Name sprintf('_%.4d', i) Ext];
-			export_file_save(i,FileName_nr,PathName,4)
-			set (handles.tecplot_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
-			drawnow;
-		end
-	end
-	gui_toolsavailable(1)
-	set (handles.tecplot_all, 'string', 'Export all frames');
-end
-
-function export_save_mat_current_Callback(~, ~, ~)
-handles=gui_gethand;
-resultslist=gui_retr('resultslist');
-currentframe=floor(get(handles.fileselector, 'value'));
-if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-	[FileName,PathName] = uiputfile('*.mat','Save MATLAB file as...','PIVlab.mat'); %framenummer in dateiname
-	if isequal(FileName,0) | isequal(PathName,0)
-	else
-		export_mat_file_save(currentframe,FileName,PathName,1); %option 1 = only currentframe
-	end
-end
-
-function export_save_mat_all_Callback(~, ~, ~)
-handles=gui_gethand;
-resultslist=gui_retr('resultslist');
-currentframe=floor(get(handles.fileselector, 'value'));
-if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-	[FileName,PathName] = uiputfile('*.mat','Save MATLAB file as...','PIVlab.mat'); %framenummer in dateiname
-	if isequal(FileName,0) | isequal(PathName,0)
-	else
-		export_mat_file_save(currentframe,FileName,PathName,2); %option2 = all frames
-	end
-end
-
-function extract_set_points_Callback(~, ~, ~)
-gui_sliderdisp(gui_retr('pivlab_axis'))
-hold on;
-gui_toolsavailable(0)
-delete(findobj('tag', 'measure'));
-n=0;
-for i=1:2
-	[xi,yi,but] = ginput(1);
-	n=n+1;
-	xposition(n)=xi; %#ok<AGROW>
-	yposition(n)=yi; %#ok<AGROW>
-	plot(xposition(n),yposition(n), 'r*','Color', [0.55,0.75,0.9], 'tag', 'measure');
-	line(xposition,yposition,'LineWidth',3, 'Color', [0.05,0,0], 'tag', 'measure');
-	line(xposition,yposition,'LineWidth',1, 'Color', [0.05,0.75,0.05], 'tag', 'measure');
-end
-line([xposition(1,1) xposition(1,2)],[yposition(1,1) yposition(1,1)], 'LineWidth',3, 'Color', [0.05,0.0,0.0], 'tag', 'measure');
-line([xposition(1,1) xposition(1,2)],[yposition(1,1) yposition(1,1)], 'LineWidth',1, 'Color', [0.95,0.05,0.01], 'tag', 'measure');
-line([xposition(1,2) xposition(1,2)], yposition,'LineWidth',3, 'Color',[0.05,0.0,0], 'tag', 'measure');
-line([xposition(1,2) xposition(1,2)], yposition,'LineWidth',1, 'Color',[0.35,0.35,1], 'tag', 'measure');
-hold off;
-gui_toolsavailable(1)
-deltax=abs(xposition(1,1)-xposition(1,2));
-deltay=abs(yposition(1,1)-yposition(1,2));
-length=sqrt(deltax^2+deltay^2);
-alpha=(180/pi) *(acos(deltax/length));
-beta=(180/pi) *(asin(deltax/length));
-handles=gui_gethand;
-calxy=gui_retr('calxy');
+gui_switchui('multip08');
 if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-	set (handles.deltax, 'String', [num2str(deltax*calxy) ' [px]']);
-	set (handles.deltay, 'String', [num2str(deltay*calxy) ' [px]']);
-	set (handles.length, 'String', [num2str(length*calxy) ' [px]']);
-
+	set(handles.derivchoice,'String',{'Vectors [px/frame]';'Vorticity [1/frame]';'Magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Simple shear rate [1/frame]';'Simple strain rate [1/frame]';'Line integral convolution (LIC) [1]' ; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
+	set(handles.text35,'String','u [px/frame]:')
+	set(handles.text36,'String','v [px/frame]:')
 else
-	set (handles.deltax, 'String', [num2str(deltax*calxy) ' [m]']);
-	set (handles.deltay, 'String', [num2str(deltay*calxy) ' [m]']);
-	set (handles.length, 'String', [num2str(length*calxy) ' [m]']);
+	set(handles.derivchoice,'String',{'Vectors [m/s]';'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Simple shear rate [1/s]';'Simple strain rate [1/s]';'Line integral convolution (LIC) [1]'; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
+	set(handles.text35,'String','u [m/s]:')
+	set(handles.text36,'String','v [m/s]:')
 end
-set (handles.alpha, 'String', num2str(alpha));
-set (handles.beta, 'String', num2str(beta));
+plot_derivchoice_Callback(handles.derivchoice)
 
-function extract_draw_extraction_coordinates_Callback(~, ~, ~)
+function plot_display_manual_markers(target_axis,handles)
+%manualmarkers
+if get(handles.displmarker,'value')==1
+	manmarkersX=gui_retr('manmarkersX');
+	manmarkersY=gui_retr('manmarkersY');
+	delete(findobj('tag','manualmarker'));
+	if numel(manmarkersX)>0
+		hold on
+		plot(manmarkersX,manmarkersY, 'o','MarkerEdgeColor','k','MarkerFaceColor',[.2 .2 1], 'MarkerSize',9, 'tag', 'manualmarker','parent',target_axis);
+		plot(manmarkersX,manmarkersY, '*','MarkerEdgeColor','w', 'tag', 'manualmarker','parent',target_axis);
+		hold off
+	end
+end
+
+function plot_displmarker_Callback(~, ~, ~)
 gui_sliderdisp(gui_retr('pivlab_axis'));
+
+function currentimage = plot_draw_pixel_background_overlay(target_axis,displaywhat, selected, handles, currentframe)
+derivative_alpha=str2double(get(handles.colormapopacity ,'string'))/100;
+if isnan(derivative_alpha) || derivative_alpha>100 || derivative_alpha <0
+	derivative_alpha=75;
+	set(handles.colormapopacity ,'string','75');
+end
+
+%% draw background particle image in gray
+[currentimage,~]=import_get_img(selected);
+if size(currentimage,3)>1 % color image
+	currentimage=rgb2gray(currentimage); %convert to gray, always.
+end
+if get(handles.enhance_images, 'Value')
+	currentimage=imadjust(currentimage);
+end
+
+image(cat(3, currentimage, currentimage, currentimage), 'parent',target_axis, 'cdatamapping', 'scaled');
+colormap('gray');
+axis image
+
+derived=gui_retr('derived');
+
+if size(derived,2)>=(currentframe+1)/2 && displaywhat > 1 && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
+else
+	if get(handles.derivchoice,'Value')>1
+		text(10,10,'This parameter needs to be calculated for this frame first. Go to Plot -> Derive Parameters and click "Apply to current frame".','color','r','fontsize',9, 'BackgroundColor', 'k', 'tag', 'derivhint')
+	end
+end
+
+%% load masks, convert to binary image
+
+render_mask=1; % should the mask be rendered in the image display?
+if get(handles.mask_edit_mode,'Value')==2 %Mask mode is "Preview"
+	masks_in_frame=gui_retr('masks_in_frame');
+	if isempty(masks_in_frame)
+		%masks_in_frame=cell(floor((currentframe+1)/2),1);
+		masks_in_frame=cell(1,floor((currentframe+1)/2));
+	end
+	if numel(masks_in_frame)<floor((currentframe+1)/2)
+		mask_positions=cell(0);
+		render_mask=0;
+	else
+		mask_positions=masks_in_frame{floor((currentframe+1)/2)};
+		if isempty (mask_positions)
+			render_mask=0;
+		end
+	end
+	converted_mask=mask_convert_masks_to_binary(size(currentimage(:,:,1)),mask_positions);
+else
+	converted_mask=zeros(size(currentimage(:,:,1)));
+	render_mask=0;
+end
+
+if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
+	currentimage=derived{displaywhat-1,(currentframe+1)/2};
+	if displaywhat ==11 % 11 ist vector direction
+		is_it_vector_direction=1;
+	else
+		is_it_vector_direction=0;
+	end
+
+	%set colormap
+	if displaywhat ~=10 %10 is LIC
+		avail_maps=get(handles.colormap_choice,'string');
+		selected_index=get(handles.colormap_choice,'value');
+		if selected_index == 4 %HochschuleBremen map
+			load('hsbmap.mat','hsb');
+			MAP = colormap(hsb);
+		elseif selected_index== 1 %parula
+			load('parula.mat','parula')
+			MAP = colormap (parula);
+		else
+			MAP = colormap(avail_maps{selected_index});
+		end
+		%adjust colormap steps
+		cmap = MAP;
+		colormap_steps_list=get(handles.colormap_steps,'String');
+		colormap_steps_value=get(handles.colormap_steps,'Value');
+		colormap_steps=str2double(colormap_steps_list{colormap_steps_value});
+		cmap_new=interp1(1:size(cmap,1),cmap,linspace(1,size(cmap,1),colormap_steps));
+		%colormap(cmap_new);
+		MAP = colormap(cmap_new);
+	else %LIC can only be gray
+		MAP = colormap('gray');
+	end
+
+	currentimage = plot_rescale_maps(currentimage,is_it_vector_direction);
+
+	if get(handles.autoscaler,'value')==1
+		minscale=min(currentimage(:));
+		maxscale=max(currentimage(:));
+		n=2;
+
+		logflr = floor(log10(abs(minscale)));
+		pof10 = 10.^(n-1-logflr);
+		minscale_adjusted = floor(minscale.*pof10)./pof10;
+		if ~isfinite(minscale_adjusted)
+			minscale_adjusted=minscale;
+		end
+
+		logflr = floor(log10(abs(maxscale)));
+		pof10 = 10.^(n-1-logflr);
+		maxscale_adjusted = ceil(maxscale.*pof10)./pof10;
+		if ~isfinite(maxscale_adjusted)
+			maxscale_adjusted=maxscale;
+		end
+
+		set (handles.mapscale_min, 'string', num2str(minscale_adjusted))
+		set (handles.mapscale_max, 'string', num2str(maxscale_adjusted))
+	else
+		minscale=str2double(get(handles.mapscale_min, 'string'));
+		maxscale=str2double(get(handles.mapscale_max, 'string'));
+		minscale_adjusted=minscale;
+		maxscale_adjusted=maxscale;
+	end
+
+	colormap_steps_list=get(handles.colormap_steps,'String');
+	colormap_steps_value=get(handles.colormap_steps,'Value');
+	colormap_steps=str2double(colormap_steps_list{colormap_steps_value});
+
+	%%convert grayscale map to RGB map to display it in color and as overlay
+
+	%% Normalize the Imagerange to the desired range:
+
+	currentimage(currentimage<minscale_adjusted)=minscale_adjusted;
+	currentimage(currentimage>maxscale_adjusted)=maxscale_adjusted;
+	currentimage=(currentimage-minscale_adjusted) / (maxscale_adjusted - minscale_adjusted) ;
+	currentimage = uint8(floor(currentimage * colormap_steps));
+	%currentimage_RGB = ind2rgb(currentimage, MAP);
+	if get(handles.mask_edit_mode,'Value')==2 %Mask mode is "Preview"
+		alpha_pixel_map=1-converted_mask; %regions that are mask get zero opaqueness.
+	else
+		alpha_pixel_map=ones(size(currentimage,1),size(currentimage,2),'logical');
+	end
+	roirect=gui_retr('roirect');
+	alpha_ROI_map=zeros(size(currentimage,1),size(currentimage,2),'logical');
+	if ~isempty(roirect) && size(roirect,2)>1
+		alpha_ROI_map (roirect(2):(roirect(2)+roirect(4)) , roirect(1):(roirect(1)+roirect(3)))=1;
+	else
+		alpha_ROI_map(:)=1;
+	end
+	hold on;
+	image(currentimage, 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',derivative_alpha.*alpha_pixel_map.*alpha_ROI_map);
+	hold off;
+
+	%% colorbar
+	if get(handles.colorbarpos,'value')~=1
+		name=get(handles.derivchoice,'string');
+		if strcmp(name,'N/A') %user hasn't visited the derived panel before
+			if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+				set(handles.derivchoice,'String',{'Vectors [px/frame]';'Vorticity [1/frame]';'Magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Simple shear rate [1/frame]';'Simple strain rate [1/frame]';'Line integral convolution (LIC) [1]' ; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
+				set(handles.text35,'String','u [px/frame]:')
+				set(handles.text36,'String','v [px/frame]:')
+			else
+				set(handles.derivchoice,'String',{'Vectors [m/s]';'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Simple shear rate [1/s]';'Simple strain rate [1/s]';'Line integral convolution (LIC) [1]'; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
+				set(handles.text35,'String','u [m/s]:')
+				set(handles.text36,'String','v [m/s]:')
+			end
+			name=get(handles.derivchoice,'String');
+		end
+
+		posichoice = get(handles.colorbarpos,'String');
+
+		parentfigure_of_target_axis=ancestor(target_axis,'figure');
+		coloobj=colorbar(posichoice{get(handles.colorbarpos,'Value')},'Fontsize',9,'HitTest','off','parent',parentfigure_of_target_axis);
+
+		axis (target_axis,'image');
+		strcmp(posichoice{get(handles.colorbarpos,'Value')},'EastOutside');
+		strcmp(posichoice{get(handles.colorbarpos,'Value')},'WestOutside');
+
+		if strcmp(posichoice{get(handles.colorbarpos,'Value')},'EastOutside')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'WestOutside')==1
+			ylabel(coloobj,name{gui_retr('displaywhat')},'fontsize',9,'fontweight','bold');
+		end
+		if strcmp(posichoice{get(handles.colorbarpos,'Value')},'NorthOutside')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'SouthOutside')==1
+			xlabel(coloobj,name{gui_retr('displaywhat')},'fontsize',11,'fontweight','bold');
+		end
+
+		tickamount=min([colormap_steps 8])+1; % depends on the amount of colormap steps
+		coloobj.Ticks=linspace(0,colormap_steps,tickamount);
+		ticklabels=linspace(minscale_adjusted,maxscale_adjusted,tickamount);
+		ticklabels_string=num2str(ticklabels(:),'%0.3e');
+		coloobj.TickLabels =ticklabels_string;
+	end
+end
+%% plot masks in preview mode (not in edit mode)
+if 	render_mask==1 && get(handles.mask_edit_mode,'Value')==2 %mask preview mode
+	mask_dimensions=size(converted_mask);
+	x=[1 mask_dimensions(2)];
+	y=[1,mask_dimensions(1)];
+	skip_mask_pixels = round(0.0000020*mask_dimensions(1)*mask_dimensions(2) - 7); %reduce the amount of pixels displayed for the mask to save render time.
+	if skip_mask_pixels>5
+		skip_mask_pixels=5;
+	end
+	if skip_mask_pixels<1
+		skip_mask_pixels=1;
+	end
+	hold on;
+	image(x,y,cat(3, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.7, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1), 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*(1-(str2num(get(handles.masktransp,'String'))/100)));
+	hold off
+end
+
+function plot_drawstreamlines_Callback(~, ~, ~)
 handles=gui_gethand;
-currentframe=floor(get(handles.fileselector, 'value'));
+toggler=gui_retr('toggler');
+selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
 resultslist=gui_retr('resultslist');
-gui_put('extract_type',[]);
+currentframe=floor(get(handles.fileselector, 'value'));
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	gui_toolsavailable(0);
-	xposition=[];
-	yposition=[];
-	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly')); %delete pre-existing
-	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle')); %delete pre-existing
-	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series')); %delete pre-existing
-	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_displayed_smaller_radii')) %delete pre-existing
-	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_max_circulation')) %delete pre-existing
-	if get(handles.draw_what,'value')==1 %polyline
-		extract_type='extract_poly';
-		extract_poly = images.roi.Polyline;
-		extract_poly.Tag=extract_type;
-		draw(extract_poly);
-		addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
-		addlistener(extract_poly,'MovingROI',@extract_poly_ROIevents);
-		addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
-		xposition=extract_poly.Position(:,1);
-		yposition=extract_poly.Position(:,2);
-
-		extract_poly.LabelVisible = 'hover';
-		extract_poly.LabelAlpha = 0.5;
-		extract_poly.LabelTextColor = 'w';
-		if size(extract_poly.Position,1)<6
-			labelstring=[];
-			for i = 1:size(extract_poly.Position,1)
-				labelstring=[labelstring num2str(round(extract_poly.Position(i,1))) ',' num2str(round(extract_poly.Position(i,2))) ' ; ']; %#ok<AGROW>
-			end
-			extract_poly.Label = labelstring;
-		else
-			extract_poly.LabelVisible = 'off';
-		end
-	elseif get(handles.draw_what,'value')==2 %circle
-		extract_type='extract_circle';
-		extract_poly = images.roi.Circle;
-		extract_poly.LabelVisible = 'off';
-		extract_poly.Tag=extract_type;
-		draw(extract_poly);
-		if extract_poly.Radius < 25 %check if circle is large enough or if user accidentally clicked once
-			extract_poly.Radius = 25;
-		end
-		addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
-		addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
-		xposition=extract_poly.Center;
-		yposition=extract_poly.Radius;		
-	elseif get(handles.draw_what,'value')==3 %circle series
-		extract_type='extract_circle_series';
-		set(handles.extraction_choice,'Value',11);
-		extract_poly = images.roi.Circle;
-		extract_poly.LabelVisible = 'off';
-		extract_poly.Tag=extract_type;
-		draw(extract_poly);
-		if extract_poly.Radius < 25 %check if circle is large enough or if user accidentally clicked once
-			extract_poly.Radius = 25;
-		end
-		addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
-		addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
-		xposition=extract_poly.Center;
-		yposition=extract_poly.Radius;		
-		x=resultslist{1,currentframe};
-		stepsize=ceil((x(1,2)-x(1,1))/1);
-		radii=linspace(stepsize,extract_poly.Radius-stepsize,round(((extract_poly.Radius-stepsize)/stepsize)));
-		for radius=radii
-			extract_poly_series=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',radius,'Tag',[extract_type '_displayed_smaller_radii'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none');
-		end
-		x_center=extract_poly.Center(1);
-		y_center=extract_poly.Center(2);
-		radius=extract_poly.Radius;
-		text(x_center,y_center+radius,' start/end','FontSize',7, 'Rotation', 90, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
-		text(x_center,y_center+radius+8,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
-		text(x_center,y_center-radius-8,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
-		text(x_center-radius-8,y_center,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[extract_type '_displayed_smaller_radii'])
-		text(x_center+radius+8,y_center,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[extract_type '_displayed_smaller_radii'])
-	end
-	gui_put('xposition',xposition)
-	gui_put('yposition',yposition)
-	gui_put('extract_type',extract_type);
-	gui_toolsavailable(1);
-end
-
-function extract_save_data_Callback(~, ~, ~)
-handles=gui_gethand;
-resultslist=gui_retr('resultslist');
-currentframe=floor(get(handles.fileselector, 'value'));
-if get(handles.extractLineAll, 'value')==0
-	startfr=currentframe;
-	endfr=currentframe;
-else
-	startfr=1;
-	endfr=size(resultslist,2);
-end
-selected=0;
-for i=startfr:endfr
-	set(handles.fileselector, 'value',i)
-	%sliderdisp(retr('pivlab_axis'))
-	currentframe=floor(get(handles.fileselector, 'value'));
-	if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-		delete(findobj('tag', 'derivplotwindow'));
-		extract_plot_data_Callback %make sure that data was calculated
-		%close figure...
-		delete(findobj('tag', 'derivplotwindow'));
-		extractwhat=get(handles.extraction_choice,'Value');
-		current=get(handles.extraction_choice,'string');
-		current=current{extractwhat};
-		if selected==0
-			imgsavepath=gui_retr('imgsavepath');
-			if isempty(imgsavepath)
-				imgsavepath=gui_retr('pathname');
-			end
-			%find '\', replace with 'per'
-			part1= current(1:strfind(current,'/')-1) ;
-			part2= current(strfind(current,'/')+1:end);
-			if isempty(part1)==1
-				currentED=current;
-			else
-				currentED=[part1 ' per ' part2];
-			end
-			[FileName,PathName] = uiputfile('*.txt','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' currentED '.txt'])); %framenummer in dateiname
-			selected=1;
-		end
-		if isequal(FileName,0) | isequal(PathName,0)
-			%exit for
-			break;
-		else
-			gui_put('imgsavepath',PathName);
-			pointpos=strfind(FileName, '.');
-			pointpos=pointpos(end);
-			FileName_final=[FileName(1:pointpos-1) '_' num2str(currentframe) '.' FileName(pointpos+1:end)];
-			c=gui_retr('c');
-			distance=gui_retr('distance');
-			%also retrieve coordinates of polyline points if possible
-			cx=gui_retr('cx');
-			cy=gui_retr('cy');
-			%normal : 300 x 1
-			if size(c,2)>1 %circle series
-				if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-					header=['circle nr., Distance on line [px], x-coordinate [px], y-coordinate [px], ' current];
-				else
-					header=['circle nr., Distance on line [m], x-coordinate [m], y-coordinate [m], ' current];
-				end
-				wholeLOT=[];
-				for z=1:size(c,1)
-					wholeLOT=[wholeLOT;[linspace(z,z,size(c,2))' distance(z,:)' cx(z,:)' cy(z,:)' c(z,:)']]; %#ok<AGROW> %anders.... untereinander
-				end
-			else
-
-				if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-					header=['Distance on line [px], x-coordinate [px], y-coordinate [px], ' current];
-				else
-					header=['Distance on line [m], x-coordinate [m], y-coordinate [m], ' current];
-				end
-				wholeLOT=[distance cx cy c];
-			end
-			fid = fopen(fullfile(PathName,FileName_final), 'w');
-			fprintf(fid, [header '\r\n']);
-			fclose(fid);
-			dlmwrite(fullfile(PathName,FileName_final), wholeLOT, '-append', 'delimiter', ',', 'precision', 10, 'newline', 'pc');
-		end
-	end
-end
-gui_sliderdisp(gui_retr('pivlab_axis'))
-
-function extract_plot_data_Callback(~, ~, ~)
-handles=gui_gethand;
-currentframe=floor(get(handles.fileselector, 'value'));
-resultslist=gui_retr('resultslist');
-if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	x=resultslist{1,currentframe};
 	y=resultslist{2,currentframe};
-	xposition=gui_retr('xposition'); 
-	yposition=gui_retr('yposition');
-	extract_type=gui_retr('extract_type');
-	if get(handles.draw_what,'value')==3 %circle series
-		set(handles.extraction_choice,'Value',11); %set to tangent
+	typevector=resultslist{5,currentframe};
+	if size(resultslist,1)>6 %filtered exists
+		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+			u=resultslist{10,currentframe};
+			v=resultslist{11,currentframe};
+			typevector=resultslist{9,currentframe}; %von smoothed
+		else
+			u=resultslist{7,currentframe};
+			if size(u,1)>1
+				v=resultslist{8,currentframe};
+				typevector=resultslist{9,currentframe}; %von smoothed
+			else
+				u=resultslist{3,currentframe};
+				v=resultslist{4,currentframe};
+				typevector=resultslist{5,currentframe};
+			end
+		end
+	else
+		u=resultslist{3,currentframe};
+		v=resultslist{4,currentframe};
 	end
-	extractwhat=get(handles.extraction_choice,'Value');
-	if ~isempty(xposition)
-		if strcmp(extract_type,'extract_poly')
-			for i=1:size(xposition,1)-1
-				%length of one segment:
-				laenge(i)=sqrt((xposition(i+1,1)-xposition(i,1))^2+(yposition(i+1,1)-yposition(i,1))^2); %#ok<AGROW>
-			end
-			length=sum(laenge);
-			extraction_coordinates_x = xposition; %coordinates in rows
-			extraction_coordinates_y = yposition;
-		elseif strcmp(extract_type,'extract_circle')
-			length = 2*yposition*pi;
-			%cenvert circular roi object to series of coordinates
-			valtable=linspace(0,2*pi,361)';
-			extraction_coordinates_x=zeros(size(valtable));
-			extraction_coordinates_y=zeros(size(valtable));
-			for i=1:size(valtable,1)
-				extraction_coordinates_x (i,1)=sin(valtable(i,1))*yposition+xposition(1);
-				extraction_coordinates_y (i,1)=cos(valtable(i,1))*yposition+xposition(2);
-			end
-		end
-		%percentagex=xposition/max(max(x));
-		%xaufderivative=percentagex*size(x,2);
-		%percentagey=yposition/max(max(y));
-		%yaufderivative=percentagey*size(y,1);
-		nrpoints=str2num(get(handles.nrpoints,'string'));
-		
-		switch extractwhat
-			case {1,2,3,4,5,6,7,8}
-				plot_derivative_calc(currentframe,extractwhat+1,0);
-				derived=gui_retr('derived');
-				maptoget=derived{extractwhat,currentframe};
-				maptoget=plot_rescale_maps_nan(maptoget,0);
-				[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
-				distance=linspace(0,length,size(c,1))';
-			case {9,10}
-				% auf stelle 9 steht vector angle. Bei derivatives ist der aber auf platz 11. daher zwei dazu
-				%auf stelle 10 steht correlation coeff, bei derivatives auf
-				%12, daher zwei dazu
-				plot_derivative_calc(currentframe,extractwhat+2,0);
-				derived=gui_retr('derived');
-				maptoget=derived{extractwhat+1,currentframe};
-				maptoget=plot_rescale_maps_nan(maptoget,0);
-				[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
-				distance=linspace(0,length,size(c,1))';
-			case 11 %tangent
-				if ~strcmp(extract_type,'extract_circle_series')
-					if size(resultslist,1)>6 %filtered exists
-						if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-							u=resultslist{10,currentframe};
-							v=resultslist{11,currentframe};
-							typevector=resultslist{9,currentframe};
-							if numel(typevector)==0%happens if user smoothes sth without NaN and without validation
-								typevector=resultslist{5,currentframe};
-							end
-						else
-							u=resultslist{7,currentframe};
-							if size(u,1)>1
-								v=resultslist{8,currentframe};
-								typevector=resultslist{9,currentframe};
-							else
-								u=resultslist{3,currentframe};
-								v=resultslist{4,currentframe};
-								typevector=resultslist{5,currentframe};
-							end
-						end
-					else
-						u=resultslist{3,currentframe};
-						v=resultslist{4,currentframe};
-						typevector=resultslist{5,currentframe};
-					end
-					calu=gui_retr('calu');calv=gui_retr('calv');
-					u=u*calu-gui_retr('subtr_u');
-					v=v*calv-gui_retr('subtr_v');
-
-					u=plot_rescale_maps_nan(u,0);
-					v=plot_rescale_maps_nan(v,0);
-
-					[cx, cy, cu] = improfile(u,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
-					cv = improfile(v,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
-					cx=cx';
-					cy=cy';
-					deltax=zeros(1,size(cx,2)-1);
-					deltay=zeros(1,size(cx,2)-1);
-					laenge=zeros(1,size(cx,2)-1);
-					alpha=zeros(1,size(cx,2)-1);
-					sinalpha=zeros(1,size(cx,2)-1);
-					cosalpha=zeros(1,size(cx,2)-1);
-					for i=2:size(cx,2)
-						deltax(1,i)=cx(1,i)-cx(1,i-1);
-						deltay(1,i)=cy(1,i)-cy(1,i-1);
-						laenge(1,i)=sqrt(deltax(1,i)*deltax(1,i)+deltay(1,i)*deltay(1,i));
-						alpha(1,i)=(acos(deltax(1,i)/laenge(1,i)));
-						if deltay(1,i) < 0
-							sinalpha(1,i)=sin(alpha(1,i));
-						else
-							sinalpha(1,i)=sin(alpha(1,i))*-1;
-						end
-						cosalpha(1,i)=cos(alpha(1,i));
-					end
-					sinalpha(1,1)=sinalpha(1,2);
-					cosalpha(1,1)=cosalpha(1,2);
-					cu=cu.*cosalpha';
-					cv=cv.*sinalpha';
-					c=cu-cv;
-					cx=cx';
-					cy=cy';
-					distance=linspace(0,length,size(cu,1))';
-				end
-				%% circle series --> can only be tangent velocity
-				if strcmp(extract_type,'extract_circle_series') %user chose circle series
-
-					%draw circles as displayed
-
-					x=resultslist{1,currentframe};
-					stepsize=ceil((x(1,2)-x(1,1))/1);
-					radii=[linspace(stepsize,yposition-stepsize,round(((yposition-stepsize)/stepsize))) yposition];
-					length = 2*radii*pi; %column vector with the lengths of the circle series
-					%convert circular roi object to series of coordinates
-					valtable=linspace(0,2*pi,361)';
-					extraction_coordinates_x=zeros(size(valtable,1),numel(length)); %rows=coordinates of one circle, cols = the different circles of the series
-					extraction_coordinates_y=zeros(size(valtable,1),numel(length));
-					for i=1:size(valtable,1)
-						for j=1:numel(length)
-							extraction_coordinates_x (i,j)=sin(valtable(i,1))*radii(j)+xposition(1);
-							extraction_coordinates_y (i,j)=cos(valtable(i,1))*radii(j)+xposition(2);
-						end
-					end
-
-					if size(resultslist,1)>6 %filtered exists
-						if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-							u=resultslist{10,currentframe};
-							v=resultslist{11,currentframe};
-							typevector=resultslist{9,currentframe};
-							if numel(typevector)==0%happens if user smoothes sth without NaN and without validation
-								typevector=resultslist{5,currentframe};
-							end
-						else
-							u=resultslist{7,currentframe};
-							if size(u,1)>1
-								v=resultslist{8,currentframe};
-								typevector=resultslist{9,currentframe};
-							else
-								u=resultslist{3,currentframe};
-								v=resultslist{4,currentframe};
-								typevector=resultslist{5,currentframe};
-							end
-						end
-					else
-						u=resultslist{3,currentframe};
-						v=resultslist{4,currentframe};
-						typevector=resultslist{5,currentframe};
-					end
-					calu=gui_retr('calu');calv=gui_retr('calv');
-					u=u*calu-gui_retr('subtr_u');
-					v=v*calv-gui_retr('subtr_v');
-					u=plot_rescale_maps_nan(u,0);
-					v=plot_rescale_maps_nan(v,0);
-
-					min_y=floor(min(extraction_coordinates_y(:)))-1;
-					max_y=ceil(max(extraction_coordinates_y(:)))+1;
-					min_x=floor(min(extraction_coordinates_x(:)))-1;
-					max_x=ceil(max(extraction_coordinates_x(:)))+1;
-					if min_y<1
-						min_y=1;
-					end
-					if max_y>size(u,1)
-						max_y=size(u,1);
-					end
-					if min_x<1
-						min_x=1;
-					end
-					if max_x>size(u,2)
-						max_x=size(u,2);
-					end
-
-					uc=u(min_y:max_y,min_x:max_x);
-					vc=v(min_y:max_y,min_x:max_x);
-
-					for m=1:numel(length)
-						[cx(m,:),cy(m,:),cu(m,:)] = improfile(uc,extraction_coordinates_x(:,m)-min_x,extraction_coordinates_y(:,m)-min_y,100,'nearest');
-						cv(m,:) =improfile(vc,extraction_coordinates_x(:,m)-min_x,extraction_coordinates_y(:,m)-min_y,100,'nearest');
-					end
-					deltax=zeros(1,size(cx,2)-1);
-					deltay=zeros(1,size(cx,2)-1);
-					laenge=zeros(1,size(cx,2)-1);
-					alpha=zeros(1,size(cx,2)-1);
-					sinalpha=zeros(1,size(cx,2)-1);
-					cosalpha=zeros(1,size(cx,2)-1);
-					for m=1:numel(length)
-						for i=2:size(cx,2)
-							deltax(m,i)=cx(m,i)-cx(m,i-1);
-							deltay(m,i)=cy(m,i)-cy(m,i-1);
-							laenge(m,i)=sqrt(deltax(m,i)*deltax(m,i)+deltay(m,i)*deltay(m,i));
-							alpha(m,i)=(acos(deltax(m,i)/laenge(m,i)));
-							if deltay(m,i) < 0
-								sinalpha(m,i)=sin(alpha(m,i));
-							else
-								sinalpha(m,i)=sin(alpha(m,i))*-1;
-							end
-							cosalpha(m,i)=cos(alpha(m,i));
-						end
-						sinalpha(m,1)=sinalpha(m,2); %ersten winkel fÃ¼llen
-						cosalpha(m,1)=cosalpha(m,2);
-					end
-					cu=cu.*cosalpha;
-					cv=cv.*sinalpha;
-					c=cu-cv;
-					for m=1:numel(length)
-						distance(m,:)=linspace(0,length(m),size(cu,2))'; % %in pixeln...
-					end
-				end
-		end
-		%% Plotting
-		if ~strcmp(extract_type,'extract_circle_series') %user did not choose circle series
-			h=figure;
-			screensize=get( 0, 'ScreenSize' );
-			rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
-			set(h,'position', rect);
-			current=get(handles.extraction_choice,'string');
-			current=current{extractwhat};
-			set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
-			calxy=gui_retr('calxy');
-
-			%removing nans for integral!
-			distance2=distance(~isnan(c));
-			c2=c(~isnan(c));
-
-			integral=trapz(distance2*calxy,c2);
-			h2=plot(distance*calxy,c);
-
-			%get units
-			if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-				distunit='px^2';
-			else
-				distunit='m^2';
-			end
-
-			unitpar=get(handles.extraction_choice,'string');
-			unitpar=unitpar{get(handles.extraction_choice,'value')};
-			unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
-
-			%text(0+0.05*max(distance*calxy),min(c)+0.05*max(c),['Integral = ' num2str(integral) ' [' unitpar '*' distunit ']'], 'BackgroundColor', 'w','fontsize',7)
-			set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-
-
-			if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-				distunit_2=' [px]';
-			else
-				distunit_2=' [m]';
-			end
-
-			currentstripped=current(1:strfind(current,'[')-1);
-
-			%modified units...
-			xlabel(['Distance on line' distunit_2 sprintf('\n') 'Integral of ' currentstripped ' = ' num2str(integral) ' [' unitpar '*' distunit_2 ']']);
-			ylabel(current);
-			gui_put('distance',distance*calxy);
-			gui_put('c',c);
-			[cx_cal,cy_cal] = calibrate_xy(cx,cy);
-			gui_put('cx',cx_cal);
-			gui_put('cy',cy_cal);
-			h_extractionplot=gui_retr('h_extractionplot');
-			h_extractionplot(size(h_extractionplot,1)+1,1)=h;
-			gui_put ('h_extractionplot', h_extractionplot);
-		end
-		if strcmp(extract_type,'extract_circle_series') %user chose circle series
-			calxy=gui_retr('calxy');
-			for m=1:numel(length)
-				integral(m)=trapz(distance(m,:)*calxy,c(m,:));
-			end
-			%highlight circle with highest circ
-			delete(findobj('tag', 'extractline'))
-			[r,col]=find(max(abs(integral))==abs(integral)); %find absolute max of integral
-			if ~isempty(radii(col))
-				extract_poly_maximum_circ=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',radii(col),'Tag',[extract_type '_max_circulation'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none','Color','r','StripeColor','y');
-				h=figure;
-				screensize=get( 0, 'ScreenSize' );
-				rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
-				set(h,'position', rect);
-				current=get(handles.extraction_choice,'string');
-				current=current{extractwhat};
-				set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
-				calxy=gui_retr('calxy');
-
-				plot (1:numel(length), integral);
-				hold on;
-				scattergroup1=scatter(1:numel(length), integral, 80, 'ko');
-				hold off;
-				%	set(scattergroup1, 'ButtonDownFcn', @extract_hitcircle, 'pickableparts', 'visible');
-				%title('Click the points of the graph to highlight it''s corresponding circle.')
-				set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-				xlabel('circle series nr. (circle with max. circulation highlighted)');
-				if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-					ylabel('tangent velocity loop integral (circulation) [px^2/frame]');
-				else
-					ylabel('tangent velocity loop integral (circulation) [m^2/s]');
-				end
-				gui_put('distance',distance*calxy);
-				gui_put('c',c);
-				[cx_cal,cy_cal] = calibrate_xy(cx,cy);
-				gui_put('cx',cx_cal);
-				gui_put('cy',cy_cal);
-				gui_put('integral', integral);
-				h_extractionplot=gui_retr('h_extractionplot');
-				h_extractionplot(size(h_extractionplot,1)+1,1)=h;
-				gui_put ('h_extractionplot', h_extractionplot);
-			end
+	ismean=gui_retr('ismean');
+	if    numel(ismean)>0
+		if ismean(currentframe)==1 %if current frame is a mean frame, typevector is stored at pos 5
+			typevector=resultslist{5,currentframe};
 		end
 	end
-end
+	calu=gui_retr('calu');calv=gui_retr('calv');
+	ustream=u-(gui_retr('subtr_u')/gui_retr('calu'));
+	vstream=v-(gui_retr('subtr_v')/gui_retr('calv'));
+	ustream(typevector==0)=nan;
+	vstream(typevector==0)=nan;
+	calxy=gui_retr('calxy');
+	button=1;
+	streamlinesX=gui_retr('streamlinesX');
+	streamlinesY=  gui_retr('streamlinesY');
+	if get(handles.holdstream,'value')==1
+		if numel(streamlinesX)>0
+			i=size(streamlinesX,2)+1;
+			xposition=streamlinesX;
+			yposition=streamlinesY;
+		else
+			i=1;
+		end
+	else
+		i=1;
+		gui_put('streamlinesX',[]);
+		gui_put('streamlinesY',[]);
+		xposition=[];
+		yposition=[];
+		delete(findobj('tag','streamline'));
+	end
+	while button == 1
+		[rawx,rawy,button] = ginput(1);
+		if button~=1
+			break
+		end
+		xposition(i)=rawx;
+		yposition(i)=rawy;
 
-function extract_hitcircle(~,~)
-posreal=get(gca,'CurrentPoint');
-delete(findobj('tag','circstring'));
-pos=round(posreal(1,1));
-xposition=gui_retr('xposition');
-yposition=gui_retr('yposition');
-integral=gui_retr('integral');
-hgui=getappdata(0,'hgui');
-h3plot=gui_retr('h3plot');
-figure(hgui);
-delete(findobj('tag', 'extractline'))
-for m=1:30
-	line(xposition(m,:),yposition(m,:),'LineWidth',1.5, 'Color', [0.95,0.5,0.01],'tag','extractline');
+		h=streamline(mmstream2(x,y,ustream,vstream,xposition(i),yposition(i),'on'));
+		set (h,'tag','streamline');
+		i=i+1;
+	end
+	delete(findobj('tag','streamline'));
+	if exist('xposition','var')==1
+		h=streamline(mmstream2(x,y,ustream,vstream,xposition,yposition,'on'));
+		set (h,'tag','streamline');
+		contents = get(handles.streamlcolor,'String');
+		set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')})
+		gui_put('streamlinesX',xposition);
+		gui_put('streamlinesY',yposition);
+	end
 end
-line(xposition(pos,:),yposition(pos,:),'LineWidth',2.5, 'Color',[0.2,0.5,0.7],'tag','extractline');
-figure(h3plot);
-marksize=linspace(80,80,30)';
-marksize(pos)=150;
-set(gco, 'SizeData', marksize);
-if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-	units='px^2/frame';
+gui_toolsavailable(1);
+
+function plot_dummy_Callback(~, ~, ~)
+filepath=gui_retr('filepath');
+if size(filepath,1) > 1
+	gui_sliderdisp(gui_retr('pivlab_axis'))
+end
+gui_MainWindow_ResizeFcn(gcf)
+
+function [x, y, u, v, typevector] = plot_get_desired_u_and_v(resultslist, currentframe)
+x=resultslist{1,(currentframe+1)/2};
+y=resultslist{2,(currentframe+1)/2};
+if size(resultslist,1)>6 %filtered exists
+	if size(resultslist,1)>10 && numel(resultslist{10,(currentframe+1)/2}) > 0 %smoothed exists
+		u=resultslist{10,(currentframe+1)/2};
+		v=resultslist{11,(currentframe+1)/2};
+		typevector=resultslist{9,(currentframe+1)/2};
+		%text(3,size(currentimage,1)-4, 'Smoothed dataset','tag', 'smoothhint', 'backgroundcolor', 'k', 'color', 'y','fontsize',6);
+		if numel(typevector)==0 %happens if user smoothes sth without NaN and without validation
+			typevector=resultslist{5,(currentframe+1)/2};
+		end
+	else
+		u=resultslist{7,(currentframe+1)/2};
+		if size(u,1)>1
+			v=resultslist{8,(currentframe+1)/2};
+			typevector=resultslist{9,(currentframe+1)/2};
+		else %filter was applied for other frames but not for this one
+			u=resultslist{3,(currentframe+1)/2};
+			v=resultslist{4,(currentframe+1)/2};
+			typevector=resultslist{5,(currentframe+1)/2};
+		end
+	end
 else
-	units='m^2/s';
+	u=resultslist{3,(currentframe+1)/2};
+	v=resultslist{4,(currentframe+1)/2};
+	typevector=resultslist{5,(currentframe+1)/2};
 end
-text(posreal(1,1)+0.75,posreal(2,2),['\leftarrow ' num2str(integral(pos)) ' ' units],'tag','circstring','BackgroundColor', [1 1 1], 'margin', 0.01, 'fontsize', 7, 'HitTest', 'off')
 
-function extract_clear_plot_Callback(~, ~, ~)
-h_extractionplot=gui_retr('h_extractionplot');
-h_extractionplot2=gui_retr('h_extractionplot2');
-for i=1:size(h_extractionplot,1)
-	try
-		close (h_extractionplot(i));
-	catch
-	end
-	try
-		close (h_extractionplot2(i));
-	catch
-	end
+function [u, v] = plot_get_highpassed_vectors(handles, u, v)
+if get(handles.highp_vectors, 'value')==1 & strncmp(get(handles.multip08, 'visible'), 'on',2) %#ok<AND2> %disable second expression to make highpass filtered data available for export
+	strength=54-round(get(handles.highpass_strength, 'value'));
+	h = fspecial('gaussian',strength,strength) ;
+	h2= fspecial('gaussian',3,3);
+	ubg=imfilter(u,h,'replicate');
+	vbg=imfilter(v,h,'replicate');
+	ufilt=u-ubg;
+	vfilt=v-vbg;
+	u=imfilter(ufilt,h2,'replicate');
+	v=imfilter(vfilt,h2,'replicate');
 end
-gui_put ('h_extractionplot', []);
-gui_put ('h_extractionplot2', []);
-delete(findobj(gui_retr('pivlab_axis'),'tag', 'extractpoint'));
-delete(findobj(gui_retr('pivlab_axis'),'tag', 'extractline'));
-delete(findobj(gui_retr('pivlab_axis'),'tag', 'circstring'));
-delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly'))
-delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle'))
-delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series'))
-delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_displayed_smaller_radii'))
-delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_max_circulation'))
-gui_put('xposition',[]);
-gui_put('yposition',[]);
-gui_put('extract_type',[]);
 
 function plot_histdraw_Callback(~, ~, ~)
 handles=gui_gethand;
@@ -8586,1662 +12116,494 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	ylabel('frequency');
 end
 
-function simulate_generate_it_Callback(~, ~, ~)
+function plot_licres_Callback(~,~,~)
 handles=gui_gethand;
-flow_sim=get(handles.flow_sim,'value');
-switch flow_sim
-	case 1 %rankine
-		v0 = str2double(get(handles.rank_displ,'string')); %max velocity
-		vortexplayground=[str2double(get(handles.img_sizex,'string')),str2double(get(handles.img_sizey,'string'))]; %width, height)
-		center1=[str2double(get(handles.rankx1,'string')),str2double(get(handles.ranky1,'string'))]; %x,y
-		center2=[str2double(get(handles.rankx2,'string')),str2double(get(handles.ranky2,'string'))]; %x,y
-		[x,y]=meshgrid(-center1(1):vortexplayground(1)-center1(1)-1,-center1(2):vortexplayground(2)-center1(2)-1);
-		[o,r] = cart2pol(x,y);
-		uo=zeros(size(x));
-		R0 = str2double(get(handles.rank_core,'string')); %radius %35
-		uoin = (r <= R0);
-		uout = (r > R0);
-		uo = uoin+uout;
-		uo(uoin) =  v0*r(uoin)/R0;
-		uo(uout) =  v0*R0./r(uout);
-		uo(isnan(uo))=0;
-		u = -uo.*sin(o);
-		v = uo.*cos(o);
-		if get(handles.singledoublerankine,'value')==2
-			[x,y]=meshgrid(-center2(1):vortexplayground(1)-center2(1)-1,-center2(2):vortexplayground(2)-center2(2)-1);
-			[o,r] = cart2pol(x,y);
-			uo=zeros(size(x));
-			R0 = str2double(get(handles.rank_core,'string')); %radius %35
-			uoin = (r <= R0);
-			uout = (r > R0);
-			uo = uoin+uout;
-			uo(uoin) =  v0*r(uoin)/R0;
-			uo(uout) =  v0*R0./r(uout);
-			uo(isnan(uo))=0;
-			u2 = -uo.*sin(o);
-			v2 = uo.*cos(o);
-			u=u-u2;
-			v=v-v2;
-		end
-	case 2 %oseen
-		v0 = str2double(get(handles.oseen_displ,'string'))*3; %max velocity
-		vortexplayground=[str2double(get(handles.img_sizex,'string')),str2double(get(handles.img_sizey,'string'))]; %width, height)
-		center1=[str2double(get(handles.oseenx1,'string')),str2double(get(handles.oseeny1,'string'))]; %x,y
-		center2=[str2double(get(handles.oseenx2,'string')),str2double(get(handles.oseeny2,'string'))]; %x,y
-		[x,y]=meshgrid(-center1(1):vortexplayground(1)-center1(1)-1,-center1(2):vortexplayground(2)-center1(2)-1);
-		[o,r] = cart2pol(x,y);
-		uo=zeros(size(x));
-		zaeh=1;
-		t=str2double(get(handles.oseen_time,'string'));
-		r=r/100;
+value=num2str(round(get(handles.licres,'Value')*10)/10);
+set(handles.LIChint2,'String',value)
 
-		%uo wird im zwentrum NaN!!
-		uo=(v0./(2*pi*r)).*(1-exp(-r.^2/(4*zaeh*t)));
-		uo(isnan(uo))=0;
-		u = -uo.*sin(o);
-		v = uo.*cos(o);
-		if get(handles.singledoubleoseen,'value')==2
-			[x,y]=meshgrid(-center2(1):vortexplayground(1)-center2(1)-1,-center2(2):vortexplayground(2)-center2(2)-1);
-			[o,r] = cart2pol(x,y);
-			r=r/100;
-			uo=(v0./(2*pi*r)).*(1-exp(-r.^2/(4*zaeh*t)));
-			uo(isnan(uo))=0;
-			u2 = -uo.*sin(o);
-			v2 = uo.*cos(o);
-			u=u-u2;
-			v=v-v2;
-		end
-	case 3 %linear
-		u=zeros(str2double(get(handles.img_sizey,'string')),str2double(get(handles.img_sizex,'string')));
-		v(1:str2double(get(handles.img_sizey,'string')),1:str2double(get(handles.img_sizex,'string')))=str2double(get(handles.shiftdisplacement,'string'));
-	case 4 % rotation
-		[v,u] = meshgrid(-(str2double(get(handles.img_sizex,'string')))/2:1:(str2double(get(handles.img_sizex,'string')))/2-1,-(str2double(get(handles.img_sizey,'string')))/2:1:(str2double(get(handles.img_sizey,'string')))/2-1);
-
-		u=u/max(max(u));
-		v=-v/max(max(v));
-		u=u*str2double(get(handles.rotationdislacement,'string'));
-		v=v*str2double(get(handles.rotationdislacement,'string'));
-		[x,y]=meshgrid(1:1:str2double(get(handles.img_sizex,'string'))+1);
-	case 5 %membrane
-		[x,y]=meshgrid(linspace(-3,3,str2double(get(handles.img_sizex,'string'))),linspace(-3,3,str2double(get(handles.img_sizey,'string'))));
-		u = peaks(x,y)/3;
-		v = peaks(y,x)/3;
-end
-%% Create Particle Image
-set(handles.status_creation,'string','Calculating particles...');drawnow;
-i=[];
-j=[];
-sizey=str2double(get(handles.img_sizey,'string'));
-sizex=str2double(get(handles.img_sizex,'string'));
-noise=str2double(get(handles.part_noise,'string'));
-A=zeros(sizey,sizex);
-B=A;
-partAm=str2double(get(handles.part_am,'string'));
-Z=str2double(get(handles.sheetthick,'string')); %0.25 sheet thickness
-dt=str2double(get(handles.part_size,'string')); %particle diameter
-ddt=str2double(get(handles.part_var,'string')); %particle diameter variation
-
-z0_pre=randn(partAm,1); %normal distributed sheet intensity
-
-z1_pre=randn(partAm,1); %normal distributed sheet intensity
-
-z0=z0_pre*(str2double(get(handles.part_z,'string'))/200+0.5)+z1_pre*(1-((str2double(get(handles.part_z,'string'))/200+0.5)));
-z1=z1_pre*(str2double(get(handles.part_z,'string'))/200+0.5)+z0_pre*(1-((str2double(get(handles.part_z,'string'))/200+0.5)));
-
-%z0=abs(randn(partAm,1)); %normal distributed sheet intensity
-I0=255*exp(-(Z^2./(0.125*z0.^2))); %particle intensity
-I0(I0>255)=255;
-I0(I0<0)=0;
-
-I1=255*exp(-(Z^2./(0.125*z1.^2))); %particle intensity
-I1(I1>255)=255;
-I1(I1<0)=0;
-
-d=randn(partAm,1)/2; %particle diameter distribution
-d=dt+d*ddt;
-d(d<0)=0;
-x0=rand(partAm,1)*sizex;
-y0=rand(partAm,1)*sizey;
-rd = -8.0 ./ d.^2;
-offsety=v;
-offsetx=u;
-
-xlimit1=floor(x0-d/2); %x min particle extent image1
-xlimit2=ceil(x0+d/2); %x max particle extent image1
-ylimit1=floor(y0-d/2); %y min particle extent image1
-ylimit2=ceil(y0+d/2); %y max particle extent image1
-xlimit2(xlimit2>sizex)=sizex;
-xlimit1(xlimit1<1)=1;
-ylimit2(ylimit2>sizey)=sizey;
-ylimit1(ylimit1<1)=1;
-
-%calculate particle extents for image2 (shifted image)
-x0integer=round(x0);
-x0integer(x0integer>sizex)=sizex;
-x0integer(x0integer<1)=1;
-y0integer=round(y0);
-y0integer(y0integer>sizey)=sizey;
-y0integer(y0integer<1)=1;
-
-xlimit3=zeros(partAm,1);
-xlimit4=xlimit3;
-ylimit3=xlimit3;
-ylimit4=xlimit3;
-for n=1:partAm
-	xlimit3(n,1)=floor(x0(n)-d(n)/2-offsetx((y0integer(n)),(x0integer(n)))); %x min particle extent image2
-	xlimit4(n,1)=ceil(x0(n)+d(n)/2-offsetx((y0integer(n)),(x0integer(n)))); %x max particle extent image2
-	ylimit3(n,1)=floor(y0(n)-d(n)/2-offsety((y0integer(n)),(x0integer(n)))); %y min particle extent image2
-	ylimit4(n,1)=ceil(y0(n)+d(n)/2-offsety((y0integer(n)),(x0integer(n)))); %y max particle extent image2
-end
-xlimit3(xlimit3<1)=1;
-xlimit4(xlimit4>sizex)=sizex;
-ylimit3(ylimit3<1)=1;
-ylimit4(ylimit4>sizey)=sizey;
-
-set(handles.status_creation,'string','Placing particles...');drawnow;
-for n=1:partAm
-	r = rd(n);
-	for j=xlimit1(n):xlimit2(n)
-		rj = (j-x0(n))^2;
-		for i=ylimit1(n):ylimit2(n)
-			A(i,j)=A(i,j)+I0(n)*exp((rj+(i-y0(n))^2)*r);
-		end
-	end
-	for j=xlimit3(n):xlimit4(n)
-		for i=ylimit3(n):ylimit4(n)
-			B(i,j)=B(i,j)+I1(n)*exp((-(j-x0(n)+offsetx(i,j))^2-(i-y0(n)+offsety(i,j))^2)*-rd(n)); %place particle with gaussian intensity profile
-		end
-	end
-end
-
-A(A>255)=255;
-B(B>255)=255;
-
-gen_image_1=imnoise(uint8(A),'gaussian',0,noise);
-gen_image_2=imnoise(uint8(B),'gaussian',0,noise);
-
-set(handles.status_creation,'string','...done')
-figure;imshow(gen_image_1,'initialmagnification', 100);
-figure;imshow(gen_image_2,'initialmagnification', 100);
-gui_put('gen_image_1',gen_image_1);
-gui_put('gen_image_2',gen_image_2);
-gui_put('real_displ_u',offsetx);
-gui_put('real_displ_v',offsety);
-
-function simulate_save_imgs_Callback(~, ~, ~)
-gen_image_1=gui_retr('gen_image_1');
-gen_image_2=gui_retr('gen_image_2');
-real_displacement_u=gui_retr('real_displ_u');
-real_displacement_v=gui_retr('real_displ_v');
-if isempty(gen_image_1)==0
-	[FileName,PathName] = uiputfile('*.tif','Save generated images as...',['PIVlab_gen.tif']);
-	if isequal(FileName,0) | isequal(PathName,0)
-	else
-		[Dir, Name, Ext] = fileparts(FileName);
-		FileName_1=[Name '_01' Ext];
-		FileName_2=[Name '_02' Ext];
-		if exist(fullfile(PathName,FileName_1),'file') >0 || exist(fullfile(PathName,FileName_2),'file') >0
-			butt = questdlg(['Warning: File ' FileName_1 ' already exists.'],'File exists','Overwrite','Cancel','Overwrite');
-			if strncmp(butt, 'Overwrite',9) == 1
-				write_it=1;
-			else
-				write_it=0;
+function plot_manually_discarded_vectors(target_axis,handles, x, y)
+if strncmp(get(handles.multip06, 'visible'), 'on',2) %validation panel visible
+	manualdeletion=gui_retr('manualdeletion');
+	frame=floor(get(handles.fileselector, 'value'));
+	framemanualdeletion=[];
+	if numel(manualdeletion)>0
+		if size(manualdeletion,2)>=frame
+			if isempty(manualdeletion{1,frame}) ==0
+				framemanualdeletion=manualdeletion{frame};
 			end
-		else
-			write_it=1;
 		end
-		if write_it==1
-			imwrite(gen_image_1,fullfile(PathName,FileName_1),'Compression','none')
-			imwrite(gen_image_2,fullfile(PathName,FileName_2),'Compression','none')
-			save(fullfile(PathName,[Name '_real_displacement.mat']) ,'real_displacement_u','real_displacement_v')
+	end
+	if isempty(framemanualdeletion)==0
+		hold on;
+		if str2num(get(handles.masktransp,'String')) < 100
+			for i=1:size(framemanualdeletion,1)
+				scatter (x(framemanualdeletion(i,1),framemanualdeletion(i,2)),y(framemanualdeletion(i,1),framemanualdeletion(i,2)), 'rx', 'tag','manualdot','parent',target_axis)
+			end
 		end
+		hold off;
 	end
 end
 
-function plot_dummy_Callback(~, ~, ~)
+function plot_mapscale_max_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function plot_mapscale_min_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function plot_mean_u_Callback(~, ~, ~)
+handles=gui_gethand;
+currentframe=floor(get(handles.fileselector, 'value'));
+resultslist=gui_retr('resultslist');
+if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0 %analysis exists
+	if size(resultslist,1)>6 && numel(resultslist{7,currentframe})>0 %filtered exists
+		u=resultslist{7,currentframe};
+	else
+		u=resultslist{3,currentframe};
+	end
+	calu=gui_retr('calu');calv=gui_retr('calv');
+	set(handles.subtr_u, 'string', num2str(mean(u(:)*calu,'omitnan')));
+else
+	set(handles.subtr_u, 'string', '0');
+end
+
+function plot_mean_v_Callback(~, ~, ~)
+handles=gui_gethand;
+currentframe=floor(get(handles.fileselector, 'value'));
+resultslist=gui_retr('resultslist');
+if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0 %analysis exists
+	if size(resultslist,1)>6 && numel(resultslist{7,currentframe})>0 %filtered exists
+		v=resultslist{8,currentframe};
+	else
+		v=resultslist{4,currentframe};
+	end
+	calu=gui_retr('calu');calv=gui_retr('calv');
+	set(handles.subtr_v, 'string', num2str(mean(v(:)*calv,'omitnan')));
+else
+	set(handles.subtr_v, 'string', '0');
+end
+
+function plot_modif_plot_Callback(~, ~, ~)
+gui_switchui('multip09');
+
+function plot_putmarkers_Callback(~, ~, ~)
+handles=gui_gethand;
+button=1;
+manmarkersX=gui_retr('manmarkersX');
+manmarkersY=gui_retr('manmarkersY');
+if get(handles.holdmarkers,'value')==1
+
+	if numel(manmarkersX)>0
+		i=size(manmarkersX,2)+1;
+		xposition=manmarkersX;
+		yposition=manmarkersY;
+	else
+		i=1;
+	end
+else
+	i=1;
+	gui_put('manmarkersX',[]);
+	gui_put('manmarkersY',[]);
+	xposition=[];
+	yposition=[];
+	delete(findobj('tag','manualmarker'));
+end
+hold on;
+gui_toolsavailable(0)
+while button == 1
+	[rawx,rawy,button] = ginput(1);
+	if button~=1
+		break
+	end
+	xposition(i)=rawx;
+	yposition(i)=rawy;
+	plot(xposition(i),yposition(i), 'r*','Color', [0.55,0.75,0.9], 'tag', 'manualmarker');
+	i=i+1;
+end
+gui_toolsavailable(1)
+delete(findobj('tag','manualmarker'));
+plot(xposition,yposition, 'o','MarkerEdgeColor','k','MarkerFaceColor',[.2 .2 1], 'MarkerSize',9, 'tag', 'manualmarker');
+plot(xposition,yposition, '*','MarkerEdgeColor','w', 'tag', 'manualmarker');
+gui_put('manmarkersX',xposition);
+gui_put('manmarkersY',yposition);
+hold off
+
+function plot_remove_temporal_frame_Callback (~,~,~)
+handles=gui_gethand;
+filepath=gui_retr('filepath');
+filename=gui_retr('filename');
+resultslist=gui_retr('resultslist');
+
+if isempty(resultslist)==0
+	if size(filepath,1)>0
+		sizeerror=0;
+		typevectormittel=ones(size(resultslist{1,1}));
+		ismean=gui_retr('ismean');
+		if isempty(ismean)==1
+			ismean=zeros(size(resultslist,2),1);
+		end
+%dont remove all, but only the current one.
+%probably shift the remaining ones....?
+currentframe=floor(get(handles.fileselector, 'value'));
+
+if ismean(currentframe,1)==1
+	filepath(currentframe*2,:)=[];
+	filename(currentframe*2,:)=[];
+	filepath(currentframe*2-1,:)=[];
+	filename(currentframe*2-1,:)=[];
+	resultslist(:,currentframe)=[];
+	ismean(currentframe,:)=[];
+	gui_put('filepath',filepath);
+	gui_put('filename',filename);
+	gui_put('resultslist',resultslist);
+	gui_put('ismean',ismean);
+	gui_sliderrange(0)
+	if get(handles.fileselector,'value')>1
+		gui_fileselector_Callback
+		set(handles.fileselector, 'value', currentframe-1);
+	end
+	gui_sliderdisp(gui_retr('pivlab_axis'));
+else
+	uiwait(msgbox('You can only delete frames with derived temporal parameters.','Notice','modal'));
+end
+	end
+end
+
+function out=plot_rescale_maps(in,isangle)
+%input has same dimensions as x,y,u,v,
+%output has size of the piv image
+handles=gui_gethand;
+filepath=gui_retr('filepath');
+currentframe=floor(get(handles.fileselector, 'value'));
+[currentimage,~]=import_get_img(2*currentframe-1);
+resultslist=gui_retr('resultslist');
+x=resultslist{1,currentframe};
+y=resultslist{2,currentframe};
+out=zeros(size(currentimage));
+if size(out,3)>1
+	out(:,:,2:end)=[];
+end
+out(:,:)=mean(in(:)); %Rand wird auf Mittelwert gesetzt
+step=x(1,2)-x(1,1)+1;
+minx=(min(min(x))-step/2);
+maxx=(max(max(x))+step/2);
+miny=(min(min(y))-step/2);
+maxy=(max(max(y))+step/2);
+width=maxx-minx;
+height=maxy-miny;
+if size(in,3)>1 %why would this actually happen...?
+	in(:,:,2:end)=[];
+end
+if isangle == 1 %angle data is unsteady, needs to interpolated differently
+	X_raw=cos(in/180*pi);
+	Y_raw=sin(in/180*pi);
+	%interpolate
+	X_interp = imresize(X_raw,[height width],'bilinear');
+	Y_interp = imresize(Y_raw,[height width],'bilinear');
+	%reconvert to phase
+	dispvar = angle(complex(X_interp,Y_interp))*180/pi;
+else
+	colormap_interpolation_list=get(handles.colormap_interpolation,'String');
+	colormap_interpolation_value = get(handles.colormap_interpolation,'Value');
+	dispvar = imresize(in,[height width],colormap_interpolation_list{colormap_interpolation_value}); %INTERPOLATION
+end
+
+if miny<1
+	miny=1;
+end
+if minx<1
+	minx=1;
+end
+try
+	out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar;
+catch
+	disp('temp workaround')
+	A=out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1));
+	out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar(1:size(A,1),1:size(A,2));
+end
+
+function out=plot_rescale_maps_nan(in,isangle)
+%input has same dimensions as x,y,u,v,
+%output has size of the piv image
+%Rand ist nan statt Mittelwert des derivatives
+handles=gui_gethand;
+filepath=gui_retr('filepath');
+currentframe=floor(get(handles.fileselector, 'value'));
+[currentimage,~]=import_get_img(2*currentframe-1);
+resultslist=gui_retr('resultslist');
+x=resultslist{1,currentframe};
+y=resultslist{2,currentframe};
+out=zeros(size(currentimage));
+if size(out,3)>1
+	out(:,:,2:end)=[];
+end
+out(:,:)=nan; %rand wird auf nan gesetzt
+step=x(1,2)-x(1,1)+1;
+minx=(min(min(x))-step/2);
+maxx=(max(max(x))+step/2);
+miny=(min(min(y))-step/2);
+maxy=(max(max(y))+step/2);
+width=maxx-minx;
+height=maxy-miny;
+if size(in,3)>1 %why would this actually happen...?
+	in(:,:,2:end)=[];
+end
+
+if isangle == 1 %angle data is unsteady, needs to interpolated differently
+	X_raw=cos(in/180*pi);
+	Y_raw=sin(in/180*pi);
+	%interpolate
+	X_interp = imresize(X_raw,[height width],'bilinear');
+	Y_interp = imresize(Y_raw,[height width],'bilinear');
+	%reconvert to phase
+	dispvar = angle(complex(X_interp,Y_interp))*180/pi;
+else
+	dispvar = imresize(in,[height width],'bilinear'); %INTERPOLATION
+end
+
+if miny<1
+	miny=1;
+end
+if minx<1
+	minx=1;
+end
+try
+	out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar;
+catch
+	disp('temp workaround')
+	A=out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1));
+	out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar(1:size(A,1),1:size(A,2));
+end
+%% remove data from masked areas
+current_mask_nr=floor(get(handles.fileselector, 'value'));
+masks_in_frame=gui_retr('masks_in_frame');
+if isempty(masks_in_frame)
+	%masks_in_frame=cell(current_mask_nr,1);
+	masks_in_frame=cell(1,current_mask_nr);
+end
+if numel(masks_in_frame)<current_mask_nr
+	mask_positions=cell(0);
+else
+	mask_positions=masks_in_frame{current_mask_nr};
+end
+expected_image_size=gui_retr('expected_image_size');
+converted_mask=mask_convert_masks_to_binary(expected_image_size,mask_positions);
+out(converted_mask==1)=nan;
+
+function [vecskip, vecscale] = plot_scale_vector_display(handles, x, y, u, v)
+autoscale_vec=get(handles.autoscale_vec, 'Value');
+vecskip=str2double(get(handles.nthvect,'String'));
+if autoscale_vec == 1
+	autoscale=1;
+	%from quiver autoscale function:
+	if min(size(x))==1, n=sqrt(numel(x)); m=n; else; [m,n]=size(x); end
+	delx = diff([min(x(:)) max(x(:))])/n;
+	dely = diff([min(y(:)) max(y(:))])/m;
+	del = delx.^2 + dely.^2;
+	if del>0
+		len = sqrt((u.^2 + v.^2)/del);
+		maxlen = max(len(:));
+	else
+		maxlen = 0;
+	end
+	if maxlen>0
+		autoscale = autoscale/ maxlen * vecskip;
+	else
+		autoscale = autoscale; %#ok<*ASGSL>
+	end
+	vecscale=autoscale;
+else %autoscale off
+	vecscale=str2num(get(handles.vectorscale,'string')); %#ok<*ST2NM>
+end
+
+function plot_scatterplotter_Callback(~, ~, ~)
+handles=gui_gethand;
+currentframe=floor(get(handles.fileselector, 'value'));
+resultslist=gui_retr('resultslist');
+if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+	if size(resultslist,1)>6 %filtered exists
+		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+			u=resultslist{10,currentframe};
+			v=resultslist{11,currentframe};
+		else
+			u=resultslist{7,currentframe};
+			if size(u,1)>1
+				v=resultslist{8,currentframe};
+			else
+				%filter was applied to some other frame than this
+				%load unfiltered results
+				u=resultslist{3,currentframe};
+				v=resultslist{4,currentframe};
+			end
+		end
+	else
+		u=resultslist{3,currentframe};
+		v=resultslist{4,currentframe};
+	end
+	calu=gui_retr('calu');calv=gui_retr('calv');
+	u=reshape(u,size(u,1)*size(u,2),1);
+	v=reshape(v,size(v,1)*size(v,2),1);
+	h=figure;
+	screensize=get( 0, 'ScreenSize' );
+	%rect = [screensize(3)/2-300, screensize(4)/2-250, 600, 500];
+	rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
+	set(h,'position', rect);
+	set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',['Scatter plot u & v, frame ' num2str(currentframe)],'tag', 'derivplotwindow');
+	h2=scatter(u*calu-gui_retr('subtr_u'),v*calv-gui_retr('subtr_v'),'r.');
+	set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
+	if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+		xlabel('u [px/frame]');
+		ylabel('v [px/frame]');
+	else
+		xlabel('u [m/s]');
+		ylabel('v [m/s]');
+	end
+end
+
+function out=plot_shear(x,y,u,v)
+hx = x(1,:);
+hy = y(:,1);
+[junk, py] = gradient(u, hx, hy);
+[qx, junk] = gradient(v, hx, hy);
+out= qx+py;
+
+function plot_statistics_Callback(~, ~, ~)
+gui_switchui('multip14')
 filepath=gui_retr('filepath');
 if size(filepath,1) > 1
 	gui_sliderdisp(gui_retr('pivlab_axis'))
 end
-gui_MainWindow_ResizeFcn(gcf)
 
-function gui_pivlabhelp_Callback(~, ~, ~)
-try
-	web('http://pivlab.blogspot.de/p/blog-page_19.html','-browser')
-catch
-	%why does 'web' not work in v 7.1.0.246 ...?
-	disp('Ooops, MATLAB couldn''t open the website.')
-	disp('You''ll have to open the website manually:')
-	disp('http://pivlab.blogspot.de/p/blog-page_19.html')
+function out=plot_strain(x,y,u,v)
+hx = x(1,:);
+hy = y(:,1);
+[px, junk] = gradient(u, hx, hy);
+[junk, qy] = gradient(v, hx, hy); %#ok<*ASGLU>
+out = px-qy;
+
+function plot_streamlines(target_axis,u, v, typevector, x, y, handles)
+%streamlines:
+streamlinesX=gui_retr('streamlinesX');
+streamlinesY=gui_retr('streamlinesY');
+delete(findobj('tag','streamline'));
+if numel(streamlinesX)>0
+	ustream=u-(gui_retr('subtr_u')/gui_retr('calu'));
+	vstream=v-(gui_retr('subtr_v')/gui_retr('calv'));
+	ustream(typevector==0)=nan;
+	vstream(typevector==0)=nan;
+	h=streamline(mmstream2(x,y,ustream,vstream,streamlinesX,streamlinesY,'on'),'parent',target_axis);
+	set (h,'tag','streamline');
+	contents = get(handles.streamlcolor,'String');
+	set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')});
 end
 
-function gui_aboutpiv_Callback(~, ~, ~)
-string={...
-	'PIVlab - Time-Resolved Digital Particle Image Velocimetry Tool for MATLAB';...
-	['version: ' gui_retr('PIVver')];...
-	'';...
-	'developed by Dr. William Thielicke and Prof. Dr. Eize J. Stamhuis';...
-	'published under the MIT licence.';...
-	'';...
-	'';...
-	'first released March 09, 2010';...
-	'';...
-	'http://PIVlab.blogspot.com';...
-	'contact: PIVlab@gmx.com';...
-	'';...
-	'The development happened mostly in Williams free time.';...
-	'But since he is now working for a company developing PIV equipment,';...
-	'some of his work time is dedicated to improving PIVlab. Therefore,';...
-	'the development is partly sponsored by www.OPTOLUTION.com.';
+function plot_streamlines_Callback(~, ~, ~)
+gui_switchui('multip18');
 
-	};
-helpdlg(string,'About')
-
-function misc_clear_everything_Callback(~, ~, ~)
-gui_put ('resultslist', []); %clears old results
-gui_put ('derived', []);
+function plot_streamrake_Callback(~, ~, ~)
 handles=gui_gethand;
-set(handles.progress, 'String','Frame progress: N/A');
-set(handles.overall, 'String','Total progress: N/A');
-set(handles.totaltime, 'String','Time left: N/A');
-set(handles.messagetext, 'String','');
-set (handles.amount_nans, 'BackgroundColor',[0.9 0.9 0.9])
-set (handles.amount_nans,'string','')
-gui_sliderdisp(gui_retr('pivlab_axis'))
-
-function plot_autoscale_vec_Callback(~, ~, ~)
-handles=gui_gethand;
-if get(handles.autoscale_vec, 'value')==1
-	set(handles.vectorscale,'enable', 'off');
-else
-	set(handles.vectorscale,'enable', 'on');
-end
-
-function export_save_session_Callback(auto_save_session, auto_save_session_filename)
-sessionpath=gui_retr('sessionpath');
-if isempty(sessionpath)
-	sessionpath=gui_retr('pathname');
-end
-if auto_save_session ~= 1
-	[FileName,PathName] = uiputfile('*.mat','Save current session as...',fullfile(sessionpath,'PIVlab_session.mat'));
-else
-	[PathName,FileName,ext] = fileparts(auto_save_session_filename);
-	FileName = [FileName ext];
-end
-
-
-if isequal(FileName,0) | isequal(PathName,0)
-else
-	gui_put('expected_image_size',[])
-	gui_put('sessionpath',PathName );
-	gui_put('existing_handles',[]);gui_put('num_handle_calls',[])
-	clear ('existing_handles','num_handle_calls');
-	export_save_session_function (PathName,FileName)
-end
-
-
-function export_save_session_function (PathName,FileName)
-hgui=getappdata(0,'hgui');
-handles=gui_gethand;
-app=getappdata(hgui);
-gui_toolsavailable(1)
-gui_toolsavailable(0,'Busy, saving session...');drawnow
-%disp('hier was aendrn mit savehint')
-%text(150,150,'Please wait, saving session. This might take a while.','color','y','fontsize',13, 'BackgroundColor', 'k','tag','savehint')
-%Newer versions of Matlab do really funny things when the following vars are not empty...:
-app.GUIDEOptions =[];
-app.GUIOnScreen  =[];
-app.Listeners  =[];
-app.SavedVisible  =[];
-app.ScribePloteditEnable  =[];
-app.UsedByGUIData_m  =[];
-app.lastValidTag =[];
-iptPointerManager=[];
-app.ZoomObject=[]; %Matlab crashes if this is not empty. Weird...
-app.ZoomFigureState=[];
-app.ZoomOnState=[];
-app.PanFigureState=[];
-app.uitools_FigureToolManager=[];
-app.existing_handles=[];
-app.num_handle_calls=[];
-
-try
-	iptPointerManager(gcf, 'disable');
-catch
-end
-clear hgui iptPointerManager GUIDEOptions GUIOnScreen Listeners SavedVisible ScribePloteditEnable UsedByGUIData_m ZoomObject existing_handles num_handle_calls
-deli={'UsedByGUIData_m', 'uitools_FigureToolManager','PanFigureState','ZoomOnState','ZoomFigureState','ZoomObject','lastValidTag','SavedVisible','Listeners','GUIOnScreen','GUIDEOptions','ScribePloteditEnable','nonexistingfield'};
-for i=1:size(deli,2)
-	try
-		app=rmfield(app,deli{i});
-	catch
-	end
-end
-clear deli
-%save('-v6', fullfile(PathName,FileName), '-struct', 'app')
-%save(fullfile(PathName,FileName), '-struct', 'app') % AKTUELL PUBLIZIERT
-warning off
-save(fullfile(PathName,FileName), '-struct', 'app','-v7.3')% riesig aber nur das geht...
-warning on
-
-clear app %hgui iptPointerManager
-clear hgui iptPointerManager GUIDEOptions GUIOnScreen Listeners SavedVisible ScribePloteditEnable UsedByGUIData_m
-
-clahe_enable=get(handles.clahe_enable,'value');
-clahe_size=get(handles.clahe_size,'string');
-enable_highpass=get(handles.enable_highpass,'value');
-highp_size=get(handles.highp_size,'string');
-wienerwurst=get(handles.wienerwurst,'value');
-wienerwurstsize=get(handles.wienerwurstsize,'string');
-%enable_clip=get(handles.enable_clip,'value');
-%clip_thresh=get(handles.clip_thresh,'string');
-enable_intenscap=get(handles.enable_intenscap,'value');
-intarea=get(handles.intarea,'string');
-stepsize=get(handles.step,'string');
-subpix=get(handles.subpix,'value');  %popup
-stdev_check=get(handles.stdev_check,'value');
-stdev_thresh=get(handles.stdev_thresh,'string');
-loc_median=get(handles.loc_median,'value');
-loc_med_thresh=get(handles.loc_med_thresh,'string');
-%epsilon=get(handles.epsilon,'string');
-interpol_missing=get(handles.interpol_missing,'value');
-vectorscale=get(handles.vectorscale,'string');
-colormap_choice=get(handles.colormap_choice,'value'); %popup
-colormap_steps=get(handles.colormap_steps,'value');
-colormap_interpolation=get(handles.colormap_interpolation,'value');
-addfileinfo=get(handles.addfileinfo,'value');
-add_header=get(handles.add_header,'value');
-delimiter=get(handles.delimiter,'value');%popup
-img_not_mask=get(handles.img_not_mask,'value');
-autoscale_vec=get(handles.autoscale_vec,'value');
-calxy=gui_retr('calxy');
-calu=gui_retr('calu');calv=gui_retr('calv');
-pointscali=gui_retr('pointscali');
-
-x_axis_direction=get(handles.x_axis_direction,'value');
-y_axis_direction=get(handles.y_axis_direction,'value');
-size_of_the_image=gui_retr('size_of_the_image');
-points_offsetx=gui_retr('points_offsetx');
-points_offsety=gui_retr('points_offsety');
-offset_x_true=gui_retr('offset_x_true');
-offset_y_true=gui_retr('offset_y_true');
-
-realdist_string=get(handles.realdist, 'String');
-time_inp_string=get(handles.time_inp, 'String');
-
-%imginterpol=get(handles.popupmenu16, 'value');
-dccmark=get(handles.dcc, 'value');
-fftmark=get(handles.fftmulti, 'value');
-ensemblemark=get(handles.ensemble, 'value');
-pass2=get(handles.checkbox26, 'value');
-pass3=get(handles.checkbox27, 'value');
-pass4=get(handles.checkbox28, 'value');
-pass2val=get(handles.edit50, 'string');
-pass3val=get(handles.edit51, 'string');
-pass4val=get(handles.edit52, 'string');
-step2=get(handles.text126, 'string');
-step3=get(handles.text127, 'string');
-step4=get(handles.text128, 'string');
-holdstream=get(handles.holdstream, 'value');
-streamlamount=get(handles.streamlamount, 'string');
-streamlcolor=get(handles.streamlcolor, 'value');
-
-try
-	%neu v1.5:
-	%Repeated_box=get(handles.Repeated_box,'value');
-	mask_auto_box=get(handles.mask_auto_box,'value');
-	Autolimit=get(handles.Autolimit,'value');
-	minintens=get(handles.minintens,'string');
-	maxintens=get(handles.maxintens,'string');
-	%neu v2.11
-	CorrQuality_nr=get(handles.CorrQuality,'value');
-	%neu v2.37
-	enhance_disp=get(handles.enhance_images, 'Value');
-catch
-	disp('Old version compatibility|');
-end
-try
-	contrast_filter_thresh=get(handles.contrast_filter_thresh,'string');
-	bright_filter_thresh=get(handles.bright_filter_thresh,'string');
-	do_bright_filter=get(handles.do_bright_filter,'Value');
-	do_contrast_filter=get(handles.do_contrast_filter,'Value');
-catch
-end
-try
-	%neu v2.54
-	do_corr2_filter=get(handles.do_corr2_filter,'value');
-	corr_filter_thresh=get(handles.corr_filter_thresh,'string');
-	notch_L_thresh=get(handles.notch_L_thresh,'string');
-	notch_H_thresh=get(handles.notch_H_thresh,'string');
-	notch_filter=get(handles.notch_filter,'Value');
-catch
-	disp('corr filter / notch settings');
-end
-%neu v2.52
-try
-	repeat_last = get (handles.repeat_last,'Value');
-	repeat_last_thresh = get(handles.edit52x,'String');
-catch
-	disp('repeat_last didnt work3')
-end
-
-try
-	bg_img_A=gui_retr('bg_img_A');
-	bg_img_B=gui_retr('bg_img_B');
-catch
-	disp('Could not fetch bg imgs')
-end
-
-clear handles
-clear existing_handles
-clear num_handle_calls
-
-%save('-v6', fullfile(PathName,FileName), '-append');
-%save(fullfile(PathName,FileName), '-append');
-save(fullfile(PathName,FileName), '-append');
-
-%delete(findobj('tag','savehint'));
-gui_toolsavailable(1)
-drawnow;
-
-function import_load_session_Callback(auto_load_session, auto_load_session_filename)
-gui_put('num_handle_calls',0);
-sessionpath=gui_retr('sessionpath');
-if isempty(sessionpath)
-	sessionpath=gui_retr('pathname');
-end
-if auto_load_session ~= 1
-	[FileName,PathName, filterindex] = uigetfile({'*.mat','MATLAB Files (*.mat)'; '*.mat','mat'},'Load PIVlab session',fullfile(sessionpath, 'PIVlab_session.mat'));
-	gui_toolsavailable(0,'Busy, loading session...');drawnow
-else
-	[PathName,FileName,ext] = fileparts(auto_load_session_filename);
-	FileName = [FileName ext];
-end
-
-if isequal(FileName,0) | isequal(PathName,0)
-else
-	gui_put('expected_image_size',[])
-	clear iptPointerManager
-	gui_put('sessionpath',PathName );
-	gui_put('derived',[]);
-	gui_put('resultslist',[]);
-	gui_put('masks_in_frame',[]);
-	gui_put('roirect',[]);
-	gui_put('velrect',[]);
-	gui_put('filename',[]);
-	gui_put('filepath',[]);
-	hgui=getappdata(0,'hgui');
-	warning off all
-	try
-		%even if a variable doesn't exist, this doesn't throw an error...
-		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu', 'calv','calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'colormap_steps', 'colormap_interpolation', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','ensemblemark','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B','x_axis_direction','y_axis_direction','size_of_the_image','points_offsetx','points_offsety','offset_x_true','offset_y_true','bright_filter_thresh','contrast_filter_thresh','do_bright_filter','do_contrast_filter','repeat_last','repeat_last_thresh','do_corr2_filter','corr_filter_thresh','notch_L_thresh','notch_H_thresh','notch_filter','masks_in_frame');
-	catch
-		disp('Old version compatibility.')
-		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu','calv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_steps','colormap_choice', 'colormap_interpolation', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
-	end
-	names=fieldnames(vars);
-	for i=1:size(names,1)
-		setappdata(hgui,names{i},vars.(names{i}))
-	end
-	gui_put('existing_handles',[]);
-	gui_sliderrange(1)
-	handles=gui_gethand;
-
-	set(handles.clahe_enable,'value',gui_retr('clahe_enable'));
-	set(handles.clahe_size,'string',gui_retr('clahe_size'));
-	set(handles.enable_highpass,'value',gui_retr('enable_highpass'));
-	set(handles.highp_size,'string',gui_retr('highp_size'));
-
-	set(handles.wienerwurst,'value',gui_retr('wienerwurst'));
-	set(handles.wienerwurstsize,'string',gui_retr('wienerwurstsize'));
-
-	%set(handles.enable_clip,'value',retr('enable_clip'));
-	%set(handles.clip_thresh,'string',retr('clip_thresh'));
-	set(handles.enable_intenscap,'value',gui_retr('enable_intenscap'));
-	set(handles.intarea,'string',gui_retr('intarea'));
-	set(handles.step,'string',gui_retr('stepsize'));
-	set(handles.subpix,'value',gui_retr('subpix'));  %popup
-	set(handles.stdev_check,'value',gui_retr('stdev_check'));
-	set(handles.stdev_thresh,'string',gui_retr('stdev_thresh'));
-	set(handles.loc_median,'value',gui_retr('loc_median'));
-	set(handles.loc_med_thresh,'string',gui_retr('loc_med_thresh'));
-	set(handles.interpol_missing,'value',gui_retr('interpol_missing'));
-
-	set(handles.vectorscale,'string',gui_retr('vectorscale'));
-	set(handles.colormap_choice,'value',gui_retr('colormap_choice')); %popup
-	set(handles.colormap_steps,'value',gui_retr('colormap_steps'));
-	set(handles.colormap_interpolation,'value',gui_retr('colormap_interpolation'));
-	set(handles.addfileinfo,'value',gui_retr('addfileinfo'));
-	set(handles.add_header,'value',gui_retr('add_header'));
-	set(handles.delimiter,'value',gui_retr('delimiter'));%popup
-	set(handles.img_not_mask,'value',gui_retr('img_not_mask'));
-	set(handles.autoscale_vec,'value',gui_retr('autoscale_vec'));
-
-	set(handles.dcc, 'value',vars.dccmark);
-	set(handles.fftmulti, 'value',vars.fftmark);
-
-
-	try
-		set(handles.ensemble, 'value',vars.ensemblemark);
-	catch
-		vars.ensemblemark=0;
-	end
-
-
-	if vars.fftmark==1 || vars.ensemblemark ==1
-		set (handles.uipanel42,'visible','on')
-	else
-		set (handles.uipanel42,'visible','off')
-	end
-	set(handles.checkbox26, 'value',vars.pass2);
-	set(handles.checkbox27, 'value',vars.pass3);
-	set(handles.checkbox28, 'value',vars.pass4);
-
-	if vars.pass2 == 1
-		set(handles.edit50, 'enable','on')
-	else
-		set(handles.edit50, 'enable','off')
-	end
-	if vars.pass3 == 1
-		set(handles.edit51, 'enable','on')
-	else
-		set(handles.edit51, 'enable','off')
-	end
-	if vars.pass4 == 1
-		set(handles.edit52, 'enable','on')
-	else
-		set(handles.edit52, 'enable','off')
-	end
-	set(handles.edit50, 'string',vars.pass2val);
-	set(handles.edit51, 'string',vars.pass3val);
-	set(handles.edit52, 'string',vars.pass4val);
-	set(handles.text126, 'string',vars.step2);
-	set(handles.text127, 'string',vars.step3);
-	set(handles.text128, 'string',vars.step4);
-	set(handles.holdstream, 'value',vars.holdstream);
-	set(handles.streamlamount, 'string',vars.streamlamount);
-	set(handles.streamlcolor, 'value',vars.streamlcolor);
-	set(handles.streamlwidth, 'value',vars.streamlcolor);
-
-	try
-		%neu v1.5:
-		set(handles.mask_auto_box,'value',vars.mask_auto_box);
-		set(handles.Autolimit,'value',vars.Autolimit);
-		set(handles.minintens,'string',vars.minintens);
-		set(handles.maxintens,'string',vars.maxintens);
-		set(handles.CorrQuality,'Value',vars.CorrQuality_nr);
-		%neu v2.37
-		set(handles.enhance_images, 'Value',vars.enhance_disp);
-	catch
-		disp('Old version compatibility,')
-	end
-	try %neu v2.42
-		set(handles.interpol_missing2,'value',gui_retr('interpol_missing'));
-	catch
-	end
-
-	try %neu 2.42
-		set (handles.x_axis_direction,'value',vars.x_axis_direction);
-		set (handles.y_axis_direction,'value',vars.y_axis_direction);
-
-		set(handles.contrast_filter_thresh,'string',vars.contrast_filter_thresh);
-		set(handles.bright_filter_thresh,'string',vars.bright_filter_thresh);
-		set(handles.do_bright_filter,'Value',vars.do_bright_filter);
-		set(handles.do_contrast_filter,'Value',vars.do_contrast_filter);
-	catch
-	end
-
-	try
-		%neu v2.54
-		set(handles.do_corr2_filter,'value',vars.do_corr2_filter);
-		set(handles.corr_filter_thresh,'string',vars.corr_filter_thresh);
-		set(handles.notch_L_thresh,'string',vars.notch_L_thresh);
-		set(handles.notch_H_thresh,'string',vars.notch_H_thresh);
-		set(handles.notch_filter,'Value',vars.notch_filter);
-	catch
-		disp('corr filter / notch settings');
-	end
-
-	try
-		if vars.velrect(1,3)~=0 && vars.velrect(1,4)~=0
-			gui_put('velrect', vars.velrect);
-			validate_update_velocity_limits_information
-		end
-	catch
-	end
-
-	try
-		set(handles.realdist, 'String',vars.realdist_string);
-		set(handles.time_inp, 'String',vars.time_inp_string);
-
-		if isempty(vars.pointscali)==0
-			handles=gui_gethand;
-			calu=gui_retr('calu');calv=gui_retr('calv');
-			calxy=gui_retr('calxy');
-			if isfield(vars,'offset_x_true') == 1
-				offset_x_true = gui_retr('offset_x_true');
-			else
-				offset_x_true=0;
-			end
-			if isfield(vars,'offset_y_true') == 1
-				offset_y_true = gui_retr('offset_y_true');
-			else
-				offset_y_true=0;
-			end
-			calibrate_update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles)
-			calibrate_pixeldist_changed_Callback()
-		end
-	catch
-		disp('...')
-	end
-
-	try
-		if ~isempty(vars.bg_img_A)
-			set(handles.bg_subtract,'Value',1);
-		else
-			set(handles.bg_subtract,'Value',0);
-		end
-	catch
-		disp('Could not set bg checkbox')
-	end
-
-	%neu v2.52
-	try
-		set (handles.repeat_last,'Value',vars.repeat_last);
-		set(handles.edit52x,'String',vars.repeat_last_thresh);
-		piv_repeat_last_Callback
-	catch
-		disp('repeat_last didnt work4')
-	end
-
-	%reset zoom
-	set(handles.panon,'Value',0);
-	set(handles.zoomon,'Value',0);
-	gui_put('xzoomlimit', []);
-	gui_put('yzoomlimit', []);
-	gui_sliderdisp(gui_retr('pivlab_axis'))
-	try
-		if gui_retr('parallel')==1
-			modestr=' (parallel)';
-		else
-			modestr=' (serial)';
-		end
-		set(getappdata(0,'hgui'), 'Name',['PIVlab ' gui_retr('PIVver')  modestr '   [Path: ' vars.pathname ']']) %for people like me that always forget what dataset they are currently working on...
-	catch
-	end
-	zoom reset
-	try
-		set (handles.filenamebox, 'string', vars.filename);
-	catch
-	end
-end
-gui_toolsavailable(1)
-
-function export_do_export_pixel_data_Callback(~, src, ~)
-handles=gui_gethand;
-filepath=gui_retr('filepath');
-if strmatch(src.Source.Tag,'do_export_pixel_data')
-	startframe=str2num(get(handles.firstframe,'string'));
-	if startframe <1
-		startframe=1;
-	elseif startframe>size(filepath,1)/2
-		startframe=size(filepath,1)/2;
-	end
-	set(handles.firstframe,'string',int2str(startframe));
-	endframe=str2num(get(handles.lastframe,'string'));
-	if endframe <startframe
-		endframe=startframe;
-	elseif endframe>size(filepath,1)/2
-		endframe=size(filepath,1)/2;
-	end
-	set(handles.lastframe,'string',int2str(endframe));
-else
-	startframe=floor(get(handles.fileselector, 'value'));
-	endframe=startframe;
-end
-imgsavepath=gui_retr('imgsavepath');
-if isempty(imgsavepath)
-	imgsavepath=gui_retr('pathname');
-end
-
-str=get(handles.export_still_or_animation,'String');
-value=get(handles.export_still_or_animation,'Value');
-selected_format=str{value};
-
-switch selected_format
-	case 'PNG'
-		formatstring={ '*.png','uncompressed image(s) (*.png)'};
-	case 'JPG'
-		formatstring={ '*.jpg','compressed image(s) (*.jpg)'};
-	case 'PDF'
-		formatstring={ '*.pdf','vector images (*.pdf)'};
-	case 'Archival AVI'
-		formatstring={ '*.avi','uncompressed animation (*.avi)'};
-	case 'MPEG-4'
-		formatstring={ '*.mp4','compressed animation (*.mp4)'};
-end
-
-[filename, pathname] = uiputfile(formatstring, 'Save images as',fullfile(imgsavepath, 'PIVlab_out'));
-
-if ~isequal(filename,0) && ~isequal(pathname,0)
-	gui_put('imgsavepath',pathname );
-	[Dir, Name, Ext] = fileparts(filename);
-
-	resolution=str2double(get(handles.resolution_setting,'String'));
-	quality=str2double(get(handles.quality_setting,'String'));
-	fps=str2double(get(handles.fps_setting,'String'));
-
-	pivlab_axis=gui_retr('pivlab_axis');
-	%cant make this invisible, because matlab then doesnt render properly... :-(
-	export_figure=figure('Name','Exporting, please wait. Please don''t close or resize this window.','NumberTitle','off','visible','on','units','pixels','Toolbar','none','DockControls','off','WindowState','normal','Color','w','WindowStyle','modal');
-	set(export_figure,'units','normalized','outerposition',[0 0 1 1]) %unfortunately, setting figure to fullscreen still reports a non-fullscreen position in matlab...
-
-	if verLessThan('matlab','9.8')  %2020a and up contains exportgraphics
-		use_exportfig =1;
-	else
-		use_exportfig =0;
-	end
-	%use_exportfig =1;
-	%change the aspect ratio of the figure window to match the aspect of the underlying data. Needs to deal with colorbars and axes resizing.
-	%{
-	%testweise ausgeschaltet
-	axes_childs=get(pivlab_axis,'Children');
-	pixel_height=size(axes_childs(end).CData,1); %lowest layer is pixel image
-	pixel_width=size(axes_childs(end).CData,2);
-	data_aspect_ratio=pixel_width/pixel_height;
-	last_units=get(export_figure,'Units');
-	set(export_figure,'Units','pixels');
-	drawnow
-	current_figure_size=get(export_figure,'position');
-	current_figure_aspect_ratio=current_figure_size(3)/current_figure_size(4);
-	if data_aspect_ratio<current_figure_aspect_ratio
-		set(export_figure,'position',[current_figure_size(1),current_figure_size(2),current_figure_size(4)*data_aspect_ratio,current_figure_size(4)]);
-	else %higher than wide
-		set(export_figure,'position',[current_figure_size(1),current_figure_size(2),current_figure_size(3),current_figure_size(4)/data_aspect_ratio]);
-	end
-	set(export_figure,'Units',last_units);
-	%}
-	export_axis=axes('parent',export_figure);
-	gui_put('export_axis',export_axis);
-	pause(0.01)
-	try
-		%~isempty(findobj(export_figure,'type','figure')) %figure still exists
-		for i=startframe:endframe
-			set(export_figure,'Name',[num2str(round((i-1)/(endframe-startframe)*100)) ' % Exporting, please wait. Please don''t close or resize this window.']);
-			newfilename=[Name sprintf('_%03d',i) Ext];
-			set(handles.fileselector, 'value',i)
-			gui_sliderdisp(export_axis)
-			%set(export_axis,'box','on','LineWidth',1,'Color','k')
-			switch selected_format
-				case 'PNG'
-					if use_exportfig
-						exportfig(export_figure,fullfile(pathname,newfilename),'Format','bmp','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
-						export_autocrop(fullfile(pathname,newfilename),0);
-					else
-						exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution)
-					end
-				case 'JPG'
-					if use_exportfig
-						exportfig(export_figure,fullfile(pathname,newfilename),'Format','bmp','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
-						export_autocrop(fullfile(pathname,newfilename),1);
-					else
-						exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution);
-					end
-				case 'PDF'
-					if use_exportfig
-						set(export_figure,'Units','inches');
-						pos = get(export_figure,'Position');
-						set(export_figure,'PaperPositionMode','auto','PaperUnits','inches','PaperPosition',[0,0,pos(3),pos(4)],'PaperSize',[pos(3), pos(4)])
-						exportfig(export_figure,fullfile(pathname,newfilename),'Format','pdf','color','CMYK','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
-					else
-						exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','vector','resolution',resolution);
-					end
-				case 'Archival AVI'
-					pixeldata=getframe(export_figure);
-					export_image=frame2im(pixeldata);
-					if i==startframe %this makes sure that frame sizes keep the same size
-						[export_image,croprect] = export_autocrop(export_image,3);
-					else
-						export_image=export_image(croprect(1):croprect(2),croprect(3):croprect(4),:);
-					end
-					if i==startframe
-						v = VideoWriter(fullfile(pathname,filename),'Uncompressed AVI'); %#ok<TNMLP>
-						v.FrameRate=fps;
-						open(v);
-					end
-					writeVideo(v,export_image);
-					if i==endframe
-						close(v);
-					end
-				case 'MPEG-4'
-					pixeldata=getframe(export_figure);
-					export_image=frame2im(pixeldata);
-					if i==startframe %this makes sure that frame sizes keep the same size
-						[export_image,croprect] = export_autocrop(export_image,3);
-					else
-						export_image=export_image(croprect(1):croprect(2),croprect(3):croprect(4),:);
-					end
-					if i==startframe
-						v = VideoWriter(fullfile(pathname,filename),'MPEG-4'); %#ok<TNMLP>
-						v.FrameRate=fps;
-						v.Quality=quality;
-						open(v);
-					end
-					writeVideo(v,export_image);
-					if i==endframe
-						close(v);
-					end
-			end
-		end
-	catch ME
-		try
-			set (export_figure,'WindowStyle','normal')
-			close(export_figure)
-		catch
-		end
-		disp(ME.identifier)
-		disp(ME.message)
-		commandwindow;
-	end
-	try
-		close(export_figure)
-	catch
-	end
-	set(handles.fileselector, 'value',startframe)
-	gui_sliderdisp(pivlab_axis)
-end
-
-function extract_extraction_choice_Callback(hObject, ~, ~)
-if get(hObject, 'value') ~= 11
-	handles=gui_gethand;
-	if get(handles.draw_what, 'value')==3
-		set(handles.draw_what, 'value', 1)
-	end
-end
-
-function extract_draw_what_Callback(hObject, ~, ~)
-handles=gui_gethand;
-if get(hObject, 'value') == 3
-	handles=gui_gethand;
-	set (handles.extraction_choice, 'value', 11);
-	set (handles.extraction_choice, 'enable', 'off');
-else
-	set (handles.extraction_choice, 'enable', 'on');
-end
-
-function misc_check_comma(who)
-boxcontent=get(who,'String');% returns contents of time_inp as text
-s = regexprep(boxcontent, ',', '.');
-set(who,'String',s);
-
-function extract_draw_area_Callback(~, ~, ~)
-%noch probleme wenn erster frame leer...
-%dann geht er sofort zu datei asuwahl...
-handles=gui_gethand;
-currentframe=floor(get(handles.fileselector, 'value'));
+toggler=gui_retr('toggler');
+selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
 resultslist=gui_retr('resultslist');
-
-%NEU
-if get(handles.extractareaall, 'value')==0
-	startfr=currentframe;
-	endfr=currentframe;
-else
-	%sollte erstes element sein mit inhalt...
-	for findcontent=size(resultslist,2):-1:1
-		if numel(resultslist{1,findcontent}) > 0
-			startfr=findcontent;
-		end
-	end
-
-	endfr=size(resultslist,2);
-end
-selected=0;
-areaoperation=get(handles.areatype, 'value');
-gui_toolsavailable(0)
-for i=startfr:endfr
-	set(handles.fileselector, 'value',i)
-	%sliderdisp(retr('pivlab_axis'))
-	currentframe=floor(get(handles.fileselector, 'value'));
-
-	if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-		if areaoperation==1
-			%area mean value
-			gui_sliderdisp(gui_retr('pivlab_axis'))
-			filepath=gui_retr('filepath');
-			x=resultslist{1,currentframe};
-			extractwhat=get(handles.area_para_select,'Value');
-			if extractwhat==9 || extractwhat==10
-				plot_derivative_calc(currentframe,extractwhat+2,0);
-			else
-				plot_derivative_calc(currentframe,extractwhat+1,0);
-			end
-			derived=gui_retr('derived');
-			[currentimage,~]=import_get_img(2*currentframe-1);
-			sizeold=size(currentimage,1);
-			sizenew=size(x,1);
-
-			%{
-            extractwhat9 ist vectorangle
-            extractwhat10 ist correlation_map
-            
-            
-            derived 9 ist LIC
-            derived10 ist vectorangle
-            derived11 ist correlation map
-			%}
-
-			if extractwhat==9 || extractwhat==10
-				maptoget=derived{extractwhat+1,currentframe};
-			else
-				maptoget=derived{extractwhat,currentframe};
-			end
-			maptoget=plot_rescale_maps_nan(maptoget,0);
-			if selected==0
-				[BW,ximask,yimask]=roipoly;
-			end
-			if isempty(BW)
-			else
-				delete(findobj('tag','areaint'));
-				delete(findobj('tag', 'extractline'))
-				delete(findobj('tag', 'extractpoint'))
-				numcells=0;
-				summe=0;
-				for i=1:size(BW,1) %#ok<*FXSET>
-					for j=1:size(BW,2)
-						if BW(i,j)==1
-							if ~isnan(maptoget(i,j))
-								summe=summe+maptoget(i,j);
-								numcells=numcells+1;
-							end
-						end
-					end
-				end
-				average=summe/numcells;
-				hold on;
-				plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
-				plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
-				hold off;
-				%get units
-				unitpar=get(handles.area_para_select,'string');
-				unitpar=unitpar{get(handles.area_para_select,'value')};
-				unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
-
-
-				text(min(ximask),mean(yimask), ['area mean value = ' num2str(average) ' [' unitpar ']'], 'BackgroundColor', 'w','tag','areaint');
-				areaoutput=average;
-				varis='[mean]';
-			end
-		elseif areaoperation==2
-			%area integral
-			gui_sliderdisp(gui_retr('pivlab_axis'))
-			filepath=gui_retr('filepath');
-			x=resultslist{1,currentframe};
-			extractwhat=get(handles.area_para_select,'Value');
-			if extractwhat==9 || extractwhat==10
-				plot_derivative_calc(currentframe,extractwhat+2,0);
-			else
-				plot_derivative_calc(currentframe,extractwhat+1,0);
-			end
-			derived=gui_retr('derived');
-			if extractwhat==9 || extractwhat==10
-				maptoget=derived{extractwhat+1,currentframe};
-			else
-				maptoget=derived{extractwhat,currentframe};
-			end
-			maptoget=plot_rescale_maps_nan(maptoget,0);
-
-			calxy=gui_retr('calxy');
-			[currentimage,~]=import_get_img(2*currentframe-1);
-			sizeold=size(currentimage,1);
-			sizenew=size(x,1);
-			if selected==0
-				[BW,ximask,yimask]=roipoly; %select in currently displayed image
-			end
-			if isempty(BW)
-			else
-				delete(findobj('tag','areaint'));
-				delete(findobj('tag', 'extractline'))
-				delete(findobj('tag', 'extractpoint'))
-				celllength=1*calxy; %size of one pixel
-				cellarea=celllength^2; %area of one cell
-				integral=0;
-				for i=1:size(BW,1)
-					for j=1:size(BW,2)
-						if BW(i,j)==1
-							if ~isnan(maptoget(i,j)) %do not include nans and nan area in integral.
-								integral=integral+cellarea*maptoget(i,j);
-							end
-						end
-					end
-				end
-				hold on;
-				plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
-				plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
-				hold off;
-
-				%get units
-				if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-					distunit='px^2';
-				else
-					distunit='m^2';
-				end
-
-				unitpar=get(handles.area_para_select,'string');
-				unitpar=unitpar{get(handles.area_para_select,'value')};
-				unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
-
-
-				text(min(ximask),mean(yimask), ['area integral = ' num2str(integral) ' [' unitpar '*' distunit ']'], 'BackgroundColor', 'w','tag','areaint');
-				areaoutput=integral;
-				varis='[integral]';
-			end
-		elseif areaoperation==3
-			% area only
-			gui_sliderdisp(gui_retr('pivlab_axis'))
-			filepath=gui_retr('filepath');
-			[currentimage,~]=import_get_img(2*currentframe-1);
-			x=resultslist{1,currentframe};
-			sizeold=size(currentimage,1);
-			sizenew=size(x,1);
-			if selected==0
-				[BW,ximask,yimask]=roipoly;
-			end
-			if isempty(BW)
-			else
-				delete(findobj('tag','areaint'));
-				delete(findobj('tag', 'extractline'))
-				delete(findobj('tag', 'extractpoint'))
-				calxy=gui_retr('calxy');
-				celllength=1*calxy;
-				cellarea=celllength^2;
-				summe=0;
-				for i=1:size(BW,1)
-					for j=1:size(BW,2)
-						if BW(i,j)==1
-							summe=summe+cellarea;
-						end
-					end
-				end
-				hold on;
-				plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
-				plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
-				hold off;
-
-				%get units
-				if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-					distunit='px^2';
-				else
-					distunit='m^2';
-				end
-
-
-				text(min(ximask),mean(yimask), ['area = ' num2str(summe) ' [' distunit ']'], 'BackgroundColor', 'w','tag','areaint');
-				areaoutput=summe;
-				varis='[area]';
-			end
-		elseif areaoperation==4
-			%area series
-			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-				x=resultslist{1,currentframe};
-				y=resultslist{2,currentframe};
-				if size(resultslist,1)>6 %filtered exists
-					if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-						u=resultslist{10,currentframe};
-						v=resultslist{11,currentframe};
-					else
-						u=resultslist{7,currentframe};
-						if size(u,1)>1
-							v=resultslist{8,currentframe};
-						else
-							u=resultslist{3,currentframe};
-							v=resultslist{4,currentframe};
-						end
-					end
-				else
-					u=resultslist{3,currentframe};
-					v=resultslist{4,currentframe};
-				end
-				calu=gui_retr('calu');calv=gui_retr('calv');
-				u=u*calu-gui_retr('subtr_u');
-				v=v*calv-gui_retr('subtr_v');
-				calxy=gui_retr('calxy');
-
-				extractwhat=get(handles.area_para_select,'Value');
-				if extractwhat==9 || extractwhat==10
-					plot_derivative_calc(currentframe,extractwhat+2,0);
-				else
-					plot_derivative_calc(currentframe,extractwhat+1,0);
-				end
-				derived=gui_retr('derived');
-
-				if extractwhat==9 || extractwhat==10
-					currentimage=derived{extractwhat+1,currentframe};
-				else
-					currentimage=derived{extractwhat,currentframe};
-				end
-				currentimage=plot_rescale_maps_nan(currentimage,0);
-				hgui=getappdata(0,'hgui');
-				figure(hgui);
-				gui_sliderdisp(gui_retr('pivlab_axis'))
-
-				delete(findobj('tag','vortarea'));
-
-				%draw ellipse
-				if selected==0
-					for i=1:5
-						[xellip(i),yellip(i),but] = ginput(1); %#ok<AGROW>
-						if but~=1
-							break
-						end
-						hold on;
-						plot (xellip(i),yellip(i),'w*')
-						hold off;
-						if i==3
-							line(xellip(2:3),yellip(2:3))
-						end
-						if i==5
-							line(xellip(4:5),yellip(4:5))
-						end
-					end
-				end
-				if size(xellip,2)==5
-					%click1=centre of vortical structure
-					%click2=top of vortical structure
-					%click3=bottom of vortical structure
-					%click4=left of vortical structure
-					%click5=right of vortical structure
-					x0=(mean(xellip)+xellip(1))/2;
-					y0=(mean(yellip)+yellip(1))/2;
-					if xellip(2)<xellip(3)
-						ang=acos((yellip(2)-yellip(3))/(sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)))-pi/2;
-					else
-						ang=asin((yellip(2)-yellip(3))/(sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)));
-					end
-					rb=sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)/2;
-					ra=sqrt((xellip(4)-xellip(5))^2+(yellip(4)-yellip(5))^2)/2;
-					ra=sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)/2;
-					rb=sqrt((xellip(4)-xellip(5))^2+(yellip(4)-yellip(5))^2)/2;
-
-					celllength=1*calxy;
-					%celllength=(x(1,2)-x(1,1))*calxy; %size of one cell
-					cellarea=celllength^2; %area of one cell
-					integralindex=0;
-
-					if get(handles.usethreshold,'value')==1
-						%sign=currentimage(round(yellip(1)),round(xellip(1)));
-						condition=get(handles.smallerlarger, 'value'); %1 is larger, 2 is smaller
-						thresholdareavalue=str2num(get(handles.thresholdarea, 'string'));
-
-						if condition==1
-							currentimage(currentimage>thresholdareavalue)=nan;
-						else
-							currentimage(currentimage<thresholdareavalue)=nan;
-						end
-						%{
-                    %redraw map to show excluded areas
-                    [xhelper,yhelper]=meshgrid(1:size(u,2),1:size(u,1));
-                    areaincluded=ones(size(u));
-                    areaincluded(isnan(currentimage)==1)=0;
-                    imagesc(currentimage);
-                    axis image
-                    hold on;
-                    quiver(xhelper(areaincluded==1),yhelper(areaincluded==1),u(areaincluded==1),v(areaincluded==1),'k','linewidth',str2double(get(handles.vecwidth,'string')))
-                    scatter(xhelper(areaincluded==0),yhelper(areaincluded==0),'rx')
-                    hold off;
-						%}
-					end
-					increasefactor=str2num(get(handles.radiusincrease,'string'))/100;
-					if ra<rb
-						minimumrad=ra;
-					else
-						minimumrad=rb;
-					end
-					%for incr = -(minimumrad)/1.5 :0.5: (ra+rb)/2*increasefactor
-					for incr = -(minimumrad)/1.5 :5: (ra+rb)/2*increasefactor
-						integralindex=integralindex+1;
-						[outputx, outputy]=ellipse(ra+incr,rb+incr,ang,x0,y0,'w');
-						%BW = roipoly(u,outputx,outputy);
-						BW = roipoly(currentimage,outputx,outputy);
-						ra_all(integralindex)=ra+incr; %#ok<AGROW>
-						rb_all(integralindex)=rb+incr; %#ok<AGROW>
-
-						integral=0;
-						%for i=1:size(u,1)
-						for i=1:size(currentimage,1)
-							%for j=1:size(u,2)
-							for j=1:size(currentimage,2)
-								if BW(i,j)==1
-									if ~isnan(currentimage(i,j))
-										integral=integral+cellarea*currentimage(i,j);
-									end
-								end
-							end
-						end
-						integralseries(integralindex)=integral; %#ok<AGROW>
-					end
-					gui_put('ra',ra_all);
-					gui_put('rb',rb_all)
-					gui_put('ang',ang)
-					gui_put('x0',x0)
-					gui_put('y0',y0)
-					h2=figure;
-					%plot(integralseries)
-					set(h2, 'tag', 'vortarea');
-
-					plot (1:size(integralseries,2), integralseries);
-					hold on;
-					scattergroup1=scatter(1:size(integralseries,2), integralseries, 80, 'ko');
-					hold off;
-					if verLessThan('matlab','8.4')
-						set(scattergroup1, 'ButtonDownFcn', @extract_hitcircle2, 'hittestarea', 'off');
-					else
-						% >R2014a
-						set(scattergroup1, 'ButtonDownFcn', @extract_hitcircle2, 'pickableparts', 'visible');
-					end
-
-					title('Click the points of the graph to highlight it''s corresponding circle.')
-					gui_put('integralseries',integralseries);
-					gui_put ('hellipse',h2);
-					screensize=get( 0, 'ScreenSize' );
-					rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
-					set(h2,'position', rect);
-
-					extractwhat=get(handles.area_para_select,'Value');
-					current=get(handles.area_para_select,'string');
-					current=current{extractwhat};
-					set(h2,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ' area integral series, frame ' num2str(currentframe)]);
-					set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-					xlabel('Ellipse series nr.');
-
-					if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-						units='px^2';
-					else
-						units='m^2';
-					end
-
-					current_2=current(1:strfind(current, '[')-1);
-					current_3=current(strfind(current, '[')+1:end-1);
-
-
-					ylabel([current_2 ' area integral [' current_3 '*' units ']']);
-					areaoutput=integralseries;
-					varis='[integral, starting at ellipse with smallest radius]';
-				end
-			end
-		elseif areaoperation==5
-			%weighted centroid
-			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-				x=resultslist{1,currentframe};
-				y=resultslist{2,currentframe};
-				if size(resultslist,1)>6 %filtered exists
-					if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-						u=resultslist{10,currentframe};
-						v=resultslist{11,currentframe};
-					else
-						u=resultslist{7,currentframe};
-						if size(u,1)>1
-							v=resultslist{8,currentframe};
-						else
-							u=resultslist{3,currentframe};
-							v=resultslist{4,currentframe};
-						end
-					end
-				else
-					u=resultslist{3,currentframe};
-					v=resultslist{4,currentframe};
-				end
-				calu=gui_retr('calu');calv=gui_retr('calv');
-				u_orig=u;
-				v_orig=v;
-				u=u*calu-gui_retr('subtr_u');
-				v=v*calv-gui_retr('subtr_v');
-				calxy=gui_retr('calxy');
-				extractwhat=get(handles.area_para_select,'Value');
-				if extractwhat==9 || extractwhat==10
-					plot_derivative_calc(currentframe,extractwhat+2,0);
-				else
-					plot_derivative_calc(currentframe,extractwhat+1,0);
-				end
-
-				derived=gui_retr('derived');
-
-				if extractwhat==9 || extractwhat==10
-					currentimage=derived{extractwhat+1,currentframe};
-				else
-					currentimage=derived{extractwhat,currentframe};
-				end
-
-				delete(findobj('tag','vortarea'));
-				%keyboard
-				imagesc(currentimage);
-				axis image
-				hold on;
-				quiver(u_orig-(gui_retr('subtr_u')/gui_retr('calu')),v_orig-(gui_retr('subtr_v')/gui_retr('calv')),'k','linewidth',str2double(get(handles.vecwidth,'string')))
-				hold off;
-
-				avail_maps=get(handles.colormap_choice,'string');
-				selected_index=get(handles.colormap_choice,'value');
-				if selected_index == 4 %HochschuleBremen map
-					load hsbmap.mat;
-					colormap(hsb);
-				elseif selected_index== 1 %rainbow
-					%load rainbow.mat;
-					colormap (parula);
-				else
-					colormap(avail_maps{selected_index});
-				end
-				if selected==0
-					[BW,ximask,yimask]=roipoly;
-				end
-				if isempty(BW)
-				else
-
-					delete(findobj('tag', 'extractline'));
-					line(ximask,yimask,'tag', 'extractline');
-					[rows,cols] = size(currentimage);
-
-					x = ones(rows,1)*[1:cols];
-					y = [1:rows]'*ones(1,cols);
-					area=0;
-					meanx=0;
-					meany=0;
-					for i=1:size(currentimage,1)
-						for j=1:size(currentimage,2)
-							if BW(i,j)==1
-								area=area+double(currentimage(i,j));%sum image intesity
-								meanx=meanx+x(i,j)*double(currentimage(i,j));%sum position*intensity
-								meany=meany+y(i,j)*double(currentimage(i,j));
-							end
-						end
-					end
-					meanx=meanx/area;%*(sizeold/sizenew)
-					meany=meany/area;%*(sizeold/sizenew)
-					hold on; plot(meanx,meany,'w*','markersize',20,'tag', 'extractline');hold off;
-					xecht=resultslist{1,currentframe};
-					yecht=resultslist{2,currentframe};
-					step=(xecht(1,2)-xecht(1,1))*calxy;
-					%+x(1,1)
-					[xecht_cal,yecht_cal]=calibrate_xy(xecht(1,1),yecht(1,1));
-					areaoutput=[xecht_cal+(meanx-1)*step yecht_cal+(meany-1)*step];
-
-					if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-						un=' px';
-					else
-						un=' m';
-					end
-					textposix=x(1,round(size(x,2)/4));
-					textposiy=y(round(size(y,1)/4),1);
-					text(textposix, textposiy,  ['x =' num2str(xecht_cal+(meanx-1)*step) un sprintf('\n') 'y =' num2str(yecht_cal+(meany-1)*step) un], 'margin', 0.01, 'fontsize', 10, 'color','w','fontweight','bold','BackgroundColor', [0 0 0],'verticalalignment','top','horizontalalignment','left');
-
-					varis='[x coordinate, y coordinate]';
-				end
-			end
-		elseif areaoperation==6
-			%mean flow direction
-			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-				x=resultslist{1,currentframe};
-				y=resultslist{2,currentframe};
-				if size(resultslist,1)>6 %filtered exists
-					if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-						u=resultslist{10,currentframe};
-						v=resultslist{11,currentframe};
-					else
-						u=resultslist{7,currentframe};
-						if size(u,1)>1
-							v=resultslist{8,currentframe};
-						else
-							u=resultslist{3,currentframe};
-							v=resultslist{4,currentframe};
-						end
-					end
-				else
-					u=resultslist{3,currentframe};
-					v=resultslist{4,currentframe};
-				end
-				gui_sliderdisp(gui_retr('pivlab_axis'))
-				calu=gui_retr('calu');calv=gui_retr('calv');
-				u=u*calu-gui_retr('subtr_u');
-				v=v*calv-gui_retr('subtr_v');
-				calxy=gui_retr('calxy');
-				delete(findobj('tag','vortarea'));
-				filepath=gui_retr('filepath');
-				x=resultslist{1,currentframe};
-				y=resultslist{2,currentframe};
-				if selected==0
-					[BW,ximask,yimask]=roipoly;
-				end
-				if isempty(BW)
-				else
-					delete(findobj('tag', 'extractline'));
-					line(ximask,yimask,'tag', 'extractline');
-					umean=0;
-					vmean=0;
-					uamount=0;
-					u=plot_rescale_maps_nan(u,0);
-					v=plot_rescale_maps_nan(v,0);
-					for i=1:size(u,1)
-						for j=1:size(u,2)
-							if BW(i,j)==1
-								if ~isnan(u(i,j)) && ~isnan(v(i,j))
-									umean=umean+u(i,j);
-									vmean=vmean+v(i,j);
-									uamount=uamount+1;
-								end
-							end
-						end
-					end
-					umean=umean/uamount;
-					vmean=vmean/uamount;
-					veclength=(x(1,2)-x(1,1))*6;
-					if vmean/calv<=0
-						angle=-atan2(vmean/calv,umean/calu)*180/pi; %divided by calibration to remove sign resulting from calibration. because the angle should not depend on the coordinate system.
-					else
-						angle=360-atan2(vmean/calv,umean/calu)*180/pi;
-					end
-					magg=sqrt(umean^2+vmean^2);
-					areaoutput=[magg angle];
-					varis='[magnitude, angle in degrees, 0 = right, 90 = up, 180 = left, 270 = down, 360 = right]';
-
-					hold on;quiver(mean2(ximask), mean2(yimask), (umean/calu)/sqrt((umean/calu)^2+(vmean/calv)^2)*veclength,(vmean/calv)/sqrt((umean/calu)^2+(vmean/calv)^2)*veclength,'r','autoscale','off', 'autoscalefactor', 100, 'linewidth',2,'MaxHeadSize',3,'tag', 'extractline');hold off;
-
-					if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-						un=' px/frame';
-					else
-						un=' m/s';
-					end
-					textposix=x(1,round(size(x,2)/4));
-					textposiy=y(round(size(y,1)/4),1);
-					text(textposix, textposiy, ['angle=' num2str(angle) '°' sprintf('\n') 'magnitude=' num2str(magg) un], 'margin', 0.01, 'fontsize', 10, 'color','w','fontweight','bold','BackgroundColor', [0 0 0],'verticalalignment','top','horizontalalignment','left');
-				end
-			end
-		end %areaoperation
-	end
-	if get(handles.savearea,'Value')==1
-		%nur wenn man es auch speichern will...
-		if selected==0
-			switch areaoperation
-				case 1
-					whatoperation = 'mean_value';
-				case 2
-					whatoperation = 'integral';
-				case 3
-					whatoperation = 'area';
-				case 4
-					whatoperation = 'integral_series';
-				case 5
-					whatoperation = 'weighted centroid';
-				case 6
-					whatoperation = 'mean_flow';
-			end
-			par = get(handles.area_para_select,'string');
-			par=par{get(handles.area_para_select,'Value')};
-			if areaoperation==3 || areaoperation==6
-				par=[];
-			end
-			imgsavepath=gui_retr('imgsavepath');
-			if isempty(imgsavepath)
-				imgsavepath=gui_retr('pathname');
-			end
-
-			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-
-				part1= par(1:strfind(par,'/')-1) ;
-				part2= par(strfind(par,'/')+1:end);
-				if isempty(part1)==1
-					parED=par;
-				else
-					parED=[part1 ' per ' part2];
-				end
-
-				[FileName,PathName] = uiputfile('*.txt','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' whatoperation '_' parED '.txt'])); %framenummer in dateiname
-				selected=1;
-				if isequal(FileName,0) | isequal(PathName,0)
-					break
-				else
-					gui_put ('imgsavepath',PathName);
-					fid = fopen(fullfile(PathName,FileName), 'w');
-					fprintf(fid, ['Frame Nr.,' par ': ' whatoperation ' ' varis '\r\n']);
-					fclose(fid);
-				end
-			end
-		end
-		if isequal(FileName,0) | isequal(PathName,0)
+currentframe=floor(get(handles.fileselector, 'value'));
+if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+	gui_toolsavailable(0);
+	x=resultslist{1,currentframe};
+	y=resultslist{2,currentframe};
+	typevector=resultslist{5,currentframe};
+	if size(resultslist,1)>6 %filtered exists
+		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+			u=resultslist{10,currentframe};
+			v=resultslist{11,currentframe};
+			typevector=resultslist{9,currentframe}; %von smoothed
 		else
-			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-				dlmwrite(fullfile(PathName,FileName), [currentframe areaoutput], '-append', 'delimiter', ',', 'precision', 10, 'newline', 'pc'); %#ok<*DLMWT>
+			u=resultslist{7,currentframe};
+			if size(u,1)>1
+				v=resultslist{8,currentframe};
+				typevector=resultslist{9,currentframe}; %von smoothed
+			else
+				u=resultslist{3,currentframe};
+				v=resultslist{4,currentframe};
+				typevector=resultslist{5,currentframe};
 			end
 		end
+	else
+		u=resultslist{3,currentframe};
+		v=resultslist{4,currentframe};
 	end
-	%areaoutput
+	ismean=gui_retr('ismean');
+	if    numel(ismean)>0
+		if ismean(currentframe)==1 %if current frame is a mean frame, typevector is stored at pos 5
+			typevector=resultslist{5,currentframe};
+		end
+	end
+	calu=gui_retr('calu');calv=gui_retr('calv');
+	ustream=u-(gui_retr('subtr_u')/gui_retr('calu'));
+	vstream=v-(gui_retr('subtr_v')/gui_retr('calv'));
+	ustream(typevector==0)=nan;
+	vstream(typevector==0)=nan;
+	calxy=gui_retr('calxy');
+	button=1;
+	streamlinesX=gui_retr('streamlinesX');
+	streamlinesY=  gui_retr('streamlinesY');
+	if get(handles.holdstream,'value')==1
+		if numel(streamlinesX)>0
+			i=size(streamlinesX,2)+1;
+			xposition=streamlinesX;
+			yposition=streamlinesY;
+		else
+			i=1;
+		end
+	else
+		i=1;
+		gui_put('streamlinesX',[]);
+		gui_put('streamlinesY',[]);
+		xposition=[];
+		yposition=[];
+		delete(findobj('tag','streamline'));
+	end
+	[rawx,rawy,~] = ginput(1);
+	hold on; scatter(rawx,rawy,'y*','tag','streammarker');hold off;
+	[rawx(2),rawy(2),~] = ginput(1);
+	delete(findobj('tag','streammarker'))
+	rawx=linspace(rawx(1),rawx(2),str2num(get(handles.streamlamount,'string')));
+	rawy=linspace(rawy(1),rawy(2),str2num(get(handles.streamlamount,'string')));
+
+	xposition(i:i+str2num(get(handles.streamlamount,'string'))-1)=rawx;
+	yposition(i:i+str2num(get(handles.streamlamount,'string'))-1)=rawy;
+	h=streamline(mmstream2(x,y,ustream,vstream,xposition(i),yposition(i),'on'));
+	set (h,'tag','streamline');
+	i=i+1;
 end
-
-gui_toolsavailable(1)
-
-function extract_hitcircle2(~,~)
-posreal=get(gca,'CurrentPoint');
-delete(findobj('tag','circstring'));
-pos=round(posreal(1,1));
-integralseries=gui_retr('integralseries');
-hgui=getappdata(0,'hgui');
-h3plot=gui_retr('hellipse');
-figure(hgui);
-delete(findobj('type', 'line', 'color', 'w')) %delete white ellipses
-ra=gui_retr('ra');
-rb=gui_retr('rb');
-ang=gui_retr('ang');
-x0= gui_retr('x0');
-y0=gui_retr('y0');
-
-for m=1:size(ra,2)
-	ellipse(ra(1,m),rb(1,m),ang,x0,y0,'w');
+if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+	delete(findobj('tag','streamline'));
+	h=streamline(mmstream2(x,y,ustream,vstream,xposition,yposition,'on'));
+	contents = get(handles.streamlcolor,'String');
+	set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')});
+	set (h,'tag','streamline');
+	gui_put('streamlinesX',xposition);
+	gui_put('streamlinesY',yposition);
 end
-ellipse(ra(1,pos),rb(1,pos),ang,x0,y0,'b');
-figure(h3plot);
-marksize=linspace(80,80,size(ra,2))';
-marksize(pos)=150;
-set(gco, 'SizeData', marksize);
-%units
+gui_toolsavailable(1);
+
+function plot_subtr_u_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function plot_subtr_v_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function plot_suppress_vec_Callback (hObject,~)
 handles=gui_gethand;
-extractwhat=get(handles.area_para_select,'Value');
-current=get(handles.area_para_select,'string');
-current=current{extractwhat};
-if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-	units='px^2';
+if get(hObject,'Value')==1
+	set(handles.nthvect,'String','100000');
+	set(handles.vectorscale,'String','0');
 else
-	units='m^2';
-end
-current_3=current(strfind(current, '[')+1:end-1);
-text(posreal(1,1)+0.25,posreal(2,2),['\leftarrow ' num2str(integralseries(pos)) ' ' current_3 '*' units],'tag','circstring','BackgroundColor', [1 1 1], 'margin', 0.01, 'fontsize', 7, 'HitTest', 'off')
-
-function extract_areatype_Callback(hObject, ~, ~)
-handles=gui_gethand;
-if get(hObject,'value')==4
-	set(handles.text93, 'visible', 'on')
-	set(handles.smallerlarger, 'visible', 'on')
-	set(handles.text94, 'visible', 'on')
-	set(handles.radiusincrease, 'visible', 'on')
-	set(handles.thresholdarea, 'visible', 'on')
-	set(handles.usethreshold, 'visible', 'on')
-	set(handles.text95, 'visible', 'on')
-else
-	set(handles.text93, 'visible', 'off')
-	set(handles.smallerlarger, 'visible', 'off')
-	set(handles.text94, 'visible', 'off')
-	set(handles.radiusincrease, 'visible', 'off')
-	set(handles.thresholdarea, 'visible', 'off')
-	set(handles.usethreshold, 'visible', 'off')
-	set(handles.text95, 'visible', 'off')
-end
-if get(hObject,'value')==3 || get(hObject,'value')==6
-	set(handles.area_para_select,'visible','off');
-	set(handles.text89,'visible','off');
-else
-	set(handles.area_para_select,'visible','on');
-	set(handles.text89,'visible','on');
+	set(handles.nthvect,'String','1');
+	set(handles.vectorscale,'String','8');
 end
 
-function simulate_flow_sim_Callback(hObject, ~, ~)
+function plot_temporal_derivs_Callback(~, ~, ~)
 handles=gui_gethand;
-contents = get(hObject,'value');
-set(handles.rankinepanel,'visible','off');
-set(handles.shiftpanel,'visible','off');
-set(handles.rotationpanel,'visible','off');
-set(handles.oseenpanel,'visible','off');
-if contents==1
-	set(handles.rankinepanel,'visible','on');
-elseif contents==2
-	set(handles.oseenpanel,'visible','on');
-elseif contents==3
-	set(handles.shiftpanel,'visible','on');
-elseif contents==4
-	set(handles.rotationpanel,'visible','on');
-end
-
-function simulate_singledoublerankine_Callback(hObject, ~, ~)
-handles=gui_gethand;
-contents = get(hObject,'value');
-set(handles.rankx1,'visible','off');
-set(handles.rankx2,'visible','off');
-set(handles.ranky1,'visible','off');
-set(handles.ranky2,'visible','off');
-set(handles.text102,'visible','off');
-set(handles.text103,'visible','off');
-set(handles.text104,'visible','off');
-if contents==1
-	set(handles.rankx1,'visible','on');
-	set(handles.ranky1,'visible','on');
-elseif contents==2
-	set(handles.rankx1,'visible','on');
-	set(handles.ranky1,'visible','on');
-	set(handles.rankx2,'visible','on');
-	set(handles.ranky2,'visible','on');
-	set(handles.text102,'visible','on');
-	set(handles.text103,'visible','on');
-	set(handles.text104,'visible','on');
-end
-
-function simulate_singledoubleoseen_Callback(hObject, ~, ~)
-handles=gui_gethand;
-contents = get(hObject,'value');
-set(handles.oseenx1,'visible','off');
-set(handles.oseenx2,'visible','off');
-set(handles.oseeny1,'visible','off');
-set(handles.oseeny2,'visible','off');
-set(handles.text110,'visible','off');
-set(handles.text111,'visible','off');
-set(handles.text112,'visible','off');
-if contents==1
-	set(handles.oseenx1,'visible','on');
-	set(handles.oseeny1,'visible','on');
-elseif contents==2
-	set(handles.oseenx1,'visible','on');
-	set(handles.oseeny1,'visible','on');
-	set(handles.oseenx2,'visible','on');
-	set(handles.oseeny2,'visible','on');
-	set(handles.text110,'visible','on');
-	set(handles.text111,'visible','on');
-	set(handles.text112,'visible','on');
-end
+gui_switchui('multip22');
 
 function plot_temporal_operation_Callback(~, ~, type)
 handles=gui_gethand;
@@ -10498,544 +12860,82 @@ if isempty(resultslist)==0
 	end
 end
 
-function simulate_part_am_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_part_size_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_part_var_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_part_noise_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_oseenx1_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_rank_core_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_rank_displ_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_rotationdisplacement_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function calibrate_realdist_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function calibrate_time_inp_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function plot_subtr_u_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function plot_subtr_v_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function plot_mapscale_min_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function plot_mapscale_max_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function validate_stdev_thresh_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function validate_loc_med_thresh_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function extract_thresholdarea_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_shiftdisplacement_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_sheetthick_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_ranky1_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_rankx1_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_rankx2_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_ranky2_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_oseen_displ_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_oseenx2_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_oseeny1_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_oseeny2_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_oseen_time_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function simulate_part_z_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
+function plot_update_Stats(x,y,u,v)
+handles=gui_gethand;
+calu=gui_retr('calu');calv=gui_retr('calv');
+calxy=gui_retr('calxy');
+x=reshape(x,size(x,1)*size(x,2),1);
+y=reshape(y,size(y,1)*size(y,2),1);
+u=reshape(u,size(u,1)*size(u,2),1);
+v=reshape(v,size(v,1)*size(v,2),1);
+if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+	set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' px/frame'])
+	set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' px/frame'])
+	set (handles.maxu,'string', [num2str(max(u*calu,[],'omitnan')) ' px/frame'])
+	set (handles.minu,'string', [num2str(min(u*calu,[],'omitnan')) ' px/frame'])
+	set (handles.maxv,'string', [num2str(max(v*calv,[],'omitnan')) ' px/frame'])
+	set (handles.minv,'string', [num2str(min(v*calv,[],'omitnan')) ' px/frame'])
+else
+	set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' m/s'])
+	set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' m/s'])
+	set (handles.maxu,'string', [num2str(max(u*calu,[],'omitnan')) ' m/s'])
+	set (handles.minu,'string', [num2str(min(u*calu,[],'omitnan')) ' m/s'])
+	set (handles.maxv,'string', [num2str(max(v*calv,[],'omitnan')) ' m/s'])
+	set (handles.minv,'string', [num2str(min(v*calv,[],'omitnan')) ' m/s'])
+end
+
+function [q, q2] = plot_vectors(target_axis,handles, vecskip, x, typevector, y, u, vecscale, v, vectorcolor)
+hold on;
+vectorcolorintp=[str2double(get(handles.interpr,'string')) str2double(get(handles.interpg,'string')) str2double(get(handles.interpb,'string'))];
+
+%normalize vector lengths so we can better see flow directions of small velocities:
+if (get (handles.uniform_vector_scale,'Value'))==1
+	u = u(:,:,1)./sqrt((u(:,:,1).^2+v(:,:,1).^2)); % normalized u
+	v = v(:,:,1)./sqrt((u(:,:,1).^2+v(:,:,1).^2)); % normalized v
+end
+
+if vecskip==1
+	q=quiver(x(typevector==1),y(typevector==1),...
+		(u(typevector==1)-(gui_retr('subtr_u')/gui_retr('calu')))*vecscale,...
+		(v(typevector==1)-(gui_retr('subtr_v')/gui_retr('calv')))*vecscale,...
+		'Color', vectorcolor,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')),'parent',target_axis);
+	q2=quiver(x(typevector==2),y(typevector==2),...
+		(u(typevector==2)-(gui_retr('subtr_u')/gui_retr('calu')))*vecscale,...
+		(v(typevector==2)-(gui_retr('subtr_v')/gui_retr('calv')))*vecscale,...
+		'Color', vectorcolorintp,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')),'parent',target_axis);
+	if str2num(get(handles.masktransp,'String')) < 100
+		scatter(x(typevector==0),y(typevector==0),'rx','parent',target_axis) %masked
+	end
+else
+	typevector_reduced=typevector(1:vecskip:end,1:vecskip:end);
+	x_reduced=x(1:vecskip:end,1:vecskip:end);
+	y_reduced=y(1:vecskip:end,1:vecskip:end);
+	u_reduced=u(1:vecskip:end,1:vecskip:end);
+	v_reduced=v(1:vecskip:end,1:vecskip:end);
+	q=quiver(x_reduced(typevector_reduced==1),y_reduced(typevector_reduced==1),...
+		(u_reduced(typevector_reduced==1)-(gui_retr('subtr_u')/gui_retr('calu')))*vecscale,...
+		(v_reduced(typevector_reduced==1)-(gui_retr('subtr_v')/gui_retr('calv')))*vecscale,...
+		'Color', vectorcolor,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')),'parent',target_axis);
+	q2=quiver(x_reduced(typevector_reduced==2),y_reduced(typevector_reduced==2),...
+		(u_reduced(typevector_reduced==2)-(gui_retr('subtr_u')/gui_retr('calu')))*vecscale,...
+		(v_reduced(typevector_reduced==2)-(gui_retr('subtr_v')/gui_retr('calv')))*vecscale,...
+		'Color', vectorcolorintp,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')),'parent',target_axis);
+	if str2num(get(handles.masktransp,'String')) < 100
+		scatter(x_reduced(typevector_reduced==0),y_reduced(typevector_reduced==0),'rx','parent',target_axis) %masked
+	end
+end
+hold off;
+
+function plot_vectorscale_Callback(~, ~, ~)
+handles=gui_gethand;
+resultslist=gui_retr('resultslist');
+currentframe=floor(get(handles.fileselector, 'value'));
+if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+	gui_sliderdisp(gui_retr('pivlab_axis'))
+end
+
 function plot_vecwidth_Callback(hObject, ~, ~)
 misc_check_comma(hObject)
-function validate_notch_L_thresh_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function validate_notch_H_thresh_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function validate_contrast_filter_thresh_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function validate_bright_filter_thresh_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-function validate_corr_filter_thresh_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-
-
-function plot_drawstreamlines_Callback(~, ~, ~)
-handles=gui_gethand;
-toggler=gui_retr('toggler');
-selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-resultslist=gui_retr('resultslist');
-currentframe=floor(get(handles.fileselector, 'value'));
-if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-	gui_toolsavailable(0);
-	x=resultslist{1,currentframe};
-	y=resultslist{2,currentframe};
-	typevector=resultslist{5,currentframe};
-	if size(resultslist,1)>6 %filtered exists
-		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-			u=resultslist{10,currentframe};
-			v=resultslist{11,currentframe};
-			typevector=resultslist{9,currentframe}; %von smoothed
-		else
-			u=resultslist{7,currentframe};
-			if size(u,1)>1
-				v=resultslist{8,currentframe};
-				typevector=resultslist{9,currentframe}; %von smoothed
-			else
-				u=resultslist{3,currentframe};
-				v=resultslist{4,currentframe};
-				typevector=resultslist{5,currentframe};
-			end
-		end
-	else
-		u=resultslist{3,currentframe};
-		v=resultslist{4,currentframe};
-	end
-	ismean=gui_retr('ismean');
-	if    numel(ismean)>0
-		if ismean(currentframe)==1 %if current frame is a mean frame, typevector is stored at pos 5
-			typevector=resultslist{5,currentframe};
-		end
-	end
-	calu=gui_retr('calu');calv=gui_retr('calv');
-	ustream=u-(gui_retr('subtr_u')/gui_retr('calu'));
-	vstream=v-(gui_retr('subtr_v')/gui_retr('calv'));
-	ustream(typevector==0)=nan;
-	vstream(typevector==0)=nan;
-	calxy=gui_retr('calxy');
-	button=1;
-	streamlinesX=gui_retr('streamlinesX');
-	streamlinesY=  gui_retr('streamlinesY');
-	if get(handles.holdstream,'value')==1
-		if numel(streamlinesX)>0
-			i=size(streamlinesX,2)+1;
-			xposition=streamlinesX;
-			yposition=streamlinesY;
-		else
-			i=1;
-		end
-	else
-		i=1;
-		gui_put('streamlinesX',[]);
-		gui_put('streamlinesY',[]);
-		xposition=[];
-		yposition=[];
-		delete(findobj('tag','streamline'));
-	end
-	while button == 1
-		[rawx,rawy,button] = ginput(1);
-		if button~=1
-			break
-		end
-		xposition(i)=rawx;
-		yposition(i)=rawy;
-
-		h=streamline(mmstream2(x,y,ustream,vstream,xposition(i),yposition(i),'on'));
-		set (h,'tag','streamline');
-		i=i+1;
-	end
-	delete(findobj('tag','streamline'));
-	if exist('xposition','var')==1
-		h=streamline(mmstream2(x,y,ustream,vstream,xposition,yposition,'on'));
-		set (h,'tag','streamline');
-		contents = get(handles.streamlcolor,'String');
-		set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')})
-		gui_put('streamlinesX',xposition);
-		gui_put('streamlinesY',yposition);
-	end
-end
-gui_toolsavailable(1);
-
-function plot_deletestreamlines_Callback(~, ~, ~)
-gui_put('streamlinesX',[]);
-gui_put('streamlinesY',[]);
-delete(findobj('tag','streamline'));
-
-function plot_streamrake_Callback(~, ~, ~)
-handles=gui_gethand;
-toggler=gui_retr('toggler');
-selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
-resultslist=gui_retr('resultslist');
-currentframe=floor(get(handles.fileselector, 'value'));
-if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-	gui_toolsavailable(0);
-	x=resultslist{1,currentframe};
-	y=resultslist{2,currentframe};
-	typevector=resultslist{5,currentframe};
-	if size(resultslist,1)>6 %filtered exists
-		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-			u=resultslist{10,currentframe};
-			v=resultslist{11,currentframe};
-			typevector=resultslist{9,currentframe}; %von smoothed
-		else
-			u=resultslist{7,currentframe};
-			if size(u,1)>1
-				v=resultslist{8,currentframe};
-				typevector=resultslist{9,currentframe}; %von smoothed
-			else
-				u=resultslist{3,currentframe};
-				v=resultslist{4,currentframe};
-				typevector=resultslist{5,currentframe};
-			end
-		end
-	else
-		u=resultslist{3,currentframe};
-		v=resultslist{4,currentframe};
-	end
-	ismean=gui_retr('ismean');
-	if    numel(ismean)>0
-		if ismean(currentframe)==1 %if current frame is a mean frame, typevector is stored at pos 5
-			typevector=resultslist{5,currentframe};
-		end
-	end
-	calu=gui_retr('calu');calv=gui_retr('calv');
-	ustream=u-(gui_retr('subtr_u')/gui_retr('calu'));
-	vstream=v-(gui_retr('subtr_v')/gui_retr('calv'));
-	ustream(typevector==0)=nan;
-	vstream(typevector==0)=nan;
-	calxy=gui_retr('calxy');
-	button=1;
-	streamlinesX=gui_retr('streamlinesX');
-	streamlinesY=  gui_retr('streamlinesY');
-	if get(handles.holdstream,'value')==1
-		if numel(streamlinesX)>0
-			i=size(streamlinesX,2)+1;
-			xposition=streamlinesX;
-			yposition=streamlinesY;
-		else
-			i=1;
-		end
-	else
-		i=1;
-		gui_put('streamlinesX',[]);
-		gui_put('streamlinesY',[]);
-		xposition=[];
-		yposition=[];
-		delete(findobj('tag','streamline'));
-	end
-	[rawx,rawy,~] = ginput(1);
-	hold on; scatter(rawx,rawy,'y*','tag','streammarker');hold off;
-	[rawx(2),rawy(2),~] = ginput(1);
-	delete(findobj('tag','streammarker'))
-	rawx=linspace(rawx(1),rawx(2),str2num(get(handles.streamlamount,'string')));
-	rawy=linspace(rawy(1),rawy(2),str2num(get(handles.streamlamount,'string')));
-
-	xposition(i:i+str2num(get(handles.streamlamount,'string'))-1)=rawx;
-	yposition(i:i+str2num(get(handles.streamlamount,'string'))-1)=rawy;
-	h=streamline(mmstream2(x,y,ustream,vstream,xposition(i),yposition(i),'on'));
-	set (h,'tag','streamline');
-	i=i+1;
-end
-if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-	delete(findobj('tag','streamline'));
-	h=streamline(mmstream2(x,y,ustream,vstream,xposition,yposition,'on'));
-	contents = get(handles.streamlcolor,'String');
-	set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')});
-	set (h,'tag','streamline');
-	gui_put('streamlinesX',xposition);
-	gui_put('streamlinesY',yposition);
-end
-gui_toolsavailable(1);
-
-function plot_applycolorwidth_Callback(~, ~, ~)
-gui_sliderdisp(gui_retr('pivlab_axis'))
-
-function plot_putmarkers_Callback(~, ~, ~)
-handles=gui_gethand;
-button=1;
-manmarkersX=gui_retr('manmarkersX');
-manmarkersY=gui_retr('manmarkersY');
-if get(handles.holdmarkers,'value')==1
-
-	if numel(manmarkersX)>0
-		i=size(manmarkersX,2)+1;
-		xposition=manmarkersX;
-		yposition=manmarkersY;
-	else
-		i=1;
-	end
-else
-	i=1;
-	gui_put('manmarkersX',[]);
-	gui_put('manmarkersY',[]);
-	xposition=[];
-	yposition=[];
-	delete(findobj('tag','manualmarker'));
-end
-hold on;
-gui_toolsavailable(0)
-while button == 1
-	[rawx,rawy,button] = ginput(1);
-	if button~=1
-		break
-	end
-	xposition(i)=rawx;
-	yposition(i)=rawy;
-	plot(xposition(i),yposition(i), 'r*','Color', [0.55,0.75,0.9], 'tag', 'manualmarker');
-	i=i+1;
-end
-gui_toolsavailable(1)
-delete(findobj('tag','manualmarker'));
-plot(xposition,yposition, 'o','MarkerEdgeColor','k','MarkerFaceColor',[.2 .2 1], 'MarkerSize',9, 'tag', 'manualmarker');
-plot(xposition,yposition, '*','MarkerEdgeColor','w', 'tag', 'manualmarker');
-gui_put('manmarkersX',xposition);
-gui_put('manmarkersY',yposition);
-hold off
-
-function plot_delmarkers_Callback(~, ~, ~)
-gui_put('manmarkersX',[]);
-gui_put('manmarkersY',[]);
-delete(findobj('tag','manualmarker'));
-
-function plot_displmarker_Callback(~, ~, ~)
-gui_sliderdisp(gui_retr('pivlab_axis'));
-
-function piv_pass2_checkbox_Callback(hObject, ~, ~)
-handles=gui_gethand;
-if get(hObject,'Value') == 0
-	set(handles.edit50,'enable','off')
-	set(handles.edit51,'enable','off')
-	set(handles.edit52,'enable','off')
-	set(handles.checkbox27,'value',0)
-	set(handles.checkbox28,'value',0)
-	set(handles.repeat_last,'Value',0)
-	set(handles.repeat_last,'Enable','off')
-	set(handles.edit52x,'Enable','off')
-else
-	set(handles.edit50,'enable','on')
-	set(handles.repeat_last,'Enable','on')
-	set(handles.edit52x,'Enable','on')
-end
-piv_dispinterrog
-
-function piv_pass2_size_Callback(hObject, ~, ~)
-handles=gui_gethand;
-step=str2double(get(hObject,'String'));
-set (handles.text126, 'string', int2str(step/2));
-piv_dispinterrog
-
-function piv_pass3_size_Callback(hObject, ~, ~)
-handles=gui_gethand;
-step=str2double(get(hObject,'String'));
-set (handles.text127, 'string', int2str(step/2));
-piv_dispinterrog
-
-function piv_repeated_thesh_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-
-function piv_repeat_last_Callback (~,~,~)
-handles=gui_gethand;
-if get (handles.checkbox26,'Value')==1
-	if get(handles.repeat_last,'Value')
-		set(handles.edit52x,'Enable','on')
-	else
-		set(handles.edit52x,'Enable','off')
-	end
-else
-	set(handles.edit52x,'Enable','off')
-end
-
-function piv_pass4_size_Callback(hObject, ~, ~)
-handles=gui_gethand;
-step=str2double(get(hObject,'String'));
-set (handles.text128, 'string', int2str(step/2));
-piv_dispinterrog
-
-function extract_area_all_Callback(hObject, ~, ~)
-handles=gui_gethand;
-if get(hObject,'Value')==1
-	set(handles.savearea,'enable','off');
-	set(handles.savearea,'value',1);
-else
-	set(handles.savearea,'enable','on');
-end
-
-function extract_radiusincrease_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-val=get(hObject,'string');
-if str2double(val)>500
-	set(hObject,'string',500);
-end
-if str2double(val)<0 || isempty(val)==1 || isnan(str2double(val))
-	set(hObject,'string',0);
-end
-
-function plot_licres_Callback(~,~,~)
-handles=gui_gethand;
-value=num2str(round(get(handles.licres,'Value')*10)/10);
-set(handles.LIChint2,'String',value)
-
-function plot_derivdropdown(hObject, ~, ~)
-handles=gui_gethand;
-if get(hObject,'value')==10
-	set(handles.LIChint1,'visible','on');
-	set(handles.LIChint2,'visible','on');
-	%set(handles.LIChint3,'visible','on');
-	set(handles.licres,'visible','on');
-else
-	set(handles.LIChint1,'visible','off');
-	set(handles.LIChint2,'visible','off');
-	%set(handles.LIChint3,'visible','off');
-	set(handles.licres,'visible','off');
-end
-
-function plot_derivchoice_Callback(hObject, ~, ~)
-handles=gui_gethand;
-contents = get(hObject,'String');
-currstring=contents{get(hObject,'Value')};
-currstring=currstring(strfind(currstring,'['):end);
-set(handles.text39,'String', ['min ' currstring ':']);
-set(handles.text40,'String', ['max ' currstring ':']);
-plot_derivdropdown(hObject);
-
-function gui_zoom_reset_zoom(~,~)
-handles=gui_gethand;
-setappdata(getappdata(0,'hgui'),'xzoomlimit',[]);
-setappdata(getappdata(0,'hgui'),'yzoomlimit',[]);
-%zoom reset
-zoom out
-set(handles.zoomon,'Value',0);
-set(handles.panon,'Value',0);
-zoom(gca,'off')
-pan(gca,'off')
-expected_image_size=gui_retr('expected_image_size');
-set(gui_retr('pivlab_axis'),'xlim',[0.5 expected_image_size(2)+0.5])
-set(gui_retr('pivlab_axis'),'ylim',[0.5 expected_image_size(1)+0.5])
-
-function gui_zoomon_Callback(hObject, ~, ~)
-hgui=getappdata(0,'hgui');
-handles=gui_gethand;
-if get(hObject,'Value')==1
-	hCMZ = uicontextmenu;
-	hZMenu = uimenu('Parent',hCMZ,'Label','Reset Zoom / Pan','Callback',@gui_zoom_reset_zoom);
-	hZoom=zoom(gcf);
-	hZoom.UIContextMenu = hCMZ;
-	zoom(gui_retr('pivlab_axis'),'on')
-	set(handles.panon,'Value',0);
-else
-	zoom(gui_retr('pivlab_axis'),'off')
-	gui_put('xzoomlimit', get (gui_retr('pivlab_axis'), 'xlim'));
-	gui_put('yzoomlimit', get (gui_retr('pivlab_axis'), 'ylim'));
-end
-
-function gui_panon_Callback(hObject, ~, ~)
-handles=gui_gethand;
-if get(hObject,'Value')==1
-	hCMP = uicontextmenu;
-	hPMenu = uimenu('Parent',hCMP,'Label','Reset Pan / Zoom','Callback',@gui_zoom_reset_zoom);
-	hPan=pan(gcf);
-	hPan.UIContextMenu = hCMP;
-	pan(gui_retr('pivlab_axis'),'on')
-	set(handles.zoomon,'Value',0);
-else
-	pan(gui_retr('pivlab_axis'),'off')
-	gui_put('xzoomlimit', get (gui_retr('pivlab_axis'), 'xlim'));
-	gui_put('yzoomlimit', get (gui_retr('pivlab_axis'), 'ylim'));
-end
-
-function export_paraview_current_Callback(~, ~, ~)
-handles=gui_gethand;
-resultslist=gui_retr('resultslist');
-currentframe=floor(get(handles.fileselector, 'value'));
-if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-	[FileName,PathName] = uiputfile('*.vtk','Save Paraview binary vtk as...','PIVlab.vtk'); %framenummer in dateiname
-	if isequal(FileName,0) | isequal(PathName,0)
-	else
-		export_file_save(currentframe,FileName,PathName,3);
-	end
-end
-
-function export_paraview_all_Callback(~, ~, ~)
-handles=gui_gethand;
-filepath=gui_retr('filepath');
-resultslist=gui_retr('resultslist');
-[FileName,PathName] = uiputfile('*.vtk','Save Paraview binary vtk as...','PIVlab.vtk'); %framenummer in dateiname
-if isequal(FileName,0) | isequal(PathName,0)
-else
-	gui_toolsavailable(0,'Busy, please wait...')
-	for i=1:floor(size(filepath,1)/2)
-		%if analysis exists
-		if size(resultslist,2)>=i && numel(resultslist{1,i})>0
-			[Dir, Name, Ext] = fileparts(FileName);
-			FileName_nr=[Name sprintf('_%.4d', i) Ext];
-			export_file_save(i,FileName_nr,PathName,3)
-			set (handles.paraview_all, 'string', ['Please wait... (' int2str((i-1)/size(filepath,1)*200) '%)']);
-			drawnow;
-		end
-	end
-	gui_toolsavailable(1)
-	set (handles.paraview_all, 'string', 'Save all frames');
-end
-
-function misc_Website_Callback(~, ~, ~)
-try
-	web('http://pivlab.blogspot.com','-browser')
-catch
-	%why does 'web' not work in v 7.1.0.246 ...?
-	disp('Ooops, MATLAB couldn''t open the website.')
-	disp('You''ll have to open the website manually:')
-	disp('http://PIVlab.blogspot.de')
-end
-
-function roi_Man_ROI_Callback(~,~,~)
-handles=gui_gethand;
-filepath=gui_retr('filepath');
-if size(filepath,1) >1 || gui_retr('video_selection_done') == 1
-	try
-		x=round(str2num(get(handles.ROI_Man_x,'String')));
-		y=round(str2num(get(handles.ROI_Man_y,'String')));
-		w=round(str2num(get(handles.ROI_Man_w,'String')));
-		h=round(str2num(get(handles.ROI_Man_h,'String')));
-	catch
-	end
-	if isempty(x)== 0 && isempty(y)== 0 && isempty(w)== 0 && isempty(h)== 0 && isnumeric(x) && isnumeric(y) && isnumeric(w) && isnumeric(h)
-		roirect(1)=x;
-		roirect(2)=y;
-		roirect(3)=w;
-		roirect(4)=h;
-		imagesize=gui_retr('expected_image_size');
-		if roirect(1)<1
-			roirect(1)=1;
-		end
-		if roirect(2)<1
-			roirect(2)=1;
-		end
-		if roirect(3)>imagesize(2)-roirect(1)
-			roirect(3)=imagesize(2)-roirect(1);
-		end
-		if roirect(4)>imagesize(1)-roirect(2)
-			roirect(4)=imagesize(1)-roirect(2);
-		end
-		gui_put ('roirect',roirect);
-		roi_select_Callback
-	end
-end
-
-function misc_howtocite_Callback(~, ~, ~)
-PIVlab_citing
-
-function gui_exitpivlab_Callback(~, ~, ~)
-close(gcf,'force')
-
-function misc_Forum_Callback(~, ~, ~)
-try
-	web('http://pivlab.blogspot.de/p/forum.html','-browser')
-catch
-	%why does 'web' not work in v 7.1.0.246 ...?
-	disp('Ooops, MATLAB couldn''t open the website.')
-	disp('You''ll have to open the website manually:')
-	disp('http://pivlab.blogspot.de/p/forum.html')
-end
 
 function preproc_Autolimit_Callback(~, ~, ~)
 handles=gui_gethand;
@@ -11055,254 +12955,9 @@ if get(handles.Autolimit, 'value') == 1
 	end
 end
 
-
-function preproc_maxintens_Callback(hObject, ~, ~)
-if str2num(get(hObject,'String'))>1
-	set(hObject,'String',1)
-end
-
-if str2num(get(hObject,'String'))<0
-	set(hObject,'String',1)
-end
-
-function preproc_minintens_Callback(hObject, ~, ~)
-if str2num(get(hObject,'String'))<0
-	set(hObject,'String',0);
-end
-
-if str2num(get(hObject,'String'))>1
-	set(hObject,'String',0);
-end
-
-function gui_filenamebox_Callback (~, ~)
-handles=gui_gethand;
-box_select=get(handles.filenamebox,'value');
-set(handles.fileselector, 'value',ceil(box_select/2));
-if mod(box_select,2) == 1 %ungerade
-	toggler=0;
-else
-	toggler=1;
-end
-
-set(handles.togglepair, 'Value',toggler);
-gui_put('toggler',toggler);
-try %if user presses buttons too quickly, error occurs.
-	gui_sliderdisp(gui_retr('pivlab_axis'))
-catch
-end
-
-
-function misc_shortcuts_Callback (~, ~)
-try
-	open('PIVlab_shortcuts.pdf')
-catch
-	msgbox('Could not open "PIVlab_Shortcuts.pdf".')
-end
-
-function gui_quick1_Callback (~,~)
-handles=gui_gethand;
-set(handles.quick1,'Value',0)
-import_loadimgs_Callback
-
-function gui_quick2_Callback (~,~)
-handles=gui_gethand;
-set(handles.quick2,'Value',0)
-mask_img_mask_new_Callback
-
-function gui_quick3_Callback (~,~)
-handles=gui_gethand;
-set(handles.quick3,'Value',0)
-preproc_Uielement_Callback
-
-function gui_quick4_Callback (~,~)
-handles=gui_gethand;
-set(handles.quick4,'Value',0)
-piv_sett_Callback
-
-function gui_quick5_Callback (~,~)
-handles=gui_gethand;
-set(handles.quick5,'Value',0)
-piv_do_analys_Callback
-
-function gui_quick6_Callback (~,~)
-handles=gui_gethand;
-set(handles.quick6,'Value',0)
-calibrate_cal_actual_Callback
-
-function validate_suggest_bright_filter_Callback (~,~,~)
-handles=gui_gethand;
-resultslist=gui_retr('resultslist');
-frame=floor(get(handles.fileselector, 'value'));
-if size(resultslist,2)>=frame
-	%image-based filtering
-	set(handles.do_bright_filter, 'value',1);
-	%do_contrast_filter=1
-	selected=2*floor(get(handles.fileselector, 'value'))-1;
-	x=resultslist{1,frame};
-	y=resultslist{2,frame};
-	u=resultslist{3,frame};
-	v=resultslist{4,frame};
-	bright_filter_thresh=str2double(get(handles.bright_filter_thresh, 'String'));
-	[A,rawimageA]=import_get_img(selected);
-	[B,rawimageB]=import_get_img(selected+1);
-	[~,~,threshold_suggestion,~,~] = PIVlab_image_filter (0,1,x,y,u,v,0,bright_filter_thresh,A,B,rawimageA,rawimageB);
-	set(handles.bright_filter_thresh, 'String',num2str(threshold_suggestion));
-	[u,v,~,~,~] = PIVlab_image_filter (0,1,x,y,u,v,0,threshold_suggestion,A,B,rawimageA,rawimageB);
-end
-
-function validate_suggest_contrast_filter_Callback (~,~,~)
-handles=gui_gethand;
-resultslist=gui_retr('resultslist');
-frame=floor(get(handles.fileselector, 'value'));
-if size(resultslist,2)>=frame
-	%image-based filtering
-	set(handles.do_contrast_filter, 'value',1);
-	%do_contrast_filter=1
-	selected=2*floor(get(handles.fileselector, 'value'))-1;
-	x=resultslist{1,frame};
-	y=resultslist{2,frame};
-	u=resultslist{3,frame};
-	v=resultslist{4,frame};
-	contrast_filter_thresh=str2double(get(handles.contrast_filter_thresh, 'String'));
-	[A,rawimageA]=import_get_img(selected);
-	[B,rawimageB]=import_get_img(selected+1);
-	[~,~,threshold_suggestion,~,~] = PIVlab_image_filter (1,0,x,y,u,v,contrast_filter_thresh,0,A,B,rawimageA,rawimageB);
-	set(handles.contrast_filter_thresh, 'String',num2str(threshold_suggestion));
-	[u,v,~,~,~] = PIVlab_image_filter (1,0,x,y,u,v,threshold_suggestion,0,A,B,rawimageA,rawimageB);
-end
-
-function validate_set_other_interpol_checkbox(hObject,~,~) %synchronizes the two existing "interpoalte missing data" checkboxes
-handles=gui_gethand;
-set(handles.interpol_missing,'Value',get(hObject,'Value'));
-set(handles.interpol_missing2,'Value',get(hObject,'Value'));
-
-function calibrate_set_offset_Callback (~,~,~)
-%calxy=retr('calxy');
-filepath=gui_retr('filepath');
-caliimg=gui_retr('caliimg');
-if numel(caliimg)==0 && size(filepath,1) >1
-	gui_sliderdisp(gui_retr('pivlab_axis'))
-end
-if size(filepath,1) >1 || numel(caliimg)>0 || gui_retr('video_selection_done') == 1
-	handles=gui_gethand;
-	delete(findobj('tag', 'offsetroi'))
-	gui_toolsavailable(0)
-
-	points_offsetx = gui_retr('points_offsetx');
-	points_offsety = gui_retr('points_offsety');
-
-
-	roi = images.roi.Crosshair;
-	%roi.EdgeAlpha=0.75;
-	roi.LabelVisible = 'on';
-	roi.Tag = 'offsetroi';
-	roi.Color = 'y';
-	roi.LineWidth = 1;
-	axes(gui_retr('pivlab_axis'))
-	draw(roi);
-
-	addlistener(roi,'MovingROI',@calibrate_Offsetselectionevents);
-	addlistener(roi,'DeletingROI',@calibrate_Offsetselectionevents);
-
-	prompt =['Enter true X coordinate in mm:'];
-	dlgtitle = ['Set X offset'];
-	if isempty (points_offsetx)
-		definput = {'0'};
-	else
-		definput = {num2str(points_offsetx(3))};
-	end
-	answer_x = inputdlg(prompt,dlgtitle,[1 40],definput);
-	prompt =['Enter true Y coordinate in mm:'];
-	dlgtitle = ['Set Y offset'];
-	if isempty (points_offsety)
-		definput = {'0'};
-	else
-		definput = {num2str(points_offsety(3))};
-	end
-	answer_y = inputdlg(prompt,dlgtitle,[1 40],definput);
-	if ~isempty(answer_x) && ~isempty(answer_y)
-		answer_x{1} = regexprep(answer_x{1}, ',', '.');
-		answer_y{1} = regexprep(answer_y{1}, ',', '.');
-		points_offsetx = [roi.Position(1),roi.Position(2),str2num(answer_x{1})];
-		gui_put('points_offsetx',points_offsetx);
-		points_offsety = [roi.Position(1),roi.Position(2),str2num(answer_y{1})];
-		gui_put('points_offsety',points_offsety);
-	end
-	dummyevt.EventName = 'MovingROI';
-	calibrate_Offsetselectionevents(roi,dummyevt); %run the moving event once to update displayed length
-	calibrate_calccali
-	gui_toolsavailable(1)
-end
-
-function offset = calibrate_calculate_offset_axis (axis,pixel_position,true_position)
-handles=gui_gethand;
-calxy=gui_retr('calxy');
-size_of_the_image=gui_retr('size_of_the_image');
-if isempty(size_of_the_image)%user applies calibration before loading images
-	caliimg=gui_retr('caliimg');
-	size_of_the_image=size(caliimg);
-	gui_put('size_of_the_image',size_of_the_image);
-end
-if strcmp(axis,'x')
-	axis_direction=get(handles.x_axis_direction,'value');
-	size_dim=size_of_the_image(2);
-end
-if strcmp(axis,'y')
-	axis_direction=get(handles.y_axis_direction,'value');
-	size_dim=size_of_the_image(1);
-end
-if axis_direction ==1
-	offset = pixel_position*calxy - true_position/1000;
-else
-	offset = (size_dim-pixel_position)*calxy - true_position/1000;
-end
-
-function plot_suppress_vec_Callback (hObject,~)
-handles=gui_gethand;
-if get(hObject,'Value')==1
-	set(handles.nthvect,'String','100000');
-	set(handles.vectorscale,'String','0');
-else
-	set(handles.nthvect,'String','1');
-	set(handles.vectorscale,'String','8');
-end
-
-function extract_save_polyline_Callback (~,~)
-xposition=gui_retr('xposition');
-yposition=gui_retr('yposition');
-extract_type = gui_retr('extract_type');
-
-if ~isempty(xposition) && ~isempty(yposition)
-	[polyfile,polypath] = uiputfile('*.mat','Save coordinates','PIVlab_coordinates.mat');
-	if isequal(polyfile,0) | isequal(polypath,0)
-		%do nothing
-	else
-		save(fullfile(polypath,polyfile),'xposition','yposition','extract_type');
-	end
-end
-
-function extract_load_polyline_Callback (~,~)
-filepath=gui_retr('filepath');
-handles=gui_gethand;
-if size(filepath,1) > 1 %did the user load images?
-	[polyfile,polypath] = uigetfile('*.mat','Load coordinate','PIVlab_coordinates.mat');
-	if isequal(polyfile,0) | isequal(polypath,0)
-		%do nothing
-	else
-		load(fullfile(polypath,polyfile),'xposition','yposition','extract_type');
-		if ~isempty(xposition) && ~isempty(yposition) && ~isempty(extract_type)
-			extract_clear_plot_Callback
-			gui_put('xposition',xposition);
-			gui_put('yposition',yposition);
-			gui_put('extract_type',extract_type);
-			delete(findobj('tag', 'extractline'))
-			delete(findobj('tag','areaint'));
-			extract_update_display(extract_type, xposition, yposition);
-		else
-			disp ('No polyline coordinate data found in selected file.')
-		end
-	end
-end
+function preproc_Uielement_Callback(~, ~, ~)
+gui_switchui('multip03')
+preproc_Autolimit_Callback
 
 function preproc_bg_view_Callback (~,~) %displays background in GUI
 handles=gui_gethand;
@@ -11344,1575 +12999,477 @@ if get(handles.bg_subtract,'Value')==1
 	end
 end
 
-%% Camera capture callbacks
-function acquisition_lasertoggle_Callback(~,~,~)
+function preproc_generate_BG_img
 handles=gui_gethand;
-serpo=gui_retr('serpo');
-laser_running = gui_retr('laser_running');
-if isempty(laser_running)
-	laser_running=0;
-end
-try
-	serpo.Port;
-	alreadyconnected=1;
-catch
-	alreadyconnected=0;
-end
-if alreadyconnected
-	pause(0.1)
-	if laser_running %laser is on
-		acquisition_control_simple_sync_serial(0,0);
-		laser_running=0;
-	else %laser is off
-		acquisition_control_simple_sync_serial(1,0);
-		laser_running=1;
-	end
-	gui_put('laser_running',laser_running);
-else
-	acquisition_no_dongle_msgbox
-end
-
-function acquisition_sync_settings_Callback(~,~,~)
-serpo=gui_retr('serpo');
-handles=gui_gethand;
-
-if str2double(get(handles.ac_interpuls,'String')) < gui_retr('min_allowed_interframe')
-	old_bg=get(handles.ac_interpuls,'BackgroundColor');
-	for i=1:3
-		set(handles.ac_interpuls,'BackgroundColor',[1 0 0]);
-		pause(0.1)
-		set(handles.ac_interpuls,'BackgroundColor',old_bg);
-		pause(0.1)
-	end
-	set(handles.ac_interpuls,'String',num2str(gui_retr('min_allowed_interframe')))
-end
-
-
-if isnan(str2double(get(handles.ac_power,'String')))
-	set(handles.ac_power,'String','0')
-end
-if str2double(get(handles.ac_power,'String')) > 100
-	%camera_type=retr('camera_type');
-	%if ~strcmp(camera_type,'chronos')
-	set(handles.ac_power,'String','100')
-	%end
-end
-
-%check that interpuls is not larger than frame period
-selected_interpulse = str2double(get(handles.ac_interpuls,'String'));
-selected_fps_value = get(handles.ac_fps,'Value');
-selected_fps_string = get(handles.ac_fps,'String');
-selected_fps=str2double(selected_fps_string{selected_fps_value});
-selected_frame_period_us = 1/selected_fps*1000*1000;
-
-if selected_interpulse > selected_frame_period_us
-	old_bg=get(handles.ac_interpuls,'BackgroundColor');
-	for i=1:3
-		set(handles.ac_interpuls,'BackgroundColor',[1 0 0]);
-		pause(0.1)
-		set(handles.ac_interpuls,'BackgroundColor',old_bg);
-		pause(0.1)
-	end
-	set(handles.ac_interpuls,'String',round(selected_frame_period_us))
-end
-
-try
-	serpo.Port;
-	alreadyconnected=1;
-catch
-	alreadyconnected=0;
-end
-if alreadyconnected
-	laser_running=gui_retr('laser_running');
-	if isempty(laser_running)
-		laser_running=0;
-	end
-	acquisition_control_simple_sync_serial(laser_running,0);
-end
-acquisition_initiate_straddling_graph
-
-
-
-function acquisition_initiate_straddling_graph
-handles=gui_gethand;
-selected_fps_value = get(handles.ac_fps,'Value');
-selected_fps_string = get(handles.ac_fps,'String');
-selected_fps=str2double(selected_fps_string{selected_fps_value});
-if get(handles.ac_enable_straddling_figure, 'Value')==1
-	blind_time=gui_retr('blind_time');
-	if isempty(blind_time)
-		blind_time=1;
-	end
-	camera_type=gui_retr('camera_type');
-
-	if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly')
-		is_dbl_shutter = 1;
-	else
-		is_dbl_shutter = 0;
-	end
-	pco_first_frame_exposure = floor(str2double(get(handles.ac_interpuls,'String'))*str2double(get(handles.ac_power,'String'))/100)+1;
-	straddling_graph(blind_time,selected_fps,str2double(get(handles.ac_interpuls,'String')),str2double(get(handles.ac_power,'String')),4,is_dbl_shutter,pco_first_frame_exposure)
-else
-	straddling_figure=findobj('tag','straddling_figure');
-	if ~isempty(straddling_figure)
-		close(straddling_figure)
-	end
-end
-
-function laser_device_id = acquisition_find_laser_device
-handles=gui_gethand;
-serpo=gui_retr('serpo');
-try
-	serpo.Port;
-	alreadyconnected=1;
-catch
-	alreadyconnected=0;
-end
-if alreadyconnected
-
-	if exist('laser_device_id.mat','file') == 2
-		old_laser_device_id = load('laser_device_id.mat','id');
-		old_laser_device_id = old_laser_device_id.id;
-	else
-		old_laser_device_id='%';
-	end
-	string1='WhoAreYou?';
-	string2='WhichFirmWare?';
-
-	try
-		writeline(serpo,string1);
-		pause(0.3)
-		warning off
-		serial_answer=readline(serpo);
-		disp(['Connected to: ' convertStringsToChars(serial_answer)])
-		warning on
-	catch
-		disp('Error sending WhoAreYou')
-	end
-	try
-		writeline(serpo,string2);
-		pause(0.3)
-		warning off
-		firmware_version=readline(serpo);
-		warning on
-		if isempty(firmware_version)
-			firmware_version='pre feb 22';
-		end
-		disp(['Firmware: ' convertStringsToChars(firmware_version)])
-
-		delete(findobj('tag','laser_info_box'));
-		try
-			Kinder=get(gca,'Children');
-			for k=1:size(Kinder,1)
-				if isprop(Kinder(k),'CData')
-					img_size=size(Kinder(k).CData,1);
-					break
+if get(handles.bg_subtract,'Value')==1
+	bg_img_A = gui_retr('bg_img_A');
+	bg_img_B = gui_retr('bg_img_B');
+	sequencer=gui_retr('sequencer');%Timeresolved or pairwise 0=timeres.; 1=pairwise
+	if sequencer ~= 2 % bg subtraction only makes sense with time-resolved and pairwise sequencing style, not with reference style.
+		if isempty(bg_img_A) || isempty(bg_img_B)
+			answer = questdlg('Mean intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
+			if strcmp(answer , 'OK')
+				%disp('BG not present, calculating now')
+				%% Calculate BG for all images....
+				% read first image to determine properties
+				filepath = gui_retr('filepath');
+				if gui_retr('video_selection_done') == 0
+					[~,~,ext] = fileparts(filepath{1});
+					if strcmp(ext,'.b16')
+						image1=f_readB16(filepath{1});
+						image2=f_readB16(filepath{2});
+						imagesource='b16_image';
+					else
+						image1=imread(filepath{1});
+						image2=imread(filepath{2});
+						imagesource='normal_pixel_image';
+					end
+				else
+					video_reader_object = gui_retr('video_reader_object');
+					video_frame_selection=gui_retr('video_frame_selection');
+					image1 = read(video_reader_object,video_frame_selection(1));
+					image2 = read(video_reader_object,video_frame_selection(2));
+					imagesource='from_video';
 				end
-			end
-			text(10,img_size*0.95,['Connected to:  ' convertStringsToChars(serial_answer) sprintf('\n') 'Firmware:  ' convertStringsToChars(firmware_version)],'tag','laser_info_box','Color','black','BackgroundColor','green','VerticalAlignment','bottom','interpreter','none');
-		catch
-		end
-	catch
-		disp('Error sending WhichFirmware')
-	end
-	%%debug messages
-	%{
-disp('---------')
-	disp(['Port is: ' serpo.Port])
-	disp(['Terminator set to: ' serpo.Terminator])
-	disp(['String written: ' string1])
-	disp(['String written: ' string2])
-	disp(['Answer: ' convertStringsToChars(serial_answer)])
-disp('---------')
-	%}
+				classimage=class(image1); %memorize the original image format (double, uint8 etc)
 
-	if isempty(serial_answer)
-		uiwait(msgbox(['No laser found.' sprintf('\n') 'Is the laser turned on?' sprintf('\n') 'Please try again.'],'modal'))
-	end
-	if strncmp(old_laser_device_id,serial_answer,20)==0 %if last laser ID DOES NOT equal current laser ID
-		get_laser_id = inputdlg(['Please enter the ID of your laser / synchronizer.' sprintf('\n') 'It can be found on the sticker on the device.' sprintf('\n') 'Firmware: ' convertStringsToChars(firmware_version)],'First time connection',1,{convertStringsToChars(serial_answer)});
-		if ~isempty(get_laser_id)
-			id=get_laser_id{1};
-			[filepath,~,~] = fileparts(mfilename('fullpath'));
-			save (fullfile(filepath, 'PIVlab_capture_resources', 'laser_device_id.mat'),'id')
-		end
-	end
-	laser_device_id = load('laser_device_id.mat','id');
-	laser_device_id = laser_device_id.id;
-else
-	acquisition_no_dongle_msgbox
-end
-
-function serial_answer = acquisition_control_simple_sync_serial(switch_it,calibration_pulse)
-%first argument 0 = turn synchronized laser diode off
-%first argument 1 = turn synchronized laser diode on
-%second argument 0 = don't care about calibration camera signal
-%second argument 1 = turn calibration camera signal on
-%second argument 2 = turn calibration camera signal off
-try %try to switch of camera angle report
-	stop(timerfind)
-	delete(timerfind)
-	set(getappdata(0,'handle_to_lens_timer_checkbox'),'Value',0)
-catch
-end
-handles=gui_gethand;
-serpo=gui_retr('serpo');
-try
-	serpo.Port;
-	alreadyconnected=1;
-catch ME
-	alreadyconnected=0;
-	disp('hier ist serialport deleted nach dem ersten erfolgreichen aufzeichnen')
-end
-if alreadyconnected
-	%Master frequency in Hz
-	master_freq =gui_retr('master_freq'); %will depend on the laser system (frequency with best beam quality)
-	%frame 1 exposure time incl. readout time in µs
-	f1exp = gui_retr('f1exp'); % will depend on camera model
-	%External trigger input settings
-	if get(handles.ac_enable_ext_trigger,'Value') == 0
-		extdly = -1; % external trigger input delay. -1 disables external trigger
-		extskp = 0; %external trigger amount of signals to skip.
-	else
-		extdly = gui_retr('selectedtriggerdelay'); % external trigger input delay. -1 disables external trigger
-		extskp = gui_retr('selectedtriggerskip'); %external trigger amount of signals to skip.
-	end
-	%Camera fps
-	ac_fps_value=get(handles.ac_fps,'Value');
-	ac_fps_str=get(handles.ac_fps,'String');
-	cam_prescaler=round(master_freq/str2double(ac_fps_str(ac_fps_value)));
-
-	%Laser power
-	las_percent=str2double(get(handles.ac_power,'String'));
-	%specific laser power polynom for converting Q-switch delay to laser energy
-	load q_delay_to_laser_power_polynom.mat %loads q and min_energy
-	energy_us = round(polyval(p,las_percent));
-	if energy_us > min_energy
-		energy_us = min_energy;
-	end
-	%Pulse distance
-	pulse_sep=str2double(get(handles.ac_interpuls,'String'));
-	laser_device_id=gui_retr('laser_device_id');
-
-	%potential bug fixes go here:
-	bugfix_factor=1;
-	try
-		if strncmp(laser_device_id,'LDPS_BAS1',12)
-			disp('Bug fix for LDPS_BAS1 activated');
-			bugfix_factor=2;
-		end
-	catch
-		bugfix_factor=1;
-	end
-
-	if switch_it==1
-		flush(serpo)
-		camera_type=gui_retr('camera_type');
-		if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly')
-			send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
-		else
-			send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(str2double(ac_fps_str(ac_fps_value))*bugfix_factor) ';CAM:' int2str(0) ';ENER:' int2str(0) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(0) ';INTERF:' int2str(round(pulse_sep/bugfix_factor)) ';EXTDLY:' int2str(0) ';EXTSKP:' int2str(0) ';LASER:enable'];
-		end
-		writeline(serpo,send_string);
-	else
-		flush(serpo)
-		%configureTerminator(serpo,'CR');
-		send_string=['TALKINGTO:' laser_device_id ';FREQ:1;CAM:1;ENER:' int2str(min_energy) ';ener%:0;F1EXP:100;INTERF:1234;EXTDLY:-1;EXTSKP:0;LASER:disable'];
-		writeline(serpo,send_string);
-		%writeline(serpo,'FREQ:5;EXPO:300;CAMDLY:835;LDPULS:300;INTERF:500;LASER:disable');
-		%disp('testing laserdiode')
-	end
-	pause(0.1)
-	warning off
-	serial_answer = acquisition_process_sync_reply(serpo);
-	if calibration_pulse ~= 0 %this is needed for the OPTRONIS cameras, they cannot be configured to free run internal trigger
-		camera_type=gui_retr('camera_type');
-		if strcmp(camera_type,'OPTRONIS')
-			if calibration_pulse ==1
-				writeline(serpo,'CAMERA_FREERUN_ON!');
-			elseif calibration_pulse ==2
-				writeline(serpo,'CAMERA_FREERUN_OFF!');
-			end
-		end
-	end
-	%% debug messages
-	%{
-	disp('---------')
-	disp(['Terminator set to: ' serpo.Terminator])
-	disp(['String written: ' send_string])
-	disp(['Answer: ' convertStringsToChars(serial_answer)])
-	disp('---------')
-	%}
-else
-	acquisition_no_dongle_msgbox
-end
-
-
-function serial_answer = acquisition_process_sync_reply(serpo)
-handles=gui_gethand;
-serial_answer=readline(serpo);
-warning on
-sync_setting=serial_answer;
-if isempty(sync_setting)
-	sync_setting='No answer from Sync';
-end
-acquisition_update_ac_status(sync_setting);
-
-set(handles.ac_laserstatus,'BackgroundColor',[1 1 0]); %yellow=warning
-set(handles.ac_laserstatus,'String','No Answer');drawnow;
-C = strsplit(sync_setting,'\t');
-if ~isempty(C)
-	if size(C,2)==8 %entspricht standard datenpaket
-		if strcmp(C{8},'1') %laser is reported to be on
-			set(handles.ac_laserstatus,'BackgroundColor',[0 1 0]); %green = on
-			set(handles.ac_laserstatus,'String','Laser ON');
-		else
-			set(handles.ac_laserstatus,'BackgroundColor',[1 0 0]); %red = off
-			set(handles.ac_laserstatus,'String','Laser OFF');
-		end
-	end
-	if size(C,2)==12 %entspricht erweitertem datenpaket
-		if strcmp(C{8},'1') %laser is reported to be on
-			set(handles.ac_laserstatus,'BackgroundColor',[0 1 0]); %green = on
-			set(handles.ac_laserstatus,'String','Laser ON');
-		else
-			set(handles.ac_laserstatus,'BackgroundColor',[1 0 0]); %red = off
-			set(handles.ac_laserstatus,'String','Laser OFF');
-			pl_msg=['Pulse length: 0 µs'];
-			set (handles.ac_pulselengthtxt,'String', pl_msg);
-		end
-		if strcmp(C{8},'1') %laser is reported to be on
-			pl_msg=['Pulse length: ' C{9} ' µs'];
-			set (handles.ac_pulselengthtxt,'String', pl_msg);
-			disp (pl_msg)
-		end
-	end
-
-end
-
-
-function acquisition_no_dongle_msgbox
-uiwait(msgbox(['No connection to the PIVlab-SimpleSync found.' sprintf('\n') 'Is the USB dongle connected?'],'modal'))
-
-
-function acquisition_connect_Callback (~,~,~)
-handles=gui_gethand;
-set(handles.ac_serialstatus,'Backgroundcolor',[1 0 0]);
-if strcmp(get(handles.ac_comport,'String'),'No available serial ports found!')
-	acquisition_capture_images_Callback; %will also refresh the comport list
-else
-	try
-		delete(gui_retr('serpo')); %delete old serialport
-		selected_item=get(handles.ac_comport,'Value');
-		avail_ports=get(handles.ac_comport,'String');
-		if size(avail_ports,1)>1
-			selected_port=avail_ports{selected_item};
-		else
-			selected_port=avail_ports;
-		end
-		serpo = serialport(selected_port,9600,'Timeout',1);
-		configureTerminator(serpo,'CR/LF');
-		gui_put('serpo',serpo);
-		set(handles.ac_serialstatus,'Backgroundcolor',[0 1 0]);
-		acquisition_update_ac_status(['Connected to ' selected_port]);
-		gui_put('laser_running',0);
-
-		laser_device_id = acquisition_find_laser_device;
-		gui_put('laser_device_id',laser_device_id);
-
-		acquisition_control_simple_sync_serial(0,0);
-	catch ME
-		acquisition_update_ac_status(ME.message);
-		acquisition_capture_images_Callback;
-	end
-end
-
-function acquisition_calibBinning_Callback (~,~,~)
-handles=gui_gethand;
-camera_type=gui_retr('camera_type');
-if ~strcmp(camera_type,'pco_panda')  %Binning available only for pco panda
-	uiwait(msgbox('Binning is (up to now) only available for the pco.panda 26 DS.','modal'))
-else
-	binning=gui_retr('binning');
-	if isempty(binning)
-		binning=1;
-	end
-	definput = {num2str(binning)};
-	prompt = {'Pixel binning (1, 2, 4)'};
-	dlgtitle = 'Pixel binning Configuration';
-	dims = [1 50];
-	answer = inputdlg(prompt,dlgtitle,dims,definput);
-	if ~isempty(answer)
-		if str2double(answer{1}) ~= 1 && str2double(answer{1}) ~= 2 && str2double(answer{1}) ~= 4
-			msgbox('Not a valid binning option.','modal')
-			gui_put('binning',1)
-		else
-			gui_put('binning',str2double(answer{1}));
-			roi_clear_roi_Callback %PIV-ROI must be cleared when camera resolution is chnaged.
-		end
-		if answer{1} ~= definput{1}
-			set(handles.ac_realtime,'Value',0);%reset realtime roi
-			gui_put('do_realtime',0);
-			%reset roi too
-			ac_ROI_general=[];
-			gui_put('ac_ROI_general',ac_ROI_general);
-			save('PIVlab_settings_default.mat','ac_ROI_general','-append');
-		end
-	end
-end
-
-function acquisition_calibROI_Callback (~,~,~)
-handles=gui_gethand;
-gui_put('capturing',0);
-gui_put('hist_enabled',0);
-camera_type=gui_retr('camera_type');
-binning=gui_retr('binning');
-if isempty(binning)
-	binning=1;
-end
-if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'chronos')  %ROI selection not yet available for pixelfly and chronos
-	uiwait(msgbox('ROI selection is not (yet) available for the selected camera type.'))
-end
-
-if strcmp(camera_type,'flir')
-	uiwait(msgbox('ROI selection for the FLIR camera series will be implemented soon!','modal'))
-end
-
-if strcmp(camera_type,'OPTRONIS')
-	uiwait(msgbox(['ROI selection for the OPTRONIS camera series will be implemented soon!' newline 'Currently waiting for bug fixes from Mathworks.'],'modal'))
-end
-if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(camera_type,'OPTOcam') %|| strcmp(camera_type,'OPTRONIS')
-	try
-		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
-	catch
-		set(handles.ac_expo,'String','100');
-		expos=100000;
-	end
-	projectpath=get(handles.ac_project,'String');
-	capture_ok=acquisition_check_project_path(projectpath,'calibration');
-	if capture_ok==1
-		gui_put('cancel_capture',0);
-		gui_put('capturing',1);
-		max_cam_res=gui_retr('max_cam_res');
-		if strcmp(camera_type,'pco_panda')
-			try
-				[errorcode, caliimg,~]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,[1,1, max_cam_res(1)/binning,max_cam_res(2)/binning],camera_type,0);
-			catch ME
-				disp(ME)
-				uiwait(msgbox('Camera not connected'))
-				gui_displogo
-				capture_ok=0;
-			end
-		elseif strcmp(camera_type,'basler')
-			[errorcode, caliimg]=PIVlab_capture_basler_calibration_image(1,expos,[1,1,max_cam_res]);
-
-		elseif strcmp(camera_type,'OPTOcam')
-			[errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(1,expos,[1,1,max_cam_res]);
-		elseif strcmp(camera_type,'OPTRONIS')
-			acquisition_control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
-			[errorcode, caliimg]=PIVlab_capture_OPTRONIS_calibration_image(1,expos,[1,1,max_cam_res]);
-			acquisition_control_simple_sync_serial(0,2);
-		end
-		gui_put('capturing',0);
-
-		if capture_ok==1
-			displaysize_x=floor(get(gca,'XLim'));
-			displaysize_y=floor(get(gca,'YLim'));
-			ac_ROI_general=[];
-			warning off
-			load('PIVlab_settings_default.mat','ac_ROI_general');
-			warning on
-
-			bla=findobj(gca,'type','image');
-			current_image_size=size(bla.CData);
-
-			if isempty(ac_ROI_general)
-				ac_ROI_general=[0.5,0.5,current_image_size(2)/binning,current_image_size(1)/binning]; %1 Hz default ROI
-			end
-			gui_put('doing_roi',1)
-			stretched_image=adapthisteq(bla.CData);
-			bla.CData=stretched_image;
-			ac_ROI_general_handle = drawrectangle(gca,'Position',ac_ROI_general,'LabelVisible','hover','Deletable',0,'DrawingArea',[1 1 current_image_size(2) current_image_size(1)],'tag','new_ROImethod','StripeColor','y');
-			addlistener(ac_ROI_general_handle,'MovingROI',@roi_ROIallevents);
-			addlistener(ac_ROI_general_handle,'ROIMoved',@roi_ROIallevents);
-			evt.EventName='ROIMoved';
-			evt.CurrentPosition=ac_ROI_general;
-			roi_ROIallevents(ac_ROI_general_handle,evt)
-
-			c_menu = uicontextmenu;
-			ac_ROI_general_handle.UIContextMenu = c_menu;
-
-			if strcmp(camera_type,'pco_panda')
-				m0 = uimenu(c_menu,'Label','pco.panda 45 Hz','Callback',@roi_setdefaultroi);
-				m1 = uimenu(c_menu,'Label','pco.panda 22.5 Hz','Callback',@roi_setdefaultroi);
-				m2 = uimenu(c_menu,'Label','pco.panda 15 Hz','Callback',@roi_setdefaultroi);
-				m3 = uimenu(c_menu,'Label','pco.panda 7.5 Hz','Callback',@roi_setdefaultroi);
-				m4 = uimenu(c_menu,'Label','pco.panda 5 Hz','Callback',@roi_setdefaultroi);
-				m5 = uimenu(c_menu,'Label','pco.panda 3 Hz','Callback',@roi_setdefaultroi);
-				m6 = uimenu(c_menu,'Label','pco.panda 1 Hz','Callback',@roi_setdefaultroi);
-				m7 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_setdefaultroi);
-			end
-			if strcmp(camera_type,'basler')
-				m0 = uimenu(c_menu,'Label','Basler 2048x1088','Callback',@roi_setdefaultroi);
-				m1 = uimenu(c_menu,'Label','Basler 1280x720','Callback',@roi_setdefaultroi);
-				m2 = uimenu(c_menu,'Label','Basler 1024x1024','Callback',@roi_setdefaultroi);
-				m3 = uimenu(c_menu,'Label','Basler 640x480','Callback',@roi_setdefaultroi);
-				m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_setdefaultroi);
-			end
-			if strcmp(camera_type,'OPTOcam')
-				m0 = uimenu(c_menu,'Label','OPTOcam 1936x1216 (8bit: 160 fps, 12bit: 80 fps)','Callback',@roi_setdefaultroi);
-				m1 = uimenu(c_menu,'Label','OPTOcam 1600x600 (8bit: 320 fps)','Callback',@roi_setdefaultroi);
-				m2 = uimenu(c_menu,'Label','OPTOcam 1600x480 (8bit: 400 fps)','Callback',@roi_setdefaultroi);
-				m3 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_setdefaultroi);
-			end
-
-			if strcmp(camera_type,'OPTRONIS')
-				%die ganzen ROIs bringen noch keine fps Erhöhung, muss erst
-				%im dropdown eine Option hinzugefügt werden...
-				camera_sub_type=gui_retr('camera_sub_type');
-				switch camera_sub_type
-					case 'Cyclone-2-2000-M'
-						m0 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1920x1080 (max. 2165 fps)','Callback',@roi_setdefaultroi);
-						m1 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x800 (max. 3100 fps)','Callback',@roi_setdefaultroi);
-						m2 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x480 (max. 5142 fps)','Callback',@roi_setdefaultroi);
-						m3 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1024x240 (max. 10150 fps)','Callback',@roi_setdefaultroi);
-						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_setdefaultroi);
-					case 'Cyclone-1HS-3500-M'
-						m0 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x860 (max. 3500 fps)','Callback',@roi_setdefaultroi);
-						m1 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x640 (max. 4700 fps)','Callback',@roi_setdefaultroi);
-						m2 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x320 (max. 9340 fps)','Callback',@roi_setdefaultroi);
-						m3 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x240 (max. 12350 fps)','Callback',@roi_setdefaultroi);
-						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_setdefaultroi);
-					case 'Cyclone-25-150-M'
-						m0 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x5120 (max. 150 fps)','Callback',@roi_setdefaultroi);
-						m1 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x2160 (max. 350 fps)','Callback',@roi_setdefaultroi);
-						m2 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x1080 (max. 695 fps)','Callback',@roi_setdefaultroi);
-						m3 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x720 (max. 1025 fps)','Callback',@roi_setdefaultroi);
-						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_setdefaultroi);
-					otherwise
-
+				if size(image1,3)>1
+					image1=rgb2gray(image1); %rgb2gray conserves the variable class (single, double, uint8, uint16)
+					image2=rgb2gray(image2);
+					colorimg=1;
+				else
+					colorimg=0;
 				end
-			end
+				counter=1;
 
-			position = acquisition_customWait(ac_ROI_general_handle);
-
-			gui_put('ac_ROI_general_handle',ac_ROI_general_handle);
-			gui_put('doing_roi',0)
-			position=round(position);
-
-			xmin=position(1);
-			ymin=position(2);
-			xmax=position(1)+position(3)-1;
-			ymax=position(2)+position(4)-1;
-
-			% Round so it fits the requirements of the camera ROI
-			xmin=floor(xmin/8)*8+1;
-			ymin=floor(ymin/2)*2+1;
-			xmax=floor(xmax/8)*8;
-			ymax=floor(ymax/2)*2;
-
-			if xmin<1
-				xmin=1;
-			end
-			if ymin<1
-				ymin=1;
-			end
-			if xmax>max_cam_res(1)
-				xmax=max_cam_res(1);
-			end
-			if ymax>max_cam_res(2)
-				ymax=max_cam_res(2);
-			end
-			position(1)=xmin;
-			position(2)=ymin;
-			position(3)=xmax-xmin+1;
-			position(4)=ymax-ymin+1;
-			ac_ROI_general=position;
-			gui_put('ac_ROI_general',ac_ROI_general);
-			save('PIVlab_settings_default.mat','ac_ROI_general','-append');
-			delete(ac_ROI_general_handle)
-			rectangle('Position',position,'EdgeColor','y','linewidth',2)
-			if strcmp(camera_type,'pco_panda')
-				%% jetzt nochmal mit finalen einstellungen bild capturen zum messen der framerate...
-				%Camera fps
-				ac_fps_value=get(handles.ac_fps,'Value');
-				ac_fps_str=get(handles.ac_fps,'String');
-				cam_fps=str2double(ac_fps_str(ac_fps_value));
-				ac_ROI_general=gui_retr('ac_ROI_general');
-				[~,~,framerate_max]=PIVlab_capture_pco(1,gui_retr('f1exp_cam'),'Synchronizer',projectpath,cam_fps,0,[],binning,ac_ROI_general,camera_type,1);
-				delete(findobj('tag','roitxt'));
-				text(50,50,['Max framerate: ' num2str(round(framerate_max,2)) ' Hz'],'tag','roitxt','Color','yellow','FontSize',14,'FontWeight','bold')
-			end
-			set(handles.ac_realtime,'Value',0);%reset realtime roi
-			gui_put('do_realtime',0);
-		end
-	end
-end
-
-function acquisition_calibcapture_Callback(~,~,~)
-[filepath,~,~] = fileparts(mfilename('fullpath'));
-camera_type=gui_retr('camera_type');
-if ~strcmp(camera_type,'chronos') %calib
-	if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_camera_load_defines.m'),'file')
-		ready=1;
-	else
-		ready=0;
-		acquisition_pco_error_msgbox
-	end
-else
-	ready=1;
-end
-if ready==1
-	handles=gui_gethand;
-	try
-		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
-	catch
-		set(handles.ac_expo,'String','100');
-		expos=100000;
-	end
-	gui_put('cancel_capture',0);
-	projectpath=get(handles.ac_project,'String');
-	capture_ok=acquisition_check_project_path(projectpath,'calibration');
-	ac_ROI_general=gui_retr('ac_ROI_general');
-	binning=gui_retr('binning');
-	if isempty(binning)
-		binning=1;
-	end
-	if isempty(ac_ROI_general)
-		max_cam_res=gui_retr('max_cam_res');
-		ac_ROI_general=[1,1,max_cam_res(1)/binning,max_cam_res(2)/binning];
-	end
-	capturing=gui_retr('capturing');
-	if isempty(capturing);capturing=0;end
-	if capture_ok==1 && capturing == 0
-		gui_put('capturing',1);
-		gui_toolsavailable(0,'Starting camera...')
-		%set(handles.ac_calibsave,'enable','on')
-		set(handles.ac_calibcapture,'enable','on')
-		set(handles.ac_serialstatus,'enable','on')
-		set(handles.ac_laserstatus,'enable','on')
-		set(handles.ac_lasertoggle,'enable','on')
-		set(handles.ac_lensctrl,'enable','on')
-		set(handles.ac_power,'enable','on')
-
-		%try
-		set(handles.ac_calibcapture,'String','Stop')
-		if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') %pco cameras
-			[errorcode, caliimg,framerate_max]=PIVlab_capture_pco(50000,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
-		elseif strcmp(camera_type,'basler')
-			[errorcode, caliimg]=PIVlab_capture_basler_calibration_image(inf,expos,ac_ROI_general);
-		elseif strcmp(camera_type,'OPTOcam')
-			[errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(inf,expos,ac_ROI_general);
-		elseif strcmp(camera_type,'OPTRONIS')
-			acquisition_control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
-			[errorcode, caliimg]=PIVlab_capture_OPTRONIS_calibration_image(inf,expos,ac_ROI_general);
-			acquisition_control_simple_sync_serial(0,2);
-		elseif strcmp(camera_type,'flir')
-			[errorcode, caliimg]=PIVlab_capture_flir_calibration_image(expos);
-		elseif strcmp(camera_type,'chronos')
-			cameraIP=gui_retr('Chronos_IP');
-			if isempty(cameraIP)
-				uiwait(msgbox({'Chronos Setup not performed.' 'Please click "Setup" in "Camera settings"'}))
-			else
-				[errorcode, caliimg] = PIVlab_capture_chronos_calibration_image(cameraIP,expos);
-			end
-		end
-		gui_put('caliimg',caliimg);
-		gui_put('fresh_calib_image',1);
-		%{
-		catch
-			set(handles.ac_calibcapture,'String','Start')
-			uiwait(msgbox('Camera not connected'))
-			displogo
-			put('capturing',0);
-			toolsavailable(1)
-		end
-		%}
-	elseif capture_ok==1 && capturing == 1
-		gui_put('cancel_capture',1);
-		gui_put('capturing',0);
-		set(handles.ac_calibcapture,'String','Start')
-		gui_toolsavailable(1)
-		set(handles.ac_calibsave,'enable','on')
-	end
-end
-%toolsavailable(1)
-
-function result=acquisition_check_project_path(projectpath,caller)
-handles=gui_gethand;
-result=0;
-if ~exist(projectpath,'dir')
-	button = questdlg('Folder does not exist. Create?','Create?','Yes','Cancel','Yes');
-	if strmatch(button,'Yes')==1
-		mkdir(projectpath);
-		result=1;
-		acquisition_update_ac_status(['Created folder ' projectpath]);
-	end
-else
-	result=1;
-end
-if strcmp(caller,'double_images')
-	if result==1 && exist(fullfile(projectpath,'PIVlab_0000_A.tif'),'file') || exist(fullfile(projectpath,'frame_000001.tiff'),'file')
-		button = questdlg('Overwrite files?','Overwrite?','Yes','Cancel','Yes');
-		if strmatch(button,'Yes')==1
-			result=1;
-		else
-			result=0;
-		end
-	end
-end
-
-function acquisition_pivcapture_save_Callback(inpt,~)
-pause(0.1)
-handles=gui_gethand;
-if inpt.Value == 0
-	set (handles.ac_imgamount, 'enable','off')
-else
-	set (handles.ac_imgamount, 'enable','on')
-	acquisition_image_amount_Callback
-end
-
-function acquisition_image_amount_Callback(~,~,~)
-camera_type=gui_retr('camera_type');
-if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'chronos') || strcmp(camera_type,'pco_pixelfly')
-	%these cameras do not capture into RAM
-else
-	handles=gui_gethand;
-	% assess how many images can be captured to RAM using the image
-	% acquisition toolbox (pco doesn't use the toolbox and writes directly
-	% to disk
-	warning('off','MATLAB:JavaEDTAutoDelegation');
-	imaqreset %resetting to get a good estimate of the free RAM
-
-	imageamount=str2double(get(handles.ac_imgamount,'String'));
-	ac_ROI_general=gui_retr('ac_ROI_general');
-	if isempty(ac_ROI_general)
-		max_cam_res=gui_retr('max_cam_res');
-		ac_ROI_general=[1 1 max_cam_res(1) max_cam_res(2)];
-	end
-	value=get(handles.ac_config,'value');
-	bitmode=8;
-	if value == 6  %basler cameras
-		bitmode=8;
-	elseif value == 7  %flir cameras
-		bitmode=8;
-	elseif value == 8  %OPTOcam
-		bitmode =gui_retr('OPTOcam_bits');
-		if isempty (bitmode)
-			bitmode=8;
-		end
-	elseif value == 9  %OPTRONIS
-		bitmode =gui_retr('OPTRONIS_bits');
-		if isempty (bitmode)
-			bitmode=8;
-		end
-	end
-
-	max_possible_dbl_images = PIVlab_capture_max_possible_images(ac_ROI_general,[],bitmode);
-	if imageamount > max_possible_dbl_images
-		if get(handles.ac_pivcapture_save,'Value')==1
-			set(handles.ac_imgamount,'BackgroundColor',[1 0.5 0])
-			beep
-			warning(['RAM most likely not sufficient to capture this amount of double images.' newline 'Please reduce the amount of double images.' newline 'Maximum double images is approx. ' num2str(max_possible_dbl_images)])
-		end
-	else
-		set(handles.ac_imgamount,'BackgroundColor',[1 1 1])
-	end
-end
-
-
-function acquisition_piv_capture_Callback(~,~,~)
-gui_put('capturing',0);
-[filepath,~,~] = fileparts(mfilename('fullpath'));
-if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_camera_load_defines.m'),'file')
-	button = questdlg('Start Laser and camera?','Warning','Yes','Cancel','Yes');
-	if strmatch(button,'Yes')==1
-		handles=gui_gethand;
-		gui_put('cancel_capture',0);
-		projectpath=get(handles.ac_project,'String');
-		if get(handles.ac_pivcapture_save,'Value')==1 %check settings only when user wants to save data
-			imageamount=str2double(get(handles.ac_imgamount,'String'));
-			capture_ok=acquisition_check_project_path(projectpath,'double_images');
-		else
-			imageamount=inf; %run forever if user doesnt want to save images
-			capture_ok=1;
-		end
-		%Camera fps
-		ac_fps_value=get(handles.ac_fps,'Value');
-		ac_fps_str=get(handles.ac_fps,'String');
-		cam_fps=str2double(ac_fps_str(ac_fps_value));
-		ac_ROI_realtime=gui_retr('ac_ROI_realtime');
-		do_realtime=gui_retr('do_realtime');
-		if isempty(do_realtime)
-			do_realtime=0;
-		end
-		if capture_ok==1
-			gui_put('expected_image_size',[])
-			ac_ROI_general=gui_retr('ac_ROI_general');
-			if isempty(ac_ROI_general)
-				max_cam_res=gui_retr('max_cam_res');
-				ac_ROI_general=[1 1 max_cam_res(1) max_cam_res(2)];
-			end
-			gui_put('capturing',1);
-			if isinf(imageamount)
-				gui_toolsavailable(0,'Starting PIV preview...')
-			else
-				gui_toolsavailable(0,'Starting PIV capture...')
-			end
-			set(handles.ac_pivstop,'enable','on')
-			set(handles.togglepair,'enable','on')
-			set(handles.ac_serialstatus,'enable','on')
-			set(handles.ac_laserstatus,'enable','on')
-			set(handles.ac_lasertoggle,'enable','on')
-
-			value=get(handles.ac_config,'value');
-
-			%save capture configuration to mat file
-			if ~isinf(imageamount)
-				config_strings=get(handles.ac_config,'String');
-				config_strings_selected=cell2mat((config_strings(value)));
-				las_percent=str2double(get(handles.ac_power,'String'));
-				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
-				binning=gui_retr('binning');
-				OPTOcam_bits =gui_retr('OPTOcam_bits');
-				if isempty (OPTOcam_bits)
-					OPTOcam_bits=8;
+				%convert all image types to double, ranging from 0...1
+				if strcmp(classimage,'double')==1 %double stays double
+					%do nothing
+				elseif strcmp(classimage,'single')==1 %e.g. 32bit tif, ranges from 0...1
+					image1=double(image1);
+					image2=double(image2);
+				elseif strcmp(classimage,'uint16')==1 %e.g. 16bit tif, ranges from 0...65535
+					image1=double(image1)/65535;
+					image2=double(image2)/65535;
+				elseif strcmp(classimage,'uint8')==1 %0...255
+					image1=double(image1)/255;
+					image2=double(image2)/255;
 				end
-				recording_time=char(datetime('now'));
-				logger_path = get(handles.ac_project,'String');
-				if exist(logger_path,'dir') %only log when directory has been set up.
-					timestamp=char(datetime('now'));
-					if exist (fullfile(logger_path, 'acquisition_log.txt'),'file')~=2
-						try
-							logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'w');
-							fprintf(logger_fid,'recording_time\tconfig_strings_selected\timageamount\tcam_fps\tpulse_sep\tlas_percent\tac_ROI_general\tbinning\tcam_bits');
-							fprintf(logger_fid, '\n');
-							fclose(logger_fid);
-						catch
+				if sequencer==0 %time-resolved
+					start_bg=2;
+					skip_bg=1;
+				else
+					start_bg=3;
+					skip_bg=2;
+				end
+				%perform image addition
+				%if timeresolved: generate only one background image from all
+				%images
+				%if not: generate two background images. One from even frames,
+				%one from odd frames
+				gui_toolsavailable(0,'Busy, please wait...')
+				updatecntr=0;
+
+				%das innere zu einer function machen und außen parfor...?
+				%als erstes: normaler for loop erstellt feste Liste mit Dateinamen.
+				%aus denen holt sich parfor loop die infos
+				%loop unten kann so bleiben wie er ist, lädt aber nicht bilder, sondern schreibt dateinamen in liste
+				for i=start_bg:skip_bg:size(filepath,1)
+					counter=counter+1; %counts the amount of images --> do that elsewhere
+					%% update progress bar
+					updatecntr=updatecntr+1;
+					if updatecntr==5
+						set(handles.preview_preprocess, 'String', ['Progress: ' num2str(round(i/size(filepath,1)*99)) ' %']);drawnow expose;
+						updatecntr=0;
+					end
+					%% read image 1 and 2, different functions for different image types
+					if strcmp('b16_image',imagesource)
+						image_to_add1 = f_readB16(filepath{i}); %will be double
+						if sequencer==1 %not time-resolved
+							image_to_add2 = f_readB16(filepath{i+1});
+						end
+					elseif strcmp('normal_pixel_image',imagesource)
+						image_to_add1 = imread(filepath{i});
+						if sequencer==1 %not time-resolved
+							image_to_add2 = imread(filepath{i+1}); %will be double or uint8
+						end
+					elseif strcmp('from_video',imagesource)
+						image_to_add1 = read(video_reader_object,video_frame_selection(i));
+						if sequencer==1 %not time-resolved
+							image_to_add2 = read(video_reader_object,video_frame_selection(i+1));
 						end
 					end
-					try
-						logger_fid = fopen(fullfile(logger_path, 'acquisition_log.txt'), 'a');
-						fprintf(logger_fid, '%s', recording_time);
-						fprintf(logger_fid, '\t');
-						fprintf(logger_fid, '%s', config_strings_selected);
-						fprintf(logger_fid, '\t');
-						fprintf(logger_fid, '%s', num2str(imageamount));
-						fprintf(logger_fid, '\t');
-						fprintf(logger_fid, '%s', num2str(cam_fps));
-						fprintf(logger_fid, '\t');
-						fprintf(logger_fid, '%s', num2str(pulse_sep));
-						fprintf(logger_fid, '\t');
-						fprintf(logger_fid, '%s', num2str(las_percent));
-						fprintf(logger_fid, '\t');
-						fprintf(logger_fid, '%s', mat2str(ac_ROI_general));
-						fprintf(logger_fid, '\t');
-						fprintf(logger_fid, '%s', num2str(binning));
-						fprintf(logger_fid, '\t');
-						fprintf(logger_fid, '%s', num2str(OPTOcam_bits));
-						fprintf(logger_fid, '\n');
-						fclose(logger_fid);
-					catch ME
-						disp('Settings logger error:')
-						disp(ME)
-					end
-				end
-			end
 
-			if value== 1 || value == 2 %setups without lD-PS
-				set(handles.ac_power,'enable','on') %here, laser power can be adjusted while it is running.
-			end
-			set(handles.ac_lensctrl,'enable','on')
-
-			f = waitbar(0,'Initializing...');
-			%if any external device is activated for automatic control, then...
-			if (~isempty(gui_retr('ac_enable_seeding1')) && gui_retr('ac_enable_seeding1') ~=0) || (~isempty(gui_retr('ac_enable_device1')) && gui_retr('ac_enable_device1') ~=0) || (~isempty(gui_retr('ac_enable_device2')) && gui_retr('ac_enable_device2') ~=0) || (~isempty(gui_retr('ac_enable_flowlab')) && gui_retr('ac_enable_flowlab') ~=0)
-				acquisition_external_device_control(1); %starts activated devices
-				waitbar(.15,f,'Starting external devices...');
-				pause(0.5)
-				waitbar(.33,f,'Starting external devices...');
-				pause(0.5)
-				if (~isempty(gui_retr('ac_enable_flowlab')) && gui_retr('ac_enable_flowlab') ~=0) %flowlab is activated
-					%ask if flowlab was already running
-					%if yes --> proceed, if not --> pause to wait for uniform flow velocity.
-					flowlab_percent=gui_retr('flowlab_percent');
-					if flowlab_percent ~= 0
-						acquisition_external_device_control(1);
-						%wait a variable time untl capturing...
-						%slower velocities require more time to settle.
-						time_to_wait = round(-7*flowlab_percent/100 + 10);
-						for i=1:time_to_wait
-							waitbar(.4 + 0.6*(i/time_to_wait),f,'Waiting for flow stabilization...');
-							pause(1)
+					%% convert images to a grayscale double
+					%images arrive in their original format here
+					%convert everything to grayscale and double [0...1]
+					if colorimg==1
+						image_to_add1 = rgb2gray(image_to_add1); %will conserve image class
+						if sequencer==1 %not time-resolved
+							image_to_add2 = rgb2gray(image_to_add2);
 						end
 					end
-				end
-			end
-			if value==1 || value==2 %setup withOUT LD-PS
-				%Start-up sequence for normal Q-Switched laser
-				waitbar(.5,f,'Starting laser...');
-				acquisition_control_simple_sync_serial(1,0);
-				gui_put('laser_running',1);
-				pause(1)
-				waitbar(.6,f,'Starting laser...');
-				pause(1)
-				waitbar(.7,f,'Laser stabilization...');
-				pause(1)
-				waitbar(.85,f,'Starting camera...');
-				pause(1)
-				waitbar(1,f,'Starting camera...');
-				pause(1)
-				close(f)
-			elseif value == 3 || value == 4 %pco cameras with laser diode
-				%Start-up sequence for PIVlab LD-PS (much quicker)
-				waitbar(.01,f,'Starting laser...');
-				acquisition_control_simple_sync_serial(1,0);
-				gui_put('laser_running',1);
-				close(f)
-			elseif value== 5 || value == 6 || value==7 || value==8 || value==9%chronos and basler and flir and OPTOcam and OPTRONIS: Camera needs to be started first, afterwards the laser is enabled.
-				close(f)
-			end
-			camera_type=gui_retr('camera_type');
-			binning=gui_retr('binning');
-			if isempty(binning)
-				binning=1;
-			end
-			value=get(handles.ac_config,'value');
-			if value== 3 || value == 4 %setup with LD-PS and pco
-				%require a calculation of the exposure time which depends on the laser pulse length
-				las_percent=str2double(get(handles.ac_power,'String'));
-				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
-				f1exp_cam =floor(pulse_sep*las_percent/100)+1; %+1 because in the snychronizer, the cam expo is started 1 us before the ld pulse
-				disp(['camera exposure time = ' num2str(f1exp_cam)])
-				if f1exp_cam < 6
-					msgbox (['Exposure time of camera too low. Please increase laser energy or pulse distance.' sprintf('\n') 'Pulse_distance[µs] * laser_energy[%] must be >= 6 µs'])
-					uiwait
-				end
-			else
-				f1exp_cam=gui_retr('f1exp_cam');
-			end
-			if value == 5 %chronos
-				%capture to camera RAM
-				%zuerst:camera konfigurieren. Dann kamera starten. dann laser. nach laserstart warten und aufnahme beenden.dann laser aus
-				cameraIP=gui_retr('Chronos_IP');
-				acquisition_control_simple_sync_serial(0,0) %stop triggering when already running.
-				[OutputError] = PIVlab_capture_chronos_synced_start(cameraIP,cam_fps); %prepare cam and start camera (waiting for trigger...)
-				acquisition_control_simple_sync_serial(1,0); gui_put('laser_running',1); %turn on laser
-				[OutputError,ima,frame_nr_display] = PIVlab_capture_chronos_synced_capture(cameraIP,imageamount,cam_fps,do_realtime,ac_ROI_realtime); %capture n images, display livestream
-			elseif value == 1 || value == 2 || value == 3 || value == 4  %pco cameras
-				PIVlab_capture_pco(imageamount,f1exp_cam,'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI_realtime,binning,ac_ROI_general,camera_type,0);
-			elseif value == 6  %basler cameras
-				[OutputError,basler_vid,frame_nr_display] = PIVlab_capture_basler_synced_start(imageamount,ac_ROI_general); %prepare cam and start camera (waiting for trigger...)
-				acquisition_control_simple_sync_serial(1,0); gui_put('laser_running',1); %turn on laser
-				[OutputError,basler_vid] = PIVlab_capture_basler_synced_capture(basler_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display); %capture n images, display livestream
-			elseif value == 7  %flir cameras
-				[OutputError,flir_vid,frame_nr_display] = PIVlab_capture_flir_synced_start(imageamount,cam_fps); %prepare cam and start camera (waiting for trigger...)
-				acquisition_control_simple_sync_serial(1,0); gui_put('laser_running',1); %turn on laser
-				[OutputError,flir_vid] = PIVlab_capture_flir_synced_capture(flir_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display); %capture n images, display livestream
-			elseif value == 8  %OPTOcam
-				OPTOcam_bits =gui_retr('OPTOcam_bits');
-				if isempty (OPTOcam_bits)
-					OPTOcam_bits=8;
-				end
-				[OutputError,OPTOcam_vid,frame_nr_display] = PIVlab_capture_OPTOcam_synced_start(imageamount,ac_ROI_general,cam_fps,OPTOcam_bits); %prepare cam and start camera (waiting for trigger...)
-				Error_Reason={};
-				OPTOcam_settings_check = 1;
-				max_fps_with_current_settings = 1/((get(OPTOcam_vid.Source,'SensorReadoutTime') + get(OPTOcam_vid.Source,'BslExposureStartDelay'))/1000/1000);
-				if cam_fps > max_fps_with_current_settings
-					OPTOcam_settings_check = 0;
-					Error_Reason{end+1,1}='Frame rate too high for selected ROI and/or bit rate.';
-					Error_Reason{end+1,1}=['With current settings, sensor max. fps is ' num2str(round(max_fps_with_current_settings,1)) ' fps'];
-					Error_Reason{end+1,1}='Please make the ROI smaller, or decrease the frame rate.';
-				end
-				min_allowed_interframe = gui_retr('min_allowed_interframe');
-				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
-				if pulse_sep < min_allowed_interframe
-					OPTOcam_settings_check = 0;
-					Error_Reason{end+1,1}='Pulse distance too small for current bit mode.';
-					Error_Reason{end+1,1}=['In ' num2str(OPTOcam_bits) ' bit mode, the puse distance must be at least ' num2str(min_allowed_interframe) ' µs.'];
-					Error_Reason{end+1,1}='Please increase the pulse distance, or decrease the bit mode.';
-				end
-				if OPTOcam_settings_check == 1
-					acquisition_control_simple_sync_serial(1,0); gui_put('laser_running',1); %turn on laser
-					[OutputError,OPTOcam_vid] = PIVlab_capture_OPTOcam_synced_capture(OPTOcam_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTOcam_bits); %capture n images, display livestream
-				else
-					msgbox(Error_Reason,'modal')
-					uiwait
-					gui_put('cancel_capture',1);
-					imageamount=inf; %will prevent saving of images
-				end
-			elseif value == 9  %OPTRONIS
-				OPTRONIS_bits =gui_retr('OPTRONIS_bits');
-				if isempty (OPTRONIS_bits)
-					OPTRONIS_bits=8;
-				end
-				[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits); %prepare cam and start camera (waiting for trigger...)
-				pause(1) %make sure OPTRONIS is ready to capture.
-				Error_Reason={};
-				OPTRONIS_settings_check = 1;
-				%2166 mit 8 bit
-				%1750 mit 10 bit
-
-				camera_sub_type=gui_retr('camera_sub_type');
-				if OPTRONIS_bits==8
-					switch camera_sub_type
-						case 'Cyclone-2-2000-M'
-							max_fps_with_current_settings = 2165;
-						case 'Cyclone-1HS-3500-M'
-							max_fps_with_current_settings = 3500;
-						case 'Cyclone-25-150-M'
-							max_fps_with_current_settings = 150;
-						otherwise
-							max_fps_with_current_settings=1111;
+					if strcmp(classimage,'double')==1
+						image_to_add1=image_to_add1;
+						if sequencer==1 %not time-resolved
+							image_to_add2=image_to_add2;
+						end
+					end
+					if strcmp(classimage,'single')==1
+						image_to_add1=double(image_to_add1);
+						if sequencer==1 %not time-resolved
+							image_to_add2=double(image_to_add2);
+						end
+					end
+					if strcmp(classimage,'uint8')==1
+						image_to_add1=double(image_to_add1)/255;
+						if sequencer==1 %not time-resolved
+							image_to_add2=double(image_to_add2)/255;
+						end
+					end
+					if strcmp(classimage,'uint16')==1
+						image_to_add1=double(image_to_add1)/65535;
+						if sequencer==1 %not time-resolved
+							image_to_add2=double(image_to_add2)/65535;
+						end
 					end
 
-				elseif OPTRONIS_bits==10
-					switch camera_sub_type
-						case 'Cyclone-2-2000-M'
-							max_fps_with_current_settings = 1750;
-						case 'Cyclone-1HS-3500-M'
-							max_fps_with_current_settings = 3175;
-						case 'Cyclone-25-150-M'
-							max_fps_with_current_settings = 149;
-						otherwise
-							max_fps_with_current_settings=1111;
+					%now everything is double [0...1]
+
+					%% check if image size matches other images
+					% remove this, takes only time
+					img_size_info1=size(image1);
+					img_size_info2=size(image_to_add1);
+					if img_size_info1(1) ~= img_size_info2(1) || img_size_info1(2) ~= img_size_info2(2)
+						uiwait(warndlg('Error: All images in a session  MUST have the same size!'));
+						break
+					end
+
+					%% sum images
+					image1=image1 +image_to_add1;
+					if sequencer==1 %not time-resolved
+						img_size_info1=size(image2);
+						img_size_info2=size(image_to_add2);
+						if img_size_info1(1) ~= img_size_info2(1) || img_size_info1(2) ~= img_size_info2(2)
+							uiwait(warndlg('Error: All images in a session  MUST have the same size!'));
+							break
+						end
+						image2=image2+image_to_add2;
+					end
+				end %of for loop and image summing
+
+
+				%divide the sum by the amount of summed images
+				image1_bg=image1/counter;
+				if sequencer==1 %not time-resolved
+					image2_bg=image2/counter;
+				end
+
+				%Convert back to original image class, if not double anyway
+				if strcmp(classimage,'uint8')==1 %#ok<*STISA>
+					image1_bg=uint8(image1_bg*255);
+					if sequencer==1 %not time-resolved
+						image2_bg=uint8(image2_bg*255);
+					end
+				end
+				if strcmp(classimage,'single')==1
+					image1_bg=single(image1_bg);
+					if sequencer==1 %not time-resolved
+						image2_bg=single(image2_bg);
+					end
+				end
+				if strcmp(classimage,'uint16')==1
+					image1_bg=uint16(image1_bg*65535);
+					if sequencer==1 %not time-resolved
+						image2_bg=uint16(image2_bg*65535);
 					end
 				end
 
-				if cam_fps > max_fps_with_current_settings
-					OPTRONIS_settings_check = 0;
-					Error_Reason{end+1,1}='Frame rate too high for selected bit rate.';
-					Error_Reason{end+1,1}=['With current settings, sensor max. fps is ' num2str(round(max_fps_with_current_settings,1)) ' fps'];
-					Error_Reason{end+1,1}='Please select a lower frame rate.';
-				end
-				min_allowed_interframe = gui_retr('min_allowed_interframe');
-				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
-				if OPTRONIS_settings_check == 1
-					acquisition_control_simple_sync_serial(1,0); gui_put('laser_running',1); %turn on laser
-					[OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits); %capture n images, display livestream
+				%make results accessible to the rest of the GUI:
+				gui_put('bg_img_A',image1_bg);
+				if sequencer==1 %not time-resolved
+					gui_put('bg_img_B',image2_bg);
 				else
-					msgbox(Error_Reason,'modal')
-					uiwait
-					gui_put('cancel_capture',1);
-					imageamount=inf; %will prevent saving of images
+					gui_put('bg_img_B',image1_bg); %timeresolved --> same bg image for a and b
 				end
-			end
-			%disable external devices
-			if (~isempty(gui_retr('ac_enable_seeding1')) && gui_retr('ac_enable_seeding1') ~=0) || (~isempty(gui_retr('ac_enable_device1')) && gui_retr('ac_enable_device1') ~=0) || (~isempty(gui_retr('ac_enable_device2')) && gui_retr('ac_enable_device2') ~=0) || (~isempty(gui_retr('ac_enable_flowlab')) && gui_retr('ac_enable_flowlab') ~=0)
-				acquisition_external_device_control(0); % stops all external devices
-			end
-			acquisition_control_simple_sync_serial(0,0);pause(0.1);acquisition_control_simple_sync_serial(0,0);
-			gui_put('laser_running',0);
-			if value == 5 %chronos
-				%when Chronos:save the images when finished recording to camera ram
-				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
-					PIVlab_capture_chronos_save (cameraIP,imageamount,projectpath,frame_nr_display)
-				end
-			end
-			if value == 6 %basler
-				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
-					[OutputError] = PIVlab_capture_basler_save(basler_vid,imageamount,projectpath,frame_nr_display); %save the images from ram to disk.
-				end
-			end
-			if value == 7 %flir
-				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
-					[OutputError] = PIVlab_capture_flir_save(flir_vid,imageamount,projectpath,frame_nr_display); %save the images from ram to disk.
-				end
-			end
-			if value == 8 %OPTOcam
-				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
-					[OutputError] = PIVlab_capture_OPTOcam_save(OPTOcam_vid,imageamount,projectpath,frame_nr_display,OPTOcam_bits); %save the images from ram to disk.
-				end
-			end
-			if value == 9 %OPTRONIS
-				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
-					[OutputError] = PIVlab_capture_OPTRONIS_save(OPTRONIS_vid,imageamount,projectpath,frame_nr_display,OPTRONIS_bits); %save the images from ram to disk.
-				end
+				set(handles.preview_preprocess, 'String', 'Apply and preview current frame');drawnow;
+				gui_toolsavailable(1)
+			else % user has checkbox enabled, but doesn't want to calculate the background...
+				set(handles.bg_subtract,'Value',0);
 			end
 
-			if gui_retr('cancel_capture')==0
-				camera_type=gui_retr('camera_type');
-				found_the_data=acquisition_push_recorded_to_GUI(camera_type);
-				if found_the_data==1
-					gui_put('sessionpath',projectpath );
-					set(handles.time_inp,'String',num2str(str2num(get(handles.ac_interpuls,'String'))/1000));
-					hgui=getappdata(0,'hgui');
-					serpo=getappdata(hgui,'serpo');
-					export_save_session_function (projectpath,'PIVlab_Capture_Session.mat');
-					gui_put('serpo',serpo); %Serpo gets inaccessible after savesession. Probably because there are a number of variables cleared to allow saving without crashing.
-				else
-					gui_displogo
-				end
-			end
+		else
+			%disp('BG exists')
 		end
-	end
-else
-	acquisition_pco_error_msgbox
-end
-gui_put('capturing',0);
-gui_toolsavailable(1)
 
-function acquisition_external_device_control(switch_it)
-handles=gui_gethand;
-serpo=gui_retr('serpo');
-if ~isempty(serpo)
-	flush(serpo)
-	if switch_it==1
-		if ~isempty(gui_retr('ac_enable_seeding1')) && gui_retr('ac_enable_seeding1') == 1
-			ext_dev_01_pwm = gui_retr('ext_dev_01_pwm');
-			line_to_write=['SEEDER_01:' num2str(ext_dev_01_pwm)];
-			writeline(serpo,line_to_write);
-			gui_put('ac_seeding1_status',1);
-			pause(0.2)
-		end
-		if ~isempty(gui_retr('ac_enable_device1')) && gui_retr('ac_enable_device1') == 1
-			ext_dev_02_pwm = gui_retr('ext_dev_02_pwm');
-			line_to_write=['DEVICE_01:' num2str(ext_dev_02_pwm)];
-			writeline(serpo,line_to_write);
-			gui_put('ac_device1_status',1);
-			pause(0.2)
-		end
-		if ~isempty(gui_retr('ac_enable_device2')) && gui_retr('ac_enable_device2') == 1
-			ext_dev_03_pwm = gui_retr('ext_dev_03_pwm');
-			line_to_write=['DEVICE_02:' num2str(ext_dev_03_pwm)];
-			writeline(serpo,line_to_write);
-			gui_put('ac_device2_status',1);
-			pause(0.2)
-		end
-		if ~isempty(gui_retr('ac_enable_flowlab')) && gui_retr('ac_enable_flowlab') == 1
-			flowlab_percent = gui_retr('flowlab_percent');
-			line_to_write=['FLOWLAB:' num2str(flowlab_percent/100)];
-			writeline(serpo,line_to_write);
-			gui_put('ac_flowlab_status',1);
-			pause(0.2)
-		end
 	else
-		writeline(serpo,'SEEDER_01:0');
-		pause(0.1)
-		writeline(serpo,'DEVICE_01:0');
-		pause(0.1)
-		writeline(serpo,'DEVICE_02:0');
-		pause(0.1)
-		writeline(serpo,'FLOWLAB:0');
-		gui_put('ac_seeding1_status',0);
-		gui_put('ac_device1_status',0);
-		gui_put('ac_device2_status',0);
-		gui_put('ac_flowlab_status',0);
+		set(handles.bg_subtract,'Value',0);
+		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'])
+		uiwait
 	end
 end
 
-
-
-
-function found_the_data = acquisition_push_recorded_to_GUI(camera_type)
+function preproc_generate_BG_img_parallel
 handles=gui_gethand;
-projectpath=get(handles.ac_project,'String');
-imageamount=str2double(get(handles.ac_imgamount,'String'));
-pathlist={};
-pathfilelist={};
-file_existing=zeros(imageamount,1);
-for i=1:imageamount
-	if ~strcmp(camera_type,'chronos')
-		pathfileA=fullfile(projectpath,['PIVlab_' sprintf('%4.4d',i-1) '_A.tif']);
-		pathfileB=fullfile(projectpath,['PIVlab_' sprintf('%4.4d',i-1) '_B.tif']);
-	elseif strcmp(camera_type,'chronos')
-		pathfileA=fullfile(projectpath,['frame_' sprintf('%6.6d',2*i-1) '.tiff']);
-		pathfileB=fullfile(projectpath,['frame_' sprintf('%6.6d',2*i) '.tiff']);
-	end
+if get(handles.bg_subtract,'Value')==1
+	bg_img_A = gui_retr('bg_img_A');
+	bg_img_B = gui_retr('bg_img_B');
+	sequencer=gui_retr('sequencer');%Timeresolved or pairwise 0=timeres.; 1=pairwise
+	if sequencer ~= 2 % bg subtraction only makes sense with time-resolved and pairwise sequencing style, not with reference style.
+		if isempty(bg_img_A) || isempty(bg_img_B)
+			answer = questdlg('Mean intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
+			if strcmp(answer , 'OK')
+				%disp('BG not present, calculating now')
+				%% Calculate BG for all images....
+				% read first image to determine properties
+				filepath = gui_retr('filepath');
+				if gui_retr('video_selection_done') == 0
+					[~,~,ext] = fileparts(filepath{1});
+					if strcmp(ext,'.b16')
+						image1=f_readB16(filepath{1});
+						image2=f_readB16(filepath{2});
+						imagesource='b16_image';
+					else
+						image1=imread(filepath{1});
+						image2=imread(filepath{2});
+						imagesource='normal_pixel_image';
+					end
+				else
+					video_reader_object = gui_retr('video_reader_object');
+					video_frame_selection=gui_retr('video_frame_selection');
+					image1 = read(video_reader_object,video_frame_selection(1));
+					image2 = read(video_reader_object,video_frame_selection(2));
+					imagesource='from_video';
+				end
+				classimage=class(image1); %memorize the original image format (double, uint8 etc)
 
-	pathA=projectpath;
-	pathB=projectpath;
+				if size(image1,3)>1
+					image1=rgb2gray(image1); %rgb2gray conserves the variable class (single, double, uint8, uint16)
+					image2=rgb2gray(image2);
+					colorimg=1;
+				else
+					colorimg=0;
+				end
+				counter=1;
 
-	pathfilelist{i*2-1,1}=pathfileA; %#ok<AGROW>
-	pathfilelist{i*2,1}=pathfileB; %#ok<AGROW>
+				%convert all image types to double, ranging from 0...1
+				if strcmp(classimage,'double')==1 %double stays double
+					%do nothing
+				elseif strcmp(classimage,'single')==1 %e.g. 32bit tif, ranges from 0...1
+					image1=double(image1);
+					image2=double(image2);
+				elseif strcmp(classimage,'uint16')==1 %e.g. 16bit tif, ranges from 0...65535
+					image1=double(image1)/65535;
+					image2=double(image2)/65535;
+				elseif strcmp(classimage,'uint8')==1 %0...255
+					image1=double(image1)/255;
+					image2=double(image2)/255;
+				end
+				if sequencer==0 %time-resolved
+					start_bg=2;
+					skip_bg=1;
+				else
+					start_bg=3;
+					skip_bg=2;
+				end
+				%perform image addition
+				%if timeresolved: generate only one background image from all
+				%images
+				%if not: generate two background images. One from even frames,
+				%one from odd frames
+				gui_toolsavailable(0,'Busy, please wait...')
+				updatecntr=0;
 
-	file_existing(i,1) = (isfile(pathfileA) + isfile(pathfileB))/2;
+				%das innere zu einer function machen und außen parfor...?
+				%als erstes: normaler for loop erstellt feste Liste mit Dateinamen.
+				%aus denen holt sich parfor loop die infos
+				%loop unten kann so bleiben wie er ist, lädt aber nicht bilder, sondern schreibt dateinamen in liste
+				cntr=1;
+				imagelist_A=cell(0);
+				imagelist_B=cell(0);
+				for i=start_bg:skip_bg:size(filepath,1)
 
-	pathlist{i*2-1,1}=pathA; %#ok<AGROW>
-	pathlist{i*2,1}=pathB; %#ok<AGROW>
-end
-if all(file_existing)
-	s = struct('name',pathfilelist,'folder',pathlist,'isdir',0);
-	gui_put('sequencer',1);
-	gui_put('capturing',0);
-	import_loadimgsbutton_Callback([],[],0,s);
-	found_the_data=1;
-else
-	found_the_data=0;
-end
+					imagelist_A{cntr}=filepath{i};
+					if sequencer==1 %not time-resolved
+						imagelist_B{cntr}=filepath{i+1};
+					else
+						imagelist_B=imagelist_A; %totally strange workaround for Matlab R2022b.... if sequencer == 0 then this variable will never be used. But if it is empty, then an error occurs...
+					end
 
-function acquisition_update_ac_status(status)
-handles=gui_gethand;
-contents=get(handles.ac_msgbox,'String');
-try
-	contents=[status;contents];
-catch
-end
-set(handles.ac_msgbox,'String',contents);
+					cntr=cntr+1;
 
+				end
 
-function acquisition_camera_stop_Callback(~,evt,~)
-gui_put('cancel_capture',1);
-acquisition_control_simple_sync_serial(0,0);
-%external_device_control(0);
-gui_put('laser_running',0);
-gui_put('capturing',0);
-gui_toolsavailable(1)
-fresh_calib_image=gui_retr('fresh_calib_image');
-if strncmp(evt.Source.Tag,'ac_calibsave',20) %only when "save" button is pressed, then save the calibration image.
-	if ~isempty(fresh_calib_image) && fresh_calib_image == 1
-		gui_put('fresh_calib_image',0);
-		handles=gui_gethand;
-		projectpath=get(handles.ac_project,'String');
-		numbi = 0;
-		imgA_path = fullfile(projectpath, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']);
-		while exist(imgA_path, 'file')
-			numbi = numbi+1;
-			imgA_path = fullfile(projectpath, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']);
-		end
-		imwrite(gui_retr('caliimg'),imgA_path);
-		set(handles.ac_calibsave,'enable','off')
-	end
-	drawnow;
-end
+				hbar = pivprogress(numel(imagelist_A),handles.preview_preprocess);
+				parfor	i=1:numel(imagelist_A)
 
-function acquisition_browse_Callback(~,~,~)
-handles=gui_gethand;
-folder_name = uigetdir(gui_retr('pathname'),'Select image folder for saving');
-if ~isequal(folder_name,0)
-	set(handles.ac_project,'String',folder_name);
-	gui_put('pathname',folder_name);
-end
+					image_to_add1=[];
+					image_to_add2=[];
+					counter=counter+1; %counts the amount of images --> do that elsewhere
+					if strcmp('b16_image',imagesource)
+						image_to_add1 = f_readB16(imagelist_A{i}); %will be double
+						if sequencer==1 %not time-resolved
+							image_to_add2 = f_readB16(imagelist_B{i});
+						end
+					elseif strcmp('normal_pixel_image',imagesource)
+						image_to_add1 = imread(imagelist_A{i});
+						if sequencer==1 %not time-resolved
+							image_to_add2 = imread(imagelist_B{i}); %will be double or uint8
+						end
+					elseif strcmp('from_video',imagesource)
+						disp('parallel bg calculation wird mit videoframes nicht gehen....')
+					end
+					%% convert images to a grayscale double
+					%images arrive in their original format here
+					%convert everything to grayscale and double [0...1]
+					if colorimg==1
+						image_to_add1 = rgb2gray(image_to_add1); %will conserve image class
+						if sequencer==1 %not time-resolved
+							image_to_add2 = rgb2gray(image_to_add2);
+						end
+					end
 
-function acquisition_realtime_Callback(~,~,~)
-handles=gui_gethand;
-if get(handles.ac_realtime,'Value')==1
-	gui_put('capturing',0);
-	try
-		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
-	catch
-		set(handles.ac_expo,'String','100');
-		expos=100000;
-	end
-	projectpath=get(handles.ac_project,'String');
-	capture_ok=acquisition_check_project_path(projectpath,'calibration');
-	ac_ROI_general=gui_retr('ac_ROI_general');
-	binning=gui_retr('binning');
-	if isempty(binning)
-		binning=1;
-	end
-	if isempty(ac_ROI_general)
-		max_cam_res=gui_retr('max_cam_res');
-		ac_ROI_general=[1,1,max_cam_res(1)/binning,max_cam_res(2)/binning];
-	end
-	camera_type=gui_retr('camera_type');
-	try
-		if capture_ok==1
-			gui_put('cancel_capture',0);
-			gui_put('capturing',1);
-			if ~strcmp(camera_type,'chronos') %calib
-				[errorcode, caliimg]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type,0);
-			else
-				%not supported yet....
+					if strcmp(classimage,'single')==1
+						image_to_add1=double(image_to_add1);
+						if sequencer==1 %not time-resolved
+							image_to_add2=double(image_to_add2);
+						end
+					end
+					if strcmp(classimage,'uint8')==1
+						image_to_add1=double(image_to_add1)/255;
+						if sequencer==1 %not time-resolved
+							image_to_add2=double(image_to_add2)/255;
+						end
+					end
+					if strcmp(classimage,'uint16')==1
+						image_to_add1=double(image_to_add1)/65535;
+						if sequencer==1 %not time-resolved
+							image_to_add2=double(image_to_add2)/65535;
+						end
+					end
 
+					%now everything is double [0...1]
+
+					%% sum images
+					image1=image1 +image_to_add1;
+					if sequencer==1 %not time-resolved
+						image2=image2+image_to_add2;
+					end
+					hbar.iterate(1); %#ok<*PFBNS>
+				end %of for loop and image summing
+				close(hbar);
+
+				set (handles.preview_preprocess, 'string', 'Apply and preview current frame');
+				%divide the sum by the amount of summed images
+				image1_bg=image1/counter;
+				if sequencer==1 %not time-resolved
+					image2_bg=image2/counter;
+				end
+
+				%Convert back to original image class, if not double anyway
+				if strcmp(classimage,'uint8')==1 %#ok<*STISA>
+					image1_bg=uint8(image1_bg*255);
+					if sequencer==1 %not time-resolved
+						image2_bg=uint8(image2_bg*255);
+					end
+				end
+				if strcmp(classimage,'single')==1
+					image1_bg=single(image1_bg);
+					if sequencer==1 %not time-resolved
+						image2_bg=single(image2_bg);
+					end
+				end
+				if strcmp(classimage,'uint16')==1
+					image1_bg=uint16(image1_bg*65535);
+					if sequencer==1 %not time-resolved
+						image2_bg=uint16(image2_bg*65535);
+					end
+				end
+
+				%make results accessible to the rest of the GUI:
+				gui_put('bg_img_A',image1_bg);
+				if sequencer==1 %not time-resolved
+					gui_put('bg_img_B',image2_bg);
+				else
+					gui_put('bg_img_B',image1_bg); %timeresolved --> same bg image for a and b
+				end
+				set(handles.preview_preprocess, 'String', 'Apply and preview current frame');drawnow;
+				gui_toolsavailable(1)
+			else % user has checkbox enabled, but doesn't want to calculate the background...
+				set(handles.bg_subtract,'Value',0);
 			end
+		else
+			%disp('BG exists')
 		end
-		gui_put('capturing',0);
-		uiwait(msgbox(['Please select the ROI for real-time PIV.'],'modal'))
-		roirect = round(getrect(gca));
-		if roirect(1,3)~=0 && roirect(1,4)~=0
-			gui_put('ac_ROI_realtime',roirect);
-			gui_put('do_realtime',1);
-		end
-	catch
-		gui_put('do_realtime',0);
-		set(handles.ac_realtime,'Value',0)
-	end
-else
-	gui_put('do_realtime',0);
-end
 
-function acquisition_ext_trigger_settings_Callback (~,~,~)
-handles=gui_gethand;
-serpo=gui_retr('serpo');
-if ~isempty(serpo)
-	acquisition_control_simple_sync_serial(0,0);
-	if get(handles.ac_enable_ext_trigger,'Value')==1 %execute only if checkbox was off before it was clicked.
-		old_label=get(handles.ac_enable_ext_trigger,'String');
-		set(handles.ac_enable_ext_trigger,'String','Acquiring...','Enable','off')
-
-		drawnow;
-		flush(serpo)
-		%configureTerminator(serpo,'CR');
-		writeline(serpo,'TrigFreq?');
-		pause(1.25);
-		warning off
-		%configureTerminator(serpo,'CR/LF');
-		serial_answer=readline(serpo);
-		warning on
-		set(handles.ac_enable_ext_trigger,'String',old_label,'Enable','on');
-		selectedtriggerdelay=gui_retr('selectedtriggerdelay');
-		if isempty(selectedtriggerdelay)
-			selectedtriggerdelay=100;
-		end
-		selectedtriggerskip=gui_retr('selectedtriggerskip');
-		if isempty(selectedtriggerskip)
-			selectedtriggerdelay=0;
-		end
-		prompt = {['Detected frequency on trigger input: ' num2str(serial_answer) ' Hz.' sprintf('\n\n') 'Trigger delay in µs (must be > 100):'],'Nr. of trigger signals to skip:'};
-		dlgtitle = 'External Trigger Configuration';
-		dims = [1 50];
-		definput = {num2str(selectedtriggerdelay),num2str(selectedtriggerskip)};
-		answer = inputdlg(prompt,dlgtitle,dims,definput);
-		if ~isempty(answer)
-			gui_put('selectedtriggerdelay',str2double(answer{1}));
-			gui_put('selectedtriggerskip',str2double(answer{2}));
-		end
+	else
+		set(handles.bg_subtract,'Value',0);
+		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'])
+		uiwait
 	end
 end
 
-function acquisition_device_control_Callback (~,~,~)
-try %try to switch of camera angle report
-	stop(timerfind)
-	delete(timerfind)
-	set(getappdata(0,'handle_to_lens_timer_checkbox'),'Value',0)
-catch
-end
-PIVlab_capture_devicectrl_GUI
-
-function acquisition_select_capture_config_Callback (~,~,~)
-handles=gui_gethand;
-value=get(handles.ac_config,'value');
-
-old_setting=gui_retr('old_setting');
-if isempty(old_setting)
-	gui_put ('old_setting',inf)
-end
-gui_put ('old_setting',value)
-
-gui_put('do_realtime',0);
-set(handles.ac_realtime,'Value',0)
-if value==1 || value ==2
-	set(handles.ac_enable_ext_trigger , 'Visible', 'on')
-else
-	set(handles.ac_enable_ext_trigger , 'Visible', 'off')
-	set(handles.ac_enable_ext_trigger , 'value', 0)
+function preproc_maxintens_Callback(hObject, ~, ~)
+if str2num(get(hObject,'String'))>1
+	set(hObject,'String',1)
 end
 
-if value==1 || value==3 % ILA.piv nano / pco pixelfly with evergreen or LD-PS
-	gui_put('camera_type','pco_pixelfly'); % Exposure start -> Q1 delay
-	gui_put('f1exp',406); % Exposure start -> Q1 delay
-	gui_put('f1exp_cam',400); %exposure time setting first frame
-	gui_put('master_freq',15);
-	gui_put('binning',1);
-	avail_freqs={'5' '3' '1.5' '1'};
-	gui_put('max_cam_res',[1392,1040]);
-	gui_put('min_allowed_interframe',10);
-	gui_put('blind_time',1);
-	set(handles.ac_fps,'string',avail_freqs);
-	%if get(handles.ac_fps,'value') > numel(avail_freqs)
-	if old_setting ~= value
-		set(handles.ac_fps,'value',numel(avail_freqs))
-	end
-	%end
+if str2num(get(hObject,'String'))<0
+	set(hObject,'String',1)
 end
-if value == 2 || value == 4% pco panda with evergreen or LD-PS
-	gui_put('camera_type','pco_panda');
-	gui_put('f1exp',352) % Exposure start -> Q1 delay
-	%disp('testing laserdiode')
-	%put('f1exp_cam',300)
-	%put('master_freq',3);
-	gui_put('f1exp_cam',350); %exposure time setting first frame
-	if value == 2 % Nd:YAG laser with panda : limited to 15 Hz
-		gui_put('master_freq',15); %master frequency driving the Nd:YAG laser
-		avail_freqs={'15' '7.5' '5' '3' '1.5' '1'};
-	end
-	if value == 4 %LD-PS laser with panda : limited to 50 Hz
-		gui_put('master_freq',45); %was 50, but gives inaccurate capture frequencies at lower numbers.
-		avail_freqs={'45' '22.5' '15' '7.5' '5' '3' '1.5' '1'};
-	end
 
-	gui_put('max_cam_res',[5120,5120]);
-	gui_put('min_allowed_interframe',10);
-	gui_put('blind_time',1);
-	set(handles.ac_fps,'string',avail_freqs);
-	%if get(handles.ac_fps,'value') > numel(avail_freqs)
-	if old_setting ~= value
-		set(handles.ac_fps,'value',numel(avail_freqs))
-	end
-	%end
+function preproc_minintens_Callback(hObject, ~, ~)
+if str2num(get(hObject,'String'))<0
+	set(hObject,'String',0);
 end
-if value == 5 % chronos LD-PS
-	gui_put('camera_type','chronos');
-	gui_put('f1exp',352) % Exposure start -> Q1 delay
-	%disp('testing laserdiode')
-	%put('f1exp_cam',300)
-	%put('master_freq',3);
-	gui_put('f1exp_cam',350); %exposure time setting first frame
-	gui_put('master_freq',15);
-	avail_freqs={'850' '600' '500' '400' '300' '200' '150' '100' '70' '50' '25' '10'};
-	gui_put('max_cam_res',[1280,1024]);
-	gui_put('min_allowed_interframe',20);
-	gui_put('blind_time',6);
-	set(handles.ac_fps,'string',avail_freqs);
-	%if get(handles.ac_fps,'value') > numel(avail_freqs)
-	if old_setting ~= value
-		set(handles.ac_fps,'value',numel(avail_freqs))
-	end
-	%end
-end
-if value == 6 % basler
-	gui_put('camera_type','basler');
-	gui_put('f1exp',352) % Exposure start -> Q1 delay
-	%disp('testing laserdiode')
-	%put('f1exp_cam',300)
-	%put('master_freq',3);
-	gui_put('f1exp_cam',350); %exposure time setting first frame
-	gui_put('master_freq',15);
-	avail_freqs={'168' '100' '75' '60' '50' '25' '10'};
-	gui_put('max_cam_res',[2048,1088]);
-	gui_put('min_allowed_interframe',150);
-	gui_put('blind_time',130);
-	set(handles.ac_fps,'string',avail_freqs);
-	%if get(handles.ac_fps,'value') > numel(avail_freqs)
-	if old_setting ~= value
-		set(handles.ac_fps,'value',numel(avail_freqs))
-	end
-	%end
-end
-if value == 7 % Flir
-	gui_put('camera_type','flir');
-	gui_put('f1exp',352) % Exposure start -> Q1 delay
-	%disp('testing laserdiode')
-	%put('f1exp_cam',300)
-	%put('master_freq',3);
-	gui_put('f1exp_cam',350); %exposure time setting first frame
-	gui_put('master_freq',15);
-	avail_freqs={'60' '50' '40' '30' '20' '10'};
-	gui_put('max_cam_res',[1440,1080]);
-	gui_put('min_allowed_interframe',470);
-	gui_put('blind_time',425);
-	set(handles.ac_fps,'string',avail_freqs);
-	%if get(handles.ac_fps,'value') > numel(avail_freqs)
-	if old_setting ~= value
-		set(handles.ac_fps,'value',numel(avail_freqs))
-	end
-	%end
-end
-if value == 8 % OPTOcam
-	gui_put('camera_type','OPTOcam');
-	gui_put('f1exp',352) % Exposure start -> Q1 delay
-	gui_put('f1exp_cam',350); %exposure time setting first frame
-	gui_put('master_freq',15);
-	avail_freqs={'400' '320' '160' '100' '80' '60' '50' '25'}; %10 fps removed, camera might skip frames.
-	gui_put('max_cam_res',[1936,1216]);
-	%default min_interframe is for 8 bits.
-	OPTOcam_bits =gui_retr('OPTOcam_bits');
-	if isempty (OPTOcam_bits)
-		OPTOcam_bits=8;
-	end
 
-	if OPTOcam_bits==8
-		gui_put('min_allowed_interframe',62); %8bit
-		gui_put('blind_time',44);
-	elseif OPTOcam_bits==12
-		gui_put('min_allowed_interframe',128); %12bit
-		gui_put('blind_time',96);
-	end
-	set(handles.ac_fps,'string',avail_freqs);
-	%if get(handles.ac_fps,'value') > numel(avail_freqs)
-	if old_setting ~= value
-		set(handles.ac_fps,'value',numel(avail_freqs))
-	end
-	%end
+if str2num(get(hObject,'String'))>1
+	set(hObject,'String',0);
 end
-if value == 9 % OPTRONIS
-	gui_put('camera_type','OPTRONIS');
-	camera_sub_type=gui_retr('camera_sub_type');
-	if isempty (camera_sub_type) %this means that hotplugging camera type will not be possible: Camera type will only be detected at first start of PIVlab.
-		try
-			gui_toolsavailable(0,'Detecting OPTRONIS camera type...')
-			[~,camera_sub_type] = PIVlab_capture_OPTRONIS_cam_detect();
-			gui_put('camera_sub_type',camera_sub_type);
-			postix=get(gca,'XLim');postiy=get(gca,'YLim');text(postix(2)/2,postiy(2)/2,['Detected: ' camera_sub_type],'HorizontalAlignment','center','VerticalAlignment','middle','color','g','fontsize',16, 'BackgroundColor', [0.25 0.25 0.25],'tag','busyhint','margin',10,'Clipping','on');
-		catch ME
-			gui_toolsavailable(1)
-			camera_sub_type=' ';
-		end
-		gui_toolsavailable(1)
-	end
-	gui_put('f1exp',352) % Exposure start -> Q1 delay
-	gui_put('f1exp_cam',350); %exposure time setting first frame
-	gui_put('master_freq',15);
 
-	switch camera_sub_type
-		case 'Cyclone-2-2000-M'
-			avail_freqs={'2165' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
-			gui_put('max_cam_res',[1920,1080]);
-			gui_put('min_allowed_interframe',20);
-			gui_put('blind_time',3);
-		case 'Cyclone-1HS-3500-M'
-			avail_freqs={'3500' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
-			gui_put('max_cam_res',[1280,860]);
-			gui_put('min_allowed_interframe',20);
-			gui_put('blind_time',3);
-		case 'Cyclone-25-150-M'
-			avail_freqs={'150' '100' '75' '50' '20' '10'};
-			gui_put('max_cam_res',[5120,5120]);
-			gui_put('min_allowed_interframe',30);
-			gui_put('blind_time',25);
-		otherwise
-			disp('Camera detection unsuccesful.')
-			avail_freqs={'5' '4' '3' '2' '1'};
-			gui_put('max_cam_res',[100,100]);
-			gui_put('min_allowed_interframe',222);
-			gui_put('blind_time',111);
+function preproc_preview_preprocess_Callback(~, ~, ~)
+filepath=gui_retr('filepath');
+if size(filepath,1) >1 || gui_retr('video_selection_done') == 1
+	handles=gui_gethand;
+	toggler=gui_retr('toggler');
+	filepath=gui_retr('filepath');
+	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
+	if gui_retr('video_selection_done') == 0 && gui_retr('parallel')==1% this is not nice, duplicated functions, one for parallel and one for video....
+		preproc_generate_BG_img_parallel
+	else
+		preproc_generate_BG_img
 	end
-	set(handles.ac_fps,'string',avail_freqs);
-	%if get(handles.ac_fps,'value') > numel(avail_freqs)
-	if old_setting ~= value
-		set(handles.ac_fps,'value',numel(avail_freqs))
-	end
-	%end
-end
-acquisition_exposure_Callback
-straddling_figure=findobj('tag','straddling_figure');
-acquisition_initiate_straddling_graph
+	[img,~]=import_get_img(selected);
+	clahe=get(handles.clahe_enable,'value');
+	highp=get(handles.enable_highpass,'value');
+	%clip=get(handles.enable_clip,'value');
+	intenscap=get(handles.enable_intenscap, 'value');
+	clahesize=str2double(get(handles.clahe_size, 'string'));
+	highpsize=str2double(get(handles.highp_size, 'string'));
+	wienerwurst=get(handles.wienerwurst, 'value');
+	wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
 
-function acquisition_exposure_Callback(~,~,~)
-handles=gui_gethand;
-camera_type=gui_retr('camera_type');
-if strcmp(camera_type,'pco_pixelfly')
-	if str2double(get(handles.ac_expo,'String')) < 1
-		set(handles.ac_expo,'String','1')
+	preproc_Autolimit_Callback
+	minintens=str2double(get(handles.minintens, 'string'));
+	maxintens=str2double(get(handles.maxintens, 'string'));
+
+	%clipthresh=str2double(get(handles.clip_thresh, 'string'));
+	roirect=gui_retr('roirect');
+	if size (roirect,2)<4
+		roirect=[1,1,size(img,2)-1,size(img,1)-1];
 	end
-	if str2double(get(handles.ac_expo,'String')) > 2000
-		set(handles.ac_expo,'String','2000')
+	out = PIVlab_preproc (img,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+	pivlab_axis=gui_retr('pivlab_axis');
+	image(out, 'parent',pivlab_axis, 'cdatamapping', 'scaled');
+	colormap('gray');
+	axis image;
+	set(gca,'ytick',[]);
+	set(gca,'xtick',[]);
+	roirect=gui_retr('roirect');
+	if size(roirect,2)>1
+		roi_dispStaticROI(gui_retr('pivlab_axis'))
 	end
-end
-if strcmp(camera_type,'pco_panda')
-	if str2double(get(handles.ac_expo,'String')) < 6
-		set(handles.ac_expo,'String','6')
-	end
-	if str2double(get(handles.ac_expo,'String')) > 350
-		set(handles.ac_expo,'String','350')
-	end
-end
-if strcmp(camera_type,'chronos')
-	if str2double(get(handles.ac_expo,'String')) < 0.1
-		set(handles.ac_expo,'String','0.1')
-	end
-	if str2double(get(handles.ac_expo,'String')) > 100000
-		set(handles.ac_expo,'String','100000')
-	end
-end
-if strcmp(camera_type,'basler')
-	if str2double(get(handles.ac_expo,'String')) < 0.05
-		set(handles.ac_expo,'String','0.05')
-	end
-	if str2double(get(handles.ac_expo,'String')) > 1000
-		set(handles.ac_expo,'String','1000')
-	end
+	currentframe=2*floor(get(handles.fileselector, 'value'))-1;
 end
 
 function preproc_remove_bg_img (~,~,~)
@@ -12923,36 +13480,38 @@ if get(handles.bg_subtract,'Value')==0
 	gui_put('bg_img_B',[]);
 end
 
-function acquisition_camera_setup_Callback(~,~,~)
-camera_type=gui_retr('camera_type');
-if strcmp(camera_type,'chronos')
-	PIVlab_capture_chronos_settings_GUI
-elseif strcmp(camera_type,'OPTOcam')
-	PIVlab_capture_OPTOcam_settings_GUI
-elseif strcmp(camera_type,'pco_panda')
-	PIVlab_capture_panda_settings_GUI
-else
-	uiwait(msgbox('Available for OPTOcam, Chronos and pco.panda cameras only.','modal'))
-end
-
-function acquisition_lens_control_Callback (~,~,~)
+function roi_Man_ROI_Callback(~,~,~)
 handles=gui_gethand;
-PIVlab_capture_lensctrl_GUI
-
-function pos = acquisition_customWait(hROI)
-% Listen for mouse clicks on the ROI
-l = addlistener(hROI,'ROIClicked',@roi_ROIclickCallback);
-% Block program execution
-uiwait;
-% Remove listener
-delete(l);
-% Return the current position
-pos = hROI.Position;
-
-
-function roi_ROIclickCallback(~,evt)
-if strcmp(evt.SelectionType,'double')
-	uiresume;
+filepath=gui_retr('filepath');
+if size(filepath,1) >1 || gui_retr('video_selection_done') == 1
+	try
+		x=round(str2num(get(handles.ROI_Man_x,'String')));
+		y=round(str2num(get(handles.ROI_Man_y,'String')));
+		w=round(str2num(get(handles.ROI_Man_w,'String')));
+		h=round(str2num(get(handles.ROI_Man_h,'String')));
+	catch
+	end
+	if isempty(x)== 0 && isempty(y)== 0 && isempty(w)== 0 && isempty(h)== 0 && isnumeric(x) && isnumeric(y) && isnumeric(w) && isnumeric(h)
+		roirect(1)=x;
+		roirect(2)=y;
+		roirect(3)=w;
+		roirect(4)=h;
+		imagesize=gui_retr('expected_image_size');
+		if roirect(1)<1
+			roirect(1)=1;
+		end
+		if roirect(2)<1
+			roirect(2)=1;
+		end
+		if roirect(3)>imagesize(2)-roirect(1)
+			roirect(3)=imagesize(2)-roirect(1);
+		end
+		if roirect(4)>imagesize(1)-roirect(2)
+			roirect(4)=imagesize(1)-roirect(2);
+		end
+		gui_put ('roirect',roirect);
+		roi_select_Callback
+	end
 end
 
 function roi_ROIallevents(src,evt)
@@ -12971,6 +13530,114 @@ switch(evname)
 		src.Label =([int2str(ceil(evt.PreviousPosition(1))) ' ' int2str(ceil(evt.PreviousPosition(2))) ' ' int2str(ceil(evt.PreviousPosition(3))) ' ' int2str(ceil(evt.PreviousPosition(4)))]);
 	case{'ROIMoved'}
 		src.Label =([int2str(ceil(evt.CurrentPosition(1))) ' ' int2str(ceil(evt.CurrentPosition(2))) ' ' int2str(ceil(evt.CurrentPosition(3))) ' ' int2str(ceil(evt.CurrentPosition(4)))]);
+end
+
+function roi_ROIclickCallback(~,evt)
+if strcmp(evt.SelectionType,'double')
+	uiresume;
+end
+
+function roi_RegionOfInterestevents(src,evt)
+evname = evt.EventName;
+handles=gui_gethand;
+switch(evname)
+	%case{'MovingROI'}
+	%disp(['ROI moving previous position: ' mat2str(evt.PreviousPosition)]);
+	%disp(['ROI moving current position: ' mat2str(evt.CurrentPosition)]);
+	case{'MovingROI'}
+		imagesize=gui_retr('expected_image_size');
+		roirect = round(src.Position);
+
+		if roirect(1)<1
+			roirect(1)=1;
+		end
+		if roirect(2)<1
+			roirect(2)=1;
+		end
+		if roirect(3)>imagesize(2)-roirect(1)
+			roirect(3)=imagesize(2)-roirect(1);
+		end
+		if roirect(4)>imagesize(1)-roirect(2)
+			roirect(4)=imagesize(1)-roirect(2);
+		end
+		if roirect(3)==0 || roirect(4)==0
+			src.Label = ['Click and drag with the mouse to draw a rectangle'];
+			src.Position(3)=50;
+			src.Position(4)=50;
+			pause(1)
+			delete(findobj('tag', 'RegionOfInterest'))
+			roi_clear_roi_Callback
+		else
+			src.Label = ['x: ' num2str(roirect(1)) '   y: ' num2str(roirect(2)) '   w: ' num2str(roirect(3)) '   h: ' num2str(roirect(4))];
+			gui_put('roirect',roirect);
+			roi_updateROIinfo
+		end
+
+	case{'DeletingROI'}
+		delete(findobj('tag', 'RegionOfInterest'))
+		roi_clear_roi_Callback
+end
+
+function roi_clear_roi_Callback(~, ~, ~)
+handles=gui_gethand;
+delete(findobj('tag', 'RegionOfInterest'))
+delete(findobj('tag', 'roiplot'));
+gui_put ('roirect',[]);
+set(handles.roi_hint, 'String', 'ROI inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
+set(handles.ROI_Man_x,'String','');
+set(handles.ROI_Man_y,'String','');
+set(handles.ROI_Man_w,'String','');
+set(handles.ROI_Man_h,'String','');
+
+function roi_dispStaticROI(target_axis)
+handles=gui_gethand;
+delete(findobj(target_axis,'tag', {'RegionOfInterest' 'roiplot'}));
+roirect=gui_retr('roirect');
+x=[roirect(1)  roirect(1)+roirect(3) roirect(1)+roirect(3)  roirect(1)            roirect(1) ];
+y=[roirect(2)  roirect(2)            roirect(2)+roirect(4)  roirect(2)+roirect(4) roirect(2) ];
+rectangle('Position',roirect,'LineWidth',1,'LineStyle','-','edgecolor','b','tag','roiplot')
+rectangle('Position',roirect,'LineWidth',1,'LineStyle',':','edgecolor','y','tag','roiplot')
+
+function roi_img_ROI_Callback(~, ~, ~)
+gui_switchui('multip02')
+
+function roi_select_Callback(~, ~, ~)
+filepath=gui_retr('filepath');
+handles=gui_gethand;
+if size(filepath,1) > 1 || gui_retr('video_selection_done') == 1
+	delete(findobj('tag','warning'));
+	gui_toolsavailable(0);
+	toggler=gui_retr('toggler');
+	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
+	filepath=gui_retr('filepath');
+	delete(findobj('tag', 'RegionOfInterest'));
+	roi = images.roi.Rectangle;
+	%roi.EdgeAlpha=0.75;
+	roi.FaceAlpha=0.05;
+	roi.LabelVisible = 'on';
+	roi.Tag = 'RegionOfInterest';
+	roi.Color = 'g';
+	roi.StripeColor = 'k';
+	roirect = gui_retr('roirect');
+	delete(findobj('tag', 'roiplot'));
+	if ~isempty(roirect)
+		roi=drawrectangle(gui_retr('pivlab_axis'),'Position',roirect);
+		%roi.EdgeAlpha=0.75;
+		roi.FaceAlpha=0.05;
+		roi.LabelVisible = 'on';
+		roi.Tag = 'RegionOfInterest';
+		roi.Color = 'g';
+		roi.StripeColor = 'k';
+	else
+		axes(gui_retr('pivlab_axis'))
+		draw(roi);
+	end
+	addlistener(roi,'MovingROI',@roi_RegionOfInterestevents);
+	addlistener(roi,'DeletingROI',@roi_RegionOfInterestevents);
+	dummyevt.EventName = 'MovingROI';
+	roi_RegionOfInterestevents(roi,dummyevt); %run the moving event once to update displayed length
+	%put ('roirect',roi.Position);
+	gui_toolsavailable(1);
 end
 
 function roi_setdefaultroi(source,~)
@@ -13097,1054 +13764,373 @@ if ~isempty(gui_retr('doing_roi')) && gui_retr('doing_roi')==1
 	roi_ROIallevents(ac_ROI_general_handle,evt)
 end
 
-function filepath = import_Check_if_image_files_exist(filepath, selected)
-%if the images are not found on the current path, then let user choose new path
-%not found: assign new path to all following elements.
-%check next file. not found -> assign new path to all following.
-%and so on...
-if isempty(filepath) == 0 && exist(filepath{selected},'file') ~=2
-	for i=1:size(filepath,1)
-		while exist(filepath{i,1},'file') ~=2
-			errordlg(['The image ' sprintf('\n') filepath{i,1} sprintf('\n') '(and probably some more...) could not be found.' sprintf('\n') 'Please select the path where the images are located.'],'File not found!','on')
-			uiwait
-			new_dir = uigetdir(pwd,'Please specify the path to all the images');
-			if new_dir==0
-				break
+function roi_updateROIinfo
+handles=gui_gethand;
+roirect=gui_retr('roirect');
+set(handles.ROI_Man_x,'String',int2str(roirect(1)));
+set(handles.ROI_Man_y,'String',int2str(roirect(2)));
+set(handles.ROI_Man_w,'String',int2str(roirect(3)));
+set(handles.ROI_Man_h,'String',int2str(roirect(4)));
+set(handles.roi_hint, 'String', 'ROI active' , 'backgroundcolor', [0.5 1 0.5]);
+
+function simulate_flow_sim_Callback(hObject, ~, ~)
+handles=gui_gethand;
+contents = get(hObject,'value');
+set(handles.rankinepanel,'visible','off');
+set(handles.shiftpanel,'visible','off');
+set(handles.rotationpanel,'visible','off');
+set(handles.oseenpanel,'visible','off');
+if contents==1
+	set(handles.rankinepanel,'visible','on');
+elseif contents==2
+	set(handles.oseenpanel,'visible','on');
+elseif contents==3
+	set(handles.shiftpanel,'visible','on');
+elseif contents==4
+	set(handles.rotationpanel,'visible','on');
+end
+
+function simulate_generate_it_Callback(~, ~, ~)
+handles=gui_gethand;
+flow_sim=get(handles.flow_sim,'value');
+switch flow_sim
+	case 1 %rankine
+		v0 = str2double(get(handles.rank_displ,'string')); %max velocity
+		vortexplayground=[str2double(get(handles.img_sizex,'string')),str2double(get(handles.img_sizey,'string'))]; %width, height)
+		center1=[str2double(get(handles.rankx1,'string')),str2double(get(handles.ranky1,'string'))]; %x,y
+		center2=[str2double(get(handles.rankx2,'string')),str2double(get(handles.ranky2,'string'))]; %x,y
+		[x,y]=meshgrid(-center1(1):vortexplayground(1)-center1(1)-1,-center1(2):vortexplayground(2)-center1(2)-1);
+		[o,r] = cart2pol(x,y);
+		uo=zeros(size(x));
+		R0 = str2double(get(handles.rank_core,'string')); %radius %35
+		uoin = (r <= R0);
+		uout = (r > R0);
+		uo = uoin+uout;
+		uo(uoin) =  v0*r(uoin)/R0;
+		uo(uout) =  v0*R0./r(uout);
+		uo(isnan(uo))=0;
+		u = -uo.*sin(o);
+		v = uo.*cos(o);
+		if get(handles.singledoublerankine,'value')==2
+			[x,y]=meshgrid(-center2(1):vortexplayground(1)-center2(1)-1,-center2(2):vortexplayground(2)-center2(2)-1);
+			[o,r] = cart2pol(x,y);
+			uo=zeros(size(x));
+			R0 = str2double(get(handles.rank_core,'string')); %radius %35
+			uoin = (r <= R0);
+			uout = (r > R0);
+			uo = uoin+uout;
+			uo(uoin) =  v0*r(uoin)/R0;
+			uo(uout) =  v0*R0./r(uout);
+			uo(isnan(uo))=0;
+			u2 = -uo.*sin(o);
+			v2 = uo.*cos(o);
+			u=u-u2;
+			v=v-v2;
+		end
+	case 2 %oseen
+		v0 = str2double(get(handles.oseen_displ,'string'))*3; %max velocity
+		vortexplayground=[str2double(get(handles.img_sizex,'string')),str2double(get(handles.img_sizey,'string'))]; %width, height)
+		center1=[str2double(get(handles.oseenx1,'string')),str2double(get(handles.oseeny1,'string'))]; %x,y
+		center2=[str2double(get(handles.oseenx2,'string')),str2double(get(handles.oseeny2,'string'))]; %x,y
+		[x,y]=meshgrid(-center1(1):vortexplayground(1)-center1(1)-1,-center1(2):vortexplayground(2)-center1(2)-1);
+		[o,r] = cart2pol(x,y);
+		uo=zeros(size(x));
+		zaeh=1;
+		t=str2double(get(handles.oseen_time,'string'));
+		r=r/100;
+
+		%uo wird im zwentrum NaN!!
+		uo=(v0./(2*pi*r)).*(1-exp(-r.^2/(4*zaeh*t)));
+		uo(isnan(uo))=0;
+		u = -uo.*sin(o);
+		v = uo.*cos(o);
+		if get(handles.singledoubleoseen,'value')==2
+			[x,y]=meshgrid(-center2(1):vortexplayground(1)-center2(1)-1,-center2(2):vortexplayground(2)-center2(2)-1);
+			[o,r] = cart2pol(x,y);
+			r=r/100;
+			uo=(v0./(2*pi*r)).*(1-exp(-r.^2/(4*zaeh*t)));
+			uo(isnan(uo))=0;
+			u2 = -uo.*sin(o);
+			v2 = uo.*cos(o);
+			u=u-u2;
+			v=v-v2;
+		end
+	case 3 %linear
+		u=zeros(str2double(get(handles.img_sizey,'string')),str2double(get(handles.img_sizex,'string')));
+		v(1:str2double(get(handles.img_sizey,'string')),1:str2double(get(handles.img_sizex,'string')))=str2double(get(handles.shiftdisplacement,'string'));
+	case 4 % rotation
+		[v,u] = meshgrid(-(str2double(get(handles.img_sizex,'string')))/2:1:(str2double(get(handles.img_sizex,'string')))/2-1,-(str2double(get(handles.img_sizey,'string')))/2:1:(str2double(get(handles.img_sizey,'string')))/2-1);
+
+		u=u/max(max(u));
+		v=-v/max(max(v));
+		u=u*str2double(get(handles.rotationdislacement,'string'));
+		v=v*str2double(get(handles.rotationdislacement,'string'));
+		[x,y]=meshgrid(1:1:str2double(get(handles.img_sizex,'string'))+1);
+	case 5 %membrane
+		[x,y]=meshgrid(linspace(-3,3,str2double(get(handles.img_sizex,'string'))),linspace(-3,3,str2double(get(handles.img_sizey,'string'))));
+		u = peaks(x,y)/3;
+		v = peaks(y,x)/3;
+end
+%% Create Particle Image
+set(handles.status_creation,'string','Calculating particles...');drawnow;
+i=[];
+j=[];
+sizey=str2double(get(handles.img_sizey,'string'));
+sizex=str2double(get(handles.img_sizex,'string'));
+noise=str2double(get(handles.part_noise,'string'));
+A=zeros(sizey,sizex);
+B=A;
+partAm=str2double(get(handles.part_am,'string'));
+Z=str2double(get(handles.sheetthick,'string')); %0.25 sheet thickness
+dt=str2double(get(handles.part_size,'string')); %particle diameter
+ddt=str2double(get(handles.part_var,'string')); %particle diameter variation
+
+z0_pre=randn(partAm,1); %normal distributed sheet intensity
+
+z1_pre=randn(partAm,1); %normal distributed sheet intensity
+
+z0=z0_pre*(str2double(get(handles.part_z,'string'))/200+0.5)+z1_pre*(1-((str2double(get(handles.part_z,'string'))/200+0.5)));
+z1=z1_pre*(str2double(get(handles.part_z,'string'))/200+0.5)+z0_pre*(1-((str2double(get(handles.part_z,'string'))/200+0.5)));
+
+%z0=abs(randn(partAm,1)); %normal distributed sheet intensity
+I0=255*exp(-(Z^2./(0.125*z0.^2))); %particle intensity
+I0(I0>255)=255;
+I0(I0<0)=0;
+
+I1=255*exp(-(Z^2./(0.125*z1.^2))); %particle intensity
+I1(I1>255)=255;
+I1(I1<0)=0;
+
+d=randn(partAm,1)/2; %particle diameter distribution
+d=dt+d*ddt;
+d(d<0)=0;
+x0=rand(partAm,1)*sizex;
+y0=rand(partAm,1)*sizey;
+rd = -8.0 ./ d.^2;
+offsety=v;
+offsetx=u;
+
+xlimit1=floor(x0-d/2); %x min particle extent image1
+xlimit2=ceil(x0+d/2); %x max particle extent image1
+ylimit1=floor(y0-d/2); %y min particle extent image1
+ylimit2=ceil(y0+d/2); %y max particle extent image1
+xlimit2(xlimit2>sizex)=sizex;
+xlimit1(xlimit1<1)=1;
+ylimit2(ylimit2>sizey)=sizey;
+ylimit1(ylimit1<1)=1;
+
+%calculate particle extents for image2 (shifted image)
+x0integer=round(x0);
+x0integer(x0integer>sizex)=sizex;
+x0integer(x0integer<1)=1;
+y0integer=round(y0);
+y0integer(y0integer>sizey)=sizey;
+y0integer(y0integer<1)=1;
+
+xlimit3=zeros(partAm,1);
+xlimit4=xlimit3;
+ylimit3=xlimit3;
+ylimit4=xlimit3;
+for n=1:partAm
+	xlimit3(n,1)=floor(x0(n)-d(n)/2-offsetx((y0integer(n)),(x0integer(n)))); %x min particle extent image2
+	xlimit4(n,1)=ceil(x0(n)+d(n)/2-offsetx((y0integer(n)),(x0integer(n)))); %x max particle extent image2
+	ylimit3(n,1)=floor(y0(n)-d(n)/2-offsety((y0integer(n)),(x0integer(n)))); %y min particle extent image2
+	ylimit4(n,1)=ceil(y0(n)+d(n)/2-offsety((y0integer(n)),(x0integer(n)))); %y max particle extent image2
+end
+xlimit3(xlimit3<1)=1;
+xlimit4(xlimit4>sizex)=sizex;
+ylimit3(ylimit3<1)=1;
+ylimit4(ylimit4>sizey)=sizey;
+
+set(handles.status_creation,'string','Placing particles...');drawnow;
+for n=1:partAm
+	r = rd(n);
+	for j=xlimit1(n):xlimit2(n)
+		rj = (j-x0(n))^2;
+		for i=ylimit1(n):ylimit2(n)
+			A(i,j)=A(i,j)+I0(n)*exp((rj+(i-y0(n))^2)*r);
+		end
+	end
+	for j=xlimit3(n):xlimit4(n)
+		for i=ylimit3(n):ylimit4(n)
+			B(i,j)=B(i,j)+I1(n)*exp((-(j-x0(n)+offsetx(i,j))^2-(i-y0(n)+offsety(i,j))^2)*-rd(n)); %place particle with gaussian intensity profile
+		end
+	end
+end
+
+A(A>255)=255;
+B(B>255)=255;
+
+gen_image_1=imnoise(uint8(A),'gaussian',0,noise);
+gen_image_2=imnoise(uint8(B),'gaussian',0,noise);
+
+set(handles.status_creation,'string','...done')
+figure;imshow(gen_image_1,'initialmagnification', 100);
+figure;imshow(gen_image_2,'initialmagnification', 100);
+gui_put('gen_image_1',gen_image_1);
+gui_put('gen_image_2',gen_image_2);
+gui_put('real_displ_u',offsetx);
+gui_put('real_displ_v',offsety);
+
+function simulate_oseen_displ_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_oseen_time_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_oseenx1_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_oseenx2_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_oseeny1_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_oseeny2_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_part_am_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_part_img_sett_Callback(~, ~, ~)
+gui_switchui('multip15')
+
+function simulate_part_noise_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_part_size_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_part_var_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_part_z_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_rank_core_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_rank_displ_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_rankx1_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_rankx2_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_ranky1_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_ranky2_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_rotationdisplacement_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_save_imgs_Callback(~, ~, ~)
+gen_image_1=gui_retr('gen_image_1');
+gen_image_2=gui_retr('gen_image_2');
+real_displacement_u=gui_retr('real_displ_u');
+real_displacement_v=gui_retr('real_displ_v');
+if isempty(gen_image_1)==0
+	[FileName,PathName] = uiputfile('*.tif','Save generated images as...',['PIVlab_gen.tif']);
+	if isequal(FileName,0) | isequal(PathName,0)
+	else
+		[Dir, Name, Ext] = fileparts(FileName);
+		FileName_1=[Name '_01' Ext];
+		FileName_2=[Name '_02' Ext];
+		if exist(fullfile(PathName,FileName_1),'file') >0 || exist(fullfile(PathName,FileName_2),'file') >0
+			butt = questdlg(['Warning: File ' FileName_1 ' already exists.'],'File exists','Overwrite','Cancel','Overwrite');
+			if strncmp(butt, 'Overwrite',9) == 1
+				write_it=1;
 			else
-				for j=i:size(filepath,1) %apply new path to all following imgs.
-					if ispc==1
-						zeichen=strfind(filepath{j,1},'\');
-					else
-						zeichen=strfind(filepath{j,1},'/');
-					end
-					currentobject=filepath{j,1};
-					currentpath=currentobject(1:(zeichen(1,size(zeichen,2))));
-					currentfile=currentobject(zeichen(1,size(zeichen,2))+1:end);
-					if ispc==1
-						filepath{j,1}=[new_dir '\' currentfile];
-					else
-						filepath{j,1}=[new_dir '/' currentfile];
-					end
-				end
+				write_it=0;
 			end
-			gui_put('filepath',filepath);
-		end
-		if new_dir==0
-			break
-		end
-	end
-	if gui_retr('video_selection_done') == 1 %create new video object with the updated file location.
-		gui_put('video_reader_object',VideoReader(filepath{1}));
-	end
-end
-
-function gui_set_bg_color_for_mean_imgs(currentframe, handles)
-ismean=gui_retr('ismean');
-if size(ismean,1)>=(currentframe+1)/2
-	if ismean((currentframe+1)/2,1) ==1
-		currentwasmean=1;
-	else
-		currentwasmean=0;
-	end
-else
-	currentwasmean=0;
-end
-
-if currentwasmean==1
-	set (handles.filenameshow,'BackgroundColor',[0.65 0.65 1]);
-else
-	set (handles.filenameshow,'BackgroundColor',[0.9412 0.9412 0.9412]);
-end
-
-function plot_display_manual_markers(target_axis,handles)
-%manualmarkers
-if get(handles.displmarker,'value')==1
-	manmarkersX=gui_retr('manmarkersX');
-	manmarkersY=gui_retr('manmarkersY');
-	delete(findobj('tag','manualmarker'));
-	if numel(manmarkersX)>0
-		hold on
-		plot(manmarkersX,manmarkersY, 'o','MarkerEdgeColor','k','MarkerFaceColor',[.2 .2 1], 'MarkerSize',9, 'tag', 'manualmarker','parent',target_axis);
-		plot(manmarkersX,manmarkersY, '*','MarkerEdgeColor','w', 'tag', 'manualmarker','parent',target_axis);
-		hold off
-	end
-end
-
-function [x, y, u, v, typevector] = plot_get_desired_u_and_v(resultslist, currentframe)
-x=resultslist{1,(currentframe+1)/2};
-y=resultslist{2,(currentframe+1)/2};
-if size(resultslist,1)>6 %filtered exists
-	if size(resultslist,1)>10 && numel(resultslist{10,(currentframe+1)/2}) > 0 %smoothed exists
-		u=resultslist{10,(currentframe+1)/2};
-		v=resultslist{11,(currentframe+1)/2};
-		typevector=resultslist{9,(currentframe+1)/2};
-		%text(3,size(currentimage,1)-4, 'Smoothed dataset','tag', 'smoothhint', 'backgroundcolor', 'k', 'color', 'y','fontsize',6);
-		if numel(typevector)==0 %happens if user smoothes sth without NaN and without validation
-			typevector=resultslist{5,(currentframe+1)/2};
-		end
-	else
-		u=resultslist{7,(currentframe+1)/2};
-		if size(u,1)>1
-			v=resultslist{8,(currentframe+1)/2};
-			typevector=resultslist{9,(currentframe+1)/2};
-		else %filter was applied for other frames but not for this one
-			u=resultslist{3,(currentframe+1)/2};
-			v=resultslist{4,(currentframe+1)/2};
-			typevector=resultslist{5,(currentframe+1)/2};
-		end
-	end
-else
-	u=resultslist{3,(currentframe+1)/2};
-	v=resultslist{4,(currentframe+1)/2};
-	typevector=resultslist{5,(currentframe+1)/2};
-end
-
-function [u, v] = plot_get_highpassed_vectors(handles, u, v)
-if get(handles.highp_vectors, 'value')==1 & strncmp(get(handles.multip08, 'visible'), 'on',2) %#ok<AND2> %disable second expression to make highpass filtered data available for export
-	strength=54-round(get(handles.highpass_strength, 'value'));
-	h = fspecial('gaussian',strength,strength) ;
-	h2= fspecial('gaussian',3,3);
-	ubg=imfilter(u,h,'replicate');
-	vbg=imfilter(v,h,'replicate');
-	ufilt=u-ubg;
-	vfilt=v-vbg;
-	u=imfilter(ufilt,h2,'replicate');
-	v=imfilter(vfilt,h2,'replicate');
-end
-
-function [vecskip, vecscale] = plot_scale_vector_display(handles, x, y, u, v)
-autoscale_vec=get(handles.autoscale_vec, 'Value');
-vecskip=str2double(get(handles.nthvect,'String'));
-if autoscale_vec == 1
-	autoscale=1;
-	%from quiver autoscale function:
-	if min(size(x))==1, n=sqrt(numel(x)); m=n; else; [m,n]=size(x); end
-	delx = diff([min(x(:)) max(x(:))])/n;
-	dely = diff([min(y(:)) max(y(:))])/m;
-	del = delx.^2 + dely.^2;
-	if del>0
-		len = sqrt((u.^2 + v.^2)/del);
-		maxlen = max(len(:));
-	else
-		maxlen = 0;
-	end
-	if maxlen>0
-		autoscale = autoscale/ maxlen * vecskip;
-	else
-		autoscale = autoscale; %#ok<*ASGSL>
-	end
-	vecscale=autoscale;
-else %autoscale off
-	vecscale=str2num(get(handles.vectorscale,'string')); %#ok<*ST2NM>
-end
-
-function [q, q2] = plot_vectors(target_axis,handles, vecskip, x, typevector, y, u, vecscale, v, vectorcolor)
-hold on;
-vectorcolorintp=[str2double(get(handles.interpr,'string')) str2double(get(handles.interpg,'string')) str2double(get(handles.interpb,'string'))];
-
-%normalize vector lengths so we can better see flow directions of small velocities:
-if (get (handles.uniform_vector_scale,'Value'))==1
-	u = u(:,:,1)./sqrt((u(:,:,1).^2+v(:,:,1).^2)); % normalized u
-	v = v(:,:,1)./sqrt((u(:,:,1).^2+v(:,:,1).^2)); % normalized v
-end
-
-if vecskip==1
-	q=quiver(x(typevector==1),y(typevector==1),...
-		(u(typevector==1)-(gui_retr('subtr_u')/gui_retr('calu')))*vecscale,...
-		(v(typevector==1)-(gui_retr('subtr_v')/gui_retr('calv')))*vecscale,...
-		'Color', vectorcolor,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')),'parent',target_axis);
-	q2=quiver(x(typevector==2),y(typevector==2),...
-		(u(typevector==2)-(gui_retr('subtr_u')/gui_retr('calu')))*vecscale,...
-		(v(typevector==2)-(gui_retr('subtr_v')/gui_retr('calv')))*vecscale,...
-		'Color', vectorcolorintp,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')),'parent',target_axis);
-	if str2num(get(handles.masktransp,'String')) < 100
-		scatter(x(typevector==0),y(typevector==0),'rx','parent',target_axis) %masked
-	end
-else
-	typevector_reduced=typevector(1:vecskip:end,1:vecskip:end);
-	x_reduced=x(1:vecskip:end,1:vecskip:end);
-	y_reduced=y(1:vecskip:end,1:vecskip:end);
-	u_reduced=u(1:vecskip:end,1:vecskip:end);
-	v_reduced=v(1:vecskip:end,1:vecskip:end);
-	q=quiver(x_reduced(typevector_reduced==1),y_reduced(typevector_reduced==1),...
-		(u_reduced(typevector_reduced==1)-(gui_retr('subtr_u')/gui_retr('calu')))*vecscale,...
-		(v_reduced(typevector_reduced==1)-(gui_retr('subtr_v')/gui_retr('calv')))*vecscale,...
-		'Color', vectorcolor,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')),'parent',target_axis);
-	q2=quiver(x_reduced(typevector_reduced==2),y_reduced(typevector_reduced==2),...
-		(u_reduced(typevector_reduced==2)-(gui_retr('subtr_u')/gui_retr('calu')))*vecscale,...
-		(v_reduced(typevector_reduced==2)-(gui_retr('subtr_v')/gui_retr('calv')))*vecscale,...
-		'Color', vectorcolorintp,'autoscale', 'off','linewidth',str2double(get(handles.vecwidth,'string')),'parent',target_axis);
-	if str2num(get(handles.masktransp,'String')) < 100
-		scatter(x_reduced(typevector_reduced==0),y_reduced(typevector_reduced==0),'rx','parent',target_axis) %masked
-	end
-end
-hold off;
-
-function plot_streamlines(target_axis,u, v, typevector, x, y, handles)
-%streamlines:
-streamlinesX=gui_retr('streamlinesX');
-streamlinesY=gui_retr('streamlinesY');
-delete(findobj('tag','streamline'));
-if numel(streamlinesX)>0
-	ustream=u-(gui_retr('subtr_u')/gui_retr('calu'));
-	vstream=v-(gui_retr('subtr_v')/gui_retr('calv'));
-	ustream(typevector==0)=nan;
-	vstream(typevector==0)=nan;
-	h=streamline(mmstream2(x,y,ustream,vstream,streamlinesX,streamlinesY,'on'),'parent',target_axis);
-	set (h,'tag','streamline');
-	contents = get(handles.streamlcolor,'String');
-	set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')});
-end
-
-function plot_manually_discarded_vectors(target_axis,handles, x, y)
-if strncmp(get(handles.multip06, 'visible'), 'on',2) %validation panel visible
-	manualdeletion=gui_retr('manualdeletion');
-	frame=floor(get(handles.fileselector, 'value'));
-	framemanualdeletion=[];
-	if numel(manualdeletion)>0
-		if size(manualdeletion,2)>=frame
-			if isempty(manualdeletion{1,frame}) ==0
-				framemanualdeletion=manualdeletion{frame};
-			end
-		end
-	end
-	if isempty(framemanualdeletion)==0
-		hold on;
-		if str2num(get(handles.masktransp,'String')) < 100
-			for i=1:size(framemanualdeletion,1)
-				scatter (x(framemanualdeletion(i,1),framemanualdeletion(i,2)),y(framemanualdeletion(i,1),framemanualdeletion(i,2)), 'rx', 'tag','manualdot','parent',target_axis)
-			end
-		end
-		hold off;
-	end
-end
-
-function currentimage = plot_draw_pixel_background_overlay(target_axis,displaywhat, selected, handles, currentframe)
-derivative_alpha=str2double(get(handles.colormapopacity ,'string'))/100;
-if isnan(derivative_alpha) || derivative_alpha>100 || derivative_alpha <0
-	derivative_alpha=75;
-	set(handles.colormapopacity ,'string','75');
-end
-
-%% draw background particle image in gray
-[currentimage,~]=import_get_img(selected);
-if size(currentimage,3)>1 % color image
-	currentimage=rgb2gray(currentimage); %convert to gray, always.
-end
-if get(handles.enhance_images, 'Value')
-	currentimage=imadjust(currentimage);
-end
-
-image(cat(3, currentimage, currentimage, currentimage), 'parent',target_axis, 'cdatamapping', 'scaled');
-colormap('gray');
-axis image
-
-derived=gui_retr('derived');
-
-if size(derived,2)>=(currentframe+1)/2 && displaywhat > 1 && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
-else
-	if get(handles.derivchoice,'Value')>1
-		text(10,10,'This parameter needs to be calculated for this frame first. Go to Plot -> Derive Parameters and click "Apply to current frame".','color','r','fontsize',9, 'BackgroundColor', 'k', 'tag', 'derivhint')
-	end
-end
-
-%% load masks, convert to binary image
-
-render_mask=1; % should the mask be rendered in the image display?
-if get(handles.mask_edit_mode,'Value')==2 %Mask mode is "Preview"
-	masks_in_frame=gui_retr('masks_in_frame');
-	if isempty(masks_in_frame)
-		%masks_in_frame=cell(floor((currentframe+1)/2),1);
-		masks_in_frame=cell(1,floor((currentframe+1)/2));
-	end
-	if numel(masks_in_frame)<floor((currentframe+1)/2)
-		mask_positions=cell(0);
-		render_mask=0;
-	else
-		mask_positions=masks_in_frame{floor((currentframe+1)/2)};
-		if isempty (mask_positions)
-			render_mask=0;
-		end
-	end
-	converted_mask=mask_convert_masks_to_binary(size(currentimage(:,:,1)),mask_positions);
-else
-	converted_mask=zeros(size(currentimage(:,:,1)));
-	render_mask=0;
-end
-
-if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
-	currentimage=derived{displaywhat-1,(currentframe+1)/2};
-	if displaywhat ==11 % 11 ist vector direction
-		is_it_vector_direction=1;
-	else
-		is_it_vector_direction=0;
-	end
-
-	%set colormap
-	if displaywhat ~=10 %10 is LIC
-		avail_maps=get(handles.colormap_choice,'string');
-		selected_index=get(handles.colormap_choice,'value');
-		if selected_index == 4 %HochschuleBremen map
-			load('hsbmap.mat','hsb');
-			MAP = colormap(hsb);
-		elseif selected_index== 1 %parula
-			load('parula.mat','parula')
-			MAP = colormap (parula);
 		else
-			MAP = colormap(avail_maps{selected_index});
+			write_it=1;
 		end
-		%adjust colormap steps
-		cmap = MAP;
-		colormap_steps_list=get(handles.colormap_steps,'String');
-		colormap_steps_value=get(handles.colormap_steps,'Value');
-		colormap_steps=str2double(colormap_steps_list{colormap_steps_value});
-		cmap_new=interp1(1:size(cmap,1),cmap,linspace(1,size(cmap,1),colormap_steps));
-		%colormap(cmap_new);
-		MAP = colormap(cmap_new);
-	else %LIC can only be gray
-		MAP = colormap('gray');
-	end
-
-	currentimage = plot_rescale_maps(currentimage,is_it_vector_direction);
-
-	if get(handles.autoscaler,'value')==1
-		minscale=min(currentimage(:));
-		maxscale=max(currentimage(:));
-		n=2;
-
-		logflr = floor(log10(abs(minscale)));
-		pof10 = 10.^(n-1-logflr);
-		minscale_adjusted = floor(minscale.*pof10)./pof10;
-		if ~isfinite(minscale_adjusted)
-			minscale_adjusted=minscale;
+		if write_it==1
+			imwrite(gen_image_1,fullfile(PathName,FileName_1),'Compression','none')
+			imwrite(gen_image_2,fullfile(PathName,FileName_2),'Compression','none')
+			save(fullfile(PathName,[Name '_real_displacement.mat']) ,'real_displacement_u','real_displacement_v')
 		end
-
-		logflr = floor(log10(abs(maxscale)));
-		pof10 = 10.^(n-1-logflr);
-		maxscale_adjusted = ceil(maxscale.*pof10)./pof10;
-		if ~isfinite(maxscale_adjusted)
-			maxscale_adjusted=maxscale;
-		end
-
-		set (handles.mapscale_min, 'string', num2str(minscale_adjusted))
-		set (handles.mapscale_max, 'string', num2str(maxscale_adjusted))
-	else
-		minscale=str2double(get(handles.mapscale_min, 'string'));
-		maxscale=str2double(get(handles.mapscale_max, 'string'));
-		minscale_adjusted=minscale;
-		maxscale_adjusted=maxscale;
-	end
-
-	colormap_steps_list=get(handles.colormap_steps,'String');
-	colormap_steps_value=get(handles.colormap_steps,'Value');
-	colormap_steps=str2double(colormap_steps_list{colormap_steps_value});
-
-	%%convert grayscale map to RGB map to display it in color and as overlay
-
-	%% Normalize the Imagerange to the desired range:
-
-	currentimage(currentimage<minscale_adjusted)=minscale_adjusted;
-	currentimage(currentimage>maxscale_adjusted)=maxscale_adjusted;
-	currentimage=(currentimage-minscale_adjusted) / (maxscale_adjusted - minscale_adjusted) ;
-	currentimage = uint8(floor(currentimage * colormap_steps));
-	%currentimage_RGB = ind2rgb(currentimage, MAP);
-	if get(handles.mask_edit_mode,'Value')==2 %Mask mode is "Preview"
-		alpha_pixel_map=1-converted_mask; %regions that are mask get zero opaqueness.
-	else
-		alpha_pixel_map=ones(size(currentimage,1),size(currentimage,2),'logical');
-	end
-	roirect=gui_retr('roirect');
-	alpha_ROI_map=zeros(size(currentimage,1),size(currentimage,2),'logical');
-	if ~isempty(roirect) && size(roirect,2)>1
-		alpha_ROI_map (roirect(2):(roirect(2)+roirect(4)) , roirect(1):(roirect(1)+roirect(3)))=1;
-	else
-		alpha_ROI_map(:)=1;
-	end
-	hold on;
-	image(currentimage, 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',derivative_alpha.*alpha_pixel_map.*alpha_ROI_map);
-	hold off;
-
-	%% colorbar
-	if get(handles.colorbarpos,'value')~=1
-		name=get(handles.derivchoice,'string');
-		if strcmp(name,'N/A') %user hasn't visited the derived panel before
-			if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-				set(handles.derivchoice,'String',{'Vectors [px/frame]';'Vorticity [1/frame]';'Magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Simple shear rate [1/frame]';'Simple strain rate [1/frame]';'Line integral convolution (LIC) [1]' ; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
-				set(handles.text35,'String','u [px/frame]:')
-				set(handles.text36,'String','v [px/frame]:')
-			else
-				set(handles.derivchoice,'String',{'Vectors [m/s]';'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Simple shear rate [1/s]';'Simple strain rate [1/s]';'Line integral convolution (LIC) [1]'; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
-				set(handles.text35,'String','u [m/s]:')
-				set(handles.text36,'String','v [m/s]:')
-			end
-			name=get(handles.derivchoice,'String');
-		end
-
-		posichoice = get(handles.colorbarpos,'String');
-
-		parentfigure_of_target_axis=ancestor(target_axis,'figure');
-		coloobj=colorbar(posichoice{get(handles.colorbarpos,'Value')},'Fontsize',9,'HitTest','off','parent',parentfigure_of_target_axis);
-
-		axis (target_axis,'image');
-		strcmp(posichoice{get(handles.colorbarpos,'Value')},'EastOutside');
-		strcmp(posichoice{get(handles.colorbarpos,'Value')},'WestOutside');
-
-		if strcmp(posichoice{get(handles.colorbarpos,'Value')},'EastOutside')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'WestOutside')==1
-			ylabel(coloobj,name{gui_retr('displaywhat')},'fontsize',9,'fontweight','bold');
-		end
-		if strcmp(posichoice{get(handles.colorbarpos,'Value')},'NorthOutside')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'SouthOutside')==1
-			xlabel(coloobj,name{gui_retr('displaywhat')},'fontsize',11,'fontweight','bold');
-		end
-
-		tickamount=min([colormap_steps 8])+1; % depends on the amount of colormap steps
-		coloobj.Ticks=linspace(0,colormap_steps,tickamount);
-		ticklabels=linspace(minscale_adjusted,maxscale_adjusted,tickamount);
-		ticklabels_string=num2str(ticklabels(:),'%0.3e');
-		coloobj.TickLabels =ticklabels_string;
 	end
 end
-%% plot masks in preview mode (not in edit mode)
-if 	render_mask==1 && get(handles.mask_edit_mode,'Value')==2 %mask preview mode
-	mask_dimensions=size(converted_mask);
-	x=[1 mask_dimensions(2)];
-	y=[1,mask_dimensions(1)];
-	skip_mask_pixels = round(0.0000020*mask_dimensions(1)*mask_dimensions(2) - 7); %reduce the amount of pixels displayed for the mask to save render time.
-	if skip_mask_pixels>5
-		skip_mask_pixels=5;
-	end
-	if skip_mask_pixels<1
-		skip_mask_pixels=1;
-	end
-	hold on;
-	image(x,y,cat(3, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.7, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1), 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*(1-(str2num(get(handles.masktransp,'String'))/100)));
-	hold off
-end
 
-function misc_toggle_parallel_Callback(~, ~, ~)
-hgui=getappdata(0,'hgui');
+function simulate_sheetthick_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_shiftdisplacement_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function simulate_singledoubleoseen_Callback(hObject, ~, ~)
 handles=gui_gethand;
-load icons.mat
-try
-	parallel=gui_retr('parallel');
-	if parallel==0
-		gui_put ('parallel',1);
-		gui_toolsavailable(0,'Please wait, opening parallel pool...')
-		pause(0.1)
-		desired_num_cores=feature('numCores');
-		pivparpool('close')
-		pivparpool('open',desired_num_cores)
-		set(handles.toggle_parallel, 'cdata',parallel_on,'TooltipString','Parallel processing on. Click to turn off.');
-	else
-		gui_put ('parallel',0);
-		gui_toolsavailable(0,'Please wait, closing parallel pool...')
-		pivparpool('close')
-		set(handles.toggle_parallel, 'cdata',parallel_off,'TooltipString','Parallel processing off. Click to turn on.');
-	end
-	gui_toolsavailable(1);
-catch ME
-	gui_put ('parallel',0);
-	set(handles.toggle_parallel, 'cdata',parallel_off,'enable','off', 'TooltipString','Parallel processing not avilable.');
-	gui_toolsavailable(1);
-	disp (ME.message)
+contents = get(hObject,'value');
+set(handles.oseenx1,'visible','off');
+set(handles.oseenx2,'visible','off');
+set(handles.oseeny1,'visible','off');
+set(handles.oseeny2,'visible','off');
+set(handles.text110,'visible','off');
+set(handles.text111,'visible','off');
+set(handles.text112,'visible','off');
+if contents==1
+	set(handles.oseenx1,'visible','on');
+	set(handles.oseeny1,'visible','on');
+elseif contents==2
+	set(handles.oseenx1,'visible','on');
+	set(handles.oseeny1,'visible','on');
+	set(handles.oseenx2,'visible','on');
+	set(handles.oseeny2,'visible','on');
+	set(handles.text110,'visible','on');
+	set(handles.text111,'visible','on');
+	set(handles.text112,'visible','on');
 end
 
-function export_still_or_animation_Callback(~,~,~)
+function simulate_singledoublerankine_Callback(hObject, ~, ~)
 handles=gui_gethand;
-str=get(handles.export_still_or_animation,'String');
-value=get(handles.export_still_or_animation,'Value');
-selected_format=str{value};
-
-switch selected_format
-	case 'PNG'
-		set(handles.quality_setting,'Enable','Off')
-		set(handles.fps_setting,'Enable','Off')
-		set(handles.resolution_setting,'Enable','On')
-	case 'JPG'
-		set(handles.quality_setting,'Enable','Off')
-		set(handles.fps_setting,'Enable','Off')
-		set(handles.resolution_setting,'Enable','On')
-	case 'PDF'
-		set(handles.quality_setting,'Enable','Off')
-		set(handles.fps_setting,'Enable','Off')
-		set(handles.resolution_setting,'Enable','On')
-	case 'Archival AVI'
-		set(handles.quality_setting,'Enable','Off')
-		set(handles.fps_setting,'Enable','On')
-		set(handles.resolution_setting,'Enable','Off')
-	case 'MPEG-4'
-		set(handles.quality_setting,'Enable','On')
-		set(handles.fps_setting,'Enable','On')
-		set(handles.resolution_setting,'Enable','Off')
+contents = get(hObject,'value');
+set(handles.rankx1,'visible','off');
+set(handles.rankx2,'visible','off');
+set(handles.ranky1,'visible','off');
+set(handles.ranky2,'visible','off');
+set(handles.text102,'visible','off');
+set(handles.text103,'visible','off');
+set(handles.text104,'visible','off');
+if contents==1
+	set(handles.rankx1,'visible','on');
+	set(handles.ranky1,'visible','on');
+elseif contents==2
+	set(handles.rankx1,'visible','on');
+	set(handles.ranky1,'visible','on');
+	set(handles.rankx2,'visible','on');
+	set(handles.ranky2,'visible','on');
+	set(handles.text102,'visible','on');
+	set(handles.text103,'visible','on');
+	set(handles.text104,'visible','on');
 end
 
-function calibrate_update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles)
-if calxy > 1000 || calxy <0.001
-	px_per_m_display=sprintf('%0.4e',calxy);
-else
-	px_per_m_display=sprintf('%0.4f',calxy);
-end
+function validate_apply_filter_all_Callback(~, ~, ~)
+resultslist=gui_retr('resultslist');
 
-if calu > 1000 || calu < 0.001
-	px_per_frame_display=sprintf('%0.4e',calu);
-else
-	px_per_frame_display=sprintf('%0.4f',calu);
-end
-
-if abs(offset_x_true) > 1000 || abs(offset_x_true) < 0.001
-	x_offset_display=sprintf('%0.4e',offset_x_true);
-	if offset_x_true == 0
-		x_offset_display='0';
-	end
-else
-	x_offset_display=sprintf('%0.4f',offset_x_true);
-end
-
-if abs(offset_y_true) > 1000 || abs(offset_y_true) < 0.001
-	y_offset_display=sprintf('%0.4e',offset_y_true);
-	if offset_y_true == 0
-		y_offset_display='0';
-	end
-else
-	y_offset_display=sprintf('%0.4f',offset_y_true);
-end
-
-set(handles.calidisp, 'string', ['1 px = ' px_per_m_display ' m' sprintf('\n') '1 px/frame = ' px_per_frame_display ' m/s' sprintf('\n') 'x offset: ' x_offset_display ' m' sprintf('\n') 'y offset: ' y_offset_display ' m'],  'backgroundcolor', [0.5 1 0.5]);
-
-
-function mask_add_Callback(~,~,type)
-%masken sollten nur im Maskenpanel als ROIs angezeigt werden ud editierbar sein. Ansonsten als Pixeloverlay. Oder als schnell zecihnendes Polygon. bzw. auch gerne als ROI objekt ohne hittest und editable
-handles=gui_gethand;
-%variable masks_in_frame ist cell mit inhalt mask_positions für jeden frame (nicht doppelt machen...)
-filepath=gui_retr('filepath');
-if size(filepath,1) > 1 %did the user load images?
-	set(handles.mask_edit_mode,'Value',1) %switch to edit mask mode when drawing a new mask.
-	gui_sliderdisp(gui_retr('pivlab_axis'));
-	currentframe=floor(get(handles.fileselector, 'value'));
-	masks_in_frame=gui_retr('masks_in_frame');
-	if isempty(masks_in_frame)
-		%masks_in_frame=cell(currentframe,1);
-		masks_in_frame=cell(1,currentframe);
-	end
-
-	if numel(masks_in_frame)<currentframe
-		mask_positions=cell(0);
-	else
-		mask_positions=masks_in_frame{currentframe};
-	end
-	if isempty(mask_positions)
-		mask_positions=cell(0);
-	end
-	masknums=size(mask_positions,1);
-	if strcmp(type,'freehand')
-		roi = images.roi.Freehand;
-		roi.Multiclick=0;
-	elseif strcmp(type,'assisted')
-		roi = images.roi.AssistedFreehand;
-		type='freehand';
-	elseif strcmp(type,'rectangle')
-		roi = images.roi.Rectangle;
-	elseif strcmp(type,'polygon')
-		roi = images.roi.Polygon;
-	elseif strcmp(type,'circle')
-		roi = images.roi.Circle;
-	end
-	recommended_colors=parula(7);
-	roi.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
-	roi.FaceAlpha=0.75;
-	roi.LabelVisible = 'off';
-	roi.UserData=['ROI_object_' type];
-
-	[~,guid] = fileparts(tempname);
-	roi.Tag = guid; %unique id for every ROImask object.
-	%addlistener(roi,'MovingROI',@ROIevents);
-	gui_toolsavailable(0)
-
-	draw(roi);
-	addlistener(roi,'ROIMoved',@mask_ROIevents);
-	addlistener(roi,'DeletingROI',@mask_ROIevents);
-	addlistener(roi,'ROIClicked',@mask_ROIevents);
-	gui_toolsavailable(1)
+if ~isempty(resultslist)
 	handles=gui_gethand;
-	currentframe=floor(get(handles.fileselector, 'value'));
-	masks_in_frame = mask_update_mask_memory(roi,currentframe,masks_in_frame);
-	gui_put('masks_in_frame',masks_in_frame);
-end
-
-function masks_in_frame = mask_update_mask_memory(roi,frame,masks_in_frame)
-
-if isempty(masks_in_frame)
-	%masks_in_frame=cell(frame,1);
-	masks_in_frame=cell(1,frame);%das hier muss
-end
-
-if numel(masks_in_frame)<frame
-	mask_positions=cell(0);
-else
-	mask_positions=masks_in_frame{frame};
-end
-if isempty(mask_positions)
-	mask_positions=cell(0);
-end
-
-mask_positions{end+1,1}=roi.UserData;
-if strcmp(roi.UserData,'ROI_object_circle')
-	mask_positions{end,2}=[roi.Center roi.Radius];
-else
-	mask_positions{end,2}=roi.Position;
-end
-mask_positions{end,3}=roi.Color;
-mask_positions{end,4}=roi.Label;
-mask_positions{end,5}=roi.Tag;
-masks_in_frame{frame}=mask_positions;
-%put('masks_in_frame',masks_in_frame)
-
-
-function mask_redraw_masks
-%redraws all masks that are saved in mask_positions
-handles=gui_gethand;
-
-if get(handles.mask_edit_mode,'Value')==1 %Mask mode is "Edit"
-	mask_editing_possible=1;
-else
-	mask_editing_possible=0;
-end
-currentframe=floor(get(handles.fileselector, 'value'));
-masks_in_frame=gui_retr('masks_in_frame');
-if isempty(masks_in_frame)
-	%masks_in_frame=cell(currentframe,1);
-	masks_in_frame=cell(1,currentframe);
-end
-if numel(masks_in_frame)<currentframe
-	mask_positions=cell(0);
-else
-	mask_positions=masks_in_frame{currentframe};
-end
-delete(findobj({'UserData','ROI_object_freehand','-or','UserData','ROI_object_rectangle','-or','UserData','ROI_object_circle','-or','UserData','ROI_object_polygon','-or','UserData','ROI_object_external'})); % deletes visible ROIs before redrawing.
-masknums=size(mask_positions,1);
-if mask_editing_possible==1
-	for i=1:masknums
-		type=mask_positions(i,1);
-		if strcmp(type,'ROI_object_freehand')
-			roi = drawfreehand('Position', mask_positions{i,2});
-			roi.Multiclick=0;
-		elseif strcmp(type,'ROI_object_rectangle')
-			roi = drawrectangle('Position', mask_positions{i,2});
-		elseif strcmp(type,'ROI_object_polygon')
-			roi = drawpolygon('Position', mask_positions{i,2});
-		elseif strcmp(type,'ROI_object_circle')
-			circledata=mask_positions{i,2}; %whyTF does the circle needs to have center and radius.....?!? Why not Position like all other ROIs....?!?
-			roi = drawcircle('Center',circledata(1:2),'Radius',circledata(3));
-		elseif strcmp(type,'ROI_object_external')
-			roi = drawfreehand('Position', mask_positions{i,2});
-		end
-		roi.UserData=mask_positions{i,1};
-		roi.Label=mask_positions{i,4};
-		roi.Tag=mask_positions{i,5};
-		roi.Color=mask_positions{i,3};
-		addlistener(roi,'ROIMoved',@mask_ROIevents);
-		addlistener(roi,'DeletingROI',@mask_ROIevents);
-		addlistener(roi,'ROIClicked',@mask_ROIevents);
-		roi.FaceAlpha=0.5;
-		%roi.EdgeAlpha=0.75;
-		roi.LineWidth=1;
-		roi.LabelVisible = 'off';
-	end
-end
-
-
-function mask_delete_all_Callback(~,~,~)
-gui_put('masks_in_frame',[])
-delete(findobj('UserData','ROI_object_freehand'));
-delete(findobj('UserData','ROI_object_rectangle'));
-delete(findobj('UserData','ROI_object_circle'));
-delete(findobj('UserData','ROI_object_polygon'));
-delete(findobj('UserData','ROI_object_external'));
-gui_sliderdisp(gui_retr('pivlab_axis'));
-
-function mask_ROIevents(src,evt)
-evname = evt.EventName;
-handles=gui_gethand;
-currentframe=floor(get(handles.fileselector, 'value'));
-masks_in_frame=gui_retr('masks_in_frame');
-mask_positions=masks_in_frame{currentframe};
-switch(evname)
-	%case{'MovingROI'}
-	%disp(['ROI moving previous position: ' mat2str(evt.PreviousPosition)]);
-	%disp(['ROI moving current position: ' mat2str(evt.CurrentPosition)]);
-	case{'ROIMoved'}
-		if ~isempty(mask_positions)
-			[r,~]=find(strcmp(src.Tag,mask_positions(:,5)));
-			if ~isempty(r)
-				if strcmp(src.UserData,'ROI_object_circle')
-					mask_positions{r,2} = [src.Position src.Radius];
-				else
-					mask_positions{r,2}=src.Position; %update position of the moved ROI
-				end
-				%assignin('base',"mask_positions",mask_positions)
-				masks_in_frame{currentframe}=mask_positions;
-				gui_put('masks_in_frame',masks_in_frame)
-			end
-		end
-	case{'DeletingROI'}
-		%Find the mask with the unique guid and delete it
-		[r,~]=find(strcmp(src.Tag,mask_positions(:,5)));
-		mask_positions(r,:)=[];
-		masks_in_frame{currentframe}=mask_positions;
-		gui_put('masks_in_frame',masks_in_frame)
-	case{'ROIClicked'}
-		bringToFront(src);
-end
-
-
-function mask_import_Callback (~,~,~)
-filepath=gui_retr('filepath');
-
-if size(filepath,1) > 1 %did the user load images?
-
-	sessionpath=gui_retr('sessionpath');
-	if isempty(sessionpath)
-		sessionpath=gui_retr('pathname');
-	end
-	[FileName,PathName] = uigetfile({'*.bmp;*.tif;*.tiff;*.jpg;*.png;','Image Files (*.bmp,*.tif,*.tiff,*.jpg,*.png)'; '*.tif','tif'; '*.tiff','tiff'; '*.jpg','jpg'; '*.bmp','bmp'; '*.png','png'},'Select the binary image mask file(s)',sessionpath, 'multiselect','on');
-	if ~isequal(FileName,0) && ~isequal(PathName,0)
-		if ischar(FileName)==1
-			AnzahlMasks=1;
-		else
-			AnzahlMasks=numel(FileName);
-		end
-		pivlab_axis=gui_retr('pivlab_axis');
-		handles=gui_gethand;
-		gui_toolsavailable(0,'Busy, please wait...')
-		for i= 1:AnzahlMasks
-			set (handles.mask_import,'String', ['Progress: ' num2str(round(i/AnzahlMasks*100)) ' %']);
-			drawnow limitrate
-			if AnzahlMasks==1
-				pixel_mask=imread(fullfile(PathName,FileName));
-			else
-				pixel_mask=imread(fullfile(PathName,FileName{i}));
-			end
-			pixel_mask=pixel_mask(:,:,1);
-			pixel_mask=imbinarize(pixel_mask);
-			CC = bwconncomp(pixel_mask);
-			CC2 = bwconncomp(1-pixel_mask);
-			numconnected=CC.NumObjects + CC2.NumObjects;
-			if numconnected > 100
-				disp('Many mask blobs detected. Now filtering the mask input images.')
-				pixel_mask = imclose(pixel_mask,strel('disk',5)); %remove small holes
-				pixel_mask = bwareaopen(pixel_mask,25); %remove areas with less than 25 pixels area
-			end
-			pixel_mask = bwareafilt(pixel_mask,[400 inf]); %only try to get blobs with more than 400 pixels
-			pixel_mask = bwareafilt(pixel_mask, 100);
-			blocations = bwboundaries(pixel_mask,'holes');
-			%imshow(A, 'Parent',pivlab_axis);
-			handles=gui_gethand;
-			masks_in_frame=gui_retr('masks_in_frame');
-			masks_in_frame=mask_px_to_rois(blocations,floor(get(handles.fileselector, 'value'))-1+i,masks_in_frame);%apply mask at the current frame and the following frames.
-			gui_put('masks_in_frame',masks_in_frame);
-		end
-		mask_redraw_masks
-		gui_sliderdisp(gui_retr('pivlab_axis'))
-		set (handles.mask_import,'String', 'Import pixel mask');
-		gui_toolsavailable(1)
-	end
-end
-
-
-function converted_mask=mask_convert_masks_to_binary(mask_size,mask_positions)
-editedMask = zeros(mask_size,'uint8');
-if ~isempty(mask_positions)
-	for i=1:size(mask_positions,1)
-		if 	strcmp(mask_positions{i,1},'ROI_object_freehand')	|| strcmp(mask_positions{i,1},'ROI_object_polygon') || strcmp(mask_positions{i,1},'ROI_object_external')
-			xi=mask_positions{i,2}(:,1);
-			yi=mask_positions{i,2}(:,2);
-			editedMask = editedMask + uint8(poly2mask(xi,yi,mask_size(1),mask_size(2)));
-		elseif strcmp(mask_positions{i,1},'ROI_object_rectangle')
-			rectangle_coords=bbox2points(mask_positions{i,2});
-			editedMask = editedMask + uint8(poly2mask(rectangle_coords(:,1),rectangle_coords(:,2),mask_size(1),mask_size(2)));
-		elseif strcmp(mask_positions{i,1},'ROI_object_circle')
-			nsides_that_make_sense = floor(sqrt(2*pi()*mask_positions{i,2}(3)/1));
-			pgon = nsidedpoly(nsides_that_make_sense,'Center',mask_positions{i,2}(1:2),'Radius',mask_positions{i,2}(3));
-			editedMask = editedMask + uint8(poly2mask(pgon.Vertices(:,1),pgon.Vertices(:,2),mask_size(1),mask_size(2)));
-		end
-	end
-end
-converted_mask = logical(bitget(editedMask,1));
-
-function mask_copy_to_all_Callback(~,~,~)
-handles=gui_gethand;
-currentframe=floor(get(handles.fileselector, 'value'));
-masks_in_frame=gui_retr('masks_in_frame');
-if isempty(masks_in_frame)
-	%masks_in_frame=cell(currentframe,1);
-	masks_in_frame=cell(1,currentframe);
-end
-
-if numel(masks_in_frame)<currentframe
-	mask_positions=cell(0);
-else
-	mask_positions=masks_in_frame{currentframe};
-end
-
-if ~isempty (mask_positions)
 	filepath=gui_retr('filepath');
-	for i=1:floor(numel(filepath)/2)
-		masks_in_frame{i} = mask_positions;
-	end
-end
-gui_put('masks_in_frame',masks_in_frame);
-
-function mask_save_Callback(~,~,~)
-masks_in_frame=gui_retr('masks_in_frame');
-sessionpath=gui_retr('sessionpath');
-if isempty(sessionpath)
-	sessionpath=gui_retr('pathname');
-end
-if  ~isempty(masks_in_frame)
-	[maskfile,maskpath] = uiputfile('*.mat','Save mask polygon(s)',fullfile(sessionpath, 'PIVlab_mask.mat'));
-	if ~isequal(maskfile,0) && ~isequal(maskpath,0)
-		save(fullfile(maskpath,maskfile),'masks_in_frame');
-	end
-end
-
-function mask_load_Callback(~,~,~)
-filepath=gui_retr('filepath');
-handles=gui_gethand;
-if size(filepath,1) > 1 %did the user load images?
-	sessionpath=gui_retr('sessionpath');
-	if isempty(sessionpath)
-		sessionpath=gui_retr('pathname');
-	end
-	[maskfile,maskpath] = uigetfile('*.mat','Load PIVlab mask',fullfile(sessionpath, 'PIVlab_mask.mat'));
-	pause(0.01)
-	if ~isequal(maskfile,0) && ~isequal(maskpath,0)
-		warning('off','MATLAB:load:variableNotFound');
-		gui_toolsavailable(0,'Busy, loading masks');drawnow nocallbacks
-		load(fullfile(maskpath,maskfile),'masks_in_frame');
-		warning('on','MATLAB:load:variableNotFound');
-		if exist('masks_in_frame','var')
-			gui_put('masks_in_frame',masks_in_frame);
-			gui_sliderdisp(gui_retr('pivlab_axis'))
-			gui_toolsavailable(1)
-		else
-			gui_toolsavailable(1)
-			msgbox('No masks found in file.','modal');
-		end
-	end
-else
-	msgbox('Before loading masks, you need to import images for your analyses.','modal');
-end
-
-function mask_basic_expert_Callback(~,~,~)
-handles=gui_gethand;
-modus=get(handles.mask_basic_expert,'Value');
-if modus==1 %basic
-	set(handles.uipanel25_1,'Visible','on');
-	set(handles.uipanel25_9,'Visible','on');
-	set(handles.uipanel25_2,'Visible','off');
-elseif modus==2 %expert
-	set(handles.uipanel25_1,'Visible','off');
-	set(handles.uipanel25_9,'Visible','off');
-	set(handles.uipanel25_2,'Visible','on');
-end
-
-function mask_edit_mode_Callback(~,~,~)
-%changes the display mode of the masks.
-%in sliderdisp, the status of the popupmenu is checked, then decides how to plot masks.
-gui_sliderdisp(gui_retr('pivlab_axis'));
-
-
-function mask_binarize_enable_Callback(~,~,~)
-handles=gui_gethand;
-if get(handles.binarize_enable,'Value')==0
-	set(handles.mask_medfilt_enable,'enable','off');
-	set(handles.median_size,'enable','off');
-	set(handles.binarize_threshold,'enable','off');
-	set(handles.mask_imopen_imclose_enable,'enable','off');
-	set(handles.imopen_imclose_size,'enable','off');
-	set(handles.mask_imdilate_imerode_enable,'enable','off');
-	set(handles.imopen_imclose_selection,'enable','off');
-	set(handles.imdilate_imerode_size,'enable','off');
-	set(handles.imdilate_imerode_selection,'enable','off');
-	set(handles.mask_remove_enable,'enable','off');
-	set(handles.remove_size,'enable','off');
-	set(handles.mask_fill_enable,'enable','off');
-else
-	set(handles.mask_medfilt_enable,'enable','on');
-	set(handles.median_size,'enable','on');
-	set(handles.binarize_threshold,'enable','on');
-	set(handles.mask_imopen_imclose_enable,'enable','on');
-	set(handles.imopen_imclose_size,'enable','on');
-	set(handles.mask_imdilate_imerode_enable,'enable','on');
-	set(handles.imopen_imclose_selection,'enable','on');
-	set(handles.imdilate_imerode_size,'enable','on');
-	set(handles.imdilate_imerode_selection,'enable','on');
-	set(handles.mask_remove_enable,'enable','on');
-	set(handles.remove_size,'enable','on');
-	set(handles.mask_fill_enable,'enable','on');
-end
-
-function mask_binarize_enable_2_Callback(~,~,~)
-handles=gui_gethand;
-if get(handles.binarize_enable_2,'Value')==0
-	set(handles.mask_medfilt_enable_2,'enable','off');
-	set(handles.median_size_2,'enable','off');
-	set(handles.binarize_threshold_2,'enable','off');
-	set(handles.mask_imopen_imclose_enable_2,'enable','off');
-	set(handles.imopen_imclose_size_2,'enable','off');
-	set(handles.mask_imdilate_imerode_enable_2,'enable','off');
-	set(handles.imopen_imclose_selection_2,'enable','off');
-	set(handles.imdilate_imerode_size_2,'enable','off');
-	set(handles.imdilate_imerode_selection_2,'enable','off');
-	set(handles.mask_remove_enable_2,'enable','off');
-	set(handles.remove_size_2,'enable','off');
-	set(handles.mask_fill_enable_2,'enable','off');
-else
-	set(handles.mask_medfilt_enable_2,'enable','on');
-	set(handles.median_size_2,'enable','on');
-	set(handles.binarize_threshold_2,'enable','on');
-	set(handles.mask_imopen_imclose_enable_2,'enable','on');
-	set(handles.imopen_imclose_size_2,'enable','on');
-	set(handles.mask_imdilate_imerode_enable_2,'enable','on');
-	set(handles.imopen_imclose_selection_2,'enable','on');
-	set(handles.imdilate_imerode_size_2,'enable','on');
-	set(handles.imdilate_imerode_selection_2,'enable','on');
-	set(handles.mask_remove_enable_2,'enable','on');
-	set(handles.remove_size_2,'enable','on');
-	set(handles.mask_fill_enable_2,'enable','on');
-end
-
-
-function mask_low_contrast_mask_enable_Callback(~,~,~)
-handles=gui_gethand;
-if get(handles.low_contrast_mask_enable,'Value')==0
-	set(handles.low_contrast_mask_threshold_suggest,'enable','off')
-	set(handles.mask_medfilt_enable_3,'enable','off');
-	set(handles.median_size_3,'enable','off');
-	set(handles.low_contrast_mask_threshold,'enable','off');
-	set(handles.mask_imopen_imclose_enable_3,'enable','off');
-	set(handles.imopen_imclose_size_3,'enable','off');
-	set(handles.mask_imdilate_imerode_enable_3,'enable','off');
-	set(handles.imopen_imclose_selection_3,'enable','off');
-	set(handles.imdilate_imerode_size_3,'enable','off');
-	set(handles.imdilate_imerode_selection_3,'enable','off');
-	set(handles.mask_remove_enable_3,'enable','off');
-	set(handles.remove_size_3,'enable','off');
-	set(handles.mask_fill_enable_3,'enable','off');
-else
-	set(handles.low_contrast_mask_threshold_suggest,'enable','on')
-	set(handles.mask_medfilt_enable_3,'enable','on');
-	set(handles.median_size_3,'enable','on');
-	set(handles.low_contrast_mask_threshold,'enable','on');
-	set(handles.mask_imopen_imclose_enable_3,'enable','on');
-	set(handles.imopen_imclose_size_3,'enable','on');
-	set(handles.mask_imdilate_imerode_enable_3,'enable','on');
-	set(handles.imopen_imclose_selection_3,'enable','on');
-	set(handles.imdilate_imerode_size_3,'enable','on');
-	set(handles.imdilate_imerode_selection_3,'enable','on');
-	set(handles.mask_remove_enable_3,'enable','on');
-	set(handles.remove_size_3,'enable','on');
-	set(handles.mask_fill_enable_3,'enable','on');
-end
-
-
-function mask_automask_preview_Callback(~,~,~)
-filepath=gui_retr('filepath');
-handles=gui_gethand;
-if size(filepath,1) > 1 %did the user load images?
-	handles=gui_gethand;
-	selected=2*floor(get(handles.fileselector, 'value'))-1;
-	mask_generator_settings=mask_get_mask_generator_settings();
-	[~,piv_image_A]=import_get_img(selected);%[piv_image_A,~]=get_img(selected); would respect background subtraction
-	[~,piv_image_B]=import_get_img(selected+1);
-
-	if size(piv_image_A,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
-		piv_image_A = rgb2gray(piv_image_A);
-		piv_image_B = rgb2gray(piv_image_B);
-	end
-
-	pixel_mask=mask_pixel_mask_from_piv_image(piv_image_A,piv_image_B,mask_generator_settings);
-	piv_image=im2double(piv_image_A)/2 + im2double(piv_image_B)/2;
-	if size(piv_image,3)>1 % color image
-		piv_image=rgb2gray(piv_image); %convert to gray, always.
-	end
-	if get(handles.enhance_images, 'Value')
-		piv_image=imadjust(piv_image);
-	end
-	image(cat(3, piv_image, piv_image, piv_image), 'parent',gui_retr('pivlab_axis'), 'cdatamapping', 'scaled');
-	hold on;
-	colormap('gray');
-	axis image
-	set(gui_retr('pivlab_axis'),'ytick',[])
-	set(gui_retr('pivlab_axis'),'xtick',[])
-	image(cat(3, pixel_mask*0.7, pixel_mask*0.1, pixel_mask*0.1), 'parent',gui_retr('pivlab_axis'), 'cdatamapping', 'direct','AlphaData',pixel_mask*0.9);
-	hold off
-end
-
-function mask_automask_generate_current_Callback (~,~,~)
-filepath=gui_retr('filepath');
-if size(filepath,1) > 1 %did the user load images?
-	handles=gui_gethand;
-	selected=2*floor(get(handles.fileselector, 'value'))-1;
-	mask_generator_settings=mask_get_mask_generator_settings();
-	[~,piv_image_A]=import_get_img(selected);
-	[~,piv_image_B]=import_get_img(selected+1);
-	if size(piv_image_A,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
-		piv_image_A = rgb2gray(piv_image_A);
-		piv_image_B = rgb2gray(piv_image_B);
-	end
-	pixel_mask=mask_pixel_mask_from_piv_image(piv_image_A,piv_image_B,mask_generator_settings);
-	blocations = bwboundaries(pixel_mask,'holes');
-	currentframe=floor(get(handles.fileselector, 'value'));
-	masks_in_frame=gui_retr('masks_in_frame');
-	masks_in_frame{currentframe}=[];%remove any pre-existing mask in the curretn frame
-	masks_in_frame=mask_px_to_rois(blocations,currentframe,masks_in_frame);
-	gui_put('masks_in_frame',masks_in_frame);
-	mask_redraw_masks
-	gui_sliderdisp(gui_retr('pivlab_axis'));
-end
-
-function mask_automask_generate_all_Callback (~,~,~)
-handles=gui_gethand;
-filepath=gui_retr('filepath');
-if size(filepath,1) > 1 %did the user load images?
-	handles=gui_gethand;
+	gui_toolsavailable(0,'Busy, please wait...')
+	gui_put('derived', []); %clear derived parameters if user modifies source data
 	if gui_retr('video_selection_done') == 0
 		num_frames_to_process=floor(size(filepath,1)/2)+1;
 	else
 		video_frame_selection=gui_retr('video_frame_selection');
 		num_frames_to_process=floor(numel(video_frame_selection)/2)+1;
 	end
-	mask_generator_settings=mask_get_mask_generator_settings();
-	gui_put('masks_in_frame',[]);%remove existing masks before calculating new ones.
-	%masks_in_frame=retr('masks_in_frame');
-	%resulting_masks_in_frame_cell=cell(0);
-	%if retr('video_selection_done') == 1 || retr('parallel')==0 %if post-processing a video, parallelization cannot be used.
-	if gui_retr('video_selection_done')==0
-		num_frames_to_process = size(filepath,1);
-	else
-		video_frame_selection=gui_retr('video_frame_selection');
-		num_frames_to_process = numel(video_frame_selection);
-	end
-	gui_toolsavailable(0,'Busy, please wait...')
-	for i=1:2:num_frames_to_process
-		[~,piv_image_A]=import_get_img(i);
-		[~,piv_image_B]=import_get_img(i+1);
-		if size(piv_image_A,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
-			piv_image_A = rgb2gray(piv_image_A);
-			piv_image_B = rgb2gray(piv_image_B);
+	if gui_retr('video_selection_done') == 1 || gui_retr('parallel')==0 %if post-processing a video, parallelization cannot be used.
+		for i=1:num_frames_to_process
+			validate_filtervectors(i)
+			set (handles.apply_filter_all, 'string', ['Please wait... (' int2str((i-1)/num_frames_to_process*100) '%)']);
+			drawnow;
 		end
-		pixel_mask=mask_pixel_mask_from_piv_image(piv_image_A,piv_image_B,mask_generator_settings);
-		set (handles.automask_generate_all,'String', ['Progress: ' num2str(round(i/num_frames_to_process*100)) ' %']);
-		drawnow limitrate
-		blocations = bwboundaries(pixel_mask,'holes');
-		masks_in_frame=gui_retr('masks_in_frame');
-		masks_in_frame=mask_px_to_rois(blocations,(i+1)/2,masks_in_frame);
-		gui_put('masks_in_frame',masks_in_frame);
-		mask_redraw_masks
-	end
-	set (handles.automask_generate_all,'String', 'Make mask for all frames');
-	gui_toolsavailable(1)
-	%{
 	else %not using a video file --> parallel processing possible
 		slicedfilepath1=cell(0);
 		slicedfilepath2=cell(0);
@@ -14153,645 +14139,609 @@ if size(filepath,1) > 1 %did the user load images?
 			slicedfilepath1{k}=filepath{i};
 			slicedfilepath2{k}=filepath{i+1};
 		end
-		parfor i=1:num_frames_to_process-1
-			%% load images in a parfor loop
-			[~,~,ext] = fileparts(slicedfilepath1{i});
-			if strcmp(ext,'.b16')
-				currentimage1=f_readB16(slicedfilepath1{i});
-				currentimage2=f_readB16(slicedfilepath2{i});
-			else
-				currentimage1=imread(slicedfilepath1{i});
-				currentimage2=imread(slicedfilepath2{i});
-			end
-			pixel_mask=pixel_mask_from_piv_image(currentimage1,currentimage2,mask_generator_settings);
-			blocations = bwboundaries(pixel_mask,'holes');
-			resulting_masks_in_frame_cell{i}=px_to_rois(blocations,i,masks_in_frame);
+		if get(handles.bg_subtract,'Value')==1
+			bg_img_A = gui_retr('bg_img_A');
+			bg_img_B = gui_retr('bg_img_B');
+			bg_sub=1;
+		else
+			bg_img_A=[];
+			bg_img_B=[];
+			bg_sub=0;
 		end
-		for i=1:num_frames_to_process-1
-		masks_in_frame{i,1}=resulting_masks_in_frame_cell{i}{i};
+		resultslist(10,:)={[]}; %remove smoothed results when user modifies original data
+		resultslist(11,:)={[]};
+		calu=gui_retr('calu');calv=gui_retr('calv');
+		x=resultslist(1,:);
+		y=resultslist(2,:);
+		u=resultslist(3,:);
+		v=resultslist(4,:);
+		typevector=resultslist(5,:);
+		typevector_original=resultslist(5,:);
+		manualdeletion=gui_retr('manualdeletion');
+
+		if numel(manualdeletion)>0
+			for i=1:size(u,2)
+				if size(manualdeletion,2)>=i
+					if isempty(manualdeletion{1,i}) ==0
+						framemanualdeletion=manualdeletion{i};
+						[u{i},v{i},typevector{i}]=validate_manual_point_deletion(u{i},v{i},typevector{i},framemanualdeletion);
+					end
+				end
+			end
+		end
+		velrect=gui_retr('velrect');
+		do_stdev_check = get(handles.stdev_check, 'value');
+		stdthresh=str2double(get(handles.stdev_thresh, 'String'));
+		do_local_median = get(handles.loc_median, 'value');
+		neigh_thresh=str2double(get(handles.loc_med_thresh,'string'));
+		%image-based filtering
+		do_contrast_filter = get(handles.do_contrast_filter, 'value');
+		do_bright_filter = get(handles.do_bright_filter, 'value');
+		contrast_filter_thresh=str2double(get(handles.contrast_filter_thresh, 'String'));
+		bright_filter_thresh=str2double(get(handles.bright_filter_thresh, 'String'));
+		interpol_missing= get(handles.interpol_missing, 'value');
+		do_corr2_filter = get(handles.do_corr2_filter, 'value');
+		corr_filter_thresh=str2double(get(handles.corr_filter_thresh,'String'));
+		do_notch_filter = get(handles.notch_filter, 'value');
+		notch_L_thresh=str2double(get(handles.notch_L_thresh,'String'));
+		notch_H_thresh=str2double(get(handles.notch_H_thresh,'String'));
+
+		hbar = pivprogress(size(slicedfilepath1,2),handles.apply_filter_all);
+		if size(u,2)<num_frames_to_process-1 %If not all frames have been analyzed. Parfor loop crashes otherwise.
+			u(num_frames_to_process-1)={[]};
+			v(num_frames_to_process-1)={[]};
+			x(num_frames_to_process-1)={[]};
+			y(num_frames_to_process-1)={[]};
+			typevector_original(num_frames_to_process-1)={[]};
+			resultslist(1,num_frames_to_process-1)={[]};
+		end
+		parfor i=1:num_frames_to_process-1 %without parallel processing toolbox, this is just a normal for loop.
+			if ~isempty(x(i))
+				if do_contrast_filter == 1 || do_bright_filter == 1
+					%% load images in a parfor loop
+					[~,~,ext] = fileparts(slicedfilepath1{i});
+					if strcmp(ext,'.b16')
+						currentimage1=f_readB16(slicedfilepath1{i});
+						currentimage2=f_readB16(slicedfilepath2{i});
+					else
+						currentimage1=imread(slicedfilepath1{i});
+						currentimage2=imread(slicedfilepath2{i});
+					end
+					rawimageA=currentimage1;
+					rawimageB=currentimage2;
+					if bg_sub==1
+						if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+							currentimage1 = rgb2gray(currentimage1)-bg_img_A;
+							currentimage2 = rgb2gray(currentimage2)-bg_img_B;
+						else
+							currentimage1 = currentimage1-bg_img_A;
+							currentimage2 = currentimage2-bg_img_B;
+						end
+					end
+					currentimage1(currentimage1<0)=0; %bg subtraction may yield negative
+					currentimage2(currentimage2<0)=0; %bg subtraction may yield negative
+					A=currentimage1;
+					B=currentimage2;
+				else
+					A=[];B=[];rawimageA=[];rawimageB=[];
+				end
+				corr2_value=resultslist{12,i};
+				[u_new{i},v_new{i},typevector_new{i}]=validate_filtervectors_all_parallel(x{i},y{i},u{i},v{i},typevector_original{i},calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh);
+				hbar.iterate(1); %#ok<*PFBNS>
+			end
+		end
+		close(hbar);
+
+		%% 3D local median filtering test
+		%{
+		neigh_thresh=3;
+		u=u_new;%resultslist(3,:);
+		v=v_new;%resultslist(4,:);
+
+		u_3d = cat(3,u{:});
+		v_3d = cat(3,v{:});
+	
+		neigh_filt=medfilt3(u_3d);
+		neigh_filt=fillmissing(neigh_filt,'linear');
+		neigh_filt=abs(neigh_filt-u_3d);
+		u_3d(neigh_filt>neigh_thresh)=nan;
+		neigh_filt=medfilt3(v_3d);
+		neigh_filt=fillmissing(neigh_filt,'linear');
+		neigh_filt=abs(neigh_filt-v_3d);
+		v_3d(neigh_filt>neigh_thresh)=nan;
+	
+		u = squeeze(num2cell(u_3d, [1,2]))';
+		v = squeeze(num2cell(v_3d, [1,2]))';
+		
+		u_new=u;
+		v_new=v;
+		%}
+		resultslist(7, :) = u_new;
+		resultslist(8, :) = v_new;
+		resultslist(9, :) = typevector_new;
+		gui_put('resultslist', resultslist);
 	end
-	end
-	%}
-	%	put('masks_in_frame',masks_in_frame);
-	%	redraw_masks
+	set (handles.apply_filter_all, 'string', 'Apply to all frames');
+	gui_toolsavailable(1)
+	gui_sliderdisp(gui_retr('pivlab_axis'));
 end
+
+function validate_apply_filter_current_Callback(~, ~, ~)
+handles=gui_gethand;
+currentframe=floor(get(handles.fileselector, 'value'));
+gui_put('derived', []); %clear derived parameters if user modifies source data
+validate_filtervectors(currentframe)
+%put('manualdeletion',[]); %only valid one time, why...? Could work without this line.
 gui_sliderdisp(gui_retr('pivlab_axis'));
 
-function mask_generator_settings=mask_get_mask_generator_settings()
+function validate_bright_filter_thresh_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function validate_clear_vel_limit_Callback(~, ~, ~)
+gui_put('velrect', []);
 handles=gui_gethand;
+set (handles.vel_limit_active, 'String', 'Limit inactive', 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
+set (handles.limittext, 'String', '');
+set (handles.vel_limit, 'String', 'Select velocity limits');
 
-mask_generator_settings.binarize_enable = get(handles.binarize_enable,'Value');
-mask_generator_settings.mask_medfilt_enable=get(handles.mask_medfilt_enable,'Value');
-mask_generator_settings.median_size=get(handles.median_size,'String');
-mask_generator_settings.binarize_threshold=get(handles.binarize_threshold,'String');
-mask_generator_settings.mask_imopen_imclose_enable=get(handles.mask_imopen_imclose_enable,'Value');
-mask_generator_settings.imopen_imclose_size=get(handles.imopen_imclose_size,'String');
-mask_generator_settings.imopen_imclose_selection=get(handles.imopen_imclose_selection,'Value');
-mask_generator_settings.mask_imdilate_imerode_enable=get(handles.mask_imdilate_imerode_enable ,'Value');
-mask_generator_settings.imdilate_imerode_size=get(handles.imdilate_imerode_size,'String');
-mask_generator_settings.imdilate_imerode_selection=get(handles.imdilate_imerode_selection,'Value');
-mask_generator_settings.mask_remove_enable=get(handles.mask_remove_enable,'Value');
-mask_generator_settings.remove_size=get(handles.remove_size,'String');
-mask_generator_settings.mask_fill_enable=get(handles.mask_fill_enable,'Value');
+function validate_contrast_filter_thresh_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
 
-mask_generator_settings.binarize_enable_2 = get(handles.binarize_enable_2,'Value');
-mask_generator_settings.mask_medfilt_enable_2=get(handles.mask_medfilt_enable_2,'Value');
-mask_generator_settings.median_size_2=get(handles.median_size_2,'String');
-mask_generator_settings.binarize_threshold_2=get(handles.binarize_threshold_2,'String');
-mask_generator_settings.mask_imopen_imclose_enable_2=get(handles.mask_imopen_imclose_enable_2,'Value');
-mask_generator_settings.imopen_imclose_size_2=get(handles.imopen_imclose_size_2,'String');
-mask_generator_settings.imopen_imclose_selection_2=get(handles.imopen_imclose_selection_2,'Value');
-mask_generator_settings.mask_imdilate_imerode_enable_2=get(handles.mask_imdilate_imerode_enable_2 ,'Value');
-mask_generator_settings.imdilate_imerode_size_2=get(handles.imdilate_imerode_size_2,'String');
-mask_generator_settings.imdilate_imerode_selection_2=get(handles.imdilate_imerode_selection_2,'Value');
-mask_generator_settings.mask_remove_enable_2=get(handles.mask_remove_enable_2,'Value');
-mask_generator_settings.remove_size_2=get(handles.remove_size_2,'String');
-mask_generator_settings.mask_fill_enable_2=get(handles.mask_fill_enable_2,'Value');
+function validate_corr_filter_thresh_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
 
-mask_generator_settings.low_contrast_mask_threshold=get(handles.low_contrast_mask_threshold,'String');
-mask_generator_settings.low_contrast_mask_enable=get(handles.low_contrast_mask_enable,'Value');
-mask_generator_settings.mask_medfilt_enable_3=get(handles.mask_medfilt_enable_3,'Value');
-mask_generator_settings.median_size_3=get(handles.median_size_3,'String');
-mask_generator_settings.mask_imopen_imclose_enable_3=get(handles.mask_imopen_imclose_enable_3,'Value');
-mask_generator_settings.imopen_imclose_size_3=get(handles.imopen_imclose_size_3,'String');
-mask_generator_settings.imopen_imclose_selection_3=get(handles.imopen_imclose_selection_3,'Value');
-mask_generator_settings.mask_imdilate_imerode_enable_3=get(handles.mask_imdilate_imerode_enable_3 ,'Value');
-mask_generator_settings.imdilate_imerode_size_3=get(handles.imdilate_imerode_size_3,'String');
-mask_generator_settings.imdilate_imerode_selection_3=get(handles.imdilate_imerode_selection_3,'Value');
-mask_generator_settings.mask_remove_enable_3=get(handles.mask_remove_enable_3,'Value');
-mask_generator_settings.remove_size_3=get(handles.remove_size_3,'String');
-mask_generator_settings.mask_fill_enable_3=get(handles.mask_fill_enable_3,'Value');
-
-function pixel_mask=mask_pixel_mask_from_piv_image(piv_image_A,piv_image_B,mask_generator_settings)
-
-%% bright mask
-if size(piv_image_A,3)>1
-	piv_image_A=piv_image_A(:,:,1);
-end
-
-if size(piv_image_B,3)>1
-	piv_image_B=piv_image_B(:,:,1);
-end
-piv_image=im2double(piv_image_A)/2 + im2double(piv_image_B)/2;
-
-piv_image_2=piv_image;
-piv_image_3=piv_image;
-
-if mask_generator_settings.binarize_enable
-	if mask_generator_settings.mask_medfilt_enable
-		median_size = str2double(mask_generator_settings.median_size);
-		piv_image=medfilt2(piv_image,[median_size median_size]);
-	end
-	piv_image=im2bw(piv_image,str2double(mask_generator_settings.binarize_threshold)); %#ok<IM2BW>
-
-	if mask_generator_settings.mask_imopen_imclose_enable
-		SE=strel('disk',str2double(mask_generator_settings.imopen_imclose_size));
-		if mask_generator_settings.imopen_imclose_selection==1 %imopen
-			piv_image=imopen(piv_image,SE);
-		else
-			piv_image=imclose(piv_image,SE);
-		end
-	end
-
-	if mask_generator_settings.mask_imdilate_imerode_enable
-		SE=strel('disk',str2double(mask_generator_settings.imdilate_imerode_size));
-		if mask_generator_settings.imdilate_imerode_selection==1 %dilate
-			piv_image=imdilate(piv_image,SE);
-		else
-			piv_image=imerode(piv_image,SE);
-		end
-	end
-	if mask_generator_settings.mask_remove_enable
-		range=[str2double(mask_generator_settings.remove_size) inf];
-		piv_image = bwareafilt(piv_image,range);
-	end
-	if mask_generator_settings.mask_fill_enable
-		piv_image = imfill(piv_image,"holes");
-	end
-else
-	piv_image=zeros(size(piv_image));
-end
-
-%% dark mask
-if mask_generator_settings.binarize_enable_2
-	if mask_generator_settings.mask_medfilt_enable_2
-		median_size = str2double(mask_generator_settings.median_size_2);
-		piv_image_2=medfilt2(piv_image_2,[median_size median_size]);
-	end
-	piv_image_2=im2bw(piv_image_2,str2double(mask_generator_settings.binarize_threshold_2)); %#ok<IM2BW>
-	piv_image_2=~piv_image_2;
-
-
-	if mask_generator_settings.mask_imopen_imclose_enable_2
-		SE=strel('disk',str2double(mask_generator_settings.imopen_imclose_size_2));
-		if mask_generator_settings.imopen_imclose_selection_2==1 %imopen
-			piv_image_2=imopen(piv_image_2,SE);
-		else
-			piv_image_2=imclose(piv_image_2,SE);
-		end
-	end
-
-	if mask_generator_settings.mask_imdilate_imerode_enable_2
-		SE=strel('disk',str2double(mask_generator_settings.imdilate_imerode_size_2));
-		if mask_generator_settings.imdilate_imerode_selection_2==1 %dilate
-			piv_image_2=imdilate(piv_image_2,SE);
-		else
-			piv_image_2=imerode(piv_image_2,SE);
-		end
-	end
-
-	if mask_generator_settings.mask_remove_enable_2
-		range=[str2double(mask_generator_settings.remove_size_2) inf];
-		piv_image_2 = bwareafilt(piv_image_2,range);
-	end
-	if mask_generator_settings.mask_fill_enable_2
-		piv_image_2 = imfill(piv_image_2,"holes");
-	end
-else
-	piv_image_2=zeros(size(piv_image));
-end
-
-%% low contrast mask
-if mask_generator_settings.low_contrast_mask_enable
-	x_orig = 1:size(piv_image,2);
-	y_orig = 1:size(piv_image,1);
-	[x,y] = meshgrid(x_orig,y_orig);
-	u=zeros(size(x));
-	v=u;
-	[~,~,~,piv_image_3,~] = PIVlab_image_filter (1,0,x,y,u,v,0,0,piv_image_3,piv_image_3,piv_image_3,piv_image_3);
-
-	if mask_generator_settings.mask_medfilt_enable_3
-		median_size = str2double(mask_generator_settings.median_size_3);
-		piv_image_3=medfilt2(piv_image_3,[median_size median_size]);
-	end
-	piv_image_3=im2bw(piv_image_3,str2double(mask_generator_settings.low_contrast_mask_threshold)); %#ok<IM2BW>
-	piv_image_3=~piv_image_3;
-
-	if mask_generator_settings.mask_imopen_imclose_enable_3
-		SE=strel('disk',str2double(mask_generator_settings.imopen_imclose_size_3));
-		if mask_generator_settings.imopen_imclose_selection_3==1 %imopen
-			piv_image_3=imopen(piv_image_3,SE);
-		else
-			piv_image_3=imclose(piv_image_3,SE);
-		end
-	end
-
-	if mask_generator_settings.mask_imdilate_imerode_enable_3
-		SE=strel('disk',str2double(mask_generator_settings.imdilate_imerode_size_3));
-		if mask_generator_settings.imdilate_imerode_selection_3==1 %dilate
-			piv_image_3=imdilate(piv_image_3,SE);
-		else
-			piv_image_3=imerode(piv_image_3,SE);
-		end
-	end
-
-	if mask_generator_settings.mask_remove_enable_3
-		range=[str2double(mask_generator_settings.remove_size_3) inf];
-		piv_image_3 = bwareafilt(piv_image_3,range);
-	end
-	if mask_generator_settings.mask_fill_enable_3
-		piv_image_3 = imfill(piv_image_3,"holes");
-	end
-
-else
-	piv_image_3=zeros(size(piv_image));
-end
-
-pixel_mask = piv_image | piv_image_2 | piv_image_3;
-
-function masks_in_frame=mask_px_to_rois(blocations,frame,masks_in_frame)
-recommended_colors=parula(7);
-for ind = 1:numel(blocations)
-	if numel(masks_in_frame)<frame
-		mask_positions=cell(0);
+function validate_count_discarded_data (~,~,~)
+handles=gui_gethand;
+resultslist=gui_retr('resultslist');
+currentframe=2*floor(get(handles.fileselector, 'value'))-1;
+if ~isempty(resultslist)
+	if size(resultslist,2) >= ((currentframe+1)/2)
+		typevector=resultslist{9,(currentframe+1)/2};
+		nan_amount=numel(typevector(typevector==2));
+		total_amount=numel(typevector(typevector==1)) + nan_amount;
+		nan_percent=nan_amount/total_amount*100;
 	else
-		mask_positions=masks_in_frame{frame};
+		nan_percent=0;
 	end
-	if isempty(mask_positions)
-		mask_positions=cell(0);
-	end
-
-	% Convert to x,y order.
-	pos = blocations{ind};
-	pos = fliplr(pos);
-	% Create a freehand ROI.
-	roi = drawfreehand('Position', pos);
-	reduce(roi,0.005)
-	roi.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
-	roi.FaceAlpha=0.75;
-	roi.LabelVisible = 'off';
-	roi.UserData=['ROI_object_' 'external'];
-
-	[~,guid] = fileparts(tempname);
-	roi.Tag = guid;
-	%addlistener(roi,'MovingROI',@ROIevents);
-	addlistener(roi,'ROIMoved',@mask_ROIevents);
-	addlistener(roi,'DeletingROI',@mask_ROIevents);
-	addlistener(roi,'ROIClicked',@mask_ROIevents);
-	masks_in_frame = mask_update_mask_memory(roi,frame,masks_in_frame);
+else
+	nan_percent=0;
+end
+if isnan(nan_percent)
+	nan_percent=0;
+end
+set (handles.amount_nans,'string',['Filtered data: ' num2str(round(nan_percent,1)) ' %'])
+if nan_percent <= 10
+	set (handles.amount_nans, 'BackgroundColor',[0 1 0])
+elseif nan_percent > 10 && nan_percent <= 25
+	set (handles.amount_nans, 'BackgroundColor',[1 1 0])
+elseif nan_percent > 25
+	set (handles.amount_nans, 'BackgroundColor',[1 0 0])
 end
 
-
-function mask_bright_or_dark_Callback(~,~,~)
+function validate_filtervectors(frame)
+%executes filters one after another, writes results to resultslist 7,8,9
 handles=gui_gethand;
-if get(handles.mask_bright_or_dark,'Value')==1
-	set (handles.uipanel25_3,'Visible','on')
-	set (handles.uipanel25_5,'Visible','off')
-	set (handles.uipanel25_7,'Visible','off')
-	mask_binarize_enable_Callback
-elseif get(handles.mask_bright_or_dark,'Value')==2
-	set (handles.uipanel25_3,'Visible','off')
-	set (handles.uipanel25_5,'Visible','on')
-	set (handles.uipanel25_7,'Visible','off')
-	mask_binarize_enable_2_Callback
-elseif get(handles.mask_bright_or_dark,'Value')==3
-	set (handles.uipanel25_3,'Visible','off')
-	set (handles.uipanel25_5,'Visible','off')
-	set (handles.uipanel25_7,'Visible','on')
-	mask_low_contrast_mask_enable_Callback
+resultslist=gui_retr('resultslist');
+resultslist{10,frame}=[]; %remove smoothed results when user modifies original data
+resultslist{11,frame}=[];
+if size(resultslist,2)>=frame
+	calu=gui_retr('calu');calv=gui_retr('calv');
+	u=resultslist{3,frame};
+	v=resultslist{4,frame};
+	typevector_original=resultslist{5,frame};
+	typevector=typevector_original;
+	manualdeletion=gui_retr('manualdeletion');
+	if size(manualdeletion,2)>=frame
+		if isempty(manualdeletion{1,frame}) ==0
+			framemanualdeletion=manualdeletion{frame};
+			[u,v,typevector]=validate_manual_point_deletion(u,v,typevector,framemanualdeletion);
+		end
+	end
+	if numel(u)>0
+		velrect=gui_retr('velrect');
+		do_stdev_check = get(handles.stdev_check, 'value');
+		stdthresh=str2double(get(handles.stdev_thresh, 'String'));
+		do_local_median = get(handles.loc_median, 'value');
+		%epsilon=str2double(get(handles.epsilon,'string'));
+		neigh_thresh=str2double(get(handles.loc_med_thresh,'string'));
+
+
+
+		%run postprocessing function
+		if numel(velrect)>0
+			valid_vel(1)=velrect(1); %umin
+			valid_vel(2)=velrect(3)+velrect(1); %umax
+			valid_vel(3)=velrect(2); %vmin
+			valid_vel(4)=velrect(4)+velrect(2); %vmax
+		else
+			valid_vel=[];
+		end
+
+		%image-based filtering
+		do_contrast_filter = get(handles.do_contrast_filter, 'value');
+		do_bright_filter = get(handles.do_bright_filter, 'value');
+		%do_contrast_filter=1
+		if do_contrast_filter == 1 || do_bright_filter == 1
+			selected=2*frame-1;
+			x=resultslist{1,frame};
+			y=resultslist{2,frame};
+			contrast_filter_thresh=str2double(get(handles.contrast_filter_thresh, 'String'));
+			bright_filter_thresh=str2double(get(handles.bright_filter_thresh, 'String'));
+
+			[A,rawimageA]=import_get_img(selected);
+			[B,rawimageB]=import_get_img(selected+1);
+			[u,v,~,~,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
+		end
+
+		%correlation filter
+		do_corr2_filter = get(handles.do_corr2_filter, 'value');
+		if do_corr2_filter == 1
+			corr_filter_thresh=str2double(get(handles.corr_filter_thresh,'String'));
+			[u,v] = PIVlab_correlation_filter (u,v,corr_filter_thresh,resultslist{12,frame});
+		end
+
+		%Notch velocity magnitude filter
+		do_notch_filter = get(handles.notch_filter, 'value');
+		if do_notch_filter == 1
+			[u,v] = PIVlab_notch_filter (u,v,calu,calv,str2double(get(handles.notch_L_thresh,'String')),str2double(get(handles.notch_H_thresh,'String')));
+		end
+
+		%vector-based filtering
+		[u,v] = PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
+
+		typevector(isnan(u))=2;
+		typevector(isnan(v))=2;
+		typevector(typevector_original==0)=0; %restores typevector for mask
+		%interpolation using inpaint_NaNs
+		if get(handles.interpol_missing, 'value')==1
+			u=inpaint_nans(u,4);
+			v=inpaint_nans(v,4);
+		end
+		resultslist{7, frame} = u;
+		resultslist{8, frame} = v;
+		resultslist{9, frame} = typevector;
+		gui_put('resultslist', resultslist);
+	end
 end
 
-function mask_low_contrast_threshold_suggest_Callback(~,~,~)
+function [u,v,typevector]=validate_filtervectors_all_parallel(x,y,u,v,typevector_original,calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh)
+typevector=typevector_original;
+%run postprocessing function
+if numel(velrect)>0
+	valid_vel(1)=velrect(1); %umin
+	valid_vel(2)=velrect(3)+velrect(1); %umax
+	valid_vel(3)=velrect(2); %vmin
+	valid_vel(4)=velrect(4)+velrect(2); %vmax
+else
+	valid_vel=[];
+end
+%do_contrast_filter=1
+if ~isempty(x)
+	if do_contrast_filter == 1 || do_bright_filter == 1
+		[u,v,~,~,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
+	end
+else
+	u=[];v=[];
+end
+
+%correlation filter
+if ~isempty(x)
+	if do_corr2_filter == 1
+		[u,v] = PIVlab_correlation_filter (u,v,corr_filter_thresh,corr2_value);
+	end
+else
+	u=[];v=[];
+end
+
+%Notch velocity magnitude filter
+if ~isempty(x)
+	if do_notch_filter == 1
+		[u,v] = PIVlab_notch_filter (u,v,calu,calv,notch_L_thresh,notch_H_thresh);
+	end
+end
+
+if ~isempty(x)
+	%vector-based filtering
+	[u,v] = PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
+else
+	u=[];v=[];
+end
+
+typevector(isnan(u))=2;
+typevector(isnan(v))=2;
+typevector(typevector_original==0)=0; %restores typevector for mask
+%interpolation using inpaint_NaNs
+if interpol_missing==1
+	u=inpaint_nans(u,4);
+	v=inpaint_nans(v,4);
+end
+
+function validate_image_val_Callback(~, ~, ~)
+gui_switchui('multip23')
+
+function validate_loc_med_thresh_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function [u,v,typevector]=validate_manual_point_deletion(u,v,typevector,framemanualdeletion)
+manualdeletion=gui_retr('manualdeletion');
+if numel(manualdeletion)>0
+	if numel(u)>0
+		for i=1:size(framemanualdeletion,1)
+			u(framemanualdeletion(i,1),framemanualdeletion(i,2))=NaN;
+			v(framemanualdeletion(i,1),framemanualdeletion(i,2))=NaN;
+		end
+		typevector(isnan(u))=2;
+		typevector(isnan(v))=2;
+	end
+end
+
+function validate_notch_H_thresh_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function validate_notch_L_thresh_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function validate_rejectsingle_Callback(~, ~, ~)
 handles=gui_gethand;
-filepath=gui_retr('filepath');
-if size(filepath,1) > 1 %did the user load images?
-	selected=2*floor(get(handles.fileselector, 'value'))-1;
-	[~,rawimageA]=import_get_img(selected);
-	[~,rawimageB]=import_get_img(selected+1);
-
-	if size(rawimageA,3)>1
-		rawimageA=rawimageA(:,:,1);
-	end
-
-	if size(rawimageA,3)>1
-		rawimageA=rawimageA(:,:,1);
-	end
-	rawimage=im2double(rawimageA)/2 + im2double(rawimageB)/2;
-
-	x_orig = 1:size(rawimage,2);
-	y_orig = 1:size(rawimage,1);
-	[x,y] = meshgrid(x_orig,y_orig);
-	u=zeros(size(x));
-	v=u;
-
-	[~,~,tresh_suggest,~,~] = PIVlab_image_filter (1,0,x,y,u,v,0,0,rawimage,rawimage,rawimage,rawimage);
-	set (handles.low_contrast_mask_threshold,'String',num2str(tresh_suggest));
-end
-
-function calibrate_Calibrationevents(src,evt)
-evname = evt.EventName;
-handles=gui_gethand;
-switch(evname)
-	%case{'MovingROI'}
-	%disp(['ROI moving previous position: ' mat2str(evt.PreviousPosition)]);
-	%disp(['ROI moving current position: ' mat2str(evt.CurrentPosition)]);
-	case{'MovingROI'}
-		Cali_coords = src.Position;
-		Cali_length = sqrt((Cali_coords(1,1)-Cali_coords(2,1))^2+(Cali_coords(1,2)-Cali_coords(2,2))^2);
-
-		if Cali_length < 0.1
-			src.Label = ['Click and drag with the mouse to draw a line'];
-		else
-			src.Label = ['Length :' num2str(Cali_length) ' px'];
-		end
-		gui_put('pointscali',Cali_coords);
-		calibrate_pixeldist_changed_Callback()
-		if gui_retr('calu') ~=1
-			calibrate_calccali
-		end
-	case{'DeletingROI'}
-		delete(findobj('tag', 'caliline'))
-		calibrate_clear_cali_Callback
-end
-
-function calibrate_Offsetselectionevents(src,evt)
-evname = evt.EventName;
-handles=gui_gethand;
-switch(evname)
-	%case{'MovingROI'}
-	%disp(['ROI moving previous position: ' mat2str(evt.PreviousPosition)]);
-	%disp(['ROI moving current position: ' mat2str(evt.CurrentPosition)]);
-	case{'MovingROI'}
-		Offset_coords = src.Position;
-		points_offsetx=gui_retr('points_offsetx');
-		points_offsety=gui_retr('points_offsety');
-		if numel(points_offsetx)==0
-			old_true_offsetx=0;
-		else
-			old_true_offsetx=points_offsetx(3);
-		end
-		if numel(points_offsety)==0
-			old_true_offsety=0;
-		else
-			old_true_offsety=points_offsety(3);
-		end
-
-		if ~isempty(points_offsetx)
-			src.Label = ['X: ' num2str(round(src.Position(1),1)) ' px = ' num2str(old_true_offsetx) ' mm ; Y: ' num2str(round(src.Position(2),1)) ' px = ' num2str(old_true_offsety) ' mm'];
-		end
-		gui_put('points_offsetx',[src.Position(1),src.Position(2),old_true_offsetx]);
-		gui_put('points_offsety',[src.Position(1),src.Position(2),old_true_offsety]);
-		if gui_retr('calu') ~=1
-			calibrate_calccali
-		end
-	case{'DeletingROI'}
-		delete(findobj('tag', 'offsetroi'))
-		gui_put('points_offsetx',[]);
-		gui_put('points_offsety',[]);
-		calibrate_calccali
-end
-
-function roi_RegionOfInterestevents(src,evt)
-evname = evt.EventName;
-handles=gui_gethand;
-switch(evname)
-	%case{'MovingROI'}
-	%disp(['ROI moving previous position: ' mat2str(evt.PreviousPosition)]);
-	%disp(['ROI moving current position: ' mat2str(evt.CurrentPosition)]);
-	case{'MovingROI'}
-		imagesize=gui_retr('expected_image_size');
-		roirect = round(src.Position);
-
-		if roirect(1)<1
-			roirect(1)=1;
-		end
-		if roirect(2)<1
-			roirect(2)=1;
-		end
-		if roirect(3)>imagesize(2)-roirect(1)
-			roirect(3)=imagesize(2)-roirect(1);
-		end
-		if roirect(4)>imagesize(1)-roirect(2)
-			roirect(4)=imagesize(1)-roirect(2);
-		end
-		if roirect(3)==0 || roirect(4)==0
-			src.Label = ['Click and drag with the mouse to draw a rectangle'];
-			src.Position(3)=50;
-			src.Position(4)=50;
-			pause(1)
-			delete(findobj('tag', 'RegionOfInterest'))
-			roi_clear_roi_Callback
-		else
-			src.Label = ['x: ' num2str(roirect(1)) '   y: ' num2str(roirect(2)) '   w: ' num2str(roirect(3)) '   h: ' num2str(roirect(4))];
-			gui_put('roirect',roirect);
-			roi_updateROIinfo
-		end
-
-	case{'DeletingROI'}
-		delete(findobj('tag', 'RegionOfInterest'))
-		roi_clear_roi_Callback
-end
-
-function calibrate_Update_Offset_Display
-delete(findobj('tag', 'offsetroi'))
-points_offsetx=gui_retr('points_offsetx');
-points_offsety=gui_retr('points_offsety');
-if numel(points_offsetx)>0 &&  numel(points_offsety)>0
-	roi=drawcrosshair(gui_retr('pivlab_axis'),'Position',[points_offsetx(1), points_offsetx(2)]);
-	%roi.EdgeAlpha=0.75;
-	roi.LabelVisible = 'on';
-	roi.Tag = 'offsetroi';
-	roi.Color = 'y';
-	roi.LineWidth = 1;
-	%roi.InteractionsAllowed='none';
-
-	addlistener(roi,'MovingROI',@calibrate_Offsetselectionevents);
-	addlistener(roi,'DeletingROI',@calibrate_Offsetselectionevents);
-	dummyevt.EventName = 'MovingROI';
-	calibrate_Offsetselectionevents(roi,dummyevt); %run the moving event once to update displayed length
-end
-
-function mask_shrink_grow_Callback (~,caller,~)
-pivlab_axis=gui_retr('pivlab_axis');
-objects_in_axis=pivlab_axis.Children;
-found=0;
-for i=1:numel(objects_in_axis)
-	if strncmp(objects_in_axis(i).UserData,'ROI_object_',11) %finds all Mask ROI objects, the first found is the one in the foreground
-		found=1;
-		break
-	end
-end
-if found
-	if strcmp (caller.Source.Tag,'mask_shrink')
-		buf=-5;
-	end
-	if strcmp (caller.Source.Tag,'mask_grow')
-		buf=+5;
-	end
-	if strcmp(objects_in_axis(i).UserData,'ROI_object_freehand') || strcmp(objects_in_axis(i).UserData,'ROI_object_polygon') || strcmp(objects_in_axis(i).UserData,'ROI_object_external')
-		warning off
-		poly_obj=polyshape(objects_in_axis(i).Position);
-		warning on
-
-		polyout1 = polybuffer(poly_obj,buf,'JointType','miter','MiterLimit',2);
-		try
-			objects_in_axis(i).Position=polyout1.Vertices;
-		catch ME
-			warning('Operation failed, most likely because shape is self-intersecting.')
-		end
-	elseif strcmp(objects_in_axis(i).UserData,'ROI_object_circle')
-		objects_in_axis(i).Radius = objects_in_axis(i).Radius+buf;
-	elseif strcmp(objects_in_axis(i).UserData,'ROI_object_rectangle')
-		objects_in_axis(i).Position(1)=objects_in_axis(i).Position(1)-buf/2;
-		objects_in_axis(i).Position(2)=objects_in_axis(i).Position(2)-buf/2;
-		objects_in_axis(i).Position(3)=objects_in_axis(i).Position(3)+buf;
-		objects_in_axis(i).Position(4)=objects_in_axis(i).Position(4)+buf;
-	end
-	evt.EventName='ROIMoved';
-	mask_ROIevents(objects_in_axis(i),evt); %saves the modified position.
-end
-
-function mask_subdivide_simplify_Callback (~,caller,~)
-pivlab_axis=gui_retr('pivlab_axis');
-objects_in_axis=pivlab_axis.Children;
-found=0;
-for i=1:numel(objects_in_axis)
-	if strncmp(objects_in_axis(i).UserData,'ROI_object_',11) %finds all Mask ROI objects, the first found is the one in the foreground
-		found=1;
-		break
-	end
-end
-if found
-	if strcmp(objects_in_axis(i).UserData,'ROI_object_freehand') || strcmp(objects_in_axis(i).UserData,'ROI_object_polygon')|| strcmp(objects_in_axis(i).UserData,'ROI_object_external')
-		if strcmp (caller.Source.Tag,'mask_optimize')
-			%objects_in_axis(i).Waypoints(:) = true;
-			reduce(objects_in_axis(i))
-		else
-			cx=objects_in_axis(i).Position(:,1);
-			cy=objects_in_axis(i).Position(:,2);
-			x=linspace(1,numel(cx),numel(cx))';
-			if strcmp (caller.Source.Tag,'mask_subdivide')
-				if numel(x) < 512 %limit over interpolation.
-					multiplier=2;
-				else
-					multiplier=1;
-				end
-			elseif strcmp (caller.Source.Tag,'mask_simplify')
-				if numel(x) > 3 %limit simplification.
-					multiplier=0.75;
-				else
-					multiplier=1;
-				end
-			end
-			xq=linspace(1,x(end),round(numel(cx)*multiplier))';
-			cxq = interp1(x,cx,xq,'spline')	;
-			cyq = interp1(x,cy,xq,'spline')	;
-			objects_in_axis(i).Position=[cxq cyq];
-			if strcmp(objects_in_axis(i).UserData,'ROI_object_freehand')
-				objects_in_axis(i).Waypoints(:) = true;
+resultslist=gui_retr('resultslist');
+frame=floor(get(handles.fileselector, 'value'));
+if size(resultslist,2)>=frame %2nd dimesnion = frame
+	x=resultslist{1,frame};
+	y=resultslist{2,frame};
+	u=resultslist{3,frame};
+	v=resultslist{4,frame};
+	typevector_original=resultslist{5,frame};
+	typevector=typevector_original;
+	manualdeletion=gui_retr('manualdeletion');
+	framemanualdeletion=[];
+	if numel(manualdeletion)>0
+		if size(manualdeletion,2)>=frame
+			if isempty(manualdeletion{1,frame}) ==0
+				framemanualdeletion=manualdeletion{frame};
 			end
 		end
-		evt.EventName='ROIMoved';
-		mask_ROIevents(objects_in_axis(i),evt); %saves the modified position.
 	end
-end
 
-function extract_poly_ROIevents(src,evt)
-evname = evt.EventName;
-handles=gui_gethand;
-switch(evname)
-	case{'MovingROI'}
-		if strcmp(src.Tag,'extract_poly')
-			if size(src.Position,1)<6
-				labelstring=[];
-				for i = 1:size(src.Position,1)
-					labelstring=[labelstring num2str(round(src.Position(i,1))) ',' num2str(round(src.Position(i,2))) ' ; ']; %#ok<AGROW>
-				end
-				src.Label = labelstring;
-				if strcmp (src.LabelVisible,'off')
-					src.LabelVisible = 'hover';
-				end
-			else
-				if strcmp (src.LabelVisible,'hover')
-					src.LabelVisible = 'off';
-				end
+	if numel(u)>0
+		delete(findobj(gca,'tag','manualdot'));
+		text(50,10,'Right mouse button exits manual validation mode.','color','g','fontsize',8, 'BackgroundColor', 'k', 'tag', 'hint')
+		gui_toolsavailable(0);
+		button = 1;
+		while button == 1
+			[xposition,yposition,button] = ginput(1);
+			if button~=1
+				break
+			end
+			if numel (xposition)>0 %will be 0 if user presses enter
+				xposition=round(xposition);
+				yposition=round(yposition);
+				%manualdeletion=zeros(size(xposition,1),2);
+				findx=abs(x/xposition-1);
+				[trash, imagex]=find(findx==min(min(findx)));
+				findy=abs(y/yposition-1);
+				[imagey, trash]=find(findy==min(min(findy)));
+				idx=size(framemanualdeletion,1);
+				%manualdeletion(idx+1,1)=imagey(1,1);
+				%manualdeletion(idx+1,2)=imagex(1,1);
+
+				framemanualdeletion(idx+1,1)=imagey(1,1); %#ok<AGROW>
+				framemanualdeletion(idx+1,2)=imagex(1,1); %#ok<AGROW>
+
+				hold on;
+				plot (x(framemanualdeletion(idx+1,1),framemanualdeletion(idx+1,2)),y(framemanualdeletion(idx+1,1),framemanualdeletion(idx+1,2)), 'yo', 'markerfacecolor', 'r', 'markersize', 10,'tag','manualdot')
+				hold off;
 			end
 		end
-	case{'ROIMoved'}
-		if strcmp(src.Tag,'extract_poly')
-			gui_put('xposition',src.Position(:,1));
-			gui_put('yposition',src.Position(:,2));
-		end
-		if strcmp(src.Tag,'extract_circle')
-			gui_put('xposition',src.Center);
-			gui_put('yposition',src.Radius);
-		end
-		if strcmp(src.Tag,'extract_circle_series')
-			delete(findobj(gui_retr('pivlab_axis'),'Tag',[src.Tag '_displayed_smaller_radii']))
-			delete(findobj(gui_retr('pivlab_axis'),'Tag',[src.Tag '_max_circulation']))
-			currentframe=floor(get(handles.fileselector, 'value'));
-			pivlab_axis=gui_retr('pivlab_axis');
-			resultslist=gui_retr('resultslist');
-			x=resultslist{1,currentframe};
-			stepsize=ceil((x(1,2)-x(1,1))/1);
-			radii=linspace(stepsize,src.Radius-stepsize,round(((src.Radius-stepsize)/stepsize)));
-			for radius=radii
-				extract_poly_series=drawcircle(gui_retr('pivlab_axis'),'Center',src.Center,'Radius',radius,'Tag',[src.Tag '_displayed_smaller_radii'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none');
-			end
-			x_center=src.Center(1);
-			y_center=src.Center(2);
-			radius=src.Radius;
-			text(pivlab_axis,x_center,y_center+radius,' start/end','FontSize',7, 'Rotation', 90, 'BackgroundColor',[1 1 1],'tag',[src.Tag '_displayed_smaller_radii'])
-			text(pivlab_axis,x_center,y_center+radius+8,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[src.Tag '_displayed_smaller_radii'])
-			text(pivlab_axis,x_center,y_center-radius-8,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[src.Tag '_displayed_smaller_radii'])
-			text(pivlab_axis,x_center-radius-8,y_center,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[src.Tag '_displayed_smaller_radii'])
-			text(pivlab_axis,x_center+radius+8,y_center,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[src.Tag '_displayed_smaller_radii'])
-			gui_put('xposition',src.Center);
-			gui_put('yposition',src.Radius);
-		end
-	case{'DeletingROI'}
-		if strcmp(src.Tag,'extract_circle_series')
-			delete(findobj(gui_retr('pivlab_axis'),'Tag',[src.Tag '_displayed_smaller_radii']))
-		end
-		delete(findobj(gui_retr('pivlab_axis'),'Tag',src.Tag))
-		gui_put('xposition',[]);
-		gui_put('yposition',[]);
-		gui_put('extract_type',[]);
-end
+		manualdeletion{frame}=framemanualdeletion;
+		gui_put('manualdeletion',manualdeletion);
 
-function extract_update_display(extract_type, xposition, yposition)
-if strcmp(extract_type,'extract_poly') %polyline
-	extract_poly=drawpolyline(gui_retr('pivlab_axis'),'Position',[xposition yposition]);
-	extract_poly.LabelVisible = 'off';
-	extract_poly.Tag=extract_type;
-	addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
-	addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
-end
-if strcmp(extract_type,'extract_circle') %circle
-	extract_poly=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',yposition);
-	extract_poly.LabelVisible = 'off';
-	extract_poly.Tag=extract_type;
-	addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
-	addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
-end
-if strcmp(extract_type,'extract_circle_series') %circle series
-	extract_poly=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',yposition);
-	extract_poly.LabelVisible = 'off';
-	extract_poly.Tag=extract_type;
-	addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
-	addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
-	handles=gui_gethand;
-	currentframe=floor(get(handles.fileselector, 'value'));
-	resultslist=gui_retr('resultslist');
-	xposition=extract_poly.Center;
-	yposition=extract_poly.Radius;
-	try
-	x=resultslist{1,currentframe};
-	catch
-		msgbox('You cannot load coordinates for non-analyzed frames.','Error','error','modal')
+		delete(findobj(gca,'Type','text','color','r'));
+		delete(findobj(gca,'tag','hint'));
+		text(50,50,'Result will be shown after applying vector validation','color','r','fontsize',10, 'fontweight','bold', 'BackgroundColor', 'k')
 	end
-	stepsize=ceil((x(1,2)-x(1,1))/1);
-	radii=linspace(stepsize,extract_poly.Radius-stepsize,round(((extract_poly.Radius-stepsize)/stepsize)));
-	for radius=radii
-		extract_poly_series=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',radius,'Tag',[extract_type '_displayed_smaller_radii'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none');
-	end
-	x_center=extract_poly.Center(1);
-	y_center=extract_poly.Center(2);
-	radius=extract_poly.Radius;
-	text(x_center,y_center+radius,' start/end','FontSize',7, 'Rotation', 90, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
-	text(x_center,y_center+radius+8,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
-	text(x_center,y_center-radius-8,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
-	text(x_center-radius-8,y_center,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[extract_type '_displayed_smaller_radii'])
-	text(x_center+radius+8,y_center,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[extract_type '_displayed_smaller_radii'])
 end
+gui_toolsavailable(1);
 
-function plot_remove_temporal_frame_Callback (~,~,~)
-handles=gui_gethand;
-filepath=gui_retr('filepath');
-filename=gui_retr('filename');
+function validate_restore_all_Callback(~, ~, ~)
+%clears resultslist at 7,8,9
 resultslist=gui_retr('resultslist');
 
-if isempty(resultslist)==0
-	if size(filepath,1)>0
-		sizeerror=0;
-		typevectormittel=ones(size(resultslist{1,1}));
-		ismean=gui_retr('ismean');
-		if isempty(ismean)==1
-			ismean=zeros(size(resultslist,2),1);
-		end
-%dont remove all, but only the current one.
-%probably shift the remaining ones....?
-currentframe=floor(get(handles.fileselector, 'value'));
+if size(resultslist,1) > 6
+	resultslist(7:9,:)={[]};
+	if size(resultslist,1) > 9
+		resultslist(10:11,:)={[]};
+	end
+	gui_put('resultslist', resultslist);
+	gui_sliderdisp(gui_retr('pivlab_axis'))
+end
+gui_put('manualdeletion',[]);
 
-if ismean(currentframe,1)==1
-	filepath(currentframe*2,:)=[];
-	filename(currentframe*2,:)=[];
-	filepath(currentframe*2-1,:)=[];
-	filename(currentframe*2-1,:)=[];
-	resultslist(:,currentframe)=[];
-	ismean(currentframe,:)=[];
-	gui_put('filepath',filepath);
-	gui_put('filename',filename);
-	gui_put('resultslist',resultslist);
-	gui_put('ismean',ismean);
-	gui_sliderrange(0)
-	if get(handles.fileselector,'value')>1
-		gui_fileselector_Callback
-		set(handles.fileselector, 'value', currentframe-1);
-	end
-	gui_sliderdisp(gui_retr('pivlab_axis'));
+function validate_set_other_interpol_checkbox(hObject,~,~) %synchronizes the two existing "interpoalte missing data" checkboxes
+handles=gui_gethand;
+set(handles.interpol_missing,'Value',get(hObject,'Value'));
+set(handles.interpol_missing2,'Value',get(hObject,'Value'));
+
+function validate_stdev_thresh_Callback(hObject, ~, ~)
+misc_check_comma(hObject)
+
+function validate_suggest_bright_filter_Callback (~,~,~)
+handles=gui_gethand;
+resultslist=gui_retr('resultslist');
+frame=floor(get(handles.fileselector, 'value'));
+if size(resultslist,2)>=frame
+	%image-based filtering
+	set(handles.do_bright_filter, 'value',1);
+	%do_contrast_filter=1
+	selected=2*floor(get(handles.fileselector, 'value'))-1;
+	x=resultslist{1,frame};
+	y=resultslist{2,frame};
+	u=resultslist{3,frame};
+	v=resultslist{4,frame};
+	bright_filter_thresh=str2double(get(handles.bright_filter_thresh, 'String'));
+	[A,rawimageA]=import_get_img(selected);
+	[B,rawimageB]=import_get_img(selected+1);
+	[~,~,threshold_suggestion,~,~] = PIVlab_image_filter (0,1,x,y,u,v,0,bright_filter_thresh,A,B,rawimageA,rawimageB);
+	set(handles.bright_filter_thresh, 'String',num2str(threshold_suggestion));
+	[u,v,~,~,~] = PIVlab_image_filter (0,1,x,y,u,v,0,threshold_suggestion,A,B,rawimageA,rawimageB);
+end
+
+function validate_suggest_contrast_filter_Callback (~,~,~)
+handles=gui_gethand;
+resultslist=gui_retr('resultslist');
+frame=floor(get(handles.fileselector, 'value'));
+if size(resultslist,2)>=frame
+	%image-based filtering
+	set(handles.do_contrast_filter, 'value',1);
+	%do_contrast_filter=1
+	selected=2*floor(get(handles.fileselector, 'value'))-1;
+	x=resultslist{1,frame};
+	y=resultslist{2,frame};
+	u=resultslist{3,frame};
+	v=resultslist{4,frame};
+	contrast_filter_thresh=str2double(get(handles.contrast_filter_thresh, 'String'));
+	[A,rawimageA]=import_get_img(selected);
+	[B,rawimageB]=import_get_img(selected+1);
+	[~,~,threshold_suggestion,~,~] = PIVlab_image_filter (1,0,x,y,u,v,contrast_filter_thresh,0,A,B,rawimageA,rawimageB);
+	set(handles.contrast_filter_thresh, 'String',num2str(threshold_suggestion));
+	[u,v,~,~,~] = PIVlab_image_filter (1,0,x,y,u,v,threshold_suggestion,0,A,B,rawimageA,rawimageB);
+end
+
+function validate_update_velocity_limits_information
+velrect=gui_retr('velrect');
+handles=gui_gethand;
+set (handles.vel_limit_active, 'String', 'Limit active', 'backgroundcolor', [0.5 1 0.5]);
+umin=velrect(1);
+umax=velrect(3)+umin;
+vmin=velrect(2);
+vmax=velrect(4)+vmin;
+if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+	set (handles.limittext, 'String', ['valid u: ' num2str(round(umin*100)/100) ' to ' num2str(round(umax*100)/100) ' [px/frame]' sprintf('\n') 'valid v: ' num2str(round(vmin*100)/100) ' to ' num2str(round(vmax*100)/100) ' [px/frame]']);
 else
-	uiwait(msgbox('You can only delete frames with derived temporal parameters.','Notice','modal'));
+	set (handles.limittext, 'String', ['valid u: ' num2str(round(umin*100)/100) ' to ' num2str(round(umax*100)/100) ' [m/s]' sprintf('\n') 'valid v: ' num2str(round(vmin*100)/100) ' to ' num2str(round(vmax*100)/100) ' [m/s]']);
 end
+set (handles.vel_limit, 'String', 'Refine velocity limits');
+
+function validate_vector_val_Callback(~, ~, ~)
+gui_switchui('multip06')
+
+function validate_vel_limit_Callback(~, ~, ~)
+gui_toolsavailable(0)
+%if analys existing
+resultslist=gui_retr('resultslist');
+handles=gui_gethand;
+currentframe=2*floor(get(handles.fileselector, 'value'))-1;
+if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
+	x=resultslist{1,(currentframe+1)/2};
+	if size(x,1)>1
+		if get(handles.meanofall,'value')==1 %calculating mean doesn't mae sense...
+			index=1;
+			foundfirst=0;
+			for i = 1:size(resultslist,2)
+				x=resultslist{1,i};
+				if isempty(x)==0 && foundfirst==0
+					firstsizex=size(x,1);
+					secondsizex=size(x,2);
+					foundfirst=1;
+				end
+				if size(x,1)>1 && size(x,1)==firstsizex && size(x,2) == secondsizex
+					u(:,:,index)=resultslist{3,i}; %#ok<AGROW>
+					v(:,:,index)=resultslist{4,i}; %#ok<AGROW>
+					index=index+1;
+				end
+			end
+		else
+			y=resultslist{2,(currentframe+1)/2};
+			u=resultslist{3,(currentframe+1)/2};
+			v=resultslist{4,(currentframe+1)/2};
+			typevector=resultslist{5,(currentframe+1)/2};
+		end
+		velrect=gui_retr('velrect');
+		calu=gui_retr('calu');calv=gui_retr('calv');
+		if numel(velrect)>0
+			%user already selected window before...
+			%"filter u+v" and display scatterplot
+			%problem: if user selects limits and then wants to refine vel
+			%limits, all data is filterd out...
+			umin=velrect(1);
+			umax=velrect(3)+umin;
+			vmin=velrect(2);
+			vmax=velrect(4)+vmin;
+			%check if all results are nan...
+			u_backup=u;
+			v_backup=v;
+			u(u*calu<umin)=NaN;
+			u(u*calu>umax)=NaN;
+			v(u*calu<umin)=NaN;
+			v(u*calu>umax)=NaN;
+			v(v*calv<vmin)=NaN;
+			v(v*calv>vmax)=NaN;
+			u(v*calv<vmin)=NaN;
+			u(v*calv>vmax)=NaN;
+			if mean(mean(mean((isnan(u)))))>0.9 || mean(mean(mean((isnan(v)))))>0.9
+				disp('User calibrated after selecting velocity limits. Discarding limits.')
+				u=u_backup;
+				v=v_backup;
+			end
+		end
+
+		%problem: wenn nur ein frame analysiert, dann gibts probleme wenn display all frames in scatterplot an.
+		datau=reshape(u*calu,1,size(u,1)*size(u,2)*size(u,3));
+		datav=reshape(v*calv,1,size(v,1)*size(v,2)*size(v,3));
+		if size(datau,2)>1000000 %more than one million value pairs are too slow in scatterplot.
+			pos=unique(ceil(rand(1000000,1)*(size(datau,2)-1))); %select random entries...
+			scatter(gca,datau(pos),datav(pos), 0.25,'k.'); %.. and plot them
+			set(gca,'Yaxislocation','right','layer','top');
+		else
+			scatter(gca,datau,datav, 0.25,'k.');
+			set(gca,'Yaxislocation','right','layer','top');
+		end
+		drawnow;%needed from R2021b on... Why...?
+		oldsize=get(gca,'outerposition');
+		newsize=[oldsize(1)+10 0.15 oldsize(3)*0.87 oldsize(4)*0.87];
+		set(gca,'outerposition', newsize)
+		%%{
+		if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+			xlabel(gca, 'u velocity [px/frame]', 'fontsize', 12)
+			ylabel(gca, 'v velocity [px/frame]', 'fontsize', 12)
+		else
+			xlabel(gca, 'u velocity [m/s]', 'fontsize', 12)
+			ylabel(gca, 'v velocity [m/s]', 'fontsize', 12)
+		end
+
+		grid on
+		%axis equal;
+		set (gca, 'tickdir', 'in');
+		%rangeu=nanmax(nanmax(nanmax(u*calu)))-nanmin(nanmin(nanmin(u*calu)));
+		%rangev=nanmax(nanmax(nanmax(v*calv)))-nanmin(nanmin(nanmin(v*calv)));
+
+		%set(gca,'xlim',[nanmin(nanmin(nanmin(u*caluv)))-rangeu*0.15 nanmax(nanmax(nanmax(u*caluv)))+rangeu*0.15])
+		%set(gca,'ylim',[nanmin(nanmin(nanmin(v*caluv)))-rangev*0.15 nanmax(nanmax(nanmax(v*caluv)))+rangev*0.15])
+		%=range of data +- 15%
+		%%}
+
+		%{
+		keyboard
+		figure;
+		datax=rand(1000000,1);
+		datay=rand(1000000,1);
+		plottl=scatter(datax,datay)
+		roi = images.roi.Freehand;
+		draw(roi)
+		tf = inROI(roi,datax,datay);
+		plottl.CData=double([1-tf tf*0 tf*0]); %makes markers outside red.
+		%}
+		velrect = getrect(gca);
+		if velrect(1,3)~=0 && velrect(1,4)~=0
+			gui_put('velrect', velrect);
+			validate_update_velocity_limits_information
+			gui_sliderdisp(gui_retr('pivlab_axis'))
+			delete(findobj(gca,'Type','text','color','r'));
+			text(50,50,'Result will be shown after applying vector validation','color','r','fontsize',10, 'fontweight','bold', 'BackgroundColor', 'k')
+		else
+			gui_sliderdisp(gui_retr('pivlab_axis'))
+			text(50,50,'Invalid selection: Click and hold left mouse button to create a rectangle.','color','r','fontsize',8, 'BackgroundColor', 'k')
+		end
 	end
 end
+gui_toolsavailable(1)
+gui_MainWindow_ResizeFcn(gcf)
