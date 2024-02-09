@@ -2360,6 +2360,10 @@ handles.summaker = uicontrol(handles.multip22,'Style','pushbutton','String','Cal
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.stdmaker = uicontrol(handles.multip22,'Style','pushbutton','String','Calculate stdev','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@plot_temporal_operation_Callback, 2}, 'Tag','stdmaker','TooltipString','Calculate standard deviation of displacements and append an extra frame with the results');
 
+item=[0 item(2)+item(4)+margin parentitem(3) 2];
+handles.remove_temporal_frame = uicontrol(handles.multip22,'Style','pushbutton','String','Remove current','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot_remove_temporal_frame_Callback, 'Tag','remove_temporal_frame','TooltipString','Remove the currently displayed frame');
+
+
 %% multip23
 handles.multip23 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Image based validation', 'Tag','multip23','fontweight','bold');
 parentitem=get(handles.multip23, 'Position');
@@ -2596,12 +2600,7 @@ disp('-> UI generated.')
 function import_loadimgs_Callback(~, ~, ~)
 gui_switchui('multip01')
 delete(findobj('tag','hinting'))
-%test1=get(gca,'xlim');
-%test2=get(gca,'ylim');
-%if test1(2)==603 && test2(2)==580 %%only display hint when logo is shown
-%	text(400,30,'\leftarrow import your image pairs by clicking on ''Load images''','horizontalalignment','right','verticalalignment','middle','fontsize',14,'tag','hinting')
-%end
-%loadimgsbutton_Callback
+
 
 function roi_img_ROI_Callback(~, ~, ~)
 gui_switchui('multip02')
@@ -2716,6 +2715,22 @@ if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
 else
 	set(handles.extraction_choice,'string', {'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]';'Tangent velocity [m/s]'});
 end
+%draw extraction polygon when frame was changed.
+pivlab_axis=gui_retr('pivlab_axis');
+delete(findobj(pivlab_axis,'tag', 'extractpoint'));
+delete(findobj(pivlab_axis,'tag', 'extractline'));
+delete(findobj(pivlab_axis,'tag', 'circstring'));
+delete(findobj(pivlab_axis,'Tag', 'extract_poly'))
+xposition = gui_retr('xposition');
+yposition = gui_retr('yposition');
+extract_type = gui_retr('extract_type');
+if ~isempty(xposition) && ~isempty(yposition) && ~isempty(extract_type)
+	extract_update_display(extract_type, xposition, yposition)
+end
+
+
+
+
 
 function extract_dist_angle_Callback(~, ~, ~)
 gui_switchui('multip13')
@@ -3657,6 +3672,20 @@ if capturing==0
 			if strncmp(get(handles.multip14, 'visible'), 'on',2) %statistics panel visible
 				plot_update_Stats (x,y,u,v);
 			end
+			if strncmp(get(handles.multip12, 'visible'), 'on',2) %extract poly panel visible
+				%draw extraction polygon when frame was changed.
+				pivlab_axis=gui_retr('pivlab_axis');
+				delete(findobj(pivlab_axis,'tag', 'extractpoint'));
+				delete(findobj(pivlab_axis,'tag', 'extractline'));
+				delete(findobj(pivlab_axis,'tag', 'circstring'));
+				delete(findobj(pivlab_axis,'Tag', 'extract_poly'))
+				xposition = gui_retr('xposition');
+				yposition = gui_retr('yposition');
+				extract_type = gui_retr('extract_type');
+				if ~isempty(xposition) && ~isempty(yposition) && ~isempty(extract_type)
+					extract_update_display(extract_type, xposition, yposition)
+				end
+			end
 			plot_manually_discarded_vectors(target_axis,handles, x, y);
 		end
 		mask_redraw_masks
@@ -3921,7 +3950,7 @@ set(handles.zoomon,'Value',0);
 gui_put('xzoomlimit', []);
 gui_put('yzoomlimit', []);
 
-gui_sliderrange
+gui_sliderrange(1)
 gui_sliderdisp(gui_retr('pivlab_axis'))
 zoom reset
 
@@ -3958,7 +3987,7 @@ if getappdata(hgui,'video_selection_done')
 	end
 	gui_put('xzoomlimit',[]);
 	gui_put('yzoomlimit',[]);
-	gui_sliderrange
+	gui_sliderrange(1)
 	set (handles.filenamebox, 'string', filename);
 	gui_put('bg_img_A',[]);
 	gui_put('bg_img_B',[]);
@@ -4033,6 +4062,7 @@ if ~isequal(path,0)
 	end
 	gui_put('xzoomlimit',[]);
 	gui_put('yzoomlimit',[]);
+	extract_clear_plot_Callback
 
 	sequencer=gui_retr('sequencer');% 0=time resolved, 1 = pairwise, 2=reference
 
@@ -4111,7 +4141,7 @@ if ~isequal(path,0)
 		gui_put('pathname',pathname); %last path
 		gui_put ('filename',filename); %only for displaying
 		gui_put ('filepath',filepath); %full path and filename for analyses
-		gui_sliderrange
+		gui_sliderrange(1)
 		set (handles.filenamebox, 'string', filename);
 		gui_put ('resultslist', []); %clears old results
 		gui_put ('derived',[]);
@@ -4157,18 +4187,26 @@ if ~isequal(path,0)
 	end
 end
 
-function gui_sliderrange
+function gui_sliderrange(reset)
 filepath=gui_retr('filepath');
 handles=gui_gethand;
 if gui_retr('video_selection_done') == 0
 	if size(filepath,1)>2
 		sliderstepcount=size(filepath,1)/2;
 		set(handles.fileselector, 'enable', 'on');
-		set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
+		if reset==1
+			set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
+		else
+			set (handles.fileselector, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
+		end
 	else
 		sliderstepcount=1;
 		set(handles.fileselector, 'enable', 'off');
-		set (handles.fileselector,'value',1, 'min', 1,'max',2,'sliderstep', [0.5 0.5]);
+		if reset==1
+			set (handles.fileselector,'value',1, 'min', 1,'max',2,'sliderstep', [0.5 0.5]);
+		else
+			set (handles.fileselector, 'min', 1,'max',2,'sliderstep', [0.5 0.5]);
+		end
 	end
 else % a video has been imported
 	%video_frame_selection=retr('video_frame_selection');
@@ -4177,7 +4215,11 @@ else % a video has been imported
 	%set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
 	sliderstepcount=size(filepath,1)/2;
 	set(handles.fileselector, 'enable', 'on');
-	set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
+	if reset==1
+		set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
+	else
+		set (handles.fileselector, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
+	end
 end
 
 function gui_fileselector_Callback(~, ~, ~)
@@ -5192,7 +5234,7 @@ if ok==1
 		masks_in_frame=cell(1,floor(size(filepath,1)/2));
 	end
 
-	gui_sliderrange
+	gui_sliderrange(1)
 
 	clahe=get(handles.clahe_enable,'value');
 	highp=get(handles.enable_highpass,'value');
@@ -5674,7 +5716,7 @@ if ok==1
 	gui_put('filepath',filepath);
 	gui_put('filename',filename);
 	gui_put('ismean',[]);
-	gui_sliderrange
+	gui_sliderrange(1)
 	%% get all parameters for preprocessing
 	clahe=get(handles.clahe_enable,'value');
 	highp=get(handles.enable_highpass,'value');
@@ -6037,7 +6079,7 @@ if ~isequal(FileName,0)
 		gui_put('expected_image_size',[])
 		gui_put('existing_handles',[]);
 		handles=gui_gethand;
-		gui_sliderrange
+		gui_sliderrange(1)
 		set (handles.filenamebox, 'string', fileboxcontents);
 		gui_sliderdisp(gui_retr('pivlab_axis'))
 	catch
@@ -7935,95 +7977,76 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	gui_toolsavailable(0);
 	xposition=[];
 	yposition=[];
-	n = 0;
-	but = 1;
-	hold on;
+	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly')); %delete pre-existing
+	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle')); %delete pre-existing
+	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series')); %delete pre-existing
+	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_displayed_smaller_radii')) %delete pre-existing
+	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_max_circulation')) %delete pre-existing
 	if get(handles.draw_what,'value')==1 %polyline
 		extract_type='extract_poly';
 		extract_poly = images.roi.Polyline;
-		extract_poly.LabelVisible = 'off';
 		extract_poly.Tag=extract_type;
 		draw(extract_poly);
 		addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+		addlistener(extract_poly,'MovingROI',@extract_poly_ROIevents);
 		addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
 		xposition=extract_poly.Position(:,1);
 		yposition=extract_poly.Position(:,2);
-%xposition = extract_poly
-		%{
-		while but == 1
-			[xi,yi,but] = ginput(1);
-			if but~=1
-				break
+
+		extract_poly.LabelVisible = 'hover';
+		extract_poly.LabelAlpha = 0.5;
+		extract_poly.LabelTextColor = 'w';
+		if size(extract_poly.Position,1)<6
+			labelstring=[];
+			for i = 1:size(extract_poly.Position,1)
+				labelstring=[labelstring num2str(round(extract_poly.Position(i,1))) ',' num2str(round(extract_poly.Position(i,2))) ' ; ']; %#ok<AGROW>
 			end
-			delete(findobj('tag', 'extractpoint'))
-			plot(xi,yi,'r+','tag','extractpoint')
-			n = n+1;
-			xposition(n)=xi; %#ok<AGROW>
-			yposition(n)=yi; %#ok<AGROW>
-			delete(findobj('tag', 'extractline'))
-			delete(findobj('tag','areaint'));
-			line(xposition,yposition,'LineWidth',3, 'Color', [0,0,0.95],'tag','extractline');
-			line(xposition,yposition,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','extractline');
+			extract_poly.Label = labelstring;
+		else
+			extract_poly.LabelVisible = 'off';
 		end
-		%}
 	elseif get(handles.draw_what,'value')==2 %circle
 		extract_type='extract_circle';
-		for i=1:2
-			[xi,yi,but] = ginput(1);
-			if i==1;delete(findobj('tag', 'extractpoint'));end
-			n=n+1;
-			xposition_raw(n)=xi; %#ok<AGROW>
-			yposition_raw(n)=yi; %#ok<AGROW>
-			plot(xposition_raw(n),yposition_raw(n), 'r+', 'MarkerSize',10,'tag','extractpoint');
+		extract_poly = images.roi.Circle;
+		extract_poly.LabelVisible = 'off';
+		extract_poly.Tag=extract_type;
+		draw(extract_poly);
+		if extract_poly.Radius < 25 %check if circle is large enough or if user accidentally clicked once
+			extract_poly.Radius = 25;
 		end
-		deltax=abs(xposition_raw(1,1)-xposition_raw(1,2));
-		deltay=abs(yposition_raw(1,1)-yposition_raw(1,2));
-		radius=sqrt(deltax^2+deltay^2);
-		valtable=linspace(0,2*pi,361);
-		for i=1:size(valtable,2)
-			xposition(1,i)=sin(valtable(1,i))*radius+xposition_raw(1,1); %#ok<AGROW>
-			yposition(1,i)=cos(valtable(1,i))*radius+yposition_raw(1,1); %#ok<AGROW>
-		end
-		delete(findobj('tag', 'extractline'))
-		line(xposition,yposition,'LineWidth',3, 'Color', [0,0,0.95],'tag','extractline');
-		line(xposition,yposition,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','extractline');
-		text(xposition(1,1),yposition(1,1),'\leftarrow start/end','FontSize',7, 'Rotation', 90, 'BackgroundColor',[1 1 1],'tag','extractline')
-		text(xposition(1,1),yposition(1,1)+8,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag','extractline')
-		text(xposition(1,1),yposition(1,1)-8-radius*2,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag','extractline')
-		text(xposition(1,1)-radius-8,yposition(1,1)-radius,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag','extractline')
-		text(xposition(1,1)+radius+8,yposition(1,1)-radius,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag','extractline')
+		addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+		addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
+		xposition=extract_poly.Center;
+		yposition=extract_poly.Radius;		
 	elseif get(handles.draw_what,'value')==3 %circle series
 		extract_type='extract_circle_series';
 		set(handles.extraction_choice,'Value',11);
-		for i=1:2
-			[xi,yi,but] = ginput(1);
-			if i==1;delete(findobj('tag', 'extractpoint'));end
-			n=n+1;
-			xposition_raw(n)=xi; %#ok<AGROW>
-			yposition_raw(n)=yi; %#ok<AGROW>
-			plot(xposition_raw(n),yposition_raw(n), 'r+', 'MarkerSize',10,'tag','extractpoint');
+		extract_poly = images.roi.Circle;
+		extract_poly.LabelVisible = 'off';
+		extract_poly.Tag=extract_type;
+		draw(extract_poly);
+		if extract_poly.Radius < 25 %check if circle is large enough or if user accidentally clicked once
+			extract_poly.Radius = 25;
 		end
-		deltax=abs(xposition_raw(1,1)-xposition_raw(1,2));
-		deltay=abs(yposition_raw(1,1)-yposition_raw(1,2));
-		radius=sqrt(deltax^2+deltay^2);
-		valtable=linspace(0,2*pi,361);
-		for m=1:30
-			for i=1:size(valtable,2)
-				xposition(m,i)=sin(valtable(1,i))*(radius-((30-m)/30)*radius)+xposition_raw(1,1); %#ok<AGROW>
-				yposition(m,i)=cos(valtable(1,i))*(radius-((30-m)/30)*radius)+yposition_raw(1,1); %#ok<AGROW>
-			end
+		addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+		addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
+		xposition=extract_poly.Center;
+		yposition=extract_poly.Radius;		
+		x=resultslist{1,currentframe};
+		stepsize=ceil((x(1,2)-x(1,1))/1);
+		radii=linspace(stepsize,extract_poly.Radius-stepsize,round(((extract_poly.Radius-stepsize)/stepsize)));
+		for radius=radii
+			extract_poly_series=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',radius,'Tag',[extract_type '_displayed_smaller_radii'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none');
 		end
-		delete(findobj('tag', 'extractline'))
-		for m=1:30
-			line(xposition(m,:),yposition(m,:),'LineWidth',1.5, 'Color', [0.95,0.5,0.01],'tag','extractline');
-		end
-		text(xposition(30,1),yposition(30,1),'\leftarrow start/end','FontSize',7, 'Rotation', 90, 'BackgroundColor',[1 1 1],'tag','extractline')
-		text(xposition(30,1),yposition(30,1)+8,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag','extractline')
-		text(xposition(30,1),yposition(30,1)-8-radius*2,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag','extractline')
-		text(xposition(30,1)-radius-8,yposition(30,1)-radius,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag','extractline')
-		text(xposition(30,1)+radius+8,yposition(30,1)-radius,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag','extractline')
+		x_center=extract_poly.Center(1);
+		y_center=extract_poly.Center(2);
+		radius=extract_poly.Radius;
+		text(x_center,y_center+radius,' start/end','FontSize',7, 'Rotation', 90, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
+		text(x_center,y_center+radius+8,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
+		text(x_center,y_center-radius-8,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
+		text(x_center-radius-8,y_center,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[extract_type '_displayed_smaller_radii'])
+		text(x_center+radius+8,y_center,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[extract_type '_displayed_smaller_radii'])
 	end
-	hold off;
 	gui_put('xposition',xposition)
 	gui_put('yposition',yposition)
 	gui_put('extract_type',extract_type);
@@ -8034,7 +8057,6 @@ function extract_save_data_Callback(~, ~, ~)
 handles=gui_gethand;
 resultslist=gui_retr('resultslist');
 currentframe=floor(get(handles.fileselector, 'value'));
-
 if get(handles.extractLineAll, 'value')==0
 	startfr=currentframe;
 	endfr=currentframe;
@@ -8084,6 +8106,7 @@ for i=startfr:endfr
 			%also retrieve coordinates of polyline points if possible
 			cx=gui_retr('cx');
 			cy=gui_retr('cy');
+			%normal : 300 x 1
 			if size(c,2)>1 %circle series
 				if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
 					header=['circle nr., Distance on line [px], x-coordinate [px], y-coordinate [px], ' current];
@@ -8091,7 +8114,7 @@ for i=startfr:endfr
 					header=['circle nr., Distance on line [m], x-coordinate [m], y-coordinate [m], ' current];
 				end
 				wholeLOT=[];
-				for z=1:30
+				for z=1:size(c,1)
 					wholeLOT=[wholeLOT;[linspace(z,z,size(c,2))' distance(z,:)' cx(z,:)' cy(z,:)' c(z,:)']]; %#ok<AGROW> %anders.... untereinander
 				end
 			else
@@ -8119,35 +8142,47 @@ resultslist=gui_retr('resultslist');
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	x=resultslist{1,currentframe};
 	y=resultslist{2,currentframe};
-	xposition=gui_retr('xposition'); %not conflicting...?
-	yposition=gui_retr('yposition'); %not conflicting...?
+	xposition=gui_retr('xposition'); 
+	yposition=gui_retr('yposition');
 	extract_type=gui_retr('extract_type');
-	if numel(xposition)>1
-		for i=1:size(xposition,1)-1
-			%length of one segment:
-			laenge(i)=sqrt((xposition(i+1,1)-xposition(i,1))^2+(yposition(i+1,1)-yposition(i,1))^2); %#ok<AGROW>
+	if get(handles.draw_what,'value')==3 %circle series
+		set(handles.extraction_choice,'Value',11); %set to tangent
+	end
+	extractwhat=get(handles.extraction_choice,'Value');
+	if ~isempty(xposition)
+		if strcmp(extract_type,'extract_poly')
+			for i=1:size(xposition,1)-1
+				%length of one segment:
+				laenge(i)=sqrt((xposition(i+1,1)-xposition(i,1))^2+(yposition(i+1,1)-yposition(i,1))^2); %#ok<AGROW>
+			end
+			length=sum(laenge);
+			extraction_coordinates_x = xposition; %coordinates in rows
+			extraction_coordinates_y = yposition;
+		elseif strcmp(extract_type,'extract_circle')
+			length = 2*yposition*pi;
+			%cenvert circular roi object to series of coordinates
+			valtable=linspace(0,2*pi,361)';
+			extraction_coordinates_x=zeros(size(valtable));
+			extraction_coordinates_y=zeros(size(valtable));
+			for i=1:size(valtable,1)
+				extraction_coordinates_x (i,1)=sin(valtable(i,1))*yposition+xposition(1);
+				extraction_coordinates_y (i,1)=cos(valtable(i,1))*yposition+xposition(2);
+			end
 		end
-		length=sum(laenge);
-		percentagex=xposition/max(max(x));
-		xaufderivative=percentagex*size(x,2);
-		percentagey=yposition/max(max(y));
-		yaufderivative=percentagey*size(y,1);
+		%percentagex=xposition/max(max(x));
+		%xaufderivative=percentagex*size(x,2);
+		%percentagey=yposition/max(max(y));
+		%yaufderivative=percentagey*size(y,1);
 		nrpoints=str2num(get(handles.nrpoints,'string'));
-		if get(handles.draw_what,'value')==3 %circle series
-			set(handles.extraction_choice,'Value',11); %set to tangent
-		end
-		extractwhat=get(handles.extraction_choice,'Value');
+		
 		switch extractwhat
 			case {1,2,3,4,5,6,7,8}
 				plot_derivative_calc(currentframe,extractwhat+1,0);
 				derived=gui_retr('derived');
 				maptoget=derived{extractwhat,currentframe};
-
 				maptoget=plot_rescale_maps_nan(maptoget,0);
-				[cx, cy, c] = improfile(maptoget,xposition,yposition,round(nrpoints),'bicubic');
-
+				[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
 				distance=linspace(0,length,size(c,1))';
-
 			case {9,10}
 				% auf stelle 9 steht vector angle. Bei derivatives ist der aber auf platz 11. daher zwei dazu
 				%auf stelle 10 steht correlation coeff, bei derivatives auf
@@ -8155,13 +8190,11 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 				plot_derivative_calc(currentframe,extractwhat+2,0);
 				derived=gui_retr('derived');
 				maptoget=derived{extractwhat+1,currentframe};
-
 				maptoget=plot_rescale_maps_nan(maptoget,0);
-				[cx, cy, c] = improfile(maptoget,xposition,yposition,round(nrpoints),'bicubic');
-
+				[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
 				distance=linspace(0,length,size(c,1))';
 			case 11 %tangent
-				if size(xposition,2)<=1 %user did not choose circle series
+				if ~strcmp(extract_type,'extract_circle_series')
 					if size(resultslist,1)>6 %filtered exists
 						if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
 							u=resultslist{10,currentframe};
@@ -8193,8 +8226,8 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 					u=plot_rescale_maps_nan(u,0);
 					v=plot_rescale_maps_nan(v,0);
 
-					[cx, cy, cu] = improfile(u,xposition,yposition,round(nrpoints),'bicubic');
-					cv = improfile(v,xposition,yposition,round(nrpoints),'bicubic');
+					[cx, cy, cu] = improfile(u,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
+					cv = improfile(v,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
 					cx=cx';
 					cy=cy';
 					deltax=zeros(1,size(cx,2)-1);
@@ -8223,14 +8256,27 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 					cx=cx';
 					cy=cy';
 					distance=linspace(0,length,size(cu,1))';
-				else %user chose circle series
-					for m=1:30
-						for i=1:size(xposition,2)-1
-							%length of one segment:
-							laenge(m,i)=sqrt((xposition(m,i+1)-xposition(m,i))^2+(yposition(m,i+1)-yposition(m,i))^2);
+				end
+				%% circle series --> can only be tangent velocity
+				if strcmp(extract_type,'extract_circle_series') %user chose circle series
+
+					%draw circles as displayed
+
+					x=resultslist{1,currentframe};
+					stepsize=ceil((x(1,2)-x(1,1))/1);
+					radii=[linspace(stepsize,yposition-stepsize,round(((yposition-stepsize)/stepsize))) yposition];
+					length = 2*radii*pi; %column vector with the lengths of the circle series
+					%convert circular roi object to series of coordinates
+					valtable=linspace(0,2*pi,361)';
+					extraction_coordinates_x=zeros(size(valtable,1),numel(length)); %rows=coordinates of one circle, cols = the different circles of the series
+					extraction_coordinates_y=zeros(size(valtable,1),numel(length));
+					for i=1:size(valtable,1)
+						for j=1:numel(length)
+							extraction_coordinates_x (i,j)=sin(valtable(i,1))*radii(j)+xposition(1);
+							extraction_coordinates_y (i,j)=cos(valtable(i,1))*radii(j)+xposition(2);
 						end
-						length(m)=sum(laenge(m,:));
 					end
+
 					if size(resultslist,1)>6 %filtered exists
 						if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
 							u=resultslist{10,currentframe};
@@ -8260,10 +8306,11 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 					v=v*calv-gui_retr('subtr_v');
 					u=plot_rescale_maps_nan(u,0);
 					v=plot_rescale_maps_nan(v,0);
-					min_y=floor(min(min(yposition)))-1;
-					max_y=ceil(max(max(yposition)))+1;
-					min_x=floor(min(min(xposition)))-1;
-					max_x=ceil(max(max(xposition)))+1;
+
+					min_y=floor(min(extraction_coordinates_y(:)))-1;
+					max_y=ceil(max(extraction_coordinates_y(:)))+1;
+					min_x=floor(min(extraction_coordinates_x(:)))-1;
+					max_x=ceil(max(extraction_coordinates_x(:)))+1;
 					if min_y<1
 						min_y=1;
 					end
@@ -8279,9 +8326,10 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 
 					uc=u(min_y:max_y,min_x:max_x);
 					vc=v(min_y:max_y,min_x:max_x);
-					for m=1:30
-						[cx(m,:),cy(m,:),cu(m,:)] = improfile(uc,xposition(m,:)-min_x,yposition(m,:)-min_y,100,'nearest'); %#ok<AGROW>
-						cv(m,:) =improfile(vc,xposition(m,:)-min_x,yposition(m,:)-min_y,100,'nearest'); %#ok<AGROW>
+
+					for m=1:numel(length)
+						[cx(m,:),cy(m,:),cu(m,:)] = improfile(uc,extraction_coordinates_x(:,m)-min_x,extraction_coordinates_y(:,m)-min_y,100,'nearest');
+						cv(m,:) =improfile(vc,extraction_coordinates_x(:,m)-min_x,extraction_coordinates_y(:,m)-min_y,100,'nearest');
 					end
 					deltax=zeros(1,size(cx,2)-1);
 					deltay=zeros(1,size(cx,2)-1);
@@ -8289,7 +8337,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 					alpha=zeros(1,size(cx,2)-1);
 					sinalpha=zeros(1,size(cx,2)-1);
 					cosalpha=zeros(1,size(cx,2)-1);
-					for m=1:30
+					for m=1:numel(length)
 						for i=2:size(cx,2)
 							deltax(m,i)=cx(m,i)-cx(m,i-1);
 							deltay(m,i)=cy(m,i)-cy(m,i-1);
@@ -8308,13 +8356,14 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 					cu=cu.*cosalpha;
 					cv=cv.*sinalpha;
 					c=cu-cv;
-					for m=1:30
-						distance(m,:)=linspace(0,length(m),size(cu,2))'; %#ok<AGROW> %in pixeln...
+					for m=1:numel(length)
+						distance(m,:)=linspace(0,length(m),size(cu,2))'; % %in pixeln...
 					end
 				end
-
 		end
-		if size(xposition,2)<=1 %user did not choose circle series
+		disp('ok')
+		%% Plotting
+		if ~strcmp(extract_type,'extract_circle_series') %user did not choose circle series
 			h=figure;
 			screensize=get( 0, 'ScreenSize' );
 			rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
@@ -8356,7 +8405,6 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 
 			%modified units...
 			xlabel(['Distance on line' distunit_2 sprintf('\n') 'Integral of ' currentstripped ' = ' num2str(integral) ' [' unitpar '*' distunit_2 ']']);
-
 			ylabel(current);
 			gui_put('distance',distance*calxy);
 			gui_put('c',c);
@@ -8366,81 +8414,49 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			h_extractionplot=gui_retr('h_extractionplot');
 			h_extractionplot(size(h_extractionplot,1)+1,1)=h;
 			gui_put ('h_extractionplot', h_extractionplot);
-		else %user chose circle series
+		end
+		if strcmp(extract_type,'extract_circle_series') %user chose circle series
 			calxy=gui_retr('calxy');
-			for m=1:30
-				integral(m)=trapz(distance(m,:)*calxy,c(m,:)); %#ok<AGROW>
+			for m=1:numel(length)
+				integral(m)=trapz(distance(m,:)*calxy,c(m,:));
 			end
 			%highlight circle with highest circ
 			delete(findobj('tag', 'extractline'))
-			for m=1:30
-				line(xposition(m,:),yposition(m,:),'LineWidth',1.5, 'Color', [0.95,0.5,0.01],'tag','extractline');
-			end
 			[r,col]=find(max(abs(integral))==abs(integral)); %find absolute max of integral
-			line(xposition(col,:),yposition(col,:),'LineWidth',2.5, 'Color', [0.2,0.5,0.7],'tag','extractline');
-			h=figure;
-			screensize=get( 0, 'ScreenSize' );
-			rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
-			set(h,'position', rect);
-			current=get(handles.extraction_choice,'string');
-			current=current{extractwhat};
-			set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
-			hold on;
-			for m=1:30
-				h2=plot(distance(m,:)*calxy,c(m,:), 'color',[m/30, rand(1)/4+0.5, 1-m/30]);
-			end
-			hold off;
-			set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-			if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-				xlabel('Distance on line [px]');
-			else
-				xlabel('Distance on line [m]');
-			end
-			ylabel(current);
-			h3=figure;
-			screensize=get( 0, 'ScreenSize' );
-			rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
-			set(h3,'position', rect);
-			current=get(handles.extraction_choice,'string');
-			current=current{extractwhat};
-			set(h3,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
-			calxy=gui_retr('calxy');
-			%user can click on point, circle will be displayed in main window
-			plot (1:30, integral);
-			hold on;
-			scattergroup1=scatter(1:30, integral, 80, 'ko');
-			hold off;
+			if ~isempty(radii(col))
+				extract_poly_maximum_circ=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',radii(col),'Tag',[extract_type '_max_circulation'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none','Color','r','StripeColor','y');
+				h=figure;
+				screensize=get( 0, 'ScreenSize' );
+				rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
+				set(h,'position', rect);
+				current=get(handles.extraction_choice,'string');
+				current=current{extractwhat};
+				set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
+				calxy=gui_retr('calxy');
 
-			if verLessThan('matlab','8.4')
-				set(scattergroup1, 'ButtonDownFcn', @extract_hitcircle, 'hittestarea', 'off');
-			else
-				% >R2014a
-				set(scattergroup1, 'ButtonDownFcn', @extract_hitcircle, 'pickableparts', 'visible');
+				plot (1:numel(length), integral);
+				hold on;
+				scattergroup1=scatter(1:numel(length), integral, 80, 'ko');
+				hold off;
+				%	set(scattergroup1, 'ButtonDownFcn', @extract_hitcircle, 'pickableparts', 'visible');
+				%title('Click the points of the graph to highlight it''s corresponding circle.')
+				set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
+				xlabel('circle series nr. (circle with max. circulation highlighted)');
+				if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+					ylabel('tangent velocity loop integral (circulation) [px^2/frame]');
+				else
+					ylabel('tangent velocity loop integral (circulation) [m^2/s]');
+				end
+				gui_put('distance',distance*calxy);
+				gui_put('c',c);
+				[cx_cal,cy_cal] = calibrate_xy(cx,cy);
+				gui_put('cx',cx_cal);
+				gui_put('cy',cy_cal);
+				gui_put('integral', integral);
+				h_extractionplot=gui_retr('h_extractionplot');
+				h_extractionplot(size(h_extractionplot,1)+1,1)=h;
+				gui_put ('h_extractionplot', h_extractionplot);
 			end
-
-
-
-			title('Click the points of the graph to highlight it''s corresponding circle.')
-			set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-			xlabel('circle series nr. (circle with max. circulation highlighted in blue)');
-			if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-				ylabel('tangent velocity loop integral (circulation) [px^2/frame]');
-			else
-				ylabel('tangent velocity loop integral (circulation) [m^2/s]');
-			end
-			gui_put('distance',distance*calxy);
-			gui_put('c',c);
-			[cx_cal,cy_cal] = calibrate_xy(cx,cy);
-			gui_put('cx',cx_cal);
-			gui_put('cy',cy_cal);
-			gui_put('h3plot', h3);
-			gui_put('integral', integral);
-			h_extractionplot=gui_retr('h_extractionplot');
-			h_extractionplot(size(h_extractionplot,1)+1,1)=h;
-			gui_put ('h_extractionplot', h_extractionplot);
-			h_extractionplot2=gui_retr('h_extractionplot2');
-			h_extractionplot2(size(h_extractionplot2,1)+1,1)=h3;
-			gui_put ('h_extractionplot2', h_extractionplot2);
 		end
 	end
 end
@@ -8490,6 +8506,10 @@ delete(findobj(gui_retr('pivlab_axis'),'tag', 'extractpoint'));
 delete(findobj(gui_retr('pivlab_axis'),'tag', 'extractline'));
 delete(findobj(gui_retr('pivlab_axis'),'tag', 'circstring'));
 delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_displayed_smaller_radii'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_max_circulation'))
 gui_put('xposition',[]);
 gui_put('yposition',[]);
 gui_put('extract_type',[]);
@@ -9065,7 +9085,7 @@ else
 		setappdata(hgui,names{i},vars.(names{i}))
 	end
 	gui_put('existing_handles',[]);
-	gui_sliderrange
+	gui_sliderrange(1)
 	handles=gui_gethand;
 
 	set(handles.clahe_enable,'value',gui_retr('clahe_enable'));
@@ -10253,7 +10273,7 @@ if isempty(resultslist)==0
 			gui_put('filename',filename);
 			gui_put('resultslist',resultslist);
 			gui_put('ismean',[]);
-			gui_sliderrange
+			gui_sliderrange(1)
 		end
 		str = strrep(get(handles.selectedFramesMean,'string'),'-',':');
 		endinside=strfind(str, 'end');
@@ -10464,7 +10484,7 @@ if isempty(resultslist)==0
 					gui_put ('filepath', filepath);
 					gui_put ('filename', filename);
 					gui_put ('typevector', typevector);
-					gui_sliderrange
+					gui_sliderrange(1)
 					try
 						set (handles.fileselector,'value',get (handles.fileselector,'max'));
 					catch
@@ -11251,12 +11271,14 @@ end
 function extract_save_polyline_Callback (~,~)
 xposition=gui_retr('xposition');
 yposition=gui_retr('yposition');
+extract_type = gui_retr('extract_type');
+
 if ~isempty(xposition) && ~isempty(yposition)
 	[polyfile,polypath] = uiputfile('*.mat','Save coordinates','PIVlab_coordinates.mat');
 	if isequal(polyfile,0) | isequal(polypath,0)
 		%do nothing
 	else
-		save(fullfile(polypath,polyfile),'xposition','yposition');
+		save(fullfile(polypath,polyfile),'xposition','yposition','extract_type');
 	end
 end
 
@@ -11268,22 +11290,17 @@ if size(filepath,1) > 1 %did the user load images?
 	if isequal(polyfile,0) | isequal(polypath,0)
 		%do nothing
 	else
-		load(fullfile(polypath,polyfile),'xposition','yposition');
-		try
+		load(fullfile(polypath,polyfile),'xposition','yposition','extract_type');
+		if ~isempty(xposition) && ~isempty(yposition) && ~isempty(extract_type)
+			extract_clear_plot_Callback
 			gui_put('xposition',xposition);
 			gui_put('yposition',yposition);
+			gui_put('extract_type',extract_type);
 			delete(findobj('tag', 'extractline'))
 			delete(findobj('tag','areaint'));
-			if size(xposition,1)==1
-				line(xposition,yposition,'LineWidth',3, 'Color', [0,0,0.95],'tag','extractline');
-				line(xposition,yposition,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','extractline');
-			else
-				for m=1:30
-					line(xposition(m,:),yposition(m,:),'LineWidth',1.5, 'Color', [0.95,0.5,0.01],'tag','extractline');
-				end
-			end
-		catch
-			disp(['Error. No coordinate data found in ' fullfile(polypath,polyfile)])
+			extract_update_display(extract_type, xposition, yposition);
+		else
+			disp ('No polyline coordinate data found in selected file.')
 		end
 	end
 end
@@ -14634,11 +14651,148 @@ function extract_poly_ROIevents(src,evt)
 evname = evt.EventName;
 handles=gui_gethand;
 switch(evname)
+	case{'MovingROI'}
+		if strcmp(src.Tag,'extract_poly')
+			if size(src.Position,1)<6
+				labelstring=[];
+				for i = 1:size(src.Position,1)
+					labelstring=[labelstring num2str(round(src.Position(i,1))) ',' num2str(round(src.Position(i,2))) ' ; ']; %#ok<AGROW>
+				end
+				src.Label = labelstring;
+				if strcmp (src.LabelVisible,'off')
+					src.LabelVisible = 'hover';
+				end
+			else
+				if strcmp (src.LabelVisible,'hover')
+					src.LabelVisible = 'off';
+				end
+			end
+		end
 	case{'ROIMoved'}
-		gui_put('xposition',src.Position(:,1));
-		gui_put('yposition',src.Position(:,2));
+		if strcmp(src.Tag,'extract_poly')
+			gui_put('xposition',src.Position(:,1));
+			gui_put('yposition',src.Position(:,2));
+		end
+		if strcmp(src.Tag,'extract_circle')
+			gui_put('xposition',src.Center);
+			gui_put('yposition',src.Radius);
+		end
+		if strcmp(src.Tag,'extract_circle_series')
+			delete(findobj(gui_retr('pivlab_axis'),'Tag',[src.Tag '_displayed_smaller_radii']))
+			delete(findobj(gui_retr('pivlab_axis'),'Tag',[src.Tag '_max_circulation']))
+			currentframe=floor(get(handles.fileselector, 'value'));
+			pivlab_axis=gui_retr('pivlab_axis');
+			resultslist=gui_retr('resultslist');
+			x=resultslist{1,currentframe};
+			stepsize=ceil((x(1,2)-x(1,1))/1);
+			radii=linspace(stepsize,src.Radius-stepsize,round(((src.Radius-stepsize)/stepsize)));
+			for radius=radii
+				extract_poly_series=drawcircle(gui_retr('pivlab_axis'),'Center',src.Center,'Radius',radius,'Tag',[src.Tag '_displayed_smaller_radii'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none');
+			end
+			x_center=src.Center(1);
+			y_center=src.Center(2);
+			radius=src.Radius;
+			text(pivlab_axis,x_center,y_center+radius,' start/end','FontSize',7, 'Rotation', 90, 'BackgroundColor',[1 1 1],'tag',[src.Tag '_displayed_smaller_radii'])
+			text(pivlab_axis,x_center,y_center+radius+8,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[src.Tag '_displayed_smaller_radii'])
+			text(pivlab_axis,x_center,y_center-radius-8,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[src.Tag '_displayed_smaller_radii'])
+			text(pivlab_axis,x_center-radius-8,y_center,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[src.Tag '_displayed_smaller_radii'])
+			text(pivlab_axis,x_center+radius+8,y_center,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[src.Tag '_displayed_smaller_radii'])
+			gui_put('xposition',src.Center);
+			gui_put('yposition',src.Radius);
+		end
 	case{'DeletingROI'}
-		delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly'))
+		if strcmp(src.Tag,'extract_circle_series')
+			delete(findobj(gui_retr('pivlab_axis'),'Tag',[src.Tag '_displayed_smaller_radii']))
+		end
+		delete(findobj(gui_retr('pivlab_axis'),'Tag',src.Tag))
 		gui_put('xposition',[]);
 		gui_put('yposition',[]);
+		gui_put('extract_type',[]);
+end
+
+function extract_update_display(extract_type, xposition, yposition)
+if strcmp(extract_type,'extract_poly') %polyline
+	extract_poly=drawpolyline(gui_retr('pivlab_axis'),'Position',[xposition yposition]);
+	extract_poly.LabelVisible = 'off';
+	extract_poly.Tag=extract_type;
+	addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+	addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
+end
+if strcmp(extract_type,'extract_circle') %circle
+	extract_poly=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',yposition);
+	extract_poly.LabelVisible = 'off';
+	extract_poly.Tag=extract_type;
+	addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+	addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
+end
+if strcmp(extract_type,'extract_circle_series') %circle series
+	extract_poly=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',yposition);
+	extract_poly.LabelVisible = 'off';
+	extract_poly.Tag=extract_type;
+	addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+	addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
+	handles=gui_gethand;
+	currentframe=floor(get(handles.fileselector, 'value'));
+	resultslist=gui_retr('resultslist');
+	xposition=extract_poly.Center;
+	yposition=extract_poly.Radius;
+	try
+	x=resultslist{1,currentframe};
+	catch
+		msgbox('You cannot load coordinates for non-analyzed frames.','Error','error','modal')
+	end
+	stepsize=ceil((x(1,2)-x(1,1))/1);
+	radii=linspace(stepsize,extract_poly.Radius-stepsize,round(((extract_poly.Radius-stepsize)/stepsize)));
+	for radius=radii
+		extract_poly_series=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',radius,'Tag',[extract_type '_displayed_smaller_radii'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none');
+	end
+	x_center=extract_poly.Center(1);
+	y_center=extract_poly.Center(2);
+	radius=extract_poly.Radius;
+	text(x_center,y_center+radius,' start/end','FontSize',7, 'Rotation', 90, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
+	text(x_center,y_center+radius+8,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
+	text(x_center,y_center-radius-8,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
+	text(x_center-radius-8,y_center,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[extract_type '_displayed_smaller_radii'])
+	text(x_center+radius+8,y_center,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[extract_type '_displayed_smaller_radii'])
+end
+
+function plot_remove_temporal_frame_Callback (~,~,~)
+handles=gui_gethand;
+filepath=gui_retr('filepath');
+filename=gui_retr('filename');
+resultslist=gui_retr('resultslist');
+
+if isempty(resultslist)==0
+	if size(filepath,1)>0
+		sizeerror=0;
+		typevectormittel=ones(size(resultslist{1,1}));
+		ismean=gui_retr('ismean');
+		if isempty(ismean)==1
+			ismean=zeros(size(resultslist,2),1);
+		end
+%dont remove all, but only the current one.
+%probably shift the remaining ones....?
+currentframe=floor(get(handles.fileselector, 'value'));
+
+if ismean(currentframe,1)==1
+	filepath(currentframe*2,:)=[];
+	filename(currentframe*2,:)=[];
+	filepath(currentframe*2-1,:)=[];
+	filename(currentframe*2-1,:)=[];
+	resultslist(:,currentframe)=[];
+	ismean(currentframe,:)=[];
+	gui_put('filepath',filepath);
+	gui_put('filename',filename);
+	gui_put('resultslist',resultslist);
+	gui_put('ismean',ismean);
+	gui_sliderrange(0)
+	if get(handles.fileselector,'value')>1
+		gui_fileselector_Callback
+		set(handles.fileselector, 'value', currentframe-1);
+	end
+	gui_sliderdisp(gui_retr('pivlab_axis'));
+else
+	uiwait(msgbox('You can only delete frames with derived temporal parameters.','Notice','modal'));
+end
+	end
 end
