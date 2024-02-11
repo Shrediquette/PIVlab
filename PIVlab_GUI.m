@@ -4455,10 +4455,11 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
 		xposition=extract_poly.Position(:,1);
 		yposition=extract_poly.Position(:,2);
-
 		extract_poly.LabelVisible = 'hover';
-		extract_poly.LabelAlpha = 0.5;
-		extract_poly.LabelTextColor = 'w';
+		if ~verLessThan('matlab','9.8') %I have no clue when this functionality was added... Can't find any info on this.
+			extract_poly.LabelAlpha = 0.5;
+			extract_poly.LabelTextColor = 'w';
+		end
 		if size(extract_poly.Position,1)<6
 			labelstring=[];
 			for i = 1:size(extract_poly.Position,1)
