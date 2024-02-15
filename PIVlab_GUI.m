@@ -315,6 +315,7 @@ else %Figure handle does already exist --> bring PIVlab to foreground.
 	disp('Only one instance of PIVlab is allowed to run.')
 	figure(fh)
 end
+
 function acquisition_browse_Callback(~,~,~)
 handles=gui_gethand;
 folder_name = uigetdir(gui_retr('pathname'),'Select image folder for saving');
@@ -4620,14 +4621,19 @@ if size(filepath,1) > 1 %did the user load images?
 	end
 end
 
-function extract_plot_data_Callback(~, ~, ~)
+function extract_plot_data_Callback(A, ~, ~)
 handles=gui_gethand;
-currentframe=floor(get(handles.fileselector, 'value'));
+
+if strcmp (A.Tag,'plot_data') %function called from button press
+	currentframe=floor(get(handles.fileselector, 'value'));
+else %function called from other skript
+	currentframe=A.Tag;
+end
 resultslist=gui_retr('resultslist');
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	x=resultslist{1,currentframe};
 	y=resultslist{2,currentframe};
-	xposition=gui_retr('xposition'); 
+	xposition=gui_retr('xposition');
 	yposition=gui_retr('yposition');
 	extract_type=gui_retr('extract_type');
 	if get(handles.draw_what,'value')==3 %circle series
@@ -4848,56 +4854,53 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		end
 		%% Plotting
 		if ~strcmp(extract_type,'extract_circle_series') %user did not choose circle series
-			h=figure;
-			screensize=get( 0, 'ScreenSize' );
-			rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
-			set(h,'position', rect);
-			current=get(handles.extraction_choice,'string');
-			current=current{extractwhat};
-			set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
+			
+
 			calxy=gui_retr('calxy');
-
-			%removing nans for integral!
-			distance2=distance(~isnan(c));
-			c2=c(~isnan(c));
-
-			integral=trapz(distance2*calxy,c2);
-			h2=plot(distance*calxy,c);
-
 			%get units
 			if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
 				distunit='px^2';
 			else
 				distunit='m^2';
 			end
-
-			unitpar=get(handles.extraction_choice,'string');
-			unitpar=unitpar{get(handles.extraction_choice,'value')};
-			unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
-
-			%text(0+0.05*max(distance*calxy),min(c)+0.05*max(c),['Integral = ' num2str(integral) ' [' unitpar '*' distunit ']'], 'BackgroundColor', 'w','fontsize',7)
-			set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-
-
 			if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
 				distunit_2=' [px]';
 			else
 				distunit_2=' [m]';
 			end
-
+			
+			current=get(handles.extraction_choice,'string');
+			current=current{extractwhat};
+			%removing nans for integral!
+			distance2=distance(~isnan(c));
+			c2=c(~isnan(c));
+			integral=trapz(distance2*calxy,c2);
 			currentstripped=current(1:strfind(current,'[')-1);
 
+			unitpar=get(handles.extraction_choice,'string');
+			unitpar=unitpar{get(handles.extraction_choice,'value')};
+			unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
+			%plot only when called from button...
+			if strcmp (A.Tag,'plot_data') %function called from button press
+				h=figure;
+				screensize=get( 0, 'ScreenSize' );
+				rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
+				set(h,'position', rect);
+				set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
+				h2=plot(distance*calxy,c);
+				set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
+				h_extractionplot=gui_retr('h_extractionplot');
+				h_extractionplot(size(h_extractionplot,1)+1,1)=h;
+				gui_put ('h_extractionplot', h_extractionplot);
+				xlabel(['Distance on line' distunit_2 sprintf('\n') 'Integral of ' currentstripped ' = ' num2str(integral) ' [' unitpar '*' distunit_2 ']']);
+				ylabel(current);
+			end
 			%modified units...
-			xlabel(['Distance on line' distunit_2 sprintf('\n') 'Integral of ' currentstripped ' = ' num2str(integral) ' [' unitpar '*' distunit_2 ']']);
-			ylabel(current);
 			gui_put('distance',distance*calxy);
 			gui_put('c',c);
 			[cx_cal,cy_cal] = calibrate_xy(cx,cy);
 			gui_put('cx',cx_cal);
 			gui_put('cy',cy_cal);
-			h_extractionplot=gui_retr('h_extractionplot');
-			h_extractionplot(size(h_extractionplot,1)+1,1)=h;
-			gui_put ('h_extractionplot', h_extractionplot);
 		end
 		if strcmp(extract_type,'extract_circle_series') %user chose circle series
 			calxy=gui_retr('calxy');
@@ -4909,27 +4912,29 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			[r,col]=find(max(abs(integral))==abs(integral)); %find absolute max of integral
 			if ~isempty(radii(col))
 				extract_poly_maximum_circ=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',radii(col),'Tag',[extract_type '_max_circulation'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none','Color','r','StripeColor','y');
-				h=figure;
-				screensize=get( 0, 'ScreenSize' );
-				rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
-				set(h,'position', rect);
 				current=get(handles.extraction_choice,'string');
 				current=current{extractwhat};
-				set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
 				calxy=gui_retr('calxy');
-
-				plot (1:numel(length), integral);
-				hold on;
-				scattergroup1=scatter(1:numel(length), integral, 80, 'ko');
-				hold off;
-				%	set(scattergroup1, 'ButtonDownFcn', @extract_hitcircle, 'pickableparts', 'visible');
-				%title('Click the points of the graph to highlight it''s corresponding circle.')
-				set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-				xlabel('circle series nr. (circle with max. circulation highlighted)');
-				if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-					ylabel('tangent velocity loop integral (circulation) [px^2/frame]');
-				else
-					ylabel('tangent velocity loop integral (circulation) [m^2/s]');
+				if strcmp (A.Tag,'plot_data') %function called from button press
+					h=figure;
+					screensize=get( 0, 'ScreenSize' );
+					rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
+					set(h,'position', rect);
+					set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
+					plot (1:numel(length), integral);
+					hold on;
+					scattergroup1=scatter(1:numel(length), integral, 80, 'ko');
+					hold off;
+					set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
+					xlabel('circle series nr. (circle with max. circulation highlighted)');
+					if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+						ylabel('tangent velocity loop integral (circulation) [px^2/frame]');
+					else
+						ylabel('tangent velocity loop integral (circulation) [m^2/s]');
+					end
+					h_extractionplot=gui_retr('h_extractionplot');
+					h_extractionplot(size(h_extractionplot,1)+1,1)=h;
+					gui_put ('h_extractionplot', h_extractionplot);
 				end
 				gui_put('distance',distance*calxy);
 				gui_put('c',c);
@@ -4937,9 +4942,6 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 				gui_put('cx',cx_cal);
 				gui_put('cy',cy_cal);
 				gui_put('integral', integral);
-				h_extractionplot=gui_retr('h_extractionplot');
-				h_extractionplot(size(h_extractionplot,1)+1,1)=h;
-				gui_put ('h_extractionplot', h_extractionplot);
 			end
 		end
 	end
@@ -5052,14 +5054,15 @@ else
 end
 selected=0;
 for i=startfr:endfr
-	set(handles.fileselector, 'value',i)
+	%set(handles.fileselector, 'value',i)
 	%sliderdisp(retr('pivlab_axis'))
-	currentframe=floor(get(handles.fileselector, 'value'));
+	currentframe=i;%floor(get(handles.fileselector, 'value'));
 	if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		delete(findobj('tag', 'derivplotwindow'));
-		extract_plot_data_Callback %make sure that data was calculated
+		caller.Tag=i;
+		extract_plot_data_Callback(caller) %make sure that data was calculated
 		%close figure...
-		delete(findobj('tag', 'derivplotwindow'));
+		%delete(findobj('tag', 'derivplotwindow'));
 		extractwhat=get(handles.extraction_choice,'Value');
 		current=get(handles.extraction_choice,'string');
 		current=current{extractwhat};
@@ -5078,6 +5081,7 @@ for i=startfr:endfr
 			end
 			[FileName,PathName] = uiputfile('*.txt','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' currentED '.txt'])); %framenummer in dateiname
 			selected=1;
+			gui_toolsavailable(0,'Busy, extracting data...');drawnow
 		end
 		if isequal(FileName,0) | isequal(PathName,0)
 			%exit for
@@ -5119,6 +5123,7 @@ for i=startfr:endfr
 		end
 	end
 end
+gui_toolsavailable(1)
 gui_sliderdisp(gui_retr('pivlab_axis'))
 
 function extract_save_polyline_Callback (~,~)
