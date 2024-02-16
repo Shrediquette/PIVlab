@@ -4440,7 +4440,8 @@ end
 
 gui_toolsavailable(1)
 
-function extract_draw_extraction_coordinates_Callback(~, ~, ~)
+function extract_draw_extraction_coordinates_Callback(caller, ~, ~)
+
 gui_sliderdisp(gui_retr('pivlab_axis'));
 handles=gui_gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
@@ -4455,9 +4456,15 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series')); %delete pre-existing
 	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_displayed_smaller_radii')) %delete pre-existing
 	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_max_circulation')) %delete pre-existing
-	if get(handles.draw_what,'value')==1 %polyline
-		extract_type='extract_poly';
-		extract_poly = images.roi.Polyline;
+ 
+	if (strcmp(caller.Tag,'draw_stuff') && strcmp(handles.draw_what.String{handles.draw_what.Value},'polyline')) || (strcmp(caller.Tag,'draw_stuff_area') && strcmp(handles.draw_what_area.String{handles.draw_what_area.Value},'polygon'))%polyline
+		if strcmp(caller.Tag,'draw_stuff') %extract from polyline
+			extract_type='extract_poly';
+			extract_poly = images.roi.Polyline;
+		elseif strcmp(caller.Tag,'draw_stuff_area')%extract from area
+			extract_type='extract_poly_area';
+			extract_poly = images.roi.Polygon;
+		end
 		extract_poly.Tag=extract_type;
 		draw(extract_poly);
 		addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
@@ -4479,8 +4486,12 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		else
 			extract_poly.LabelVisible = 'off';
 		end
-	elseif get(handles.draw_what,'value')==2 %circle
-		extract_type='extract_circle';
+	elseif (strcmp(caller.Tag,'draw_stuff') && strcmp(handles.draw_what.String{handles.draw_what.Value},'circle')) || (strcmp(caller.Tag,'draw_stuff_area') && strcmp(handles.draw_what_area.String{handles.draw_what_area.Value},'circle'))%circle
+		if strcmp(caller.Tag,'draw_stuff') %extract from polyline
+			extract_type='extract_circle';
+		elseif strcmp(caller.Tag,'draw_stuff_area') %extract from area
+			extract_type='extract_circle_area';
+		end
 		extract_poly = images.roi.Circle;
 		extract_poly.LabelVisible = 'off';
 		extract_poly.Tag=extract_type;
@@ -4491,10 +4502,14 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
 		addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
 		xposition=extract_poly.Center;
-		yposition=extract_poly.Radius;		
-	elseif get(handles.draw_what,'value')==3 %circle series
-		extract_type='extract_circle_series';
-		set(handles.extraction_choice,'Value',11);
+		yposition=extract_poly.Radius;
+	elseif (strcmp(caller.Tag,'draw_stuff') && strcmp(handles.draw_what.String{handles.draw_what.Value},'circle series (tangent vel. only)')) || (strcmp(caller.Tag,'draw_stuff_area') && strcmp(handles.draw_what_area.String{handles.draw_what_area.Value},'circle series'))%circle series
+		if strcmp(caller.Tag,'draw_stuff') %extract from polyline
+			extract_type='extract_circle_series';
+			set(handles.extraction_choice,'Value',11);
+		elseif strcmp(caller.Tag,'draw_stuff_area') %extract from area
+			extract_type='extract_circle_series_area';
+		end
 		extract_poly = images.roi.Circle;
 		extract_poly.LabelVisible = 'off';
 		extract_poly.Tag=extract_type;
@@ -4520,6 +4535,22 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		text(x_center,y_center-radius-8,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1],'tag',[extract_type '_displayed_smaller_radii'])
 		text(x_center-radius-8,y_center,'\leftarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[extract_type '_displayed_smaller_radii'])
 		text(x_center+radius+8,y_center,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[extract_type '_displayed_smaller_radii'])
+	elseif strcmp(caller.Tag,'draw_stuff_area') && strcmp(handles.draw_what_area.String{handles.draw_what_area.Value},'rectangle') %rectangle
+		extract_type='extract_rectangle_area';
+		extract_poly = images.roi.Rectangle;
+		extract_poly.LabelVisible = 'off';
+		extract_poly.Tag=extract_type;
+		draw(extract_poly);
+		if extract_poly.Position(3) < 25 %check if rectangle is large enough or if user accidentally clicked once
+			extract_poly.Position(3) = 25;
+		end
+		if extract_poly.Position(4) < 25 %check if rectangle is large enough or if user accidentally clicked once
+			extract_poly.Position(4) = 25;
+		end
+		addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+		addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
+		xposition=[extract_poly.Position(1) extract_poly.Position(3)]; %x and width of rectangle
+		yposition=[extract_poly.Position(2) extract_poly.Position(4)]; %y and height of rectangle
 	end
 	gui_put('xposition',xposition)
 	gui_put('yposition',yposition)
