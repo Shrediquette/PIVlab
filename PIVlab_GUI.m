@@ -3726,9 +3726,11 @@ function extract_area_extract_Callback(~, ~, ~)
 handles=gui_gethand;
 gui_switchui('multip17');
 if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-	set(handles.area_para_select,'string', {'Vorticity [1/frame]';'Magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Correlation coefficient [-]'});
+	%set(handles.area_para_select,'string', {'Vorticity [1/frame]';'Magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Correlation coefficient [-]'});
+	set(handles.extraction_choice_area,'string', {'Vorticity [1/frame]';'Magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Correlation coefficient [-]'});
 else
-	set(handles.area_para_select,'string', {'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]'});
+	%set(handles.area_para_select,'string', {'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]'});
+	set(handles.extraction_choice_area,'string', {'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]'});
 end
 
 function extract_areatype_Callback(hObject, ~, ~)
@@ -3789,6 +3791,13 @@ function extract_dist_angle_Callback(~, ~, ~)
 gui_switchui('multip13')
 
 function extract_draw_area_Callback(~, ~, ~)
+%sollte doch bitte extract_draw_extraction_coordinates_Callback nutzen.
+%dann muss man formenzeichnen etc. nicht nochmal neu erfinden, sondern benutzt es nochmal. statt polyline wird es dann polygon, das kann man doch abfragen was gefordert wird, area oder polyline.
+%und das interface muss GENAU so sein wie bei extract polyline. Möglichst wenig code duplizieren...
+%wegschmeissen weighted centroid
+%wegschmeissen threshold (zu kompliziert und zu speziell)
+%alle ergebnisse in edit field schreiben aus dem man rauskopieren kann...?
+
 %noch probleme wenn erster frame leer...
 %dann geht er sofort zu datei asuwahl...
 handles=gui_gethand;
@@ -6848,11 +6857,11 @@ handles.multip12 = uipanel(MainWindow, 'Units','characters', 'Position', [0+marg
 parentitem=get(handles.multip12, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4) parentitem(3) 2];
-handles.text55 = uicontrol(handles.multip12,'Style','text','String','Draw a line or circle and extract derived parameters from it.','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text55');
+%item=[0 item(2)+item(4) parentitem(3) 2];
+%handles.text55 = uicontrol(handles.multip12,'Style','text','String','Draw a line or circle and extract derived parameters from it.','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text55');
 
-item=[0 item(2)+item(4) parentitem(3) 7];
-handles.text91 = uicontrol(handles.multip12,'Style','text','String','Draw a poly-line by clicking with left mouse button. Right mouse button ends the poly-line. Draw a circle by clicking twice with the left mouse button: First click is for the centre, second click for radius.','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text91');
+%item=[0 item(2)+item(4) parentitem(3) 7];
+%handles.text91 = uicontrol(handles.multip12,'Style','text','String','Draw a poly-line by clicking with left mouse button. Right mouse button ends the poly-line. Draw a circle by clicking twice with the left mouse button: First click is for the centre, second click for radius.','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text91');
 
 item=[0 item(2)+item(4) parentitem(3) 1];
 handles.text57 = uicontrol(handles.multip12,'Style','text','String','Type:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text57');
@@ -7232,7 +7241,6 @@ item=[0 0 0 0];
 item=[0 27 parentitem(3) 1];
 handles.status_creation = uicontrol(handles.multip15,'Style','text','String','N/A','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','status_creation');
 
-
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.generate_it = uicontrol(handles.multip15,'Style','pushbutton','String','Create images','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate_generate_it_Callback,'Tag','generate_it','TooltipString','Start particle simulation and create image pair');
 
@@ -7243,8 +7251,6 @@ handles.save_imgs = uicontrol(handles.multip15,'Style','pushbutton','String','Sa
 handles.multip16 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Save image (sequence)', 'Tag','multip16','fontweight','bold');
 parentitem=get(handles.multip16, 'Position');
 item=[0 0 0 0];
-
-
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
 
 handles.export_still_or_animation = uicontrol(handles.multip16,'Style','popupmenu','String',{'Please wait...'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@export_still_or_animation_Callback,'Tag','export_still_or_animation','TooltipString','Select type of export.');
@@ -7286,6 +7292,61 @@ item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 handles.do_export_pixel_data = uicontrol(handles.multip16,'Style','pushbutton','String','Export multiple frames','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@export_do_export_pixel_data_Callback,'Tag','do_export_pixel_data','TooltipString','Save image sequence for the selected frames');
 
 %% Multip17
+%new interface:
+%%{
+%% multip17
+handles.multip17 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Extract parameters from area', 'Tag','multip17','fontweight','bold');
+parentitem=get(handles.multip17, 'Position');
+item=[0 0 0 0];
+
+item=[0 item(2)+item(4) parentitem(3) 1];
+handles.text57a = uicontrol(handles.multip17,'Style','text','String','Type:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text57a');
+
+item=[0 item(2)+item(4) parentitem(3) 1];
+handles.draw_what_area = uicontrol(handles.multip17,'Style','popupmenu','String',{'rectangle','polygon','circle','circle series'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','draw_what_area','TooltipString','Select the type of object that you want to draw and extract data from');
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
+handles.draw_stuff_area = uicontrol(handles.multip17,'Style','pushbutton','String','Draw!','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_draw_extraction_coordinates_Callback,'Tag','draw_stuff_area','TooltipString','Draw the object that you selected above');
+
+item=[0 item(2)+item(4) parentitem(3)/2 2];
+handles.save_area_coordinates = uicontrol(handles.multip17,'Style','pushbutton','String','Save coords','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_save_area_coordinates_Callback,'Tag','save_area_coordinates','TooltipString','Save area coordinates to *.mat file');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
+handles.load_area_coordinates = uicontrol(handles.multip17,'Style','pushbutton','String','Load coords','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_load_area_coordinates_Callback,'Tag','load_area_coordinates','TooltipString','Load area coordinates from *.mat file');
+
+item=[0 item(2)+item(4)+margin parentitem(3) 1];
+handles.text56a = uicontrol(handles.multip17,'Style','text','String','Parameter:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text56a');
+
+item=[0 item(2)+item(4) parentitem(3) 1];
+handles.extraction_choice_area = uicontrol(handles.multip17,'Style','popupmenu','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extraction_choice_area','TooltipString','What parameter do you want to extract from the area?');
+
+item=[0 item(2)+item(4)+margin parentitem(3) 1];
+handles.text57a = uicontrol(handles.multip17,'Style','text','String','Operation:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text57');
+
+item=[0 item(2)+item(4) parentitem(3) 1];
+disp('was kommt hier sinnvollerweise rein...?')
+handles.areatype = uicontrol(handles.multip17,'Style','popupmenu','String',{'Area mean value','Area integral','Area size','Area integral series','Area weighted centroid','Area mean flow direction'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_areatype_Callback,'Tag','areatype','TooltipString','Select the type of operation that you want to perform with the area you will select');
+
+item=[0 item(2)+item(4)+margin parentitem(3)/2 2];
+handles.plot_data_area = uicontrol(handles.multip17,'Style','pushbutton','String','Plot data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_plot_data_area_Callback,'Tag','plot_data_area','TooltipString','Extract the data from the area drawn');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
+handles.clear_plot_area = uicontrol(handles.multip17,'Style','pushbutton','String','Clear data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_clear_plot_area_Callback,'Tag','clear_plot_area','TooltipString','Clear area data');
+
+item=[0 item(2)+item(4)+margin*2 parentitem(3) 1];
+handles.save_plot_data_area = uicontrol(handles.multip17,'Style','text','String','Save extraction(s)','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','save_plot_data_area');
+
+item=[0 item(2)+item(4) parentitem(3) 1];
+handles.extractAreaAll = uicontrol(handles.multip17,'Style','checkbox','String','extract and save for all frames','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extractAreaAll','TooltipString','Extract data for all frames of the current session');
+
+item=[0 item(2)+item(4) parentitem(3) 2];
+handles.save_data_area = uicontrol(handles.multip17,'Style','pushbutton','String','Save result as text file(s)','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_save_data_area_Callback,'Tag','save_data_area','TooltipString','Extract data and save results to a text file');
+
+%%}
+
+
+%old interface
+%{
 handles.multip17 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Extract parameters from area', 'Tag','multip17','fontweight','bold');
 parentitem=get(handles.multip17, 'Position');
 item=[0 0 0 0];
@@ -7337,6 +7398,8 @@ handles.text145 = uicontrol(handles.multip17,'Style','text','String','Do and sav
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 handles.draw_area = uicontrol(handles.multip17,'Style','pushbutton','String','Draw area','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_draw_area_Callback,'Tag','draw_area','TooltipString','Draw the area by clicking with the left mouse button');
+
+%}
 
 %% Multip18
 handles.multip18 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Stream lines', 'Tag','multip18','fontweight','bold');
