@@ -12,6 +12,11 @@
 % mmstream2 by Duane Hanselman
 % f_readB16 by Carl Hall
 
+%% TODO:
+%extract_draw_area_Callback
+
+
+
 function PIVlab_GUI(desired_num_cores,batch_session_file)
 %% Make figure
 fh = findobj('tag', 'hgui');
@@ -3722,7 +3727,7 @@ else
 	set(handles.savearea,'enable','on');
 end
 
-function extract_area_extract_Callback(~, ~, ~)
+function extract_area_panel_activation_Callback(~, ~, ~)
 handles=gui_gethand;
 gui_switchui('multip17');
 if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
@@ -3733,32 +3738,8 @@ else
 	set(handles.extraction_choice_area,'string', {'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]'});
 end
 
-function extract_areatype_Callback(hObject, ~, ~)
-handles=gui_gethand;
-if get(hObject,'value')==4
-	set(handles.text93, 'visible', 'on')
-	set(handles.smallerlarger, 'visible', 'on')
-	set(handles.text94, 'visible', 'on')
-	set(handles.radiusincrease, 'visible', 'on')
-	set(handles.thresholdarea, 'visible', 'on')
-	set(handles.usethreshold, 'visible', 'on')
-	set(handles.text95, 'visible', 'on')
-else
-	set(handles.text93, 'visible', 'off')
-	set(handles.smallerlarger, 'visible', 'off')
-	set(handles.text94, 'visible', 'off')
-	set(handles.radiusincrease, 'visible', 'off')
-	set(handles.thresholdarea, 'visible', 'off')
-	set(handles.usethreshold, 'visible', 'off')
-	set(handles.text95, 'visible', 'off')
-end
-if get(hObject,'value')==3 || get(hObject,'value')==6
-	set(handles.area_para_select,'visible','off');
-	set(handles.text89,'visible','off');
-else
-	set(handles.area_para_select,'visible','on');
-	set(handles.text89,'visible','on');
-end
+function extract_areatype_Callback(~, ~, ~)
+
 
 function extract_clear_plot_Callback(~, ~, ~)
 h_extractionplot=gui_retr('h_extractionplot');
@@ -3783,12 +3764,64 @@ delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle'))
 delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series'))
 delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_displayed_smaller_radii'))
 delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_max_circulation'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly_area'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_rectangle_area'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_area'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_area'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_area_displayed_smaller_radii'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_area_max_circulation'))
 gui_put('xposition',[]);
 gui_put('yposition',[]);
 gui_put('extract_type',[]);
 
 function extract_dist_angle_Callback(~, ~, ~)
 gui_switchui('multip13')
+
+function extract_plot_data_area_Callback(~,~,~)
+%neue funktion für areaextraction. copy from below
+handles=gui_gethand;
+currentframe=floor(get(handles.fileselector, 'value'));
+resultslist=gui_retr('resultslist');
+extractwhat=get(handles.extraction_choice_area,'Value');
+areaoperation=get(handles.areatype, 'value')
+if extractwhat==9 || extractwhat==10
+	plot_derivative_calc(currentframe,extractwhat+2,0);
+else
+	plot_derivative_calc(currentframe,extractwhat+1,0);
+end
+derived=gui_retr('derived');
+if extractwhat==9 || extractwhat==10
+	maptoget=derived{extractwhat+1,currentframe};
+else
+	maptoget=derived{extractwhat,currentframe};
+end
+maptoget=plot_rescale_maps_nan(maptoget,0,currentframe);
+xposition=gui_retr('xposition');
+yposition=gui_retr('yposition');
+extract_type = gui_retr('extract_type');
+if ~strcmp(extract_type,'extract_poly_area') && ~strcmp(extract_type,'extract_rectangle_area') && ~strcmp(extract_type,'extract_circle_area') && ~strcmp(extract_type,'extract_circle_series_area')
+	msgbox('No area was drawn. Click ''Draw!'' on the left panel to start drawing an extraction area.','Error','error','modal')
+else
+	BW=extract_convert_roi_to_binary(xposition,yposition,extract_type,size(maptoget));
+	%jetzt anhand von gezeichnetem roi mittelwert fläche etc berechnen. Auch caluv etc. beachten.
+	%am besten genauso rechnen wie unten.... Mit ganzen zellenn bewährt
+	disp('Hier weitermachen')
+	figure;imagesc(double(BW).*maptoget)
+end
+function BW=extract_convert_roi_to_binary(xposition,yposition,extract_type,size_of_image)
+
+if strcmp(extract_type,'extract_poly_area')%polygon:
+	BW = poly2mask(xposition,yposition,size_of_image(1),size_of_image(2));
+elseif strcmp(extract_type,'extract_rectangle_area')%rectangle:
+	rectangle_coords=bbox2points([xposition(1),yposition(1),xposition(2),yposition(2)]);
+	BW = poly2mask(rectangle_coords(:,1),rectangle_coords(:,2),size_of_image(1),size_of_image(2));
+elseif strcmp(extract_type,'extract_circle_area')%circles:
+	nsides_that_make_sense = floor(sqrt(2*pi()*yposition));
+	pgon = nsidedpoly(nsides_that_make_sense,'Center',xposition,'Radius',yposition);
+	BW = poly2mask(pgon.Vertices(:,1),pgon.Vertices(:,2),size_of_image(1),size_of_image(2));
+end
+
+
 
 function extract_draw_area_Callback(~, ~, ~)
 %sollte doch bitte extract_draw_extraction_coordinates_Callback nutzen.
@@ -3858,7 +3891,7 @@ for i=startfr:endfr
 			else
 				maptoget=derived{extractwhat,currentframe};
 			end
-			maptoget=plot_rescale_maps_nan(maptoget,0);
+			maptoget=plot_rescale_maps_nan(maptoget,0,[]);
 			if selected==0
 				[BW,ximask,yimask]=roipoly;
 			end
@@ -3911,7 +3944,7 @@ for i=startfr:endfr
 			else
 				maptoget=derived{extractwhat,currentframe};
 			end
-			maptoget=plot_rescale_maps_nan(maptoget,0);
+			maptoget=plot_rescale_maps_nan(maptoget,0,[]);
 
 			calxy=gui_retr('calxy');
 			[currentimage,~]=import_get_img(2*currentframe-1);
@@ -4042,7 +4075,7 @@ for i=startfr:endfr
 				else
 					currentimage=derived{extractwhat,currentframe};
 				end
-				currentimage=plot_rescale_maps_nan(currentimage,0);
+				currentimage=plot_rescale_maps_nan(currentimage,0,[]);
 				hgui=getappdata(0,'hgui');
 				figure(hgui);
 				gui_sliderdisp(gui_retr('pivlab_axis'))
@@ -4340,8 +4373,8 @@ for i=startfr:endfr
 					umean=0;
 					vmean=0;
 					uamount=0;
-					u=plot_rescale_maps_nan(u,0);
-					v=plot_rescale_maps_nan(v,0);
+					u=plot_rescale_maps_nan(u,0,[]);
+					v=plot_rescale_maps_nan(v,0,[]);
 					for i=1:size(u,1)
 						for j=1:size(u,2)
 							if BW(i,j)==1
@@ -4454,9 +4487,15 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly')); %delete pre-existing
 	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle')); %delete pre-existing
 	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series')); %delete pre-existing
+	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly_area')); %delete pre-existing
+	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_area')); %delete pre-existing
+	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_area')); %delete pre-existing
+	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_rectangle_area')); %delete pre-existing
 	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_displayed_smaller_radii')) %delete pre-existing
+	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_area_displayed_smaller_radii')) %delete pre-existing
 	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_max_circulation')) %delete pre-existing
- 
+	delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_area_max_circulation')) %delete pre-existing
+
 	if (strcmp(caller.Tag,'draw_stuff') && strcmp(handles.draw_what.String{handles.draw_what.Value},'polyline')) || (strcmp(caller.Tag,'draw_stuff_area') && strcmp(handles.draw_what_area.String{handles.draw_what_area.Value},'polygon'))%polyline
 		if strcmp(caller.Tag,'draw_stuff') %extract from polyline
 			extract_type='extract_poly';
@@ -4520,7 +4559,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
 		addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
 		xposition=extract_poly.Center;
-		yposition=extract_poly.Radius;		
+		yposition=extract_poly.Radius;
 		x=resultslist{1,currentframe};
 		stepsize=ceil((x(1,2)-x(1,1))/1);
 		radii=linspace(stepsize,extract_poly.Radius-stepsize,round(((extract_poly.Radius-stepsize)/stepsize)));
@@ -4705,13 +4744,13 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		%percentagey=yposition/max(max(y));
 		%yaufderivative=percentagey*size(y,1);
 		nrpoints=str2num(get(handles.nrpoints,'string'));
-		
+
 		switch extractwhat
 			case {1,2,3,4,5,6,7,8}
 				plot_derivative_calc(currentframe,extractwhat+1,0);
 				derived=gui_retr('derived');
 				maptoget=derived{extractwhat,currentframe};
-				maptoget=plot_rescale_maps_nan(maptoget,0);
+				maptoget=plot_rescale_maps_nan(maptoget,0,currentframe);
 				[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
 				distance=linspace(0,length,size(c,1))';
 			case {9,10}
@@ -4721,7 +4760,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 				plot_derivative_calc(currentframe,extractwhat+2,0);
 				derived=gui_retr('derived');
 				maptoget=derived{extractwhat+1,currentframe};
-				maptoget=plot_rescale_maps_nan(maptoget,0);
+				maptoget=plot_rescale_maps_nan(maptoget,0,currentframe);
 				[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
 				distance=linspace(0,length,size(c,1))';
 			case 11 %tangent
@@ -4754,8 +4793,8 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 					u=u*calu-gui_retr('subtr_u');
 					v=v*calv-gui_retr('subtr_v');
 
-					u=plot_rescale_maps_nan(u,0);
-					v=plot_rescale_maps_nan(v,0);
+					u=plot_rescale_maps_nan(u,0,currentframe);
+					v=plot_rescale_maps_nan(v,0,currentframe);
 
 					[cx, cy, cu] = improfile(u,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
 					cv = improfile(v,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
@@ -4835,8 +4874,8 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 					calu=gui_retr('calu');calv=gui_retr('calv');
 					u=u*calu-gui_retr('subtr_u');
 					v=v*calv-gui_retr('subtr_v');
-					u=plot_rescale_maps_nan(u,0);
-					v=plot_rescale_maps_nan(v,0);
+					u=plot_rescale_maps_nan(u,0,currentframe);
+					v=plot_rescale_maps_nan(v,0,currentframe);
 
 					min_y=floor(min(extraction_coordinates_y(:)))-1;
 					max_y=ceil(max(extraction_coordinates_y(:)))+1;
@@ -4894,7 +4933,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		end
 		%% Plotting
 		if ~strcmp(extract_type,'extract_circle_series') %user did not choose circle series
-			
+
 
 			calxy=gui_retr('calxy');
 			%get units
@@ -4908,7 +4947,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			else
 				distunit_2=' [m]';
 			end
-			
+
 			current=get(handles.extraction_choice,'string');
 			current=current{extractwhat};
 			%removing nans for integral!
@@ -4992,7 +5031,7 @@ evname = evt.EventName;
 handles=gui_gethand;
 switch(evname)
 	case{'MovingROI'}
-		if strcmp(src.Tag,'extract_poly')
+		if strcmp(src.Tag,'extract_poly') || strcmp(src.Tag,'extract_poly_area')
 			if size(src.Position,1)<6
 				labelstring=[];
 				for i = 1:size(src.Position,1)
@@ -5009,15 +5048,19 @@ switch(evname)
 			end
 		end
 	case{'ROIMoved'}
-		if strcmp(src.Tag,'extract_poly')
+		if strcmp(src.Tag,'extract_poly') || strcmp(src.Tag,'extract_poly_area')
 			gui_put('xposition',src.Position(:,1));
 			gui_put('yposition',src.Position(:,2));
 		end
-		if strcmp(src.Tag,'extract_circle')
+		if strcmp(src.Tag,'extract_circle') || strcmp(src.Tag,'extract_circle_area')
 			gui_put('xposition',src.Center);
 			gui_put('yposition',src.Radius);
 		end
-		if strcmp(src.Tag,'extract_circle_series')
+		if strcmp(src.Tag,'extract_rectangle_area')
+			gui_put('xposition',[src.Position(1) src.Position(3)]); %x and width of rectangle
+			gui_put('yposition',[src.Position(2) src.Position(4)]); %y and height of rectangle
+		end
+		if strcmp(src.Tag,'extract_circle_series') ||strcmp(src.Tag,'extract_circle_series_area')
 			delete(findobj(gui_retr('pivlab_axis'),'Tag',[src.Tag '_displayed_smaller_radii']))
 			delete(findobj(gui_retr('pivlab_axis'),'Tag',[src.Tag '_max_circulation']))
 			currentframe=floor(get(handles.fileselector, 'value'));
@@ -5230,16 +5273,32 @@ if strcmp(extract_type,'extract_poly') %polyline
 	extract_poly.LabelVisible = 'off';
 	extract_poly.Tag=extract_type;
 	addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+	addlistener(extract_poly,'MovingROI',@extract_poly_ROIevents);
 	addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
 end
-if strcmp(extract_type,'extract_circle') %circle
+if strcmp(extract_type,'extract_poly_area') %polygon
+	extract_poly=drawpolygon(gui_retr('pivlab_axis'),'Position',[xposition yposition]);
+	extract_poly.LabelVisible = 'off';
+	extract_poly.Tag=extract_type;
+	addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+	addlistener(extract_poly,'MovingROI',@extract_poly_ROIevents);
+	addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
+end
+if strcmp(extract_type,'extract_circle') || strcmp(extract_type,'extract_circle_area') %circle
 	extract_poly=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',yposition);
 	extract_poly.LabelVisible = 'off';
 	extract_poly.Tag=extract_type;
 	addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
 	addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
 end
-if strcmp(extract_type,'extract_circle_series') %circle series
+if strcmp(extract_type,'extract_rectangle_area')  %rectangle
+	extract_poly=drawrectangle(gui_retr('pivlab_axis'),'Position',[xposition(1) yposition(1) xposition(2) yposition(2)]);
+	extract_poly.LabelVisible = 'off';
+	extract_poly.Tag=extract_type;
+	addlistener(extract_poly,'ROIMoved',@extract_poly_ROIevents);
+	addlistener(extract_poly,'DeletingROI',@extract_poly_ROIevents);
+end
+if strcmp(extract_type,'extract_circle_series') || strcmp(extract_type,'extract_circle_series_area') %circle series
 	extract_poly=drawcircle(gui_retr('pivlab_axis'),'Center',xposition,'Radius',yposition);
 	extract_poly.LabelVisible = 'off';
 	extract_poly.Tag=extract_type;
@@ -5251,7 +5310,7 @@ if strcmp(extract_type,'extract_circle_series') %circle series
 	xposition=extract_poly.Center;
 	yposition=extract_poly.Radius;
 	try
-	x=resultslist{1,currentframe};
+		x=resultslist{1,currentframe};
 	catch
 		msgbox('You cannot load coordinates for non-analyzed frames.','Error','error','modal')
 	end
@@ -5672,7 +5731,7 @@ uimenu(m9,'Label','Streamlines','Callback',@plot_streamlines_Callback);
 uimenu(m9,'Label','Markers / distance / angle','Callback',@extract_dist_angle_Callback,'Accelerator','T');
 m10 = uimenu('Label','Extractions');
 uimenu(m10,'Label','Parameters from poly-line','Callback',@extract_poly_extract_Callback,'Accelerator','P');
-uimenu(m10,'Label','Parameters from area','Callback',@extract_area_extract_Callback,'Accelerator','Q');
+uimenu(m10,'Label','Parameters from area','Callback',@extract_area_panel_activation_Callback,'Accelerator','Q');
 m11 = uimenu('Label','Statistics');
 uimenu(m11,'Label','Statistics','Callback',@plot_statistics_Callback,'Accelerator','B');
 m12 = uimenu('Label','Synthetic particle image generation');
@@ -7356,13 +7415,13 @@ handles.text57a = uicontrol(handles.multip17,'Style','text','String','Operation:
 
 item=[0 item(2)+item(4) parentitem(3) 1];
 disp('was kommt hier sinnvollerweise rein...?')
-handles.areatype = uicontrol(handles.multip17,'Style','popupmenu','String',{'Area mean value','Area integral','Area size','Area integral series','Area weighted centroid','Area mean flow direction'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_areatype_Callback,'Tag','areatype','TooltipString','Select the type of operation that you want to perform with the area you will select');
+handles.areatype = uicontrol(handles.multip17,'Style','popupmenu','String',{'Area mean value, area integral and area size','Area integral series','Area mean flow direction'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_areatype_Callback,'Tag','areatype','TooltipString','Select the type of operation that you want to perform with the area you will select');
 
 item=[0 item(2)+item(4)+margin parentitem(3)/2 2];
 handles.plot_data_area = uicontrol(handles.multip17,'Style','pushbutton','String','Plot data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_plot_data_area_Callback,'Tag','plot_data_area','TooltipString','Extract the data from the area drawn');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
-handles.clear_plot_area = uicontrol(handles.multip17,'Style','pushbutton','String','Clear data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_clear_plot_area_Callback,'Tag','clear_plot_area','TooltipString','Clear area data');
+handles.clear_plot_area = uicontrol(handles.multip17,'Style','pushbutton','String','Clear data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_clear_plot_Callback,'Tag','clear_plot_area','TooltipString','Clear area data');
 
 item=[0 item(2)+item(4)+margin*2 parentitem(3) 1];
 handles.save_plot_data_area = uicontrol(handles.multip17,'Style','text','String','Save extraction(s)','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','save_plot_data_area');
@@ -8041,13 +8100,15 @@ if capturing==0
 			if strncmp(get(handles.multip14, 'visible'), 'on',2) %statistics panel visible
 				plot_update_Stats (x,y,u,v);
 			end
-			if strncmp(get(handles.multip12, 'visible'), 'on',2) %extract poly panel visible
+			if strncmp(get(handles.multip12, 'visible'), 'on',2) || strncmp(get(handles.multip17, 'visible'), 'on',2) %extract poly panel visible
 				%draw extraction polygon when frame was changed.
 				pivlab_axis=gui_retr('pivlab_axis');
 				delete(findobj(pivlab_axis,'tag', 'extractpoint'));
 				delete(findobj(pivlab_axis,'tag', 'extractline'));
 				delete(findobj(pivlab_axis,'tag', 'circstring'));
 				delete(findobj(pivlab_axis,'Tag', 'extract_poly'))
+				delete(findobj(pivlab_axis,'Tag', 'extract_poly_area'))
+
 				xposition = gui_retr('xposition');
 				yposition = gui_retr('yposition');
 				extract_type = gui_retr('extract_type');
@@ -12341,30 +12402,30 @@ if isempty(resultslist)==0
 		if isempty(ismean)==1
 			ismean=zeros(size(resultslist,2),1);
 		end
-%dont remove all, but only the current one.
-%probably shift the remaining ones....?
-currentframe=floor(get(handles.fileselector, 'value'));
+		%dont remove all, but only the current one.
+		%probably shift the remaining ones....?
+		currentframe=floor(get(handles.fileselector, 'value'));
 
-if ismean(currentframe,1)==1
-	filepath(currentframe*2,:)=[];
-	filename(currentframe*2,:)=[];
-	filepath(currentframe*2-1,:)=[];
-	filename(currentframe*2-1,:)=[];
-	resultslist(:,currentframe)=[];
-	ismean(currentframe,:)=[];
-	gui_put('filepath',filepath);
-	gui_put('filename',filename);
-	gui_put('resultslist',resultslist);
-	gui_put('ismean',ismean);
-	gui_sliderrange(0)
-	if get(handles.fileselector,'value')>1
-		gui_fileselector_Callback
-		set(handles.fileselector, 'value', currentframe-1);
-	end
-	gui_sliderdisp(gui_retr('pivlab_axis'));
-else
-	uiwait(msgbox('You can only delete frames with derived temporal parameters.','Notice','modal'));
-end
+		if ismean(currentframe,1)==1
+			filepath(currentframe*2,:)=[];
+			filename(currentframe*2,:)=[];
+			filepath(currentframe*2-1,:)=[];
+			filename(currentframe*2-1,:)=[];
+			resultslist(:,currentframe)=[];
+			ismean(currentframe,:)=[];
+			gui_put('filepath',filepath);
+			gui_put('filename',filename);
+			gui_put('resultslist',resultslist);
+			gui_put('ismean',ismean);
+			gui_sliderrange(0)
+			if get(handles.fileselector,'value')>1
+				gui_fileselector_Callback
+				set(handles.fileselector, 'value', currentframe-1);
+			end
+			gui_sliderdisp(gui_retr('pivlab_axis'));
+		else
+			uiwait(msgbox('You can only delete frames with derived temporal parameters.','Notice','modal'));
+		end
 	end
 end
 
@@ -12421,13 +12482,17 @@ catch
 	out(floor(miny):floor(maxy-1),floor(minx):floor(maxx-1))=dispvar(1:size(A,1),1:size(A,2));
 end
 
-function out=plot_rescale_maps_nan(in,isangle)
+function out=plot_rescale_maps_nan(in,isangle,desired_frame) %if desiredframe is empty, then  get current frame
 %input has same dimensions as x,y,u,v,
 %output has size of the piv image
 %Rand ist nan statt Mittelwert des derivatives
 handles=gui_gethand;
 filepath=gui_retr('filepath');
-currentframe=floor(get(handles.fileselector, 'value'));
+if isempty(desired_frame)
+	currentframe=floor(get(handles.fileselector, 'value'));
+else
+	currentframe=desired_frame;
+end
 [currentimage,~]=import_get_img(2*currentframe-1);
 resultslist=gui_retr('resultslist');
 x=resultslist{1,currentframe};
