@@ -7,7 +7,6 @@ OutputError=0;
 OPTOcam_frames_to_capture = nr_of_images*2;
 
 %% capture data
-
 while OPTOcam_vid.FramesAcquired < (OPTOcam_frames_to_capture) &&  getappdata(hgui,'cancel_capture') ~=1
     ima = image_handle_OPTOcam.CData;
     if ~isinf(OPTOcam_frames_to_capture)

@@ -13,9 +13,9 @@
 % f_readB16 by Carl Hall
 
 %% TODO:
-%extract_draw_area_Callback
+%{
 
-
+%}
 
 function PIVlab_GUI(desired_num_cores,batch_session_file)
 %% Make figure
@@ -960,8 +960,8 @@ if strcmp(camera_type,'chronos')
 	if str2double(get(handles.ac_expo,'String')) < 0.1
 		set(handles.ac_expo,'String','0.1')
 	end
-	if str2double(get(handles.ac_expo,'String')) > 100000
-		set(handles.ac_expo,'String','100000')
+	if str2double(get(handles.ac_expo,'String')) > 1000
+		set(handles.ac_expo,'String','10000')
 	end
 end
 if strcmp(camera_type,'basler')
@@ -972,6 +972,16 @@ if strcmp(camera_type,'basler')
 		set(handles.ac_expo,'String','1000')
 	end
 end
+if strcmp(camera_type,'flir')
+	if str2double(get(handles.ac_expo,'String')) < 0.02
+		set(handles.ac_expo,'String','0.02')
+	end
+	if str2double(get(handles.ac_expo,'String')) > 25
+		set(handles.ac_expo,'String','25')
+	end
+end
+
+
 
 function acquisition_ext_trigger_settings_Callback (~,~,~)
 handles=gui_gethand;
@@ -1557,6 +1567,13 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 			end
 			if value == 8 %OPTOcam
 				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
+					if gui_retr('cancel_capture')==1
+						answer = questdlg('Save the PIV images that were recorded?', 'Save images?', 'Yes','No','Yes');
+						if strcmp(answer , 'Yes')
+							gui_put('cancel_capture',0); %user pressed cancel, but still wants to save the recorded images.
+							imageamount=floor(OPTOcam_vid.FramesAcquired/2);
+						end
+					end
 					[OutputError] = PIVlab_capture_OPTOcam_save(OPTOcam_vid,imageamount,projectpath,frame_nr_display,OPTOcam_bits); %save the images from ram to disk.
 				end
 			end
@@ -1568,7 +1585,7 @@ if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_
 
 			if gui_retr('cancel_capture')==0
 				camera_type=gui_retr('camera_type');
-				found_the_data=acquisition_push_recorded_to_GUI(camera_type);
+				found_the_data=acquisition_push_recorded_to_GUI(camera_type,imageamount);
 				if found_the_data==1
 					gui_put('sessionpath',projectpath );
 					set(handles.time_inp,'String',num2str(str2num(get(handles.ac_interpuls,'String'))/1000));
@@ -1640,10 +1657,10 @@ if ~isempty(C)
 
 end
 
-function found_the_data = acquisition_push_recorded_to_GUI(camera_type)
+function found_the_data = acquisition_push_recorded_to_GUI(camera_type,imageamount)
 handles=gui_gethand;
 projectpath=get(handles.ac_project,'String');
-imageamount=str2double(get(handles.ac_imgamount,'String'));
+%imageamount=str2double(get(handles.ac_imgamount,'String'));
 pathlist={};
 pathfilelist={};
 file_existing=zeros(imageamount,1);
@@ -2859,7 +2876,7 @@ if type==1 %ascii file
 		%wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
 		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
 	end
-	dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc');
+	dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc'); %#ok<DLMWT>
 end %type==1
 
 if type==2 %NOT USED ANYMORE matlab file
@@ -2969,7 +2986,7 @@ if type==4 %tecplot file
 	end
 	wholeLOT=sortrows(wholeLOT,2);
 
-	dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc');
+	dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc'); %#ok<DLMWT>
 end %fÃ¼r mehrere Zones: einfach header6 nochmal appenden, dann whileLOT fÃ¼r den nÃ¤chsten frame berechnen und appenden etc...
 
 function export_mat_file_save (currentframe,FileName,PathName,type)
@@ -3737,9 +3754,31 @@ else
 	%set(handles.area_para_select,'string', {'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]'});
 	set(handles.extraction_choice_area,'string', {'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]'});
 end
+%draw extraction polygon when frame was changed.
+pivlab_axis=gui_retr('pivlab_axis');
+delete(findobj(gui_retr('pivlab_axis'),'tag', 'extractpoint'));
+delete(findobj(gui_retr('pivlab_axis'),'tag', 'extractline'));
+delete(findobj(gui_retr('pivlab_axis'),'tag', 'circstring'));
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_displayed_smaller_radii'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_max_circulation'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly_area'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_rectangle_area'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_area'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_area'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_area_displayed_smaller_radii'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_area_max_circulation'))
+xposition = gui_retr('xposition');
+yposition = gui_retr('yposition');
+extract_type = gui_retr('extract_type');
 
-function extract_areatype_Callback(~, ~, ~)
-
+if ~isempty(xposition) && ~isempty(yposition) && ~isempty(extract_type)
+	if strcmp(extract_type,'extract_poly_area') || strcmp(extract_type,'extract_rectangle_area') || strcmp(extract_type,'extract_circle_area') || strcmp(extract_type,'extract_circle_series_area')
+		extract_update_display(extract_type, xposition, yposition)
+	end
+end
 
 function extract_clear_plot_Callback(~, ~, ~)
 h_extractionplot=gui_retr('h_extractionplot');
@@ -3773,17 +3812,78 @@ delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_area_max_cir
 gui_put('xposition',[]);
 gui_put('yposition',[]);
 gui_put('extract_type',[]);
+handles=gui_gethand;
+set(handles.area_results,'String','');
 
 function extract_dist_angle_Callback(~, ~, ~)
 gui_switchui('multip13')
 
+
 function extract_plot_data_area_Callback(~,~,~)
-%neue funktion für areaextraction. copy from below
+%click on button to extract data
 handles=gui_gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
+[returned_data, returned_header]=extract_plot_data_area(currentframe,1);
+
+function extract_save_data_area_Callback (~,~,~)
+handles=gui_gethand;
+resultslist=gui_retr('resultslist');
+currentframe=floor(get(handles.fileselector, 'value'));
+if get(handles.extractAreaAll,'Value') == 1
+	refresh_data=0;
+	startfr=1;
+	endfr=size(resultslist,2);
+else
+	refresh_data=1;
+	startfr=currentframe;
+	endfr=currentframe;
+end
+%determine name of output file
+current=get(handles.extraction_choice_area,'string');
+extractwhat=get(handles.extraction_choice_area,'Value');
+current=current{extractwhat};
+part1= current(1:strfind(current,'/')-1) ;
+part2= current(strfind(current,'/')+1:end);
+if isempty(part1)==1
+	currentED=current;
+else
+	currentED=[part1 ' per ' part2];
+end
+imgsavepath=gui_retr('imgsavepath');
+if isempty(imgsavepath)
+	imgsavepath=gui_retr('pathname');
+end
+if get(handles.extractionArea_fileformat,'Value') ==1
+	[FileName,PathName] = uiputfile('*.xls','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' currentED '.xls'])); %framenummer in dateiname
+else
+	[FileName,PathName] = uiputfile('*.txt','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' currentED '.txt'])); %framenummer in dateiname
+end
+
+if ~isequal(FileName,0) && ~isequal(PathName,0)
+	file_selection_ok=1;
+	gui_toolsavailable(0,'Busy, extracting data...');drawnow
+else
+	file_selection_ok=0;
+end
+if file_selection_ok
+	
+	for i=startfr:endfr
+		if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+			[returned_data, returned_header]=extract_plot_data_area(i,refresh_data);
+			if i==startfr %generate file with header
+				writecell(returned_header,fullfile(PathName,FileName)); %initiate file 
+			end
+			writecell(returned_data,fullfile(PathName,FileName),'WriteMode','Append');
+		end
+	end
+end
+gui_toolsavailable(1)
+
+function [returned_data, returned_header]=extract_plot_data_area(currentframe,refreshdisplay)
+%returned_data=cell(0);
+handles=gui_gethand;
 resultslist=gui_retr('resultslist');
 extractwhat=get(handles.extraction_choice_area,'Value');
-areaoperation=get(handles.areatype, 'value')
 if extractwhat==9 || extractwhat==10
 	plot_derivative_calc(currentframe,extractwhat+2,0);
 else
@@ -3795,21 +3895,90 @@ if extractwhat==9 || extractwhat==10
 else
 	maptoget=derived{extractwhat,currentframe};
 end
-maptoget=plot_rescale_maps_nan(maptoget,0,currentframe);
 xposition=gui_retr('xposition');
 yposition=gui_retr('yposition');
 extract_type = gui_retr('extract_type');
 if ~strcmp(extract_type,'extract_poly_area') && ~strcmp(extract_type,'extract_rectangle_area') && ~strcmp(extract_type,'extract_circle_area') && ~strcmp(extract_type,'extract_circle_series_area')
-	msgbox('No area was drawn. Click ''Draw!'' on the left panel to start drawing an extraction area.','Error','error','modal')
+	if refreshdisplay
+		msgbox('No area was drawn. Click ''Draw!'' on the left panel to start drawing an extraction area.','Error','error','modal')
+	end
 else
-	BW=extract_convert_roi_to_binary(xposition,yposition,extract_type,size(maptoget));
-	%jetzt anhand von gezeichnetem roi mittelwert fläche etc berechnen. Auch caluv etc. beachten.
-	%am besten genauso rechnen wie unten.... Mit ganzen zellenn bewährt
-	disp('Hier weitermachen')
-	figure;imagesc(double(BW).*maptoget)
-end
-function BW=extract_convert_roi_to_binary(xposition,yposition,extract_type,size_of_image)
+	if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+		distunit='px^2';
+	else
+		distunit='m^2';
+	end
+	if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
+		distunit_2=' px';
+	else
+		distunit_2=' m';
+	end
 
+	current=get(handles.extraction_choice_area,'string');
+	current=current{extractwhat};
+	currentstripped=current(1:strfind(current,'[')-1);
+
+	unitpar=get(handles.extraction_choice_area,'string');
+	unitpar=unitpar{get(handles.extraction_choice_area,'value')};
+	unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
+
+	if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0 %if there is data in the current frame
+		maptoget=plot_rescale_maps_nan(maptoget,0,currentframe);
+		if strcmp(extract_type,'extract_poly_area') || strcmp(extract_type,'extract_rectangle_area') || strcmp(extract_type,'extract_circle_area')
+			BW=extract_convert_roi_to_binary(xposition,yposition,extract_type,size(maptoget));
+			area=extract_get_area_of_selection(BW,maptoget,1);
+			mean_value=extract_get_mean_of_selection(BW,maptoget);
+			area_integral=extract_get_integral_of_selection(BW,maptoget);
+			returned_header = {strjoin({'Area (' distunit ')'},''),strjoin({'Mean (' unitpar ')'},'') , strjoin({'Integral (' unitpar '*' distunit ')'},'')};
+			returned_data = {area, mean_value, area_integral};
+		elseif strcmp(extract_type,'extract_circle_series_area')
+			%draw circles as displayed
+			x=resultslist{1,currentframe};
+			stepsize=ceil((x(1,2)-x(1,1)));
+			radii=[linspace(stepsize,yposition-stepsize,round(((yposition-stepsize)/stepsize))) yposition];
+			length = 2*radii*pi; %column vector with the lengths of the circle series
+			%convert circular roi object to series of coordinates
+			valtable=linspace(0,2*pi,361)';
+			extraction_coordinates_x=zeros(size(valtable,1),numel(length)); %rows=coordinates of one circle, cols = the different circles of the series
+			extraction_coordinates_y=zeros(size(valtable,1),numel(length));
+			for i=1:size(valtable,1)
+				for j=1:numel(length)
+					extraction_coordinates_x (i,j)=sin(valtable(i,1))*radii(j)+xposition(1);
+					extraction_coordinates_y (i,j)=cos(valtable(i,1))*radii(j)+xposition(2);
+				end
+			end
+			BW=zeros(size(maptoget));
+			returned_data=cell(size(extraction_coordinates_x,2),4);
+			for i=1:size(extraction_coordinates_x,2)
+				BW = poly2mask(extraction_coordinates_x(:,i),extraction_coordinates_y(:,i),size(maptoget,1),size(maptoget,2));
+				area=extract_get_area_of_selection(BW,maptoget,1);
+				mean_value=extract_get_mean_of_selection(BW,maptoget);
+				area_integral=extract_get_integral_of_selection(BW,maptoget);
+				old_string=get (handles.area_results,'String');
+				returned_header = {strjoin({'Circle Nr.'},''),strjoin({'Area (' distunit ')'},''),strjoin({'Mean (' unitpar ')'},'') , strjoin({'Integral (' unitpar '*' distunit ')'},'')};
+				returned_data{i,1}=i;
+				returned_data{i,2}=area;
+				returned_data{i,3}=mean_value;
+				returned_data{i,4}=area_integral;
+			end
+		end
+		if refreshdisplay
+			old_color=get (handles.area_results,'Backgroundcolor');
+			set(handles.area_results,'Backgroundcolor',[0.5 0.8 0.5]);
+			pause(0.1)
+			set(handles.area_results,'Backgroundcolor',old_color);
+			outputstring=cell(0);
+			for j = 1: size(returned_data,2)
+				for jj=1:size(returned_data,1)
+					outputstring{j,jj}=[num2str(returned_header{1,j}), ' = ' num2str(returned_data{jj,j})];
+				end
+			end
+			set (handles.area_results,'String',outputstring)
+		end
+	end
+end
+
+function BW=extract_convert_roi_to_binary(xposition,yposition,extract_type,size_of_image)
 if strcmp(extract_type,'extract_poly_area')%polygon:
 	BW = poly2mask(xposition,yposition,size_of_image(1),size_of_image(2));
 elseif strcmp(extract_type,'extract_rectangle_area')%rectangle:
@@ -3821,660 +3990,28 @@ elseif strcmp(extract_type,'extract_circle_area')%circles:
 	BW = poly2mask(pgon.Vertices(:,1),pgon.Vertices(:,2),size_of_image(1),size_of_image(2));
 end
 
+function area_integral=extract_get_integral_of_selection(BW,maptoget)
+%returns area integral value of selected area
+non_masked_area = extract_get_area_of_selection(BW,maptoget,0);
+area_integral = non_masked_area * mean((maptoget(BW==1 & ~isnan(maptoget))),'omitnan');
 
 
-function extract_draw_area_Callback(~, ~, ~)
-%sollte doch bitte extract_draw_extraction_coordinates_Callback nutzen.
-%dann muss man formenzeichnen etc. nicht nochmal neu erfinden, sondern benutzt es nochmal. statt polyline wird es dann polygon, das kann man doch abfragen was gefordert wird, area oder polyline.
-%und das interface muss GENAU so sein wie bei extract polyline. Möglichst wenig code duplizieren...
-%wegschmeissen weighted centroid
-%wegschmeissen threshold (zu kompliziert und zu speziell)
-%alle ergebnisse in edit field schreiben aus dem man rauskopieren kann...?
-
-%noch probleme wenn erster frame leer...
-%dann geht er sofort zu datei asuwahl...
-handles=gui_gethand;
-currentframe=floor(get(handles.fileselector, 'value'));
-resultslist=gui_retr('resultslist');
-
-%NEU
-if get(handles.extractareaall, 'value')==0
-	startfr=currentframe;
-	endfr=currentframe;
-else
-	%sollte erstes element sein mit inhalt...
-	for findcontent=size(resultslist,2):-1:1
-		if numel(resultslist{1,findcontent}) > 0
-			startfr=findcontent;
-		end
-	end
-
-	endfr=size(resultslist,2);
-end
-selected=0;
-areaoperation=get(handles.areatype, 'value');
-gui_toolsavailable(0)
-for i=startfr:endfr
-	set(handles.fileselector, 'value',i)
-	%sliderdisp(retr('pivlab_axis'))
-	currentframe=floor(get(handles.fileselector, 'value'));
-
-	if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-		if areaoperation==1
-			%area mean value
-			gui_sliderdisp(gui_retr('pivlab_axis'))
-			filepath=gui_retr('filepath');
-			x=resultslist{1,currentframe};
-			extractwhat=get(handles.area_para_select,'Value');
-			if extractwhat==9 || extractwhat==10
-				plot_derivative_calc(currentframe,extractwhat+2,0);
-			else
-				plot_derivative_calc(currentframe,extractwhat+1,0);
-			end
-			derived=gui_retr('derived');
-			[currentimage,~]=import_get_img(2*currentframe-1);
-			sizeold=size(currentimage,1);
-			sizenew=size(x,1);
-
-			%{
-            extractwhat9 ist vectorangle
-            extractwhat10 ist correlation_map
-            
-            
-            derived 9 ist LIC
-            derived10 ist vectorangle
-            derived11 ist correlation map
-			%}
-
-			if extractwhat==9 || extractwhat==10
-				maptoget=derived{extractwhat+1,currentframe};
-			else
-				maptoget=derived{extractwhat,currentframe};
-			end
-			maptoget=plot_rescale_maps_nan(maptoget,0,[]);
-			if selected==0
-				[BW,ximask,yimask]=roipoly;
-			end
-			if isempty(BW)
-			else
-				delete(findobj('tag','areaint'));
-				delete(findobj('tag', 'extractline'))
-				delete(findobj('tag', 'extractpoint'))
-				numcells=0;
-				summe=0;
-				for i=1:size(BW,1) %#ok<*FXSET>
-					for j=1:size(BW,2)
-						if BW(i,j)==1
-							if ~isnan(maptoget(i,j))
-								summe=summe+maptoget(i,j);
-								numcells=numcells+1;
-							end
-						end
-					end
-				end
-				average=summe/numcells;
-				hold on;
-				plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
-				plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
-				hold off;
-				%get units
-				unitpar=get(handles.area_para_select,'string');
-				unitpar=unitpar{get(handles.area_para_select,'value')};
-				unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
+function mean_area=extract_get_mean_of_selection(BW,maptoget)
+%returns mean value of selected area
+mean_area = mean(maptoget(BW==1),'omitnan');
 
 
-				text(min(ximask),mean(yimask), ['area mean value = ' num2str(average) ' [' unitpar ']'], 'BackgroundColor', 'w','tag','areaint');
-				areaoutput=average;
-				varis='[mean]';
-			end
-		elseif areaoperation==2
-			%area integral
-			gui_sliderdisp(gui_retr('pivlab_axis'))
-			filepath=gui_retr('filepath');
-			x=resultslist{1,currentframe};
-			extractwhat=get(handles.area_para_select,'Value');
-			if extractwhat==9 || extractwhat==10
-				plot_derivative_calc(currentframe,extractwhat+2,0);
-			else
-				plot_derivative_calc(currentframe,extractwhat+1,0);
-			end
-			derived=gui_retr('derived');
-			if extractwhat==9 || extractwhat==10
-				maptoget=derived{extractwhat+1,currentframe};
-			else
-				maptoget=derived{extractwhat,currentframe};
-			end
-			maptoget=plot_rescale_maps_nan(maptoget,0,[]);
-
-			calxy=gui_retr('calxy');
-			[currentimage,~]=import_get_img(2*currentframe-1);
-			sizeold=size(currentimage,1);
-			sizenew=size(x,1);
-			if selected==0
-				[BW,ximask,yimask]=roipoly; %select in currently displayed image
-			end
-			if isempty(BW)
-			else
-				delete(findobj('tag','areaint'));
-				delete(findobj('tag', 'extractline'))
-				delete(findobj('tag', 'extractpoint'))
-				celllength=1*calxy; %size of one pixel
-				cellarea=celllength^2; %area of one cell
-				integral=0;
-				for i=1:size(BW,1)
-					for j=1:size(BW,2)
-						if BW(i,j)==1
-							if ~isnan(maptoget(i,j)) %do not include nans and nan area in integral.
-								integral=integral+cellarea*maptoget(i,j);
-							end
-						end
-					end
-				end
-				hold on;
-				plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
-				plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
-				hold off;
-
-				%get units
-				if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-					distunit='px^2';
-				else
-					distunit='m^2';
-				end
-
-				unitpar=get(handles.area_para_select,'string');
-				unitpar=unitpar{get(handles.area_para_select,'value')};
-				unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
-
-
-				text(min(ximask),mean(yimask), ['area integral = ' num2str(integral) ' [' unitpar '*' distunit ']'], 'BackgroundColor', 'w','tag','areaint');
-				areaoutput=integral;
-				varis='[integral]';
-			end
-		elseif areaoperation==3
-			% area only
-			gui_sliderdisp(gui_retr('pivlab_axis'))
-			filepath=gui_retr('filepath');
-			[currentimage,~]=import_get_img(2*currentframe-1);
-			x=resultslist{1,currentframe};
-			sizeold=size(currentimage,1);
-			sizenew=size(x,1);
-			if selected==0
-				[BW,ximask,yimask]=roipoly;
-			end
-			if isempty(BW)
-			else
-				delete(findobj('tag','areaint'));
-				delete(findobj('tag', 'extractline'))
-				delete(findobj('tag', 'extractpoint'))
-				calxy=gui_retr('calxy');
-				celllength=1*calxy;
-				cellarea=celllength^2;
-				summe=0;
-				for i=1:size(BW,1)
-					for j=1:size(BW,2)
-						if BW(i,j)==1
-							summe=summe+cellarea;
-						end
-					end
-				end
-				hold on;
-				plot(ximask,yimask,'LineWidth',3, 'Color', [0,0.95,0],'tag','areaint');
-				plot(ximask,yimask,'LineWidth',1, 'Color', [0.95,0.5,0.01],'tag','areaint');
-				hold off;
-
-				%get units
-				if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-					distunit='px^2';
-				else
-					distunit='m^2';
-				end
-
-
-				text(min(ximask),mean(yimask), ['area = ' num2str(summe) ' [' distunit ']'], 'BackgroundColor', 'w','tag','areaint');
-				areaoutput=summe;
-				varis='[area]';
-			end
-		elseif areaoperation==4
-			%area series
-			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-				x=resultslist{1,currentframe};
-				y=resultslist{2,currentframe};
-				if size(resultslist,1)>6 %filtered exists
-					if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-						u=resultslist{10,currentframe};
-						v=resultslist{11,currentframe};
-					else
-						u=resultslist{7,currentframe};
-						if size(u,1)>1
-							v=resultslist{8,currentframe};
-						else
-							u=resultslist{3,currentframe};
-							v=resultslist{4,currentframe};
-						end
-					end
-				else
-					u=resultslist{3,currentframe};
-					v=resultslist{4,currentframe};
-				end
-				calu=gui_retr('calu');calv=gui_retr('calv');
-				u=u*calu-gui_retr('subtr_u');
-				v=v*calv-gui_retr('subtr_v');
-				calxy=gui_retr('calxy');
-
-				extractwhat=get(handles.area_para_select,'Value');
-				if extractwhat==9 || extractwhat==10
-					plot_derivative_calc(currentframe,extractwhat+2,0);
-				else
-					plot_derivative_calc(currentframe,extractwhat+1,0);
-				end
-				derived=gui_retr('derived');
-
-				if extractwhat==9 || extractwhat==10
-					currentimage=derived{extractwhat+1,currentframe};
-				else
-					currentimage=derived{extractwhat,currentframe};
-				end
-				currentimage=plot_rescale_maps_nan(currentimage,0,[]);
-				hgui=getappdata(0,'hgui');
-				figure(hgui);
-				gui_sliderdisp(gui_retr('pivlab_axis'))
-
-				delete(findobj('tag','vortarea'));
-
-				%draw ellipse
-				if selected==0
-					for i=1:5
-						[xellip(i),yellip(i),but] = ginput(1); %#ok<AGROW>
-						if but~=1
-							break
-						end
-						hold on;
-						plot (xellip(i),yellip(i),'w*')
-						hold off;
-						if i==3
-							line(xellip(2:3),yellip(2:3))
-						end
-						if i==5
-							line(xellip(4:5),yellip(4:5))
-						end
-					end
-				end
-				if size(xellip,2)==5
-					%click1=centre of vortical structure
-					%click2=top of vortical structure
-					%click3=bottom of vortical structure
-					%click4=left of vortical structure
-					%click5=right of vortical structure
-					x0=(mean(xellip)+xellip(1))/2;
-					y0=(mean(yellip)+yellip(1))/2;
-					if xellip(2)<xellip(3)
-						ang=acos((yellip(2)-yellip(3))/(sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)))-pi/2;
-					else
-						ang=asin((yellip(2)-yellip(3))/(sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)));
-					end
-					rb=sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)/2;
-					ra=sqrt((xellip(4)-xellip(5))^2+(yellip(4)-yellip(5))^2)/2;
-					ra=sqrt((xellip(2)-xellip(3))^2+(yellip(2)-yellip(3))^2)/2;
-					rb=sqrt((xellip(4)-xellip(5))^2+(yellip(4)-yellip(5))^2)/2;
-
-					celllength=1*calxy;
-					%celllength=(x(1,2)-x(1,1))*calxy; %size of one cell
-					cellarea=celllength^2; %area of one cell
-					integralindex=0;
-
-					if get(handles.usethreshold,'value')==1
-						%sign=currentimage(round(yellip(1)),round(xellip(1)));
-						condition=get(handles.smallerlarger, 'value'); %1 is larger, 2 is smaller
-						thresholdareavalue=str2num(get(handles.thresholdarea, 'string'));
-
-						if condition==1
-							currentimage(currentimage>thresholdareavalue)=nan;
-						else
-							currentimage(currentimage<thresholdareavalue)=nan;
-						end
-						%{
-                    %redraw map to show excluded areas
-                    [xhelper,yhelper]=meshgrid(1:size(u,2),1:size(u,1));
-                    areaincluded=ones(size(u));
-                    areaincluded(isnan(currentimage)==1)=0;
-                    imagesc(currentimage);
-                    axis image
-                    hold on;
-                    quiver(xhelper(areaincluded==1),yhelper(areaincluded==1),u(areaincluded==1),v(areaincluded==1),'k','linewidth',str2double(get(handles.vecwidth,'string')))
-                    scatter(xhelper(areaincluded==0),yhelper(areaincluded==0),'rx')
-                    hold off;
-						%}
-					end
-					increasefactor=str2num(get(handles.radiusincrease,'string'))/100;
-					if ra<rb
-						minimumrad=ra;
-					else
-						minimumrad=rb;
-					end
-					%for incr = -(minimumrad)/1.5 :0.5: (ra+rb)/2*increasefactor
-					for incr = -(minimumrad)/1.5 :5: (ra+rb)/2*increasefactor
-						integralindex=integralindex+1;
-						[outputx, outputy]=ellipse(ra+incr,rb+incr,ang,x0,y0,'w');
-						%BW = roipoly(u,outputx,outputy);
-						BW = roipoly(currentimage,outputx,outputy);
-						ra_all(integralindex)=ra+incr; %#ok<AGROW>
-						rb_all(integralindex)=rb+incr; %#ok<AGROW>
-
-						integral=0;
-						%for i=1:size(u,1)
-						for i=1:size(currentimage,1)
-							%for j=1:size(u,2)
-							for j=1:size(currentimage,2)
-								if BW(i,j)==1
-									if ~isnan(currentimage(i,j))
-										integral=integral+cellarea*currentimage(i,j);
-									end
-								end
-							end
-						end
-						integralseries(integralindex)=integral; %#ok<AGROW>
-					end
-					gui_put('ra',ra_all);
-					gui_put('rb',rb_all)
-					gui_put('ang',ang)
-					gui_put('x0',x0)
-					gui_put('y0',y0)
-					h2=figure;
-					%plot(integralseries)
-					set(h2, 'tag', 'vortarea');
-
-					plot (1:size(integralseries,2), integralseries);
-					hold on;
-					scattergroup1=scatter(1:size(integralseries,2), integralseries, 80, 'ko');
-					hold off;
-					if verLessThan('matlab','8.4')
-						set(scattergroup1, 'ButtonDownFcn', @extract_hitcircle2, 'hittestarea', 'off');
-					else
-						% >R2014a
-						set(scattergroup1, 'ButtonDownFcn', @extract_hitcircle2, 'pickableparts', 'visible');
-					end
-
-					title('Click the points of the graph to highlight it''s corresponding circle.')
-					gui_put('integralseries',integralseries);
-					gui_put ('hellipse',h2);
-					screensize=get( 0, 'ScreenSize' );
-					rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
-					set(h2,'position', rect);
-
-					extractwhat=get(handles.area_para_select,'Value');
-					current=get(handles.area_para_select,'string');
-					current=current{extractwhat};
-					set(h2,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ' area integral series, frame ' num2str(currentframe)]);
-					set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-					xlabel('Ellipse series nr.');
-
-					if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-						units='px^2';
-					else
-						units='m^2';
-					end
-
-					current_2=current(1:strfind(current, '[')-1);
-					current_3=current(strfind(current, '[')+1:end-1);
-
-
-					ylabel([current_2 ' area integral [' current_3 '*' units ']']);
-					areaoutput=integralseries;
-					varis='[integral, starting at ellipse with smallest radius]';
-				end
-			end
-		elseif areaoperation==5
-			%weighted centroid
-			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-				x=resultslist{1,currentframe};
-				y=resultslist{2,currentframe};
-				if size(resultslist,1)>6 %filtered exists
-					if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-						u=resultslist{10,currentframe};
-						v=resultslist{11,currentframe};
-					else
-						u=resultslist{7,currentframe};
-						if size(u,1)>1
-							v=resultslist{8,currentframe};
-						else
-							u=resultslist{3,currentframe};
-							v=resultslist{4,currentframe};
-						end
-					end
-				else
-					u=resultslist{3,currentframe};
-					v=resultslist{4,currentframe};
-				end
-				calu=gui_retr('calu');calv=gui_retr('calv');
-				u_orig=u;
-				v_orig=v;
-				u=u*calu-gui_retr('subtr_u');
-				v=v*calv-gui_retr('subtr_v');
-				calxy=gui_retr('calxy');
-				extractwhat=get(handles.area_para_select,'Value');
-				if extractwhat==9 || extractwhat==10
-					plot_derivative_calc(currentframe,extractwhat+2,0);
-				else
-					plot_derivative_calc(currentframe,extractwhat+1,0);
-				end
-
-				derived=gui_retr('derived');
-
-				if extractwhat==9 || extractwhat==10
-					currentimage=derived{extractwhat+1,currentframe};
-				else
-					currentimage=derived{extractwhat,currentframe};
-				end
-
-				delete(findobj('tag','vortarea'));
-				%keyboard
-				imagesc(currentimage);
-				axis image
-				hold on;
-				quiver(u_orig-(gui_retr('subtr_u')/gui_retr('calu')),v_orig-(gui_retr('subtr_v')/gui_retr('calv')),'k','linewidth',str2double(get(handles.vecwidth,'string')))
-				hold off;
-
-				avail_maps=get(handles.colormap_choice,'string');
-				selected_index=get(handles.colormap_choice,'value');
-				if selected_index == 4 %HochschuleBremen map
-					load hsbmap.mat;
-					colormap(hsb);
-				elseif selected_index== 1 %rainbow
-					%load rainbow.mat;
-					colormap (parula);
-				else
-					colormap(avail_maps{selected_index});
-				end
-				if selected==0
-					[BW,ximask,yimask]=roipoly;
-				end
-				if isempty(BW)
-				else
-
-					delete(findobj('tag', 'extractline'));
-					line(ximask,yimask,'tag', 'extractline');
-					[rows,cols] = size(currentimage);
-
-					x = ones(rows,1)*[1:cols];
-					y = [1:rows]'*ones(1,cols);
-					area=0;
-					meanx=0;
-					meany=0;
-					for i=1:size(currentimage,1)
-						for j=1:size(currentimage,2)
-							if BW(i,j)==1
-								area=area+double(currentimage(i,j));%sum image intesity
-								meanx=meanx+x(i,j)*double(currentimage(i,j));%sum position*intensity
-								meany=meany+y(i,j)*double(currentimage(i,j));
-							end
-						end
-					end
-					meanx=meanx/area;%*(sizeold/sizenew)
-					meany=meany/area;%*(sizeold/sizenew)
-					hold on; plot(meanx,meany,'w*','markersize',20,'tag', 'extractline');hold off;
-					xecht=resultslist{1,currentframe};
-					yecht=resultslist{2,currentframe};
-					step=(xecht(1,2)-xecht(1,1))*calxy;
-					%+x(1,1)
-					[xecht_cal,yecht_cal]=calibrate_xy(xecht(1,1),yecht(1,1));
-					areaoutput=[xecht_cal+(meanx-1)*step yecht_cal+(meany-1)*step];
-
-					if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-						un=' px';
-					else
-						un=' m';
-					end
-					textposix=x(1,round(size(x,2)/4));
-					textposiy=y(round(size(y,1)/4),1);
-					text(textposix, textposiy,  ['x =' num2str(xecht_cal+(meanx-1)*step) un sprintf('\n') 'y =' num2str(yecht_cal+(meany-1)*step) un], 'margin', 0.01, 'fontsize', 10, 'color','w','fontweight','bold','BackgroundColor', [0 0 0],'verticalalignment','top','horizontalalignment','left');
-
-					varis='[x coordinate, y coordinate]';
-				end
-			end
-		elseif areaoperation==6
-			%mean flow direction
-			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-				x=resultslist{1,currentframe};
-				y=resultslist{2,currentframe};
-				if size(resultslist,1)>6 %filtered exists
-					if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
-						u=resultslist{10,currentframe};
-						v=resultslist{11,currentframe};
-					else
-						u=resultslist{7,currentframe};
-						if size(u,1)>1
-							v=resultslist{8,currentframe};
-						else
-							u=resultslist{3,currentframe};
-							v=resultslist{4,currentframe};
-						end
-					end
-				else
-					u=resultslist{3,currentframe};
-					v=resultslist{4,currentframe};
-				end
-				gui_sliderdisp(gui_retr('pivlab_axis'))
-				calu=gui_retr('calu');calv=gui_retr('calv');
-				u=u*calu-gui_retr('subtr_u');
-				v=v*calv-gui_retr('subtr_v');
-				calxy=gui_retr('calxy');
-				delete(findobj('tag','vortarea'));
-				filepath=gui_retr('filepath');
-				x=resultslist{1,currentframe};
-				y=resultslist{2,currentframe};
-				if selected==0
-					[BW,ximask,yimask]=roipoly;
-				end
-				if isempty(BW)
-				else
-					delete(findobj('tag', 'extractline'));
-					line(ximask,yimask,'tag', 'extractline');
-					umean=0;
-					vmean=0;
-					uamount=0;
-					u=plot_rescale_maps_nan(u,0,[]);
-					v=plot_rescale_maps_nan(v,0,[]);
-					for i=1:size(u,1)
-						for j=1:size(u,2)
-							if BW(i,j)==1
-								if ~isnan(u(i,j)) && ~isnan(v(i,j))
-									umean=umean+u(i,j);
-									vmean=vmean+v(i,j);
-									uamount=uamount+1;
-								end
-							end
-						end
-					end
-					umean=umean/uamount;
-					vmean=vmean/uamount;
-					veclength=(x(1,2)-x(1,1))*6;
-					if vmean/calv<=0
-						angle=-atan2(vmean/calv,umean/calu)*180/pi; %divided by calibration to remove sign resulting from calibration. because the angle should not depend on the coordinate system.
-					else
-						angle=360-atan2(vmean/calv,umean/calu)*180/pi;
-					end
-					magg=sqrt(umean^2+vmean^2);
-					areaoutput=[magg angle];
-					varis='[magnitude, angle in degrees, 0 = right, 90 = up, 180 = left, 270 = down, 360 = right]';
-
-					hold on;quiver(mean2(ximask), mean2(yimask), (umean/calu)/sqrt((umean/calu)^2+(vmean/calv)^2)*veclength,(vmean/calv)/sqrt((umean/calu)^2+(vmean/calv)^2)*veclength,'r','autoscale','off', 'autoscalefactor', 100, 'linewidth',2,'MaxHeadSize',3,'tag', 'extractline');hold off;
-
-					if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-						un=' px/frame';
-					else
-						un=' m/s';
-					end
-					textposix=x(1,round(size(x,2)/4));
-					textposiy=y(round(size(y,1)/4),1);
-					text(textposix, textposiy, ['angle=' num2str(angle) '°' sprintf('\n') 'magnitude=' num2str(magg) un], 'margin', 0.01, 'fontsize', 10, 'color','w','fontweight','bold','BackgroundColor', [0 0 0],'verticalalignment','top','horizontalalignment','left');
-				end
-			end
-		end %areaoperation
-	end
-	if get(handles.savearea,'Value')==1
-		%nur wenn man es auch speichern will...
-		if selected==0
-			switch areaoperation
-				case 1
-					whatoperation = 'mean_value';
-				case 2
-					whatoperation = 'integral';
-				case 3
-					whatoperation = 'area';
-				case 4
-					whatoperation = 'integral_series';
-				case 5
-					whatoperation = 'weighted centroid';
-				case 6
-					whatoperation = 'mean_flow';
-			end
-			par = get(handles.area_para_select,'string');
-			par=par{get(handles.area_para_select,'Value')};
-			if areaoperation==3 || areaoperation==6
-				par=[];
-			end
-			imgsavepath=gui_retr('imgsavepath');
-			if isempty(imgsavepath)
-				imgsavepath=gui_retr('pathname');
-			end
-
-			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-
-				part1= par(1:strfind(par,'/')-1) ;
-				part2= par(strfind(par,'/')+1:end);
-				if isempty(part1)==1
-					parED=par;
-				else
-					parED=[part1 ' per ' part2];
-				end
-
-				[FileName,PathName] = uiputfile('*.txt','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' whatoperation '_' parED '.txt'])); %framenummer in dateiname
-				selected=1;
-				if isequal(FileName,0) | isequal(PathName,0)
-					break
-				else
-					gui_put ('imgsavepath',PathName);
-					fid = fopen(fullfile(PathName,FileName), 'w');
-					fprintf(fid, ['Frame Nr.,' par ': ' whatoperation ' ' varis '\r\n']);
-					fclose(fid);
-				end
-			end
-		end
-		if isequal(FileName,0) | isequal(PathName,0)
-		else
-			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-				dlmwrite(fullfile(PathName,FileName), [currentframe areaoutput], '-append', 'delimiter', ',', 'precision', 10, 'newline', 'pc'); %#ok<*DLMWT>
-			end
-		end
-	end
-	%areaoutput
+function area=extract_get_area_of_selection(BW,maptoget,include_masked)
+%returns area in m^2 or pixels^2 (depends on calibration applied or not).
+celllength=gui_retr('calxy');
+cellarea=celllength^2;
+area=numel(BW(BW==1))*cellarea;
+if include_masked~=1
+	area=area-numel(BW(BW==1 & isnan(maptoget)))*cellarea;
 end
 
-gui_toolsavailable(1)
 
 function extract_draw_extraction_coordinates_Callback(caller, ~, ~)
-
 gui_sliderdisp(gui_retr('pivlab_axis'));
 handles=gui_gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
@@ -4615,69 +4152,7 @@ if get(hObject, 'value') ~= 11
 	end
 end
 
-function extract_hitcircle(~,~)
-posreal=get(gca,'CurrentPoint');
-delete(findobj('tag','circstring'));
-pos=round(posreal(1,1));
-xposition=gui_retr('xposition');
-yposition=gui_retr('yposition');
-integral=gui_retr('integral');
-hgui=getappdata(0,'hgui');
-h3plot=gui_retr('h3plot');
-figure(hgui);
-delete(findobj('tag', 'extractline'))
-for m=1:30
-	line(xposition(m,:),yposition(m,:),'LineWidth',1.5, 'Color', [0.95,0.5,0.01],'tag','extractline');
-end
-line(xposition(pos,:),yposition(pos,:),'LineWidth',2.5, 'Color',[0.2,0.5,0.7],'tag','extractline');
-figure(h3plot);
-marksize=linspace(80,80,30)';
-marksize(pos)=150;
-set(gco, 'SizeData', marksize);
-if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-	units='px^2/frame';
-else
-	units='m^2/s';
-end
-text(posreal(1,1)+0.75,posreal(2,2),['\leftarrow ' num2str(integral(pos)) ' ' units],'tag','circstring','BackgroundColor', [1 1 1], 'margin', 0.01, 'fontsize', 7, 'HitTest', 'off')
-
-function extract_hitcircle2(~,~)
-posreal=get(gca,'CurrentPoint');
-delete(findobj('tag','circstring'));
-pos=round(posreal(1,1));
-integralseries=gui_retr('integralseries');
-hgui=getappdata(0,'hgui');
-h3plot=gui_retr('hellipse');
-figure(hgui);
-delete(findobj('type', 'line', 'color', 'w')) %delete white ellipses
-ra=gui_retr('ra');
-rb=gui_retr('rb');
-ang=gui_retr('ang');
-x0= gui_retr('x0');
-y0=gui_retr('y0');
-
-for m=1:size(ra,2)
-	ellipse(ra(1,m),rb(1,m),ang,x0,y0,'w');
-end
-ellipse(ra(1,pos),rb(1,pos),ang,x0,y0,'b');
-figure(h3plot);
-marksize=linspace(80,80,size(ra,2))';
-marksize(pos)=150;
-set(gco, 'SizeData', marksize);
-%units
-handles=gui_gethand;
-extractwhat=get(handles.area_para_select,'Value');
-current=get(handles.area_para_select,'string');
-current=current{extractwhat};
-if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-	units='px^2';
-else
-	units='m^2';
-end
-current_3=current(strfind(current, '[')+1:end-1);
-text(posreal(1,1)+0.25,posreal(2,2),['\leftarrow ' num2str(integralseries(pos)) ' ' current_3 '*' units],'tag','circstring','BackgroundColor', [1 1 1], 'margin', 0.01, 'fontsize', 7, 'HitTest', 'off')
-
-function extract_load_polyline_Callback (~,~)
+function extract_load_polyline_Callback (caller,~)
 filepath=gui_retr('filepath');
 handles=gui_gethand;
 if size(filepath,1) > 1 %did the user load images?
@@ -4685,15 +4160,30 @@ if size(filepath,1) > 1 %did the user load images?
 	if isequal(polyfile,0) | isequal(polypath,0)
 		%do nothing
 	else
+		loading_correct_data=0;
 		load(fullfile(polypath,polyfile),'xposition','yposition','extract_type');
 		if ~isempty(xposition) && ~isempty(yposition) && ~isempty(extract_type)
-			extract_clear_plot_Callback
-			gui_put('xposition',xposition);
-			gui_put('yposition',yposition);
-			gui_put('extract_type',extract_type);
-			delete(findobj('tag', 'extractline'))
-			delete(findobj('tag','areaint'));
-			extract_update_display(extract_type, xposition, yposition);
+			if strcmp (caller.Parent.Tag,'multip12') %called from polyline panel
+				if strcmp(extract_type, 'extract_poly') || strcmp(extract_type, 'extract_circle') || strcmp(extract_type, 'extract_circle_series')
+					loading_correct_data=1;
+				end
+			end
+			if strcmp (caller.Parent.Tag,'multip17') %called from area extract panel
+				if strcmp(extract_type, 'extract_poly_area') ||  strcmp(extract_type, 'extract_circle_area') ||  strcmp(extract_type, 'extract_circle_series_area') || strcmp(extract_type, 'extract_rectangle_area')
+					loading_correct_data=1;
+				end
+			end
+			if loading_correct_data==1
+				extract_clear_plot_Callback
+				gui_put('xposition',xposition);
+				gui_put('yposition',yposition);
+				gui_put('extract_type',extract_type);
+				delete(findobj('tag', 'extractline'))
+				delete(findobj('tag','areaint'));
+				extract_update_display(extract_type, xposition, yposition);
+			else
+				msgbox('You tried to load polyline coordinates from the area extraction panel or vice versa.','Error','error','modal')
+			end
 		else
 			disp ('No polyline coordinate data found in selected file.')
 		end
@@ -4738,12 +4228,16 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 				extraction_coordinates_x (i,1)=sin(valtable(i,1))*yposition+xposition(1);
 				extraction_coordinates_y (i,1)=cos(valtable(i,1))*yposition+xposition(2);
 			end
+		elseif strcmp(extract_type,'extract_circle_series')
+			length = 2*yposition*pi;
 		end
 		%percentagex=xposition/max(max(x));
 		%xaufderivative=percentagex*size(x,2);
 		%percentagey=yposition/max(max(y));
 		%yaufderivative=percentagey*size(y,1);
-		nrpoints=str2num(get(handles.nrpoints,'string'));
+
+		stepsize=ceil((x(1,2)-x(1,1))/1);
+		nrpoints = double(round(length/stepsize*3));
 
 		switch extractwhat
 			case {1,2,3,4,5,6,7,8}
@@ -4943,9 +4437,9 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 				distunit='m^2';
 			end
 			if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
-				distunit_2=' [px]';
+				distunit_2=' px';
 			else
-				distunit_2=' [m]';
+				distunit_2=' m';
 			end
 
 			current=get(handles.extraction_choice,'string');
@@ -5103,25 +4597,27 @@ else
 end
 %draw extraction polygon when frame was changed.
 pivlab_axis=gui_retr('pivlab_axis');
-delete(findobj(pivlab_axis,'tag', 'extractpoint'));
-delete(findobj(pivlab_axis,'tag', 'extractline'));
-delete(findobj(pivlab_axis,'tag', 'circstring'));
-delete(findobj(pivlab_axis,'Tag', 'extract_poly'))
+delete(findobj(gui_retr('pivlab_axis'),'tag', 'extractpoint'));
+delete(findobj(gui_retr('pivlab_axis'),'tag', 'extractline'));
+delete(findobj(gui_retr('pivlab_axis'),'tag', 'circstring'));
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_displayed_smaller_radii'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_max_circulation'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_poly_area'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_rectangle_area'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_area'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_area'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_area_displayed_smaller_radii'))
+delete(findobj(gui_retr('pivlab_axis'),'Tag','extract_circle_series_area_max_circulation'))
 xposition = gui_retr('xposition');
 yposition = gui_retr('yposition');
 extract_type = gui_retr('extract_type');
 if ~isempty(xposition) && ~isempty(yposition) && ~isempty(extract_type)
-	extract_update_display(extract_type, xposition, yposition)
-end
-
-function extract_radiusincrease_Callback(hObject, ~, ~)
-misc_check_comma(hObject)
-val=get(hObject,'string');
-if str2double(val)>500
-	set(hObject,'string',500);
-end
-if str2double(val)<0 || isempty(val)==1 || isnan(str2double(val))
-	set(hObject,'string',0);
+	if strcmp(extract_type,'extract_poly') || strcmp(extract_type,'extract_circle') || strcmp(extract_type,'extract_circle_series')
+		extract_update_display(extract_type, xposition, yposition)
+	end
 end
 
 function extract_save_data_Callback(~, ~, ~)
@@ -5162,7 +4658,11 @@ for i=startfr:endfr
 			else
 				currentED=[part1 ' per ' part2];
 			end
-			[FileName,PathName] = uiputfile('*.txt','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' currentED '.txt'])); %framenummer in dateiname
+			if get(handles.extractionLine_fileformat,'Value')==1
+				[FileName,PathName] = uiputfile('*.xls','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' currentED '.xls'])); %framenummer in dateiname
+			else
+				[FileName,PathName] = uiputfile('*.txt','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' currentED '.txt'])); %framenummer in dateiname
+			end
 			selected=1;
 			gui_toolsavailable(0,'Busy, extracting data...');drawnow
 		end
@@ -5199,10 +4699,8 @@ for i=startfr:endfr
 				end
 				wholeLOT=[distance cx cy c];
 			end
-			fid = fopen(fullfile(PathName,FileName_final), 'w');
-			fprintf(fid, [header '\r\n']);
-			fclose(fid);
-			dlmwrite(fullfile(PathName,FileName_final), wholeLOT, '-append', 'delimiter', ',', 'precision', 10, 'newline', 'pc');
+			writecell(strsplit(header,','),fullfile(PathName,FileName_final))
+			writematrix(wholeLOT,fullfile(PathName,FileName_final),'WriteMode','Append')
 		end
 	end
 end
@@ -6975,14 +6473,8 @@ handles.text56 = uicontrol(handles.multip12,'Style','text','String','Parameter:'
 item=[0 item(2)+item(4) parentitem(3) 1];
 handles.extraction_choice = uicontrol(handles.multip12,'Style','popupmenu','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_extraction_choice_Callback,'Tag','extraction_choice','TooltipString','What parameter do you want to extract along the line / circle?');
 
-item=[0 item(2)+item(4)+margin/2 parentitem(3)/4*3 1];
-handles.text58 = uicontrol(handles.multip12,'Style','text','String','Nr. of interpolated points:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text58');
-
-item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1];
-handles.nrpoints = uicontrol(handles.multip12,'Style','edit','String','300','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','nrpoints','TooltipString','Resolution of the line / circle');
-
 item=[0 item(2)+item(4)+margin parentitem(3)/2 2];
-handles.plot_data = uicontrol(handles.multip12,'Style','pushbutton','String','Plot data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_plot_data_Callback,'Tag','plot_data','TooltipString','When you finished drawing a line / circle, you can plot data along the line / circle by pushing this button');
+handles.plot_data = uicontrol(handles.multip12,'Style','pushbutton','String','Extract data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_plot_data_Callback,'Tag','plot_data','TooltipString','When you finished drawing a line / circle, you can plot data along the line / circle by pushing this button');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
 handles.clear_plot = uicontrol(handles.multip12,'Style','pushbutton','String','Clear data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_clear_plot_Callback,'Tag','clear_plot','TooltipString','Clear line / circle data');
@@ -6993,8 +6485,11 @@ handles.iLoveLenaMaliaAndLine = uicontrol(handles.multip12,'Style','text','Strin
 item=[0 item(2)+item(4) parentitem(3) 1];
 handles.extractLineAll = uicontrol(handles.multip12,'Style','checkbox','String','extract and save for all frames','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extractLineAll','TooltipString','Extract data for all frames of the current session');
 
-item=[0 item(2)+item(4) parentitem(3) 2];
-handles.save_data = uicontrol(handles.multip12,'Style','pushbutton','String','Save result as text file(s)','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_save_data_Callback,'Tag','save_data','TooltipString','Extract data and save results to a text file');
+item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 2];
+handles.extractionLine_fileformat = uicontrol(handles.multip12,'Style','popupmenu','String',{'Excel file' 'Text file'},'Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extractionLine_fileformat','TooltipString','The format that the data is saved in');
+
+item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 2];
+handles.save_data = uicontrol(handles.multip12,'Style','pushbutton','String','Export data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_save_data_Callback,'Tag','save_data','TooltipString','Extract data and save results to a text file');
 
 %% Multip13
 handles.multip13 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Measure distance & angle (CTRL+T)', 'Tag','multip13','fontweight','bold');
@@ -7382,9 +6877,6 @@ item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 handles.do_export_pixel_data = uicontrol(handles.multip16,'Style','pushbutton','String','Export multiple frames','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@export_do_export_pixel_data_Callback,'Tag','do_export_pixel_data','TooltipString','Save image sequence for the selected frames');
 
 %% Multip17
-%new interface:
-%%{
-%% multip17
 handles.multip17 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Extract parameters from area', 'Tag','multip17','fontweight','bold');
 parentitem=get(handles.multip17, 'Position');
 item=[0 0 0 0];
@@ -7399,10 +6891,10 @@ item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
 handles.draw_stuff_area = uicontrol(handles.multip17,'Style','pushbutton','String','Draw!','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_draw_extraction_coordinates_Callback,'Tag','draw_stuff_area','TooltipString','Draw the object that you selected above');
 
 item=[0 item(2)+item(4) parentitem(3)/2 2];
-handles.save_area_coordinates = uicontrol(handles.multip17,'Style','pushbutton','String','Save coords','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_save_area_coordinates_Callback,'Tag','save_area_coordinates','TooltipString','Save area coordinates to *.mat file');
+handles.save_area_coordinates = uicontrol(handles.multip17,'Style','pushbutton','String','Save coords','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_save_polyline_Callback,'Tag','save_area_coordinates','TooltipString','Save area coordinates to *.mat file');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
-handles.load_area_coordinates = uicontrol(handles.multip17,'Style','pushbutton','String','Load coords','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_load_area_coordinates_Callback,'Tag','load_area_coordinates','TooltipString','Load area coordinates from *.mat file');
+handles.load_area_coordinates = uicontrol(handles.multip17,'Style','pushbutton','String','Load coords','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_load_polyline_Callback,'Tag','load_area_coordinates','TooltipString','Load area coordinates from *.mat file');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.text56a = uicontrol(handles.multip17,'Style','text','String','Parameter:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text56a');
@@ -7410,18 +6902,17 @@ handles.text56a = uicontrol(handles.multip17,'Style','text','String','Parameter:
 item=[0 item(2)+item(4) parentitem(3) 1];
 handles.extraction_choice_area = uicontrol(handles.multip17,'Style','popupmenu','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extraction_choice_area','TooltipString','What parameter do you want to extract from the area?');
 
-item=[0 item(2)+item(4)+margin parentitem(3) 1];
-handles.text57a = uicontrol(handles.multip17,'Style','text','String','Operation:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text57');
-
-item=[0 item(2)+item(4) parentitem(3) 1];
-disp('was kommt hier sinnvollerweise rein...?')
-handles.areatype = uicontrol(handles.multip17,'Style','popupmenu','String',{'Area mean value, area integral and area size','Area integral series','Area mean flow direction'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_areatype_Callback,'Tag','areatype','TooltipString','Select the type of operation that you want to perform with the area you will select');
-
 item=[0 item(2)+item(4)+margin parentitem(3)/2 2];
-handles.plot_data_area = uicontrol(handles.multip17,'Style','pushbutton','String','Plot data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_plot_data_area_Callback,'Tag','plot_data_area','TooltipString','Extract the data from the area drawn');
+handles.plot_data_area = uicontrol(handles.multip17,'Style','pushbutton','String','Extract data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_plot_data_area_Callback,'Tag','plot_data_area','TooltipString','Extract the data from the area drawn');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
 handles.clear_plot_area = uicontrol(handles.multip17,'Style','pushbutton','String','Clear data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_clear_plot_Callback,'Tag','clear_plot_area','TooltipString','Clear area data');
+
+item=[0 item(2)+item(4)+margin parentitem(3) 1];
+handles.results_txts = uicontrol(handles.multip17,'Style','text','String','Results:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','results_txts');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 4];
+handles.area_results = uicontrol(handles.multip17,'Style','edit','String',{''},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','area_results','TooltipString','Results of area extraction','Max',4,'Min',1,'Horizontalalignment','left');
 
 item=[0 item(2)+item(4)+margin*2 parentitem(3) 1];
 handles.save_plot_data_area = uicontrol(handles.multip17,'Style','text','String','Save extraction(s)','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','save_plot_data_area');
@@ -7429,67 +6920,13 @@ handles.save_plot_data_area = uicontrol(handles.multip17,'Style','text','String'
 item=[0 item(2)+item(4) parentitem(3) 1];
 handles.extractAreaAll = uicontrol(handles.multip17,'Style','checkbox','String','extract and save for all frames','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extractAreaAll','TooltipString','Extract data for all frames of the current session');
 
-item=[0 item(2)+item(4) parentitem(3) 2];
-handles.save_data_area = uicontrol(handles.multip17,'Style','pushbutton','String','Save result as text file(s)','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_save_data_area_Callback,'Tag','save_data_area','TooltipString','Extract data and save results to a text file');
+item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 2];
+handles.extractionArea_fileformat = uicontrol(handles.multip17,'Style','popupmenu','String',{'Excel file' 'Text file'},'Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extractionArea_fileformat','TooltipString','The format that the data is saved in');
 
-%%}
+item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 2];
+handles.save_data_area = uicontrol(handles.multip17,'Style','pushbutton','String','Export data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_save_data_area_Callback,'Tag','save_data_area','TooltipString','Extract data and save results to a text file');
 
 
-%old interface
-%{
-handles.multip17 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Extract parameters from area', 'Tag','multip17','fontweight','bold');
-parentitem=get(handles.multip17, 'Position');
-item=[0 0 0 0];
-
-item=[0 item(2)+item(4) parentitem(3) 6];
-handles.text90 = uicontrol(handles.multip17,'Style','text','String','Select desired parameter and type of area operation. Then click "Draw!" to specify the area with your mouse. Calculations are based on full cells inside the selected region.','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text90');
-
-item=[0 item(2)+item(4) parentitem(3) 1];
-handles.text57 = uicontrol(handles.multip17,'Style','text','String','Type:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text57');
-
-item=[0 item(2)+item(4) parentitem(3) 1];
-handles.areatype = uicontrol(handles.multip17,'Style','popupmenu','String',{'Area mean value','Area integral','Area size','Area integral series','Area weighted centroid','Area mean flow direction'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_areatype_Callback,'Tag','areatype','TooltipString','Select the type of operation that you want to perform with the area you will select');
-
-item=[0 item(2)+item(4)+margin parentitem(3) 1];
-handles.text89 = uicontrol(handles.multip17,'Style','text','String','Parameter:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text89');
-
-item=[0 item(2)+item(4) parentitem(3) 1];
-handles.area_para_select = uicontrol(handles.multip17,'Style','popupmenu','String',{'N/A'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','area_para_select','TooltipString','Select the parameter that you want to perform the selected operation with');
-
-item=[0 item(2)+item(4)+margin/2 parentitem(3) 6];
-handles.text95 = uicontrol(handles.multip17,'Style','text','Visible','off','String',{'Selection procedure:','1st click: centre of structure','2nd click: upper limit','3rd click: lower limit','4th click: left limit','5th click: right limit'},'Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text95');
-
-item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
-handles.usethreshold = uicontrol(handles.multip17,'Style','checkbox','Visible','off','String','Use threshold','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','usethreshold','TooltipString','Use a threshold for the operation: Only use data that fulfills the condition');
-
-item=[0 item(2)+item(4) parentitem(3) 1];
-handles.text93 = uicontrol(handles.multip17,'Style','text','Visible','off','String','Theshold','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text93');
-
-item=[0 item(2)+item(4) parentitem(3)/4 1.5];
-handles.smallerlarger = uicontrol(handles.multip17,'Style','popupmenu','Visible','off','String',{'>','<'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','smallerlarger','TooltipString','Condition for the threshold');
-
-item=[parentitem(3)/4 item(2) parentitem(3)/3 1.5];
-handles.thresholdarea = uicontrol(handles.multip17,'Style','edit','Visible','off','String','0','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_thresholdarea_Callback,'Tag','thresholdarea','TooltipString','Threshold value');
-
-item=[0 item(2)+item(4)+margin/2 parentitem(3)/3*2 1];
-handles.text94 = uicontrol(handles.multip17,'Style','text','Visible','off','String','Radius increase [%]','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text94');
-
-item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.radiusincrease = uicontrol(handles.multip17,'Style','edit','Visible','off','String','200','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_radiusincrease_Callback,'Tag','radiusincrease','TooltipString','When using the area integral series, the area will be gradually increased. The final amount of increase is selected here');
-
-item=[0 item(2)+item(4)+margin parentitem(3) 1];
-handles.savearea = uicontrol(handles.multip17,'Style','checkbox','String','     save result as text (ASCII) chart','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','savearea','TooltipString','Save the result of the area extraction as a (ASCII) file');
-
-item=[0 item(2)+item(4)+margin/4 parentitem(3)/5 1];
-handles.extractareaall = uicontrol(handles.multip17,'Style','checkbox','String','','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_area_all_Callback,'Tag','extractareaall','TooltipString','Perform the area extraction for all frames of the current session');
-
-item=[parentitem(3)/5 item(2) parentitem(3)/5*4 2];
-handles.text145 = uicontrol(handles.multip17,'Style','text','String','Do and save extractions for all frames','Units','characters', 'HorizontalAlignment','left','Position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text145');
-
-item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
-handles.draw_area = uicontrol(handles.multip17,'Style','pushbutton','String','Draw area','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract_draw_area_Callback,'Tag','draw_area','TooltipString','Draw the area by clicking with the left mouse button');
-
-%}
 
 %% Multip18
 handles.multip18 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Stream lines', 'Tag','multip18','fontweight','bold');

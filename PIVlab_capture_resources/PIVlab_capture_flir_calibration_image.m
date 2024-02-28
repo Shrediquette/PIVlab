@@ -24,8 +24,20 @@ flir_supported_formats = info.DeviceInfo.SupportedFormats;
 flir_vid = videoinput(info.AdaptorName);
 
 flir_settings = get(flir_vid);
-flir_settings.Source.DeviceLinkThroughputLimit = flir_settings.Source.DeviceLinkSpeed;
 
+if ~contains (flir_name,'GS3-U3-51S5')
+	flir_settings.Source.DeviceLinkThroughputLimit = flir_settings.Source.DeviceLinkSpeed;
+else
+	flir_settings.Source.DeviceLinkThroughputLimit = flir_settings.Source.DeviceMaxThroughput;
+end
+
+if contains (flir_name,'GS3-U3-51S5')
+	flir_settings.Source.ExposureAuto='Off';
+	flir_settings.Source.ExposureAuto='Off';
+	flir_settings.Source.SharpnessAuto='Off';
+	flir_settings.Source.GainAuto='Off';
+	flir_settings.Source.Gain=0;
+end
 
 triggerconfig(flir_vid, 'manual');
 flir_settings.TriggerMode ='manual';

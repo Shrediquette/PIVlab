@@ -126,6 +126,7 @@ if ~isinf(nr_of_images) %only start capturing if save box is ticked.
 	OPTOcam_vid.ErrorFcn = @CustomIMAQErrorFcn;
 	start(OPTOcam_vid);
 end
+
 preview(OPTOcam_vid,image_handle_OPTOcam);
 % open in 8 bit
 if bitmode ==8
@@ -134,7 +135,14 @@ if bitmode ==8
 elseif bitmode==12
 	caxis([0 2^12]); %seems to be a workaround to force preview to show full data range...
 end
-pause(1); %make sure OPTOcam is ready...
+pause(0.1); %make sure OPTOcam is ready...
+if ~isinf(nr_of_images)
+	status=[];
+	while isempty(status) %make sure OPTOcam is ready...
+		status=OPTOcam_vid.Eventlog;
+		pause(0.001)
+	end
+end
 drawnow;
 
 function CustomIMAQErrorFcn(obj, event, varargin)

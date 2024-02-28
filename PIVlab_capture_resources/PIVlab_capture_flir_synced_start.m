@@ -29,7 +29,11 @@ flir_supported_formats = info.DeviceInfo.SupportedFormats;
 flir_vid = videoinput(info.AdaptorName);
 
 flir_settings = get(flir_vid);
-flir_settings.Source.DeviceLinkThroughputLimit = flir_settings.Source.DeviceLinkSpeed;
+if ~contains (flir_name,'GS3-U3-51S5')
+	flir_settings.Source.DeviceLinkThroughputLimit = flir_settings.Source.DeviceLinkSpeed;
+else
+	flir_settings.Source.DeviceLinkThroughputLimit = flir_settings.Source.DeviceMaxThroughput;
+end
 
 %% prepare axes
 PIVlab_axis = findobj(hgui,'Type','Axes');
@@ -47,6 +51,15 @@ set(gca,'xtick',[])
 colorbar
 
 
+if contains (flir_name,'GS3-U3-51S5')
+	flir_settings.Source.ExposureAuto='Off';
+	flir_settings.Source.ExposureAuto='Off';
+	flir_settings.Source.SharpnessAuto='Off';
+	flir_settings.Source.GainAuto='Off';
+	flir_settings.Source.Gain=0;
+end
+
+
 %% set camera parameters for free run or triggered acquisition
 flir_settings.Source.TriggerSource='Line2';
 flir_settings.Source.TriggerActivation='RisingEdge';
@@ -60,8 +73,8 @@ flir_settings.Source.ExposureTime = floor(1/frame_rate*1000*1000-405);
 
 %% Set Line3 to output ExposureActive Signal for debugging:
 flir_settings.Source.LineSelector='Line3';
-flir_settings.Source.LineSource = 'ExposureActive';
 flir_settings.Source.LineMode = 'Output';
+flir_settings.Source.LineSource = 'ExposureActive';
 flir_settings.Source.LineInverter='False';
 
 %% start acqusition (waiting for trigger)
