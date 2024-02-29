@@ -3873,14 +3873,27 @@ else
 	file_selection_ok=0;
 end
 if file_selection_ok
-
+	write_error=0;
 	for i=startfr:endfr
 		if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			[returned_data, returned_header]=extract_plot_data_area(i,refresh_data);
 			if i==startfr %generate file with header
-				writecell(returned_header,fullfile(PathName,FileName)); %initiate file
+				if exist(fullfile(PathName,FileName),'file')==2 %file is already there
+					try
+						delete(fullfile(PathName,FileName));
+						writecell(returned_header,fullfile(PathName,FileName)); %initiate file
+					catch ME
+						msgbox('No write access to file. Is it currently open somewhere else?','Error','error','modal')
+						write_error=1;
+					end
+				end
+				if write_error==0
+					writecell(returned_header,fullfile(PathName,FileName)); %initiate file
+				end
 			end
-			writecell(returned_data,fullfile(PathName,FileName),'WriteMode','Append');
+			if write_error==0
+				writecell(returned_data,fullfile(PathName,FileName),'WriteMode','Append');
+			end
 		end
 	end
 end
