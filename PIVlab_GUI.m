@@ -4443,8 +4443,6 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		end
 		%% Plotting
 		if ~strcmp(extract_type,'extract_circle_series') %user did not choose circle series
-
-
 			calxy=gui_retr('calxy');
 			%get units
 			if (gui_retr('calu')==1 || gui_retr('calu')==-1) && gui_retr('calxy')==1
@@ -4493,9 +4491,19 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		end
 		if strcmp(extract_type,'extract_circle_series') %user chose circle series
 			calxy=gui_retr('calxy');
-			for m=1:numel(length)
-				integral(m)=trapz(distance(m,:)*calxy,c(m,:));
+
+			%interpolate circles that contain less than 50% missing data
+			amount_of_nans_in_circle=zeros(numel(length),1);
+			for ind=1:numel(length)
+				amount_of_nans_in_circle(ind)=numel(find(isnan(c(ind,:))));
 			end
+			amount_of_nans_in_circle = amount_of_nans_in_circle / size(c,2);
+			c_interpolated=inpaint_nans(c); %interpolate all nans
+			c_interpolated(amount_of_nans_in_circle>0.5,:)=nan; %set rows with more than 50% nan back to nan
+			for m=1:numel(length)
+				integral(m)=trapz(distance(m,:)*calxy,c_interpolated(m,:));
+			end
+
 			%highlight circle with highest circ
 			delete(findobj('tag', 'extractline'))
 			[r,col]=find(max(abs(integral))==abs(integral)); %find absolute max of integral
