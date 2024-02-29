@@ -552,9 +552,9 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 end
 
 function acquisition_calibcapture_Callback(~,~,~)
-[filepath,~,~] = fileparts(mfilename('fullpath'));
+filepath = fileparts(which('PIVlab_GUI.m'));
 camera_type=gui_retr('camera_type');
-if ~strcmp(camera_type,'chronos') %calib
+if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') %calib
 	if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_camera_load_defines.m'),'file')
 		ready=1;
 	else
@@ -1269,8 +1269,15 @@ uiwait(msgbox(['PCO camera drivers not found in this directory:' sprintf('\n') f
 
 function acquisition_piv_capture_Callback(~,~,~)
 gui_put('capturing',0);
-[filepath,~,~] = fileparts(mfilename('fullpath'));
-if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_camera_load_defines.m'),'file')
+filepath = fileparts(which('PIVlab_GUI.m'));
+camera_type=gui_retr('camera_type');
+required_files_check=1;
+if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') %calib
+	if ~exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_camera_load_defines.m'),'file')
+		required_files_check=0;
+	end
+end
+if required_files_check
 	button = questdlg('Start Laser and camera?','Warning','Yes','Cancel','Yes');
 	if strmatch(button,'Yes')==1
 		handles=gui_gethand;
@@ -3866,12 +3873,12 @@ else
 	file_selection_ok=0;
 end
 if file_selection_ok
-	
+
 	for i=startfr:endfr
 		if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			[returned_data, returned_header]=extract_plot_data_area(i,refresh_data);
 			if i==startfr %generate file with header
-				writecell(returned_header,fullfile(PathName,FileName)); %initiate file 
+				writecell(returned_header,fullfile(PathName,FileName)); %initiate file
 			end
 			writecell(returned_data,fullfile(PathName,FileName),'WriteMode','Append');
 		end
