@@ -3888,7 +3888,11 @@ if file_selection_ok
 					end
 				end
 				if write_error==0
-					writecell(returned_header,fullfile(PathName,FileName)); %initiate file
+					if get(handles.extractionArea_fileformat,'Value') ==1
+						writecell(returned_header,fullfile(PathName,FileName),'WriteMode','replacefile'); %initiate file
+					else
+						writecell(returned_header,fullfile(PathName,FileName),'WriteMode','overwrite'); %initiate file
+					end
 				end
 			end
 			if write_error==0
@@ -4736,8 +4740,24 @@ for i=startfr:endfr
 				end
 				wholeLOT=[distance cx cy c];
 			end
-			writecell(strsplit(header,','),fullfile(PathName,FileName_final))
-			writematrix(wholeLOT,fullfile(PathName,FileName_final),'WriteMode','Append')
+			write_error=0;
+			if exist(fullfile(PathName,FileName_final),'file')==2 %file is already there
+				try
+					delete(fullfile(PathName,FileName_final));
+					writecell(strsplit(header,','),fullfile(PathName,FileName_final))
+				catch ME
+					uiwait(msgbox('No write access to file. Is it currently open somewhere else?','Error','error','modal'))
+					write_error=1;
+				end
+			end
+			if write_error==0
+				if get(handles.extractionLine_fileformat,'Value')==1
+					writecell(strsplit(header,','),fullfile(PathName,FileName_final),'WriteMode','replacefile')
+				else
+					writecell(strsplit(header,','),fullfile(PathName,FileName_final),'WriteMode','overwrite')
+				end
+				writematrix(wholeLOT,fullfile(PathName,FileName_final),'WriteMode','Append')
+			end
 		end
 	end
 end
