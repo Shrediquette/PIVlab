@@ -3982,7 +3982,16 @@ function BW=extract_convert_roi_to_binary(xposition,yposition,extract_type,size_
 if strcmp(extract_type,'extract_poly_area')%polygon:
 	BW = poly2mask(xposition,yposition,size_of_image(1),size_of_image(2));
 elseif strcmp(extract_type,'extract_rectangle_area')%rectangle:
-	rectangle_coords=bbox2points([xposition(1),yposition(1),xposition(2),yposition(2)]);
+	bbox=[xposition(1),yposition(1),xposition(2),yposition(2)];
+	rectangle_coords = zeros(4, 2, 'like', bbox);
+	rectangle_coords(1, 1) = bbox(:, 1);
+	rectangle_coords(1, 2) = bbox(:, 2);
+	rectangle_coords(2, 1) = bbox(:, 1) + bbox(:, 3);
+	rectangle_coords(2, 2) = bbox(:, 2);
+	rectangle_coords(3, 1) = bbox(:, 1) + bbox(:, 3);
+	rectangle_coords(3, 2) = bbox(:, 2) + bbox(:, 4);
+	rectangle_coords(4, 1) = bbox(:, 1);
+	rectangle_coords(4, 2) = bbox(:, 2) + bbox(:, 4);
 	BW = poly2mask(rectangle_coords(:,1),rectangle_coords(:,2),size_of_image(1),size_of_image(2));
 elseif strcmp(extract_type,'extract_circle_area')%circles:
 	nsides_that_make_sense = floor(sqrt(2*pi()*yposition));
@@ -8945,6 +8954,7 @@ elseif get(handles.mask_bright_or_dark,'Value')==3
 end
 
 function converted_mask=mask_convert_masks_to_binary(mask_size,mask_positions)
+mask_size=mask_size(1:2);
 editedMask = zeros(mask_size,'uint8');
 if ~isempty(mask_positions)
 	for i=1:size(mask_positions,1)
@@ -8953,7 +8963,16 @@ if ~isempty(mask_positions)
 			yi=mask_positions{i,2}(:,2);
 			editedMask = editedMask + uint8(poly2mask(xi,yi,mask_size(1),mask_size(2)));
 		elseif strcmp(mask_positions{i,1},'ROI_object_rectangle')
-			rectangle_coords=bbox2points(mask_positions{i,2});
+			bbox=mask_positions{i,2};
+			rectangle_coords = zeros(4, 2, 'like', bbox);
+			rectangle_coords(1, 1) = bbox(:, 1);
+			rectangle_coords(1, 2) = bbox(:, 2);
+			rectangle_coords(2, 1) = bbox(:, 1) + bbox(:, 3);
+			rectangle_coords(2, 2) = bbox(:, 2);
+			rectangle_coords(3, 1) = bbox(:, 1) + bbox(:, 3);
+			rectangle_coords(3, 2) = bbox(:, 2) + bbox(:, 4);
+			rectangle_coords(4, 1) = bbox(:, 1);
+			rectangle_coords(4, 2) = bbox(:, 2) + bbox(:, 4);
 			editedMask = editedMask + uint8(poly2mask(rectangle_coords(:,1),rectangle_coords(:,2),mask_size(1),mask_size(2)));
 		elseif strcmp(mask_positions{i,1},'ROI_object_circle')
 			nsides_that_make_sense = floor(sqrt(2*pi()*mask_positions{i,2}(3)/1));
