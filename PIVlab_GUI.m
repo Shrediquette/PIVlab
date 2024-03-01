@@ -111,7 +111,7 @@ if isempty(fh)
 		disp('Could not load default settings. But this doesn''t really matter.')
 	end
 	%% check required files
-	[tempfilepath,~,~] = fileparts(mfilename('fullpath'));
+	tempfilepath = fileparts(which('PIVlab_GUI.m'));
 	addpath(fullfile(tempfilepath, 'PIVlab_capture_resources'));
 	try
 		ctr=0;
@@ -239,8 +239,8 @@ if isempty(fh)
 	warning('off','serialport:serialport:ReadlineWarning')
 	if ~exist('pathname','var') || ~exist('homedir','var')
 		try
-			if exist(fullfile(fileparts(mfilename('fullpath')) , 'Examples'),'dir') == 7 %if no previous path -> check if example dir exists
-				homedir=fullfile(fileparts(mfilename('fullpath')) , 'Examples'); %... and use it as default
+			if exist(fullfile(fileparts(which('PIVlab_GUI.m')), 'Examples'),'dir') == 7 %if no previous path -> check if example dir exists
+				homedir =fullfile(fileparts(which('PIVlab_GUI.m')), 'Examples'); %... and use it as default
 				pathname=homedir;
 				disp('-> No previous path found, using default path.')
 			else %if example path doesnt exist -> use current directory
@@ -677,17 +677,10 @@ if strncmp(evt.Source.Tag,'ac_calibsave',20) %only when "save" button is pressed
 end
 
 function acquisition_capture_images_Callback(~,~,~) %Menu item is called
-[filepath,~,~] = fileparts(mfilename('fullpath'));
+filepath = fileparts(which('PIVlab_GUI.m'));
 gui_switchui('multip24')
 acquisition_select_capture_config_Callback
-if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources'),'dir')==7
-	%addpath(genpath(fullfile(filepath, 'PCO_resources')));
-	addpath(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts'));
-	%PCO setup_files.m copies required dlls and headers to dir.
-	%subfolders might not be necessary. Check!
-else
-	acquisition_pco_error_msgbox
-end
+
 if verLessThan('matlab','9.7') %R2019b
 	uiwait(msgbox('Image capture and synchronizer control in PIVlab requires at least MATLAB version 9.7 (R2019b).','modal'))
 end
@@ -1145,7 +1138,7 @@ disp('---------')
 		get_laser_id = inputdlg(['Please enter the ID of your laser / synchronizer.' sprintf('\n') 'It can be found on the sticker on the device.' sprintf('\n') 'Firmware: ' convertStringsToChars(firmware_version)],'First time connection',1,{convertStringsToChars(serial_answer)});
 		if ~isempty(get_laser_id)
 			id=get_laser_id{1};
-			[filepath,~,~] = fileparts(mfilename('fullpath'));
+			filepath = fileparts(which('PIVlab_GUI.m'));
 			save (fullfile(filepath, 'PIVlab_capture_resources', 'laser_device_id.mat'),'id')
 		end
 	end
@@ -1264,7 +1257,7 @@ function acquisition_no_dongle_msgbox
 uiwait(msgbox(['No connection to the PIVlab-SimpleSync found.' sprintf('\n') 'Is the USB dongle connected?'],'modal'))
 
 function acquisition_pco_error_msgbox
-[filepath,~,~] = fileparts(mfilename('fullpath'));
+filepath = fileparts(which('PIVlab_GUI.m'));
 uiwait(msgbox(['PCO camera drivers not found in this directory:' sprintf('\n') fullfile(filepath, 'PIVlab_capture_resources\PCO_resources') sprintf('\n\n') 'The free pco toolbox for Matlab can be downloaded here:' sprintf('\n') 'https://www.pco.de/de/software/third-party/matlab/' sprintf('\n\n') 'Please download and install this toolbox to use your pco camera in PIVlab.'],'modal'))
 
 function acquisition_piv_capture_Callback(~,~,~)
@@ -5142,7 +5135,7 @@ function gui_displogo(~)
 try
 	logoimg=imread('PIVlablogo.jpg');
 catch
-	[filepath,name,ext]=fileparts([mfilename('fullpath') '.m']);
+	[filepath,name,ext]=  fileparts(which('PIVlab_GUI.m'));
 	cd (filepath); %if current directory is not where PIVlab_GUI.m is located, then change directory.
 	logoimg=imread('PIVlablogo.jpg');
 end
