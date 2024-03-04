@@ -194,7 +194,7 @@ elseif iscellstr(prop.append) && isvector(prop.append)
 		if exist(prop.append{item},'dir') && ...
 				~any(strcmp(full_file_picks,prop.append{item}))
 			full_file_picks{item} = prop.append{item};
-			[unused,fn,ext] = fileparts(prop.append{item});
+			[~,fn,ext] = fileparts(prop.append{item});
 			file_picks{item} = [fn,ext];
 			temp = dir(fullfile(prop.append{item},'..'));
 			if ispc || ismac
@@ -207,7 +207,7 @@ elseif iscellstr(prop.append) && isvector(prop.append)
 		elseif exist(prop.append{item},'file') && ...
 				~any(strcmp(full_file_picks,prop.append{item}))
 			full_file_picks{item} = prop.append{item};
-			[unused,fn,ext] = fileparts(prop.append{item});
+			[~,fn,ext] = fileparts(prop.append{item});
 			file_picks{item} = [fn,ext];
 			dir_picks(item) = dir(prop.append{item});
 			dir_picks(item).name = prop.append{item};
@@ -317,9 +317,9 @@ else
 end
 
 % Create uicontrols.
-frame1 = uicontrol('Style','frame',...
+uicontrol('Style','frame',...
 	'Position',[255 260 110 70]);
-frame2 = uicontrol('Style','frame',...
+uicontrol('Style','frame',...
 	'Position',[275 135 110 100]);
 
 navlist = uicontrol('Style','listbox',...
@@ -373,30 +373,8 @@ pickslist = uicontrol('Style','listbox',...
 	'KeyPressFcn',@keypresslist,...
 	'Max',2,...
 	'Value',[]);
-%{
-openbut = uicontrol('Style','pushbutton',...
-	'Position',[270 300 80 20],...
-	'String','Open',...
-	'Enable','off',...
-	'KeyPressFcn',@keypressmisc,...
-	'Callback',@open);
-	%}
-	arrow = [ ...
-		'    100     ';
-		'     100    ';
-		'     1000   ';
-		'      1000  ';
-		'00000000000 ';
-		'000000000000';
-		'00000000000 ';
-		'      1000  ';
-		'     1000   ';
-		'     100    ';
-		'    100     '];
-	cmap = NaN(128,3);
-	cmap(double('10'),:) = [0.2 0.9 0.2;0 0.5 0];
-	arrow_im = NaN(11,14,3);
-    arrow_im(:,1:12,:) = ind2rgb(double(arrow),cmap);
+
+
 	addbut = uicontrol('Style','pushbutton',...
 		'Position',[270 275 80 40],...
 		'String','Add',...
@@ -508,7 +486,7 @@ openbut = uicontrol('Style','pushbutton',...
 		'Callback',@change_path,...
 		'UIContextMenu',hist_cm);
 	
-	label1 = uicontrol('Style','text',...
+	uicontrol('Style','text',...
 		'Position',[10 401 250 16],...
 		'String','Current Folder',...
 		'HorizontalAlignment','left',...
@@ -519,51 +497,20 @@ openbut = uicontrol('Style','pushbutton',...
 	hist_menus = [];
 	make_history_cm()
 	
-	%{
-label2 = uicontrol('Style','text',...
-	'Position',[10 440+36 80 17],...
-	'String','File Filter',...
-	'HorizontalAlignment','left');
-	%}
-	label2 = uicontrol('Style','text',...
+	uicontrol('Style','text',...
 		'Position',[10 550 260 30],...
 		'String','Image Import',...
 		'HorizontalAlignment','left','Fontsize',15);
-	label3 = uicontrol('Style','text',...
+	uicontrol('Style','text',...
 		'Position',[10 550-30+15 160+50 17],...
 		'String','Regular Expression Filter',...
 		'HorizontalAlignment','left');
-	label4 = uicontrol('Style','text',...
+	uicontrol('Style','text',...
 		'Position',[10 500-15 160+50 17],...
 		'String','Image sequencing style:',...
 		'Fontweight','bold',...
 		'HorizontalAlignment','left');
-	%{
-showallfiles = uicontrol('Style','checkbox',...
-	'Position',[270 420+32 110 20],...
-	'String','Show All Files',...
-	'Value',0,...
-	'HorizontalAlignment','left',...
-	'KeyPressFcn',@keypressmisc,...
-	'Callback',@togglefilter);
-		%}
-		%{
-refilterdirs = uicontrol('Style','checkbox',...
-	'Position',[270 420+10 100 20],...
-	'String','RE Filter Dirs',...
-	'Value',prop.redirs,...
-	'HorizontalAlignment','left',...
-	'KeyPressFcn',@keypressmisc,...
-	'Callback',@toggle_refiltdirs);
-    
-filter_ed = uicontrol('Style','edit',...
-	'Position',[10 420+30 80 26],...
-	'BackgroundColor','w',...
-	'String',filter,...
-	'HorizontalAlignment','left',...
-	'KeyPressFcn',@keypressmisc,...
-	'Callback',@setfilspec);
-		%}
+
 		refilter_ed = uicontrol('Style','edit',...
 			'Position',[10 525-15 160 26],...
 			'BackgroundColor','w',...
@@ -604,17 +551,17 @@ filter_ed = uicontrol('Style','edit',...
 		%%{
 		
 		%%}
-		label4 = uicontrol('Style','text',...
+		uicontrol('Style','text',...
 			'Position',[380 240 350 20],...
 			'String','Images selected for import',...
 			'HorizontalAlignment','left','fontweight','bold');
-		done_button = uicontrol('Style','pushbutton',...
+		uicontrol('Style','pushbutton',...
 			'Position',[280 70 80 50],...
 			'String','Import',...
 			'fontsize',12,...
 			'KeyPressFcn',@keypressmisc,...
 			'Callback',@done,'fontweight','bold','foregroundcolor',[0 0.5 0]);
-		cancel_button = uicontrol('Style','pushbutton',...
+		uicontrol('Style','pushbutton',...
 			'Position',[280 30 80 30],...
 			'String','Cancel',...
 			'KeyPressFcn',@keypressmisc,...
@@ -640,19 +587,13 @@ filter_ed = uicontrol('Style','edit',...
 		end
 
 		%new folder selection
-		dirbrowse = uicontrol('Style','pushbutton',...
+		uicontrol('Style','pushbutton',...
 			'Position',[263 350 60 20],...
 			'String','Browse...',...
 			'Enable','on',...
 			'Callback',@selectdire,'tooltipstring','Select directory','fontweight','bold');
 		
-		%{
-uicontrol('Position',[380 566 150 14],...
-	'Style','text',...
-	'String','Image preview',...
-	'HorizontalAlignment','left','FontWeight','bold','tooltipstring','Image preview')
-			%}
-			recall_button = uicontrol('Style','pushbutton',...
+			uicontrol('Style','pushbutton',...
 				'Position',[550 245 65 15],...%[380 240 350 20]
 				'String','Recall',...
 				'KeyPressFcn',@keypressmisc,...
@@ -746,8 +687,6 @@ uicontrol('Position',[380 566 150 14],...
 
 
 	function selectdire(varargin)
-		
-		handles=guihandles;
 		get(pathbox,'String')
 		folder_name = uigetdir(get(pathbox,'String'),'Select folder');
 		if folder_name ~= 0
@@ -916,7 +855,7 @@ uicontrol('Position',[380 566 150 14],...
 			if exist(ffp{i},'dir') && ...
 					(~nodupes || ~any(strcmp(full_file_picks,ffp{i})))
 				full_file_picks{end + 1} = ffp{i}; %#ok<AGROW>
-				[unused,fn,ext] = fileparts(ffp{i});
+				[~,fn,ext] = fileparts(ffp{i});
 				file_picks{end + 1} = [fn,ext]; %#ok<AGROW>
 				temp = dir(fullfile(ffp{i},'..'));
 				if ispc || ismac
@@ -929,7 +868,7 @@ uicontrol('Position',[380 566 150 14],...
 			elseif exist(ffp{i},'file') && ...
 					(~nodupes || ~any(strcmp(full_file_picks,ffp{i})))
 				full_file_picks{end + 1} = ffp{i}; %#ok<AGROW>
-				[unused,fn,ext] = fileparts(ffp{i});
+				[~,fn,ext] = fileparts(ffp{i});
 				file_picks{end + 1} = [fn,ext]; %#ok<AGROW>
 				dir_picks(end + 1) = dir(ffp{i}); %#ok<AGROW>
 				dir_picks(end).name = ffp{i};
@@ -1143,7 +1082,7 @@ end
 		nodupes = get(remove_dupes,'Value');
 		if nodupes
 			num_picks = length(full_file_picks);
-			[unused,rev_order] = unique(full_file_picks(end:-1:1)); %#ok<SETNU>
+			[~,rev_order] = unique(full_file_picks(end:-1:1)); 
 			order = sort(num_picks + 1 - rev_order);
 			full_file_picks = full_file_picks(order);
 			file_picks = file_picks(order);
@@ -1203,43 +1142,6 @@ end
 		set(moveupbut,'Enable','on')
 	end
 
-	function togglefilter(varargin)
-		set(fig,'pointer','watch')
-		drawnow
-		value = get(showallfiles,'Value');
-		if value
-			filter = '*';
-			re_filter = '';
-			set([filter_ed,refilter_ed],'Enable','off')
-		else
-			filter = get(filter_ed,'String');
-			re_filter = get(refilter_ed,'String');
-			set([filter_ed,refilter_ed],'Enable','on')
-		end
-		full_filter = fullfile(current_dir,filter);
-		fdir = filtered_dir(full_filter,re_filter,prop.redirs,...
-			@(x)file_sort(x,sort_state));
-		filenames = {fdir.name}';
-		filenames = annotate_file_names(filenames,fdir,fsdata);
-		set(navlist,'String',filenames,'Value',[])
-		set(addbut,'Enable','off')
-		set(fig,'pointer','arrow')
-	end
-
-	function toggle_refiltdirs(varargin)
-		set(fig,'pointer','watch')
-		drawnow
-		value = get(refilterdirs,'Value');
-		prop.redirs = value;
-		full_filter = fullfile(current_dir,filter);
-		fdir = filtered_dir(full_filter,re_filter,prop.redirs,...
-			@(x)file_sort(x,sort_state));
-		filenames = {fdir.name}';
-		filenames = annotate_file_names(filenames,fdir,fsdata);
-		set(navlist,'String',filenames,'Value',[])
-		set(addbut,'Enable','off')
-		set(fig,'pointer','arrow')
-	end
 
 	function setfilspec(varargin)
 		set(fig,'pointer','watch')
@@ -1570,24 +1472,25 @@ end
 
 function [files_sorted,index] = file_sort(files,sort_state)
 switch find(sort_state)
-	case 1
-		[files_sorted,index] = sort(lower({files.name}));
-		if sort_state(1) < 0
-			files_sorted = files_sorted(end:-1:1);
-			index = index(end:-1:1);
-		end
-	case 2
-		if sort_state(2) > 0
-			[files_sorted,index] = sort([files.datenum]);
-		else
-			[files_sorted,index] = sort([files.datenum],'descend');
-		end
-	case 3
-		if sort_state(3) > 0
-			[files_sorted,index] = sort([files.bytes]);
-		else
-			[files_sorted,index] = sort([files.bytes],'descend');
-		end
+    case 1
+        %[files_sorted,index] = sort(lower({files.name}));
+        [files_sorted,index] = natsortfiles(lower({files.name})); %natural file name sorting
+        if sort_state(1) < 0
+            files_sorted = files_sorted(end:-1:1);
+            index = index(end:-1:1);
+        end
+    case 2
+        if sort_state(2) > 0
+            [files_sorted,index] = sort([files.datenum]);
+        else
+            [files_sorted,index] = sort([files.datenum],'descend');
+        end
+    case 3
+        if sort_state(3) > 0
+            [files_sorted,index] = sort([files.bytes]);
+        else
+            [files_sorted,index] = sort([files.bytes],'descend');
+        end
 end
 end
 
@@ -1599,12 +1502,12 @@ letters = char('A':'Z');
 num_letters = length(letters);
 drives = cell(1,num_letters);
 for i = 1:num_letters
-	if exist([letters(i),':\'],'dir');
+	if exist([letters(i),':\'],'dir')
 		drives{i} = [letters(i),':'];
 	end
 end
 drives(cellfun('isempty',drives)) = [];
-if nargin > 0 && iscellstr(other_drives)
+if nargin > 0 && iscellstr(other_drives) %#ok<ISCLSTR> 
 	drives = [drives,unique(other_drives)];
 end
 end
@@ -1738,3 +1641,413 @@ if length(prop_index) ~= 1
 	error('Property ''%s'' does not exist or is ambiguous.',arg)
 end
 end
+
+function [B,ndx,dbg] = natsort(A,rgx,varargin)
+%% Input Wrangling %%
+%
+fnh = @(c)cellfun('isclass',c,'char') & cellfun('size',c,1)<2 & cellfun('ndims',c)<3;
+%
+if iscell(A)
+	assert(all(fnh(A(:))),...
+		'SC:natsort:A:CellInvalidContent',...
+		'First input <A> cell array must contain only character row vectors.')
+	C = A(:);
+elseif ischar(A) % Convert char matrix:
+	assert(ndims(A)<3,...
+		'SC:natsort:A:CharNotMatrix',...
+		'First input <A> if character class must be a matrix.') %#ok<ISMAT>
+	C = num2cell(A,2);
+else % Convert string, categorical, datetime, enumeration, etc.:
+	C = cellstr(A(:));
+end
+%
+chk = '(match|ignore)(case|dia)|(de|a)scend(ing)?|(char|nan|num)[<>](char|nan|num)|%[a-z]+';
+%
+if nargin<2 || isnumeric(rgx)&&isequal(rgx,[])
+	rgx = '\d+';
+elseif ischar(rgx)
+	assert(ndims(rgx)<3 && size(rgx,1)==1,...
+		'SC:natsort:rgx:NotCharVector',...
+		'Second input <rgx> character row vector must have size 1xN.') %#ok<ISMAT>
+	nsChkRgx(rgx,chk)
+else
+	rgx = ns1s2c(rgx);
+	assert(ischar(rgx),...
+		'SC:natsort:rgx:InvalidType',...
+		'Second input <rgx> must be a character row vector or a string scalar.')
+	nsChkRgx(rgx,chk)
+end
+%
+varargin = cellfun(@ns1s2c, varargin, 'UniformOutput',false);
+ixv = fnh(varargin); % char
+txt = varargin(ixv); % char
+xtx = varargin(~ixv); % not
+%
+% Sort direction:
+tdd = strcmpi(txt,'descend');
+tdx = strcmpi(txt,'ascend')|tdd;
+% Character case:
+tcm = strcmpi(txt,'matchcase');
+tcx = strcmpi(txt,'ignorecase')|tcm;
+% Char/num order:
+ttn = strcmpi(txt,'num>char')|strcmpi(txt,'char<num');
+ttx = strcmpi(txt,'num<char')|strcmpi(txt,'char>num')|ttn;
+% NaN/num order:
+ton = strcmpi(txt,'num>NaN')|strcmpi(txt,'NaN<num');
+tox = strcmpi(txt,'num<NaN')|strcmpi(txt,'NaN>num')|ton;
+% SSCANF format:
+tsf = ~cellfun('isempty',regexp(txt,'^%([bdiuoxfeg]|l[diuox])$'));
+%
+nsAssert(txt, tdx, 'SortDirection', 'sort direction')
+nsAssert(txt, tcx,  'CaseMatching', 'case sensitivity')
+nsAssert(txt, ttx,  'CharNumOrder', 'number-character order')
+nsAssert(txt, tox,   'NanNumOrder', 'number-NaN order')
+nsAssert(txt, tsf,  'sscanfFormat', 'SSCANF format')
+%
+ixx = tdx|tcx|ttx|tox|tsf;
+if ~all(ixx)
+	error('SC:natsort:InvalidOptions',...
+		['Invalid options provided. Check the help and option spelling!',...
+		'\nThe provided options:%s'],sprintf(' "%s"',txt{~ixx}))
+end
+%
+% SSCANF format:
+if any(tsf)
+	fmt = txt{tsf};
+else
+	fmt = '%f';
+end
+%
+xfh = cellfun('isclass',xtx,'function_handle');
+assert(nnz(xfh)<2,...
+	'SC:natsort:FunctionHandle:Overspecified',...
+	'The function handle option may only be specified once.')
+assert(all(xfh),...
+	'SC:natsort:InvalidOptions',...
+	'Optional arguments must be character row vectors, string scalars, or function handles.')
+if any(xfh)
+	txfh = xtx{xfh};
+end
+%
+%% Identify and Convert Numbers %%
+%
+[nbr,spl] = regexpi(C(:), rgx, 'match','split', txt{tcx});
+%
+if numel(nbr)
+	V = [nbr{:}];
+	if strcmp(fmt,'%b')
+		V = regexprep(V,'^0[Bb]','');
+		vec = cellfun(@(s)pow2(numel(s)-1:-1:0)*sscanf(s,'%1d'),V);
+	else
+		vec = sscanf(strrep(sprintf(' %s','0',V{:}),',','.'),fmt);
+		vec = vec(2:end); % SSCANF wrong data class bug (R2009b and R2010b)
+	end
+	assert(numel(vec)==numel(V),...
+		'SC:natsort:sscanf:TooManyValues',...
+		'The "%s" format must return one value for each input number.',fmt)
+else
+	vec = [];
+end
+%
+%% Allocate Data %%
+%
+% Determine lengths:
+nmx = numel(C);
+lnn = cellfun('length',nbr);
+lns = cellfun('length',spl);
+mxs = max(lns);
+%
+% Allocate data:
+idn = permute(bsxfun(@le,1:mxs,lnn),[2,1]); % TRANSPOSE lost class bug (R2013b)
+ids = permute(bsxfun(@le,1:mxs,lns),[2,1]); % TRANSPOSE lost class bug (R2013b)
+arn = zeros(mxs,nmx,class(vec));
+ars =  cell(mxs,nmx);
+ars(:) = {''};
+ars(ids) = [spl{:}];
+arn(idn) = vec;
+%
+%% Debugging Array %%
+%
+if nargout>2
+	dbg = cell(nmx,0);
+	for k = 1:nmx
+		V = spl{k};
+		V(2,:) = [num2cell(arn(idn(:,k),k));{[]}];
+		V(cellfun('isempty',V)) = [];
+		dbg(k,1:numel(V)) = V;
+	end
+end
+%
+%% Sort Matrices %%
+%
+if ~any(tcm) % ignorecase
+	ars = lower(ars);
+end
+%
+if any(ttn) % char<num
+	% Determine max character code:
+	mxc = 'X';
+	tmp = warning('off','all');
+	mxc(1) = Inf;
+	warning(tmp)
+	mxc(mxc==0) = 255; % Octave
+	% Append max character code to the split text:
+	%ars(idn) = strcat(ars(idn),mxc); % slower than loop
+	for ii = reshape(find(idn),1,[])
+		ars{ii}(1,end+1) = mxc;
+	end
+end
+%
+idn(isnan(arn)) = ~any(ton); % NaN<num
+%
+if any(xfh) % external text-sorting function
+	[~,ndx] = txfh(ars(mxs,:));
+	for ii = mxs-1:-1:1
+		[~,idx] = sort(arn(ii,ndx),txt{tdx});
+		ndx = ndx(idx);
+		[~,idx] = sort(idn(ii,ndx),txt{tdx});
+		ndx = ndx(idx);
+		[~,idx] = txfh(ars(ii,ndx));
+		ndx = ndx(idx);
+	end
+elseif any(tdd)
+	[~,ndx] = sort(nsGroups(ars(mxs,:)),'descend');
+	for ii = mxs-1:-1:1
+		[~,idx] = sort(arn(ii,ndx),'descend');
+		ndx = ndx(idx);
+		[~,idx] = sort(idn(ii,ndx),'descend');
+		ndx = ndx(idx);
+		[~,idx] = sort(nsGroups(ars(ii,ndx)),'descend');
+		ndx = ndx(idx);
+	end
+else
+	[~,ndx] = sort(ars(mxs,:)); % ascend
+	for ii = mxs-1:-1:1
+		[~,idx] = sort(arn(ii,ndx),'ascend');
+		ndx = ndx(idx);
+		[~,idx] = sort(idn(ii,ndx),'ascend');
+		ndx = ndx(idx);
+		[~,idx] = sort(ars(ii,ndx)); % ascend
+		ndx = ndx(idx);
+	end
+end
+%
+%% Outputs %%
+%
+if ischar(A)
+	ndx = ndx(:);
+	B = A(ndx,:);
+else
+	ndx = reshape(ndx,size(A));
+	B = A(ndx);
+end
+%
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%natsort
+function grp = nsGroups(vec)
+% Groups in a cell array of char vectors, equivalent to [~,~,grp]=unique(vec);
+[vec,idx] = sort(vec);
+grp = cumsum([true(1,numel(vec)>0),~strcmp(vec(1:end-1),vec(2:end))]);
+grp(idx) = grp;
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%nsGroups
+function nsChkRgx(rgx,chk)
+% Perform some basic sanity-checks on the supplied regular expression.
+chk = sprintf('^(%s)$',chk);
+assert(isempty(regexpi(rgx,chk,'once')),...
+	'SC:natsort:rgx:OptionMixUp',...
+	['Second input <rgx> must be a regular expression that matches numbers.',...
+	'\nThe provided input "%s" looks like an optional argument (inputs 3+).'],rgx)
+if isempty(regexpi('0',rgx,'once'))
+	warning('SC:natsort:rgx:SanityCheck',...
+		['Second input <rgx> must be a regular expression that matches numbers.',...
+		'\nThe provided regular expression does not match the digit "0", which\n',...
+		'may be acceptable (e.g. if literals, quantifiers, or lookarounds are used).'...
+		'\nThe provided regular expression: "%s"'],rgx)
+end
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%nsChkRgx
+function nsAssert(txt,idx,eid,opt)
+% Throw an error if an option is overspecified.
+if nnz(idx)>1
+	error(sprintf('SC:natsort:%s:Overspecified',eid),...
+		['The %s option may only be specified once.',...
+		'\nThe provided options:%s'],opt,sprintf(' "%s"',txt{idx}));
+end
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%nsAssert
+function arr = ns1s2c(arr)
+% If scalar string then extract the character vector, otherwise data is unchanged.
+if isa(arr,'string') && isscalar(arr)
+	arr = arr{1};
+end
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%ns1s2c
+
+function [B,ndx,dbg] = natsortfiles(A,rgx,varargin)
+%% Input Wrangling %%
+%
+fnh = @(c)cellfun('isclass',c,'char') & cellfun('size',c,1)<2 & cellfun('ndims',c)<3;
+%
+if isstruct(A)
+	assert(isfield(A,'name'),...
+		'SC:natsortfiles:A:StructMissingNameField',...
+		'If first input <A> is a struct then it must have field <name>.')
+	nmx = {A.name};
+	assert(all(fnh(nmx)),...
+		'SC:natsortfiles:A:NameFieldInvalidType',...
+		'First input <A> field <name> must contain only character row vectors.')
+	[fpt,fnm,fxt] = cellfun(@fileparts, nmx, 'UniformOutput',false);
+	if isfield(A,'folder')
+		fpt(:) = {A.folder};
+		assert(all(fnh(fpt)),...
+			'SC:natsortfiles:A:FolderFieldInvalidType',...
+			'First input <A> field <folder> must contain only character row vectors.')
+	end
+elseif iscell(A)
+	assert(all(fnh(A(:))),...
+		'SC:natsortfiles:A:CellContentInvalidType',...
+		'First input <A> cell array must contain only character row vectors.')
+	[fpt,fnm,fxt] = cellfun(@fileparts, A(:), 'UniformOutput',false);
+	nmx = strcat(fnm,fxt);
+elseif ischar(A)
+	assert(ndims(A)<3,...
+		'SC:natsortfiles:A:CharNotMatrix',...
+		'First input <A> if character class must be a matrix.') %#ok<ISMAT>
+	[fpt,fnm,fxt] = cellfun(@fileparts, num2cell(A,2), 'UniformOutput',false);
+	nmx = strcat(fnm,fxt);
+else
+	assert(isa(A,'string'),...
+		'SC:natsortfiles:A:InvalidType',...
+		'First input <A> must be a structure, a cell array, or a string array.');
+	[fpt,fnm,fxt] = cellfun(@fileparts, cellstr(A(:)), 'UniformOutput',false);
+	nmx = strcat(fnm,fxt);
+end
+%
+varargin = cellfun(@nsf1s2c, varargin, 'UniformOutput',false);
+ixv = fnh(varargin); % char
+txt = varargin(ixv); % char
+xtx = varargin(~ixv); % not
+%
+trd = strcmpi(txt,'rmdot');
+tnx = strcmpi(txt,'noext');
+txp = strcmpi(txt,'xpath');
+%
+nsfAssert(txt, trd, 'rmdot', '"." and ".." folder')
+nsfAssert(txt, tnx, 'noext', 'file-extension')
+nsfAssert(txt, txp, 'xpath', 'file-path')
+%
+chk = '(no|rm|x)(dot|ext|path)';
+%
+if nargin>1
+	nsfChkRgx(rgx,chk)
+	txt = [{rgx},txt(~(trd|tnx|txp))];
+end
+%
+%% Path and Extension %%
+%
+% Path separator regular expression:
+if ispc()
+	psr = '[^/\\]+';
+else % Mac & Linux
+	psr = '[^/]+';
+end
+%
+if any(trd) % Remove "." and ".." dot directory names
+	ddx = strcmp(nmx,'.') | strcmp(nmx,'..');
+	fxt(ddx) = [];
+	fnm(ddx) = [];
+	fpt(ddx) = [];
+	nmx(ddx) = [];
+end
+%
+if any(tnx) % No file-extension
+	fnm = nmx;
+	fxt = [];
+end
+%
+if any(txp) % No file-path
+	mat = reshape(fnm,1,[]);
+else % Split path into {dir,subdir,subsubdir,...}:
+	spl = regexp(fpt(:),psr,'match');
+	nmn = 1+cellfun('length',spl(:));
+	mxn = max(nmn);
+	vec = 1:mxn;
+	mat = cell(mxn,numel(nmn));
+	mat(:) = {''};
+	%mat(mxn,:) = fnm(:); % old behavior
+	mat(permute(bsxfun(@eq,vec,nmn),[2,1])) =  fnm(:);  % TRANSPOSE bug loses type (R2013b)
+	mat(permute(bsxfun(@lt,vec,nmn),[2,1])) = [spl{:}]; % TRANSPOSE bug loses type (R2013b)
+end
+%
+if numel(fxt) % File-extension
+	mat(end+1,:) = fxt(:);
+end
+%
+%% Sort Matrices %%
+%
+nmr = size(mat,1)*all(size(mat));
+dbg = cell(1,nmr);
+ndx = 1:numel(fnm);
+%
+for ii = nmr:-1:1
+	if nargout<3 % faster:
+		[~,idx] = natsort(mat(ii,ndx),txt{:},xtx{:});
+	else % for debugging:
+		[~,idx,gbd] = natsort(mat(ii,ndx),txt{:},xtx{:});
+		[~,idb] = sort(ndx);
+		dbg{ii} = gbd(idb,:);
+	end
+	ndx = ndx(idx);
+end
+%
+% Return the sorted input array and corresponding indices:
+%
+if any(trd)
+	tmp = find(~ddx);
+	ndx = tmp(ndx);
+end
+%
+ndx = ndx(:);
+%
+if ischar(A)
+	B = A(ndx,:);
+elseif any(trd)
+	xsz = size(A);
+	nsd = xsz~=1;
+	if nnz(nsd)==1 % vector
+		xsz(nsd) = numel(ndx);
+		ndx = reshape(ndx,xsz);
+	end
+	B = A(ndx);
+else
+	ndx = reshape(ndx,size(A));
+	B = A(ndx);
+end
+%
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%natsortfiles
+function nsfChkRgx(rgx,chk)
+chk = sprintf('^(%s)$',chk);
+assert(~ischar(rgx)||isempty(regexpi(rgx,chk,'once')),...
+	'SC:natsortfiles:rgx:OptionMixUp',...
+	['Second input <rgx> must be a regular expression that matches numbers.',...
+	'\nThe provided expression "%s" looks like an optional argument (inputs 3+).'],rgx)
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%nsfChkRgx
+function nsfAssert(txt,idx,eid,opt)
+% Throw an error if an option is overspecified.
+if nnz(idx)>1
+	error(sprintf('SC:natsortfiles:%s:Overspecified',eid),...
+		['The %s option may only be specified once.',...
+		'\nThe provided options:%s'],opt,sprintf(' "%s"',txt{idx}));
+end
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%nsfAssert
+function arr = nsf1s2c(arr)
+% If scalar string then extract the character vector, otherwise data is unchanged.
+if isa(arr,'string') && isscalar(arr)
+	arr = arr{1};
+end
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%nsf1s2c
