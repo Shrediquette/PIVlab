@@ -32,19 +32,11 @@ Damien Garcia, http://www.biomecardio.com
 
 ---------------------------------------------------------------------------------
 
-Ellipse: by D.G. Long
-
----------------------------------------------------------------------------------
-
 Particle image generation based on Raffel M, Willert CE, Kompenhans J (1998) Particle image velocity:
 a practical guide. Springer, Berlin Heidelberg New York, Hong Kong
 
 ---------------------------------------------------------------------------------
 
-NaN Suite by Jan Gläscher, 31 Jan 2005 (Updated 05 May 2008)
-Descriptive Statistics for N-D matrices ignoring NaNs.
-
--------
 Exportfig by Ben Hinkle, 13 Sep 2001 (Updated 28 Oct 2009)
 Functions for exporting figures.
 

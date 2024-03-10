@@ -37,5 +37,6 @@ We would like to acknowledge Uri Shavit, Roi Gurka &amp; Alex Liberzon for shari
 
 Visit Matlabs File exchange site for PIVlab: [![View PIVlab - particle image velocimetry (PIV) tool on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://de.mathworks.com/matlabcentral/fileexchange/27659-pivlab-particle-image-velocimetry-piv-tool)
 
-PIVlab can be run online in your browser using MATLAB online. MATLAB online is free (after registration) with a limited usage time per user:
+PIVlab can be run online using MATLAB online. MATLAB online is free (after registration) with a limited usage time per user:
 [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=Shrediquette/PIVlab&file=PIVlab_GUI.m)
+PIVlab isn't yet optimized for MATLAB online, I am waiting for contributors that help with this.
