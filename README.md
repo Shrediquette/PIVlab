@@ -1,5 +1,5 @@
 # PIVlab - particle image velocimetry (PIV) tool with GUI
-*PIVlab is a GUI based particle image velocimetry (PIV) software. It does not only calculate the velocity distribution within particle image pairs, but can also be used to derive, display and export multiple parameters of the flow pattern. A user-friendly graphical user interface (GUI) with the ability to control a PIV camera and a laser makes PIV data acquisition and data post-processing fast and efficient.*
+*PIVlab is a graphical user interface (GUI) based particle image velocimetry (PIV) software. It can be used to control OPTOLUTION's lasers, cameras and synchronizers, and of course it calculates the velocity distribution within imported (or captured) particle image pairs. It can also be used to derive, display and export multiple parameters of the flow pattern. The simple, GUI makes PIV data acquisition and data post-processing fast and efficient.*
 
 ![PIVlab_screenshot](https://github.com/Shrediquette/PIVlab/blob/main/images/PIVlab_screenshot.jpg)
 
@@ -27,6 +27,7 @@ https://youtu.be/8B5M31NWlJc
 **   **
 **Code contributors:**
 * Main: William Thielicke (http://william.thielicke.org)
+* Mikhil from MATHWORKS: Name spaces / packages
 * Vectorization in piv_fftmulti: Sergey Filatov (http://www.issp.ac.ru/lqc/people.html)
 * GUI parallelization: Chun-Sheng Wang, ParaPIV (https://de.mathworks.com/matlabcentral/fileexchange/63358-parapiv)
 * Command line parallelization: Quynh M. Nguyen (https://github.com/quynhneo)
@@ -39,4 +40,3 @@ Visit Matlabs File exchange site for PIVlab: [![View PIVlab - particle image vel
 
 PIVlab can be run online using MATLAB online. MATLAB online is free (after registration) with a limited usage time per user:
 [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=Shrediquette/PIVlab&file=PIVlab_GUI.m)
-PIVlab isn't yet optimized for MATLAB online, I am waiting for contributors that help with this.
