@@ -247,7 +247,6 @@ DWORD GetErrorSource(DWORD dwerr);
 
 #define PCO_ERROR_PROGLIB                  0x00140000    // error inside the programmer library
 
-
 // ====================================================================================================== //
 // -- 3.4 Application devices --------------------------------------------------------------------------- //
 // ====================================================================================================== //
@@ -415,11 +414,14 @@ DWORD GetErrorSource(DWORD dwerr);
 #define PCO_ERROR_SDKDLL_BUFFERALREADYQUEUED        0x80003012 // buffer is already queued
 #define PCO_ERROR_SDKDLL_BUFFERNOTQUEUED            0x80003013 // buffer is not queued 
 
+#define PCO_ERROR_SDKDLL_SIGNATURE_FAILED           0x80003014 // signature error inside the convert dll
+
 #define PCO_WARNING_SDKDLL_BUFFER_STILL_ALLOKATED   0xC0003001 // Buffers are still allocated
 
 #define PCO_WARNING_SDKDLL_NO_IMAGE_BOARD           0xC0003002 // No Images are in the board buffer
 #define PCO_WARNING_SDKDLL_COC_VALCHANGE            0xC0003003 // value change when testing COC
 #define PCO_WARNING_SDKDLL_COC_STR_SHORT            0xC0003004 // string buffer to short for replacement
+#define PCO_WARNING_SDKDLL_TIMING_SIGNAL_NOTSELECTED 0xC0003005 // timing signal is not selected
 
 
   // The following error messages have been shifted to the common error code range:

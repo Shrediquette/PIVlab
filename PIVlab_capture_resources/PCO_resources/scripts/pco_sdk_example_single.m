@@ -74,16 +74,6 @@ subfunc.fh_set_triggermode(out_ptr,triggermode);
 
 %if PCO_ArmCamera does fail no images can be grabbed
 
-hwio_sig=libstruct('PCO_Signal');
-set(hwio_sig,'wSize',hwio_sig.structsize);
-[errorCode,~,hwio_sig] = calllib('PCO_CAM_SDK', 'PCO_GetHWIOSignal', out_ptr,0,hwio_sig);
-pco_errdisp('PCO_GetHWIOSignal',errorCode);
-hwio_sig.wEnabled = 1;
-[errorCode,~,~] = calllib('PCO_CAM_SDK', 'PCO_SetHWIOSignal', out_ptr,0,hwio_sig);
-pco_errdisp('PCO_SetHWIOSignal',errorCode);
-
-
-
 errorCode = calllib('PCO_CAM_SDK', 'PCO_ArmCamera', out_ptr);
 if(errorCode~=PCO_NOERROR)
  pco_errdisp('PCO_ArmCamera',errorCode);   

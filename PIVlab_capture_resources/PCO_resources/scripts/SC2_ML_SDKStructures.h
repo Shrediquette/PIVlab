@@ -515,6 +515,7 @@ typedef struct
 #define NUM_MAX_SIGNALS     20         // Maximum number of signals available
 #define NUM_SIGNALS 4
 #define NUM_SIGNAL_NAMES 4
+#define AUTO_SELECT_TIMING_SIGNAL_7 0xF100 // Used in PCO_SetHWIOSignalTiming to auto select exp. functionality
 typedef struct
 {
   WORD  wSize;                         // Sizeof ‘this’ (for future enhancements)
@@ -727,7 +728,7 @@ typedef struct
   WORD        ZZwAlignDummy4;
   DWORD       dwRamSegSize[PCO_RAMSEGCNT];// Size of ram segment 1-4 in pages // 28
   DWORD       ZZdwDummyrs[20];                                            // 108
-  WORD        wActSeg;                 // no. (0 .. 3) of active segment  // 110
+  WORD        wActSeg;                 // no. (1 .. 4) of active segment  // 110
   WORD        ZZwDummy[PCO_STORAGEDUMMY];                                 // 188
 } PCO_Storage;
 

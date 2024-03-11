@@ -114,18 +114,22 @@ if(errorCode==0)
  [~,~,count]=size(ima_stack);
   
  if(~isempty(metadata_stack))
-  libmeta=libstruct('PCO_METADATA_STRUCT');
   [metadatasize,count_m]=size(metadata_stack);   
-  metastructs(count_m)=get(libmeta);
-  for n=1:count_m
-   [errorCode_m,metastructs(n)]=subfunc.fh_get_struct_metadata(metadata_stack(:,n),metadatasize);
-   if(errorCode_m)
-    pco_errdisp('get_struct_metadata',errorCode_m);
-    metadata_stack=[];
-    break;
+  [errorCode_m,metastruct]=subfunc.fh_get_struct_metadata(metadata_stack(:,1),metadatasize);  
+  if(errorCode_m)
+   pco_errdisp('get_struct_metadata',errorCode_m);
+   metadata_stack=[];
+  else 
+   metastructs(count_m)=metastruct;
+   for n=1:count_m
+    [errorCode_m,metastructs(n)]=subfunc.fh_get_struct_metadata(metadata_stack(:,n),metadatasize);
+    if(errorCode_m)
+     pco_errdisp('get_struct_metadata',errorCode_m);
+     metadata_stack=[];
+     break;
+    end
    end
-  end
-  clear libmeta;
+  end 
  end
 
  if(count==1)

@@ -230,8 +230,8 @@ if(interface==INTERFACE_FIREWIRE)
 end
 %disp([int2str(lineadd),' additional line(s) must be allocated ']);
 
-%disp(['number of images to grab: ',int2str(imacount)]);
-%disp(['actual recording state:   ',int2str(act_recstate)]);   
+disp(['number of images to grab: ',int2str(imacount)]);
+disp(['actual recording state:   ',int2str(act_recstate)]);   
 if showall==1
  disp(['actual triggermode:       ',int2str(act_trigmode)]);   
  disp(['interface type:           ',int2str(interface)]);

@@ -30,7 +30,7 @@ function [errorCode,image_stack] = pco_sdk_example_recorder(imacount,exposure_ti
 glvar=struct('do_libunload',0,'do_close',0,'camera_open',0,'out_ptr',[]);
 
 if(~exist('imacount','var'))
- imacount = 120;   
+ imacount = 20;   
 end
 
 if(~exist('exposure_time','var'))

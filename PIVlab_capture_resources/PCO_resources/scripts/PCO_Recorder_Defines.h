@@ -8,6 +8,14 @@
 #define FILESAVE_IMAGE_COL_8                    "C_08"
 //=======================================================
 
+//Masks for recorde mode and mode flags
+#define PCO_RECORDER_MODE_MASK                  0x00FF
+#define PCO_RECORDER_MODE_FLAG_MASK             0xFF00
+
+//Flag for using DotPhoton Compression
+//Only valid for Memory and Camram, will be ignored for file mode
+#define PCO_RECORDER_MODE_USE_DPCORE            0x1000
+
 //Recorder Mode
 #define PCO_RECORDER_MODE_FILE                  0x0001
 #define PCO_RECORDER_MODE_MEMORY                0x0002

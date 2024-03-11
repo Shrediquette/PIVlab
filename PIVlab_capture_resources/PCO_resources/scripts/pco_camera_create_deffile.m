@@ -6,6 +6,7 @@ function pco_camera_create_deffile()
 
  get_defines('PCO_err.h',wfid); 
  get_defines('sc2_defs.h',wfid); 
+ get_defines('sc2_common.h',wfid); 
  get_defines('sc2_ml_sdkstructures.h',wfid); 
  get_defines('PCO_Recorder_Defines.h',wfid);
  
@@ -37,43 +38,50 @@ while( true )
     d = strfind(tline,'#define ');
     if( ~isempty(d) )
         str = strtrim(tline(d(1)+8:end));
-%        disp(['string is ',str]);
+        r = strfind(str,'/');
+        if(~isempty(r))
+         str = str(1:r(1)-1);
+%         disp(['no comment str is     ',str]);
+        end
+%        disp(['trimmed string str is ',str]);
         s = strfind(str,' ');
         if( ~isempty(s) )
-            p = strfind(str(1:s(1)-1),'(');
-            if( isempty(p) )
+            valid=true;
+            pattern=["(",")","|","&","+","-"];
+%            disp(['search for ',pattern,' in',str(s(1):end)]);
+            p = contains(str(s(1):end),pattern);
+            if(p)
+             valid=false;
+            end 
+            
+            if(valid==true)
              q = strfind(str,'0x');
-             r = strfind(str,'/');
              if( isempty(q) )
               str(s(1)) = '=';
-              if( ~isempty(r) )
-               str=str(1:r-1);
-              end 
               s=strfind(str,'.');              
               if( ~isempty(s) )
-               str=str(1:end-1);
+               disp('string has . ');
+               str=str(1:s(1)-1);
               end
-               fprintf(wfid,'%s\n',str);
+              fprintf(wfid,'%s\n',str);
 %              disp(['string is ',str]);
 %              eval(str);
-               n = n + 1;
+              n = n + 1;
              else   
               hstr=str(1:q-1);
               hstr=strtrim(hstr);
               hstr=strcat(hstr,'=');
-              if( ~isempty(r) )
-               numstr=str(q+2:r-1);
-              else
-               numstr=str(q+2:end);
-              end 
+              numstr=str(q+2:end);
               numstr=strtrim(numstr);
               num=hex2dec(numstr);
               str=strcat(hstr,num2str(num));
               fprintf(wfid,'%s\n',str);
-              
 %              disp(['string is ',hstr,' numstr is ',numstr,' num is ',num2str(num)]);
+%              eval(str);
               n = n + 1;
              end   
+%            else
+%             disp('do not use string ');
             end
         end
     end

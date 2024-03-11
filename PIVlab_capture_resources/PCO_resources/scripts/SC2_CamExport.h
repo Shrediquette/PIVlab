@@ -146,7 +146,7 @@ extern "C" {                           //  Assume C declarations for C++
 #endif  //C++
 
 #define PCO_SDK_VERMAJOR 1             // Shows the current version of the sc2_cam.dll
-#define PCO_SDK_VERMINOR 25
+#define PCO_SDK_VERMINOR 26
 
 // VERY IMPORTANT INFORMATION:
 /*******************************************************************/
@@ -1371,6 +1371,22 @@ SC2_SDK_FUNC int WINAPI PCO_SetAcquireModeEx(HANDLE ph, WORD wAcquMode, DWORD dw
 //     WORD wAcquMode -> WORD variable to set the acquire mode.
 //     DWORD dwNumberImages -> DWORD variable to set the number of images (for mode sequence).
 //     DWORD* dwReserved -> Pointer to 4 DWORDs to set future settings (set to zero, pointer can be NULL).
+// Out: int -> Error message.
+
+SC2_SDK_FUNC int WINAPI PCO_GetAcquireControl(HANDLE ph, DWORD* dwAcquCtrlFlags, DWORD* dwReserved, WORD wNumReserved);
+// Gets the acquire control flags of the camera.
+// In: HANDLE ph -> Handle to a previously opened camera.
+//     DWORD* dwAcquCtrlFlags -> Pointer to a DWORD variable to receive the acquire ctrl flags.
+//     DWORD* dwReserved -> Pointer to x DWORDs to receive future settings (actually set to zero, pointer can be NULL).
+//     WORD wNumReserved -> WORD to set the number of DWORDs for future settings (actually set to zero, pointer can be NULL).
+// Out: int -> Error message.
+
+SC2_SDK_FUNC int WINAPI PCO_SetAcquireControl(HANDLE ph, DWORD dwAcquCtrlFlags, DWORD* dwReserved, WORD wNumReserved);
+// Sets the acquire control flags of the camera.
+// In: HANDLE ph -> Handle to a previously opened camera.
+//     DWORD dwAcquCtrlFlags -> DWORD variable to set the acquire ctrl flags.
+//     DWORD* dwReserved -> Pointer to x DWORDs to set future settings (actually set to zero, pointer can be NULL).
+//     WORD wNumReserved -> WORD to set the number of DWORDs for future settings (actually set to zero, pointer can be NULL).
 // Out: int -> Error message.
 
 SC2_SDK_FUNC int WINAPI PCO_GetAcqEnblSignalStatus(HANDLE ph, WORD* wAcquEnableState);

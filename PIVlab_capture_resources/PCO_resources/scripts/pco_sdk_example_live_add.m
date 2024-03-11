@@ -65,7 +65,6 @@ subfunc.fh_stop_camera(out_ptr);
 cam_desc=libstruct('PCO_Description');
 set(cam_desc,'wSize',cam_desc.structsize);
 [errorCode,~,cam_desc] = calllib('PCO_CAM_SDK', 'PCO_GetCameraDescription', out_ptr,cam_desc);
-cam_desc
 pco_errdisp('PCO_GetCameraDescription',errorCode);   
 
 bitpix=uint16(cam_desc.wDynResDESC);
@@ -85,26 +84,11 @@ end
 
 %enable MetaData if available
 if(bitand(cam_desc.dwGeneralCapsDESC1,GENERALCAPS1_METADATA))
- subfunc.fh_set_metadata_mode(out_ptr,0);
+ subfunc.fh_set_metadata_mode(out_ptr,1);
 end
 
-	%{
-	%Pixel Binning
-	%binning funktioniert nur wenn gleichzeitig ROI gesetzt wird.
-	h_binning=1; %1,2,4
-	v_binning=1; %1,2,4
-	
-	v_ROI_reduction = 4
-	[errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetBinning', out_ptr,h_binning,v_binning); %2,4, etc.
-	%ROI selection
-	[errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetROI', out_ptr,1,1,5120/h_binning/4,5120/v_binning/v_ROI_reduction); %does this work for the panda...?
-	
-
-%}
-
-
 %set default Pixelrate
-subfunc.fh_set_pixelrate(out_ptr,2);
+subfunc.fh_set_pixelrate(out_ptr,1);
 
 subfunc.fh_set_triggermode(out_ptr,triggermode);
 subfunc.fh_set_exposure_times(out_ptr,exposure_time,2,0,2);
@@ -124,19 +108,7 @@ subfunc.fh_set_transferparameter(out_ptr);
 triggermode=subfunc.fh_get_triggermode(out_ptr);
 
 %display actual image time and maximal frequency
-imatime=subfunc.fh_show_frametime(out_ptr)
-
-%% 
-%% Measure time to acquire 1 image
-		dwSec=uint32(0);
-		dwNanoSec=uint32(0);
-		[errorCode,~,dwSec,dwNanoSec] = calllib('PCO_CAM_SDK', 'PCO_GetCOCRuntime', out_ptr,dwSec,dwNanoSec);
-		if(errorCode)
-			pco_errdisp('PCO_GetCOCRuntime',errorCode);
-		end
-		disp(['Max double image capture freq: ' num2str(round(1/(double(dwNanoSec)/1000/1000/1000),3)) ' Hz.'])
-%% 
-
+imatime=subfunc.fh_show_frametime(out_ptr);
 
 metadatasize=0;
 if(bitand(cam_desc.dwGeneralCapsDESC1,GENERALCAPS1_METADATA))
@@ -251,7 +223,7 @@ imah=draw_image(ima,[0 100]);
 axish=gca;
 set(axish,'CLim',[0 1000]);
 
-pause(0.0001);
+pause(0.5);
 
 %grab preimage to get actual image value range and set limits
 errorCode=subfunc.fh_start_camera(out_ptr);
@@ -351,7 +323,7 @@ subfunc.fh_stop_camera(out_ptr);
 errorCode = calllib('PCO_CAM_SDK', 'PCO_CancelImages', out_ptr);
 pco_errdisp('PCO_CancelImages',errorCode);   
 
-pause(0.01);
+pause(0.2);
 %variable to reduce amount of messages
 d=10;
 if(nr_of_images>100)
@@ -486,8 +458,7 @@ if(act_recstate==1)
      ima=bitshift(ima,s);
     end
     set(imah,'CData',ima,'CDataMapping','scaled'); 
-	pause(0.0001);
-	assignin('base','letztes_bild',ima);
+    pause(0.0001);
     
     errorCode = calllib('PCO_CAM_SDK','PCO_AddBufferEx', out_ptr,0,0,bufnum(next),act_xsize,act_ysize,bitpix);
     if(errorCode)
@@ -525,10 +496,10 @@ if(act_recstate==1)
  end
 
  
- %disp('Press "Enter" to close window and proceed')
- %pause();
- %close();
- %pause(1);
+ disp('Press "Enter" to close window and proceed')
+ pause();
+ close();
+ pause(1);
 end
 
 subfunc.fh_stop_camera(out_ptr);

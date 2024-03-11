@@ -88,7 +88,7 @@
 //  0.26     | 31.08.2010 |  FRE:Added defines for                 //
 //           |            |  Lookup Table commands                 //
 //           |            |  Fairchild color sensor                //
-//           | 08.11.2011 |  FRE: Added                            // 
+//           | 08.11.2011 |  FRE: Added                            //
 //           |            |   GENERALCAPS1_NO_GLOBAL_SHUTTER       //
 //-----------------------------------------------------------------//
 //  0.27     | 04.12.2013 |  FRE: Moved HWIO defs from             //
@@ -144,15 +144,20 @@
 #define CAMERASUBTYPE_PCO_DIMAX_HD_plus    0xC0FF   // pco.dimax HD+
 #define CAMERASUBTYPE_PCO_DIMAX_X35        0x00C8   // 200 = Weisscam/P+S HD35
 
-#define CAMERASUBTYPE_PCO_DIMAX_HS1        0x207F   
-#define CAMERASUBTYPE_PCO_DIMAX_HS2        0x217F   
-#define CAMERASUBTYPE_PCO_DIMAX_HS4        0x237F   
+#define CAMERASUBTYPE_PCO_DIMAX_HS1        0x207F
+#define CAMERASUBTYPE_PCO_DIMAX_HS2        0x217F
+#define CAMERASUBTYPE_PCO_DIMAX_HS4        0x237F
 
-#define CAMERASUBTYPE_PCO_DIMAX_CS_AM_DEPRECATED      0x407F   
-#define CAMERASUBTYPE_PCO_DIMAX_CS_1       0x417F   
-#define CAMERASUBTYPE_PCO_DIMAX_CS_2       0x427F   
-#define CAMERASUBTYPE_PCO_DIMAX_CS_3       0x437F   
-#define CAMERASUBTYPE_PCO_DIMAX_CS_4       0x447F   
+#define CAMERASUBTYPE_PCO_DIMAX_CS_AM_DEPRECATED      0x407F
+#define CAMERASUBTYPE_PCO_DIMAX_CS_1       0x417F
+#define CAMERASUBTYPE_PCO_DIMAX_CS_2       0x427F
+#define CAMERASUBTYPE_PCO_DIMAX_CS_3       0x437F
+#define CAMERASUBTYPE_PCO_DIMAX_CS_4       0x447F
+
+// #define CAMERASUBTYPE_PCO_DIMAX_CS_1_PLUS  0x517F  // RFU
+// #define CAMERASUBTYPE_PCO_DIMAX_CS_2_PLUS  0x527F  // RFU
+// #define CAMERASUBTYPE_PCO_DIMAX_CS_3_PLUS  0x537F  // RFU
+#define CAMERASUBTYPE_PCO_DIMAX_CS_4_PLUS  0x547F
 
 
 // pco.sensicam types                   // tbd., all names are internal ids
@@ -167,7 +172,7 @@
 #define CAMERATYPE_PCO_EDGE_42               0x1302 // pco.edge 4.2 (Sensor CIS2020) Interface: CameraLink , rolling shutter
 #define CAMERATYPE_PCO_EDGE_GL               0x1310 // pco.edge 5.5 (Sensor CIS2521) Interface: CameraLink , global  shutter
 #define CAMERATYPE_PCO_EDGE_USB3             0x1320 // pco.edge     (all sensors   ) Interface: USB 3.0    ,(all shutter modes)
-#define CAMERATYPE_PCO_EDGE_HS               0x1340 // pco.edge     (all sensors   ) Interface: high speed ,(all shutter modes) 
+#define CAMERATYPE_PCO_EDGE_HS               0x1340 // pco.edge     (all sensors   ) Interface: high speed ,(all shutter modes)
 #define CAMERATYPE_PCO_EDGE_MT               0x1304 // pco.edge MT2 (all sensors   ) Interface: CameraLink Base, rolling shutter
 
 
@@ -207,11 +212,13 @@
 #define CAMERASUBTYPE_PCO_PANDA_42_BI        0x0001 // pco.panda 4.2 bi
 #define CAMERASUBTYPE_PCO_PANDA_150          0x0002 // pco.panda 15
 #define CAMERASUBTYPE_PCO_PANDA_OEM1         0x0003
+#define CAMERASUBTYPE_PCO_PANDA_260          0x0004 // pco.panda 26
 
 
 // EDGE Family
 #define CAMERASUBTYPE_PCO_EDGE_42_BI         0x0001 // pco.edge 4.2 bi
 #define CAMERASUBTYPE_PCO_EDGE_260           0x0002 // pco.edge 26
+
 
 // DICAM Family
 #define CAMERASUBTYPE_PCO_DICAM_C1           0x0001 // pco.dicam C1
@@ -220,6 +227,8 @@
 #define CAMERASUBTYPE_PCO_DICAM_C4           0x0004 // pco.dicam C4
 
 // DIMAX Family
+
+
 
 //#define CAMERATYPE_PCOUPDATE     0xFFFF   // indicates Camera in update mode!
 
@@ -259,9 +268,9 @@
 #define CL_FORMAT_5x12    0x07
 
 #define CL_TESTPATTERN    0xF0
-#define CL_TESTPATTERN_1  0x10  
-#define CL_TESTPATTERN_2  0x20  
-#define CL_TESTPATTERN_3  0x30  
+#define CL_TESTPATTERN_1  0x10
+#define CL_TESTPATTERN_2  0x20
+#define CL_TESTPATTERN_3  0x30
 
 // ------------------------------------------------------------------------ //
 // -- Bitmask Defines for CameraLink Transmit------------------------------ //
@@ -339,7 +348,7 @@
 // ------------------------------------------------------------------------ //
 // -- Sensor type definitions --------------------------------------------- //
 // ------------------------------------------------------------------------ //
-  // Sensor Type 
+  // Sensor Type
   // ATTENTION: Lowest bit is reserved for COLOR CCDs
   // In case a new color CCD is added the lowest bit MUST be set!!!
 #define SENSOR_ICX285AL           0x0010      // Sony
@@ -441,8 +450,8 @@ const PCO_SENSOR_TYPE_DEF far pco_sensor[] =
               { SENSOR_ICX414AL,               "Sony ICX414AL"                      },
               { SENSOR_ICX414AK,               "Sony ICX414AK"                      },
               { SENSOR_ICX407BLA,              "Sony ICX407BLA"                     },
-                                                                                    
-               // Kodak sensor types                                                
+
+               // Kodak sensor types
               { SENSOR_KAI2000M,               "Kodak KAI2000M"                     },
               { SENSOR_KAI2000CM,              "Kodak KAI2000CM"                    },
               { SENSOR_KAI2001M,               "Kodak KAI2001M"                     },
@@ -465,26 +474,26 @@ const PCO_SENSOR_TYPE_DEF far pco_sensor[] =
               { SENSOR_KAI11002CM,             "Kodak KAI11002CM"                   },
               { SENSOR_KAI16000AXA,            "Kodak KAI16000AXA"                  },
               { SENSOR_KAI16000CXA,            "Kodak KAI16000CXA"                  },
-                                                                                    
-               // Mircon sensor types                                               
+
+               // Mircon sensor types
               { SENSOR_MV13BW,                 "Micron MV13BW"                      },
               { SENSOR_MV13COL,                "Micron MV13COL"                     },
 
                // Other sensor types
               { SENSOR_TC285SPD,               "TI TC285SPD"                        },
               { SENSOR_QMFLIM_V2B_BW,          "QMFLIM V2B BW"                      },
-               
+
               { SENSOR_CYPRESS_RR_V1_BW,       "Cypress Roadrunner V1 BW"           },
               { SENSOR_CYPRESS_RR_V1_COL,      "Cypress Roadrunner V1 Color"        },
-               
+
               { SENSOR_CIS2051_V1_FI_BW,       "Fairchild CIS2521 V1 I-Front BW"    },
               { SENSOR_CIS2051_V1_FI_COL,      "Fairchild CIS2521 V1 I-Front Color" },
               { SENSOR_CIS1042_V1_FI_BW,       "Fairchild CIS2020 V1 I-Front BW"    },
               { SENSOR_CIS2051_V1_BI_BW,       "Fairchild CIS2521 V1 I-Back BW"     },
-               
+
               { SENSOR_CMOSIS_CMV12000_BW,     "CMOSIS CMV12000 BW"                 },
               { SENSOR_CMOSIS_CMV12000_COL,    "CMOSIS CMV12000 Color"              },
-               
+
 
               { SENSOR_GPIXEL_GSENSE2020_BW,   "Gpixel GSENSE2020 BW"               },
               { SENSOR_GPIXEL_GSENSE2020_COL,  "Gpixel GSENSE2020 Color"            },
@@ -575,9 +584,13 @@ extern const int far PCO_SENSOR_TYPE_DEF_NUM;
 #define GENERALCAPS3_IRIG_B_MODULATED                  0x00000008 // can evaluate an IRIG B modulated signal
 #define GENERALCAPS3_CAMERA_SYNC                       0x00000010 // has camera sync mode implemented
 #define GENERALCAPS3_RESERVED0                         0x00000020 // reserved
-#define GENERALCAPS3_HS_READOUT_MODE                   0x00000040 // special fast sensor readout mode 
-#define GENERALCAPS3_EXT_SYNC_1HZ_MODE                 0x00000080 // in trigger mode external synchronized, multiples of 
+#define GENERALCAPS3_HS_READOUT_MODE                   0x00000040 // special fast sensor readout mode
+#define GENERALCAPS3_EXT_SYNC_1HZ_MODE                 0x00000080 // in trigger mode external synchronized, multiples of
                                                                   //   1 F/s can be set (until now: 100 Hz)
+#define GENERALCAPS3_TRANSFER_MODE_ALIGN_8BIT          0x00000100 // possibility to align 8 bit transfer modes into 12 bit
+
+#define GENERALCAPS3_MEMORY_COMPRESSION_GENERAL        0x00000200 // possibility to set general memory compression generally
+#define GENERALCAPS3_MEMORY_COMPRESSION_PER_SEGMENT    0x00000400 // possibility to set general memory compression per segment
 
 
 // ------------------------------------------------------------------------ //
@@ -599,7 +612,7 @@ extern const int far PCO_SENSOR_TYPE_DEF_NUM;
 #define PCO_EDGE_SETUP_GLOBAL_RESET    0x00000004         // global reset rolling readout
 
 
-#define PCO_DIMAX_CS_CAMERA_SETUP_TYPE_RSRVD_0     0x1001  // pco.dimax CS CameraSetup 
+#define PCO_DIMAX_CS_CAMERA_SETUP_TYPE_RSRVD_0     0x1001  // pco.dimax CS CameraSetup
 #define PCO_DIMAX_CS_CAMERA_SETUP_TYPE_RSRVD_1     0x1002  //   definitions for type parameter
 #define PCO_DIMAX_CS_CAMERA_SETUP_TYPE_RSRVD_2     0x1004  //   used for calibration purposes
 #define PCO_DIMAX_CS_CAMERA_SETUP_TYPE_RSRVD_3     0x1008
@@ -620,13 +633,13 @@ extern const int far PCO_SENSOR_TYPE_DEF_NUM;
 #define USER_INTERFACE_TYPE_USART                      0x0003
 #define USER_INTERFACE_TYPE_SPI                        0x0004
 #define USER_INTERFACE_TYPE_I2C                        0x0005
-                                                       
+
 #define USER_INTERFACE_OPTIONS_UART_PARITY_NONE        0x00000001
 #define USER_INTERFACE_OPTIONS_UART_PARITY_EVEN        0x00000002
 #define USER_INTERFACE_OPTIONS_UART_PARITY_ODD         0x00000004
-                                                       
+
 #define USER_INTERFACE_EQUIPMENT_LENS_CONTROL_BIRGER   0x00000001
-                                                       
+
 #define USER_INTERFACE_HANDSHAKE_TYPE_NONE             0x0001
 #define USER_INTERFACE_HANDSHAKE_TYPE_RTS_CTS          0x0002
 #define USER_INTERFACE_HANDSHAKE_TYPE_XON_XOFF         0x0004
@@ -722,7 +735,7 @@ extern const int far PCO_SENSOR_TYPE_DEF_NUM;
 // ------------------------------------------------------------------------ //
 
 #define DOUBLE_IMAGE_MODE_OFF            0x0000
-#define DOUBLE_IMAGE_MODE_ON             0x0001     
+#define DOUBLE_IMAGE_MODE_ON             0x0001
 
 
 // ------------------------------------------------------------------------ //
@@ -812,8 +825,8 @@ extern const int far PCO_SENSOR_TYPE_DEF_NUM;
 // -- Defines for Get/Set Delay Exposure Timetable Command: --------------- //
 // ------------------------------------------------------------------------ //
 
-#define MAX_TIMEPAIRS   16    // max size of time table for 
-                              
+#define MAX_TIMEPAIRS   16    // max size of time table for
+
 
 
 // ------------------------------------------------------------------------ //
@@ -870,6 +883,13 @@ extern const int far PCO_SENSOR_TYPE_DEF_NUM;
 #define STORAGE_MODE_RECORDER      0
 #define STORAGE_MODE_FIFO_BUFFER   1
 
+// ------------------------------------------------------------------------ //
+// -- Defines for Get/Set Memory Commpression Mode Command: --------------- //
+// ------------------------------------------------------------------------ //
+
+#define MEMORY_COMPRESSION_MODE_OFF                0x0000
+#define MEMORY_COMPRESSION_MODE_GENERAL            0x0001
+#define MEMORY_COMPRESSION_MODE_PER_SEGMENT        0x0002
 
 // ------------------------------------------------------------------------ //
 // -- Defines for Get/Set Recorder Submode Command: ----------------------- //
@@ -900,10 +920,10 @@ extern const int far PCO_SENSOR_TYPE_DEF_NUM;
 // -- Defines for Set Event Monitor Configuration: ------------------------ //
 // ------------------------------------------------------------------------ //
 
-#define EVENT_CONFIG_EXPTRIG_RISING            0x0001   
-#define EVENT_CONFIG_EXPTRIG_FALLING           0x0002   
-#define EVENT_CONFIG_ACQENBL_RISING            0x0004   
-#define EVENT_CONFIG_ACQENBL_FALLING           0x0008   
+#define EVENT_CONFIG_EXPTRIG_RISING            0x0001
+#define EVENT_CONFIG_EXPTRIG_FALLING           0x0002
+#define EVENT_CONFIG_ACQENBL_RISING            0x0004
+#define EVENT_CONFIG_ACQENBL_FALLING           0x0008
 
 
 // ------------------------------------------------------------------------ //
@@ -950,7 +970,7 @@ extern const int far PCO_SENSOR_TYPE_DEF_NUM;
 // ------------------------------------------------------------------------ //
 
 #define FAST_TIMING_MODE_OFF            0x0000
-#define FAST_TIMING_MODE_ON             0x0001     
+#define FAST_TIMING_MODE_ON             0x0001
 
 
 
@@ -1000,6 +1020,12 @@ extern const int far PCO_SENSOR_TYPE_DEF_NUM;
 #define COLOR_GREENA  0x02
 #define COLOR_GREENBA 0x03
 #define COLOR_BLUE    0x04
+
+#define BAYER_BGGR      ((COLOR_BLUE    << 0) | (COLOR_GREENBA << 4) | (COLOR_GREENA  << 8)  | (COLOR_RED     << 12))
+#define BAYER_RGGB      ((COLOR_RED     << 0) | (COLOR_GREENA  << 4) | (COLOR_GREENBA << 8)  | (COLOR_BLUE    << 12))
+#define BAYER_GBRG      ((COLOR_GREENBA << 0) | (COLOR_BLUE    << 4) | (COLOR_RED     << 8)  | (COLOR_GREENA  << 12))
+#define BAYER_GRBG      ((COLOR_GREENA  << 0) | (COLOR_RED     << 4) | (COLOR_BLUE    << 8)  | (COLOR_GREENBA << 12))
+
 
 #define COLOR_CYAN    0x05
 #define COLOR_MAGENTA 0x06
@@ -1123,7 +1149,7 @@ extern const int far PCO_SENSOR_TYPE_DEF_NUM;
 //#define COLOR_PROC_OPTIONS_USE_REC709                             0x0002
 //#define COLOR_PROC_OPTIONS_USE_LOG90                              0x0004
 
-#define COLOR_SETTINGS_LUT_NOT_USED                               0x0000                             
+#define COLOR_SETTINGS_LUT_NOT_USED                               0x0000
 #define COLOR_SETTINGS_LUT_REC709                                 0x1001
 #define COLOR_SETTINGS_LUT_LOG90                                  0x1002
 
@@ -1132,12 +1158,12 @@ extern const int far PCO_SENSOR_TYPE_DEF_NUM;
 // -- Defines for Get / Set Image Transfer Mode: -------------------------- //
 // ------------------------------------------------------------------------ //
 
-#define IMAGE_TRANSFER_MODE_STANDARD                              0x0000 
-#define IMAGE_TRANSFER_MODE_SCALED_XY_8BIT                        0x0001 
-#define IMAGE_TRANSFER_MODE_CUTOUT_XY_8BIT                        0x0002 
-#define IMAGE_TRANSFER_MODE_FULL_RGB_24BIT                        0x0003 
-#define IMAGE_TRANSFER_MODE_BIN_SCALED_8BIT_BW                    0x0004 
-#define IMAGE_TRANSFER_MODE_BIN_SCALED_8BIT_COLOR                 0x0005 
+#define IMAGE_TRANSFER_MODE_STANDARD                              0x0000
+#define IMAGE_TRANSFER_MODE_SCALED_XY_8BIT                        0x0001
+#define IMAGE_TRANSFER_MODE_CUTOUT_XY_8BIT                        0x0002
+#define IMAGE_TRANSFER_MODE_FULL_RGB_24BIT                        0x0003
+#define IMAGE_TRANSFER_MODE_BIN_SCALED_8BIT_BW                    0x0004
+#define IMAGE_TRANSFER_MODE_BIN_SCALED_8BIT_COLOR                 0x0005
 #define IMAGE_TRANSFER_MODE_TEST_ONLY                             0x8000
 
 
@@ -1158,6 +1184,8 @@ extern const int far PCO_SENSOR_TYPE_DEF_NUM;
 
 #define IMAGE_TIMING_NOT_APPLICABLE                           0xFFFFFFFF
 
+
+
 // ------------------------------------------------------------------------ //
 // -- Defines for Lookup Table: ------------------------------------------- //
 // ------------------------------------------------------------------------ //
@@ -1176,12 +1204,21 @@ extern const int far PCO_SENSOR_TYPE_DEF_NUM;
 
 #define COOLING_SETPOINTS_BLOCKSIZE 10
 
+
 // ------------------------------------------------------------------------ //
 // -- Defines for Linetiming   -------------------------------------------- //
 // ------------------------------------------------------------------------ //
 
+// wParameter:
 #define CMOS_LINETIMING_PARAM_OFF  0x0000
 #define CMOS_LINETIMING_PARAM_ON   0x0001
+
+// dwLineCaps:
+#define CMOS_LINE_TIMING_CAPS_PIXCLK_SLOW_ONLY  0x0001  // Camera supports line timing with slowest pixel clk frequency
+#define CMOS_LINE_TIMING_CAPS_PIXCLK_ALL        0x0002  // Camera supports line timing with all pixel clk frequencies
+
+
+
 
 // ------------------------------------------------------------------------ //
 // -- Defines for HWIO Signal Timing: ------------------------------------- //
@@ -1291,7 +1328,7 @@ extern const int far PCO_SENSOR_TYPE_DEF_NUM;
 // -- Defines for intensified camera description and commands ------------- //
 // ------------------------------------------------------------------------ //
 
-// descriptor: 
+// descriptor:
 #define INTENSIFIED_DESC_FLAG_HAS_GATING_MODE      0x00000001
 #define INTENSIFIED_DESC_FLAG_HAS_GATING_MODE2     0x00000002
 
@@ -1302,7 +1339,7 @@ extern const int far PCO_SENSOR_TYPE_DEF_NUM;
 #define INTENSIFIED_GATING_MODE_2                  2
 
 #endif
- 
+
 // ------------------------------< end of file >--------------------------- //
 
 
