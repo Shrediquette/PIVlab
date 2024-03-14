@@ -30,7 +30,7 @@ if isempty(fh)
 	drawnow
 	handle_splash_text = text(splash_ax,10,10,'Loading, please wait...');
 	%}
-	MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0 0.1 1 0.8],'ResizeFcn', @gui_NameSpace.gui_MainWindow_ResizeFcn,'CloseRequestFcn', @gui_NameSpace.gui_MainWindow_CloseRequestFcn,'tag','hgui','visible','off','KeyPressFcn', @gui_NameSpace.gui_key_press);
+	MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0 0.1 1 0.8],'ResizeFcn', @gui.gui_MainWindow_ResizeFcn,'CloseRequestFcn', @gui.gui_MainWindow_CloseRequestFcn,'tag','hgui','visible','off','KeyPressFcn', @gui.gui_key_press);
 	set (MainWindow,'Units','Characters');
 	%clc
 	%% Initialize
@@ -38,7 +38,7 @@ if isempty(fh)
 	guidata(MainWindow,handles)
 	setappdata(0,'hgui',MainWindow);
 	version = '3.00';
-	gui_NameSpace.gui_put('PIVver', version);
+	gui.gui_put('PIVver', version);
 	try
 		load('PIVlab_settings_default.mat','build_date');
 	catch
@@ -69,16 +69,16 @@ if isempty(fh)
 	panelheighttools=12;
 	panelheightpanels=35;
 	do_correlation_matrices=0; % enable or disable the output of raw correlation matrices
-	gui_NameSpace.gui_put('do_correlation_matrices',do_correlation_matrices);
-	gui_NameSpace.gui_put('panelwidth',panelwidth);
-	gui_NameSpace.gui_put('margin',margin);
-	gui_NameSpace.gui_put('panelheighttools',panelheighttools);
-	gui_NameSpace.gui_put('panelheightpanels',panelheightpanels);
-	gui_NameSpace.gui_put('quickwidth',panelwidth);
-	gui_NameSpace.gui_put('quickheight',3.2);
-	gui_NameSpace.gui_put('quickvisible',1);
-	gui_NameSpace.gui_put('alreadydisplayed',0);
-	gui_NameSpace.gui_put('video_selection_done',0);
+	gui.gui_put('do_correlation_matrices',do_correlation_matrices);
+	gui.gui_put('panelwidth',panelwidth);
+	gui.gui_put('margin',margin);
+	gui.gui_put('panelheighttools',panelheighttools);
+	gui.gui_put('panelheightpanels',panelheightpanels);
+	gui.gui_put('quickwidth',panelwidth);
+	gui.gui_put('quickheight',3.2);
+	gui.gui_put('quickvisible',1);
+	gui.gui_put('alreadydisplayed',0);
+	gui.gui_put('video_selection_done',0);
 
 	%% check write access
 
@@ -100,7 +100,7 @@ if isempty(fh)
 	try
 		psdfile=which('PIVlab_settings_default.mat');
 		dindex=strfind(psdfile,filesep); %filesep ist '\'
-		import_NameSpace.import_read_panel_width('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
+		import.import_read_panel_width('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
 	catch
 		try
 			disp(['Could not load default settings in this path: ' psdfile(1:(dindex(end)-1))])
@@ -130,18 +130,18 @@ if isempty(fh)
 		disp('-> Problem detecting required files.')
 	end
 	%%
-	gui_NameSpace.gui_generateUI
-	gui_NameSpace.gui_generateMenu
+	gui.gui_generateUI
+	gui.gui_generateMenu
 
 	%% Prepare axes
-	gui_NameSpace.gui_switchui('multip01');
+	gui.gui_switchui('multip01');
 	pivlab_axis=axes('units','characters','parent',MainWindow);
 	axis image;
 	set(gca,'ActivePositionProperty','outerposition');%,'Box','off','DataAspectRatioMode','auto','Layer','bottom','Units','normalized');
-	set(MainWindow, 'Name',['PIVlab ' gui_NameSpace.gui_retr('PIVver')])% ' by William Thielicke and Eize J. Stamhuis'])
-	gui_NameSpace.gui_put('pivlab_axis',pivlab_axis);
+	set(MainWindow, 'Name',['PIVlab ' gui.gui_retr('PIVver')])% ' by William Thielicke and Eize J. Stamhuis'])
+	gui.gui_put('pivlab_axis',pivlab_axis);
 	%%
-	misc_NameSpace.misc_Lena
+	misc.misc_Lena
 	%% Check Matlab version
 	try
 		if verLessThan('matlab', '9.7') == 0
@@ -182,13 +182,13 @@ if isempty(fh)
 			beep;commandwindow;pause
 		end
 		%% Check parallel computing toolbox availability
-		gui_NameSpace.gui_put('parallel',0);
+		gui.gui_put('parallel',0);
 		try %checking for a parallel license file throws a huge error message wheh it is not available. This might scare users... Better: Try...catch block
 			if ~exist('desired_num_cores','var') %no input argument --> use all existing cores
 				if pivparpool('size')<=0 %no exisitng pool
 					pivparpool('open',feature('numCores')); %use all cores
 				end
-				gui_NameSpace.gui_put('parallel',1);
+				gui.gui_put('parallel',1);
 			else%parameter supplied
 				if desired_num_cores > 1 && desired_num_cores ~= pivparpool('size') %desired doesn't match existing pool
 					if desired_num_cores > feature('numCores')%desired too many cores
@@ -197,15 +197,15 @@ if isempty(fh)
 					end
 					pivparpool('close')
 					pivparpool('open',desired_num_cores);
-					gui_NameSpace.gui_put('parallel',1);
+					gui.gui_put('parallel',1);
 				elseif desired_num_cores < 2 %leq than 1 core desired --> serial processing.
 					pivparpool('close')
-					gui_NameSpace.gui_put('parallel',0);
+					gui.gui_put('parallel',0);
 				elseif desired_num_cores==pivparpool('size')
-					gui_NameSpace.gui_put('parallel',1);
+					gui.gui_put('parallel',1);
 				end
 			end
-			if gui_NameSpace.gui_retr('parallel')==1
+			if gui.gui_retr('parallel')==1
 				disp(['-> Distributed Computing Toolbox found. Parallel pool (' int2str(pivparpool('size')) ' workers) active (default settings).'])
 			else
 				disp('-> Distributed Computing disabled.')
@@ -218,15 +218,15 @@ if isempty(fh)
 	end
 
 	%% Variable initialization
-	gui_NameSpace.gui_put ('toggler',0);
-	gui_NameSpace.gui_put('calu',1);
-	gui_NameSpace.gui_put('calv',1);
-	gui_NameSpace.gui_put('calxy',1);
-	gui_NameSpace.gui_put('offset_x_true',0)
-	gui_NameSpace.gui_put('offset_y_true',0)
-	gui_NameSpace.gui_put('subtr_u', 0);
-	gui_NameSpace.gui_put('subtr_v', 0);
-	gui_NameSpace.gui_put('displaywhat',1);%vectors
+	gui.gui_put ('toggler',0);
+	gui.gui_put('calu',1);
+	gui.gui_put('calv',1);
+	gui.gui_put('calxy',1);
+	gui.gui_put('offset_x_true',0)
+	gui.gui_put('offset_y_true',0)
+	gui.gui_put('subtr_u', 0);
+	gui.gui_put('subtr_v', 0);
+	gui.gui_put('displaywhat',1);%vectors
 
 
 	%% read current and last directory.....:
@@ -258,8 +258,8 @@ if isempty(fh)
 		end
 		disp(['-> Start up path: ' pathname])
 	end
-	gui_NameSpace.gui_put('homedir',homedir);
-	gui_NameSpace.gui_put('pathname',pathname);
+	gui.gui_put('homedir',homedir);
+	gui.gui_put('pathname',pathname);
 	save('PIVlab_settings_default.mat','homedir','pathname','-append');
 
 	%% Read and apply default settings
@@ -268,7 +268,7 @@ if isempty(fh)
 		psdfile=which('PIVlab_settings_default.mat');
 		dindex=strfind(psdfile,filesep); %filesep ist '\'
 		%erstes argument datei, zweites pfad bis zum letzten fileseperator.
-		import_NameSpace.import_read_settings('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
+		import.import_read_settings('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
 		disp(['-> Got default settings from: ' psdfile])
 	catch
 		disp('Could not load default settings. But this doesn''t really matter.')
@@ -276,10 +276,10 @@ if isempty(fh)
 	%%
 
 	%%
-	misc_NameSpace.misc_CheckUpdates
-	gui_NameSpace.gui_SetFullScreen
+	misc.misc_CheckUpdates
+	gui.gui_SetFullScreen
 
-	gui_NameSpace.gui_displogo(1);drawnow;
+	gui.gui_displogo(1);drawnow;
 	try
 		close(splashscreen)
 	catch
@@ -288,29 +288,29 @@ if isempty(fh)
 
 	%% Batch session  processing in GUI
 	if ~exist('batch_session_file','var') %no input argument --> no GUI batch processing
-		gui_NameSpace.gui_put('batchModeActive',0)
+		gui.gui_put('batchModeActive',0)
 	else
 		if exist (batch_session_file,'file')
 			[filepath,name,ext] = fileparts(batch_session_file);
-			import_NameSpace.import_load_session_Callback (1,batch_session_file)
+			import.import_load_session_Callback (1,batch_session_file)
 			disp('')
 			disp(['Batch mode, analyzing ' batch_session_file])
 			batch_session_file_output=fullfile(filepath,[name '_BATCH' ext]);
 			disp(['Output will be saved as:  ' batch_session_file_output ])
 			disp('...running PIV analysis...')
-			piv_NameSpace.piv_do_analys_Callback
-			piv_NameSpace.piv_AnalyzeAll_Callback
+			piv.piv_do_analys_Callback
+			piv.piv_AnalyzeAll_Callback
 			disp('...running post processing...')
-			validate_NameSpace.validate_apply_filter_all_Callback
+			validate.validate_apply_filter_all_Callback
 			disp('...saving output...')
-			export_NameSpace.export_save_session_Callback(1,batch_session_file_output)
+			export.export_save_session_Callback(1,batch_session_file_output)
 
-			gui_NameSpace.gui_put('batchModeActive',1)
+			gui.gui_put('batchModeActive',1)
 			disp('done, exiting...')
-			gui_NameSpace.gui_MainWindow_CloseRequestFcn
+			gui.gui_MainWindow_CloseRequestFcn
 		else
 			disp(['NOT FOUND: ' batch_session_file])
-			gui_NameSpace.gui_put('batchModeActive',0)
+			gui.gui_put('batchModeActive',0)
 		end
 	end
 
