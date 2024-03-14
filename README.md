@@ -32,7 +32,6 @@ https://youtu.be/8B5M31NWlJc
 * GUI parallelization: Chun-Sheng Wang, ParaPIV (https://de.mathworks.com/matlabcentral/fileexchange/63358-parapiv)
 * Command line parallelization: Quynh M. Nguyen (https://github.com/quynhneo)
 * Speed, memory and general optimizations: Maarten (https://github.com/mkbosmans) via VORtech.nl via MathWorks
-* Several donations to update Matlab licenses
 **   **
 We would like to acknowledge Uri Shavit, Roi Gurka &amp; Alex Liberzon for sharing their code for 3-point Gaussian sub-pixel estimation. Thanks to Nima Bigdely Shamlo for allowing me to include the LIC function. Thanks to Raffel et al. for writing the book "Particle Image Velocimetry, A Practical Guide", which was a very good help. Thanks to the [thousands of publications that use PIVlab for research](https://scholar.google.de/scholar?cites=819244312015141543)!
 
