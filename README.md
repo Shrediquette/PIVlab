@@ -27,7 +27,7 @@ https://youtu.be/8B5M31NWlJc
 **   **
 **Code contributors:**
 * Main: William Thielicke (http://william.thielicke.org)
-* Mikhil from MATHWORKS: Name spaces / packages
+* Name spaces / packages: Mikhil from MATHWORKS (https://github.com/Mikhil11)
 * Vectorization in piv_fftmulti: Sergey Filatov (http://www.issp.ac.ru/lqc/people.html)
 * GUI parallelization: Chun-Sheng Wang, ParaPIV (https://de.mathworks.com/matlabcentral/fileexchange/63358-parapiv)
 * Command line parallelization: Quynh M. Nguyen (https://github.com/quynhneo)
