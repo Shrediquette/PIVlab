@@ -758,7 +758,7 @@ item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.AnalyzeAll = uicontrol(handles.multip05,'Style','pushbutton','String','Analyze all frames','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @piv.piv_AnalyzeAll_Callback,'Tag','AnalyzeAll','TooltipString','Perform PIV analyses for all frames');
 
 item=[0 item(2)+item(4) parentitem(3)/4*2.5 1.5];
-handles.update_display_checkbox = uicontrol(handles.multip05,'Style','checkbox', 'value',1, 'String','Refresh display','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','update_display_checkbox','TooltipString','Refresh the display during the analysis. Disabling it will increase processing speed.');
+handles.update_display_checkbox = uicontrol(handles.multip05,'Style','checkbox', 'value',0, 'String','Refresh display','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','update_display_checkbox','TooltipString','Refresh the display during the analysis. Disabling it will increase processing speed.');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1.5];
 handles.cancelbutt = uicontrol(handles.multip05,'Style','pushbutton','String','Cancel','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @piv.piv_cancelbutt_Callback,'Tag','cancelbutt','TooltipString','Cancel analysis');
