@@ -164,7 +164,7 @@ if isempty(fh)
 		result=license('checkout','Image_Toolbox');
 		if result == 1
 			try
-				J = adapthisteq(rand(8,8));
+				J = adapthisteq(rand(8,8)); %#ok<NASGU>
 				disp('-> Image Processing Toolbox found.')
 			catch
 				disp(' ')
