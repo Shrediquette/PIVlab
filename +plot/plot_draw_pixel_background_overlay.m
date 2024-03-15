@@ -23,7 +23,7 @@ derived=gui.gui_retr('derived');
 if size(derived,2)>=(currentframe+1)/2 && displaywhat > 1 && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
 else
 	if get(handles.derivchoice,'Value')>1
-		text(10,10,'This parameter needs to be calculated for this frame first. Go to Plot -> Derive Parameters and click "Apply to current frame".','color','r','fontsize',9, 'BackgroundColor', 'k', 'tag', 'derivhint')
+		text(15,15,'This parameter needs to be calculated for this frame first. Go to Plot -> Spatial: Derive Parameters and click "Apply to all frames".','color','r','fontsize',9, 'BackgroundColor', 'k', 'tag', 'derivhint')
 	end
 end
 

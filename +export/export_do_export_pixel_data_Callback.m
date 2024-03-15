@@ -41,9 +41,27 @@ switch selected_format
 	case 'MPEG-4'
 		formatstring={ '*.mp4','compressed animation (*.mp4)'};
 end
+continue_export=1;
+if startframe ~=endframe && gui.gui_retr('displaywhat')>1 && get(handles.autoscaler,'Value') == 1 %user wants to export multiple frames and displays derivatives, and hasn't enabled a fixed colormap range
+	answer = questdlg('You haven''t set fixed limits to the colormap. This might result in flickering of the colormap. Please select fixed limits of the colormap (disable autoscale). Continue anyway? ', 'Colormap limits are not fixed', 'Yes','No','No');
+	if strcmp(answer , 'No')
+		continue_export=0;
+		gui.gui_switchui('multip08');drawnow;
+		old_bg=get(handles.autoscaler,'Backgroundcolor');
+		for i=1:10 %highlight the setting that the user needs to change...
+			set(handles.autoscaler,'Backgroundcolor',[1 0.2 0.2])
+			pause(0.15)
+			set(handles.autoscaler,'Backgroundcolor',old_bg)
+			pause(0.15)
+		end
+	end
+end
 
-[filename, pathname] = uiputfile(formatstring, 'Save images as',fullfile(imgsavepath, 'PIVlab_out'));
-
+if continue_export==1
+	[filename, pathname] = uiputfile(formatstring, 'Save images as',fullfile(imgsavepath, 'PIVlab_out'));
+else
+	filename=0;pathname=0;
+end
 if ~isequal(filename,0) && ~isequal(pathname,0)
 	gui.gui_put('imgsavepath',pathname );
 	[Dir, Name, Ext] = fileparts(filename);
