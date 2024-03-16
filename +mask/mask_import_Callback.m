@@ -17,7 +17,7 @@ if size(filepath,1) > 1 %did the user load images?
 		handles=gui.gui_gethand;
 		gui.gui_toolsavailable(0,'Busy, please wait...')
 		for i= 1:AnzahlMasks
-			set (handles.mask_import,'String', ['Progress: ' num2str(round(i/AnzahlMasks*100)) ' %']);
+			%set (handles.mask_import,'String', ['Progress: ' num2str(round(i/AnzahlMasks*100)) ' %']);
 			gui.gui_update_progress(round(i/AnzahlMasks*100))
 			drawnow limitrate
 			if AnzahlMasks==1
@@ -46,7 +46,7 @@ if size(filepath,1) > 1 %did the user load images?
 		end
 		mask.mask_redraw_masks
 		gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
-		set (handles.mask_import,'String', 'Import pixel mask');
+		%set (handles.mask_import,'String', 'Import pixel mask');
 		gui.gui_update_progress(0)
 		gui.gui_toolsavailable(1)
 	end

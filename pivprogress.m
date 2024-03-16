@@ -110,11 +110,13 @@ classdef pivprogress < handle
 					mins=floor(mins);
 					secs=floor(secs);
 
+					
 					if elapsd < 5
 						remain_string='Remaining time: calculating...';
 					else
 						remain_string=['Remaining time: ' sprintf('%2.2d', hrs) 'h ' sprintf('%2.2d', mins) 'm ' sprintf('%2.2d', secs) 's'];
 					end
+					
 					if this.percent ~= last_par_percent
 						if ~isinf(remain_t)
 							set(this.hdl, 'string' , ['Total progress: ' num2str(floor(100*this.percent)) '%' sprintf('\n') remain_string ]); %#ok<SPRINTFN>

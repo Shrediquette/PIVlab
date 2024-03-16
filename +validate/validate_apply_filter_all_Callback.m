@@ -16,7 +16,7 @@ if ~isempty(resultslist)
 		for i=1:num_frames_to_process
 			validate.validate_filtervectors(i)
 			gui.gui_update_progress((i-1)/num_frames_to_process*100)
-			set (handles.apply_filter_all, 'string', ['Please wait... (' int2str((i-1)/num_frames_to_process*100) '%)']);
+			%set (handles.apply_filter_all, 'string', ['Please wait... (' int2str((i-1)/num_frames_to_process*100) '%)']);
 			drawnow;
 		end
 	else %not using a video file --> parallel processing possible
@@ -149,7 +149,7 @@ if ~isempty(resultslist)
 		resultslist(9, :) = typevector_new;
 		gui.gui_put('resultslist', resultslist);
 	end
-	set (handles.apply_filter_all, 'string', 'Apply to all frames');
+	%set (handles.apply_filter_all, 'string', 'Apply to all frames');
 	gui.gui_update_progress(0)
 	gui.gui_toolsavailable(1)
 	gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'));

@@ -776,7 +776,7 @@ item=[0 item(2)+item(4)+margin parentitem(3) 1.5];
 handles.clear_everything = uicontrol(handles.multip05,'Style','pushbutton','String','Clear all results','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @misc.misc_clear_everything_Callback,'Tag','clear_everything','TooltipString','Clear all results');
 
 item=[0 item(2)+item(4)+margin*2 parentitem(3) 2];
-handles.progress = uicontrol(handles.multip05,'Style','text','String','Frame progress: N/A','Units','characters', 'HorizontalAlignment','left','Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','progress');
+handles.progress = uicontrol(handles.multip05,'Style','text','String','Frame progress: N/A','Units','characters', 'HorizontalAlignment','left','Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','progress','Visible','off');
 
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.overall = uicontrol(handles.multip05,'Style','text','String','Total progress: N/A','Units','characters', 'HorizontalAlignment','left','Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','overall');
