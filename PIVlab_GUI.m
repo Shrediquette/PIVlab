@@ -213,6 +213,15 @@ if isempty(fh)
 		catch
 			disp('-> Running without parallelization (no distributed computing toolbox installed).')
 		end
+
+		handles=gui.gui_gethand;
+		load icons.mat
+		if gui.gui_retr('parallel') == 1
+			set(handles.toggle_parallel, 'cdata',parallel_on,'TooltipString','Parallel processing on. Click to turn off.');
+		else
+			set(handles.toggle_parallel, 'cdata',parallel_off,'TooltipString','Parallel processing off. Click to turn on.');
+		end
+
 	catch
 		disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
 	end

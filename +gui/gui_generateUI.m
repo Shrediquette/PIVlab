@@ -54,16 +54,6 @@ load icons.mat
 set(handles.zoomon, 'cdata',zoompic);
 set(handles.panon, 'cdata',panpic);
 
-if gui.gui_retr('parallel') == 1
-	set(handles.toggle_parallel, 'cdata',parallel_on,'TooltipString','Parallel processing on. Click to turn off.');
-else
-	set(handles.toggle_parallel, 'cdata',parallel_off,'TooltipString','Parallel processing off. Click to turn on.');
-end
-%also new is icons.mat content
-%and icons_PIVlab.xcf
-%end
-
-
 %% Quick access
 iconwidth=5;
 iconheight=2;
