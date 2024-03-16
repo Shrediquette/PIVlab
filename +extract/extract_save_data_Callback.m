@@ -97,7 +97,9 @@ for i=startfr:endfr
 			end
 		end
 	end
+	gui.gui_update_progress(round(i/(endfr-startfr+1)*100))
 end
+gui.gui_update_progress(0)
 gui.gui_toolsavailable(1)
 gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
 

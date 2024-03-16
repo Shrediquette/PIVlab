@@ -71,7 +71,7 @@ iconamount=6;
 quickwidth = gui.gui_retr('quickwidth')-iconwidth-0.5;
 quickheight = gui.gui_retr('quickheight');
 
-handles.quick = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin*0.5 0+margin*0.5+panelheighttools quickwidth quickheight],'title','Main tasks quick access', 'Tag','quick','fontweight','bold','Visible','on');
+handles.quick = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin*0.5 0+margin*0.5+panelheighttools+quickheight quickwidth quickheight],'title','Main tasks quick access', 'Tag','quick','fontweight','bold','Visible','on');
 handles.quick1 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[1*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.gui_quick1_Callback,'tag','quick1','TooltipString','Load images');
 handles.quick2 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[2*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.gui_quick2_Callback,'tag','quick2','TooltipString','Mask generation');
 handles.quick3 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[3*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.gui_quick3_Callback,'tag','quick3','TooltipString','Pre-processing');
@@ -86,6 +86,15 @@ set(handles.quick3, 'cdata',prepic);
 set(handles.quick4, 'cdata',settpic);
 set(handles.quick5, 'cdata',anapic);
 set(handles.quick6, 'cdata',calpic);
+
+%% Progress info / progress bar
+handles.toolprogress = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin*0.5 0+margin*0.5+panelheighttools quickwidth quickheight],'title','Progress', 'Tag','toolprogress','fontweight','bold','Visible','on');
+parentitem=get(handles.toolprogress, 'Position');
+item=[margin 0 parentitem(3) 1];
+handles.toolprogress_bg = uicontrol(handles.toolprogress,'Style','text','units', 'characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','BackgroundColor',[0.85 0.85 0.85],'Tag','toolprogress_bg','Enable','off');
+handles.toolprogress_fg = uicontrol(handles.toolprogress,'Style','text','units', 'characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) 0 item(4)],'String','','BackgroundColor','g','Tag','toolprogress_fg','Enable','off');
+gui.gui_put('handle_toolprogress_bg',handles.toolprogress_bg); %for faster access in update loop
+gui.gui_put('handle_toolprogress_fg',handles.toolprogress_fg);
 
 
 %% Multip01

@@ -29,15 +29,14 @@ if size(filepath,1) > 1 %did the user load images?
 			piv_image_B = rgb2gray(piv_image_B);
 		end
 		pixel_mask=mask.mask_pixel_mask_from_piv_image(piv_image_A,piv_image_B,mask_generator_settings);
-		set (handles.automask_generate_all,'String', ['Progress: ' num2str(round(i/num_frames_to_process*100)) ' %']);
-		drawnow limitrate
+		gui.gui_update_progress((round(i/num_frames_to_process*100)))
 		blocations = bwboundaries(pixel_mask,'holes');
 		masks_in_frame=gui.gui_retr('masks_in_frame');
 		masks_in_frame=mask.mask_px_to_rois(blocations,(i+1)/2,masks_in_frame);
 		gui.gui_put('masks_in_frame',masks_in_frame);
 		mask.mask_redraw_masks
 	end
-	set (handles.automask_generate_all,'String', 'Make mask for all frames');
+	gui.gui_update_progress(0)
 	gui.gui_toolsavailable(1)
 	%{
 	else %not using a video file --> parallel processing possible

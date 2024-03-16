@@ -65,7 +65,8 @@ if file_selection_ok
 				writecell(returned_data,fullfile(PathName,FileName),'WriteMode','Append');
 			end
 		end
+		gui.gui_update_progress(round(i/(endfr-startfr+1)*100))
 	end
 end
+gui.gui_update_progress(0)
 gui.gui_toolsavailable(1)
-

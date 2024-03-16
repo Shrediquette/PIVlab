@@ -128,6 +128,7 @@ if ok==1
 		set(handles.fileselector, 'value', 1);
 		set(handles.progress, 'string' , ['Frame progress: 100%'])
 		%set(handles.overall, 'string' , ['Total progress: ' int2str((i+1)/2/(size(filepath,1)/2)*100) '%'])
+		gui.gui_update_progress(0)
 		gui.gui_put('subtr_u', 0);
 		gui.gui_put('subtr_v', 0);
 		gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
@@ -148,6 +149,7 @@ if ok==1
 		set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
 		set(handles.totaltime, 'String','Time left: N/A');
 		set(handles.progress, 'string' , ['Frame progress: 100%'])
+		gui.gui_update_progress(0)
 		gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
 	end
 

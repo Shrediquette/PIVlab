@@ -449,8 +449,9 @@ if ok==1
 				resultslist{12,(i+1)/2}=correlation_map;
 				gui.gui_put('resultslist',resultslist);
 				set(handles.fileselector, 'value', (i+1)/2);
-				set(handles.progress, 'string' , ['Frame progress: 100%'])
+				%set(handles.progress, 'string' , ['Frame progress: 100%'])
 				set(handles.overall, 'string' , ['Total progress: ' int2str((i+1)/2/num_frames_to_process*200) '%'])
+				gui.gui_update_progress((i+1)/2/num_frames_to_process*200)
 				gui.gui_put('subtr_u', 0);
 				gui.gui_put('subtr_v', 0);
 				if gui.gui_retr('update_display')==0
@@ -475,6 +476,7 @@ if ok==1
 
 		delete(findobj('tag', 'annoyingthing'));
 		set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
+		gui.gui_update_progress(0)
 		set(handles.totaltime, 'String',['Analysis time: ' num2str(round(toc*10)/10) ' s']);
 	end
 	cancel=gui.gui_retr('cancel');
@@ -499,5 +501,6 @@ if ok==1
 	assignin('base','correlation_matrices',correlation_matrices_list);
 end
 gui.gui_toolsavailable(1);
+gui.gui_update_progress(0)
 gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
 

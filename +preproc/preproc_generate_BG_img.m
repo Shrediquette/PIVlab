@@ -78,7 +78,8 @@ if get(handles.bg_subtract,'Value')==1
 					%% update progress bar
 					updatecntr=updatecntr+1;
 					if updatecntr==5
-						set(handles.preview_preprocess, 'String', ['Progress: ' num2str(round(i/size(filepath,1)*99)) ' %']);drawnow expose;
+						gui.gui_update_progress((round(i/size(filepath,1)*100)))
+						%set(handles.preview_preprocess, 'String', ['Progress: ' num2str(round(i/size(filepath,1)*99)) ' %']);drawnow expose;
 						updatecntr=0;
 					end
 					%% read image 1 and 2, different functions for different image types
@@ -191,7 +192,8 @@ if get(handles.bg_subtract,'Value')==1
 				else
 					gui.gui_put('bg_img_B',image1_bg); %timeresolved --> same bg image for a and b
 				end
-				set(handles.preview_preprocess, 'String', 'Apply and preview current frame');drawnow;
+				%set(handles.preview_preprocess, 'String', 'Apply and preview current frame');drawnow;
+				gui.gui_update_progress(0)
 				gui.gui_toolsavailable(1)
 			else % user has checkbox enabled, but doesn't want to calculate the background...
 				set(handles.bg_subtract,'Value',0);

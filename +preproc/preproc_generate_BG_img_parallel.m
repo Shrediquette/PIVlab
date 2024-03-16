@@ -183,6 +183,7 @@ if get(handles.bg_subtract,'Value')==1
 					gui.gui_put('bg_img_B',image1_bg); %timeresolved --> same bg image for a and b
 				end
 				set(handles.preview_preprocess, 'String', 'Apply and preview current frame');drawnow;
+				gui.gui_update_progress(0)
 				gui.gui_toolsavailable(1)
 			else % user has checkbox enabled, but doesn't want to calculate the background...
 				set(handles.bg_subtract,'Value',0);

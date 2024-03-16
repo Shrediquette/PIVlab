@@ -15,6 +15,7 @@ if ~isempty(resultslist)
 	if gui.gui_retr('video_selection_done') == 1 || gui.gui_retr('parallel')==0 %if post-processing a video, parallelization cannot be used.
 		for i=1:num_frames_to_process
 			validate.validate_filtervectors(i)
+			gui.gui_update_progress((i-1)/num_frames_to_process*100)
 			set (handles.apply_filter_all, 'string', ['Please wait... (' int2str((i-1)/num_frames_to_process*100) '%)']);
 			drawnow;
 		end
@@ -149,6 +150,7 @@ if ~isempty(resultslist)
 		gui.gui_put('resultslist', resultslist);
 	end
 	set (handles.apply_filter_all, 'string', 'Apply to all frames');
+	gui.gui_update_progress(0)
 	gui.gui_toolsavailable(1)
 	gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'));
 end
