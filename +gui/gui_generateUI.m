@@ -852,7 +852,7 @@ item=[0 item(2)+item(4) parentitem(3) 2];
 handles.restore_all = uicontrol(handles.multip06,'Style','pushbutton','String','Undo all validations (all frames)','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.validate_restore_all_Callback,'Tag','restore_all','TooltipString','Remove all velocity filters for all frames');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
-handles.amount_nans = uicontrol(handles.multip06,'Style','text','String','Filtered data: 0 %','HorizontalAlignment','center','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','amount_nans');
+handles.amount_nans = uicontrol(handles.multip06,'Style','text','String','VDP: 100 %','HorizontalAlignment','center','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','amount_nans','TooltipString','Valid detection probability in percent');
 
 %% Multip07
 handles.multip07 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Calibration (CTRL+Z)', 'Tag','multip07','fontweight','bold');
