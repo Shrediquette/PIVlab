@@ -105,4 +105,3 @@ if capturing==0
 		drawnow;
 	end
 end
-

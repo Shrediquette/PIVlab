@@ -44,11 +44,12 @@ m11 = uimenu('Label','Statistics');
 uimenu(m11,'Label','Statistics','Callback',@plot.plot_statistics_Callback,'Accelerator','B');
 m12 = uimenu('Label','Synthetic particle image generation');
 uimenu(m12,'Label','Settings','Callback',@simulate.simulate_part_img_sett_Callback,'Accelerator','G');
-m13 = uimenu('Label','Help / Referencing');
+m13 = uimenu('Label','Learn!');
 uimenu(m13,'Label','List keyboard shortcuts','Callback',@misc.misc_shortcuts_Callback);
 uimenu(m13,'Label','How to cite PIVlab','Callback',@misc.misc_howtocite_Callback);
 uimenu(m13,'Label','Forum','Callback',@misc.misc_Forum_Callback);
-uimenu(m13,'Label','Tutorial / getting started','Callback',@gui.gui_pivlabhelp_Callback,'Accelerator','H');
+uimenu(m13,'Label','Tutorial videos','Callback',@gui.gui_pivlabyoutube_Callback);
+uimenu(m13,'Label','Getting started manual','Callback',@gui.gui_pivlabhelp_Callback,'Accelerator','H');
 uimenu(m13,'Label','About','Callback',@gui.gui_aboutpiv_Callback);
 uimenu(m13,'Label','Website','Callback',@misc.misc_Website_Callback);
 menuhandles = findall(getappdata(0,'hgui'),'type','uimenu'); %das soll gemacht werden laut Hilfe

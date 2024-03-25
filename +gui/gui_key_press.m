@@ -1,6 +1,7 @@
 function gui_key_press(~, event) %General (currently hidden, respectively not documented) keyboard shortcuts in PIVlab
 %display currently pressed key name:
 %disp(event.Key)
+%disp(event.Character)
 if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(event.Modifier{2},'control') %ctrl and shift modifiers
 	if strcmp(event.Key,'c')
 		crosshair_enabled=gui.gui_retr('crosshair_enabled');
@@ -44,4 +45,20 @@ if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(even
 		gui.gui_put('hist_enabled',1-hist_enabled);
 	end
 end
+%{
+if strcmp(event.Key,'uparrow') %
+	old_xlims=get(gca,'xlim');
+	centr=get(gcf(),'CurrentPoint');
+	new_xlims=old_xlims*0.9
+	set(gca,'xlim',new_xlims)
 
+	%zoom(1.1)
+	%get mousepointerpos, pan there....
+
+	get(gca,'xlim')
+end
+if strcmp(event.Key,'downarrow') %
+	disp('downdowndown')
+	zoom(0.9)
+end
+%}
