@@ -36,6 +36,8 @@ switch selected_format
 		formatstring={ '*.jpg','compressed image(s) (*.jpg)'};
 	case 'PDF'
 		formatstring={ '*.pdf','vector images (*.pdf)'};
+	case 'Matlab Figure'
+		formatstring={ '*.fig','Matlab figures (*.fig)'};
 	case 'Archival AVI'
 		formatstring={ '*.avi','uncompressed animation (*.avi)'};
 	case 'MPEG-4'
@@ -135,6 +137,9 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 					else
 						exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','vector','resolution',resolution);
 					end
+				case 'Matlab Figure'
+					set(export_figure,'Name',fullfile(pathname,newfilename),'NumberTitle','on','visible','on','units','pixels','Toolbar','figure','DockControls','on','WindowState','normal','Color','w','WindowStyle','normal');
+					savefig(export_figure,fullfile(pathname,newfilename),'compact');
 				case 'Archival AVI'
 					pixeldata=getframe(export_figure);
 					export_image=frame2im(pixeldata);
@@ -189,4 +194,3 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 	set(handles.fileselector, 'value',startframe)
 	gui.gui_sliderdisp(pivlab_axis)
 end
-

@@ -24,7 +24,7 @@ else
 	msgbox('No analyses yet...')
 end
 %populate the popup menu
-avail_file_formats={'PNG','JPG','PDF'};
+avail_file_formats={'PNG','JPG','PDF','Matlab Figure'};
 
 avail_profiles = VideoWriter.getProfiles();
 ArchivalAVI = find(ismember({avail_profiles.Name},'Archival'),1);

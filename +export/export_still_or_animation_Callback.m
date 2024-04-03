@@ -17,6 +17,10 @@ switch selected_format
 		set(handles.quality_setting,'Enable','Off')
 		set(handles.fps_setting,'Enable','Off')
 		set(handles.resolution_setting,'Enable','On')
+	case 'Matlab Figure'
+		set(handles.quality_setting,'Enable','Off')
+		set(handles.fps_setting,'Enable','Off')
+		set(handles.resolution_setting,'Enable','Off')
 	case 'Archival AVI'
 		set(handles.quality_setting,'Enable','Off')
 		set(handles.fps_setting,'Enable','On')
