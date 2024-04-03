@@ -148,7 +148,7 @@ if get(handles.bg_subtract,'Value')==1
 				end %of for loop and image summing
 				close(hbar);
 
-				%set (handles.preview_preprocess, 'string', 'Apply and preview current frame');
+				set (handles.preview_preprocess, 'string', 'Apply and preview current frame');
 				%divide the sum by the amount of summed images
 				image1_bg=image1/counter;
 				if sequencer==1 %not time-resolved
@@ -182,7 +182,7 @@ if get(handles.bg_subtract,'Value')==1
 				else
 					gui.gui_put('bg_img_B',image1_bg); %timeresolved --> same bg image for a and b
 				end
-				%set(handles.preview_preprocess, 'String', 'Apply and preview current frame');drawnow;
+				set(handles.preview_preprocess, 'String', 'Apply and preview current frame');drawnow;
 				gui.gui_update_progress(0)
 				gui.gui_toolsavailable(1)
 			else % user has checkbox enabled, but doesn't want to calculate the background...
