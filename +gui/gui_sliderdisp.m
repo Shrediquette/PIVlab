@@ -101,6 +101,9 @@ if capturing==0
 			set(target_axis,'xlim',xzoomlimit)
 			set(target_axis,'ylim',yzoomlimit)
 		end
+		if strncmp(get(handles.multip04, 'visible'), 'on',2) %piv settings panel visible
+			piv.piv_dispinterrog
+		end
 		set(target_axis,'YlimMode','manual');set(target_axis,'XlimMode','manual') %in r2014b, vectors are not clipped when set to auto... (?!?)
 		drawnow;
 	end
