@@ -110,6 +110,7 @@ if isempty(fh)
 	end
 	%% check required files
 	tempfilepath = fileparts(which('PIVlab_GUI.m'));
+	addpath(tempfilepath);
 	addpath(fullfile(tempfilepath, 'PIVlab_capture_resources'));
 	try
 		ctr=0;
