@@ -23,6 +23,15 @@ if strcmp(button,'Yes')==1
 		PIVlab_capture_lensctrl (1400,1400,0) %lens needs to be set to neutral otherwise re-enabling power might cause issues
 	catch
 	end
+
+	try
+		hgui = getappdata(0,'hgui');
+		serpo=getappdata(hgui,'serpo');
+		string3='WarningSignDisable!';
+		pause(0.1)
+		writeline(serpo,string3); %disable the lighting of the laser warning sign
+	catch
+	end
 	try
 		delete(hObject);
 	catch

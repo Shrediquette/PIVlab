@@ -17,6 +17,7 @@ if alreadyconnected
 	end
 	string1='WhoAreYou?';
 	string2='WhichFirmWare?';
+	string3='WarningSignEnable!';
 
 	try
 		writeline(serpo,string1);
@@ -53,6 +54,12 @@ if alreadyconnected
 		end
 	catch
 		disp('Error sending WhichFirmware')
+	end
+	try
+		pause(0.3)
+		writeline(serpo,string3); %enable the lighting of the laser warning sign
+	catch
+		disp('Could not enable Laser warning sign')
 	end
 	%%debug messages
 	%{
