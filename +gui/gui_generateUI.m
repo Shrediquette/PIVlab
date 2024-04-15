@@ -532,6 +532,9 @@ item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.mask_optimize = uicontrol(handles.uipanel25_9,'Style','pushbutton','String','Optimize','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask.mask_subdivide_simplify_Callback,'Tag','mask_optimize','TooltipString','Optimize the waypoints of the currently selected mask');
 
 
+item=[0+item(3) item(2) parentitem(3)/2 1.5];
+handles.mask_combine = uicontrol(handles.uipanel25_9,'Style','pushbutton','String','Combine','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask.mask_combine_Callback,'Tag','mask_combine','TooltipString','Combine all overlapping masks of the current frame');
+
 
 
 %panel mask operations
