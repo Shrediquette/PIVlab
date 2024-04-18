@@ -35,7 +35,7 @@ if strcmp(button,'Yes')==1
 	try
 		delete(hObject);
 	catch
-		delete(gcf,'force');
+		close(gcf,'force');
 	end
 end
 
