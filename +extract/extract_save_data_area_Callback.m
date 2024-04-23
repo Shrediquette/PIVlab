@@ -40,6 +40,7 @@ else
 end
 if file_selection_ok
 	write_error=0;
+	cnt=0;
 	for i=startfr:endfr
 		if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			[returned_data, returned_header]=extract.extract_plot_data_area(i,refresh_data);
@@ -65,7 +66,8 @@ if file_selection_ok
 				writecell(returned_data,fullfile(PathName,FileName),'WriteMode','Append');
 			end
 		end
-		gui.gui_update_progress(round(i/(endfr-startfr+1)*100))
+		cnt=cnt+1;
+		gui.gui_update_progress(round(cnt/(endfr-startfr+1)*100))
 	end
 end
 gui.gui_update_progress(0)

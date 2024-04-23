@@ -10,6 +10,7 @@ else
 	endfr=size(resultslist,2);
 end
 selected=0;
+cnt=0;
 for i=startfr:endfr
 	%set(handles.fileselector, 'value',i)
 	%sliderdisp(retr('pivlab_axis'))
@@ -97,7 +98,8 @@ for i=startfr:endfr
 			end
 		end
 	end
-	gui.gui_update_progress(round(i/(endfr-startfr+1)*100))
+	cnt=cnt+1;
+	gui.gui_update_progress(round(cnt/(endfr-startfr+1)*100))
 end
 gui.gui_update_progress(0)
 gui.gui_toolsavailable(1)

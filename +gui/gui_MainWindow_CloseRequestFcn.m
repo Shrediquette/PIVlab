@@ -25,11 +25,13 @@ if strcmp(button,'Yes')==1
 	end
 
 	try
+		
 		hgui = getappdata(0,'hgui');
 		serpo=getappdata(hgui,'serpo');
 		string3='WarningSignDisable!';
-		pause(0.1)
+		pause(1)
 		writeline(serpo,string3); %disable the lighting of the laser warning sign
+		pause(0.5)
 	catch
 	end
 	try
