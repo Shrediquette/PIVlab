@@ -37,7 +37,7 @@ if isempty(fh)
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 	guidata(MainWindow,handles)
 	setappdata(0,'hgui',MainWindow);
-	version = '3.00';
+	version = '3.01';
 	gui.gui_put('PIVver', version);
 	try
 		load('PIVlab_settings_default.mat','build_date');
