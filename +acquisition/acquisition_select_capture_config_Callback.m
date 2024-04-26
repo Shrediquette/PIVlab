@@ -186,6 +186,9 @@ if value == 9 % OPTRONIS
 			gui.gui_put('min_allowed_interframe',222);
 			gui.gui_put('blind_time',111);
 	end
+	if str2double(get(handles.ac_expo,'string')) > 49
+		set(handles.ac_expo,'string','49'); %at least the cyclone 2-2000-m has a max exposure time of 49.99 ms. So default 50 ms will result in error message.
+	end
 	set(handles.ac_fps,'string',avail_freqs);
 	%if get(handles.ac_fps,'value') > numel(avail_freqs)
 	if old_setting ~= value
