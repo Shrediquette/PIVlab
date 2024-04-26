@@ -7,6 +7,8 @@ elseif bitmode==10
 	disp(mfilename)
 	disp('needs testing')
 end
+OPTRONIS_settings = get(OPTRONIS_vid);
+OPTRONIS_settings.Source.EnableFan = 'On';
 hgui=getappdata(0,'hgui');
 OutputError=0;
 OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame;
