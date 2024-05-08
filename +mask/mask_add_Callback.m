@@ -5,7 +5,7 @@ handles=gui.gui_gethand;
 filepath=gui.gui_retr('filepath');
 if size(filepath,1) > 1 %did the user load images?
 	set(handles.mask_edit_mode,'Value',1) %switch to edit mask mode when drawing a new mask.
-	gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'));
+	%gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'));
 	currentframe=floor(get(handles.fileselector, 'value'));
 	masks_in_frame=gui.gui_retr('masks_in_frame');
 	if isempty(masks_in_frame)

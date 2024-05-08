@@ -2,8 +2,8 @@
   <configuration build-checksum="1364226421" file="C:\Users\trash\Documents\MATLAB\PIVlab\PIVlab.prj" location="C:\Users\trash\Documents\MATLAB\PIVlab" name="PIVlab" target="target.mlapps" target-name="Package App">
     <param.appname>PIVlab</param.appname>
     <param.authnamewatermark>William Thielicke and Eize J. Stamhuis</param.authnamewatermark>
-    <param.email />
-    <param.company />
+    <param.email>thielicke@optolution.com</param.email>
+    <param.company>OPTOLUTION Messtechnik GmbH</param.company>
     <param.icon>${PROJECT_ROOT}\PIVlab_resources\icon_24.png</param.icon>
     <param.icons>
       <file>${PROJECT_ROOT}\PIVlab_resources\icon_48.png</file>
@@ -23,8 +23,8 @@
       <item>17</item>
     </param.products.id>
     <param.products.version>
-      <item>9.13</item>
-      <item>11.6</item>
+      <item>9.14</item>
+      <item>11.7</item>
     </param.products.version>
     <param.platforms />
     <param.output>${PROJECT_ROOT}</param.output>
@@ -88,7 +88,7 @@
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>C:\Program Files\MATLAB\R2022b</root>
+      <root>C:\Program Files\MATLAB\R2023a</root>
       <toolboxes />
     </matlab>
     <platform>

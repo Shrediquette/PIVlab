@@ -499,25 +499,33 @@ item=[0 item(2)+item(4) parentitem(3) 1.5];
 handles.automask_generate_all = uicontrol(handles.uipanel25_2,'Style','pushbutton','String','Make mask for all frames','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask.mask_automask_generate_all_Callback,'Tag','automask_generate_all','TooltipString','Automatic generation of a mask for all frames');
 
 
+%panel image display options 
+parentitem=get(handles.multip25, 'Position');
+item=[0 12 parentitem(3) 5];
+handles.uipanel25_10 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Image display options', 'Tag','uipanel25_10','fontweight','bold');
 
+parentitem=get(handles.uipanel25_10, 'Position');
+item=[0 0 parentitem(3)/2 1.5];
+handles.mask_display_brighter = uicontrol(handles.uipanel25_10,'Style','pushbutton','String','Brighter','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask.mask_display_brighter_darker_Callback,'Tag','mask_display_brighter','TooltipString','increase brightness');
 
+item=[parentitem(3)/2 0 parentitem(3)/2 1.5];
+handles.mask_display_darker = uicontrol(handles.uipanel25_10,'Style','pushbutton','String','Darker','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask.mask_display_brighter_darker_Callback,'Tag','mask_display_darker','TooltipString','decrease brightness');
 
+item=[0 0+item(4) parentitem(3)/2 1.5];
+handles.mask_display_average = uicontrol(handles.uipanel25_10,'Style','pushbutton','String','Display average','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask.mask_display_average_Callback,'Tag','mask_display_average','TooltipString','Show the mean image');
 
 
 %panel mask modifications
-item=[0 0 0 0];
 parentitem=get(handles.multip25, 'Position');
 item=[0 18 parentitem(3) 6.5];
 handles.uipanel25_9 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Mask modifications', 'Tag','uipanel25_9','fontweight','bold');
 
-item=[0 0 0 0];
 parentitem=get(handles.uipanel25_9, 'Position');
 item=[0 0 parentitem(3)/2 1.5];
 handles.mask_shrink = uicontrol(handles.uipanel25_9,'Style','pushbutton','String','Shrink mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask.mask_shrink_grow_Callback,'Tag','mask_shrink','TooltipString','Shrink the currently selected mask');
 
 item=[0+item(3) item(2) parentitem(3)/2 1.5];
 handles.mask_grow = uicontrol(handles.uipanel25_9,'Style','pushbutton','String','Grow mask','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask.mask_shrink_grow_Callback,'Tag','mask_grow','TooltipString','Enlarge the currently selected mask');
-
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.mask_simplify = uicontrol(handles.uipanel25_9,'Style','pushbutton','String','Simplify','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask.mask_subdivide_simplify_Callback,'Tag','mask_simplify','TooltipString','Simplify the currently selected mask');
