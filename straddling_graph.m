@@ -154,6 +154,8 @@ end
 
 function straddling_figure_CloseRequestFcn(hObject, ~, ~)
 try
+	handles=guihandles(getappdata(0,'hgui')); %#ok<*NASGU>
+	set(handles.ac_enable_straddling_figure,'Value',0);
 	delete(hObject);
 catch
 	delete(gcf);
