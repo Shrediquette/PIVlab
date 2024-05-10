@@ -1,4 +1,9 @@
 function acquisition_piv_capture_Callback(~,~,~)
+try
+	acquisition.acquisition_control_simple_sync_serial(0,0);
+catch
+	keyboard
+end
 gui.gui_put('capturing',0);
 filepath = fileparts(which('PIVlab_GUI.m'));
 camera_type=gui.gui_retr('camera_type');
