@@ -181,10 +181,10 @@ if value == 9 % OPTRONIS
 			gui.gui_put('blind_time',25);
 		otherwise
 			disp('Camera detection unsuccesful.')
-			avail_freqs={'5' '4' '3' '2' '1'};
-			gui.gui_put('max_cam_res',[100,100]);
-			gui.gui_put('min_allowed_interframe',222);
-			gui.gui_put('blind_time',111);
+			avail_freqs={'2165' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
+			gui.gui_put('max_cam_res',[1920,1080]);
+			gui.gui_put('min_allowed_interframe',20);
+			gui.gui_put('blind_time',3);
 	end
 	if str2double(get(handles.ac_expo,'string')) > 49
 		set(handles.ac_expo,'string','49'); %at least the cyclone 2-2000-m has a max exposure time of 49.99 ms. So default 50 ms will result in error message.
