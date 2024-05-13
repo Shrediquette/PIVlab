@@ -234,6 +234,11 @@ for multipass = 1:passes
 		BATCHSIZE = 200;
 		image1_cut = zeros([interrogationarea interrogationarea BATCHSIZE], convert_image_class_type);
 		image2_cut = zeros([interrogationarea interrogationarea BATCHSIZE], convert_image_class_type);
+		keep_all_images_in_memory=0; %keep all sub images in memory for later experiments or tests.
+		if keep_all_images_in_memory
+			all_sub_images_1 = result_conv; %if desired: keep all matrices in memory
+			all_sub_images_2 = result_conv; %if desired: keep all matrices in memory
+		end
 		for batch_offset = 0:BATCHSIZE:N-1
 			batch_len = min(BATCHSIZE, N-batch_offset);
 			if batch_len < BATCHSIZE
@@ -256,6 +261,10 @@ for multipass = 1:passes
 			end
 			% Do 2D FFT
 			result_conv(:,:,batch_offset+(1:batch_len)) = do_correlations(image1_cut, image2_cut, do_pad, interrogationarea);
+			if keep_all_images_in_memory
+				all_sub_images_1(:,:,batch_offset+(1:batch_len))= image1_cut;%if desired: keep all matrices in memory
+				all_sub_images_2(:,:,batch_offset+(1:batch_len))= image2_cut;%if desired: keep all matrices in memory
+			end
 		end
 
 		%% repeated correlation
@@ -452,15 +461,14 @@ for multipass = 1:passes
 	
 end
 
-
 %{
 %mal alle daten die ich brauche speichern. Als Beispielsatz. Dann damit experimentieren wie in echt...
 %% Hier uncertainty...?
 %Die Werte sind viel zu hoch, im Prinzip folgen sie aber den Erwartungen.
 Das Problem wird meine Partikelpäarchenfinder sein. Evtl. doch aus dem Beispiel klauen...
 %lowpass filter
-image1_cut = imfilter(image1_cut,fspecial('gaussian',[3 3]));
-image2_cut = imfilter(image2_cut,fspecial('gaussian',[3 3]));
+image1_cut = imfilter(all_sub_images_1,fspecial('gaussian',[3 3]));
+image2_cut = imfilter(all_sub_images_2,fspecial('gaussian',[3 3]));
 
 multiplied_images = image1_cut(:,:,:) .* image1_cut(:,:,:);
 max_val=max(multiplied_images,[],[1 2]); %maximum for each slice
@@ -505,8 +513,6 @@ xdisparity (xdisparity>1.5 | xdisparity<-1.5)=nan;
 ydisparity (ydisparity>1.5 | ydisparity<-1.5)=nan;
 
 total_disparity=(xdisparity.^2+ydisparity.^2).^0.5;
-
-
 
 per_slice_stdev=zeros(size(multiplied_images,3),1);
 per_slice_mean=zeros(size(multiplied_images,3),1);
