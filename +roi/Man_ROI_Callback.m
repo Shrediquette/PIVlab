@@ -28,7 +28,7 @@ if size(filepath,1) >1 || gui.retr('video_selection_done') == 1
 			roirect(4)=imagesize(1)-roirect(2);
 		end
 		gui.put ('roirect',roirect);
-		roi_1.roi_select_Callback
+		roi.select_Callback
 	end
 end
 

@@ -27,15 +27,15 @@ switch(evname)
 			src.Position(4)=50;
 			pause(1)
 			delete(findobj('tag', 'RegionOfInterest'))
-			roi_1.roi_clear_roi_Callback
+			roi.clear_roi_Callback
 		else
 			src.Label = ['x: ' num2str(roirect(1)) '   y: ' num2str(roirect(2)) '   w: ' num2str(roirect(3)) '   h: ' num2str(roirect(4))];
 			gui.put('roirect',roirect);
-			roi_1.roi_updateROIinfo
+			roi.updateROIinfo
 		end
 
 	case{'DeletingROI'}
 		delete(findobj('tag', 'RegionOfInterest'))
-		roi_1.roi_clear_roi_Callback
+		roi.clear_roi_Callback
 end
 

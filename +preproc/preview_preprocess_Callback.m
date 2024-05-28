@@ -38,7 +38,7 @@ if size(filepath,1) >1 || gui.retr('video_selection_done') == 1
 	set(gca,'xtick',[]);
 	roirect=gui.retr('roirect');
 	if size(roirect,2)>1
-		roi_1.roi_dispStaticROI(gui.retr('pivlab_axis'))
+		roi.dispStaticROI(gui.retr('pivlab_axis'))
 	end
 	currentframe=2*floor(get(handles.fileselector, 'value'))-1;
 end

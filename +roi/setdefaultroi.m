@@ -119,6 +119,6 @@ if ~isempty(gui.retr('doing_roi')) && gui.retr('doing_roi')==1
 	set(findobj('tag','new_ROImethod'), 'Position',[min_x,min_y,img_size(1),img_size(2)])
 	evt.EventName='ROIMoved';
 	evt.CurrentPosition=[min_x,min_y,img_size(1),img_size(2)];
-	roi_1.roi_ROIallevents(ac_ROI_general_handle,evt)
+	roi.ROIallevents(ac_ROI_general_handle,evt)
 end
 

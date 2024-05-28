@@ -144,7 +144,7 @@ if ~isequal(path,0)
 		if old_img_size ~= 0%ROI should be cleared only when image size of loaded imgs is different from before...
 			new_img_size=size(import.get_img(1));
 			if new_img_size(1) ~= old_img_size(1) || new_img_size(2) ~= old_img_size(2)
-				roi_1.roi_clear_roi_Callback
+				roi.clear_roi_Callback
 			end
 		end
 

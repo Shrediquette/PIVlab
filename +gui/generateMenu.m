@@ -20,7 +20,7 @@ m4 = uimenu(m1,'Label','Exit','Separator','on','Callback',@gui.exitpivlab_Callba
 m51 = uimenu('Label','Image acquisition');
 uimenu(m51,'Label','Capture PIV images','Callback',@acquisition.capture_images_Callback);
 m5 = uimenu('Label','Image settings');
-uimenu(m5,'Label','Define region of interest (ROI)','Callback',@roi_1.roi_img_ROI_Callback,'Accelerator','E');
+uimenu(m5,'Label','Define region of interest (ROI)','Callback',@roi.img_ROI_Callback,'Accelerator','E');
 uimenu(m5,'Label','Define masks to exclude regions from analysis','Callback',@mask.img_mask_new_Callback);
 uimenu(m5,'Label','Image pre-processing','Callback',@preproc.Uielement_Callback,'Accelerator','I');
 m6 = uimenu('Label','Analysis');

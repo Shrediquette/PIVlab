@@ -1,6 +1,6 @@
 function pos = customWait(hROI)
 % Listen for mouse clicks on the ROI
-l = addlistener(hROI,'ROIClicked',@roi_1.roi_ROIclickCallback);
+l = addlistener(hROI,'ROIClicked',@roi.ROIclickCallback);
 % Block program execution
 uiwait;
 % Remove listener

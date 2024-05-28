@@ -19,7 +19,7 @@ else
 			gui.put('binning',1)
 		else
 			gui.put('binning',str2double(answer{1}));
-			roi_1.roi_clear_roi_Callback %PIV-ROI must be cleared when camera resolution is chnaged.
+			roi.clear_roi_Callback %PIV-ROI must be cleared when camera resolution is chnaged.
 		end
 		if answer{1} ~= definput{1}
 			set(handles.ac_realtime,'Value',0);%reset realtime roi

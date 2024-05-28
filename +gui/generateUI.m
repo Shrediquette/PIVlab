@@ -128,10 +128,10 @@ item=[0 item(2)+item(4) parentitem(3) 1.5];
 handles.roi_hint = uicontrol(handles.uipanel5,'Style','text','units','characters','Horizontalalignment', 'center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','ROI inactive','tag','roi_hint');
 
 item=[0 item(2)+item(4) parentitem(3)/2 2];
-handles.roi_select = uicontrol(handles.uipanel5,'Style','pushbutton','String','Select ROI','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @roi_1.roi_select_Callback,'Tag','roi_select','TooltipString','Draw a rectangle for selecting a region of interest');
+handles.roi_select = uicontrol(handles.uipanel5,'Style','pushbutton','String','Select ROI','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @roi.select_Callback,'Tag','roi_select','TooltipString','Draw a rectangle for selecting a region of interest');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
-handles.clear_roi = uicontrol(handles.uipanel5,'Style','pushbutton','String','Clear ROI','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @roi_1.roi_clear_roi_Callback,'Tag','clear_roi','TooltipString','Remove the ROI');
+handles.clear_roi = uicontrol(handles.uipanel5,'Style','pushbutton','String','Clear ROI','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @roi.clear_roi_Callback,'Tag','clear_roi','TooltipString','Remove the ROI');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3)/5 1.5];
 handles.text155 = uicontrol(handles.uipanel5,'Style','text','units','characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','x:');
@@ -146,16 +146,16 @@ item=[parentitem(3)/4*3 item(2) parentitem(3)/3 1.5];
 handles.text158 = uicontrol(handles.uipanel5,'Style','text','units','characters','Horizontalalignment', 'left','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','height:');
 
 item=[parentitem(3)/4*0+margin item(2)+item(4) parentitem(3)/4 1.5];
-handles.ROI_Man_x = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_x','Callback',@roi_1.roi_Man_ROI_Callback);
+handles.ROI_Man_x = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_x','Callback',@roi.Man_ROI_Callback);
 
 item=[parentitem(3)/4*1+margin item(2) parentitem(3)/4 1.5];
-handles.ROI_Man_y = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_y','Callback',@roi_1.roi_Man_ROI_Callback);
+handles.ROI_Man_y = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_y','Callback',@roi.Man_ROI_Callback);
 
 item=[parentitem(3)/4*2+margin item(2) parentitem(3)/4 1.5];
-handles.ROI_Man_w = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_w','Callback',@roi_1.roi_Man_ROI_Callback);
+handles.ROI_Man_w = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_w','Callback',@roi.Man_ROI_Callback);
 
 item=[parentitem(3)/4*3+margin item(2) parentitem(3)/4 1.5];
-handles.ROI_Man_h = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_h','Callback',@roi_1.roi_Man_ROI_Callback);
+handles.ROI_Man_h = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_h','Callback',@roi.Man_ROI_Callback);
 
 
 %% Multip25 (new mask)

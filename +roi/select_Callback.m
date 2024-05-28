@@ -29,10 +29,10 @@ if size(filepath,1) > 1 || gui.retr('video_selection_done') == 1
 		axes(gui.retr('pivlab_axis'))
 		draw(roi);
 	end
-	addlistener(roi,'MovingROI',@roi_1.roi_RegionOfInterestevents);
-	addlistener(roi,'DeletingROI',@roi_1.roi_RegionOfInterestevents);
+	addlistener(roi,'MovingROI',@roi.roi_RegionOfInterestevents);
+	addlistener(roi,'DeletingROI',@roi.roi_RegionOfInterestevents);
 	dummyevt.EventName = 'MovingROI';
-	roi_1.roi_RegionOfInterestevents(roi,dummyevt); %run the moving event once to update displayed length
+	roi.RegionOfInterestevents(roi,dummyevt); %run the moving event once to update displayed length
 	%put ('roirect',roi.Position);
 	gui.toolsavailable(1);
 end

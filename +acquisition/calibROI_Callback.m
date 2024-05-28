@@ -70,37 +70,37 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 			stretched_image=adapthisteq(bla.CData);
 			bla.CData=stretched_image;
 			ac_ROI_general_handle = drawrectangle(gca,'Position',ac_ROI_general,'LabelVisible','hover','Deletable',0,'DrawingArea',[1 1 current_image_size(2) current_image_size(1)],'tag','new_ROImethod','StripeColor','y');
-			addlistener(ac_ROI_general_handle,'MovingROI',@roi_1.roi_ROIallevents);
-			addlistener(ac_ROI_general_handle,'ROIMoved',@roi_1.roi_ROIallevents);
+			addlistener(ac_ROI_general_handle,'MovingROI',@roi.ROIallevents);
+			addlistener(ac_ROI_general_handle,'ROIMoved',@roi.ROIallevents);
 			evt.EventName='ROIMoved';
 			evt.CurrentPosition=ac_ROI_general;
-			roi_1.roi_ROIallevents(ac_ROI_general_handle,evt)
+			roi.ROIallevents(ac_ROI_general_handle,evt)
 
 			c_menu = uicontextmenu;
 			ac_ROI_general_handle.UIContextMenu = c_menu;
 
 			if strcmp(camera_type,'pco_panda')
-				m0 = uimenu(c_menu,'Label','pco.panda 45 Hz','Callback',@roi_1.roi_setdefaultroi);
-				m1 = uimenu(c_menu,'Label','pco.panda 22.5 Hz','Callback',@roi_1.roi_setdefaultroi);
-				m2 = uimenu(c_menu,'Label','pco.panda 15 Hz','Callback',@roi_1.roi_setdefaultroi);
-				m3 = uimenu(c_menu,'Label','pco.panda 7.5 Hz','Callback',@roi_1.roi_setdefaultroi);
-				m4 = uimenu(c_menu,'Label','pco.panda 5 Hz','Callback',@roi_1.roi_setdefaultroi);
-				m5 = uimenu(c_menu,'Label','pco.panda 3 Hz','Callback',@roi_1.roi_setdefaultroi);
-				m6 = uimenu(c_menu,'Label','pco.panda 1 Hz','Callback',@roi_1.roi_setdefaultroi);
-				m7 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_1.roi_setdefaultroi);
+				m0 = uimenu(c_menu,'Label','pco.panda 45 Hz','Callback',@roi.setdefaultroi);
+				m1 = uimenu(c_menu,'Label','pco.panda 22.5 Hz','Callback',@roi.setdefaultroi);
+				m2 = uimenu(c_menu,'Label','pco.panda 15 Hz','Callback',@roi.setdefaultroi);
+				m3 = uimenu(c_menu,'Label','pco.panda 7.5 Hz','Callback',@roi.setdefaultroi);
+				m4 = uimenu(c_menu,'Label','pco.panda 5 Hz','Callback',@roi.setdefaultroi);
+				m5 = uimenu(c_menu,'Label','pco.panda 3 Hz','Callback',@roi.setdefaultroi);
+				m6 = uimenu(c_menu,'Label','pco.panda 1 Hz','Callback',@roi.setdefaultroi);
+				m7 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
 			end
 			if strcmp(camera_type,'basler')
-				m0 = uimenu(c_menu,'Label','Basler 2048x1088','Callback',@roi_1.roi_setdefaultroi);
-				m1 = uimenu(c_menu,'Label','Basler 1280x720','Callback',@roi_1.roi_setdefaultroi);
-				m2 = uimenu(c_menu,'Label','Basler 1024x1024','Callback',@roi_1.roi_setdefaultroi);
-				m3 = uimenu(c_menu,'Label','Basler 640x480','Callback',@roi_1.roi_setdefaultroi);
-				m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_1.roi_setdefaultroi);
+				m0 = uimenu(c_menu,'Label','Basler 2048x1088','Callback',@roi.setdefaultroi);
+				m1 = uimenu(c_menu,'Label','Basler 1280x720','Callback',@roi.setdefaultroi);
+				m2 = uimenu(c_menu,'Label','Basler 1024x1024','Callback',@roi.setdefaultroi);
+				m3 = uimenu(c_menu,'Label','Basler 640x480','Callback',@roi.setdefaultroi);
+				m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
 			end
 			if strcmp(camera_type,'OPTOcam')
-				m0 = uimenu(c_menu,'Label','OPTOcam 1936x1216 (8bit: 160 fps, 12bit: 80 fps)','Callback',@roi_1.roi_setdefaultroi);
-				m1 = uimenu(c_menu,'Label','OPTOcam 1600x600 (8bit: 320 fps)','Callback',@roi_1.roi_setdefaultroi);
-				m2 = uimenu(c_menu,'Label','OPTOcam 1600x480 (8bit: 400 fps)','Callback',@roi_1.roi_setdefaultroi);
-				m3 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_1.roi_setdefaultroi);
+				m0 = uimenu(c_menu,'Label','OPTOcam 1936x1216 (8bit: 160 fps, 12bit: 80 fps)','Callback',@roi.setdefaultroi);
+				m1 = uimenu(c_menu,'Label','OPTOcam 1600x600 (8bit: 320 fps)','Callback',@roi.setdefaultroi);
+				m2 = uimenu(c_menu,'Label','OPTOcam 1600x480 (8bit: 400 fps)','Callback',@roi.setdefaultroi);
+				m3 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
 			end
 
 			if strcmp(camera_type,'OPTRONIS')
@@ -109,23 +109,23 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 				camera_sub_type=gui.retr('camera_sub_type');
 				switch camera_sub_type
 					case 'Cyclone-2-2000-M'
-						m0 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1920x1080 (max. 2165 fps)','Callback',@roi_1.roi_setdefaultroi);
-						m1 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x800 (max. 3100 fps)','Callback',@roi_1.roi_setdefaultroi);
-						m2 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x480 (max. 5142 fps)','Callback',@roi_1.roi_setdefaultroi);
-						m3 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1024x240 (max. 10150 fps)','Callback',@roi_1.roi_setdefaultroi);
-						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_1.roi_setdefaultroi);
+						m0 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1920x1080 (max. 2165 fps)','Callback',@roi.setdefaultroi);
+						m1 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x800 (max. 3100 fps)','Callback',@roi.setdefaultroi);
+						m2 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x480 (max. 5142 fps)','Callback',@roi.setdefaultroi);
+						m3 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1024x240 (max. 10150 fps)','Callback',@roi.setdefaultroi);
+						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
 					case 'Cyclone-1HS-3500-M'
-						m0 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x860 (max. 3500 fps)','Callback',@roi_1.roi_setdefaultroi);
-						m1 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x640 (max. 4700 fps)','Callback',@roi_1.roi_setdefaultroi);
-						m2 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x320 (max. 9340 fps)','Callback',@roi_1.roi_setdefaultroi);
-						m3 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x240 (max. 12350 fps)','Callback',@roi_1.roi_setdefaultroi);
-						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_1.roi_setdefaultroi);
+						m0 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x860 (max. 3500 fps)','Callback',@roi.setdefaultroi);
+						m1 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x640 (max. 4700 fps)','Callback',@roi.setdefaultroi);
+						m2 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x320 (max. 9340 fps)','Callback',@roi.setdefaultroi);
+						m3 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x240 (max. 12350 fps)','Callback',@roi.setdefaultroi);
+						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
 					case 'Cyclone-25-150-M'
-						m0 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x5120 (max. 150 fps)','Callback',@roi_1.roi_setdefaultroi);
-						m1 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x2160 (max. 350 fps)','Callback',@roi_1.roi_setdefaultroi);
-						m2 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x1080 (max. 695 fps)','Callback',@roi_1.roi_setdefaultroi);
-						m3 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x720 (max. 1025 fps)','Callback',@roi_1.roi_setdefaultroi);
-						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi_1.roi_setdefaultroi);
+						m0 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x5120 (max. 150 fps)','Callback',@roi.setdefaultroi);
+						m1 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x2160 (max. 350 fps)','Callback',@roi.setdefaultroi);
+						m2 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x1080 (max. 695 fps)','Callback',@roi.setdefaultroi);
+						m3 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x720 (max. 1025 fps)','Callback',@roi.setdefaultroi);
+						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
 					otherwise
 
 				end

@@ -57,7 +57,7 @@ if capturing==0
 
 		roirect=gui.retr('roirect');
 		if size(roirect,2)>1
-			roi_1.roi_dispStaticROI(target_axis);
+			roi.dispStaticROI(target_axis);
 		end
 
 		resultslist=gui.retr('resultslist');
