@@ -1,4 +1,4 @@
-function mask_generator_settings=get_generator_settings()
+function mask_generator_settings=get_mask_generator_settings()
 handles=gui.gethand;
 
 mask_generator_settings.binarize_enable = get(handles.binarize_enable,'Value');

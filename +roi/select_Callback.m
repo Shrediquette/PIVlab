@@ -8,31 +8,31 @@ if size(filepath,1) > 1 || gui.retr('video_selection_done') == 1
 	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
 	filepath=gui.retr('filepath');
 	delete(findobj('tag', 'RegionOfInterest'));
-	roi = images.roi.Rectangle;
+	regionOfInterest = images.roi.Rectangle;
 	%roi.EdgeAlpha=0.75;
-	roi.FaceAlpha=0.05;
-	roi.LabelVisible = 'on';
-	roi.Tag = 'RegionOfInterest';
-	roi.Color = 'g';
-	roi.StripeColor = 'k';
+	regionOfInterest.FaceAlpha=0.05;
+	regionOfInterest.LabelVisible = 'on';
+	regionOfInterest.Tag = 'RegionOfInterest';
+	regionOfInterest.Color = 'g';
+	regionOfInterest.StripeColor = 'k';
 	roirect = gui.retr('roirect');
 	delete(findobj('tag', 'roiplot'));
 	if ~isempty(roirect)
-		roi=drawrectangle(gui.retr('pivlab_axis'),'Position',roirect);
+		regionOfInterest=drawrectangle(gui.retr('pivlab_axis'),'Position',roirect);
 		%roi.EdgeAlpha=0.75;
-		roi.FaceAlpha=0.05;
-		roi.LabelVisible = 'on';
-		roi.Tag = 'RegionOfInterest';
-		roi.Color = 'g';
-		roi.StripeColor = 'k';
+		regionOfInterest.FaceAlpha=0.05;
+		regionOfInterest.LabelVisible = 'on';
+		regionOfInterest.Tag = 'RegionOfInterest';
+		regionOfInterest.Color = 'g';
+		regionOfInterest.StripeColor = 'k';
 	else
 		axes(gui.retr('pivlab_axis'))
-		draw(roi);
+		draw(regionOfInterest);
 	end
-	addlistener(roi,'MovingROI',@roi.roi_RegionOfInterestevents);
-	addlistener(roi,'DeletingROI',@roi.roi_RegionOfInterestevents);
+	addlistener(regionOfInterest,'MovingROI',@regionOfInterest.RegionOfInterestevents);
+	addlistener(regionOfInterest,'DeletingROI',@regionOfInterest.RegionOfInterestevents);
 	dummyevt.EventName = 'MovingROI';
-	roi.RegionOfInterestevents(roi,dummyevt); %run the moving event once to update displayed length
+	roi.RegionOfInterestevents(regionOfInterest,dummyevt); %run the moving event once to update displayed length
 	%put ('roirect',roi.Position);
 	gui.toolsavailable(1);
 end

@@ -1,4 +1,4 @@
-function masks_in_frame = update_memory(roi,frame,masks_in_frame)
+function masks_in_frame = update_mask_memory(roi,frame,masks_in_frame)
 
 if isempty(masks_in_frame)
 	%masks_in_frame=cell(frame,1);

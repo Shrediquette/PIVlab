@@ -1,4 +1,4 @@
-function pixel_mask=pixel_from_piv_image(piv_image_A,piv_image_B,mask_generator_settings)
+function pixel_mask=pixel_mask_from_piv_image(piv_image_A,piv_image_B,mask_generator_settings)
 
 %% bright mask
 if size(piv_image_A,3)>1
