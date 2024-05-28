@@ -34,11 +34,11 @@ delete(findobj('UserData','ROI_object_polygon'));
 delete(findobj('UserData','ROI_object_external'));
 
 converted_mask = logical(editedMask); %adds all elements
-masks_in_frame = gui.gui_retr('masks_in_frame');
-handles=gui.gui_gethand;
+masks_in_frame = gui.retr('masks_in_frame');
+handles=gui.gethand;
 current_mask_nr=floor(get(handles.fileselector, 'value'));
 masks_in_frame{1,current_mask_nr}={}; %remove existing before combining
 blocations = bwboundaries(converted_mask,'holes');
-masks_in_frame=mask.mask_px_to_rois(blocations,current_mask_nr,masks_in_frame);%apply mask at the current frame and the following frames.
-gui.gui_put('masks_in_frame',masks_in_frame);
-gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'));
+masks_in_frame=mask.px_to_rois(blocations,current_mask_nr,masks_in_frame);%apply mask at the current frame and the following frames.
+gui.put('masks_in_frame',masks_in_frame);
+gui.sliderdisp(gui.retr('pivlab_axis'));

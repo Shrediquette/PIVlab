@@ -30,10 +30,10 @@ end
 %}
 
 try
-	pivlab_axis=gui.gui_retr('pivlab_axis');
+	pivlab_axis=gui.retr('pivlab_axis');
 	image(logoimg, 'parent', pivlab_axis,'interpolation','bilinear');
 catch
-	pivlab_axis=gui.gui_retr('pivlab_axis');
+	pivlab_axis=gui.retr('pivlab_axis');
 	image(logoimg, 'parent', pivlab_axis);
 end
 set(gca, 'xcolor', [0.94 0.94 0.94], 'ycolor', [0.94 0.94 0.94]) ;
@@ -45,10 +45,10 @@ set(gca, 'xlim', [1 size(logoimg,2)]);
 set(gca, 'ylim', [1 size(logoimg,1)]);
 
 set(gca, 'ydir', 'reverse'); %750%582
-text (1025,800,['version: ' gui.gui_retr('PIVver')], 'fontsize', 10,'horizontalalignment','right');
-text (1025,800,['   ' sprintf('\n') gui.gui_retr('update_msg')], 'fontsize', 10,'fontangle','italic','horizontalalignment','right','Color',gui.gui_retr('update_msg_color'),'verticalalignment','top');
-imgproctoolbox=gui.gui_retr('imgproctoolbox');
-gui.gui_put('imgproctoolbox',[]);
+text (1025,800,['version: ' gui.retr('PIVver')], 'fontsize', 10,'horizontalalignment','right');
+text (1025,800,['   ' sprintf('\n') gui.retr('update_msg')], 'fontsize', 10,'fontangle','italic','horizontalalignment','right','Color',gui.retr('update_msg_color'),'verticalalignment','top');
+imgproctoolbox=gui.retr('imgproctoolbox');
+gui.put('imgproctoolbox',[]);
 if imgproctoolbox==0
 	text (90,200,'Image processing toolbox not found!', 'fontsize', 16, 'color', [1 0 0], 'backgroundcolor', [0 0 0]);
 end

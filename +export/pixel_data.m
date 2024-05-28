@@ -1,6 +1,6 @@
 function pixel_data(~, ~, ~)
-handles=gui.gui_gethand;
-resultslist=gui.gui_retr('resultslist');
+handles=gui.gethand;
+resultslist=gui.retr('resultslist');
 if size(resultslist,2)>=1
 	startframe=0;
 	endframe=0;
@@ -15,11 +15,11 @@ if size(resultslist,2)>=1
 	set(handles.firstframe, 'String',int2str(startframe));
 	set(handles.lastframe, 'String',int2str(endframe));
 	if strmatch(get(handles.multip08, 'visible'), 'on')
-		gui.gui_put('p8wasvisible',1)
+		gui.put('p8wasvisible',1)
 	else
-		gui.gui_put('p8wasvisible',0)
+		gui.put('p8wasvisible',0)
 	end
-	gui.gui_switchui('multip16');
+	gui.switchui('multip16');
 else
 	msgbox('No analyses yet...')
 end
@@ -37,5 +37,5 @@ if ~isempty(MPEG4)
 	avail_file_formats = [avail_file_formats {'MPEG-4'}];
 end
 set(handles.export_still_or_animation,'String',avail_file_formats)
-export.export_still_or_animation_Callback()
+export.still_or_animation_Callback()
 

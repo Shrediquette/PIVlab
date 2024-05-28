@@ -1,8 +1,8 @@
 function display_manual_markers(target_axis,handles)
 %manualmarkers
 if get(handles.displmarker,'value')==1
-	manmarkersX=gui.gui_retr('manmarkersX');
-	manmarkersY=gui.gui_retr('manmarkersY');
+	manmarkersX=gui.retr('manmarkersX');
+	manmarkersY=gui.retr('manmarkersY');
 	delete(findobj('tag','manualmarker'));
 	if numel(manmarkersX)>0
 		hold on

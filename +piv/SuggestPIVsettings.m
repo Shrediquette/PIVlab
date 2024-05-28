@@ -1,8 +1,8 @@
 function SuggestPIVsettings(~, ~, ~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 selected=2*floor(get(handles.fileselector, 'value'))-1;
-filepath=gui.gui_retr('filepath');
-ok=gui.gui_checksettings;
+filepath=gui.retr('filepath');
+ok=gui.checksettings;
 if ok==1
 	uiwait(msgbox({'Please select a rectangle';'that encloses the area that';'you want to analyze.'},'Suggestion for PIV settings','modal'));
 	roi = images.roi.Rectangle;
@@ -11,7 +11,7 @@ if ok==1
 	roi.Tag = 'suggestRect';
 	roi.Color = 'r';
 	roi.StripeColor = 'k';
-	axes(gui.gui_retr('pivlab_axis'))
+	axes(gui.retr('pivlab_axis'))
 	draw(roi);
 	roirect=round(roi.Position);
 
@@ -22,8 +22,8 @@ if ok==1
 		else
 			text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
 			drawnow
-			[A,~] = import.import_get_img(selected);
-			[B,~] = import.import_get_img(selected+1);
+			[A,~] = import.get_img(selected);
+			[B,~] = import.get_img(selected+1);
 			A=A(roirect(2):roirect(2)+roirect(4),roirect(1):roirect(1)+roirect(3));
 			B=B(roirect(2):roirect(2)+roirect(4),roirect(1):roirect(1)+roirect(3));
 			clahe=get(handles.clahe_enable,'value');
@@ -33,8 +33,8 @@ if ok==1
 			highpsize=str2double(get(handles.highp_size, 'string'));
 			wienerwurst=get(handles.wienerwurst, 'value');
 			wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-			do_correlation_matrices=gui.gui_retr('do_correlation_matrices');
-			roirect=gui.gui_retr('roirect');
+			do_correlation_matrices=gui.retr('do_correlation_matrices');
+			roirect=gui.retr('roirect');
 			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
 				stretcher = stretchlim(A);
 				minintens = stretcher(1);
@@ -96,15 +96,15 @@ if ok==1
 			%set(handles.Repeated_box,'value',0);
 			set(handles.CorrQuality,'value',1)
 			set(handles.mask_auto_box,'value',0);
-			piv.piv_pass2_checkbox_Callback(handles.checkbox26)
-			piv.piv_pass3_checkbox_Callback(handles.checkbox27)
-			piv.piv_pass4_checkbox_Callback(handles.checkbox28)
-			piv.piv_pass2_size_Callback(handles.edit50)
-			piv.piv_pass3_size_Callback(handles.edit51)
-			piv.piv_pass4_size_Callback(handles.edit52)
-			piv.piv_fftmulti_Callback(handles.fftmulti)
-			piv.piv_step_Callback(handles.step)
-			piv.piv_dispinterrog
+			piv.pass2_checkbox_Callback(handles.checkbox26)
+			piv.pass3_checkbox_Callback(handles.checkbox27)
+			piv.pass4_checkbox_Callback(handles.checkbox28)
+			piv.pass2_size_Callback(handles.edit50)
+			piv.pass3_size_Callback(handles.edit51)
+			piv.pass4_size_Callback(handles.edit52)
+			piv.fftmulti_Callback(handles.fftmulti)
+			piv.step_Callback(handles.step)
+			piv.dispinterrog
 			delete(findobj('tag','hint'));
 		end
 	end

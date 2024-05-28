@@ -1,9 +1,9 @@
 function dispinterrog
-handles=gui.gui_gethand;
+handles=gui.gethand;
 selected=2*floor(get(handles.fileselector, 'value'))-1;
-filepath=gui.gui_retr('filepath');
+filepath=gui.retr('filepath');
 if numel(filepath)>1
-	[image_dummy,~]=import.import_get_img(selected);
+	[image_dummy,~]=import.get_img(selected);
 	size_img(1)=size(image_dummy,2)/2;
 	size_img(2)=size(image_dummy,1)/2;
 	step=str2double(get(handles.step,'string'));
@@ -71,10 +71,10 @@ if numel(filepath)>1
 		sizeerror=0;
 	end
 
-	roirect=gui.gui_retr('roirect');
+	roirect=gui.retr('roirect');
 
 	if isempty(roirect) == 0 %roi eingeschaltet
-		roirect=gui.gui_retr('roirect');
+		roirect=gui.retr('roirect');
 		minisize=min([roirect(3) roirect(4)]);
 	else
 		minisize=min([size_img(1) size_img(2)]);

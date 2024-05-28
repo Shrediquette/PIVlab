@@ -1,24 +1,24 @@
 function filtervectors(frame)
 %executes filters one after another, writes results to resultslist 7,8,9
-handles=gui.gui_gethand;
-resultslist=gui.gui_retr('resultslist');
+handles=gui.gethand;
+resultslist=gui.retr('resultslist');
 resultslist{10,frame}=[]; %remove smoothed results when user modifies original data
 resultslist{11,frame}=[];
 if size(resultslist,2)>=frame
-	calu=gui.gui_retr('calu');calv=gui.gui_retr('calv');
+	calu=gui.retr('calu');calv=gui.retr('calv');
 	u=resultslist{3,frame};
 	v=resultslist{4,frame};
 	typevector_original=resultslist{5,frame};
 	typevector=typevector_original;
-	manualdeletion=gui.gui_retr('manualdeletion');
+	manualdeletion=gui.retr('manualdeletion');
 	if size(manualdeletion,2)>=frame
 		if isempty(manualdeletion{1,frame}) ==0
 			framemanualdeletion=manualdeletion{frame};
-			[u,v,typevector]=validate.validate_manual_point_deletion(u,v,typevector,framemanualdeletion);
+			[u,v,typevector]=validate.manual_point_deletion(u,v,typevector,framemanualdeletion);
 		end
 	end
 	if numel(u)>0
-		velrect=gui.gui_retr('velrect');
+		velrect=gui.retr('velrect');
 		do_stdev_check = get(handles.stdev_check, 'value');
 		stdthresh=str2double(get(handles.stdev_thresh, 'String'));
 		do_local_median = get(handles.loc_median, 'value');
@@ -48,8 +48,8 @@ if size(resultslist,2)>=frame
 			contrast_filter_thresh=str2double(get(handles.contrast_filter_thresh, 'String'));
 			bright_filter_thresh=str2double(get(handles.bright_filter_thresh, 'String'));
 
-			[A,rawimageA]=import.import_get_img(selected);
-			[B,rawimageB]=import.import_get_img(selected+1);
+			[A,rawimageA]=import.get_img(selected);
+			[B,rawimageB]=import.get_img(selected+1);
 			[u,v,~,~,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
 		end
 
@@ -80,7 +80,7 @@ if size(resultslist,2)>=frame
 		resultslist{7, frame} = u;
 		resultslist{8, frame} = v;
 		resultslist{9, frame} = typevector;
-		gui.gui_put('resultslist', resultslist);
+		gui.put('resultslist', resultslist);
 	end
 end
 

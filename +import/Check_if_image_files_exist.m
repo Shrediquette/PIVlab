@@ -28,14 +28,14 @@ if isempty(filepath) == 0 && exist(filepath{selected},'file') ~=2
 					end
 				end
 			end
-			gui.gui_put('filepath',filepath);
+			gui.put('filepath',filepath);
 		end
 		if new_dir==0
 			break
 		end
 	end
-	if gui.gui_retr('video_selection_done') == 1 %create new video object with the updated file location.
-		gui.gui_put('video_reader_object',VideoReader(filepath{1}));
+	if gui.retr('video_selection_done') == 1 %create new video object with the updated file location.
+		gui.put('video_reader_object',VideoReader(filepath{1}));
 	end
 end
 

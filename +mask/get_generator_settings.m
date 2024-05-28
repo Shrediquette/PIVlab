@@ -1,5 +1,5 @@
 function mask_generator_settings=get_generator_settings()
-handles=gui.gui_gethand;
+handles=gui.gethand;
 
 mask_generator_settings.binarize_enable = get(handles.binarize_enable,'Value');
 mask_generator_settings.mask_medfilt_enable=get(handles.mask_medfilt_enable,'Value');

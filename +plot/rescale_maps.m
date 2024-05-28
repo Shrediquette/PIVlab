@@ -1,11 +1,11 @@
 function out=rescale_maps(in,isangle)
 %input has same dimensions as x,y,u,v,
 %output has size of the piv image
-handles=gui.gui_gethand;
-filepath=gui.gui_retr('filepath');
+handles=gui.gethand;
+filepath=gui.retr('filepath');
 currentframe=floor(get(handles.fileselector, 'value'));
-[currentimage,~]=import.import_get_img(2*currentframe-1);
-resultslist=gui.gui_retr('resultslist');
+[currentimage,~]=import.get_img(2*currentframe-1);
+resultslist=gui.retr('resultslist');
 x=resultslist{1,currentframe};
 y=resultslist{2,currentframe};
 out=zeros(size(currentimage));

@@ -1,9 +1,9 @@
 function save_session_function (PathName,FileName)
 hgui=getappdata(0,'hgui');
-handles=gui.gui_gethand;
+handles=gui.gethand;
 app=getappdata(hgui);
-gui.gui_toolsavailable(1)
-gui.gui_toolsavailable(0,'Busy, saving session...');drawnow
+gui.toolsavailable(1)
+gui.toolsavailable(0,'Busy, saving session...');drawnow
 %disp('hier was aendrn mit savehint')
 %text(150,150,'Please wait, saving session. This might take a while.','color','y','fontsize',13, 'BackgroundColor', 'k','tag','savehint')
 %Newer versions of Matlab do really funny things when the following vars are not empty...:
@@ -72,17 +72,17 @@ add_header=get(handles.add_header,'value');
 delimiter=get(handles.delimiter,'value');%popup
 img_not_mask=get(handles.img_not_mask,'value');
 autoscale_vec=get(handles.autoscale_vec,'value');
-calxy=gui.gui_retr('calxy');
-calu=gui.gui_retr('calu');calv=gui.gui_retr('calv');
-pointscali=gui.gui_retr('pointscali');
+calxy=gui.retr('calxy');
+calu=gui.retr('calu');calv=gui.retr('calv');
+pointscali=gui.retr('pointscali');
 
 x_axis_direction=get(handles.x_axis_direction,'value');
 y_axis_direction=get(handles.y_axis_direction,'value');
-size_of_the_image=gui.gui_retr('size_of_the_image');
-points_offsetx=gui.gui_retr('points_offsetx');
-points_offsety=gui.gui_retr('points_offsety');
-offset_x_true=gui.gui_retr('offset_x_true');
-offset_y_true=gui.gui_retr('offset_y_true');
+size_of_the_image=gui.retr('size_of_the_image');
+points_offsetx=gui.retr('points_offsetx');
+points_offsety=gui.retr('points_offsety');
+offset_x_true=gui.retr('offset_x_true');
+offset_y_true=gui.retr('offset_y_true');
 
 realdist_string=get(handles.realdist, 'String');
 time_inp_string=get(handles.time_inp, 'String');
@@ -144,8 +144,8 @@ catch
 end
 
 try
-	bg_img_A=gui.gui_retr('bg_img_A');
-	bg_img_B=gui.gui_retr('bg_img_B');
+	bg_img_A=gui.retr('bg_img_A');
+	bg_img_B=gui.retr('bg_img_B');
 catch
 	disp('Could not fetch bg imgs')
 end
@@ -159,6 +159,6 @@ clear num_handle_calls
 save(fullfile(PathName,FileName), '-append');
 
 %delete(findobj('tag','savehint'));
-gui.gui_toolsavailable(1)
+gui.toolsavailable(1)
 drawnow;
 

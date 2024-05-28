@@ -1,6 +1,6 @@
 function updateROIinfo
-handles=gui.gui_gethand;
-roirect=gui.gui_retr('roirect');
+handles=gui.gethand;
+roirect=gui.retr('roirect');
 set(handles.ROI_Man_x,'String',int2str(roirect(1)));
 set(handles.ROI_Man_y,'String',int2str(roirect(2)));
 set(handles.ROI_Man_w,'String',int2str(roirect(3)));

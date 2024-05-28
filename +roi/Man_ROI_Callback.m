@@ -1,7 +1,7 @@
 function Man_ROI_Callback(~,~,~)
-handles=gui.gui_gethand;
-filepath=gui.gui_retr('filepath');
-if size(filepath,1) >1 || gui.gui_retr('video_selection_done') == 1
+handles=gui.gethand;
+filepath=gui.retr('filepath');
+if size(filepath,1) >1 || gui.retr('video_selection_done') == 1
 	try
 		x=round(str2num(get(handles.ROI_Man_x,'String')));
 		y=round(str2num(get(handles.ROI_Man_y,'String')));
@@ -14,7 +14,7 @@ if size(filepath,1) >1 || gui.gui_retr('video_selection_done') == 1
 		roirect(2)=y;
 		roirect(3)=w;
 		roirect(4)=h;
-		imagesize=gui.gui_retr('expected_image_size');
+		imagesize=gui.retr('expected_image_size');
 		if roirect(1)<1
 			roirect(1)=1;
 		end
@@ -27,7 +27,7 @@ if size(filepath,1) >1 || gui.gui_retr('video_selection_done') == 1
 		if roirect(4)>imagesize(1)-roirect(2)
 			roirect(4)=imagesize(1)-roirect(2);
 		end
-		gui.gui_put ('roirect',roirect);
+		gui.put ('roirect',roirect);
 		roi_1.roi_select_Callback
 	end
 end

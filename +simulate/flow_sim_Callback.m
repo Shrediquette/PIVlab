@@ -1,5 +1,5 @@
 function flow_sim_Callback(hObject, ~, ~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 contents = get(hObject,'value');
 set(handles.rankinepanel,'visible','off');
 set(handles.shiftpanel,'visible','off');

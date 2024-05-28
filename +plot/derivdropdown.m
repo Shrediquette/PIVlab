@@ -1,5 +1,5 @@
 function derivdropdown(hObject, ~, ~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 if get(hObject,'value')==10
 	set(handles.LIChint1,'visible','on');
 	set(handles.LIChint2,'visible','on');

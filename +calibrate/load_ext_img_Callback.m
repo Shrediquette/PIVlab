@@ -1,10 +1,10 @@
 function load_ext_img_Callback(~, ~, ~) %load extra calibration image
-cali_folder=gui.gui_retr('cali_folder');
+cali_folder=gui.retr('cali_folder');
 if isempty (cali_folder)==1
 	if ispc==1
-		cali_folder=[gui.gui_retr('pathname') '\'];
+		cali_folder=[gui.retr('pathname') '\'];
 	else
-		cali_folder=[gui.gui_retr('pathname') '/'];
+		cali_folder=[gui.retr('pathname') '/'];
 	end
 end
 try
@@ -19,8 +19,8 @@ if ~isequal(filename,0)
 	else
 		caliimg=imread(fullfile(pathname, filename));
 	end
-	gui.gui_put('caliimg', caliimg);
-	gui.gui_put('cali_folder', pathname);
-	calibrate.calibrate_display_cali_img (caliimg)
+	gui.put('caliimg', caliimg);
+	gui.put('cali_folder', pathname);
+	calibrate.display_cali_img (caliimg)
 end
 

@@ -1,7 +1,7 @@
 function scatterplotter_Callback(~, ~, ~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
-resultslist=gui.gui_retr('resultslist');
+resultslist=gui.retr('resultslist');
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	if size(resultslist,1)>6 %filtered exists
 		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
@@ -22,7 +22,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		u=resultslist{3,currentframe};
 		v=resultslist{4,currentframe};
 	end
-	calu=gui.gui_retr('calu');calv=gui.gui_retr('calv');
+	calu=gui.retr('calu');calv=gui.retr('calv');
 	u=reshape(u,size(u,1)*size(u,2),1);
 	v=reshape(v,size(v,1)*size(v,2),1);
 	h=figure;
@@ -31,9 +31,9 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
 	set(h,'position', rect);
 	set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',['Scatter plot u & v, frame ' num2str(currentframe)],'tag', 'derivplotwindow');
-	h2=scatter(u*calu-gui.gui_retr('subtr_u'),v*calv-gui.gui_retr('subtr_v'),'r.');
+	h2=scatter(u*calu-gui.retr('subtr_u'),v*calv-gui.retr('subtr_v'),'r.');
 	set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-	if (gui.gui_retr('calu')==1 || gui.gui_retr('calu')==-1) && gui.gui_retr('calxy')==1
+	if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 		xlabel('u [px/frame]');
 		ylabel('v [px/frame]');
 	else

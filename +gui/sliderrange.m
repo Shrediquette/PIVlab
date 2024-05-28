@@ -1,7 +1,7 @@
 function sliderrange(reset)
-filepath=gui.gui_retr('filepath');
-handles=gui.gui_gethand;
-if gui.gui_retr('video_selection_done') == 0
+filepath=gui.retr('filepath');
+handles=gui.gethand;
+if gui.retr('video_selection_done') == 0
 	if size(filepath,1)>2
 		sliderstepcount=size(filepath,1)/2;
 		set(handles.fileselector, 'enable', 'on');

@@ -1,6 +1,6 @@
 function read_settings (FileName,PathName)
-gui.gui_put('num_handle_calls',0);
-handles=gui.gui_gethand;
+gui.put('num_handle_calls',0);
+handles=gui.gethand;
 try
 	load(fullfile(PathName,FileName));
 
@@ -92,28 +92,28 @@ try
 	end
 
 	try
-		gui.gui_put('points_offsetx',points_offsetx);
-		gui.gui_put('points_offsety',points_offsety);
-		gui.gui_put('size_of_the_image',size_of_the_image);
+		gui.put('points_offsetx',points_offsetx);
+		gui.put('points_offsety',points_offsety);
+		gui.put('size_of_the_image',size_of_the_image);
 		set(handles.x_axis_direction,'value',x_axis_direction);
 		set(handles.y_axis_direction,'value',y_axis_direction);
 	catch %ME
 		%disp(ME)
 	end
-	calu=gui.gui_retr('calu');
-	calxy=gui.gui_retr('calxy');
+	calu=gui.retr('calu');
+	calxy=gui.retr('calxy');
 	if (calu==1 || calu==-1) && calxy==1
 	else
-		calibrate.calibrate_update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles)
+		calibrate.update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles)
 	end
-	gui.gui_put('offset_x_true',offset_x_true);
-	gui.gui_put('offset_y_true',offset_y_true);
-	gui.gui_put('calxy',calxy);
-	gui.gui_put('calu',calu);
-	gui.gui_put('calv',calv);
+	gui.put('offset_x_true',offset_x_true);
+	gui.put('offset_y_true',offset_y_true);
+	gui.put('calxy',calxy);
+	gui.put('calu',calu);
+	gui.put('calv',calv);
 	if exist('pointscali','var')
 		if ~isempty(pointscali)
-			gui.gui_put('pointscali',pointscali);
+			gui.put('pointscali',pointscali);
 		end
 	end
 catch
@@ -128,7 +128,7 @@ try
 	set(handles.maxintens,'string',maxintens);
 	%neu v2.0
 	set(handles.panelslider,'Value',panelwidth);
-	gui.gui_put ('panelwidth',panelwidth);
+	gui.put ('panelwidth',panelwidth);
 	%neu v2.11
 	set(handles.CorrQuality,'Value',CorrQuality_nr);
 	%neu v2.37
@@ -161,10 +161,10 @@ end
 try
 	set (handles.repeat_last,'Value',repeat_last);
 	set(handles.edit52x,'String',repeat_last_thresh);
-	piv.piv_repeat_last_Callback
+	piv.repeat_last_Callback
 catch
 	disp('repeat_last didnt work')
 end
-gui.gui_put('expected_image_size',[])
-calibrate.calibrate_pixeldist_changed_Callback()
+gui.put('expected_image_size',[])
+calibrate.pixeldist_changed_Callback()
 

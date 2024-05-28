@@ -1,6 +1,6 @@
 function save_data_area_Callback (~,~,~)
-handles=gui.gui_gethand;
-resultslist=gui.gui_retr('resultslist');
+handles=gui.gethand;
+resultslist=gui.retr('resultslist');
 currentframe=floor(get(handles.fileselector, 'value'));
 if get(handles.extractAreaAll,'Value') == 1
 	refresh_data=0;
@@ -22,9 +22,9 @@ if isempty(part1)==1
 else
 	currentED=[part1 ' per ' part2];
 end
-imgsavepath=gui.gui_retr('imgsavepath');
+imgsavepath=gui.retr('imgsavepath');
 if isempty(imgsavepath)
-	imgsavepath=gui.gui_retr('pathname');
+	imgsavepath=gui.retr('pathname');
 end
 if get(handles.extractionArea_fileformat,'Value') ==1
 	[FileName,PathName] = uiputfile('*.xls','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' currentED '.xls'])); %framenummer in dateiname
@@ -34,7 +34,7 @@ end
 
 if ~isequal(FileName,0) && ~isequal(PathName,0)
 	file_selection_ok=1;
-	gui.gui_toolsavailable(0,'Busy, extracting data...');drawnow
+	gui.toolsavailable(0,'Busy, extracting data...');drawnow
 else
 	file_selection_ok=0;
 end
@@ -43,7 +43,7 @@ if file_selection_ok
 	cnt=0;
 	for i=startfr:endfr
 		if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-			[returned_data, returned_header]=extract.extract_plot_data_area(i,refresh_data);
+			[returned_data, returned_header]=extract.plot_data_area(i,refresh_data);
 			if i==startfr %generate file with header
 				if exist(fullfile(PathName,FileName),'file')==2 %file is already there
 					try
@@ -67,8 +67,8 @@ if file_selection_ok
 			end
 		end
 		cnt=cnt+1;
-		gui.gui_update_progress(round(cnt/(endfr-startfr+1)*100))
+		gui.update_progress(round(cnt/(endfr-startfr+1)*100))
 	end
 end
-gui.gui_update_progress(0)
-gui.gui_toolsavailable(1)
+gui.update_progress(0)
+gui.toolsavailable(1)

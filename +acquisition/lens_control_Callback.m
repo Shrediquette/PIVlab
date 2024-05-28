@@ -1,4 +1,4 @@
 function lens_control_Callback (~,~,~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 PIVlab_capture_lensctrl_GUI
 

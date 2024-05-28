@@ -1,8 +1,8 @@
 function CheckUpdates
 % Check for updates
-version=gui.gui_retr('PIVver');
+version=gui.retr('PIVver');
 filename_update = 'latest_version.txt';
-if gui.gui_retr('parallel')==1
+if gui.retr('parallel')==1
 	current_url = 'http://william.thielicke.org/PIVlab/latest_version_p.txt';
 else
 	current_url = 'http://william.thielicke.org/PIVlab/latest_version.txt';
@@ -12,7 +12,7 @@ filename_starred='starred_feature.txt';
 % Update checking inspired by: https://www.mathworks.com/matlabcentral/fileexchange/64294-photoannotation
 update_msg = 'Could not check for updates'; %default message will be overwritten by the following lines
 starred_feature_text='';
-gui.gui_put('update_msg_color',[0 0 0.75]);
+gui.put('update_msg_color',[0 0 0.75]);
 try
 	if exist('websave','builtin')||exist('websave','file')
 		outfilename=websave(filename_update,current_url,weboptions('Timeout',10));
@@ -44,20 +44,20 @@ try
 	end
 	if strcmp(version,web_version) == 1
 		update_msg = 'You have the latest PIVlab version.';
-		gui.gui_put('update_msg_color',[0 0.75 0]);
+		gui.put('update_msg_color',[0 0.75 0]);
 	elseif str2num (strrep(version,'.','')) < str2num(strrep(web_version,'.',''))
 		update_msg = ['PIVlab is outdated. Please update to version ' web_version sprintf('\n') starred_feature_text];
-		gui.gui_put('update_msg_color',[0.85 0 0]);
+		gui.put('update_msg_color',[0.85 0 0]);
 	elseif str2num (strrep(version,'.','')) > str2num(strrep(web_version,'.',''))
 		update_msg = ['Your PIVlab version is newer than the latest official release.'];
-		gui.gui_put('update_msg_color',[0.5 0.5 0]);
+		gui.put('update_msg_color',[0.5 0.5 0]);
 	end
 catch
 	%Either the download failed, or the file downloaded is empty.
 	update_msg = 'Could not check for updates';
-	gui.gui_put('update_msg_color',[0.75 0.75 0]);
+	gui.put('update_msg_color',[0.75 0.75 0]);
 end
 clear filename_update current_url fileID_update outfilename web_version trash_upd
 disp (['-> ' update_msg])
-gui.gui_put('update_msg',update_msg);
+gui.put('update_msg',update_msg);
 

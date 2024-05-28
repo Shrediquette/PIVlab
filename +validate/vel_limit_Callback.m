@@ -1,8 +1,8 @@
 function vel_limit_Callback(~, ~, ~)
-gui.gui_toolsavailable(0)
+gui.toolsavailable(0)
 %if analys existing
-resultslist=gui.gui_retr('resultslist');
-handles=gui.gui_gethand;
+resultslist=gui.retr('resultslist');
+handles=gui.gethand;
 currentframe=2*floor(get(handles.fileselector, 'value'))-1;
 if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 	x=resultslist{1,(currentframe+1)/2};
@@ -29,8 +29,8 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 			v=resultslist{4,(currentframe+1)/2};
 			typevector=resultslist{5,(currentframe+1)/2};
 		end
-		velrect=gui.gui_retr('velrect');
-		calu=gui.gui_retr('calu');calv=gui.gui_retr('calv');
+		velrect=gui.retr('velrect');
+		calu=gui.retr('calu');calv=gui.retr('calv');
 		if numel(velrect)>0
 			%user already selected window before...
 			%"filter u+v" and display scatterplot
@@ -74,7 +74,7 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 		newsize=[oldsize(1)+10 0.15 oldsize(3)*0.87 oldsize(4)*0.87];
 		set(gca,'outerposition', newsize)
 		%%{
-		if (gui.gui_retr('calu')==1 || gui.gui_retr('calu')==-1) && gui.gui_retr('calxy')==1
+		if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 			xlabel(gca, 'u velocity [px/frame]', 'fontsize', 12)
 			ylabel(gca, 'v velocity [px/frame]', 'fontsize', 12)
 		else
@@ -106,17 +106,17 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 		%}
 		velrect = getrect(gca);
 		if velrect(1,3)~=0 && velrect(1,4)~=0
-			gui.gui_put('velrect', velrect);
-			validate.validate_update_velocity_limits_information
-			gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
+			gui.put('velrect', velrect);
+			validate.update_velocity_limits_information
+			gui.sliderdisp(gui.retr('pivlab_axis'))
 			delete(findobj(gca,'Type','text','color','r'));
 			text(50,50,'Result will be shown after applying vector validation','color','r','fontsize',10, 'fontweight','bold', 'BackgroundColor', 'k')
 		else
-			gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
+			gui.sliderdisp(gui.retr('pivlab_axis'))
 			text(50,50,'Invalid selection: Click and hold left mouse button to create a rectangle.','color','r','fontsize',8, 'BackgroundColor', 'k')
 		end
 	end
 end
-gui.gui_toolsavailable(1)
-gui.gui_MainWindow_ResizeFcn(gcf)
+gui.toolsavailable(1)
+gui.MainWindow_ResizeFcn(gcf)
 

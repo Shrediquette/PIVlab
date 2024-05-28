@@ -1,5 +1,5 @@
 function quick4_Callback (~,~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 set(handles.quick4,'Value',0)
-piv.piv_sett_Callback
+piv.sett_Callback
 

@@ -1,5 +1,5 @@
 function quick3_Callback (~,~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 set(handles.quick3,'Value',0)
-preproc.preproc_Uielement_Callback
+preproc.Uielement_Callback
 

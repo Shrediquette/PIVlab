@@ -1,6 +1,6 @@
 function count_discarded_data (~,~,~)
-handles=gui.gui_gethand;
-resultslist=gui.gui_retr('resultslist');
+handles=gui.gethand;
+resultslist=gui.retr('resultslist');
 currentframe=2*floor(get(handles.fileselector, 'value'))-1;
 if ~isempty(resultslist)
 	if size(resultslist,2) >= ((currentframe+1)/2)

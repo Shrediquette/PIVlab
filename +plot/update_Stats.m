@@ -1,12 +1,12 @@
 function update_Stats(x,y,u,v)
-handles=gui.gui_gethand;
-calu=gui.gui_retr('calu');calv=gui.gui_retr('calv');
-calxy=gui.gui_retr('calxy');
+handles=gui.gethand;
+calu=gui.retr('calu');calv=gui.retr('calv');
+calxy=gui.retr('calxy');
 x=reshape(x,size(x,1)*size(x,2),1);
 y=reshape(y,size(y,1)*size(y,2),1);
 u=reshape(u,size(u,1)*size(u,2),1);
 v=reshape(v,size(v,1)*size(v,2),1);
-if (gui.gui_retr('calu')==1 || gui.gui_retr('calu')==-1) && gui.gui_retr('calxy')==1
+if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 	set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' px/frame'])
 	set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' px/frame'])
 	set (handles.maxu,'string', [num2str(max(u*calu,[],'omitnan')) ' px/frame'])

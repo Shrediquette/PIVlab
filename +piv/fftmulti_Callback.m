@@ -1,5 +1,5 @@
 function fftmulti_Callback(hObject, ~, ~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 if get(hObject,'Value') ==1
 	set(handles.dcc,'value',0)
 	set(handles.ensemble,'value',0)
@@ -17,5 +17,5 @@ if get(hObject,'Value') ==1
 else
 	set(handles.fftmulti,'value',1)
 end
-piv.piv_dispinterrog
+piv.dispinterrog
 

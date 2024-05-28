@@ -2,15 +2,15 @@ function toolsavailable(inpt,busy_msg)
 %0: disable all tools
 %1: re-enable tools that were previously also enabled
 hgui=getappdata(0,'hgui');
-handles=gui.gui_gethand;
+handles=gui.gethand;
 if inpt==0
 	if get(handles.zoomon,'Value')==1
 		set(handles.zoomon,'Value',0);
-		gui.gui_zoomon_Callback(handles.zoomon)
+		gui.zoomon_Callback(handles.zoomon)
 	end
 	if get(handles.panon,'Value')==1
 		set(handles.panon,'Value',0);
-		gui.gui_panon_Callback(handles.panon)
+		gui.panon_Callback(handles.panon)
 	end
 end
 
@@ -36,10 +36,10 @@ if inpt==0
 			wasdisabled(i)=1;
 		end
 	end
-	gui.gui_put('wasdisabled', wasdisabled);
+	gui.put('wasdisabled', wasdisabled);
 	set(elementsOfCrime2, 'enable', 'off');
 else
-	wasdisabled=gui.gui_retr('wasdisabled');
+	wasdisabled=gui.retr('wasdisabled');
 	set(elementsOfCrime, 'enable', 'on');
 	set(elementsOfCrime(wasdisabled==1), 'enable', 'off');
 	set(elementsOfCrime2, 'enable', 'on');

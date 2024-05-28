@@ -1,14 +1,14 @@
 function temporal_operation_Callback(~, ~, type)
-handles=gui.gui_gethand;
-filepath=gui.gui_retr('filepath');
-filename=gui.gui_retr('filename');
-resultslist=gui.gui_retr('resultslist');
+handles=gui.gethand;
+filepath=gui.retr('filepath');
+filename=gui.retr('filename');
+resultslist=gui.retr('resultslist');
 
 if isempty(resultslist)==0
 	if size(filepath,1)>0
 		sizeerror=0;
 		typevectormittel=ones(size(resultslist{1,1}));
-		ismean=gui.gui_retr('ismean');
+		ismean=gui.retr('ismean');
 		if isempty(ismean)==1
 			ismean=zeros(size(resultslist,2),1);
 		end
@@ -23,11 +23,11 @@ if isempty(resultslist)==0
 					ismean(i,:)=[];
 				end
 			end
-			gui.gui_put('filepath',filepath);
-			gui.gui_put('filename',filename);
-			gui.gui_put('resultslist',resultslist);
-			gui.gui_put('ismean',[]);
-			gui.gui_sliderrange(1)
+			gui.put('filepath',filepath);
+			gui.put('filename',filename);
+			gui.put('resultslist',resultslist);
+			gui.put('ismean',[]);
+			gui.sliderrange(1)
 		end
 		str = strrep(get(handles.selectedFramesMean,'string'),'-',':');
 		endinside=strfind(str, 'end');
@@ -122,16 +122,16 @@ if isempty(resultslist)==0
 				if selectionok==1
 
 					%% calculate mean mask from all the masks that have been applied
-					masks_in_frame=gui.gui_retr('masks_in_frame');
+					masks_in_frame=gui.retr('masks_in_frame');
 					if ~isempty(masks_in_frame)
-						expected_image_size=gui.gui_retr('expected_image_size');
+						expected_image_size=gui.retr('expected_image_size');
 						converted_mask=zeros(expected_image_size,'uint8');
 						amount_nonmean_images = numel(ismean(ismean==0));
 						frames_to_process= eval(str);
 						for i=frames_to_process
 							if numel (masks_in_frame) >= i%if size (masks_in_frame,2) >= i
 								mask_positions=masks_in_frame{i};
-								converted_mask=converted_mask + uint8(mask.mask_convert_masks_to_binary(expected_image_size,mask_positions)); %only when all frames are masked --> apply mask also in the average.
+								converted_mask=converted_mask + uint8(mask.convert_masks_to_binary(expected_image_size,mask_positions)); %only when all frames are masked --> apply mask also in the average.
 							end
 						end
 
@@ -142,8 +142,8 @@ if isempty(resultslist)==0
 						frame_where_to_put_the_average=size(resultslist,2)+1;
 
 						masks_in_frame{frame_where_to_put_the_average}=[];%remove any pre-existing mask in the curretn frame
-						masks_in_frame=mask.mask_px_to_rois(blocations,frame_where_to_put_the_average,masks_in_frame);
-						gui.gui_put('masks_in_frame',masks_in_frame);
+						masks_in_frame=mask.px_to_rois(blocations,frame_where_to_put_the_average,masks_in_frame);
+						gui.put('masks_in_frame',masks_in_frame);
 					end
 					typevectoralle=ones(size(typevector));
 
@@ -212,13 +212,13 @@ if isempty(resultslist)==0
 					eval(['filepathselected=filepathselected([' str '],:);']);
 					filepath{size(filepath,1)+1,1}=filepathselected{1,1};
 					filepath{size(filepath,1)+1,1}=filepathselected{1,1};
-					if gui.gui_retr('video_selection_done') == 1
-						video_frame_selection=gui.gui_retr('video_frame_selection');
+					if gui.retr('video_selection_done') == 1
+						video_frame_selection=gui.retr('video_frame_selection');
 						video_frame_selection(end+1,1)=video_frame_selection(strnum(end)*2);
 						video_frame_selection(end+1,1)=video_frame_selection(strnum(end)*2);
-						gui.gui_put('video_frame_selection',video_frame_selection);
+						gui.put('video_frame_selection',video_frame_selection);
 					end
-					filename=gui.gui_retr('filename');
+					filename=gui.retr('filename');
 					if type == 2
 						filename{size(filename,1)+1,1}=['STDEV of frames ' str];
 						filename{size(filename,1)+1,1}=['STDEV of frames ' str];
@@ -232,19 +232,19 @@ if isempty(resultslist)==0
 						filename{size(filename,1)+1,1}=['SUM of frames ' str];
 					end
 					ismean(size(resultslist,2),1)=1;
-					gui.gui_put('ismean',ismean);
+					gui.put('ismean',ismean);
 
-					gui.gui_put ('resultslist', resultslist);
-					gui.gui_put ('filepath', filepath);
-					gui.gui_put ('filename', filename);
-					gui.gui_put ('typevector', typevector);
-					gui.gui_sliderrange(1)
+					gui.put ('resultslist', resultslist);
+					gui.put ('filepath', filepath);
+					gui.put ('filename', filename);
+					gui.put ('typevector', typevector);
+					gui.sliderrange(1)
 					try
 						set (handles.fileselector,'value',get (handles.fileselector,'max'));
 					catch
 					end
 
-					gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
+					gui.sliderdisp(gui.retr('pivlab_axis'))
 				end
 			else %user tried to average analyses with different sizes
 				errordlg('All analyses of one session have to be of the same size and have to be analyzed with identical PIV settings.','Averaging / summing not possible...')

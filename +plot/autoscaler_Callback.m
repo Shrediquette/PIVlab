@@ -1,5 +1,5 @@
 function autoscaler_Callback(~, ~, ~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 if get(handles.autoscaler, 'value')==1
 	set (handles.mapscale_min, 'enable', 'off')
 	set (handles.mapscale_max, 'enable', 'off')

@@ -1,6 +1,6 @@
 function manually_discarded_vectors(target_axis,handles, x, y)
 if strncmp(get(handles.multip06, 'visible'), 'on',2) %validation panel visible
-	manualdeletion=gui.gui_retr('manualdeletion');
+	manualdeletion=gui.retr('manualdeletion');
 	frame=floor(get(handles.fileselector, 'value'));
 	framemanualdeletion=[];
 	if numel(manualdeletion)>0

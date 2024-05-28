@@ -1,8 +1,8 @@
 function sync_settings_Callback(~,~,~)
-serpo=gui.gui_retr('serpo');
-handles=gui.gui_gethand;
+serpo=gui.retr('serpo');
+handles=gui.gethand;
 
-if str2double(get(handles.ac_interpuls,'String')) < gui.gui_retr('min_allowed_interframe')
+if str2double(get(handles.ac_interpuls,'String')) < gui.retr('min_allowed_interframe')
 	old_bg=get(handles.ac_interpuls,'BackgroundColor');
 	for i=1:3
 		set(handles.ac_interpuls,'BackgroundColor',[1 0 0]);
@@ -10,7 +10,7 @@ if str2double(get(handles.ac_interpuls,'String')) < gui.gui_retr('min_allowed_in
 		set(handles.ac_interpuls,'BackgroundColor',old_bg);
 		pause(0.1)
 	end
-	set(handles.ac_interpuls,'String',num2str(gui.gui_retr('min_allowed_interframe')))
+	set(handles.ac_interpuls,'String',num2str(gui.retr('min_allowed_interframe')))
 end
 
 
@@ -49,11 +49,11 @@ catch
 	alreadyconnected=0;
 end
 if alreadyconnected
-	laser_running=gui.gui_retr('laser_running');
+	laser_running=gui.retr('laser_running');
 	if isempty(laser_running)
 		laser_running=0;
 	end
-	acquisition.acquisition_control_simple_sync_serial(laser_running,0);
+	acquisition.control_simple_sync_serial(laser_running,0);
 end
-acquisition.acquisition_initiate_straddling_graph
+acquisition.initiate_straddling_graph
 

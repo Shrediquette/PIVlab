@@ -1,6 +1,6 @@
 function save_data_Callback(~, ~, ~)
-handles=gui.gui_gethand;
-resultslist=gui.gui_retr('resultslist');
+handles=gui.gethand;
+resultslist=gui.retr('resultslist');
 currentframe=floor(get(handles.fileselector, 'value'));
 if get(handles.extractLineAll, 'value')==0
 	startfr=currentframe;
@@ -18,16 +18,16 @@ for i=startfr:endfr
 	if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		delete(findobj('tag', 'derivplotwindow'));
 		caller.Tag=i;
-		extract.extract_plot_data_Callback(caller) %make sure that data was calculated
+		extract.plot_data_Callback(caller) %make sure that data was calculated
 		%close figure...
 		%delete(findobj('tag', 'derivplotwindow'));
 		extractwhat=get(handles.extraction_choice,'Value');
 		current=get(handles.extraction_choice,'string');
 		current=current{extractwhat};
 		if selected==0
-			imgsavepath=gui.gui_retr('imgsavepath');
+			imgsavepath=gui.retr('imgsavepath');
 			if isempty(imgsavepath)
-				imgsavepath=gui.gui_retr('pathname');
+				imgsavepath=gui.retr('pathname');
 			end
 			%find '\', replace with 'per'
 			part1= current(1:strfind(current,'/')-1) ;
@@ -43,24 +43,24 @@ for i=startfr:endfr
 				[FileName,PathName] = uiputfile('*.txt','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' currentED '.txt'])); %framenummer in dateiname
 			end
 			selected=1;
-			gui.gui_toolsavailable(0,'Busy, extracting data...');drawnow
+			gui.toolsavailable(0,'Busy, extracting data...');drawnow
 		end
 		if isequal(FileName,0) | isequal(PathName,0)
 			%exit for
 			break;
 		else
-			gui.gui_put('imgsavepath',PathName);
+			gui.put('imgsavepath',PathName);
 			pointpos=strfind(FileName, '.');
 			pointpos=pointpos(end);
 			FileName_final=[FileName(1:pointpos-1) '_' num2str(currentframe) '.' FileName(pointpos+1:end)];
-			c=gui.gui_retr('c');
-			distance=gui.gui_retr('distance');
+			c=gui.retr('c');
+			distance=gui.retr('distance');
 			%also retrieve coordinates of polyline points if possible
-			cx=gui.gui_retr('cx');
-			cy=gui.gui_retr('cy');
+			cx=gui.retr('cx');
+			cy=gui.retr('cy');
 			%normal : 300 x 1
 			if size(c,2)>1 %circle series
-				if (gui.gui_retr('calu')==1 || gui.gui_retr('calu')==-1) && gui.gui_retr('calxy')==1
+				if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 					header=['circle nr., Distance on line [px], x-coordinate [px], y-coordinate [px], ' current];
 				else
 					header=['circle nr., Distance on line [m], x-coordinate [m], y-coordinate [m], ' current];
@@ -71,7 +71,7 @@ for i=startfr:endfr
 				end
 			else
 
-				if (gui.gui_retr('calu')==1 || gui.gui_retr('calu')==-1) && gui.gui_retr('calxy')==1
+				if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 					header=['Distance on line [px], x-coordinate [px], y-coordinate [px], ' current];
 				else
 					header=['Distance on line [m], x-coordinate [m], y-coordinate [m], ' current];
@@ -99,9 +99,9 @@ for i=startfr:endfr
 		end
 	end
 	cnt=cnt+1;
-	gui.gui_update_progress(round(cnt/(endfr-startfr+1)*100))
+	gui.update_progress(round(cnt/(endfr-startfr+1)*100))
 end
-gui.gui_update_progress(0)
-gui.gui_toolsavailable(1)
-gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
+gui.update_progress(0)
+gui.toolsavailable(1)
+gui.sliderdisp(gui.retr('pivlab_axis'))
 

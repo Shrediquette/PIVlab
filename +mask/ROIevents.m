@@ -1,8 +1,8 @@
 function ROIevents(src,evt)
 evname = evt.EventName;
-handles=gui.gui_gethand;
+handles=gui.gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
-masks_in_frame=gui.gui_retr('masks_in_frame');
+masks_in_frame=gui.retr('masks_in_frame');
 mask_positions=masks_in_frame{currentframe};
 switch(evname)
 	%case{'MovingROI'}
@@ -19,7 +19,7 @@ switch(evname)
 				end
 				%assignin('base',"mask_positions",mask_positions)
 				masks_in_frame{currentframe}=mask_positions;
-				gui.gui_put('masks_in_frame',masks_in_frame)
+				gui.put('masks_in_frame',masks_in_frame)
 			end
 		end
 	case{'DeletingROI'}
@@ -27,7 +27,7 @@ switch(evname)
 		[r,~]=find(strcmp(src.Tag,mask_positions(:,5)));
 		mask_positions(r,:)=[];
 		masks_in_frame{currentframe}=mask_positions;
-		gui.gui_put('masks_in_frame',masks_in_frame)
+		gui.put('masks_in_frame',masks_in_frame)
 	case{'ROIClicked'}
 		bringToFront(src);
 end

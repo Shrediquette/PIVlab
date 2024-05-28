@@ -1,8 +1,8 @@
 function save_imgs_Callback(~, ~, ~)
-gen_image_1=gui.gui_retr('gen_image_1');
-gen_image_2=gui.gui_retr('gen_image_2');
-real_displacement_u=gui.gui_retr('real_displ_u');
-real_displacement_v=gui.gui_retr('real_displ_v');
+gen_image_1=gui.retr('gen_image_1');
+gen_image_2=gui.retr('gen_image_2');
+real_displacement_u=gui.retr('real_displ_u');
+real_displacement_v=gui.retr('real_displ_v');
 if isempty(gen_image_1)==0
 	[FileName,PathName] = uiputfile('*.tif','Save generated images as...',['PIVlab_gen.tif']);
 	if isequal(FileName,0) | isequal(PathName,0)

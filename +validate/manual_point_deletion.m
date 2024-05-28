@@ -1,5 +1,5 @@
 function [u,v,typevector]=manual_point_deletion(u,v,typevector,framemanualdeletion)
-manualdeletion=gui.gui_retr('manualdeletion');
+manualdeletion=gui.retr('manualdeletion');
 if numel(manualdeletion)>0
 	if numel(u)>0
 		for i=1:size(framemanualdeletion,1)

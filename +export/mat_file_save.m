@@ -1,9 +1,9 @@
 function mat_file_save (currentframe,FileName,PathName,type)
-resultslist=gui.gui_retr('resultslist');
+resultslist=gui.retr('resultslist');
 if isempty(resultslist)==0
-	derived=gui.gui_retr('derived');
-	calxy=gui.gui_retr('calxy');
-	calu=gui.gui_retr('calu');calv=gui.gui_retr('calv');
+	derived=gui.retr('derived');
+	calxy=gui.retr('calxy');
+	calu=gui.retr('calu');calv=gui.retr('calv');
 	nrframes=size(resultslist,2);
 
 	if size(resultslist,1)< 11
@@ -56,7 +56,7 @@ if isempty(resultslist)==0
 		if type==2 %all frames
 			currentframe=i;
 		end
-		[x_cal,y_cal]=calibrate.calibrate_xy (resultslist{1,currentframe},resultslist{2,currentframe});
+		[x_cal,y_cal]=calibrate.xy (resultslist{1,currentframe},resultslist{2,currentframe});
 		x{i,1}=x_cal;
 		y{i,1}=y_cal;
 

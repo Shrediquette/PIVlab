@@ -1,24 +1,24 @@
 function draw_extraction_coordinates_Callback(caller, ~, ~)
-gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'));
-handles=gui.gui_gethand;
+gui.sliderdisp(gui.retr('pivlab_axis'));
+handles=gui.gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
-resultslist=gui.gui_retr('resultslist');
-gui.gui_put('extract_type',[]);
+resultslist=gui.retr('resultslist');
+gui.put('extract_type',[]);
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-	gui.gui_toolsavailable(0);
+	gui.toolsavailable(0);
 	xposition=[];
 	yposition=[];
-	delete(findobj(gui.gui_retr('pivlab_axis'),'Tag','extract_poly')); %delete pre-existing
-	delete(findobj(gui.gui_retr('pivlab_axis'),'Tag','extract_circle')); %delete pre-existing
-	delete(findobj(gui.gui_retr('pivlab_axis'),'Tag','extract_circle_series')); %delete pre-existing
-	delete(findobj(gui.gui_retr('pivlab_axis'),'Tag','extract_poly_area')); %delete pre-existing
-	delete(findobj(gui.gui_retr('pivlab_axis'),'Tag','extract_circle_area')); %delete pre-existing
-	delete(findobj(gui.gui_retr('pivlab_axis'),'Tag','extract_circle_series_area')); %delete pre-existing
-	delete(findobj(gui.gui_retr('pivlab_axis'),'Tag','extract_rectangle_area')); %delete pre-existing
-	delete(findobj(gui.gui_retr('pivlab_axis'),'Tag','extract_circle_series_displayed_smaller_radii')) %delete pre-existing
-	delete(findobj(gui.gui_retr('pivlab_axis'),'Tag','extract_circle_series_area_displayed_smaller_radii')) %delete pre-existing
-	delete(findobj(gui.gui_retr('pivlab_axis'),'Tag','extract_circle_series_max_circulation')) %delete pre-existing
-	delete(findobj(gui.gui_retr('pivlab_axis'),'Tag','extract_circle_series_area_max_circulation')) %delete pre-existing
+	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_poly')); %delete pre-existing
+	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_circle')); %delete pre-existing
+	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_circle_series')); %delete pre-existing
+	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_poly_area')); %delete pre-existing
+	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_circle_area')); %delete pre-existing
+	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_circle_series_area')); %delete pre-existing
+	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_rectangle_area')); %delete pre-existing
+	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_circle_series_displayed_smaller_radii')) %delete pre-existing
+	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_circle_series_area_displayed_smaller_radii')) %delete pre-existing
+	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_circle_series_max_circulation')) %delete pre-existing
+	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_circle_series_area_max_circulation')) %delete pre-existing
 
 	if (strcmp(caller.Tag,'draw_stuff') && strcmp(handles.draw_what.String{handles.draw_what.Value},'polyline')) || (strcmp(caller.Tag,'draw_stuff_area') && strcmp(handles.draw_what_area.String{handles.draw_what_area.Value},'polygon'))%polyline
 		if strcmp(caller.Tag,'draw_stuff') %extract from polyline
@@ -30,9 +30,9 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		end
 		extract_poly.Tag=extract_type;
 		draw(extract_poly);
-		addlistener(extract_poly,'ROIMoved',@extract.extract_poly_ROIevents);
-		addlistener(extract_poly,'MovingROI',@extract.extract_poly_ROIevents);
-		addlistener(extract_poly,'DeletingROI',@extract.extract_poly_ROIevents);
+		addlistener(extract_poly,'ROIMoved',@extract.poly_ROIevents);
+		addlistener(extract_poly,'MovingROI',@extract.poly_ROIevents);
+		addlistener(extract_poly,'DeletingROI',@extract.poly_ROIevents);
 		xposition=extract_poly.Position(:,1);
 		yposition=extract_poly.Position(:,2);
 		extract_poly.LabelVisible = 'hover';
@@ -62,8 +62,8 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		if extract_poly.Radius < 25 %check if circle is large enough or if user accidentally clicked once
 			extract_poly.Radius = 25;
 		end
-		addlistener(extract_poly,'ROIMoved',@extract.extract_poly_ROIevents);
-		addlistener(extract_poly,'DeletingROI',@extract.extract_poly_ROIevents);
+		addlistener(extract_poly,'ROIMoved',@extract.poly_ROIevents);
+		addlistener(extract_poly,'DeletingROI',@extract.poly_ROIevents);
 		xposition=extract_poly.Center;
 		yposition=extract_poly.Radius;
 	elseif (strcmp(caller.Tag,'draw_stuff') && strcmp(handles.draw_what.String{handles.draw_what.Value},'circle series (tangent vel. only)')) || (strcmp(caller.Tag,'draw_stuff_area') && strcmp(handles.draw_what_area.String{handles.draw_what_area.Value},'circle series'))%circle series
@@ -80,15 +80,15 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		if extract_poly.Radius < 25 %check if circle is large enough or if user accidentally clicked once
 			extract_poly.Radius = 25;
 		end
-		addlistener(extract_poly,'ROIMoved',@extract.extract_poly_ROIevents);
-		addlistener(extract_poly,'DeletingROI',@extract.extract_poly_ROIevents);
+		addlistener(extract_poly,'ROIMoved',@extract.poly_ROIevents);
+		addlistener(extract_poly,'DeletingROI',@extract.poly_ROIevents);
 		xposition=extract_poly.Center;
 		yposition=extract_poly.Radius;
 		x=resultslist{1,currentframe};
 		stepsize=ceil((x(1,2)-x(1,1))/1);
 		radii=linspace(stepsize,extract_poly.Radius-stepsize,round(((extract_poly.Radius-stepsize)/stepsize)));
 		for radius=radii
-			extract_poly_series=drawcircle(gui.gui_retr('pivlab_axis'),'Center',xposition,'Radius',radius,'Tag',[extract_type '_displayed_smaller_radii'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none');
+			extract_poly_series=drawcircle(gui.retr('pivlab_axis'),'Center',xposition,'Radius',radius,'Tag',[extract_type '_displayed_smaller_radii'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none');
 		end
 		x_center=extract_poly.Center(1);
 		y_center=extract_poly.Center(2);
@@ -110,14 +110,14 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		if extract_poly.Position(4) < 25 %check if rectangle is large enough or if user accidentally clicked once
 			extract_poly.Position(4) = 25;
 		end
-		addlistener(extract_poly,'ROIMoved',@extract.extract_poly_ROIevents);
-		addlistener(extract_poly,'DeletingROI',@extract.extract_poly_ROIevents);
+		addlistener(extract_poly,'ROIMoved',@extract.poly_ROIevents);
+		addlistener(extract_poly,'DeletingROI',@extract.poly_ROIevents);
 		xposition=[extract_poly.Position(1) extract_poly.Position(3)]; %x and width of rectangle
 		yposition=[extract_poly.Position(2) extract_poly.Position(4)]; %y and height of rectangle
 	end
-	gui.gui_put('xposition',xposition)
-	gui.gui_put('yposition',yposition)
-	gui.gui_put('extract_type',extract_type);
-	gui.gui_toolsavailable(1);
+	gui.put('xposition',xposition)
+	gui.put('yposition',yposition)
+	gui.put('extract_type',extract_type);
+	gui.toolsavailable(1);
 end
 

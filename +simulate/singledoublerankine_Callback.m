@@ -1,5 +1,5 @@
 function singledoublerankine_Callback(hObject, ~, ~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 contents = get(hObject,'value');
 set(handles.rankx1,'visible','off');
 set(handles.rankx2,'visible','off');

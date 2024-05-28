@@ -1,3 +1,3 @@
 function displmarker_Callback(~, ~, ~)
-gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'));
+gui.sliderdisp(gui.retr('pivlab_axis'));
 

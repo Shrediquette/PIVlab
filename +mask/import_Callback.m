@@ -1,10 +1,10 @@
 function import_Callback (~,~,~)
-filepath=gui.gui_retr('filepath');
+filepath=gui.retr('filepath');
 
 if size(filepath,1) > 1 %did the user load images?
-	sessionpath=gui.gui_retr('sessionpath');
+	sessionpath=gui.retr('sessionpath');
 	if isempty(sessionpath)
-		sessionpath=gui.gui_retr('pathname');
+		sessionpath=gui.retr('pathname');
 	end
 	[FileName,PathName] = uigetfile({'*.bmp;*.tif;*.tiff;*.jpg;*.png;','Image Files (*.bmp,*.tif,*.tiff,*.jpg,*.png)'; '*.tif','tif'; '*.tiff','tiff'; '*.jpg','jpg'; '*.bmp','bmp'; '*.png','png'},'Select the binary image mask file(s)',sessionpath, 'multiselect','on');
 	if ~isequal(FileName,0) && ~isequal(PathName,0)
@@ -13,12 +13,12 @@ if size(filepath,1) > 1 %did the user load images?
 		else
 			AnzahlMasks=numel(FileName);
 		end
-		pivlab_axis=gui.gui_retr('pivlab_axis');
-		handles=gui.gui_gethand;
-		gui.gui_toolsavailable(0,'Busy, please wait...')
+		pivlab_axis=gui.retr('pivlab_axis');
+		handles=gui.gethand;
+		gui.toolsavailable(0,'Busy, please wait...')
 		for i= 1:AnzahlMasks
 			%set (handles.mask_import,'String', ['Progress: ' num2str(round(i/AnzahlMasks*100)) ' %']);
-			gui.gui_update_progress(round(i/AnzahlMasks*100))
+			gui.update_progress(round(i/AnzahlMasks*100))
 			drawnow limitrate
 			if AnzahlMasks==1
 				pixel_mask=imread(fullfile(PathName,FileName));
@@ -39,16 +39,16 @@ if size(filepath,1) > 1 %did the user load images?
 			pixel_mask = bwareafilt(pixel_mask, 100);
 			blocations = bwboundaries(pixel_mask,'holes');
 			%imshow(A, 'Parent',pivlab_axis);
-			handles=gui.gui_gethand;
-			masks_in_frame=gui.gui_retr('masks_in_frame');
-			masks_in_frame=mask.mask_px_to_rois(blocations,floor(get(handles.fileselector, 'value'))-1+i,masks_in_frame);%apply mask at the current frame and the following frames.
-			gui.gui_put('masks_in_frame',masks_in_frame);
+			handles=gui.gethand;
+			masks_in_frame=gui.retr('masks_in_frame');
+			masks_in_frame=mask.px_to_rois(blocations,floor(get(handles.fileselector, 'value'))-1+i,masks_in_frame);%apply mask at the current frame and the following frames.
+			gui.put('masks_in_frame',masks_in_frame);
 		end
-		mask.mask_redraw_masks
-		gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
+		mask.redraw_masks
+		gui.sliderdisp(gui.retr('pivlab_axis'))
 		%set (handles.mask_import,'String', 'Import pixel mask');
-		gui.gui_update_progress(0)
-		gui.gui_toolsavailable(1)
+		gui.update_progress(0)
+		gui.toolsavailable(1)
 	end
 end
 

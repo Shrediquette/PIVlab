@@ -1,13 +1,13 @@
 function out=LIC(vx,vy,frame)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 LICreso=round(get (handles.licres, 'value')*10)/10;
-resultslist=gui.gui_retr('resultslist');
+resultslist=gui.retr('resultslist');
 x=resultslist{1,frame};
 y=resultslist{2,frame};
 text(mean(x(1,:)/1.5),mean(y(:,1)), ['Please wait. LIC in progress...' sprintf('\n') 'If this message stays here for > 20s,' sprintf('\n') 'check MATLABs command window.' sprintf('\n') 'The function might need to be compiled first.'],'tag', 'waitplease', 'backgroundcolor', 'k', 'color', 'r','fontsize',10);
 drawnow;
 iterations=2;
-pivlab_axis=gui.gui_retr('pivlab_axis');
+pivlab_axis=gui.retr('pivlab_axis');
 old_units=get(pivlab_axis,'Units');
 set(pivlab_axis,'Units','Pixels');
 axessize=get(gca,'position');

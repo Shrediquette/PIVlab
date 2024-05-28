@@ -4,7 +4,7 @@ if exist('src','var')
 		% simulate clicking a distance in a calibration image and draw a line
 		delete(findobj('tag', 'caliline'))
 		spacing_to_border=50;
-		misc.misc_check_comma(src)
+		misc.check_comma(src)
 		xposition(1)=spacing_to_border;
 		xposition(2)=spacing_to_border+str2double(src.String);
 
@@ -12,14 +12,14 @@ if exist('src','var')
 		yposition(2)=spacing_to_border;
 
 
-		gui.gui_put('pointscali',[xposition' yposition']);
+		gui.put('pointscali',[xposition' yposition']);
 
-		calibrate.calibrate_draw_line_Callback
+		calibrate.draw_line_Callback
 
 	end
 else
-	handles=gui.gui_gethand;
-	pointscali=gui.gui_retr('pointscali');
+	handles=gui.gethand;
+	pointscali=gui.retr('pointscali');
 	if ~isempty(pointscali)
 		xposition=pointscali(:,1);
 		yposition=pointscali(:,2);

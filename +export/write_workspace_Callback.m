@@ -1,9 +1,9 @@
 function write_workspace_Callback(~, ~, ~)
-resultslist=gui.gui_retr('resultslist');
+resultslist=gui.retr('resultslist');
 if isempty(resultslist)==0
-	derived=gui.gui_retr('derived');
-	calxy=gui.gui_retr('calxy');
-	calu=gui.gui_retr('calu');calv=gui.gui_retr('calv');
+	derived=gui.retr('derived');
+	calxy=gui.retr('calxy');
+	calu=gui.retr('calu');calv=gui.retr('calv');
 	nrframes=size(resultslist,2);
 	if size(resultslist,1)< 11
 		resultslist{11,nrframes}=[]; %make sure resultslist has cells for all params
@@ -47,7 +47,7 @@ if isempty(resultslist)==0
 	correlation_map=vorticity;
 
 	for i=1:nrframes
-		[x_cal,y_cal]=calibrate.calibrate_xy (resultslist{1,i},resultslist{2,i});
+		[x_cal,y_cal]=calibrate.xy (resultslist{1,i},resultslist{2,i});
 		x{i,1}=x_cal;
 		y{i,1}=y_cal;
 		u_original{i,1}=resultslist{3,i}*calu;

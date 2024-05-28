@@ -1,16 +1,16 @@
 function zoomon_Callback(hObject, ~, ~)
 hgui=getappdata(0,'hgui');
-handles=gui.gui_gethand;
+handles=gui.gethand;
 if get(hObject,'Value')==1
 	hCMZ = uicontextmenu;
-	hZMenu = uimenu('Parent',hCMZ,'Label','Reset Zoom / Pan','Callback',@gui.gui_zoom_reset_zoom);
+	hZMenu = uimenu('Parent',hCMZ,'Label','Reset Zoom / Pan','Callback',@gui.zoom_reset_zoom);
 	hZoom=zoom(gcf);
 	hZoom.UIContextMenu = hCMZ;
-	zoom(gui.gui_retr('pivlab_axis'),'on')
+	zoom(gui.retr('pivlab_axis'),'on')
 	set(handles.panon,'Value',0);
 else
-	zoom(gui.gui_retr('pivlab_axis'),'off')
-	gui.gui_put('xzoomlimit', get (gui.gui_retr('pivlab_axis'), 'xlim'));
-	gui.gui_put('yzoomlimit', get (gui.gui_retr('pivlab_axis'), 'ylim'));
+	zoom(gui.retr('pivlab_axis'),'off')
+	gui.put('xzoomlimit', get (gui.retr('pivlab_axis'), 'xlim'));
+	gui.put('yzoomlimit', get (gui.retr('pivlab_axis'), 'ylim'));
 end
 

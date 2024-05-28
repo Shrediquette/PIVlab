@@ -1,27 +1,27 @@
 function capture_images_Callback(~,~,~) %Menu item is called
 filepath = fileparts(which('PIVlab_GUI.m'));
-gui.gui_switchui('multip24')
-acquisition.acquisition_select_capture_config_Callback
+gui.switchui('multip24')
+acquisition.select_capture_config_Callback
 
 if verLessThan('matlab','9.7') %R2019b
 	uiwait(msgbox('Image capture and synchronizer control in PIVlab requires at least MATLAB version 9.7 (R2019b).','modal'))
 end
-handles=gui.gui_gethand;
+handles=gui.gethand;
 if isempty(get(handles.ac_project,'String')) %if user hasnt entered a project path...
-	if ~isempty(gui.gui_retr('pathname'))
-		set(handles.ac_project,'String',fullfile(gui.gui_retr('pathname'),['PIVlabCapture_' char(datetime('today'))]));
+	if ~isempty(gui.retr('pathname'))
+		set(handles.ac_project,'String',fullfile(gui.retr('pathname'),['PIVlabCapture_' char(datetime('today'))]));
 	else
 		set(handles.ac_project,'String',fullfile(pwd,['PIVlabCapture_' char(datetime('today'))]));
 	end
 end
-serpo=gui.gui_retr('serpo');
+serpo=gui.retr('serpo');
 try
 	serpo.Port; %is there no other way to determine if serialport is working...?
 	alreadyconnected=1;
 catch
 	alreadyconnected=0;
 	delete(serpo)
-	gui.gui_put('serpo',[]);
+	gui.put('serpo',[]);
 	set(handles.ac_comport,'Value',1);
 	set(handles.ac_laserstatus,'String','N/A','BackgroundColor',[1 0 0])
 end
@@ -48,8 +48,8 @@ end
 
 
 % Set default image colormap limits
-gui.gui_put('ac_lower_clim',0);
-gui.gui_put('ac_upper_clim',2^16);
+gui.put('ac_lower_clim',0);
+gui.put('ac_upper_clim',2^16);
 delete(findobj('tag','shortcutlist'));
 %Keyboard shortcuts
 text(10,10,['Image acquisition keyboard shortcuts' sprintf('\n') 'CTRL SHIFT C : Toggle crosshair' sprintf('\n') 'CTRL SHIFT X : Toggle sharpness measure' sprintf('\n') 'CTRL SHIFT + : Increase display brightness' sprintf('\n') 'CTRL SHIFT - : Decrease display brightness' sprintf('\n') 'CTRL SHIFT K : Toggle between log and lin color scale' sprintf('\n') 'CTRL SHIFT H : Toggle histogram display'],'tag','shortcutlist','Color','black','BackgroundColor','white','VerticalAlignment','top');
@@ -65,11 +65,11 @@ try
 	end
 catch
 end
-if gui.gui_retr('parallel')==1
+if gui.retr('parallel')==1
 	button = questdlg('It is highly recommended to turn off parallel processing during image capture to save RAM.','Shut down parallel pool?','OK','Cancel','OK');
 	if strncmp(button,'OK',3)==1
-		gui.gui_put('parallel',1); %sets to "parallel on" and then presses the toggle button --> will turn off.
-		misc.misc_toggle_parallel_Callback
+		gui.put('parallel',1); %sets to "parallel on" and then presses the toggle button --> will turn off.
+		misc.toggle_parallel_Callback
 	end
 end
 

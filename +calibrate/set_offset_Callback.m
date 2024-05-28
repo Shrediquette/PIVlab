@@ -1,17 +1,17 @@
 function set_offset_Callback (~,~,~)
 %calxy=retr('calxy');
-filepath=gui.gui_retr('filepath');
-caliimg=gui.gui_retr('caliimg');
+filepath=gui.retr('filepath');
+caliimg=gui.retr('caliimg');
 if numel(caliimg)==0 && size(filepath,1) >1
-	gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
+	gui.sliderdisp(gui.retr('pivlab_axis'))
 end
-if size(filepath,1) >1 || numel(caliimg)>0 || gui.gui_retr('video_selection_done') == 1
-	handles=gui.gui_gethand;
+if size(filepath,1) >1 || numel(caliimg)>0 || gui.retr('video_selection_done') == 1
+	handles=gui.gethand;
 	delete(findobj('tag', 'offsetroi'))
-	gui.gui_toolsavailable(0)
+	gui.toolsavailable(0)
 
-	points_offsetx = gui.gui_retr('points_offsetx');
-	points_offsety = gui.gui_retr('points_offsety');
+	points_offsetx = gui.retr('points_offsetx');
+	points_offsety = gui.retr('points_offsety');
 
 
 	roi = images.roi.Crosshair;
@@ -20,11 +20,11 @@ if size(filepath,1) >1 || numel(caliimg)>0 || gui.gui_retr('video_selection_done
 	roi.Tag = 'offsetroi';
 	roi.Color = 'y';
 	roi.LineWidth = 1;
-	axes(gui.gui_retr('pivlab_axis'))
+	axes(gui.retr('pivlab_axis'))
 	draw(roi);
 
-	addlistener(roi,'MovingROI',@calibrate.calibrate_Offsetselectionevents);
-	addlistener(roi,'DeletingROI',@calibrate.calibrate_Offsetselectionevents);
+	addlistener(roi,'MovingROI',@calibrate.Offsetselectionevents);
+	addlistener(roi,'DeletingROI',@calibrate.Offsetselectionevents);
 
 	prompt =['Enter true X coordinate in mm:'];
 	dlgtitle = ['Set X offset'];
@@ -46,13 +46,13 @@ if size(filepath,1) >1 || numel(caliimg)>0 || gui.gui_retr('video_selection_done
 		answer_x{1} = regexprep(answer_x{1}, ',', '.');
 		answer_y{1} = regexprep(answer_y{1}, ',', '.');
 		points_offsetx = [roi.Position(1),roi.Position(2),str2num(answer_x{1})];
-		gui.gui_put('points_offsetx',points_offsetx);
+		gui.put('points_offsetx',points_offsetx);
 		points_offsety = [roi.Position(1),roi.Position(2),str2num(answer_y{1})];
-		gui.gui_put('points_offsety',points_offsety);
+		gui.put('points_offsety',points_offsety);
 	end
 	dummyevt.EventName = 'MovingROI';
-	calibrate.calibrate_Offsetselectionevents(roi,dummyevt); %run the moving event once to update displayed length
-	calibrate.calibrate_calccali
-	gui.gui_toolsavailable(1)
+	calibrate.Offsetselectionevents(roi,dummyevt); %run the moving event once to update displayed length
+	calibrate.calccali
+	gui.toolsavailable(1)
 end
 

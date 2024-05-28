@@ -1,5 +1,5 @@
 function shrink_grow_Callback (~,caller,~)
-pivlab_axis=gui.gui_retr('pivlab_axis');
+pivlab_axis=gui.retr('pivlab_axis');
 objects_in_axis=pivlab_axis.Children;
 found=0;
 for i=1:numel(objects_in_axis)
@@ -35,6 +35,6 @@ if found
 		objects_in_axis(i).Position(4)=objects_in_axis(i).Position(4)+buf;
 	end
 	evt.EventName='ROIMoved';
-	mask.mask_ROIevents(objects_in_axis(i),evt); %saves the modified position.
+	mask.ROIevents(objects_in_axis(i),evt); %saves the modified position.
 end
 

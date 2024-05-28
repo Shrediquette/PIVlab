@@ -1,14 +1,14 @@
 function initiate_straddling_graph
-handles=gui.gui_gethand;
+handles=gui.gethand;
 selected_fps_value = get(handles.ac_fps,'Value');
 selected_fps_string = get(handles.ac_fps,'String');
 selected_fps=str2double(selected_fps_string{selected_fps_value});
 if get(handles.ac_enable_straddling_figure, 'Value')==1
-	blind_time=gui.gui_retr('blind_time');
+	blind_time=gui.retr('blind_time');
 	if isempty(blind_time)
 		blind_time=1;
 	end
-	camera_type=gui.gui_retr('camera_type');
+	camera_type=gui.retr('camera_type');
 
 	if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly')
 		is_dbl_shutter = 1;

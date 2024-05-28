@@ -1,19 +1,19 @@
 function MainWindow_CloseRequestFcn(hObject, ~, ~)
-handles=gui.gui_gethand;
-batchModeActive=gui.gui_retr('batchModeActive');
+handles=gui.gethand;
+batchModeActive=gui.retr('batchModeActive');
 if batchModeActive == 0
 	button = questdlg('Do you want to quit PIVlab?','Quit?','Yes','Cancel','Cancel');
 else
 	button = 'Yes';
 end
 try
-	gui.gui_toolsavailable(1)
+	gui.toolsavailable(1)
 catch
 end
 if strcmp(button,'Yes')==1
 	try
-		homedir=gui.gui_retr('homedir');
-		pathname=gui.gui_retr('pathname');
+		homedir=gui.retr('homedir');
+		pathname=gui.retr('pathname');
 		save('PIVlab_settings_default.mat','homedir','pathname','-append');
 		last_selected_device = get(handles.ac_config, 'value');
 		save('PIVlab_settings_default.mat','last_selected_device','-append');

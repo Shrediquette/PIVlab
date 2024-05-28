@@ -1,5 +1,5 @@
 function still_or_animation_Callback(~,~,~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 str=get(handles.export_still_or_animation,'String');
 value=get(handles.export_still_or_animation,'Value');
 selected_format=str{value};

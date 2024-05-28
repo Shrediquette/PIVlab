@@ -1,9 +1,9 @@
 function generate_BG_img
-handles=gui.gui_gethand;
+handles=gui.gethand;
 if get(handles.bg_subtract,'Value')==1
-	bg_img_A = gui.gui_retr('bg_img_A');
-	bg_img_B = gui.gui_retr('bg_img_B');
-	sequencer=gui.gui_retr('sequencer');%Timeresolved or pairwise 0=timeres.; 1=pairwise
+	bg_img_A = gui.retr('bg_img_A');
+	bg_img_B = gui.retr('bg_img_B');
+	sequencer=gui.retr('sequencer');%Timeresolved or pairwise 0=timeres.; 1=pairwise
 	if sequencer ~= 2 % bg subtraction only makes sense with time-resolved and pairwise sequencing style, not with reference style.
 		if isempty(bg_img_A) || isempty(bg_img_B)
 			answer = questdlg('Mean intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
@@ -11,8 +11,8 @@ if get(handles.bg_subtract,'Value')==1
 				%disp('BG not present, calculating now')
 				%% Calculate BG for all images....
 				% read first image to determine properties
-				filepath = gui.gui_retr('filepath');
-				if gui.gui_retr('video_selection_done') == 0
+				filepath = gui.retr('filepath');
+				if gui.retr('video_selection_done') == 0
 					[~,~,ext] = fileparts(filepath{1});
 					if strcmp(ext,'.b16')
 						image1=f_readB16(filepath{1});
@@ -24,8 +24,8 @@ if get(handles.bg_subtract,'Value')==1
 						imagesource='normal_pixel_image';
 					end
 				else
-					video_reader_object = gui.gui_retr('video_reader_object');
-					video_frame_selection=gui.gui_retr('video_frame_selection');
+					video_reader_object = gui.retr('video_reader_object');
+					video_frame_selection=gui.retr('video_frame_selection');
 					image1 = read(video_reader_object,video_frame_selection(1));
 					image2 = read(video_reader_object,video_frame_selection(2));
 					imagesource='from_video';
@@ -66,7 +66,7 @@ if get(handles.bg_subtract,'Value')==1
 				%images
 				%if not: generate two background images. One from even frames,
 				%one from odd frames
-				gui.gui_toolsavailable(0,'Busy, please wait...')
+				gui.toolsavailable(0,'Busy, please wait...')
 				updatecntr=0;
 
 				%das innere zu einer function machen und außen parfor...?
@@ -78,7 +78,7 @@ if get(handles.bg_subtract,'Value')==1
 					%% update progress bar
 					updatecntr=updatecntr+1;
 					if updatecntr==5
-						gui.gui_update_progress((round(i/size(filepath,1)*100)))
+						gui.update_progress((round(i/size(filepath,1)*100)))
 						%set(handles.preview_preprocess, 'String', ['Progress: ' num2str(round(i/size(filepath,1)*99)) ' %']);drawnow expose;
 						updatecntr=0;
 					end
@@ -186,15 +186,15 @@ if get(handles.bg_subtract,'Value')==1
 				end
 
 				%make results accessible to the rest of the GUI:
-				gui.gui_put('bg_img_A',image1_bg);
+				gui.put('bg_img_A',image1_bg);
 				if sequencer==1 %not time-resolved
-					gui.gui_put('bg_img_B',image2_bg);
+					gui.put('bg_img_B',image2_bg);
 				else
-					gui.gui_put('bg_img_B',image1_bg); %timeresolved --> same bg image for a and b
+					gui.put('bg_img_B',image1_bg); %timeresolved --> same bg image for a and b
 				end
 				set(handles.preview_preprocess, 'String', 'Apply and preview current frame');drawnow;
-				gui.gui_update_progress(0)
-				gui.gui_toolsavailable(1)
+				gui.update_progress(0)
+				gui.toolsavailable(1)
 			else % user has checkbox enabled, but doesn't want to calculate the background...
 				set(handles.bg_subtract,'Value',0);
 			end

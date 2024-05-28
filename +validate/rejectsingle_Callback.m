@@ -1,6 +1,6 @@
 function rejectsingle_Callback(~, ~, ~)
-handles=gui.gui_gethand;
-resultslist=gui.gui_retr('resultslist');
+handles=gui.gethand;
+resultslist=gui.retr('resultslist');
 frame=floor(get(handles.fileselector, 'value'));
 if size(resultslist,2)>=frame %2nd dimesnion = frame
 	x=resultslist{1,frame};
@@ -9,7 +9,7 @@ if size(resultslist,2)>=frame %2nd dimesnion = frame
 	v=resultslist{4,frame};
 	typevector_original=resultslist{5,frame};
 	typevector=typevector_original;
-	manualdeletion=gui.gui_retr('manualdeletion');
+	manualdeletion=gui.retr('manualdeletion');
 	framemanualdeletion=[];
 	if numel(manualdeletion)>0
 		if size(manualdeletion,2)>=frame
@@ -22,7 +22,7 @@ if size(resultslist,2)>=frame %2nd dimesnion = frame
 	if numel(u)>0
 		delete(findobj(gca,'tag','manualdot'));
 		text(50,10,'Right mouse button exits manual validation mode.','color','g','fontsize',8, 'BackgroundColor', 'k', 'tag', 'hint')
-		gui.gui_toolsavailable(0);
+		gui.toolsavailable(0);
 		button = 1;
 		while button == 1
 			[xposition,yposition,button] = ginput(1);
@@ -50,12 +50,12 @@ if size(resultslist,2)>=frame %2nd dimesnion = frame
 			end
 		end
 		manualdeletion{frame}=framemanualdeletion;
-		gui.gui_put('manualdeletion',manualdeletion);
+		gui.put('manualdeletion',manualdeletion);
 
 		delete(findobj(gca,'Type','text','color','r'));
 		delete(findobj(gca,'tag','hint'));
 		text(50,50,'Result will be shown after applying vector validation','color','r','fontsize',10, 'fontweight','bold', 'BackgroundColor', 'k')
 	end
 end
-gui.gui_toolsavailable(1);
+gui.toolsavailable(1);
 

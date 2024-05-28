@@ -1,5 +1,5 @@
 function save_settings_Callback(~, ~, ~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 clahe_enable=get(handles.clahe_enable,'value');
 clahe_size=get(handles.clahe_size,'string');
 enable_highpass=get(handles.enable_highpass,'value');
@@ -62,8 +62,8 @@ interpr=get(handles.interpr,'string');
 interpg=get(handles.interpg,'string');
 interpb=get(handles.interpb,'string');
 
-calxy=gui.gui_retr('calxy');
-calu=gui.gui_retr('calu');calv=gui.gui_retr('calv');
+calxy=gui.retr('calxy');
+calu=gui.retr('calu');calv=gui.retr('calv');
 
 try
 	%neu v1.5:
@@ -85,11 +85,11 @@ try
 	%v2.41
 	x_axis_direction=get(handles.x_axis_direction,'value');
 	y_axis_direction=get(handles.y_axis_direction,'value');
-	size_of_the_image=gui.gui_retr('size_of_the_image');
-	points_offsetx=gui.gui_retr('points_offsetx');
-	points_offsety=gui.gui_retr('points_offsety');
-	offset_x_true=gui.gui_retr('offset_x_true');
-	offset_y_true=gui.gui_retr('offset_y_true');
+	size_of_the_image=gui.retr('size_of_the_image');
+	points_offsetx=gui.retr('points_offsetx');
+	points_offsety=gui.retr('points_offsety');
+	offset_x_true=gui.retr('offset_x_true');
+	offset_y_true=gui.retr('offset_y_true');
 	contrast_filter_thresh=get(handles.contrast_filter_thresh,'string');
 	bright_filter_thresh=get(handles.bright_filter_thresh,'string');
 	do_bright_filter=get(handles.do_bright_filter,'Value');
@@ -114,7 +114,7 @@ catch
 	disp('repeat_last didnt work2')
 end
 
-pointscali=gui.gui_retr('pointscali');
+pointscali=gui.retr('pointscali');
 if isempty(pointscali)
 	clear pointscali
 end

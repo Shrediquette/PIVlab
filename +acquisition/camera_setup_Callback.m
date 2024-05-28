@@ -1,5 +1,5 @@
 function camera_setup_Callback(~,~,~)
-camera_type=gui.gui_retr('camera_type');
+camera_type=gui.retr('camera_type');
 if strcmp(camera_type,'chronos')
 	PIVlab_capture_chronos_settings_GUI
 elseif strcmp(camera_type,'OPTOcam')

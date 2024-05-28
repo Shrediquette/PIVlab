@@ -1,5 +1,5 @@
 function delmarkers_Callback(~, ~, ~)
-gui.gui_put('manmarkersX',[]);
-gui.gui_put('manmarkersY',[]);
+gui.put('manmarkersX',[]);
+gui.put('manmarkersY',[]);
 delete(findobj('tag','manualmarker'));
 

@@ -1,5 +1,5 @@
 function found_the_data = push_recorded_to_GUI(camera_type,imageamount)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 projectpath=get(handles.ac_project,'String');
 %imageamount=str2double(get(handles.ac_imgamount,'String'));
 pathlist={};
@@ -27,9 +27,9 @@ for i=1:imageamount
 end
 if all(file_existing)
 	s = struct('name',pathfilelist,'folder',pathlist,'isdir',0);
-	gui.gui_put('sequencer',1);
-	gui.gui_put('capturing',0);
-	import.import_loadimgsbutton_Callback([],[],0,s);
+	gui.put('sequencer',1);
+	gui.put('capturing',0);
+	import.loadimgsbutton_Callback([],[],0,s);
 	found_the_data=1;
 else
 	found_the_data=0;

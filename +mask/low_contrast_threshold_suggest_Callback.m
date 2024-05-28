@@ -1,10 +1,10 @@
 function low_contrast_threshold_suggest_Callback(~,~,~)
-handles=gui.gui_gethand;
-filepath=gui.gui_retr('filepath');
+handles=gui.gethand;
+filepath=gui.retr('filepath');
 if size(filepath,1) > 1 %did the user load images?
 	selected=2*floor(get(handles.fileselector, 'value'))-1;
-	[~,rawimageA]=import.import_get_img(selected);
-	[~,rawimageB]=import.import_get_img(selected+1);
+	[~,rawimageA]=import.get_img(selected);
+	[~,rawimageB]=import.get_img(selected+1);
 
 	if size(rawimageA,3)>1
 		rawimageA=rawimageA(:,:,1);

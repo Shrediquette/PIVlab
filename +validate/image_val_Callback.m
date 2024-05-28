@@ -1,3 +1,3 @@
 function image_val_Callback(~, ~, ~)
-gui.gui_switchui('multip23')
+gui.switchui('multip23')
 

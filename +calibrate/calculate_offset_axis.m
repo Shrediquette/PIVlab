@@ -1,11 +1,11 @@
 function offset = calculate_offset_axis (axis,pixel_position,true_position)
-handles=gui.gui_gethand;
-calxy=gui.gui_retr('calxy');
-size_of_the_image=gui.gui_retr('size_of_the_image');
+handles=gui.gethand;
+calxy=gui.retr('calxy');
+size_of_the_image=gui.retr('size_of_the_image');
 if isempty(size_of_the_image)%user applies calibration before loading images
-	caliimg=gui.gui_retr('caliimg');
+	caliimg=gui.retr('caliimg');
 	size_of_the_image=size(caliimg);
-	gui.gui_put('size_of_the_image',size_of_the_image);
+	gui.put('size_of_the_image',size_of_the_image);
 end
 if strcmp(axis,'x')
 	axis_direction=get(handles.x_axis_direction,'value');

@@ -1,7 +1,7 @@
 function dispStaticROI(target_axis)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 delete(findobj(target_axis,'tag', {'RegionOfInterest' 'roiplot'}));
-roirect=gui.gui_retr('roirect');
+roirect=gui.retr('roirect');
 x=[roirect(1)  roirect(1)+roirect(3) roirect(1)+roirect(3)  roirect(1)            roirect(1) ];
 y=[roirect(2)  roirect(2)            roirect(2)+roirect(4)  roirect(2)+roirect(4) roirect(2) ];
 rectangle('Position',roirect,'LineWidth',1,'LineStyle','-','edgecolor','b','tag','roiplot')

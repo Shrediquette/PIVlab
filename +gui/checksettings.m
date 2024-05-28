@@ -1,8 +1,8 @@
 function ok=checksettings
-handles=gui.gui_gethand;
+handles=gui.gethand;
 mess={};
-filepath=gui.gui_retr('filepath');
-if size(filepath,1) <2 && gui.gui_retr('video_selection_done') == 0
+filepath=gui.retr('filepath');
+if size(filepath,1) <2 && gui.retr('video_selection_done') == 0
 	mess{size(mess,2)+1}='No images were loaded';
 end
 if get(handles.clahe_enable, 'value')==1

@@ -1,5 +1,5 @@
 function quick1_Callback (~,~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 set(handles.quick1,'Value',0)
-import.import_loadimgs_Callback
+import.loadimgs_Callback
 

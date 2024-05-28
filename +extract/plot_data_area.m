@@ -1,33 +1,33 @@
 function [returned_data, returned_header]=plot_data_area(currentframe,refreshdisplay)
 %returned_data=cell(0);
-handles=gui.gui_gethand;
-resultslist=gui.gui_retr('resultslist');
+handles=gui.gethand;
+resultslist=gui.retr('resultslist');
 extractwhat=get(handles.extraction_choice_area,'Value');
 if extractwhat==9 || extractwhat==10
-	plot.plot_derivative_calc(currentframe,extractwhat+2,0);
+	plot.derivative_calc(currentframe,extractwhat+2,0);
 else
-	plot.plot_derivative_calc(currentframe,extractwhat+1,0);
+	plot.derivative_calc(currentframe,extractwhat+1,0);
 end
-derived=gui.gui_retr('derived');
+derived=gui.retr('derived');
 if extractwhat==9 || extractwhat==10
 	maptoget=derived{extractwhat+1,currentframe};
 else
 	maptoget=derived{extractwhat,currentframe};
 end
-xposition=gui.gui_retr('xposition');
-yposition=gui.gui_retr('yposition');
-extract_type = gui.gui_retr('extract_type');
+xposition=gui.retr('xposition');
+yposition=gui.retr('yposition');
+extract_type = gui.retr('extract_type');
 if ~strcmp(extract_type,'extract_poly_area') && ~strcmp(extract_type,'extract_rectangle_area') && ~strcmp(extract_type,'extract_circle_area') && ~strcmp(extract_type,'extract_circle_series_area')
 	if refreshdisplay
 		msgbox('No area was drawn. Click ''Draw!'' on the left panel to start drawing an extraction area.','Error','error','modal')
 	end
 else
-	if (gui.gui_retr('calu')==1 || gui.gui_retr('calu')==-1) && gui.gui_retr('calxy')==1
+	if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 		distunit='px^2';
 	else
 		distunit='m^2';
 	end
-	if (gui.gui_retr('calu')==1 || gui.gui_retr('calu')==-1) && gui.gui_retr('calxy')==1
+	if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 		distunit_2=' px';
 	else
 		distunit_2=' m';
@@ -42,12 +42,12 @@ else
 	unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
 
 	if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0 %if there is data in the current frame
-		maptoget=plot.plot_rescale_maps_nan(maptoget,0,currentframe);
+		maptoget=plot.rescale_maps_nan(maptoget,0,currentframe);
 		if strcmp(extract_type,'extract_poly_area') || strcmp(extract_type,'extract_rectangle_area') || strcmp(extract_type,'extract_circle_area')
-			BW=extract.extract_convert_roi_to_binary(xposition,yposition,extract_type,size(maptoget));
-			area=extract.extract_get_area_of_selection(BW,maptoget,1);
-			mean_value=extract.extract_get_mean_of_selection(BW,maptoget);
-			area_integral=extract.extract_get_integral_of_selection(BW,maptoget);
+			BW=extract.convert_roi_to_binary(xposition,yposition,extract_type,size(maptoget));
+			area=extract.get_area_of_selection(BW,maptoget,1);
+			mean_value=extract.get_mean_of_selection(BW,maptoget);
+			area_integral=extract.get_integral_of_selection(BW,maptoget);
 			returned_header = {strjoin({'Area (' distunit ')'},''),strjoin({'Mean (' unitpar ')'},'') , strjoin({'Integral (' unitpar '*' distunit ')'},'')};
 			returned_data = {area, mean_value, area_integral};
 		elseif strcmp(extract_type,'extract_circle_series_area')
@@ -70,9 +70,9 @@ else
 			returned_data=cell(size(extraction_coordinates_x,2),4);
 			for i=1:size(extraction_coordinates_x,2)
 				BW = poly2mask(extraction_coordinates_x(:,i),extraction_coordinates_y(:,i),size(maptoget,1),size(maptoget,2));
-				area=extract.extract_get_area_of_selection(BW,maptoget,1);
-				mean_value=extract.extract_get_mean_of_selection(BW,maptoget);
-				area_integral=extract.extract_get_integral_of_selection(BW,maptoget);
+				area=extract.get_area_of_selection(BW,maptoget,1);
+				mean_value=extract.get_mean_of_selection(BW,maptoget);
+				area_integral=extract.get_integral_of_selection(BW,maptoget);
 				old_string=get (handles.area_results,'String');
 				returned_header = {strjoin({'Circle Nr.'},''),strjoin({'Area (' distunit ')'},''),strjoin({'Mean (' unitpar ')'},'') , strjoin({'Integral (' unitpar '*' distunit ')'},'')};
 				returned_data{i,1}=i;

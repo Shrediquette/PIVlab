@@ -1,14 +1,14 @@
 function veclick(~,~)
 %only active if vectors are displayed.
-handles=gui.gui_gethand;
+handles=gui.gethand;
 currentframe=2*floor(get(handles.fileselector, 'value'))-1;
-resultslist=gui.gui_retr('resultslist');
+resultslist=gui.retr('resultslist');
 
 %apply calibration, direction and offset to x and y coordinates
 x=resultslist{1,(currentframe+1)/2};
 y=resultslist{2,(currentframe+1)/2};
 
-[x_cal,y_cal]=calibrate.calibrate_xy (x,y);
+[x_cal,y_cal]=calibrate.xy (x,y);
 
 pos=get(gca,'CurrentPoint');
 
@@ -49,15 +49,15 @@ end
 if typevector(info(1,1),info(1,2)) ~=0
 	delete(findobj('tag', 'infopoint'));
 	%here, the calibration matters...
-	if (gui.gui_retr('calu')==1 || gui.gui_retr('calu')==-1) && gui.gui_retr('calxy')==1%not calibrated
-		set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*gui.gui_retr('calu')-gui.gui_retr('subtr_u'))*100000)/100000) ' px/fr']);
-		set(handles.v_cp, 'String', ['v:' num2str(round((v(info(1,1),info(1,2))*gui.gui_retr('calv')-gui.gui_retr('subtr_v'))*100000)/100000) ' px/fr']);
+	if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1%not calibrated
+		set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*gui.retr('calu')-gui.retr('subtr_u'))*100000)/100000) ' px/fr']);
+		set(handles.v_cp, 'String', ['v:' num2str(round((v(info(1,1),info(1,2))*gui.retr('calv')-gui.retr('subtr_v'))*100000)/100000) ' px/fr']);
 		set(handles.x_cp, 'String', ['x:' num2str(round((x_cal(info(1,1),info(1,2)))*10000)/10000) ' px']);
 		set(handles.y_cp, 'String', ['y:' num2str(round((y_cal(info(1,1),info(1,2)))*10000)/10000) ' px']);
 	else %calibrated
 
-		u_cp_string_velocity=u(info(1,1),info(1,2))*gui.gui_retr('calu')-gui.gui_retr('subtr_u');
-		v_cp_string_velocity=v(info(1,1),info(1,2))*gui.gui_retr('calv')-gui.gui_retr('subtr_v');
+		u_cp_string_velocity=u(info(1,1),info(1,2))*gui.retr('calu')-gui.retr('subtr_u');
+		v_cp_string_velocity=v(info(1,1),info(1,2))*gui.retr('calv')-gui.retr('subtr_v');
 		x_cp_string = x_cal(info(1,1),info(1,2));
 		y_cp_string = y_cal(info(1,1),info(1,2));
 
@@ -78,8 +78,8 @@ if typevector(info(1,1),info(1,2)) ~=0
 			set(handles.y_cp, 'String', ['y:' sprintf('%0.4f',y_cp_string)  ' m']);
 		end
 	end
-	derived=gui.gui_retr('derived');
-	displaywhat=gui.gui_retr('displaywhat');
+	derived=gui.retr('derived');
+	displaywhat=gui.retr('displaywhat');
 	if displaywhat>1
 		if size (derived,2) >= (currentframe+1)/2
 			if numel(derived{displaywhat-1,(currentframe+1)/2})>0
@@ -94,7 +94,7 @@ if typevector(info(1,1),info(1,2)) ~=0
 					end
 					set(handles.scalar_cp, 'String', [name{displaywhat} ': ' scalar_to_plot_string]);
 				catch
-					plot.plot_derivs_Callback
+					plot.derivs_Callback
 					name=get(handles.derivchoice,'string');
 					scalar_to_plot=map(info(1,1),info(1,2));
 					if scalar_to_plot >100 || scalar_to_plot < 0.001

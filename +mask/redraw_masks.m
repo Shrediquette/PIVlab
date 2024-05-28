@@ -1,6 +1,6 @@
 function redraw_masks
 %redraws all masks that are saved in mask_positions
-handles=gui.gui_gethand;
+handles=gui.gethand;
 
 if get(handles.mask_edit_mode,'Value')==1 %Mask mode is "Edit"
 	mask_editing_possible=1;
@@ -8,7 +8,7 @@ else
 	mask_editing_possible=0;
 end
 currentframe=floor(get(handles.fileselector, 'value'));
-masks_in_frame=gui.gui_retr('masks_in_frame');
+masks_in_frame=gui.retr('masks_in_frame');
 if isempty(masks_in_frame)
 	%masks_in_frame=cell(currentframe,1);
 	masks_in_frame=cell(1,currentframe);
@@ -40,9 +40,9 @@ if mask_editing_possible==1
 		roi.Label=mask_positions{i,4};
 		roi.Tag=mask_positions{i,5};
 		roi.Color=mask_positions{i,3};
-		addlistener(roi,'ROIMoved',@mask.mask_ROIevents);
-		addlistener(roi,'DeletingROI',@mask.mask_ROIevents);
-		addlistener(roi,'ROIClicked',@mask.mask_ROIevents);
+		addlistener(roi,'ROIMoved',@mask.ROIevents);
+		addlistener(roi,'DeletingROI',@mask.ROIevents);
+		addlistener(roi,'ROIClicked',@mask.ROIevents);
 		roi.FaceAlpha=0.5;
 		%roi.EdgeAlpha=0.75;
 		roi.LineWidth=1;

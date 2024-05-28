@@ -1,5 +1,5 @@
 function set_bg_color_for_mean_imgs(currentframe, handles)
-ismean=gui.gui_retr('ismean');
+ismean=gui.retr('ismean');
 if size(ismean,1)>=(currentframe+1)/2
 	if ismean((currentframe+1)/2,1) ==1
 		currentwasmean=1;

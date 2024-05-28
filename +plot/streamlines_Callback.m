@@ -1,3 +1,3 @@
 function streamlines_Callback(~, ~, ~)
-gui.gui_switchui('multip18');
+gui.switchui('multip18');
 

@@ -1,6 +1,6 @@
 function load_polyline_Callback (caller,~)
-filepath=gui.gui_retr('filepath');
-handles=gui.gui_gethand;
+filepath=gui.retr('filepath');
+handles=gui.gethand;
 if size(filepath,1) > 1 %did the user load images?
 	[polyfile,polypath] = uigetfile('*.mat','Load coordinate','PIVlab_coordinates.mat');
 	if isequal(polyfile,0) | isequal(polypath,0)
@@ -20,13 +20,13 @@ if size(filepath,1) > 1 %did the user load images?
 				end
 			end
 			if loading_correct_data==1
-				extract.extract_clear_plot_Callback
-				gui.gui_put('xposition',xposition);
-				gui.gui_put('yposition',yposition);
-				gui.gui_put('extract_type',extract_type);
+				extract.clear_plot_Callback
+				gui.put('xposition',xposition);
+				gui.put('yposition',yposition);
+				gui.put('extract_type',extract_type);
 				delete(findobj('tag', 'extractline'))
 				delete(findobj('tag','areaint'));
-				extract.extract_update_display(extract_type, xposition, yposition);
+				extract.update_display(extract_type, xposition, yposition);
 			else
 				msgbox('You tried to load polyline coordinates from the area extraction panel or vice versa.','Error','error','modal')
 			end

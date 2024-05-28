@@ -24,9 +24,9 @@ for ind = 1:numel(blocations)
 	[~,guid] = fileparts(tempname);
 	roi.Tag = guid;
 	%addlistener(roi,'MovingROI',@ROIevents);
-	addlistener(roi,'ROIMoved',@mask.mask_ROIevents);
-	addlistener(roi,'DeletingROI',@mask.mask_ROIevents);
-	addlistener(roi,'ROIClicked',@mask.mask_ROIevents);
-	masks_in_frame = mask.mask_update_mask_memory(roi,frame,masks_in_frame);
+	addlistener(roi,'ROIMoved',@mask.ROIevents);
+	addlistener(roi,'DeletingROI',@mask.ROIevents);
+	addlistener(roi,'ROIClicked',@mask.ROIevents);
+	masks_in_frame = mask.update_mask_memory(roi,frame,masks_in_frame);
 end
 

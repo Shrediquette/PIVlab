@@ -1,21 +1,21 @@
 function apply_filter_all_Callback(~, ~, ~)
-resultslist=gui.gui_retr('resultslist');
+resultslist=gui.retr('resultslist');
 
 if ~isempty(resultslist)
-	handles=gui.gui_gethand;
-	filepath=gui.gui_retr('filepath');
-	gui.gui_toolsavailable(0,'Busy, please wait...')
-	gui.gui_put('derived', []); %clear derived parameters if user modifies source data
-	if gui.gui_retr('video_selection_done') == 0
+	handles=gui.gethand;
+	filepath=gui.retr('filepath');
+	gui.toolsavailable(0,'Busy, please wait...')
+	gui.put('derived', []); %clear derived parameters if user modifies source data
+	if gui.retr('video_selection_done') == 0
 		num_frames_to_process=floor(size(filepath,1)/2)+1;
 	else
-		video_frame_selection=gui.gui_retr('video_frame_selection');
+		video_frame_selection=gui.retr('video_frame_selection');
 		num_frames_to_process=floor(numel(video_frame_selection)/2)+1;
 	end
-	if gui.gui_retr('video_selection_done') == 1 || gui.gui_retr('parallel')==0 %if post-processing a video, parallelization cannot be used.
+	if gui.retr('video_selection_done') == 1 || gui.retr('parallel')==0 %if post-processing a video, parallelization cannot be used.
 		for i=1:num_frames_to_process
-			validate.validate_filtervectors(i)
-			gui.gui_update_progress((i-1)/num_frames_to_process*100)
+			validate.filtervectors(i)
+			gui.update_progress((i-1)/num_frames_to_process*100)
 			%set (handles.apply_filter_all, 'string', ['Please wait... (' int2str((i-1)/num_frames_to_process*100) '%)']);
 			drawnow;
 		end
@@ -28,8 +28,8 @@ if ~isempty(resultslist)
 			slicedfilepath2{k}=filepath{i+1};
 		end
 		if get(handles.bg_subtract,'Value')==1
-			bg_img_A = gui.gui_retr('bg_img_A');
-			bg_img_B = gui.gui_retr('bg_img_B');
+			bg_img_A = gui.retr('bg_img_A');
+			bg_img_B = gui.retr('bg_img_B');
 			bg_sub=1;
 		else
 			bg_img_A=[];
@@ -38,26 +38,26 @@ if ~isempty(resultslist)
 		end
 		resultslist(10,:)={[]}; %remove smoothed results when user modifies original data
 		resultslist(11,:)={[]};
-		calu=gui.gui_retr('calu');calv=gui.gui_retr('calv');
+		calu=gui.retr('calu');calv=gui.retr('calv');
 		x=resultslist(1,:);
 		y=resultslist(2,:);
 		u=resultslist(3,:);
 		v=resultslist(4,:);
 		typevector=resultslist(5,:);
 		typevector_original=resultslist(5,:);
-		manualdeletion=gui.gui_retr('manualdeletion');
+		manualdeletion=gui.retr('manualdeletion');
 
 		if numel(manualdeletion)>0
 			for i=1:size(u,2)
 				if size(manualdeletion,2)>=i
 					if isempty(manualdeletion{1,i}) ==0
 						framemanualdeletion=manualdeletion{i};
-						[u{i},v{i},typevector{i}]=validate.validate_manual_point_deletion(u{i},v{i},typevector{i},framemanualdeletion);
+						[u{i},v{i},typevector{i}]=validate.manual_point_deletion(u{i},v{i},typevector{i},framemanualdeletion);
 					end
 				end
 			end
 		end
-		velrect=gui.gui_retr('velrect');
+		velrect=gui.retr('velrect');
 		do_stdev_check = get(handles.stdev_check, 'value');
 		stdthresh=str2double(get(handles.stdev_thresh, 'String'));
 		do_local_median = get(handles.loc_median, 'value');
@@ -114,7 +114,7 @@ if ~isempty(resultslist)
 					A=[];B=[];rawimageA=[];rawimageB=[];
 				end
 				corr2_value=resultslist{12,i};
-				[u_new{i},v_new{i},typevector_new{i}]=validate.validate_filtervectors_all_parallel(x{i},y{i},u{i},v{i},typevector_original{i},calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh);
+				[u_new{i},v_new{i},typevector_new{i}]=validate.filtervectors_all_parallel(x{i},y{i},u{i},v{i},typevector_original{i},calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh);
 				hbar.iterate(1); %#ok<*PFBNS>
 			end
 		end
@@ -147,11 +147,11 @@ if ~isempty(resultslist)
 		resultslist(7, :) = u_new;
 		resultslist(8, :) = v_new;
 		resultslist(9, :) = typevector_new;
-		gui.gui_put('resultslist', resultslist);
+		gui.put('resultslist', resultslist);
 	end
 	%set (handles.apply_filter_all, 'string', 'Apply to all frames');
-	gui.gui_update_progress(0)
-	gui.gui_toolsavailable(1)
-	gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'));
+	gui.update_progress(0)
+	gui.toolsavailable(1)
+	gui.sliderdisp(gui.retr('pivlab_axis'));
 end
 

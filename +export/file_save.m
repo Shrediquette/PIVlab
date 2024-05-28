@@ -1,14 +1,14 @@
 function file_save (currentframe,FileName,PathName,type)
-handles=gui.gui_gethand;
-resultslist=gui.gui_retr('resultslist');
-derived=gui.gui_retr('derived');
-filename=gui.gui_retr('filename');
-calu=gui.gui_retr('calu');calv=gui.gui_retr('calv');
-calxy=gui.gui_retr('calxy');
+handles=gui.gethand;
+resultslist=gui.retr('resultslist');
+derived=gui.retr('derived');
+filename=gui.retr('filename');
+calu=gui.retr('calu');calv=gui.retr('calv');
+calxy=gui.retr('calxy');
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	x=resultslist{1,currentframe};
 	y=resultslist{2,currentframe};
-	[x_cal,y_cal]=calibrate.calibrate_xy (x,y);
+	[x_cal,y_cal]=calibrate.xy (x,y);
 
 	if size(resultslist,1)>6 %filtered exists
 		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
@@ -39,8 +39,8 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 end
 u(typevector==0)=NaN;
 v(typevector==0)=NaN;
-subtract_u=gui.gui_retr('subtr_u');
-subtract_v=gui.gui_retr('subtr_v');
+subtract_u=gui.retr('subtr_u');
+subtract_v=gui.retr('subtr_v');
 
 if type==1 %ascii file
 	delimiter=get(handles.delimiter, 'value');
@@ -59,7 +59,7 @@ if type==1 %ascii file
 		header2=[];
 	end
 	if get(handles.add_header, 'value')==1
-		if (gui.gui_retr('calu')==1 || gui.gui_retr('calu')==-1) && gui.gui_retr('calxy')==1
+		if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 			if get(handles.export_vort, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
 				header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'Vector type [-]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'dcev [1]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
 			else
@@ -92,15 +92,15 @@ if type==1 %ascii file
 		fclose(fid);
 	end
 	if get(handles.export_vort, 'Value') == 1 %sollen alle derivatives exportiert werden?
-		plot.plot_derivative_calc(currentframe,2,1); %vorticity
-		plot.plot_derivative_calc(currentframe,3,1); %magnitude
+		plot.derivative_calc(currentframe,2,1); %vorticity
+		plot.derivative_calc(currentframe,3,1); %magnitude
 		%u und v habe ich ja...
-		plot.plot_derivative_calc(currentframe,6,1); %divergence
-		plot.plot_derivative_calc(currentframe,7,1); %dcev
-		plot.plot_derivative_calc(currentframe,8,1); %shear
-		plot.plot_derivative_calc(currentframe,9,1); %strain
-		plot.plot_derivative_calc(currentframe,11,1); %vectorangle
-		derived=gui.gui_retr('derived');
+		plot.derivative_calc(currentframe,6,1); %divergence
+		plot.derivative_calc(currentframe,7,1); %dcev
+		plot.derivative_calc(currentframe,8,1); %shear
+		plot.derivative_calc(currentframe,9,1); %strain
+		plot.derivative_calc(currentframe,11,1); %vectorangle
+		derived=gui.retr('derived');
 		vort=derived{2-1,currentframe};
 		magn=derived{3-1,currentframe};
 		div=derived{6-1,currentframe};
@@ -127,7 +127,7 @@ if type==3 %paraview vtk PARAVIEW DATEN OHNE die ganzen derivatives.... Berechne
 
 	nr_of_elements=numel(x_cal);
 	fid = fopen(fullfile(PathName,FileName), 'w');
-	if (gui.gui_retr('calu')==1 || gui.gui_retr('calu')==-1) && gui.gui_retr('calxy')==1
+	if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 		info='[px/frame]';
 	else
 		info='[m/s]';
@@ -160,7 +160,7 @@ if type==4 %tecplot file
 	delimiter = ' ';
 	header1=['# PIVlab by W.Th. & E.J.S., TECPLOT output - ' char(datetime('today'))];
 	header2=['# FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(calu)];
-	if (gui.gui_retr('calu')==1 || gui.gui_retr('calu')==-1) && gui.gui_retr('calxy')==1
+	if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 		if get(handles.export_vort_tec, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
 			header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'dcev [1]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
 			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "dcev", "simple_shear", "simple_strain", "vector_direction"';
@@ -185,16 +185,16 @@ if type==4 %tecplot file
 	fclose(fid);
 
 	if get(handles.export_vort_tec, 'Value') == 1 %sollen alle derivatives exportiert werden?
-		plot.plot_derivative_calc(currentframe,2,1); %vorticity
-		plot.plot_derivative_calc(currentframe,3,1); %magnitude
+		plot.derivative_calc(currentframe,2,1); %vorticity
+		plot.derivative_calc(currentframe,3,1); %magnitude
 		%u und v habe ich ja...
-		plot.plot_derivative_calc(currentframe,6,1); %divergence
-		plot.plot_derivative_calc(currentframe,7,1); %dcev
-		plot.plot_derivative_calc(currentframe,8,1); %shear
-		plot.plot_derivative_calc(currentframe,9,1); %strain
-		plot.plot_derivative_calc(currentframe,11,1); %vectorangle
+		plot.derivative_calc(currentframe,6,1); %divergence
+		plot.derivative_calc(currentframe,7,1); %dcev
+		plot.derivative_calc(currentframe,8,1); %shear
+		plot.derivative_calc(currentframe,9,1); %strain
+		plot.derivative_calc(currentframe,11,1); %vectorangle
 		%derivative_calc(currentframe,12,1); %correlation coefficient
-		derived=gui.gui_retr('derived');
+		derived=gui.retr('derived');
 		vort=derived{2-1,currentframe};
 		magn=derived{3-1,currentframe};
 		div=derived{6-1,currentframe};

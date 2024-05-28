@@ -1,7 +1,7 @@
 function statistics_Callback(~, ~, ~)
-gui.gui_switchui('multip14')
-filepath=gui.gui_retr('filepath');
+gui.switchui('multip14')
+filepath=gui.retr('filepath');
 if size(filepath,1) > 1
-	gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
+	gui.sliderdisp(gui.retr('pivlab_axis'))
 end
 

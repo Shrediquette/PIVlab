@@ -1,5 +1,5 @@
 function quick2_Callback (~,~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 set(handles.quick2,'Value',0)
-mask.mask_img_mask_new_Callback
+mask.img_mask_new_Callback
 

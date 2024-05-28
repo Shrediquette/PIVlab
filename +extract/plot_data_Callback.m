@@ -1,18 +1,18 @@
 function plot_data_Callback(A, ~, ~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 
 if strcmp (A.Tag,'plot_data') %function called from button press
 	currentframe=floor(get(handles.fileselector, 'value'));
 else %function called from other skript
 	currentframe=A.Tag;
 end
-resultslist=gui.gui_retr('resultslist');
+resultslist=gui.retr('resultslist');
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	x=resultslist{1,currentframe};
 	y=resultslist{2,currentframe};
-	xposition=gui.gui_retr('xposition');
-	yposition=gui.gui_retr('yposition');
-	extract_type=gui.gui_retr('extract_type');
+	xposition=gui.retr('xposition');
+	yposition=gui.retr('yposition');
+	extract_type=gui.retr('extract_type');
 	if get(handles.draw_what,'value')==3 %circle series
 		set(handles.extraction_choice,'Value',11); %set to tangent
 	end
@@ -49,20 +49,20 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 
 		switch extractwhat
 			case {1,2,3,4,5,6,7,8}
-				plot.plot_derivative_calc(currentframe,extractwhat+1,0);
-				derived=gui.gui_retr('derived');
+				plot.derivative_calc(currentframe,extractwhat+1,0);
+				derived=gui.retr('derived');
 				maptoget=derived{extractwhat,currentframe};
-				maptoget=plot.plot_rescale_maps_nan(maptoget,0,currentframe);
+				maptoget=plot.rescale_maps_nan(maptoget,0,currentframe);
 				[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
 				distance=linspace(0,length,size(c,1))';
 			case {9,10}
 				% auf stelle 9 steht vector angle. Bei derivatives ist der aber auf platz 11. daher zwei dazu
 				%auf stelle 10 steht correlation coeff, bei derivatives auf
 				%12, daher zwei dazu
-				plot.plot_derivative_calc(currentframe,extractwhat+2,0);
-				derived=gui.gui_retr('derived');
+				plot.derivative_calc(currentframe,extractwhat+2,0);
+				derived=gui.retr('derived');
 				maptoget=derived{extractwhat+1,currentframe};
-				maptoget=plot.plot_rescale_maps_nan(maptoget,0,currentframe);
+				maptoget=plot.rescale_maps_nan(maptoget,0,currentframe);
 				[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
 				distance=linspace(0,length,size(c,1))';
 			case 11 %tangent
@@ -91,12 +91,12 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 						v=resultslist{4,currentframe};
 						typevector=resultslist{5,currentframe};
 					end
-					calu=gui.gui_retr('calu');calv=gui.gui_retr('calv');
-					u=u*calu-gui.gui_retr('subtr_u');
-					v=v*calv-gui.gui_retr('subtr_v');
+					calu=gui.retr('calu');calv=gui.retr('calv');
+					u=u*calu-gui.retr('subtr_u');
+					v=v*calv-gui.retr('subtr_v');
 
-					u=plot.plot_rescale_maps_nan(u,0,currentframe);
-					v=plot.plot_rescale_maps_nan(v,0,currentframe);
+					u=plot.rescale_maps_nan(u,0,currentframe);
+					v=plot.rescale_maps_nan(v,0,currentframe);
 
 					[cx, cy, cu] = improfile(u,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
 					cv = improfile(v,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
@@ -173,11 +173,11 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 						v=resultslist{4,currentframe};
 						typevector=resultslist{5,currentframe};
 					end
-					calu=gui.gui_retr('calu');calv=gui.gui_retr('calv');
-					u=u*calu-gui.gui_retr('subtr_u');
-					v=v*calv-gui.gui_retr('subtr_v');
-					u=plot.plot_rescale_maps_nan(u,0,currentframe);
-					v=plot.plot_rescale_maps_nan(v,0,currentframe);
+					calu=gui.retr('calu');calv=gui.retr('calv');
+					u=u*calu-gui.retr('subtr_u');
+					v=v*calv-gui.retr('subtr_v');
+					u=plot.rescale_maps_nan(u,0,currentframe);
+					v=plot.rescale_maps_nan(v,0,currentframe);
 
 					min_y=floor(min(extraction_coordinates_y(:)))-1;
 					max_y=ceil(max(extraction_coordinates_y(:)))+1;
@@ -235,14 +235,14 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		end
 		%% Plotting
 		if ~strcmp(extract_type,'extract_circle_series') %user did not choose circle series
-			calxy=gui.gui_retr('calxy');
+			calxy=gui.retr('calxy');
 			%get units
-			if (gui.gui_retr('calu')==1 || gui.gui_retr('calu')==-1) && gui.gui_retr('calxy')==1
+			if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 				distunit='px^2';
 			else
 				distunit='m^2';
 			end
-			if (gui.gui_retr('calu')==1 || gui.gui_retr('calu')==-1) && gui.gui_retr('calxy')==1
+			if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 				distunit_2=' px';
 			else
 				distunit_2=' m';
@@ -268,21 +268,21 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 				set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
 				h2=plot(distance*calxy,c);
 				set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-				h_extractionplot=gui.gui_retr('h_extractionplot');
+				h_extractionplot=gui.retr('h_extractionplot');
 				h_extractionplot(size(h_extractionplot,1)+1,1)=h;
-				gui.gui_put ('h_extractionplot', h_extractionplot);
+				gui.put ('h_extractionplot', h_extractionplot);
 				xlabel(['Distance on line' distunit_2 sprintf('\n') 'Integral of ' currentstripped ' = ' num2str(integral) ' [' unitpar '*' distunit_2 ']']);
 				ylabel(current);
 			end
 			%modified units...
-			gui.gui_put('distance',distance*calxy);
-			gui.gui_put('c',c);
-			[cx_cal,cy_cal] = calibrate.calibrate_xy(cx,cy);
-			gui.gui_put('cx',cx_cal);
-			gui.gui_put('cy',cy_cal);
+			gui.put('distance',distance*calxy);
+			gui.put('c',c);
+			[cx_cal,cy_cal] = calibrate.xy(cx,cy);
+			gui.put('cx',cx_cal);
+			gui.put('cy',cy_cal);
 		end
 		if strcmp(extract_type,'extract_circle_series') %user chose circle series
-			calxy=gui.gui_retr('calxy');
+			calxy=gui.retr('calxy');
 
 			%interpolate circles that contain less than 50% missing data
 			amount_of_nans_in_circle=zeros(numel(length),1);
@@ -300,10 +300,10 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			delete(findobj('tag', 'extractline'))
 			[r,col]=find(max(abs(integral))==abs(integral)); %find absolute max of integral
 			if ~isempty(radii(col))
-				extract_poly_maximum_circ=drawcircle(gui.gui_retr('pivlab_axis'),'Center',xposition,'Radius',radii(col),'Tag',[extract_type '_max_circulation'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none','Color','r','StripeColor','y');
+				extract_poly_maximum_circ=drawcircle(gui.retr('pivlab_axis'),'Center',xposition,'Radius',radii(col),'Tag',[extract_type '_max_circulation'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none','Color','r','StripeColor','y');
 				current=get(handles.extraction_choice,'string');
 				current=current{extractwhat};
-				calxy=gui.gui_retr('calxy');
+				calxy=gui.retr('calxy');
 				if strcmp (A.Tag,'plot_data') %function called from button press
 					h=figure;
 					screensize=get( 0, 'ScreenSize' );
@@ -316,21 +316,21 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 					hold off;
 					set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
 					xlabel('circle series nr. (circle with max. circulation highlighted)');
-					if (gui.gui_retr('calu')==1 || gui.gui_retr('calu')==-1) && gui.gui_retr('calxy')==1
+					if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 						ylabel('tangent velocity loop integral (circulation) [px^2/frame]');
 					else
 						ylabel('tangent velocity loop integral (circulation) [m^2/s]');
 					end
-					h_extractionplot=gui.gui_retr('h_extractionplot');
+					h_extractionplot=gui.retr('h_extractionplot');
 					h_extractionplot(size(h_extractionplot,1)+1,1)=h;
-					gui.gui_put ('h_extractionplot', h_extractionplot);
+					gui.put ('h_extractionplot', h_extractionplot);
 				end
-				gui.gui_put('distance',distance*calxy);
-				gui.gui_put('c',c);
-				[cx_cal,cy_cal] = calibrate.calibrate_xy(cx,cy);
-				gui.gui_put('cx',cx_cal);
-				gui.gui_put('cy',cy_cal);
-				gui.gui_put('integral', integral);
+				gui.put('distance',distance*calxy);
+				gui.put('c',c);
+				[cx_cal,cy_cal] = calibrate.xy(cx,cy);
+				gui.put('cx',cx_cal);
+				gui.put('cy',cy_cal);
+				gui.put('integral', integral);
 			end
 		end
 	end

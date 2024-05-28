@@ -1,5 +1,5 @@
 function generate_it_Callback(~, ~, ~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 flow_sim=get(handles.flow_sim,'value');
 switch flow_sim
 	case 1 %rankine
@@ -175,8 +175,8 @@ gen_image_2=imnoise(uint8(B),'gaussian',0,noise);
 set(handles.status_creation,'string','...done')
 figure;imshow(gen_image_1,'initialmagnification', 100);
 figure;imshow(gen_image_2,'initialmagnification', 100);
-gui.gui_put('gen_image_1',gen_image_1);
-gui.gui_put('gen_image_2',gen_image_2);
-gui.gui_put('real_displ_u',offsetx);
-gui.gui_put('real_displ_v',offsety);
+gui.put('gen_image_1',gen_image_1);
+gui.put('gen_image_2',gen_image_2);
+gui.put('real_displ_u',offsetx);
+gui.put('real_displ_v',offsety);
 

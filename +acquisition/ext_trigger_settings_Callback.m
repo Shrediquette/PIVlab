@@ -1,8 +1,8 @@
 function ext_trigger_settings_Callback (~,~,~)
-handles=gui.gui_gethand;
-serpo=gui.gui_retr('serpo');
+handles=gui.gethand;
+serpo=gui.retr('serpo');
 if ~isempty(serpo)
-	acquisition.acquisition_control_simple_sync_serial(0,0);
+	acquisition.control_simple_sync_serial(0,0);
 	if get(handles.ac_enable_ext_trigger,'Value')==1 %execute only if checkbox was off before it was clicked.
 		old_label=get(handles.ac_enable_ext_trigger,'String');
 		set(handles.ac_enable_ext_trigger,'String','Acquiring...','Enable','off')
@@ -17,11 +17,11 @@ if ~isempty(serpo)
 		serial_answer=readline(serpo);
 		warning on
 		set(handles.ac_enable_ext_trigger,'String',old_label,'Enable','on');
-		selectedtriggerdelay=gui.gui_retr('selectedtriggerdelay');
+		selectedtriggerdelay=gui.retr('selectedtriggerdelay');
 		if isempty(selectedtriggerdelay)
 			selectedtriggerdelay=100;
 		end
-		selectedtriggerskip=gui.gui_retr('selectedtriggerskip');
+		selectedtriggerskip=gui.retr('selectedtriggerskip');
 		if isempty(selectedtriggerskip)
 			selectedtriggerdelay=0;
 		end
@@ -31,8 +31,8 @@ if ~isempty(serpo)
 		definput = {num2str(selectedtriggerdelay),num2str(selectedtriggerskip)};
 		answer = inputdlg(prompt,dlgtitle,dims,definput);
 		if ~isempty(answer)
-			gui.gui_put('selectedtriggerdelay',str2double(answer{1}));
-			gui.gui_put('selectedtriggerskip',str2double(answer{2}));
+			gui.put('selectedtriggerdelay',str2double(answer{1}));
+			gui.put('selectedtriggerskip',str2double(answer{2}));
 		end
 	end
 end

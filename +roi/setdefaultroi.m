@@ -1,8 +1,8 @@
 function setdefaultroi(source,~)
-if ~isempty(gui.gui_retr('doing_roi')) && gui.gui_retr('doing_roi')==1
+if ~isempty(gui.retr('doing_roi')) && gui.retr('doing_roi')==1
 	ac_ROI_general_handle = findobj('tag','new_ROImethod');
-	binning=gui.gui_retr('binning');
-	max_cam_res =gui.gui_retr('max_cam_res');
+	binning=gui.retr('binning');
+	max_cam_res =gui.retr('max_cam_res');
 	if isempty(binning)
 		binning=1;
 	end

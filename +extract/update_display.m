@@ -1,43 +1,43 @@
 function update_display(extract_type, xposition, yposition)
 if strcmp(extract_type,'extract_poly') %polyline
-	extract_poly=drawpolyline(gui.gui_retr('pivlab_axis'),'Position',[xposition yposition]);
+	extract_poly=drawpolyline(gui.retr('pivlab_axis'),'Position',[xposition yposition]);
 	extract_poly.LabelVisible = 'off';
 	extract_poly.Tag=extract_type;
-	addlistener(extract_poly,'ROIMoved',@extract.extract_poly_ROIevents);
-	addlistener(extract_poly,'MovingROI',@extract.extract_poly_ROIevents);
-	addlistener(extract_poly,'DeletingROI',@extract.extract_poly_ROIevents);
+	addlistener(extract_poly,'ROIMoved',@extract.poly_ROIevents);
+	addlistener(extract_poly,'MovingROI',@extract.poly_ROIevents);
+	addlistener(extract_poly,'DeletingROI',@extract.poly_ROIevents);
 end
 if strcmp(extract_type,'extract_poly_area') %polygon
-	extract_poly=drawpolygon(gui.gui_retr('pivlab_axis'),'Position',[xposition yposition]);
+	extract_poly=drawpolygon(gui.retr('pivlab_axis'),'Position',[xposition yposition]);
 	extract_poly.LabelVisible = 'off';
 	extract_poly.Tag=extract_type;
-	addlistener(extract_poly,'ROIMoved',@extract.extract_poly_ROIevents);
-	addlistener(extract_poly,'MovingROI',@extract.extract_poly_ROIevents);
-	addlistener(extract_poly,'DeletingROI',@extract.extract_poly_ROIevents);
+	addlistener(extract_poly,'ROIMoved',@extract.poly_ROIevents);
+	addlistener(extract_poly,'MovingROI',@extract.poly_ROIevents);
+	addlistener(extract_poly,'DeletingROI',@extract.poly_ROIevents);
 end
 if strcmp(extract_type,'extract_circle') || strcmp(extract_type,'extract_circle_area') %circle
-	extract_poly=drawcircle(gui.gui_retr('pivlab_axis'),'Center',xposition,'Radius',yposition);
+	extract_poly=drawcircle(gui.retr('pivlab_axis'),'Center',xposition,'Radius',yposition);
 	extract_poly.LabelVisible = 'off';
 	extract_poly.Tag=extract_type;
-	addlistener(extract_poly,'ROIMoved',@extract.extract_poly_ROIevents);
-	addlistener(extract_poly,'DeletingROI',@extract.extract_poly_ROIevents);
+	addlistener(extract_poly,'ROIMoved',@extract.poly_ROIevents);
+	addlistener(extract_poly,'DeletingROI',@extract.poly_ROIevents);
 end
 if strcmp(extract_type,'extract_rectangle_area')  %rectangle
-	extract_poly=drawrectangle(gui.gui_retr('pivlab_axis'),'Position',[xposition(1) yposition(1) xposition(2) yposition(2)]);
+	extract_poly=drawrectangle(gui.retr('pivlab_axis'),'Position',[xposition(1) yposition(1) xposition(2) yposition(2)]);
 	extract_poly.LabelVisible = 'off';
 	extract_poly.Tag=extract_type;
-	addlistener(extract_poly,'ROIMoved',@extract.extract_poly_ROIevents);
-	addlistener(extract_poly,'DeletingROI',@extract.extract_poly_ROIevents);
+	addlistener(extract_poly,'ROIMoved',@extract.poly_ROIevents);
+	addlistener(extract_poly,'DeletingROI',@extract.poly_ROIevents);
 end
 if strcmp(extract_type,'extract_circle_series') || strcmp(extract_type,'extract_circle_series_area') %circle series
-	extract_poly=drawcircle(gui.gui_retr('pivlab_axis'),'Center',xposition,'Radius',yposition);
+	extract_poly=drawcircle(gui.retr('pivlab_axis'),'Center',xposition,'Radius',yposition);
 	extract_poly.LabelVisible = 'off';
 	extract_poly.Tag=extract_type;
-	addlistener(extract_poly,'ROIMoved',@extract.extract_poly_ROIevents);
-	addlistener(extract_poly,'DeletingROI',@extract.extract_poly_ROIevents);
-	handles=gui.gui_gethand;
+	addlistener(extract_poly,'ROIMoved',@extract.poly_ROIevents);
+	addlistener(extract_poly,'DeletingROI',@extract.poly_ROIevents);
+	handles=gui.gethand;
 	currentframe=floor(get(handles.fileselector, 'value'));
-	resultslist=gui.gui_retr('resultslist');
+	resultslist=gui.retr('resultslist');
 	xposition=extract_poly.Center;
 	yposition=extract_poly.Radius;
 	try
@@ -48,7 +48,7 @@ if strcmp(extract_type,'extract_circle_series') || strcmp(extract_type,'extract_
 	stepsize=ceil((x(1,2)-x(1,1))/1);
 	radii=linspace(stepsize,extract_poly.Radius-stepsize,round(((extract_poly.Radius-stepsize)/stepsize)));
 	for radius=radii
-		extract_poly_series=drawcircle(gui.gui_retr('pivlab_axis'),'Center',xposition,'Radius',radius,'Tag',[extract_type '_displayed_smaller_radii'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none');
+		extract_poly_series=drawcircle(gui.retr('pivlab_axis'),'Center',xposition,'Radius',radius,'Tag',[extract_type '_displayed_smaller_radii'],'Deletable',0,'FaceAlpha',0,'FaceSelectable',0,'InteractionsAllowed','none');
 	end
 	x_center=extract_poly.Center(1);
 	y_center=extract_poly.Center(2);

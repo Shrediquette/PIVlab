@@ -1,8 +1,8 @@
 function save_Callback(~,~,~)
-masks_in_frame=gui.gui_retr('masks_in_frame');
-sessionpath=gui.gui_retr('sessionpath');
+masks_in_frame=gui.retr('masks_in_frame');
+sessionpath=gui.retr('sessionpath');
 if isempty(sessionpath)
-	sessionpath=gui.gui_retr('pathname');
+	sessionpath=gui.retr('pathname');
 end
 if  ~isempty(masks_in_frame)
 	[maskfile,maskpath] = uiputfile('*.mat','Save mask polygon(s)',fullfile(sessionpath, 'PIVlab_mask.mat'));

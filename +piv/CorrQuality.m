@@ -1,5 +1,5 @@
 function [imdeform, repeat, do_pad]=CorrQuality(~,~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 quali = get(handles.CorrQuality,'Value');
 if quali==1 % normal quality
 	imdeform='*linear';

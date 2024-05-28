@@ -1,12 +1,12 @@
 function draw_line_Callback(~, ~, ~)
-filepath=gui.gui_retr('filepath');
-caliimg=gui.gui_retr('caliimg');
+filepath=gui.retr('filepath');
+caliimg=gui.retr('caliimg');
 if numel(caliimg)==0 && size(filepath,1) >1
-	gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
+	gui.sliderdisp(gui.retr('pivlab_axis'))
 end
-if size(filepath,1) >1 || numel(caliimg)>0 || gui.gui_retr('video_selection_done') == 1
-	handles=gui.gui_gethand;
-	gui.gui_toolsavailable(0)
+if size(filepath,1) >1 || numel(caliimg)>0 || gui.retr('video_selection_done') == 1
+	handles=gui.gethand;
+	gui.toolsavailable(0)
 	delete(findobj('tag', 'caliline'))
 	roi = images.roi.Line;
 	%roi.EdgeAlpha=0.75;
@@ -15,9 +15,9 @@ if size(filepath,1) >1 || numel(caliimg)>0 || gui.gui_retr('video_selection_done
 	roi.Color = 'y';
 	roi.StripeColor = 'g';
 	roi.LineWidth = roi.LineWidth*2;
-	Cali_coords = gui.gui_retr('pointscali');
+	Cali_coords = gui.retr('pointscali');
 	if ~isempty(Cali_coords)
-		roi=drawline(gui.gui_retr('pivlab_axis'),'Position',Cali_coords);
+		roi=drawline(gui.retr('pivlab_axis'),'Position',Cali_coords);
 		%roi.EdgeAlpha=0.75;
 		roi.LabelVisible = 'on';
 		roi.Tag = 'caliline';
@@ -34,14 +34,14 @@ if size(filepath,1) >1 || numel(caliimg)>0 || gui.gui_retr('video_selection_done
 		roi.LineWidth = original_linewidth*2;
 		pause(0.1)
 	else
-		axes(gui.gui_retr('pivlab_axis'))
+		axes(gui.retr('pivlab_axis'))
 		draw(roi);
 	end
-	addlistener(roi,'MovingROI',@calibrate.calibrate_Calibrationevents);
-	addlistener(roi,'DeletingROI',@calibrate.calibrate_Calibrationevents);
+	addlistener(roi,'MovingROI',@calibrate.Calibrationevents);
+	addlistener(roi,'DeletingROI',@calibrate.Calibrationevents);
 
 	dummyevt.EventName = 'MovingROI';
-	calibrate.calibrate_Calibrationevents(roi,dummyevt); %run the moving event once to update displayed length
-	gui.gui_toolsavailable(1)
+	calibrate.Calibrationevents(roi,dummyevt); %run the moving event once to update displayed length
+	gui.toolsavailable(1)
 end
 

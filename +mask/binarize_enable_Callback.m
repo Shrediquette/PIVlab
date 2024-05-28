@@ -1,5 +1,5 @@
 function binarize_enable_Callback(~,~,~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 if get(handles.binarize_enable,'Value')==0
 	set(handles.mask_medfilt_enable,'enable','off');
 	set(handles.median_size,'enable','off');

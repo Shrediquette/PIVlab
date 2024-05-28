@@ -1,6 +1,6 @@
 function laser_device_id = find_laser_device
-handles=gui.gui_gethand;
-serpo=gui.gui_retr('serpo');
+handles=gui.gethand;
+serpo=gui.retr('serpo');
 try
 	serpo.Port;
 	alreadyconnected=1;
@@ -86,6 +86,6 @@ disp('---------')
 	laser_device_id = load('laser_device_id.mat','id');
 	laser_device_id = laser_device_id.id;
 else
-	acquisition.acquisition_no_dongle_msgbox
+	acquisition.no_dongle_msgbox
 end
 

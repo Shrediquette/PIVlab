@@ -1,5 +1,5 @@
 function area_all_Callback(hObject, ~, ~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 if get(hObject,'Value')==1
 	set(handles.savearea,'enable','off');
 	set(handles.savearea,'value',1);

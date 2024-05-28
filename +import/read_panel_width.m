@@ -1,9 +1,9 @@
 function read_panel_width (FileName,PathName)
-gui.gui_put('num_handle_calls',0);
-handles=gui.gui_gethand;
+gui.put('num_handle_calls',0);
+handles=gui.gethand;
 try
 	load(fullfile(PathName,FileName)); %#ok<*LOAD>
-	gui.gui_put ('panelwidth',panelwidth);
+	gui.put ('panelwidth',panelwidth);
 catch
 end
 

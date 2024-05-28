@@ -6,7 +6,7 @@ if isnan(derivative_alpha) || derivative_alpha>100 || derivative_alpha <0
 end
 
 %% draw background particle image in gray
-[currentimage,~]=import.import_get_img(selected);
+[currentimage,~]=import.get_img(selected);
 if size(currentimage,3)>1 % color image
 	currentimage=rgb2gray(currentimage); %convert to gray, always.
 end
@@ -18,7 +18,7 @@ image(cat(3, currentimage, currentimage, currentimage), 'parent',target_axis, 'c
 colormap('gray');
 axis image
 
-derived=gui.gui_retr('derived');
+derived=gui.retr('derived');
 
 if size(derived,2)>=(currentframe+1)/2 && displaywhat > 1 && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
 else
@@ -31,7 +31,7 @@ end
 
 render_mask=1; % should the mask be rendered in the image display?
 if get(handles.mask_edit_mode,'Value')==2 %Mask mode is "Preview"
-	masks_in_frame=gui.gui_retr('masks_in_frame');
+	masks_in_frame=gui.retr('masks_in_frame');
 	if isempty(masks_in_frame)
 		%masks_in_frame=cell(floor((currentframe+1)/2),1);
 		masks_in_frame=cell(1,floor((currentframe+1)/2));
@@ -45,7 +45,7 @@ if get(handles.mask_edit_mode,'Value')==2 %Mask mode is "Preview"
 			render_mask=0;
 		end
 	end
-	converted_mask=mask.mask_convert_masks_to_binary(size(currentimage(:,:,1)),mask_positions);
+	converted_mask=mask.convert_masks_to_binary(size(currentimage(:,:,1)),mask_positions);
 else
 	converted_mask=zeros(size(currentimage(:,:,1)));
 	render_mask=0;
@@ -84,7 +84,7 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 		MAP = colormap('gray');
 	end
 
-	currentimage = plot.plot_rescale_maps(currentimage,is_it_vector_direction);
+	currentimage = plot.rescale_maps(currentimage,is_it_vector_direction);
 
 	if get(handles.autoscaler,'value')==1
 		minscale=min(currentimage(:));
@@ -132,7 +132,7 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 	else
 		alpha_pixel_map=ones(size(currentimage,1),size(currentimage,2),'logical');
 	end
-	roirect=gui.gui_retr('roirect');
+	roirect=gui.retr('roirect');
 	alpha_ROI_map=zeros(size(currentimage,1),size(currentimage,2),'logical');
 	if ~isempty(roirect) && size(roirect,2)>1
 		alpha_ROI_map (roirect(2):(roirect(2)+roirect(4)) , roirect(1):(roirect(1)+roirect(3)))=1;
@@ -147,7 +147,7 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 	if get(handles.colorbarpos,'value')~=1
 		name=get(handles.derivchoice,'string');
 		if strcmp(name,'N/A') %user hasn't visited the derived panel before
-			if (gui.gui_retr('calu')==1 || gui.gui_retr('calu')==-1) && gui.gui_retr('calxy')==1
+			if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 				set(handles.derivchoice,'String',{'Vectors [px/frame]';'Vorticity [1/frame]';'Magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Simple shear rate [1/frame]';'Simple strain rate [1/frame]';'Line integral convolution (LIC) [1]' ; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
 				set(handles.text35,'String','u [px/frame]:')
 				set(handles.text36,'String','v [px/frame]:')
@@ -169,10 +169,10 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 		strcmp(posichoice{get(handles.colorbarpos,'Value')},'WestOutside');
 
 		if strcmp(posichoice{get(handles.colorbarpos,'Value')},'EastOutside')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'WestOutside')==1
-			ylabel(coloobj,name{gui.gui_retr('displaywhat')},'fontsize',9,'fontweight','bold');
+			ylabel(coloobj,name{gui.retr('displaywhat')},'fontsize',9,'fontweight','bold');
 		end
 		if strcmp(posichoice{get(handles.colorbarpos,'Value')},'NorthOutside')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'SouthOutside')==1
-			xlabel(coloobj,name{gui.gui_retr('displaywhat')},'fontsize',11,'fontweight','bold');
+			xlabel(coloobj,name{gui.retr('displaywhat')},'fontsize',11,'fontweight','bold');
 		end
 
 		tickamount=min([colormap_steps 8])+1; % depends on the amount of colormap steps

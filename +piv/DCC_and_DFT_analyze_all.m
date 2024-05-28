@@ -1,11 +1,11 @@
 function DCC_and_DFT_analyze_all
-ok=gui.gui_checksettings;
-handles=gui.gui_gethand;
+ok=gui.checksettings;
+handles=gui.gethand;
 try
 	warning off
 	recycle('off');
 	delete('cancel_piv');
-	gui.gui_put('cancel',0);
+	gui.put('cancel',0);
 	warning on
 catch ME
 	disp('There was an error deleting a temporary file.')
@@ -16,24 +16,24 @@ end
 if ok==1
 	try
 		if get(handles.update_display_checkbox,'Value')==1
-			gui.gui_put('update_display',1);
+			gui.put('update_display',1);
 		else
-			gui.gui_put('update_display',0);
+			gui.put('update_display',0);
 			%text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
 		end
 	catch
-		gui.gui_put('update_display',1)
+		gui.put('update_display',1)
 	end
-	filepath=gui.gui_retr('filepath');
-	filename=gui.gui_retr('filename');
-	toggler=gui.gui_retr('toggler');
+	filepath=gui.retr('filepath');
+	filename=gui.retr('filename');
+	toggler=gui.retr('toggler');
 	resultslist=cell(0); %clear old results
 
-	gui.gui_put('derived', [])
-	gui.gui_toolsavailable(0,'Busy, please wait...');
+	gui.put('derived', [])
+	gui.toolsavailable(0,'Busy, please wait...');
 	set (handles.cancelbutt, 'enable', 'on');
 
-	ismean=gui.gui_retr('ismean');
+	ismean=gui.retr('ismean');
 	for i=size(ismean,1):-1:1 %remove averaged results
 		if ismean(i,1)==1
 			filepath(i*2,:)=[];
@@ -43,16 +43,16 @@ if ok==1
 			filename(i*2-1,:)=[];
 		end
 	end
-	gui.gui_put('filepath',filepath);
-	gui.gui_put('filename',filename);
-	gui.gui_put('ismean',[]);
-	masks_in_frame=gui.gui_retr('masks_in_frame');
+	gui.put('filepath',filepath);
+	gui.put('filename',filename);
+	gui.put('ismean',[]);
+	masks_in_frame=gui.retr('masks_in_frame');
 	if isempty(masks_in_frame)
 		%masks_in_frame=cell(floor(size(filepath,1)/2),1);
 		masks_in_frame=cell(1,floor(size(filepath,1)/2));
 	end
 
-	gui.gui_sliderrange(1)
+	gui.sliderrange(1)
 
 	clahe=get(handles.clahe_enable,'value');
 	highp=get(handles.enable_highpass,'value');
@@ -68,7 +68,7 @@ if ok==1
 	minintens=str2double(get(handles.minintens, 'string'));
 	maxintens=str2double(get(handles.maxintens, 'string'));
 	%clipthresh=str2double(get(handles.clip_thresh, 'string'));
-	roirect=gui.gui_retr('roirect');
+	roirect=gui.retr('roirect');
 
 	interrogationarea=str2double(get(handles.intarea, 'string'));
 	step=str2double(get(handles.step, 'string'));
@@ -78,27 +78,27 @@ if ok==1
 	int3=str2num(get(handles.edit51,'string'));
 	int4=str2num(get(handles.edit52,'string'));
 	mask_auto = get(handles.mask_auto_box,'value');
-	[imdeform, repeat, do_pad] = piv.piv_CorrQuality;
+	[imdeform, repeat, do_pad] = piv.CorrQuality;
 
 
-	if gui.gui_retr('video_selection_done')==0
+	if gui.retr('video_selection_done')==0
 		num_frames_to_process = size(filepath,1);
 	else
-		video_frame_selection=gui.gui_retr('video_frame_selection');
+		video_frame_selection=gui.retr('video_frame_selection');
 		num_frames_to_process = numel(video_frame_selection);
 	end
 
-	if gui.gui_retr('parallel')==1 && gui.gui_retr('video_selection_done') == 1
+	if gui.retr('parallel')==1 && gui.retr('video_selection_done') == 1
 		disp('Parallel processing of video files not yet supported.')
 	end
-	if gui.gui_retr('parallel')==1 && gui.gui_retr('video_selection_done') == 0
+	if gui.retr('parallel')==1 && gui.retr('video_selection_done') == 0
 		%parallel toolbox available
 		%drawnow; %#ok<*NBRAK>
 		set(handles.progress, 'string' , ['Frame progress: 100%']);
 		set(handles.overall, 'string' , ['Total progress: 0%']);
 		drawnow; %#ok<*NBRAK>
 
-		do_correlation_matrices=gui.gui_retr('do_correlation_matrices');
+		do_correlation_matrices=gui.retr('do_correlation_matrices');
 		slicedfilepath1=cell(0);
 		slicedfilepath2=cell(0);
 		xlist=cell(0);
@@ -123,8 +123,8 @@ if ok==1
 
 		if get(handles.dcc,'Value')==1
 			if get(handles.bg_subtract,'Value')==1
-				bg_img_A = gui.gui_retr('bg_img_A');
-				bg_img_B = gui.gui_retr('bg_img_B');
+				bg_img_A = gui.retr('bg_img_A');
+				bg_img_B = gui.retr('bg_img_B');
 				bg_sub=1;
 			else
 				bg_img_A=[];
@@ -132,7 +132,7 @@ if ok==1
 				bg_sub=0;
 			end
 
-			masks_in_frame=gui.gui_retr('masks_in_frame');
+			masks_in_frame=gui.retr('masks_in_frame');
 			if isempty(masks_in_frame)
 				%masks_in_frame=cell(size(slicedfilepath1,2),1);
 				masks_in_frame=cell(1,size(slicedfilepath1,2));
@@ -200,7 +200,7 @@ if ok==1
 					mask_positions=masks_in_frame{i};
 				end
 
-				converted_mask=mask.mask_convert_masks_to_binary(size(currentimage1(:,:,1)),mask_positions);
+				converted_mask=mask.convert_masks_to_binary(size(currentimage1(:,:,1)),mask_positions);
 
 				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect); %#ok<PFTUSW>
 				xlist{i}=x;
@@ -226,15 +226,15 @@ if ok==1
 			repeat_last_pass = get(handles.repeat_last,'Value');
 			delta_diff_min = str2double(get(handles.edit52x,'String'));
 			if get(handles.bg_subtract,'Value')==1
-				bg_img_A = gui.gui_retr('bg_img_A');
-				bg_img_B = gui.gui_retr('bg_img_B');
+				bg_img_A = gui.retr('bg_img_A');
+				bg_img_B = gui.retr('bg_img_B');
 				bg_sub=1;
 			else
 				bg_img_A=[];
 				bg_img_B=[];
 				bg_sub=0;
 			end
-			masks_in_frame=gui.gui_retr('masks_in_frame');
+			masks_in_frame=gui.retr('masks_in_frame');
 			if isempty(masks_in_frame)
 				%masks_in_frame=cell(size(slicedfilepath1,2),1);
 				masks_in_frame=cell(1,size(slicedfilepath1,2));
@@ -262,7 +262,7 @@ if ok==1
 				else
 					mask_positions=masks_in_frame{i};
 				end
-				converted_mask=mask.mask_convert_masks_to_binary(size(currentimage1(:,:,1)),mask_positions);
+				converted_mask=mask.convert_masks_to_binary(size(currentimage1(:,:,1)),mask_positions);
 
 				if bg_sub==1
 					if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
@@ -320,7 +320,7 @@ if ok==1
 		hrs=floor(hrs);
 		mins=floor(mins);
 		secs=floor(secs);
-		if gui.gui_retr('cancel')==0 %dont output anything if cancelled
+		if gui.retr('cancel')==0 %dont output anything if cancelled
 			for i=1:size(slicedfilepath1,2)
 				resultslist{1,i}=xlist{i};
 				resultslist{2,i}=ylist{i};
@@ -330,20 +330,20 @@ if ok==1
 				resultslist{6,i}=[];
 				resultslist{12,i}=corrlist{i};
 			end
-			gui.gui_put('resultslist',resultslist);
-			gui.gui_put('subtr_u', 0);
-			gui.gui_put('subtr_v', 0);
+			gui.put('resultslist',resultslist);
+			gui.put('subtr_u', 0);
+			gui.put('subtr_v', 0);
 		end
-		gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
+		gui.sliderdisp(gui.retr('pivlab_axis'))
 		delete(findobj('tag', 'annoyingthing'));
 		set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%']);
 		set(handles.totaltime,'string', ['Time elapsed: ' sprintf('%2.2d', hrs) 'h ' sprintf('%2.2d', mins) 'm ' sprintf('%2.2d', secs) 's']);
 	end
 	%% serial (standard) calculation
-	if gui.gui_retr('parallel')==0 ||  gui.gui_retr('video_selection_done') == 1
+	if gui.retr('parallel')==0 ||  gui.retr('video_selection_done') == 1
 		set (handles.cancelbutt, 'enable', 'on');
 
-		masks_in_frame=gui.gui_retr('masks_in_frame');
+		masks_in_frame=gui.retr('masks_in_frame');
 		if isempty(masks_in_frame)
 			%masks_in_frame=cell(floor((num_frames_to_process+1)/2),1);
 			masks_in_frame=cell(1,floor((num_frames_to_process+1)/2));
@@ -353,10 +353,10 @@ if ok==1
 			if i==1
 				tic
 			end
-			cancel=gui.gui_retr('cancel');
+			cancel=gui.retr('cancel');
 			if isempty(cancel)==1 || cancel ~=1
-				image1 = import.import_get_img(i);
-				image2 = import.import_get_img(i+1);
+				image1 = import.get_img(i);
+				image2 = import.get_img(i+1);
 				%if size(image1,3)>1
 				%	image1=uint8(mean(image1,3));
 				%	image2=uint8(mean(image2,3));
@@ -371,12 +371,12 @@ if ok==1
 				highpsize=str2double(get(handles.highp_size, 'string'));
 				wienerwurst=get(handles.wienerwurst, 'value');
 				wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-				do_correlation_matrices=gui.gui_retr('do_correlation_matrices');
-				preproc.preproc_Autolimit_Callback
+				do_correlation_matrices=gui.retr('do_correlation_matrices');
+				preproc.Autolimit_Callback
 				minintens=str2double(get(handles.minintens, 'string'));
 				maxintens=str2double(get(handles.maxintens, 'string'));
 				%clipthresh=str2double(get(handles.clip_thresh, 'string'));
-				roirect=gui.gui_retr('roirect');
+				roirect=gui.retr('roirect');
 				if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
 					if size(image1,3)>1
 						stretcher = stretchlim(rgb2gray(image1));
@@ -409,7 +409,7 @@ if ok==1
 					mask_positions=masks_in_frame{currentmask};
 				end
 
-				converted_mask=mask.mask_convert_masks_to_binary(size(image1(:,:,1)),mask_positions);
+				converted_mask=mask.convert_masks_to_binary(size(image1(:,:,1)),mask_positions);
 
 				if get(handles.dcc,'Value')==1
 					[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
@@ -431,7 +431,7 @@ if ok==1
 					mask_auto = get(handles.mask_auto_box,'value');
 					repeat_last_pass = get(handles.repeat_last,'Value');
 					delta_diff_min = str2double(get(handles.edit52x,'String'));
-					[imdeform, repeat, do_pad] = piv.piv_CorrQuality;
+					[imdeform, repeat, do_pad] = piv.CorrQuality;
 					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
 					%u=real(u)
 					%v=real(v)
@@ -447,16 +447,16 @@ if ok==1
 				end
 				correlation_matrices_list{(i+1)/2}=correlation_matrices;
 				resultslist{12,(i+1)/2}=correlation_map;
-				gui.gui_put('resultslist',resultslist);
+				gui.put('resultslist',resultslist);
 				set(handles.fileselector, 'value', (i+1)/2);
 				%set(handles.progress, 'string' , ['Frame progress: 100%'])
 				set(handles.overall, 'string' , ['Total progress: ' int2str((i+1)/2/num_frames_to_process*200) '%'])
-				gui.gui_update_progress((i+1)/2/num_frames_to_process*200)
-				gui.gui_put('subtr_u', 0);
-				gui.gui_put('subtr_v', 0);
-				if gui.gui_retr('update_display')==0
+				gui.update_progress((i+1)/2/num_frames_to_process*200)
+				gui.put('subtr_u', 0);
+				gui.put('subtr_v', 0);
+				if gui.retr('update_display')==0
 				else
-					gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
+					gui.sliderdisp(gui.retr('pivlab_axis'))
 				end
 				%xpos=size(image1,2)/2-40;
 				%text(xpos,50, ['Analyzing... ' int2str((i+1)/2/(size(filepath,1)/2)*100) '%' ],'color', 'r','FontName','FixedWidth','fontweight', 'bold', 'fontsize', 20, 'tag', 'annoyingthing')
@@ -476,17 +476,17 @@ if ok==1
 
 		delete(findobj('tag', 'annoyingthing'));
 		set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
-		gui.gui_update_progress(0)
+		gui.update_progress(0)
 		set(handles.totaltime, 'String',['Analysis time: ' num2str(round(toc*10)/10) ' s']);
 	end
-	cancel=gui.gui_retr('cancel');
+	cancel=gui.retr('cancel');
 	if isempty(cancel)==1 || cancel ~=1
 		try
 			sound(audioread('finished.mp3'),44100);
 		catch
 		end
 	end
-	gui.gui_put('cancel',0);
+	gui.put('cancel',0);
 	try
 		warning off
 		recycle('off');
@@ -500,7 +500,7 @@ if ok==1
 	end
 	assignin('base','correlation_matrices',correlation_matrices_list);
 end
-gui.gui_toolsavailable(1);
-gui.gui_update_progress(0)
-gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
+gui.toolsavailable(1);
+gui.update_progress(0)
+gui.sliderdisp(gui.retr('pivlab_axis'))
 

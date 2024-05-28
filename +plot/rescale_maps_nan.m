@@ -2,15 +2,15 @@ function out=rescale_maps_nan(in,isangle,desired_frame) %if desiredframe is empt
 %input has same dimensions as x,y,u,v,
 %output has size of the piv image
 %Rand ist nan statt Mittelwert des derivatives
-handles=gui.gui_gethand;
-filepath=gui.gui_retr('filepath');
+handles=gui.gethand;
+filepath=gui.retr('filepath');
 if isempty(desired_frame)
 	currentframe=floor(get(handles.fileselector, 'value'));
 else
 	currentframe=desired_frame;
 end
-[currentimage,~]=import.import_get_img(2*currentframe-1);
-resultslist=gui.gui_retr('resultslist');
+[currentimage,~]=import.get_img(2*currentframe-1);
+resultslist=gui.retr('resultslist');
 x=resultslist{1,currentframe};
 y=resultslist{2,currentframe};
 out=zeros(size(currentimage));
@@ -56,7 +56,7 @@ catch
 end
 %% remove data from masked areas
 current_mask_nr=floor(get(handles.fileselector, 'value'));
-masks_in_frame=gui.gui_retr('masks_in_frame');
+masks_in_frame=gui.retr('masks_in_frame');
 if isempty(masks_in_frame)
 	%masks_in_frame=cell(current_mask_nr,1);
 	masks_in_frame=cell(1,current_mask_nr);
@@ -66,7 +66,7 @@ if numel(masks_in_frame)<current_mask_nr
 else
 	mask_positions=masks_in_frame{current_mask_nr};
 end
-expected_image_size=gui.gui_retr('expected_image_size');
-converted_mask=mask.mask_convert_masks_to_binary(expected_image_size,mask_positions);
+expected_image_size=gui.retr('expected_image_size');
+converted_mask=mask.convert_masks_to_binary(expected_image_size,mask_positions);
 out(converted_mask==1)=nan;
 

@@ -1,7 +1,7 @@
 function histdraw_Callback(~, ~, ~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
-resultslist=gui.gui_retr('resultslist');
+resultslist=gui.retr('resultslist');
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	x=resultslist{1,currentframe};
 	y=resultslist{2,currentframe};
@@ -26,7 +26,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		u=resultslist{3,currentframe};
 		v=resultslist{4,currentframe};
 	end
-	ismean=gui.gui_retr('ismean');
+	ismean=gui.retr('ismean');
 	if    numel(ismean)>0
 		if ismean(currentframe)==1 %if current frame is a mean frame, typevector is stored at pos 5
 			typevector=resultslist{5,currentframe};
@@ -36,8 +36,8 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	u(typevector==0)=nan;
 	v(typevector==0)=nan;
 
-	calu=gui.gui_retr('calu');calv=gui.gui_retr('calv');
-	calxy=gui.gui_retr('calxy');
+	calu=gui.retr('calu');calv=gui.retr('calv');
+	calxy=gui.retr('calxy');
 	x=reshape(x,size(x,1)*size(x,2),1);
 	y=reshape(y,size(y,1)*size(y,2),1);
 	u=reshape(u,size(u,1)*size(u,2),1);
@@ -52,13 +52,13 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',['Histogram ' current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
 	nrofbins=str2double(get(handles.nrofbins, 'string'));
 	if choice_plot==1
-		[n, xout]=hist(u*calu-gui.gui_retr('subtr_u'),nrofbins); %#ok<*HIST>
+		[n, xout]=hist(u*calu-gui.retr('subtr_u'),nrofbins); %#ok<*HIST>
 		xdescript='velocity (u)';
 	elseif choice_plot==2
-		[n, xout]=hist(v*calv-gui.gui_retr('subtr_v'),nrofbins);
+		[n, xout]=hist(v*calv-gui.retr('subtr_v'),nrofbins);
 		xdescript='velocity (v)';
 	elseif choice_plot==3
-		[n, xout]=hist(sqrt((u*calu-gui.gui_retr('subtr_u')).^2+(v*calv-gui.gui_retr('subtr_v')).^2),nrofbins);
+		[n, xout]=hist(sqrt((u*calu-gui.retr('subtr_u')).^2+(v*calv-gui.retr('subtr_v')).^2),nrofbins);
 		xdescript='velocity magnitude';
 	elseif choice_plot==4 %sub-pixels
 
@@ -71,7 +71,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 
 	h2=bar(xout,n);
 	set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
-	if (gui.gui_retr('calu')==1 || gui.gui_retr('calu')==-1) && gui.gui_retr('calxy')==1
+	if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 		xlabel([xdescript ' [px/frame]']);
 	else
 		xlabel([xdescript ' [m/s]']);

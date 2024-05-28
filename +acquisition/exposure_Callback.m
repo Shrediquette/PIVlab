@@ -1,6 +1,6 @@
 function exposure_Callback(~,~,~)
-handles=gui.gui_gethand;
-camera_type=gui.gui_retr('camera_type');
+handles=gui.gethand;
+camera_type=gui.retr('camera_type');
 if strcmp(camera_type,'pco_pixelfly')
 	if str2double(get(handles.ac_expo,'String')) < 1
 		set(handles.ac_expo,'String','1')

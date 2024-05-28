@@ -1,8 +1,8 @@
 function calccali
-gui.gui_put('derived',[]) %calibration makes previously derived params incorrect
-handles=gui.gui_gethand;
+gui.put('derived',[]) %calibration makes previously derived params incorrect
+handles=gui.gethand;
 
-pointscali=gui.gui_retr('pointscali');
+pointscali=gui.retr('pointscali');
 if numel(pointscali)>0
 	xposition=pointscali(:,1);
 	yposition=pointscali(:,2);
@@ -22,31 +22,31 @@ if numel(pointscali)>0
 	else
 		calv=-1*(calxy/(time/1000));
 	end
-	gui.gui_put('calu',calu);
-	gui.gui_put('calv',calv);
-	gui.gui_put('calxy',calxy);
+	gui.put('calu',calu);
+	gui.put('calv',calv);
+	gui.put('calxy',calxy);
 	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','on')
-	points_offsetx=gui.gui_retr('points_offsetx');
+	points_offsetx=gui.retr('points_offsetx');
 	if numel(points_offsetx)>0
-		offsetx = calibrate.calibrate_calculate_offset_axis('x',points_offsetx(1),points_offsetx(3));
-		gui.gui_put('offset_x_true',offsetx);
+		offsetx = calibrate.calculate_offset_axis('x',points_offsetx(1),points_offsetx(3));
+		gui.put('offset_x_true',offsetx);
 	else %no offsets applied
-		gui.gui_put('offset_x_true',0);
+		gui.put('offset_x_true',0);
 	end
-	points_offsety=gui.gui_retr('points_offsety');
+	points_offsety=gui.retr('points_offsety');
 	if numel(points_offsety)>0
-		offsety = calibrate.calibrate_calculate_offset_axis('y',points_offsety(2),points_offsety(3));
-		gui.gui_put('offset_y_true',offsety);
+		offsety = calibrate.calculate_offset_axis('y',points_offsety(2),points_offsety(3));
+		gui.put('offset_y_true',offsety);
 	else %no offsets applied
-		gui.gui_put('offset_y_true',0);
+		gui.put('offset_y_true',0);
 	end
 
-	calxy=gui.gui_retr('calxy');
-	calu=gui.gui_retr('calu');calv=gui.gui_retr('calv');
-	offset_x_true = gui.gui_retr('offset_x_true');
-	offset_y_true = gui.gui_retr('offset_y_true');
+	calxy=gui.retr('calxy');
+	calu=gui.retr('calu');calv=gui.retr('calv');
+	offset_x_true = gui.retr('offset_x_true');
+	offset_y_true = gui.retr('offset_y_true');
 
-	calibrate.calibrate_update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles);
+	calibrate.update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles);
 
 	%sliderdisp(retr('pivlab_axis'))
 

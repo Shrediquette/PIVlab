@@ -1,12 +1,12 @@
 function load_session_Callback(auto_load_session, auto_load_session_filename)
-gui.gui_put('num_handle_calls',0);
-sessionpath=gui.gui_retr('sessionpath');
+gui.put('num_handle_calls',0);
+sessionpath=gui.retr('sessionpath');
 if isempty(sessionpath)
-	sessionpath=gui.gui_retr('pathname');
+	sessionpath=gui.retr('pathname');
 end
 if auto_load_session ~= 1
 	[FileName,PathName, filterindex] = uigetfile({'*.mat','MATLAB Files (*.mat)'; '*.mat','mat'},'Load PIVlab session',fullfile(sessionpath, 'PIVlab_session.mat'));
-	gui.gui_toolsavailable(0,'Busy, loading session...');drawnow
+	gui.toolsavailable(0,'Busy, loading session...');drawnow
 else
 	[PathName,FileName,ext] = fileparts(auto_load_session_filename);
 	FileName = [FileName ext];
@@ -14,16 +14,16 @@ end
 
 if isequal(FileName,0) | isequal(PathName,0)
 else
-	gui.gui_put('expected_image_size',[])
+	gui.put('expected_image_size',[])
 	clear iptPointerManager
-	gui.gui_put('sessionpath',PathName );
-	gui.gui_put('derived',[]);
-	gui.gui_put('resultslist',[]);
-	gui.gui_put('masks_in_frame',[]);
-	gui.gui_put('roirect',[]);
-	gui.gui_put('velrect',[]);
-	gui.gui_put('filename',[]);
-	gui.gui_put('filepath',[]);
+	gui.put('sessionpath',PathName );
+	gui.put('derived',[]);
+	gui.put('resultslist',[]);
+	gui.put('masks_in_frame',[]);
+	gui.put('roirect',[]);
+	gui.put('velrect',[]);
+	gui.put('filename',[]);
+	gui.put('filepath',[]);
 	hgui=getappdata(0,'hgui');
 	warning off all
 	try
@@ -37,39 +37,39 @@ else
 	for i=1:size(names,1)
 		setappdata(hgui,names{i},vars.(names{i}))
 	end
-	gui.gui_put('existing_handles',[]);
-	gui.gui_sliderrange(1)
-	handles=gui.gui_gethand;
+	gui.put('existing_handles',[]);
+	gui.sliderrange(1)
+	handles=gui.gethand;
 
-	set(handles.clahe_enable,'value',gui.gui_retr('clahe_enable'));
-	set(handles.clahe_size,'string',gui.gui_retr('clahe_size'));
-	set(handles.enable_highpass,'value',gui.gui_retr('enable_highpass'));
-	set(handles.highp_size,'string',gui.gui_retr('highp_size'));
+	set(handles.clahe_enable,'value',gui.retr('clahe_enable'));
+	set(handles.clahe_size,'string',gui.retr('clahe_size'));
+	set(handles.enable_highpass,'value',gui.retr('enable_highpass'));
+	set(handles.highp_size,'string',gui.retr('highp_size'));
 
-	set(handles.wienerwurst,'value',gui.gui_retr('wienerwurst'));
-	set(handles.wienerwurstsize,'string',gui.gui_retr('wienerwurstsize'));
+	set(handles.wienerwurst,'value',gui.retr('wienerwurst'));
+	set(handles.wienerwurstsize,'string',gui.retr('wienerwurstsize'));
 
 	%set(handles.enable_clip,'value',retr('enable_clip'));
 	%set(handles.clip_thresh,'string',retr('clip_thresh'));
-	set(handles.enable_intenscap,'value',gui.gui_retr('enable_intenscap'));
-	set(handles.intarea,'string',gui.gui_retr('intarea'));
-	set(handles.step,'string',gui.gui_retr('stepsize'));
-	set(handles.subpix,'value',gui.gui_retr('subpix'));  %popup
-	set(handles.stdev_check,'value',gui.gui_retr('stdev_check'));
-	set(handles.stdev_thresh,'string',gui.gui_retr('stdev_thresh'));
-	set(handles.loc_median,'value',gui.gui_retr('loc_median'));
-	set(handles.loc_med_thresh,'string',gui.gui_retr('loc_med_thresh'));
-	set(handles.interpol_missing,'value',gui.gui_retr('interpol_missing'));
+	set(handles.enable_intenscap,'value',gui.retr('enable_intenscap'));
+	set(handles.intarea,'string',gui.retr('intarea'));
+	set(handles.step,'string',gui.retr('stepsize'));
+	set(handles.subpix,'value',gui.retr('subpix'));  %popup
+	set(handles.stdev_check,'value',gui.retr('stdev_check'));
+	set(handles.stdev_thresh,'string',gui.retr('stdev_thresh'));
+	set(handles.loc_median,'value',gui.retr('loc_median'));
+	set(handles.loc_med_thresh,'string',gui.retr('loc_med_thresh'));
+	set(handles.interpol_missing,'value',gui.retr('interpol_missing'));
 
-	set(handles.vectorscale,'string',gui.gui_retr('vectorscale'));
-	set(handles.colormap_choice,'value',gui.gui_retr('colormap_choice')); %popup
-	set(handles.colormap_steps,'value',gui.gui_retr('colormap_steps'));
-	set(handles.colormap_interpolation,'value',gui.gui_retr('colormap_interpolation'));
-	set(handles.addfileinfo,'value',gui.gui_retr('addfileinfo'));
-	set(handles.add_header,'value',gui.gui_retr('add_header'));
-	set(handles.delimiter,'value',gui.gui_retr('delimiter'));%popup
-	set(handles.img_not_mask,'value',gui.gui_retr('img_not_mask'));
-	set(handles.autoscale_vec,'value',gui.gui_retr('autoscale_vec'));
+	set(handles.vectorscale,'string',gui.retr('vectorscale'));
+	set(handles.colormap_choice,'value',gui.retr('colormap_choice')); %popup
+	set(handles.colormap_steps,'value',gui.retr('colormap_steps'));
+	set(handles.colormap_interpolation,'value',gui.retr('colormap_interpolation'));
+	set(handles.addfileinfo,'value',gui.retr('addfileinfo'));
+	set(handles.add_header,'value',gui.retr('add_header'));
+	set(handles.delimiter,'value',gui.retr('delimiter'));%popup
+	set(handles.img_not_mask,'value',gui.retr('img_not_mask'));
+	set(handles.autoscale_vec,'value',gui.retr('autoscale_vec'));
 
 	set(handles.dcc, 'value',vars.dccmark);
 	set(handles.fftmulti, 'value',vars.fftmark);
@@ -130,7 +130,7 @@ else
 		disp('Old version compatibility,')
 	end
 	try %neu v2.42
-		set(handles.interpol_missing2,'value',gui.gui_retr('interpol_missing'));
+		set(handles.interpol_missing2,'value',gui.retr('interpol_missing'));
 	catch
 	end
 
@@ -158,8 +158,8 @@ else
 
 	try
 		if vars.velrect(1,3)~=0 && vars.velrect(1,4)~=0
-			gui.gui_put('velrect', vars.velrect);
-			validate.validate_update_velocity_limits_information
+			gui.put('velrect', vars.velrect);
+			validate.update_velocity_limits_information
 		end
 	catch
 	end
@@ -169,21 +169,21 @@ else
 		set(handles.time_inp, 'String',vars.time_inp_string);
 
 		if isempty(vars.pointscali)==0
-			handles=gui.gui_gethand;
-			calu=gui.gui_retr('calu');calv=gui.gui_retr('calv');
-			calxy=gui.gui_retr('calxy');
+			handles=gui.gethand;
+			calu=gui.retr('calu');calv=gui.retr('calv');
+			calxy=gui.retr('calxy');
 			if isfield(vars,'offset_x_true') == 1
-				offset_x_true = gui.gui_retr('offset_x_true');
+				offset_x_true = gui.retr('offset_x_true');
 			else
 				offset_x_true=0;
 			end
 			if isfield(vars,'offset_y_true') == 1
-				offset_y_true = gui.gui_retr('offset_y_true');
+				offset_y_true = gui.retr('offset_y_true');
 			else
 				offset_y_true=0;
 			end
-			calibrate.calibrate_update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles)
-			calibrate.calibrate_pixeldist_changed_Callback()
+			calibrate.update_green_calibration_box(calxy, calu, offset_x_true, offset_y_true, handles)
+			calibrate.pixeldist_changed_Callback()
 		end
 	catch
 		disp('...')
@@ -203,7 +203,7 @@ else
 	try
 		set (handles.repeat_last,'Value',vars.repeat_last);
 		set(handles.edit52x,'String',vars.repeat_last_thresh);
-		piv.piv_repeat_last_Callback
+		piv.repeat_last_Callback
 	catch
 		disp('repeat_last didnt work4')
 	end
@@ -211,16 +211,16 @@ else
 	%reset zoom
 	set(handles.panon,'Value',0);
 	set(handles.zoomon,'Value',0);
-	gui.gui_put('xzoomlimit', []);
-	gui.gui_put('yzoomlimit', []);
-	gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
+	gui.put('xzoomlimit', []);
+	gui.put('yzoomlimit', []);
+	gui.sliderdisp(gui.retr('pivlab_axis'))
 	try
-		if gui.gui_retr('parallel')==1
+		if gui.retr('parallel')==1
 			modestr=' (parallel)';
 		else
 			modestr=' (serial)';
 		end
-		set(getappdata(0,'hgui'), 'Name',['PIVlab ' gui.gui_retr('PIVver')  modestr '   [Path: ' vars.pathname ']']) %for people like me that always forget what dataset they are currently working on...
+		set(getappdata(0,'hgui'), 'Name',['PIVlab ' gui.retr('PIVver')  modestr '   [Path: ' vars.pathname ']']) %for people like me that always forget what dataset they are currently working on...
 	catch
 	end
 	zoom reset
@@ -229,5 +229,5 @@ else
 	catch
 	end
 end
-gui.gui_toolsavailable(1)
+gui.toolsavailable(1)
 

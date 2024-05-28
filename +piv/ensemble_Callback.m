@@ -1,5 +1,5 @@
 function ensemble_Callback(hObject, ~, ~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 if get(hObject,'Value') ==1
 	set(handles.dcc,'value',0)
 	set(handles.fftmulti,'value',0)
@@ -16,5 +16,5 @@ if get(hObject,'Value') ==1
 else
 	set(handles.ensemble,'value',1)
 end
-piv.piv_dispinterrog
+piv.dispinterrog
 

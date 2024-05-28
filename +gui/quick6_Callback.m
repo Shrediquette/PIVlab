@@ -1,5 +1,5 @@
 function quick6_Callback (~,~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 set(handles.quick6,'Value',0)
-calibrate.calibrate_cal_actual_Callback
+calibrate.cal_actual_Callback
 

@@ -1,13 +1,13 @@
 function derivative_calc (frame,deriv,update)
-handles=gui.gui_gethand;
-resultslist=gui.gui_retr('resultslist');
+handles=gui.gethand;
+resultslist=gui.retr('resultslist');
 if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
-	filenames=gui.gui_retr('filenames');
-	filepath=gui.gui_retr('filepath');
-	derived=gui.gui_retr('derived');
-	calu=gui.gui_retr('calu');calv=gui.gui_retr('calv');
-	calxy=gui.gui_retr('calxy');
-	[currentimage,~]=import.import_get_img(2*frame-1);
+	filenames=gui.retr('filenames');
+	filepath=gui.retr('filepath');
+	derived=gui.retr('derived');
+	calu=gui.retr('calu');calv=gui.retr('calv');
+	calxy=gui.retr('calxy');
+	[currentimage,~]=import.get_img(2*frame-1);
 	x=resultslist{1,frame};
 	y=resultslist{2,frame};
 	%subtrayct mean u
@@ -32,12 +32,12 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 		if any(any(isnan(u))) || any(any(isnan(v)))
 			if isempty(strfind(get(handles.apply_deriv_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.ascii_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.save_mat_all,'string'), 'Please'))==1%not in batch
 				drawnow;
-				if gui.gui_retr('alreadydisplayed') == 1
+				if gui.retr('alreadydisplayed') == 1
 				else
 					msgbox('Your dataset contains NaNs. A vector interpolation will be performed automatically to interpolate missing vectors.', 'modal')
 					uiwait
 				end
-				gui.gui_put('alreadydisplayed',1);
+				gui.put('alreadydisplayed',1);
 			end
 			typevector_original=typevector;
 			u(isnan(v))=NaN;
@@ -54,12 +54,12 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 	else
 		if isempty(strfind(get(handles.apply_deriv_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.ascii_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.tecplot_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.save_mat_all,'string'), 'Please'))==1%not in batch
 			drawnow;
-			if gui.gui_retr('alreadydisplayed') == 1
+			if gui.retr('alreadydisplayed') == 1
 			else
 				msgbox('Your dataset contains NaNs. Derived parameters will have a lot of missing data. Redo the vector validation with the option to interpolate missing data turned on.', 'modal')
 				uiwait
 			end
-			gui.gui_put('alreadydisplayed',1);
+			gui.put('alreadydisplayed',1);
 		end
 	end
 	if get(handles.smooth, 'Value') == 1
@@ -132,15 +132,15 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 		%disp('divergence')
 	end
 	if deriv==7
-		derived{6,frame}=plot.plot_dcev(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
+		derived{6,frame}=plot.dcev(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
 		%disp('dcev')
 	end
 	if deriv==8
-		derived{7,frame}=plot.plot_shear(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
+		derived{7,frame}=plot.shear(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
 		%disp('shear')
 	end
 	if deriv==9
-		derived{8,frame}=plot.plot_strain(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
+		derived{8,frame}=plot.strain(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
 		%disp('strain')
 	end
 	if deriv==10
@@ -156,7 +156,7 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 		%}
 		%EDITED for williams visualization
 		%Original:
-		derived{9,frame}=plot.plot_LIC(v*calv-subtr_v,u*calu-subtr_u,frame);
+		derived{9,frame}=plot.LIC(v*calv-subtr_v,u*calu-subtr_u,frame);
 		%disp('LIC')
 	end
 	if deriv==11
@@ -175,12 +175,12 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 		%disp('corrmap')
 	end
 
-	gui.gui_put('subtr_u', subtr_u);
-	gui.gui_put('subtr_v', subtr_v);
-	gui.gui_put('resultslist', resultslist);
-	gui.gui_put ('derived',derived);
+	gui.put('subtr_u', subtr_u);
+	gui.put('subtr_v', subtr_v);
+	gui.put('resultslist', resultslist);
+	gui.put ('derived',derived);
 	if update==1
-		gui.gui_put('displaywhat', deriv);
+		gui.put('displaywhat', deriv);
 	end
 end
 

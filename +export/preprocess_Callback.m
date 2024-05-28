@@ -1,15 +1,15 @@
 function preprocess_Callback(~, ~, ~)
-filepath=gui.gui_retr('filepath');
+filepath=gui.retr('filepath');
 if size(filepath,1) > 1 %did the user load images?
-	sessionpath=gui.gui_retr('sessionpath');
+	sessionpath=gui.retr('sessionpath');
 	if isempty(sessionpath)
-		sessionpath=gui.gui_retr('pathname');
+		sessionpath=gui.retr('pathname');
 	end
 
-	preproc.preproc_preview_preprocess_Callback
+	preproc.preview_preprocess_Callback
 	preprocessed_img=findobj(gca,'type','image');
 	preprocessed_img=(preprocessed_img.CData);
-	toggler=gui.gui_retr('toggler');
+	toggler=gui.retr('toggler');
 	if toggler==0
 		img_idx='_A';
 	else

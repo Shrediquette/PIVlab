@@ -1,5 +1,5 @@
 function pass4_checkbox_Callback(hObject, ~, ~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 if get(hObject,'Value') == 0
 	set(handles.edit52,'enable','off')
 	set(handles.repeat_last,'Value',0)
@@ -18,5 +18,5 @@ if get(handles.checkbox27,'value')==0
 	set(handles.checkbox28,'value',0)
 	set(handles.edit52,'enable','off')
 end
-piv.piv_dispinterrog
+piv.dispinterrog
 

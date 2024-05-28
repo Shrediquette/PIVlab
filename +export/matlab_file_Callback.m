@@ -1,3 +1,3 @@
 function matlab_file_Callback(~, ~, ~)
-gui.gui_switchui('multip11')
+gui.switchui('multip11')
 

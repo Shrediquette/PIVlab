@@ -1,6 +1,6 @@
 function Calibrationevents(src,evt)
 evname = evt.EventName;
-handles=gui.gui_gethand;
+handles=gui.gethand;
 switch(evname)
 	%case{'MovingROI'}
 	%disp(['ROI moving previous position: ' mat2str(evt.PreviousPosition)]);
@@ -14,13 +14,13 @@ switch(evname)
 		else
 			src.Label = ['Length :' num2str(Cali_length) ' px'];
 		end
-		gui.gui_put('pointscali',Cali_coords);
-		calibrate.calibrate_pixeldist_changed_Callback()
-		if gui.gui_retr('calu') ~=1
-			calibrate.calibrate_calccali
+		gui.put('pointscali',Cali_coords);
+		calibrate.pixeldist_changed_Callback()
+		if gui.retr('calu') ~=1
+			calibrate.calccali
 		end
 	case{'DeletingROI'}
 		delete(findobj('tag', 'caliline'))
-		calibrate.calibrate_clear_cali_Callback
+		calibrate.clear_cali_Callback
 end
 

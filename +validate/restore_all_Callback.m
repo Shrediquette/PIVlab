@@ -1,14 +1,14 @@
 function restore_all_Callback(~, ~, ~)
 %clears resultslist at 7,8,9
-resultslist=gui.gui_retr('resultslist');
+resultslist=gui.retr('resultslist');
 
 if size(resultslist,1) > 6
 	resultslist(7:9,:)={[]};
 	if size(resultslist,1) > 9
 		resultslist(10:11,:)={[]};
 	end
-	gui.gui_put('resultslist', resultslist);
-	gui.gui_sliderdisp(gui.gui_retr('pivlab_axis'))
+	gui.put('resultslist', resultslist);
+	gui.sliderdisp(gui.retr('pivlab_axis'))
 end
-gui.gui_put('manualdeletion',[]);
+gui.put('manualdeletion',[]);
 

@@ -1,5 +1,5 @@
 function deletestreamlines_Callback(~, ~, ~)
-gui.gui_put('streamlinesX',[]);
-gui.gui_put('streamlinesY',[]);
+gui.put('streamlinesX',[]);
+gui.put('streamlinesY',[]);
 delete(findobj('tag','streamline'));
 

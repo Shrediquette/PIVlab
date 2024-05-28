@@ -1,5 +1,5 @@
 function low_contrast_enable_Callback(~,~,~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 if get(handles.low_contrast_mask_enable,'Value')==0
 	set(handles.low_contrast_mask_threshold_suggest,'enable','off')
 	set(handles.mask_medfilt_enable_3,'enable','off');

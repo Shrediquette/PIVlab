@@ -1,5 +1,5 @@
 function display_cali_img (caliimg)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 if get(handles.optimize_calib_img,'value')==1
 	numberoftiles1=round(size(caliimg,1)/40);
 	numberoftiles2=round(size(caliimg,2)/40);
@@ -19,7 +19,7 @@ if get(handles.optimize_calib_img,'value')==1
 		end
 	end
 end
-pivlab_axis=gui.gui_retr('pivlab_axis');
+pivlab_axis=gui.retr('pivlab_axis');
 image(caliimg, 'parent',pivlab_axis, 'cdatamapping', 'scaled');
 colormap('gray');
 axis image;

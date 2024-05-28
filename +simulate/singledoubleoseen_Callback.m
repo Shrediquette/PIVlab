@@ -1,5 +1,5 @@
 function singledoubleoseen_Callback(hObject, ~, ~)
-handles=gui.gui_gethand;
+handles=gui.gethand;
 contents = get(hObject,'value');
 set(handles.oseenx1,'visible','off');
 set(handles.oseenx2,'visible','off');
