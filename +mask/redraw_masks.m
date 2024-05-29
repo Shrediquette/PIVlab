@@ -24,29 +24,29 @@ if mask_editing_possible==1
 	for i=1:masknums
 		type=mask_positions(i,1);
 		if strcmp(type,'ROI_object_freehand')
-			roi = drawfreehand('Position', mask_positions{i,2});
-			roi.Multiclick=0;
+			regionOfInterest = drawfreehand('Position', mask_positions{i,2});
+			regionOfInterest.Multiclick=0;
 		elseif strcmp(type,'ROI_object_rectangle')
-			roi = drawrectangle('Position', mask_positions{i,2});
+			regionOfInterest = drawrectangle('Position', mask_positions{i,2});
 		elseif strcmp(type,'ROI_object_polygon')
-			roi = drawpolygon('Position', mask_positions{i,2});
+			regionOfInterest = drawpolygon('Position', mask_positions{i,2});
 		elseif strcmp(type,'ROI_object_circle')
 			circledata=mask_positions{i,2}; %whyTF does the circle needs to have center and radius.....?!? Why not Position like all other ROIs....?!?
-			roi = drawcircle('Center',circledata(1:2),'Radius',circledata(3));
+			regionOfInterest = drawcircle('Center',circledata(1:2),'Radius',circledata(3));
 		elseif strcmp(type,'ROI_object_external')
-			roi = drawfreehand('Position', mask_positions{i,2});
+			regionOfInterest = drawfreehand('Position', mask_positions{i,2});
 		end
-		roi.UserData=mask_positions{i,1};
-		roi.Label=mask_positions{i,4};
-		roi.Tag=mask_positions{i,5};
-		roi.Color=mask_positions{i,3};
-		addlistener(roi,'ROIMoved',@mask.ROIevents);
-		addlistener(roi,'DeletingROI',@mask.ROIevents);
-		addlistener(roi,'ROIClicked',@mask.ROIevents);
-		roi.FaceAlpha=0.5;
-		%roi.EdgeAlpha=0.75;
-		roi.LineWidth=1;
-		roi.LabelVisible = 'off';
+		regionOfInterest.UserData=mask_positions{i,1};
+		regionOfInterest.Label=mask_positions{i,4};
+		regionOfInterest.Tag=mask_positions{i,5};
+		regionOfInterest.Color=mask_positions{i,3};
+		addlistener(regionOfInterest,'ROIMoved',@mask.ROIevents);
+		addlistener(regionOfInterest,'DeletingROI',@mask.ROIevents);
+		addlistener(regionOfInterest,'ROIClicked',@mask.ROIevents);
+		regionOfInterest.FaceAlpha=0.5;
+		%regionOfInterest.EdgeAlpha=0.75;
+		regionOfInterest.LineWidth=1;
+		regionOfInterest.LabelVisible = 'off';
 	end
 end
 

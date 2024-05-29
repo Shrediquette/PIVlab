@@ -23,37 +23,37 @@ if size(filepath,1) > 1 %did the user load images?
 	end
 	masknums=size(mask_positions,1);
 	if strcmp(type,'freehand')
-		roi = images.roi.Freehand;
-		roi.Multiclick=0;
+		regionOfInterest = images.roi.Freehand;
+		regionOfInterest.Multiclick=0;
 	elseif strcmp(type,'assisted')
-		roi = images.roi.AssistedFreehand;
+		regionOfInterest = images.roi.AssistedFreehand;
 		type='freehand';
 	elseif strcmp(type,'rectangle')
-		roi = images.roi.Rectangle;
+		regionOfInterest = images.roi.Rectangle;
 	elseif strcmp(type,'polygon')
-		roi = images.roi.Polygon;
+		regionOfInterest = images.roi.Polygon;
 	elseif strcmp(type,'circle')
-		roi = images.roi.Circle;
+		regionOfInterest = images.roi.Circle;
 	end
 	recommended_colors=parula(7);
-	roi.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
-	roi.FaceAlpha=0.75;
-	roi.LabelVisible = 'off';
-	roi.UserData=['ROI_object_' type];
+	regionOfInterest.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
+	regionOfInterest.FaceAlpha=0.75;
+	regionOfInterest.LabelVisible = 'off';
+	regionOfInterest.UserData=['ROI_object_' type];
 
 	[~,guid] = fileparts(tempname);
-	roi.Tag = guid; %unique id for every ROImask object.
-	%addlistener(roi,'MovingROI',@ROIevents);
+	regionOfInterest.Tag = guid; %unique id for every ROImask object.
+	%addlistener(regionOfInterest,'MovingROI',@ROIevents);
 	gui.toolsavailable(0)
 
-	draw(roi);
-	addlistener(roi,'ROIMoved',@mask.ROIevents);
-	addlistener(roi,'DeletingROI',@mask.ROIevents);
-	addlistener(roi,'ROIClicked',@mask.ROIevents);
+	draw(regionOfInterest);
+	addlistener(regionOfInterest,'ROIMoved',@mask.ROIevents);
+	addlistener(regionOfInterest,'DeletingROI',@mask.ROIevents);
+	addlistener(regionOfInterest,'ROIClicked',@mask.ROIevents);
 	gui.toolsavailable(1)
 	handles=gui.gethand;
 	currentframe=floor(get(handles.fileselector, 'value'));
-	masks_in_frame = mask.update_mask_memory(roi,currentframe,masks_in_frame);
+	masks_in_frame = mask.update_mask_memory(regionOfInterest,currentframe,masks_in_frame);
 	gui.put('masks_in_frame',masks_in_frame);
 end
 

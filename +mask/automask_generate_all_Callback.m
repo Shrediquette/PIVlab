@@ -1,4 +1,4 @@
-function autogenerate_all_Callback (~,~,~)
+function automask_generate_all_Callback (~,~,~)
 handles=gui.gethand;
 filepath=gui.retr('filepath');
 if size(filepath,1) > 1 %did the user load images?

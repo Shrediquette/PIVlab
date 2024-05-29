@@ -14,19 +14,19 @@ for ind = 1:numel(blocations)
 	pos = blocations{ind};
 	pos = fliplr(pos);
 	% Create a freehand ROI.
-	roi = drawfreehand('Position', pos);
-	reduce(roi,0.005)
-	roi.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
-	roi.FaceAlpha=0.75;
-	roi.LabelVisible = 'off';
-	roi.UserData=['ROI_object_' 'external'];
+	regionOfInterest = drawfreehand('Position', pos);
+	reduce(regionOfInterest,0.005)
+	regionOfInterest.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
+	regionOfInterest.FaceAlpha=0.75;
+	regionOfInterest.LabelVisible = 'off';
+	regionOfInterest.UserData=['ROI_object_' 'external'];
 
 	[~,guid] = fileparts(tempname);
-	roi.Tag = guid;
-	%addlistener(roi,'MovingROI',@ROIevents);
-	addlistener(roi,'ROIMoved',@mask.ROIevents);
-	addlistener(roi,'DeletingROI',@mask.ROIevents);
-	addlistener(roi,'ROIClicked',@mask.ROIevents);
-	masks_in_frame = mask.update_mask_memory(roi,frame,masks_in_frame);
+	regionOfInterest.Tag = guid;
+	%addlistener(regionOfInterest,'MovingROI',@ROIevents);
+	addlistener(regionOfInterest,'ROIMoved',@mask.ROIevents);
+	addlistener(regionOfInterest,'DeletingROI',@mask.ROIevents);
+	addlistener(regionOfInterest,'ROIClicked',@mask.ROIevents);
+	masks_in_frame = mask.update_mask_memory(regionOfInterest,frame,masks_in_frame);
 end
 

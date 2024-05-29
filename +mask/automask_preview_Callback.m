@@ -1,4 +1,4 @@
-function autopreview_Callback(~,~,~)
+function automask_preview_Callback(~,~,~)
 filepath=gui.retr('filepath');
 handles=gui.gethand;
 if size(filepath,1) > 1 %did the user load images?

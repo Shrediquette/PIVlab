@@ -8,40 +8,40 @@ if size(filepath,1) >1 || numel(caliimg)>0 || gui.retr('video_selection_done') =
 	handles=gui.gethand;
 	gui.toolsavailable(0)
 	delete(findobj('tag', 'caliline'))
-	roi = images.roi.Line;
-	%roi.EdgeAlpha=0.75;
-	roi.LabelVisible = 'on';
-	roi.Tag = 'caliline';
-	roi.Color = 'y';
-	roi.StripeColor = 'g';
-	roi.LineWidth = roi.LineWidth*2;
+	regionOfInterest = images.roi.Line;
+	%regionOfInterest.EdgeAlpha=0.75;
+	regionOfInterest.LabelVisible = 'on';
+	regionOfInterest.Tag = 'caliline';
+	regionOfInterest.Color = 'y';
+	regionOfInterest.StripeColor = 'g';
+	regionOfInterest.LineWidth = regionOfInterest.LineWidth*2;
 	Cali_coords = gui.retr('pointscali');
 	if ~isempty(Cali_coords)
-		roi=drawline(gui.retr('pivlab_axis'),'Position',Cali_coords);
-		%roi.EdgeAlpha=0.75;
-		roi.LabelVisible = 'on';
-		roi.Tag = 'caliline';
-		original_linewidth=roi.LineWidth;
-		roi.LineWidth = original_linewidth*2;
+		regionOfInterest=drawline(gui.retr('pivlab_axis'),'Position',Cali_coords);
+		%regionOfInterest.EdgeAlpha=0.75;
+		regionOfInterest.LabelVisible = 'on';
+		regionOfInterest.Tag = 'caliline';
+		original_linewidth=regionOfInterest.LineWidth;
+		regionOfInterest.LineWidth = original_linewidth*2;
 		for rep=1:2 %bring users attention to already existing line
-			roi.Color = 'g'; roi.StripeColor = 'y';
+			regionOfInterest.Color = 'g'; regionOfInterest.StripeColor = 'y';
 			pause(0.1)
-			roi.Color = 'y'; roi.StripeColor = 'g';
+			regionOfInterest.Color = 'y'; regionOfInterest.StripeColor = 'g';
 			pause(0.1)
 		end
-		roi.Color = 'y';
-		roi.StripeColor = 'g';
-		roi.LineWidth = original_linewidth*2;
+		regionOfInterest.Color = 'y';
+		regionOfInterest.StripeColor = 'g';
+		regionOfInterest.LineWidth = original_linewidth*2;
 		pause(0.1)
 	else
 		axes(gui.retr('pivlab_axis'))
-		draw(roi);
+		draw(regionOfInterest);
 	end
-	addlistener(roi,'MovingROI',@calibrate.Calibrationevents);
-	addlistener(roi,'DeletingROI',@calibrate.Calibrationevents);
+	addlistener(regionOfInterest,'MovingROI',@calibrate.Calibrationevents);
+	addlistener(regionOfInterest,'DeletingROI',@calibrate.Calibrationevents);
 
 	dummyevt.EventName = 'MovingROI';
-	calibrate.Calibrationevents(roi,dummyevt); %run the moving event once to update displayed length
+	calibrate.Calibrationevents(regionOfInterest,dummyevt); %run the moving event once to update displayed length
 	gui.toolsavailable(1)
 end
 

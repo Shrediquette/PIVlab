@@ -5,15 +5,15 @@ filepath=gui.retr('filepath');
 ok=gui.checksettings;
 if ok==1
 	uiwait(msgbox({'Please select a rectangle';'that encloses the area that';'you want to analyze.'},'Suggestion for PIV settings','modal'));
-	roi = images.roi.Rectangle;
-	%roi.EdgeAlpha=0.75;
-	roi.LabelVisible = 'on';
-	roi.Tag = 'suggestRect';
-	roi.Color = 'r';
-	roi.StripeColor = 'k';
+	regionOfInterest = images.roi.Rectangle;
+	%regionOfInterest.EdgeAlpha=0.75;
+	regionOfInterest.LabelVisible = 'on';
+	regionOfInterest.Tag = 'suggestRect';
+	regionOfInterest.Color = 'r';
+	regionOfInterest.StripeColor = 'k';
 	axes(gui.retr('pivlab_axis'))
-	draw(roi);
-	roirect=round(roi.Position);
+	draw(regionOfInterest);
+	roirect=round(regionOfInterest.Position);
 
 	if numel(roirect) == 4
 		%roirect(1,3)~=0 && roirect(1,4)~=0
