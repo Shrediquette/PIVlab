@@ -1,4 +1,4 @@
-function do_pixel_data_Callback(~, src, ~)
+function export_do_export_pixel_data_Callback(~, src, ~)
 handles=gui.gethand;
 filepath=gui.retr('filepath');
 if strmatch(src.Source.Tag,'do_export_pixel_data')

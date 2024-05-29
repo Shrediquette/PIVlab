@@ -1,4 +1,4 @@
-function poly_Callback(~, ~, ~)
+function poly_extract_Callback(~, ~, ~)
 handles=gui.gethand;
 gui.switchui('multip12')
 if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
