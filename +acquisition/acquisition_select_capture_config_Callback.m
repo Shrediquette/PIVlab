@@ -177,7 +177,7 @@ if value == 9 % OPTRONIS
 		case 'Cyclone-25-150-M'
 			avail_freqs={'150' '100' '75' '50' '20'};
 			gui.gui_put('max_cam_res',[5120,5120]);
-			gui.gui_put('min_allowed_interframe',30);
+			gui.gui_put('min_allowed_interframe',40);
 			gui.gui_put('blind_time',25);
 		otherwise
 			disp('Camera detection unsuccesful.')
