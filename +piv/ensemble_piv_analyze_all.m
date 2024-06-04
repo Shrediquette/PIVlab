@@ -1,4 +1,4 @@
-function ensemble_analyze_all
+function ensemble_piv_analyze_all
 handles=gui.gethand;
 try
 	if get(handles.update_display_checkbox,'Value')==1
