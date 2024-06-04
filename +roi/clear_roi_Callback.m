@@ -1,4 +1,4 @@
-function clear_Callback(~, ~, ~)
+function clear_roi_Callback(~, ~, ~)
 handles=gui.gethand;
 delete(findobj('tag', 'RegionOfInterest'))
 delete(findobj('tag', 'roiplot'));
