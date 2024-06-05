@@ -55,7 +55,7 @@ function image = readB16(dirPath, filename)
 % 4        int32     color LUT-setting, 0 = linear, 1 = logarithmic 
 % ?        int32     internal use
 % ?        chars     Comment file in ASCII characters with variable length of 0...XX. 
-%                              The length of the comment filed must be documented in the ìheader lengthî field. 
+%                              The length of the comment filed must be documented in the ‚Äúheader length‚Äù field. 
 %          uint16    16 bit pixel data, starting at offset given by the 'header size' int32
 
 %% Start of Code
