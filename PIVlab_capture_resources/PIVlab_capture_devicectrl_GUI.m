@@ -111,11 +111,14 @@ if isempty(fh)
 	%% FLOWlab
 	parentitem=get(handles.flowlabpanel, 'Position');
 	item=[0 0 0 0];
-	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2*1 1.5];
+	item=[parentitem(3)/3*0 item(2)+item(4) parentitem(3)/3*1 1.5];
 	handles.flowlab_on = uicontrol(handles.flowlabpanel,'Style','pushbutton','String','On','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,4,'on'} );
 
-	item=[parentitem(3)/2*1 item(2) parentitem(3)/2*1 1.5];
+	item=[parentitem(3)/3*1 item(2) parentitem(3)/3*1 1.5];
 	handles.flowlab_off = uicontrol(handles.flowlabpanel,'Style','pushbutton','String','Off','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,4,'off'} );
+
+	item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
+	handles.flowlab_mix = uicontrol(handles.flowlabpanel,'Style','pushbutton','String','Mix','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@device_set,4,'mix'} );
 
 	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
 	handles.flowlab_label = uicontrol(handles.flowlabpanel,'Style','text','String','Percent','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'horizontalalignment','right');
@@ -270,6 +273,23 @@ if strmatch(inpt,'on')
 	external_device_control(device,1)
 end
 if strmatch(inpt,'off')
+	external_device_control(device,0)
+end
+if strmatch(inpt,'mix')
+	pwm=str2double(get(handles.flowlab_edit,'String'));
+	for i=1:5
+		external_device_control(device,0)
+		pause(0.5)
+		put('flowlab_percent',pwm);
+		external_device_control(device,1)
+		pause(3)
+		external_device_control(device,0)
+		pause(0.5)
+		put('flowlab_percent',-pwm);
+		external_device_control(device,1)
+		pause(3)
+	end
+	put('flowlab_percent',pwm);
 	external_device_control(device,0)
 end
 
