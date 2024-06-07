@@ -169,7 +169,7 @@ utable(vtable>interrogationarea/1.5)=NaN;
 
 function [vector] = SUBPIXGAUSS (result_conv,interrogationarea,x,y,SubPixOffset)
 if (x <= (size(result_conv,1)-1)) && (y <= (size(result_conv,1)-1)) && (x >= 1) && (y >= 1)
-    %the following 8 lines are copyright (c) 1998, Uri Shavit, Roi Gurka, Alex Liberzon, Technion – Israel Institute of Technology
+    %the following 8 lines are copyright (c) 1998, Uri Shavit, Roi Gurka, Alex Liberzon, Technion â€“ Israel Institute of Technology
     %http://urapiv.wordpress.com
     f0 = log(result_conv(y,x));
     f1 = log(result_conv(y-1,x));
@@ -197,11 +197,11 @@ if (x <= (size(result_conv,1)-1)) && (y <= (size(result_conv,1)-1)) && (x >= 1) 
     for i=-1:1
         for j=-1:1
             %following 15 lines based on
-            %H. Nobach Æ M. Honkanen (2005)
+            %H. Nobach Ã† M. Honkanen (2005)
             %Two-dimensional Gaussian regression for sub-pixel displacement
             %estimation in particle image velocimetry or particle position
             %estimation in particle tracking velocimetry
-            %Experiments in Fluids (2005) 38: 511–515
+            %Experiments in Fluids (2005) 38: 511â€“515
             if i ~= 0
                 c10(j+2,i+2)=i*log(result_conv(y+j, x+i));
                 c11(j+2,i+2)=i*j*log(result_conv(y+j, x+i));

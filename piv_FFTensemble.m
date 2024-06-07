@@ -299,7 +299,7 @@ for ensemble_i1=1:2:amount_input_imgs
 		from_total=from_total+1;
 		set(handles.progress, 'string' , ['Pass ' int2str(1) ' progress: ' int2str(progri) '%' ])
 		set(handles.overall, 'string' , ['Total progress: ' int2str(from_total / total_analyses_amount * 100) '%'])
-		gui.gui_update_progress(from_total / total_analyses_amount * 100)
+		gui.update_progress(from_total / total_analyses_amount * 100)
 		zeit=toc;
 		done=from_total;
 		tocome=total_analyses_amount-done;
@@ -444,7 +444,7 @@ if cancel == 0
 				from_total=from_total+1;
 				set(handles.progress, 'string' , ['Pass ' int2str(multipass+1) ' progress: ' int2str(progri) '%' ])
 				set(handles.overall, 'string' , ['Total progress: ' int2str(from_total / total_analyses_amount * 100) '%'])
-				gui.gui_update_progress(from_total / total_analyses_amount * 100)
+				gui.update_progress(from_total / total_analyses_amount * 100)
 				zeit=toc;
 				done=from_total;
 				tocome=total_analyses_amount-done;
