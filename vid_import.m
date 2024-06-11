@@ -299,11 +299,11 @@ video_loaded=0;
 				f = new_f;
 			end
 			%was soll es tun:
-			%video soll nicht weiter vorgespult werden können als startframe.
+			%video soll nicht weiter vorgespult werden kÃ¶nnen als startframe.
 			%Dann soll scrollbar ganz links sein
 			%Und nicht weiter nach rechts spulen als enframe.
 			%dann scrollbar ganz rechts.
-			%skipframes soll auch berücksichtigt werden
+			%skipframes soll auch berÃ¼cksichtigt werden
 			%Das video soll also so angezeigt werden, als ging ee snur von start bis
 			%end mit skip frames.
 			
