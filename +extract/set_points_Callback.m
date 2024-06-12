@@ -1,5 +1,5 @@
 function set_points_Callback(~, ~, ~)
-gui.sliderdisp(gui.retr('pivlab_axis'))
+%gui.sliderdisp(gui.retr('pivlab_axis'))
 hold on;
 gui.toolsavailable(0)
 delete(findobj('tag', 'measure'));
