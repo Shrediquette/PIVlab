@@ -48,4 +48,3 @@ set(handles.progress, 'enable', 'on');
 set(handles.overall, 'enable', 'on');
 set(handles.totaltime, 'enable', 'on');
 set(handles.messagetext, 'enable', 'on');
-

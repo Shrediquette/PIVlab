@@ -33,6 +33,14 @@ else
 		disp('Old version compatibility.')
 		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu','calv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_steps','colormap_choice', 'colormap_interpolation', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','dccmark','fftmark','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
 	end
+
+	Amount_of_existing_ui_elements=numel(findobj(hgui, 'type', 'uicontrol'));
+	Amount_of_loaded_ui_elements=numel(vars.wasdisabled);
+	display_hint=0;
+	if Amount_of_existing_ui_elements ~= Amount_of_loaded_ui_elements
+		vars=rmfield(vars,'wasdisabled'); %results in conflict if new ui elements were added in new release.
+		display_hint=1;
+	end
 	names=fieldnames(vars);
 	for i=1:size(names,1)
 		setappdata(hgui,names{i},vars.(names{i}))
@@ -230,4 +238,7 @@ else
 	end
 end
 gui.toolsavailable(1)
+if display_hint==1
+	uiwait(msgbox('You loaded a session from an older PIVlab release. This is not recommended and may lead to display problems in the GUI.','modal'))
+end
 
