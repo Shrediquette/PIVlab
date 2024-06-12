@@ -1321,6 +1321,10 @@ handles.holdmarkers = uicontrol(handles.uipanel39,'Style','checkbox','String','H
 item=[0 item(2)+item(4) parentitem(3) 1];
 handles.displmarker = uicontrol(handles.uipanel39,'Style','checkbox','String','Display markers','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.displmarker_Callback,'Tag','displmarker','TooltipString','Show or hide the markers');
 
+parentitem=get(handles.multip13, 'Position');
+item=[0 21+margin/2 parentitem(3) 2];
+handles.markers_display_average = uicontrol(handles.multip13,'Style','pushbutton','String','Display average','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask.display_average_Callback,'Tag','markers_display_average','TooltipString','Show the mean image');
+
 %% Multip14
 handles.multip14 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Statistics (CTRL+B)', 'Tag','multip14','fontweight','bold');
 parentitem=get(handles.multip14, 'Position');
