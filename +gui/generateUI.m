@@ -1266,34 +1266,34 @@ parentitem=get(handles.uipanel40, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.set_points = uicontrol(handles.uipanel40,'Style','pushbutton','String','Set points','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract.set_points_Callback,'Tag','set_points','TooltipString','Set two points by clicking twice in the image');
+handles.set_points = uicontrol(handles.uipanel40,'Style','pushbutton','String','Draw line','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract.set_points_Callback,'Tag','set_points','TooltipString','Draw a line to measure distance and angle');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3)/3*2 1];
-handles.text50 = uicontrol(handles.uipanel40,'Style','text','String','Length red:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text50');
+handles.text50 = uicontrol(handles.uipanel40,'Style','text','String','Delta x:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text50');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 handles.deltax = uicontrol(handles.uipanel40,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','deltax');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
-handles.text51 = uicontrol(handles.uipanel40,'Style','text','String','Length blue:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text51');
+handles.text51 = uicontrol(handles.uipanel40,'Style','text','String','Delta y:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text51');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 handles.deltay = uicontrol(handles.uipanel40,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','deltay');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
-handles.text52 = uicontrol(handles.uipanel40,'Style','text','String','Length green:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text52');
+handles.text52 = uicontrol(handles.uipanel40,'Style','text','String','Length:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text52');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 handles.length = uicontrol(handles.uipanel40,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','length');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
-handles.text53 = uicontrol(handles.uipanel40,'Style','text','String','Angle red/green in deg:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text53');
+handles.text53 = uicontrol(handles.uipanel40,'Style','text','String','Angle to horiz. (deg):','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text53');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 handles.alpha = uicontrol(handles.uipanel40,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','alpha');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
-handles.text54 = uicontrol(handles.uipanel40,'Style','text','String','Angle blue/green in deg:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text54');
+handles.text54 = uicontrol(handles.uipanel40,'Style','text','String','Angle to vert. (deg):','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text54');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 handles.beta = uicontrol(handles.uipanel40,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','beta');
