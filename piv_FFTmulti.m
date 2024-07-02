@@ -87,7 +87,12 @@ for multipass = 1:passes
 				end
 				if ~isempty (display_warning_msg)
 					disp(['WARNING: ' display_warning_msg ' image data, interpass-validation discarded ' num2str(round(discarded)) '% of the vectors in pass nr. ' num2str(multipass) '!'])
+					disp('Here are some recommendations:')
 					disp(['Try increasing the Pass 1 interrogation area size to ' num2str(interrogationarea*2) ' pixels.'])
+					disp('Try to decrease the time delay within your image pair (e.g. reducing pulse separation or recording at higher frame rate).')
+					disp('Try to increase the brightness of your illumination.')
+					disp('Try to add more seeding to your flow.')
+					disp('Try to align the light sheet with your main flow direction.')
 					if serious_issue
 						beep on
 						beep
