@@ -93,17 +93,29 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 		%=range of data +- 15%
 		%%}
 
-		%{
-		keyboard
-		figure;
-		datax=rand(1000000,1);
-		datay=rand(1000000,1);
-		plottl=scatter(datax,datay)
-		roi = images.roi.Freehand;
-		draw(roi)
-		tf = inROI(roi,datax,datay);
-		plottl.CData=double([1-tf tf*0 tf*0]); %makes markers outside red.
-		%}
+%{
+%hier müssen immer alle punkte geplottet werden, sonst wird es nicht gehen,
+datau_mod=(datau');
+datav_mod=(datav');
+
+datau_mod=double(datau_mod*1);
+datav_mod=double(datav_mod*1);
+
+MUST be double otherwise strange effects.
+
+datau_mod(isnan(datau_mod))=100;
+datav_mod(isnan(datav_mod))=100;
+figure;
+scatter(datau_mod,datav_mod,'k.')
+roi = images.roi.Freehand;
+draw(roi)
+tf = inROI(roi,datau_mod,datav_mod);
+hold on;
+scatter(gca,datau_mod(tf==0),datav_mod(tf==0), 5,'rx');
+
+ 
+
+%}
 		velrect = getrect(gca);
 		if velrect(1,3)~=0 && velrect(1,4)~=0
 			gui.put('velrect', velrect);
