@@ -42,3 +42,10 @@ Visit Matlabs File exchange site for PIVlab: [![View PIVlab - particle image vel
 
 PIVlab [can be run online using MATLAB online](https://youtu.be/EQHfAmRxXw4?si=X77HabqAIbuHRIGT). MATLAB online is free (after registration) with a limited usage time per user (20 hrs/month):
 [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=Shrediquette/PIVlab&file=PIVlab_GUI.m)
+
+The following is a test to see how videos inside tables are displayed on the matlab file excahnge website:
+
+| Resource  | Link |
+| ------------- | ------------- |
+| Video turorial 3  | [Youtube Link](https://youtube.com/watch?v=47NCB_RFiE8)  |
+| Content Cell  | Content Cell  |
