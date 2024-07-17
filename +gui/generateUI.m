@@ -1792,6 +1792,9 @@ handles.textsizedown = uicontrol(handles.multip21,'Style','pushbutton','String',
 item=[0 item(2)+item(4)+margin parentitem(3) 4];
 handles.paneltext4 = uicontrol(handles.multip21,'Style','text','String','Please note: This setting will currently not be saved. Because otherwise this might screw up your user interface permanently.','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','paneltext4');
 
+item=[0 item(2)+item(4) parentitem(3) 2];
+handles.flash_sync = uicontrol(handles.multip21,'Style','pushbutton','String','Flash firmware to synchronizer','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@gui.flash_sync_Callback,'Tag','flash_sync','TooltipString','Flash new firmware to OPTOLUTION synchronizer');
+
 %% Multip22
 handles.multip22 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Derive Temporal Parameters', 'Tag','multip22','fontweight','bold');
 parentitem=get(handles.multip22, 'Position');

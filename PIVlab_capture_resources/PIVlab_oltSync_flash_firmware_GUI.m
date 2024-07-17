@@ -8,7 +8,10 @@ if isempty(fh)
 	catch
 		mainpos=[0    2.8571  240.0000   50.9524];
 	end
-	oltSync_flash_firmware = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','oltSync: Flash Firmware','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4+4 35 11+1.5],'tag','oltSync_flash_firmware','visible','on','KeyPressFcn', @key_press,'resize','off');
+	if isempty(mainpos)
+		mainpos=[0    2.8571  240.0000   50.9524];
+	end
+	oltSync_flash_firmware = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','oltSync: Flash Firmware','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4+4 35 11+1.5],'tag','oltSync_flash_firmware','visible','on','resize','off');
 	set (oltSync_flash_firmware,'Units','Characters');
 
 
@@ -38,60 +41,69 @@ if isempty(fh)
 
 	item=[0 item(2)+item(4)+0.25 parentitem(3) 2];
 	handles.flash_firmware= uicontrol(handles.mainpanel,'Style','pushbutton','String','Flash firmware!','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag', 'flash_firmware','Callback',@flash_firware_file,'enable','off');
-
+	standardbg = get(handles.infotext,'Backgroundcolor');
 
 else %Figure handle does already exist --> bring UI to foreground.
 	figure(fh)
 end
 
 
-function select_firware_file(~,~,~)
-[FileName,PathName, ~] = uigetfile('*.hex','Select firmware file');
-if ~isempty (FileName)
-	handles=gethand;
-	put('firmware_path',fullfile(PathName,FileName));
-	set(handles.infotext,'String',FileName);
-	set(handles.flash_firmware,'Enable','On');
-end
-
-function flash_firware_file(~,~,~)
-handles=gethand;
-firmware_path=retr('firmware_path');
-[~,cmdout] = system('tycmd.exe list');
-cnt=0;
-if ~isempty(cmdout)
-	C=strsplit(cmdout,'add');
-	for i=1:size(C,2)
-		if ~isempty(C{i})
-			cnt=cnt+1;
+	function select_firware_file(~,~,~)
+		[FileName,PathName, ~] = uigetfile('*.hex','Select firmware file');
+		if ~isempty (FileName)
+			handles=gethand;
+			put('firmware_path',fullfile(PathName,FileName));
+			set(handles.infotext,'String',FileName);
+			set(handles.flash_firmware,'Enable','On');
+			set(handles.infotext,'Backgroundcolor',standardbg)
 		end
 	end
-end
-if cnt > 1
-	msgbox('Too many devices detected. Please remove all devices except the synchronizer.','modal')
-elseif cnt < 1
-	msgbox('Could not detect the synchronizer. Please connect via USB and turn the synchronizer on.','modal')
-elseif cnt == 1
-	set(handles.infotext,'String','Flashing...');
-	set(handles.infotext,'Backgroundcolor',[1 1 0]);
-	pause(0.25)
-	command = ['tycmd.exe upload ' firmware_path]
-	%[status,cmdout] = system(command);
-	%auch abfragen ob erfolgreich...
-	if 1==1
-		set(handles.infotext,'String','Success!');
-		set(handles.infotext,'Backgroundcolor',[0 1 0]);
+
+	function flash_firware_file(~,~,~)
+		[tempfilepath,~,~] = fileparts(mfilename('fullpath'));
+		handles=gethand;
+		firmware_path=retr('firmware_path');
+		command = [fullfile(tempfilepath,'tycmd.exe') ' list'];
+		[~,cmdout] = system(command);
+		cnt=0;
+		if ~isempty(cmdout)
+			C=strsplit(cmdout,'add');
+			for i=1:size(C,2)
+				if ~isempty(C{i})
+					cnt=cnt+1;
+				end
+			end
+		end
+		if cnt > 1
+			msgbox('Too many devices detected. Please remove all devices except the synchronizer.','modal')
+		elseif cnt < 1
+			msgbox('Could not detect the synchronizer. Please connect via USB and turn the synchronizer on.','modal')
+		elseif cnt == 1
+			set(handles.infotext,'String','Flashing...');
+			set(handles.infotext,'Backgroundcolor',[1 1 0]);
+			pause(0.25)
+			command = [fullfile(tempfilepath,'tycmd.exe') ' upload ' firmware_path];
+			[~,cmdout] = system(command);
+			if ~isempty(cmdout) && contains(cmdout,'Uploading...') && contains(cmdout,'Sending reset command (with RTC)')
+				set(handles.infotext,'String','Success!');
+				set(handles.infotext,'Backgroundcolor',[0 1 0]);
+			else
+				set(handles.infotext,'String','Error');
+				set(handles.infotext,'Backgroundcolor',[1 0 0]);
+				msgbox(cmdout)
+			end
+		end
+	end
+	function put(name, what)
+		holtSync_flash_firmware=getappdata(0,'holtSync_flash_firmware');
+		setappdata(holtSync_flash_firmware, name, what);
+	end
+	function var = retr(name)
+		holtSync_flash_firmware=getappdata(0,'holtSync_flash_firmware');
+		var=getappdata(holtSync_flash_firmware, name);
+	end
+	function handles=gethand
+		holtSync_flash_firmware=getappdata(0,'holtSync_flash_firmware');
+		handles=guihandles(holtSync_flash_firmware);
 	end
 end
-
-function put(name, what)
-holtSync_flash_firmware=getappdata(0,'holtSync_flash_firmware');
-setappdata(holtSync_flash_firmware, name, what);
-
-function var = retr(name)
-holtSync_flash_firmware=getappdata(0,'holtSync_flash_firmware');
-var=getappdata(holtSync_flash_firmware, name);
-
-function handles=gethand
-holtSync_flash_firmware=getappdata(0,'holtSync_flash_firmware');
-handles=guihandles(holtSync_flash_firmware);

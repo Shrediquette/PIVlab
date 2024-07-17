@@ -1,5 +1,6 @@
 function laser_device_id = find_laser_device
-handles=gui.gethand;
+%handles=gui.gethand;
+gui.put('sync_type',[]); %remove any eexpectation about connected synchronizer
 serpo=gui.retr('serpo');
 try
 	serpo.Port;
@@ -25,6 +26,15 @@ if alreadyconnected
 		warning off
 		serial_answer=readline(serpo);
 		disp(['Connected to: ' convertStringsToChars(serial_answer)])
+		if contains(serial_answer,'oltSync:') %decide which synchronizer hardware is connected
+			gui.put('sync_type','oltSync') %Waldemars Sync
+			disp('oltSync detected')
+		else
+			if ~isempty(serial_answer)
+				gui.put('sync_type','xmSync') %Williams Sync
+				disp('xmSync detected')
+			end
+		end
 		warning on
 	catch
 		disp('Error sending WhoAreYou')
@@ -37,8 +47,13 @@ if alreadyconnected
 		warning on
 		if isempty(firmware_version)
 			firmware_version='pre feb 22';
+		else
+			firmware_version=convertStringsToChars(firmware_version);
+			if contains(firmware_version,'oltSync:')
+				firmware_version = firmware_version(strfind(firmware_version,'oltSync:')+8 : end);
+			end
 		end
-		disp(['Firmware: ' convertStringsToChars(firmware_version)])
+		disp(['Firmware: ' firmware_version])
 
 		delete(findobj('tag','laser_info_box'));
 		try
