@@ -656,24 +656,29 @@ handles.algorithm_selection = uicontrol(handles.uipanel35,'Style','popupmenu', '
 parentitem=get(handles.multip04, 'Position');
 item=[0 0 0 0];
 
-
+%OFV UI items
 item=[0 8 parentitem(3) 7];
 handles.uipanel_ofv1 = uipanel(handles.multip04, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Optical flow settings', 'Tag','uipanel_ofv1','fontweight','bold','Visible','off');
 parentitem=get(handles.uipanel_ofv1, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4) parentitem(3)/2 1];
-handles.text_ofv_1 = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Parameter 1:');
+item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
+handles.text_ofv_median = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Inter-pass median filter:');
 
-item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
-handles.edit_ofv_1 = uicontrol(handles.uipanel_ofv1,'Style','edit', 'String','12345','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','edit_ofv_1','TooltipString','Tooltip string');
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
+handles.ofv_median = uicontrol(handles.uipanel_ofv1,'Style','popupmenu', 'String',{'Off' '3x3' '5x5' '9x9'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_median','TooltipString','Tooltip string');
 
-item=[0 item(2)+item(4) parentitem(3)/2 1];
-handles.text_ofv_2 = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Parameter 2:');
+item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
+handles.text_ofv_pyramid_levels = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pyramid levels:');
 
-item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
-handles.edit_ofv_2 = uicontrol(handles.uipanel_ofv1,'Style','edit', 'String','54321','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','edit_ofv_2','TooltipString','Tooltip string');
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
+handles.ofv_pyramid_levels = uicontrol(handles.uipanel_ofv1,'Style','popupmenu', 'String',{'5' '4' '3' '2' '1'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_pyramid_levels','TooltipString','Tooltip string');
 
+item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
+handles.text_ofv_eta = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Solution smoothness (eta):');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
+handles.ofv_eta = uicontrol(handles.uipanel_ofv1,'Style','edit', 'String','0.5','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_eta','TooltipString','Tooltip string');
 
 parentitem=get(handles.multip04, 'Position');
 item=[0 8 parentitem(3) 5];

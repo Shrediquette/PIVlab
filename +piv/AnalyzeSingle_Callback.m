@@ -112,17 +112,20 @@ if ok==1
 			end
 		elseif get(handles.algorithm_selection,'Value')==4 %optical flow
 			gui.toolsavailable(1); %re-enabling the ui elements already here, so debugging is easier when things crash. Should be removed when ofv is working.
-			%How you get the ofv parameters:
-			disp([' OFV Parameter 1: ' get(handles.edit_ofv_1,'string')]) %note that these are still strings
-			disp([' OFV Parameter 2: ' get(handles.edit_ofv_2,'string')])
+			%How you get the ofv parameters (these are still strings):
 
-			%this is how ofv could be implemented. I am assuming a function called "wOFV" that generates x,y,u,v and typevector. 
+			%Get the three required parameters like this:
+			handles.ofv_median.String{handles.ofv_median.Value}
+			handles.ofv_pyramid_levels.String{handles.ofv_pyramid_levels.Value}
+			get(handles.ofv_eta,'string')
+
+			%this is how ofv could be implemented. I am assuming a function called "wOFV" that generates x,y,u,v and typevector.
 			% Typevector is a 2D matrix with the same size as x, and it contains 1 where data is valid, 0 where a mask was applied
 			%converted_mask is a binary mask with the same size as the input images
 			%roirect is the region of interest in x,y,width,height
 			%[x, y, u, v, typevector] = wOFV (image1,image2,converted_mask, roirect);
-			
-%placeholder data:
+
+			%placeholder data:
 			X = 1:size(image1,2);
 			Y = 1:size(image1,1);
 			[x,y] = meshgrid(X,Y);
@@ -130,7 +133,7 @@ if ok==1
 			v=randn(size(x))+2;
 			typevector=ones(size(x));
 
-			%I think that by default maybe every 10th vector should be displayed? Users can then increase the vector density if they like. 
+			%I think that by default maybe every 10th vector should be displayed? Users can then increase the vector density if they like.
 			% To make this really obvious to the users, it maybe makes sense to add this parameter directly where currently "OFV Parameter 1" is located.
 
 
