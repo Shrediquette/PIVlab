@@ -673,9 +673,10 @@ handles.text_ofv_pyramid_levels = uicontrol(handles.uipanel_ofv1,'Style','text',
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
 handles.ofv_pyramid_levels = uicontrol(handles.uipanel_ofv1,'Style','popupmenu', 'String',{'5' '4' '3' '2' '1'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_pyramid_levels','TooltipString','Tooltip string');
+handles.ofv_pyramid_levels.Value = 3; %set default
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
-handles.text_ofv_eta = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Solution smoothness (eta):');
+handles.text_ofv_eta = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Smoothness (eta):');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
 handles.ofv_eta = uicontrol(handles.uipanel_ofv1,'Style','edit', 'String','0.5','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_eta','TooltipString','Tooltip string');
