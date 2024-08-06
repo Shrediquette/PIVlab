@@ -88,9 +88,7 @@ realdist_string=get(handles.realdist, 'String');
 time_inp_string=get(handles.time_inp, 'String');
 
 %imginterpol=get(handles.popupmenu16, 'value');
-dccmark=get(handles.dcc, 'value');
-fftmark=get(handles.fftmulti, 'value');
-ensemblemark=get(handles.ensemble, 'value');
+algorithm_selection = get(handles.algorithm_selection,'value');
 pass2=get(handles.checkbox26, 'value');
 pass3=get(handles.checkbox27, 'value');
 pass4=get(handles.checkbox28, 'value');

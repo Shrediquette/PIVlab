@@ -80,11 +80,11 @@ if ok==1
 		step=str2double(get(handles.step, 'string'));
 		subpixfinder=get(handles.subpix,'value');
 		do_correlation_matrices=gui.retr('do_correlation_matrices');
-		if get(handles.dcc,'Value')==1
+		if get(handles.algorithm_selection,'Value')==3 %DCC
 			[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
 			correlation_map=zeros(size(u)); %nor correlation map available with DCC
 			correlation_matrices=[];
-		elseif get(handles.fftmulti,'Value')==1 || get(handles.ensemble,'Value')==1
+		elseif get(handles.algorithm_selection,'Value')==1 || get(handles.algorithm_selection,'Value')==2 %fft and ensemble
 			passes=1;
 			if get(handles.checkbox26,'value')==1
 				passes=2;
@@ -102,7 +102,7 @@ if ok==1
 			mask_auto = get(handles.mask_auto_box,'value');
 			repeat_last_pass = get(handles.repeat_last,'Value');
 			delta_diff_min = str2double(get(handles.edit52x,'String'));
-			if get(handles.fftmulti,'Value')==1
+			if get(handles.algorithm_selection,'Value')==1 %fft multi
 				try
 					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
 				catch ME
@@ -110,7 +110,19 @@ if ok==1
 					gui.toolsavailable(1);
 				end
 			end
+		elseif get(handles.algorithm_selection,'Value')==4 %optical flow
+			gui.toolsavailable(1); %re-enabling the ui elements already here, so debugging is easier when things crash. Should be removed when ofv is working.
+			%How you get the ofv parameters:
+			disp([' OFV Parameter 1: ' get(handles.edit_ofv_1,'string')]) %note that these are still strings
+			disp([' OFV Parameter 2: ' get(handles.edit_ofv_2,'string')])
 
+			%this is how ofv could be implemented. I am assuming a function called "wOFV" that generates x,y,u,v and typevector. 
+			% Typevector is a 2D matrix with the same size as x, and it contains 1 where data is valid, 0 where a mask was applied
+			%converted_mask is a binary mask with the same size as the input images
+			%roirect is the region of interest in x,y,width,height
+			[x, y, u, v, typevector] = wOFV (image1,image2,converted_mask, roirect);
+			correlation_map=zeros(size(x)); %no correlation map available with OFV (?)
+			correlation_matrices=[];
 		end
 		gui.toolsavailable(1);
 		resultslist{1,(selected+1)/2}=x;

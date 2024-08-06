@@ -30,9 +30,7 @@ img_not_mask=get(handles.img_not_mask,'value');
 autoscale_vec=get(handles.autoscale_vec,'value');
 
 %imginterpol=get(handles.popupmenu16, 'value');
-dccmark=get(handles.dcc, 'value');
-fftmark=get(handles.fftmulti, 'value');
-ensemblemark=get(handles.ensemble, 'value');
+algorithm_selection = get(handles.algorithm_selection,'value');
 
 pass2=get(handles.checkbox26, 'value');
 

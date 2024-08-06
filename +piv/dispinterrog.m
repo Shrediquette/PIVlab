@@ -17,7 +17,7 @@ if numel(filepath)>1
 	y1=[centre(1)-intarea1 centre(1)-intarea1 centre(1)+intarea1 centre(1)+intarea1 centre(1)-intarea1];
 	hold on;
 	plot(x1,y1,'c-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
-	if get(handles.fftmulti,'value')==1 || get(handles.ensemble,'value')==1
+	if get(handles.algorithm_selection ,'value')==1 || get(handles.algorithm_selection ,'value')==2
 		text(x1(1),y1(1), ['pass 1'],'color','c','fontsize',8,'tag','intareadispl','HorizontalAlignment','right','verticalalignment','bottom')
 		if get(handles.checkbox26,'value')==1
 			intarea2=str2double(get(handles.edit50,'string'))/2;
