@@ -120,7 +120,20 @@ if ok==1
 			% Typevector is a 2D matrix with the same size as x, and it contains 1 where data is valid, 0 where a mask was applied
 			%converted_mask is a binary mask with the same size as the input images
 			%roirect is the region of interest in x,y,width,height
-			[x, y, u, v, typevector] = wOFV (image1,image2,converted_mask, roirect);
+			%[x, y, u, v, typevector] = wOFV (image1,image2,converted_mask, roirect);
+			
+%placeholder data:
+			X = 1:size(image1,2);
+			Y = 1:size(image1,1);
+			[x,y] = meshgrid(X,Y);
+			u=randn(size(x));
+			v=randn(size(x))+2;
+			typevector=ones(size(x));
+
+			%I think that by default maybe every 10th vector should be displayed? Users can then increase the vector density if they like. 
+			% To make this really obvious to the users, it maybe makes sense to add this parameter directly where currently "OFV Parameter 1" is located.
+
+
 			correlation_map=zeros(size(x)); %no correlation map available with OFV (?)
 			correlation_matrices=[];
 		end
