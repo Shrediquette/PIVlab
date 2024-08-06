@@ -70,7 +70,9 @@ end
 			C=strsplit(cmdout,'add');
 			for i=1:size(C,2)
 				if ~isempty(C{i})
-					cnt=cnt+1;
+					if contains (C{i},'nsy 4.0')
+						cnt=cnt+1;
+					end
 				end
 			end
 		end

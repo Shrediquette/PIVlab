@@ -645,23 +645,37 @@ handles.textSuggest = uicontrol(handles.multip04,'Style','text','units','charact
 item=[parentitem(3)/4 item(2) parentitem(3)/1.85 1.5];
 handles.SuggestSettings = uicontrol(handles.multip04,'Style','pushbutton','String','Suggest settings','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @piv.SuggestPIVsettings,'Tag','SuggestSettings','TooltipString','Suggest PIV settings based on image data in current frame');
 
-item=[0 item(2)+item(4) parentitem(3) 6.5];
+item=[0 item(2)+item(4) parentitem(3) 3.5];
 handles.uipanel35 = uipanel(handles.multip04, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','PIV algorithm', 'Tag','uipanel35','fontweight','bold');
 
 parentitem=get(handles.uipanel35, 'Position');
 item=[0 0 0 0];
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.fftmulti = uicontrol(handles.uipanel35,'Style','radiobutton','value',1,'units','characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','FFT window deformation','tag','fftmulti','Callback',@piv.fftmulti_Callback,'TooltipString','FFT based multipass algorithm');
-
-item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.ensemble = uicontrol(handles.uipanel35,'Style','radiobutton','value',0,'units','characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Ensemble correlation','tag','ensemble','Callback',@piv.ensemble_Callback,'TooltipString','Ensemble window deformation correlation. For micro PIV and other sparesly seeded flow.');
-
-item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.dcc = uicontrol(handles.uipanel35,'Style','radiobutton','value',0,'units','characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','DCC (deprecated)','tag','dcc','Callback',@piv.dcc_Callback,'TooltipString','DCC based single pass algorithm. Not recommended anymore');
+handles.piv_algorithm = uicontrol(handles.uipanel35,'Style','popupmenu', 'String',{'Multipass FFT window deformation','Ensemble multipass FFT window deformation','Single pass direct cross-correlation (DCC)', 'Optical flow (wavelet-based)'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','piv_algorithm','TooltipString',sprintf('* Multipass FFT window deformation is the standard algorithm, suitable for most cases.\n* Ensemble correlation is for sparsely seeded flows (e.g. micro-piv). \n* DCC is the first algorithm that was implemented in PIVlab. \n* Optical flow is for ... , implemented by Schmidt et al. from case.edu tbd'),'Callback',@piv.algorithm_selection_Callback);
 
 parentitem=get(handles.multip04, 'Position');
 item=[0 0 0 0];
 
+
+item=[0 8 parentitem(3) 7];
+handles.uipanel_ofv1 = uipanel(handles.multip04, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Optical flow settings', 'Tag','uipanel_ofv1','fontweight','bold','Visible','off');
+parentitem=get(handles.uipanel_ofv1, 'Position');
+item=[0 0 0 0];
+
+item=[0 item(2)+item(4) parentitem(3)/2 1];
+handles.text_ofv_1 = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Parameter 1:');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
+handles.edit_ofv_1 = uicontrol(handles.uipanel_ofv1,'Style','edit', 'String','12345','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','edit_ofv_1','TooltipString','Tooltip string');
+
+item=[0 item(2)+item(4) parentitem(3)/2 1];
+handles.text_ofv_2 = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Parameter 2:');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
+handles.edit_ofv_2 = uicontrol(handles.uipanel_ofv1,'Style','edit', 'String','54321','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','edit_ofv_2','TooltipString','Tooltip string');
+
+
+parentitem=get(handles.multip04, 'Position');
 item=[0 8 parentitem(3) 5];
 handles.uipanel41 = uipanel(handles.multip04, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Pass 1', 'Tag','uipanel41','fontweight','bold');
 
