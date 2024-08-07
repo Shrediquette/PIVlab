@@ -69,6 +69,9 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 		elseif selected_index== 1 %parula
 			load('parula.mat','parula')
 			MAP = colormap (parula);
+			elseif selected_index== 16 %plasma
+			load('plasma.mat','plasma')
+			MAP = colormap (plasma);
 		else
 			MAP = colormap(avail_maps{selected_index});
 		end
