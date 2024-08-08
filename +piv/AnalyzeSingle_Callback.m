@@ -112,14 +112,11 @@ if ok==1
 			end
 		elseif get(handles.algorithm_selection,'Value')==4 %optical flow
 			gui.toolsavailable(1); %re-enabling the ui elements already here, so debugging is easier when things crash. Should be removed when ofv is working.
-			
-%             handles.ofv_median.String{handles.ofv_median.Value}
-% 			handles.ofv_pyramid_levels.String{handles.ofv_pyramid_levels.Value}
-%             get(handles.ofv_eta,'string')
 
-			eta = str2double(get(handles.ofv_eta,'string'));
+			etaUnScaled = str2double(get(handles.ofv_eta,'string'));
             PydLev = str2double(handles.ofv_pyramid_levels.String{handles.ofv_pyramid_levels.Value});
-
+            %scaling eta from [0,100] to [1e-5,1e5]
+            eta = 10^(etaUnScaled*0.1 - 5);
 
             vartheta = ones(size(image1));
             if strcmp(handles.ofv_median.String{handles.ofv_median.Value},'Off')
@@ -130,14 +127,15 @@ if ok==1
                 MedFiltFlag = true;
                 MedFiltSize = [str2double(handles.ofv_median.String{handles.ofv_median.Value}(1)),str2double(handles.ofv_median.String{handles.ofv_median.Value}(3))];
             end
-
-%             eta = 10^(1);
-%             MedFiltFlag = false;
-%             MedFiltSize = [3,3];
-%             PydLev = 3;
-
-            [x,y,u,v,typevector]=wOFVMain(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev);
-
+            
+            if strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Off')
+                [x,y,u,v,typevector]=wOFVMain(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev);
+            elseif strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Default')
+                [x,y,u,v,typevector]=wOFVMain_Parallel(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,[]);
+            else
+                PatchSize = str2double(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value});
+                [x,y,u,v,typevector]=wOFVMain_Parallel(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,PatchSize);
+            end     
 
 			correlation_map=zeros(size(x)); %no correlation map available with OFV (?) Nope!
 			correlation_matrices=[];

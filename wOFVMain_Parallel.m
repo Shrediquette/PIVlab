@@ -1,32 +1,32 @@
-function [XGrid,YGrid,vHorz,vVert,Typevector]=wOFVMain(I0Org,I1Org,mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PyramidLevels)
+function [XGrid,YGrid,vHorz,vVert,Typevector]=wOFVMain_Parallel(I0Org,I1Org,mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PyramidLevels,PatchSize)
 
 addpath(genpath('wOFV/'))
 
-%Wavelet optical flow function, required inputs are I0 and I1 to be 
-%analyzed for velocimetry, and lambda is the (scalar) regularization 
-%parameter. The images (inputs I0 and I1) must be the same size, (Nr x Nc) where Nr is the 
-%number of rows and Nc is the number of columns. The primary output is v1, 
-%the estimated velocity field, which is an (Nr x Nc x 2) array. The 
-%x-velocity (positive down) is contained in the 1st 2D array along 
+%Wavelet optical flow function, required inputs are I0 and I1 to be
+%analyzed for velocimetry, and lambda is the (scalar) regularization
+%parameter. The images (inputs I0 and I1) must be the same size, (Nr x Nc) where Nr is the
+%number of rows and Nc is the number of columns. The primary output is v1,
+%the estimated velocity field, which is an (Nr x Nc x 2) array. The
+%x-velocity (positive down) is contained in the 1st 2D array along
 %dimension 3 of v1, and the y-velocity (positive right) is contained in the
 %2nd 2D array along dimension 3 of v1.
 %
-%The function uses a separable wavelet transform with symmetric 
-%biorthogonal wavelets implemented with matrix multiplication. The 
-%regularization is performed using continuous approximation (via Derian, 
-%2012). Non-square images and images where the image size N is not a power 
-%of 2 are handled by subdividing the domain into square regions of size 
-%2^M, with mx and my regions in each dimension (the overlap is computed 
-%automatically). The results from each region are combined with weighting 
+%The function uses a separable wavelet transform with symmetric
+%biorthogonal wavelets implemented with matrix multiplication. The
+%regularization is performed using continuous approximation (via Derian,
+%2012). Non-square images and images where the image size N is not a power
+%of 2 are handled by subdividing the domain into square regions of size
+%2^M, with mx and my regions in each dimension (the overlap is computed
+%automatically). The results from each region are combined with weighting
 %by a 2-D, separable Nuttall window to avoid sharp transitions at subdomain
-%boundaries. 
+%boundaries.
 %
 %There is an optional input structure called 'options'. This is a structure
 %that can contain any or all of these optional fields:
-%- C - the coarsest scale solved. Must be an integer between 0 and the scale 
+%- C - the coarsest scale solved. Must be an integer between 0 and the scale
 %of the subwindows F, F=log2(M). (default 0)
-%- L - the finest scale solved. Must be an integer between C and F. 
-%(default F-1) 
+%- L - the finest scale solved. Must be an integer between C and F.
+%(default F-1)
 %- v0 - initial guess of the velocity field, typically an average velocity.
 %Must be an (Nr x Nc x 2) array (default 0's).
 %- regscheme - scheme for regularization. Must be a string, selected from
@@ -35,10 +35,10 @@ addpath(genpath('wOFV/'))
 %   - 'lap': Laplacian of u and v
 %   - '2Tik': 2nd order Tikhonov
 %   - 'divcurl': Gradient of divergence and curl (Corpetti et al., 2002)
-%   - 'visc' (default): Viscosity-based regularization (Schmidt & Sutton, 
-    %2021)
+%   - 'visc' (default): Viscosity-based regularization (Schmidt & Sutton,
+%2021)
 %- M - scale of the subwindows. Each subwindow is (2^M x 2^M) in size. Must
-%be an integer between 1 and min(nextpow2([Nr,Nc]) 
+%be an integer between 1 and min(nextpow2([Nr,Nc])
 %(default min(nextpow2([Nr,Nc]))
 %- mx - number of subwindows in the x (vertical) direction. Must be an
 %integer greater than or equal to 1. If an insufficient number of
@@ -47,7 +47,7 @@ addpath(genpath('wOFV/'))
 %subwindows are specified to cover the image without producing significant
 %overlap artifacts, the code will produce a warning but proceed. (default
 %is minimum possible of subwindows based on M, Nr, and an anti-artifact
-%criteria, which is that the overlap between subwindows must be at least 
+%criteria, which is that the overlap between subwindows must be at least
 %10% of M)
 %- my - number of subwindows in the y (horizontal) direction. Must be an
 %integer greater than or equal to 1. If an insufficient number of
@@ -56,9 +56,9 @@ addpath(genpath('wOFV/'))
 %subwindows are specified to cover the image without producing significant
 %overlap artifacts, the code will produce a warning but proceed. (default
 %is minimum possible of subwindows based on M, Nc, and an anti-artifact
-%criteria, which is that the overlap between subwindows must be at least 
+%criteria, which is that the overlap between subwindows must be at least
 %10% of M)
-%- mask - a logical matrix with ones where the computation is desired and 
+%- mask - a logical matrix with ones where the computation is desired and
 %zero where it is not. mask must be the same size as the input images.
 %
 %An optional parameter is specified by creating a variable called 'options'
@@ -68,8 +68,8 @@ addpath(genpath('wOFV/'))
 %options.C=1;
 %options.regscheme='lap';
 %
-%Optional outputs are subOut and minOut. 
-%subOut is a structure containing M, mx, and my, hence describing how the 
+%Optional outputs are subOut and minOut.
+%subOut is a structure containing M, mx, and my, hence describing how the
 %image was subdivided.
 %minOut is an array of structures of the output data from minFunc, the
 %minimization function used to solve the DFD equation. This can be useful
@@ -133,6 +133,13 @@ else
     regscheme=options.regscheme;
 end
 
+options.M = PatchSize;
+
+if isempty(options.M)
+    options = rmfield(options,'M');
+end
+
+
 %% Patch size computation
 if isfield(options,'M')
     M=options.M;
@@ -148,7 +155,7 @@ if isfield(options,'M')
             xlims(1)=xcent-M/2+1;
             xlims(2)=xcent+M/2;
         end
-        
+
         if ylims(1)>size(I0,2)-M+1
             ylims(1)=size(I0,2)-M+1;
             ylims(2)=size(I0,2);
@@ -162,7 +169,7 @@ if isfield(options,'M')
         end
     end
 end
-            
+
 I0=I0(xlims(1):xlims(2),ylims(1):ylims(2));
 I1=I1(xlims(1):xlims(2),ylims(1):ylims(2));
 mask=mask(xlims(1):xlims(2),ylims(1):ylims(2));
@@ -174,9 +181,9 @@ end
 
 if ~isfield(options,'mx')
     mx=ceil(size(I0,1)/M);
-    
-     %Compute overlaps
-    totolapx=mx*M-size(I0,1);    
+
+    %Compute overlaps
+    totolapx=mx*M-size(I0,1);
     while totolapx/(mx-1)<max(.15*M,34)
         mx=mx+1;
         totolapx=mx*M-size(I0,1);
@@ -187,9 +194,9 @@ end
 
 if ~isfield(options,'my')
     my=ceil(size(I0,2)/M);
-    
+
     %Compute overlaps
-    totolapy=my*M-size(I0,2);    
+    totolapy=my*M-size(I0,2);
     while totolapy/(my-1)<max(.15*M,34)
         my=my+1;
         totolapy=my*M-size(I0,2);
@@ -240,10 +247,10 @@ switch mx
             warning(['Warning: There may not be enough subdomains in '...
                 'the x-direction. Artifacts from edges may be visible.'])
         end
-        
+
         olapx=ones(mx-1,1)*(totolapx-rem(totolapx,mx-1))/(mx-1)+[ones(...
             rem(totolapx,mx-1),1);zeros(mx-1-rem(totolapx,mx-1),1)];
-        
+
         t1=upsample(olapx(1:ceil((mx-1)/2)),2);
         t2=[0;upsample(olapx(ceil((mx-1)/2):end),2)];
         olapx=[t1(1:mx-1)+t2(1:mx-1);0];
@@ -257,10 +264,10 @@ switch my
             warning(['Warning: There may not be enough subdomains in '...
                 'the y-direction. Artifacts from edges may be visible.'])
         end
-        
+
         olapy=ones(my-1,1)*(totolapy-rem(totolapy,my-1))/(my-1)+[ones(...
             rem(totolapy,my-1),1);zeros(my-1-rem(totolapy,my-1),1)];
-        
+
         t1=upsample(olapy(1:ceil((my-1)/2)),2);
         t2=[0;upsample(olapy(ceil((my-1)/2):end),2)];
         olapy=[t1(1:my-1)+t2(1:my-1);0];
@@ -279,35 +286,70 @@ UL=[1,1];
 windM=nuttall(M)*nuttall(M)';
 invwind=zeros(size(I0));
 
-v1=zeros(size(v0));
-alphafield=zeros(size(I0));
 
+
+%% Parallel processing 
+%Divide into subdomains that we can feed into the optimizer
+I0sub = zeros(M^2,mx*my);
+I1sub = I0sub;
+varthetaSub = I0sub;
+masksub = I0sub;
+v0sub = zeros(2*M^2,mx*my);
+%assemble the patches in a matrix
 for k=1:mx
     UL(2)=1;
     for j=1:my
-        I0sub=I0(UL(1):UL(1)+M-1,UL(2):UL(2)+M-1);
-        I1sub=I1(UL(1):UL(1)+M-1,UL(2):UL(2)+M-1);
-        varthetaSub=vartheta(UL(1):UL(1)+M-1,UL(2):UL(2)+M-1);
-        v0sub=v0(UL(1):UL(1)+M-1,UL(2):UL(2)+M-1,:);
-        %Pass along the mask as well
-        masksub=mask(UL(1):UL(1)+M-1,UL(2):UL(2)+M-1);
-        
-        [v1tmp,minOut(domnum),alphatmp]=wOFVBayesPyd_sub(I0sub,I1sub,C,L,eta,varthetaSub,v0sub,...
-            regscheme,masksub,Fmats,PyramidLevels,MedianFilter,FiltImg);
-        
+        I0sub(:,domnum)=reshape(I0(UL(1):UL(1)+M-1,UL(2):UL(2)+M-1),[M^2,1]);
+        I1sub(:,domnum)=reshape(I1(UL(1):UL(1)+M-1,UL(2):UL(2)+M-1),[M^2,1]);
+        varthetaSub(:,domnum)=reshape(vartheta(UL(1):UL(1)+M-1,UL(2):UL(2)+M-1),[M^2,1]);
+        v0sub(:,domnum)=reshape(v0(UL(1):UL(1)+M-1,UL(2):UL(2)+M-1,:),[2*M^2,1]);
+        masksub(:,domnum)=reshape(mask(UL(1):UL(1)+M-1,UL(2):UL(2)+M-1),[M^2,1]);
+
+        UL(2)=UL(2)+M-olapy(j);
+        domnum=domnum+1;
+    end
+    UL(1)=UL(1)+M-olapx(k);
+end
+
+%Run the parfor loop to compute patches at the same time
+v1Patches = zeros(2*M^2,1,mx*my); %create a matrix to store all the velocity patches
+alphaPatches = zeros(M^2,1,mx*my); %create a matrix to store all the alphafield patches
+
+parfor domnum = 1:mx*my
+    [v1tmp,minOut(domnum),alphatmp]=wOFVBayesPyd_sub(reshape(I0sub(:,domnum),[M,M]),reshape(I1sub(:,domnum),[M,M]),C,L,eta,reshape(varthetaSub(:,domnum),[M,M]),reshape(v0sub(:,domnum),[M,M,2]),...
+        regscheme,reshape(masksub(:,domnum),[M,M]),Fmats,PyramidLevels,MedianFilter,FiltImg);
+
+    v1Patches(:,domnum) = v1tmp(:);
+    alphaPatches(:,domnum) = alphatmp(:);
+end
+
+clear alphatmp v1tmp
+
+%Stitching the field back together
+%Loop through subdomains, stitching them together
+v1=zeros(size(v0));
+alphafield=zeros(size(I0));
+domnum = 1;
+%Track the upper-left corner
+UL=[1,1];
+for k=1:mx
+    UL(2)=1;
+    for j=1:my
+        v1tmp = reshape(v1Patches(:,domnum),[M,M,2]);
+
         alphafield(UL(1):UL(1)+M-1,UL(2):UL(2)+M-1)=alphafield(UL(1):UL(1)+M-1,...
-                UL(2):UL(2)+M-1)+alphatmp(:,:).*windM;
+            UL(2):UL(2)+M-1)+reshape(alphaPatches(:,domnum),[M,M]).*windM;
 
         for c=1:2
             v1(UL(1):UL(1)+M-1,UL(2):UL(2)+M-1,c)=v1(UL(1):UL(1)+M-1,...
                 UL(2):UL(2)+M-1,c)+v1tmp(:,:,c).*windM;
         end
-        
+
         invwind(UL(1):UL(1)+M-1,UL(2):UL(2)+M-1)=invwind(UL(1):UL(1)+...
             M-1,UL(2):UL(2)+M-1)+windM;
-        
+
         UL(2)=UL(2)+M-olapy(j);
-        domnum=domnum+1;
+        domnum = domnum + 1;
     end
     UL(1)=UL(1)+M-olapx(k);
 end
@@ -331,5 +373,5 @@ subOut.M=M;
 subOut.mx=mx;
 subOut.my=my;
 
-vHorz = v1(:,:,2); 
+vHorz = v1(:,:,2);
 vVert = v1(:,:,1);

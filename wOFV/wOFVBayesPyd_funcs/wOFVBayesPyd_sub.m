@@ -42,7 +42,7 @@ VarThetaPy = GenerateImPyramid(varthetaOrg,PyramidLevels,FiltImg);
 
 %% Loop over the pyramids
 for Level = PyramidLevels:-1:1
-    disp(['Pyramid Level: ' num2str(Level) ' out of ' num2str(PyramidLevels)])
+%     disp(['Pyramid Level: ' num2str(Level) ' out of ' num2str(PyramidLevels)])
     % Switch the image, transform and the finite difference matrices according to the
     % pyramid level
     Fmat = FmatPy{Level};

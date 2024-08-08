@@ -1,4 +1,4 @@
-function [XGrid,YGrid,vHorz,vVert,Typevector]=wOFVMain(I0Org,I1Org,mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PyramidLevels)
+function [XGrid,YGrid,vHorz,vVert,Typevector]=wOFVMain_DatasetProc(I0Org,I1Org,mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PyramidLevels,Fmats,M)
 
 addpath(genpath('wOFV/'))
 
@@ -87,7 +87,6 @@ mask = ~mask; %PIVLab seems to use an inverted mask
 I0Org = double(I0Org);
 I1Org = double(I1Org);
 
-
 %cut image according to ROI
 I0 = I0Org(roirect(2):roirect(2)+roirect(4)-1,roirect(1):roirect(1)+roirect(3)-1);
 I1 = I1Org(roirect(2):roirect(2)+roirect(4)-1,roirect(1):roirect(1)+roirect(3)-1); 
@@ -118,12 +117,30 @@ xlims=[min(nonzeros(Y.*mask)),max(nonzeros(Y.*mask))];
 ylims=[min(nonzeros(X.*mask)),max(nonzeros(X.*mask))];
 
 %% Additional options
-options.mask = ones(size(I0));
+options.regscheme = 'visc';
+
 %Default coarsest/finest scales
-if ~isfield(options,'C')
-    C=0;
-else
-    C=options.C;
+C=0;
+L=log2(M)-1;
+
+%compute number of patches in vert
+mx=ceil(size(I0,1)/M);
+
+%Compute overlaps
+totolapx=mx*M-size(I0,1);
+while totolapx/(mx-1)<max(.15*M,34)
+    mx=mx+1;
+    totolapx=mx*M-size(I0,1);
+end
+
+%compute number of patches in horz
+my=ceil(size(I0,2)/M);
+
+%Compute overlaps
+totolapy=my*M-size(I0,2);
+while totolapy/(my-1)<max(.15*M,34)
+    my=my+1;
+    totolapy=my*M-size(I0,2);
 end
 
 %Set regularization scheme
@@ -133,87 +150,39 @@ else
     regscheme=options.regscheme;
 end
 
-%% Patch size computation
-if isfield(options,'M')
-    M=options.M;
-    if diff(xlims)+1<M
-        if xlims(1)>size(I0,1)-M+1
-            xlims(1)=size(I0,1)-M+1;
-            xlims(2)=size(I0,1);
-        elseif xlims(2)<M
-            xlims(1)=1;
-            xlims(2)=M;
-        else
-            xcent=floor(mean(xlims));
-            xlims(1)=xcent-M/2+1;
-            xlims(2)=xcent+M/2;
-        end
-        
-        if ylims(1)>size(I0,2)-M+1
-            ylims(1)=size(I0,2)-M+1;
-            ylims(2)=size(I0,2);
-        elseif ylims(2)<M
-            ylims(1)=1;
-            ylims(2)=M;
-        else
-            ycent=floor(mean(ylims));
-            ylims(1)=ycent-M/2+1;
-            ylims(2)=ycent+M/2;
-        end
+
+%% patch size compatibility
+if diff(xlims)+1<M
+    if xlims(1)>size(I0,1)-M+1
+        xlims(1)=size(I0,1)-M+1;
+        xlims(2)=size(I0,1);
+    elseif xlims(2)<M
+        xlims(1)=1;
+        xlims(2)=M;
+    else
+        xcent=floor(mean(xlims));
+        xlims(1)=xcent-M/2+1;
+        xlims(2)=xcent+M/2;
+    end
+
+    if ylims(1)>size(I0,2)-M+1
+        ylims(1)=size(I0,2)-M+1;
+        ylims(2)=size(I0,2);
+    elseif ylims(2)<M
+        ylims(1)=1;
+        ylims(2)=M;
+    else
+        ycent=floor(mean(ylims));
+        ylims(1)=ycent-M/2+1;
+        ylims(2)=ycent+M/2;
     end
 end
-            
+
+
 I0=I0(xlims(1):xlims(2),ylims(1):ylims(2));
 I1=I1(xlims(1):xlims(2),ylims(1):ylims(2));
 mask=mask(xlims(1):xlims(2),ylims(1):ylims(2));
 v0=v0(xlims(1):xlims(2),ylims(1):ylims(2),:);
-
-if ~isfield(options,'M')
-    M=2^floor(log2(min(size(I0))));
-end
-
-if ~isfield(options,'mx')
-    mx=ceil(size(I0,1)/M);
-    
-     %Compute overlaps
-    totolapx=mx*M-size(I0,1);    
-    while totolapx/(mx-1)<max(.15*M,34)
-        mx=mx+1;
-        totolapx=mx*M-size(I0,1);
-    end
-else
-    mx=options.mx;
-end
-
-if ~isfield(options,'my')
-    my=ceil(size(I0,2)/M);
-    
-    %Compute overlaps
-    totolapy=my*M-size(I0,2);    
-    while totolapy/(my-1)<max(.15*M,34)
-        my=my+1;
-        totolapy=my*M-size(I0,2);
-    end
-else
-    my=options.my;
-end
-
-if ~isfield(options,'L')
-    L=log2(M)-1;
-else
-    L=options.L;
-end
-
-if ~isfield(options,'Fmats')
-    Fmats=getFmatPyramid(M,PyramidLevels);
-else
-    Fmats=options.Fmats;
-    if  size(Fmats.FmatPy{1}(:,:,1),1) ~= M
-        error(['The size of the transform matrices does not match the ' ...
-            'subwindow size M. Please specify options.M to ensure the ' ...
-            'sizes agree appropriately.'])
-    end
-end
 
 %Arrange sub-domains in row-major order
 
