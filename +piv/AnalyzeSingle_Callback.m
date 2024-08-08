@@ -112,32 +112,34 @@ if ok==1
 			end
 		elseif get(handles.algorithm_selection,'Value')==4 %optical flow
 			gui.toolsavailable(1); %re-enabling the ui elements already here, so debugging is easier when things crash. Should be removed when ofv is working.
-			%How you get the ofv parameters (these are still strings):
+			
+%             handles.ofv_median.String{handles.ofv_median.Value}
+% 			handles.ofv_pyramid_levels.String{handles.ofv_pyramid_levels.Value}
+%             get(handles.ofv_eta,'string')
 
-			%Get the three required parameters like this:
-			handles.ofv_median.String{handles.ofv_median.Value}
-			handles.ofv_pyramid_levels.String{handles.ofv_pyramid_levels.Value}
-			get(handles.ofv_eta,'string')
-
-			%this is how ofv could be implemented. I am assuming a function called "wOFV" that generates x,y,u,v and typevector.
-			% Typevector is a 2D matrix with the same size as x, and it contains 1 where data is valid, 0 where a mask was applied
-			%converted_mask is a binary mask with the same size as the input images
-			%roirect is the region of interest in x,y,width,height
-			%[x, y, u, v, typevector] = wOFV (image1,image2,converted_mask, roirect);
-
-			%placeholder data:
-			X = 1:size(image1,2);
-			Y = 1:size(image1,1);
-			[x,y] = meshgrid(X,Y);
-			u=randn(size(x));
-			v=randn(size(x))+2;
-			typevector=ones(size(x));
-
-			%I think that by default maybe every 10th vector should be displayed? Users can then increase the vector density if they like.
-			% To make this really obvious to the users, it maybe makes sense to add this parameter directly where currently "OFV Parameter 1" is located.
+			eta = str2double(get(handles.ofv_eta,'string'));
+            PydLev = str2double(handles.ofv_pyramid_levels.String{handles.ofv_pyramid_levels.Value});
 
 
-			correlation_map=zeros(size(x)); %no correlation map available with OFV (?)
+            vartheta = ones(size(image1));
+            if strcmp(handles.ofv_median.String{handles.ofv_median.Value},'Off')
+                MedFiltFlag = false;
+                MedFiltSize = [3,3];
+          
+            else
+                MedFiltFlag = true;
+                MedFiltSize = [str2double(handles.ofv_median.String{handles.ofv_median.Value}(1)),str2double(handles.ofv_median.String{handles.ofv_median.Value}(3))];
+            end
+
+%             eta = 10^(1);
+%             MedFiltFlag = false;
+%             MedFiltSize = [3,3];
+%             PydLev = 3;
+
+            [x,y,u,v,typevector]=wOFVMain(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev);
+
+
+			correlation_map=zeros(size(x)); %no correlation map available with OFV (?) Nope!
 			correlation_matrices=[];
 		end
 		gui.toolsavailable(1);
