@@ -7,5 +7,5 @@ if get(handles.algorithm_selection,'value')==2
 	piv.ensemble_piv_analyze_all
 end
 if get(handles.algorithm_selection,'value')==4 %optical flow
-	disp('to be implemented later')
+	piv.wOFV_analyze_all
 end
