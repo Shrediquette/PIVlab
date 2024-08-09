@@ -657,10 +657,17 @@ parentitem=get(handles.multip04, 'Position');
 item=[0 0 0 0];
 
 %OFV UI items
-item=[0 8 parentitem(3) 7];
+item=[0 8 parentitem(3) 8];
 handles.uipanel_ofv1 = uipanel(handles.multip04, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Optical flow settings', 'Tag','uipanel_ofv1','fontweight','bold','Visible','off');
 parentitem=get(handles.uipanel_ofv1, 'Position');
 item=[0 0 0 0];
+
+item=[0 item(2)+item(4) parentitem(3) 3];
+handles.text_parallelpatches = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Parallel process patches:');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
+handles.ofv_parallelpatches = uicontrol(handles.uipanel_ofv1,'Style','popupmenu', 'String',{'Off' '128' '256' '512' '1024' 'Default'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_parallelpatches','TooltipString','Tooltip string');
+
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
 handles.text_ofv_median = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Inter-pass median filter:');

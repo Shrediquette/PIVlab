@@ -88,9 +88,42 @@ if ok==1
 
 
 	%% wOFV specific settings from GUI:
-	handles.ofv_median.String{handles.ofv_median.Value}
-	handles.ofv_pyramid_levels.String{handles.ofv_pyramid_levels.Value}
-	get(handles.ofv_eta,'string')
+    etaUnScaled = str2double(get(handles.ofv_eta,'string'));
+    PydLev = str2double(handles.ofv_pyramid_levels.String{handles.ofv_pyramid_levels.Value});
+    
+    %scaling eta from [0,100] to [1e-5,1e5]
+    eta = 10^(etaUnScaled*0.1 - 5);
+    
+    if strcmp(handles.ofv_median.String{handles.ofv_median.Value},'Off')
+        MedFiltFlag = false;
+        MedFiltSize = [3,3];
+
+    else
+        MedFiltFlag = true;
+        MedFiltSize = [str2double(handles.ofv_median.String{handles.ofv_median.Value}(1)),str2double(handles.ofv_median.String{handles.ofv_median.Value}(3))];
+    end
+    
+    %load the filter matrices (assumes all the images are of the same size to compute the patch size)
+    if strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Off')
+        tempImg = import.get_img(1);
+        tempImg = tempImg(roirect(2):roirect(2)+roirect(4)-1,roirect(1):roirect(1)+roirect(3)-1);
+        PatchSize = 2^floor(log2(min(size(tempImg))));
+        Fmats = getFmatPyramid(PatchSize,PydLev);
+        vartheta = ones(size(tempImg));
+    elseif strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Default')
+        tempImg = import.get_img(1);
+        tempImg = tempImg(roirect(2):roirect(2)+roirect(4)-1,roirect(1):roirect(1)+roirect(3)-1);
+        PatchSize = 2^floor(log2(min(size(tempImg))));
+        Fmats = getFmatPyramid(PatchSize,PydLev);
+        vartheta = ones(size(tempImg));
+    else
+        tempImg = import.get_img(1);
+        tempImg = tempImg(roirect(2):roirect(2)+roirect(4)-1,roirect(1):roirect(1)+roirect(3)-1);
+        PatchSize = str2double(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value});
+        Fmats = getFmatPyramid(PatchSize,PydLev);
+        vartheta = ones(size(tempImg));
+    end
+
 
 	for i=1:2:num_frames_to_process
 		if i==1
@@ -128,13 +161,16 @@ if ok==1
 
 			%% wOFV calculation goes here
 			%[x, y, u, v, typevector] = wOFV (image1,image2,converted_mask, roirect);
-			%placeholder data:
-			X = 1:size(image1,2);
-			Y = 1:size(image2,1);
-			[x,y] = meshgrid(X,Y);
-			u=randn(size(x));
-			v=randn(size(x))+2;
-			typevector=ones(size(x));
+            
+            if strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Off')
+                [x,y,u,v,typevector]=wOFVMain_DatasetProc(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,Fmats,PatchSize);
+            elseif strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Default')
+                [x,y,u,v,typevector]=wOFVMain_Parallel_DatasetProc(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,Fmats,PatchSize);
+            else
+                PatchSize = str2double(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value});
+                [x,y,u,v,typevector]=wOFVMain_Parallel_DatasetProc(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,Fmats,PatchSize);
+            end
+
 			correlation_matrices=[];%not available for DCC
 			correlation_map=zeros(size(x));
 
