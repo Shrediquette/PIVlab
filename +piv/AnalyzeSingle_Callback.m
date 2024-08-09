@@ -111,6 +111,7 @@ if ok==1
 				end
 			end
 		elseif get(handles.algorithm_selection,'Value')==4 %optical flow
+            addpath(genpath('OptimizationSolvers')); %add the optimizer to filepath
 			gui.toolsavailable(1); %re-enabling the ui elements already here, so debugging is easier when things crash. Should be removed when ofv is working.
 
 			etaUnScaled = str2double(get(handles.ofv_eta,'string'));
@@ -129,12 +130,12 @@ if ok==1
             end
             
             if strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Off')
-                [x,y,u,v,typevector]=wOFVMain(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev);
+                [x,y,u,v,typevector]=wOFV.RunMain(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev);
             elseif strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Default')
-                [x,y,u,v,typevector]=wOFVMain_Parallel(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,[]);
+                [x,y,u,v,typevector]=wOFV.RunMain_Parallel(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,[]);
             else
                 PatchSize = str2double(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value});
-                [x,y,u,v,typevector]=wOFVMain_Parallel(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,PatchSize);
+                [x,y,u,v,typevector]=wOFV.RunMain_Parallel(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,PatchSize);
             end     
 
 			correlation_map=zeros(size(x)); %no correlation map available with OFV (?) Nope!
