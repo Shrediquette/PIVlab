@@ -75,6 +75,8 @@ function [XGrid,YGrid,vHorz,vVert,Typevector]=RunMain_Parallel(I0Org,I1Org,mask,
 %organized in row-major order (I know, MATLAB usually uses column-major
 %order. My bad.)
 
+PatchSize = min(PatchSize,2048);
+
 if isempty(roirect)
     roirect = [1,1,size(I0Org,2),size(I0Org,1)];
 end

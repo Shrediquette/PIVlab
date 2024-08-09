@@ -134,6 +134,7 @@ end
 %% Patch size computation
 if isfield(options,'M')
     M=options.M;
+    M = min(M,2048);
     if diff(xlims)+1<M
         if xlims(1)>size(I0,1)-M+1
             xlims(1)=size(I0,1)-M+1;
@@ -168,6 +169,7 @@ v0=v0(xlims(1):xlims(2),ylims(1):ylims(2),:);
 
 if ~isfield(options,'M')
     M=2^floor(log2(min(size(I0))));
+    M = min(M,2048);
 end
 
 if ~isfield(options,'mx')

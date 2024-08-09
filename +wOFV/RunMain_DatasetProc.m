@@ -75,6 +75,8 @@ function [XGrid,YGrid,vHorz,vVert,Typevector]=RunMain_DatasetProc(I0Org,I1Org,ma
 %organized in row-major order (I know, MATLAB usually uses column-major
 %order. My bad.)
 
+M = min(M,2048); %cap the patch size to 2048
+
 if isempty(roirect)
     roirect = [1,1,size(I0Org,2),size(I0Org,1)];
 end
