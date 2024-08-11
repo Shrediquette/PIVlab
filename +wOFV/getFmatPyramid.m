@@ -2,9 +2,8 @@ function Fmats = getFmatPyramid(M,PyramidLevels)
 
 %check if the filter matrix exists, if it doesn't generate them
 if ~exist(['+wOFV/Filter Matrices/bior6.8/' num2str(M) '/Fmats.mat'],'file')
-    disp('Wavelet filter matrices do not exist! Generating them...')
+    uiwait(warndlg('Wavelet filter matrices do not exist. They are generated and stored for later use now.','No filter matrices found','modal'));
     wOFV.GenerateFilterMatrices();
-    disp('Matrices stored for future use!')
 end
 
 load(['+wOFV/Filter Matrices/bior6.8/' num2str(M) '/Fmats.mat'],'Fw','FwInv','N0','N1','N2','N3','N4');
