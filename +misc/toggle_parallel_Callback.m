@@ -26,3 +26,11 @@ catch ME
 	disp (ME.message)
 end
 
+if gui.retr('parallel')==0
+	set (handles.text_parallelpatches,'visible','off')
+	set (handles.ofv_parallelpatches,'visible','off')
+	set (handles.ofv_parallelpatches,'Value',1)
+else
+	set (handles.text_parallelpatches,'visible','on')
+	set (handles.ofv_parallelpatches,'visible','on')
+end

@@ -76,7 +76,7 @@ function [XGrid,YGrid,vHorz,vVert,Typevector]=RunMain(I0Org,I1Org,mask,roirect,e
 %order. My bad.)
 
 if isempty(roirect)
-    roirect = [1,1,size(I0Org,2),size(I0Org,1)];
+    roirect = [1,1,size(I0Org,2)-1,size(I0Org,1)-1];
 end
 
 mask = ~mask; %PIVLab seems to use an inverted mask
@@ -281,7 +281,6 @@ invwind=zeros(size(I0));
 
 v1=zeros(size(v0));
 alphafield=zeros(size(I0));
-
 for k=1:mx
     UL(2)=1;
     for j=1:my

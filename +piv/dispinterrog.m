@@ -2,7 +2,7 @@ function dispinterrog
 handles=gui.gethand;
 selected=2*floor(get(handles.fileselector, 'value'))-1;
 filepath=gui.retr('filepath');
-if numel(filepath)>1
+if numel(filepath)>1 && get(handles.algorithm_selection,'Value') ~= 4 %display only when files are loaded and not using wOFV
 	[image_dummy,~]=import.get_img(selected);
 	size_img(1)=size(image_dummy,2)/2;
 	size_img(2)=size(image_dummy,1)/2;
@@ -83,6 +83,6 @@ if numel(filepath)>1
 	if intarea1*2 *2 > minisize
 		text (centre(2),centre(1)*5/3,['Warning: Interrogation area of pass 1 is most likely too big.'],'color','r','tag','intareadispl','HorizontalAlignment','center','verticalalignment','top','Fontsize',10,'Backgroundcolor','k')
 	end
-
+else
+	delete (findobj('tag','intareadispl'))
 end
-

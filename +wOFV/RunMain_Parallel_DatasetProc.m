@@ -79,7 +79,7 @@ function [XGrid,YGrid,vHorz,vVert,Typevector]=RunMain_Parallel_DatasetProc(I0Org
 M = min(M,2048); %cap M
 
 if isempty(roirect)
-    roirect = [1,1,size(I0Org,2),size(I0Org,1)];
+    roirect = [1,1,size(I0Org,2)-1,size(I0Org,1)-1];
 end
 
 mask = ~mask; %PIVLab seems to use an inverted mask

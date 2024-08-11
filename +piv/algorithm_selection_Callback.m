@@ -70,4 +70,22 @@ if selection ==4 %wOFV
 	set(handles.subpix,'visible','off')
 	set(handles.textSuggest,'visible','off')
 	set(handles.SuggestSettings,'visible','off')
+	delete (findobj('tag','intareadispl'))%do not display visuals about interrogation area
+end
+%suggestion to reduce vector display density
+current_vector_setting=get(handles.nthvect,'String');
+if selection ==4 %wOFV
+	if ~strcmp(current_vector_setting,'5')
+		ans_w=questdlg(['wOFV results in one vector per pixel. Displaying all vectors is not recommended.' newline newline 'Should I reduce the vector display density for you?' newline newline 'You can manually change this by going to Plot -> Modify plot appearance -> plot every nth vector'],'Vector display density','Yes','No','Yes');
+		if strcmp(ans_w,'Yes')
+			set(handles.nthvect,'String',5)
+		end
+	end
+else
+	if ~strcmp(current_vector_setting,'1')
+		ans_w=questdlg(['You are currently not plotting every calculated vector.' newline newline 'Should I apply the standard vector display setting for you?' newline newline 'You can manually change this by going to Plot -> Modify plot appearance -> plot every nth vector'],'Vector display density','Yes','No','Yes');
+		if strcmp(ans_w,'Yes')
+			set(handles.nthvect,'String',1)
+		end
+	end
 end

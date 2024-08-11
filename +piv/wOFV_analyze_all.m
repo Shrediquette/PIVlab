@@ -85,6 +85,7 @@ if ok==1
 	maxintens=str2double(get(handles.maxintens, 'string'));
 	%clipthresh=str2double(get(handles.clip_thresh, 'string'));
 	roirect=gui.retr('roirect');
+	
 
 
 	%% wOFV specific settings from GUI:
@@ -102,27 +103,30 @@ if ok==1
         MedFiltFlag = true;
         MedFiltSize = [str2double(handles.ofv_median.String{handles.ofv_median.Value}(1)),str2double(handles.ofv_median.String{handles.ofv_median.Value}(3))];
     end
-    
-    %load the filter matrices (assumes all the images are of the same size to compute the patch size)
-    if strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Off')
-        tempImg = import.get_img(1);
-        tempImg = tempImg(roirect(2):roirect(2)+roirect(4)-1,roirect(1):roirect(1)+roirect(3)-1);
-        PatchSize = 2^floor(log2(min(size(tempImg))));
-        Fmats = wOFV.getFmatPyramid(PatchSize,PydLev);
-        vartheta = ones(size(tempImg));
-    elseif strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Default')
-        tempImg = import.get_img(1);
-        tempImg = tempImg(roirect(2):roirect(2)+roirect(4)-1,roirect(1):roirect(1)+roirect(3)-1);
-        PatchSize = 2^floor(log2(min(size(tempImg))));
-        Fmats = wOFV.getFmatPyramid(PatchSize,PydLev);
-        vartheta = ones(size(tempImg));
-    else
-        tempImg = import.get_img(1);
-        tempImg = tempImg(roirect(2):roirect(2)+roirect(4)-1,roirect(1):roirect(1)+roirect(3)-1);
-        PatchSize = str2double(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value});
-        Fmats = wOFV.getFmatPyramid(PatchSize,PydLev);
-        vartheta = ones(size(tempImg));
-    end
+
+	%load the filter matrices (assumes all the images are of the same size to compute the patch size)
+	tempImg = import.get_img(1);
+	if isempty(roirect)
+		roirect = [1,1,size(tempImg,2)-1,size(tempImg,1)-1];
+	end
+
+	if strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Off')
+		tempImg = tempImg(roirect(2):roirect(2)+roirect(4)-1,roirect(1):roirect(1)+roirect(3)-1);
+		PatchSize = 2^floor(log2(min(size(tempImg))));
+		Fmats = wOFV.getFmatPyramid(PatchSize,PydLev);
+		vartheta = ones(size(tempImg));
+	elseif strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Default')
+		tempImg = tempImg(roirect(2):roirect(2)+roirect(4)-1,roirect(1):roirect(1)+roirect(3)-1);
+		PatchSize = 2^floor(log2(min(size(tempImg))));
+		Fmats = wOFV.getFmatPyramid(PatchSize,PydLev);
+		vartheta = ones(size(tempImg));
+	else
+		tempImg = import.get_img(1);
+		tempImg = tempImg(roirect(2):roirect(2)+roirect(4)-1,roirect(1):roirect(1)+roirect(3)-1);
+		PatchSize = str2double(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value});
+		Fmats = wOFV.getFmatPyramid(PatchSize,PydLev);
+		vartheta = ones(size(tempImg));
+	end
 
 
 	for i=1:2:num_frames_to_process
