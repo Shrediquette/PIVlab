@@ -6,7 +6,7 @@ function GenerateFilterMatrices()
 %Wavelet
 wname='bior6.8';
 %Load wavelet filters
-[Lo_D,Hi_D,Lo_R,Hi_R]=wfilters(wname);
+[Lo_D,Hi_D,Lo_R,Hi_R]= wOFV.wfilters(wname);
 
 Jmin=0;
 
