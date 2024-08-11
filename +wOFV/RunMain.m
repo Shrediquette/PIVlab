@@ -244,8 +244,8 @@ switch mx
         olapx=ones(mx-1,1)*(totolapx-rem(totolapx,mx-1))/(mx-1)+[ones(...
             rem(totolapx,mx-1),1);zeros(mx-1-rem(totolapx,mx-1),1)];
         
-        t1=upsample(olapx(1:ceil((mx-1)/2)),2);
-        t2=[0;upsample(olapx(ceil((mx-1)/2):end),2)];
+        t1=wOFV.upsample(olapx(1:ceil((mx-1)/2)),2);
+        t2=[0;wOFV.upsample(olapx(ceil((mx-1)/2):end),2)];
         olapx=[t1(1:mx-1)+t2(1:mx-1);0];
 end
 switch my
@@ -261,8 +261,8 @@ switch my
         olapy=ones(my-1,1)*(totolapy-rem(totolapy,my-1))/(my-1)+[ones(...
             rem(totolapy,my-1),1);zeros(my-1-rem(totolapy,my-1),1)];
         
-        t1=upsample(olapy(1:ceil((my-1)/2)),2);
-        t2=[0;upsample(olapy(ceil((my-1)/2):end),2)];
+        t1=wOFV.upsample(olapy(1:ceil((my-1)/2)),2);
+        t2=[0;wOFV.upsample(olapy(ceil((my-1)/2):end),2)];
         olapy=[t1(1:my-1)+t2(1:my-1);0];
 end
 
