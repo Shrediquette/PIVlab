@@ -84,8 +84,8 @@ end
 mask = ~mask; %PIVLab seems to use an inverted mask
 
 %To use with gridded interpolant, we need these to be single/double
-I0Org = double(I0Org);
-I1Org = double(I1Org);
+I0Org = im2double(I0Org);
+I1Org = im2double(I1Org);
 
 
 %cut image according to ROI
