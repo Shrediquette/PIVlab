@@ -112,7 +112,7 @@ if ok==1
 			end
 		elseif get(handles.algorithm_selection,'Value')==4 %optical flow
             addpath(genpath('OptimizationSolvers')); %add the optimizer to filepath
-			gui.toolsavailable(1); %re-enabling the ui elements already here, so debugging is easier when things crash. Should be removed when ofv is working.
+			%gui.toolsavailable(1); %re-enabling the ui elements already here, so debugging is easier when things crash. Should be removed when ofv is working.
 
 			etaUnScaled = str2double(get(handles.ofv_eta,'string'));
             PydLev = str2double(handles.ofv_pyramid_levels.String{handles.ofv_pyramid_levels.Value});

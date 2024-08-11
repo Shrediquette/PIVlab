@@ -281,6 +281,10 @@ invwind=zeros(size(I0));
 
 v1=zeros(size(v0));
 alphafield=zeros(size(I0));
+%%per-frame progress bar
+amount_patches=mx*my;
+ran_patches=0;
+gui.update_progress(0);
 for k=1:mx
     UL(2)=1;
     for j=1:my
@@ -307,6 +311,8 @@ for k=1:mx
         
         UL(2)=UL(2)+M-olapy(j);
         domnum=domnum+1;
+		ran_patches=ran_patches+1;
+		gui.update_progress(ran_patches/amount_patches*100);
     end
     UL(1)=UL(1)+M-olapx(k);
 end
