@@ -65,9 +65,13 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 	if get(handles.smooth, 'Value') == 1
 		smoothfactor=floor(get(handles.smoothstr, 'Value'));
 		try
-
-			u = smoothn(u,smoothfactor/10); %not supported in prehistoric Matlab versions like the one I have to use :'-(
-			v = smoothn(v,smoothfactor/10); %not supported in prehistoric Matlab versions like the one I have to use :'-(
+			if get(handles.algorithm_selection,'Value')~=4 %not optical flow
+				u = smoothn(u,smoothfactor/10); 
+				v = smoothn(v,smoothfactor/10); 
+			else %optical flow
+				u = smoothn(u,smoothfactor/10*20); 
+				v = smoothn(v,smoothfactor/10*20); 
+			end
 			%clc
 			%disp ('Using smoothn.m from Damien Garcia for data smoothing.')
 			%disp (['Input smoothing parameter S for smoothn is: ' num2str(smoothfactor/10)])
