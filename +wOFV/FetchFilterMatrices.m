@@ -9,3 +9,4 @@ websave(FileName,FileUrl);
 disp('Filter Matrices downloaede, unzipping...')
 unzip(FileName,'Filter Matrices')
 disp('Filter Matrices stored.')
+delete(FileName)
