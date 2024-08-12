@@ -4,9 +4,10 @@ function FetchFilterMatrices()
 
 FileUrl = 'https://files.osf.io/v1/resources/y48mk/providers/osfstorage/?zip=';
 FileName = 'Filter Matrices.zip';
-disp('Downloading Filter Matrices...')
+disp('Downloading Filter Matrices.')
+disp('This might take a while...')
 websave(FileName,FileUrl);
-disp('Filter Matrices downloaede, unzipping...')
+disp('Filter Matrices downloaded, unzipping...')
 unzip(FileName,'+wOFV/Filter Matrices/')
 disp('Filter Matrices stored.')
 delete(FileName)

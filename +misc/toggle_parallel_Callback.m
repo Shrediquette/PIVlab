@@ -33,4 +33,5 @@ if gui.retr('parallel')==0
 else
 	set (handles.text_parallelpatches,'visible','on')
 	set (handles.ofv_parallelpatches,'visible','on')
+	set (handles.ofv_parallelpatches,'Value',6)
 end
