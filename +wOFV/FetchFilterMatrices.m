@@ -8,6 +8,7 @@ disp('Downloading Filter Matrices.')
 disp('This might take a while...')
 websave(FileName,FileUrl);
 disp('Filter Matrices downloaded, unzipping...')
-unzip(FileName,'+wOFV/Filter Matrices/')
+[filepath,~,~]=  fileparts(which('PIVlab_GUI.m'));
+unzip(FileName,fullfile(filepath,'+wOFV','Filter matrices'))
 disp('Filter Matrices stored.')
 delete(FileName)
