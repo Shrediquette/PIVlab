@@ -55,7 +55,7 @@ nbOut = nargout;
 if ~any([0 1 2 4 8]==nbOut)
     error(message('Wavelet:FunctionOutput:Invalid_ArgNum'));
 end
-if errargt(mfilename,wname,'str')
+if wOFV.errargt(mfilename,wname,'str')
     error(message('Wavelet:FunctionArgVal:Invalid_ArgVal'));    
 end
 
@@ -67,7 +67,7 @@ if mat_f
      load(fname,'-mat');
    catch %#ok<CTCH>
      msg = getWavMSG('Wavelet:FunctionArgVal:Invalid_WavFilNam',fname);
-     errargt(mfilename,msg,'msg');
+     wOFV.errargt(mfilename,msg,'msg');
      error(message('Wavelet:FunctionArgVal:Invalid_WavFilNam', fname));
    end
 end
@@ -86,7 +86,7 @@ elseif wtype==2            % biorth. wavelet
     else
         if exist('Rf','var')~=1 || exist('Df','var')~=1
             msg = getWavMSG('Wavelet:moreMSGRF:Invalid_BiorFile',fname);
-            errargt(mfilename,msg,'msg');
+            wOFV.errargt(mfilename,msg,'msg');
             error(message('Wavelet:FunctionArgVal:Invalid_ArgVal'));
         end
     end
@@ -97,7 +97,7 @@ elseif wtype==2            % biorth. wavelet
 
 else
     msg = getWavMSG('Wavelet:moreMSGRF:Invalid_Wavelet',wname);
-    errargt(mfilename,msg,'msg');
+    wOFV.errargt(mfilename,msg,'msg');
     error(message('Wavelet:FunctionArgVal:Invalid_ArgVal'));
 end
 
@@ -111,7 +111,7 @@ else
         case 'l' , varargout = {Lo_D,Lo_R};
         case 'h' , varargout = {Hi_D,Hi_R};
         otherwise  
-            errargt(mfilename, ...
+            wOFV.errargt(mfilename, ...
                 getWavMSG('Wavelet:FunctionArgVal:Invalid_ArgVal'),'msg');
             error(message('Wavelet:FunctionArgVal:Invalid_ArgVal'));
     end
