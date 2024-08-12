@@ -80,11 +80,11 @@ if ok==1
 		step=str2double(get(handles.step, 'string'));
 		subpixfinder=get(handles.subpix,'value');
 		do_correlation_matrices=gui.retr('do_correlation_matrices');
-		if get(handles.dcc,'Value')==1
+		if get(handles.algorithm_selection,'Value')==3 %DCC
 			[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
 			correlation_map=zeros(size(u)); %nor correlation map available with DCC
 			correlation_matrices=[];
-		elseif get(handles.fftmulti,'Value')==1 || get(handles.ensemble,'Value')==1
+		elseif get(handles.algorithm_selection,'Value')==1 || get(handles.algorithm_selection,'Value')==2 %fft and ensemble
 			passes=1;
 			if get(handles.checkbox26,'value')==1
 				passes=2;
@@ -102,7 +102,7 @@ if ok==1
 			mask_auto = get(handles.mask_auto_box,'value');
 			repeat_last_pass = get(handles.repeat_last,'Value');
 			delta_diff_min = str2double(get(handles.edit52x,'String'));
-			if get(handles.fftmulti,'Value')==1
+			if get(handles.algorithm_selection,'Value')==1 %fft multi
 				try
 					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
 				catch ME
@@ -110,7 +110,36 @@ if ok==1
 					gui.toolsavailable(1);
 				end
 			end
+		elseif get(handles.algorithm_selection,'Value')==4 %optical flow
+            addpath(genpath('OptimizationSolvers')); %add the optimizer to filepath
+			%gui.toolsavailable(1); %re-enabling the ui elements already here, so debugging is easier when things crash. Should be removed when ofv is working.
 
+			etaUnScaled = str2double(get(handles.ofv_eta,'string'));
+            PydLev = str2double(handles.ofv_pyramid_levels.String{handles.ofv_pyramid_levels.Value});
+            %scaling eta from [0,100] to [1e-5,1e5]
+            eta = 10^(etaUnScaled*0.1 - 5);
+
+            vartheta = ones(size(image1));
+            if strcmp(handles.ofv_median.String{handles.ofv_median.Value},'Off')
+                MedFiltFlag = false;
+                MedFiltSize = [3,3];
+          
+            else
+                MedFiltFlag = true;
+                MedFiltSize = [str2double(handles.ofv_median.String{handles.ofv_median.Value}(1)),str2double(handles.ofv_median.String{handles.ofv_median.Value}(3))];
+            end
+            
+            if strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Off')
+                [x,y,u,v,typevector]=wOFV.RunMain(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev);
+            elseif strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Default')
+                [x,y,u,v,typevector]=wOFV.RunMain_Parallel(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,[]);
+            else
+                PatchSize = str2double(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value});
+                [x,y,u,v,typevector]=wOFV.RunMain_Parallel(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,PatchSize);
+            end     
+
+			correlation_map=zeros(size(x)); %no correlation map available with OFV (?) Nope!
+			correlation_matrices=[];
 		end
 		gui.toolsavailable(1);
 		resultslist{1,(selected+1)/2}=x;

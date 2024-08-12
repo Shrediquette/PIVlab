@@ -79,10 +79,7 @@ if ok==1
 			recommendation = median([recommended1 recommended2 recommended3]);
 			%[recommended1 recommended2 recommended3]
 			uiwait(msgbox({'These are the recommendations for the size of the final interrogation area:';[''];['Based on the displacements: ' num2str(recommended1) ' pixels'];['Based on the particle count: ' num2str(recommended2) ' pixels'];['Based on practical experience: ' num2str(recommended3) ' pixels'];[''];'The settings are automatically updated with the median of the recommendation.'},'Suggestion for PIV settings','modal'));
-			set(handles.fftmulti,'Value', 1)
-			set(handles.ensemble,'Value', 1)
-
-			set(handles.dcc,'Value', 0)
+			set(handles.algorithm_selection,'Value', 1)
 			set (handles.intarea, 'String', recommendation*2); %two times the minimum recommendation
 			set (handles.step, 'String', recommendation);
 			set(handles.checkbox26,'Value',1); %pass2
@@ -102,7 +99,7 @@ if ok==1
 			piv.pass2_size_Callback(handles.edit50)
 			piv.pass3_size_Callback(handles.edit51)
 			piv.pass4_size_Callback(handles.edit52)
-			piv.fftmulti_Callback(handles.fftmulti)
+			piv.algorithm_selection_Callback(handles.algorithm_selection)
 			piv.step_Callback(handles.step)
 			piv.dispinterrog
 			delete(findobj('tag','hint'));

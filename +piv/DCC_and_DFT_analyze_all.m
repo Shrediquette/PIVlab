@@ -121,7 +121,7 @@ if ok==1
 		hbar = pivprogress(size(slicedfilepath1,2),handles.overall);
 		set(handles.totaltime,'String','');
 
-		if get(handles.dcc,'Value')==1
+		if get(handles.algorithm_selection,'Value')==3 %dcc
 			if get(handles.bg_subtract,'Value')==1
 				bg_img_A = gui.retr('bg_img_A');
 				bg_img_B = gui.retr('bg_img_B');
@@ -212,7 +212,7 @@ if ok==1
 				correlation_matrices_list{i}=[];%no correlation matrix output for dcc
 				hbar.iterate(1);
 			end
-		elseif get(handles.fftmulti,'Value')==1
+		elseif get(handles.algorithm_selection,'Value')==1
 			passes=1;
 			if get(handles.checkbox26,'value')==1
 				passes=2;
@@ -411,10 +411,10 @@ if ok==1
 
 				converted_mask=mask.convert_masks_to_binary(size(image1(:,:,1)),mask_positions);
 
-				if get(handles.dcc,'Value')==1
+				if get(handles.algorithm_selection,'Value')==3 %dcc
 					[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
 					correlation_matrices=[];%not available for DCC
-				elseif get(handles.fftmulti,'Value')==1
+				elseif get(handles.algorithm_selection,'Value')==1
 					passes=1;
 					if get(handles.checkbox26,'value')==1
 						passes=2;
@@ -442,7 +442,7 @@ if ok==1
 				resultslist{4,(i+1)/2}=v;
 				resultslist{5,(i+1)/2}=typevector;
 				resultslist{6,(i+1)/2}=[];
-				if get(handles.dcc,'Value')==1
+				if get(handles.algorithm_selection,'Value')==3 %dcc
 					correlation_map=zeros(size(x));
 				end
 				correlation_matrices_list{(i+1)/2}=correlation_matrices;

@@ -33,14 +33,9 @@ try
 	set(handles.autoscale_vec,'value',autoscale_vec);
 
 	%set(handles.popupmenu16, 'value',imginterpol);
-	set(handles.dcc, 'value',dccmark);
-	set(handles.fftmulti, 'value',fftmark);
-	set(handles.ensemble, 'value',ensemblemark);
-	if fftmark==1 || ensemblemark == 1
-		set (handles.uipanel42,'visible','on')
-	else
-		set (handles.uipanel42,'visible','off')
-	end
+	set(handles.algorithm_selection,'value',algorithm_selection);
+	piv.algorithm_selection_Callback(handles.algorithm_selection)
+
 	set(handles.checkbox26, 'value',pass2);
 	set(handles.checkbox27, 'value',pass3);
 	set(handles.checkbox28, 'value',pass4);

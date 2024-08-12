@@ -645,23 +645,51 @@ handles.textSuggest = uicontrol(handles.multip04,'Style','text','units','charact
 item=[parentitem(3)/4 item(2) parentitem(3)/1.85 1.5];
 handles.SuggestSettings = uicontrol(handles.multip04,'Style','pushbutton','String','Suggest settings','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @piv.SuggestPIVsettings,'Tag','SuggestSettings','TooltipString','Suggest PIV settings based on image data in current frame');
 
-item=[0 item(2)+item(4) parentitem(3) 6.5];
+item=[0 item(2)+item(4) parentitem(3) 3.5];
 handles.uipanel35 = uipanel(handles.multip04, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','PIV algorithm', 'Tag','uipanel35','fontweight','bold');
 
 parentitem=get(handles.uipanel35, 'Position');
 item=[0 0 0 0];
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.fftmulti = uicontrol(handles.uipanel35,'Style','radiobutton','value',1,'units','characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','FFT window deformation','tag','fftmulti','Callback',@piv.fftmulti_Callback,'TooltipString','FFT based multipass algorithm');
-
-item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.ensemble = uicontrol(handles.uipanel35,'Style','radiobutton','value',0,'units','characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Ensemble correlation','tag','ensemble','Callback',@piv.ensemble_Callback,'TooltipString','Ensemble window deformation correlation. For micro PIV and other sparesly seeded flow.');
-
-item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.dcc = uicontrol(handles.uipanel35,'Style','radiobutton','value',0,'units','characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','DCC (deprecated)','tag','dcc','Callback',@piv.dcc_Callback,'TooltipString','DCC based single pass algorithm. Not recommended anymore');
+handles.algorithm_selection = uicontrol(handles.uipanel35,'Style','popupmenu', 'String',{'Multipass FFT window deformation','Ensemble multipass FFT window deformation','Single pass direct cross-correlation (DCC)', 'Optical flow (wavelet-based)'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','algorithm_selection','TooltipString',sprintf('* Multipass FFT window deformation is the standard algorithm, suitable for most cases.\n* Ensemble correlation is for sparsely seeded flows (e.g. micro-piv). \n* DCC is the first algorithm that was implemented in PIVlab. \n* Optical flow can yield higher resolution with appropriate image data (but is slower), implemented by Schmidt et al. from case.edu'),'Callback',@piv.algorithm_selection_Callback);
 
 parentitem=get(handles.multip04, 'Position');
 item=[0 0 0 0];
 
+%OFV UI items
+item=[0 8 parentitem(3) 8];
+handles.uipanel_ofv1 = uipanel(handles.multip04, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Optical flow settings', 'Tag','uipanel_ofv1','fontweight','bold','Visible','off');
+parentitem=get(handles.uipanel_ofv1, 'Position');
+item=[0 0 0 0];
+
+
+item=[0 item(2)+item(4) parentitem(3) 3];
+handles.text_parallelpatches = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Parallel process patches:','Tag','text_parallelpatches');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
+handles.ofv_parallelpatches = uicontrol(handles.uipanel_ofv1,'Style','popupmenu', 'String',{'Off' '128' '256' '512' '1024' 'Default'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_parallelpatches','TooltipString','Parallel processing of patches');
+set (handles.ofv_parallelpatches,'Value',6);
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
+handles.text_ofv_median = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Inter-pass median filter:');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
+handles.ofv_median = uicontrol(handles.uipanel_ofv1,'Style','popupmenu', 'String',{'Off' '3x3' '5x5' '9x9'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_median','TooltipString','Median filtering in between the pyramid levels');
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
+handles.text_ofv_pyramid_levels = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pyramid levels:');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
+handles.ofv_pyramid_levels = uicontrol(handles.uipanel_ofv1,'Style','popupmenu', 'String',{'5' '4' '3' '2' '1'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_pyramid_levels','TooltipString','Amount of coarse-to-fine steps, larger numbers required for larger displacements');
+handles.ofv_pyramid_levels.Value = 3; %set default
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
+handles.text_ofv_eta = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Smoothness (eta):');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
+handles.ofv_eta = uicontrol(handles.uipanel_ofv1,'Style','edit', 'String','40','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_eta','TooltipString','smoothness determined by the regularization parameter');
+
+parentitem=get(handles.multip04, 'Position');
 item=[0 8 parentitem(3) 5];
 handles.uipanel41 = uipanel(handles.multip04, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Pass 1', 'Tag','uipanel41','fontweight','bold');
 
@@ -1134,7 +1162,7 @@ item=[0+item(3) item(2) parentitem(3)/2 1];
 handles.text143a = uicontrol(handles.uipanel27,'Style','text','String','Steps','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text143a');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1];
-handles.colormap_choice = uicontrol(handles.uipanel27,'Style','popupmenu', 'String',{'Parula','HSV','Jet','HSB','Hot','Cool','Spring','Summer','Autumn','Winter','Gray','Bone','Copper','Pink','Lines'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colormap_choice','TooltipString','Select the color map for displaying derived parameters here');
+handles.colormap_choice = uicontrol(handles.uipanel27,'Style','popupmenu', 'String',{'Parula','HSV','Jet','HSB','Hot','Cool','Spring','Summer','Autumn','Winter','Gray','Bone','Copper','Pink','Lines','Plasma'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colormap_choice','TooltipString','Select the color map for displaying derived parameters here');
 
 item=[0+item(3) item(2) parentitem(3)/2 1];
 handles.colormap_steps = uicontrol(handles.uipanel27,'Style','popupmenu', 'String',{'256','128','64','32','16','8','4','2'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colormap_steps','TooltipString','Select the amount of colors in a colormap');
