@@ -2,11 +2,12 @@ function GenerateFilterMatrices()
 %Compute and store wavelet transform matrices (and their inverses) for 
 %future use, along with wavelet-domain regularization matrices N of various
 %differentiation orders
+addpath(genpath('wavelet/'))
 
 %Wavelet
 wname='bior6.8';
 %Load wavelet filters
-[Lo_D,Hi_D,Lo_R,Hi_R]= wOFV.wfilters(wname);
+[Lo_D,Hi_D,Lo_R,Hi_R]= wfilters(wname);
 
 Jmin=0;
 

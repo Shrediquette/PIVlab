@@ -1,0 +1,798 @@
+{
+   
+
+    "dualtree":
+        {
+            "inputs":
+            [
+                {"name":"X", "kind":"required", "type":[["numeric"],["vector"],["matrix"],["timetable"]]},
+                {"name":"Level", "kind":"namevalue", "type":["scalar","integer"]},
+                {"name": "LevelOneFilter", "kind":"namevalue","type":"choices={'nearsym5_7','nearsym13_19','antonini','legall'}"},
+                {"name": "FilterLength", "kind":"namevalue", "type":"choices={6, 10, 14, 16, 18}"}
+
+                
+            ],
+
+            "outputs":
+
+            [
+                {"name":"A", "type":[["scalar"],["vector"],["matrix"]]},
+                {"name": "D", "type":"cell"},
+                {"name": "Ascale","type":"cell"}
+
+            ]
+        },
+
+ "dualtree2":
+        {
+            "inputs":
+            [
+                {"name":"X", "kind":"required", "type":"numeric"},
+                {"name":"Level", "kind":"namevalue", "type":["scalar","integer"]},
+                {"name": "LevelOneFilter", "kind":"namevalue","type":"choices={'nearsym5_7','nearsym13_19','antonini','legall'}"},
+                {"name": "FilterLength", "kind":"namevalue", "type":"choices={6, 10, 14, 16, 18}"}
+
+                
+            ],
+
+            "outputs":
+
+            [
+                {"name":"A", "type":[["scalar"],["matrix"]]},
+                {"name": "D", "type":"cell"},
+                {"name": "Ascale","type":"cell"}
+
+            ]
+        },
+
+"wcoherence":
+
+    {
+
+        "inputs":
+
+        [
+            
+
+            {"mutuallyExclusiveGroup":
+                [
+                    [
+
+                        {"name":"X","kind":"required","type":"vector"},
+                        {"name":"Y","kind":"required","type":"vector"},
+                        {"name":"Fs","kind":"positional","type":["positive", "scalar"]},
+                        {"name":"VoicesPerOctave","kind":"namevalue","type":["scalar","even",">=10","<=32"]},
+                        {"name":"PhaseDisplayThreshold","kind":"namevalue","type":["scalar",">=0","<=1"]},                        
+                        {"name":"FrequencyLimits","kind":"namevalue", "type":["vector","numel=2","positive"]}
+
+                    ],
+                    [
+                        {"name":"X","kind":"required","type":"vector"},
+                        {"name":"Y","kind":"required","type":"vector"},
+                        {"name":"Ts","kind":"positional","type":["positive", "duration"]},
+                        {"name":"VoicesPerOctave","kind":"namevalue","type":["scalar","even",">=10","<=32"]},
+                        {"name":"PhaseDisplayThreshold","kind":"namevalue","type":["scalar",">=0","<=1"]},
+                        {"name":"PeriodLimits","kind":"namevalue", "type":["vector","numel=2","positive","duration"]}
+
+                    ]
+
+
+                ]
+            }
+            
+        ],
+
+         "outputs":
+
+
+        [
+            {"name":"WCOH","type":"matrix"},
+            {"name":"WCS","type":"matrix"},
+            {"name":"F","type":"vector"},
+            {"name":"COI","type":"vector"},
+            {"name":"WTX","type":"matrix"},
+            {"name":"WTY","type":"matrix"}
+
+        ]
+
+
+    },
+
+
+"dwpt":
+
+
+{
+    "inputs":
+
+    [ 
+        {"name":"X","kind":"required","type":[["numeric"],["vector"],["matrix"],["timetable"]]},
+        {"name":"WNAME","kind":"positional","type":[["char"],["string","scalar"]]},
+        {"name":"LoD","kind":"positional","type":"vector"},
+        {"name":"HiD","kind":"positional","type":"vector"},
+        {"name":"Level", "kind":"namevalue", "type":["scalar","integer"]},
+        {"name":"FullTree", "kind":"namevalue", "type":["logical","scalar"]},
+        {"name":"Boundary", "kind":"namevalue", "type":"choices = {'reflection','periodic'}"}
+        
+
+    ],
+
+
+    "outputs":
+
+    [
+
+    {"name":"WPT","type":"cell"},
+    {"name":"L","type":"vector"},
+    {"name":"PACKETLEVELS","type":"vector"},
+    {"name":"F","type":"vector"},
+    {"name":"RE","type":"vector"}
+    
+
+
+    ]
+
+
+},
+
+"idwpt":
+
+
+{
+    "inputs":
+
+    [ 
+        {"name":"WPT","kind":"required","type":"cell"},
+        {"name":"L","kind":"required","type":"vector"},
+        {"name":"WNAME","kind":"positional","type":[["char"],["string","scalar"]]},
+        {"name":"LoR","kind":"positional","type":"vector"},
+        {"name":"HiR","kind":"positional","type":"vector"},
+        {"name":"Boundary", "kind":"namevalue", "type":"choices = {'reflection','periodic'}"}
+        
+
+    ],
+
+
+    "outputs":
+
+    [
+
+    {"name":"XREC","type":[["vector"],["matrix"]]}
+    
+    
+
+
+    ]
+
+
+},
+
+"cwtfilterbank":
+
+{
+
+    "inputs":
+
+    [
+        {"name":"SignalLength","kind":"namevalue","type":"scalar"},
+        {"name":"Wavelet","kind":"namevalue","type":"choices = {'Morse','amor','bump'}"},
+        {"name":"VoicesPerOctave","kind":"namevalue","type":["scalar","even",">=4","<=48"]},
+        {"name":"TimeBandwidth","kind":"namevalue","type":["scalar","positive",">3","<=120"]},
+        {"name":"WaveletParameters","kind":"namevalue","type":["vector","numel=2"]},
+        {"name":"Boundary","kind":"namevalue","type":"choices = {'reflection','periodic'}"},
+        {"name":"SamplingFrequency","kind":"namevalue","type":["scalar","positive"]},
+        {"name":"FrequencyLimits","kind":"namevalue","type":["vector","numel=2"]},
+        {"name":"SamplingPeriod","kind":"namevalue","type":["scalar","duration"]},
+        {"name":"PeriodLimits","kind":"namevalue","type":["vector","duration","numel=2"]} 
+               
+
+    ],
+
+    "outputs":
+
+    [
+        {"name":"FB","type":"cwtfilterbank"}
+
+    ]
+},
+
+"cwtfilterbank.timeSpectrum":
+{
+    "inputs":
+
+    [
+        {"name": "cwtfilterbank object", "kind":"required","type":"cwtfilterbank"},
+        {"mutuallyExclusiveGroup":
+            [
+                [
+                    {"name":"X", "kind":"required","type":[["numeric"],["vector"]]},
+                    {"name":"Normalization","kind":"namevalue","type":"choices = {'var','pdf','none'}"},
+                    {"name":"SpectrumType","kind":"namevalue","type":"choices = {'power','density'}"},
+                    {"name":"TimeLimits","kind":"namevalue","type":["vector","numel=2"]}
+                ],
+                [
+                    {"name":"CFS","kind":"required","type":[["numeric"],["matrix"]]},
+                    {"name":"Normalization","kind":"namevalue","type":"choices = {'var','pdf','none'}"},
+                    {"name":"SpectrumType","kind":"namevalue","type":"choices = {'power','density'}"},
+                    {"name":"TimeLimits","kind":"namevalue","type":["vector","numel=2"]}
+                ]
+            ]
+         
+        }
+        ],
+    "output":
+    [
+        {"name":"TAVGP","type":"vector"},
+        {"name":"F","type":"vector"}
+    ]
+},
+
+"cwtfilterbank.scaleSpectrum":
+{
+    "inputs":
+    [
+        {"name": "cwtfilterbank object", "kind":"required","type":"cwtfilterbank"},
+        {"mutuallyExclusiveGroup":
+            [
+                [
+                    {"name":"X", "kind":"required","type":[["numeric"],["vector"]]},
+                    {"name":"Normalization","kind":"namevalue","type":"choices = {'var','pdf','none'}"},
+                    {"name":"SpectrumType","kind":"namevalue","type":"choices = {'power','density'}"},
+                    {"name":"FrequencyLimits","kind":"namevalue","type":["vector","numel=2"]},
+                    {"name":"PeriodLimits","kind":"namevalue","type":[["vector"],["duration"],["numel=2"]]}
+
+                ],
+                [
+                    {"name":"CFS","kind":"required","type":[["numeric"],["matrix"]]},
+                    {"name":"Normalization","kind":"namevalue","type":"choices = {'var','pdf','none'}"},
+                    {"name":"SpectrumType","kind":"namevalue","type":"choices = {'power','density'}"},
+                    {"name":"FrequencyLimits","kind":"namevalue","type":["vector","numel=2"]},
+                    {"name":"PeriodLimits","kind":"namevalue","type":[["vector"],["duration"],["numel=2"]]}
+
+                ]
+            ]
+        }    
+        ],
+    "output":
+    [
+        {"name":"SAVGP","type":"vector"},
+        {"name":"SCIDX","type":"vector"}
+    ]
+
+},
+
+"waveletScattering":
+
+{
+
+    "inputs":
+
+    [
+        {"name":"SignalLength","kind":"namevalue","type":"scalar"},
+        {"name":"SamplingFrequency","kind":"namevalue","type":["scalar","positive"]},
+        {"name":"InvarianceScale","kind":"namevalue","type":["scalar","positive"]},
+        {"name":"QualityFactors","kind":"namevalue","type":["vector","positive",">=1","<=32"]},
+        {"name":"Boundary","kind":"namevalue","type":"choices = {'periodic','reflection'}"},
+        {"name":"Precision","kind":"namevalue","type":"choices = {'double','single'}"},
+        {"name":"OversamplingFactor","kind":"namevalue","type":["scalar",">=0"]},
+        {"name":"OptimizePath","kind":"namevalue","type":["scalar","logical"]} 
+               
+
+    ],
+
+    "outputs":
+
+    [
+        {"name":"SN","type":"waveletScattering"}
+
+    ]
+},
+
+"ewt":
+
+{
+    "inputs":
+    [ 
+        {"name":"X","kind":"required","type":[["numeric"],["vector"],["matrix"],["timetable"]]},
+        {"name":"PeakThresholdPercent","kind":"namevalue","type":["scalar","integer",">0","<100"]},
+        {"name":"SegmentMethod","kind":"namevalue","type":"choices = {'geomean','localmin'}"},
+        {"name":"MaxNumPeaks","kind":"namevalue","type":["scalar","integer",">=1"]},
+        {"name":"FrequencyResolution","kind":"namevalue","type":["scalar","numeric","positive"]},
+        {"name":"LogSpectrum","kind":"namevalue","type":["scalar","logical"]}
+
+    ],
+
+    "outputs":
+    [
+        {"name":"MRA","type":[["matrix"],["timetable"]]},
+        {"name":"CFS","type":"matrix"},
+        {"name":"WFB","type":"matrix"},
+        {"name":"INFO","type":"struct"}
+        
+
+    ]
+},
+
+"wavedec":
+{
+
+    "inputs":
+    [
+        {"mutuallyExclusiveGroup":
+            [
+                [
+                    {"name": "X", "kind":"required", "type":[["numeric"],["vector"]]},
+                    {"name":"N", "kind":"required", "type":"scalar"},
+                    {"name":"WNAME","kind":"required","type":[["char"],["string"]]}
+                ],
+
+                [
+                    {"name": "X", "kind":"required", "type":[["numeric"],["vector"]]},
+                    {"name":"N", "kind":"required", "type":"scalar"},
+                    {"name":"LoD","kind":"required","type":"vector"},
+                    {"name":"HiD","kind":"required","type":"vector"}
+                ]
+            ]
+        }  
+    ],  
+
+    "outputs":
+    [
+        {"name":"C", "type":"vector"},
+        {"name":"L","type":"vector"}
+    ]
+
+},
+
+"wavedec2":
+
+{
+    "inputs":
+    [
+        {"mutuallyExclusiveGroup":
+            [
+                [
+                    {"name": "X", "kind":"required", "type":"matrix"},
+                    {"name":"N", "kind":"required", "type":"scalar"},
+                    {"name":"WNAME","kind":"required","type":[["char"],["string"]]}
+                ],
+
+                [
+                    {"name": "X", "kind":"required", "type":"matrix"},
+                    {"name":"N", "kind":"required", "type":"scalar"},
+                    {"name":"LoD","kind":"required","type":"vector"},
+                    {"name":"HiD","kind":"required","type":"vector"}
+                ]
+            ]
+        }  
+
+    ],
+    
+
+    "outputs":
+    [
+        {"name":"C", "type":"vector"},
+        {"name":"S","type":"matrix"}
+    ]
+
+},  
+       
+"dwtfilterbank":
+
+{
+
+    "inputs":
+
+
+    [
+        {"name":"SignalLength","kind":"namevalue","type":"scalar"},
+        {"name":"Wavelet","kind":"namevalue","type":[["char"],["string"]]},
+        {"name":"FilterType","kind":"namevalue","type":"choices = {'Analysis','Synthesis'}"},
+        {"name":"Level","kind":"namevalue","type":"scalar"},
+        {"name":"SamplingFrequency","kind":"namevalue","type":"scalar"},
+        {"name":"CustomWaveletFilter","kind":"namevalue","type":[["vector"],["matrix"]]},
+        {"name":"CustomScalingFilter","kind":"namevalue","type":[["vector"],["matrix"]]}
+
+        
+        
+
+    ],
+
+    "outputs":
+
+    [
+        {"name":"FB","type":"dwtfilterbank"}
+
+    ]
+},
+
+"liftingStep":
+
+{
+
+    "inputs":
+
+
+    [
+        {"name":"Type","kind":"namevalue","type":"choices = {'predict','update'}"},
+        {"name":"Coefficients","kind":"namevalue","type":[["scalar"],["vector"]]},
+        {"name":"MaxOrder","kind":"namevalue","type":"scalar"}
+    ],
+
+    "outputs":
+
+    [
+        {"name":"LS","type":"struct"}
+
+    ]
+},
+
+"liftingScheme":
+
+{
+
+    "inputs":
+
+
+    [
+        {"name":"Wavelet","kind":"namevalue","type":[["char"],["string"]]}
+    ],
+
+    "outputs":
+
+    [
+        {"name":"LS","type":"liftingScheme"}
+
+    ]
+},
+
+"liftingScheme":
+
+{
+
+    "inputs":
+
+
+    [
+        {"name":"LiftingSteps","kind":"namevalue","type":"structure"},
+        {"name":"NormalizationFactors","kind":"namevalue","type":[["scalar"],["vector"]]}
+    ],
+
+    "outputs":
+
+    [
+        {"name":"LS","type":"liftingScheme"}
+
+    ]
+},
+
+"liftingScheme":
+
+{
+
+    "inputs":
+
+
+    [  
+        {"name":"CustomLowpassFilter","kind":"namevalue","type":[["cell"],["vector"]]}
+    ],
+
+    "outputs":
+
+    [
+        {"name":"LS","type":"liftingScheme"}
+
+    ]
+},
+
+
+
+"lwt":
+
+{
+
+    "inputs":
+
+
+    [
+        {"name":"X","kind":"required","type":[["numeric"],["vector"],["2d"]]},
+        {"name":"Wavelet","kind":"namevalue","type":[["char"],["string"]]},
+        {"name":"LiftingScheme","kind":"namevalue","type":"liftingScheme"},
+        {"name":"Level","kind":"namevalue","type":"scalar"},  
+        {"name":"Extension","kind":"namevalue","type":"choices = {'zeropad','periodic','symmetric'}"},
+        {"name":"Int2Int","kind":"namevalue","type":"logical"}
+    ],
+
+    "outputs":
+
+    [
+        {"name":"CA","type":[["vector"],["2d"]]},
+        {"name":"CD","type":"cell"}
+
+    ]
+},
+
+"ilwt":
+
+{
+
+    "inputs":
+
+
+    [
+        {"name":"CA","kind":"required","type":[["numeric"],["vector"],["2d"]]},
+        {"name":"CD","kind":"required","type":[["numeric"],["cell"]]},
+        {"name":"Wavelet","kind":"namevalue","type":[["char"],["string"]]},
+        {"name":"LiftingScheme","kind":"namevalue","type":"liftingScheme"},
+        {"name":"Level","kind":"namevalue","type":"scalar"},  
+        {"name":"Extension","kind":"namevalue","type":"choices = {'zeropad','periodic','symmetric'}"},
+        {"name":"Int2Int","kind":"namevalue","type":"logical"}
+    ],
+
+    "outputs":
+
+    [
+        {"name":"XR","type":[["vector"],["2d"]]}
+
+    ]
+},
+
+
+"lwt2":
+
+{
+
+    "inputs":
+
+
+    [
+        {"name":"X","kind":"required","type":[["numeric"],["matrix"]]},
+        {"name":"Wavelet","kind":"namevalue","type":[["char"],["string"]]},
+        {"name":"LiftingScheme","kind":"namevalue","type":"liftingScheme"},
+        {"name":"Level","kind":"namevalue","type":"scalar"},  
+        {"name":"Extension","kind":"namevalue","type":"choices = {'zeropad','periodic','symmetric'}"},
+        {"name":"Int2Int","kind":"namevalue","type":"logical"}
+    ],
+
+    "outputs":
+
+    [
+        {"name":"LL","type":[["numeric"],["matrix"]]},
+        {"name":"LH","type":"cell"},
+        {"name":"HL","type":"cell"},
+        {"name":"HH","type":"cell"}
+
+    ]
+},
+
+"ilwt2":
+
+{
+
+    "inputs":
+
+
+    [
+        {"name":"LL","kind":"required","type":[["numeric"],["matrix"]]},
+        {"name":"LH","kind":"required","type":[["numeric"],["cell"]]},
+        {"name":"HL","kind":"required","type":[["numeric"],["cell"]]},
+        {"name":"HH","kind":"required","type":[["numeric"],["cell"]]},
+        {"name":"Wavelet","kind":"namevalue","type":[["char"],["string"]]},
+        {"name":"LiftingScheme","kind":"namevalue","type":"liftingScheme"},
+        {"name":"Level","kind":"namevalue","type":"scalar"},  
+        {"name":"Extension","kind":"namevalue","type":"choices = {'zeropad','periodic','symmetric'}"},
+        {"name":"Int2Int","kind":"namevalue","type":"logical"}
+    ],
+
+    "outputs":
+
+    [
+        {"name":"XR","type":[["numeric"],["matrix"]]}
+
+    ]
+},
+
+"tqwt":
+
+{
+    "inputs":
+
+    [ 
+        {"name":"X","kind":"required","type":[["numeric"],["vector"],["matrix"],["gpuArray"]]},
+        {"name":"QualityFactor", "kind":"namevalue", "type":["scalar"]},
+        {"name":"Level", "kind":"namevalue", "type":["scalar","integer"]}
+                
+
+    ],
+
+
+    "outputs":
+
+    [
+
+        {"name":"WT","type":["cell"]},
+        {"name":"INFO","type":["structure"]}      
+
+
+    ]
+
+
+},
+
+"itqwt":
+
+{
+    "inputs":
+    [
+        {"name":"WT","kind":"required","type":["cell"]},
+        {"name":"N","kind":"required","type":["scalar","integer"]},
+        {"name":"QualityFactor","kind":"namevalue","type":["scalar"]},
+        {"name":"Level","kind":"namevalue","type":["scalar","integer"]}
+    ],
+
+    "outputs":
+    [
+        {"name":"XREC","type":[["numeric"],["vector"],["matrix"],["gpuArray"]]}
+
+    ]
+
+
+},
+
+"tqwtmra":
+
+{
+    "inputs":
+    [
+        {"name":"WT","kind":"required","type": ["cell"]},
+        {"name":"N","kind":"required","type":["scalar","integer"]},
+        {"name":"QualityFactor","kind":"namevalue","type":[["numeric"],["scalar"]]}
+    ],
+
+    "outputs":
+    [
+        {"name":"MRA","type":[["numeric"],["vector"],["matrix"],["gpuArray"]]}
+    ]
+},
+
+"laurentMatrix":
+
+{
+    "inputs":
+    [
+        {"name":"Elements","kind":"namevalue","type":"cell"}
+    ],
+
+    "outputs":
+    [
+        {"name":"LM","type":"laurentMatrix"}
+    ]
+
+},
+
+"laurentPolynomial":
+
+{
+    "inputs":
+    [
+        {"name":"Coefficients","kind":"namevalue","type":[["numeric"],["vector"]]},
+        {"name":"MaxOrder","kind":"namevalue","type":["scalar","integer"]}
+    ],
+
+    "outputs":
+    [
+        {"name":"LP","type":"laurentPolynomial"}
+    ]
+},
+
+"icwt":
+{
+    "inputs":
+    [
+        {"name":"CFS", "kind":"required","type":[["numeric"],["matrix"]]},
+        {"mutuallyExclusiveGroup":
+            [
+                [
+                    {"name":"WNAME","kind":"ordered","type":"choices = {'Morse','amor','bump'}"},
+                    {"name":"F","kind":"ordered","type":"vector"},
+                    {"name":"FREQRANGE","kind":"ordered","type":"vector"},
+                    {"name":"TimeBandwidth","kind":"namevalue","type":"scalar"},
+                    {"name":"WaveletParameters","kind":"namevalue","type":"vector"},
+                    {"name":"VoicesPerOctave","kind":"namevalue","type":"scalar"},
+                    {"name":"SignalMean","kind":"namevalue","type":["scalar","vector"]}            
+                ],
+                [
+                    {"name":"WNAME","kind":"ordered","type":"choices = {'Morse','amor','bump'}"},
+                    {"name":"P","kind":"ordered","type":"duration"},
+                    {"name":"PeriodRange","kind":"ordered","type":[["duration"],["vector"]]},
+                    {"name":"TimeBandwidth","kind":"namevalue","type":"scalar"},
+                    {"name":"WaveletParameters","kind":"namevalue","type":"vector"},
+                    {"name":"VoicesPerOctave","kind":"namevalue","type":"scalar"},
+                    {"name":"SignalMean","kind":"namevalue","type":["scalar","vector"]}  
+                ],
+                [
+                    {"name":"WNAME","kind":"ordered","type":"choices = {'Morse','amor','bump'}"},
+                    {"name":"F","kind":"ordered","type":"vector"},
+                    {"name":"FREQRANGE","kind":"ordered","type":"vector"},
+                    {"name":"TimeBandwidth","kind":"namevalue","type":"scalar"},
+                    {"name":"WaveletParameters","kind":"namevalue","type":"vector"},
+                    {"name":"VoicesPerOctave","kind":"namevalue","type":"scalar"},
+                    {"name":"ScalingCoefficients","kind":"namevalue","type":"vector"}
+                ]
+            ]
+        }
+    
+    ],
+
+    "outputs":
+    [
+      {"name":"XREC","type":"vector"}  
+    ]
+},
+
+"sensingDictionary":
+{
+    
+    "inputs":
+
+
+    [
+        {"name":"Size","kind":"namevalue","type":[["scalar"],["vector"]]},
+        {"name":"Type","kind":"namevalue","type":["cellstr"]},
+        {"name":"Name","kind":"namevalue","type":["cellstr"]},
+        {"name":"Level","kind":"namevalue","type":[["scalar"],["vector"]]},
+        {"name":"CustomDictionary","kind":"namevalue","type":["matrix"]}
+
+    ],
+
+    "outputs":
+
+    [
+        {"name":"A","type":"sensingDictionary"}
+
+    ]
+},
+
+"wentropy":
+{
+    "inputs":
+    [
+        {"name":"X","kind":"required","type": ["vector"]},
+        {"name":"Entropy","kind":"namevalue","type":"choices = {'Shannon','Renyi','Tsallis'}"},
+        {"name":"Exponent","kind":"namevalue","type":["scalar"]},
+        {"name":"Transform","kind":"namevalue","type":"choices = {'modwt','modwpt','dwpt','dwt'}"},
+        {"name":"Wavelet","kind":"namevalue","type":[["char"],["string"]]},
+        {"name":"Level","kind":"namevalue","type":["scalar"]},
+        {"name":"Distribution","kind":"namevalue","type":"choices={'scale','global'}"},
+        {"name":"EnergyThreshold","kind":"namevalue","type":["scalar"]},
+        {"name":"Scaled","kind":"namevalue","type":["logical","scalar"]}
+    ],
+    "outputs":
+    [
+        {"name":"ENT","type": [["vector","scalar"]]}
+    ]
+},
+"wentropy":
+{
+    "inputs":
+    [
+        {"name":"WT","kind":"required","type": [["cell"],["matrix"]]},
+        {"name":"Entropy","kind":"namevalue","type":"choices = {'Shannon','Renyi','Tsallis'}"},
+        {"name":"Exponent","kind":"namevalue","type":["scalar"]},
+        {"name":"Distribution","kind":"namevalue","type":"choices={'scale','global'}"},
+        {"name":"EnergyThreshold","kind":"namevalue","type":["scalar"]},
+        {"name":"Scaled","kind":"namevalue","type":["logical","scalar"]}
+    ],
+    "outputs":
+    [
+        {"name":"ENT","type": [["vector"],["scalar"]]}
+    ]
+}
+
+}
+
+
+
+
+    
+

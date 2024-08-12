@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2011-2021 The MathWorks, Inc. -->
+<!-- THIS FILE CONTRIBUTES TO THE MATLAB APPS GALLERY WHICH IS CAREFULLY CURATED -->
+<!-- ADDITIONS AND CHANGES MUST GO THROUGH A DESIGN REVIEW PROCESS WITH SENIOR MANGEMENT -->
+<!-- THIS PROCESS IS MANAGED BY THE MATLAB DESKTOP TEAM. CONSULT THE TOOLSTRIP GUIDELINES TO GET STARTED -->
+<toolset id="wavelet_toolset" message_catalog="Wavelet:desktop">
+    <tool id="wavemenu">
+        <icon filename="signal_app_16.png" path="."  id="waveletAnalyzerApp"/>
+        <icon filename="signal_app_24.png" path="." />
+        <callback>waveletAnalyzer</callback>
+        <parent_tool id="signal_products" toolset_id="apps_toolset" />
+    </tool>
+    <tool id="waveletSignalDenoiser">
+        <icon filename="wavelet-signal-denoiser-16.png" path="."  id="waveletSignalDenoiserApp"/>
+        <icon filename="wavelet-signal-denoiser-24.png" path="." />
+        <callback>waveletSignalDenoiser</callback>
+        <capability>
+            <localClient>false</localClient>  <!-- Supported in MOTW -->
+        </capability>
+        <parent_tool id="signal_products" toolset_id="apps_toolset" />
+    </tool>
+    <tool id="signalMultiresolutionAnalyzer">
+        <icon filename="Signal_Multiresolution_Analyzer_App_Icon_16.png" path="."  id="signalMultiresolutionAnalyzerApp"/>
+        <icon filename="Signal_Multiresolution_Analyzer_App_Icon_24.png" path="." />
+        <callback>signalMultiresolutionAnalyzer</callback>
+        <capability>
+            <localClient>false</localClient>  <!-- Supported in MOTW -->
+        </capability>
+        <parent_tool id="signal_products" toolset_id="apps_toolset" />
+    </tool>
+    <tool id="waveletTimeFrequencyAnalyzer">
+        <icon filename="wavelet-time-frequency-analyzer-16.png" path="." id="waveletTimeFrequencyAnalyzerApp"/>
+        <icon filename="wavelet-time-frequency-analyzer-24.png" path="." />
+        <callback>waveletTimeFrequencyAnalyzer</callback>
+        <capability>
+            <localClient>false</localClient>  <!-- Supported in MOTW -->
+        </capability>
+        <parent_tool id="signal_products" toolset_id="apps_toolset" />
+    </tool>
+    
+</toolset>

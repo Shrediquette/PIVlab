@@ -5,7 +5,7 @@ function [N,Fw,Fw2]=computeNsym(wname,dord,isz,Jmin)
 %isz, Jmin is the minimum scale of the wavelet transform
 
 %QMF's for wavelets
-[Lo_D,Hi_D,Lo_R,Hi_R]=wOFV.wfilters(wname);
+[Lo_D,Hi_D,Lo_R,Hi_R]=wfilters(wname);
 
 %Find wavelet connection coefficients
 dim=2*length(Lo_R)-3;
