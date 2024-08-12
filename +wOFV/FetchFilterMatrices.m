@@ -7,6 +7,6 @@ FileName = 'Filter Matrices.zip';
 disp('Downloading Filter Matrices...')
 websave(FileName,FileUrl);
 disp('Filter Matrices downloaede, unzipping...')
-unzip(FileName,'Filter Matrices')
+unzip(FileName,'+wOFV/Filter Matrices/')
 disp('Filter Matrices stored.')
 delete(FileName)
