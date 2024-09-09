@@ -125,23 +125,22 @@ if isempty(resultslist)==0
 					masks_in_frame=gui.retr('masks_in_frame');
 					if ~isempty(masks_in_frame)
 						expected_image_size=gui.retr('expected_image_size');
-						converted_mask=zeros(expected_image_size,'uint8');
-						amount_nonmean_images = numel(ismean(ismean==0));
-						frames_to_process= eval(str);
-						for i=frames_to_process
-							if numel (masks_in_frame) >= i%if size (masks_in_frame,2) >= i
-								mask_positions=masks_in_frame{i};
-								converted_mask=converted_mask + uint8(mask.convert_masks_to_binary(expected_image_size,mask_positions)); %only when all frames are masked --> apply mask also in the average.
-							end
-						end
+                        converted_mask=zeros(expected_image_size,'uint16');
+                        amount_nonmean_images = numel(ismean(ismean==0));
+                        frames_to_process= eval(['[' str ']']);
+                        for i=frames_to_process
+                            if numel (masks_in_frame) >= i%if size (masks_in_frame,2) >= i
+                                mask_positions=masks_in_frame{i};
+                                converted_mask=converted_mask + uint16(mask.convert_masks_to_binary(expected_image_size,mask_positions)); %only when all frames are masked --> apply mask also in the average.
+                            end
+                        end
+                        converted_mask(converted_mask<numel(frames_to_process))=0;
+                        converted_mask(converted_mask==numel(frames_to_process))=1;
+                        converted_mask=uint8(converted_mask);
+                        blocations = bwboundaries(converted_mask,'holes');
+                        frame_where_to_put_the_average=size(resultslist,2)+1;
+						masks_in_frame(frame_where_to_put_the_average:end)=[];%remove any pre-existing mask in the curretn frame
 
-						converted_mask(converted_mask<numel(frames_to_process))=0;
-						converted_mask(converted_mask==numel(frames_to_process))=1;
-
-						blocations = bwboundaries(converted_mask,'holes');
-						frame_where_to_put_the_average=size(resultslist,2)+1;
-
-						masks_in_frame{frame_where_to_put_the_average}=[];%remove any pre-existing mask in the curretn frame
 						masks_in_frame=mask.px_to_rois(blocations,frame_where_to_put_the_average,masks_in_frame);
 						gui.put('masks_in_frame',masks_in_frame);
 					end
