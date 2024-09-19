@@ -40,12 +40,18 @@ if isempty(fh)
 	version = '3.03';
 	gui.put('PIVver', version);
 	try
+		warning off
 		load('PIVlab_settings_default.mat','build_date');
+		warning on
 	catch
-		build_date='';
+		build_date=' ';
+	end
+	
+	if ~exist ('build_date','var') 
+		build_date=' ';
 	end
 	if isempty(build_date)
-		build_date='';
+		build_date=' ';
 	else
 	end
 
