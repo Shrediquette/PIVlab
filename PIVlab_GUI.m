@@ -222,7 +222,7 @@ if isempty(fh)
 		end
 
 		handles=gui.gethand;
-		load icons.mat
+		load ('icons.mat','parallel_off','parallel_on');
 		if gui.retr('parallel') == 1
 			set(handles.toggle_parallel, 'cdata',parallel_on,'TooltipString','Parallel processing on. Click to turn off.');
 		else
