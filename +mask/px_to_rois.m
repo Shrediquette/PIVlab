@@ -1,4 +1,4 @@
-function masks_in_frame=px_to_rois(blocations,frame,masks_in_frame)
+function masks_in_frame=px_to_rois(blocations,frame,masks_in_frame,visibility)
 recommended_colors=parula(7);
 for ind = 1:numel(blocations)
 	if numel(masks_in_frame)<frame
@@ -14,7 +14,7 @@ for ind = 1:numel(blocations)
 	pos = blocations{ind};
 	pos = fliplr(pos);
 	% Create a freehand ROI.
-	regionOfInterest = drawfreehand('Position', pos);
+	regionOfInterest = drawfreehand('Position', pos,'Visible',visibility);
 	reduce(regionOfInterest,0.005)
 	regionOfInterest.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
 	regionOfInterest.FaceAlpha=0.75;

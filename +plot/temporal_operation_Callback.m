@@ -141,7 +141,7 @@ if isempty(resultslist)==0
                         frame_where_to_put_the_average=size(resultslist,2)+1;
 						masks_in_frame(frame_where_to_put_the_average:end)=[];%remove any pre-existing mask in the curretn frame
 
-						masks_in_frame=mask.px_to_rois(blocations,frame_where_to_put_the_average,masks_in_frame);
+						masks_in_frame=mask.px_to_rois(blocations,frame_where_to_put_the_average,masks_in_frame,'on');
 						gui.put('masks_in_frame',masks_in_frame);
 					end
 					typevectoralle=ones(size(typevector));

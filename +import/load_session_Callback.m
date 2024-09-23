@@ -83,10 +83,11 @@ else
 	set(handles.img_not_mask,'value',gui.retr('img_not_mask'));
 	set(handles.autoscale_vec,'value',gui.retr('autoscale_vec'));
 
-	
-	set(handles.algorithm_selection, 'value',vars.algorithm_selection);
-	piv.algorithm_selection_Callback(handles.algorithm_selection)
-
+	try
+		set(handles.algorithm_selection, 'value',vars.algorithm_selection);
+		piv.algorithm_selection_Callback(handles.algorithm_selection)
+	catch
+	end
 
 	set(handles.checkbox26, 'value',vars.pass2);
 	set(handles.checkbox27, 'value',vars.pass3);

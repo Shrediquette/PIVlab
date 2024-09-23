@@ -1,6 +1,6 @@
 function import_Callback (~,~,~)
 filepath=gui.retr('filepath');
-
+tic
 if size(filepath,1) > 1 %did the user load images?
 	sessionpath=gui.retr('sessionpath');
 	if isempty(sessionpath)
@@ -15,11 +15,11 @@ if size(filepath,1) > 1 %did the user load images?
 		end
 		pivlab_axis=gui.retr('pivlab_axis');
 		handles=gui.gethand;
-		gui.toolsavailable(0,'Busy, please wait...')
+		gui.toolsavailable(0,'Converting masks, please wait...')
 		for i= 1:AnzahlMasks
 			%set (handles.mask_import,'String', ['Progress: ' num2str(round(i/AnzahlMasks*100)) ' %']);
 			gui.update_progress(round(i/AnzahlMasks*100))
-			drawnow limitrate
+			%drawnow limitrate
 			if AnzahlMasks==1
 				pixel_mask=imread(fullfile(PathName,FileName));
 			else
@@ -41,7 +41,7 @@ if size(filepath,1) > 1 %did the user load images?
 			%imshow(A, 'Parent',pivlab_axis);
 			handles=gui.gethand;
 			masks_in_frame=gui.retr('masks_in_frame');
-			masks_in_frame=mask.px_to_rois(blocations,floor(get(handles.fileselector, 'value'))-1+i,masks_in_frame);%apply mask at the current frame and the following frames.
+			masks_in_frame=mask.px_to_rois(blocations,floor(get(handles.fileselector, 'value'))-1+i,masks_in_frame,'off');%apply mask at the current frame and the following frames.
 			gui.put('masks_in_frame',masks_in_frame);
 		end
 		mask.redraw_masks
@@ -51,4 +51,5 @@ if size(filepath,1) > 1 %did the user load images?
 		gui.toolsavailable(1)
 	end
 end
+toc
 

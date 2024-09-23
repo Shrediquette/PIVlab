@@ -1,5 +1,5 @@
 % readB16.m
-function image = readB16(dirPath, filename)
+function image = f_readB16(dirPath, filename)
 % readB16.m  Read PCO *.b16 image file
 %
 % image = readB16(filename)
@@ -100,7 +100,8 @@ fseek(fd, headLength, 'bof');
 image = fread(fd, [imgWidth,imgHeight], 'uint16');
 
 % rotate and flip image to suit user
-image = flipud(image');  
+image = flipud(image'); 
+image=im2double(image);
 image=image/max(image(:));
 fclose(fd);
 end

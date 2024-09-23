@@ -15,7 +15,7 @@ if size(filepath,1) > 1 %did the user load images?
 	currentframe=floor(get(handles.fileselector, 'value'));
 	masks_in_frame=gui.retr('masks_in_frame');
 	masks_in_frame{currentframe}=[];%remove any pre-existing mask in the curretn frame
-	masks_in_frame=mask.px_to_rois(blocations,currentframe,masks_in_frame);
+	masks_in_frame=mask.px_to_rois(blocations,currentframe,masks_in_frame,'on');
 	gui.put('masks_in_frame',masks_in_frame);
 	mask.redraw_masks
 	gui.sliderdisp(gui.retr('pivlab_axis'));
