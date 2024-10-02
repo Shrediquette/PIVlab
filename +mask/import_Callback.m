@@ -1,6 +1,5 @@
 function import_Callback (~,~,~)
 filepath=gui.retr('filepath');
-tic
 if size(filepath,1) > 1 %did the user load images?
 	sessionpath=gui.retr('sessionpath');
 	if isempty(sessionpath)
@@ -51,5 +50,3 @@ if size(filepath,1) > 1 %did the user load images?
 		gui.toolsavailable(1)
 	end
 end
-toc
-

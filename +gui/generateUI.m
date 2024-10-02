@@ -215,7 +215,7 @@ parentitem=get(handles.uipanel25_2, 'Position');
 
 
 item=[0 0 parentitem(3) 1.5];
-handles.mask_bright_or_dark = uicontrol(handles.uipanel25_2,'Style','popupmenu','String',{'Bright area mask generator','Dark area mask generator','Low contrast area mask generator'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_bright_or_dark','Callback',@mask.bright_or_dark_Callback, 'TooltipString','Select different automatic mask generators here');
+handles.mask_bright_or_dark = uicontrol(handles.uipanel25_2,'Style','popupmenu','String',{'Bright area mask generator','Dark area mask generator','Low contrast area mask generator', 'Custom script (coming soon)'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_bright_or_dark','Callback',@mask.bright_or_dark_Callback, 'TooltipString','Select different automatic mask generators here');
 
 
 %% bright area mask generator
@@ -231,7 +231,7 @@ size_width=parentitem(3)/10*1.5;
 
 %binarize
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1];
-handles.binarize_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',1, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@mask.binarize_enable_Callback,'Tag','binarize_enable','TooltipString','Enable this mask generator');
+handles.binarize_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@mask.binarize_enable_Callback,'Tag','binarize_enable','TooltipString','Enable this mask generator');
 
 item=[checkbox_width item(2) filter_text_width 1];
 handles.binarize_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Enable','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_text');
@@ -310,7 +310,7 @@ handles.mask_fill_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'va
 item=[checkbox_width item(2) filter_text_width 1];
 handles.fill_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Fill holes','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','fill_text');
 
-
+mask.binarize_enable_Callback
 
 %% dark area mask generator
 parentitem=get(handles.uipanel25_2, 'Position');
