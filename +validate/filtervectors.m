@@ -50,32 +50,32 @@ if size(resultslist,2)>=frame
 
 			[A,rawimageA]=import.get_img(selected);
 			[B,rawimageB]=import.get_img(selected+1);
-			[u,v,~,~,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
+			[u,v,~,~,~] = postproc.PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
 		end
 
 		%correlation filter
 		do_corr2_filter = get(handles.do_corr2_filter, 'value');
 		if do_corr2_filter == 1
 			corr_filter_thresh=str2double(get(handles.corr_filter_thresh,'String'));
-			[u,v] = PIVlab_correlation_filter (u,v,corr_filter_thresh,resultslist{12,frame});
+			[u,v] = postproc.PIVlab_correlation_filter (u,v,corr_filter_thresh,resultslist{12,frame});
 		end
 
 		%Notch velocity magnitude filter
 		do_notch_filter = get(handles.notch_filter, 'value');
 		if do_notch_filter == 1
-			[u,v] = PIVlab_notch_filter (u,v,calu,calv,str2double(get(handles.notch_L_thresh,'String')),str2double(get(handles.notch_H_thresh,'String')));
+			[u,v] = postproc.PIVlab_notch_filter (u,v,calu,calv,str2double(get(handles.notch_L_thresh,'String')),str2double(get(handles.notch_H_thresh,'String')));
 		end
 
 		%vector-based filtering
-		[u,v] = PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
+		[u,v] = postproc.PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
 
 		typevector(isnan(u))=2;
 		typevector(isnan(v))=2;
 		typevector(typevector_original==0)=0; %restores typevector for mask
 		%interpolation using inpaint_NaNs
 		if get(handles.interpol_missing, 'value')==1
-			u=inpaint_nans(u,4);
-			v=inpaint_nans(v,4);
+			u=misc.inpaint_nans(u,4);
+			v=misc.inpaint_nans(v,4);
 		end
 		resultslist{7, frame} = u;
 		resultslist{8, frame} = v;

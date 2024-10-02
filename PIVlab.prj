@@ -12,7 +12,7 @@
     </param.icons>
     <param.summary>Tool for performing particle image velocimetry in MATLAB</param.summary>
     <param.description>PIVlab is an open-source particle image velocimetry (PIV) software that does not only calculate the velocity distribution within image pairs, but can also be used to derive, display and export multiple parameters of the flow pattern. A user-friendly graphical user interface (GUI) makes PIV analyses and data post-processing fast and efficient.</param.description>
-    <param.screenshot>${PROJECT_ROOT}\pivlab_logo1.png</param.screenshot>
+    <param.screenshot>${PROJECT_ROOT}\images\pivlab_logo1.png</param.screenshot>
     <param.version>2.36</param.version>
     <param.products.name>
       <item>MATLAB</item>
@@ -361,11 +361,11 @@
       <file>${PROJECT_ROOT}\+validate\validate_update_velocity_limits_information.m</file>
       <file>${PROJECT_ROOT}\+validate\validate_vector_val_Callback.m</file>
       <file>${PROJECT_ROOT}\+validate\validate_vel_limit_Callback.m</file>
-      <file>${PROJECT_ROOT}\f_readB16.m</file>
-      <file>${PROJECT_ROOT}\hardware_Ad.jpg</file>
-      <file>${PROJECT_ROOT}\hardware_Ad.m</file>
-      <file>${PROJECT_ROOT}\piv_analysis.m</file>
-      <file>${PROJECT_ROOT}\piv_quick.m</file>
+      <file>${PROJECT_ROOT}\+import\f_readB16.m</file>
+      <file>${PROJECT_ROOT}\images\hardware_Ad.jpg</file>
+      <file>${PROJECT_ROOT}\+misc\hardware_Ad.m</file>
+      <file>${PROJECT_ROOT}\+piv\piv_analysis.m</file>
+      <file>${PROJECT_ROOT}\+piv\piv_quick.m</file>
       <file>${PROJECT_ROOT}\PIVlab_capture_resources\PCO_resources\scripts\pco_camera_create_deffile.m</file>
       <file>${PROJECT_ROOT}\PIVlab_capture_resources\PCO_resources\scripts\pco_camera_def.txt</file>
       <file>${PROJECT_ROOT}\PIVlab_capture_resources\PCO_resources\scripts\pco_camera_load_defines.m</file>
@@ -405,55 +405,54 @@
       <file>${PROJECT_ROOT}\PIVlab_capture_resources\PIVlab_capture_pco.m</file>
       <file>${PROJECT_ROOT}\PIVlab_capture_resources\PIVlab_capture_sharpness_indicator.m</file>
       <file>${PROJECT_ROOT}\PIVlab_capture_resources\q_delay_to_laser_power_polynom.mat</file>
-      <file>${PROJECT_ROOT}\PIVlab_correlation_filter.m</file>
-      <file>${PROJECT_ROOT}\PIVlab_image_filter.m</file>
-      <file>${PROJECT_ROOT}\PIVlab_notch_filter.m</file>
-      <file>${PROJECT_ROOT}\PIVlab_postproc.m</file>
-      <file>${PROJECT_ROOT}\pivparpool.m</file>
-      <file>${PROJECT_ROOT}\pivprogress.m</file>
-      <file>${PROJECT_ROOT}\straddling_graph.m</file>
-      <file>${PROJECT_ROOT}\vid_hint.jpg</file>
-      <file>${PROJECT_ROOT}\vid_import.m</file>
+      <file>${PROJECT_ROOT}\+postproc\PIVlab_correlation_filter.m</file>
+      <file>${PROJECT_ROOT}\+postproc\PIVlab_image_filter.m</file>
+      <file>${PROJECT_ROOT}\+postproc\PIVlab_notch_filter.m</file>
+      <file>${PROJECT_ROOT}\+postproc\PIVlab_postproc.m</file>
+      <file>${PROJECT_ROOT}\+misc\pivparpool.m</file>
+      <file>${PROJECT_ROOT}\+gui\pivprogress.m</file>
+      <file>${PROJECT_ROOT}\+acquisition\straddling_graph.m</file>
+      <file>${PROJECT_ROOT}\images\vid_hint.jpg</file>
+      <file>${PROJECT_ROOT}\+import\vid_import.m</file>
     </fileset.depfun>
     <fileset.resources>
       <file>${PROJECT_ROOT}\Accuracy.m</file>
       <file>${PROJECT_ROOT}\applogo.jpg</file>
-      <file>${PROJECT_ROOT}\dctn.m</file>
-      <file>${PROJECT_ROOT}\exportfig.m</file>
-      <file>${PROJECT_ROOT}\fastLICFunction.c</file>
-      <file>${PROJECT_ROOT}\fastLICFunction.m</file>
-      <file>${PROJECT_ROOT}\finished.mp3</file>
-      <file>${PROJECT_ROOT}\hsbmap.mat</file>
-      <file>${PROJECT_ROOT}\icons.mat</file>
-      <file>${PROJECT_ROOT}\icons_quick.mat</file>
-      <file>${PROJECT_ROOT}\idctn.m</file>
-      <file>${PROJECT_ROOT}\inpaint_nans.m</file>
-      <file>${PROJECT_ROOT}\mmstream2.m</file>
+      <file>${PROJECT_ROOT}\+misc\dctn.m</file>
+      <file>${PROJECT_ROOT}\+export\exportfig.m</file>
+      <file>${PROJECT_ROOT}\+plot\fastLICFunction.c</file>
+      <file>${PROJECT_ROOT}\+plot\fastLICFunction.m</file>
+      <file>${PROJECT_ROOT}\+misc\finished.mp3</file>
+      <file>${PROJECT_ROOT}\+plot\hsbmap.mat</file>
+      <file>${PROJECT_ROOT}\images\icons.mat</file>
+      <file>${PROJECT_ROOT}\images\icons_quick.mat</file>
+      <file>${PROJECT_ROOT}\+misc\idctn.m</file>
+      <file>${PROJECT_ROOT}\+misc\inpaint_nans.m</file>
+      <file>${PROJECT_ROOT}\+plot\mmstream2.m</file>
       <file>${PROJECT_ROOT}\nanmax.m</file>
       <file>${PROJECT_ROOT}\nanmean.m</file>
       <file>${PROJECT_ROOT}\nanmin.m</file>
       <file>${PROJECT_ROOT}\nanstd.m</file>
-      <file>${PROJECT_ROOT}\parula.mat</file>
-      <file>${PROJECT_ROOT}\piv_DCC.m</file>
-      <file>${PROJECT_ROOT}\piv_FFTensemble.m</file>
-      <file>${PROJECT_ROOT}\piv_FFTmulti.m</file>
-      <file>${PROJECT_ROOT}\PIVlab_citing.fig</file>
-      <file>${PROJECT_ROOT}\PIVlab_citing.m</file>
-      <file>${PROJECT_ROOT}\PIVlab_commandline.m</file>
+      <file>${PROJECT_ROOT}\+plot\parula.mat</file>
+      <file>${PROJECT_ROOT}\+piv\piv_DCC.m</file>
+      <file>${PROJECT_ROOT}\+piv\piv_FFTensemble.m</file>
+      <file>${PROJECT_ROOT}\+piv\piv_FFTmulti.m</file>
+      <file>${PROJECT_ROOT}\+misc\PIVlab_citing.m</file>
+      <file>${PROJECT_ROOT}\Example_scripts\PIVlab_commandline.m</file>
       <file>${PROJECT_ROOT}\PIVlab_GUI.m</file>
-      <file>${PROJECT_ROOT}\pivlab_logo1.jpg</file>
+      <file>${PROJECT_ROOT}\images\pivlab_logo1.jpg</file>
       <file>${PROJECT_ROOT}\PIVlab_Original.project</file>
-      <file>${PROJECT_ROOT}\PIVlab_preproc.m</file>
+      <file>${PROJECT_ROOT}\+preproc\PIVlab_preproc.m</file>
       <file>${PROJECT_ROOT}\PIVlab_resources</file>
       <file>${PROJECT_ROOT}\PIVlab_settings_default.mat</file>
-      <file>${PROJECT_ROOT}\PIVlab_shortcuts.pdf</file>
+      <file>${PROJECT_ROOT}\help\PIVlab_shortcuts.pdf</file>
       <file>${PROJECT_ROOT}\PIVlab_toolbox.project</file>
-      <file>${PROJECT_ROOT}\PIVlablogo.jpg</file>
-      <file>${PROJECT_ROOT}\smoothn.m</file>
-      <file>${PROJECT_ROOT}\Testspeed.m</file>
-      <file>${PROJECT_ROOT}\thirdparty.txt</file>
-      <file>${PROJECT_ROOT}\uipickfiles.m</file>
-      <file>${PROJECT_ROOT}\uipickfiles_folder_icon.png</file>
+      <file>${PROJECT_ROOT}\images\PIVlablogo.jpg</file>
+      <file>${PROJECT_ROOT}\+misc\smoothn.m</file>
+      <file>${PROJECT_ROOT}\+misc\Testspeed.m</file>
+      <file>${PROJECT_ROOT}\help\thirdparty.txt</file>
+      <file>${PROJECT_ROOT}\+gui\uipickfiles.m</file>
+      <file>${PROJECT_ROOT}\+gui\uipickfiles_folder_icon.png</file>
     </fileset.resources>
     <fileset.package />
     <build-deliverables>

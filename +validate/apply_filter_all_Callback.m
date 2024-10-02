@@ -74,7 +74,7 @@ if ~isempty(resultslist)
 		notch_L_thresh=str2double(get(handles.notch_L_thresh,'String'));
 		notch_H_thresh=str2double(get(handles.notch_H_thresh,'String'));
 
-		hbar = pivprogress(size(slicedfilepath1,2),handles.apply_filter_all);
+		hbar = gui.pivprogress(size(slicedfilepath1,2),handles.apply_filter_all);
 		if size(u,2)<num_frames_to_process-1 %If not all frames have been analyzed. Parfor loop crashes otherwise.
 			u(num_frames_to_process-1)={[]};
 			v(num_frames_to_process-1)={[]};
@@ -89,8 +89,8 @@ if ~isempty(resultslist)
 					%% load images in a parfor loop
 					[~,~,ext] = fileparts(slicedfilepath1{i});
 					if strcmp(ext,'.b16')
-						currentimage1=f_readB16(slicedfilepath1{i});
-						currentimage2=f_readB16(slicedfilepath2{i});
+						currentimage1=import.f_readB16(slicedfilepath1{i});
+						currentimage2=import.f_readB16(slicedfilepath2{i});
 					else
 						currentimage1=imread(slicedfilepath1{i});
 						currentimage2=imread(slicedfilepath2{i});

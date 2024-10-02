@@ -14,8 +14,8 @@ if size(resultslist,2)>=frame
 	bright_filter_thresh=str2double(get(handles.bright_filter_thresh, 'String'));
 	[A,rawimageA]=import.get_img(selected);
 	[B,rawimageB]=import.get_img(selected+1);
-	[~,~,threshold_suggestion,~,~] = PIVlab_image_filter (0,1,x,y,u,v,0,bright_filter_thresh,A,B,rawimageA,rawimageB);
+	[~,~,threshold_suggestion,~,~] = postproc.PIVlab_image_filter (0,1,x,y,u,v,0,bright_filter_thresh,A,B,rawimageA,rawimageB);
 	set(handles.bright_filter_thresh, 'String',num2str(threshold_suggestion));
-	[u,v,~,~,~] = PIVlab_image_filter (0,1,x,y,u,v,0,threshold_suggestion,A,B,rawimageA,rawimageB);
+	[u,v,~,~,~] = postproc.PIVlab_image_filter (0,1,x,y,u,v,0,threshold_suggestion,A,B,rawimageA,rawimageB);
 end
 

@@ -1,3 +1,3 @@
 function howtocite_Callback(~, ~, ~)
-PIVlab_citing
+misc.PIVlab_citing
 

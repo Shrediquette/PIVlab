@@ -15,7 +15,7 @@ end
 if ~isequal(filename,0)
 	[~,~,ext] = fileparts(fullfile(pathname, filename));
 	if strcmp(ext,'.b16')
-		caliimg=f_readB16(fullfile(pathname, filename));
+		caliimg=import.f_readB16(fullfile(pathname, filename));
 	else
 		caliimg=imread(fullfile(pathname, filename));
 	end

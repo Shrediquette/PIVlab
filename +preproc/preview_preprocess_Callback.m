@@ -29,7 +29,7 @@ if size(filepath,1) >1 || gui.retr('video_selection_done') == 1
 	if size (roirect,2)<4
 		roirect=[1,1,size(img,2)-1,size(img,1)-1];
 	end
-	out = PIVlab_preproc (img,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+	out = preproc.PIVlab_preproc (img,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 	pivlab_axis=gui.retr('pivlab_axis');
 	image(out, 'parent',pivlab_axis, 'cdatamapping', 'scaled');
 	colormap('gray');

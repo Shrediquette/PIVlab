@@ -2,5 +2,5 @@
 
 function tests = test_piv_FFTmulti
 % calling piv_FFTmulti without arguments to get all its local functions
-tests = functiontests(piv_FFTmulti);
+tests = functiontests(piv.piv_FFTmulti);
 end

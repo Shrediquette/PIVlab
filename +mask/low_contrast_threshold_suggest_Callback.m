@@ -21,7 +21,7 @@ if size(filepath,1) > 1 %did the user load images?
 	u=zeros(size(x));
 	v=u;
 
-	[~,~,tresh_suggest,~,~] = PIVlab_image_filter (1,0,x,y,u,v,0,0,rawimage,rawimage,rawimage,rawimage);
+	[~,~,tresh_suggest,~,~] = postproc.PIVlab_image_filter (1,0,x,y,u,v,0,0,rawimage,rawimage,rawimage,rawimage);
 	set (handles.low_contrast_mask_threshold,'String',num2str(tresh_suggest));
 end
 

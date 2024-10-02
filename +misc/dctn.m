@@ -1,8 +1,9 @@
-function [y,w] = idctn(y,w)
+function [y,w] = dctn(y,w)
 
-%IDCTN N-D inverse discrete cosine transform.
-%   X = IDCTN(Y) inverts the N-D DCT transform, returning the original
-%   array if Y was obtained using Y = DCTN(X).
+%DCTN N-D discrete cosine transform.
+%   Y = DCTN(X) returns the discrete cosine transform of X. The array Y is
+%   the same size as X and contains the discrete cosine transform
+%   coefficients. This transform can be inverted using IDCTN.
 %
 %   Class Support
 %   -------------
@@ -29,20 +30,20 @@ function [y,w] = idctn(y,w)
 %       figure, imshow(I)
 %       figure, imshow(K,[0 255])
 %
-%   See also DCTN, IDCT, IDCT2.
+%   See also IDCTN, DCT, DCT2.
 %
-%   -- Damien Garcia -- 2009/04, revised 2009/11
+%   -- Damien Garcia -- 2008/06, revised 2009/11
 
 % ----------
-%   [Y,W] = IDCTN(X,W) uses and returns the weights which are used by the
-%   program. If IDCTN is required for several large arrays of same size,
-%   the weights can be reused to make the algorithm faster. A typical
-%   syntax is the following:
+%   [Y,W] = DCTN(X,W) uses and returns the weights which are used by the
+%   program. If DCTN is required for several large arrays of same size, the
+%   weights can be reused to make the algorithm faster. A typical syntax is
+%   the following:
 %      w = [];
 %      for k = 1:10
-%          [y{k},w] = idctn(x{k},w);
+%          [y{k},w] = dctn(x{k},w);
 %      end
-%   The weights (w) are calculated during the first call of IDCTN then
+%   The weights (w) are calculated during the first call of DCTN then
 %   reused in the next calls.
 % ----------
 
@@ -66,22 +67,21 @@ if ~exist('w','var') || isempty(w)
 end
 
 if ~isreal(y)
-    y = complex(idctn(real(y),w),idctn(imag(y),w));
+    y = complex(misc.dctn(real(y),w),misc.dctn(imag(y),w));
 else
-        for dim = 1:dimy
-            siz = size(y);
-            n = siz(1);
-            y = reshape(y,n,[]);
-            y = bsxfun(@times,y,w{dim});
-            y(1,:) = y(1,:)/sqrt(2);
-            y = ifft(y,[],1);
-            y = real(y*sqrt(2*n));
-            I = (1:n)*0.5+0.5;
-            I(2:2:end) = n-I(1:2:end-1)+1;
-            y = y(I,:);
-            y = reshape(y,siz);
-            y = shiftdim(y,1);            
-        end
+    for dim = 1:dimy
+        siz = size(y);
+        n = siz(1);
+        y = y([1:2:n 2*floor(n/2):-2:2],:);
+        y = reshape(y,n,[]);
+        y = y*sqrt(2*n);
+        y = ifft(y,[],1);
+        y = bsxfun(@times,y,w{dim});
+        y = real(y);
+        y(1,:) = y(1,:)/sqrt(2);
+        y = reshape(y,siz);
+        y = shiftdim(y,1);
+    end
 end
         
 y = reshape(y,sizy);

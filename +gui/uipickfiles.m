@@ -581,7 +581,7 @@ pickslist = uicontrol('Style','listbox',...
 		
 		ah1 = axes('units', 'pixels', 'Position',[388 308 350 270], 'xtick', [],'ytick',[]);
 		try
-			imshow(imread('pivlab_logo1.jpg'),'parent',ah1,'interpolation','bilinear');
+			imshow(imread(fullfile('images','pivlab_logo1.jpg')),'parent',ah1,'interpolation','bilinear');
 		catch
 			imshow(zeros(27,35)+0.75,'parent',ah1);
 		end
@@ -752,7 +752,7 @@ pickslist = uicontrol('Style','listbox',...
 						pick_full = fullfile(current_dir,pick);
 						%dir_pick.name = pick_full;
 						if numel(pick)-strfind(pick,'.b16')==3 %b16 is only grayscale
-							temp_img=f_readB16(pick_full);
+							temp_img=import.f_readB16(pick_full);
 							temp_img=imadjust(temp_img/max(temp_img(:)));
 							imshow (temp_img,'parent',ah1);
 						else
@@ -829,7 +829,7 @@ pickslist = uicontrol('Style','listbox',...
 				pick_full = fullfile(current_dir,pick{1,1});
 				figure(fig)
 				if numel(pick)-strfind(pick,'.b16')==3
-					temp_img=f_readB16(pick_full);
+					temp_img=import.f_readB16(pick_full);
 					temp_img=imadjust(temp_img/max(temp_img(:)));
 					imshow (temp_img,'parent',ah1);
 				else
@@ -1573,7 +1573,7 @@ fsdata.style = folder_style_pref;
 % If style = 1, check to make sure icon image file exists.  If it doesn't,
 % try to create it.  If that fails set style = 2.
 if fsdata.style == 1
-	icon_path = fullfile(pwd,'uipickfiles_folder_icon.png');
+	icon_path = fullfile(pwd,'+gui','uipickfiles_folder_icon.png');
 	%icon_path = fullfile(prefdir,'uipickfiles_folder_icon.png');
 	if ~exist(icon_path,'file')
 		success = generate_folder_icon(icon_path);

@@ -1,10 +1,10 @@
 function displogo(~)
 try
-	logoimg=imread('PIVlablogo.jpg');
+	logoimg=imread(fullfile('images','PIVlablogo.jpg'));
 catch
 	[filepath,name,ext]=  fileparts(which('PIVlab_GUI.m'));
 	cd (filepath); %if current directory is not where PIVlab_GUI.m is located, then change directory.
-	logoimg=imread('PIVlablogo.jpg');
+	logoimg=imread(fullfile('images','PIVlablogo.jpg'));
 end
 %{
 if zoom==1

@@ -19,8 +19,8 @@ for ensemble_i1=1:2:amount_input_imgs
 		%detect if it is b16 or standard pixel image
 		[~,~,ext] = fileparts(filepath{1});
 		if strcmp(ext,'.b16')
-			image1=f_readB16(filepath{ensemble_i1});
-			image2=f_readB16(filepath{ensemble_i1+1});
+			image1=import.f_readB16(filepath{ensemble_i1});
+			image2=import.f_readB16(filepath{ensemble_i1+1});
 		else
 			image1=imread(filepath{ensemble_i1});
 			image2=imread(filepath{ensemble_i1+1});
@@ -57,8 +57,8 @@ for ensemble_i1=1:2:amount_input_imgs
 	minintens2 = stretcher(1);
 	maxintens2 = stretcher(2);
 	%end
-	image1 = PIVlab_preproc (image1,roi_inpt,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens1,maxintens1);
-	image2 = PIVlab_preproc (image2,roi_inpt,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens2,maxintens2);
+	image1 = preproc.PIVlab_preproc (image1,roi_inpt,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens1,maxintens1);
+	image2 = preproc.PIVlab_preproc (image2,roi_inpt,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens2,maxintens2);
 
 	%% calculate the average mask that will be applied in the very end. It will remove all vectors where 100% of the input images have been masked.
 	%prepare a matrix for calculating the average mask of all images
@@ -381,8 +381,8 @@ if cancel == 0
 			end
 			if isempty(video_frame_selection) %list with image files was passed
 				if strcmp(ext,'.b16')
-					image1=f_readB16(filepath{ensemble_i1});
-					image2=f_readB16(filepath{ensemble_i1+1});
+					image1=import.f_readB16(filepath{ensemble_i1});
+					image2=import.f_readB16(filepath{ensemble_i1+1});
 				else
 					image1=imread(filepath{ensemble_i1});
 					image2=imread(filepath{ensemble_i1+1});
@@ -418,8 +418,8 @@ if cancel == 0
 			minintens2 = stretcher(1);
 			maxintens2 = stretcher(2);
 			%end
-			image1 = PIVlab_preproc (image1,roi_inpt,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens1,maxintens1);
-			image2 = PIVlab_preproc (image2,roi_inpt,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens2,maxintens2);
+			image1 = preproc.PIVlab_preproc (image1,roi_inpt,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens1,maxintens1);
+			image2 = preproc.PIVlab_preproc (image2,roi_inpt,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens2,maxintens2);
 			mask_inpt = converted_mask{floor((ensemble_i1+1)/2),1};
 			if numel(roi_inpt)>0
 				xroi=roi_inpt(1);
@@ -467,7 +467,7 @@ if cancel == 0
 			%multipass validation, smoothing
 			utable_orig=utable;
 			vtable_orig=vtable;
-			[utable,vtable] = PIVlab_postproc (utable,vtable,[],[], [], 1,4, 1,1.5);
+			[utable,vtable] = postproc.PIVlab_postproc (utable,vtable,[],[], [], 1,4, 1,1.5);
 			if GUI_avail==1
 				cancel=getappdata(hgui, 'cancel');
 				if cancel == 1
@@ -493,16 +493,16 @@ if cancel == 0
 				end
 			end
 			%replace nans
-			utable=inpaint_nans(utable,4);
-			vtable=inpaint_nans(vtable,4);
+			utable=misc.inpaint_nans(utable,4);
+			vtable=misc.inpaint_nans(vtable,4);
 			%smooth predictor
 			try
 				if multipass<passes-1
-					utable = smoothn(utable,0.6); %stronger smoothing for first passes
-					vtable = smoothn(vtable,0.6);
+					utable = misc.smoothn(utable,0.6); %stronger smoothing for first passes
+					vtable = misc.smoothn(vtable,0.6);
 				else
-					utable = smoothn(utable); %weaker smoothing for last pass
-					vtable = smoothn(vtable);
+					utable = misc.smoothn(utable); %weaker smoothing for last pass
+					vtable = misc.smoothn(vtable);
 				end
 			catch
 				%old matlab versions: gaussian kernel

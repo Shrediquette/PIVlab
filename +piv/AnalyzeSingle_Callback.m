@@ -50,7 +50,7 @@ if ok==1
 			minintens = stretcher(1);
 			maxintens = stretcher(2);
 		end
-		image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+		image1 = preproc.PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 		if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
 			if size(image2,3)>1
 				stretcher = stretchlim(rgb2gray(image2));
@@ -61,7 +61,7 @@ if ok==1
 			maxintens = stretcher(2);
 		end
 
-		image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+		image2 = preproc.PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 
 		current_mask_nr=floor(get(handles.fileselector, 'value'));
 		masks_in_frame=gui.retr('masks_in_frame');
@@ -81,7 +81,7 @@ if ok==1
 		subpixfinder=get(handles.subpix,'value');
 		do_correlation_matrices=gui.retr('do_correlation_matrices');
 		if get(handles.algorithm_selection,'Value')==3 %DCC
-			[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
+			[x, y, u, v, typevector] = piv.piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
 			correlation_map=zeros(size(u)); %nor correlation map available with DCC
 			correlation_matrices=[];
 		elseif get(handles.algorithm_selection,'Value')==1 || get(handles.algorithm_selection,'Value')==2 %fft and ensemble
@@ -104,7 +104,7 @@ if ok==1
 			delta_diff_min = str2double(get(handles.edit52x,'String'));
 			if get(handles.algorithm_selection,'Value')==1 %fft multi
 				try
-					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
+					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv.piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
 				catch ME
 					disp(getReport(ME))
 					gui.toolsavailable(1);

@@ -51,8 +51,8 @@ if size(filepath,1) > 1 %did the user load images?
 			%% load images in a parfor loop
 			[~,~,ext] = fileparts(slicedfilepath1{i});
 			if strcmp(ext,'.b16')
-				currentimage1=f_readB16(slicedfilepath1{i});
-				currentimage2=f_readB16(slicedfilepath2{i});
+				currentimage1=import.f_readB16(slicedfilepath1{i});
+				currentimage2=import.f_readB16(slicedfilepath2{i});
 			else
 				currentimage1=imread(slicedfilepath1{i});
 				currentimage2=imread(slicedfilepath2{i});

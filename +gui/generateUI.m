@@ -50,7 +50,7 @@ handles.zoomon = uicontrol(handles.tools,'Style','togglebutton','units', 'charac
 item=[parentitem(3)/2+parentitem(3)/2/2 item(2) parentitem(3)/2/2 parentitem(3)/2/2/4];
 handles.panon = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@gui.panon_Callback,'tag','panon','TooltipString','Pan');
 
-load icons.mat
+load (fullfile('images','icons.mat'))
 set(handles.zoomon, 'cdata',zoompic);
 set(handles.panon, 'cdata',panpic);
 
@@ -69,7 +69,7 @@ handles.quick4 = uicontrol(handles.quick,'Style','togglebutton','units', 'charac
 handles.quick5 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[5*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.quick5_Callback,'tag','quick5','TooltipString','Analyze');
 handles.quick6 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[6*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.quick6_Callback,'tag','quick6','TooltipString','Calibrate');
 
-load icons_quick.mat
+load (fullfile('images','icons_quick.mat'))
 set(handles.quick1, 'cdata',loadpic);
 set(handles.quick2, 'cdata',maskpic);
 set(handles.quick3, 'cdata',prepic);

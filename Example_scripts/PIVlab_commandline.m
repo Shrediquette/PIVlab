@@ -15,8 +15,8 @@ if nr_of_cores > 1
 	end
 end
 %% Create list of images inside user specified directory
-directory= fullfile(fileparts(mfilename('fullpath')) , 'Examples') ; %directory containing the images you want to analyze
-% default directory: PIVlab/Examples
+directory= fullfile(fileparts(mfilename('fullpath')) , 'Example_data') ; %directory containing the images you want to analyze
+% default directory: PIVlab/Example_data
 addpath(fileparts(mfilename('fullpath')));
 disp(fileparts(mfilename('fullpath')))
 
@@ -102,21 +102,21 @@ end
 %% Main PIV analysis loop:
 % parallel
 if nr_of_cores > 1
-	if pivparpool('size')<nr_of_cores
-		pivparpool('open',nr_of_cores);
+	if misc.pivparpool('size')<nr_of_cores
+		misc.pivparpool('open',nr_of_cores);
 	end
 
 	parfor i=1:size(slicedfilename1,2)  % index must increment by 1
 
 		[x{i}, y{i}, u{i}, v{i}, typevector{i},correlation_map{i}] = ...
-			piv_analysis(directory, slicedfilename1{i}, slicedfilename2{i},p,s,nr_of_cores,false);
+			piv.piv_analysis(directory, slicedfilename1{i}, slicedfilename2{i},p,s,nr_of_cores,false);
 	end
 else % sequential loop
 
 	for i=1:size(slicedfilename1,2)  % index must increment by 1
 
 		[x{i}, y{i}, u{i}, v{i}, typevector{i},correlation_map{i}] = ...
-			piv_analysis(directory, slicedfilename1{i}, slicedfilename2{i},p,s,nr_of_cores,true);
+			piv.piv_analysis(directory, slicedfilename1{i}, slicedfilename2{i},p,s,nr_of_cores,true);
 
 		disp([int2str((i+1)/amount*100) ' %']);
 
@@ -144,8 +144,8 @@ typevector_filt=typevector;
 
 if nr_of_cores >1 % parallel loop
 
-	if pivparpool('size')<nr_of_cores
-		pivparpool('open',nr_of_cores);
+	if misc.pivparpool('size')<nr_of_cores
+		misc.pivparpool('open',nr_of_cores);
 	end
 
 	parfor PIVresult=1:size(x,1)
@@ -183,7 +183,7 @@ clearvars -except p s r x y u v typevector directory filenames u_filt v_filt typ
 disp('DONE.')
 
 function [u_filt, v_filt,typevector_filt] = post_proc_wrapper(u,v,typevector,post_proc_setting,paint_nan)
-% wrapper function for PIVlab_postproc
+% wrapper function for postproc.PIVlab_postproc
 
 % INPUT
 % u, v: u and v components of vector fields
@@ -196,7 +196,7 @@ function [u_filt, v_filt,typevector_filt] = post_proc_wrapper(u,v,typevector,pos
 % typevector_filt: post-processed type vector
 
 
-[u_filt,v_filt] = PIVlab_postproc(u,v, ...
+[u_filt,v_filt] = postproc.PIVlab_postproc(u,v, ...
 	post_proc_setting{1,2},...
 	post_proc_setting{2,2},...
 	post_proc_setting{3,2},...
@@ -211,8 +211,8 @@ typevector_filt(isnan(v_filt))=2;
 typevector_filt(typevector==0)=0; %restores typevector for mask
 
 if paint_nan
-	u_filt=inpaint_nans(u_filt,4);
-	v_filt=inpaint_nans(v_filt,4);
+	u_filt=misc.inpaint_nans(u_filt,4);
+	v_filt=misc.inpaint_nans(v_filt,4);
 end
 
 

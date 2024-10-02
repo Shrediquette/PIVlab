@@ -59,7 +59,7 @@ try
 			%do not display ad
 		else
 			if exist('laser_device_id.mat','file') ~= 2
-				hardware_Ad
+				misc.hardware_Ad
 			end
 		end
 	end

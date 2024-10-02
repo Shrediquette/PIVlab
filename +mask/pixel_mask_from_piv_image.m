@@ -94,7 +94,7 @@ if mask_generator_settings.low_contrast_mask_enable
 	[x,y] = meshgrid(x_orig,y_orig);
 	u=zeros(size(x));
 	v=u;
-	[~,~,~,piv_image_3,~] = PIVlab_image_filter (1,0,x,y,u,v,0,0,piv_image_3,piv_image_3,piv_image_3,piv_image_3);
+	[~,~,~,piv_image_3,~] = postproc.PIVlab_image_filter (1,0,x,y,u,v,0,0,piv_image_3,piv_image_3,piv_image_3,piv_image_3);
 
 	if mask_generator_settings.mask_medfilt_enable_3
 		median_size = str2double(mask_generator_settings.median_size_3);

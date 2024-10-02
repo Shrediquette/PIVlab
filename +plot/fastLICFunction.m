@@ -31,7 +31,8 @@ end
 if success
 % execute the mex file that was just created
 disp('... compilation OK')
-funname = mfilename;
+funname = ['plot.' mfilename];
 funhandle = str2func(funname);
 [varargout{1:nargout}] = funhandle(varargin{:});
+
 end

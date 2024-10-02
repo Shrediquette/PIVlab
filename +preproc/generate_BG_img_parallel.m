@@ -15,8 +15,8 @@ if get(handles.bg_subtract,'Value')==1
 				if gui.retr('video_selection_done') == 0
 					[~,~,ext] = fileparts(filepath{1});
 					if strcmp(ext,'.b16')
-						image1=f_readB16(filepath{1});
-						image2=f_readB16(filepath{2});
+						image1=import.f_readB16(filepath{1});
+						image2=import.f_readB16(filepath{2});
 						imagesource='b16_image';
 					else
 						image1=imread(filepath{1});
@@ -89,16 +89,16 @@ if get(handles.bg_subtract,'Value')==1
 
 				end
 
-				hbar = pivprogress(numel(imagelist_A),handles.preview_preprocess);
+				hbar = gui.pivprogress(numel(imagelist_A),handles.preview_preprocess);
 				parfor	i=1:numel(imagelist_A)
 
 					image_to_add1=[];
 					image_to_add2=[];
 					counter=counter+1; %counts the amount of images --> do that elsewhere
 					if strcmp('b16_image',imagesource)
-						image_to_add1 = f_readB16(imagelist_A{i}); %will be double
+						image_to_add1 = import.f_readB16(imagelist_A{i}); %will be double
 						if sequencer==1 %not time-resolved
-							image_to_add2 = f_readB16(imagelist_B{i});
+							image_to_add2 = import.f_readB16(imagelist_B{i});
 						end
 					elseif strcmp('normal_pixel_image',imagesource)
 						image_to_add1 = imread(imagelist_A{i});

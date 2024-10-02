@@ -40,13 +40,13 @@ if ok==1
 				minintens = stretcher(1);
 				maxintens = stretcher(2);
 			end
-			A = PIVlab_preproc (A,[],clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+			A = preproc.PIVlab_preproc (A,[],clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
 				stretcher = stretchlim(B);
 				minintens = stretcher(1);
 				maxintens = stretcher(2);
 			end
-			B = PIVlab_preproc (B,[],clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+			B = preproc.PIVlab_preproc (B,[],clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 
 			interrogationarea=round(min(size(A))/4);
 			if interrogationarea > 128
@@ -56,11 +56,11 @@ if ok==1
 			if step < 6
 				step=6;
 			end
-			[x, y, u, v, typevector,~,correlation_matrices] = piv_FFTmulti (A,B,interrogationarea, step,1,[],[],1,32,16,16,'*linear',1,0,0,do_correlation_matrices,0,0);
+			[x, y, u, v, typevector,~,correlation_matrices] = piv.piv_FFTmulti (A,B,interrogationarea, step,1,[],[],1,32,16,16,'*linear',1,0,0,do_correlation_matrices,0,0);
 			u=medfilt2(u);
 			v=medfilt2(v);
-			u=inpaint_nans(u,4);
-			v=inpaint_nans(v,4);
+			u=misc.inpaint_nans(u,4);
+			v=misc.inpaint_nans(v,4);
 			maxvel=max(max(sqrt(u.^2+v.^2)));
 			%minimum size recommendation based on displacement
 			recommended1=ceil(4*maxvel/2)*2;

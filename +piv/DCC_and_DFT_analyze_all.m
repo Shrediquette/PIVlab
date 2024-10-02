@@ -118,7 +118,7 @@ if ok==1
 		info=text(60,50, 'Analyzing ...','color', 'r','FontName','FixedWidth','fontweight', 'bold', 'fontsize', 16, 'BackgroundColor', 'k', 'tag', 'annoyingthing');
 		drawnow;
 		calc_time_start=tic;
-		hbar = pivprogress(size(slicedfilepath1,2),handles.overall);
+		hbar = gui.pivprogress(size(slicedfilepath1,2),handles.overall);
 		set(handles.totaltime,'String','');
 
 		if get(handles.algorithm_selection,'Value')==3 %dcc
@@ -146,8 +146,8 @@ if ok==1
 
 				[~,~,ext] = fileparts(slicedfilepath1{i});
 				if strcmp(ext,'.b16')
-					currentimage1=f_readB16(slicedfilepath1{i});
-					currentimage2=f_readB16(slicedfilepath2{i});
+					currentimage1=import.f_readB16(slicedfilepath1{i});
+					currentimage2=import.f_readB16(slicedfilepath2{i});
 
 				else
 					currentimage1=imread(slicedfilepath1{i});
@@ -190,8 +190,8 @@ if ok==1
 					minintenst=stretcher(1);
 					maxintenst=stretcher(2);
 				end
-				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-				image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+				image1 = preproc.PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+				image2 = preproc.PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 
 
 				if numel(masks_in_frame)< i
@@ -202,7 +202,7 @@ if ok==1
 
 				converted_mask=mask.convert_masks_to_binary(size(currentimage1(:,:,1)),mask_positions);
 
-				[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect); %#ok<PFTUSW>
+				[x, y, u, v, typevector] = piv.piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect); %#ok<PFTUSW>
 				xlist{i}=x;
 				ylist{i}=y;
 				ulist{i}=u;
@@ -250,8 +250,8 @@ if ok==1
 
 				[~,~,ext] = fileparts(slicedfilepath1{i});
 				if strcmp(ext,'.b16')
-					currentimage1=f_readB16(slicedfilepath1{i});
-					currentimage2=f_readB16(slicedfilepath2{i});
+					currentimage1=import.f_readB16(slicedfilepath1{i});
+					currentimage2=import.f_readB16(slicedfilepath2{i});
 				else
 					currentimage1=imread(slicedfilepath1{i});
 					currentimage2=imread(slicedfilepath2{i});
@@ -299,9 +299,9 @@ if ok==1
 					minintenst=stretcher(1);
 					maxintenst=stretcher(2);
 				end
-				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-				image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min); %#ok<PFTUSW>
+				image1 = preproc.PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+				image2 = preproc.PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv.piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min); %#ok<PFTUSW>
 				xlist{i}=x;
 				ylist{i}=y;
 				ulist{i}=u;
@@ -386,7 +386,7 @@ if ok==1
 					minintens = stretcher(1);
 					maxintens = stretcher(2);
 				end
-				image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+				image1 = preproc.PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 				if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
 					if size(image2,3)>1
 						stretcher = stretchlim(rgb2gray(image2));
@@ -396,7 +396,7 @@ if ok==1
 					minintens = stretcher(1);
 					maxintens = stretcher(2);
 				end
-				image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+				image2 = preproc.PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 				interrogationarea=str2double(get(handles.intarea, 'string'));
 				step=str2double(get(handles.step, 'string'));
 				subpixfinder=get(handles.subpix,'value');
@@ -412,7 +412,7 @@ if ok==1
 				converted_mask=mask.convert_masks_to_binary(size(image1(:,:,1)),mask_positions);
 
 				if get(handles.algorithm_selection,'Value')==3 %dcc
-					[x, y, u, v, typevector] = piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
+					[x, y, u, v, typevector] = piv.piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
 					correlation_matrices=[];%not available for DCC
 				elseif get(handles.algorithm_selection,'Value')==1
 					passes=1;
@@ -432,7 +432,7 @@ if ok==1
 					repeat_last_pass = get(handles.repeat_last,'Value');
 					delta_diff_min = str2double(get(handles.edit52x,'String'));
 					[imdeform, repeat, do_pad] = piv.CorrQuality;
-					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
+					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv.piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min);
 					%u=real(u)
 					%v=real(v)
 				end
@@ -482,7 +482,7 @@ if ok==1
 	cancel=gui.retr('cancel');
 	if isempty(cancel)==1 || cancel ~=1
 		try
-			sound(audioread('finished.mp3'),44100);
+			sound(audioread(fullfile('+misc','finished.mp3')),44100);
 		catch
 		end
 	end

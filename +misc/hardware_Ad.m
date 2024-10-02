@@ -53,7 +53,7 @@ axis image;
 set(gca,'ActivePositionProperty','outerposition','Box','off','DataAspectRatioMode','auto','Layer','bottom','Units','normalized');
 axis off
 axes (axes_handle)
-imshow(imread('hardware_Ad.jpg'));drawnow
+imshow(imread(fullfile('images','hardware_Ad.jpg')));drawnow
 
 	function gotowebsite(~,~)
 		web('https://www.optolution.com/en/products/particle-image-velocimetry-piv/')

@@ -68,13 +68,13 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		xposition(i)=rawx;
 		yposition(i)=rawy;
 
-		h=streamline(mmstream2(x,y,ustream,vstream,xposition(i),yposition(i),'on'));
+		h=streamline(plot.mmstream2(x,y,ustream,vstream,xposition(i),yposition(i),'on'));
 		set (h,'tag','streamline');
 		i=i+1;
 	end
 	delete(findobj('tag','streamline'));
 	if exist('xposition','var')==1
-		h=streamline(mmstream2(x,y,ustream,vstream,xposition,yposition,'on'));
+		h=streamline(plot.mmstream2(x,y,ustream,vstream,xposition,yposition,'on'));
 		set (h,'tag','streamline');
 		contents = get(handles.streamlcolor,'String');
 		set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')})

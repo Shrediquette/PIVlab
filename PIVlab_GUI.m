@@ -22,7 +22,7 @@ if isempty(fh)
 	%{
 	splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','Loading...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','off','handlevisibility','on');
 	splash_ax=axes(splashscreen,'units','normalized');
-	imshow(imread('pivlab_logo1.jpg'),"Parent",splash_ax,'border','tight');
+	imshow(imread(fullfile('images','pivlab_logo1.jpg')),"Parent",splash_ax,'border','tight');
 	set(splash_ax,'Position',[0 0 1 1])
 	set(gca,'DataAspectRatioMode','auto')
 	movegui(splashscreen,'center');
@@ -120,7 +120,8 @@ if isempty(fh)
 	addpath(fullfile(tempfilepath, 'PIVlab_capture_resources'));
 	try
 		ctr=0;
-		pivFiles = {'dctn.m' 'idctn.m' 'inpaint_nans.m' 'piv_DCC.m' 'piv_FFTmulti.m' 'PIVlab_preproc.m' 'PIVlab_postproc.m' 'PIVlablogo.jpg' 'smoothn.m' 'uipickfiles.m' 'PIVlab_settings_default.mat' 'hsbmap.mat' 'parula.mat' 'exportfig.m' 'fastLICFunction.m' 'icons.mat' 'mmstream2.m' 'PIVlab_citing.m' 'icons_quick.mat' 'f_readB16.m' 'vid_import.m' 'vid_hint.jpg' 'PIVlab_capture_pco.m' 'PIVlab_image_filter.m' 'pivparpool.m' 'pivprogress.m' 'piv_analysis.m' 'piv_quick.m' 'PIVlab_notch_filter.m' 'PIVlab_correlation_filter.m' 'PIVlab_capture_devicectrl_GUI.m' 'PIVlab_capture_lensctrl_GUI.m' 'PIVlab_capture_lensctrl.m' 'PIVlab_capture_sharpness_indicator.m' 'straddling_graph.m' 'plasma.mat'};
+		disp ('check +folder names here')
+		pivFiles = {'PIVlab_settings_default.mat' 'PIVlab_capture_pco.m' 'PIVlab_capture_devicectrl_GUI.m' 'PIVlab_capture_lensctrl_GUI.m' 'PIVlab_capture_lensctrl.m' 'PIVlab_capture_sharpness_indicator.m'};
 		for i=1:size(pivFiles,2)
 			if exist(pivFiles{1,i},'file')~=2
 				disp(['ERROR: A required file was not found: ' pivFiles{1,i}]);
@@ -192,28 +193,28 @@ if isempty(fh)
 		gui.put('parallel',0);
 		try %checking for a parallel license file throws a huge error message wheh it is not available. This might scare users... Better: Try...catch block
 			if ~exist('desired_num_cores','var') %no input argument --> use all existing cores
-				if pivparpool('size')<=0 %no exisitng pool
-					pivparpool('open',feature('numCores')); %use all cores
+				if misc.pivparpool('size')<=0 %no exisitng pool
+					misc.pivparpool('open',feature('numCores')); %use all cores
 				end
 				gui.put('parallel',1);
 			else%parameter supplied
-				if desired_num_cores > 1 && desired_num_cores ~= pivparpool('size') %desired doesn't match existing pool
+				if desired_num_cores > 1 && desired_num_cores ~= misc.pivparpool('size') %desired doesn't match existing pool
 					if desired_num_cores > feature('numCores')%desired too many cores
 						desired_num_cores=feature('numCores');
 						disp('Selected too many cores. Adjusted to actually existing cores')
 					end
-					pivparpool('close')
-					pivparpool('open',desired_num_cores);
+					misc.pivparpool('close')
+					misc.pivparpool('open',desired_num_cores);
 					gui.put('parallel',1);
 				elseif desired_num_cores < 2 %leq than 1 core desired --> serial processing.
-					pivparpool('close')
+					misc.pivparpool('close')
 					gui.put('parallel',0);
-				elseif desired_num_cores==pivparpool('size')
+				elseif desired_num_cores==misc.pivparpool('size')
 					gui.put('parallel',1);
 				end
 			end
 			if gui.retr('parallel')==1
-				disp(['-> Distributed Computing Toolbox found. Parallel pool (' int2str(pivparpool('size')) ' workers) active (default settings).'])
+				disp(['-> Distributed Computing Toolbox found. Parallel pool (' int2str(misc.pivparpool('size')) ' workers) active (default settings).'])
 			else
 				disp('-> Distributed Computing disabled.')
 			end
@@ -222,7 +223,7 @@ if isempty(fh)
 		end
 
 		handles=gui.gethand;
-		load ('icons.mat','parallel_off','parallel_on');
+		load (fullfile('images','icons.mat'),'parallel_off','parallel_on');
 		if gui.retr('parallel') == 1
 			set(handles.toggle_parallel, 'cdata',parallel_on,'TooltipString','Parallel processing on. Click to turn off.');
 		else
@@ -253,8 +254,8 @@ if isempty(fh)
 	warning('off','serialport:serialport:ReadlineWarning')
 	if ~exist('pathname','var') || ~exist('homedir','var')
 		try
-			if exist(fullfile(fileparts(which('PIVlab_GUI.m')), 'Examples'),'dir') == 7 %if no previous path -> check if example dir exists
-				homedir =fullfile(fileparts(which('PIVlab_GUI.m')), 'Examples'); %... and use it as default
+			if exist(fullfile(fileparts(which('PIVlab_GUI.m')), 'Example_data'),'dir') == 7 %if no previous path -> check if example dir exists
+				homedir =fullfile(fileparts(which('PIVlab_GUI.m')), 'Example_data'); %... and use it as default
 				pathname=homedir;
 				disp('-> No previous path found, using default path.')
 			else %if example path doesnt exist -> use current directory

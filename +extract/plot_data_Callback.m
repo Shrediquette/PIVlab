@@ -290,7 +290,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 				amount_of_nans_in_circle(ind)=numel(find(isnan(c(ind,:))));
 			end
 			amount_of_nans_in_circle = amount_of_nans_in_circle / size(c,2);
-			c_interpolated=inpaint_nans(c); %interpolate all nans
+			c_interpolated=misc.inpaint_nans(c); %interpolate all nans
 			c_interpolated(amount_of_nans_in_circle>0.5,:)=nan; %set rows with more than 50% nan back to nan
 			for m=1:numel(length)
 				integral(m)=trapz(distance(m,:)*calxy,c_interpolated(m,:));

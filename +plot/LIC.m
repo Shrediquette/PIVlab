@@ -22,8 +22,8 @@ else
 	scalefactor=axessize(2)/yextend;
 end
 
-vx=inpaint_nans(vx); %otherwise LIC will make Matlab crash
-vy=inpaint_nans(vy);
+vx=misc.inpaint_nans(vx); %otherwise LIC will make Matlab crash
+vy=misc.inpaint_nans(vy);
 vx=imresize(vx,scalefactor*LICreso,'bicubic');
 vy=imresize(vy,scalefactor*LICreso,'bicubic');
 
@@ -50,14 +50,14 @@ noiseImage=rand(width,height);
 % Making LIC Image
 try
 	for m = 1:iterations
-		[LICImage, intensity,normvx,normvy] = fastLICFunction(double(vx),double(vy),noiseImage,kernel); % External Fast LIC implemennted in C language
+		[LICImage, intensity,normvx,normvy] = plot.fastLICFunction(double(vx),double(vy),noiseImage,kernel); % External Fast LIC implemennted in C language
 		LICImage = imadjust(LICImage); % Adjust the value range
 		noiseImage = LICImage;
 	end
 	out=LICImage;
 	delete(findobj('tag', 'waitplease'));
 catch
-	h=errordlg(['Could not run the LIC tool.' sprintf('\n') 'Probably the tool is not compiled correctly.' sprintf('\n')  'Please execute the following command in Matlab:' sprintf('\n') sprintf('\n') '     mex fastLICFunction.c     ' sprintf('\n') sprintf('\n') 'Then try again.'],'Error','on');
+	h=errordlg(['Could not run the LIC tool.' sprintf('\n') 'Probably the tool is not compiled correctly.' sprintf('\n')  'Please execute the following command in Matlab:' sprintf('\n') sprintf('\n') '     mex +plot\fastLICFunction.c     ' sprintf('\n') sprintf('\n') 'Then try again.'],'Error','on');
 	uiwait(h);
 	out=zeros(size(vx));
 end

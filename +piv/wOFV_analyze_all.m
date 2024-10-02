@@ -139,7 +139,7 @@ if ok==1
 			image2 = import.get_img(i+1);
 			set(handles.progress, 'string' , ['Frame progress: 0%']);drawnow; %#ok<*NBRAK>
 
-			image1 = PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+			image1 = preproc.PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
 				if size(image2,3)>1
 					stretcher = stretchlim(rgb2gray(image2));
@@ -149,7 +149,7 @@ if ok==1
 				minintens = stretcher(1);
 				maxintens = stretcher(2);
 			end
-			image2 = PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+			image2 = preproc.PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 
 			currentmask=floor((i+1)/2);
 
@@ -220,7 +220,7 @@ if ok==1
 	cancel=gui.retr('cancel');
 	if isempty(cancel)==1 || cancel ~=1
 		try
-			sound(audioread('finished.mp3'),44100);
+			sound(audioread(fullfile('+misc','finished.mp3')),44100);
 		catch
 		end
 	end

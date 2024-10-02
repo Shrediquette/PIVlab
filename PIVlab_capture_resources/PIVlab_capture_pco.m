@@ -771,11 +771,11 @@ else
 							B=adapthisteq(ima(act_ysize/2+1:end  ,  1:act_xsize));
 							A=A(ROI_live(2):ROI_live(2)+ROI_live(4) , ROI_live(1):ROI_live(1)+ROI_live(3));
 							B=B(ROI_live(2):ROI_live(2)+ROI_live(4) , ROI_live(1):ROI_live(1)+ROI_live(3));
-							[xtable, ytable, utable, vtable] = piv_quick (A,B,int_area, step);
+							[xtable, ytable, utable, vtable] = piv.piv_quick (A,B,int_area, step);
 							xtable=xtable+ROI_live(1);
 							ytable=ytable+ROI_live(2);
 							%0.008
-							[utable,vtable] = PIVlab_postproc (utable,vtable,1,1, [-10 10 -10 10], 1,7, 1,4);
+							[utable,vtable] = postproc.PIVlab_postproc (utable,vtable,1,1, [-10 10 -10 10], 1,7, 1,4);
 							set(quiver_handle,'Xdata',xtable,'ydata',ytable,'udata',utable*8,'vdata',vtable*8);
 						end
 						errorCode = calllib('PCO_CAM_SDK','PCO_AddBufferEx', out_ptr,0,0,bufnum(next),act_xsize,act_ysize,bitpix);

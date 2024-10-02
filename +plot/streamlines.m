@@ -8,7 +8,7 @@ if numel(streamlinesX)>0
 	vstream=v-(gui.retr('subtr_v')/gui.retr('calv'));
 	ustream(typevector==0)=nan;
 	vstream(typevector==0)=nan;
-	h=streamline(mmstream2(x,y,ustream,vstream,streamlinesX,streamlinesY,'on'),'parent',target_axis);
+	h=streamline(plot.mmstream2(x,y,ustream,vstream,streamlinesX,streamlinesY,'on'),'parent',target_axis);
 	set (h,'tag','streamline');
 	contents = get(handles.streamlcolor,'String');
 	set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')});

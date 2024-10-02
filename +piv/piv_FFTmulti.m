@@ -66,7 +66,7 @@ for multipass = 1:passes
 			%multipass validation, smoothing
 			utable_orig=utable;
 			vtable_orig=vtable;
-			[utable,vtable] = PIVlab_postproc (utable,vtable,[],[], [], 1,4, 1,1.5);
+			[utable,vtable] = postproc.PIVlab_postproc (utable,vtable,[],[], [], 1,4, 1,1.5);
 			
 			maskedpoints=numel(find((typevector)==0));
 			amountnans=numel(find(isnan(utable)))-maskedpoints;
@@ -103,15 +103,15 @@ for multipass = 1:passes
 
 			%replace nans
 			try
-				utable=inpaint_nans(utable,4);
-				vtable=inpaint_nans(vtable,4);
+				utable=misc.inpaint_nans(utable,4);
+				vtable=misc.inpaint_nans(vtable,4);
 				%smooth predictor
 				if multipass < passes
-					utable = smoothn(utable,0.9); %stronger smoothing for first passes
-					vtable = smoothn(vtable,0.9);
+					utable = misc.smoothn(utable,0.9); %stronger smoothing for first passes
+					vtable = misc.smoothn(vtable,0.9);
 				else
-					utable = smoothn(utable); %weaker smoothing for last pass(nb: BEFORE the image deformation. So the output is not smoothed!)
-					vtable = smoothn(vtable);
+					utable = misc.smoothn(utable); %weaker smoothing for last pass(nb: BEFORE the image deformation. So the output is not smoothed!)
+					vtable = misc.smoothn(vtable);
 				end
 			catch
 				disp('Error: Could not validate vector data, too few valid vectors.')
@@ -839,7 +839,7 @@ B((Pstart:Pend)-25, (Pstart:Pend)+20) = patch; % The patch is shifted by (-25, 2
 A = medfilt2(A, [9 9], 'symmetric');
 B = medfilt2(B, [9 9], 'symmetric');
 % Calculate velocity vectors
-[xtable, ytable, utable, vtable] = piv_FFTmulti(A, B, 80, 40, 1, [], [], 3, 40, 20, 0, '*linear', 0, 0, 0, 0, 0, 0);
+[xtable, ytable, utable, vtable] = piv.piv_FFTmulti(A, B, 80, 40, 1, [], [], 3, 40, 20, 0, '*linear', 0, 0, 0, 0, 0, 0);
 testCase.assertFalse(any(isnan(utable(:))));
 testCase.assertFalse(any(isnan(vtable(:))));
 % Verify that velocity vectors are close to actual solution

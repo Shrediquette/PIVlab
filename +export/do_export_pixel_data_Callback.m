@@ -116,14 +116,14 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 			switch selected_format
 				case 'PNG'
 					if use_exportfig
-						exportfig(export_figure,fullfile(pathname,newfilename),'Format','bmp','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
+						export.exportfig(export_figure,fullfile(pathname,newfilename),'Format','bmp','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
 						export.autocrop(fullfile(pathname,newfilename),0);
 					else
 						exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution)
 					end
 				case 'JPG'
 					if use_exportfig
-						exportfig(export_figure,fullfile(pathname,newfilename),'Format','bmp','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
+						export.exportfig(export_figure,fullfile(pathname,newfilename),'Format','bmp','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
 						export.autocrop(fullfile(pathname,newfilename),1);
 					else
 						exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution);
@@ -133,7 +133,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 						set(export_figure,'Units','inches');
 						pos = get(export_figure,'Position');
 						set(export_figure,'PaperPositionMode','auto','PaperUnits','inches','PaperPosition',[0,0,pos(3),pos(4)],'PaperSize',[pos(3), pos(4)])
-						exportfig(export_figure,fullfile(pathname,newfilename),'Format','pdf','color','CMYK','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
+						export.exportfig(export_figure,fullfile(pathname,newfilename),'Format','pdf','color','CMYK','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
 					else
 						exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','vector','resolution',resolution);
 					end

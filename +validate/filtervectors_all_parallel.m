@@ -12,7 +12,7 @@ end
 %do_contrast_filter=1
 if ~isempty(x)
 	if do_contrast_filter == 1 || do_bright_filter == 1
-		[u,v,~,~,~] = PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
+		[u,v,~,~,~] = postproc.PIVlab_image_filter (do_contrast_filter,do_bright_filter,x,y,u,v,contrast_filter_thresh,bright_filter_thresh,A,B,rawimageA,rawimageB);
 	end
 else
 	u=[];v=[];
@@ -21,7 +21,7 @@ end
 %correlation filter
 if ~isempty(x)
 	if do_corr2_filter == 1
-		[u,v] = PIVlab_correlation_filter (u,v,corr_filter_thresh,corr2_value);
+		[u,v] = postproc.PIVlab_correlation_filter (u,v,corr_filter_thresh,corr2_value);
 	end
 else
 	u=[];v=[];
@@ -30,13 +30,13 @@ end
 %Notch velocity magnitude filter
 if ~isempty(x)
 	if do_notch_filter == 1
-		[u,v] = PIVlab_notch_filter (u,v,calu,calv,notch_L_thresh,notch_H_thresh);
+		[u,v] = postproc.PIVlab_notch_filter (u,v,calu,calv,notch_L_thresh,notch_H_thresh);
 	end
 end
 
 if ~isempty(x)
 	%vector-based filtering
-	[u,v] = PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
+	[u,v] = postproc.PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
 else
 	u=[];v=[];
 end
@@ -46,7 +46,7 @@ typevector(isnan(v))=2;
 typevector(typevector_original==0)=0; %restores typevector for mask
 %interpolation using inpaint_NaNs
 if interpol_missing==1
-	u=inpaint_nans(u,4);
-	v=inpaint_nans(v,4);
+	u=misc.inpaint_nans(u,4);
+	v=misc.inpaint_nans(v,4);
 end
 

@@ -1,7 +1,7 @@
 function shortcuts_Callback (~, ~)
 try
-	open('PIVlab_shortcuts.pdf')
+	open(fullfile('help','PIVlab_shortcuts.pdf'))
 catch
-	msgbox('Could not open "PIVlab_Shortcuts.pdf".')
+	msgbox('Could not open "help\PIVlab_Shortcuts.pdf".')
 end
 

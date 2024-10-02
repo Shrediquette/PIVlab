@@ -9,10 +9,10 @@ handles=gui.gethand;
 gui.displogo(0)
 setappdata(hgui,'video_selection_done',0);
 if gui.retr('parallel')==1 %videos are not yet supported in parallel processing. But an opened parallel pool (that is not used) slows down video processing
-	pivparpool('close')
+	misc.pivparpool('close')
 	disp('Parallel video processing is not yet supported by PIVlab. Parallel pool was therefore closed.')
 end
-vid_import(pathname);
+import.vid_import(pathname);
 uiwait
 if getappdata(hgui,'video_selection_done')
 	gui.put('expected_image_size',[])

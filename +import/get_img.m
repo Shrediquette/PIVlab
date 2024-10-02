@@ -4,7 +4,7 @@ filepath = gui.retr('filepath');
 if gui.retr('video_selection_done') == 0
 	[~,~,ext] = fileparts(filepath{selected});
 	if strcmp(ext,'.b16')
-		currentimage=f_readB16(filepath{selected});
+		currentimage=import.f_readB16(filepath{selected});
 		rawimage=currentimage;
 	else
 		%disp(filepath{selected})

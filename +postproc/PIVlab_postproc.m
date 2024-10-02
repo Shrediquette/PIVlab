@@ -19,7 +19,7 @@ end
 if do_local_median==1
 	neigh_filt=medfilt2(u,[3,3],'symmetric');
 	try
-		neigh_filt=inpaint_nans(neigh_filt);
+		neigh_filt=misc.inpaint_nans(neigh_filt);
 	catch %above will fail if all vectos are filtered out before.
 		neigh_filt=NaN(size(neigh_filt));
 	end
@@ -28,7 +28,7 @@ if do_local_median==1
 
 	neigh_filt=medfilt2(v,[3,3],'symmetric');
 	try
-		neigh_filt=inpaint_nans(neigh_filt);
+		neigh_filt=misc.inpaint_nans(neigh_filt);
 	catch %above will fail if all vectos are filtered out before.
 		neigh_filt=NaN(size(neigh_filt));
 	end
@@ -54,8 +54,8 @@ end
 %% Gradient filter
 %{
 if do_gradient==1
-    u_filled=inpaint_nans(u);
-    v_filled=inpaint_nans(v);
+    u_filled=misc.inpaint_nans(u);
+    v_filled=misc.inpaint_nans(v);
     gradient_filt_x =abs(gradient(u_filled));
     gradient_filt_y =abs(gradient(v_filled));
     u(gradient_filt_x>neigh_thresh)=nan;

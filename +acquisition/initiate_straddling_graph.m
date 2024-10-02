@@ -16,7 +16,7 @@ if get(handles.ac_enable_straddling_figure, 'Value')==1
 		is_dbl_shutter = 0;
 	end
 	pco_first_frame_exposure = floor(str2double(get(handles.ac_interpuls,'String'))*str2double(get(handles.ac_power,'String'))/100)+1;
-	straddling_graph(blind_time,selected_fps,str2double(get(handles.ac_interpuls,'String')),str2double(get(handles.ac_power,'String')),4,is_dbl_shutter,pco_first_frame_exposure)
+	acquisition.straddling_graph(blind_time,selected_fps,str2double(get(handles.ac_interpuls,'String')),str2double(get(handles.ac_power,'String')),4,is_dbl_shutter,pco_first_frame_exposure)
 else
 	straddling_figure=findobj('tag','straddling_figure');
 	if ~isempty(straddling_figure)

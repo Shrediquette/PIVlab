@@ -44,8 +44,8 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 			v(isnan(u))=NaN;
 			typevector(isnan(u))=2;
 			typevector(typevector_original==0)=0;
-			u=inpaint_nans(u,4);
-			v=inpaint_nans(v,4);
+			u=misc.inpaint_nans(u,4);
+			v=misc.inpaint_nans(v,4);
 			resultslist{7, frame} = u;
 			resultslist{8, frame} = v;
 			resultslist{9, frame} = typevector;
@@ -66,11 +66,11 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 		smoothfactor=floor(get(handles.smoothstr, 'Value'));
 		try
 			if get(handles.algorithm_selection,'Value')~=4 %not optical flow
-				u = smoothn(u,smoothfactor/10); 
-				v = smoothn(v,smoothfactor/10); 
+				u = misc.smoothn(u,smoothfactor/10); 
+				v = misc.smoothn(v,smoothfactor/10); 
 			else %optical flow
-				u = smoothn(u,smoothfactor/10*20); 
-				v = smoothn(v,smoothfactor/10*20); 
+				u = misc.smoothn(u,smoothfactor/10*20); 
+				v = misc.smoothn(v,smoothfactor/10*20); 
 			end
 			%clc
 			%disp ('Using smoothn.m from Damien Garcia for data smoothing.')

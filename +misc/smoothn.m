@@ -325,7 +325,7 @@ while RobustIterativeProcess
     %---
     while tol>TolZ && nit<MaxIter
         nit = nit+1;
-        DCTy = dctn(Wtot.*(y-z)+z);
+        DCTy = misc.dctn(Wtot.*(y-z)+z);
         if isauto && ~rem(log2(nit),1)
             %---
             % The generalized cross-validation (GCV) method is used.
@@ -336,7 +336,7 @@ while RobustIterativeProcess
             %---
             fminbnd(@gcv,log10(sMinBnd),log10(sMaxBnd),opt);
         end
-        z = RF*idctn(Gamma.*DCTy) + (1-RF)*z;
+        z = RF*misc.idctn(Gamma.*DCTy) + (1-RF)*z;
         
         % if no weighted/missing data => tol=0 (no iteration)
         tol = isweighted*norm(z0(:)-z(:))/norm(z(:));
@@ -395,7 +395,7 @@ function GCVscore = gcv(p)
         RSS = norm(DCTy(:).*(Gamma(:)-1))^2;
     else
         % take account of the weights to calculate RSS:
-        yhat = idctn(Gamma.*DCTy);
+        yhat = misc.idctn(Gamma.*DCTy);
         RSS = norm(sqrt(Wtot(IsFinite)).*(y(IsFinite)-yhat(IsFinite)))^2;
     end
     %---
@@ -418,11 +418,11 @@ end
 
 %% Test for DCTN and IDCTN
 function test4DCTNandIDCTN
-    if ~exist('dctn','file')
+    if ~exist(fullfile('+misc','dctn'),'file')
         error('MATLAB:smoothn:MissingFunction',...
             ['DCTN and IDCTN are required. Download DCTN <a href="matlab:web(''',...
             'http://www.biomecardio.com/matlab/dctn.html'')">here</a>.'])
-    elseif ~exist('idctn','file')
+    elseif ~exist(fullfile('+misc','idctn'),'file')
         error('MATLAB:smoothn:MissingFunction',...
             ['DCTN and IDCTN are required. Download IDCTN <a href="matlab:web(''',...
             'http://www.biomecardio.com/matlab/idctn.html'')">here</a>.'])
@@ -454,11 +454,11 @@ function z = InitialGuess(y,I)
     end
     %-- coarse fast smoothing using one-tenth of the DCT coefficients
     siz = size(z);
-    z = dctn(z);
+    z = misc.dctn(z);
     for k = 1:ndims(z)
         z(ceil(siz(k)/10)+1:end,:) = 0;
         z = reshape(z,circshift(siz,[0 1-k]));
         z = shiftdim(z,1);
     end
-    z = idctn(z);
+    z = misc.idctn(z);
 end

@@ -64,13 +64,13 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 		avail_maps=get(handles.colormap_choice,'string');
 		selected_index=get(handles.colormap_choice,'value');
 		if selected_index == 4 %HochschuleBremen map
-			load('hsbmap.mat','hsb');
+			load(fullfile('+plot','hsbmap.mat'),'hsb');
 			MAP = colormap(hsb);
 		elseif selected_index== 1 %parula
-			load('parula.mat','parula')
+			load(fullfile('+plot','parula.mat'),'parula')
 			MAP = colormap (parula);
 			elseif selected_index== 16 %plasma
-			load('plasma.mat','plasma')
+			load(fullfile('+plot','plasma.mat'),'plasma')
 			MAP = colormap (plasma);
 		else
 			MAP = colormap(avail_maps{selected_index});
