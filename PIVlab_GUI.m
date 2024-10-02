@@ -114,17 +114,16 @@ if isempty(fh)
 		end
 		disp('Could not load default settings. But this doesn''t really matter.')
 	end
-	%% check required files
+	%% check required package folders
 	tempfilepath = fileparts(which('PIVlab_GUI.m'));
 	addpath(tempfilepath);
 	addpath(fullfile(tempfilepath, 'PIVlab_capture_resources'));
 	try
 		ctr=0;
-		disp ('check +folder names here')
-		pivFiles = {'PIVlab_settings_default.mat' 'PIVlab_capture_pco.m' 'PIVlab_capture_devicectrl_GUI.m' 'PIVlab_capture_lensctrl_GUI.m' 'PIVlab_capture_lensctrl.m' 'PIVlab_capture_sharpness_indicator.m'};
+		pivFiles = {'+acquisition' '+calibrate' '+export' '+extract' '+gui' '+import' '+mask' '+misc' '+piv' '+plot' '+postproc' '+preproc' '+roi' '+simulate' '+validate' '+wOFV' 'OptimizationSolvers' 'PIVlab_capture_resources'};
 		for i=1:size(pivFiles,2)
-			if exist(pivFiles{1,i},'file')~=2
-				disp(['ERROR: A required file was not found: ' pivFiles{1,i}]);
+			if exist(pivFiles{1,i},'dir')~=7
+				disp(['ERROR: A required package folder was not found: ' pivFiles{1,i}]);
 				disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
 				beep;commandwindow;pause
 			else
@@ -132,10 +131,10 @@ if isempty(fh)
 			end
 		end
 		if ctr==size(pivFiles,2)
-			disp('-> All required files found.')
+			disp('-> All required package folders found.')
 		end
 	catch
-		disp('-> Problem detecting required files.')
+		disp('-> Problem detecting required package folders.')
 	end
 	%%
 	gui.generateUI
