@@ -15,6 +15,7 @@ try
 disp(['trying to compile MEX file from ' mexsrc ' ...']);
 cd(mexdir);
 mex(mexsrc);
+pause(1)
 cd(pwdir);
 success = true;
 
@@ -24,7 +25,7 @@ disp(lasterr);
 error('could not locate MEX file for %s', mexname);
 disp(['Please try to compile the file ' mexsrc ' manually.']);
 disp('You might need to run "mex -setup" in Matlab before compilation');
-cd(pwdir);
+%cd(pwdir);
 success = false;
 end
 
