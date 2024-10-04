@@ -46,8 +46,8 @@ if isempty(fh)
 	catch
 		build_date=' ';
 	end
-	
-	if ~exist ('build_date','var') 
+
+	if ~exist ('build_date','var')
 		build_date=' ';
 	end
 	if isempty(build_date)
@@ -117,6 +117,8 @@ if isempty(fh)
 	%% check required package folders
 	tempfilepath = fileparts(which('PIVlab_GUI.m'));
 	addpath(tempfilepath);
+	addpath(fullfile(tempfilepath, 'images'));
+	addpath(fullfile(tempfilepath, 'help'));
 	addpath(fullfile(tempfilepath, 'PIVlab_capture_resources'));
 	try
 		ctr=0;
