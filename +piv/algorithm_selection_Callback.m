@@ -69,7 +69,7 @@ if selection ==4 %wOFV
 	set(handles.text14,'visible','off')
 	set(handles.subpix,'visible','off')
 	set(handles.textSuggest,'visible','off')
-	set(handles.SuggestSettings,'visible','off')
+	set(handles.SuggestSettings,'visible','on')
 	delete (findobj('tag','intareadispl'))%do not display visuals about interrogation area
 end
 %suggestion to reduce vector display density
