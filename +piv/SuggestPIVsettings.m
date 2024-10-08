@@ -122,7 +122,7 @@ if ok==1
 				v=misc.inpaint_nans(v,4);
 
 				[EtaPred,PatchSizePred] = wOFV.PredictSmoothnessCoefficient(x,y,u,v,A_raw,B_raw,roirect);
-
+				gui.toolsavailable(1)
 				uiwait(msgbox({'These are the recommendations for wOFV parameters:';[''];['Smoothness (eta): ' num2str(EtaPred)];['Patch size: ' num2str(PatchSizePred)];[''];'The settings are updated automatically.'},'Suggestion for wOFV settings','modal'));
 
 				set (handles.ofv_median,'Value', 1); %revert to default?
