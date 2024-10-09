@@ -6,6 +6,10 @@ function [EtaPred,PatchSizePred] = PredictSmoothnessCoefficient(x,y,u_filt,v_fil
 %note roirect should select a square region -- preferrably of size 256x256
 %(but it would work otherwise)
 
+%need to normalize the images to [0,1] as that's what wOFV takes
+I0 = im2double(I0);
+I1 = im2double(I1);
+
 %interpolate the results to the full image size
 [X,Y] = ndgrid(1:size(I0,1),1:size(I0,2));
 InterpObju = griddedInterpolant(x',y',u_filt,'linear','linear');
@@ -87,3 +91,6 @@ if MostProbableVectorMag > 14
 else
     PatchSizePred = 256;
 end
+
+%Ensure that the patch size predicted isn't larger than the image size itself
+PatchSizePred = min(min(size(I0)),PatchSizePred); 
