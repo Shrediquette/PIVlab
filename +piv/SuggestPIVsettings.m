@@ -25,6 +25,9 @@ if ok==1
 		if NearImSqSize < 64
 			NearImSqSize=64;
 		end
+		if NearImSqSize > 256
+			NearImSqSize=256;
+		end
 		deltasize=round(roirect(3) - NearImSqSize);
 		regionOfInterest.Position = [roirect(1:2)+deltasize/2 NearImSqSize NearImSqSize];
 		regionOfInterest.Label=['Adjusted size to ' num2str(NearImSqSize) ' x ' num2str(NearImSqSize) ' px'];
@@ -32,13 +35,9 @@ if ok==1
 	end
 
 	if numel(roirect) == 4
-
-
-
 		if roirect(3) < 64 || roirect(4)< 64
 			uiwait(msgbox({'The rectangle you selected is too small.';'Please select a larger rectangle.';'(should be larger than 64 x 64 pixels)'},'Suggestion for PIV settings','modal'));
 		else
-
 			text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
 			drawnow
 			[A,~] = import.get_img(selected);
@@ -47,26 +46,25 @@ if ok==1
 			B_raw = B;
 			A=A(roirect(2):roirect(2)+roirect(4)-1,roirect(1):roirect(1)+roirect(3)-1);
 			B=B(roirect(2):roirect(2)+roirect(4)-1,roirect(1):roirect(1)+roirect(3)-1);
-			clahe=get(handles.clahe_enable,'value');
-			highp=get(handles.enable_highpass,'value');
-			intenscap=get(handles.enable_intenscap, 'value');
-			clahesize=str2double(get(handles.clahe_size, 'string'))*2; % faster...
-			highpsize=str2double(get(handles.highp_size, 'string'));
-			wienerwurst=get(handles.wienerwurst, 'value');
-			wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-			do_correlation_matrices=gui.retr('do_correlation_matrices');
+			clahe=1;
+			highp=0;
+			intenscap=0;
+			clahesize=64;
+			highpsize=15;
+			wienerwurst=0;
+			wienerwurstsize=3;
+			do_correlation_matrices=0;
 
-			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-				stretcher = stretchlim(A);
-				minintens = stretcher(1);
-				maxintens = stretcher(2);
-			end
+			stretcher = stretchlim(A);
+			minintens = stretcher(1);
+			maxintens = stretcher(2);
+
 			A = preproc.PIVlab_preproc (A,[],clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-				stretcher = stretchlim(B);
-				minintens = stretcher(1);
-				maxintens = stretcher(2);
-			end
+
+			stretcher = stretchlim(B);
+			minintens = stretcher(1);
+			maxintens = stretcher(2);
+
 			B = preproc.PIVlab_preproc (B,[],clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
 
 			interrogationarea=round(min(size(A))/4);
@@ -85,7 +83,7 @@ if ok==1
 			maxvel=max(max(sqrt(u.^2+v.^2)));
 			%minimum size recommendation based on displacement
 			recommended1=ceil(4*maxvel/2)*2;
-			
+
 			A_part=A;
 			B_part=B;
 
@@ -120,8 +118,7 @@ if ok==1
 				[u,v] = postproc.PIVlab_postproc (u,v,[],[], [], 1,6,1,3); %validate results
 				u=misc.inpaint_nans(u,4); %fill holes
 				v=misc.inpaint_nans(v,4);
-
-				[EtaPred,PatchSizePred] = wOFV.PredictSmoothnessCoefficient(x,y,u,v,A_raw,B_raw,roirect);
+				[EtaPred,PatchSizePred] = wOFV.PredictSmoothnessCoefficient(x,y,u,v,A,B);
 				gui.toolsavailable(1)
 				uiwait(msgbox({'These are the recommendations for wOFV parameters:';[''];['Smoothness (eta): ' num2str(EtaPred)];['Patch size: ' num2str(PatchSizePred)];[''];'The settings are updated automatically.'},'Suggestion for wOFV settings','modal'));
 

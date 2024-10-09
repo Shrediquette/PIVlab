@@ -1,24 +1,10 @@
-function [EtaPred,PatchSizePred] = PredictSmoothnessCoefficient(x,y,u_filt,v_filt,I0Org,I1Org,roirect)
+function [EtaPred,PatchSizePred] = PredictSmoothnessCoefficient(x,y,u_filt,v_filt,I0,I1)
 
 %takes in an image pair, along with the correlation
 %velocity field, and returns the smoothness parameter eta
 %EtaPred is the etaUnScaled variable in PIVLab
 %note roirect should select a square region -- preferrably of size 256x256
 %(but it would work otherwise)
-
-%I think PIVLab always returns cells, so just converting those to simple
-%double arrays here to avoid any complications
-%{
-x = double(x{1});
-y = double(y{1});
-u_filt = double(u_filt{1});
-v_filt = double(v_filt{1});
-%}
-
-
-%crop the images according to ROI -- ROI needs to be squared. 
-I0 = I0Org(roirect(2):roirect(2)+roirect(4)-1,roirect(1):roirect(1)+roirect(3)-1);
-I1 = I1Org(roirect(2):roirect(2)+roirect(4)-1,roirect(1):roirect(1)+roirect(3)-1); 
 
 %interpolate the results to the full image size
 [X,Y] = ndgrid(1:size(I0,1),1:size(I0,2));
@@ -52,10 +38,7 @@ end
 
 %% Load the Ni's and Fmat for JD and JR Computation
 %JR
-%FMat = load(['Filter matrices/bior6.8/' num2str(size(I0,1)) '/Fmats.mat']);
-
 FMat  = load(fullfile(filepath,'+wOFV','Filter matrices','bior6.8',num2str(size(I0,1)) ,'Fmats.mat'));
-
 
 Ni = cat(3,FMat.N0,FMat.N1,FMat.N2,FMat.N3,FMat.N4);
 Fw = FMat.Fw;
