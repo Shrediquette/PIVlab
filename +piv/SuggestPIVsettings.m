@@ -25,9 +25,6 @@ if ok==1
 		if NearImSqSize < 64
 			NearImSqSize=64;
 		end
-		if NearImSqSize > 256
-			NearImSqSize=256;
-		end
 		deltasize=round(roirect(3) - NearImSqSize);
 		regionOfInterest.Position = [roirect(1:2)+deltasize/2 NearImSqSize NearImSqSize];
 		regionOfInterest.Label=['Adjusted size to ' num2str(NearImSqSize) ' x ' num2str(NearImSqSize) ' px'];
