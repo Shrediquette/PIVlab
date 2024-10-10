@@ -1,7 +1,7 @@
 % Example script how to use PIVlab from the commandline
 % Just run this script to see what it does.
 % You can adjust the settings in "s" and "p", specify a mask and a region of interest
-clc; clear all
+clc; clear
 
 nr_of_cores = 1; % integer, 1 means single core, greater than 1 means parallel
 if nr_of_cores > 1
@@ -15,10 +15,10 @@ if nr_of_cores > 1
 	end
 end
 %% Create list of images inside user specified directory
-directory= fullfile(fileparts(mfilename('fullpath')) , 'Example_data') ; %directory containing the images you want to analyze
-% default directory: PIVlab/Example_data
-addpath(fileparts(mfilename('fullpath')));
-disp(fileparts(mfilename('fullpath')))
+directory= fullfile(fileparts(fileparts(which('PIVlab_commandline.m'))),'Example_data') ; %directory containing the images you want to analyze
+% Note that I dont find an easy way to select the PIVlab\Example_data folder
+
+addpath(fileparts(fileparts(which('PIVlab_commandline.m')))); %add the PIVlab folder to search path
 
 suffix='*.jpg'; %*.bmp or *.tif or *.jpg or *.tiff or *.jpeg
 disp(['Looking for ' suffix ' files in the selected directory.']);
