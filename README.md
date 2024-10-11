@@ -10,8 +10,8 @@ Listen to a podcast about PIVlab, its development and ideas for the future:
 **PIVlab comes with it's own unique hardware: Pulsed lasers, LEDs, synchronizers and cameras are available here: [Optolution.com](https://www.optolution.com/en/products/particle-image-velocimetry-piv/)**
 **   **
 
-Download the Matlab Toolbox Package (PIVlab.mltbx) on the releases page:
-https://github.com/Shrediquette/PIVlab/releases
+*Download the Matlab Toolbox Package (PIVlab.mltbx) on the releases page:
+https://github.com/Shrediquette/PIVlab/releases*
 
 Video tutorial 1/3: Quickstart guide
 https://youtube.com/watch?v=g2hcTRAzBvY
@@ -30,8 +30,10 @@ https://youtu.be/8B5M31NWlJc
 
 **Please ask your questions in the PIVlab forum:** http://pivlab.blogspot.de/p/forum.html
 
-**   **
- Thanks to the [thousands of publications that use PIVlab for research](https://scholar.google.de/scholar?cites=819244312015141543)!
+**  **
+
 
 PIVlab [can be run online using MATLAB online](https://youtu.be/EQHfAmRxXw4?si=X77HabqAIbuHRIGT). MATLAB online is free (after registration) with a limited usage time per user (20 hrs/month):
 [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=Shrediquette/PIVlab&file=PIVlab_GUI.m)
+
+Thanks to the [thousands of publications that use PIVlab for research](https://scholar.google.de/scholar?cites=819244312015141543)!
