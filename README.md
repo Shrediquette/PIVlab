@@ -28,7 +28,7 @@ https://youtu.be/8B5M31NWlJc
 
 **Installation:** https://github.com/Shrediquette/PIVlab/wiki#installation-instructions
 
-**Please ask your questions in the PIVlab forum:** http://pivlab.blogspot.de/p/forum.html
+**Please ask your questions in the PIVlab forum:** https://groups.google.com/g/pivlab
 
 **  **
 
