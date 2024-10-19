@@ -2,6 +2,8 @@ function temporal_operation_Callback(~, ~, type)
 handles=gui.gethand;
 filepath=gui.retr('filepath');
 filename=gui.retr('filename');
+framenum=gui.retr('framenum');
+framepart=gui.retr('framepart');
 resultslist=gui.retr('resultslist');
 
 if isempty(resultslist)==0
@@ -16,15 +18,21 @@ if isempty(resultslist)==0
 			for i=size(ismean,1):-1:1 %remove averaged results
 				if ismean(i,1)==1
 					filepath(i*2,:)=[];
-					filename(i*2,:)=[];
 					filepath(i*2-1,:)=[];
+					filename(i*2,:)=[];
 					filename(i*2-1,:)=[];
+					framenum(i*2,:)=[];
+					framenum(i*2-1,:)=[];
+					framepart(i*2,:)=[];
+					framepart(i*2-1,:)=[];
 					resultslist(:,i)=[];
 					ismean(i,:)=[];
 				end
 			end
 			gui.put('filepath',filepath);
 			gui.put('filename',filename);
+			gui.put('framenum',framenum);
+			gui.put('framepart',framepart);
 			gui.put('resultslist',resultslist);
 			gui.put('ismean',[]);
 			gui.sliderrange(1)
@@ -140,7 +148,6 @@ if isempty(resultslist)==0
                         blocations = bwboundaries(converted_mask,'holes');
                         frame_where_to_put_the_average=size(resultslist,2)+1;
 						masks_in_frame(frame_where_to_put_the_average:end)=[];%remove any pre-existing mask in the curretn frame
-
 						masks_in_frame=mask.px_to_rois(blocations,frame_where_to_put_the_average,masks_in_frame,'on');
 						gui.put('masks_in_frame',masks_in_frame);
 					end
@@ -176,7 +183,6 @@ if isempty(resultslist)==0
 					eval(['vmittelselected=vmittel(:,:,[' str ']);']);
 					if type==2
 						%standard deviation
-						%ROCHE Modifikation
 						out_mean_u=std(umittelselected,0,3,'omitnan'); %#ok<*NANSTD,NODEF>
 						out_mean_v=std(vmittelselected,0,3,'omitnan'); %#ok<NODEF>
 						out_mean_u(typevectormean>=1.75)=nan; %discard everything that has less than 25% valid measurements
@@ -186,7 +192,6 @@ if isempty(resultslist)==0
 					end
 
 					if type==1
-						%ROCHE Modifikation
 						out_mean_u=mean(umittelselected,3,'omitnan');
 						out_mean_v=mean(vmittelselected,3,'omitnan');
 						out_mean_u(typevectormean>=1.75)=nan; %discard everything that has less than 25% valid measurements
@@ -211,6 +216,12 @@ if isempty(resultslist)==0
 					eval(['filepathselected=filepathselected([' str '],:);']);
 					filepath{size(filepath,1)+1,1}=filepathselected{1,1};
 					filepath{size(filepath,1)+1,1}=filepathselected{1,1};
+					disp('hier geht was nicht denke ich')
+					framenum (size(filepath,1)+1,1)=framenum(1,1);
+					framenum (size(filepath,1)+1,1)=framenum(1,1);
+					framepart(size(framepart,1)+1,:)=framepart(1,:);
+					framepart(size(framepart,1)+1,:)=framepart(1,:);
+
 					if gui.retr('video_selection_done') == 1
 						video_frame_selection=gui.retr('video_frame_selection');
 						video_frame_selection(end+1,1)=video_frame_selection(strnum(end)*2);
@@ -232,17 +243,17 @@ if isempty(resultslist)==0
 					end
 					ismean(size(resultslist,2),1)=1;
 					gui.put('ismean',ismean);
-
 					gui.put ('resultslist', resultslist);
 					gui.put ('filepath', filepath);
 					gui.put ('filename', filename);
+					gui.put ('framenum', framenum);
+					gui.put ('framepart', framepart);
 					gui.put ('typevector', typevector);
 					gui.sliderrange(1)
 					try
 						set (handles.fileselector,'value',get (handles.fileselector,'max'));
 					catch
 					end
-
 					gui.sliderdisp(gui.retr('pivlab_axis'))
 				end
 			else %user tried to average analyses with different sizes
@@ -251,4 +262,3 @@ if isempty(resultslist)==0
 		end
 	end
 end
-

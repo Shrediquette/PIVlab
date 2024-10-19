@@ -1,4 +1,4 @@
-function [xtable, ytable, utable, vtable, typevector,correlation_map] = piv_FFTensemble (autolimit,filepath,video_frame_selection,bg_img_A,bg_img_B,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roi_inpt,converted_mask,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad)
+function [xtable, ytable, utable, vtable, typevector,correlation_map] = piv_FFTensemble (autolimit,filepath,framenum,framepart,video_frame_selection,bg_img_A,bg_img_B,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roi_inpt,converted_mask,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad)
 %this funtion performs the  PIV analysis. It is a modification of the
 %pivFFTmulti, and will do ensemble correlation. That is a suitable
 %algorithm for low seeding density as it happens in microPIV.
@@ -22,8 +22,8 @@ for ensemble_i1=1:2:amount_input_imgs
 			image1=import.f_readB16(filepath{ensemble_i1});
 			image2=import.f_readB16(filepath{ensemble_i1+1});
 		else
-			image1=imread(filepath{ensemble_i1});
-			image2=imread(filepath{ensemble_i1+1});
+			image1=import.imread_wrapper(filepath{ensemble_i1},framenum(ensemble_i1),framepart(ensemble_i1,:));
+			image2=import.imread_wrapper(filepath{ensemble_i1+1},framenum(ensemble_i1+1),framepart(ensemble_i1+1,:));
 		end
 	else % video file was passed
 		image1 = read(filepath,video_frame_selection(ensemble_i1));
@@ -384,8 +384,8 @@ if cancel == 0
 					image1=import.f_readB16(filepath{ensemble_i1});
 					image2=import.f_readB16(filepath{ensemble_i1+1});
 				else
-					image1=imread(filepath{ensemble_i1});
-					image2=imread(filepath{ensemble_i1+1});
+					image1=import.imread_wrapper(filepath{ensemble_i1},framenum(ensemble_i1),framepart(ensemble_i1,:));
+					image2=import.imread_wrapper(filepath{ensemble_i1+1},framenum(ensemble_i1+1),framepart(ensemble_i1+1,:));
 				end
 			else % video file was passed
 				image1 = read(filepath,video_frame_selection(ensemble_i1));

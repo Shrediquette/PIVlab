@@ -2073,7 +2073,6 @@ set(handles.ac_msgbox,'BackgroundColor', get (handles.ac_msgbox,'BackgroundColor
 try
 	warning off
 	load('PIVlab_settings_default.mat','last_selected_device');
-
 	if exist('last_selected_device','var')
 		set(handles.ac_config, 'value',last_selected_device);
 	end
@@ -2081,7 +2080,10 @@ try
 catch
 
 end
-
+gui.put('multitiff',0); %default for compatibility: Not a multitiff.
+gui.put('pcopanda_dbl_image',0); %default for compatibility: Not a multitiff.
 
 disp('-> UI generated.')
+
+disp(' XXXXXXXXXX auf jeden fall noch load settings / session und save settings session mit den zusatz dateiinformationen ausstatten (framenum, framepart, pcopanda_dbl_image')
 

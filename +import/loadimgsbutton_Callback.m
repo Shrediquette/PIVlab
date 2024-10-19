@@ -16,20 +16,28 @@ end
 if useGUI ==1
 	if ispc==1
 		try
-			path=gui.uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+			[path, multitiff]=gui.uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 10000], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
 		catch
-			path=gui.uipickfiles ('FilterSpec', pwd, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+			[path, multitiff]=gui.uipickfiles ('FilterSpec', pwd, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 10000], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
 		end
 	else
 		try
-			path=gui.uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+			[path, multitiff]=gui.uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 10000], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
 		catch
-			path=gui.uipickfiles ('FilterSpec', pwd, 'numfiles', [2 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+			[path, multitiff]=gui.uipickfiles ('FilterSpec', pwd, 'numfiles', [1 10000], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
 		end
 	end
 	gui.put('expected_image_size',[])
 end
+
 if ~isequal(path,0)
+	%remove directories from list
+	for kk=size(path,1):-1:1
+		if path(kk).isdir == 1
+			path(kk)=[];
+		end
+	end
+
 	cla(gui.retr('pivlab_axis'))
 	setappdata(hgui,'video_selection_done',0);
 	if get(handles.zoomon,'Value')==1
@@ -45,62 +53,195 @@ if ~isequal(path,0)
 	extract.clear_plot_Callback
 
 	sequencer=gui.retr('sequencer');% 0=time resolved, 1 = pairwise, 2=reference
+	gui.put('multitiff',multitiff); %save in GUI if user opened a multitiff file.
 
 	% check if filenames end with "A" and "B", if yes: warn the user that he probably wants to use pairwise sequencing and not timeresolved.
-	[~,checkname_1,~]=fileparts(path(1).name);
-	[~,checkname_2,~]=fileparts(path(2).name);
-	if (strcmp(checkname_1(end),'A') || strcmp(checkname_1(end),'a')) && (strcmp(checkname_2(end),'B') || strcmp(checkname_2(end),'b'))
-		proposed_sequencing = 1;
-	else
-		proposed_sequencing = 2;
+	if size(path,1) > 1 && multitiff == 0
+		[~,checkname_1,~]=fileparts(path(1).name);
+		[~,checkname_2,~]=fileparts(path(2).name);
+		if (strcmp(checkname_1(end),'A') || strcmp(checkname_1(end),'a')) && (strcmp(checkname_2(end),'B') || strcmp(checkname_2(end),'b'))
+			proposed_sequencing = 1;
+		else
+			proposed_sequencing = 2;
+		end
+		if sequencer==0 && proposed_sequencing==1
+			ans_w=questdlg(['File name ending "A" and "B" detected. This indicates that you should use the "Pairwise" sequencing style instead of "Time resolved".' newline newline 'Should I fix this for you?'],'Sure?','Yes','No','Yes');
+			if strcmp(ans_w,'Yes')
+				sequencer=1;
+				gui.put('sequencer',sequencer);
+				save('PIVlab_settings_default.mat','sequencer','-append');
+			end
+		end
 	end
-	if sequencer==0 && proposed_sequencing==1
-		ans_w=questdlg(['File name ending "A" and "B" detected. This indicates that you should use the "Pairwise" sequencing style instead of "Time resolved".' newline newline 'Should I fix this for you?'],'Sure?','Yes','No','Yes');
-		if strcmp(ans_w,'Yes')
+
+	pcopanda_dbl_image=0;
+	if multitiff 	 %check if frames captured by pco panda as double image array.
+		temp_info=imfinfo(path(1).name);
+		if isfield(temp_info,'Software')
+			if strcmp (temp_info(1).Software,'PCO_Recorder')
+				pcopanda_dbl_image=1;
+			end
+		end
+
+		if pcopanda_dbl_image==1 && sequencer ~=1
+			uiwait(msgbox(['Detected a pco.panda generated double image multi-tiff file.' newline newline 'Sequencing style was changed to "pairwise" to account for the double images.'],'modal'));
 			sequencer=1;
 			gui.put('sequencer',sequencer);
 			save('PIVlab_settings_default.mat','sequencer','-append');
 		end
 	end
+	gui.put('pcopanda_dbl_image',pcopanda_dbl_image);
 
-	if sequencer==1
-		for i=1:size(path,1)
-			if path(i).isdir == 0 %remove directories from selection
+	if multitiff
+		frames_per_image_file=zeros(size(path,1),1);
+		for jj=1:size(path,1)
+			frames_per_image_file(jj)=size(imfinfo(path(jj).name),1);;
+		end
+		loopcntr=sum(frames_per_image_file);
+	else % single image files.
+		loopcntr=size(path,1);
+	end
+
+	if sequencer==1 % AB
+		if ~multitiff
+			for i=1:loopcntr
 				if exist('filepath','var')==0 %first loop
 					filepath{1,1}=path(i).name;
+					framenum(1,1)=1;
 				else
 					filepath{size(filepath,1)+1,1}=path(i).name; %#ok<AGROW>
+					framenum(size(framenum,1)+1,1)=1;
+				end
+			end
+		else % multitiff
+			if ~pcopanda_dbl_image
+
+				filepath=cell(0);
+				framenum=[];
+				cntr=1;
+				for i=1:size(path,1)
+					for jj=1:frames_per_image_file(i)
+						filepath{cntr,1}=path(i).name;
+						framenum(cntr,1)=jj;
+						cntr=cntr+1;
+					end
+				end
+			else
+				filepath=cell(0);
+				framenum=[];
+				framepart=[];
+				cntr=1;
+				img_height=size(imread(path(1).name,1),1); %read one file to detect image height to devide it by two later.
+				for i=1:size(path,1)
+					for jj=1:frames_per_image_file(i)
+						filepath{cntr,1}=path(i).name;
+						filepath{cntr+1,1}=path(i).name;
+						framenum(cntr,1)=jj;
+						framenum(cntr+1,1)=jj;
+						framepart(cntr,1)=1;
+						framepart(cntr,2)=img_height/2;
+						framepart(cntr+1,1)=img_height/2+1;
+						framepart(cntr+1,2)=img_height;
+						cntr=cntr+2;
+					end
 				end
 			end
 		end
-	elseif sequencer==0
-		for i=1:size(path,1)
-			if path(i).isdir == 0 %remove directories from selection
+	elseif sequencer==0 %time-resolved
+		if ~multitiff
+			for i=1:loopcntr
 				if exist('filepath','var')==0 %first loop
 					filepath{1,1}=path(i).name;
+					framenum(1,1)=1;
 				else
 					filepath{size(filepath,1)+1,1}=path(i).name; %#ok<AGROW>
 					filepath{size(filepath,1)+1,1}=path(i).name; %#ok<AGROW>
+					framenum(size(framenum,1)+1,1)=1;
+					framenum(size(framenum,1)+1,1)=1;
+				end
+			end
+		else % multitiff
+			filepath=cell(0);
+			framenum=[];
+			cntr=1;
+			for i=1:size(path,1)
+				for jj=1:frames_per_image_file(i)
+					if jj == 1 || jj== frames_per_image_file
+						filepath{cntr,1}=path(i).name;
+						framenum(cntr,1)=jj;
+						cntr=cntr+1;
+					else
+						filepath{cntr,1}=path(i).name;
+						filepath{cntr+1,1}=path(i).name;
+						framenum(cntr,1)=jj;
+						framenum(cntr+1,1)=jj;
+						cntr=cntr+2;
+					end
 				end
 			end
 		end
 	elseif sequencer == 2 % Reference image style
-		for i=1:size(path,1)
-			if path(i).isdir == 0 %remove directories from selection
+		if ~multitiff
+			for i=1:loopcntr
 				if exist('filepath','var')==0 %first loop
 					reference_image_i=i;
 					filepath=[];
+					framenum=[];
 				else
 					filepath{size(filepath,1)+1,1}=path(reference_image_i).name; %#ok<AGROW>
 					filepath{size(filepath,1)+1,1}=path(i).name; %#ok<AGROW>
+					framenum(size(framenum,1)+1,1)=1;
+					framenum(size(framenum,1)+1,1)=1;
+				end
+			end
+		else %multitiff
+			filepath=cell(0);
+			framenum=[];
+			cntr=1;
+			for i=1:size(path,1)
+				for jj=1:frames_per_image_file(i)
+					filepath{cntr,1}=path(1).name;
+					filepath{cntr+1,1}=path(i).name;
+					framenum(cntr,1)=1;
+					framenum(cntr+1,1)=jj;
+					cntr=cntr+2;
 				end
 			end
 		end
 	end
-	if size(filepath,1) > 1
+
+	if ~pcopanda_dbl_image %for non pco files, we also generate this list which tells us which pixels to load from the image file
+		[~,~,ext] = fileparts(path(1).name);
+		if strcmpi(ext,'.tif') || strcmpi(ext,'.tiff') %for a tiff file, imread accepts a layer index as additional argument, for other files not, WTF!!!
+			img_height=size(imread(path(1).name,1),1);
+		else
+			img_height=size(imread(path(1).name),1);
+		end
+		framepart(1,1)=1;
+		framepart(1,2)=img_height;
+		framepart=repmat(framepart,[size(filepath,1),1]);
+	end
+
+	%% Make error reporting for sequencing easier.
+	if numel(framenum) ~= numel(filepath)
+		disp('Error during sequencing.')
+		disp('Please send this debug file to William:')
+		disp([pwd filesep 'sequencing_error_report.mat'])
+		comp_info = computer;
+		matlab_info=ver;
+		myVarList=who;
+		for indVar = 1:length(myVarList)
+			assignin('base',myVarList{indVar},eval(myVarList{indVar}))
+		end
+		save sequencing_error_report.mat;
+		commandwindow
+	end
+
+	if loopcntr >= 1
 		if mod(size(filepath,1),2)==1
 			cutoff=size(filepath,1);
 			filepath(cutoff)=[];
+			framenum(cutoff)=[];
 		end
 		filename=cell(1);
 		for i=1:size(filepath,1)
@@ -110,17 +251,27 @@ if ~isequal(path,0)
 				zeichen=strfind(filepath{i,1},'/');
 			end
 			currentpath=filepath{i,1};
-			if mod(i,2) == 1
-				filename{i,1}=['A: ' currentpath(zeichen(1,size(zeichen,2))+1:end)];
+			if ~multitiff
+				if mod(i,2) == 1
+					filename{i,1}=['A: ' currentpath(zeichen(1,size(zeichen,2))+1:end)];
+				else
+					filename{i,1}=['B: ' currentpath(zeichen(1,size(zeichen,2))+1:end)];
+				end
 			else
-				filename{i,1}=['B: ' currentpath(zeichen(1,size(zeichen,2))+1:end)];
+				if mod(i,2) == 1
+					filename{i,1}=['A: ' currentpath(zeichen(1,size(zeichen,2))+1:end) ', layer: ' num2str(framenum(i))];
+				else
+					filename{i,1}=['B: ' currentpath(zeichen(1,size(zeichen,2))+1:end) ', layer: ' num2str(framenum(i))];
+				end
 			end
 		end
 		%extract path:
 		pathname=currentpath(1:zeichen(1,size(zeichen,2))-1);
-		gui.put('pathname',pathname); %last path
+		gui.put ('pathname',pathname); %last path
 		gui.put ('filename',filename); %only for displaying
 		gui.put ('filepath',filepath); %full path and filename for analyses
+		gui.put ('framenum',framenum); %important layer information for multi tiffs.
+		gui.put ('framepart',framepart); %Only needed for pco panda multi-frame tiffs.
 		gui.sliderrange(1)
 		set (handles.filenamebox, 'string', filename);
 		gui.put ('resultslist', []); %clears old results
@@ -166,4 +317,3 @@ if ~isequal(path,0)
 		errordlg('Please select at least two images ( = 1 pair of images)','Error','on')
 	end
 end
-

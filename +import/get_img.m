@@ -1,14 +1,16 @@
 function [currentimage,rawimage] = get_img(selected)
 handles=gui.gethand;
 filepath = gui.retr('filepath');
+framenum = gui.retr ('framenum');
+framepart = gui.retr ('framepart');
 if gui.retr('video_selection_done') == 0
 	[~,~,ext] = fileparts(filepath{selected});
 	if strcmp(ext,'.b16')
 		currentimage=import.f_readB16(filepath{selected});
 		rawimage=currentimage;
 	else
-		%disp(filepath{selected})
-		currentimage=imread(filepath{selected});
+		%currentimage=imread(filepath{selected},framenum(selected));
+		currentimage=import.imread_wrapper(filepath{selected},framenum(selected),framepart(selected,:));
 		rawimage=currentimage;
 	end
 else
