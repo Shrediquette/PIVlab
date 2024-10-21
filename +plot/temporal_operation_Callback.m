@@ -216,9 +216,8 @@ if isempty(resultslist)==0
 					eval(['filepathselected=filepathselected([' str '],:);']);
 					filepath{size(filepath,1)+1,1}=filepathselected{1,1};
 					filepath{size(filepath,1)+1,1}=filepathselected{1,1};
-					disp('hier geht was nicht denke ich')
-					framenum (size(filepath,1)+1,1)=framenum(1,1);
-					framenum (size(filepath,1)+1,1)=framenum(1,1);
+					framenum (size(framenum,1)+1,1)=framenum(1,1);
+					framenum (size(framenum,1)+1,1)=framenum(1,1);
 					framepart(size(framepart,1)+1,:)=framepart(1,:);
 					framepart(size(framepart,1)+1,:)=framepart(1,:);
 

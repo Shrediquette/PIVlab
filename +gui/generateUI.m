@@ -2084,6 +2084,3 @@ gui.put('multitiff',0); %default for compatibility: Not a multitiff.
 gui.put('pcopanda_dbl_image',0); %default for compatibility: Not a multitiff.
 
 disp('-> UI generated.')
-
-disp(' XXXXXXXXXX auf jeden fall noch load settings / session und save settings session mit den zusatz dateiinformationen ausstatten (framenum, framepart, pcopanda_dbl_image')
-
