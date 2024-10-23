@@ -6,5 +6,5 @@ else
 	image_data=imread(filename);
 end
 if ~isempty(rows)
-	image_data = image_data (rows(1):rows(2),:);
+	image_data = image_data (rows(1):rows(2),:,:);
 end
