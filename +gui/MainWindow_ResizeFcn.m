@@ -24,20 +24,20 @@ if colorbarpos==1
 else
 	posichoice = get(handles.colorbarpos,'String');
 	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'EastOutside')
-		width_reduct=25;x_shift=0;
+		width_reduct=30;x_shift=0;
 		height_reduct=0;y_shift=0;
 	end
 	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'WestOutside')
-		width_reduct=25;x_shift=25;
+		width_reduct=30;x_shift=30;
 		height_reduct=0;y_shift=0;
 	end
 	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'NorthOutside')
-		width_reduct=6;x_shift=3;
-		height_reduct=4;y_shift=0;
+		width_reduct=8;x_shift=4;
+		height_reduct=5;y_shift=0;
 	end
 	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'SouthOutside')
-		width_reduct=6;x_shift=3;
-		height_reduct=4;y_shift=5;
+		width_reduct=8;x_shift=4;
+		height_reduct=5;y_shift=6;
 	end
 end
 if (panelheighttools+panelheightpanels+margin*0.25+margin*0.25+quickheight*2 ) <= Figure_Size(4)

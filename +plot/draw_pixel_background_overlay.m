@@ -165,17 +165,17 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 		posichoice = get(handles.colorbarpos,'String');
 
 		parentfigure_of_target_axis=ancestor(target_axis,'figure');
-		coloobj=colorbar(posichoice{get(handles.colorbarpos,'Value')},'Fontsize',9,'HitTest','off','parent',parentfigure_of_target_axis);
+		coloobj=colorbar(posichoice{get(handles.colorbarpos,'Value')},'Fontsize',12,'HitTest','off','parent',parentfigure_of_target_axis);
 
 		axis (target_axis,'image');
 		strcmp(posichoice{get(handles.colorbarpos,'Value')},'EastOutside');
 		strcmp(posichoice{get(handles.colorbarpos,'Value')},'WestOutside');
 
 		if strcmp(posichoice{get(handles.colorbarpos,'Value')},'EastOutside')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'WestOutside')==1
-			ylabel(coloobj,name{gui.retr('displaywhat')},'fontsize',9,'fontweight','bold');
+			ylabel(coloobj,name{gui.retr('displaywhat')},'fontsize',12,'fontweight','bold'); %9
 		end
 		if strcmp(posichoice{get(handles.colorbarpos,'Value')},'NorthOutside')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'SouthOutside')==1
-			xlabel(coloobj,name{gui.retr('displaywhat')},'fontsize',11,'fontweight','bold');
+			xlabel(coloobj,name{gui.retr('displaywhat')},'fontsize',12,'fontweight','bold'); %11
 		end
 
 		tickamount=min([colormap_steps 8])+1; % depends on the amount of colormap steps
