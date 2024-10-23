@@ -767,21 +767,26 @@ setpref('uipickfiles','figure_position',fig_pos)
 							else
 								i_compression='Uncompressed';
 							end
-
+							dbl_img=[];
+							if isfield(info,'Software')
+								if strcmpi (info(1).Software, 'PCO_Recorder')
+									dbl_img='dual shutter';
+								end
+							end
 							i_bits=info(1).BitDepth;
 							i_frames=size(info,1);
 							if i_frames > 1
-								framestring = 'frames';
+								framestring = 'layers';
 								multitiff=1;
 							else
-								framestring = 'frame';
+								framestring = 'layer';
 								multitiff=0;
 							end
 							i_filesize=round(info(1).FileSize/1024/1014,1);
 							i_width=info(1).Width;
 							i_height=info(1).Height;
 							delete(findobj('Tag','fileinfo'));
-							text('String',{[num2str(i_width) '*' num2str(i_height) ' - ' num2str(i_bits)  ' bit - ' num2str(i_filesize) ' MB' ],[i_compression ' - ' num2str(i_frames) ' ' framestring]},'Position',[1 1],'parent',ah1,'HorizontalAlignment','left','VerticalAlignment','top','BackgroundColor','k','Color','w','Margin',0.1,'Clipping','on','LineStyle','none','Interpreter','none','FontSize',8,'Tag','fileinfo')
+							text('String',{[num2str(i_width) '*' num2str(i_height) ' - ' num2str(i_bits)  ' bit - ' num2str(i_filesize) ' MB' ],[i_compression ' - ' num2str(i_frames) ' ' framestring, ', ' dbl_img]},'Position',[1 1],'parent',ah1,'HorizontalAlignment','left','VerticalAlignment','top','BackgroundColor','k','Color','w','Margin',0.1,'Clipping','on','LineStyle','none','Interpreter','none','FontSize',8,'Tag','fileinfo')
 						end
 						ylabel('enhanced image display')
 					catch
