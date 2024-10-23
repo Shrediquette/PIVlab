@@ -309,6 +309,7 @@ if isempty(fh)
 		gui.put('batchModeActive',0)
 	else
 		if exist (batch_session_file,'file')
+			gui.put('batchModeActive',1)
 			[filepath,name,ext] = fileparts(batch_session_file);
 			import.load_session_Callback (1,batch_session_file)
 			disp('')
@@ -322,8 +323,6 @@ if isempty(fh)
 			validate.apply_filter_all_Callback
 			disp('...saving output...')
 			export.save_session_Callback(1,batch_session_file_output)
-
-			gui.put('batchModeActive',1)
 			disp('done, exiting...')
 			gui.MainWindow_CloseRequestFcn
 		else

@@ -1,6 +1,10 @@
 function algorithm_selection_Callback(hObject, ~, ~)
 handles=gui.gethand;
 selection=get(hObject,'Value');
+batchModeActive=gui.retr('batchModeActive');
+if isempty (batchModeActive)
+	batchModeActive = 0;
+end
 if selection ==1 % piv fft multi
 	set(handles.uipanel42,'visible','on')
 	set(handles.uipanel41,'visible','on')
@@ -75,14 +79,14 @@ end
 %suggestion to reduce vector display density
 current_vector_setting=get(handles.nthvect,'String');
 if selection ==4 %wOFV
-	if ~strcmp(current_vector_setting,'5')
+	if ~strcmp(current_vector_setting,'5') && ~batchModeActive
 		ans_w=questdlg(['wOFV results in one vector per pixel. Displaying all vectors is not recommended.' newline newline 'Should I reduce the vector display density for you?' newline newline 'You can manually change this by going to Plot -> Modify plot appearance -> plot every nth vector'],'Vector display density','Yes','No','Yes');
 		if strcmp(ans_w,'Yes')
 			set(handles.nthvect,'String',5)
 		end
 	end
 else
-	if ~strcmp(current_vector_setting,'1')
+	if ~strcmp(current_vector_setting,'1') && ~batchModeActive		
 		ans_w=questdlg(['You are currently not plotting every calculated vector.' newline newline 'Should I apply the standard vector display setting for you?' newline newline 'You can manually change this by going to Plot -> Modify plot appearance -> plot every nth vector'],'Vector display density','Yes','No','Yes');
 		if strcmp(ans_w,'Yes')
 			set(handles.nthvect,'String',1)

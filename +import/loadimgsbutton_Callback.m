@@ -7,6 +7,10 @@ else
 end
 handles=gui.gethand;
 gui.displogo(0)
+batchModeActive=gui.retr('batchModeActive');
+if isempty (batchModeActive)
+	batchModeActive = 0;
+end
 %remember imagesize of currently loaded images
 try
 	old_img_size=size(import.get_img(1));
@@ -64,7 +68,7 @@ if ~isequal(path,0)
 		else
 			proposed_sequencing = 2;
 		end
-		if sequencer==0 && proposed_sequencing==1
+		if sequencer==0 && proposed_sequencing==1 && ~batchModeActive
 			ans_w=questdlg(['File name ending "A" and "B" detected. This indicates that you should use the "Pairwise" sequencing style instead of "Time resolved".' newline newline 'Should I fix this for you?'],'Sure?','Yes','No','Yes');
 			if strcmp(ans_w,'Yes')
 				sequencer=1;
@@ -84,7 +88,9 @@ if ~isequal(path,0)
 		end
 
 		if pcopanda_dbl_image==1 && sequencer ~=1
-			uiwait(msgbox(['Detected a pco.panda generated double image multi-tiff file.' newline newline 'Sequencing style was changed to "pairwise" to account for the double images.'],'modal'));
+			if ~batchModeActive
+				uiwait(msgbox(['Detected a pco.panda generated double image multi-tiff file.' newline newline 'Sequencing style was changed to "pairwise" to account for the double images.'],'modal'));
+			end
 			sequencer=1;
 			gui.put('sequencer',sequencer);
 			save('PIVlab_settings_default.mat','sequencer','-append');
