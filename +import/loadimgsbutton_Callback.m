@@ -57,7 +57,11 @@ if ~isequal(path,0)
 	extract.clear_plot_Callback
 
 	sequencer=gui.retr('sequencer');% 0=time resolved, 1 = pairwise, 2=reference
-	gui.put('multitiff',multitiff); %save in GUI if user opened a multitiff file.
+	if exist('multitiff','var') && ~isempty(multitiff)
+		gui.put('multitiff',multitiff); %save in GUI if user opened a multitiff file.
+	else
+		multitiff=gui.retr('multitiff');
+	end
 
 	% check if filenames end with "A" and "B", if yes: warn the user that he probably wants to use pairwise sequencing and not timeresolved.
 	if size(path,1) > 1 && multitiff == 0

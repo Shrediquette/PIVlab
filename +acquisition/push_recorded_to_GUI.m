@@ -5,6 +5,11 @@ projectpath=get(handles.ac_project,'String');
 pathlist={};
 pathfilelist={};
 file_existing=zeros(imageamount,1);
+if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly')
+	gui.put('multitiff',1);
+else
+	gui.put('multitiff',0);
+end
 for i=1:imageamount
 	if ~strcmp(camera_type,'chronos')
 		pathfileA=fullfile(projectpath,['PIVlab_' sprintf('%4.4d',i-1) '_A.tif']);
