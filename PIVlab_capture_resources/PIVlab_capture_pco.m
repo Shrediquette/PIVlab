@@ -1,7 +1,7 @@
 function [OutputError,ima,framerate_max] = PIVlab_capture_pco(nr_of_images,exposure_time,TriggerModeString,ImagePath,framerate,do_realtime,ROI_live,binning,ROI_general,camera_type,measure_framerate_max)
 display_warning=0;
 filepath = fileparts(which('PIVlab_GUI.m'));
-addpath(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts'));
+
 
 if measure_framerate_max == 1
 	OutputError=0;

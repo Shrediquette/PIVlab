@@ -2,7 +2,7 @@ function calibcapture_Callback(~,~,~)
 filepath = fileparts(which('PIVlab_GUI.m'));
 camera_type=gui.retr('camera_type');
 if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') %calib
-	if exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_camera_load_defines.m'),'file')
+	if exist('pco_camera_load_defines.m','file') %pco.matlab must have been added to matlab search path
 		%addpath(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts'));
 		ready=1;
 	else

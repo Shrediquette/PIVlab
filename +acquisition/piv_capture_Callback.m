@@ -9,7 +9,7 @@ filepath = fileparts(which('PIVlab_GUI.m'));
 camera_type=gui.retr('camera_type');
 required_files_check=1;
 if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') %calib
-	if ~exist(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts\pco_camera_load_defines.m'),'file')
+	if ~exist('pco_camera_load_defines.m','file') %pco.matlab must be installed and permanently added to the search path
 		required_files_check=0;
 	end
 end
