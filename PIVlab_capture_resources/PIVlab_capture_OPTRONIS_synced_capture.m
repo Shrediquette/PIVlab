@@ -9,7 +9,7 @@ OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame;
 
 %% capture data
 
-while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture) &&  getappdata(hgui,'cancel_capture') ~=1
+while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdata(hgui,'cancel_capture') ~=1
     ima = image_handle_OPTRONIS.CData;
     if ~isinf(OPTRONIS_frames_to_capture)
         set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTRONIS_vid.FramesAcquired/2))]);

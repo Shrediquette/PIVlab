@@ -128,6 +128,7 @@ if value == 8 % OPTOcam
 	OPTOcam_bits =gui.retr('OPTOcam_bits');
 	if isempty (OPTOcam_bits)
 		OPTOcam_bits=8;
+		gui.put('OPTOcam_bits',8); %8bit
 	end
 
 	if OPTOcam_bits==8

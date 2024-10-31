@@ -95,11 +95,14 @@ item=[0 0 0 0];
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.loadimgsbutton = uicontrol(handles.multip01,'Style','pushbutton','String','Import images','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@import.loadimgsbutton_Callback,1,[]},'Tag','loadimgsbutton','TooltipString','Load image data');
 
-item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 handles.loadvideobutton = uicontrol(handles.multip01,'Style','pushbutton','String','Import video','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.loadvideobutton_Callback,'Tag','loadvideobutton','TooltipString','Load video file');
 
-item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 handles.loadsessionbutton = uicontrol(handles.multip01,'Style','pushbutton','String','Load session','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.load_session_Callback,'Tag','loadsessionbutton','TooltipString','Load previously saved session file');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
+handles.acquirebutton = uicontrol(handles.multip01,'Style','pushbutton','String','Acquire images','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.capture_images_Callback,'Tag','acquirebutton','TooltipString','Acquire PIV images in PIVlab');
 
 item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 1];
 handles.text2 = uicontrol(handles.multip01,'Style','text','units', 'characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Image list:');
