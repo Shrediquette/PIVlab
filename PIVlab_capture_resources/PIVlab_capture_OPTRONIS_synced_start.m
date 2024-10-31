@@ -99,7 +99,7 @@ OPTRONIS_src.AcquisitionFrameRate = frame_rate;
 
 %% start acqusition (waiting for trigger)
 OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame;
-OPTRONIS_vid.FramesPerTrigger = OPTRONIS_frames_to_capture;
+OPTRONIS_vid.FramesPerTrigger = OPTRONIS_frames_to_capture+2;
 if ~isinf(nr_of_images) %only start capturing if save box is ticked.
 	flushdata(OPTRONIS_vid);
 	OPTRONIS_vid.ErrorFcn = @CustomIMAQErrorFcn;
