@@ -15,6 +15,7 @@ if get(handles.enhance_images, 'Value')
 end
 
 image(cat(3, currentimage, currentimage, currentimage), 'parent',target_axis, 'cdatamapping', 'scaled');
+
 colormap('gray');
 axis image
 

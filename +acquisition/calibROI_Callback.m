@@ -33,7 +33,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 		max_cam_res=gui.retr('max_cam_res');
 		if strcmp(camera_type,'pco_panda')
 			try
-				[errorcode, caliimg,~]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,[1,1, max_cam_res(1)/binning,max_cam_res(2)/binning],camera_type,0);
+				[errorcode, caliimg]=PIVlab_capture_pco(6,expos,'SingleImage',projectpath,binning,[1,1, max_cam_res(1)/binning,max_cam_res(2)/binning],camera_type);
 			catch ME
 				disp(ME)
 				uiwait(msgbox('Camera not connected'))
@@ -86,7 +86,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 				m3 = uimenu(c_menu,'Label','pco.panda 7.5 Hz','Callback',@roi.setdefaultroi);
 				m4 = uimenu(c_menu,'Label','pco.panda 5 Hz','Callback',@roi.setdefaultroi);
 				m5 = uimenu(c_menu,'Label','pco.panda 3 Hz','Callback',@roi.setdefaultroi);
-				m6 = uimenu(c_menu,'Label','pco.panda 1 Hz','Callback',@roi.setdefaultroi);
+				m6 = uimenu(c_menu,'Label','pco.panda 1.5 Hz','Callback',@roi.setdefaultroi);
 				m7 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
 			end
 			if strcmp(camera_type,'basler')
@@ -169,6 +169,8 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 			save('PIVlab_settings_default.mat','ac_ROI_general','-append');
 			delete(ac_ROI_general_handle)
 			rectangle('Position',position,'EdgeColor','y','linewidth',2)
+			%{
+			%measuring max framerate is not necessary anymore. These numburs are now hardware-determined by the camera.
 			if strcmp(camera_type,'pco_panda')
 				%% jetzt nochmal mit finalen einstellungen bild capturen zum messen der framerate...
 				%Camera fps
@@ -180,6 +182,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 				delete(findobj('tag','roitxt'));
 				text(50,50,['Max framerate: ' num2str(round(framerate_max,2)) ' Hz'],'tag','roitxt','Color','yellow','FontSize',14,'FontWeight','bold')
 			end
+			%}
 			set(handles.ac_realtime,'Value',0);%reset realtime roi
 			gui.put('do_realtime',0);
 		end

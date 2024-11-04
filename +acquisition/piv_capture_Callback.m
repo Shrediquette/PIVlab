@@ -190,7 +190,7 @@ if required_files_check
 				acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
 				[OutputError,ima,frame_nr_display] = PIVlab_capture_chronos_synced_capture(cameraIP,imageamount,cam_fps,do_realtime,ac_ROI_realtime); %capture n images, display livestream
 			elseif value == 1 || value == 2 || value == 3 || value == 4  %pco cameras
-				PIVlab_capture_pco(imageamount,f1exp_cam,'Synchronizer',projectpath,cam_fps,do_realtime,ac_ROI_realtime,binning,ac_ROI_general,camera_type,0);
+				PIVlab_capture_pco(imageamount,f1exp_cam,'Synchronizer',projectpath,binning,ac_ROI_general,camera_type);
 			elseif value == 6  %basler cameras
 				[OutputError,basler_vid,frame_nr_display] = PIVlab_capture_basler_synced_start(imageamount,ac_ROI_general); %prepare cam and start camera (waiting for trigger...)
 				acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
