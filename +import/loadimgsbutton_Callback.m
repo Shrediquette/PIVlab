@@ -105,7 +105,7 @@ if ~isequal(path,0)
 	if multitiff
 		frames_per_image_file=zeros(size(path,1),1);
 		for jj=1:size(path,1)
-			frames_per_image_file(jj)=size(imfinfo(path(jj).name),1);;
+			frames_per_image_file(jj)=size(imfinfo(path(jj).name),1);
 		end
 		loopcntr=sum(frames_per_image_file);
 	else % single image files.
@@ -252,6 +252,7 @@ if ~isequal(path,0)
 			cutoff=size(filepath,1);
 			filepath(cutoff)=[];
 			framenum(cutoff)=[];
+			framepart(cutoff,:)=[];
 		end
 		filename=cell(1);
 		for i=1:size(filepath,1)
@@ -323,6 +324,7 @@ if ~isequal(path,0)
 		set(getappdata(0,'hgui'), 'Name',['PIVlab ' gui.retr('PIVver') '   [Path: ' pathname ']']) %for people like me that always forget what dataset they are currently working on...
 		set (handles.amount_nans, 'BackgroundColor',[0.9 0.9 0.9])
 		set (handles.amount_nans,'string','')
+		set (handles.remove_imgs,'enable','on');
 	else
 		errordlg('Please select at least two images ( = 1 pair of images)','Error','on')
 	end

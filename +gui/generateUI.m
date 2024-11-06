@@ -109,9 +109,13 @@ handles.text2 = uicontrol(handles.multip01,'Style','text','units', 'characters',
 
 PIVver=gui.retr('PIVver');
 item=[0 item(2)+item(4) parentitem(3) 12];
-handles.filenamebox = uicontrol(handles.multip01,'Style','ListBox','units','characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String',{['Welcome to PIVlab ' PIVver '.'] 'Add images by clicking the' '"Import images" button above.'},'Callback',@gui.filenamebox_Callback,'tag','filenamebox','TooltipString','This list displays the frames that you currently loaded');
+handles.filenamebox = uicontrol(handles.multip01,'Style','ListBox','max',3,'min',1,'units','characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String',{['Welcome to PIVlab ' PIVver '.'] 'Add images by clicking the' '"Import images" button above.'},'Callback',@gui.filenamebox_Callback,'tag','filenamebox','TooltipString','This list displays the frames that you currently loaded');
+gui.put('standard_bg_color',get(handles.filenamebox,'Backgroundcolor'));
 
-item=[0 item(2)+item(4) parentitem(3) 7];
+item=[0 item(2)+item(4)+margin/8 parentitem(3)/3*2 2];
+handles.remove_imgs = uicontrol(handles.multip01,'Style','pushbutton','String','Remove images','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.remove_images_from_list,'Tag','remove_imgs','TooltipString','Remove images from the image list','enable','off');
+
+item=[0 item(2)+item(4) parentitem(3) 3];
 handles.text4 = uicontrol(handles.multip01,'Style','text','units','characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Use the scrollbar in the "Tools" panel to cycle through the images.');
 
 item=[0 item(2)+item(4) parentitem(3) 4];
