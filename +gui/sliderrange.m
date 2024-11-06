@@ -3,12 +3,17 @@ filepath=gui.retr('filepath');
 handles=gui.gethand;
 if gui.retr('video_selection_done') == 0
 	if size(filepath,1)>2
-		sliderstepcount=size(filepath,1)/2;
+		sliderstepcount=floor(size(filepath,1)/2);
 		set(handles.fileselector, 'enable', 'on');
+		slidersteps=[1/(sliderstepcount-1) 1/(sliderstepcount-1)*10];
+		if isinf(slidersteps(1))
+			slidersteps=[1 1];
+			set(handles.fileselector, 'enable', 'off');
+		end
 		if reset==1
-			set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
+			set (handles.fileselector,'value',1, 'min', 1,'max',sliderstepcount,'sliderstep', slidersteps);
 		else
-			set (handles.fileselector, 'min', 1,'max',sliderstepcount,'sliderstep', [1/(sliderstepcount-1) 1/(sliderstepcount-1)*10]);
+			set (handles.fileselector, 'min', 1,'max',sliderstepcount,'sliderstep', slidersteps);
 		end
 	else
 		sliderstepcount=1;
