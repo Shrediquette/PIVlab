@@ -1,4 +1,4 @@
-function [out multitiff] = uipickfiles(varargin)
+function [out, multitiff] = uipickfiles(varargin)
 %neu
 %uipickfiles: GUI program to select files and/or folders.
 %
@@ -688,7 +688,7 @@ setpref('uipickfiles','figure_position',fig_pos)
 
 
 	function selectdire(varargin)
-		get(pathbox,'String')
+		get(pathbox,'String');
 		folder_name = uigetdir(get(pathbox,'String'),'Select folder');
 		if folder_name ~= 0
 			set(pathbox,'String',folder_name);
