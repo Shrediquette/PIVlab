@@ -16,7 +16,7 @@ PIVlab_axis = findobj(hgui,'Type','Axes');
 image_handle_pco=imagesc(zeros(100,100),'Parent',PIVlab_axis,[0 2^16]);
 setappdata(hgui,'image_handle_pco',image_handle_pco);
 
-frame_nr_display=text(100,100,'Initializing...','Color',[1 1 0]);
+frame_nr_display=text(10,10,'Detecting camera...','Color',[1 1 0]);
 colormap default %reset colormap steps
 new_map=colormap('gray');
 new_map(1:3,:)=[0 0.2 0;0 0.2 0;0 0.2 0];
@@ -27,14 +27,15 @@ set(gca,'xtick',[])
 colorbar
 
 %% delete data in image directory, manage rcordfiles
-filePattern = fullfile(fileparts(ImagePath), 'PIVlab_pco_Cam*.tif');
+filePattern = fullfile(ImagePath, 'PIVlab_pco_Cam*.tif');
 diskchar='C:\\';
 if triggermode==2 && ~isinf(imacount) %external Trigger, with the desire to save
-	direc= dir(filePattern);filenames={};
+	direc= dir(filePattern);
+	filenames={};
 	[filenames{1:length(direc),1}] = deal(direc.name);
 	amount = length(filenames);
 	for i=1:amount
-		delete(fullfile(fileparts(ImagePath),filenames{i}));
+		delete(fullfile(ImagePath,filenames{i}));
 	end
 end
 
@@ -51,6 +52,7 @@ if(errorCode~=PCO_NOERROR)
 	glvar.do_libunload=1;
 	pco_camera_open_close(glvar);
 	figure(hgui)
+	set(frame_nr_display,'String',['Camera not found. [1]' newline 'If problem persists, you might' newline 'need to restart Matlab.']);
 	return;
 end
 hcam_ptr=glvar.out_ptr;
@@ -201,7 +203,7 @@ try
 	ml_camlist.cam_ptr1=libpointer('voidPtr',hcam_ptr);
 	camera_array=libstruct('PCO_cam_ptr_List',ml_camlist);
 	hreci_ptr = libpointer('voidPtrPtr');
-	
+
 	%je nach modus in RAM ringbuffer oder als datei:
 	if triggermode==2 && ~isinf(imacount) %external trigger, PIV recording
 		[errorCode,hrec_ptr,~,~,MaxImgCountArr] = calllib('PCO_CAM_RECORDER', 'PCO_RecorderCreate',hreci_ptr,camera_array ,pImgDistributionArr,camcount,PCO_RECORDER_MODE_FILE,diskchar,pMaxImgCountArr);
@@ -215,6 +217,7 @@ try
 		clear camera_array;
 		pco_errdisp('PCO_RecorderCreate',errorCode);
 		ME = MException('PCO_ERROR:RecorderCreate','Cannot continue script when creation of recorder fails');
+		set(frame_nr_display,'String',['Camera not found. [2]' newline 'If problem persists, you might' newline 'need to restart Matlab.']);
 		subfunc.fh_lasterr(errorCode);
 		throw(ME);
 	end
@@ -248,10 +251,11 @@ try
 			,0,[],[]);
 		pco_errdisp('PCO_RecorderInit',errorCode);
 	end
-	
+
 	if errorCode ~= 0
 		clear camera_array;
 		ME = MException('PCO_ERROR:RecorderInit','Cannot continue script when initialisation of recorder fails');
+		set(frame_nr_display,'String',['Camera not found. [3]' newline 'If problem persists, you might' newline 'need to restart Matlab.']);
 		subfunc.fh_lasterr(errorCode);
 		throw(ME);
 	end
@@ -339,11 +343,11 @@ try
 	im_ptr=libpointer('uint16Ptr',image_stack);
 	ProcImgCount=0;
 	old_ProcImgCount=ProcImgCount;
-
-
-%% loop running while recording
+	if triggermode==2 % external trigger, PIV mode
+		set(frame_nr_display,'String','Waiting for trigger...');
+	end
+	%% loop running while recording
 	while IsRunning && getappdata(hgui,'cancel_capture') ~=1
-		pause(0.0001);
 		[errorCode,~,~...
 			,IsRunning,~,~...
 			,ProcImgCount,ReqImgCount] = calllib('PCO_CAM_RECORDER', 'PCO_RecorderGetStatus' ...
@@ -353,20 +357,12 @@ try
 			,[],[] ...
 			,StartTime,StopTime);
 		pco_errdisp('PCO_PCO_RecorderGetStatus',errorCode);
-
 		if ProcImgCount~=old_ProcImgCount %if there has been progress (one more image in buffer)
 			%if ProcImgCount>=1
 			[errorCode]=calllib('PCO_CAM_RECORDER','PCO_RecorderCopyImage',hrec_ptr,hcam_ptr,PCO_RECORDER_LATEST_IMAGE,1,1,act_xsize,act_ysize,im_ptr,[],libmeta,libtime);
 			pco_errdisp('PCO_RecorderCopyImage',errorCode);
 			image_stack=get(im_ptr,'Value');
 			image_stack=permute(image_stack,[2 1 3]);
-			%{
-			if strcmp(camera_type,'pco_panda')
-				image_stack=bitshift(image_stack,4); %12 bit to 16 bit conversion
-			elseif strcmp(camera_type,'pco_pixelfly')
-				image_stack=bitshift(image_stack,2); %14 bit to 16 bit conversion
-			end
-			%}
 			if triggermode==2 % external trigger, PIV mode
 				toggle_image_state=getappdata(hgui,'toggler');
 				if toggle_image_state == 0
@@ -388,26 +384,227 @@ try
 			if strcmpi(TriggerModeString,'oneimage_calibration') || strcmpi(TriggerModeString,'oneimage_piv')
 				break;
 			end
+			%% Additional functions that process realtime image data go here.
+			live_data=get(image_handle_pco,'CData');
+			%% Image sharpness display
+			sharpness_enabled = getappdata(hgui,'sharpness_enabled');
+			if sharpness_enabled == 1 %cross-hair and sharpness indicator
+				%% sharpness indicator for particle images
+				if strcmp(camera_type,'pco_panda')
+					textx=ROI_general(3)-10;
+					texty=ROI_general(4)-50;
+				else
+					textx=1300;
+					texty=950;
+				end
+				[~,~] = PIVlab_capture_sharpness_indicator (live_data,textx,texty);
+			else
+				delete(findobj('tag','sharpness_display_text'));
+			end
+
+			%% Cross-hair
+			crosshair_enabled = getappdata(hgui,'crosshair_enabled');
+			if crosshair_enabled == 1 %cross-hair
+				%% cross-hair
+				%locations=[0.15 0.5 0.85];
+				locations=[0.1:0.1:0.9];
+				if numel(live_data)<10000000
+					half_thickness=2;
+				else
+					half_thickness=4;
+				end
+				brightness_incr=10000;
+				ima_ed=live_data;
+				old_max=max(live_data(:));
+				for loca=locations
+					%vertical
+					ima_ed(:,round(size(live_data,2)*loca)-half_thickness:round(size(live_data,2)*loca)+half_thickness)=ima_ed(:,round(size(live_data,2)*loca)-half_thickness:round(size(live_data,2)*loca)+half_thickness)+brightness_incr;
+					%horizontal
+					ima_ed(round(size(live_data,1)*loca)-half_thickness:round(size(live_data,1)*loca)+half_thickness,:)=ima_ed(round(size(live_data,1)*loca)-half_thickness:round(size(live_data,1)*loca)+half_thickness,:)+brightness_incr;
+				end
+				ima_ed(ima_ed>old_max)=old_max;
+				set(image_handle_pco,'CData',ima_ed);
+			end
+
+			%% HISTOGRAM
+			if getappdata(hgui,'hist_enabled')==1
+				if isvalid(image_handle_pco)
+					hist_fig=findobj('tag','hist_fig');
+					if isempty(hist_fig)
+						hist_fig=figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Live histogram','Toolbar','none','tag','hist_fig','CloseRequestFcn', @HistWindow_CloseRequestFcn);
+					end
+					if ~exist ('old_hist_y_limits','var')
+						old_hist_y_limits =[0 35000];
+					else
+						if isvalid(hist_obj)
+							old_hist_y_limits=get(hist_obj.Parent,'YLim');
+						end
+					end
+					hist_obj=histogram(live_data(1:2:end,1:2:end),'Parent',hist_fig,'binlimits',[0 65535]);
+				end
+				%lowpass hist y limits for better visibility
+				if ~exist ('new_hist_y_limits','var')
+					new_hist_y_limits =[0 35000];
+				end
+				new_hist_y_limits=get(hist_obj.Parent,'YLim');
+
+				set(hist_obj.Parent,'YLim',(new_hist_y_limits*0.5 + old_hist_y_limits*0.5))
+			else
+				hist_fig=findobj('tag','hist_fig');
+				if ~isempty(hist_fig)
+					close(hist_fig)
+				end
+			end
+
+
+
+			%% Autofocus
+			%% Lens control
+			%Sowieso machen: Nicht lineare schritte für die anzufahrenden fokuspositionen. Diese Liste vorher ausrechnen und dann nur index anspringen
+			autofocus_enabled = getappdata(hgui,'autofocus_enabled');
+			if autofocus_enabled == 1
+				delaycounter=delaycounter+1;
+			else
+				delaycounter=0;
+				delaycounter2=0;
+				delay_time_1=tic;
+			end
+			%immer mehrere Bilder abfragen nachdem fokus verstellt wurde.... nicht nur eins, sondern z.B. drei Davon nur das letzte per sharpness beurteilen
+			delay_time= 0.5; %1 seconds delay between measurements %350000 / exposure_time;
+			if autofocus_enabled == 1
+				if delaycounter>10 %wait 10 images before starting autofocus. Needed so that servo can reach target position
+					focus_start = getappdata(hgui,'focus_servo_lower_limit');
+					focus_end = getappdata(hgui,'focus_servo_upper_limit');
+					amount_of_raw_steps=20;
+					fine_step_resolution_increase = 8;
+					focus_step_raw=round(abs(focus_end - focus_start)/amount_of_raw_steps);% in microseconds)
+					focus_step_fine=round(1/fine_step_resolution_increase*(abs(focus_end - focus_start)/amount_of_raw_steps));% in microseconds)
+					if ~exist('sharpness_focus_table','var') || isempty(sharpness_focus_table) || isempty(sharp_loop_cnt)
+						sharpness_focus_table=zeros(1,2);
+						sharp_loop_cnt=0;
+						focus=focus_start;
+						raw_finished=0;
+						aperture=getappdata(hgui,'aperture');
+						lighting=getappdata(hgui,'lighting');
+						PIVlab_capture_lensctrl(focus,aperture,lighting)
+					end
+					if raw_finished==0
+						if focus < focus_end % maxialer focus = endanschlag. Bis zu dem wert wird von null gefahren
+							if toc(delay_time_1)>=delay_time %only every second image is taken for analysis. This gives more time to the servo to reach position
+								delay_time_1=tic;
+								sharp_loop_cnt=sharp_loop_cnt+1;
+								[sharpness,~] = PIVlab_capture_sharpness_indicator (live_data,[],[]);
+								sharpness_focus_table(sharp_loop_cnt,1)=focus;
+								sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
+								focus=focus+focus_step_raw;
+								PIVlab_capture_lensctrl(focus,aperture,lighting)		%kann steuern und aktuelle position ausgeben
+								autofocus_notification(1)
+							else
+								%do nothing
+							end
+						else
+							%assignin('base','sharpness_focus_table',sharpness_focus_table)
+							%find best focus
+							[r,~]=find(sharpness_focus_table == max(sharpness_focus_table(:,2)));
+							focus_peak=sharpness_focus_table(r(1),1);
+							disp(['Best raw focus: ' num2str(focus_peak)])
+							raw_finished=1;
+							%focus vs. distance is not linear!
+							focus_start_fine=focus_peak-6*focus_step_raw; %start of finer focussearch
+							focus_end_fine=focus_peak+3*focus_step_raw;
+							if focus_start_fine < focus_start
+								focus_start_fine = focus_start;
+							end
+							if focus_end_fine > focus_end
+								focus_end_fine = focus_end;
+							end
+							%original focus=focus_end_fine;
+							focus=focus_start_fine;
+							PIVlab_capture_lensctrl(focus,aperture,lighting)
+							sharp_loop_cnt=0;
+							raw_data=[sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range')];
+							sharpness_focus_table=zeros(1,2);
+						end
+					end
+
+					if raw_finished == 1
+						delaycounter2=delaycounter2+1;
+					else
+						delaycounter2=0;
+					end
+
+					if raw_finished == 1
+						delay_time= 0.35;
+						if delaycounter2>10
+							%repeat with finer steps
+							%original if focus > focus_start_fine % maxialer focus = endanschlag. Bis zu dem wert wird von null gefahren
+							if focus < focus_end_fine % maxialer focus = endanschlag. Bis zu dem wert wird von null gefahren
+								if toc(delay_time_1)>=delay_time %only every second image is taken for analysis. This gives more time to the servo to reach position
+									delay_time_1=tic;
+									sharp_loop_cnt=sharp_loop_cnt+1;
+									[sharpness,~] = PIVlab_capture_sharpness_indicator (live_data,[],[]);
+									sharpness_focus_table(sharp_loop_cnt,1)=focus;
+									sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
+									%original focus=focus-focus_step_fine;
+									focus=focus+focus_step_fine;
+									PIVlab_capture_lensctrl(focus,aperture,lighting)		%kann steuern und aktuelle position ausgeben
+									autofocus_notification(1)
+								else
+									%do nothing
+								end
+							else %fine focus search finished
+								%assignin('base','sharpness_focus_table',sharpness_focus_table)
+								%find best focus
+								[r,~]=find(sharpness_focus_table == max(sharpness_focus_table(:,2)));
+								focus_peak=sharpness_focus_table(r(1),1);
+								disp(['Best fine focus: ' num2str(focus_peak)])
+								PIVlab_capture_lensctrl(focus_end_fine,aperture,lighting)%backlash compensation
+								pause(0.5)
+								PIVlab_capture_lensctrl(focus_start_fine,aperture,lighting) %backlash compensation
+								pause(0.5)
+								PIVlab_capture_lensctrl(focus_peak,aperture,lighting) %set to best focus
+
+								setappdata(hgui,'autofocus_enabled',0); %autofocus am ende ausschalten
+
+								lens_control_window = getappdata(0,'hlens');
+								focus_edit_field=getappdata(lens_control_window,'handle_to_focus_edit_field');
+								set(focus_edit_field,'String',num2str(focus_peak)); %update
+								%setappdata(hgui,'cancel_capture',1); %stop recording....?
+								figure;plot(raw_data(:,1),raw_data(:,2))
+								hold on;plot(sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range'));hold off
+								title('Focus search')
+								xlabel('Pulsewidth us')
+								ylabel('Sharpness')
+								legend('Coarse search','Fine search')
+								grid on
+
+							end
+						end
+					end
+				end
+			else
+				autofocus_notification(0)
+				sharpness_focus_table=[];
+				sharp_loop_cnt=[];
+			end
+
+
+
+
+
 		end
 		old_ProcImgCount=ProcImgCount;
 		if ~isinf(imacount) && triggermode==2 && (ProcImgCount>=ReqImgCount) %actually a duplicate exiting the while loop.
 			%disp('Capture complete.');
 			break;
 		end
-
+		pause(0.1);
 	end
 	set(frame_nr_display,'String','');
 	[errorCode]=calllib('PCO_CAM_RECORDER','PCO_RecorderStopRecord',hrec_ptr,hcam_ptr);
 	pco_errdisp('PCO_RecorderStopRecord',errorCode);
 	[errorCode]=calllib('PCO_CAM_RECORDER','PCO_RecorderDelete',hrec_ptr);
 	pco_errdisp('PCO_RecorderDelete',errorCode);
-
-
-	%
-	% if(libisloaded('PCO_CAM_RECORDER'))
-
-	% unloadlibrary('PCO_CAM_RECORDER');
-	%end
 
 
 catch ME
@@ -420,7 +617,7 @@ catch ME
 		pco_errdisp('PCO_RecorderDelete',erri);
 	end
 
-	clearvars -except ME glvar errorCode txt framerate_max;
+	clearvars -except ME glvar errorCode txt framerate_max hgui;
 
 	if(libisloaded('PCO_CAM_RECORDER'))
 		unloadlibrary('PCO_CAM_RECORDER');
@@ -442,16 +639,16 @@ catch ME
 			disp(['from file ',ME.stack(k).file,' at line ',num2str(ME.stack(k).line)]);
 		end
 		close();
-		clearvars -except errorCode;
+		clearvars -except errorCode hgui;
 		return;
 	else
 		close();
-		clearvars -except ME;
+		clearvars -except ME hgui;
 		rethrow(ME)
 	end
 end
 
-clearvars -except glvar errorCode image_stack OutputError hgui framerate_max;
+clearvars -except glvar errorCode image_stack OutputError hgui framerate_max hgui;
 
 if(glvar.camera_open==1)
 	glvar.do_close=1;
@@ -461,240 +658,6 @@ if(glvar.camera_open==1)
 end
 %clear glvar;
 unloadlibrary('PCO_CAM_RECORDER')
-
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% code schnippsel die noch gebraucht werden:
-% als funktion in diese datei auslagern... sonst unübersichtlich
-
-%{
-
-
-sharpness_enabled = getappdata(hgui,'sharpness_enabled');
-if sharpness_enabled == 1 %cross-hair and sharpness indicator
-	%% sharpness indicator for particle images
-	if strcmp(camera_type,'pco_panda')
-		textx=ROI_general(3)-10;
-		texty=ROI_general(4)-50;
-	else
-		textx=1300;
-		texty=950;
-	end
-	[~,~] = PIVlab_capture_sharpness_indicator (ima(1:act_ysize/2  ,  1:act_xsize),textx,texty);
-else
-	delete(findobj('tag','sharpness_display_text'));
-end
-
-
-crosshair_enabled = getappdata(hgui,'crosshair_enabled');
-if crosshair_enabled == 1 %cross-hair
-	%% cross-hair
-	%locations=[0.15 0.5 0.85];
-	locations=[0.1:0.1:0.9];
-	if numel(ima)<10000000
-		half_thickness=2;
-	else
-		half_thickness=4;
-	end
-	brightness_incr=10000;
-	ima_ed=ima;
-	old_max=max(ima(:));
-	for loca=locations
-		%vertical
-		ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)=ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)+brightness_incr;
-		%horizontal
-		ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)=ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)+brightness_incr;
-	end
-	ima_ed(ima_ed>old_max)=old_max;
-	set(image_handle_pco,'CData',ima_ed);
-else
-	set(image_handle_pco,'CData',ima);
-end
-
-
-
-%% HISTOGRAM
-if getappdata(hgui,'hist_enabled')==1
-	if isvalid(image_handle_pco)
-		hist_fig=findobj('tag','hist_fig');
-		if isempty(hist_fig)
-			hist_fig=figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Live histogram','Toolbar','none','tag','hist_fig','CloseRequestFcn', @HistWindow_CloseRequestFcn);
-		end
-		if ~exist ('old_hist_y_limits','var')
-			old_hist_y_limits =[0 35000];
-		else
-			if isvalid(hist_obj)
-				old_hist_y_limits=get(hist_obj.Parent,'YLim');
-			end
-		end
-
-		if triggermode == 2
-			if toggle_image_state == 0
-				hist_obj=histogram(ima(1:2:act_ysize/2  ,  1:2:act_xsize),'Parent',hist_fig,'binlimits',[0 65535]);
-			else
-				hist_obj=histogram(ima(act_ysize/2+1:2:end  ,  1:2:act_xsize),'Parent',hist_fig,'binlimits',[0 65535]);
-			end
-		else
-			%if exist('hist_obj','var') && isvalid(hist_obj) %so koennte man CPU sparen. muss aber limtis selber updaten...
-			%	hist_obj.Data=ima(1:2:end,1:2:end);
-			%else
-			hist_obj=histogram(ima(1:2:end,1:2:end),'Parent',hist_fig,'binlimits',[0 65535]);
-			%end
-		end
-	end
-	%lowpass hist y limits for better visibility
-	if ~exist ('new_hist_y_limits','var')
-		new_hist_y_limits =[0 35000];
-	end
-	new_hist_y_limits=get(hist_obj.Parent,'YLim');
-
-	set(hist_obj.Parent,'YLim',(new_hist_y_limits*0.5 + old_hist_y_limits*0.5))
-else
-	hist_fig=findobj('tag','hist_fig');
-	if ~isempty(hist_fig)
-		close(hist_fig)
-	end
-end
-
-
-%% Autofocus
-%% Lens control
-%Sowieso machen: Nicht lineare schritte für die anzufahrenden fokuspositionen. Diese Liste vorher ausrechnen und dann nur index anspringen
-
-autofocus_enabled = getappdata(hgui,'autofocus_enabled');
-
-if autofocus_enabled == 1
-	delaycounter=delaycounter+1;
-else
-	delaycounter=0;
-	delaycounter2=0;
-	delay_time_1=tic;
-end
-%immer mehrere Bilder abfragen nachdem fokus verstellt wurde.... nicht nur eins, sondern z.B. drei Davon nur das letzte per sharpness beurteilen
-delay_time= 0.5; %1 seconds delay between measurements %350000 / exposure_time;
-if autofocus_enabled == 1
-	if delaycounter>10 %wait 10 images before starting autofocus. Needed so that servo can reach target position
-		focus_start = getappdata(hgui,'focus_servo_lower_limit');
-		focus_end = getappdata(hgui,'focus_servo_upper_limit');
-		amount_of_raw_steps=20;
-		fine_step_resolution_increase = 8;
-		focus_step_raw=round(abs(focus_end - focus_start)/amount_of_raw_steps);% in microseconds)
-		focus_step_fine=round(1/fine_step_resolution_increase*(abs(focus_end - focus_start)/amount_of_raw_steps));% in microseconds)
-		if ~exist('sharpness_focus_table','var') || isempty(sharpness_focus_table) || isempty(sharp_loop_cnt)
-			sharpness_focus_table=zeros(1,2);
-			sharp_loop_cnt=0;
-			focus=focus_start;
-			raw_finished=0;
-			aperture=getappdata(hgui,'aperture');
-			lighting=getappdata(hgui,'lighting');
-			PIVlab_capture_lensctrl(focus,aperture,lighting)
-		end
-		if raw_finished==0
-			if focus < focus_end % maxialer focus = endanschlag. Bis zu dem wert wird von null gefahren
-				if toc(delay_time_1)>=delay_time %only every second image is taken for analysis. This gives more time to the servo to reach position
-					delay_time_1=tic;
-					sharp_loop_cnt=sharp_loop_cnt+1;
-					[sharpness,~] = PIVlab_capture_sharpness_indicator (ima,[],[]);
-					sharpness_focus_table(sharp_loop_cnt,1)=focus;
-					sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
-					focus=focus+focus_step_raw;
-					PIVlab_capture_lensctrl(focus,aperture,lighting)		%kann steuern und aktuelle position ausgeben
-					autofocus_notification(1)
-				else
-					%do nothing
-				end
-			else
-				%assignin('base','sharpness_focus_table',sharpness_focus_table)
-				%find best focus
-				[r,~]=find(sharpness_focus_table == max(sharpness_focus_table(:,2)));
-				focus_peak=sharpness_focus_table(r(1),1);
-				disp(['Best raw focus: ' num2str(focus_peak)])
-				raw_finished=1;
-				%focus vs. distance is not linear!
-				focus_start_fine=focus_peak-6*focus_step_raw; %start of finer focussearch
-				focus_end_fine=focus_peak+3*focus_step_raw;
-				if focus_start_fine < focus_start
-					focus_start_fine = focus_start;
-				end
-				if focus_end_fine > focus_end
-					focus_end_fine = focus_end;
-				end
-				%original focus=focus_end_fine;
-				focus=focus_start_fine;
-				PIVlab_capture_lensctrl(focus,aperture,lighting)
-				sharp_loop_cnt=0;
-				raw_data=[sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range')];
-				sharpness_focus_table=zeros(1,2);
-			end
-		end
-
-		if raw_finished == 1
-			delaycounter2=delaycounter2+1;
-		else
-			delaycounter2=0;
-		end
-
-
-		if raw_finished == 1
-			delay_time= 0.35;
-			if delaycounter2>10
-				%repeat with finer steps
-				%original if focus > focus_start_fine % maxialer focus = endanschlag. Bis zu dem wert wird von null gefahren
-				if focus < focus_end_fine % maxialer focus = endanschlag. Bis zu dem wert wird von null gefahren
-					if toc(delay_time_1)>=delay_time %only every second image is taken for analysis. This gives more time to the servo to reach position
-						delay_time_1=tic;
-						sharp_loop_cnt=sharp_loop_cnt+1;
-						[sharpness,~] = PIVlab_capture_sharpness_indicator (ima,[],[]);
-						sharpness_focus_table(sharp_loop_cnt,1)=focus;
-						sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
-						%original focus=focus-focus_step_fine;
-						focus=focus+focus_step_fine;
-						PIVlab_capture_lensctrl(focus,aperture,lighting)		%kann steuern und aktuelle position ausgeben
-						autofocus_notification(1)
-					else
-						%do nothing
-					end
-				else %fine focus search finished
-					%assignin('base','sharpness_focus_table',sharpness_focus_table)
-					%find best focus
-					[r,~]=find(sharpness_focus_table == max(sharpness_focus_table(:,2)));
-					focus_peak=sharpness_focus_table(r(1),1);
-					disp(['Best fine focus: ' num2str(focus_peak)])
-					PIVlab_capture_lensctrl(focus_end_fine,aperture,lighting)%backlash compensation
-					pause(0.5)
-					PIVlab_capture_lensctrl(focus_start_fine,aperture,lighting) %backlash compensation
-					pause(0.5)
-					PIVlab_capture_lensctrl(focus_peak,aperture,lighting) %set to best focus
-
-					setappdata(hgui,'autofocus_enabled',0); %autofocus am ende ausschalten
-
-					lens_control_window = getappdata(0,'hlens');
-					focus_edit_field=getappdata(lens_control_window,'handle_to_focus_edit_field');
-					set(focus_edit_field,'String',num2str(focus_peak)); %update
-					%setappdata(hgui,'cancel_capture',1); %stop recording....?
-					figure;plot(raw_data(:,1),raw_data(:,2))
-					hold on;plot(sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range'));hold off
-					title('Focus search')
-					xlabel('Pulsewidth us')
-					ylabel('Sharpness')
-					legend('Coarse search','Fine search')
-					grid on
-
-				end
-			end
-		end
-	end
-else
-	autofocus_notification(0)
-	sharpness_focus_table=[];
-	sharp_loop_cnt=[];
-end
-
-%}
-
 
 function HistWindow_CloseRequestFcn(hObject,~)
 hgui=getappdata(0,'hgui');

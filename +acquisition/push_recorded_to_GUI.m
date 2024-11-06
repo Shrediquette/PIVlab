@@ -33,12 +33,12 @@ if multitiff==0
 		pathlist{i*2,1}=pathB; %#ok<AGROW>
 	end
 else
-	filePattern = fullfile(fileparts(projectpath), 'PIVlab_pco_Cam*.tif');
+	filePattern = fullfile(projectpath, 'PIVlab_pco_Cam*.tif');
 	direc= dir(filePattern);filenames={};
 	[filenames{1:length(direc),1}] = deal(direc.name);
 	amount = length(filenames);
 	for i=1:amount
-		pathfilelist{i,1}=fullfile(fileparts(projectpath),filenames{i});
+		pathfilelist{i,1}=fullfile(projectpath,filenames{i});
 		pathlist{i,1}=projectpath;
 	end
 	file_existing=1; %must exist, because generated from drive
