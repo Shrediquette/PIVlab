@@ -25,7 +25,7 @@ if get(handles.ac_realtime,'Value')==1
 			gui.put('cancel_capture',0);
 			gui.put('capturing',1);
 			if ~strcmp(camera_type,'chronos') %calib
-				[errorcode, caliimg]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type);
+				[errorcode, caliimg,~]=PIVlab_capture_pco(1,expos,'Calibration',projectpath,[],0,[],binning,ac_ROI_general,camera_type);
 			else
 				%not supported yet....
 

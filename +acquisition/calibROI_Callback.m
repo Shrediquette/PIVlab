@@ -33,7 +33,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 		max_cam_res=gui.retr('max_cam_res');
 		if strcmp(camera_type,'pco_panda')
 			try
-				[errorcode, caliimg]=PIVlab_capture_pco(6,expos,'SingleImage',projectpath,binning,[1,1, max_cam_res(1)/binning,max_cam_res(2)/binning],camera_type);
+				[~, roi_image,~]=PIVlab_capture_pco(6,expos,'oneimage_calibration',projectpath,binning,[1,1, max_cam_res(1)/binning,max_cam_res(2)/binning],camera_type);
 			catch ME
 				disp(ME)
 				uiwait(msgbox('Camera not connected'))
@@ -169,8 +169,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 			save('PIVlab_settings_default.mat','ac_ROI_general','-append');
 			delete(ac_ROI_general_handle)
 			rectangle('Position',position,'EdgeColor','y','linewidth',2)
-			%{
-			%measuring max framerate is not necessary anymore. These numburs are now hardware-determined by the camera.
+			
 			if strcmp(camera_type,'pco_panda')
 				%% jetzt nochmal mit finalen einstellungen bild capturen zum messen der framerate...
 				%Camera fps
@@ -178,14 +177,18 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 				ac_fps_str=get(handles.ac_fps,'String');
 				cam_fps=str2double(ac_fps_str(ac_fps_value));
 				ac_ROI_general=gui.retr('ac_ROI_general');
-				[~,~,framerate_max]=PIVlab_capture_pco(1,gui.retr('f1exp_cam'),'Synchronizer',projectpath,cam_fps,0,[],binning,ac_ROI_general,camera_type,1);
+				[~,~,framerate_max]=PIVlab_capture_pco(6,gui.retr('f1exp_cam'),'oneimage_PIV',projectpath,binning,ac_ROI_general,camera_type);
 				delete(findobj('tag','roitxt'));
+				target_axis=gui.retr('pivlab_axis');
+				xmin=ac_ROI_general(1);
+				ymin=ac_ROI_general(2);
+				xmax=ac_ROI_general(1)+ac_ROI_general(3)-1;
+				ymax=ac_ROI_general(2)+ac_ROI_general(4)-1;
+				image(adapthisteq(roi_image(ymin:ymax,xmin:xmax)), 'parent',target_axis, 'cdatamapping', 'scaled');colormap('gray');axis image
 				text(50,50,['Max framerate: ' num2str(round(framerate_max,2)) ' Hz'],'tag','roitxt','Color','yellow','FontSize',14,'FontWeight','bold')
 			end
-			%}
 			set(handles.ac_realtime,'Value',0);%reset realtime roi
 			gui.put('do_realtime',0);
 		end
 	end
 end
-

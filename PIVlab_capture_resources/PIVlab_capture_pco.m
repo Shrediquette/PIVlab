@@ -1,14 +1,17 @@
-function [OutputError,image_stack] = PIVlab_capture_pco(imacount,exposure_time,TriggerModeString,ImagePath,binning,ROI_general,camera_type)
+function [OutputError,image_stack,framerate_max] = PIVlab_capture_pco(imacount,exposure_time,TriggerModeString,ImagePath,binning,ROI_general,camera_type)
 hgui=getappdata(0,'hgui');
-if strcmpi(TriggerModeString,'calibration') 
+if strcmpi(TriggerModeString,'calibration')
 	triggermode=0; %internal trigger
-elseif  strcmpi(TriggerModeString,'synchronizer') 
+elseif  strcmpi(TriggerModeString,'synchronizer')
 	triggermode=2; %external Trigger
-elseif  strcmpi(TriggerModeString,'singleimage') 
-	triggermode=0; %internal trigger
+elseif  strcmpi(TriggerModeString,'oneimage_calibration')
+	triggermode=0; %internal trigger, single image
+elseif  strcmpi(TriggerModeString,'oneimage_piv')
+	triggermode=0; %internal trigger, dual image (actually only for measuring max acquisition speed)
 end
 OutputError=0;
 image_stack=[];
+framerate_max=1;
 PIVlab_axis = findobj(hgui,'Type','Axes');
 image_handle_pco=imagesc(zeros(100,100),'Parent',PIVlab_axis,[0 2^16]);
 setappdata(hgui,'image_handle_pco',image_handle_pco);
@@ -52,15 +55,21 @@ if(errorCode~=PCO_NOERROR)
 end
 hcam_ptr=glvar.out_ptr;
 
-%% Set to double /single image
+%% Set to double /single shutter
 if triggermode == 2
 	[errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetDoubleImageMode', hcam_ptr,1); %on
 elseif triggermode==0
-	[errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetDoubleImageMode', hcam_ptr,0); %off
+	if strcmpi(TriggerModeString,'calibration') || strcmpi(TriggerModeString,'oneimage_calibration')
+		[errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetDoubleImageMode', hcam_ptr,0); %off
+	end
+	if  strcmpi(TriggerModeString,'oneimage_piv')
+		[errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetDoubleImageMode', hcam_ptr,1); %off
+	end
 end
 if(errorCode)
 	pco_errdisp('PCO_SetDoubleImageMode',errorCode);
 end
+
 if strcmp(camera_type,'pco_panda')
 	%% set I/O lines
 	hwio_sig=libstruct('PCO_Signal');
@@ -154,7 +163,7 @@ end
 subfunc.fh_set_triggermode(hcam_ptr,triggermode); %0=auto, 2= external trigger
 subfunc.fh_set_exposure_times(hcam_ptr,exposure_time,1,0,1); %set units to µs
 subfunc.fh_get_triggermode(hcam_ptr);
-imatime=subfunc.fh_show_frametime(hcam_ptr);
+framerate_max=1/subfunc.fh_show_frametime(hcam_ptr);
 
 %% PCO recorder code
 try
@@ -371,10 +380,12 @@ try
 					set(frame_nr_display,'String','PIV preview');
 				end
 			else %Calibration mode
-				set(image_handle_pco,'CData',(image_stack));
-				set(frame_nr_display,'String','Live image');
+				if ~strcmpi(TriggerModeString,'oneimage_piv') %dont show the image that is captured after ROI is selected (it is only captured to measure max framerate)
+					set(image_handle_pco,'CData',(image_stack));
+					set(frame_nr_display,'String','Live image');
+				end
 			end
-			if strcmpi(TriggerModeString,'singleimage')
+			if strcmpi(TriggerModeString,'oneimage_calibration') || strcmpi(TriggerModeString,'oneimage_piv')
 				break;
 			end
 		end
@@ -409,7 +420,7 @@ catch ME
 		pco_errdisp('PCO_RecorderDelete',erri);
 	end
 
-	clearvars -except ME glvar errorCode txt;
+	clearvars -except ME glvar errorCode txt framerate_max;
 
 	if(libisloaded('PCO_CAM_RECORDER'))
 		unloadlibrary('PCO_CAM_RECORDER');
@@ -440,7 +451,7 @@ catch ME
 	end
 end
 
-clearvars -except glvar errorCode image_stack OutputError hgui;
+clearvars -except glvar errorCode image_stack OutputError hgui framerate_max;
 
 if(glvar.camera_open==1)
 	glvar.do_close=1;

@@ -48,7 +48,7 @@ if ready==1
 		%try
 		set(handles.ac_calibcapture,'String','Stop')
 		if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') %pco cameras
-			[errorcode, caliimg]=PIVlab_capture_pco(6,expos,'Calibration',projectpath,binning,ac_ROI_general,camera_type);
+			[~, caliimg,~]=PIVlab_capture_pco(6,expos,'Calibration',projectpath,binning,ac_ROI_general,camera_type);
 		elseif strcmp(camera_type,'basler')
 			[errorcode, caliimg]=PIVlab_capture_basler_calibration_image(inf,expos,ac_ROI_general);
 		elseif strcmp(camera_type,'OPTOcam')

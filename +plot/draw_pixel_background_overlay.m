@@ -29,7 +29,6 @@ else
 end
 
 %% load masks, convert to binary image
-
 render_mask=1; % should the mask be rendered in the image display?
 if get(handles.mask_edit_mode,'Value')==2 %Mask mode is "Preview"
 	masks_in_frame=gui.retr('masks_in_frame');
