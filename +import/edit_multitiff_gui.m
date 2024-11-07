@@ -1,5 +1,5 @@
-% Video file selection, startframe, endframe and skipping of frames for PIVlab
-function vid_import(pathname)
+% edit multitiffs for PIVlab
+function edit_multitiff_gui(pathname)
 if nargin < 1
 	pathname=pwd;
 end
@@ -15,7 +15,7 @@ filename=[];
 video_pathname=[];
 video_loaded = 0;
 %% Make figure
-fig_handle = figure('MenuBar','none', 'Toolbar','none', 'Units','characters', 'WindowButtonDownFcn',@button_down, 'WindowButtonUpFcn',@button_up,  'WindowButtonMotionFcn', @on_click,'KeyPressFcn', @key_press,'Name','Video preview','numbertitle','off','Visible','off','Windowstyle','modal','resize','off','dockcontrol','off');
+fig_handle = figure('MenuBar','none', 'Toolbar','none', 'Units','characters', 'WindowButtonDownFcn',@button_down, 'WindowButtonUpFcn',@button_up,  'WindowButtonMotionFcn', @on_click,'KeyPressFcn', @key_press,'Name','Edit multi tiffs','numbertitle','off','Visible','off','Windowstyle','modal','resize','on','dockcontrol','off');
 fig_handle.Position(3)=100;
 fig_handle.Position(4)=30;
 warning('off','MATLAB:TIMER:RATEPRECISION')
@@ -32,24 +32,24 @@ parentitem=get(fig_handle, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.selectvideo = uicontrol(fig_handle,'Style','pushbutton','String','Select video file','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@select_Callback, pathname},'Tag','selectvideo','TooltipString','Select video file');
+handles.selectvideo = uicontrol(fig_handle,'Style','pushbutton','String','Select image file','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@select_Callback, pathname},'Tag','selectvideo','TooltipString','Select image file');
 item=[0 item(2)+item(4)+margin parentitem(3)/3*2 1];
-handles.text1 = uicontrol(fig_handle,'Style','text','units', 'characters','Horizontalalignment', 'right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Start frame: ');
+handles.text1 = uicontrol(fig_handle,'Style','text','units', 'characters','Horizontalalignment', 'right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Start layer: ');
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 handles.startframe = uicontrol(fig_handle,'Style','edit','units', 'characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','1','Tag','startframe','Callback',@startframe_change,'enable','off');
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
-handles.text2 = uicontrol(fig_handle,'Style','text','units', 'characters','Horizontalalignment', 'right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','End frame: ');
+handles.text2 = uicontrol(fig_handle,'Style','text','units', 'characters','Horizontalalignment', 'right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','End layer: ');
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 handles.endframe = uicontrol(fig_handle,'Style','edit','units', 'characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','1','Tag','endframe','Callback',@endframe_change,'enable','off');
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
-handles.text3 = uicontrol(fig_handle,'Style','text','units', 'characters','Horizontalalignment', 'right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Process every nth frame: ');
+handles.text3 = uicontrol(fig_handle,'Style','text','units', 'characters','Horizontalalignment', 'right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Process every nth layer: ');
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 handles.skipframe = uicontrol(fig_handle,'Style','edit','units', 'characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','1','Tag','skipframe','Callback',@skipframe_change,'enable','off');
 item=[0 item(2)+item(4)+margin parentitem(3)/3*2 1];
-handles.text4 = uicontrol(fig_handle,'Style','text','units', 'characters','Horizontalalignment', 'right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Preview frame nr.: ');
+handles.text4 = uicontrol(fig_handle,'Style','text','units', 'characters','Horizontalalignment', 'right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Preview layer nr.: ');
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
-handles.importvideo = uicontrol(fig_handle,'Style','pushbutton','String','Import video frames','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import_Callback,'Tag','importvideo','TooltipString','Import video frames','enable','off');
+handles.importvideo = uicontrol(fig_handle,'Style','pushbutton','String','Save as...','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import_Callback,'Tag','importvideo','TooltipString','Save the modified tiff file','enable','off');
 item=[0 item(2)+item(4)+margin parentitem(3) 13];
 axes_handle=axes('Parent',fig_handle,'units','characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 axis image;
@@ -65,14 +65,7 @@ scroll_bar_width = max(1 / 10, 0.02);
 scroll_handle = patch([0 1 1 0] * scroll_bar_width, [0 0 1 1], [.5 .5 .5], 'Parent',scroll_axes_handle, 'EdgeColor','none', 'ButtonDownFcn', @on_click);
 
 %framenrdisplay
-frametext = uicontrol(fig_handle,'Style','text','units', 'characters','Horizontalalignment', 'left','position',[0,2,60,1],'String',['Frame Nr.: 1/' num2str(1)]);
-
-
-%videofile='xylophone.mpg';
-%v = VideoReader(videofile);
-%play_fps = v.FrameRate;
-%num_frames=v.NumberOfFrames;
-%scroll_bar_width = max(1 / num_frames, 0.02);
+frametext = uicontrol(fig_handle,'Style','text','units', 'characters','Horizontalalignment', 'left','position',[0,2,60,1],'String',['Layer nr.: 1/' num2str(1)]);
 
 v = [];
 play_fps = 1;
@@ -110,13 +103,16 @@ video_loaded=0;
 		if video_loaded
 			handles=guihandles(fig_handle);
 			if floor(str2double(get(handles.endframe,'String'))) ~= (str2double(get(handles.endframe,'String'))) %check if integer
-				set(handles.endframe,'String',num2str(v.NumberOfFrames));
+				%set(handles.endframe,'String',num2str(v.NumberOfFrames));
+				set(handles.endframe,'String',num2str(num_frames));
 			else
 				if str2double(get(handles.endframe,'String')) <=0
 					set(handles.endframe,'String','1');
 				end
-				if str2double(get(handles.endframe,'String')) > v.NumberOfFrames
-					set(handles.endframe,'String',num2str(v.NumberOfFrames));
+				%if str2double(get(handles.endframe,'String')) > v.NumberOfFrames
+				if str2double(get(handles.endframe,'String')) > num_frames
+					%set(handles.endframe,'String',num2str(v.NumberOfFrames));
+					set(handles.endframe,'String',num2str(num_frames));
 				end
 				num_frames=floor((str2double(get(handles.endframe,'String')) - (str2double(get(handles.startframe,'String'))-1))/ str2double(get(handles.skipframe,'String')));
 				scroll_bar_width = max(1 / num_frames, 0.02);
@@ -148,29 +144,26 @@ video_loaded=0;
 	function select_Callback(~,~,pathname)
 		fig_handle=getappdata(0,'fig_handle');
 		handles=guihandles(fig_handle);
-		%[filename,video_pathname] = uigetfile({'*.mp4';'*.avi';'*.mpg';'*.mpeg';'*.wmv';'*.mov';'*.*'},'Video File Selector',pathname);
-		[filename,video_pathname] = uigetfile({'*.mp4;*.avi;*.mpg;*.mpeg;*.wmv;*.mov','Video Files (*.mp4,*.avi,*.mpg,*.mpeg,*.wmv,*.mov)';'*.*','All Files'},'Video File Selector',pathname);
+		[filename,video_pathname] = uigetfile({'*.tif;*.tiff','Multi tiff (*.tif,*.tiff)';'*.*','All Files'},'TIF File Selector',pathname);
 		if ~isequal(filename,0)
 			video_loaded = 1;
-			% videofile='xylophone.mpg';
 			success=0;
 			try
-				v = VideoReader(fullfile(video_pathname,filename));
+				v=fullfile(video_pathname,filename);
+				vinfo=imfinfo(v);
 				success=1;
 			catch ME
 				success=0;
 			end
 			if success==1
-				play_fps = v.FrameRate;
-				num_frames=v.NumberOfFrames;
+				play_fps = 10;
+				num_frames=size(vinfo,1);
 				scroll_bar_width = max(1 / num_frames, 0.02);
 				video_end=num_frames;
 				
-				if isnan(v.Height)
-					fprintf('Failed to create video object.\n');
-				else
+				
 					axes (axes_handle)
-					h_fig=imshow(read(v,1));drawnow
+					h_fig=imshow(imread(v,1));drawnow
 					set(handles.startframe,'String', num2str(1))
 					set(handles.endframe,'String', num2str(num_frames))
 					set(handles.skipframe,'String', num2str(1))
@@ -180,7 +173,7 @@ video_loaded=0;
 					set(handles.startframe,'enable','on')
 					set(handles.endframe,'enable','on')
 					set(handles.skipframe,'enable','on')
-				end
+				
 			else
 				errordlg({'Matlab could not import this video file. Most likely, the video codec cannot be used by Matlab. This is not a PIVlab-related issue. The exact error message is: ' sprintf('\n') ME.identifier sprintf('\n') ME.message});
 			end
@@ -318,7 +311,7 @@ video_loaded=0;
 			set(fig_handle, 'CurrentAxes', axes_handle);
 			try
 				%set(h_fig,'CData',read(v,f+video_start-1));
-				set(h_fig,'CData',read(v,frame_selection(f)));
+				set(h_fig,'CData',imread(v,frame_selection(f)));
 			catch
 			end
 			set (frametext,'String', ['frame nr.: ' int2str(frame_selection(f)) ', total frames: ' int2str(num_frames)])
