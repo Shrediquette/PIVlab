@@ -16,7 +16,7 @@ PIVlab_axis = findobj(hgui,'Type','Axes');
 image_handle_pco=imagesc(zeros(100,100),'Parent',PIVlab_axis,[0 2^16]);
 setappdata(hgui,'image_handle_pco',image_handle_pco);
 
-frame_nr_display=text(10,10,'Detecting camera...','Color',[1 1 0]);
+frame_nr_display=text(10,10,'Detecting camera...','Color',[1 1 0],'HorizontalAlignment','left','VerticalAlignment','top','FontSize',12);
 colormap default %reset colormap steps
 new_map=colormap('gray');
 new_map(1:3,:)=[0 0.2 0;0 0.2 0;0 0.2 0];
@@ -38,7 +38,6 @@ if triggermode==2 && ~isinf(imacount) %external Trigger, with the desire to save
 		delete(fullfile(ImagePath,filenames{i}));
 	end
 end
-
 
 %% Initialize camera
 glvar=struct('do_libunload',0,'do_close',0,'camera_open',0,'out_ptr',[]);

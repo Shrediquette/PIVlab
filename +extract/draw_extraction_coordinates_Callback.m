@@ -29,25 +29,30 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			extract_poly = images.roi.Polygon;
 		end
 		extract_poly.Tag=extract_type;
+		extract_poly.LabelVisible = 'on';
+		extract_poly.Label = "right mouse click stops drawing";
 		draw(extract_poly);
+		extract_poly.LabelVisible = 'off';
 		addlistener(extract_poly,'ROIMoved',@extract.poly_ROIevents);
 		addlistener(extract_poly,'MovingROI',@extract.poly_ROIevents);
 		addlistener(extract_poly,'DeletingROI',@extract.poly_ROIevents);
-		xposition=extract_poly.Position(:,1);
-		yposition=extract_poly.Position(:,2);
-		extract_poly.LabelVisible = 'hover';
-		if ~verLessThan('matlab','9.8') %I have no clue when this functionality was added... Can't find any info on this.
-			extract_poly.LabelAlpha = 0.5;
-			extract_poly.LabelTextColor = 'w';
-		end
-		if size(extract_poly.Position,1)<6
-			labelstring=[];
-			for i = 1:size(extract_poly.Position,1)
-				labelstring=[labelstring num2str(round(extract_poly.Position(i,1))) ',' num2str(round(extract_poly.Position(i,2))) ' ; ']; %#ok<AGROW>
+		if ~isempty(xposition)
+			xposition=extract_poly.Position(:,1);
+			yposition=extract_poly.Position(:,2);
+			extract_poly.LabelVisible = 'hover';
+			if ~verLessThan('matlab','9.8') %I have no clue when this functionality was added... Can't find any info on this.
+				extract_poly.LabelAlpha = 0.5;
+				extract_poly.LabelTextColor = 'w';
 			end
-			extract_poly.Label = labelstring;
-		else
-			extract_poly.LabelVisible = 'off';
+			if size(extract_poly.Position,1)<6
+				labelstring=[];
+				for i = 1:size(extract_poly.Position,1)
+					labelstring=[labelstring num2str(round(extract_poly.Position(i,1))) ',' num2str(round(extract_poly.Position(i,2))) ' ; ']; %#ok<AGROW>
+				end
+				extract_poly.Label = labelstring;
+			else
+				extract_poly.LabelVisible = 'off';
+			end
 		end
 	elseif (strcmp(caller.Tag,'draw_stuff') && strcmp(handles.draw_what.String{handles.draw_what.Value},'circle')) || (strcmp(caller.Tag,'draw_stuff_area') && strcmp(handles.draw_what_area.String{handles.draw_what_area.Value},'circle'))%circle
 		if strcmp(caller.Tag,'draw_stuff') %extract from polyline

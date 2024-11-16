@@ -150,6 +150,9 @@ if get(handles.bg_subtract,'Value')==1
 
 					%% sum images
 					image1=image1 +image_to_add1;
+					%just keep smallest element
+					%image1(image_to_add1<image1) = image_to_add1(image_to_add1<image1);
+					
 					if sequencer==1 %not time-resolved
 						img_size_info1=size(image2);
 						img_size_info2=size(image_to_add2);
@@ -158,6 +161,7 @@ if get(handles.bg_subtract,'Value')==1
 							break
 						end
 						image2=image2+image_to_add2;
+						%image2(image_to_add2<image2) = image_to_add2(image_to_add2<image2);
 					end
 				end %of for loop and image summing
 

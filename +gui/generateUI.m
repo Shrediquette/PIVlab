@@ -1266,7 +1266,7 @@ item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
 handles.load_polyline = uicontrol(handles.multip12,'Style','pushbutton','String','Load coords','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract.load_polyline_Callback,'Tag','load_polyline','TooltipString','Load poly line coordinates from *.mat file');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
-handles.text56 = uicontrol(handles.multip12,'Style','text','String','Parameter:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text56');
+handles.text56 = uicontrol(handles.multip12,'Style','text','String','Data to extract:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text56');
 
 item=[0 item(2)+item(4) parentitem(3) 1];
 handles.extraction_choice = uicontrol(handles.multip12,'Style','popupmenu','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract.extraction_choice_Callback,'Tag','extraction_choice','TooltipString','What parameter do you want to extract along the line / circle?');
@@ -1699,7 +1699,7 @@ item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
 handles.load_area_coordinates = uicontrol(handles.multip17,'Style','pushbutton','String','Load coords','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract.load_polyline_Callback,'Tag','load_area_coordinates','TooltipString','Load area coordinates from *.mat file');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
-handles.text56a = uicontrol(handles.multip17,'Style','text','String','Parameter:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text56a');
+handles.text56a = uicontrol(handles.multip17,'Style','text','String','Calculate the average of:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text56a');
 
 item=[0 item(2)+item(4) parentitem(3) 1];
 handles.extraction_choice_area = uicontrol(handles.multip17,'Style','popupmenu','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extraction_choice_area','TooltipString','What parameter do you want to extract from the area?');

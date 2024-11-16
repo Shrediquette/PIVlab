@@ -7,27 +7,31 @@ if gui.retr('video_selection_done') ~= 1
 	multitiff=gui.retr('multitiff');
 	box_select=get(handles.filenamebox,'value')';
 	masks_in_frame=gui.retr('masks_in_frame');
-	masks_in_frame_doubled=cell(1,size(masks_in_frame,2)*2);
-	for i = 1:2:size(masks_in_frame,2)*2
-		masks_in_frame_doubled(i)=masks_in_frame((i+1)/2);
-		masks_in_frame_doubled(i+1)=masks_in_frame((i+1)/2);
+	if ~isempty(masks_in_frame)
+		masks_in_frame_doubled=cell(1,size(masks_in_frame,2)*2);
+		for i = 1:2:size(masks_in_frame,2)*2
+			masks_in_frame_doubled(i)=masks_in_frame((i+1)/2);
+			masks_in_frame_doubled(i+1)=masks_in_frame((i+1)/2);
+		end
 	end
-
 	if ~isempty(box_select) && numel(box_select)<=(numel(filepath)-2)
 		for i=numel(box_select):-1:1
 			filepath(box_select(i))=[];
 			framenum(box_select(i))=[];
 			framepart(box_select(i),:)=[];
-			masks_in_frame_doubled(box_select(i))=[];
+			if ~isempty(masks_in_frame)
+				masks_in_frame_doubled(box_select(i))=[];
+			end
 		end
-		masks_in_frame=cell(0);
-		cntr=1;
-		for i = 1:2:size(masks_in_frame_doubled,2)
-			masks_in_frame(cntr)=masks_in_frame_doubled(i);
-			cntr=cntr+1;
+		if ~isempty(masks_in_frame)
+			masks_in_frame=cell(0);
+			cntr=1;
+			for i = 1:2:size(masks_in_frame_doubled,2)
+				masks_in_frame(cntr)=masks_in_frame_doubled(i);
+				cntr=cntr+1;
+			end
+			gui.put('masks_in_frame',masks_in_frame);
 		end
-		gui.put('masks_in_frame',masks_in_frame);
-
 		filename=cell(1);
 		for i=1:size(filepath,1)
 			if ispc==1
