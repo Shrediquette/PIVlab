@@ -189,8 +189,8 @@ while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdat
                         focus_edit_field=getappdata(lens_control_window,'handle_to_focus_edit_field');
                         set(focus_edit_field,'String',num2str(focus_peak)); %update
                         %setappdata(hgui,'cancel_capture',1); %stop recording....?
-                        figure;plot(raw_data(:,1),raw_data(:,2))
-                        hold on;plot(sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range'));hold off
+                        figure;plot(raw_data(:,1),raw_data(:,2),'Linewidth',2)
+                        hold on;plot(sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range'),'Linewidth',2);hold off
                         title('Focus search')
                         xlabel('Pulsewidth us')
                         ylabel('Sharpness')
