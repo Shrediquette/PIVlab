@@ -218,6 +218,7 @@ else
 		framenum=[];
 		framepart=[];
 		cntr=1;
+		vars.filepath=import.Check_if_image_files_exist(vars.filepath,1);
 		img_height=size(imread(vars.filepath{1}),1); %read one file to detect image height to devide it by two later.
 		for i=1:size(vars.filepath,1)
 			framenum(i,1)=1;
