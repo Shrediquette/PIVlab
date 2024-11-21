@@ -26,6 +26,7 @@ if alreadyconnected
 		warning off
 		serial_answer=readline(serpo);
 		disp(['Connected to: ' convertStringsToChars(serial_answer)])
+		handles=gui.gethand;
 		if contains(serial_answer,'oltSync:') %decide which synchronizer hardware is connected
 			gui.put('sync_type','oltSync') %Waldemars Sync
 			disp('oltSync detected')

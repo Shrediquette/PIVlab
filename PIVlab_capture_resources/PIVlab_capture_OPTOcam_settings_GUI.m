@@ -127,7 +127,7 @@ end
 try
 	if alreadyconnected==1
 		pause(0.1)
-		flush(serpo)
+		flush(serpo);pause(0.1)
 		writeline(serpo,['TALKINGTO:' laser_device_id ';SET_CAM_BITS:' num2str(OPTOcam_bits)]);
 	else
 		msgbox('Error: Bit mode can only be set when connected to the laser / synchronizer!','modal')

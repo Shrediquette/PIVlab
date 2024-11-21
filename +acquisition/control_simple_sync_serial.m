@@ -61,7 +61,7 @@ if alreadyconnected
 	end
 
 	if switch_it==1
-		flush(serpo)
+		flush(serpo);pause(0.1)
 		camera_type=gui.retr('camera_type');
 		if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly')
 			send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
@@ -70,7 +70,7 @@ if alreadyconnected
 		end
 		writeline(serpo,send_string);
 	else
-		flush(serpo)
+		flush(serpo);pause(0.1)
 		%configureTerminator(serpo,'CR');
 		send_string=['TALKINGTO:' laser_device_id ';FREQ:1;CAM:1;ENER:' int2str(min_energy) ';ener%:0;F1EXP:100;INTERF:1234;EXTDLY:-1;EXTSKP:0;LASER:disable'];
 		writeline(serpo,send_string);

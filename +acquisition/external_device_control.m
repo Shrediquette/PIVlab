@@ -2,7 +2,7 @@ function external_device_control(switch_it)
 handles=gui.gethand;
 serpo=gui.retr('serpo');
 if ~isempty(serpo)
-	flush(serpo)
+	flush(serpo);pause(0.1)
 	if switch_it==1
 		if ~isempty(gui.retr('ac_enable_seeding1')) && gui.retr('ac_enable_seeding1') == 1
 			ext_dev_01_pwm = gui.retr('ext_dev_01_pwm');
