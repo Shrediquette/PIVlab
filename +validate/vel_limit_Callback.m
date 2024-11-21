@@ -77,9 +77,15 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 		if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 			xlabel(gca, 'u velocity [px/frame]', 'fontsize', 12)
 			ylabel(gca, 'v velocity [px/frame]', 'fontsize', 12)
-		else
-			xlabel(gca, 'u velocity [m/s]', 'fontsize', 12)
-			ylabel(gca, 'v velocity [m/s]', 'fontsize', 12)
+		else %calibrated
+			displacement_only=gui.retr('displacement_only');
+			if ~isempty(displacement_only) && displacement_only == 1
+				xlabel(gca, 'u velocity [m/frame]', 'fontsize', 12)
+				ylabel(gca, 'v velocity [m/frame]', 'fontsize', 12)
+			else
+				xlabel(gca, 'u velocity [m/s]', 'fontsize', 12)
+				ylabel(gca, 'v velocity [m/s]', 'fontsize', 12)
+			end
 		end
 
 		grid on

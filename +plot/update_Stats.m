@@ -13,12 +13,22 @@ if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 	set (handles.minu,'string', [num2str(min(u*calu,[],'omitnan')) ' px/frame'])
 	set (handles.maxv,'string', [num2str(max(v*calv,[],'omitnan')) ' px/frame'])
 	set (handles.minv,'string', [num2str(min(v*calv,[],'omitnan')) ' px/frame'])
-else
-	set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' m/s'])
-	set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' m/s'])
-	set (handles.maxu,'string', [num2str(max(u*calu,[],'omitnan')) ' m/s'])
-	set (handles.minu,'string', [num2str(min(u*calu,[],'omitnan')) ' m/s'])
-	set (handles.maxv,'string', [num2str(max(v*calv,[],'omitnan')) ' m/s'])
-	set (handles.minv,'string', [num2str(min(v*calv,[],'omitnan')) ' m/s'])
+else %calibrated
+	displacement_only=gui.retr('displacement_only');
+	if ~isempty(displacement_only) && displacement_only == 1
+		set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' m/frame'])
+		set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' m/frame'])
+		set (handles.maxu,'string', [num2str(max(u*calu,[],'omitnan')) ' m/frame'])
+		set (handles.minu,'string', [num2str(min(u*calu,[],'omitnan')) ' m/frame'])
+		set (handles.maxv,'string', [num2str(max(v*calv,[],'omitnan')) ' m/frame'])
+		set (handles.minv,'string', [num2str(min(v*calv,[],'omitnan')) ' m/frame'])
+	else
+		set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' m/s'])
+		set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' m/s'])
+		set (handles.maxu,'string', [num2str(max(u*calu,[],'omitnan')) ' m/s'])
+		set (handles.minu,'string', [num2str(min(u*calu,[],'omitnan')) ' m/s'])
+		set (handles.maxv,'string', [num2str(max(v*calv,[],'omitnan')) ' m/s'])
+		set (handles.minv,'string', [num2str(min(v*calv,[],'omitnan')) ' m/s'])
+	end
 end
 

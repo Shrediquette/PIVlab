@@ -68,6 +68,11 @@ try
 
 	set(handles.realdist, 'string',realdist);
 	set(handles.time_inp, 'string',time_inp);
+	if str2double(time_inp) == 0 %user entered zero as time step --> PIVlab will measure displacements instead of velocities
+		gui.put('displacement_only',1)
+	else
+		gui.put('displacement_only',0)
+	end
 
 	set(handles.nthvect, 'string',nthvect);
 	set(handles.validr,'string',validr);

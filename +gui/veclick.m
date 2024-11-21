@@ -55,7 +55,12 @@ if typevector(info(1,1),info(1,2)) ~=0
 		set(handles.x_cp, 'String', ['x:' num2str(round((x_cal(info(1,1),info(1,2)))*10000)/10000) ' px']);
 		set(handles.y_cp, 'String', ['y:' num2str(round((y_cal(info(1,1),info(1,2)))*10000)/10000) ' px']);
 	else %calibrated
-
+		displacement_only=gui.retr('displacement_only');
+		if ~isempty(displacement_only) && displacement_only == 1
+			time_unit='frame';
+		else
+			time_unit='s';
+		end
 		u_cp_string_velocity=u(info(1,1),info(1,2))*gui.retr('calu')-gui.retr('subtr_u');
 		v_cp_string_velocity=v(info(1,1),info(1,2))*gui.retr('calv')-gui.retr('subtr_v');
 		x_cp_string = x_cal(info(1,1),info(1,2));
@@ -63,12 +68,13 @@ if typevector(info(1,1),info(1,2)) ~=0
 
 		magnitude_of_current_point = (u_cp_string_velocity^2 + v_cp_string_velocity^2)^0.5;
 
+
 		if  magnitude_of_current_point > 100 || magnitude_of_current_point < 0.01
-			set(handles.u_cp, 'String',  ['u:' sprintf('%0.4e',u_cp_string_velocity) ' m/s']);
-			set(handles.v_cp, 'String',  ['v:' sprintf('%0.4e',v_cp_string_velocity) ' m/s']);
+			set(handles.u_cp, 'String',  ['u:' sprintf('%0.4e',u_cp_string_velocity) ' m/' time_unit]);
+			set(handles.v_cp, 'String',  ['v:' sprintf('%0.4e',v_cp_string_velocity) ' m/' time_unit]);
 		else
-			set(handles.u_cp, 'String',  ['u:' sprintf('%0.4f',u_cp_string_velocity) ' m/s']);
-			set(handles.v_cp, 'String',  ['v:' sprintf('%0.4f',v_cp_string_velocity) ' m/s']);
+			set(handles.u_cp, 'String',  ['u:' sprintf('%0.4f',u_cp_string_velocity) ' m/' time_unit]);
+			set(handles.v_cp, 'String',  ['v:' sprintf('%0.4f',v_cp_string_velocity) ' m/' time_unit]);
 		end
 		if x_cp_string > 100 || x_cp_string < 0.01 || y_cp_string > 100 || y_cp_string < 0.01
 			set(handles.x_cp, 'String', ['x:' sprintf('%0.4e',x_cp_string)  ' m']);

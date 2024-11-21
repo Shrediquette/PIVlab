@@ -73,8 +73,13 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
 	if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 		xlabel([xdescript ' [px/frame]']);
-	else
-		xlabel([xdescript ' [m/s]']);
+	else %calibrated
+		displacement_only=gui.retr('displacement_only');
+		if ~isempty(displacement_only) && displacement_only == 1
+			xlabel([xdescript ' [m/frame]']);
+		else
+			xlabel([xdescript ' [m/s]']);
+		end
 	end
 	ylabel('frequency');
 end

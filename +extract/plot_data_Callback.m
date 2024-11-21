@@ -258,7 +258,8 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 
 			unitpar=get(handles.extraction_choice,'string');
 			unitpar=unitpar{get(handles.extraction_choice,'value')};
-			unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
+			%unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
+			unitpar=unitpar(strfind(unitpar,'in ')+3:end);
 			%plot only when called from button...
 			if strcmp (A.Tag,'plot_data') %function called from button press
 				h=figure;
@@ -319,7 +320,12 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 					if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 						ylabel('tangent velocity loop integral (circulation) [px^2/frame]');
 					else
-						ylabel('tangent velocity loop integral (circulation) [m^2/s]');
+						displacement_only=gui.retr('displacement_only');
+						if ~isempty(displacement_only) && displacement_only == 1
+							ylabel('tangent velocity loop integral (circulation) [m^2/frame]');
+						else
+							ylabel('tangent velocity loop integral (circulation) [m^2/s]');
+						end
 					end
 					h_extractionplot=gui.retr('h_extractionplot');
 					h_extractionplot(size(h_extractionplot,1)+1,1)=h;

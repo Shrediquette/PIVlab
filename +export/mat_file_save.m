@@ -19,8 +19,13 @@ if isempty(resultslist)==0
 
 	if calxy==1 && (calu==1 ||calu==-1)
 		units='[px] respectively [px/frame]';
-	else
-		units='[m] respectively [m/s]';
+	else % calibrated
+		displacement_only=gui.retr('displacement_only');
+		if ~isempty(displacement_only) && displacement_only == 1
+			units='[m] respectively [m/frame]';
+		else
+			units='[m] respectively [m/s]';
+		end
 	end
 	%ohne alles: 6 hoch
 	%mit filtern: 11 hoch
