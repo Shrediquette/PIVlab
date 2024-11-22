@@ -44,6 +44,8 @@ if ready==1
 		set(handles.ac_lasertoggle,'enable','on')
 		set(handles.ac_lensctrl,'enable','on')
 		set(handles.ac_power,'enable','on')
+		set(handles.panon,'enable','on');
+		set(handles.zoomon,'enable','on');
 
 		%try
 		set(handles.ac_calibcapture,'String','Stop')
