@@ -1,6 +1,6 @@
 function pivlabhelp_Callback(~, ~, ~)
 try
-	web('http://pivlab.blogspot.de/p/blog-page_19.html','-browser')
+	web('https://github.com/Shrediquette/PIVlab/wiki/Quickstart:-Analyze-PIV-data','-browser')
 catch
 	%why does 'web' not work in v 7.1.0.246 ...?
 	disp('Ooops, MATLAB couldn''t open the website.')
