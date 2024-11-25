@@ -25,15 +25,11 @@ https://youtube.com/watch?v=47NCB_RFiE8
 PIVlab controlling cameras, lasers, etc.
 https://youtu.be/8B5M31NWlJc
 
-
 **Installation:** https://github.com/Shrediquette/PIVlab/wiki#installation-instructions
 
-**Please ask your questions in the PIVlab forum:** https://groups.google.com/g/pivlab
-
-**  **
-
+**Wiki with information, tutorials, manuals etc:** https://github.com/Shrediquette/PIVlab/wiki
 
 PIVlab [can be run online using MATLAB online](https://youtu.be/EQHfAmRxXw4?si=X77HabqAIbuHRIGT). MATLAB online is free (after registration) with a limited usage time per user (20 hrs/month):
 [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=Shrediquette/PIVlab&file=PIVlab_GUI.m)
 
-Thanks to the [thousands of publications that use PIVlab for research](https://scholar.google.de/scholar?cites=819244312015141543)!
+Thanks to the [thousands of publications that use PIVlab for research](https://scholar.google.de/scholar?hl=de&as_sdt=0%2C5&q=%28%22pivlab%22+%7C+%22piv+lab%22%29+AND+%28%22piv%22+%7C+%22particle+image+velocimetry%22%29+-%22%40pivlab.net%22&btnG=)!
