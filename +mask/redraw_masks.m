@@ -19,9 +19,14 @@ else
 	mask_positions=masks_in_frame{currentframe};
 end
 delete(findobj({'UserData','ROI_object_freehand','-or','UserData','ROI_object_rectangle','-or','UserData','ROI_object_circle','-or','UserData','ROI_object_polygon','-or','UserData','ROI_object_external'})); % deletes visible ROIs before redrawing.
-masknums=size(mask_positions,1);
+
 if mask_editing_possible==1
-	for i=1:masknums
+	for i=size(mask_positions,1):-1:1 %remove empty masks.
+		if isempty(mask_positions{i,2})
+			mask_positions(i,:)=[];
+		end
+	end
+	for i=1:size(mask_positions,1)
 		type=mask_positions(i,1);
 		if strcmp(type,'ROI_object_freehand')
 			regionOfInterest = drawfreehand('Position', mask_positions{i,2});
