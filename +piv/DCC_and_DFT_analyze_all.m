@@ -4,7 +4,7 @@ handles=gui.gethand;
 try
 	warning off
 	recycle('off');
-	delete('cancel_piv');
+	delete(fullfile(userpath,'cancel_piv'));
 	gui.put('cancel',0);
 	warning on
 catch ME
@@ -150,7 +150,7 @@ if ok==1
 			end
 
 			parfor i=1:size(slicedfilepath1,2)
-				if exist('cancel_piv','file')
+				if exist(fullfile(userpath,'cancel_piv'),'file')
 					close(hbar);
 					continue
 				end
@@ -254,7 +254,7 @@ if ok==1
 
 			parfor i=1:size(slicedfilepath1,2)
 				%------------------------
-				if exist('cancel_piv','file')
+				if exist(fullfile(userpath,'cancel_piv'),'file')
 					close(hbar);
 					continue
 				end
@@ -501,7 +501,7 @@ if ok==1
 	try
 		warning off
 		recycle('off');
-		delete('cancel_piv')
+		delete(fullfile(userpath,'cancel_piv'))
 		warning on
 	catch ME
 		disp('There was an error deleting a temporary file.')

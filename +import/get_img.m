@@ -54,7 +54,7 @@ else %expected_image_size is not empty, an image has been read before
 		gui.put('size_warning_has_been_shown',1);
 		warning off
 		recycle('off');
-		delete('cancel_piv');
+		delete(fullfile(userpath,'cancel_piv'));
 		warning on
 	end
 end

@@ -30,6 +30,7 @@ if isempty(fh)
 	drawnow
 	handle_splash_text = text(splash_ax,10,10,'Loading, please wait...');
 	%}
+	disp('-> Starting PIVlab...')
 	MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0 0.1 1 0.8],'ResizeFcn', @gui.MainWindow_ResizeFcn,'CloseRequestFcn', @gui.MainWindow_CloseRequestFcn,'tag','hgui','visible','off','KeyPressFcn', @gui.key_press);
 	set (MainWindow,'Units','Characters');
 	%clc
@@ -58,11 +59,13 @@ if isempty(fh)
 	v=ver('MATLAB');
 
 	if ~exist('desired_num_cores','var')
-		disp('-> Use the command "PIVlab_GUI(Nr_of_cores)" to select the amount of computation cores.')
+		if ~isdeployed
+			disp('-> Use the command "PIVlab_GUI(Nr_of_cores)" to select the amount of computation cores.')
+		end
 	end
 
 	if ~exist('splash_ax','var')
-		disp(['-> Starting PIVlab ' version ', built on: ' char(datetime(build_date)) ' ...'])
+		disp(['-> PIVlab ' version ', built on: ' char(datetime(build_date)) ' ...'])
 
 		disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
 	else
@@ -87,18 +90,22 @@ if isempty(fh)
 	gui.put('video_selection_done',0);
 
 	%% check write access
-
+	disp(['-> User path is ' userpath]);
 	try
 		temp=rand(3,3);
-		save('temp.mat','temp');
+		save(fullfile(userpath,'temp.mat' ),'temp');
 		if ispc %Matlab seems to have issues with deleting files on unix systems
-			delete 'temp.mat'
+			delete (fullfile(userpath,'temp.mat' ))
 		end
 		disp('-> Write access in current folder ok.')
 	catch
-		disp(['-> No write access in ' pwd '. PIVlab won''t work like this.'])
-		disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
-		beep;commandwindow;pause
+		if isdeployed
+			uiwait(msgbox(['No write access in ' userpath newline newline 'PIVlab will not work properly like this.' newline 'Please make sure that there is write permission for the folder ' userpath ],'modal'));
+		else
+			disp(['-> No write access in ' pwd '. PIVlab won''t work like this.'])
+			disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
+			beep;commandwindow;pause
+		end
 	end
 
 
@@ -127,7 +134,9 @@ if isempty(fh)
 			if exist(fullfile(tempfilepath,pivFiles{1,i}),'dir')~=7
 				disp(['ERROR: A required package folder was not found: ' pivFiles{1,i}]);
 				disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
-				beep;commandwindow;pause
+				if ~isdeployed
+					beep;commandwindow;pause
+				end
 			else
 				ctr=ctr+1;
 			end
@@ -159,14 +168,17 @@ if isempty(fh)
 			disp('WARNING: Your Matlab version is too old for running PIVlab.')
 			disp('WARNING: You need at least version 9.7 (R2019b) to use all features.')
 			disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
-			beep;commandwindow;pause
+			if ~isdeployed
+				beep;commandwindow;pause
+			end
 		end
 	catch
 		disp('MATLAB version could not be checked automatically.')
 		disp('WARNING: You need at least version 9.7 (R2019b) to use all features.')
 		disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
-		beep
-		beep;commandwindow;pause
+		if ~isdeployed
+			beep;commandwindow;pause
+		end
 	end
 	%% Check image toolbox availability
 	try
@@ -183,21 +195,35 @@ if isempty(fh)
 				disp('"J = adapthisteq(rand(8,8))" (enter this without quotes)')
 				disp(' ')
 				disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
-				beep;commandwindow;pause
+				if ~isdeployed
+					beep;commandwindow;pause
+				end
 			end
 		else
 			disp('ERROR: Image Processing Toolbox not found! PIVlab won''t work like this.')
 			disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
-			beep;commandwindow;pause
+			if ~isdeployed
+				beep;commandwindow;pause
+			end
 		end
 		%% Check parallel computing toolbox availability
 		gui.put('parallel',0);
 		try %checking for a parallel license file throws a huge error message wheh it is not available. This might scare users... Better: Try...catch block
 			if ~exist('desired_num_cores','var') %no input argument --> use all existing cores
 				if misc.pivparpool('size')<=0 %no exisitng pool
-					misc.pivparpool('open',feature('numCores')); %use all cores
+					if isdeployed
+						answer = questdlg('Open parallel pool?','Parallel processing', 'Yes','No','Yes');
+						switch answer
+							case 'Yes'
+								misc.pivparpool('open',feature('numCores')); %use all cores
+								gui.put('parallel',1);
+							case 'No'
+						end
+					else
+						misc.pivparpool('open',feature('numCores')); %use all cores
+						gui.put('parallel',1);
+					end
 				end
-				gui.put('parallel',1);
 			else%parameter supplied
 				if desired_num_cores > 1 && desired_num_cores ~= misc.pivparpool('size') %desired doesn't match existing pool
 					if desired_num_cores > feature('numCores')%desired too many cores
@@ -330,7 +356,13 @@ if isempty(fh)
 			gui.put('batchModeActive',0)
 		end
 	end
-
+%{
+	disp('test')
+currentdir = pwd
+cd ('C:\Program Files\PCO Digital Camera Toolbox\pco.matlab\runtime\win_x64\bin') 
+loadlibrary('pco_recorder','sc2_cammatlab.h' ,'addheader','pco_recorder_export.h' ,'alias','PCO_CAM_RECORDER');
+cd currentdir
+%}
 else %Figure handle does already exist --> bring PIVlab to foreground.
 	disp('Only one instance of PIVlab is allowed to run.')
 	figure(fh)

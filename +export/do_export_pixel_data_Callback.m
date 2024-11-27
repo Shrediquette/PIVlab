@@ -185,7 +185,9 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 		end
 		disp(ME.identifier)
 		disp(ME.message)
-		commandwindow;
+		if ~isdeployed
+			commandwindow;
+		end
 	end
 	try
 		close(export_figure)

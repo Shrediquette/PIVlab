@@ -134,7 +134,7 @@ classdef pivprogress < handle
 				% Kill the timer if the waitbar is closed.
 				close(this);
 			end
-			if exist('cancel_piv','file')
+			if exist(fullfile(userpath,'cancel_piv'),'file')
 				close(this)
 			end
 		end

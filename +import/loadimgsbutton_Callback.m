@@ -244,7 +244,9 @@ if ~isequal(path,0)
 			assignin('base',myVarList{indVar},eval(myVarList{indVar}))
 		end
 		save sequencing_error_report.mat;
-		commandwindow
+		if ~isdeployed
+			commandwindow
+		end
 	end
 
 	if loopcntr >= 1

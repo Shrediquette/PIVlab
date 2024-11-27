@@ -1,14 +1,14 @@
 function CheckUpdates
 % Check for updates
 version=gui.retr('PIVver');
-filename_update = 'latest_version.txt';
+filename_update = fullfile(userpath ,'latest_version.txt');
 if gui.retr('parallel')==1
 	current_url = 'http://william.thielicke.org/PIVlab/latest_version_p.txt';
 else
 	current_url = 'http://william.thielicke.org/PIVlab/latest_version.txt';
 end
 starred_feature_url='http://william.thielicke.org/PIVlab/starred_feature.txt';
-filename_starred='starred_feature.txt';
+filename_starred=fullfile(userpath ,'starred_feature.txt');
 % Update checking inspired by: https://www.mathworks.com/matlabcentral/fileexchange/64294-photoannotation
 update_msg = 'Could not check for updates'; %default message will be overwritten by the following lines
 starred_feature_text='';
@@ -60,4 +60,3 @@ end
 clear filename_update current_url fileID_update outfilename web_version trash_upd
 disp (['-> ' update_msg])
 gui.put('update_msg',update_msg);
-
