@@ -36,7 +36,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		addlistener(extract_poly,'ROIMoved',@extract.poly_ROIevents);
 		addlistener(extract_poly,'MovingROI',@extract.poly_ROIevents);
 		addlistener(extract_poly,'DeletingROI',@extract.poly_ROIevents);
-		if ~isempty(xposition)
+		if numel(extract_poly.Position) >=4
 			xposition=extract_poly.Position(:,1);
 			yposition=extract_poly.Position(:,2);
 			extract_poly.LabelVisible = 'hover';
