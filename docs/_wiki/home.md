@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Home
-permalink: /wiki/home
+permalink: /PIVlab/wiki/home
 ---
 # What is it?
 
