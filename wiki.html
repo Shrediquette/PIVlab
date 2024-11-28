@@ -1,0 +1,13 @@
+---
+layout: default
+title: Wiki
+---
+<h1>Wiki</h1>
+<p>Welcome to the Wiki! Browse the pages below:</p>
+<ul>
+  {% for page in site.wiki %}
+  <li>
+    <a href="{{ page.url }}">{{ page.title }}</a>
+  </li>
+  {% endfor %}
+</ul>

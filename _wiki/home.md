@@ -1,3 +1,7 @@
+---
+layout: default
+title: Home
+---
 # What is it?
 
 PIVlab is a free graphical user interface (GUI) based particle image velocimetry (PIV) software and is currently the most frequently cited PIV software on the market. It can be used to control [OPTOLUTION's lasers, cameras and synchronizers](https://optolution.com/en/products/particle-image-velocimetry-piv/), and of course it calculates the velocity distribution within imported (or captured) particle image pairs. It can also be used to derive, display and export multiple parameters of the flow pattern. The simple, GUI makes PIV data acquisition and data post-processing fast and efficient.

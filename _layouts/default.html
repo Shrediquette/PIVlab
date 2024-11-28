@@ -39,12 +39,20 @@
 
 <div class="wrapper">
   <nav>
-    <ul></ul>
+    <ul>
+      {% for item in site.nav %}
+      <li><a href="{{ item.url }}">{{ item.title }}</a></li>
+      {% endfor %}
+    </ul>
   </nav>
   <section>
     {{ content }}
-
+    
+    {% for wiki in site.wiki %}
+    <a href="{{ wiki.url }}">{{ wiki.title }}</a>
+    {% endfor %}
   </section>
+ 
   <footer>
     {% if site.github.is_project_page %}
     <p>Project maintained by <a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a></p>
