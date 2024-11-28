@@ -9,8 +9,8 @@ collections:
     permalink: /wiki/:path/
 nav:
   - title: "Home"
-    url: "/"
+    url: "/PIVlab/"
   - title: "About"
-    url: "/about.html"
+    url: "/PIVlab/about.html"
   - title: "Wiki"
-    url: "/wiki/"
+    url: "/PIVlab/wiki/"

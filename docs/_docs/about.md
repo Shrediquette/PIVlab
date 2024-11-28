@@ -1,6 +1,6 @@
 ---
 layout: default
 title: About Me
-permalink: /PIVlab/about/
+permalink: /about/
 ---
 This is the about page.
