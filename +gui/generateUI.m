@@ -1105,6 +1105,15 @@ item=[0 item(2)+item(4) parentitem(3) 1];
 handles.uniform_vector_scale = uicontrol(handles.multip09,'Style','checkbox','String','uniform vector scale','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','uniform_vector_scale','TooltipString','Draw all vectors with the same size, independent of velocity');
 
 
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3)/2 1];
+handles.displ_image_txt = uicontrol(handles.multip09,'Style','text','String','Background:', 'HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','displ_image_txt');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
+handles.displ_image = uicontrol(handles.multip09,'Style','popupmenu', 'String',{'Display PIV image' 'Solid black','Solid white'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','displ_image','TooltipString','Display the PIV image in the background');
+
+
+
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 8];
 handles.uipanel37 = uipanel(handles.multip09, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Vector colors', 'Tag','uipanel37','fontweight','bold');
 
@@ -1150,7 +1159,7 @@ item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
 handles.text140 = uicontrol(handles.uipanel37,'Style','text','String','interpolated vectors','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text142', 'fontsize', 6);
 
 parentitem=get(handles.multip09, 'Position');
-item=[0 9.5+6.5 parentitem(3) 12];
+item=[0 9.5+6.5+1.5 parentitem(3) 11];
 handles.uipanel27 = uipanel(handles.multip09, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Derived parameter appearance', 'Tag','uipanel27','fontweight','bold');
 
 parentitem=get(handles.uipanel27, 'Position');
@@ -1855,6 +1864,9 @@ handles.summaker = uicontrol(handles.multip22,'Style','pushbutton','String','Cal
 
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.stdmaker = uicontrol(handles.multip22,'Style','pushbutton','String','Calculate stdev','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@plot.temporal_operation_Callback, 2}, 'Tag','stdmaker','TooltipString','Calculate standard deviation of displacements and append an extra frame with the results');
+
+%item=[0 item(2)+item(4) parentitem(3) 2];
+%handles.tkemaker = uicontrol(handles.multip22,'Style','pushbutton','String','Calculate TKE','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@plot.temporal_operation_Callback, 3}, 'Tag','tkemaker','TooltipString','Calculate turbulent kinetic energy and append an extra frame with the results');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.remove_temporal_frame = uicontrol(handles.multip22,'Style','pushbutton','String','Remove current','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.remove_temporal_frame_Callback, 'Tag','remove_temporal_frame','TooltipString','Remove the currently displayed frame');

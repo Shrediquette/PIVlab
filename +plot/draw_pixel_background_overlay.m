@@ -6,16 +6,23 @@ if isnan(derivative_alpha) || derivative_alpha>100 || derivative_alpha <0
 end
 
 %% draw background particle image in gray
+image_display_type=get(handles.displ_image,'Value'); %1 = piv image, 2= black, 3 = white
 [currentimage,~]=import.get_img(selected);
 if size(currentimage,3)>1 % color image
 	currentimage=rgb2gray(currentimage); %convert to gray, always.
 end
-if get(handles.enhance_images, 'Value')
-	currentimage=imadjust(currentimage);
+
+
+if image_display_type==1
+	if get(handles.enhance_images, 'Value')
+		currentimage=imadjust(currentimage);
+	end
+	image(cat(3, currentimage, currentimage, currentimage), 'parent',target_axis, 'cdatamapping', 'scaled');
+elseif image_display_type==2 %black
+	image(cat(3, currentimage*0, currentimage*0, currentimage*0), 'parent',target_axis, 'cdatamapping', 'scaled');
+elseif image_display_type==3 %white
+	image(cat(3, currentimage*inf, currentimage*inf, currentimage*inf), 'parent',target_axis, 'cdatamapping', 'scaled');
 end
-
-image(cat(3, currentimage, currentimage, currentimage), 'parent',target_axis, 'cdatamapping', 'scaled');
-
 colormap('gray');
 axis image
 
