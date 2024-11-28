@@ -21,7 +21,7 @@ if image_display_type==1
 elseif image_display_type==2 %black
 	image(cat(3, currentimage*0, currentimage*0, currentimage*0), 'parent',target_axis, 'cdatamapping', 'scaled');
 elseif image_display_type==3 %white
-	image(cat(3, currentimage*inf, currentimage*inf, currentimage*inf), 'parent',target_axis, 'cdatamapping', 'scaled');
+	image(cat(3, (currentimage+1)*inf, (currentimage+1)*inf, (currentimage+1)*inf), 'parent',target_axis, 'cdatamapping', 'scaled');
 end
 colormap('gray');
 axis image
