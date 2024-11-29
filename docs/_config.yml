@@ -11,6 +11,9 @@ collections:
   docs:
     output: true
     permalink: /:name/
+  news:
+    output: true
+    permalink: /news/:name/
 navigation:
   - title: "Home"
     url: "/PIVlab/"
