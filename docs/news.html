@@ -7,7 +7,7 @@ title: News
 <ul>
     {% for news in site.news %}
     <li>
-        <a href="{{site.baseurl}}{{ news.url }}">{{ news.title }}</a>
+        <iframe src="{{site.baseurl}}{{ news.url }}"></iframe>
     </li>
     {% endfor %}
 </ul>
