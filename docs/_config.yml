@@ -4,6 +4,10 @@ show_downloads: true
 google_analytics:
 theme: jekyll-theme-leap-day
 baseurl: "/PIVlab"
+collections: 
+  wiki:
+    output: true
+    permalink: /wiki/:path
 navigation:
   - title: "Home"
     url: "/PIVlab/"

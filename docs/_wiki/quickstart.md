@@ -1,7 +1,6 @@
 ---
 layout: default
 title: Quickstart
-permalink: /wiki/quickstart
 ---
 # General remarks
 

@@ -1,7 +1,6 @@
 ---
 layout: default
 title: Camera Setup
-permalink: /wiki/camera-setup
 ---
 # Setting up the OPTOcam camera
 *   The OPTOcam requires the [image acquisition toolbox from Mathworks](https://de.mathworks.com/products/image-acquisition.html). This is included in many Matlab licenses from universities.
