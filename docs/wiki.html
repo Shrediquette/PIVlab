@@ -10,4 +10,9 @@ title: Wiki
     <a href="{{ page.url }}">{{ page.title }}</a>
   </li>
   {% endfor %}
+  {% for wiki in site.wiki %}
+    <li>
+        <a href="{{ wiki.url }}">{{ wiki.title }}</a>
+    </li>
+  {% endfor %}
 </ul>
