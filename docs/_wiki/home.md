@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Home
-permalink: /wiki/
+permalink: /wiki/home
 ---
 # What is it?
 
