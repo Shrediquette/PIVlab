@@ -3,14 +3,14 @@ description: Leap Day is a theme for GitHub Pages.
 show_downloads: true
 google_analytics:
 theme: jekyll-theme-leap-day
-baseurl: "/PIVlab"
+baseurl: "/PIVlab/"
 collections: 
   wiki:
     output: true
-    permalink: /PIVlab/wiki/:name/
+    permalink: /wiki/:name/
   docs:
     output: true
-    permalink: /PIVlab/:name/
+    permalink: /:name/
 navigation:
   - title: "Home"
     url: "/PIVlab/"
