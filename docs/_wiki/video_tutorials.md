@@ -1,6 +1,7 @@
 ---
 layout: default
 title: Video Tutorials
+permalink: /PIVlab/wiki/video_tutorials
 ---
 # How to setup PIVlab and import images into PIVlab
 [![IMAGE ALT TEXT](http://img.youtube.com/vi/g2hcTRAzBvY/0.jpg)](http://www.youtube.com/watch?v=g2hcTRAzBvY "PIVlab tutorial 1")

@@ -7,7 +7,10 @@ baseurl: "/PIVlab"
 collections: 
   wiki:
     output: true
-    permalink: /PIVlab/wiki/:path
+#    permalink: /PIVlab/wiki/:path
+  docs:
+    output: true
+#    permalink: /PIVlab/:path
 navigation:
   - title: "Home"
     url: "/PIVlab/"
