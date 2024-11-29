@@ -1,3 +1,5 @@
+@import 'jekyll-theme-leap-day';
+
 .list-divider {
     border-top: 1px solid #ccc;
     margin: 10px 0;
