@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ site.lang | default: "en-US" }}">
+<!--<html lang="{{ site.lang | default: "en-US" }}">-->
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -12,6 +12,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js" integrity="sha256-3Jy/GbSLrg0o9y5Z5n1uw0qxZECH7C6OQpVBgNFYa0g=" crossorigin="anonymous"></script>
   <![endif]-->
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title> PIVlab Home</title>
 
   {% include head-custom.html %}
 </head>
@@ -40,7 +41,7 @@
 <div class="wrapper">
   <nav>
     <ul>
-      {% for item in site.nav %}
+      {% for item in site.navigation %}
       <li><a href="{{ item.url }}">{{ item.title }}</a></li>
       {% endfor %}
     </ul>
@@ -61,4 +62,4 @@
   </footer>
 </div>
 </body>
-</html>
+<!--</html>-->
