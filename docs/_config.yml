@@ -5,8 +5,8 @@ google_analytics:
 theme: jekyll-theme-leap-day
 nav:
   - title: "Home"
-    url: "/PIVlab/"
+    url: "/"
   - title: "About"
-    url: "/PIVlab/about.html"
+    url: "/about.html"
   - title: "Wiki"
-    url: "/PIVlab/wiki/"
+    url: "/wiki/"
