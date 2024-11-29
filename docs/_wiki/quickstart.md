@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Quickstart
-permalink: /PIVlab/wiki/quickstart
+permalink: /PIVlab/wiki/quickstart/
 ---
 # General remarks
 

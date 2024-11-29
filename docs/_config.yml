@@ -15,6 +15,6 @@ navigation:
   - title: "Home"
     url: "/PIVlab/"
   - title: "About"
-    url: "/PIVlab/about.html"
+    url: "/PIVlab/about"
   - title: "Wiki"
-    url: "/PIVlab/wiki/"
+    url: "/PIVlab/wiki"
