@@ -8,11 +8,6 @@ title: Wiki
   {% for page in site.pages %}
   <li>
     <a href="{{ page.url }}">{{ page.title }}</a>
-    <ul>
-      {% for key, value in page %}
-      <li>{{ key }}: {{ value }}</li>
-      {% endfor %}
-    </ul>
   </li>
   {% endfor %}
 </ul>
