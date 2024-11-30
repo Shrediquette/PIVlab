@@ -1623,7 +1623,7 @@ fsdata.style = folder_style_pref;
 % If style = 1, check to make sure icon image file exists.  If it doesn't,
 % try to create it.  If that fails set style = 2.
 if fsdata.style == 1
-	icon_path = fullfile(pwd,'+gui','uipickfiles_folder_icon.png');
+	icon_path = fullfile(userpath,'uipickfiles_folder_icon.png');
 	%icon_path = fullfile(prefdir,'uipickfiles_folder_icon.png');
 	if ~exist(icon_path,'file')
 		success = generate_folder_icon(icon_path);
