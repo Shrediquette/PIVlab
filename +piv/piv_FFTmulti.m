@@ -67,7 +67,7 @@ for multipass = 1:passes
 			utable_orig=utable;
 			vtable_orig=vtable;
 			[utable,vtable] = postproc.PIVlab_postproc (utable,vtable,[],[], [], 1,4, 1,1.5);
-			
+
 			maskedpoints=numel(find((typevector)==0));
 			amountnans=numel(find(isnan(utable)))-maskedpoints;
 			discarded=amountnans/(size(utable,1)*size(utable,2))*100;
@@ -96,7 +96,9 @@ for multipass = 1:passes
 					if serious_issue
 						beep on
 						beep
-						commandwindow
+						if ~isdeployed
+							commandwindow
+						end
 					end
 				end
 			end
@@ -132,7 +134,7 @@ for multipass = 1:passes
 		end
 		interrogationarea = uint32(interrogationarea);
 		step = uint32(step);
-		
+
 		%bildkoordinaten neu errechnen:
 		%roi=[];
 
@@ -173,7 +175,7 @@ for multipass = 1:passes
 		%keyboard
 		disp('XXX')
 		%}
-		
+
 		if (rem(interrogationarea,2) == 0) %for the subpixel displacement measurement
 			interrogationarea_center = double(interrogationarea/2 + 1);
 		else
@@ -200,7 +202,9 @@ for multipass = 1:passes
 			catch
 				%msgbox('Error: Most likely, your ROI is too small and/or the interrogation area too large.','modal')
 				disp('Error: Most likely, your ROI is too small and/or the interrogation area too large.')
-				commandwindow
+				if ~isdeployed
+					commandwindow
+				end
 				utable=zeros(size(xtable));
 				vtable=zeros(size(xtable));
 			end
@@ -210,7 +214,7 @@ for multipass = 1:passes
 			Y = interp1(1:size(ytable,1), ytable(:,1), 0:size(ytable,1)+1, 'linear', 'extrap')';
 			U = padarray(utable, [1,1], 'replicate'); %interesting portion of u
 			V = padarray(vtable, [1,1], 'replicate'); % "" of v
-			
+
 			X1 = (X(1):1:X(end)-1);
 			Y1 = (Y(1):1:Y(end)-1)';
 			X2 = interp2(X,Y,U,X1,Y1,'*linear') + repmat(X1,size(Y1, 1),1);
@@ -463,7 +467,7 @@ for multipass = 1:passes
 			break
 		end
 	end
-	
+
 end
 
 %{
@@ -579,7 +583,7 @@ if(numel(x)~=0)
 	f1 = log(result_conv(ip-xmax));
 	f2 = log(result_conv(ip+xmax));
 	peakx = x + (f1-f2)./(2*f1-4*f0+2*f2);
-	
+
 	SubpixelX = peakx - interrogationarea_center;
 	SubpixelY = peaky - interrogationarea_center;
 	vector(z, :) = [SubpixelX, SubpixelY];
@@ -626,7 +630,7 @@ if(numel(x)~=0)
 	c20 = c10;
 	c02 = c10;
 	ip = sub2ind(size(result_conv), y, x, z);
-	
+
 	for i = -1:1
 		for j = -1:1
 			%following 15 lines based on
@@ -649,15 +653,15 @@ if(numel(x)~=0)
 	c20 = (1/6)*sum(sum(c20));
 	c02 = (1/6)*sum(sum(c02));
 	%c00=(1/9)*sum(sum(c00));
-	
+
 	deltax = squeeze((c11.*c01-2*c10.*c02)./(4*c20.*c02-c11.^2));
 	deltay = squeeze((c11.*c10-2*c01.*c20)./(4*c20.*c02-c11.^2));
 	peakx = x+deltax;
 	peaky = y+deltay;
-	
+
 	SubpixelX = peakx - interrogationarea_center;
 	SubpixelY = peaky - interrogationarea_center;
-	
+
 	vector(z, :) = [SubpixelX, SubpixelY];
 	max_displace=size(result_conv,1)/2;
 	vector(vector > max_displace)=nan;
@@ -666,15 +670,15 @@ end
 
 
 function out = convert_image_class(in,type)
-	if strcmp(type,'double')
-		out=im2double(in);
-	elseif strcmp(type,'single')
-		out=im2single(in);
-	elseif strcmp(type,'uint8')
-		out=im2uint8(in);
-	elseif strcmp(type,'uint16')
-		out=im2uint16(in);
-	end
+if strcmp(type,'double')
+	out=im2double(in);
+elseif strcmp(type,'single')
+	out=im2single(in);
+elseif strcmp(type,'uint8')
+	out=im2uint8(in);
+elseif strcmp(type,'uint16')
+	out=im2uint16(in);
+end
 end
 
 %{
@@ -723,57 +727,57 @@ end
 
 %% Scale an array linearly between 0 and 255 along the third axis.
 function A = rescale_array(A)
-	minA = min(min(A));
-	maxA = max(max(A));
-	deltaA = maxA - minA;
-	% A = ((A-minA) ./ deltaA) * 255
-	A = bsxfun(@rdivide, bsxfun(@minus, A, minA), deltaA) * 255;
+minA = min(min(A));
+maxA = max(max(A));
+deltaA = maxA - minA;
+% A = ((A-minA) ./ deltaA) * 255
+A = bsxfun(@rdivide, bsxfun(@minus, A, minA), deltaA) * 255;
 end
 
 
 %% Pad each image in a stack of images with the mean image value
 function padded_image = meanzeropad(image, padsize)
-	% Subtract mean to avoid high frequencies at border of correlation
-	try
-		image = image - mean(image, [1 2]);
-	catch %old Matlab release
-		image_mean = zeros(size(image));
-		for oldmatlab = 1:size(image,3)
-			image_mean(:,:,oldmatlab) = mean(mean(image(:,:,oldmatlab)));
-		end
-		image = image - image_mean;
+% Subtract mean to avoid high frequencies at border of correlation
+try
+	image = image - mean(image, [1 2]);
+catch %old Matlab release
+	image_mean = zeros(size(image));
+	for oldmatlab = 1:size(image,3)
+		image_mean(:,:,oldmatlab) = mean(mean(image(:,:,oldmatlab)));
 	end
-	% Padding (faster than padarray) to get the linear correlation
-	padded_image = [image zeros(size(image,1),padsize-1,size(image,3)); zeros(padsize-1,size(image,1)+padsize-1,size(image,3))];
+	image = image - image_mean;
+end
+% Padding (faster than padarray) to get the linear correlation
+padded_image = [image zeros(size(image,1),padsize-1,size(image,3)); zeros(padsize-1,size(image,1)+padsize-1,size(image,3))];
 end
 
 %% Correlate two stacks of images using FFT-based convolution
 function result_conv = do_correlations(image1_cut, image2_cut, do_pad, padsize)
-	orig_size = size(image1_cut);
-	if do_pad
-		% pad and subtract mean to avoid high frequencies at border of correlation
-		image1_cut = meanzeropad(image1_cut, padsize);
-		image2_cut = meanzeropad(image2_cut, padsize);
-	end
-	% 2D FFT to calculate correlation matrix
-	result_conv = real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut)));
-	result_conv = fftshift(fftshift(result_conv, 1), 2);
-	if do_pad
-		% cropping of correlation matrix
-		result_conv = result_conv(padsize/2:orig_size(1)-1+padsize/2,padsize/2:orig_size(2)-1+padsize/2,:);
-	end
+orig_size = size(image1_cut);
+if do_pad
+	% pad and subtract mean to avoid high frequencies at border of correlation
+	image1_cut = meanzeropad(image1_cut, padsize);
+	image2_cut = meanzeropad(image2_cut, padsize);
 end
-	%GPU computing performance test
-	%image1_cut_gpu=gpuArray(image1_cut);
-	%image2_cut_gpu=gpuArray(image2_cut);
-	%tic
-	%result_conv_gpu = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut_gpu)).*fft2(image2_cut_gpu))), 1), 2);
-	%toc
-	%result_conv2=gather(result_conv_gpu);
-	%result_conv=result_conv2;
-	%for i=1:size(image1_cut,3)
-	%	result_conv(:,:,i) = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut(:,:,i))).*fft2(image2_cut(:,:,i)))), 1), 2);
-	%end
+% 2D FFT to calculate correlation matrix
+result_conv = real(ifft2(conj(fft2(image1_cut)).*fft2(image2_cut)));
+result_conv = fftshift(fftshift(result_conv, 1), 2);
+if do_pad
+	% cropping of correlation matrix
+	result_conv = result_conv(padsize/2:orig_size(1)-1+padsize/2,padsize/2:orig_size(2)-1+padsize/2,:);
+end
+end
+%GPU computing performance test
+%image1_cut_gpu=gpuArray(image1_cut);
+%image2_cut_gpu=gpuArray(image2_cut);
+%tic
+%result_conv_gpu = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut_gpu)).*fft2(image2_cut_gpu))), 1), 2);
+%toc
+%result_conv2=gather(result_conv_gpu);
+%result_conv=result_conv2;
+%for i=1:size(image1_cut,3)
+%	result_conv(:,:,i) = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut(:,:,i))).*fft2(image2_cut(:,:,i)))), 1), 2);
+%end
 
 %% Check whether a shifted version of an array is correctly detected
 function test_do_correlations(testCase)
@@ -791,22 +795,22 @@ end
 
 %% Calculate correlation coeficients for a stack of image pairs
 function corr_map = calculate_correlation_map(img1, img2)
-	validateattributes(img1, {'numeric'}, {'real','3d'}, mfilename, 'img1', 1);
-	validateattributes(img2, {'numeric'}, {'real','3d'}, mfilename, 'img2', 2);
-	N = size(img1, 3);
-	n = size(img1, 1) * size(img1, 2);
-	a = reshape(img1, [n N]);
-	b = reshape(img2, [n N]);
-	mean_a = sum(a) / n;
-	mean_b = sum(b) / n;
-	corr_map = zeros(N, 1);
-	for i=1:N
-		% All this is a long, but fast way of calculating
-		%   corr_map(i) = corr2(img1(:,:,i), img2(:,:,i))
-		a_ = a(:,i) - mean_a(i);
-		b_ = b(:,i) - mean_b(i);
-		corr_map(i) = sum(a_.*b_) / sqrt(sum(a_.*a_) * sum(b_.*b_));
-	end
+validateattributes(img1, {'numeric'}, {'real','3d'}, mfilename, 'img1', 1);
+validateattributes(img2, {'numeric'}, {'real','3d'}, mfilename, 'img2', 2);
+N = size(img1, 3);
+n = size(img1, 1) * size(img1, 2);
+a = reshape(img1, [n N]);
+b = reshape(img2, [n N]);
+mean_a = sum(a) / n;
+mean_b = sum(b) / n;
+corr_map = zeros(N, 1);
+for i=1:N
+	% All this is a long, but fast way of calculating
+	%   corr_map(i) = corr2(img1(:,:,i), img2(:,:,i))
+	a_ = a(:,i) - mean_a(i);
+	b_ = b(:,i) - mean_b(i);
+	corr_map(i) = sum(a_.*b_) / sqrt(sum(a_.*a_) * sum(b_.*b_));
+end
 end
 
 %% Checks for calculate_correlation_map()

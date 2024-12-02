@@ -16,20 +16,22 @@
 %}
 
 function PIVlab_GUI(desired_num_cores,batch_session_file)
+%% display splash screen in deployed version
+if isdeployed
+		splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','PIVlab standalone','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','off','handlevisibility','on');
+		splash_ax=axes(splashscreen,'units','normalized');
+		imshow(imread(fullfile('images','pivlab_logo1.jpg')),"Parent",splash_ax,'border','tight');
+		set(splash_ax,'Position',[0 0 1 1])
+		set(gca,'DataAspectRatioMode','auto')
+		movegui(splashscreen,'center');
+		set(splashscreen,'visible','on')
+		handle_splash_text = text(splash_ax,250,355,'Generating figure window, please wait...','Color','w','VerticalAlignment','bottom','HorizontalAlignment','center');
+		drawnow expose
+	end
 %% Make figure
 fh = findobj('tag', 'hgui');
 if isempty(fh)
-	%{
-	splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','Loading...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','off','handlevisibility','on');
-	splash_ax=axes(splashscreen,'units','normalized');
-	imshow(imread(fullfile('images','pivlab_logo1.jpg')),"Parent",splash_ax,'border','tight');
-	set(splash_ax,'Position',[0 0 1 1])
-	set(gca,'DataAspectRatioMode','auto')
-	movegui(splashscreen,'center');
-	set(splashscreen,'visible','on')
-	drawnow
-	handle_splash_text = text(splash_ax,10,10,'Loading, please wait...');
-	%}
+	disp('-> Starting PIVlab...')
 	MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0 0.1 1 0.8],'ResizeFcn', @gui.MainWindow_ResizeFcn,'CloseRequestFcn', @gui.MainWindow_CloseRequestFcn,'tag','hgui','visible','off','KeyPressFcn', @gui.key_press);
 	set (MainWindow,'Units','Characters');
 	%clc
@@ -37,7 +39,7 @@ if isempty(fh)
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 	guidata(MainWindow,handles)
 	setappdata(0,'hgui',MainWindow);
-	version = '3.06';
+	version = '3.07';
 	gui.put('PIVver', version);
 	try
 		warning off
@@ -58,11 +60,13 @@ if isempty(fh)
 	v=ver('MATLAB');
 
 	if ~exist('desired_num_cores','var')
-		disp('-> Use the command "PIVlab_GUI(Nr_of_cores)" to select the amount of computation cores.')
+		if ~isdeployed
+			disp('-> Use the command "PIVlab_GUI(Nr_of_cores)" to select the amount of computation cores.')
+		end
 	end
 
 	if ~exist('splash_ax','var')
-		disp(['-> Starting PIVlab ' version ', built on: ' char(datetime(build_date)) ' ...'])
+		disp(['-> PIVlab ' version ', built on: ' char(datetime(build_date)) ' ...'])
 
 		disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
 	else
@@ -87,18 +91,22 @@ if isempty(fh)
 	gui.put('video_selection_done',0);
 
 	%% check write access
-
+	disp(['-> User path is ' userpath]);
 	try
 		temp=rand(3,3);
-		save('temp.mat','temp');
+		save(fullfile(userpath,'temp.mat' ),'temp');
 		if ispc %Matlab seems to have issues with deleting files on unix systems
-			delete 'temp.mat'
+			delete (fullfile(userpath,'temp.mat' ))
 		end
 		disp('-> Write access in current folder ok.')
 	catch
-		disp(['-> No write access in ' pwd '. PIVlab won''t work like this.'])
-		disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
-		beep;commandwindow;pause
+		if isdeployed
+			uiwait(msgbox(['No write access in ' userpath newline newline 'PIVlab will not work properly like this.' newline 'Please make sure that there is write permission for the folder ' userpath ],'modal'));
+		else
+			disp(['-> No write access in ' pwd '. PIVlab won''t work like this.'])
+			disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
+			beep;commandwindow;pause
+		end
 	end
 
 
@@ -120,6 +128,7 @@ if isempty(fh)
 	addpath(fullfile(tempfilepath, 'images'));
 	addpath(fullfile(tempfilepath, 'help'));
 	addpath(fullfile(tempfilepath, 'PIVlab_capture_resources'));
+	addpath(fullfile(tempfilepath, 'PIVlab_capture_resources','pco_resources'));
 	try
 		ctr=0;
 		pivFiles = {'+acquisition' '+calibrate' '+export' '+extract' '+gui' '+import' '+mask' '+misc' '+piv' '+plot' '+postproc' '+preproc' '+roi' '+simulate' '+validate' '+wOFV' 'OptimizationSolvers' 'PIVlab_capture_resources'};
@@ -127,7 +136,9 @@ if isempty(fh)
 			if exist(fullfile(tempfilepath,pivFiles{1,i}),'dir')~=7
 				disp(['ERROR: A required package folder was not found: ' pivFiles{1,i}]);
 				disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
-				beep;commandwindow;pause
+				if ~isdeployed
+					beep;commandwindow;pause
+				end
 			else
 				ctr=ctr+1;
 			end
@@ -159,14 +170,17 @@ if isempty(fh)
 			disp('WARNING: Your Matlab version is too old for running PIVlab.')
 			disp('WARNING: You need at least version 9.7 (R2019b) to use all features.')
 			disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
-			beep;commandwindow;pause
+			if ~isdeployed
+				beep;commandwindow;pause
+			end
 		end
 	catch
 		disp('MATLAB version could not be checked automatically.')
 		disp('WARNING: You need at least version 9.7 (R2019b) to use all features.')
 		disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
-		beep
-		beep;commandwindow;pause
+		if ~isdeployed
+			beep;commandwindow;pause
+		end
 	end
 	%% Check image toolbox availability
 	try
@@ -183,21 +197,35 @@ if isempty(fh)
 				disp('"J = adapthisteq(rand(8,8))" (enter this without quotes)')
 				disp(' ')
 				disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
-				beep;commandwindow;pause
+				if ~isdeployed
+					beep;commandwindow;pause
+				end
 			end
 		else
 			disp('ERROR: Image Processing Toolbox not found! PIVlab won''t work like this.')
 			disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
-			beep;commandwindow;pause
+			if ~isdeployed
+				beep;commandwindow;pause
+			end
 		end
 		%% Check parallel computing toolbox availability
 		gui.put('parallel',0);
 		try %checking for a parallel license file throws a huge error message wheh it is not available. This might scare users... Better: Try...catch block
 			if ~exist('desired_num_cores','var') %no input argument --> use all existing cores
 				if misc.pivparpool('size')<=0 %no exisitng pool
-					misc.pivparpool('open',feature('numCores')); %use all cores
+					if isdeployed
+						answer = questdlg('Open parallel pool?','Parallel processing', 'Yes','No','Yes');
+						switch answer
+							case 'Yes'
+								misc.pivparpool('open',feature('numCores')); %use all cores
+								gui.put('parallel',1);
+							case 'No'
+						end
+					else
+						misc.pivparpool('open',feature('numCores')); %use all cores
+						gui.put('parallel',1);
+					end
 				end
-				gui.put('parallel',1);
 			else%parameter supplied
 				if desired_num_cores > 1 && desired_num_cores ~= misc.pivparpool('size') %desired doesn't match existing pool
 					if desired_num_cores > feature('numCores')%desired too many cores
@@ -292,16 +320,15 @@ if isempty(fh)
 		disp('Could not load default settings. But this doesn''t really matter.')
 	end
 	%%
-
+	if isdeployed
+		close(splashscreen)
+	end
 	%%
 	misc.CheckUpdates
 	gui.SetFullScreen
 
 	gui.displogo(1);drawnow;
-	try
-		close(splashscreen)
-	catch
-	end
+	
 	set(MainWindow, 'Visible','on');
 
 	%% Batch session  processing in GUI
@@ -309,6 +336,7 @@ if isempty(fh)
 		gui.put('batchModeActive',0)
 	else
 		if exist (batch_session_file,'file')
+			gui.put('batchModeActive',1)
 			[filepath,name,ext] = fileparts(batch_session_file);
 			import.load_session_Callback (1,batch_session_file)
 			disp('')
@@ -322,8 +350,6 @@ if isempty(fh)
 			validate.apply_filter_all_Callback
 			disp('...saving output...')
 			export.save_session_Callback(1,batch_session_file_output)
-
-			gui.put('batchModeActive',1)
 			disp('done, exiting...')
 			gui.MainWindow_CloseRequestFcn
 		else
@@ -331,7 +357,13 @@ if isempty(fh)
 			gui.put('batchModeActive',0)
 		end
 	end
-
+%{
+	disp('test')
+currentdir = pwd
+cd ('C:\Program Files\PCO Digital Camera Toolbox\pco.matlab\runtime\win_x64\bin') 
+loadlibrary('pco_recorder','sc2_cammatlab.h' ,'addheader','pco_recorder_export.h' ,'alias','PCO_CAM_RECORDER');
+cd currentdir
+%}
 else %Figure handle does already exist --> bring PIVlab to foreground.
 	disp('Only one instance of PIVlab is allowed to run.')
 	figure(fh)

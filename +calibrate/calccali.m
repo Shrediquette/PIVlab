@@ -9,19 +9,39 @@ if numel(pointscali)>0
 	dist=sqrt((xposition(1)-xposition(2))^2 + (yposition(1)-yposition(2))^2);
 	realdist=str2double(get(handles.realdist, 'String'));
 	time=str2double(get(handles.time_inp, 'String'));
+
+
 	calxy=(realdist/1000)/dist; %m/px %realdist=realdistance in m; dist=distance in px
 	x_axis_direction=get(handles.x_axis_direction,'value'); %1= increase to right, 2= increase to left
 	y_axis_direction=get(handles.y_axis_direction,'value'); %1= increase to bottom, 2= increase to top
-	if x_axis_direction==1
-		calu=calxy/(time/1000);
+
+
+	if time == 0 %user entered zero as time step --> PIVlab will measure displacements instead of velocities
+		gui.put('displacement_only',1)
+		if x_axis_direction==1
+			calu=calxy;
+		else
+			calu=-1*calxy;
+		end
+		if y_axis_direction==1
+			calv=calxy;
+		else
+			calv=-1*calxy;
+		end
 	else
-		calu=-1*(calxy/(time/1000));
+		gui.put('displacement_only',0)
+		if x_axis_direction==1
+			calu=calxy/(time/1000);
+		else
+			calu=-1*(calxy/(time/1000));
+		end
+		if y_axis_direction==1
+			calv=calxy/(time/1000);
+		else
+			calv=-1*(calxy/(time/1000));
+		end
 	end
-	if y_axis_direction==1
-		calv=calxy/(time/1000);
-	else
-		calv=-1*(calxy/(time/1000));
-	end
+
 	gui.put('calu',calu);
 	gui.put('calv',calv);
 	gui.put('calxy',calxy);

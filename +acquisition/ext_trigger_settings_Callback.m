@@ -8,7 +8,7 @@ if ~isempty(serpo)
 		set(handles.ac_enable_ext_trigger,'String','Acquiring...','Enable','off')
 
 		drawnow;
-		flush(serpo)
+		flush(serpo);pause(0.1)
 		%configureTerminator(serpo,'CR');
 		writeline(serpo,'TrigFreq?');
 		pause(1.25);

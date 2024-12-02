@@ -17,7 +17,7 @@ switch(evname)
 			set (handles.deltax, 'String', [num2str(deltax*calxy) ' [px]']);
 			set (handles.deltay, 'String', [num2str(deltay*calxy) ' [px]']);
 			set (handles.length, 'String', [num2str(length*calxy) ' [px]']);
-		else
+		else %calibrated
 			set (handles.deltax, 'String', [num2str(deltax*calxy) ' [m]']);
 			set (handles.deltay, 'String', [num2str(deltay*calxy) ' [m]']);
 			set (handles.length, 'String', [num2str(length*calxy) ' [m]']);

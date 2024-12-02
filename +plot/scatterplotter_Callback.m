@@ -37,8 +37,14 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		xlabel('u [px/frame]');
 		ylabel('v [px/frame]');
 	else
-		xlabel('u [m/s]');
-		ylabel('v [m/s]');
+		displacement_only=gui.retr('displacement_only');
+		if ~isempty(displacement_only) && displacement_only == 1
+			xlabel('u [m/frame]');
+			ylabel('v [m/frame]');
+		else
+			xlabel('u [m/s]');
+			ylabel('v [m/s]');
+		end
 	end
 end
 

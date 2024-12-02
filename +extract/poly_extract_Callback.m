@@ -2,9 +2,14 @@ function poly_extract_Callback(~, ~, ~)
 handles=gui.gethand;
 gui.switchui('multip12')
 if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
-	set(handles.extraction_choice,'string', {'Vorticity [1/frame]';'Magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Shear rate [1/frame]';'Strain rate [1/frame]';'Vector direction [degrees]';'Correlation coefficient [-]';'Tangent velocity [px/frame]'});
-else
-	set(handles.extraction_choice,'string', {'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Shear rate [1/s]';'Strain rate [1/s]';'Vector direction [degrees]';'Correlation coefficient [-]';'Tangent velocity [m/s]'});
+	set(handles.extraction_choice,'string', {'Vorticity in 1/frame';'Magnitude in px/frame';'u component in px/frame';'v component in px/frame';'Divergence in 1/frame';'Vortex locator';'Shear rate in 1/frame';'Strain rate in 1/frame';'Vector direction in degrees';'Correlation coefficient';'Tangent velocity in px/frame'});
+else %calibrated
+	displacement_only=gui.retr('displacement_only');
+	if ~isempty(displacement_only) && displacement_only == 1
+		set(handles.extraction_choice,'string', {'Vorticity in 1/frame';'Magnitude in m/frame';'u component in m/frame';'v component in m/frame';'Divergence in 1/frame';'Vortex locator';'Shear rate in 1/frame';'Strain rate in 1/frame';'Vector direction in degrees';'Correlation coefficient';'Tangent velocity in m/frame'});
+	else
+		set(handles.extraction_choice,'string', {'Vorticity in 1/s';'Magnitude in m/s';'u component in m/s';'v component in m/s';'Divergence in 1/s';'Vortex locator';'Shear rate in 1/s';'Strain rate in 1/s';'Vector direction in degrees';'Correlation coefficient';'Tangent velocity in m/s'});
+	end
 end
 %draw extraction polygon when frame was changed.
 pivlab_axis=gui.retr('pivlab_axis');

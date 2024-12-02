@@ -74,8 +74,16 @@ if size(resultslist,2)>=frame
 		typevector(typevector_original==0)=0; %restores typevector for mask
 		%interpolation using inpaint_NaNs
 		if get(handles.interpol_missing, 'value')==1
-			u=misc.inpaint_nans(u,4);
-			v=misc.inpaint_nans(v,4);
+			try
+				u=misc.inpaint_nans(u,4);
+			catch
+				disp('too many missing vectors, can not interpolate.')
+			end
+			try
+				v=misc.inpaint_nans(v,4);
+			catch
+				disp('too many missing vectors, can not interpolate.')
+			end
 		end
 		resultslist{7, frame} = u;
 		resultslist{8, frame} = v;

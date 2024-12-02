@@ -12,12 +12,21 @@ else
 	result=1;
 end
 if strcmp(caller,'double_images')
-	if result==1 && exist(fullfile(projectpath,'PIVlab_0000_A.tif'),'file') || exist(fullfile(projectpath,'frame_000001.tiff'),'file')
-		button = questdlg('Overwrite files?','Overwrite?','Yes','Cancel','Yes');
-		if strmatch(button,'Yes')==1
-			result=1;
+	if result==1
+		pcofilePattern = fullfile(projectpath, 'PIVlab_pco_Cam*.tif');
+		direc= dir(pcofilePattern);
+		if ~isempty(direc)
+			direc=fullfile(projectpath,direc(1).name);
 		else
-			result=0;
+			direc='';
+		end
+		if exist(fullfile(projectpath,'PIVlab_0000_A.tif'),'file')==2 || exist(fullfile(projectpath,'frame_000001.tiff'),'file')==2 || exist(direc,'file')==2
+			button = questdlg('Overwrite files?','Overwrite?','Yes','Cancel','Yes');
+			if strmatch(button,'Yes')==1
+				result=1;
+			else
+				result=0;
+			end
 		end
 	end
 end

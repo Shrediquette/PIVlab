@@ -152,7 +152,7 @@ end
 try
 	if alreadyconnected==1
 		pause(0.1)
-		flush(serpo)
+		flush(serpo);pause(0.1)
 		status_device=[];
 		handles=gethand;
 		switch device

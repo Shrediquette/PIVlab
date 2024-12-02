@@ -82,7 +82,7 @@ scroll_bar_width = 0.5;
 %timer to play video
 axes (axes_handle)
 
-h_fig=imshow(imread(fullfile('images','vid_hint.jpg')));drawnow
+h_fig=imshow(imread(fullfile('images','vid_hint.jpg')),'Interpolation','bilinear');drawnow
 play_timer = timer('TimerFcn',@play_timer_callback, 'ExecutionMode','fixedRate','busymode','drop');
 scroll_bar_handles = [scroll_axes_handle; scroll_handle];
 scroll_func = @scroll;

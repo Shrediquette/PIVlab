@@ -1,4 +1,4 @@
-function [OutputError,ima,frame_nr_display] = PIVlab_capture_OPTOcam_calibration_image(img_amount,exposure_time,ROI_OPTOcam)
+function [OutputError,ima_out,frame_nr_display] = PIVlab_capture_OPTOcam_calibration_image(img_amount,exposure_time,ROI_OPTOcam)
 
 OutputError=0;
 hgui=getappdata(0,'hgui');
@@ -101,7 +101,8 @@ preview(OPTOcam_vid,image_handle_OPTOcam)
 caxis([0 2^12]); %seems to be a workaround to force preview to show full data range...
 displayed_img_amount=0;
 while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
-    ima = image_handle_OPTOcam.CData;%*16; %stretch 12 bit to 16 bit
+    ima = image_handle_OPTOcam.CData;
+	ima_out = bitshift(ima,4); %stretch 12 bit to 16 bit
     %% sharpness indicator
     sharpness_enabled = getappdata(hgui,'sharpness_enabled');
     if sharpness_enabled == 1 % sharpness indicator
@@ -273,8 +274,8 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
                         focus_edit_field=getappdata(lens_control_window,'handle_to_focus_edit_field');
                         set(focus_edit_field,'String',num2str(focus_peak)); %update
                         %setappdata(hgui,'cancel_capture',1); %stop recording....?
-                        figure;plot(raw_data(:,1),raw_data(:,2))
-                        hold on;plot(sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range'));hold off
+                        figure;plot(raw_data(:,1),raw_data(:,2),'Linewidth',2)
+                        hold on;plot(sharpness_focus_table(:,1),normalize(sharpness_focus_table(:,2),'range'),'Linewidth',2);hold off
                         title('Focus search')
                         xlabel('Pulsewidth us')
                         ylabel('Sharpness')

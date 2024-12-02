@@ -14,7 +14,7 @@ catch
 end
 
 if alreadyconnected==1
-	flush(serpo)
+	flush(serpo);pause(0.01)
 	line_to_write=['FOCUS:' num2str(focus) ';APERTURE:' num2str(aperture) ';LIGHTING:' num2str(lighting)];
 	writeline(serpo,line_to_write);
 	%disp(['Setting focus: ' num2str(focus) ' us, aperture: ' num2str(aperture) ' us, light: ' num2str(lighting)])

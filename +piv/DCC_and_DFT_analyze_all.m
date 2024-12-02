@@ -4,7 +4,7 @@ handles=gui.gethand;
 try
 	warning off
 	recycle('off');
-	delete('cancel_piv');
+	delete(fullfile(userpath,'cancel_piv'));
 	gui.put('cancel',0);
 	warning on
 catch ME
@@ -25,7 +25,10 @@ if ok==1
 		gui.put('update_display',1)
 	end
 	filepath=gui.retr('filepath');
+	framenum=gui.retr('framenum');
 	filename=gui.retr('filename');
+	framepart = gui.retr ('framepart');
+
 	toggler=gui.retr('toggler');
 	resultslist=cell(0); %clear old results
 
@@ -101,6 +104,10 @@ if ok==1
 		do_correlation_matrices=gui.retr('do_correlation_matrices');
 		slicedfilepath1=cell(0);
 		slicedfilepath2=cell(0);
+		slicedframenum1=[];
+		slicedframenum2=[];
+		slicedframepart1=[];
+		slicedframepart2=[];
 		xlist=cell(0);
 		ylist=cell(0);
 		ulist=cell(0);
@@ -112,6 +119,10 @@ if ok==1
 			k=(i+1)/2;
 			slicedfilepath1{k}=filepath{i};
 			slicedfilepath2{k}=filepath{i+1};
+			slicedframenum1(k)=framenum(i);
+			slicedframenum2(k)=framenum(i+1);
+			slicedframepart1(k,:)=framepart(i,:);
+			slicedframepart2(k,:)=framepart(i+1,:);
 		end
 		%set(handles.totaltime, 'String','Time elapsed: N/A');
 		%xpos=size(image1,2)/2-40;
@@ -139,7 +150,7 @@ if ok==1
 			end
 
 			parfor i=1:size(slicedfilepath1,2)
-				if exist('cancel_piv','file')
+				if exist(fullfile(userpath,'cancel_piv'),'file')
 					close(hbar);
 					continue
 				end
@@ -150,8 +161,8 @@ if ok==1
 					currentimage2=import.f_readB16(slicedfilepath2{i});
 
 				else
-					currentimage1=imread(slicedfilepath1{i});
-					currentimage2=imread(slicedfilepath2{i});
+					currentimage1=import.imread_wrapper(slicedfilepath1{i},slicedframenum1(i),slicedframepart1(i,:))
+					currentimage2=import.imread_wrapper(slicedfilepath2{i},slicedframenum2(i),slicedframepart2(i,:))
 				end
 				if bg_sub==1
 					if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
@@ -243,7 +254,7 @@ if ok==1
 
 			parfor i=1:size(slicedfilepath1,2)
 				%------------------------
-				if exist('cancel_piv','file')
+				if exist(fullfile(userpath,'cancel_piv'),'file')
 					close(hbar);
 					continue
 				end
@@ -253,8 +264,8 @@ if ok==1
 					currentimage1=import.f_readB16(slicedfilepath1{i});
 					currentimage2=import.f_readB16(slicedfilepath2{i});
 				else
-					currentimage1=imread(slicedfilepath1{i});
-					currentimage2=imread(slicedfilepath2{i});
+					currentimage1=import.imread_wrapper(slicedfilepath1{i},slicedframenum1(i),slicedframepart1(i,:))
+					currentimage2=import.imread_wrapper(slicedfilepath2{i},slicedframenum2(i),slicedframepart2(i,:))
 				end
 
 				if numel(masks_in_frame)< i
@@ -490,7 +501,7 @@ if ok==1
 	try
 		warning off
 		recycle('off');
-		delete('cancel_piv')
+		delete(fullfile(userpath,'cancel_piv'))
 		warning on
 	catch ME
 		disp('There was an error deleting a temporary file.')

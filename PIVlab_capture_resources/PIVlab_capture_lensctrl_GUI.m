@@ -153,7 +153,7 @@ catch
 	delete(serpo)
 end
 if alreadyconnected==1
-	flush(serpo)
+	flush(serpo);pause(0.01)
 	writeline(serpo,'WhatIsTheAngle?');
 	warning off
 	serial_answer=readline(serpo);
@@ -195,7 +195,7 @@ catch
 	delete(serpo)
 end
 if alreadyconnected==1
-	flush(serpo)
+	flush(serpo);pause(0.01)
 	writeline(serpo,'WhatIsTheAngle?');
 	warning off
 	serial_answer=readline(serpo);
@@ -462,7 +462,7 @@ if do_calib==1
 		set(handles.angle_measure,'Value',0);
 		temp_set.Value=0;
 		angle_measure_Callback (temp_set);
-		flush(serpo)
+		flush(serpo);pause(0.01)
 		Roll=zeros(1,10);
 		Pitch=zeros(1,10);
 		set(handles.calibrate,'String','Please wait...')

@@ -39,7 +39,8 @@ else
 
 	unitpar=get(handles.extraction_choice_area,'string');
 	unitpar=unitpar{get(handles.extraction_choice_area,'value')};
-	unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
+	%unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
+	unitpar=unitpar(strfind(unitpar,'in ')+3:end);
 
 	if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0 %if there is data in the current frame
 		maptoget=plot.rescale_maps_nan(maptoget,0,currentframe);

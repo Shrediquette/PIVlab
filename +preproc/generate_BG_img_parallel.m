@@ -12,6 +12,9 @@ if get(handles.bg_subtract,'Value')==1
 				%% Calculate BG for all images....
 				% read first image to determine properties
 				filepath = gui.retr('filepath');
+				framenum = gui.retr('framenum');
+				framepart = gui.retr ('framepart');
+
 				if gui.retr('video_selection_done') == 0
 					[~,~,ext] = fileparts(filepath{1});
 					if strcmp(ext,'.b16')
@@ -19,8 +22,8 @@ if get(handles.bg_subtract,'Value')==1
 						image2=import.f_readB16(filepath{2});
 						imagesource='b16_image';
 					else
-						image1=imread(filepath{1});
-						image2=imread(filepath{2});
+						image1=import.imread_wrapper(filepath{1},framenum(1),framepart(1,:));
+						image2=import.imread_wrapper(filepath{2},framenum(2),framepart(2,:));
 						imagesource='normal_pixel_image';
 					end
 				else
@@ -76,22 +79,29 @@ if get(handles.bg_subtract,'Value')==1
 				cntr=1;
 				imagelist_A=cell(0);
 				imagelist_B=cell(0);
+				framenumlist_A=[];
+				framenumlist_B=[];
+				framepartlist_A=[];
+				framepartlist_B=[];
 				for i=start_bg:skip_bg:size(filepath,1)
-
 					imagelist_A{cntr}=filepath{i};
+					framenumlist_A(cntr,:)=framenum(i);
+					framepartlist_A(cntr,:)=framepart(i,:);
 					if sequencer==1 %not time-resolved
 						imagelist_B{cntr}=filepath{i+1};
+						framenumlist_B(cntr,:)=framenum(i+1);
+						framepartlist_B(cntr,:)=framepart(i+1,:);
 					else
 						imagelist_B=imagelist_A; %totally strange workaround for Matlab R2022b.... if sequencer == 0 then this variable will never be used. But if it is empty, then an error occurs...
+						framenumlist_B=framenumlist_A;
+						framepartlist_B=framepartlist_A;
 					end
-
 					cntr=cntr+1;
 
 				end
 
 				hbar = gui.pivprogress(numel(imagelist_A),handles.preview_preprocess);
 				parfor	i=1:numel(imagelist_A)
-
 					image_to_add1=[];
 					image_to_add2=[];
 					counter=counter+1; %counts the amount of images --> do that elsewhere
@@ -101,9 +111,9 @@ if get(handles.bg_subtract,'Value')==1
 							image_to_add2 = import.f_readB16(imagelist_B{i});
 						end
 					elseif strcmp('normal_pixel_image',imagesource)
-						image_to_add1 = imread(imagelist_A{i});
+						image_to_add1 = import.imread_wrapper(imagelist_A{i},framenumlist_A(i),framepartlist_A(i,:));
 						if sequencer==1 %not time-resolved
-							image_to_add2 = imread(imagelist_B{i}); %will be double or uint8
+							image_to_add2 = import.imread_wrapper(imagelist_B{i},framenumlist_B(i),framepartlist_B(i,:)); %will be double or uint8
 						end
 					elseif strcmp('from_video',imagesource)
 						disp('parallel bg calculation wird mit videoframes nicht gehen....')

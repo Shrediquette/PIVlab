@@ -6,15 +6,23 @@ if isnan(derivative_alpha) || derivative_alpha>100 || derivative_alpha <0
 end
 
 %% draw background particle image in gray
+image_display_type=get(handles.displ_image,'Value'); %1 = piv image, 2= black, 3 = white
 [currentimage,~]=import.get_img(selected);
 if size(currentimage,3)>1 % color image
 	currentimage=rgb2gray(currentimage); %convert to gray, always.
 end
-if get(handles.enhance_images, 'Value')
-	currentimage=imadjust(currentimage);
-end
 
-image(cat(3, currentimage, currentimage, currentimage), 'parent',target_axis, 'cdatamapping', 'scaled');
+
+if image_display_type==1
+	if get(handles.enhance_images, 'Value')
+		currentimage=imadjust(currentimage);
+	end
+	image(cat(3, currentimage, currentimage, currentimage), 'parent',target_axis, 'cdatamapping', 'scaled');
+elseif image_display_type==2 %black
+	image(cat(3, currentimage*0, currentimage*0, currentimage*0), 'parent',target_axis, 'cdatamapping', 'scaled');
+elseif image_display_type==3 %white
+	image(cat(3, (currentimage+1)*inf, (currentimage+1)*inf, (currentimage+1)*inf), 'parent',target_axis, 'cdatamapping', 'scaled');
+end
 colormap('gray');
 axis image
 
@@ -28,7 +36,6 @@ else
 end
 
 %% load masks, convert to binary image
-
 render_mask=1; % should the mask be rendered in the image display?
 if get(handles.mask_edit_mode,'Value')==2 %Mask mode is "Preview"
 	masks_in_frame=gui.retr('masks_in_frame');
@@ -151,13 +158,20 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 		name=get(handles.derivchoice,'string');
 		if strcmp(name,'N/A') %user hasn't visited the derived panel before
 			if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
-				set(handles.derivchoice,'String',{'Vectors [px/frame]';'Vorticity [1/frame]';'Magnitude [px/frame]';'u component [px/frame]';'v component [px/frame]';'Divergence [1/frame]';'Vortex locator [1]';'Simple shear rate [1/frame]';'Simple strain rate [1/frame]';'Line integral convolution (LIC) [1]' ; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
-				set(handles.text35,'String','u [px/frame]:')
-				set(handles.text36,'String','v [px/frame]:')
-			else
-				set(handles.derivchoice,'String',{'Vectors [m/s]';'Vorticity [1/s]';'Magnitude [m/s]';'u component [m/s]';'v component [m/s]';'Divergence [1/s]';'Vortex locator [1]';'Simple shear rate [1/s]';'Simple strain rate [1/s]';'Line integral convolution (LIC) [1]'; 'Vector direction [degrees]'; 'Correlation coefficient [-]'});
-				set(handles.text35,'String','u [m/s]:')
-				set(handles.text36,'String','v [m/s]:')
+				set(handles.derivchoice,'String',{'Vectors in px/frame';'Vorticity in 1/frame';'Magnitude in px/frame';'u component in px/frame';'v component in px/frame';'Divergence in 1/frame';'Vortex locator';'Simple shear rate in 1/frame';'Simple strain rate in 1/frame';'Line integral convolution (LIC)' ; 'Vector direction in degrees'; 'Correlation coefficient'});
+				set(handles.text35,'String','u in px/frame:')
+				set(handles.text36,'String','v in px/frame:')
+			else %calibrated
+				displacement_only=gui.retr('displacement_only');
+				if ~isempty(displacement_only) && displacement_only == 1
+					set(handles.derivchoice,'String',{'Vectors in m/frame';'Vorticity in 1/sframe';'Magnitude in m/frame';'u component in m/frame';'v component in m/sframe';'Divergence in 1/sframe';'Vortex locator';'Simple shear rate in 1/frame';'Simple strain rate in 1/frame';'Line integral convolution (LIC)'; 'Vector direction in degrees'; 'Correlation coefficient'});
+					set(handles.text35,'String','u in m/frame:')
+					set(handles.text36,'String','v in m/frame:')
+				else
+					set(handles.derivchoice,'String',{'Vectors in m/s';'Vorticity in 1/s';'Magnitude in m/s';'u component in m/s';'v component in m/s';'Divergence in 1/s';'Vortex locator';'Simple shear rate in 1/s';'Simple strain rate in 1/s';'Line integral convolution (LIC)'; 'Vector direction in degrees'; 'Correlation coefficient'});
+					set(handles.text35,'String','u in m/s:')
+					set(handles.text36,'String','v in m/s:')
+				end
 			end
 			name=get(handles.derivchoice,'String');
 		end
@@ -165,17 +179,17 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 		posichoice = get(handles.colorbarpos,'String');
 
 		parentfigure_of_target_axis=ancestor(target_axis,'figure');
-		coloobj=colorbar(posichoice{get(handles.colorbarpos,'Value')},'Fontsize',9,'HitTest','off','parent',parentfigure_of_target_axis);
+		coloobj=colorbar(posichoice{get(handles.colorbarpos,'Value')},'Fontsize',12,'HitTest','off','parent',parentfigure_of_target_axis);
 
 		axis (target_axis,'image');
 		strcmp(posichoice{get(handles.colorbarpos,'Value')},'EastOutside');
 		strcmp(posichoice{get(handles.colorbarpos,'Value')},'WestOutside');
 
 		if strcmp(posichoice{get(handles.colorbarpos,'Value')},'EastOutside')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'WestOutside')==1
-			ylabel(coloobj,name{gui.retr('displaywhat')},'fontsize',9,'fontweight','bold');
+			ylabel(coloobj,name{gui.retr('displaywhat')},'fontsize',12,'fontweight','bold'); %9
 		end
 		if strcmp(posichoice{get(handles.colorbarpos,'Value')},'NorthOutside')==1 | strcmp(posichoice{get(handles.colorbarpos,'Value')},'SouthOutside')==1
-			xlabel(coloobj,name{gui.retr('displaywhat')},'fontsize',11,'fontweight','bold');
+			xlabel(coloobj,name{gui.retr('displaywhat')},'fontsize',12,'fontweight','bold'); %11
 		end
 
 		tickamount=min([colormap_steps 8])+1; % depends on the amount of colormap steps

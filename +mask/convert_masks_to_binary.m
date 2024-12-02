@@ -2,6 +2,11 @@ function converted_mask=convert_masks_to_binary(mask_size,mask_positions)
 mask_size=mask_size(1:2);
 editedMask = zeros(mask_size,'uint8');
 if ~isempty(mask_positions)
+	for i=size(mask_positions,1):-1:1 %remove empty masks.
+		if isempty(mask_positions{i,2})
+			mask_positions(i,:)=[];
+		end
+	end
 	for i=1:size(mask_positions,1)
 		if 	strcmp(mask_positions{i,1},'ROI_object_freehand')	|| strcmp(mask_positions{i,1},'ROI_object_polygon') || strcmp(mask_positions{i,1},'ROI_object_external')
 			xi=mask_positions{i,2}(:,1);

@@ -4,6 +4,8 @@ resultslist=gui.retr('resultslist');
 if ~isempty(resultslist)
 	handles=gui.gethand;
 	filepath=gui.retr('filepath');
+	framenum=gui.retr('framenum');
+	framepart = gui.retr ('framepart');
 	gui.toolsavailable(0,'Busy, please wait...')
 	gui.put('derived', []); %clear derived parameters if user modifies source data
 	if gui.retr('video_selection_done') == 0
@@ -22,10 +24,18 @@ if ~isempty(resultslist)
 	else %not using a video file --> parallel processing possible
 		slicedfilepath1=cell(0);
 		slicedfilepath2=cell(0);
+		slicedframenum1=[];
+		slicedframenum2=[];
+		slicedframepart1=[];
+		slicedframepart2=[];
 		for i=1:2:size(filepath,1)%num_frames_to_process
 			k=(i+1)/2;
 			slicedfilepath1{k}=filepath{i};
 			slicedfilepath2{k}=filepath{i+1};
+			slicedframenum1(k)=framenum(i);
+			slicedframenum2(k)=framenum(i+1);
+			slicedframepart1(k,:)=framepart(i,:);
+			slicedframepart2(k,:)=framepart(i+1,:);
 		end
 		if get(handles.bg_subtract,'Value')==1
 			bg_img_A = gui.retr('bg_img_A');
@@ -92,8 +102,8 @@ if ~isempty(resultslist)
 						currentimage1=import.f_readB16(slicedfilepath1{i});
 						currentimage2=import.f_readB16(slicedfilepath2{i});
 					else
-						currentimage1=imread(slicedfilepath1{i});
-						currentimage2=imread(slicedfilepath2{i});
+						currentimage1=import.imread_wrapper(slicedfilepath1{i},slicedframenum1(i),slicedframepart1(i,:))
+						currentimage2=import.imread_wrapper(slicedfilepath2{i},slicedframenum2(i),slicedframepart2(i,:))
 					end
 					rawimageA=currentimage1;
 					rawimageB=currentimage2;

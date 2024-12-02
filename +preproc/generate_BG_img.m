@@ -12,6 +12,9 @@ if get(handles.bg_subtract,'Value')==1
 				%% Calculate BG for all images....
 				% read first image to determine properties
 				filepath = gui.retr('filepath');
+				framenum = gui.retr ('framenum');
+				framepart = gui.retr ('framepart');
+
 				if gui.retr('video_selection_done') == 0
 					[~,~,ext] = fileparts(filepath{1});
 					if strcmp(ext,'.b16')
@@ -19,8 +22,8 @@ if get(handles.bg_subtract,'Value')==1
 						image2=import.f_readB16(filepath{2});
 						imagesource='b16_image';
 					else
-						image1=imread(filepath{1});
-						image2=imread(filepath{2});
+						image1=import.imread_wrapper(filepath{1},framenum(1),framepart(1,:));
+						image2=import.imread_wrapper(filepath{2},framenum(2),framepart(2,:));
 						imagesource='normal_pixel_image';
 					end
 				else
@@ -89,9 +92,9 @@ if get(handles.bg_subtract,'Value')==1
 							image_to_add2 = import.f_readB16(filepath{i+1});
 						end
 					elseif strcmp('normal_pixel_image',imagesource)
-						image_to_add1 = imread(filepath{i});
+						image_to_add1 = import.imread_wrapper(filepath{i},framenum(i),framepart(i,:));
 						if sequencer==1 %not time-resolved
-							image_to_add2 = imread(filepath{i+1}); %will be double or uint8
+							image_to_add2 = import.imread_wrapper(filepath{i+1},framenum(i+1),framepart(i+1,:)); %will be double or uint8
 						end
 					elseif strcmp('from_video',imagesource)
 						image_to_add1 = read(video_reader_object,video_frame_selection(i));
@@ -147,6 +150,9 @@ if get(handles.bg_subtract,'Value')==1
 
 					%% sum images
 					image1=image1 +image_to_add1;
+					%just keep smallest element
+					%image1(image_to_add1<image1) = image_to_add1(image_to_add1<image1);
+					
 					if sequencer==1 %not time-resolved
 						img_size_info1=size(image2);
 						img_size_info2=size(image_to_add2);
@@ -155,6 +161,7 @@ if get(handles.bg_subtract,'Value')==1
 							break
 						end
 						image2=image2+image_to_add2;
+						%image2(image_to_add2<image2) = image_to_add2(image_to_add2<image2);
 					end
 				end %of for loop and image summing
 

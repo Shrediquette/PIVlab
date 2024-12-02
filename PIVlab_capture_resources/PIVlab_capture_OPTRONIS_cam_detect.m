@@ -12,7 +12,9 @@ try
 catch
 	errordlg('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','Error!','modal')
 	disp('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.')
-	commandwindow
+	if ~isdeployed
+		commandwindow
+	end
 end
 info = imaqhwinfo(hwinf.InstalledAdaptors{1});
 if strcmp(info.AdaptorName,'gentl')
@@ -21,7 +23,9 @@ else
 	disp('ERROR: gentl adaptor not found. Please install the GenICam / GenTL support package from here:')
 	disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
 	errordlg({'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'Error, support package missing','modal')
-	commandwindow
+	if ~isdeployed
+		commandwindow
+	end
 end
 
 try

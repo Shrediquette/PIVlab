@@ -1,14 +1,16 @@
 function [currentimage,rawimage] = get_img(selected)
 handles=gui.gethand;
 filepath = gui.retr('filepath');
+framenum = gui.retr ('framenum');
+framepart = gui.retr ('framepart');
 if gui.retr('video_selection_done') == 0
 	[~,~,ext] = fileparts(filepath{selected});
 	if strcmp(ext,'.b16')
 		currentimage=import.f_readB16(filepath{selected});
 		rawimage=currentimage;
 	else
-		%disp(filepath{selected})
-		currentimage=imread(filepath{selected});
+		%currentimage=imread(filepath{selected},framenum(selected));
+		currentimage=import.imread_wrapper(filepath{selected},framenum(selected),framepart(selected,:));
 		rawimage=currentimage;
 	end
 else
@@ -52,7 +54,7 @@ else %expected_image_size is not empty, an image has been read before
 		gui.put('size_warning_has_been_shown',1);
 		warning off
 		recycle('off');
-		delete('cancel_piv');
+		delete(fullfile(userpath,'cancel_piv'));
 		warning on
 	end
 end

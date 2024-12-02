@@ -9,24 +9,24 @@ if ~isempty(gui.retr('doing_roi')) && gui.retr('doing_roi')==1
 	selection=1; %automatic centering of ROI
 	switch source.Label
 		case 'pco.panda 45 Hz'
-			des_x=360;
-			des_y=256;
+			des_x=480;
+			des_y=340;
 		case 'pco.panda 22.5 Hz'
 			des_x=720;
 			des_y=576;
 		case 'pco.panda 15 Hz'
-			des_x=1160;
-			des_y=864;
+			des_x=1200;
+			des_y=896;
 		case 'pco.panda 7.5 Hz'
-			des_x=2352;
-			des_y=1824;
+			des_x=2400;
+			des_y=1904;
 		case 'pco.panda 5 Hz'
-			des_x=3464;
-			des_y=2728;%2624;
+			des_x=4000;
+			des_y=3000;
 		case 'pco.panda 3 Hz'
-			des_x=4488;
-			des_y=3320;
-		case 'pco.panda 1 Hz'
+			des_x=4296;
+			des_y=3296;
+		case 'pco.panda 1.5 Hz'
 			des_x=5120;
 			des_y=5120;
 
