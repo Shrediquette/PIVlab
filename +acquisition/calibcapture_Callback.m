@@ -6,6 +6,39 @@ if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') %calib
 		%addpath(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts'));
 		ready=1;
 	else
+		%{
+		disp('debugging pco')
+%disp('erste meldung: Frge hast du pco matlab bereits installiert? Ja oder nein. wenn nein, verweisen auf wiki. Wenn ja: pfad auswählen und kopieren der dateien')
+		ready=1;
+		pcofolder=uigetdir
+
+		filePattern = fullfile(pcofolder, 'scripts', 'pco_*');
+		direc= dir(filePattern)
+		filenames={};
+		[filenames{1:length(direc),1}] = deal(direc.name);
+		amount = length(filenames);
+
+		for filenum=1:amount
+			copyfile (fullfile(pcofolder, 'scripts',filenames{filenum})  , fullfile(userpath, filenames{filenum}))
+		end
+
+		filePattern = fullfile(pcofolder, 'scripts', 'sc2_*');
+		direc= dir(filePattern)
+		filenames={};
+		[filenames{1:length(direc),1}] = deal(direc.name);
+		amount = length(filenames);
+
+		for filenum=1:amount
+			copyfile (fullfile(pcofolder, 'scripts',filenames{filenum})  , fullfile(userpath, filenames{filenum}))
+		end
+cd (userpath)
+exist('pco_camera_load_defines.m','file')
+exist('pco_recorder.dll','file')
+disp('debugging pco end')
+%das funktioniert nicht richtig, weil später z.B. PIVlab_capture_pco.m nicht auf dieses Verzeichnis zugreifen kann.
+% ich versuche jetzt einfach alle dateien in den root ordner von PIVlab zu verschieben, bzw. zu includen im Standalone Project....
+%https://www.mathworks.com/help/compiler/matlab-library-loading.html
+		%}
 		ready=0;
 		acquisition.pco_error_msgbox
 	end
