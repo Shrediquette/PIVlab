@@ -16,20 +16,21 @@
 %}
 
 function PIVlab_GUI(desired_num_cores,batch_session_file)
+%% display splash screen in deployed version
+if isdeployed
+		splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','PIVlab standalone','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','off','handlevisibility','on');
+		splash_ax=axes(splashscreen,'units','normalized');
+		imshow(imread(fullfile('images','pivlab_logo1.jpg')),"Parent",splash_ax,'border','tight');
+		set(splash_ax,'Position',[0 0 1 1])
+		set(gca,'DataAspectRatioMode','auto')
+		movegui(splashscreen,'center');
+		set(splashscreen,'visible','on')
+		handle_splash_text = text(splash_ax,250,355,'Generating figure window, please wait...','Color','w','VerticalAlignment','bottom','HorizontalAlignment','center');
+		drawnow expose
+	end
 %% Make figure
 fh = findobj('tag', 'hgui');
 if isempty(fh)
-	%{
-	splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','Loading...','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','off','handlevisibility','on');
-	splash_ax=axes(splashscreen,'units','normalized');
-	imshow(imread(fullfile('images','pivlab_logo1.jpg')),"Parent",splash_ax,'border','tight');
-	set(splash_ax,'Position',[0 0 1 1])
-	set(gca,'DataAspectRatioMode','auto')
-	movegui(splashscreen,'center');
-	set(splashscreen,'visible','on')
-	drawnow
-	handle_splash_text = text(splash_ax,10,10,'Loading, please wait...');
-	%}
 	disp('-> Starting PIVlab...')
 	MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0 0.1 1 0.8],'ResizeFcn', @gui.MainWindow_ResizeFcn,'CloseRequestFcn', @gui.MainWindow_CloseRequestFcn,'tag','hgui','visible','off','KeyPressFcn', @gui.key_press);
 	set (MainWindow,'Units','Characters');
@@ -127,6 +128,7 @@ if isempty(fh)
 	addpath(fullfile(tempfilepath, 'images'));
 	addpath(fullfile(tempfilepath, 'help'));
 	addpath(fullfile(tempfilepath, 'PIVlab_capture_resources'));
+	addpath(fullfile(tempfilepath, 'PIVlab_capture_resources','pco_resources'));
 	try
 		ctr=0;
 		pivFiles = {'+acquisition' '+calibrate' '+export' '+extract' '+gui' '+import' '+mask' '+misc' '+piv' '+plot' '+postproc' '+preproc' '+roi' '+simulate' '+validate' '+wOFV' 'OptimizationSolvers' 'PIVlab_capture_resources'};
@@ -318,16 +320,15 @@ if isempty(fh)
 		disp('Could not load default settings. But this doesn''t really matter.')
 	end
 	%%
-
+	if isdeployed
+		close(splashscreen)
+	end
 	%%
 	misc.CheckUpdates
 	gui.SetFullScreen
 
 	gui.displogo(1);drawnow;
-	try
-		close(splashscreen)
-	catch
-	end
+	
 	set(MainWindow, 'Visible','on');
 
 	%% Batch session  processing in GUI
