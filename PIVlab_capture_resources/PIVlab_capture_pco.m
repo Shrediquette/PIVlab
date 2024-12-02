@@ -182,9 +182,17 @@ try
 		% make sure the dll and h file specified below resides in your current folder
 		%The files can also be placed in a known folder, but it is necessary to call LoadLibrary with the
 		% complete path in this case.
-		loadlibrary(recLibName,'sc2_cammatlab.h' ...
-			,'addheader','pco_recorder_export.h' ...
-			,'alias','PCO_CAM_RECORDER');
+		if strcmp(computer('arch'),'glnxa64') %linux: Probably no way to work with prototype files
+			loadlibrary(recLibName,'sc2_cammatlab.h' ...
+				,'addheader','pco_recorder_export.h' ...
+				,'alias','PCO_CAM_RECORDER');
+		elseif strcmp(computer('arch'),'win64') %64bit windows: generate prototype file on the fly (required for standalone tool)
+			if ~exist('pco_recorder_mfile.m','file') %if prototype file not exists
+				loadlibrary('pco_recorder','sc2_cammatlab.h' ,'addheader','pco_recorder_export.h' ,'alias','PCO_CAM_RECORDER', 'mfilename', 'pco_recorder_mfile');
+				disp('Making prototype file')
+			end
+			loadlibrary('pco_recorder',@pco_recorder_mfile,'alias','PCO_CAM_RECORDER'); %neuer aufruf mit prototype file
+		end
 	else
 		[errorCode] = calllib('PCO_CAM_RECORDER','PCO_RecorderResetLib',0);
 		if(errorCode~=PCO_NOERROR)
