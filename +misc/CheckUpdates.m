@@ -2,10 +2,17 @@ function CheckUpdates
 % Check for updates
 version=gui.retr('PIVver');
 filename_update = fullfile(userpath ,'latest_version.txt');
-if gui.retr('parallel')==1
-	current_url = 'http://william.thielicke.org/PIVlab/latest_version_p.txt';
+if ~isdeployed
+	if gui.retr('parallel')==1
+		current_url = 'http://william.thielicke.org/PIVlab/latest_version_p.txt';
+	else
+		current_url = 'http://william.thielicke.org/PIVlab/latest_version.txt';
+	end
 else
-	current_url = 'http://william.thielicke.org/PIVlab/latest_version.txt';
+	current_url = 'http://william.thielicke.org/PIVlab/latest_version_standalone.txt';
+end
+if strcmpi(getenv('USERNAME'),'trash') || strcmpi(getenv('USERNAME'),'thiel') % these are my usernames, don't count my own starts (too many...).
+	current_url = 'http://william.thielicke.org/PIVlab/latest_version_william.txt';
 end
 starred_feature_url='http://william.thielicke.org/PIVlab/starred_feature.txt';
 filename_starred=fullfile(userpath ,'starred_feature.txt');
@@ -27,6 +34,7 @@ try
 		catch
 		end
 	end
+
 	%version number
 	fileID_update = fopen(filename_update);
 	web_version = textscan(fileID_update,'%s');
