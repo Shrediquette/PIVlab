@@ -132,8 +132,9 @@ nav {
     width: 230px;
     position: relative;
     top: 0px;
-    left:50%;
-    margin-left:-580px;
+    left:10px;
+    margin-left:20px;
+    margin-right: 20px;
     text-align: right;
 
     ul {
@@ -187,7 +188,7 @@ section {
     width:590px;
     padding: 30px 30px 50px 30px;
     margin: 20px 0;
-    margin-top: -190px;
+    margin-top: 0px;
     position:relative;
     background: #fbfbfb;
     border-radius: 3px;
@@ -199,6 +200,18 @@ section {
     width:650px;
     margin:0 auto;
     position:relative;
+    display: flex;
+    justify-content: space-between;
+}
+
+footer {
+    width:180px;
+    position: relative;
+    left:0;
+    margin-left:-50px;
+    bottom:20px;
+    text-align: right;
+    line-height: 16px;
 }
 
 .list-divider {
