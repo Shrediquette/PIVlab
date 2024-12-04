@@ -6,17 +6,17 @@
 header {
     padding: 25px 20px 40px 20px;
     margin: 0;
-    position: fixed;
+    position: relative;
     top: 0;
     left:0;
     right:0;
     width: 100%;
-    text-align: center;
+    text-align: right;
     background: #514F4F url(../images/background.png) no-repeat;
     box-shadow: 1px 0px 2px rgba(0,0,0,.75);
     z-index:99;
     -webkit-font-smoothing:antialiased;
-    min-height: 76px;
+    min-height: 240px;
 
     h1 {
         font: 40px/48px 'Copse', "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -43,9 +43,9 @@ header {
     left:0;
     right:50%;
     height: 50px;
-    margin-right:-382px;
-    position: fixed;
-    top: 115px;
+    margin-right:0px;
+    position: relative;
+    top: 255px;
     background: #D0D70A;
     border: 1px solid #BED011;
     box-shadow: 0px 1px 3px rgba(0,0,0,.25);
@@ -54,7 +54,7 @@ header {
 
     .button {
         border: 1px solid #E6E507;
-        background: linear-gradient(rgb(255, 231, 136), rgb(255, 206, 56));
+        background: linear-gradient(rgb(216, 213, 8), rgb(15, 79, 194));
         border-radius: 2px;
         box-shadow: inset 0px 1px 0px rgba(255,255,255,.4), 0px 1px 1px rgba(0,0,0,.1);
         background-color: #FFE788;
@@ -75,7 +75,7 @@ header {
     }
 
     .fork {
-        position:fixed;
+        position:relative;
         left:50%;
         margin-left:-325px;
         padding: 10px 12px;
@@ -93,7 +93,7 @@ header {
             float:left;
             line-height:52px;
             font-size:90%;
-            color:#9d7f0d;
+            color: #0d729d;
             text-transform:uppercase;
             text-shadow:rgba(#fff, 0.2) 0 1px 0;
         }
@@ -123,10 +123,81 @@ header {
         top:7px;
         display: block;
         background: url(../images/olt_main.png);
+        background-size: cover;
     }
 }
 
+nav {
+    width: 230px;
+    position: relative;
+    left:50%;
+    margin-left:-580px;
+    text-align: right;
 
+    ul {
+        list-style: none;
+        list-style-image:none;
+        font-size: 14px;
+        line-height:24px;
+
+        li {
+            padding: 5px 0px;
+            line-height: 16px;
+            // padding-right:17px;
+            // position:relative;
+            // right:-12px;
+
+            &.tag-h1 {
+                font-size: 1.2em;
+
+                a {
+                    font-weight: bold;
+                    color: #333;
+                }
+
+                + .tag-h2 {
+
+                }
+            }
+
+            &.tag-h2 {
+
+                + .tag-h1 {
+                    margin-top:10px;
+                }
+            }
+        }
+
+        a {
+            color: #666;
+
+            &:hover { color: #999; }
+        }
+
+        // .active {
+        //   border-right:solid 4px #39C;
+        //   padding-right:13px;
+        // }
+    }
+}
+
+section {
+    width:590px;
+    padding: 30px 30px 50px 30px;
+    margin: 20px 0;
+    margin-top: -190px;
+    position:relative;
+    background: #fbfbfb;
+    border-radius: 3px;
+    border: 1px solid #cbcbcb;
+    box-shadow: 0px 1px 2px rgba(0,0,0,.09), inset 0px 0px 2px 2px rgba(255,255,255,.5), inset 0 0 5px 5px rgba(255,255,255,.4);
+}
+
+.wrapper {
+    width:650px;
+    margin:0 auto;
+    position:relative;
+}
 
 .list-divider {
     border-top: 1px solid #ccc;
