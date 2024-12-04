@@ -323,7 +323,13 @@ if ~isequal(path,0)
 		set(handles.filenamebox,'value',1);
 		gui.sliderdisp(gui.retr('pivlab_axis')) %displays raw image when slider moves
 		zoom reset
-		set(getappdata(0,'hgui'), 'Name',['PIVlab ' gui.retr('PIVver') '   [Path: ' pathname ']']) %for people like me that always forget what dataset they are currently working on...
+		
+		if ~isdeployed
+			appname='PIVlab';
+		else
+			appname='PIVlab standalone';
+		end
+		set(getappdata(0,'hgui'), 'Name',[appname ' ' gui.retr('PIVver') '   [Path: ' pathname ']']) %for people like me that always forget what dataset they are currently working on...
 		set (handles.amount_nans, 'BackgroundColor',[0.9 0.9 0.9])
 		set (handles.amount_nans,'string','')
 		set (handles.remove_imgs,'enable','on');

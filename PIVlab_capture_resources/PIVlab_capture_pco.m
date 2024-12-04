@@ -51,7 +51,7 @@ if(errorCode~=PCO_NOERROR)
 	glvar.do_libunload=1;
 	pco_camera_open_close(glvar);
 	figure(hgui)
-	set(frame_nr_display,'String',['Camera not found. [1]' newline 'If problem persists, you might' newline 'need to restart Matlab.']);
+	set(frame_nr_display,'String',['Camera not found. Is the pco.USB driver installed? Is it connected?' newline 'If problem persists, you might' newline 'need to restart Matlab.']);
 	return;
 end
 hcam_ptr=glvar.out_ptr;

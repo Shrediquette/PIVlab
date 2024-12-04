@@ -246,7 +246,13 @@ else
 		else
 			modestr=' (serial)';
 		end
-		set(getappdata(0,'hgui'), 'Name',['PIVlab ' gui.retr('PIVver')  modestr '   [Path: ' vars.pathname ']']) %for people like me that always forget what dataset they are currently working on...
+		
+		if ~isdeployed
+			appname='PIVlab';
+		else
+			appname='PIVlab standalone';
+		end
+		set(getappdata(0,'hgui'), 'Name',[appname ' ' gui.retr('PIVver')  modestr '   [Path: ' vars.pathname ']']) %for people like me that always forget what dataset they are currently working on...
 	catch
 	end
 	zoom reset

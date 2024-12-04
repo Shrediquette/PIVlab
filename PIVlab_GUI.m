@@ -18,16 +18,17 @@
 function PIVlab_GUI(desired_num_cores,batch_session_file)
 %% display splash screen in deployed version
 if isdeployed
-		splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','PIVlab standalone','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','off','handlevisibility','on');
-		splash_ax=axes(splashscreen,'units','normalized');
-		imshow(imread(fullfile('images','pivlab_logo1.jpg')),"Parent",splash_ax,'border','tight');
-		set(splash_ax,'Position',[0 0 1 1])
-		set(gca,'DataAspectRatioMode','auto')
-		movegui(splashscreen,'center');
-		set(splashscreen,'visible','on')
-		handle_splash_text = text(splash_ax,250,355,'Generating figure window, please wait...','Color','w','VerticalAlignment','bottom','HorizontalAlignment','center');
-		drawnow expose
-	end
+	%splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','PIVlab standalone','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','off','handlevisibility','on');
+	splashscreen = figure('integerhandle','off','resize','off','numbertitle','off','MenuBar','none','DockControls','off','Name','PIVlab standalone','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','off','handlevisibility','on');
+	splash_ax=axes(splashscreen,'units','normalized');
+	imshow(imread(fullfile('images','pivlab_logo1.jpg')),"Parent",splash_ax,'border','tight');
+	set(splash_ax,'Position',[0 0 1 1])
+	set(gca,'DataAspectRatioMode','auto')
+	movegui(splashscreen,'center');
+	set(splashscreen,'visible','on')
+	handle_splash_text = text(splash_ax,250,355,'Generating figure window, please wait...','Color','w','VerticalAlignment','bottom','HorizontalAlignment','center');
+	drawnow expose
+end
 %% Make figure
 fh = findobj('tag', 'hgui');
 if isempty(fh)
@@ -67,11 +68,10 @@ if isempty(fh)
 
 	if ~exist('splash_ax','var')
 		disp(['-> PIVlab ' version ', built on: ' char(datetime(build_date)) ' ...'])
-
 		disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
 	else
 		text_content=get(handle_splash_text,'String');
-		set (handle_splash_text, 'String',[text_content newline '-> Starting PIVlab ' version ' ...' newline '-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.']);
+		set (handle_splash_text, 'String',[text_content newline '-> Starting PIVlab ' version ' ...' newline '-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.']);drawnow
 	end
 
 	margin=1.5;
@@ -98,7 +98,14 @@ if isempty(fh)
 		if ispc %Matlab seems to have issues with deleting files on unix systems
 			delete (fullfile(userpath,'temp.mat' ))
 		end
-		disp('-> Write access in current folder ok.')
+		if ~exist('splash_ax','var')
+			disp('-> Write access in current folder ok.')
+		else
+			text_content=get(handle_splash_text,'String');
+			text_content{end+1} = '-> Write access in current folder ok.';
+			set (handle_splash_text, 'String',text_content);drawnow
+		end
+
 	catch
 		if isdeployed
 			uiwait(msgbox(['No write access in ' userpath newline newline 'PIVlab will not work properly like this.' newline 'Please make sure that there is write permission for the folder ' userpath ],'modal'));
@@ -144,7 +151,14 @@ if isempty(fh)
 			end
 		end
 		if ctr==size(pivFiles,2)
-			disp('-> All required package folders found.')
+			if ~exist('splash_ax','var')
+				disp('-> All required package folders found.')
+			else
+				text_content=get(handle_splash_text,'String');
+				text_content{end+1}='-> All required package folders found.';
+				set (handle_splash_text, 'String',text_content);drawnow
+			end
+
 		end
 	catch
 		disp('-> Problem detecting required package folders.')
@@ -165,7 +179,14 @@ if isempty(fh)
 	%% Check Matlab version
 	try
 		if verLessThan('matlab', '9.7') == 0
-			disp('-> Matlab version check ok.')
+			if ~exist('splash_ax','var')
+				disp('-> Matlab version check ok.')
+			else
+				text_content=get(handle_splash_text,'String');
+				text_content{end+1}='-> Matlab version check ok.';
+				set (handle_splash_text, 'String',text_content);drawnow
+			end
+
 		else
 			disp('WARNING: Your Matlab version is too old for running PIVlab.')
 			disp('WARNING: You need at least version 9.7 (R2019b) to use all features.')
@@ -188,7 +209,14 @@ if isempty(fh)
 		if result == 1
 			try
 				J = adapthisteq(rand(8,8)); %#ok<NASGU>
-				disp('-> Image Processing Toolbox found.')
+				if ~exist('splash_ax','var')
+					disp('-> Image Processing Toolbox found.')
+				else
+					text_content=get(handle_splash_text,'String');
+					text_content{end+1}='-> Image Processing Toolbox found.';
+					set (handle_splash_text, 'String',text_content);drawnow
+				end
+
 			catch
 				disp(' ')
 				disp('Image Processing Toolbox not accessible! PIVlab won''t work like this.')
@@ -214,7 +242,7 @@ if isempty(fh)
 			if ~exist('desired_num_cores','var') %no input argument --> use all existing cores
 				if misc.pivparpool('size')<=0 %no exisitng pool
 					if isdeployed
-						answer = questdlg('Open parallel pool?','Parallel processing', 'Yes','No','Yes');
+						answer = questdlg(['PIVlab can be run with parallel computing.' newline newline '- Recommended when processing multiple images.' newline '- Not required when acquiring images or processing mp4 and avi files.' newline newline 'Open parallel pool?'],'Parallel processing', 'Yes','No','Yes');
 						switch answer
 							case 'Yes'
 								misc.pivparpool('open',feature('numCores')); %use all cores
@@ -243,9 +271,23 @@ if isempty(fh)
 				end
 			end
 			if gui.retr('parallel')==1
-				disp(['-> Distributed Computing Toolbox found. Parallel pool (' int2str(misc.pivparpool('size')) ' workers) active (default settings).'])
+				if ~exist('splash_ax','var')
+					disp(['-> Distributed Computing Toolbox found. Parallel pool (' int2str(misc.pivparpool('size')) ' workers) active (default settings).'])
+				else
+					text_content=get(handle_splash_text,'String');
+					text_content{end+1}=['-> Distributed Computing Toolbox found. Parallel pool (' int2str(misc.pivparpool('size')) ' workers) active (default settings).'];
+					set (handle_splash_text, 'String',text_content);drawnow
+				end
+
 			else
-				disp('-> Distributed Computing disabled.')
+				if ~exist('splash_ax','var')
+					disp('-> Distributed Computing disabled.')
+				else
+					text_content=get(handle_splash_text,'String');
+					text_content{end+1}='-> Distributed Computing disabled.';
+					set (handle_splash_text, 'String',text_content);drawnow
+				end
+
 			end
 		catch
 			disp('-> Running without parallelization (no distributed computing toolbox installed).')
@@ -315,20 +357,25 @@ if isempty(fh)
 		dindex=strfind(psdfile,filesep); %filesep ist '\'
 		%erstes argument datei, zweites pfad bis zum letzten fileseperator.
 		import.read_settings('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
-		disp(['-> Got default settings from: ' psdfile])
+		if ~exist('splash_ax','var')
+			disp(['-> Got default settings from: ' psdfile])
+		else
+			text_content=get(handle_splash_text,'String');
+			text_content{end+1}=['-> Got default settings from: ' psdfile];
+			set (handle_splash_text, 'String',text_content);drawnow
+		end
 	catch
 		disp('Could not load default settings. But this doesn''t really matter.')
 	end
-	%%
+
+	misc.CheckUpdates
 	if isdeployed
 		close(splashscreen)
 	end
-	%%
-	misc.CheckUpdates
 	gui.SetFullScreen
 
 	gui.displogo(1);drawnow;
-	
+
 	set(MainWindow, 'Visible','on');
 
 	%% Batch session  processing in GUI
@@ -357,13 +404,6 @@ if isempty(fh)
 			gui.put('batchModeActive',0)
 		end
 	end
-%{
-	disp('test')
-currentdir = pwd
-cd ('C:\Program Files\PCO Digital Camera Toolbox\pco.matlab\runtime\win_x64\bin') 
-loadlibrary('pco_recorder','sc2_cammatlab.h' ,'addheader','pco_recorder_export.h' ,'alias','PCO_CAM_RECORDER');
-cd currentdir
-%}
 else %Figure handle does already exist --> bring PIVlab to foreground.
 	disp('Only one instance of PIVlab is allowed to run.')
 	figure(fh)
