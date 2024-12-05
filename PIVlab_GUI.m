@@ -18,15 +18,15 @@
 function PIVlab_GUI(desired_num_cores,batch_session_file)
 %% display splash screen in deployed version
 if isdeployed
-	%splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','PIVlab standalone','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','off','handlevisibility','on');
-	splashscreen = figure('integerhandle','off','resize','off','numbertitle','off','MenuBar','none','DockControls','off','Name','PIVlab standalone','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','off','handlevisibility','on');
+	splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','PIVlab standalone','Toolbar','none','Units','pixels','Position',[10 10 150 150],'tag','splashscreen','visible','off','handlevisibility','on');
+	%splashscreen = figure('integerhandle','off','resize','off','numbertitle','off','MenuBar','none','DockControls','off','Name','PIVlab standalone','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','off','handlevisibility','on');
 	splash_ax=axes(splashscreen,'units','normalized');
-	imshow(imread(fullfile('images','pivlab_logo1.jpg')),"Parent",splash_ax,'border','tight');
+	imshow(imread(fullfile('images','pivlab_standalone_splashscreen_2.jpg')),'Parent',splash_ax,'border','tight');
 	set(splash_ax,'Position',[0 0 1 1])
 	set(gca,'DataAspectRatioMode','auto')
 	movegui(splashscreen,'center');
 	set(splashscreen,'visible','on')
-	handle_splash_text = text(splash_ax,250,355,'Generating figure window, please wait...','Color','w','VerticalAlignment','bottom','HorizontalAlignment','center');
+	handle_splash_text = text(splash_ax,300,590,'Generating figure window, please wait...','Color','w','VerticalAlignment','bottom','HorizontalAlignment','center','FontName','FixedWidth','Fontweight','bold','FontSize',10);
 	drawnow expose
 end
 %% Make figure
@@ -68,7 +68,7 @@ if isempty(fh)
 
 	if ~exist('splash_ax','var')
 		disp(['-> PIVlab ' version ', built on: ' char(datetime(build_date)) ' ...'])
-		disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer  ' (' num2str(maxNumCompThreads('automatic')) ' cores).'])
+		disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
 	else
 		text_content=get(handle_splash_text,'String');
 		set (handle_splash_text, 'String',[text_content newline '-> Starting PIVlab ' version ' ...' newline '-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.']);drawnow
@@ -242,13 +242,10 @@ if isempty(fh)
 			if ~exist('desired_num_cores','var') %no input argument --> use all existing cores
 				if misc.pivparpool('size')<=0 %no exisitng pool
 					if isdeployed
-						answer = questdlg(['PIVlab can be run with parallel computing.' newline newline '- Recommended when processing multiple images.' newline '- Not required when acquiring images or processing mp4 and avi files.' newline newline 'Open parallel pool?'],'Parallel processing', 'Yes (automatic)', 'Yes (maximum)', 'No','Yes');
+						answer = questdlg(['PIVlab can be run with parallel computing.' newline newline '- Recommended when processing multiple images.' newline '- Not required when acquiring images or processing mp4 and avi files.' newline newline 'Open parallel pool?'],'Parallel processing', 'Yes', 'No','Yes');
 						switch answer
-							case 'Yes (automatic)'
+							case 'Yes'
 								misc.pivparpool('open',maxNumCompThreads('automatic')); %use matlab suggested num of cores
-								gui.put('parallel',1);
-							case 'Yes (maximum)'
-								misc.pivparpool('open',maxNumCompThreads); %use all cores
 								gui.put('parallel',1);
 							case 'No'
 						end
@@ -279,7 +276,7 @@ if isempty(fh)
 				else
 					text_content=get(handle_splash_text,'String');
 					text_content{end+1}=['-> Distributed Computing Toolbox found. Parallel pool (' int2str(misc.pivparpool('size')) ' workers) active (default settings).'];
-					set (handle_splash_text, 'String',text_content);drawnow
+					set (handle_splash_text, 'String',text_content);drawnow;pause(1)
 				end
 
 			else
@@ -288,7 +285,7 @@ if isempty(fh)
 				else
 					text_content=get(handle_splash_text,'String');
 					text_content{end+1}='-> Distributed Computing disabled.';
-					set (handle_splash_text, 'String',text_content);drawnow
+					set (handle_splash_text, 'String',text_content);drawnow;pause(1)
 				end
 
 			end
