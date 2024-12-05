@@ -4,11 +4,9 @@ title: News
 ---
 <h1>news</h1>
 <p>News from Pivlab: </p>
-<ul>
+<div class="newswrapper">
     {% for news in site.news %}
-    <li>
-        <iframe src="{{site.baseurl}}{{ news.url }}"></iframe>
-    </li>
+    <iframe src="{{site.baseurl}}{{ news.url }}"></iframe>
     {% endfor %}
-</ul>
+</div>
 

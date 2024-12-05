@@ -78,7 +78,7 @@ header {
 
     .fork {
         position:relative;
-        left:10%;
+        left:20%;
         margin-left: 0px;
         padding: 10px 12px;
         margin-top: 6px;
@@ -89,7 +89,7 @@ header {
 
     .downloads {
         position: relative;
-        left: -10%;
+        left: -20%;
         float: right;
         margin:0 45px 0 0;
 
@@ -133,10 +133,11 @@ header {
 
 nav {
     width: 230px;
+    min-width: 200px;
     position: relative;
     top: 0px;
-    left:10px;
-    margin-left:20px;
+    left: 0px;
+    margin-left: 0px;
     margin-right: 20px;
     text-align: right;
 
@@ -204,6 +205,12 @@ section {
     width:650px;
     margin:0 auto;
     position:relative;
+    display: flex;
+    justify-content: space-between;
+}
+
+.newswrapper{
+    position: relative;
     display: flex;
     justify-content: space-between;
 }
