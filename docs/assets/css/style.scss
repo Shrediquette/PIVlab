@@ -190,6 +190,7 @@ nav {
 
 section {
     width:590px;
+    height: auto;
     min-width: 700px;
     padding: 30px 30px 50px 30px;
     margin: 20px 0;
@@ -211,7 +212,7 @@ section {
 
 .newswrapper{
     position: relative;
-    display: flex;
+    display: contents;
     justify-content: space-between;
 }
 

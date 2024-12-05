@@ -6,7 +6,7 @@ title: News
 <p>News from Pivlab: </p>
 <div class="newswrapper">
     {% for news in site.news %}
-    <iframe src="{{site.baseurl}}{{ news.url }}"></iframe>
+    <iframe src="{{site.baseurl}}{{ news.url }}" style="min-width: 700px; min-height: 350px"></iframe>
     {% endfor %}
 </div>
 
