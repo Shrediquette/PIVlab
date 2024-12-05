@@ -17,7 +17,7 @@ collections:
 navigation:
   - title: "Home"
     url: "/PIVlab/"
-  - title: "About"
-    url: "/PIVlab/about"
   - title: "Wiki"
     url: "/PIVlab/wiki"
+  - title: "Hardware"
+    url: "/PIVlab/hardware"
