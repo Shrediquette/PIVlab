@@ -24,6 +24,7 @@ header {
         text-shadow: 0px 2px 0px #235796;
         margin: 0px;
         margin-right: 40px;
+        margin-top: 85px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -77,8 +78,8 @@ header {
 
     .fork {
         position:relative;
-        left:50%;
-        margin-left:-325px;
+        left:10%;
+        margin-left: 0px;
         padding: 10px 12px;
         margin-top: 6px;
         line-height:14px;
@@ -87,6 +88,8 @@ header {
     }
 
     .downloads {
+        position: relative;
+        left: -10%;
         float: right;
         margin:0 45px 0 0;
 
@@ -117,10 +120,10 @@ header {
     }
 
     #logo {
-        position:absolute;
+        position:relative;
         height: 36px;
         width: 36px;
-        right:7px;
+        right:-10px;
         top:7px;
         display: block;
         background: url(../images/olt_main.png);
@@ -186,6 +189,7 @@ nav {
 
 section {
     width:590px;
+    min-width: 700px;
     padding: 30px 30px 50px 30px;
     margin: 20px 0;
     margin-top: 0px;
@@ -208,7 +212,8 @@ footer {
     width:180px;
     position: relative;
     left:0;
-    margin-left:-50px;
+    margin-left:50px;
+    margin-top: 20px;
     bottom:20px;
     text-align: right;
     line-height: 16px;
