@@ -68,7 +68,7 @@ if isempty(fh)
 
 	if ~exist('splash_ax','var')
 		disp(['-> PIVlab ' version ', built on: ' char(datetime(build_date)) ' ...'])
-		disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
+		disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer  ' (' num2str(maxNumCompThreads('automatic')) ' cores).'])
 	else
 		text_content=get(handle_splash_text,'String');
 		set (handle_splash_text, 'String',[text_content newline '-> Starting PIVlab ' version ' ...' newline '-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.']);drawnow
@@ -242,22 +242,25 @@ if isempty(fh)
 			if ~exist('desired_num_cores','var') %no input argument --> use all existing cores
 				if misc.pivparpool('size')<=0 %no exisitng pool
 					if isdeployed
-						answer = questdlg(['PIVlab can be run with parallel computing.' newline newline '- Recommended when processing multiple images.' newline '- Not required when acquiring images or processing mp4 and avi files.' newline newline 'Open parallel pool?'],'Parallel processing', 'Yes','No','Yes');
+						answer = questdlg(['PIVlab can be run with parallel computing.' newline newline '- Recommended when processing multiple images.' newline '- Not required when acquiring images or processing mp4 and avi files.' newline newline 'Open parallel pool?'],'Parallel processing', 'Yes (automatic)', 'Yes (maximum)', 'No','Yes');
 						switch answer
-							case 'Yes'
-								misc.pivparpool('open',feature('numCores')); %use all cores
+							case 'Yes (automatic)'
+								misc.pivparpool('open',maxNumCompThreads('automatic')); %use matlab suggested num of cores
+								gui.put('parallel',1);
+							case 'Yes (maximum)'
+								misc.pivparpool('open',maxNumCompThreads); %use all cores
 								gui.put('parallel',1);
 							case 'No'
 						end
 					else
-						misc.pivparpool('open',feature('numCores')); %use all cores
+						misc.pivparpool('open',maxNumCompThreads('automatic')); %use all cores
 						gui.put('parallel',1);
 					end
 				end
 			else%parameter supplied
 				if desired_num_cores > 1 && desired_num_cores ~= misc.pivparpool('size') %desired doesn't match existing pool
-					if desired_num_cores > feature('numCores')%desired too many cores
-						desired_num_cores=feature('numCores');
+					if desired_num_cores > maxNumCompThreads%desired too many cores
+						desired_num_cores=maxNumCompThreads;
 						disp('Selected too many cores. Adjusted to actually existing cores')
 					end
 					misc.pivparpool('close')
