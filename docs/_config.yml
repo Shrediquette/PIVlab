@@ -17,7 +17,14 @@ collections:
 navigation:
   - title: "Home"
     url: "/PIVlab/"
+  - title: "Downloads"
+    url: "/PIVlab/downloads"
   - title: "Wiki"
     url: "/PIVlab/wiki"
   - title: "Hardware"
     url: "/PIVlab/hardware"
+  - title: "Screenshots"
+    url: "/PIVlab/screenshots"
+  - title: "References"
+    url: "/PIVlab/references"
+    
