@@ -25,6 +25,6 @@ navigation:
     url: "/PIVlab/hardware"
   - title: "Screenshots"
     url: "/PIVlab/screenshots"
-  - title: "References"
-    url: "/PIVlab/references"
+  - title: "Applications"
+    url: "/PIVlab/applications"
     

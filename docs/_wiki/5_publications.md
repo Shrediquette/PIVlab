@@ -1,8 +1,8 @@
 ---
 layout: default
-title: Documentation
+title: Publications
 ---
-# Documentation
+# Publications
 
 There are papers published on PIVlab by me, they give some background information:
 
