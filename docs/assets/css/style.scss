@@ -240,13 +240,11 @@ footer {
     }
 
     nav{
+        display: flex;
         min-width: 100px;
-        display: contents;
     }
 
-    header, section, footer {
-        float:none;
-
+    section {
         h1 {
             white-space: nowrap;
             overflow: hidden;
@@ -260,10 +258,11 @@ footer {
         width: 100%;
 
         .downloads {
-            margin-right: 60px;
+            left: 0;
         }
 
         .fork {
+            left: 0;
         }
 
         #logo {
@@ -274,13 +273,15 @@ footer {
     section {
         border:1px solid #e5e5e5;
         border-width:1px 0;
-        padding:20px 0;
-        margin: 190px auto 20px;
         max-width: 600px;
     }
 
     footer{
         display: none;
+    }
+    
+    header{
+        min-height: 240px;
     }
 }
 
@@ -294,27 +295,15 @@ footer {
         margin: 0;
 
         h1 {
-            font-size: 32px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            -o-text-overflow: ellipsis;
-            -ms-text-overflow: ellipsis;
+            display: none;
         }
 
         p { display: none;}
     }
 
     #banner {
-        top: 80px;
 
         .fork {
-            float: left;
-            display: inline-block;
-            margin-left: 0px;
-            position:fixed;
-            left:20px;
-
         }
     }
 
@@ -337,15 +326,7 @@ footer {
         position: relative;
         padding: 5px 0px;
         min-height: 0px;
-
-        h1 {
-            font-size: 24px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            -o-text-overflow: ellipsis;
-            -ms-text-overflow: ellipsis;
-        }
+        
     }
     section {
         margin-top: 5px;
