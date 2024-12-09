@@ -97,6 +97,7 @@ header {
             float:left;
             line-height:52px;
             font-size:90%;
+            font-weight: bold;
             color: #0d729d;
             text-transform:uppercase;
             text-shadow:rgba(#fff, 0.2) 0 1px 0;
@@ -242,6 +243,7 @@ footer {
     nav{
         display: flex;
         min-width: 100px;
+        margin-right: 40px;
     }
 
     section {
