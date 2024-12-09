@@ -1,0 +1,14 @@
+---
+layout: default
+title: PIVlab Wiki
+---
+<h1>PIVlab Wiki</h1>
+<p>Welcome to the PIVlab Wiki! Browse the wiki pages below:</p>
+<ul>
+  {% for wiki in site.wiki %}
+    <li>
+        <a href="{{site.baseurl}}{{ wiki.url }}">{{ wiki.title }}</a>
+    </li>
+  {% endfor %}
+</ul>
+
