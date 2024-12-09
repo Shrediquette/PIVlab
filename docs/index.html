@@ -32,6 +32,13 @@ title: PIVlab Home
     </a>.
 </p>
 
+<!--<h1>News</h1>-->
+<p>PIVlab News </p>
+<div class="newswrapper">
+    {% for news in site.news %}
+    <iframe src="{{site.baseurl}}{{ news.url }}" style="min-width: 700px; min-height: 350px"></iframe>
+    {% endfor %}
+</div>
 <!--<ul>-->
 <!--    <li><a href="{{ site.baseurl }}/wiki">Wiki</a> - Browse the Wiki pages</li>-->
 <!--    <li><a href="{{ site.baseurl }}/about">About</a> - Learn more about this project</li>-->
