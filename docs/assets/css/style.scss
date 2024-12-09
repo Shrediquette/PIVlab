@@ -138,7 +138,7 @@ nav {
     top: 0px;
     left: 0px;
     margin-left: 0px;
-    margin-right: 20px;
+    margin-right: 30px;
     text-align: right;
 
     ul {
@@ -271,9 +271,9 @@ footer {
     }
 
     section {
+        min-width: 500px;
         border:1px solid #e5e5e5;
         border-width:1px 0;
-        max-width: 600px;
     }
 
     footer{
@@ -308,7 +308,7 @@ footer {
     }
 
     section {
-        margin-top: 130px;
+        min-width: 450px;
         margin-bottom: 0px;
         width: auto;
     }
@@ -323,12 +323,11 @@ footer {
     }
 
     header{
-        position: relative;
-        padding: 5px 0px;
-        min-height: 0px;
+        min-height: 240px;
         
     }
     section {
+        min-width: 200px;
         margin-top: 5px;
     }
 
