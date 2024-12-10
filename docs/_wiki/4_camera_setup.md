@@ -99,6 +99,7 @@ The camera is very nice and extremely affordable, but this also introduces some 
 * A frame rate of 1000 fps is not possible on the Chronos when using an external trigger. In order to use 1000 fps, you need to slightly reduce the resolution to something like 1280x720. I have no clue why this is the case.
 * In many cases, the Chronos will not properly shut down when you press the power button. A long press will force the camera to shut down. This seems to happen whenever the camera is configured to be triggered externally. You could circumvent this by initiating the live preview from PIVlab before you power the camera off.
 * When powering the camera on, it is sometimes not clear if the camera is booting or if it hangs. Powering up the camera takes some time, so you may need to wait between 30s and a minute.
+
 ### General tips
 * I am using a VONETS VAP11s mini router connected to the Chronos. Then I can connect to the WiFi network of the Vonets and access the Chronos wirelessly.
 * Use PIVlab to toggle between live image preview or PIV capture mode.
