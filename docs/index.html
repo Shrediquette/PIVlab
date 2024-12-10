@@ -1,0 +1,51 @@
+---
+layout: default
+title: PIVlab Home
+---
+<h1>What is PIVlab?</h1>
+<p>
+    PIVlab is a free graphical user interface (GUI) based particle image velocimetry (PIV) software and is currently
+    the most frequently cited PIV software on the market. It can be used to control
+    <a href="https://optolution.com/en/products/particle-image-velocimetry-piv/" target="_blank">OPTOLUTION's lasers, cameras and synchronizers</a>,
+    and of course it calculates the velocity distribution within imported (or captured) particle image pairs.
+    It can also be used to derive, display and export multiple parameters of the flow pattern. The simple GUI makes
+    PIV data acquisition and data post-processing fast and efficient.
+</p>
+
+<h2>You can use PIVlab:</h2>
+<ul>
+    <li>As a free stand-alone program for Windows computers (all features, no requirements)</li>
+    <li>As a free toolbox inside Matlab for every operating system (all features, Matlab required)</li>
+    <li>As a free web browser-based app by using Matlab online (no hardware interaction, free Mathworks account required)</li>
+    <li><a href="{{site.baseurl}}/downloads.html" target="_self">Follow this link to the downloads page</a></li>
+</ul>
+
+<p>
+    <em><strong>Still not sure what exactly PIVlab is, how it looks like, if it is easy enough to use, and if it really is a good choice for doing PIV?</strong></em>
+    Then have a look at a quick video demo of how easy PIVlab can be used:
+</p>
+    <iframe src="https://www.youtube.com/embed/bmeR8vdpZF8?si=ssEaTrzeRqci1q-r" style=" width: 100%; height: 360px" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <p>
+    Some example results are presented here:
+    </p>
+        <iframe src="https://www.youtube.com/embed/LXtrEX5X6SI?si=TtDTKOsj01ii-f95" style=" width: 100%; height: 360px" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<p>
+    Many researchers have published papers (&gt;5000) in high impact journals with the help of PIVlab in the past.
+    Papers citing PIVlab can be found via
+    <a href="https://scholar.google.de/scholar?hl=de&as_sdt=0%2C5&q=%28%22pivlab%22+%7C+%22piv+lab%22%29+AND+%28%22piv%22+%7C+%22particle+image+velocimetry%22%29+-%22%40pivlab.net%22&btnG=" target="_blank">
+        this Google Scholar link
+    </a>.
+</p>
+
+<!--<h1>News</h1>-->
+<p>PIVlab News </p>
+<div class="newswrapper">
+    {% for news in site.news %}
+    <iframe src="{{site.baseurl}}{{ news.url }}" style=" width: 100%; height: auto"></iframe>
+    {% endfor %}
+</div>
+<!--<ul>-->
+<!--    <li><a href="{{ site.baseurl }}/wiki">Wiki</a> - Browse the Wiki pages</li>-->
+<!--    <li><a href="{{ site.baseurl }}/about">About</a> - Learn more about this project</li>-->
+<!--    <li><a href="{{ site.baseurl }}/news">News</a> - Read the latest news</li>-->
+<!--</ul>-->
