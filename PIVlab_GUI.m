@@ -275,7 +275,7 @@ if isempty(fh)
 					disp(['-> Distributed Computing Toolbox found. Parallel pool (' int2str(misc.pivparpool('size')) ' workers) active (default settings).'])
 				else
 					text_content=get(handle_splash_text,'String');
-					text_content{end+1}=['-> Distributed Computing Toolbox found. Parallel pool (' int2str(misc.pivparpool('size')) ' workers) active (default settings).'];
+					text_content{end+1}=['-> Distributed Computing Toolbox found.' newline '-> Parallel pool (' int2str(misc.pivparpool('size')) ' workers) active (default settings).'];
 					set (handle_splash_text, 'String',text_content);drawnow;pause(1)
 				end
 
