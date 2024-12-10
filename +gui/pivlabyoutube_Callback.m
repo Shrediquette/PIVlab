@@ -1,10 +1,10 @@
 function pivlabyoutube_Callback(~, ~, ~)
 try
-	web('https://github.com/Shrediquette/PIVlab/wiki/Video-tutorials')
+	web('https://shrediquette.github.io/PIVlab/wiki/2-video-tutorials/','-browser')
 catch
 	%why does 'web' not work in v 7.1.0.246 ...?
 	disp('Ooops, MATLAB couldn''t open the website.')
 	disp('You''ll have to open the website manually:')
-	disp('https://www.youtube.com/playlist?list=PLm0qHGfFNU28vvBsj15M0S0ujb1Xt2kgr')
+	disp('https://shrediquette.github.io/PIVlab/wiki/2-video-tutorials/')
 end
 

@@ -748,6 +748,7 @@ setpref('uipickfiles','figure_position',fig_pos)
 				else
 					%set(openbut,'Enable','off')
 					try
+						warning ('off')
 						dir_pick = fdir(value(1));
 						pick = dir_pick.name;
 						pick_full = fullfile(current_dir,pick);
@@ -792,6 +793,7 @@ setpref('uipickfiles','figure_position',fig_pos)
 					catch
 						%keyboard
 					end
+					warning ('on')
 				end
 			otherwise
 				set(addbut,'Enable','on')

@@ -250,7 +250,7 @@ if ~isequal(path,0)
 	end
 
 	if loopcntr >= 1
-		if mod(size(filepath,1),2)==1
+		if size(filepath,1) >1 && mod(size(filepath,1),2)==1
 			cutoff=size(filepath,1);
 			filepath(cutoff)=[];
 			framenum(cutoff)=[];
@@ -278,6 +278,8 @@ if ~isequal(path,0)
 				end
 			end
 		end
+		
+		if size(framepart,1)>=2 %check if enough images loaded
 		%extract path:
 		pathname=currentpath(1:zeichen(1,size(zeichen,2))-1);
 		gui.put ('pathname',pathname); %last path
@@ -333,7 +335,12 @@ if ~isequal(path,0)
 		set (handles.amount_nans, 'BackgroundColor',[0.9 0.9 0.9])
 		set (handles.amount_nans,'string','')
 		set (handles.remove_imgs,'enable','on');
+		else
+			gui.displogo(0)
+			errordlg('Selection must contain at least two images ( = 1 pair of images)','Error','on')
+		end
 	else
-		errordlg('Please select at least two images ( = 1 pair of images)','Error','on')
+		gui.displogo(0)
+		errordlg('Selection must contain at least two images ( = 1 pair of images)','Error','on')
 	end
 end
