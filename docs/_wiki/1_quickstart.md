@@ -131,4 +131,4 @@ Additionally, you can change the colors of the vectors. The checkbox _enhance PI
 
 ![](https://github.com/user-attachments/assets/2707d658-1fd2-4686-8135-6325c82de96f)
 
-Almost all steps mentioned above are also shown in three video tutorials. Furthermore these tutorials show how to work and analyze your results and how to export results in various formats. [Watch these videos here.](https://github.com/Shrediquette/PIVlab/wiki/Video-tutorials)
+Almost all steps mentioned above are also shown in three video tutorials. Furthermore these tutorials show how to work and analyze your results and how to export results in various formats. [Watch these videos here.](https://shrediquette.github.io/PIVlab/wiki/2-video-tutorials/)
