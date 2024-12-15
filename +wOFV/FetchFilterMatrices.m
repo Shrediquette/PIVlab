@@ -5,33 +5,41 @@ uiwait(warndlg('Wavelet filter matrices do not exist. They are downloaded and st
 gui.toolsavailable(1)
 gui.toolsavailable(0,'Downloading filter matrices...');drawnow
 FileName = fullfile(userpath, 'Filter Matrices.zip');
-F = parfeval(backgroundPool,@download_stuff,0,FileName);
-pause(1)
-fig = uifigure;
-fig.Visible='off';
-fig.Position = [680   687   444   191];
-movegui(fig,'center');
-fig.Resize='off';
-fig.WindowStyle = 'modal';
-fig.Visible='on';
-d = uiprogressdlg(fig,'Title','Please Wait','Message','Downloading filter matrices','Cancelable','on');
-progress=0;
-while strcmpi (F.State, 'running')
-	s = dir(FileName);
-	if ~isempty(s)
-		filesize = s.bytes;
-		progress= (filesize/256840824);
-		d.Value=progress;
-		d.Message = ['Downloading filter matrices (' num2str(round(filesize/1024/1024)) ' / ' num2str(round(256840824/1024/1024)) ' MB done).'];
+
+if ~verLessThan('matlab','9.11')
+	F = parfeval(backgroundPool,@download_stuff,0,FileName);
+	pause(1)
+	fig = uifigure;
+	fig.Visible='off';
+	fig.Position = [680   687   444   191];
+	movegui(fig,'center');
+	fig.Resize='off';
+	fig.WindowStyle = 'modal';
+	fig.Visible='on';
+	d = uiprogressdlg(fig,'Title','Please Wait','Message','Downloading filter matrices','Cancelable','on');
+	progress=0;
+	while strcmpi (F.State, 'running')
+		s = dir(FileName);
+		if ~isempty(s)
+			filesize = s.bytes;
+			progress= (filesize/256840824);
+			d.Value=progress;
+			d.Message = ['Downloading filter matrices (' num2str(round(filesize/1024/1024)) ' / ' num2str(round(256840824/1024/1024)) ' MB done).'];
+		end
+		if d.CancelRequested
+			cancel(F)
+			break
+		end
+		pause(0.25)
 	end
-	if d.CancelRequested
-		cancel(F)
-		break
-	end
-	pause(0.25)
+	close(d)
+	close(fig)
+else %older matlab releases than 2021
+	FileUrl = 'https://files.osf.io/v1/resources/y48mk/providers/osfstorage/?zip=';
+	disp('Downloading Filter Matrices.')
+	disp('This might take a while...')
+	websave(FileName,FileUrl);
 end
-close(d)
-close(fig)
 
 gui.toolsavailable(1)
 gui.toolsavailable(0,'Unzipping filter matrices...');drawnow
