@@ -1,4 +1,4 @@
-%Testing calculation speeds for PIVlab. Feel free to share your results and your configuration on the PIVlab forums (http://pivlab.blogspot.de/p/forum.html)
+%Testing calculation speeds for PIVlab.
 clear all
 close all
 clc
