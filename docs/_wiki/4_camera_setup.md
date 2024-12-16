@@ -14,9 +14,11 @@ title: Camera Setup
 * When this is finished, start PIVlab with the camera plugged into a USB3.0 port **(do NOT use a USB hub! The camera needs the full bandwith of the USB port)**, select the suitable configurations (e.g. "PIVlab LD-PS + OPTOcam 2/80), and start your PIV analyses!
 
 # Setting up pco cameras (panda and pixelfly)
+
 ### Standalone application of PIVlab
 1. Install the PCO USB 3.0 Interface Driver for the panda camera, or the 2.0 Driver for the pixelfly: https://www.excelitas.com/product/pco-interface-drivers
 2. Plug in your pco camera **(do NOT use a USB hub! The camera needs the full bandwith of the USB port)**. Please take care to fully insert (fully tighten the two screws!) the USB cable in the camera.
+
 ### Instructions for PIVlab toolbox version >= 3.07 (for older versions, see below)
 1. Install pco camware: https://www.excelitas.com/product/pco-camera-control-software
 2. Install pco.matlab: https://www.excelitas.com/product/pco-software-development-kits
