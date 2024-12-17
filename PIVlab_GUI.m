@@ -17,6 +17,7 @@
 
 function PIVlab_GUI(desired_num_cores,batch_session_file)
 %% display splash screen in deployed version
+%isdeployed=1 %debug splash screen
 if isdeployed
 	splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','PIVlab standalone','Toolbar','none','Units','pixels','Position',[10 10 150 150],'tag','splashscreen','visible','off','handlevisibility','on');
 	%splashscreen = figure('integerhandle','off','resize','off','numbertitle','off','MenuBar','none','DockControls','off','Name','PIVlab standalone','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','off','handlevisibility','on');
@@ -26,7 +27,7 @@ if isdeployed
 	set(gca,'DataAspectRatioMode','auto')
 	movegui(splashscreen,'center');
 	set(splashscreen,'visible','on')
-	handle_splash_text = text(splash_ax,300,590,'Generating figure window, please wait...','Color','w','VerticalAlignment','bottom','HorizontalAlignment','center','FontName','FixedWidth','Fontweight','bold','FontSize',10);
+	handle_splash_text = text(splash_ax,300,590,'Generating figure window, please wait...','Color','w','VerticalAlignment','bottom','HorizontalAlignment','center','FontName','FixedWidth','Fontweight','bold','FontSize',9,'Interpreter','none');
 	drawnow expose
 end
 %% Make figure
@@ -40,7 +41,7 @@ if isempty(fh)
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 	guidata(MainWindow,handles)
 	setappdata(0,'hgui',MainWindow);
-	version = '3.07';
+	version = '3.08';
 	gui.put('PIVver', version);
 	try
 		warning off
@@ -361,7 +362,8 @@ if isempty(fh)
 			disp(['-> Got default settings from: ' psdfile])
 		else
 			text_content=get(handle_splash_text,'String');
-			text_content{end+1}=['-> Got default settings from: ' psdfile];
+			text_content{end+1}='-> Got default settings from:';
+			text_content{end+1}=psdfile;
 			set (handle_splash_text, 'String',text_content);drawnow
 		end
 	catch
@@ -370,6 +372,7 @@ if isempty(fh)
 
 	misc.CheckUpdates
 	if isdeployed || exist('splash_ax','var')
+		pause(1)
 		close(splashscreen)
 	end
 	gui.SetFullScreen
@@ -377,6 +380,7 @@ if isempty(fh)
 	gui.displogo(1);drawnow;
 
 	set(MainWindow, 'Visible','on');
+
 
 	%% Batch session  processing in GUI
 	if ~exist('batch_session_file','var') %no input argument --> no GUI batch processing
