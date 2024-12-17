@@ -21,7 +21,7 @@ if isdeployed
 	splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','PIVlab standalone','Toolbar','none','Units','pixels','Position',[10 10 150 150],'tag','splashscreen','visible','off','handlevisibility','on');
 	%splashscreen = figure('integerhandle','off','resize','off','numbertitle','off','MenuBar','none','DockControls','off','Name','PIVlab standalone','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','off','handlevisibility','on');
 	splash_ax=axes(splashscreen,'units','normalized');
-	imshow(imread(fullfile('images','pivlab_standalone_splashscreen_2.jpg')),'Parent',splash_ax,'border','tight');
+	bgimg=imshow(imread(fullfile('images','pivlab_standalone_splashscreen_2.jpg')),'Parent',splash_ax,'border','tight');
 	set(splash_ax,'Position',[0 0 1 1])
 	set(gca,'DataAspectRatioMode','auto')
 	movegui(splashscreen,'center');
@@ -369,7 +369,7 @@ if isempty(fh)
 	end
 
 	misc.CheckUpdates
-	if isdeployed
+	if isdeployed || exist('splash_ax','var')
 		close(splashscreen)
 	end
 	gui.SetFullScreen
@@ -404,6 +404,7 @@ if isempty(fh)
 			gui.put('batchModeActive',0)
 		end
 	end
+
 else %Figure handle does already exist --> bring PIVlab to foreground.
 	disp('Only one instance of PIVlab is allowed to run.')
 	figure(fh)
