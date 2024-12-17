@@ -28,7 +28,9 @@ colorbar
 
 %% delete data in image directory, manage rcordfiles
 filePattern = fullfile(ImagePath, 'PIVlab_pco_Cam*.tif');
-diskchar='C:\\';
+pathparts = strsplit(filePattern,filesep);
+diskchar = [pathparts{1} filesep];
+%diskchar='C:\\';
 if triggermode==2 && ~isinf(imacount) %external Trigger, with the desire to save
 	direc= dir(filePattern);
 	filenames={};
