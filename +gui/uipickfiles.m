@@ -1260,10 +1260,14 @@ setpref('uipickfiles','figure_position',fig_pos)
 				multitiff=0;
 			end
 		else
-			if size(imfinfo(full_file_picks{1}),1) > 1
-				multitiff=1;
-			else
+			if numel(pick)-strfind(pick,'.b16')==3
 				multitiff=0;
+			else
+				if size(imfinfo(full_file_picks{1}),1) > 1
+					multitiff=1;
+				else
+					multitiff=0;
+				end
 			end
 		end
 		%PIVlab_select_Callback
