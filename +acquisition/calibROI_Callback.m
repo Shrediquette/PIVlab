@@ -76,6 +76,8 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 			evt.CurrentPosition=ac_ROI_general;
 			roi.ROIallevents(ac_ROI_general_handle,evt)
 
+			text (1,1,{'Right click for presets.' 'After modifying ROI: Double click to apply.'},'HorizontalAlignment','left','VerticalAlignment','top','Color','y','Parent',gui.retr('pivlab_axis'));
+
 			c_menu = uicontextmenu;
 			ac_ROI_general_handle.UIContextMenu = c_menu;
 
