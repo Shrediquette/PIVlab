@@ -4,7 +4,7 @@ set(handles.progress, 'String','Frame progress: N/A');
 set(handles.overall, 'String','Total progress: N/A');
 set(handles.totaltime, 'String','Time left: N/A');
 set(handles.messagetext, 'String','');
-if get(handles.algorithm_selection,'Value') == 1 || get(handles.algorithm_selection,'Value') == 3 %fft multi or dcc
+if get(handles.algorithm_selection,'Value') == 1 || get(handles.algorithm_selection,'Value') == 3 || get(handles.algorithm_selection,'Value') == 4 %fft multi or dcc or wOFV
 	set(handles.AnalyzeAll,'String','Analyze all frames');
 end
 if get(handles.algorithm_selection,'Value') == 2 %ensemble
