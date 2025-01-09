@@ -224,8 +224,12 @@ if ~isequal(path,0)
 		[~,~,ext] = fileparts(path(1).name);
 		if strcmpi(ext,'.tif') || strcmpi(ext,'.tiff') %for a tiff file, imread accepts a layer index as additional argument, for other files not, WTF!!!
 			img_height=size(imread(path(1).name,1),1);
-		else
-			img_height=size(imread(path(1).name),1);
+        else
+            if ~strcmpi(ext,'.b16')
+    			img_height=size(imread(path(1).name),1);
+            else
+                img_height=size(import.f_readB16(path(1).name),1);
+            end
 		end
 		framepart(1,1)=1;
 		framepart(1,2)=img_height;
