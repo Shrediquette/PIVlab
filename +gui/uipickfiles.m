@@ -1259,10 +1259,11 @@ setpref('uipickfiles','figure_position',fig_pos)
 			else
 				multitiff=0;
 			end
-		else
+        else % i_frames (nr of layers) has not been checked yet
+            pick = file_picks{1};
 			if numel(pick)-strfind(pick,'.b16')==3
 				multitiff=0;
-			else
+            else % not b16 image --> check if multilayer
 				if size(imfinfo(full_file_picks{1}),1) > 1
 					multitiff=1;
 				else
