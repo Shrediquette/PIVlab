@@ -1,4 +1,4 @@
-function straddling_graph(blind_time,frame_rate,pulse_distance,laser_energy,num_exposures_to_show,is_dbl_shutter,f1exp_cam)
+function straddling_graph_xmsync(blind_time,frame_rate,pulse_distance,laser_energy,num_exposures_to_show,is_dbl_shutter,f1exp_cam)
 if is_dbl_shutter % a double shutter camera like the pco panda and pixelfly capture 2 images for each frame.
 	frame_rate=frame_rate*2;
 end
