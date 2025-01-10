@@ -156,6 +156,14 @@ if required_files_check
 			elseif value == 3 || value == 4 %pco cameras with laser diode
 				%Start-up sequence for PIVlab LD-PS (much quicker)
 				waitbar(.01,f,'Starting laser...');
+				las_percent=str2double(get(handles.ac_power,'String'));
+				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
+				if strcmpi(gui.retr('sync_type'),'xmSync')
+					f1exp_cam =floor(pulse_sep*las_percent/100)+1; %+1 because in the snychronizer, the cam expo is started 1 us before the ld pulse
+				elseif strcmpi(gui.retr('sync_type'),'oltSync')
+					f1exp_cam =floor(pulse_sep*las_percent/100);
+					gui.put('f1exp_cam',f1exp_cam);
+				end
 				acquisition.control_simple_sync_serial(1,0);
 				gui.put('laser_running',1);
 				close(f)
@@ -172,7 +180,12 @@ if required_files_check
 				%require a calculation of the exposure time which depends on the laser pulse length
 				las_percent=str2double(get(handles.ac_power,'String'));
 				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
-				f1exp_cam =floor(pulse_sep*las_percent/100)+1; %+1 because in the snychronizer, the cam expo is started 1 us before the ld pulse
+				if strcmpi(gui.retr('sync_type'),'xmSync')
+					f1exp_cam =floor(pulse_sep*las_percent/100)+1; %+1 because in the snychronizer, the cam expo is started 1 us before the ld pulse
+				elseif strcmpi(gui.retr('sync_type'),'oltSync')
+					f1exp_cam =floor(pulse_sep*las_percent/100);
+					gui.put('f1exp_cam',f1exp_cam);
+				end
 				disp(['camera exposure time = ' num2str(f1exp_cam)])
 				if f1exp_cam < 6
 					msgbox (['Exposure time of camera too low. Please increase laser energy or pulse distance.' sprintf('\n') 'Pulse_distance[µs] * laser_energy[%] must be >= 6 µs'])

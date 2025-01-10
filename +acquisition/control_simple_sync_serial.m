@@ -63,19 +63,37 @@ if alreadyconnected
 	if switch_it==1
 		flush(serpo);pause(0.1)
 		camera_type=gui.retr('camera_type');
-		if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly')
-			send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
-		else
-			send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(str2double(ac_fps_str(ac_fps_value))*bugfix_factor) ';CAM:' int2str(0) ';ENER:' int2str(0) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(0) ';INTERF:' int2str(round(pulse_sep/bugfix_factor)) ';EXTDLY:' int2str(0) ';EXTSKP:' int2str(0) ';LASER:enable'];
+		if strcmpi(gui.retr('sync_type'),'xmSync')
+			if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly')
+				send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
+			else
+				send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(str2double(ac_fps_str(ac_fps_value))*bugfix_factor) ';CAM:' int2str(0) ';ENER:' int2str(0) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(0) ';INTERF:' int2str(round(pulse_sep/bugfix_factor)) ';EXTDLY:' int2str(0) ';EXTSKP:' int2str(0) ';LASER:enable'];
+			end
+			writeline(serpo,send_string);
+		elseif strcmpi(gui.retr('sync_type'),'oltSync')
+			camera_sub_type=gui.retr('camera_sub_type');
+			bitmode =gui.retr('OPTOcam_bits');
+			framerate=str2double(ac_fps_str(ac_fps_value));
+			f1exp_cam=gui.retr('f1exp_cam');
+			[~, pin_string,~,frame_time] = PIVlab_calc_oltsync_timings(camera_type,camera_sub_type,bitmode,framerate,f1exp_cam,pulse_sep,las_percent);
+			send_string=['sequence:' int2str(frame_time) ':0,0:' pin_string];
+			writeline(serpo,send_string);
+			%pause(0.05)
+			%flush(serpo)
+			%pause(0.05)
+			pause(0.05)
+			writeline(serpo,'start');
 		end
-		writeline(serpo,send_string);
+
 	else
 		flush(serpo);pause(0.1)
-		%configureTerminator(serpo,'CR');
-		send_string=['TALKINGTO:' laser_device_id ';FREQ:1;CAM:1;ENER:' int2str(min_energy) ';ener%:0;F1EXP:100;INTERF:1234;EXTDLY:-1;EXTSKP:0;LASER:disable'];
-		writeline(serpo,send_string);
-		%writeline(serpo,'FREQ:5;EXPO:300;CAMDLY:835;LDPULS:300;INTERF:500;LASER:disable');
-		%disp('testing laserdiode')
+		if strcmpi(gui.retr('sync_type'),'xmSync')
+			send_string=['TALKINGTO:' laser_device_id ';FREQ:1;CAM:1;ENER:' int2str(min_energy) ';ener%:0;F1EXP:100;INTERF:1234;EXTDLY:-1;EXTSKP:0;LASER:disable'];
+			writeline(serpo,send_string);
+		elseif strcmpi(gui.retr('sync_type'),'oltSync')
+			writeline(serpo,'stop');
+		end
+
 	end
 	pause(0.1)
 	warning off
@@ -84,9 +102,21 @@ if alreadyconnected
 		camera_type=gui.retr('camera_type');
 		if strcmp(camera_type,'OPTRONIS')
 			if calibration_pulse ==1
-				writeline(serpo,'CAMERA_FREERUN_ON!');
+				if strcmpi(gui.retr('sync_type'),'xmSync')
+					writeline(serpo,'CAMERA_FREERUN_ON!');
+				elseif strcmpi(gui.retr('sync_type'),'oltSync')
+					%toggle the camera with approx 20 Hz
+					send_string=['sequence:' int2str(50000) ':0,0:' '100,1100:0,0'];
+					writeline(serpo,send_string);
+					pause(0.2)
+					writeline(serpo,'start');
+				end
 			elseif calibration_pulse ==2
-				writeline(serpo,'CAMERA_FREERUN_OFF!');
+				if strcmpi(gui.retr('sync_type'),'xmSync')
+					writeline(serpo,'CAMERA_FREERUN_OFF!');
+				elseif strcmpi(gui.retr('sync_type'),'oltSync')
+					writeline(serpo,'stop');
+				end
 			end
 		end
 	end

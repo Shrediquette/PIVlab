@@ -1,4 +1,4 @@
-function straddling_graph_oltsync(timing_table,frame_time,cam_delay,camera_principle,exposure_time,camera_type)
+function straddling_graph_oltsync(timing_table,frame_time,cam_delay,camera_principle,camera_type)
 %zeilen: die verschiedenen pins; spalten:die zeiten
 
 bot_cam = 0.45;

@@ -13,7 +13,7 @@ else
 		else
 			selected_port=avail_ports;
 		end
-		serpo = serialport(selected_port,9600,'Timeout',1);
+		serpo = serialport(selected_port,9600,'Timeout',2);
 		configureTerminator(serpo,'CR/LF');
 		gui.put('serpo',serpo);
 		set(handles.ac_serialstatus,'Backgroundcolor',[0 1 0]);

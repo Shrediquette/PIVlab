@@ -1,4 +1,4 @@
-function [timing_table, pin_string] = PIVlab_calc_oltsync_timings(camera_type,camera_sub_type,bitrate,framerate,exposure_time,interframe,laser_energy)
+function [timing_table, pin_string, cam_delay, frame_time] = PIVlab_calc_oltsync_timings(camera_type,camera_sub_type,bitrate,framerate,exposure_time,interframe,laser_energy)
 
 %only relevant for pco:
 %exposure_time is also known as f1exp_cam
@@ -12,6 +12,9 @@ else
 end
 
 if strcmp(camera_type,'OPTOcam')
+	if isempty(bitrate)
+		bitrate=8;
+	end
 	if bitrate == 8
 		blind_time=44;
 		cam_delay=17;
@@ -117,6 +120,4 @@ for i=1:amount_pins
 		pin_string = [pin_string ':'];
 	end
 end
-
 %send_string=['sequence:' int2str(frame_time) ':0,0:' pin_string]
-%acquisition.straddling_graph_oltsync(timing_table,frame_time,cam_delay,camera_principle,exposure_time,camera_type) %gleich Funktion schreiben die ergebnis korrekt plottet. Besser zum programieren wenn man direkt was sieht.
