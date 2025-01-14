@@ -207,7 +207,8 @@ while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdat
         sharp_loop_cnt=[];
     end
 end
-
+OPTRONIS_settings=get(OPTRONIS_vid);
+OPTRONIS_settings.Source.EnableFan = 'On';
 
 stoppreview(OPTRONIS_vid)
 stop(OPTRONIS_vid);

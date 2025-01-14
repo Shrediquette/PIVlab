@@ -181,6 +181,7 @@ if value == 9 % OPTRONIS
 			gui.put('min_allowed_interframe',40);
 			gui.put('blind_time',25);
 		otherwise
+			msgbox({'No camera found. Is it connected and powered on?' 'Is the ''Image Acquisition Toolbox Support Package for GenICam Interface'' installed?.'},'modal')
 			disp('Camera detection unsuccesful.')
 			avail_freqs={'2165' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
 			gui.put('max_cam_res',[1920,1080]);

@@ -50,6 +50,9 @@ if strcmp(camera_type,'flir')
 end
 
 if strcmp(camera_type,'OPTRONIS')
+	if isempty(camera_sub_type)
+		camera_sub_type=''; %empty string
+	end
 	switch camera_sub_type
 		case 'Cyclone-2-2000-M'
 			blind_time=8;
@@ -61,7 +64,9 @@ if strcmp(camera_type,'OPTRONIS')
 			blind_time=27;
 			cam_delay=3;
 		otherwise
-			msgbox('This camera sub type is not known.')
+			msgbox('This camera sub type is not known.','modal')
+			blind_time=8;
+			cam_delay=3;
 	end
 end
 
@@ -70,6 +75,11 @@ if strcmp(camera_principle,'normal_shutter')
 	cam_period=frame_time/2 - blind_time; %maximum exposure of camera;
 	laser_period=interframe*laser_energy/100; % laser on time of laser pulse
 
+	max_laser_period = 0.5*(frame_time/2); % laser duty cycle limited to 50%
+	if laser_period > max_laser_period
+		laser_period = max_laser_period;
+	end
+	
 	laserpulse1_on =  cam_period - interframe/2 - laser_period/2 + blind_time + cam_delay;
 	laserpulse1_off = cam_period - interframe/2 + laser_period/2 + cam_delay;
 	laserpulse2_on =  cam_period + interframe/2 - laser_period/2 + blind_time + cam_delay;
@@ -82,6 +92,11 @@ elseif strcmp(camera_principle,'double_shutter')
 	frame_time = 1/framerate*1000^2; %the frame_time is the camera period, because every frame, the whole cycle repeats itself.
 	cam_period=exposure_time+cam_delay; %exposure of the first frame;
 	laser_period=interframe*laser_energy/100; % laser on time of laser pulse
+
+	max_laser_period = 0.5*(frame_time/2) % laser duty cycle limited to 50%
+	if laser_period > max_laser_period
+		laser_period = max_laser_period;
+	end
 
 	laserpulse1_on =  cam_delay + blind_time/2; %+(interframe - laser_period)/2;
 	laserpulse1_off = cam_delay + laser_period - blind_time/2; %+(interframe - laser_period)/2;
