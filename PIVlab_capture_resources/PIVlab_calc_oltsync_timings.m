@@ -79,7 +79,7 @@ if strcmp(camera_principle,'normal_shutter')
 	pin2_times=[laserpulse1_on    laserpulse1_off    laserpulse2_on           laserpulse2_off     ]; %laser
 
 elseif strcmp(camera_principle,'double_shutter')
-	frame_time = 1/framerate*1000^2 ; %the frame_time is the camera period, because every frame, the whole cycle repeats itself.
+	frame_time = 1/framerate*1000^2; %the frame_time is the camera period, because every frame, the whole cycle repeats itself.
 	cam_period=exposure_time+cam_delay; %exposure of the first frame;
 	laser_period=interframe*laser_energy/100; % laser on time of laser pulse
 
@@ -120,4 +120,5 @@ for i=1:amount_pins
 		pin_string = [pin_string ':'];
 	end
 end
+
 %send_string=['sequence:' int2str(frame_time) ':0,0:' pin_string]
