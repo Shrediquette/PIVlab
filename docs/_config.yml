@@ -16,15 +16,15 @@ collections:
     permalink: /news/:name/
 navigation:
   - title: "Home"
-    url: "/PIVlab/"
+    url: "/"
   - title: "Downloads"
-    url: "/PIVlab/downloads"
+    url: "/downloads"
   - title: "Wiki"
-    url: "/PIVlab/wiki"
+    url: "/wiki"
   - title: "Hardware"
-    url: "/PIVlab/hardware"
+    url: "/hardware"
   - title: "Screenshots"
-    url: "/PIVlab/screenshots"
+    url: "/screenshots"
   - title: "Applications"
-    url: "/PIVlab/applications"
+    url: "/applications"
     
