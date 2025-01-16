@@ -88,6 +88,16 @@ scroll_bar_handles = [scroll_axes_handle; scroll_handle];
 scroll_func = @scroll;
 video_loaded=0;
 
+batchModeActive=gui.retr('batchModeActive');
+if isempty (batchModeActive) || batchModeActive == 0
+	if ~ispref('PIVlab_ad','video_warn') || getpref('PIVlab_ad','video_warn') == 0
+		pause(0.1);drawnow
+		uiwait(msgbox('Hint: If possible you should always prefer image files over video files, e.g. by converting them to a lossless format before importing in PIVlab.','modal'))
+		setpref('PIVlab_ad','video_warn',1)
+	end
+end
+
+
 	function startframe_change (~,~,~)
 		if video_loaded
 			handles=guihandles(fig_handle);
