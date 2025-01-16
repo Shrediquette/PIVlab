@@ -67,15 +67,15 @@ if ~isempty(C)
 
 			pl_msg=['Pulse length: ' int2str(pulse_length) ' µs'];
 
-			if pulse_length < 1
-				pl_msg=['ERROR pulse length! Increase energy.'];
+			if round(pulse_length) < 1 %Rounding for this test, because string sent to Sync is int2str
+				pl_msg='ERROR pulse length! Increase energy.';
 			end
 			set (handles.ac_pulselengthtxt,'String', pl_msg);
 			disp (pl_msg)
 		elseif strcmpi(sync_setting,'Laser:disable')
 			set(handles.ac_laserstatus,'BackgroundColor',[1 0 0]); %red = off
 			set(handles.ac_laserstatus,'String','Laser OFF');
-			pl_msg=['Pulse length: 0 µs'];
+			pl_msg='Pulse length: 0 µs';
 			set (handles.ac_pulselengthtxt,'String', pl_msg);
 		end
 
