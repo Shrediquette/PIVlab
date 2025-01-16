@@ -100,7 +100,7 @@ if ok==1
 	else
 		video_frame_selection=gui.retr('video_frame_selection');
 		video_reader_object = gui.retr('video_reader_object');
-		[x, y, u, v, typevector,correlation_map] = piv.piv_FFTensemble (autolimit, video_reader_object ,video_frame_selection,bg_img_A,bg_img_B,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,converted_mask,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
+		[x, y, u, v, typevector,correlation_map] = piv.piv_FFTensemble (autolimit, video_reader_object ,framenum,framepart,video_frame_selection,bg_img_A,bg_img_B,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roirect,converted_mask,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad);
 	end
 
 	cancel = gui.retr('cancel');
