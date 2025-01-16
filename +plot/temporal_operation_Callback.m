@@ -21,10 +21,12 @@ if isempty(resultslist)==0
 					filepath(i*2-1,:)=[];
 					filename(i*2,:)=[];
 					filename(i*2-1,:)=[];
-					framenum(i*2,:)=[];
-					framenum(i*2-1,:)=[];
-					framepart(i*2,:)=[];
-					framepart(i*2-1,:)=[];
+					if gui.retr('video_selection_done') == 0
+						framenum(i*2,:)=[];
+						framenum(i*2-1,:)=[];
+						framepart(i*2,:)=[];
+						framepart(i*2-1,:)=[];
+					end
 					resultslist(:,i)=[];
 					ismean(i,:)=[];
 				end
@@ -211,17 +213,16 @@ if isempty(resultslist)==0
 							resultslist{4,size(filepath,1)/2+1}=sum(vmittelselected,3);
 						end
 					end
-
 					filepathselected=filepath(1:2:end);
 					eval(['filepathselected=filepathselected([' str '],:);']);
 					filepath{size(filepath,1)+1,1}=filepathselected{1,1};
 					filepath{size(filepath,1)+1,1}=filepathselected{1,1};
-					framenum (size(framenum,1)+1,1)=framenum(1,1);
-					framenum (size(framenum,1)+1,1)=framenum(1,1);
-					framepart(size(framepart,1)+1,:)=framepart(1,:);
-					framepart(size(framepart,1)+1,:)=framepart(1,:);
-
-					if gui.retr('video_selection_done') == 1
+					if gui.retr('video_selection_done') == 0
+						framenum (size(framenum,1)+1,1)=framenum(1,1);
+						framenum (size(framenum,1)+1,1)=framenum(1,1);
+						framepart(size(framepart,1)+1,:)=framepart(1,:);
+						framepart(size(framepart,1)+1,:)=framepart(1,:);
+					else
 						video_frame_selection=gui.retr('video_frame_selection');
 						video_frame_selection(end+1,1)=video_frame_selection(strnum(end)*2);
 						video_frame_selection(end+1,1)=video_frame_selection(strnum(end)*2);
