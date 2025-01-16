@@ -1,9 +1,9 @@
 title: PIVlab
-description: Open Source Particle Imagge Velocimetry Software.
+description: Open Source Particle Image Velocimetry Software
 show_downloads: true
 google_analytics:
 theme: jekyll-theme-leap-day
-baseurl: "/PIVlab"
+baseurl: ""
 collections: 
   wiki:
     output: true
