@@ -76,13 +76,14 @@ if alreadyconnected
 			framerate=str2double(ac_fps_str(ac_fps_value));
 			f1exp_cam=gui.retr('f1exp_cam');
 			[~, pin_string,~,frame_time] = PIVlab_calc_oltsync_timings(camera_type,camera_sub_type,bitmode,framerate,f1exp_cam,pulse_sep,las_percent);
-			send_string=['sequence:' int2str(frame_time) ':0,0:' pin_string];
+			send_string=['TALKINGTO:' laser_device_id ':sequence:' int2str(frame_time) ':0,0:' pin_string];
 			writeline(serpo,send_string);
 			%pause(0.05)
 			%flush(serpo)
 			%pause(0.05)
 			pause(0.05)
-			writeline(serpo,'start');
+			send_string=['TALKINGTO:' laser_device_id ':start'];
+			writeline(serpo,send_string);
 		end
 
 	else
@@ -91,7 +92,8 @@ if alreadyconnected
 			send_string=['TALKINGTO:' laser_device_id ';FREQ:1;CAM:1;ENER:' int2str(min_energy) ';ener%:0;F1EXP:100;INTERF:1234;EXTDLY:-1;EXTSKP:0;LASER:disable'];
 			writeline(serpo,send_string);
 		elseif strcmpi(gui.retr('sync_type'),'oltSync')
-			writeline(serpo,'stop');
+			send_string=['TALKINGTO:' laser_device_id ':stop'];
+			writeline(serpo,send_string);
 		end
 
 	end
@@ -106,16 +108,18 @@ if alreadyconnected
 					writeline(serpo,'CAMERA_FREERUN_ON!');
 				elseif strcmpi(gui.retr('sync_type'),'oltSync')
 					%toggle the camera with approx 20 Hz
-					send_string=['sequence:' int2str(50000) ':0,0:' '100,1100:0,0'];
+					send_string=['TALKINGTO:' laser_device_id ':sequence:50000:0,0:100,1100:'];
 					writeline(serpo,send_string);
 					pause(0.2)
-					writeline(serpo,'start');
+					send_string=['TALKINGTO:' laser_device_id ':start'];
+					writeline(serpo,send_string);
 				end
 			elseif calibration_pulse ==2
 				if strcmpi(gui.retr('sync_type'),'xmSync')
 					writeline(serpo,'CAMERA_FREERUN_OFF!');
 				elseif strcmpi(gui.retr('sync_type'),'oltSync')
-					writeline(serpo,'stop');
+					send_string=['TALKINGTO:' laser_device_id ':stop'];
+					writeline(serpo,send_string);
 				end
 			end
 		end
