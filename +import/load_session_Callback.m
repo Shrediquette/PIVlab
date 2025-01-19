@@ -218,22 +218,25 @@ else
 	end
 
 	% new for multitiff
-	if ~isfield(vars,'framenum') || ~isfield(vars,'framepart') %% old sessions do not have these vars yet
-		display_hint=1;
-		framenum=[];
-		framepart=[];
-		cntr=1;
-		vars.filepath=import.Check_if_image_files_exist(vars.filepath,1);
-		img_height=size(imread(vars.filepath{1}),1); %read one file to detect image height to devide it by two later.
-		for i=1:size(vars.filepath,1)
-			framenum(i,1)=1;
-			framepart(i,1)=1;
-			framepart(i,2)=img_height;
+	if isfield(vars,'video_selection_done') && vars.video_selection_done == 1
+	%session was saved with video file selection, dont generate framenum and framepart
+	else
+		if ~isfield(vars,'framenum') || ~isfield(vars,'framepart') %% old sessions do not have these vars yet
+			display_hint=1;
+			framenum=[];
+			framepart=[];
+			cntr=1;
+			vars.filepath=import.Check_if_image_files_exist(vars.filepath,1);
+			img_height=size(imread(vars.filepath{1}),1); %read one file to detect image height to devide it by two later.
+			for i=1:size(vars.filepath,1)
+				framenum(i,1)=1;
+				framepart(i,1)=1;
+				framepart(i,2)=img_height;
+			end
+			gui.put ('framenum',framenum);
+			gui.put ('framepart',framepart);
 		end
-		gui.put ('framenum',framenum);
-		gui.put ('framepart',framepart);
 	end
-
 	%reset zoom
 	set(handles.panon,'Value',0);
 	set(handles.zoomon,'Value',0);
