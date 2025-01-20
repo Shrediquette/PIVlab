@@ -79,7 +79,7 @@ if alreadyconnected
 			triggermode=gui.retr('oltSync_triggermode');
 			if isempty(triggermode)
 				triggermode='internal';
-				put('oltSync_triggermode',triggermode)
+				gui.put('oltSync_triggermode',triggermode)
 			else
 				disp('check if these modes are correct!')
 				if strcmpi(triggermode,'internal')
