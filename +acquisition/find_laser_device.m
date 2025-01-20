@@ -75,6 +75,7 @@ if alreadyconnected
 	try
 		pause(0.3)
 		writeline(serpo,string3); %enable the lighting of the laser warning sign
+		pause(0.2)
 	catch
 		disp('Could not enable Laser warning sign')
 	end
