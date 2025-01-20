@@ -1,5 +1,4 @@
 function laser_device_id = find_laser_device
-%handles=gui.gethand;
 gui.put('sync_type',[]); %remove any eexpectation about connected synchronizer
 serpo=gui.retr('serpo');
 try
@@ -9,7 +8,6 @@ catch
 	alreadyconnected=0;
 end
 if alreadyconnected
-
 	if exist('laser_device_id.mat','file') == 2
 		old_laser_device_id = load('laser_device_id.mat','id');
 		old_laser_device_id = old_laser_device_id.id;
@@ -19,7 +17,6 @@ if alreadyconnected
 	string1='WhoAreYou?';
 	string2='WhichFirmWare?';
 	string3='WarningSignEnable!';
-
 	try
 		writeline(serpo,string1);
 		pause(0.3)
@@ -30,10 +27,12 @@ if alreadyconnected
 		if contains(serial_answer,'oltSync:') %decide which synchronizer hardware is connected
 			gui.put('sync_type','oltSync') %Waldemars Sync
 			disp('oltSync detected')
+			set(handles.ac_enable_ext_trigger,'Visible','on')
 		else
 			if ~isempty(serial_answer)
 				gui.put('sync_type','xmSync') %Williams Sync
 				disp('xmSync detected')
+				set(handles.ac_enable_ext_trigger,'Visible','off') %not displayed for old synchronizer
 			end
 		end
 		warning on
@@ -89,7 +88,6 @@ disp('---------')
 	disp(['Answer: ' convertStringsToChars(serial_answer)])
 disp('---------')
 	%}
-
 	if isempty(serial_answer)
 		uiwait(msgbox(['No laser found.' sprintf('\n') 'Is the laser turned on?' sprintf('\n') 'Please try again.'],'modal'))
 	end

@@ -76,7 +76,7 @@ if alreadyconnected
 			framerate=str2double(ac_fps_str(ac_fps_value));
 			f1exp_cam=gui.retr('f1exp_cam');
 			[~, pin_string,~,frame_time] = PIVlab_calc_oltsync_timings(camera_type,camera_sub_type,bitmode,framerate,f1exp_cam,pulse_sep,las_percent);
-			send_string=['TALKINGTO:' laser_device_id ':sequence:' int2str(frame_time) ':0,0:' pin_string]
+			send_string=['TALKINGTO:' laser_device_id ':sequence:' int2str(frame_time) ':0,0:' pin_string];
 			writeline(serpo,send_string);
 			pause(0.05)
 			serial_answer=readline(serpo);

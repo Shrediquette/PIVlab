@@ -12,8 +12,9 @@ end
 
 
 
-
 %{
+filename_update = fullfile(userpath ,'latest_version.txt');
+current_url = 'http://william.thielicke.org/PIVlab/latest_version_p.txt';
 if exist('websave','builtin')||exist('websave','file')
 		outfilename=websave(filename_update,current_url,weboptions('Timeout',10));
 		try
