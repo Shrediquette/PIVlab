@@ -52,6 +52,7 @@ if alreadyconnected
 			firmware_version=convertStringsToChars(firmware_version);
 			if contains(firmware_version,'oltSync:')
 				firmware_version = firmware_version(strfind(firmware_version,'oltSync:')+8 : end);
+				misc.check_sync_firmware(firmware_version)
 			end
 		end
 		disp(['Firmware: ' firmware_version])
