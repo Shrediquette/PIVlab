@@ -1,22 +1,9 @@
 function check_sync_firmware(firmware_version)
-latest_firmware='1.1'; % get latest version from server
-firmware_version_num=str2double(firmware_version);
-latest_firmware_num=str2double(latest_firmware);
-if ~isnan(latest_firmware_num) && ~isnan(firmware_version_num)
-	if str2double(firmware_version) < str2double(latest_firmware)
-
-	end
-else
-	disp('Could not check for synchronizer updates.')
-end
-
-
-
-%{
-filename_update = fullfile(userpath ,'latest_version.txt');
-current_url = 'http://william.thielicke.org/PIVlab/latest_version_p.txt';
+%% get latest sync firmware version from server
+filename_update = fullfile(userpath ,'latest_version_oltsync.txt');
+current_url = 'http://william.thielicke.org/PIVlab/latest_version_oltsync.txt';
 if exist('websave','builtin')||exist('websave','file')
-		outfilename=websave(filename_update,current_url,weboptions('Timeout',10));
+		outfilename=websave(filename_update,current_url,weboptions('Timeout',2));
 		try
 			outfilename2=websave(filename_starred,starred_feature_url,weboptions('Timeout',2));
 		catch
@@ -28,18 +15,24 @@ if exist('websave','builtin')||exist('websave','file')
 		catch
 		end
 	end
-
 	%version number
 	fileID_update = fopen(filename_update);
 	web_version = textscan(fileID_update,'%s');
-	web_version=cell2mat(web_version{1});
+	latest_firmware=cell2mat(web_version{1});
 	trash_upd = fclose(fileID_update);
 	if ispc %Matlab seems to have issues with deleting files on unix systems
 		recycle('on');
 		delete(filename_update)
 	end
-
-%}
-
-pivlab_axis=gui.retr('pivlab_axis');
-text (1025,800,['   ' sprintf('\n') gui.retr('update_msg')], 'fontsize', 10,'fontangle','italic','horizontalalignment','right','Color',gui.retr('update_msg_color'),'verticalalignment','top','Parent',pivlab_axis);
+%% compare 
+firmware_version_num=str2double(firmware_version);
+latest_firmware_num=str2double(latest_firmware);
+if ~isnan(latest_firmware_num) && ~isnan(firmware_version_num)
+	if str2double(firmware_version) < str2double(latest_firmware)
+		uiwait(msgbox({'A new firmware for your synchronizer has been published.' 'Please contact OPTOLUTION to get the file:' 'info@optolution.com'},'modal'))
+	end
+else
+	disp('Could not check for synchronizer updates.')
+end
+%pivlab_axis=gui.retr('pivlab_axis');
+%text (1025,800,['   ' sprintf('\n') gui.retr('update_msg')], 'fontsize', 10,'fontangle','italic','horizontalalignment','right','Color',gui.retr('update_msg_color'),'verticalalignment','top','Parent',pivlab_axis);
