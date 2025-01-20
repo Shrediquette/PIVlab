@@ -93,7 +93,7 @@ elseif strcmp(camera_principle,'double_shutter')
 	cam_period=exposure_time+cam_delay; %exposure of the first frame;
 	laser_period=interframe*laser_energy/100; % laser on time of laser pulse
 
-	max_laser_period = 0.5*(frame_time/2) % laser duty cycle limited to 50%
+	max_laser_period = 0.5*(frame_time/2); % laser duty cycle limited to 50%
 	if laser_period > max_laser_period
 		laser_period = max_laser_period;
 	end

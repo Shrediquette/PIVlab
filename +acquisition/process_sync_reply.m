@@ -1,16 +1,6 @@
 function serial_answer = process_sync_reply(serpo)
 handles=gui.gethand;
 serial_answer=readline(serpo);
-if strcmpi(serial_answer,'Sequence:OK')
-	disp('Sequence reported OK')
-	pause(0.1)
-	serial_answer=readline(serpo);
-end
-if strcmpi(serial_answer,'Sequence:Error')
-	disp('Sequence not correct')
-	pause(0.1)
-	serial_answer=readline(serpo);
-end
 warning on
 sync_setting=serial_answer;
 if isempty(sync_setting)

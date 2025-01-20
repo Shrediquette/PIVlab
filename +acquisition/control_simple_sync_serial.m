@@ -76,14 +76,23 @@ if alreadyconnected
 			framerate=str2double(ac_fps_str(ac_fps_value));
 			f1exp_cam=gui.retr('f1exp_cam');
 			[~, pin_string,~,frame_time] = PIVlab_calc_oltsync_timings(camera_type,camera_sub_type,bitmode,framerate,f1exp_cam,pulse_sep,las_percent);
-			send_string=['TALKINGTO:' laser_device_id ':sequence:' int2str(frame_time) ':0,0:' pin_string];
+			send_string=['TALKINGTO:' laser_device_id ':sequence:' int2str(frame_time) ':0,0:' pin_string]
 			writeline(serpo,send_string);
-			%pause(0.05)
-			%flush(serpo)
-			%pause(0.05)
 			pause(0.05)
-			send_string=['TALKINGTO:' laser_device_id ':start'];
-			writeline(serpo,send_string);
+			serial_answer=readline(serpo);
+
+			% check if sequence is ok. If not --> dont turn laser on
+			if strcmpi(serial_answer,'Sequence:OK')
+				disp('Sequence reported OK')
+				pause(0.05)
+				send_string=['TALKINGTO:' laser_device_id ':start'];
+				writeline(serpo,send_string);
+			end
+			if strcmpi(serial_answer,'Sequence:Error')
+				disp('Sequence not correct')
+				set(handles.ac_laserstatus,'BackgroundColor',[1 1 0]); %yellow=warning
+				set(handles.ac_laserstatus,'String','!Sequence!');drawnow;
+			end
 		end
 
 	else
