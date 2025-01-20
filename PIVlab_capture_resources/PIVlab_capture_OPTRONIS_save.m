@@ -31,16 +31,19 @@ if getappdata(hgui,'cancel_capture') ~=1 %capture was not cancelled --> save ima
             max_imgs=size(OPTRONIS_data,4);
         end
         sum_img=zeros(1,max_imgs);
-        corr_img_A=zeros(1,max_imgs);
-        corr_img_B=zeros(1,max_imgs);
+        corr_img_A=zeros(1,max_imgs-2);
+        corr_img_B=zeros(1,max_imgs-2);
         for i=1:max_imgs
             sum_img(i)=sum(OPTRONIS_data(:,:,:,i),'all');
-
-            if i < max_imgs-2
-                corr_img_A(i)=corr2(OPTRONIS_data(:,:,:,i),OPTRONIS_data(:,:,:,i+1));
-                corr_img_B(i)=corr2(OPTRONIS_data(:,:,:,i+1),OPTRONIS_data(:,:,:,i+2));
-            end
         end
+
+        for i=1:2:max_imgs-2 %test correlation
+            corr_img_A(i)=corr2(OPTRONIS_data(:,:,:,i),OPTRONIS_data(:,:,:,i+1));
+            corr_img_B(i)=corr2(OPTRONIS_data(:,:,:,i+1),OPTRONIS_data(:,:,:,i+2));
+        end
+        %mean(corr_img_A,'omitnan')
+        %mean(corr_img_B,'omitnan')
+
         if mean(corr_img_B,'omitnan') > mean(corr_img_A,'omitnan')
             disp('First frame removed. Bug fix for OPTRONIS and Mathworks (not for PIVlab...!)')
             bug_fix_skipped_frame=1;
