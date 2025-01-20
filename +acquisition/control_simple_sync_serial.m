@@ -76,25 +76,37 @@ if alreadyconnected
 			framerate=str2double(ac_fps_str(ac_fps_value));
 			f1exp_cam=gui.retr('f1exp_cam');
 			[~, pin_string,~,frame_time] = PIVlab_calc_oltsync_timings(camera_type,camera_sub_type,bitmode,framerate,f1exp_cam,pulse_sep,las_percent);
-			send_string=['TALKINGTO:' laser_device_id ':sequence:' int2str(frame_time) ':0,0:' pin_string];
+			triggermode=gui.retr('oltSync_triggermode');
+			if isempty(triggermode)
+				triggermode='internal';
+				put('oltSync_triggermode',triggermode)
+			else
+				disp('check if these modes are correct!')
+				if strcmpi(triggermode,'internal')
+					triggerconfig=':0,0:';
+				elseif strcmpi(triggermode,'activehigh')
+					triggerconfig=':2,0:';
+				elseif strcmpi(triggermode,'singlerising')
+					triggerconfig=':1,0:';
+				end
+			end
+			send_string=['TALKINGTO:' laser_device_id ':sequence:' int2str(frame_time) triggerconfig pin_string];
 			writeline(serpo,send_string);
 			pause(0.05)
 			serial_answer=readline(serpo);
-
 			% check if sequence is ok. If not --> dont turn laser on
 			if strcmpi(serial_answer,'Sequence:OK')
-				disp('Sequence reported OK')
+				%disp('Sequence reported OK')
 				pause(0.05)
 				send_string=['TALKINGTO:' laser_device_id ':start'];
 				writeline(serpo,send_string);
 			end
 			if strcmpi(serial_answer,'Sequence:Error')
-				disp('Sequence not correct')
+				%disp('Sequence not correct')
 				set(handles.ac_laserstatus,'BackgroundColor',[1 1 0]); %yellow=warning
 				set(handles.ac_laserstatus,'String','!Sequence!');drawnow;
 			end
 		end
-
 	else
 		flush(serpo);pause(0.1)
 		if strcmpi(gui.retr('sync_type'),'xmSync')
@@ -104,12 +116,11 @@ if alreadyconnected
 			send_string=['TALKINGTO:' laser_device_id ':stop'];
 			writeline(serpo,send_string);
 		end
-
 	end
 	pause(0.1)
 	warning off
 	serial_answer = acquisition.process_sync_reply(serpo);
-	if calibration_pulse ~= 0 %this is needed for the OPTRONIS cameras, they cannot be configured to free run internal trigger
+	if calibration_pulse ~= 0 %this is needed for the OPTRONIS cameras, they cannot be configured to free run internal trigger with matlab :(
 		camera_type=gui.retr('camera_type');
 		if strcmp(camera_type,'OPTRONIS')
 			if calibration_pulse ==1
@@ -120,8 +131,19 @@ if alreadyconnected
 					send_string=['TALKINGTO:' laser_device_id ':sequence:50000:0,0:100,1100:'];
 					writeline(serpo,send_string);
 					pause(0.2)
-					send_string=['TALKINGTO:' laser_device_id ':start'];
-					writeline(serpo,send_string);
+					serial_answer=readline(serpo);
+					% check if sequence is ok. If not --> dont turn synchronizer on
+					if strcmpi(serial_answer,'Sequence:OK')
+						%disp('Sequence reported OK')
+						pause(0.05)
+						send_string=['TALKINGTO:' laser_device_id ':start'];
+						writeline(serpo,send_string);
+					end
+					if strcmpi(serial_answer,'Sequence:Error')
+						%disp('Sequence not correct')
+						set(handles.ac_laserstatus,'BackgroundColor',[1 1 0]); %yellow=warning
+						set(handles.ac_laserstatus,'String','!Sequence!');drawnow;
+					end
 				end
 			elseif calibration_pulse ==2
 				if strcmpi(gui.retr('sync_type'),'xmSync')
@@ -144,4 +166,3 @@ if alreadyconnected
 else
 	acquisition.no_dongle_msgbox
 end
-
