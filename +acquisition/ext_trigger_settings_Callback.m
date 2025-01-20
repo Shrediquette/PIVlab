@@ -93,15 +93,16 @@ if isempty(fh)
 	if isempty(triggermode)
 		triggermode='internal';
 		put('oltSync_triggermode',triggermode)
-	else
-		if strcmpi(triggermode,'internal')
-			set (handles.triggermode,'Value',1)
-		elseif strcmpi(triggermode,'activehigh')
-			set (handles.triggermode,'Value',2)
-		elseif strcmpi(triggermode,'singlerising')
-			set (handles.triggermode,'Value',3)
-		end
 	end
+
+	if strcmpi(triggermode,'internal')
+		set (handles.triggermode,'Value',1)
+	elseif strcmpi(triggermode,'activehigh')
+		set (handles.triggermode,'Value',2)
+	elseif strcmpi(triggermode,'singlerising')
+		set (handles.triggermode,'Value',3)
+	end
+
 
 else %Figure handle does already exist --> bring UI to foreground.
 	figure(fh)

@@ -80,16 +80,16 @@ if alreadyconnected
 			if isempty(triggermode)
 				triggermode='internal';
 				gui.put('oltSync_triggermode',triggermode)
-			else
-				disp('check if these modes are correct!')
-				if strcmpi(triggermode,'internal')
-					triggerconfig=':0,0:';
-				elseif strcmpi(triggermode,'activehigh')
-					triggerconfig=':2,0:';
-				elseif strcmpi(triggermode,'singlerising')
-					triggerconfig=':1,0:';
-				end
 			end
+			disp('check if these modes are correct!')
+			if strcmpi(triggermode,'internal')
+				triggerconfig=':0,0:';
+			elseif strcmpi(triggermode,'activehigh')
+				triggerconfig=':2,0:';
+			elseif strcmpi(triggermode,'singlerising')
+				triggerconfig=':1,0:';
+			end
+
 			send_string=['TALKINGTO:' laser_device_id ':sequence:' int2str(frame_time) triggerconfig pin_string];
 			writeline(serpo,send_string);
 			pause(0.05)
