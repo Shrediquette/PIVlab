@@ -1,4 +1,5 @@
 function load_session_Callback(auto_load_session, auto_load_session_filename)
+valid_session_file=1;
 gui.put('num_handle_calls',0);
 sessionpath=gui.retr('sessionpath');
 if isempty(sessionpath)
@@ -7,13 +8,21 @@ end
 if auto_load_session ~= 1
 	[FileName,PathName, filterindex] = uigetfile({'*.mat','MATLAB Files (*.mat)'; '*.mat','mat'},'Load PIVlab session',fullfile(sessionpath, 'PIVlab_session.mat'));
 	gui.toolsavailable(0,'Busy, loading session...');drawnow
+	if ~isequal(FileName,0) & ~isequal(PathName,0)
+		load(fullfile(PathName,FileName),'resultslist','wasdisabled','video_selection_done')
+		if exist('resultslist','var') && exist('wasdisabled','var') && exist('video_selection_done','var')
+			valid_session_file=1;
+		else
+			valid_session_file=0;
+		end
+	end
 else
 	[PathName,FileName,ext] = fileparts(auto_load_session_filename);
 	FileName = [FileName ext];
 end
 
 if isequal(FileName,0) | isequal(PathName,0)
-else
+elseif valid_session_file == 1
 	gui.put('expected_image_size',[])
 	clear iptPointerManager
 	gui.put('sessionpath',PathName );
@@ -219,7 +228,7 @@ else
 
 	% new for multitiff
 	if isfield(vars,'video_selection_done') && vars.video_selection_done == 1
-	%session was saved with video file selection, dont generate framenum and framepart
+		%session was saved with video file selection, dont generate framenum and framepart
 	else
 		if ~isfield(vars,'framenum') || ~isfield(vars,'framepart') %% old sessions do not have these vars yet
 			display_hint=1;
@@ -249,7 +258,7 @@ else
 		else
 			modestr=' (serial)';
 		end
-		
+
 		if ~isdeployed
 			appname='PIVlab';
 		else
@@ -263,6 +272,10 @@ else
 		set (handles.filenamebox, 'string', vars.filename);
 	catch
 	end
+end
+if valid_session_file==0
+	uiwait(msgbox('This is not a valid PIVlab session file.','modal'))
+	display_hint=0;
 end
 gui.toolsavailable(1)
 if display_hint==1
