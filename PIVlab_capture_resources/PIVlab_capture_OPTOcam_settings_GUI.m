@@ -73,7 +73,7 @@ if isempty(fh)
 		DeviceFirmwareVersion=OPTOcam_videoinput.DeviceFirmwareVersion;
 		DeviceFirmwareVersion2=strsplit(DeviceFirmwareVersion,'/');
 	catch
-		DeviceFirmwareVersion = 'N/A';
+		DeviceFirmwareVersion2 = 'N/A';
 	end
 
 
