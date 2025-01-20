@@ -110,13 +110,17 @@ end
 
 function Apply_settings(~,~,~)
 handles=gethand;
+mainhandles=gui.gethand;
 value=get(handles.triggermode,'Value');
 if value==1
 	put('oltSync_triggermode','internal')
+	set(mainhandles.ac_enable_ext_trigger,'Value',0)
 elseif value==2
 	put('oltSync_triggermode','activehigh')
+	set(mainhandles.ac_enable_ext_trigger,'Value',1)
 elseif value==3
 	put('oltSync_triggermode','singlerising')
+	set(mainhandles.ac_enable_ext_trigger,'Value',1)
 end
 
 function put(name, what)
