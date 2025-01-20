@@ -25,14 +25,25 @@ if getappdata(hgui,'cancel_capture') ~=1 %capture was not cancelled --> save ima
     %the following frames. If it is, then it is likely, that the camera didn't
     %start properly, then we have to remove the first frame.
     bug_fix_skipped_frame=0;
-    max_imgs=50;
+    max_imgs=30;
     if size(OPTRONIS_data,4) >= 10
         if size(OPTRONIS_data,4) < max_imgs
             max_imgs=size(OPTRONIS_data,4);
         end
         sum_img=zeros(1,max_imgs);
+        corr_img_A=zeros(1,max_imgs);
+        corr_img_B=zeros(1,max_imgs);
         for i=1:max_imgs
             sum_img(i)=sum(OPTRONIS_data(:,:,:,i),'all');
+
+            if i < max_imgs-2
+                corr_img_A(i)=corr2(OPTRONIS_data(:,:,:,i),OPTRONIS_data(:,:,:,i+1));
+                corr_img_B(i)=corr2(OPTRONIS_data(:,:,:,i+1),OPTRONIS_data(:,:,:,i+2));
+            end
+        end
+        if mean(corr_img_B,'omitnan') > mean(corr_img_A,'omitnan')
+            disp('First frame removed. Bug fix for OPTRONIS and Mathworks (not for PIVlab...!)')
+            bug_fix_skipped_frame=1;
         end
         mean_img=mean((sum_img(:,2:end)));
         stdev_img=5*std(sum_img(:,2:end)); %5x stdev is allowed
