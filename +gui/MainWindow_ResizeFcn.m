@@ -7,8 +7,10 @@ set(hObject,'Units',originalunits);
 margin=1.5;
 panelwidth=gui.retr('panelwidth');
 %panelwidth=37;
-panelheighttools=12;
-panelheightpanels=35;
+%panelheighttools=12;
+panelheighttools=gui.retr('panelheighttools');
+panelheightpanels=gui.retr('panelheightpanels');
+%panelheightpanels=35;
 quickwidth=gui.retr('quickwidth');
 quickheight=gui.retr('quickheight');
 %coordinate system starts lower left
