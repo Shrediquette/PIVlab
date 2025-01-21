@@ -27,12 +27,14 @@ if alreadyconnected
 		if contains(serial_answer,'oltSync:') %decide which synchronizer hardware is connected
 			gui.put('sync_type','oltSync') %Waldemars Sync
 			disp('oltSync detected')
-			set(handles.ac_enable_ext_trigger,'Visible','on')
+			%set(handles.ac_enable_ext_trigger,'Visible','off')
+			set(handles.ac_enable_ext_trigger_oltsync,'Visible','on')
 		else
 			if ~isempty(serial_answer)
 				gui.put('sync_type','xmSync') %Williams Sync
 				disp('xmSync detected')
-				set(handles.ac_enable_ext_trigger,'Visible','off') %not displayed for old synchronizer
+				%set(handles.ac_enable_ext_trigger,'Visible','on')
+				set(handles.ac_enable_ext_trigger_oltsync,'Visible','off') %not displayed for old synchronizer
 			end
 		end
 		warning on
