@@ -350,6 +350,9 @@ if required_files_check
 					serpo=getappdata(hgui,'serpo');
 					export.save_session_function (projectpath,'PIVlab_Capture_Session.mat');
 					gui.put('serpo',serpo); %Serpo gets inaccessible after savesession. Probably because there are a number of variables cleared to allow saving without crashing.
+					disp('XXXXXXXXXXXXXXXX')
+					disp('test if images from a session can be deleted after recording finsihed using the image list / filenamebox')
+					set (handles.remove_imgs,'enable','on');
 				else
 					gui.displogo
 				end
