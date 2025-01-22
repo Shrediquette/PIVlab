@@ -5,15 +5,19 @@ image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam');
 OutputError=0;
 
 OPTOcam_frames_to_capture = nr_of_images*2;
-
+set(frame_nr_display,'backgroundcolor','k');
 %% capture data
 while OPTOcam_vid.FramesAcquired < (OPTOcam_frames_to_capture) &&  getappdata(hgui,'cancel_capture') ~=1
-    ima = image_handle_OPTOcam.CData;
-    if ~isinf(OPTOcam_frames_to_capture)
-        set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTOcam_vid.FramesAcquired/2))]);
-    else
-        set(frame_nr_display,'String','PIV preview');
-    end
+	ima = image_handle_OPTOcam.CData;
+	if ~isinf(OPTOcam_frames_to_capture)
+		if OPTOcam_vid.FramesAcquired == 0
+			set(frame_nr_display,'String','Waiting for trigger...')
+		else
+			set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTOcam_vid.FramesAcquired/2))]);
+		end
+	else
+		set(frame_nr_display,'String','PIV preview');
+	end
 
     drawnow limitrate
     %% sharpness indicator

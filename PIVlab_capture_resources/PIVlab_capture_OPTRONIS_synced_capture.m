@@ -6,21 +6,25 @@ image_handle_OPTRONIS=getappdata(hgui,'image_handle_OPTRONIS');
 OutputError=0;
 
 OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame;
-
+set(frame_nr_display,'backgroundcolor','k');
 %% capture data
 
 while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdata(hgui,'cancel_capture') ~=1
-    ima = image_handle_OPTRONIS.CData;
-    if ~isinf(OPTRONIS_frames_to_capture)
-        set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTRONIS_vid.FramesAcquired/2))]);
-    else
-        set(frame_nr_display,'String','PIV preview');
-    end
+	ima = image_handle_OPTRONIS.CData;
+	if ~isinf(OPTRONIS_frames_to_capture)
+		if OPTRONIS_vid.FramesAcquired == 0
+			set(frame_nr_display,'String','Waiting for trigger...')
+		else
+			set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTRONIS_vid.FramesAcquired/2))]);
+		end
+	else
+		set(frame_nr_display,'String','PIV preview');
+	end
 
-    drawnow limitrate
-    %% sharpness indicator
-    sharpness_enabled = getappdata(hgui,'sharpness_enabled');
-    if sharpness_enabled == 1 % sharpness indicator
+	drawnow limitrate
+	%% sharpness indicator
+	sharpness_enabled = getappdata(hgui,'sharpness_enabled');
+	if sharpness_enabled == 1 % sharpness indicator
         textx=1240;
         texty=950;
         [~,~] = PIVlab_capture_sharpness_indicator (ima,textx,texty);

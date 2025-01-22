@@ -339,7 +339,7 @@ if required_files_check
 					[OutputError] = PIVlab_capture_OPTRONIS_save(OPTRONIS_vid,imageamount,projectpath,frame_nr_display,OPTRONIS_bits); %save the images from ram to disk.
 				end
 			end
-
+			found_the_data=0;
 			if gui.retr('cancel_capture')==0
 				camera_type=gui.retr('camera_type');
 				found_the_data=acquisition.push_recorded_to_GUI(camera_type,imageamount);
@@ -350,9 +350,6 @@ if required_files_check
 					serpo=getappdata(hgui,'serpo');
 					export.save_session_function (projectpath,'PIVlab_Capture_Session.mat');
 					gui.put('serpo',serpo); %Serpo gets inaccessible after savesession. Probably because there are a number of variables cleared to allow saving without crashing.
-					disp('XXXXXXXXXXXXXXXX')
-					disp('test if images from a session can be deleted after recording finsihed using the image list / filenamebox')
-					set (handles.remove_imgs,'enable','on');
 				else
 					gui.displogo
 				end
@@ -364,4 +361,6 @@ else
 end
 gui.put('capturing',0);
 gui.toolsavailable(1)
-
+if found_the_data==1
+	set (handles.remove_imgs,'enable','on');
+end
