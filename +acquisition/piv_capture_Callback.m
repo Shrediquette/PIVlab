@@ -291,7 +291,11 @@ if required_files_check
 				min_allowed_interframe = gui.retr('min_allowed_interframe');
 				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
 				if OPTRONIS_settings_check == 1
-					acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
+					uiwait(msgbox('Start!','modal'))
+					answer=questdlg('Pressing ''Start'' will start acquisition. Sure?','Laser armed!','Start!','Start!');
+					if strcmpi(answer,'Start!')
+						acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
+					end
 					[OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits); %capture n images, display livestream
 				else
 					msgbox(Error_Reason,'modal')
