@@ -6,6 +6,12 @@ bot_las = 0.2;
 amp = 0.2;
 num_reps=2;
 
+triggermode=gui.retr('oltSync_triggermode');
+if isempty(triggermode)
+	triggermode='internal'; %%internal activehigh %singlerising
+	gui.put('oltSync_triggermode',triggermode)
+end
+
 straddling_figure=findobj('tag','straddling_figure');
 if isempty(straddling_figure)
 	hf = figure('numbertitle','off','MenuBar','figure','DockControls','off','Name',['Camera exposure and pulse timing visualization - ' camera_type],'Toolbar','figure','CloseRequestFcn', @straddling_figure_CloseRequestFcn,'tag','straddling_figure','visible','on');
@@ -13,7 +19,7 @@ else
 	hf = figure(straddling_figure);
 	clf(hf)
 end
-
+drawnow %drawing the annotations below takes ages.... Therefore directly display the empty figure to show some progress...
 axh=axes(hf);
 axis tight
 %xlim([0 period*num_exposures_to_show])
@@ -21,6 +27,7 @@ ylim([0 1])
 xlabel('time in µs')
 ylabel([])
 yticks([])
+
 %remove unnecessary Toolbar stuff
 % Get a handle to the standard plot toolbar.
 tbh = findall(hf,'Type','uitoolbar');
@@ -45,7 +52,6 @@ delete(findall(hf,'Tag','figMenuTools'))
 delete(findall(hf,'Tag','figMenuInsert'))
 delete(findall(hf,'Tag','figMenuView'))
 delete(findall(hf,'Tag','figMenuEdit'))
-
 hold on;
 %% cycle
 %plot([0 0],[0 1],'k--')
@@ -70,7 +76,13 @@ if strcmp(camera_principle,'double_shutter') %frame_time in dbl shutter doesnt h
 	x_var(end+1)=frame_time*num_reps;
 	y_var(end+1)=bot_cam;
 end
-plot(round(x_var+cam_delay) ,y_var) %cam_delay is subtracted, to show the true camera exposure instead of the trigger signal
+%add low signal before start
+pretriggerx=[-frame_time/10 0];
+pretriggery=[bot_cam bot_cam];
+
+plot([pretriggerx round(x_var+cam_delay)] ,[pretriggery y_var],'b-') %cam_delay is subtracted, to show the true camera exposure instead of the trigger signal
+
+
 
 %% laser
 x_var=[];
@@ -79,7 +91,25 @@ for i=0:num_reps-1
 	x_var=[x_var (i*frame_time +[0         timing_table{2,1} timing_table{2,1} timing_table{2,2} timing_table{2,2} timing_table{2,3} timing_table{2,3} timing_table{2,4} timing_table{2,4} frame_time])];
 	y_var =[y_var [bot_las    bot_las              bot_las+amp      bot_las+amp        bot_las         bot_las       bot_las+amp        bot_las+amp       bot_las         bot_las]];
 end
-plot(round(x_var) ,y_var)
+%add low signal before start
+pretriggerx=[-frame_time/10 0];
+pretriggery=[bot_las bot_las];
+
+plot([pretriggerx round(x_var)] ,[pretriggery y_var])
+
+%% display trigger position
+if strcmpi(triggermode,'internal')
+	%do nothing
+elseif strcmpi(triggermode,'activehigh')
+	plot([0 0],[0 1],'k--')
+	text(0,0.05,'trigger','Rotation',90,'HorizontalAlignment','left','VerticalAlignment','middle','FontSize',8)
+elseif strcmpi(triggermode,'singlerising')
+	plot([0 0],[0 1],'k--')
+	plot([frame_time  frame_time],[0 1],'k--')
+	text(0,0.05,'ext. trigger 1','Rotation',90,'HorizontalAlignment','left','VerticalAlignment','middle','FontSize',8)
+	text(frame_time,0.05,'ext. trigger 2','Rotation',90,'HorizontalAlignment','left','VerticalAlignment','middle','FontSize',8)
+end
+
 
 %% Pulse_length
 start_of_pulse1 = timing_table{2,1};
@@ -155,7 +185,7 @@ duty_cycle=pulse_length*2/(frame_time);
 if strcmp(camera_principle,'normal_shutter')
 	text(period/10,0.99,{['Laser duty cycle: ' num2str(round(duty_cycle*100,4)) ' %'] ['PIV data rate: ' num2str(frame_rate/2) ' Hz']},'HorizontalAlignment','left','VerticalAlignment','top')
 	%info top right
-	text((num_reps+2)*period,0.99,{' Use zoom buttons to see the details '},'HorizontalAlignment','right','VerticalAlignment','top')
+	infotxt=text((num_reps+2)*period,0.99,{' Use zoom buttons to see the details '},'HorizontalAlignment','right','VerticalAlignment','top');
 	margin=period/20*0;
 	smallmargin=margin/2*0;
 	for i=0:2:num_reps+1
@@ -174,7 +204,7 @@ if strcmp(camera_principle,'normal_shutter')
 elseif strcmp(camera_principle,'double_shutter')
 	text(period/10,0.99,{['Laser duty cycle: ' num2str(round(duty_cycle*100,4)) ' %'] ['PIV data rate: ' num2str(frame_rate) ' Hz']},'HorizontalAlignment','left','VerticalAlignment','top')
 	%info top right
-	text((num_reps+2)*period*0.5,0.99,{' Use zoom buttons to see the details '},'HorizontalAlignment','right','VerticalAlignment','top')
+	infotxt=text((num_reps+2)*period*0.5,0.99,{' Use zoom buttons to see the details '},'HorizontalAlignment','right','VerticalAlignment','top');
 	margin=period/20*0;
 	smallmargin=margin/2*0;
 	for i=0:2:num_reps+1
@@ -182,6 +212,12 @@ elseif strcmp(camera_principle,'double_shutter')
 		ha.Parent=hf.CurrentAxes;
 		ha.Position=[0+margin+  period* i*0.5           bot_cam+amp+0.04              period*1-margin*2                 0.175];
 	end
+end
+if strcmpi(triggermode,'singlerising')
+	newtxt=get(infotxt,'String');
+	%text((num_reps+2)*period,0.99,['Max. trigger rate = ' num2str(round(1/(frame_time/1000^2)))],'Rotation',0,'HorizontalAlignment','left','VerticalAlignment','middle','FontSize',8)
+	newtxt{2}=['Max. trigger rate = ' num2str(round(1/(frame_time/1000^2))) ' Hz '];
+	set(infotxt,'String',newtxt);
 end
 
 hold off;
