@@ -30,35 +30,39 @@ if getappdata(hgui,'cancel_capture') ~=1 %capture was not cancelled --> save ima
         if size(OPTRONIS_data,4) < max_imgs
             max_imgs=size(OPTRONIS_data,4);
         end
-        sum_img=zeros(1,max_imgs);
-        corr_img_A=zeros(1,max_imgs-2);
-        corr_img_B=zeros(1,max_imgs-2);
-        for i=1:max_imgs
-            sum_img(i)=sum(OPTRONIS_data(:,:,:,i),'all');
+        %sum_img=zeros(1,max_imgs);
+        datalength=numel(1:round(size(OPTRONIS_data,4)/(max_imgs*2))*2:size(OPTRONIS_data,4)-2);
+        corr_img_A=zeros(1,datalength);
+        corr_img_B=zeros(1,datalength);
+        %for i=1:max_imgs
+        %    sum_img(i)=sum(OPTRONIS_data(:,:,:,i),'all');
+        %end
+        cntr=1;
+        for i=1:round(size(OPTRONIS_data,4)/(max_imgs*2))*2:size(OPTRONIS_data,4)-2 %test correlation
+            corr_img_A(cntr)=corr2(OPTRONIS_data(:,:,:,i),OPTRONIS_data(:,:,:,i+1));
+            corr_img_B(cntr)=corr2(OPTRONIS_data(:,:,:,i+1),OPTRONIS_data(:,:,:,i+2));
+            cntr=cntr+1;
         end
-
-        for i=1:2:max_imgs-2 %test correlation
-            corr_img_A(i)=corr2(OPTRONIS_data(:,:,:,i),OPTRONIS_data(:,:,:,i+1));
-            corr_img_B(i)=corr2(OPTRONIS_data(:,:,:,i+1),OPTRONIS_data(:,:,:,i+2));
-        end
+        %bla=gcf;
+        %figure;plot(corr_img_A);hold on;plot(corr_img_B)
         %mean(corr_img_A,'omitnan')
         %mean(corr_img_B,'omitnan')
-
+        %figure(bla)
         if mean(corr_img_B,'omitnan') > mean(corr_img_A,'omitnan')
             disp('First frame removed. Bug fix for OPTRONIS and Mathworks (not for PIVlab...!)')
             bug_fix_skipped_frame=1;
         end
-        mean_img=mean((sum_img(:,2:end)));
-        stdev_img=5*std(sum_img(:,2:end)); %5x stdev is allowed
-        if (sum_img(1) < (mean_img-stdev_img))
-            %disp('bild skipped')
-            %disp(['value: ' num2str(sum_img(1))])
-            %disp(['lower bound: ' num2str(mean_img-stdev_img) '| upper bound: ' num2str(mean_img+stdev_img)])
-            disp('First frame removed. Bug fix for OPTRONIS and Mathworks (not for PIVlab...!)')
-            bug_fix_skipped_frame=1;
-        else
-            %disp('OK')
-        end
+        %mean_img=mean((sum_img(:,2:end)));
+        %stdev_img=5*std(sum_img(:,2:end)); %5x stdev is allowed
+        %if (sum_img(1) < (mean_img-stdev_img))
+        %disp('bild skipped')
+        %disp(['value: ' num2str(sum_img(1))])
+        %disp(['lower bound: ' num2str(mean_img-stdev_img) '| upper bound: ' num2str(mean_img+stdev_img)])
+        %    disp('First frame removed. Bug fix for OPTRONIS and Mathworks (not for PIVlab...!)')
+        %    bug_fix_skipped_frame=1;
+        %else
+        %disp('OK')
+        %end
     else
         disp('Automatic bug fix for skipped frames could not be run, needs to have at least 5 image pairs')
     end
