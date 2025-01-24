@@ -368,6 +368,6 @@ else
 end
 gui.put('capturing',0);
 gui.toolsavailable(1)
-if found_the_data==1
+if exist('found_the_data','var') && found_the_data==1
 	set (handles.remove_imgs,'enable','on');
 end
