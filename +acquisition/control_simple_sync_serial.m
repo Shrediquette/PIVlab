@@ -81,7 +81,7 @@ if alreadyconnected
 				triggermode='internal';
 				gui.put('oltSync_triggermode',triggermode)
 			end
-			disp('check if these modes are correct!')
+			
 			if strcmpi(triggermode,'internal')
 				triggerconfig=':0,0:';
 			elseif strcmpi(triggermode,'activehigh')
@@ -128,7 +128,7 @@ if alreadyconnected
 					writeline(serpo,'CAMERA_FREERUN_ON!');
 				elseif strcmpi(gui.retr('sync_type'),'oltSync')
 					%toggle the camera with approx 20 Hz
-					send_string=['TALKINGTO:' laser_device_id ':sequence:50000:0,0:100,1100:'];
+					send_string=['TALKINGTO:' laser_device_id ':sequence:50000:0,0:100,1100'];
 					writeline(serpo,send_string);
 					pause(0.2)
 					serial_answer=readline(serpo);

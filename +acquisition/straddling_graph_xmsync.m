@@ -55,6 +55,7 @@ else
 	hf = figure(straddling_figure);
 	clf(hf)
 end
+drawnow %anootation taking ages, therefore showing something here already.
 
 plot(exposure_active_x,exposure_active_y,'linewidth',2)
 hold on
