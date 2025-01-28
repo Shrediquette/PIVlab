@@ -59,7 +59,6 @@ set(gca,'ytick',[])
 set(gca,'xtick',[])
 colorbar
 
-
 %% set camera parameters for triggered acquisition
 %OPTRONIS trigger source cannot be set in Matlab. Therefore always set to
 %external. Synchronizer must always run.
@@ -79,7 +78,7 @@ if contains(OPTRONIS_name,'Cyclone-2-2000-M')
 elseif contains (OPTRONIS_name,'Cyclone-1HS-3500-M')
 	disp(['Found camera: ' 'Cyclone-1HS-3500-M'])
 	%framerate=floor(1/((expotime+3)/1000^2)) %muss man auch setzen damit exposure time akzeptiert wird...
-   exposure_time=ceil(1/frame_rate*1000^2-3); %3178 ist maximum
+    exposure_time=ceil(1/frame_rate*1000^2-3); %3178 ist maximum
     minexpo=2;
     warning('off','imaq:gentl:hardwareTriggerTriggerModeOff'); %trigger property of OPTRONIS cannot be set in Matlab.
     warning('off','MATLAB:JavaEDTAutoDelegation'); %strange warning
@@ -100,18 +99,31 @@ OPTRONIS_src.AcquisitionFrameRate = frame_rate;
 %% start acqusition (waiting for trigger)
 OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame;
 OPTRONIS_vid.FramesPerTrigger = OPTRONIS_frames_to_capture+2;
+triggerconfig(OPTRONIS_vid, 'manual');
+
+%OPTRONIS_vid.TriggerType = 'manual'; %requires trigger(OPTRONIS_vid) to start
 if ~isinf(nr_of_images) %only start capturing if save box is ticked.
 	flushdata(OPTRONIS_vid);
+   % disp('pause added to avoid flushing of recorded frames...')
+    pause(0.01)
 	OPTRONIS_vid.ErrorFcn = @CustomIMAQErrorFcn;
 	warning('off','imaq:gentl:hardwareTriggerTriggerModeOff'); %trigger property of OPTRONIS cannot be set in Matlab.
-	warning('off','MATLAB:JavaEDTAutoDelegation'); %strange warning
-	start(OPTRONIS_vid);
+	warning('off','MATLAB:JavaEDTAutoDelegation'); %strange warning 
+    start(OPTRONIS_vid);
 end
 warning('off','imaq:gentl:hardwareTriggerTriggerModeOff'); %trigger property of OPTRONIS cannot be set in Matlab.
 warning('off','MATLAB:JavaEDTAutoDelegation'); %strange warning
-preview(OPTRONIS_vid,image_handle_OPTRONIS);
+preview(OPTRONIS_vid,image_handle_OPTRONIS); 
+%der befehl oben führt wohl zu einem reset, denn acquisition mode wird auf defaults zurückgesetzt
+
 OPTRONIS_src.AcquisitionFrameRate = frame_rate; %muss man auch setzen damit exposure time akzeptiert wird...
 OPTRONIS_src.ExposureTime=exposure_time;
+pause(0.01)
+if ~isinf(nr_of_images)
+    %aufnahmes tartet erst nachdem letztes mal die settings geändert
+    %wurden.
+    trigger(OPTRONIS_vid)
+end
 OPTRONIS_settings.Source.EnableFan='Off';
 caxis([0 2^bitmode]); %seems to be a workaround to force preview to show full data range...
 
