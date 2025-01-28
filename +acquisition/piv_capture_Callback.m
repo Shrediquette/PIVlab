@@ -256,7 +256,7 @@ if required_files_check
 					OPTRONIS_bits=8;
 				end
 				[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits); %prepare cam and start camera (waiting for trigger...)
-				pause(1) %make sure OPTRONIS is ready to capture.
+				pause(0.1) %make sure OPTRONIS is ready to capture.
 				Error_Reason={};
 				OPTRONIS_settings_check = 1;
 				%2166 mit 8 bit
