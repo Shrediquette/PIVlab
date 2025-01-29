@@ -100,7 +100,7 @@ plot([pretriggerx round(x_var)] ,[pretriggery y_var])
 %% display trigger position
 if strcmpi(triggermode,'internal')
 	%do nothing
-elseif strcmpi(triggermode,'activehigh')
+elseif strcmpi(triggermode,'activehigh') || strcmpi(triggermode,'startrising')
 	plot([0 0],[0 1],'k--')
 	text(0,0.05,'trigger','Rotation',90,'HorizontalAlignment','left','VerticalAlignment','middle','FontSize',8)
 elseif strcmpi(triggermode,'singlerising')

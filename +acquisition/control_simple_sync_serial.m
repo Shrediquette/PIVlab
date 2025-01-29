@@ -88,6 +88,8 @@ if alreadyconnected
 				triggerconfig=':2,0:';
 			elseif strcmpi(triggermode,'singlerising')
 				triggerconfig=':1,0:';
+			elseif strcmpi(triggermode,'startrising')
+				triggerconfig=':3,0:';
 			end
 
 			send_string=['TALKINGTO:' laser_device_id ':sequence:' int2str(frame_time) triggerconfig pin_string];

@@ -38,7 +38,7 @@ if isempty(fh)
 	item=[0 0 0 0];
 
 	item=[item(1) item(2)+item(4) parentitem(3) 1];
-	handles.triggermode = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'Internal','External: Shoot while high', 'External: Double shot on rising edge'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','triggermode','Callback',@Apply_settings);
+	handles.triggermode = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'Internal','External: Start on rising edge' 'External: Shoot while high', 'External: Double shot on rising edge'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','triggermode','Callback',@Apply_settings);
 
 	item=[0 item(2)+item(4)+margin/2 parentitem(3) 6];
 	handles.explain = uicontrol(handles.mainpanel,'Style','Text','String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'tag','explain','fontsize',7);
@@ -51,11 +51,14 @@ if isempty(fh)
 	if strcmpi(triggermode,'internal')
 		set (handles.triggermode,'Value',1)
 		set (handles.explain,'String', {'Uses the configured camera and pulse timings, and starts recording when ''Start'' button is clicked, stops when ''image amount'' is reached.'})
-	elseif strcmpi(triggermode,'activehigh')
+	elseif strcmpi(triggermode,'startrising')
 		set (handles.triggermode,'Value',2)
-		set (handles.explain,'String', {'Uses the configured camera and pulse timings, arms when ''Start'' button is clicked, records when the trigger input is high, stops when ''image amount'' is reached.'})
-	elseif strcmpi(triggermode,'singlerising')
+		set (handles.explain,'String', {'Uses the configured camera and pulse timings, arms when ''Start'' button is clicked, starts record when the trigger input goes high, stops when ''image amount'' is reached.'})
+	elseif strcmpi(triggermode,'activehigh')
 		set (handles.triggermode,'Value',3)
+		set (handles.explain,'String', {'Uses the configured camera and pulse timings, arms when ''Start'' button is clicked, records while the trigger input is high, stops when ''image amount'' is reached.'})
+	elseif strcmpi(triggermode,'singlerising')
+		set (handles.triggermode,'Value',4)
 		set (handles.explain,'String', {'Uses the configured camera and pulse timings, arms when ''Start'' button is clicked, records one double image each time trigger goes high, stops when ''image amount'' is reached.'})
 	end
 else %Figure handle does already exist --> bring UI to foreground.
@@ -69,9 +72,12 @@ set (handles.explain,'String', {'Uses the configured camera and pulse timings, a
 if value==1
 	put('oltSync_triggermode','internal')
 elseif value==2
-	put('oltSync_triggermode','activehigh')
-	set (handles.explain,'String', {'Uses the configured camera and pulse timings, arms when ''Start'' button is clicked, records when the trigger input is high, stops when ''image amount'' is reached.'})
+	put('oltSync_triggermode','startrising')
+	set (handles.explain,'String', {'Uses the configured camera and pulse timings, arms when ''Start'' button is clicked, starts record when the trigger input goes high, stops when ''image amount'' is reached.'})
 elseif value==3
+	put('oltSync_triggermode','activehigh')
+	set (handles.explain,'String', {'Uses the configured camera and pulse timings, arms when ''Start'' button is clicked, records while the trigger input is high, stops when ''image amount'' is reached.'})
+elseif value==4
 	put('oltSync_triggermode','singlerising')
 	set (handles.explain,'String', {'Uses the configured camera and pulse timings, arms when ''Start'' button is clicked, records one double image each time trigger goes high, stops when ''image amount'' is reached.'})
 end
