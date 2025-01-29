@@ -1,10 +1,13 @@
 function displogo(~)
 try
-	logoimg=imread(fullfile('images','PIVlablogo.jpg'));
+	%logoimg=imread(fullfile('images','PIVlablogo.jpg'));
+	[logoimg, ~, alphachannel] = imread(fullfile('images','PIVlablogo.png'));
 catch
 	[filepath,name,ext]=  fileparts(which('PIVlab_GUI.m'));
 	cd (filepath); %if current directory is not where PIVlab_GUI.m is located, then change directory.
-	logoimg=imread(fullfile('images','PIVlablogo.jpg'));
+	%logoimg=imread(fullfile('images','PIVlablogo.jpg'));
+	[logoimg, ~, alphachannel] = imread(fullfile('images','PIVlablogo.png'));
+	%image(img, 'AlphaData', alphachannel);
 end
 %{
 if zoom==1
@@ -31,13 +34,13 @@ end
 
 try
 	pivlab_axis=gui.retr('pivlab_axis');
-	image(logoimg, 'parent', pivlab_axis,'interpolation','bilinear');
+	image(logoimg, 'parent', pivlab_axis,'interpolation','bilinear', 'AlphaData', alphachannel);
 catch
 	pivlab_axis=gui.retr('pivlab_axis');
-	image(logoimg, 'parent', pivlab_axis);
+	image(logoimg, 'parent', pivlab_axis, 'AlphaData', alphachannel);
 end
 set(gca, 'xcolor', [0.94 0.94 0.94], 'ycolor', [0.94 0.94 0.94]) ;
-
+set(gca,'Color','none')
 axis image;
 set(gca,'ytick',[])
 set(gca,'xtick',[])
