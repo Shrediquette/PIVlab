@@ -90,7 +90,14 @@ if isempty(fh)
 	gui.put('quickvisible',1);
 	gui.put('alreadydisplayed',0);
 	gui.put('video_selection_done',0);
-
+	if ~verLessThan('Matlab','25')
+		theme=MainWindow.Theme;
+		if strcmpi(theme.BaseColorStyle,'dark')
+			gui.put('darkmode',1);
+		end
+	else
+		gui.put('darkmode',0);
+	end
 	%% check write access
 	disp(['-> User path is ' userpath]);
 	try
@@ -296,6 +303,10 @@ if isempty(fh)
 
 		handles=gui.gethand;
 		load (fullfile('images','icons.mat'),'parallel_off','parallel_on');
+		if gui.retr('darkmode')
+			parallel_on=1-parallel_on;
+			parallel_off=1-parallel_off;
+		end
 		if gui.retr('parallel') == 1
 			set(handles.toggle_parallel, 'cdata',parallel_on,'TooltipString','Parallel processing on. Click to turn off.');
 		else

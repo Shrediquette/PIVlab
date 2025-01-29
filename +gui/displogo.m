@@ -39,7 +39,7 @@ catch
 	pivlab_axis=gui.retr('pivlab_axis');
 	image(logoimg, 'parent', pivlab_axis, 'AlphaData', alphachannel);
 end
-set(gca, 'xcolor', [0.94 0.94 0.94], 'ycolor', [0.94 0.94 0.94]) ;
+set(gca, 'xcolor', 'none', 'ycolor', 'none') ;
 set(gca,'Color','none')
 axis image;
 set(gca,'ytick',[])

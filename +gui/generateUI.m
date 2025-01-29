@@ -51,6 +51,10 @@ item=[parentitem(3)/2+parentitem(3)/2/2 item(2) parentitem(3)/2/2 parentitem(3)/
 handles.panon = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@gui.panon_Callback,'tag','panon','TooltipString','Pan');
 
 load (fullfile('images','icons.mat'))
+if gui.retr('darkmode')
+	zoompic=1-zoompic;
+	panpic=1-panpic;
+end
 set(handles.zoomon, 'cdata',zoompic);
 set(handles.panon, 'cdata',panpic);
 
@@ -70,6 +74,14 @@ handles.quick5 = uicontrol(handles.quick,'Style','togglebutton','units', 'charac
 handles.quick6 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[6*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.quick6_Callback,'tag','quick6','TooltipString','Calibrate');
 
 load (fullfile('images','icons_quick.mat'))
+if gui.retr('darkmode')
+	loadpic=255-loadpic;
+	maskpic=255-maskpic;
+	prepic=255-prepic;
+	settpic=255-settpic;
+	anapic=255-anapic;
+	calpic=255-calpic;
+end
 set(handles.quick1, 'cdata',loadpic);
 set(handles.quick2, 'cdata',maskpic);
 set(handles.quick3, 'cdata',prepic);

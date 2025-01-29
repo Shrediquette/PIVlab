@@ -2,6 +2,10 @@ function toggle_parallel_Callback(~, ~, ~)
 hgui=getappdata(0,'hgui');
 handles=gui.gethand;
 load (fullfile('images','icons.mat'))
+if gui.retr('darkmode')
+	parallel_on=1-parallel_on;
+	parallel_off=1-parallel_off;
+end
 try
 	parallel=gui.retr('parallel');
 	if parallel==0
