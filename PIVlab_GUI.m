@@ -75,7 +75,7 @@ if isempty(fh)
 		set (handle_splash_text, 'String',[text_content newline '-> Starting PIVlab ' version ' ...' newline '-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.']);drawnow
 	end
 
-	margin=1.5; %for Matlab 2025 this probably needs to be increased to 2.5, together with more fixes on all panels...
+	margin=1.5;%1.5; %for Matlab 2025 this probably needs to be increased to 2.5, together with more fixes on all panels...
 	panelwidth=45;
 	panelheighttools=13;%12;
 	panelheightpanels=41;%35;
@@ -86,7 +86,7 @@ if isempty(fh)
 	gui.put('panelheighttools',panelheighttools);
 	gui.put('panelheightpanels',panelheightpanels);
 	gui.put('quickwidth',panelwidth);
-	gui.put('quickheight',3.2);
+	gui.put('quickheight',3.5);
 	gui.put('quickvisible',1);
 	gui.put('alreadydisplayed',0);
 	gui.put('video_selection_done',0);

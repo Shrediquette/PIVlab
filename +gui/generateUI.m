@@ -41,7 +41,7 @@ handles.fileselector = uicontrol(handles.tools,'Style','slider','units', 'charac
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
 handles.togglepair = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)], 'string','Toggle','Callback',@gui.togglepair_Callback,'tag','togglepair','TooltipString','Toggle images within a frame');%,'Interruptible','off','busyaction','cancel');
 
-item=[0  item(2)+item(4) parentitem(3)/2/2 parentitem(3)/2/2/4];
+item=[0  item(2)+item(4)+margin*0.2 parentitem(3)/2/2 parentitem(3)/2/2/4];
 handles.toggle_parallel = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@misc.toggle_parallel_Callback,'tag','toggle_parallel');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2/2 parentitem(3)/2/2/4];
@@ -62,7 +62,7 @@ set(handles.panon, 'cdata',panpic);
 iconwidth=5;
 iconheight=2;
 iconamount=6;
-quickwidth = gui.retr('quickwidth')-iconwidth-0.5;
+quickwidth = gui.retr('quickwidth')-iconwidth-0.5-0.25;
 quickheight = gui.retr('quickheight');
 
 handles.quick = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin*0.5 0+margin*0.5+panelheighttools+quickheight quickwidth quickheight],'title','Main tasks quick access', 'Tag','quick','fontweight','bold','Visible','on');
@@ -92,7 +92,7 @@ set(handles.quick6, 'cdata',calpic);
 %% Progress info / progress bar
 handles.toolprogress = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin*0.5 0+margin*0.5+panelheighttools quickwidth quickheight],'title','Progress', 'Tag','toolprogress','fontweight','bold','Visible','on');
 parentitem=get(handles.toolprogress, 'Position');
-item=[margin 0 parentitem(3) 1];
+item=[margin 0.4 parentitem(3) 1];
 handles.toolprogress_bg = uicontrol(handles.toolprogress,'Style','text','units', 'characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','BackgroundColor',[0.85 0.85 0.85],'Tag','toolprogress_bg','Enable','off');
 handles.toolprogress_fg = uicontrol(handles.toolprogress,'Style','text','units', 'characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) 0 item(4)],'String','','BackgroundColor','g','Tag','toolprogress_fg','Enable','off');
 gui.put('handle_toolprogress_bg',handles.toolprogress_bg); %for faster access in update loop
@@ -127,7 +127,7 @@ gui.put('standard_bg_color',get(handles.filenamebox,'Backgroundcolor'));
 item=[0 item(2)+item(4)+margin/8 parentitem(3)/3*2 2];
 handles.remove_imgs = uicontrol(handles.multip01,'Style','pushbutton','String','Remove images','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.remove_images_from_list,'Tag','remove_imgs','TooltipString','Remove images from the image list','enable','off');
 
-item=[0 item(2)+item(4) parentitem(3) 3];
+item=[0 item(2)+item(4)+0.4 parentitem(3) 3];
 handles.text4 = uicontrol(handles.multip01,'Style','text','units','characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Use the scrollbar in the "Tools" panel to cycle through the images.');
 
 item=[0 item(2)+item(4) parentitem(3) 4];
@@ -2005,7 +2005,7 @@ handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String','10
 item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
 handles.ac_pulselengthtxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pulse length: 0 µs','tag','ac_pulselengthtxt');
 
-item=[0 item(2)+item(4)+margin*0.2 parentitem(3) 1];
+item=[0 item(2)+item(4)+margin*0.2 parentitem(3) 1.1];
 handles.ac_enable_straddling_figure = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Timing graph','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_straddling_figure','TooltipString','Show a graph with the timing of camera and laser pulses','Callback', @acquisition.sync_settings_Callback);
 
 item=[0 item(2)+item(4)+margin*0.2 parentitem(3)/4*2 2];
@@ -2036,16 +2036,16 @@ handles.uipanelac_camsettings = uipanel(handles.multip24, 'Units','characters', 
 parentitem=get(handles.uipanelac_camsettings, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4)-0.25 parentitem(3)/4 1.5];
+item=[0 item(2)+item(4) parentitem(3)/4.1 1.5];
 handles.ac_calibBinning = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Binning','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @acquisition.calibBinning_Callback,'Tag','ac_calibBinning','TooltipString','Select pixel binning');
 
-item=[parentitem(3)/4*1  item(2) parentitem(3)/4 1.5];
+item=[parentitem(3)/4.1*1  item(2) parentitem(3)/4.1 1.5];
 handles.ac_calibROI = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','ROI','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @acquisition.calibROI_Callback,'Tag','ac_calibROI','TooltipString','Select ROI in camera image');
 
-item=[parentitem(3)/4*2  item(2) parentitem(3)/4 1.5];
+item=[parentitem(3)/4.1*2  item(2) parentitem(3)/4.1 1.5];
 handles.ac_lensctrl = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Lens','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @acquisition.lens_control_Callback,'Tag','ac_lensctrl','TooltipString','Control camera lens');
 
-item=[parentitem(3)/4*3  item(2) parentitem(3)/4 1.5];
+item=[parentitem(3)/4.1*3  item(2) parentitem(3)/4.1 1.5];
 handles.ac_camera_setup = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Setup','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @acquisition.camera_setup_Callback,'Tag','ac_camera_setup','TooltipString','Setup Chronos camera');
 
 
@@ -2079,7 +2079,7 @@ handles.uipanelac_capture = uipanel(handles.multip24, 'Units','characters', 'Pos
 parentitem=get(handles.uipanelac_capture, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4) parentitem(3)/2 1];
+item=[0 item(2)+item(4)+0.1 parentitem(3)/2 1];
 handles.ac_imgamounttxt = uicontrol(handles.uipanelac_capture,'Style','text', 'String','Image amount: ','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_imgamounttxt');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/4 1];
