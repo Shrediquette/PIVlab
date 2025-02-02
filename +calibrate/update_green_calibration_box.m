@@ -30,8 +30,13 @@ else
 end
 
 displacement_only=gui.retr('displacement_only');
-if ~isempty(displacement_only) && displacement_only == 1
-	set(handles.calidisp, 'string', ['1 px = ' px_per_m_display ' m' sprintf('\n') '1 px/frame = ' px_per_frame_display ' m/frame' sprintf('\n') 'x offset: ' x_offset_display ' m' sprintf('\n') 'y offset: ' y_offset_display ' m'],  'backgroundcolor', [0.5 1 0.5]);
+if gui.retr('darkmode')
+	bg_col=[0 80/255 0];
 else
-	set(handles.calidisp, 'string', ['1 px = ' px_per_m_display ' m' sprintf('\n') '1 px/frame = ' px_per_frame_display ' m/s' sprintf('\n') 'x offset: ' x_offset_display ' m' sprintf('\n') 'y offset: ' y_offset_display ' m'],  'backgroundcolor', [0.5 1 0.5]);
+	bg_col=[0.5 1 0.5];
+end
+if ~isempty(displacement_only) && displacement_only == 1
+	set(handles.calidisp, 'string', ['1 px = ' px_per_m_display ' m' sprintf('\n') '1 px/frame = ' px_per_frame_display ' m/frame' sprintf('\n') 'x offset: ' x_offset_display ' m' sprintf('\n') 'y offset: ' y_offset_display ' m'],  'backgroundcolor', bg_col);
+else
+	set(handles.calidisp, 'string', ['1 px = ' px_per_m_display ' m' sprintf('\n') '1 px/frame = ' px_per_frame_display ' m/s' sprintf('\n') 'x offset: ' x_offset_display ' m' sprintf('\n') 'y offset: ' y_offset_display ' m'],  'backgroundcolor', bg_col);
 end

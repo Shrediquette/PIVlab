@@ -1,7 +1,12 @@
 function update_velocity_limits_information
 velrect=gui.retr('velrect');
 handles=gui.gethand;
-set (handles.vel_limit_active, 'String', 'Limit active', 'backgroundcolor', [0.5 1 0.5]);
+if gui.retr('darkmode')
+	bg_col=[0 80/255 0];
+else
+	bg_col=[0.5 1 0.5];
+end
+set (handles.vel_limit_active, 'String', 'Limit active', 'backgroundcolor', bg_col);
 umin=velrect(1);
 umax=velrect(3)+umin;
 vmin=velrect(2);
@@ -17,4 +22,3 @@ else % calibrated
 	end
 end
 set (handles.vel_limit, 'String', 'Refine velocity limits');
-

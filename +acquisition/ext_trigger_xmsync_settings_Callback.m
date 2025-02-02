@@ -1,6 +1,7 @@
 function ext_trigger_xmsync_settings_Callback (~,~,~)
 handles=gui.gethand;
 serpo=gui.retr('serpo');
+
 if ~isempty(serpo)
 	if strcmpi(gui.retr('sync_type'),'xmSync')
 		acquisition.control_simple_sync_serial(0,0);
@@ -36,6 +37,4 @@ if ~isempty(serpo)
 			end
 		end
 	end
-else %Figure handle does already exist --> bring UI to foreground.
-	figure(fh)
 end

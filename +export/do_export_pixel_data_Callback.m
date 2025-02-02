@@ -75,6 +75,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 	pivlab_axis=gui.retr('pivlab_axis');
 	%cant make this invisible, because matlab then doesnt render properly... :-(
 	export_figure=figure('Name','Exporting, please wait. Please don''t close or resize this window.','NumberTitle','off','visible','on','units','pixels','Toolbar','none','DockControls','off','WindowState','normal','Color','w','WindowStyle','modal');
+	
 	set(export_figure,'units','normalized','outerposition',[0 0 1 1]) %unfortunately, setting figure to fullscreen still reports a non-fullscreen position in matlab...
 
 	if verLessThan('matlab','9.8')  %2020a and up contains exportgraphics
@@ -111,7 +112,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 			set(export_figure,'Name',[num2str(round((i-1)/(endframe-startframe)*100)) ' % Exporting, please wait. Please don''t close or resize this window.']);
 			newfilename=[Name sprintf('_%03d',i) Ext];
 			set(handles.fileselector, 'value',i)
-			gui.sliderdisp(export_axis)
+			gui.sliderdisp(export_axis);%hiergehtesschief
 			%set(export_axis,'box','on','LineWidth',1,'Color','k')
 			switch selected_format
 				case 'PNG'

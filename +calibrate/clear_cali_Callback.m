@@ -10,7 +10,12 @@ gui.put('offset_x_true',0);
 gui.put('offset_y_true',0);
 gui.put('caliimg', []);
 filepath=gui.retr('filepath');
-set(handles.calidisp, 'string', ['inactive'], 'backgroundcolor', [0.9411764705882353 0.9411764705882353 0.9411764705882353]);
+if gui.retr('darkmode')
+	bg_col=[35/255 35/255 35/255];
+else
+	bg_col=[0.9411764705882353 0.9411764705882353 0.9411764705882353];
+end
+set(handles.calidisp, 'string', 'inactive', 'backgroundcolor', bg_col);
 delete(findobj('tag', 'caliline'));
 set(handles.realdist, 'String','1');
 set(handles.time_inp, 'String','1');
@@ -23,4 +28,3 @@ if size(filepath,1) >1 || gui.retr('video_selection_done') == 1
 else
 	gui.displogo(0)
 end
-

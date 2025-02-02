@@ -3,8 +3,10 @@ hgui=getappdata(0,'hgui');
 handles=gui.gethand;
 load (fullfile('images','icons.mat'))
 if gui.retr('darkmode')
-	parallel_on=1-parallel_on;
-	parallel_off=1-parallel_off;
+	parallel_on=1-parallel_on+35/255;
+	parallel_off=1-parallel_off+35/255;
+	parallel_on(parallel_on>1)=1;
+	parallel_off(parallel_off>1)=1;
 end
 try
 	parallel=gui.retr('parallel');

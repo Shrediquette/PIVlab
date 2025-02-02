@@ -82,16 +82,19 @@ end
 			msgbox('Could not detect the synchronizer. Please connect via USB and turn the synchronizer on.','modal')
 		elseif cnt == 1
 			set(handles.infotext,'String','Flashing...');
-			set(handles.infotext,'Backgroundcolor',[1 1 0]);
+			set(handles.infotext,'Backgroundcolor',[0.75 0.75 0]);
+			set(handles.infotext,'foregroundColor','k');
 			pause(0.25)
 			command = [fullfile(tempfilepath,'tycmd.exe') ' upload ' firmware_path];
 			[~,cmdout] = system(command);
 			if ~isempty(cmdout) && contains(cmdout,'Uploading...') && contains(cmdout,'Sending reset command (with RTC)')
 				set(handles.infotext,'String','Success!');
-				set(handles.infotext,'Backgroundcolor',[0 1 0]);
+				set(handles.infotext,'Backgroundcolor',[0 0.75 0]);
+				set(handles.infotext,'foregroundColor','k');
 			else
 				set(handles.infotext,'String','Error');
-				set(handles.infotext,'Backgroundcolor',[1 0 0]);
+				set(handles.infotext,'Backgroundcolor',[0.75 0 0]);
+				set(handles.infotext,'foregroundColor','k');
 				msgbox(cmdout)
 			end
 		end

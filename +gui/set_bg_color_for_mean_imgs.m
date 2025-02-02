@@ -11,8 +11,15 @@ else
 end
 
 if currentwasmean==1
-	set (handles.filenameshow,'BackgroundColor',[0.65 0.65 1]);
+	if gui.retr('darkmode')
+		set (handles.filenameshow,'BackgroundColor',[0.25 0.25 1]);
+	else
+		set (handles.filenameshow,'BackgroundColor',[0.65 0.65 1]);
+	end
 else
-	set (handles.filenameshow,'BackgroundColor',[0.9412 0.9412 0.9412]);
+	if gui.retr('darkmode')
+		set (handles.filenameshow,'BackgroundColor',[35/255 35/255 35/255]);
+	else
+		set (handles.filenameshow,'BackgroundColor',[0.9412 0.9412 0.9412]);
+	end
 end
-

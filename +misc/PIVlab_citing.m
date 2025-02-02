@@ -27,22 +27,22 @@ if isempty(fh)
 	item=[0 item(2)+item(4) parentitem(3)/4*3 5];
 	handles.paper1 = uicontrol(handles.mainpanel,'Style','edit','String',paperstring1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'HorizontalAlignment','left','Max',50,'Min',1);
 	item=[parentitem(3)/4*3 item(2) parentitem(3)/4*1 5];
-	handles.copy1 = uicontrol(handles.mainpanel,'Style','pushbutton','String','<html>copy to<br />clipboard</html>','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@copy_clip,'tag',paperstring1);
+	handles.copy1 = uicontrol(handles.mainpanel,'Style','pushbutton','String','Copy','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@copy_clip,'tag',paperstring1);
 
 	item=[0 item(2)+item(4)+margin/2 parentitem(3)/4*3 5];
 	handles.paper2 = uicontrol(handles.mainpanel,'Style','edit','String',paperstring2,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'HorizontalAlignment','left','Max',50,'Min',1);
 	item=[parentitem(3)/4*3 item(2) parentitem(3)/4*1 5];
-	handles.copy2 = uicontrol(handles.mainpanel,'Style','pushbutton','String','<html>copy to<br />clipboard</html>','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@copy_clip,'tag',paperstring2);
+	handles.copy2 = uicontrol(handles.mainpanel,'Style','pushbutton','String','Copy','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@copy_clip,'tag',paperstring2);
 
 	item=[0 item(2)+item(4)+margin/2 parentitem(3)/4*3 5];
 	handles.paper3 = uicontrol(handles.mainpanel,'Style','edit','String',paperstring3,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'HorizontalAlignment','left','Max',50,'Min',1);
 	item=[parentitem(3)/4*3 item(2) parentitem(3)/4*1 5];
-	handles.copy3 = uicontrol(handles.mainpanel,'Style','pushbutton','String','<html>copy to<br />clipboard</html>','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@copy_clip,'tag',paperstring3);
+	handles.copy3 = uicontrol(handles.mainpanel,'Style','pushbutton','String','Copy','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@copy_clip,'tag',paperstring3);
 
 	item=[0 item(2)+item(4)+margin/2 parentitem(3)/4*3 5];
 	handles.paper4 = uicontrol(handles.mainpanel,'Style','edit','String',paperstring4,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'HorizontalAlignment','left','Max',50,'Min',1);
 	item=[parentitem(3)/4*3 item(2) parentitem(3)/4*1 5];
-	handles.copy4 = uicontrol(handles.mainpanel,'Style','pushbutton','String','<html>copy to<br />clipboard</html>','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@copy_clip,'tag',paperstring4);
+	handles.copy4 = uicontrol(handles.mainpanel,'Style','pushbutton','String','Copy','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@copy_clip,'tag',paperstring4);
 else %Figure handle does already exist --> bring UI to foreground.
 	figure(fh)
 end
