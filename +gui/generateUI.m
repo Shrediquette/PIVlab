@@ -787,7 +787,7 @@ item=[0 0 0 0];
 item=[0 5+5+11.5+1.5+margin/3 parentitem(3) 1];
 handles.text14 = uicontrol(handles.multip04,'Style','text', 'String','Sub-pixel estimator','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text14');
 
-item=[0 item(2)+item(4) parentitem(3) 1];
+item=[0 item(2)+item(4) parentitem(3) 2];
 handles.subpix = uicontrol(handles.multip04,'Style','popupmenu', 'String',{'Gauss 2x3-point','2D Gauss'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','subpix','TooltipString','Subpixel estimation technique. 2D Gauss is supposed to be more accurate for image data that contains motion blur, but there is hardly a difference');
 
 %item=[0 item(2)+item(4)+margin parentitem(3) 1];
@@ -799,7 +799,7 @@ handles.mask_auto_box = uicontrol(handles.multip04,'Style','checkbox', 'String',
 item=[0 item(2)+item(4)+margin/1.5 parentitem(3) 1];
 handles.text914 = uicontrol(handles.multip04,'Style','text', 'String','Correlation robustness','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text914');
 
-item=[0 item(2)+item(4)+margin/6 parentitem(3) 1];
+item=[0 item(2)+item(4)+margin/6 parentitem(3) 2];
 handles.CorrQuality = uicontrol(handles.multip04,'Style','popupmenu', 'String',{'Standard (recommended)','High','Extreme'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','CorrQuality','TooltipString','Correlation quality. Better = slower...');
 
 item=[0 item(2)+item(4)+margin/1.5 parentitem(3) 1.5];
@@ -1823,7 +1823,24 @@ handles.multip21 = uipanel(MainWindow, 'Units','characters', 'Position', [0+marg
 parentitem=get(handles.multip21, 'Position');
 item=[0 0 0 0]; %reset positioning
 
-item=[0 item(2)+item(4)+margin/4 parentitem(3) 1];
+if ~verLessThan('Matlab','25')
+	item=[0 item(2)+item(4)+margin/4 parentitem(3) 1];
+	handles.matlab_theme_txt = uicontrol(handles.multip21,'Style','text','String','Color theme','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','matlab_theme_txt');
+
+	item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
+	handles.matlab_theme = uicontrol(handles.multip21,'Style','popupmenu','String',{'Dark','Light'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','matlab_theme','TooltipString','Change Matlab Theme','Callback',@gui.change_theme);
+
+	s = settings;
+	current_theme = s.matlab.appearance.MATLABTheme.PersonalValue;
+
+	if strcmpi(current_theme, 'Dark')
+		set( handles.matlab_theme,'Value',1);
+	elseif strcmpi(current_theme, 'Light')
+		set( handles.matlab_theme,'Value',2);
+	end
+end
+
+item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.paneltext = uicontrol(handles.multip21,'Style','text','String','Width of the panels','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','paneltext');
 
 item=[0 item(2)+item(4) parentitem(3)/2 2];
@@ -1945,7 +1962,7 @@ handles.multip24 = uipanel(MainWindow, 'Units','characters', 'Position', [0+marg
 parentitem=get(handles.multip24, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4) parentitem(3) 8.75];
+item=[0 item(2)+item(4) parentitem(3) 10];
 handles.uipanelac_general = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','General settings', 'Tag','uipanelac_general','fontweight','bold');
 
 parentitem=get(handles.uipanelac_general, 'Position');
@@ -1964,13 +1981,13 @@ handles.ac_browse = uicontrol(handles.uipanelac_general,'Style','pushbutton','St
 item=[0 item(2)+item(4)+margin*0.05 parentitem(3) 1];
 handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Select configuration:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_configtxt');
 
-item=[0 item(2)+item(4) parentitem(3) 1.5];
+item=[0 item(2)+item(4) parentitem(3) 2];
 handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',{'Nd:YAG (SimpleSync) + pco.pixelfly usb' 'Nd:YAG (SimpleSync) + pco.panda 26 DS' 'PIVlab LD-PS + pco.pixelfly usb' 'PIVlab LD-PS + pco.panda 26 DS' 'PIVlab LD-PS + Chronos' 'PIVlab LD-PS + Basler acA2000-165um' 'PIVlab LD-PS + FLIR FFY-U3-16S2M' 'PIVlab LD-PS + OPTOcam 2/80' 'PIVlab LD-PS + OPTRONIS Cyclone'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@acquisition.select_capture_config_Callback);
 
-item=[0 item(2)+item(4)+0.25 parentitem(3)/2 1.5];
+item=[0 item(2)+item(4)+0.25 parentitem(3)/2 2];
 handles.ac_comport = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'COM1'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_comport');
 
-item=[parentitem(3)/2 item(2) parentitem(3)/2*0.9 1.5];
+item=[parentitem(3)/2 item(2) parentitem(3)/2*0.9 2];
 handles.ac_connect = uicontrol(handles.uipanelac_general,'Style','pushbutton','String','Connect','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.connect_Callback,'Tag','ac_connect','TooltipString','Connect to PIVlab-SimpleSync');
 
 IndicatorPos=get(handles.ac_connect,'Position');
@@ -1980,13 +1997,13 @@ handles.ac_serialstatus = uicontrol(handles.uipanelac_general,'Style','edit','un
 
 % Sync control
 parentitem=get(handles.multip24, 'Position');
-item=[0 8.5 parentitem(3) 10.75+1];
+item=[0 10.5 parentitem(3) 12];
 handles.uipanelac_laser = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Synchronizer control', 'Tag','uipanelac_laser','fontweight','bold');
 
 parentitem=get(handles.uipanelac_laser, 'Position');
 item=[0 0 0 0];
 
-item=[0 0 parentitem(3)/4*2.5 1];
+item=[0 0 parentitem(3)/4*2.5 2];
 handles.ac_fpstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Frame rate [Hz]:','tag','ac_fpstxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
@@ -2032,13 +2049,13 @@ handles.ac_device_control = uicontrol(handles.uipanelac_laser,'Style','pushbutto
 
 % Camera settings
 parentitem=get(handles.multip24, 'Position');
-item=[0 19.25+1 parentitem(3) 3.25];
+item=[0 23 parentitem(3) 4];
 handles.uipanelac_camsettings = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Camera settings', 'Tag','uipanelac_camsettings','fontweight','bold');
 
 parentitem=get(handles.uipanelac_camsettings, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4) parentitem(3)/4.1 1.5];
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/4.1 1.5];
 handles.ac_calibBinning = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Binning','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @acquisition.calibBinning_Callback,'Tag','ac_calibBinning','TooltipString','Select pixel binning');
 
 item=[parentitem(3)/4.1*1  item(2) parentitem(3)/4.1 1.5];
@@ -2054,7 +2071,7 @@ handles.ac_camera_setup = uicontrol(handles.uipanelac_camsettings,'Style','pushb
 % Calib capture
 
 parentitem=get(handles.multip24, 'Position');
-item=[0 22.5+1 parentitem(3) 4.5];
+item=[0 27.5 parentitem(3) 4.5];
 
 handles.uipanelac_calib = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Live image', 'Tag','uipanelac_calib','fontweight','bold');
 
@@ -2075,13 +2092,13 @@ handles.ac_calibsave = uicontrol(handles.uipanelac_calib,'Style','pushbutton','S
 
 % PIV capture
 parentitem=get(handles.multip24, 'Position');
-item=[0 27.25+1 parentitem(3) 5];
+item=[0 33 parentitem(3) 5];
 handles.uipanelac_capture = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Capture PIV images', 'Tag','uipanelac_capture','fontweight','bold');
 
 parentitem=get(handles.uipanelac_capture, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4)+0.1 parentitem(3)/2 1];
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 1];
 handles.ac_imgamounttxt = uicontrol(handles.uipanelac_capture,'Style','text', 'String','Image amount: ','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_imgamounttxt');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/4 1];

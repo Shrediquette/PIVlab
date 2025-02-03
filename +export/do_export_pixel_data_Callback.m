@@ -49,12 +49,12 @@ if startframe ~=endframe && gui.retr('displaywhat')>1 && get(handles.autoscaler,
 	if strcmp(answer , 'No')
 		continue_export=0;
 		gui.switchui('multip08');drawnow;
-		old_bg=get(handles.autoscaler,'Backgroundcolor');
+		old_bg=get(handles.autoscaler,'foregroundcolor');
 		for i=1:10 %highlight the setting that the user needs to change...
-			set(handles.autoscaler,'Backgroundcolor',[1 0.2 0.2])
-			pause(0.15)
-			set(handles.autoscaler,'Backgroundcolor',old_bg)
-			pause(0.15)
+			set(handles.autoscaler,'foregroundcolor',[1 0.2 0.2])
+			pause(0.15);drawnow;
+			set(handles.autoscaler,'foregroundcolor',old_bg)
+			pause(0.15);drawnow;
 		end
 	end
 end
@@ -74,7 +74,8 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 
 	pivlab_axis=gui.retr('pivlab_axis');
 	%cant make this invisible, because matlab then doesnt render properly... :-(
-	export_figure=figure('Name','Exporting, please wait. Please don''t close or resize this window.','NumberTitle','off','visible','on','units','pixels','Toolbar','none','DockControls','off','WindowState','normal','Color','w','WindowStyle','modal');
+	%export_figure=figure('Name','Exporting, please wait. Please don''t close or resize this window.','NumberTitle','off','visible','on','units','pixels','Toolbar','none','DockControls','off','WindowState','normal','Color','w','WindowStyle','modal');
+	export_figure=figure('Name','Exporting, please wait. Please don''t close or resize this window.','NumberTitle','off','visible','on','units','pixels','Toolbar','none','DockControls','off','WindowState','normal','Color','w');
 	
 	set(export_figure,'units','normalized','outerposition',[0 0 1 1]) %unfortunately, setting figure to fullscreen still reports a non-fullscreen position in matlab...
 
@@ -108,12 +109,23 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 	pause(0.01)
 	try
 		%~isempty(findobj(export_figure,'type','figure')) %figure still exists
+		firstframe=1;
 		for i=startframe:endframe
-			set(export_figure,'Name',[num2str(round((i-1)/(endframe-startframe)*100)) ' % Exporting, please wait. Please don''t close or resize this window.']);
+			
+			if startframe ~=endframe
+				set(export_figure,'Name',[num2str(round((i-1)/(endframe-startframe)*100)) ' % Exporting, please wait. Please don''t close or resize this window.']);
+			else
+				set(export_figure,'Name','Exporting one image, please wait. Please don''t close or resize this window.');
+			end
 			newfilename=[Name sprintf('_%03d',i) Ext];
 			set(handles.fileselector, 'value',i)
-			gui.sliderdisp(export_axis);%hiergehtesschief
-			%set(export_axis,'box','on','LineWidth',1,'Color','k')
+			if ~verLessThan('Matlab','25')
+				if firstframe==1
+					export_figure.Theme = "light";
+					figure(export_figure); %maaaaan, why does r2025a require this...?
+				end
+			end
+			gui.sliderdisp(export_axis);
 			switch selected_format
 				case 'PNG'
 					if use_exportfig
@@ -177,6 +189,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
 						close(v);
 					end
 			end
+			firstframe=0;
 		end
 	catch ME
 		try
