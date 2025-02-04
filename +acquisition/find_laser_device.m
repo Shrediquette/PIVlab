@@ -18,7 +18,9 @@ if alreadyconnected
 	string2='WhichFirmWare?';
 	string3='WarningSignEnable!';
 	try
-		writeline(serpo,string1);
+		flush(serpo)
+        pause(0.1)
+        writeline(serpo,string1);
 		pause(0.3)
 		warning off
 		serial_answer=readline(serpo);
@@ -61,13 +63,17 @@ if alreadyconnected
 		delete(findobj('tag','laser_info_box'));
 		try
 			Kinder=get(gca,'Children');
-			for k=1:size(Kinder,1)
-				if isprop(Kinder(k),'CData')
-					img_size=size(Kinder(k).CData,1);
-					break
-				end
-			end
-			text(10,img_size*0.95,['Connected to:  ' convertStringsToChars(serial_answer) sprintf('\n') 'Firmware:  ' convertStringsToChars(firmware_version)],'tag','laser_info_box','Color','black','BackgroundColor','green','VerticalAlignment','bottom','interpreter','none');
+            for k=1:size(Kinder,1)
+                if isprop(Kinder(k),'CData')
+                    img_size=size(Kinder(k).CData,1);
+                    break
+                end
+            end
+            if ~isempty(serial_answer)
+    			text(10,img_size*0.95,['Connected to:  ' convertStringsToChars(serial_answer) sprintf('\n') 'Firmware:  ' convertStringsToChars(firmware_version)],'tag','laser_info_box','Color','black','BackgroundColor','green','VerticalAlignment','bottom','interpreter','none');
+            else
+                delete(findobj('tag','laser_info_box'))
+            end
 		catch
 		end
 	catch

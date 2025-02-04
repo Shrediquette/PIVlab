@@ -46,28 +46,37 @@ end
 
 if strcmp(camera_type,'flir')
 	blind_time=425;
-	cam_delay=50;
+    cam_delay=50;
 end
 
 if strcmp(camera_type,'OPTRONIS')
-	if isempty(camera_sub_type)
-		camera_sub_type=''; %empty string
-	end
-	switch camera_sub_type
-		case 'Cyclone-2-2000-M'
-			blind_time=8;
-			cam_delay=3;
-		case 'Cyclone-1HS-3500-M'
-			blind_time=8;
-			cam_delay=3;
-		case 'Cyclone-25-150-M'
-			blind_time=27;
-			cam_delay=3;
-		otherwise
-			msgbox('This camera sub type is not known.','modal')
-			blind_time=8;
-			cam_delay=3;
-	end
+    if isempty(camera_sub_type)
+        camera_sub_type=''; %empty string
+    end
+    switch camera_sub_type
+        case 'Cyclone-2-2000-M'
+            if isempty(bitrate)
+                bitrate=8;
+            end
+            if bitrate == 8
+                blind_time=8;
+                cam_delay=3;
+            end
+            if bitrate == 10
+                blind_time=8;
+                cam_delay=3;
+            end
+        case 'Cyclone-1HS-3500-M'
+            blind_time=20;
+            cam_delay=3;
+        case 'Cyclone-25-150-M'
+            blind_time=27;
+            cam_delay=3;
+        otherwise
+            msgbox('This camera sub type is not known.','modal')
+            blind_time=8;
+            cam_delay=3;
+    end
 end
 
 if strcmp(camera_principle,'normal_shutter')

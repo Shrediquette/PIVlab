@@ -4,7 +4,7 @@ fix_Optronis_skipped_frame=0;
 if bitmode==8
     bitmultiplicator=1;
 elseif bitmode==10
-    bitmultiplicator = 32; %bring 10bit data to 16 bits full histogram, otherwise images outside Matlab are not displayed correctly (too dark).
+    bitmultiplicator = 64; %bring 10bit data to 16 bits full histogram, otherwise images outside Matlab are not displayed correctly (too dark).
     disp(mfilename)
     disp('needs testing')
 end
@@ -64,7 +64,7 @@ if getappdata(hgui,'cancel_capture') ~=1 %capture was not cancelled --> save ima
         %disp('OK')
         %end
     else
-        disp('Automatic bug fix for skipped frames could not be run, needs to have at least 5 image pairs')
+        disp('Automatic bug fix for skipped frame could not be run, needs to have at least 5 image pairs')
     end
     %%
     cntr=0;

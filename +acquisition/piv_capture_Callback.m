@@ -254,19 +254,14 @@ if required_files_check
 				OPTRONIS_bits =gui.retr('OPTRONIS_bits');
 				if isempty (OPTRONIS_bits)
 					OPTRONIS_bits=8;
-				end
-				[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits); %prepare cam and start camera (waiting for trigger...)
-				pause(0.1) %make sure OPTRONIS is ready to capture.
-				Error_Reason={};
-				OPTRONIS_settings_check = 1;
-				%2166 mit 8 bit
-				%1750 mit 10 bit
+                end
 
-				camera_sub_type=gui.retr('camera_sub_type');
+                camera_sub_type=gui.retr('camera_sub_type');
 				if OPTRONIS_bits==8
 					switch camera_sub_type
 						case 'Cyclone-2-2000-M'
-							max_fps_with_current_settings = 2165;
+							max_fps_with_current_settings = 10000;
+                            %max_fps_with_current_settings = 2165;
 						case 'Cyclone-1HS-3500-M'
 							max_fps_with_current_settings = 3500;
 						case 'Cyclone-25-150-M'
@@ -275,38 +270,48 @@ if required_files_check
 							max_fps_with_current_settings=1111;
 					end
 
-				elseif OPTRONIS_bits==10
-					switch camera_sub_type
-						case 'Cyclone-2-2000-M'
-							max_fps_with_current_settings = 1750;
-						case 'Cyclone-1HS-3500-M'
-							max_fps_with_current_settings = 3175;
-						case 'Cyclone-25-150-M'
-							max_fps_with_current_settings = 149;
-						otherwise
-							max_fps_with_current_settings=1111;
-					end
-				end
+                elseif OPTRONIS_bits==10
+                    switch camera_sub_type
+                        case 'Cyclone-2-2000-M'
+                            max_fps_with_current_settings = 10000;
+                        case 'Cyclone-1HS-3500-M'
+                            max_fps_with_current_settings = 3175;
+                        case 'Cyclone-25-150-M'
+                            max_fps_with_current_settings = 149;
+                        otherwise
+                            max_fps_with_current_settings=1111;
+                    end
+                end
+                OPTRONIS_settings_check = 1;
+                Error_Reason={};
+                if cam_fps > max_fps_with_current_settings
+                    OPTRONIS_settings_check = 0;
+                    Error_Reason{end+1,1}='Frame rate too high for selected bit rate.';
+                    Error_Reason{end+1,1}=['With current settings, sensor max. fps is ' num2str(round(max_fps_with_current_settings,1)) ' fps'];
+                    Error_Reason{end+1,1}='Please select a lower frame rate.';
+                end
+                if OPTRONIS_settings_check == 1
+    				[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits); %prepare cam and start camera (waiting for trigger...)
+    				pause(0.1) %make sure OPTRONIS is ready to capture.
+                    Error_Reason={};
+                end
 
-				if cam_fps > max_fps_with_current_settings
-					OPTRONIS_settings_check = 0;
-					Error_Reason{end+1,1}='Frame rate too high for selected bit rate.';
-					Error_Reason{end+1,1}=['With current settings, sensor max. fps is ' num2str(round(max_fps_with_current_settings,1)) ' fps'];
-					Error_Reason{end+1,1}='Please select a lower frame rate.';
-				end
-				min_allowed_interframe = gui.retr('min_allowed_interframe');
-				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
-				if OPTRONIS_settings_check == 1
-					uiwait(warndlg('Pressing ''OK'' will start the laser.','Laser is armed','modal'))
-					acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
-					[OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits); %capture n images, display livestream
-				else
-					msgbox(Error_Reason,'modal')
-					uiwait
-					gui.put('cancel_capture',1);
-					imageamount=inf; %will prevent saving of images
-				end
-			end
+                %2166 mit 8 bit
+                %1750 mit 10 bit
+
+
+                min_allowed_interframe = gui.retr('min_allowed_interframe');
+                pulse_sep=str2double(get(handles.ac_interpuls,'String'));
+                if OPTRONIS_settings_check == 1
+                    uiwait(warndlg('Pressing ''OK'' will start the laser.','Laser is armed','modal'))
+                    acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
+                    [OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits); %capture n images, display livestream
+                else
+                    uiwait(msgbox(Error_Reason,'modal'))
+                    gui.put('cancel_capture',1);
+                    imageamount=inf; %will prevent saving of images
+                end
+            end
 			%disable external devices
 			if (~isempty(gui.retr('ac_enable_seeding1')) && gui.retr('ac_enable_seeding1') ~=0) || (~isempty(gui.retr('ac_enable_device1')) && gui.retr('ac_enable_device1') ~=0) || (~isempty(gui.retr('ac_enable_device2')) && gui.retr('ac_enable_device2') ~=0) || (~isempty(gui.retr('ac_enable_flowlab')) && gui.retr('ac_enable_flowlab') ~=0)
 				acquisition.external_device_control(0); % stops all external devices

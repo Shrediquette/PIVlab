@@ -40,15 +40,32 @@ warning('off','imaq:gentl:hardwareTriggerTriggerModeOff'); %trigger property of 
 warning('off','MATLAB:JavaEDTAutoDelegation'); %strange warning
 
 OPTRONIS_supported_formats = info.DeviceInfo.SupportedFormats;
-% select bitmode (some support 8, 10, 12 bits)
 
-bitmode =8; %in calibration mode: 10 bit would make sense, but in Matlab, all data that is returned from OPTRONIS is 8 bit...
+OPTRONIS_bits = gui.retr('OPTRONIS_bits');
+if isempty(OPTRONIS_bits)
+    OPTRONIS_bits=8;
+end
+
+if verLessThan('matlab','25') %allow only 8 bits in older matlab versions.
+    bitmode = 8; %in calibration mode: 10 bit would make sense, but in Matlab, all data that is returned from OPTRONIS is 8 bit...
+else
+    bitmode=OPTRONIS_bits;
+end
+
+OPTRONIS_gain = gui.retr('OPTRONIS_gain');
+if isempty(OPTRONIS_gain)
+    OPTRONIS_gain=1;
+end
+
 OPTRONIS_vid = videoinput(info.AdaptorName,info.DeviceInfo.DeviceID,['Mono' sprintf('%0.0d',bitmode)]);
 
 OPTRONIS_settings = get(OPTRONIS_vid);
 OPTRONIS_settings.PreviewFullBitDepth='On';
 OPTRONIS_vid.PreviewFullBitDepth='On';
 
+if ~verLessThan('matlab','25')
+    OPTRONIS_settings.Source.AGain = num2str(OPTRONIS_gain);
+end
 %OPTRONIS trigger source cannot be set in Matlab. Therefore always set to
 %external. Synchronizer must always run.
 triggerconfig(OPTRONIS_vid, 'hardware','DeviceSpecific','DeviceSpecific');
@@ -57,10 +74,8 @@ OPTRONIS_settings.TriggerSource = 'SingleFrame';
 OPTRONIS_settings.TriggerMode ='On';
 OPTRONIS_src=getselectedsource(OPTRONIS_vid);
 
-
 ROI_OPTRONIS=[ROI_OPTRONIS(1)-1,ROI_OPTRONIS(2)-1,ROI_OPTRONIS(3),ROI_OPTRONIS(4)];
 OPTRONIS_vid.ROIPosition=ROI_OPTRONIS;
-
 
 %the synchronizer of the optronis must also generate a trigger signal in
 %calibration mode, because the optronis cannot be set to internal

@@ -34,15 +34,23 @@ else
 		end
 	end
 
-	max_possible_dbl_images = PIVlab_capture_max_possible_images(ac_ROI_general,[],bitmode);
-	if imageamount > max_possible_dbl_images
-		if get(handles.ac_pivcapture_save,'Value')==1
-			set(handles.ac_imgamount,'BackgroundColor',[1 0.5 0])
-			beep
-			warning(['RAM most likely not sufficient to capture this amount of double images.' newline 'Please reduce the amount of double images.' newline 'Maximum double images is approx. ' num2str(max_possible_dbl_images)])
-		end
-	else
-		set(handles.ac_imgamount,'BackgroundColor',[1 1 1])
-	end
+    max_possible_dbl_images = PIVlab_capture_max_possible_images(ac_ROI_general,[],bitmode);
+    if imageamount > max_possible_dbl_images
+        if get(handles.ac_pivcapture_save,'Value')==1
+            if gui.retr('darkmode')
+                set(handles.ac_imgamount,'BackgroundColor',[0.75 0 0])
+            else
+    			set(handles.ac_imgamount,'BackgroundColor',[1 0.5 0])
+            end
+            beep
+            warning(['RAM most likely not sufficient to capture this amount of double images.' newline 'Please reduce the amount of double images.' newline 'Maximum double images is approx. ' num2str(max_possible_dbl_images)])
+        end
+    else
+        if gui.retr('darkmode')
+            set(handles.ac_imgamount,'BackgroundColor',[35/255 35/255 35/255])
+        else
+    		set(handles.ac_imgamount,'BackgroundColor',[1 1 1])
+        end
+    end
 end
 

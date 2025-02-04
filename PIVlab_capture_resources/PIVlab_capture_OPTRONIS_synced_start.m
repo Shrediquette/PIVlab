@@ -30,18 +30,26 @@ end
 
 OPTRONIS_supported_formats = info.DeviceInfo.SupportedFormats;
 % select bitmode (some support 8, 10, 12 bits)
-
-	bitmode =8; %10 bit would make sense, but in Matlab, all data that is returned from OPTRONIS is 8 bit...
-
+if verLessThan('matlab','25') %if not 2025a and beyond: force to be 8 bit, because not supported by matlab.
+    bitmode =8; %10 bit would make sense, but in Matlab, all data that is returned from OPTRONIS is 8 bit...
+end
 OPTRONIS_vid = videoinput(info.AdaptorName,info.DeviceInfo.DeviceID,['Mono' sprintf('%0.0d',bitmode)]);
 
 OPTRONIS_settings = get(OPTRONIS_vid);
 OPTRONIS_settings.PreviewFullBitDepth='On';
 OPTRONIS_vid.PreviewFullBitDepth='On';
 
+OPTRONIS_gain = gui.retr('OPTRONIS_gain');
+if isempty(OPTRONIS_gain)
+    OPTRONIS_gain=1;
+end
+
+if ~verLessThan('matlab','25')
+    OPTRONIS_settings.Source.AGain = num2str(OPTRONIS_gain);
+end
+
 ROI_OPTRONIS=[ROI_OPTRONIS(1)-1,ROI_OPTRONIS(2)-1,ROI_OPTRONIS(3),ROI_OPTRONIS(4)];
 OPTRONIS_vid.ROIPosition=ROI_OPTRONIS;
-
 
 %% prepare axes
 PIVlab_axis = findobj(hgui,'Type','Axes');
@@ -68,6 +76,10 @@ OPTRONIS_settings.TriggerSource = 'SingleFrame';
 OPTRONIS_settings.TriggerMode ='On';
 OPTRONIS_src=getselectedsource(OPTRONIS_vid);
 
+%set extended framerate calculation
+if ~verLessThan('matlab','25')
+    OPTRONIS_settings.Source.MaxFrameRateExtended = 'Extended';
+end
 if contains(OPTRONIS_name,'Cyclone-2-2000-M')
 	disp(['Found camera: ' 'Cyclone-2-2000-M'])
     %framerate=floor(1/((expotime+3)/1000^2)) %muss man auch setzen damit exposure time akzeptiert wird...
@@ -93,42 +105,57 @@ else
     disp('camera type unknown!')
 end
 
+fps_too_high=0;
 OPTRONIS_src.ExposureTime = minexpo;
-OPTRONIS_src.AcquisitionFrameRate = frame_rate;
+try
+    OPTRONIS_src.AcquisitionFrameRate = frame_rate;
+catch ME
+    try
+        msg=strsplit (ME.message,'value must be less than or equal to ');msg{2}(end)=[];msg=msg{2};
+    catch
+        msg = '(can not determine max. frame rate)';
+    end
+    uiwait(errordlg(['The frame rate is too high for the selected FOV. With the current settings, the frame rate must not be higher than ' msg ' fps.'],'Frame rate error'))
+    fps_too_high=1;
+end
 
-%% start acqusition (waiting for trigger)
-OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame;
-OPTRONIS_vid.FramesPerTrigger = OPTRONIS_frames_to_capture+2;
-triggerconfig(OPTRONIS_vid, 'manual');
+if fps_too_high==0
+    %% start acqusition (waiting for trigger)
+    OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame;
+    OPTRONIS_vid.FramesPerTrigger = OPTRONIS_frames_to_capture+2;
+    triggerconfig(OPTRONIS_vid, 'manual');
 
-%OPTRONIS_vid.TriggerType = 'manual'; %requires trigger(OPTRONIS_vid) to start
-if ~isinf(nr_of_images) %only start capturing if save box is ticked.
-	flushdata(OPTRONIS_vid);
-   % disp('pause added to avoid flushing of recorded frames...')
+    %OPTRONIS_vid.TriggerType = 'manual'; %requires trigger(OPTRONIS_vid) to start
+    if ~isinf(nr_of_images) %only start capturing if save box is ticked.
+    	flushdata(OPTRONIS_vid);
+        % disp('pause added to avoid flushing of recorded frames...')
+        pause(0.01)
+    	OPTRONIS_vid.ErrorFcn = @CustomIMAQErrorFcn;
+    	warning('off','imaq:gentl:hardwareTriggerTriggerModeOff'); %trigger property of OPTRONIS cannot be set in Matlab.
+    	warning('off','MATLAB:JavaEDTAutoDelegation'); %strange warning
+        start(OPTRONIS_vid);
+    end
+    warning('off','imaq:gentl:hardwareTriggerTriggerModeOff'); %trigger property of OPTRONIS cannot be set in Matlab.
+    warning('off','MATLAB:JavaEDTAutoDelegation'); %strange warning
+    preview(OPTRONIS_vid,image_handle_OPTRONIS);
+    %der befehl oben führt wohl zu einem reset, denn acquisition mode wird auf defaults zurückgesetzt
+    tmp=get(image_handle_OPTRONIS,'CData');
+    tmp=size(tmp(:,:,1));
+    set(image_handle_OPTRONIS,'CData',ones(tmp)*35);
+    delete(frame_nr_display);
+    frame_nr_display=text(100,100,'Ready!','Color',[1 1 0]);
+    OPTRONIS_src.AcquisitionFrameRate = frame_rate; %muss man auch setzen damit exposure time akzeptiert wird...
+    OPTRONIS_src.ExposureTime=exposure_time;
     pause(0.01)
-	OPTRONIS_vid.ErrorFcn = @CustomIMAQErrorFcn;
-	warning('off','imaq:gentl:hardwareTriggerTriggerModeOff'); %trigger property of OPTRONIS cannot be set in Matlab.
-	warning('off','MATLAB:JavaEDTAutoDelegation'); %strange warning 
-    start(OPTRONIS_vid);
+    if ~isinf(nr_of_images)
+        OPTRONIS_settings.Source.EnableFan='Off';
+        %aufnahmes tartet erst nachdem letztes mal die settings geändert
+        %wurden.
+        trigger(OPTRONIS_vid)
+    end
+    caxis([0 2^bitmode]); %seems to be a workaround to force preview to show full data range...
+    drawnow;
 end
-warning('off','imaq:gentl:hardwareTriggerTriggerModeOff'); %trigger property of OPTRONIS cannot be set in Matlab.
-warning('off','MATLAB:JavaEDTAutoDelegation'); %strange warning
-preview(OPTRONIS_vid,image_handle_OPTRONIS); 
-%der befehl oben führt wohl zu einem reset, denn acquisition mode wird auf defaults zurückgesetzt
-
-OPTRONIS_src.AcquisitionFrameRate = frame_rate; %muss man auch setzen damit exposure time akzeptiert wird...
-OPTRONIS_src.ExposureTime=exposure_time;
-pause(0.01)
-if ~isinf(nr_of_images)
-    %aufnahmes tartet erst nachdem letztes mal die settings geändert
-    %wurden.
-    trigger(OPTRONIS_vid)
-end
-OPTRONIS_settings.Source.EnableFan='Off';
-caxis([0 2^bitmode]); %seems to be a workaround to force preview to show full data range...
-
-drawnow;
-
 function CustomIMAQErrorFcn(obj, event, varargin)
 stop(obj)
 hgui=getappdata(0,'hgui');

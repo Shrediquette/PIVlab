@@ -16,9 +16,12 @@ if strcmp(camera_type,'flir')
 end
 
 if strcmp(camera_type,'OPTRONIS')
-	uiwait(msgbox(['ROI selection for the OPTRONIS camera series will be implemented soon!' newline 'Currently waiting for bug fixes from Mathworks.'],'modal'))
+    if verLessThan('matlab','25')
+        uiwait(msgbox('ROI selection for the OPTRONIS can only be done with Matlab versions > R2025a.','modal'))
+        camera_type='NaN'; %prevent execution of ROI selection for versions < R2025a
+    end
 end
-if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(camera_type,'OPTOcam') %|| strcmp(camera_type,'OPTRONIS')
+if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(camera_type,'OPTOcam') || strcmp(camera_type,'OPTRONIS')
 	try
 		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
 	catch
@@ -41,16 +44,23 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 				capture_ok=0;
 			end
 		elseif strcmp(camera_type,'basler')
-			[errorcode, caliimg]=PIVlab_capture_basler_calibration_image(1,expos,[1,1,max_cam_res]);
+            [errorcode, caliimg]=PIVlab_capture_basler_calibration_image(1,expos,[1,1,max_cam_res]);
 
-		elseif strcmp(camera_type,'OPTOcam')
-			[errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(1,expos,[1,1,max_cam_res]);
-		elseif strcmp(camera_type,'OPTRONIS')
-			acquisition.control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
-			[errorcode, caliimg]=PIVlab_capture_OPTRONIS_calibration_image(1,expos,[1,1,max_cam_res]);
-			acquisition.control_simple_sync_serial(0,2);
-		end
-		gui.put('capturing',0);
+        elseif strcmp(camera_type,'OPTOcam')
+            [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(1,expos,[1,1,max_cam_res]);
+        elseif strcmp(camera_type,'OPTRONIS')
+            disp('single image capture with synchronizer toggled on...')
+
+            expos=round(str2num(get(handles.ac_expo,'String'))*1000);
+            acquisition.control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
+            [errorcode, caliimg]=PIVlab_capture_OPTRONIS_calibration_image(1,expos,[1,1,max_cam_res]);
+            acquisition.control_simple_sync_serial(0,2);
+
+            %acquisition.control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
+            %[errorcode, caliimg]=PIVlab_capture_OPTRONIS_calibration_image(1,expos,[1,1,max_cam_res]);
+            %acquisition.control_simple_sync_serial(0,2);
+        end
+        gui.put('capturing',0);
 
 		if capture_ok==1
 			displaysize_x=floor(get(gca,'XLim'));
@@ -112,13 +122,11 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 				switch camera_sub_type
 					case 'Cyclone-2-2000-M'
 						m0 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1920x1080 (max. 2165 fps)','Callback',@roi.setdefaultroi);
-						m1 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x800 (max. 3100 fps)','Callback',@roi.setdefaultroi);
-						m2 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x480 (max. 5142 fps)','Callback',@roi.setdefaultroi);
-						m3 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1024x240 (max. 10150 fps)','Callback',@roi.setdefaultroi);
+						m2 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x480 (max. 5000 fps)','Callback',@roi.setdefaultroi);
+						m3 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1024x240 (max. 10000 fps)','Callback',@roi.setdefaultroi);
 						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
 					case 'Cyclone-1HS-3500-M'
 						m0 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x860 (max. 3500 fps)','Callback',@roi.setdefaultroi);
-						m1 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x640 (max. 4700 fps)','Callback',@roi.setdefaultroi);
 						m2 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x320 (max. 9340 fps)','Callback',@roi.setdefaultroi);
 						m3 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x240 (max. 12350 fps)','Callback',@roi.setdefaultroi);
 						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
@@ -129,7 +137,6 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 						m3 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x720 (max. 1025 fps)','Callback',@roi.setdefaultroi);
 						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
 					otherwise
-
 				end
 			end
 

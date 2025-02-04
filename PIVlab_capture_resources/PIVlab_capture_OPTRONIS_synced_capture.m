@@ -21,12 +21,12 @@ while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdat
 		set(frame_nr_display,'String','PIV preview');
 	end
 
-	drawnow limitrate
+	%drawnow limitrate
 	%% sharpness indicator
 	sharpness_enabled = getappdata(hgui,'sharpness_enabled');
 	if sharpness_enabled == 1 % sharpness indicator
-        textx=1240;
-        texty=950;
+        textx=1000;
+        texty=100;
         [~,~] = PIVlab_capture_sharpness_indicator (ima,textx,texty);
     else
         delete(findobj('tag','sharpness_display_text'));

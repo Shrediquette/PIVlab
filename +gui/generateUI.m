@@ -2041,11 +2041,6 @@ handles.ac_enable_ext_trigger_oltsync = uicontrol(handles.uipanelac_laser,'Style
 item=[item(3) item(2) parentitem(3)/2 1.5];
 handles.ac_device_control = uicontrol(handles.uipanelac_laser,'Style','pushbutton','String','Devices','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_device_control','TooltipString','Setup external devices (such as remote controlled seeding generator etc.)','Callback',@acquisition.device_control_Callback);
 
-
-%item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 2];
-%handles.ac_ext_trigger_settings = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Setup','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_ext_trigger_settings_Callback,'Tag','ac_ext_trigger_settings','TooltipString','Setup external trigger input on PIVlab-SimpleSync');
-
-
 % Camera settings
 parentitem=get(handles.multip24, 'Position');
 item=[0 23 parentitem(3) 4];
@@ -2064,7 +2059,7 @@ item=[parentitem(3)/4.1*2  item(2) parentitem(3)/4.1 1.5];
 handles.ac_lensctrl = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Lens','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @acquisition.lens_control_Callback,'Tag','ac_lensctrl','TooltipString','Control camera lens');
 
 item=[parentitem(3)/4.1*3  item(2) parentitem(3)/4.1 1.5];
-handles.ac_camera_setup = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Setup','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @acquisition.camera_setup_Callback,'Tag','ac_camera_setup','TooltipString','Setup Chronos camera');
+handles.ac_camera_setup = uicontrol(handles.uipanelac_camsettings,'Style','pushbutton','String','Setup','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'Callback', @acquisition.camera_setup_Callback,'Tag','ac_camera_setup','TooltipString','Configure selected camera');
 
 
 % Calib capture
