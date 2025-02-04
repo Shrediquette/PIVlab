@@ -1,6 +1,6 @@
 # PIVlab - particle image velocimetry (PIV) tool with GUI
 
-**[http://PIVlab.de](http://PIVlab.de)**
+**[http://www.PIVlab.de](http://www.PIVlab.de)**
 
 *PIVlab is a free and open-source particle image velocimetry (PIV) software and is currently the most frequently cited PIV tool on the market. It can be used to calculate the velocity distribution within imported (or captured) images. It can also control [OPTOLUTION's lasers, cameras and synchronizers](https://www.optolution.com/en/products/particle-image-velocimetry-piv), and derive, display and export multiple parameters of the flow pattern. The simple graphical user interface makes PIV data acquisition and data post-processing fast and efficient.*
 
