@@ -14,7 +14,11 @@ try
 		gui.put ('parallel',1);
 		gui.toolsavailable(0,'Please wait, opening parallel pool...')
 		pause(0.1)
-		desired_num_cores=feature('numCores');
+		try
+			desired_num_cores=maxNumCompThreads('automatic');
+		catch
+			desired_num_cores=feature('numCores');
+		end
 		misc.pivparpool('close')
 		misc.pivparpool('open',desired_num_cores)
 		set(handles.toggle_parallel, 'cdata',parallel_on,'TooltipString','Parallel processing on. Click to turn off.');
