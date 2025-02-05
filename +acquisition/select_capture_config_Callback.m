@@ -1,10 +1,10 @@
 function select_capture_config_Callback (~,~,~)
 handles=gui.gethand;
 value=get(handles.ac_config,'value');
-
 old_setting=gui.retr('old_setting');
 if isempty(old_setting)
-	gui.put ('old_setting',inf)
+	old_setting=inf;
+    gui.put ('old_setting',old_setting)
 end
 gui.put ('old_setting',value)
 

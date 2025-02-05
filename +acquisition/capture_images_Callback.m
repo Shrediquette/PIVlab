@@ -23,29 +23,36 @@ catch
 	delete(serpo)
 	gui.put('serpo',[]);
 	set(handles.ac_comport,'Value',1);
-	set(handles.ac_laserstatus,'String','N/A','BackgroundColor',[1 0 0])
+    set(handles.ac_laserstatus,'String','N/A','BackgroundColor',[1 0 0])
 end
 if alreadyconnected
-	serports=serialportlist('available');
-	set(handles.ac_comport,'String',[serpo.Port serports]); %fill dropdown with connected port on top, and other available ports at bottom
-	set(handles.ac_connect,'String','Connect');
-	set(handles.ac_serialstatus,'Backgroundcolor',[0 1 0]);
+    serports=serialportlist('available');
+    set(handles.ac_comport,'String',[serpo.Port serports]); %fill dropdown with connected port on top, and other available ports at bottom
+    set(handles.ac_connect,'String','Connect');
+    set(handles.ac_serialstatus,'Backgroundcolor',[0 1 0]);
 else
-	try
-		serports=serialportlist('available');
-	catch
-		serports=[];
-	end
-	if isempty(serports)
-		serports='No available serial ports found!';
-		set(handles.ac_connect,'String','Refresh');
-	else
-		set(handles.ac_connect,'String','Connect');
-	end
-	set(handles.ac_comport,'String',serports);
-	set(handles.ac_serialstatus,'Backgroundcolor',[1 0 0]);
+    try
+        serports=serialportlist('available');
+    catch
+        serports=[];
+    end
+    if isempty(serports)
+        serports='No available serial ports found!';
+        set(handles.ac_connect,'String','Refresh');
+    else
+        set(handles.ac_connect,'String','Connect');
+    end
+    set(handles.ac_comport,'String',serports);
+    set(handles.ac_serialstatus,'Backgroundcolor',[1 0 0]);
+    selected_com_port = gui.retr('selected_com_port');
+    if ~isempty(selected_com_port) %remember last selected COM port.
+        try
+            set(handles.ac_comport,'Value',find(strcmpi(serports,selected_com_port)));
+        catch
+            disp('Last selected COM port not available.')
+        end
+    end
 end
-
 
 % Set default image colormap limits
 gui.put('ac_lower_clim',0);

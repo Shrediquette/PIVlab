@@ -54,6 +54,7 @@ while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdat
             hist_fig=findobj('tag','hist_fig');
             if isempty(hist_fig)
                 hist_fig=figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Live histogram','Toolbar','none','tag','hist_fig','CloseRequestFcn', @HistWindow_CloseRequestFcn);
+                hist_obj=histogram(ima(1:2:end,1:2:end),'binlimits',[0 2^bitmode]);
             end
             if ~exist ('old_hist_y_limits','var')
                 old_hist_y_limits =[0 35000];
@@ -62,13 +63,20 @@ while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdat
                     old_hist_y_limits=get(hist_obj.Parent,'YLim');
                 end
             end
-            hist_obj=histogram(ima(1:2:end,1:2:end),'Parent',hist_fig,'binlimits',[0 OPTRONIS_climits]);
+            parent_ax= findall(hist_fig,'type','axes');
+            hist_obj=histogram(ima(1:2:end,1:2:end),'Parent',parent_ax,'binlimits',[0 2^bitmode]); %wird nicht neu gezeichnet...??
         end
         %lowpass hist y limits for better visibility
         if ~exist ('new_hist_y_limits','var')
             new_hist_y_limits =[0 35000];
         end
         new_hist_y_limits=get(hist_obj.Parent,'YLim');
+        if isempty (new_hist_y_limits)
+            new_hist_y_limits =[0 35000];
+        end
+        if isempty (old_hist_y_limits)
+            old_hist_y_limits =[0 35000];
+        end
         set(hist_obj.Parent,'YLim',(new_hist_y_limits*0.5 + old_hist_y_limits*0.5))
     else
         hist_fig=findobj('tag','hist_fig');
@@ -251,8 +259,11 @@ else
 end
 
 function HistWindow_CloseRequestFcn(hObject,~)
-hgui=getappdata(0,'hgui');
-setappdata(hgui,'hist_enabled',0);
+try
+    hgui=getappdata(0,'hgui');
+    setappdata(hgui,'hist_enabled',0);
+catch
+end
 try
     delete(hObject);
 catch

@@ -19,7 +19,7 @@ if isempty(fh)
 		mainpos=[0    2.8571  240.0000   50.9524];
 	end
 
-	oltSync_GUI_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Trigger settings','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4+4 35 10],'tag','oltSync_GUI_window','visible','on','resize','off');
+	oltSync_GUI_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Trigger settings','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4+4 35 11.5],'tag','oltSync_GUI_window','visible','on','resize','off');
 	set (oltSync_GUI_window,'Units','Characters');
 
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
@@ -30,17 +30,17 @@ if isempty(fh)
 
 	margin=1.5;
 
-	panelheight=9.5;
+	panelheight=11;
 	handles.mainpanel = uipanel(oltSync_GUI_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight parentitem(3)-2 panelheight],'title','Trigger mode','fontweight','bold');
 
 	%% mainpanel
 	parentitem=get(handles.mainpanel, 'Position');
 	item=[0 0 0 0];
 
-	item=[item(1) item(2)+item(4) parentitem(3) 1];
+	item=[item(1) item(2)+item(4)+margin/4 parentitem(3) 2];
 	handles.triggermode = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'Internal','External: Start on rising edge' 'External: Shoot while high', 'External: Double shot on rising edge'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','triggermode','Callback',@Apply_settings);
 
-	item=[0 item(2)+item(4)+margin/2 parentitem(3) 6];
+	item=[0 item(2)+item(4)+margin/2 parentitem(3)-margin/4 6];
 	handles.explain = uicontrol(handles.mainpanel,'Style','Text','String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'tag','explain','fontsize',7);
 
 	triggermode=retr('oltSync_triggermode');

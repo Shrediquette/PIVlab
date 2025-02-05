@@ -13,5 +13,5 @@ elseif strcmp(camera_type,'OPTRONIS')
 elseif strcmp(camera_type,'pco_panda')
     PIVlab_capture_panda_settings_GUI
 else
-    uiwait(msgbox('Available for OPTOcam, Chronos, pco.panda and OPTRONIS cameras only.','modal'))
+    uiwait(msgbox('Not available for the selected camera model.','modal'))
 end

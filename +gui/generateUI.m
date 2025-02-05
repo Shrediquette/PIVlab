@@ -2041,6 +2041,11 @@ handles.ac_enable_ext_trigger_oltsync = uicontrol(handles.uipanelac_laser,'Style
 item=[item(3) item(2) parentitem(3)/2 1.5];
 handles.ac_device_control = uicontrol(handles.uipanelac_laser,'Style','pushbutton','String','Devices','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_device_control','TooltipString','Setup external devices (such as remote controlled seeding generator etc.)','Callback',@acquisition.device_control_Callback);
 
+
+%item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 2];
+%handles.ac_ext_trigger_settings = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Setup','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @ac_ext_trigger_settings_Callback,'Tag','ac_ext_trigger_settings','TooltipString','Setup external trigger input on PIVlab-SimpleSync');
+
+
 % Camera settings
 parentitem=get(handles.multip24, 'Position');
 item=[0 23 parentitem(3) 4];
@@ -2116,16 +2121,19 @@ item=[0 30.5 parentitem(3) 2];
 handles.ac_msgbox = uicontrol(handles.multip24,'Style','edit', 'Fontname','fixedwidth', 'enable','inactive','Max', 3, 'min', 1, 'String',{'Welcome to PIVlab' 'image acquisition!'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_msgbox','TooltipString','Messages','visible','off');
 set(handles.ac_msgbox,'BackgroundColor', get (handles.ac_msgbox,'BackgroundColor')*0.95); %dim msgbox color
 
-%Image acquisition: load last device
+%Image acquisition: load last device and COM port
 try
-	warning off
-	load('PIVlab_settings_default.mat','last_selected_device');
-	if exist('last_selected_device','var')
-		set(handles.ac_config, 'value',last_selected_device);
-	end
-	warning on
+    warning off
+    load('PIVlab_settings_default.mat','last_selected_device');
+    if exist('last_selected_device','var')
+        set(handles.ac_config, 'value',last_selected_device);
+    end
+    load('PIVlab_settings_default.mat','selected_com_port');
+    if exist('selected_com_port','var') && ~isempty(selected_com_port)
+        gui.put('selected_com_port',selected_com_port);
+    end
+    warning on
 catch
-
 end
 gui.put('multitiff',0); %default for compatibility: Not a multitiff.
 gui.put('pcopanda_dbl_image',0); %default for compatibility: Not a multitiff.

@@ -47,7 +47,7 @@ if isempty(OPTRONIS_bits)
 end
 
 if verLessThan('matlab','25') %allow only 8 bits in older matlab versions.
-    bitmode = 8; %in calibration mode: 10 bit would make sense, but in Matlab, all data that is returned from OPTRONIS is 8 bit...
+    bitmode = 8; %in calibration mode: 10 bit would make sense, but in Matlab <2025a, all data that is returned from OPTRONIS is 8 bit...
 else
     bitmode=OPTRONIS_bits;
 end
@@ -153,7 +153,7 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
 	end
 	crosshair_enabled = getappdata(hgui,'crosshair_enabled');
 	if crosshair_enabled == 1 %cross-hair
-		%% cross-hair
+	%% cross-hair
 		locations=[0.15 0.5 0.85];
 		half_thickness=1;
 		brightness_incr=101;
@@ -162,44 +162,52 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
 		for loca=locations
 			%vertical
 			ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)=ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)+brightness_incr;
-			%horizontal
-			ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)=ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)+brightness_incr;
-		end
-		ima_ed(ima_ed>old_max)=old_max;
-		set(image_handle_OPTRONIS,'CData',ima_ed);
-	end
-	%% HISTOGRAM
-	if getappdata(hgui,'hist_enabled')==1
-		if isvalid(image_handle_OPTRONIS)
-			hist_fig=findobj('tag','hist_fig');
-			if isempty(hist_fig)
-				hist_fig=figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Live histogram','Toolbar','none','tag','hist_fig','CloseRequestFcn', @HistWindow_CloseRequestFcn);
-			end
-			if ~exist ('old_hist_y_limits','var')
-				old_hist_y_limits =[0 35000];
-			else
-				if isvalid(hist_obj)
-					old_hist_y_limits=get(hist_obj.Parent,'YLim');
-				end
-			end
-			hist_obj=histogram(ima(1:2:end,1:2:end),'Parent',hist_fig,'binlimits',[0 2^bitmode]);
-		end
-		%lowpass hist y limits for better visibility
-		if ~exist ('new_hist_y_limits','var')
-			new_hist_y_limits =[0 35000];
-		end
-		new_hist_y_limits=get(hist_obj.Parent,'YLim');
-		set(hist_obj.Parent,'YLim',(new_hist_y_limits*0.5 + old_hist_y_limits*0.5))
-	else
-		hist_fig=findobj('tag','hist_fig');
-		if ~isempty(hist_fig)
-			close(hist_fig)
-		end
-	end
-	%drawnow limitrate;
-	drawnow limitrate
-	%% Autofocus
-	%% Lens control
+            %horizontal
+            ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)=ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)+brightness_incr;
+        end
+        ima_ed(ima_ed>old_max)=old_max;
+        set(image_handle_OPTRONIS,'CData',ima_ed);
+    end
+    %% HISTOGRAM
+    if getappdata(hgui,'hist_enabled')==1
+        if isvalid(image_handle_OPTRONIS)
+            hist_fig=findobj('tag','hist_fig');
+            if isempty(hist_fig)
+                hist_fig=figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Live histogram','Toolbar','none','tag','hist_fig','CloseRequestFcn', @HistWindow_CloseRequestFcn);
+                hist_obj=histogram(ima(1:2:end,1:2:end),'binlimits',[0 2^bitmode]);
+            end
+            if ~exist ('old_hist_y_limits','var')
+                old_hist_y_limits =[0 35000];
+            else
+                if isvalid(hist_obj)
+                    old_hist_y_limits=get(hist_obj.Parent,'YLim');
+                end
+            end
+            parent_ax= findall(hist_fig,'type','axes');
+            hist_obj=histogram(ima(1:2:end,1:2:end),'Parent',parent_ax,'binlimits',[0 2^bitmode]); %wird nicht neu gezeichnet...??
+        end
+        %lowpass hist y limits for better visibility
+        if ~exist ('new_hist_y_limits','var')
+            new_hist_y_limits =[0 35000];
+        end
+        new_hist_y_limits=get(hist_obj.Parent,'YLim');
+        if isempty (new_hist_y_limits)
+            new_hist_y_limits =[0 35000];
+        end
+        if isempty (old_hist_y_limits)
+            old_hist_y_limits =[0 35000];
+        end
+        set(hist_obj.Parent,'YLim',(new_hist_y_limits*0.5 + old_hist_y_limits*0.5))
+    else
+        hist_fig=findobj('tag','hist_fig');
+        if ~isempty(hist_fig)
+            close(hist_fig)
+        end
+    end
+    %drawnow limitrate;
+    drawnow limitrate
+    %% Autofocus
+    %% Lens control
 	%Sowieso machen: Nicht lineare schritte für die anzufahrenden fokuspositionen. Diese Liste vorher ausrechnen und dann nur index anspringen
 
 	autofocus_enabled = getappdata(hgui,'autofocus_enabled');
