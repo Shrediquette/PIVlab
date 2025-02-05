@@ -2110,8 +2110,12 @@ handles.ac_realtime = uicontrol(handles.uipanelac_capture,'Style','checkbox','un
 item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/3 1.5];
 handles.ac_pivcapture = uicontrol(handles.uipanelac_capture,'Style','pushbutton','String','Start','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.piv_capture_Callback,'Tag','ac_pivcapture','TooltipString','Start PIV image capture and laser');
 
-item=[parentitem(3)/3*1 item(2) parentitem(3)/3 1.5];
+item=[parentitem(3)/3*1 item(2) parentitem(3)/5 1.5];
 handles.ac_pivcapture_save = uicontrol(handles.uipanelac_capture,'Style','checkbox','units','characters','HorizontalAlignment','right','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3) item(4)],'Value',0,'String','Save','tag','ac_pivcapture_save','TooltipString','Save PIV double images','Callback',@acquisition.pivcapture_save_Callback);
+
+item=[parentitem(3)/3*1+parentitem(3)/5 item(2) parentitem(3)/5 1.5];
+handles.ac_auto_interframe = uicontrol(handles.uipanelac_capture,'Style','Pushbutton','String','Auto','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_auto_interframe','TooltipString','Automatically determine suitable interframe time','Callback', @acquisition.automatic_interframe,'Visible','off');
+
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
 handles.ac_pivstop = uicontrol(handles.uipanelac_capture,'Style','pushbutton','String','Abort','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.camera_stop_Callback,'Tag','ac_pivstop','TooltipString','Cancel capture and discard images');
