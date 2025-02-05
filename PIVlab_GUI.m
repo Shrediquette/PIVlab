@@ -12,8 +12,6 @@
 % f_readB16 by Carl Hall
 % natsort, natsortfiles by Stephen23
 %% TODO:
-%{
-%}
 
 function PIVlab_GUI(desired_num_cores,batch_session_file)
 %% display splash screen in deployed version
