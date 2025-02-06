@@ -40,16 +40,20 @@ else %older matlab releases than 2021
 	disp('This might take a while...')
 	websave(FileName,FileUrl);
 end
-
-gui.toolsavailable(1)
-gui.toolsavailable(0,'Unzipping filter matrices...');drawnow
-disp('Filter Matrices downloaded, unzipping...')
-[filepath,~,~]=  fileparts(which('PIVlab_GUI.m'));
-unzip(FileName,fullfile(filepath,'+wOFV','Filter matrices'))
-disp('Filter Matrices stored.')
-delete(FileName)
-gui.toolsavailable(1)
-gui.toolsavailable(0,'Busy, please wait...');drawnow
+if exist(FileName,'file')
+    gui.toolsavailable(1)
+    gui.toolsavailable(0,'Unzipping filter matrices...');drawnow
+    disp('Filter Matrices downloaded, unzipping...')
+    [filepath,~,~]=  fileparts(which('PIVlab_GUI.m'));
+    unzip(FileName,fullfile(filepath,'+wOFV','Filter matrices'))
+    disp('Filter Matrices stored.')
+    delete(FileName)
+    gui.toolsavailable(1)
+    gui.toolsavailable(0,'Busy, please wait...');drawnow
+else
+    gui.toolsavailable(1)
+    uiwait(warndlg({'Data could not be downloaded from repository:' 'https://files.osf.io/v1/resources/y48mk/providers/osfstorage/?zip='},'No filter matrices found','modal'));
+end
 
 function download_stuff (FileName)
 FileUrl = 'https://files.osf.io/v1/resources/y48mk/providers/osfstorage/?zip=';
