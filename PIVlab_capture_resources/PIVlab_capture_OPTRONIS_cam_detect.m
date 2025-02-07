@@ -18,20 +18,31 @@ catch
         commandwindow
     end
 end
-info = imaqhwinfo(hwinf.InstalledAdaptors{1});
-if strcmp(info.AdaptorName,'gentl')
-    disp('gentl adaptor found.')
-else
-    disp('ERROR: gentl adaptor not found. Please install the GenICam / GenTL support package from here:')
-    disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
-    errordlg({'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'Error, support package missing','modal')
-    if ~isdeployed
-        commandwindow
+found_correct_adaptor=0;
+for adaptorID=1:numel(hwinf.InstalledAdaptors)
+    info = imaqhwinfo(hwinf.InstalledAdaptors{adaptorID});
+    if strcmp(info.AdaptorName,'gentl')
+        disp(['gentl adaptor found with ID: ' num2str(adaptorID)])
+        found_correct_adaptor=1;
+        break
     end
 end
 
+if found_correct_adaptor~=1
+	disp('ERROR: gentl adaptor not found. Please install the GenICam / GenTL support package from here:')
+	disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
+    errordlg({'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'Error, support package missing','modal')
+end
+
 try
-    OPTRONIS_name = info.DeviceInfo.DeviceName;
+    %Getting camera device ID when multiple cameras are connected
+    for CamID = 1: size(info.DeviceInfo,2)
+        camName=info.DeviceInfo(CamID).DeviceName;
+        if contains(camName,'Cyclone')
+            break
+        end
+    end
+    OPTRONIS_name = info.DeviceInfo(CamID).DeviceName;
 catch
     errordlg('Error: Camera not found! Is it connected?','Error!','modal')
 end
