@@ -18,12 +18,20 @@ if alreadyconnected
 	string2='WhichFirmWare?';
 	string3='WarningSignEnable!';
 	try
-		flush(serpo)
-        pause(0.1)
-        writeline(serpo,string1);
-		pause(0.3)
-		warning off
-		serial_answer=readline(serpo);
+        gui.toolsavailable(0,'Searching for synchronizer...')
+		serial_answer='';
+        attempts=0;
+        while isempty(serial_answer) && attempts <= 2
+            flush(serpo)
+            pause(0.1)
+            writeline(serpo,string1);
+    		pause(0.3)
+    		warning off
+    		serial_answer=readline(serpo);
+            pause(0.1)
+            attempts=attempts+1;
+        end
+
 		disp(['Connected to: ' convertStringsToChars(serial_answer)])
 		handles=gui.gethand;
 		if contains(serial_answer,'oltSync:') %decide which synchronizer hardware is connected
@@ -39,10 +47,12 @@ if alreadyconnected
 				%set(handles.ac_enable_ext_trigger,'Visible','on')
 				set(handles.ac_enable_ext_trigger_oltsync,'Visible','off') %not displayed for old synchronizer
 			end
-		end
+        end
+        gui.toolsavailable(1)
 		warning on
 	catch
 		disp('Error sending WhoAreYou')
+        gui.toolsavailable(1)
 	end
 	try
 		writeline(serpo,string2);
