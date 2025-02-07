@@ -31,6 +31,7 @@ if alreadyconnected
 			disp('oltSync detected')
 			%set(handles.ac_enable_ext_trigger,'Visible','off')
 			set(handles.ac_enable_ext_trigger_oltsync,'Visible','on')
+            set(handles.ac_auto_interframe,'Visible','on','enable','off')
 		else
 			if ~isempty(serial_answer)
 				gui.put('sync_type','xmSync') %Williams Sync
