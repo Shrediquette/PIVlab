@@ -11,29 +11,49 @@ try
 	hwinf = imaqhwinfo;
 	%imaqreset
 catch
-	disp('Error: Image Acquisition Toolbox not available!')
+	errordlg('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','Error!','modal')
+	disp('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.')
 end
 
-info = imaqhwinfo(hwinf.InstalledAdaptors{1});
+found_correct_adaptor=0;
+for adaptorID=1:numel(hwinf.InstalledAdaptors)
+    info = imaqhwinfo(hwinf.InstalledAdaptors{adaptorID});
+    if strcmp(info.AdaptorName,'gentl')
+        disp(['gentl adaptor found with ID: ' num2str(adaptorID)])
+        found_correct_adaptor=1;
+        break
+    end
+end
 
-if strcmp(info.AdaptorName,'gentl')
-	disp('gentl adaptor found.')
-else
+if found_correct_adaptor~=1
 	disp('ERROR: gentl adaptor not found. Please install the GenICam / GenTL support package from here:')
 	disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
-end
-try
-	OPTRONIS_name = info.DeviceInfo.DeviceName;
-catch
-	errordlg('Error: Camera not found! Is it connected?','Error!','modal')
+    errordlg({'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'Error, support package missing','modal')
 end
 
-OPTRONIS_supported_formats = info.DeviceInfo.SupportedFormats;
+try
+    %Getting camera device ID when multiple cameras are connected
+    for CamID = 1: size(info.DeviceInfo,2)
+        camName=info.DeviceInfo(CamID).DeviceName;
+        if contains(camName,'Cyclone')
+            break
+        end
+    end
+    OPTRONIS_name = info.DeviceInfo(CamID).DeviceName;
+catch
+    errordlg('Error: Camera not found! Is it connected?','Error!','modal')
+end
+
+OPTRONIS_supported_formats = info.DeviceInfo(CamID).SupportedFormats;
+
 % select bitmode (some support 8, 10, 12 bits)
+if isempty(bitmode) || ~isnumeric(bitmode)
+    bitmode=8;
+end
 if verLessThan('matlab','25') %if not 2025a and beyond: force to be 8 bit, because not supported by matlab.
     bitmode =8; %10 bit would make sense, but in Matlab, all data that is returned from OPTRONIS is 8 bit...
 end
-OPTRONIS_vid = videoinput(info.AdaptorName,info.DeviceInfo.DeviceID,['Mono' sprintf('%0.0d',bitmode)]);
+OPTRONIS_vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,['Mono' sprintf('%0.0d',bitmode)]);
 
 OPTRONIS_settings = get(OPTRONIS_vid);
 OPTRONIS_settings.PreviewFullBitDepth='On';
