@@ -36,10 +36,10 @@ item=[0 item(2)+item(4) parentitem(3) 2];
 handles.filenameshow = uicontrol(handles.tools,'Style','text','units', 'characters','Horizontalalignment', 'center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','N/A','tag','filenameshow');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
-handles.fileselector = uicontrol(handles.tools,'Style','slider','units', 'characters','Horizontalalignment', 'center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'max',4,'min',1,'value',1,'sliderstep',[0.5 1],'Callback',@gui.fileselector_Callback,'tag','fileselector','TooltipString','Step through your frames here');%,'Interruptible','off','busyaction','cancel');
+handles.fileselector = uicontrol(handles.tools,'Style','slider','units', 'characters','Horizontalalignment', 'center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'max',4,'min',1,'value',1,'sliderstep',[0.5 1],'Callback',@gui.fileselector_Callback,'tag','fileselector','TooltipString','Step through your frames here','interruptible','off','BusyAction','cancel');%,'Interruptible','off','busyaction','cancel');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.togglepair = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)], 'string','Toggle','Callback',@gui.togglepair_Callback,'tag','togglepair','TooltipString','Toggle images within a frame');%,'Interruptible','off','busyaction','cancel');
+handles.togglepair = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)], 'string','Toggle','Callback',@gui.togglepair_Callback,'tag','togglepair','TooltipString','Toggle images within a frame','interruptible','off','BusyAction','cancel');%,'Interruptible','off','busyaction','cancel');
 
 item=[0  item(2)+item(4)+margin*0.2 parentitem(3)/2/2 parentitem(3)/2/2/4];
 handles.toggle_parallel = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@misc.toggle_parallel_Callback,'tag','toggle_parallel');
