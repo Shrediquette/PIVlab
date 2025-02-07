@@ -74,7 +74,7 @@ if isempty(OPTRONIS_gain)
     OPTRONIS_gain=1;
 end
 
-%%{
+%{
 disp('---- SuperDuper RennieDebugMode -----')
 
 disp('Adaptor Name: ')
@@ -89,7 +89,7 @@ info.DeviceInfo(CamID)
 disp('bitmode set to: ')
 ['Mono' sprintf('%0.0d',bitmode)]
 
-%%}
+%}
 
 OPTRONIS_vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,['Mono' sprintf('%0.0d',bitmode)]);
 
