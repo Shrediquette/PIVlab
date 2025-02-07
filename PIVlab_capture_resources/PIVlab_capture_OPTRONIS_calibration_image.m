@@ -12,23 +12,38 @@ catch
 	errordlg('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','Error!','modal')
 	disp('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.')
 end
-info = imaqhwinfo(hwinf.InstalledAdaptors{1});
-if strcmp(info.AdaptorName,'gentl')
-	disp('gentl adaptor found.')
-else
+
+found_correct_adaptor=0;
+for adaptorID=1:numel(hwinf.InstalledAdaptors)
+    info = imaqhwinfo(hwinf.InstalledAdaptors{adaptorID});
+    if strcmp(info.AdaptorName,'gentl')
+        disp(['gentl adaptor found with ID: ' num2str(adaptorID)])
+        found_correct_adaptor=1;
+        break
+    end
+end
+
+if found_correct_adaptor~=1
 	disp('ERROR: gentl adaptor not found. Please install the GenICam / GenTL support package from here:')
 	disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
-	errordlg({'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'Error, support package missing','modal')
+    errordlg({'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'Error, support package missing','modal')
 end
 
 try
-	OPTRONIS_name = info.DeviceInfo.DeviceName;
+    %Getting camera device ID when multiple cameras are connected
+    for CamID = 1: size(info.DeviceInfo,2)
+        camName=info.DeviceInfo(CamID).DeviceName;
+        if contains(camName,'Cyclone')
+            break
+        end
+    end
+    OPTRONIS_name = info.DeviceInfo(CamID).DeviceName;
 catch
-	errordlg('Error: Camera not found! Is it connected?','Error!','modal')
+    errordlg('Error: Camera not found! Is it connected?','Error!','modal')
 end
 
 if contains(OPTRONIS_name,'Cyclone-2-2000-M')
-	disp(['Found camera: ' 'Cyclone-2-2000-M'])
+    disp(['Found camera: ' 'Cyclone-2-2000-M'])
 elseif contains (OPTRONIS_name,'Cyclone-1HS-3500-M')
 	disp(['Found camera: ' 'Cyclone-1HS-3500-M'])
 elseif contains (OPTRONIS_name,'Cyclone-25-150-M')
@@ -39,13 +54,15 @@ end
 warning('off','imaq:gentl:hardwareTriggerTriggerModeOff'); %trigger property of OPTRONIS cannot be set in Matlab.
 warning('off','MATLAB:JavaEDTAutoDelegation'); %strange warning
 
-OPTRONIS_supported_formats = info.DeviceInfo.SupportedFormats;
+
+OPTRONIS_supported_formats = info.DeviceInfo(CamID).SupportedFormats;
 
 OPTRONIS_bits = gui.retr('OPTRONIS_bits');
-if isempty(OPTRONIS_bits)
+if isempty(OPTRONIS_bits) || ~isnumeric(OPTRONIS_bits)
     OPTRONIS_bits=8;
+    gui.put('OPTRONIS_bits', OPTRONIS_bits);
 end
-
+bitmode = 8;
 if verLessThan('matlab','25') %allow only 8 bits in older matlab versions.
     bitmode = 8; %in calibration mode: 10 bit would make sense, but in Matlab <2025a, all data that is returned from OPTRONIS is 8 bit...
 else
@@ -57,7 +74,24 @@ if isempty(OPTRONIS_gain)
     OPTRONIS_gain=1;
 end
 
-OPTRONIS_vid = videoinput(info.AdaptorName,info.DeviceInfo.DeviceID,['Mono' sprintf('%0.0d',bitmode)]);
+%%{
+disp('---- SuperDuper RennieDebugMode -----')
+
+disp('Adaptor Name: ')
+hwinf = imaqhwinfo
+
+disp('Devices: ')
+info = imaqhwinfo(hwinf.InstalledAdaptors{1})
+
+disp('Device: ')
+info.DeviceInfo(CamID)
+
+disp('bitmode set to: ')
+['Mono' sprintf('%0.0d',bitmode)]
+
+%%}
+
+OPTRONIS_vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,['Mono' sprintf('%0.0d',bitmode)]);
 
 OPTRONIS_settings = get(OPTRONIS_vid);
 OPTRONIS_settings.PreviewFullBitDepth='On';
@@ -133,7 +167,9 @@ set(frame_nr_display,'String','');
 warning('off','imaq:gentl:hardwareTriggerTriggerModeOff'); %trigger property of OPTRONIS cannot be set in Matlab.
 warning('off','MATLAB:JavaEDTAutoDelegation'); %strange warning
 preview(OPTRONIS_vid,image_handle_OPTRONIS)
-
+tmp=get(image_handle_OPTRONIS,'CData');
+tmp=size(tmp(:,:,1));
+set(image_handle_OPTRONIS,'CData',ones(tmp)*35);
 
 OPTRONIS_src.AcquisitionFrameRate = 20; % needs to be set again on the optronis after starting preview or acquisition
 OPTRONIS_src.ExposureTime =exposure_time;
