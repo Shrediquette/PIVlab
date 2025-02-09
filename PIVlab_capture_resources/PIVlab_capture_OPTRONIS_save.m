@@ -5,8 +5,6 @@ if bitmode==8
     bitmultiplicator=1;
 elseif bitmode==10
     bitmultiplicator = 64; %bring 10bit data to 16 bits full histogram, otherwise images outside Matlab are not displayed correctly (too dark).
-    disp(mfilename)
-    disp('needs testing')
 end
 OPTRONIS_settings = get(OPTRONIS_vid);
 OPTRONIS_settings.Source.EnableFan = 'On';
@@ -17,9 +15,11 @@ do_save_frames=0;
 if getappdata(hgui,'cancel_capture') ~=1 %capture was not cancelled --> save all images from RAM to disk
 	do_save_frames=OPTRONIS_frames_to_capture+2;
 else
-	selec=questdlg('Recording cancelled. Save acquired images?','Recording cancelled','Yes','No','No');
-	if strcmpi(selec,'Yes')
-		do_save_frames = (floor(OPTRONIS_vid.FramesAcquired/2))*2-2;
+	if OPTRONIS_vid.FramesAcquired > 4
+		selec=questdlg('Recording cancelled. Save acquired images?','Recording cancelled','Yes','No','No');
+		if strcmpi(selec,'Yes')
+			do_save_frames = (floor(OPTRONIS_vid.FramesAcquired/2))*2-2;
+		end
 	end
 end
 
