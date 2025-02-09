@@ -13,8 +13,18 @@ OPTRONIS_settings.Source.EnableFan = 'On';
 hgui=getappdata(0,'hgui');
 OutputError=0;
 OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame;
-if getappdata(hgui,'cancel_capture') ~=1 %capture was not cancelled --> save images from RAM to disk
-    OPTRONIS_data = getdata(OPTRONIS_vid,OPTRONIS_frames_to_capture+2);
+do_save_frames=0;
+if getappdata(hgui,'cancel_capture') ~=1 %capture was not cancelled --> save all images from RAM to disk
+	do_save_frames=OPTRONIS_frames_to_capture+2;
+else
+	selec=questdlg('Recording cancelled. Save acquired images?','Recording cancelled','Yes','No','No');
+	if strcmpi(selec,'Yes')
+		do_save_frames = (floor(OPTRONIS_vid.FramesAcquired/2))*2-2;
+	end
+end
+
+if do_save_frames > 0 
+    OPTRONIS_data = getdata(OPTRONIS_vid,do_save_frames+2);
     %% Detect if first frame is empty
     % There are a number of bugs with the OPTRONIS cameras and Matlabs IMAQ
     % toolbox. I had discussion with both parties, noone feels responsible.
@@ -69,14 +79,14 @@ if getappdata(hgui,'cancel_capture') ~=1 %capture was not cancelled --> save ima
     %%
     cntr=0;
     starttime=tic;
-    for image_save_number=bug_fix_skipped_frame + (1+fix_Optronis_skipped_frame) : 2 : OPTRONIS_frames_to_capture
+    for image_save_number=bug_fix_skipped_frame + (1+fix_Optronis_skipped_frame) : 2 : do_save_frames
         if getappdata(hgui,'cancel_capture') ~=1
             imgA_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',cntr) '_A.tif']);
             imgB_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',cntr) '_B.tif']);
             imwrite(OPTRONIS_data(:,:,:,image_save_number)*bitmultiplicator,imgA_path,'compression','none'); %tif file saving seems to be the fastest method for saving data...
             imwrite(OPTRONIS_data(:,:,:,image_save_number+1)*bitmultiplicator,imgB_path,'compression','none');
             cntr=cntr+1;
-            set(frame_nr_display,'String',['Saving images to disk: Image pair ' num2str(cntr) ' of ' num2str(OPTRONIS_frames_to_capture/2)]);
+            set(frame_nr_display,'String',['Saving images to disk: Image pair ' num2str(cntr) ' of ' num2str(do_save_frames/2)]);
             drawnow limitrate;
         end
     end
