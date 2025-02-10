@@ -348,7 +348,8 @@ if required_files_check
 			end
 			if value == 9 %OPTRONIS
 				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
-					[OutputError] = PIVlab_capture_OPTRONIS_save(OPTRONIS_vid,imageamount,projectpath,frame_nr_display,OPTRONIS_bits); %save the images from ram to disk.
+					[OutputError,actually_saved_images] = PIVlab_capture_OPTRONIS_save(OPTRONIS_vid,imageamount,projectpath,frame_nr_display,OPTRONIS_bits); %save the images from ram to disk.
+                    imageamount=actually_saved_images;
 				end
 			end
 			found_the_data=0;
