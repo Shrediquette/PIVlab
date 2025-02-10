@@ -336,14 +336,8 @@ if required_files_check
 			end
 			if value == 8 %OPTOcam
 				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
-					if gui.retr('cancel_capture')==1
-						answer = questdlg('Save the PIV images that were recorded?', 'Save images?', 'Yes','No','Yes');
-						if strcmp(answer , 'Yes')
-							gui.put('cancel_capture',0); %user pressed cancel, but still wants to save the recorded images.
-							imageamount=floor(OPTOcam_vid.FramesAcquired/2);
-						end
-					end
-					[OutputError] = PIVlab_capture_OPTOcam_save(OPTOcam_vid,imageamount,projectpath,frame_nr_display,OPTOcam_bits); %save the images from ram to disk.
+					[OutputError,actually_saved_images] = PIVlab_capture_OPTOcam_save(OPTOcam_vid,imageamount,projectpath,frame_nr_display,OPTOcam_bits); %save the images from ram to disk.
+                    imageamount=actually_saved_images;
 				end
 			end
 			if value == 9 %OPTRONIS

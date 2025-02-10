@@ -1,53 +1,65 @@
 function [OutputError,ima_out,frame_nr_display] = PIVlab_capture_OPTOcam_calibration_image(img_amount,exposure_time,ROI_OPTOcam)
-
 OutputError=0;
 hgui=getappdata(0,'hgui');
 %% Prepare camera
 imaq_error=0;
 try
-	delete(imaqfind); %clears all previous videoinputs
-	warning off
-	hwinf = imaqhwinfo;
-	warning on
-	%imaqreset
+    delete(imaqfind); %clears all previous videoinputs
+    warning off
+    hwinf = imaqhwinfo;
+    warning on
+    %imaqreset
 catch
-	imaq_error=1;
+    imaq_error=1;
 end
 if imaq_error==0
-	if isempty(hwinf.InstalledAdaptors)
-		imaq_error=2;
-	end
+    if isempty(hwinf.InstalledAdaptors)
+        imaq_error=2;
+    end
 end
 if imaq_error==0
-	info = imaqhwinfo(hwinf.InstalledAdaptors{1});
-	if strcmp(info.AdaptorName,'gentl')
-		disp('gentl adaptor found.')
-	else
-		imaq_error=2;
-	end
+    info = imaqhwinfo(hwinf.InstalledAdaptors{1});
+    found_correct_adaptor=0;
+    for adaptorID=1:numel(hwinf.InstalledAdaptors)
+        info = imaqhwinfo(hwinf.InstalledAdaptors{adaptorID});
+        if strcmp(info.AdaptorName,'gentl')
+            disp(['gentl adaptor found with ID: ' num2str(adaptorID)])
+            found_correct_adaptor=1;
+            break
+        else
+            imaq_error=2;
+        end
+    end
 end
-if imaq_error==0
-	try
-		OPTOcam_name = info.DeviceInfo.DeviceName;
-	catch
-		imaq_error=3;
-	end
+if imaq_error==0 && found_correct_adaptor ==1
+    try
+        %Getting camera device ID when multiple cameras are connected
+        for CamID = 1: size(info.DeviceInfo,2)
+            camName=info.DeviceInfo(CamID).DeviceName;
+            if contains(camName,'160um','IgnoreCase',true) || contains(camName,'OPTOcam','IgnoreCase',true)
+                break
+            end
+        end
+        OPTOcam_name = info.DeviceInfo(CamID).DeviceName;
+    catch
+        imaq_error=3;
+    end
 end
 if imaq_error==1
-	errordlg('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','Error!','modal')
-	disp('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.')
+    errordlg('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','Error!','modal')
+    disp('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.')
 elseif imaq_error==2
-	disp('ERROR: gentl adaptor not found. Please install the GenICam / GenTL support package from here:')
-	disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
-	errordlg({'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'Error, support package missing','modal')
+    disp('ERROR: gentl adaptor not found. Please install the GenICam / GenTL support package from here:')
+    disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
+    errordlg({'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'Error, support package missing','modal')
 elseif imaq_error==3
-	errordlg('Error: Camera not found! Is it connected?','Error!','modal')
+    errordlg('Error: Camera not found! Is it connected?','Error!','modal')
 end
 
 disp(['Found camera: ' OPTOcam_name])
 
-OPTOcam_supported_formats = info.DeviceInfo.SupportedFormats;
-OPTOcam_vid = videoinput(info.AdaptorName,info.DeviceInfo.DeviceID,'Mono12'); %calibration image in 12 bit always.
+OPTOcam_supported_formats = info.DeviceInfo(CamID).SupportedFormats;
+OPTOcam_vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,'Mono12'); %calibration image in 12 bit always.
 
 OPTOcam_settings = get(OPTOcam_vid);
 OPTOcam_settings.Source.DeviceLinkThroughputLimitMode = 'off';
@@ -102,7 +114,7 @@ caxis([0 2^12]); %seems to be a workaround to force preview to show full data ra
 displayed_img_amount=0;
 while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
     ima = image_handle_OPTOcam.CData;
-	ima_out = bitshift(ima,4); %stretch 12 bit to 16 bit
+    ima_out = bitshift(ima,4); %stretch 12 bit to 16 bit
     %% sharpness indicator
     sharpness_enabled = getappdata(hgui,'sharpness_enabled');
     if sharpness_enabled == 1 % sharpness indicator
@@ -201,7 +213,7 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
                         sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
                         focus=focus+focus_step_raw;
                         PIVlab_capture_lensctrl(focus,aperture,lighting)		%kann steuern und aktuelle position ausgeben
-						autofocus_notification(1)
+                        autofocus_notification(1)
                     else
                         %do nothing
                     end
@@ -252,7 +264,7 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
                             %original focus=focus-focus_step_fine;
                             focus=focus+focus_step_fine;
                             PIVlab_capture_lensctrl(focus,aperture,lighting)		%kann steuern und aktuelle position ausgeben
-							autofocus_notification(1)
+                            autofocus_notification(1)
                         else
                             %do nothing
                         end
@@ -286,19 +298,19 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
                 end
             end
         end
-	else
-		autofocus_notification(0)
+    else
+        autofocus_notification(0)
         sharpness_focus_table=[];
         sharp_loop_cnt=[];
     end
 
 
 
-	if img_amount == 1
-		if sum(ima(1:10,1,1)) ~=10 %check if the display was updated, if there is real camera data. I didnt find a more elegant way...
-			displayed_img_amount=displayed_img_amount+1;
-		end
-	end
+    if img_amount == 1
+        if sum(ima(1:10,1,1)) ~=10 %check if the display was updated, if there is real camera data. I didnt find a more elegant way...
+            displayed_img_amount=displayed_img_amount+1;
+        end
+    end
 
 
 end
@@ -307,29 +319,29 @@ stoppreview(OPTOcam_vid)
 function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');
 if running == 1
-	
-	hgui=getappdata(0,'hgui');
-	PIVlab_axis = findobj(hgui,'Type','Axes');
-	%image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam');
-	postix=get(PIVlab_axis,'XLim');
-	postiy=get(PIVlab_axis,'YLim');
-	bg_col=get(auto_focus_active_hint,'BackgroundColor'); % Toggle background color while autofocus is active
 
-	if ~isempty(bg_col)
-		if  sum(bg_col)==0.75 %hint is currently displayed
-			bg_col = [0.05 0.05 0.05];
-		else
-			bg_col = [0.25 0.25 0.25];
-		end
-		set(auto_focus_active_hint,'BackgroundColor',bg_col);
-	else
-		bg_col= [0.25 0.25 0.25];
-		axes(PIVlab_axis);
-		text(postix(2)/2,postiy(2)/2,'Autofocus running, please wait...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',24, 'BackgroundColor', bg_col,'tag','auto_focus_active','margin',10,'Clipping','on');
-		
-	end
+    hgui=getappdata(0,'hgui');
+    PIVlab_axis = findobj(hgui,'Type','Axes');
+    %image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam');
+    postix=get(PIVlab_axis,'XLim');
+    postiy=get(PIVlab_axis,'YLim');
+    bg_col=get(auto_focus_active_hint,'BackgroundColor'); % Toggle background color while autofocus is active
+
+    if ~isempty(bg_col)
+        if  sum(bg_col)==0.75 %hint is currently displayed
+            bg_col = [0.05 0.05 0.05];
+        else
+            bg_col = [0.25 0.25 0.25];
+        end
+        set(auto_focus_active_hint,'BackgroundColor',bg_col);
+    else
+        bg_col= [0.25 0.25 0.25];
+        axes(PIVlab_axis);
+        text(postix(2)/2,postiy(2)/2,'Autofocus running, please wait...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',24, 'BackgroundColor', bg_col,'tag','auto_focus_active','margin',10,'Clipping','on');
+
+    end
 else
-	delete(auto_focus_active_hint);
+    delete(auto_focus_active_hint);
 end
 
 function HistWindow_CloseRequestFcn(hObject,~)
