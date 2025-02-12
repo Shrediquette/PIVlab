@@ -81,6 +81,22 @@ end
 		elseif cnt < 1
 			msgbox('Could not detect the synchronizer. Please connect via USB and turn the synchronizer on.','modal')
 		elseif cnt == 1
+			ser_info = 'COM?';
+			command = [fullfile(tempfilepath,'tycmd.exe') ' list -v'];
+			[~,cmdout] = system(command);
+			if ~isempty(cmdout)
+				C=strsplit(cmdout,'\n');
+				if numel(C) == 11
+					C=strsplit(C{10},'Serial: ');
+					if numel(C) == 2
+						ser_info=C{2};
+					end
+				end
+			end
+			set(handles.infotext,'String',[ser_info ' detected.']);
+			set(handles.infotext,'Backgroundcolor',[0 0.75 0]);
+			set(handles.infotext,'foregroundColor','k');
+			pause(1)
 			set(handles.infotext,'String','Flashing...');
 			set(handles.infotext,'Backgroundcolor',[0.75 0.75 0]);
 			set(handles.infotext,'foregroundColor','k');
