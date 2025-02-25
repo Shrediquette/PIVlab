@@ -89,9 +89,18 @@ if isempty(fh)
 	gui.put('alreadydisplayed',0);
 	gui.put('video_selection_done',0);
 	if ~verLessThan('Matlab','25')
-		theme=MainWindow.Theme;
-		if strcmpi(theme.BaseColorStyle,'dark')
-			gui.put('darkmode',1);
+		if ispref('PIVlab_ad','dark_mode_theme')
+			gui.put('darkmode',getpref('PIVlab_ad','dark_mode_theme'));
+			if getpref('PIVlab_ad','dark_mode_theme') == 1
+				MainWindow.Theme = 'dark';
+			else
+				MainWindow.Theme = 'light';
+			end
+		else
+			theme=MainWindow.Theme;
+			if strcmpi(theme.BaseColorStyle,'dark')
+				gui.put('darkmode',1);
+			end
 		end
 	else
 		gui.put('darkmode',0);

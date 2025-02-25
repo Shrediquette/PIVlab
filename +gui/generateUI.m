@@ -1830,6 +1830,7 @@ if ~verLessThan('Matlab','25')
 	item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 	handles.matlab_theme = uicontrol(handles.multip21,'Style','popupmenu','String',{'Dark','Light'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','matlab_theme','TooltipString','Change Matlab Theme','Callback',@gui.change_theme);
 
+	
 	current_theme = MainWindow.Theme.BaseColorStyle;
 
 	if strcmpi(current_theme, 'Dark')

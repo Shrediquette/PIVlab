@@ -5,13 +5,16 @@ handles=gui.gethand;
 selected=get(handles.matlab_theme,'Value');
 selections=get(handles.matlab_theme,'string');
 theme=selections{selected};
-s = settings;
-s.matlab.appearance.MATLABTheme.PersonalValue = theme;
+%s = settings;
+%s.matlab.appearance.MATLABTheme.PersonalValue = theme;
 if strcmpi(theme,'dark')
 	gui.put('darkmode',1)
+	setpref('PIVlab_ad','dark_mode_theme',1);
 else
 	gui.put('darkmode',0)
+	setpref('PIVlab_ad','dark_mode_theme',0);
 end
+
 gui.destroyUI
 gui.generateUI
 gui.MainWindow_ResizeFcn(gcf)
