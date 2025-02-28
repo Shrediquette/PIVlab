@@ -21,4 +21,4 @@ else % calibrated
 		set (handles.limittext, 'String', ['valid u: ' num2str(round(umin*100)/100) ' to ' num2str(round(umax*100)/100) ' [m/s]' sprintf('\n') 'valid v: ' num2str(round(vmin*100)/100) ' to ' num2str(round(vmax*100)/100) ' [m/s]']);
 	end
 end
-set (handles.vel_limit, 'String', 'Refine velocity limits');
+set (handles.vel_limit, 'String', 'Select rectangle');

@@ -8,4 +8,5 @@ else
 end
 set (handles.vel_limit_active, 'String', 'Limit inactive', 'backgroundcolor', bg_col);
 set (handles.limittext, 'String', '');
-set (handles.vel_limit, 'String', 'Select velocity limits');
+set (handles.vel_limit, 'String', 'Select rectangle');
+delete(findobj('tag', 'vel_limit_ROI'))
