@@ -40,9 +40,43 @@ else %older matlab releases than 2021
 	disp('This might take a while...')
 	websave(FileName,FileUrl);
 end
+
+%% try again when primary repo failed
+if ~exist(FileName,'file')
+	if ~verLessThan('matlab','9.11')
+		F = parfeval(backgroundPool,@download_stuff_alternate_location,0,FileName);
+		pause(1)
+		fig = uifigure;
+		fig.Visible='off';
+		fig.Position = [680   687   444   191];
+		movegui(fig,'center');
+		fig.Resize='off';
+		fig.WindowStyle = 'modal';
+		fig.Visible='on';
+		d = uiprogressdlg(fig,'Title','Please Wait','Message','Downloading filter matrices','Cancelable','on');
+		progress=0;
+		while strcmpi (F.State, 'running')
+			s = dir(FileName);
+			if ~isempty(s)
+				filesize = s.bytes;
+				progress= (filesize/256840824);
+				d.Value=progress;
+				d.Message = ['Downloading filter matrices (' num2str(round(filesize/1024/1024)) ' / ' num2str(round(256840824/1024/1024)) ' MB done).'];
+			end
+			if d.CancelRequested
+				cancel(F)
+				break
+			end
+			pause(0.25)
+		end
+		close(d)
+		close(fig)
+	end
+end
+
 if exist(FileName,'file')
-    gui.toolsavailable(1)
-    gui.toolsavailable(0,'Unzipping filter matrices...');drawnow
+	gui.toolsavailable(1)
+	gui.toolsavailable(0,'Unzipping filter matrices...');drawnow
     disp('Filter Matrices downloaded, unzipping...')
     [filepath,~,~]=  fileparts(which('PIVlab_GUI.m'));
     unzip(FileName,fullfile(filepath,'+wOFV','Filter matrices'))
@@ -57,5 +91,10 @@ end
 
 function download_stuff (FileName)
 FileUrl = 'https://files.osf.io/v1/resources/y48mk/providers/osfstorage/?zip=';
-options = weboptions('Timeout',10);
+options = weboptions('Timeout',4);
+websave(FileName,FileUrl,options);
+
+function download_stuff_alternate_location (FileName)
+FileUrl = 'https://pivlab.de/';
+options = weboptions('Timeout',4);
 websave(FileName,FileUrl,options);
