@@ -95,6 +95,6 @@ options = weboptions('Timeout',4);
 websave(FileName,FileUrl,options);
 
 function download_stuff_alternate_location (FileName)
-FileUrl = 'https://pivlab.de/';
+FileUrl = 'https://files.optolution.com/filter_matrices.zip';
 options = weboptions('Timeout',4);
 websave(FileName,FileUrl,options);
