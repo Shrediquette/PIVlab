@@ -1,5 +1,4 @@
 function vel_limit_Callback(caller, ~, ~)
-disp('auch das rectangle soll gespeichert und bearbeitbar / modifizierbar sein... Wie ROI')
 gui.toolsavailable(0)
 %if analys existing
 resultslist=gui.retr('resultslist');
@@ -8,6 +7,7 @@ currentframe=2*floor(get(handles.fileselector, 'value'))-1;
 if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
     x=resultslist{1,(currentframe+1)/2};
     if size(x,1)>1
+        %oldsize=get(gca,'outerposition');
         if get(handles.meanofall,'value')==1 %calculating mean doesn't mae sense...
             index=1;
             foundfirst=0;
@@ -32,12 +32,21 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
         end
         velrect=gui.retr('velrect');
         calu=gui.retr('calu');calv=gui.retr('calv');
-       
+
 
         %problem: wenn nur ein frame analysiert, dann gibts probleme wenn display all frames in scatterplot an.
         datau=reshape(u*calu,1,size(u,1)*size(u,2)*size(u,3));
         datav=reshape(v*calv,1,size(v,1)*size(v,2)*size(v,3));
 
+        limit_figure = findobj('Tag', 'limit_figure');
+
+        if isempty(limit_figure)
+            limit_figure = figure('Tag','limit_figure');
+            limit_ax = axes('Parent',limit_figure);
+        else
+            figure(limit_figure)
+            limit_ax = limit_figure.CurrentAxes;
+        end
 
         if strcmpi(caller.Tag,'vel_limit_freehand')
             datau_mod=(datau');
@@ -53,139 +62,121 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 
             datau_mod_nonans(isnan(datau_mod)|isnan(datav_mod))=[];
             datav_mod_nonans(isnan(datau_mod)|isnan(datav_mod))=[];
-            scatter(datau_mod_nonans,datav_mod_nonans,0.25,'.')
+            scatplot=scatter(datau_mod_nonans,datav_mod_nonans,0.25,'.');
         else
             if size(datau,2)>1000000 %more than one million value pairs are too slow in scatterplot.
                 pos=unique(ceil(rand(1000000,1)*(size(datau,2)-1))); %select random entries...
-                scatter(gca,datau(pos),datav(pos), 0.25,'.'); %.. and plot them
+                scatplot=scatter(datau(pos),datav(pos), 0.25,'.'); %.. and plot them
             else
-                scatter(gca,datau,datav, 0.25,'.');
+                scatplot=scatter(datau,datav, 0.25,'.');
             end
         end
-        set(gca,'Yaxislocation','right','layer','top');
-        drawnow;%needed from R2021b on... Why...?
 
-
-        disp('hier passt das mit der axis nicht. man erkennt die labels nicht.')
-
-        disp('wenn gezoomt wurde wärend rectangle auswahl, danach ist alles kaputt')
-        %oldsize=get(gca,'outerposition');
-        %newsize=[oldsize(1)+10 0.15 oldsize(3)*0.87 oldsize(4)*0.87];
-        %set(gca,'outerposition', newsize)
-        %%{
         if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
-            xlabel(gca, 'u velocity [px/frame]', 'fontsize', 12)
-            ylabel(gca, 'v velocity [px/frame]', 'fontsize', 12)
+            xlabel(limit_ax, 'u velocity [px/frame]', 'fontsize', 12)
+            ylabel(limit_ax, 'v velocity [px/frame]', 'fontsize', 12)
         else %calibrated
             displacement_only=gui.retr('displacement_only');
             if ~isempty(displacement_only) && displacement_only == 1
-                xlabel(gca, 'u velocity [m/frame]', 'fontsize', 12)
-                ylabel(gca, 'v velocity [m/frame]', 'fontsize', 12)
+                xlabel(limit_ax, 'u velocity [m/frame]', 'fontsize', 12)
+                ylabel(limit_ax, 'v velocity [m/frame]', 'fontsize', 12)
             else
-                xlabel(gca, 'u velocity [m/s]', 'fontsize', 12)
-                ylabel(gca, 'v velocity [m/s]', 'fontsize', 12)
+                xlabel(limit_ax, 'u velocity [m/s]', 'fontsize', 12)
+                ylabel(limit_ax, 'v velocity [m/s]', 'fontsize', 12)
             end
         end
 
-        grid on
         %axis equal;
-        set (gca, 'tickdir', 'in');
-        %rangeu=nanmax(nanmax(nanmax(u*calu)))-nanmin(nanmin(nanmin(u*calu)));
-        %rangev=nanmax(nanmax(nanmax(v*calv)))-nanmin(nanmin(nanmin(v*calv)));
-
-        %set(gca,'xlim',[nanmin(nanmin(nanmin(u*caluv)))-rangeu*0.15 nanmax(nanmax(nanmax(u*caluv)))+rangeu*0.15])
-        %set(gca,'ylim',[nanmin(nanmin(nanmin(v*caluv)))-rangev*0.15 nanmax(nanmax(nanmax(v*caluv)))+rangev*0.15])
-        %=range of data +- 15%
-        %%}
+        grid(limit_ax,'on')
+        set (limit_ax, 'tickdir', 'in');
+        axes(limit_ax)
 
         if strcmpi(caller.Tag,'vel_limit_freehand')
-            roi = images.roi.Freehand;
-            draw(roi)
-            tf = inROI(roi,datau_mod_nonans,datav_mod_nonans);
+           
+            
+            
+            
+            
+             delete(findobj('tag', 'vel_limit_ROI_freehand'));
+        	regionOfInterest = images.roi.Freehand;
+        	%roi.EdgeAlpha=0.75;
+        	regionOfInterest.FaceAlpha=0.05;
+        	regionOfInterest.LabelVisible = 'on';
+        	regionOfInterest.Tag = 'vel_limit_ROI_freehand';
+        	regionOfInterest.Color = 'g';
+        	regionOfInterest.StripeColor = 'k';
+        	roirect_freehand = gui.retr('roirect_freehand');
+        	if ~isempty(roirect_freehand)
+        		regionOfInterest=drawfreehand(limit_ax,'Position',roirect_freehand);
+        		%roi.EdgeAlpha=0.75;
+        		regionOfInterest.FaceAlpha=0.05;
+        		regionOfInterest.LabelVisible = 'off';
+        		regionOfInterest.Tag = 'vel_limit_ROI_freehand';
+        		regionOfInterest.Color = 'g';
+        		regionOfInterest.StripeColor = 'k';
+        	else
+        		axes(limit_ax)
+        		draw(regionOfInterest);
+                gui.put ('roirect_freehand',regionOfInterest.Position);
+        	end
+            
+            
+            
+            disp('müssen noch die gleichen Listener rein wie beim Rechteck.')
+            %am besten die bestehenden Funktionen ändern, und checken ob
+            %rectangle oder freehand aufruft. Dann entsprechend position
+            %per gui.put in die richtige Variable.
+            
+            %addlistener(regionOfInterest,'MovingROI',@validate.RegionOfInterestevents);
+        	%addlistener(regionOfInterest,'DeletingROI',@validate.RegionOfInterestevents);
+        	%dummyevt.EventName = 'MovingROI';
+        	%validate.RegionOfInterestevents(regionOfInterest,dummyevt); %run the moving event once to update displayed length
+            
+            
+            
+            
+            
+            tf = inROI(regionOfInterest,datau_mod_nonans,datav_mod_nonans);
             gui.toolsavailable(1)
-           %das braucht eine action wo äußere punkte dann ausgegraut
-           %dargestellt werden.
-           %Verhalten wie bei ROI für Bildausschnitt selektion
-           %Außerdem muss roi abgespeichert werden permanent.... und editierbar bleiben
-           %für refine velocity limits
 
-           % hold on;
-           % scatter(gca,datau_mod_nonans(tf==0),datav_mod_nonans(tf==0), 5,'rx');
-           %gui.sliderdisp(gui.retr('pivlab_axis'))
+            %das braucht eine action wo äußere punkte dann ausgegraut
+            %dargestellt werden.
+            %Verhalten wie bei ROI für Bildausschnitt selektion
+            %Außerdem muss roi abgespeichert werden permanent.... und editierbar bleiben
+            %für refine velocity limits
+
+            % hold on;
+            % scatter(gca,datau_mod_nonans(tf==0),datav_mod_nonans(tf==0), 5,'rx');
+            %gui.sliderdisp(gui.retr('pivlab_axis'))
         else
-            %velrect = getrect(gca);
+            delete(findobj('tag', 'vel_limit_ROI'));
+        	regionOfInterest = images.roi.Rectangle;
+        	%roi.EdgeAlpha=0.75;
+        	regionOfInterest.FaceAlpha=0.05;
+        	regionOfInterest.LabelVisible = 'on';
+        	regionOfInterest.Tag = 'vel_limit_ROI';
+        	regionOfInterest.Color = 'g';
+        	regionOfInterest.StripeColor = 'k';
+        	roirect = gui.retr('velrect');
+        	if ~isempty(roirect)
+        		regionOfInterest=drawrectangle(limit_ax,'Position',roirect);
+        		%roi.EdgeAlpha=0.75;
+        		regionOfInterest.FaceAlpha=0.05;
+        		regionOfInterest.LabelVisible = 'off';
+        		regionOfInterest.Tag = 'vel_limit_ROI';
+        		regionOfInterest.Color = 'g';
+        		regionOfInterest.StripeColor = 'k';
+        	else
+        		axes(limit_ax)
+        		draw(regionOfInterest);
+        	end
+        	addlistener(regionOfInterest,'MovingROI',@validate.RegionOfInterestevents);
+        	addlistener(regionOfInterest,'DeletingROI',@validate.RegionOfInterestevents);
+        	dummyevt.EventName = 'MovingROI';
+        	validate.RegionOfInterestevents(regionOfInterest,dummyevt); %run the moving event once to update displayed length
+        	%put ('roirect',roi.Position);
 
-
-
-
-
-
-
-
-
-delete(findobj('tag', 'vel_limit_ROI'));
-	regionOfInterest = images.roi.Rectangle;
-	%roi.EdgeAlpha=0.75;
-	regionOfInterest.FaceAlpha=0.05;
-	regionOfInterest.LabelVisible = 'on';
-	regionOfInterest.Tag = 'vel_limit_ROI';
-	regionOfInterest.Color = 'g';
-	regionOfInterest.StripeColor = 'k';
-	roirect = gui.retr('velrect');
-
-	if ~isempty(roirect)
-		regionOfInterest=drawrectangle(gui.retr('pivlab_axis'),'Position',roirect);
-		%roi.EdgeAlpha=0.75;
-		regionOfInterest.FaceAlpha=0.05;
-		regionOfInterest.LabelVisible = 'off';
-		regionOfInterest.Tag = 'vel_limit_ROI';
-		regionOfInterest.Color = 'g';
-		regionOfInterest.StripeColor = 'k';
-	else
-		axes(gui.retr('pivlab_axis'))
-		draw(regionOfInterest);
-	end
-	addlistener(regionOfInterest,'MovingROI',@validate.RegionOfInterestevents);
-	addlistener(regionOfInterest,'DeletingROI',@validate.RegionOfInterestevents);
-	dummyevt.EventName = 'MovingROI';
-	validate.RegionOfInterestevents(regionOfInterest,dummyevt); %run the moving event once to update displayed length
-	%put ('roirect',roi.Position);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%{
-
-
-            if velrect(1,3)~=0 && velrect(1,4)~=0
-                gui.put('velrect', velrect);
-                validate.update_velocity_limits_information
-                gui.sliderdisp(gui.retr('pivlab_axis'))
-                delete(findobj(gca,'Type','text','color','r'));
-                text(50,50,'Result will be shown after applying vector validation','color','r','fontsize',10, 'fontweight','bold', 'BackgroundColor', 'k')
-            else
-                gui.sliderdisp(gui.retr('pivlab_axis'))
-                text(50,50,'Invalid selection: Click and hold left mouse button to create a rectangle.','color','r','fontsize',8, 'BackgroundColor', 'k')
-            end
-%}
             gui.toolsavailable(1)
-  %          gui.MainWindow_ResizeFcn(gcf)
 
         end
     end
