@@ -5,6 +5,7 @@ batchModeActive=gui.retr('batchModeActive');
 if isempty (batchModeActive)
 	batchModeActive = 0;
 end
+
 if selection ==1 % piv fft multi
 	set(handles.uipanel42,'visible','on')
 	set(handles.uipanel41,'visible','on')
@@ -19,6 +20,7 @@ if selection ==1 % piv fft multi
 	set(handles.uipanel_ofv1,'visible','off')
 	set(handles.textSuggest,'visible','on')
 	set(handles.SuggestSettings,'visible','on')
+	set(handles.uipanel_psv1,'visible','off')
 	if get(handles.checkbox26,'value') ~=0
 		set(handles.repeat_last,'Enable','on')
 		set(handles.edit52x,'Enable','on')
@@ -42,6 +44,7 @@ if selection ==2 % ensemble
 	set(handles.uipanel_ofv1,'visible','off')
 	set(handles.textSuggest,'visible','on')
 	set(handles.SuggestSettings,'visible','on')
+	set(handles.uipanel_psv1,'visible','off')
 	piv.dispinterrog
 end
 if selection==3 % DCC
@@ -58,6 +61,7 @@ if selection==3 % DCC
 	set(handles.uipanel_ofv1,'visible','off')
 	set(handles.textSuggest,'visible','on')
 	set(handles.SuggestSettings,'visible','on')
+	set(handles.uipanel_psv1,'visible','off')
 	piv.dispinterrog
 end
 if selection ==4 %wOFV
@@ -75,6 +79,24 @@ if selection ==4 %wOFV
 	set(handles.textSuggest,'visible','off')
 	set(handles.SuggestSettings,'visible','on')
 	delete (findobj('tag','intareadispl'))%do not display visuals about interrogation area
+	set(handles.uipanel_psv1,'visible','off')
+end
+if selection ==5 %PSV
+set(handles.uipanel_psv1,'visible','on')
+	set(handles.uipanel_ofv1,'visible','off')
+	set(handles.uipanel42,'visible','off')
+	set(handles.uipanel41,'visible','off')
+	set(handles.CorrQuality,'visible','off')
+	set(handles.text914,'visible','off')
+	set(handles.mask_auto_box,'visible','off')
+	%set(handles.AnalyzeAll,'visible','on')
+	set(handles.AnalyzeSingle,'visible','on')
+	set(handles.Settings_Apply_current,'visible','on')
+	set(handles.text14,'visible','off')
+	set(handles.subpix,'visible','off')
+	set(handles.textSuggest,'visible','off')
+	set(handles.SuggestSettings,'visible','off')
+	%delete (findobj('tag','intareadispl'))%do not display visuals about interrogation area
 end
 %suggestion to reduce vector display density
 current_vector_setting=get(handles.nthvect,'String');

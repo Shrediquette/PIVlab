@@ -9,3 +9,6 @@ end
 if get(handles.algorithm_selection,'value')==4 %optical flow
 	piv.wOFV_analyze_all
 end
+if get(handles.algorithm_selection,'value')==5 %psv
+	psv.psv_analyze_all
+end

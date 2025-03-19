@@ -672,12 +672,37 @@ handles.uipanel35 = uipanel(handles.multip04, 'Units','characters', 'Position', 
 parentitem=get(handles.uipanel35, 'Position');
 item=[0 0 0 0];
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
-handles.algorithm_selection = uicontrol(handles.uipanel35,'Style','popupmenu', 'String',{'Multipass FFT window deformation','Ensemble multipass FFT window deformation','Single pass direct cross-correlation (DCC)', 'Optical flow (wavelet-based)'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','algorithm_selection','TooltipString',sprintf('* Multipass FFT window deformation is the standard algorithm, suitable for most cases.\n* Ensemble correlation is for sparsely seeded flows (e.g. micro-piv). \n* DCC is the first algorithm that was implemented in PIVlab. \n* Optical flow can yield higher resolution with appropriate image data (but is slower), implemented by Schmidt et al. from case.edu'),'Callback',@piv.algorithm_selection_Callback);
+handles.algorithm_selection = uicontrol(handles.uipanel35,'Style','popupmenu', 'String',{'Multipass FFT window deformation','Ensemble multipass FFT window deformation','Single pass direct cross-correlation (DCC)', 'Optical flow (wavelet-based)', 'Particle streak velocimetry (PSV)'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','algorithm_selection','TooltipString',sprintf('* Multipass FFT window deformation is the standard algorithm, suitable for most cases.\n* Ensemble correlation is for sparsely seeded flows (e.g. micro-piv). \n* DCC is the first algorithm that was implemented in PIVlab. \n* Optical flow can yield higher resolution with appropriate image data (but is slower), implemented by Schmidt et al. from case.edu'),'Callback',@piv.algorithm_selection_Callback);
 
 parentitem=get(handles.multip04, 'Position');
+
+
+
+%PSV ui items 
+item=[0 0 0 0];
+item=[0 7 parentitem(3) 8];
+handles.uipanel_psv1 = uipanel(handles.multip04, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','PSV settings', 'Tag','uipanel_psv1','fontweight','bold','Visible','off');
+parentitem=get(handles.uipanel_psv1, 'Position');
 item=[0 0 0 0];
 
-%OFV UI items
+item=[0 item(2)+item(4) parentitem(3) 3];
+handles.text_threshold = uicontrol(handles.uipanel_psv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Binarize level','Tag','text_threshold');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
+handles.psv_threshold = uicontrol(handles.uipanel_psv1,'Style','edit', 'String','0.5','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','psv_threshold','TooltipString','Binarization threshold [0...1]');
+
+
+item=[0 item(2)+item(4) parentitem(3) 3];
+handles.text_bins = uicontrol(handles.uipanel_psv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Size of binning window in px','Tag','text_bins');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
+handles.psv_binsize = uicontrol(handles.uipanel_psv1,'Style','edit', 'String','128','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','psv_binsize','TooltipString','Size of the bins in px');
+
+
+
+parentitem=get(handles.multip04, 'Position');
+%PSV ui items 
+item=[0 0 0 0];
 item=[0 7 parentitem(3) 8];
 handles.uipanel_ofv1 = uipanel(handles.multip04, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Optical flow settings', 'Tag','uipanel_ofv1','fontweight','bold','Visible','off');
 parentitem=get(handles.uipanel_ofv1, 'Position');

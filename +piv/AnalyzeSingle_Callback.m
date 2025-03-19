@@ -129,16 +129,23 @@ if ok==1
                 MedFiltSize = [str2double(handles.ofv_median.String{handles.ofv_median.Value}(1)),str2double(handles.ofv_median.String{handles.ofv_median.Value}(3))];
             end
             
-            if strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Off')
-                [x,y,u,v,typevector]=wOFV.RunMain(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev);
-            elseif strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Default')
-                [x,y,u,v,typevector]=wOFV.RunMain_Parallel(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,[]);
-            else
-                PatchSize = str2double(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value});
-                [x,y,u,v,typevector]=wOFV.RunMain_Parallel(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,PatchSize);
-            end     
+			if strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Off')
+				[x,y,u,v,typevector]=wOFV.RunMain(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev);
+			elseif strcmp(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value},'Default')
+				[x,y,u,v,typevector]=wOFV.RunMain_Parallel(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,[]);
+			else
+				PatchSize = str2double(handles.ofv_parallelpatches.String{handles.ofv_parallelpatches.Value});
+				[x,y,u,v,typevector]=wOFV.RunMain_Parallel(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,PatchSize);
+			end
 
 			correlation_map=zeros(size(x)); %no correlation map available with OFV (?) Nope!
+			correlation_matrices=[];
+		elseif get(handles.algorithm_selection,'Value')==5 %particle streak velocimetry PSV
+			img_BW = imbinarize(image1, str2double(get(handles.psv_threshold,'String')));
+			binsize=str2double(get(handles.psv_binsize,'String'));
+			% run particle streak velocimetry  code
+			[x,y,u,v,typevector] = psv.psv_code(img_BW, binsize,roirect,converted_mask);
+			correlation_map=zeros(size(x));
 			correlation_matrices=[];
 		end
 		gui.toolsavailable(1);
