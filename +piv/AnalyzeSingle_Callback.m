@@ -144,8 +144,8 @@ if ok==1
 			img_BW = imbinarize(image1, str2double(get(handles.psv_threshold,'String')));
 			binsize=str2double(get(handles.psv_binsize,'String'));
 			% run particle streak velocimetry  code
-			[x,y,u,v,typevector] = psv.psv_code(img_BW, binsize,roirect,converted_mask);
-			correlation_map=zeros(size(x));
+			[x,y,u,v,typevector,correlation_map] = psv.psv_code(img_BW, binsize,roirect,converted_mask);
+			%correlation_map=zeros(size(x));
 			correlation_matrices=[];
 		end
 		gui.toolsavailable(1);

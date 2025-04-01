@@ -1,4 +1,4 @@
-function [xq,yq,uq,vq,typevector] = psv_code(img, binsize,roirect,converted_mask)
+function [xq,yq,uq,vq,typevector,no_streaks] = psv_code(img, binsize,roirect,converted_mask)
 % identify objects
 img=bitand(img,~converted_mask); %make masked area black
 if numel(roirect)>0
@@ -7,10 +7,12 @@ if numel(roirect)>0
     widthroi=roirect(3);
     heightroi=roirect(4);
     img_roi=img(yroi:yroi+heightroi,xroi:xroi+widthroi);
+	converted_mask_roi=converted_mask(yroi:yroi+heightroi,xroi:xroi+widthroi);
 else
 	xroi=0;
 	yroi=0;
 	img_roi=img;
+	converted_mask_roi=converted_mask;
 end
 
 object_info = regionprops(img_roi, 'BoundingBox', 'Centroid', 'Area', 'Eccentricity', 'Orientation');
@@ -22,7 +24,8 @@ min_size_threshold = 10;   % minimum size of objects in pixels
 [mean_area, std_area] = psv.get_stats(object_info);
 no_std = 2;
 max_size_threshold = mean_area + no_std * std_area;  % maximum size of object in pixels
-eccentricity_threshold = 0.95;  % criteria for identifying line objects from circular/square objects - e=1 for line while e=0 for circle
+eccentricity_threshold = 0.75;  % criteria for identifying line objects from circular/square objects - e=1 for line while e=0 for circle
+
 
 counter = 1;
 for i = 1:length(object_info)
@@ -54,13 +57,23 @@ end
 if counter == 1
 	disp('No streaks found. Change image settings or preprocessing.')
 end
+
+%% display particle streaks
+%{
+cla
+hold on
+imshow(img); % inverse image
+quiver(streaks.posn.x(:,1), streaks.posn.y(:,1), streaks.disp.x(:,1), streaks.disp.y(:,1), 3, 'Linewidth', 0.25, 'color', 'g'); % velocity vectors
+hold off
+pause(2)
+%}
+
+%{
 % Interpolate scattered data onto rectilinear grid
 [xq,yq] = psv.generate_grid(img,binsize,roirect); %generate a grid just as in my PIV code
 %griddata is much faster than manual method
 % per-particle information is interpolated to a grid. This is currently necessary, as PIVlab expects gridded data.
 
-% @Godfrey: how could we still get information like "number of detected streaks per grid point" in a fast way...?
-% We should return an additional matrix with the same size as xq, containing the amount of streaks per grid cell. But how...?
 uq = griddata(streaks.posn.x+xroi,streaks.posn.y+yroi,streaks.disp.x,xq,yq,'cubic');
 vq = griddata(streaks.posn.x+xroi,streaks.posn.y+yroi,streaks.disp.y,xq,yq,'cubic');
 
@@ -77,3 +90,47 @@ for i = 1:size(xq,1)
 		end
 	end
 end
+
+%}
+
+%% alternative way to bin data:
+% reduce displacement data based on binning
+
+no_bins.x = binsize;
+no_bins.y = binsize;
+total_bins = no_bins.x * no_bins.y;
+bins.centroid.x = zeros(total_bins, 1);  % x coordinate of center of bin
+bins.centroid.y = zeros(total_bins, 1);  % y coordinate of center of bin
+bins.disp.x = zeros(total_bins, 1);  % representative x-displacement at center of bin
+bins.disp.y = zeros(total_bins, 1);  % representative y-displacement at center of bin
+bins.std_disp.x = zeros(total_bins, 1);  % standard deviation of x-displacement based on number of streaks within bins
+bins.std_disp.y = zeros(total_bins, 1);  % standard deviation of y-displacement based on number of streaks within bins
+bins.no_streaks = zeros(total_bins, 1);  % number of streaks within bin
+
+
+bins = psv.perform_data_reduction(img_roi, streaks, no_bins);
+
+%reformat output matrices
+xq=round(reshape(bins.centroid.x,[no_bins.y,no_bins.x])');
+yq=round(reshape(bins.centroid.y,[no_bins.y,no_bins.x])');
+uq=reshape(bins.disp.x,[no_bins.y,no_bins.x])';
+vq=reshape(bins.disp.y,[no_bins.y,no_bins.x])';
+typevector=ones(size(xq));
+no_streaks=reshape(bins.no_streaks,[no_bins.y,no_bins.x])';
+
+%Remove areas that were masked
+
+
+for i = 1:size(xq,1)
+	for j=1:size(xq,2)
+		idx1=yq(i,j);
+		idx2=xq(i,j);
+		if converted_mask_roi(idx1,idx2)==1
+			uq(i,j)=nan;%remove velocity information (it exists, because this location was interpolated)
+			vq(i,j)=nan;
+			typevector(i,j)=0; %indicates that this location is masked
+		end
+	end
+end
+xq=xq+xroi;
+yq=yq+yroi;

@@ -9,10 +9,12 @@ end
 image_display_type=get(handles.displ_image,'Value'); %1 = piv image, 2= black, 3 = white
 [currentimage,~]=import.get_img(selected);
 if size(currentimage,3)>1 % color image
-	currentimage=rgb2gray(currentimage); %convert to gray, always.
+	if size(currentimage,3)>3 %strange image
+		currentimage=rgb2gray(currentimage(:,:,1:3));
+	else
+		currentimage=rgb2gray(currentimage); %convert to gray, always.
+	end
 end
-
-
 if image_display_type==1
 	if get(handles.enhance_images, 'Value')
 		currentimage=imadjust(currentimage);

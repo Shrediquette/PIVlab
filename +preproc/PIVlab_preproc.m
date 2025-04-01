@@ -2,9 +2,15 @@ function out = PIVlab_preproc (in,roirect,clahe, clahesize,highp,highpsize,inten
 %preprocessing does not change the image class anymore
 %works with uint8, uint16, singe and double RGB and gray images.
 %this function preprocesses the images
-if size(in,3)>1
-	in=rgb2gray(in); % rgb2gray keeps image class
+
+if size(in,3)>1 % color image
+	if size(in,3)>3 %strange image
+		in=rgb2gray(in(:,:,1:3));
+	else
+		in=rgb2gray(in); %convert to gray, always.
+	end
 end
+
 if numel(roirect)>0
     x=roirect(1);
     y=roirect(2);

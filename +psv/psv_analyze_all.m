@@ -130,9 +130,8 @@ if ok==1
 				%% PSV calculation goes here
 				img_BW = imbinarize(image1, str2double(get(handles.psv_threshold,'String')));
 
-				[x,y,u,v,typevector] = psv.psv_code(img_BW, binsize,roirect,converted_mask);
+				[x,y,u,v,typevector,correlation_map] = psv.psv_code(img_BW, binsize,roirect,converted_mask);
 
-				correlation_map=zeros(size(x));
 				correlation_matrices=[];
 
 				resultslist{1,(i+1)/2}=x;
@@ -269,13 +268,13 @@ if ok==1
 			end
 			converted_mask=mask.convert_masks_to_binary(size(currentimage1(:,:,1)),mask_positions);
 			img_BW = imbinarize(image1, str2double(get(handles.psv_threshold,'String')));
-			[x,y,u,v,typevector] = psv.psv_code(img_BW, binsize,roirect,converted_mask);
+			[x,y,u,v,typevector,correlation_map] = psv.psv_code(img_BW, binsize,roirect,converted_mask);
 			xlist{i}=x;
 			ylist{i}=y;
 			ulist{i}=u;
 			vlist{i}=v;
 			typelist{i}=typevector;
-			corrlist{i}=zeros(size(typevector)); %no correlation coefficient in DCC.
+			corrlist{i}=correlation_map; %no correlation coefficient in DCC.
 			correlation_matrices_list{i}=[];%no correlation matrix output for dcc
 			hbar.iterate(1);
 		end

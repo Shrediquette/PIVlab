@@ -271,7 +271,7 @@ filenames = annotate_file_names(filenames,fdir,fsdata);
 
 % Initialize some data.
 show_full_path = false;
-nodupes = true;
+nodupes = false;
 
 % Get history preferences and set history.
 history = getpref('uipickfiles','history',...
