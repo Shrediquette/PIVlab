@@ -1,4 +1,4 @@
-function [u,v,typevector]=filtervectors_all_parallel(x,y,u,v,typevector_original,calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh)
+function [u,v,typevector]=filtervectors_all_parallel(x,y,u,v,typevector_original,calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh,roi_freehand)
 typevector=typevector_original;
 %run postprocessing function
 if numel(velrect)>0
@@ -32,6 +32,20 @@ if ~isempty(x)
 	if do_notch_filter == 1
 		[u,v] = postproc.PIVlab_notch_filter (u,v,calu,calv,notch_L_thresh,notch_H_thresh);
 	end
+end
+
+% freehand velocity limit filter (new in v3.10)
+if ~isempty(roi_freehand)
+	nanMask_u = isnan(u); % Define nan mask
+	nanMask_v = isnan(v); % Define nan mask
+	u(nanMask_u)=0;
+	v(nanMask_v)=0;
+	tf = inROI(roi_freehand,u,v);
+	%restore nans from previous filters
+	u(nanMask_u)=NaN;
+	v(nanMask_v)=NaN;
+	u(tf==0)=nan;
+	v(tf==0)=nan;
 end
 
 if ~isempty(x)
