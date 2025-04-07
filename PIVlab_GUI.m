@@ -76,7 +76,7 @@ if isempty(fh)
 	margin=1.5;%1.5; %for Matlab 2025 this probably needs to be increased to 2.5, together with more fixes on all panels...
 	panelwidth=45;
 	panelheighttools=13;%12;
-	panelheightpanels=41;%35;
+	panelheightpanels=45;%35;
 	do_correlation_matrices=0; % enable or disable the output of raw correlation matrices
 	gui.put('do_correlation_matrices',do_correlation_matrices);
 	gui.put('panelwidth',panelwidth);
