@@ -2,7 +2,6 @@ function derivative_calc (frame,deriv,update)
 handles=gui.gethand;
 resultslist=gui.retr('resultslist');
 if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
-	filenames=gui.retr('filenames');
 	filepath=gui.retr('filepath');
 	derived=gui.retr('derived');
 	calu=gui.retr('calu');calv=gui.retr('calv');
@@ -119,8 +118,19 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 		%disp('vorticity')
 	end
 	if deriv==3 %magnitude
-		%andersrum, (u*caluv)-subtr_u
-		derived{2,frame}=sqrt((u*calu-subtr_u).^2+(v*calv-subtr_v).^2);
+		ismean=gui.retr('ismean');
+		if ismean(frame) ==1 % temporal derivative
+			%not so nice workaround would be to check if filestring contains TKE, and then change the way that this is calculated...
+			%because magnitude is like (x.^2+v.^2).^0.5   ,   but total TKE is x+y
+			filename=gui.retr('filename');
+			if strncmpi(filename{frame*2-1},'TKE of frames',13) % total TKE is to be calculated, just a simple sum of x and y
+				derived{2,frame}=(u*calu)+(v*calv);
+			else %some other temporal quantity is calculated --> vector sum
+				derived{2,frame}=sqrt((u*calu-subtr_u).^2+(v*calv-subtr_v).^2);
+			end
+		else % a regular (non-average or std or tke) frame is used --> vector sum.
+			derived{2,frame}=sqrt((u*calu-subtr_u).^2+(v*calv-subtr_v).^2);
+		end
 		%disp('magnitude')
 	end
 	if deriv==4
