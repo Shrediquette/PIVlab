@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Camera Setup
+title: Synchronizer setup
 ---
 # Setting up the wireless serial dongle
 Communication with the snychronizer works through a wireless serial link. The white USB stick with the small spiral antenna is one end of this wireless serial link. It needs this driver to work properly (a standard USB / UART transceiver chip)
