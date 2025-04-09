@@ -2,12 +2,12 @@ function derivative_calc (frame,deriv,update)
 handles=gui.gethand;
 resultslist=gui.retr('resultslist');
 if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
-	filenames=gui.retr('filenames');
-	filepath=gui.retr('filepath');
+	%filenames=gui.retr('filenames');
+	%filepath=gui.retr('filepath');
 	derived=gui.retr('derived');
 	calu=gui.retr('calu');calv=gui.retr('calv');
 	calxy=gui.retr('calxy');
-	[currentimage,~]=import.get_img(2*frame-1);
+	%[currentimage,~]=import.get_img(2*frame-1);
 	x=resultslist{1,frame};
 	y=resultslist{2,frame};
 	%subtrayct mean u
