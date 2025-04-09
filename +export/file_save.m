@@ -61,7 +61,7 @@ if type==1 %ascii file
 	if get(handles.add_header, 'value')==1
 		if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 			if get(handles.export_vort, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
-				header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'Vector type [-]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
+				header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'Vector type [-]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
 			else
 				header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'Vector type [-]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
 			end
@@ -69,13 +69,13 @@ if type==1 %ascii file
 			displacement_only=gui.retr('displacement_only');
 			if ~isempty(displacement_only) && displacement_only == 1
 				if get(handles.export_vort, 'Value') == 1  %alle derivatives exportieren, kalibriert
-					header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/frame]' delimiter 'v [m/frame]' delimiter 'Vector type [-]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [m/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
+					header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/frame]' delimiter 'v [m/frame]' delimiter 'Vector type [-]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [m/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
 				else
 					header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
 				end
 			else
 				if get(handles.export_vort, 'Value') == 1  %alle derivatives exportieren, kalibriert
-					header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'Q criterion [1/s^2]' delimiter 'simple shear [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]'];
+					header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'Q criterion [1/s^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]'];
 				else
 					header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
 				end
@@ -175,8 +175,8 @@ if type==4 %tecplot file
 	header2=['# FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(calu)];
 	if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 		if get(handles.export_vort_tec, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
-			header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
-			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "simple_shear", "simple_strain", "vector_direction"';
+			header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
+			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "shear_rate", "simple_strain", "vector_direction"';
 		else
 			header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
 			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
@@ -185,16 +185,16 @@ if type==4 %tecplot file
 		displacement_only=gui.retr('displacement_only');
 		if ~isempty(displacement_only) && displacement_only == 1
 			if get(handles.export_vort_tec, 'Value') == 1  %alle derivatives exportieren, kalibriert
-				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'Q criterion [1/s^2]' delimiter 'simple shear [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]'];
-				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "simple_shear", "simple_strain", "vector_direction"';
+				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'Q criterion [1/s^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]'];
+				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "shear_rate", "simple_strain", "vector_direction"';
 			else
 				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
 				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
 			end
 		else
 			if get(handles.export_vort_tec, 'Value') == 1  %alle derivatives exportieren, kalibriert
-				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/frame]' delimiter 'v [m/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [m/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'simple shear [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
-				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "simple_shear", "simple_strain", "vector_direction"';
+				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/frame]' delimiter 'v [m/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [m/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]'];
+				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "shear_rate", "simple_strain", "vector_direction"';
 			else
 				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/frame]' delimiter 'v [m/frame]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
 				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
