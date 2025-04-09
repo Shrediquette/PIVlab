@@ -56,9 +56,6 @@ if ~isempty(gui.retr('doing_roi')) && gui.retr('doing_roi')==1
 		case 'Cyclone-2-2000-M 1920x1080 (max. 2165 fps)'
 			des_x=1920;
 			des_y=1080;
-		case 'Cyclone-2-2000-M 1792x800 (max. 3100 fps)'
-			des_x=1792;
-			des_y=800;
 		case 'Cyclone-2-2000-M 1792x480 (max. 5000 fps)'
 			des_x=1792;
 			des_y=480;
@@ -69,26 +66,23 @@ if ~isempty(gui.retr('doing_roi')) && gui.retr('doing_roi')==1
 		case 'Cyclone-1HS-3500-M 1280x860 (max. 3500 fps)'
 			des_x=1280;
 			des_y=860;
-		case 'Cyclone-1HS-3500-M 1280x640 (max. 4700 fps)'
-			des_x=1280;
-			des_y=640;
-		case 'Cyclone-1HS-3500-M 1280x320 (max. 9340 fps)'
+		case 'Cyclone-1HS-3500-M 1280x320 (max. 9200 fps)'
 			des_x=1280;
 			des_y=320;
-		case 'Cyclone-1HS-3500-M 1280x240 (max. 12350 fps)'
+		case 'Cyclone-1HS-3500-M 1280x240 (max. 12200 fps)'
 			des_x=1280;
 			des_y=240;
 
 		case 'Cyclone-25-150-M 5120x5120 (max. 150 fps)'
 			des_x=5120;
 			des_y=5120;
-		case 'Cyclone-25-150-M 5120x2160 (max. 350 fps)'
+		case 'Cyclone-25-150-M 5120x2160 (max. 300 fps)'
 			des_x=5120;
 			des_y=2160;
-		case 'Cyclone-25-150-M 5120x1080 (max. 695 fps)'
+		case 'Cyclone-25-150-M 5120x1080 (max. 650 fps)'
 			des_x=5120;
 			des_y=1080;
-		case 'Cyclone-25-150-M 5120x720 (max. 1025 fps)'
+		case 'Cyclone-25-150-M 5120x720 (max. 1000 fps)'
 			des_x=5120;
 			des_y=720;
 

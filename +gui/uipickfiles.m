@@ -340,6 +340,7 @@ tri_icon = {tri_down,tri_null,tri_up};
 sort_state = [1 0 0];
 last_sort_state = [1 1 1];
 sort_cb = zeros(1,3);
+%
 sort_cb(1) = uicontrol('Style','checkbox',...
 	'Position',[15 331 70 15],...
 	'String','Name',...
@@ -1633,6 +1634,8 @@ if fsdata.style == 1
 	end
 end
 % Set pre and post fields.
+%prevent html use (broken in r2025)
+fsdata.style = 3;
 if fsdata.style == 1
 
 

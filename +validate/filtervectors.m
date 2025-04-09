@@ -25,8 +25,6 @@ if size(resultslist,2)>=frame
 		%epsilon=str2double(get(handles.epsilon,'string'));
 		neigh_thresh=str2double(get(handles.loc_med_thresh,'string'));
 
-
-
 		%run postprocessing function
 		if numel(velrect)>0
 			valid_vel(1)=velrect(1); %umin
@@ -64,6 +62,22 @@ if size(resultslist,2)>=frame
 		do_notch_filter = get(handles.notch_filter, 'value');
 		if do_notch_filter == 1
 			[u,v] = postproc.PIVlab_notch_filter (u,v,calu,calv,str2double(get(handles.notch_L_thresh,'String')),str2double(get(handles.notch_H_thresh,'String')));
+		end
+
+		% freehand velocity limit filter (new in v3.10)
+		velrect_freehand=gui.retr('velrect_freehand');
+		if ~isempty(velrect_freehand)
+			nanMask_u = isnan(u); % Define nan mask
+			nanMask_v = isnan(v); % Define nan mask
+			u(nanMask_u)=0;
+			v(nanMask_v)=0;
+			roi = images.roi.Freehand('Position',velrect_freehand);
+			tf = inROI(roi,u*calu,v*calv);
+			%restore nans from previous filters
+			u(nanMask_u)=NaN;
+			v(nanMask_v)=NaN;
+			u(tf==0)=nan;
+			v(tf==0)=nan;
 		end
 
 		%vector-based filtering

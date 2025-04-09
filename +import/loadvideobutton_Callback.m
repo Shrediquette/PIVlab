@@ -47,7 +47,7 @@ if getappdata(hgui,'video_selection_done')
 	set(handles.minintens, 'string', 0);
 	set(handles.maxintens, 'string', 1);
 	%Clear all things
-	validate.clear_vel_limit_Callback %clear velocity limits
+	validate.clear_vel_limit_Callback([],[]) %clear velocity limits
 	roi.clear_roi_Callback
 	%clear_mask_Callback:
 	gui.put('masks_in_frame',[]);
