@@ -136,7 +136,8 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 		%disp('divergence')
 	end
 	if deriv==7
-		derived{6,frame}=plot.dcev(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
+		%derived{6,frame}=plot.dcev(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
+		derived{6,frame}=plot.qcrit(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
 		%disp('dcev')
 	end
 	if deriv==8

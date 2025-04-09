@@ -44,7 +44,7 @@ if isempty(resultslist)==0
 	u_component=vorticity;
 	v_component=vorticity;
 	divergence=vorticity;
-	vortex_locator=vorticity;
+	q_criterion=vorticity;
 	shear_rate=vorticity;
 	strain_rate=vorticity;
 	LIC=vorticity;
@@ -69,7 +69,7 @@ if isempty(resultslist)==0
 		u_component{i,1}=derived{3,i};
 		v_component{i,1}=derived{4,i};
 		divergence{i,1}=derived{5,i};
-		vortex_locator{i,1}=derived{6,i};
+		q_criterion{i,1}=derived{6,i};
 		shear_rate{i,1}=derived{7,i};
 		strain_rate{i,1}=derived{8,i};
 		LIC{i,1}=derived{9,i};
@@ -94,7 +94,7 @@ if isempty(resultslist)==0
 	assignin('base','u_component',u_component);
 	assignin('base','v_component',v_component);
 	assignin('base','divergence',divergence);
-	assignin('base','vortex_locator',vortex_locator);
+	assignin('base','q_criterion',q_criterion);
 	assignin('base','shear_rate',shear_rate);
 	assignin('base','strain_rate',strain_rate);
 	assignin('base','LIC',LIC);
