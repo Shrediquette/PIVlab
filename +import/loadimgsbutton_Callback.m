@@ -310,7 +310,7 @@ if ~isequal(path,0)
 		set(handles.maxintens, 'string', 1);
 
 		%Clear all things
-		validate.clear_vel_limit_Callback %clear velocity limits
+		validate.clear_vel_limit_Callback([],[]) %clear velocity limits
 		if old_img_size ~= 0%ROI should be cleared only when image size of loaded imgs is different from before...
 			new_img_size=size(import.get_img(1));
 			if new_img_size(1) ~= old_img_size(1) || new_img_size(2) ~= old_img_size(2)

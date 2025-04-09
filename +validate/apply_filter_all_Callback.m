@@ -84,6 +84,14 @@ if ~isempty(resultslist)
 		notch_L_thresh=str2double(get(handles.notch_L_thresh,'String'));
 		notch_H_thresh=str2double(get(handles.notch_H_thresh,'String'));
 
+		% freehand velocity limit filter (new in v3.10)
+		velrect_freehand=gui.retr('velrect_freehand');
+		if ~isempty(velrect_freehand)
+			roi_freehand = images.roi.Freehand('Position',velrect_freehand);
+		else
+			roi_freehand=[];
+		end
+
 		hbar = gui.pivprogress(size(slicedfilepath1,2),handles.apply_filter_all);
 		if size(u,2)<num_frames_to_process-1 %If not all frames have been analyzed. Parfor loop crashes otherwise.
 			u(num_frames_to_process-1)={[]};
@@ -124,7 +132,7 @@ if ~isempty(resultslist)
 					A=[];B=[];rawimageA=[];rawimageB=[];
 				end
 				corr2_value=resultslist{12,i};
-				[u_new{i},v_new{i},typevector_new{i}]=validate.filtervectors_all_parallel(x{i},y{i},u{i},v{i},typevector_original{i},calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh);
+				[u_new{i},v_new{i},typevector_new{i}]=validate.filtervectors_all_parallel(x{i},y{i},u{i},v{i},typevector_original{i},calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh,roi_freehand);
 				hbar.iterate(1); %#ok<*PFBNS>
 			end
 		end

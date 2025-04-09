@@ -841,23 +841,35 @@ handles.messagetext = uicontrol(handles.multip05,'Style','text','String','N/A','
 handles.multip06 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Vector validation (CTRL+V)', 'Tag','multip06','fontweight','bold');
 parentitem=get(handles.multip06, 'Position');
 item=[0 0 0 0];
+item=[0 item(2)+item(4) parentitem(3) 13];
 
-item=[0 item(2)+item(4) parentitem(3) 2];
-handles.vel_limit = uicontrol(handles.multip06,'Style','pushbutton','String','Select velocity limits','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.vel_limit_Callback,'Tag','vel_limit','TooltipString','Display a velocity scatter plot and draw a window around the allowed velocities');
+handles.uipanel42x = uipanel(handles.multip06, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Velocity limits', 'Tag','uipanel42x','fontweight','bold');
+parentitem=get(handles.uipanel42x, 'Position');
+item=[0 0 0 0];
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 2];
+handles.vel_limit = uicontrol(handles.uipanel42x,'Style','pushbutton','String','Select rectangle','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.vel_limit_Callback,'Tag','vel_limit','TooltipString','Display a velocity scatter plot and draw a window around the allowed velocities');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
+handles.vel_limit_freehand = uicontrol(handles.uipanel42x,'Style','pushbutton','String','Select freehand','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.vel_limit_Callback,'Tag','vel_limit_freehand','TooltipString','Display a velocity scatter plot and freely draw around the allowed velocities');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.1];
-handles.meanofall = uicontrol(handles.multip06,'Style','checkbox','Value',1,'String','display all frames in scatterplot','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','meanofall','TooltipString','Use velocity data of all frames in the velocity scatter plot');
+handles.meanofall = uicontrol(handles.uipanel42x,'Style','checkbox','Value',1,'String','display all frames in scatterplot','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','meanofall','TooltipString','Use velocity data of all frames in the velocity scatter plot');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
-handles.vel_limit_active = uicontrol(handles.multip06,'Style','text','String','Limit inactive','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','vel_limit_active');
+handles.vel_limit_active = uicontrol(handles.uipanel42x,'Style','text','String','Limit inactive','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','vel_limit_active');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 3];
-handles.limittext = uicontrol(handles.multip06,'Style','text','String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','limittext');
+handles.limittext = uicontrol(handles.uipanel42x,'Style','text','String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','limittext');
 
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.clear_vel_limit = uicontrol(handles.multip06,'Style','pushbutton','String','Clear velocity limits','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.clear_vel_limit_Callback,'Tag','clear_vel_limit','TooltipString','Remove the velocity limits');
+handles.clear_vel_limit = uicontrol(handles.uipanel42x,'Style','pushbutton','String','Clear all velocity limits','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.clear_vel_limit_Callback,'Tag','clear_vel_limit','TooltipString','Remove the velocity limits');
 
-item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
+
+parentitem=get(handles.multip06, 'Position');
+item=[0 0 0 0];
+
+item=[0 13+margin/2 parentitem(3) 1.1];
 handles.stdev_check = uicontrol(handles.multip06,'Style','checkbox','String','Standard deviation filter','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','stdev_check','TooltipString','Filter velocities by removing velocities that are outside the mean velocity +- n times the standard deviation');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
@@ -1173,7 +1185,7 @@ item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
 handles.text140 = uicontrol(handles.uipanel37,'Style','text','String','interpolated vectors','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text142', 'fontsize', 6);
 
 parentitem=get(handles.multip09, 'Position');
-item=[0 12.5+6.5+1.5 parentitem(3) 13.5];
+item=[0 12.5+6.5+1.5 parentitem(3) 10];
 handles.uipanel27 = uipanel(handles.multip09, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Derived parameter appearance', 'Tag','uipanel27','fontweight','bold');
 
 parentitem=get(handles.uipanel27, 'Position');
@@ -1206,15 +1218,28 @@ handles.colormap_interpolation = uicontrol(handles.uipanel27,'Style','popupmenu'
 %item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
 handles.img_not_mask = uicontrol(handles.uipanel27,'Style','checkbox','String','Do not display mask','Units','characters','Visible','off','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','img_not_mask');
 
-item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
-handles.displ_colorbar = uicontrol(handles.uipanel27,'Style','text','String','Show colorbar:', 'HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','displ_colorbar','TooltipString','Display a colour bar for the derived parameters');
+parentitem=get(handles.multip09, 'Position');
+item=[0 12.5+6.5+1.5+10.5 parentitem(3) 6];
+handles.uipanel27b = uipanel(handles.multip09, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Color legend', 'Tag','uipanel27b','fontweight','bold');
 
-item=[0 item(2)+item(4)+margin/6 parentitem(3) 2];
-handles.colorbarpos = uicontrol(handles.uipanel27,'Style','popupmenu', 'String',{'None' 'SouthOutside','NorthOutside','EastOutside','WestOutside'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colorbarpos','TooltipString','Position of the colour bar');
+parentitem=get(handles.uipanel27b, 'Position');
+item=[0 0 0 0];
+
+item=[0 item(2)+item(4) parentitem(3)/5*3 1];
+handles.displ_colorbar = uicontrol(handles.uipanel27b,'Style','text','String','Show colorbar:', 'HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','displ_colorbar','TooltipString','Display a colour bar for the derived parameters');
+
+item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
+handles.colorbarpos = uicontrol(handles.uipanel27b,'Style','popupmenu', 'String',{'None' 'SouthOutside','NorthOutside','EastOutside','WestOutside'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colorbarpos','TooltipString','Position of the colour bar');
+
+item=[0 item(2)+item(4) parentitem(3)/5*3 1];
+handles.colorbarnumberformattxt = uicontrol(handles.uipanel27b,'Style','text','String','Colorbar numeric format:', 'HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colorbarnumberformattxt');
+
+item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
+handles.colorbarnumberformat = uicontrol(handles.uipanel27b,'Style','popupmenu', 'String',{'compact notation' 'scientific notation' 'fixed-decimals'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colorbarnumberformat','TooltipString','Number format of the colorbar');
 
 parentitem=get(handles.multip09, 'Position');
 item=[0 0 0 0];
-item=[0 15+4+14+margin parentitem(3) 1.1];
+item=[0 17.5+4+14+1+margin parentitem(3) 1.1];
 handles.enhance_images = uicontrol(handles.multip09,'Style','checkbox','String','Enhance PIV image display','Value',1,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','enhance_images','TooltipString','Improve contrast of PIV images for display');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];

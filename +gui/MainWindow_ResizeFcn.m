@@ -34,11 +34,11 @@ else
 		height_reduct=0;y_shift=0;
 	end
 	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'NorthOutside')
-		width_reduct=8;x_shift=4;
+		width_reduct=12;x_shift=6;
 		height_reduct=5;y_shift=0;
 	end
 	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'SouthOutside')
-		width_reduct=8;x_shift=4;
+		width_reduct=12;x_shift=6;
 		height_reduct=5;y_shift=6;
 	end
 end
