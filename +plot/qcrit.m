@@ -8,16 +8,16 @@ dy = y(2,1) - y(1,1);  % Works for meshgrid-style x/y
 [dudy, dudx] = gradient(u, -dy, dx);
 [dvdy, dvdx] = gradient(v, -dy, dx);
 
+% Rotation rate (vorticity component)
+[curlz,~] = curl(x,y,u,v);
+
 % Strain rate components
 Sxx = dudx;
 Syy = dvdy;
 Sxy = 0.5 * (dudy + dvdx);
 
-% Rotation rate (vorticity component)
-Omega = 0.5 * (dvdx - dudy);
-
 % Strain rate magnitude squared
 S2 = Sxx.^2 + 2*Sxy.^2 + Syy.^2;
 
 % Q-criterion
-Q = -0.5 * (Omega.^2 - S2);
+Q = 0.5 * (curlz.^2 - S2);
