@@ -116,25 +116,31 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 			end
 
 			if strcmp(camera_type,'OPTRONIS')
-				%die ganzen ROIs bringen noch keine fps Erhöhung, muss erst
-				%im dropdown eine Option hinzugefügt werden...
 				camera_sub_type=gui.retr('camera_sub_type');
 				switch camera_sub_type
 					case 'Cyclone-2-2000-M'
+						%Hier: auswahl nur wenn r2025....
 						m0 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1920x1080 (max. 2165 fps)','Callback',@roi.setdefaultroi);
-						m2 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x480 (max. 5000 fps)','Callback',@roi.setdefaultroi);
-						m3 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1024x240 (max. 10000 fps)','Callback',@roi.setdefaultroi);
+						if ~verLessThan('matlab','25')
+							m2 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x480 (max. 5000 fps)','Callback',@roi.setdefaultroi);
+							m3 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1024x240 (max. 10000 fps)','Callback',@roi.setdefaultroi);
+						end
 						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
 					case 'Cyclone-1HS-3500-M'
 						m0 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x860 (max. 3500 fps)','Callback',@roi.setdefaultroi);
-						m2 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x320 (max. 9340 fps)','Callback',@roi.setdefaultroi);
-						m3 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x240 (max. 12350 fps)','Callback',@roi.setdefaultroi);
+						if ~verLessThan('matlab','25')
+							m2 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x320 (max. 9200 fps)','Callback',@roi.setdefaultroi);
+							m3 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x240 (max. 12200 fps)','Callback',@roi.setdefaultroi);
+						end
 						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
 					case 'Cyclone-25-150-M'
+						%Hier: auswahl nur wenn r2025....
 						m0 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x5120 (max. 150 fps)','Callback',@roi.setdefaultroi);
-						m1 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x2160 (max. 350 fps)','Callback',@roi.setdefaultroi);
-						m2 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x1080 (max. 695 fps)','Callback',@roi.setdefaultroi);
-						m3 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x720 (max. 1025 fps)','Callback',@roi.setdefaultroi);
+						if ~verLessThan('matlab','25')
+							m1 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x2160 (max. 300 fps)','Callback',@roi.setdefaultroi);
+							m2 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x1080 (max. 650 fps)','Callback',@roi.setdefaultroi);
+							m3 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x720 (max. 1000 fps)','Callback',@roi.setdefaultroi);
+						end
 						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
 					otherwise
 				end
