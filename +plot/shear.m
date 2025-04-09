@@ -9,6 +9,7 @@ out= qx+py;
 %}
 
 %New code, 'Shear rate (magnitude of the rate-of-strain tensor)'
+%based on discussion with https://github.com/CSFrom
 %x is a 2D matrix containing the x-coordinates of every node
 %y is a 2D matrix containing the y-coordinates of every node
 %u is a 2D matrix containing the velocities in x direction at every node
