@@ -257,58 +257,35 @@ if required_files_check
 				OPTRONIS_bits =gui.retr('OPTRONIS_bits');
 				if isempty (OPTRONIS_bits)
 					OPTRONIS_bits=8;
-				end
+                end
 
-				camera_sub_type=gui.retr('camera_sub_type');
+                camera_sub_type=gui.retr('camera_sub_type');
 				if OPTRONIS_bits==8
 					switch camera_sub_type
 						case 'Cyclone-2-2000-M'
-							if ~verLessThan('matlab','25')
-								max_fps_with_current_settings = 10000;
-							else
-								max_fps_with_current_settings = 2165;
-							end
+							max_fps_with_current_settings = 10000;
+                            %max_fps_with_current_settings = 2165;
 						case 'Cyclone-1HS-3500-M'
-							if ~verLessThan('matlab','25')
-								max_fps_with_current_settings = 12200;
-							else
-								max_fps_with_current_settings = 3500;
-							end
+							max_fps_with_current_settings = 3500;
 						case 'Cyclone-25-150-M'
-							if ~verLessThan('matlab','25')
-								max_fps_with_current_settings = 1000;
-							else
-								max_fps_with_current_settings = 150;
-							end
+							max_fps_with_current_settings = 150;
 						otherwise
 							max_fps_with_current_settings=1111;
 					end
 
-				elseif OPTRONIS_bits==10
-					switch camera_sub_type
-						case 'Cyclone-2-2000-M'
-							if ~verLessThan('matlab','25')
-								max_fps_with_current_settings = 10000;
-							else
-								max_fps_with_current_settings = 1760;
-							end
-						case 'Cyclone-1HS-3500-M'
-							if ~verLessThan('matlab','25')
-								max_fps_with_current_settings = 11180;
-							else
-								max_fps_with_current_settings = 3170;
-							end
-						case 'Cyclone-25-150-M'
-							if ~verLessThan('matlab','25')
-								max_fps_with_current_settings = 1000;
-							else
-								max_fps_with_current_settings = 149;
-							end
-						otherwise
-							max_fps_with_current_settings=1111;
-					end
-				end
-				OPTRONIS_settings_check = 1;
+                elseif OPTRONIS_bits==10
+                    switch camera_sub_type
+                        case 'Cyclone-2-2000-M'
+                            max_fps_with_current_settings = 10000;
+                        case 'Cyclone-1HS-3500-M'
+                            max_fps_with_current_settings = 3175;
+                        case 'Cyclone-25-150-M'
+                            max_fps_with_current_settings = 149;
+                        otherwise
+                            max_fps_with_current_settings=1111;
+                    end
+                end
+                OPTRONIS_settings_check = 1;
                 Error_Reason={};
                 if cam_fps > max_fps_with_current_settings
                     OPTRONIS_settings_check = 0;

@@ -166,29 +166,17 @@ if value == 9 % OPTRONIS
 
 	switch camera_sub_type
 		case 'Cyclone-2-2000-M'
-			if ~verLessThan('matlab','25')
-				avail_freqs={'10000' '5000' '2165' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
-			else
-				avail_freqs={'2165' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
-			end
+			avail_freqs={'10000' '5000' '2165' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
 			gui.put('max_cam_res',[1920,1080]);
 			gui.put('min_allowed_interframe',20);
 			gui.put('blind_time',3);
 		case 'Cyclone-1HS-3500-M'
-			if ~verLessThan('matlab','25')
-				avail_freqs={'12200' '9200' '3500' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
-			else
-				avail_freqs={'3500' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
-			end
+			avail_freqs={'3500' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
 			gui.put('max_cam_res',[1280,860]);
 			gui.put('min_allowed_interframe',20);
 			gui.put('blind_time',3);
 		case 'Cyclone-25-150-M'
-			if ~verLessThan('matlab','25')
-				avail_freqs={'1000' '650' '300' '150' '100' '75' '50' '20'};
-			else
-				avail_freqs={'150' '100' '75' '50' '20'};
-			end
+			avail_freqs={'150' '100' '75' '50' '20'};
 			gui.put('max_cam_res',[5120,5120]);
 			gui.put('min_allowed_interframe',40);
 			gui.put('blind_time',25);

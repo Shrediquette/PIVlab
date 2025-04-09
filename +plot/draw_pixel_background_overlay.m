@@ -158,17 +158,17 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 		name=get(handles.derivchoice,'string');
 		if strcmp(name,'N/A') %user hasn't visited the derived panel before
 			if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
-				set(handles.derivchoice,'String',{'Vectors in px/frame';'Vorticity in 1/frame';'Magnitude in px/frame';'u component in px/frame';'v component in px/frame';'Divergence in 1/frame';'Q criterion in 1/frame^2';'Shear rate (magnitude of the rate-of-strain tensor) in 1/frame';'Simple strain rate in 1/frame';'Line integral convolution (LIC)' ; 'Vector direction in degrees'; 'Correlation coefficient'});
+				set(handles.derivchoice,'String',{'Vectors in px/frame';'Vorticity in 1/frame';'Magnitude in px/frame';'u component in px/frame';'v component in px/frame';'Divergence in 1/frame';'Vortex locator';'Simple shear rate in 1/frame';'Simple strain rate in 1/frame';'Line integral convolution (LIC)' ; 'Vector direction in degrees'; 'Correlation coefficient'});
 				set(handles.text35,'String','u in px/frame:')
 				set(handles.text36,'String','v in px/frame:')
 			else %calibrated
 				displacement_only=gui.retr('displacement_only');
 				if ~isempty(displacement_only) && displacement_only == 1
-					set(handles.derivchoice,'String',{'Vectors in m/frame';'Vorticity in 1/frame';'Magnitude in m/frame';'u component in m/frame';'v component in m/frame';'Divergence in 1/frame';'Q criterion in 1/frame^2';'Shear rate (magnitude of the rate-of-strain tensor) in 1/frame';'Simple strain rate in 1/frame';'Line integral convolution (LIC)'; 'Vector direction in degrees'; 'Correlation coefficient'});
+					set(handles.derivchoice,'String',{'Vectors in m/frame';'Vorticity in 1/sframe';'Magnitude in m/frame';'u component in m/frame';'v component in m/sframe';'Divergence in 1/sframe';'Vortex locator';'Simple shear rate in 1/frame';'Simple strain rate in 1/frame';'Line integral convolution (LIC)'; 'Vector direction in degrees'; 'Correlation coefficient'});
 					set(handles.text35,'String','u in m/frame:')
 					set(handles.text36,'String','v in m/frame:')
 				else
-					set(handles.derivchoice,'String',{'Vectors in m/s';'Vorticity in 1/s';'Magnitude in m/s';'u component in m/s';'v component in m/s';'Divergence in 1/s';'Q criterion in 1/s^2';'Shear rate (magnitude of the rate-of-strain tensor) in 1/s';'Simple strain rate in 1/s';'Line integral convolution (LIC)'; 'Vector direction in degrees'; 'Correlation coefficient'});
+					set(handles.derivchoice,'String',{'Vectors in m/s';'Vorticity in 1/s';'Magnitude in m/s';'u component in m/s';'v component in m/s';'Divergence in 1/s';'Vortex locator';'Simple shear rate in 1/s';'Simple strain rate in 1/s';'Line integral convolution (LIC)'; 'Vector direction in degrees'; 'Correlation coefficient'});
 					set(handles.text35,'String','u in m/s:')
 					set(handles.text36,'String','v in m/s:')
 				end
@@ -195,13 +195,7 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 		tickamount=min([colormap_steps 8])+1; % depends on the amount of colormap steps
 		coloobj.Ticks=linspace(0,colormap_steps,tickamount);
 		ticklabels=linspace(minscale_adjusted,maxscale_adjusted,tickamount);
-		if get(handles.colorbarnumberformat,'Value') == 1 % colorbar number format
-			ticklabels_string=num2str(ticklabels(:),'%0.3g');
-		elseif get(handles.colorbarnumberformat,'Value') == 2
-			ticklabels_string=num2str(ticklabels(:),'%0.3e');
-			elseif get(handles.colorbarnumberformat,'Value') == 3
-				ticklabels_string=num2str(ticklabels(:),'%0.3f');
-		end
+		ticklabels_string=num2str(ticklabels(:),'%0.3e');
 		coloobj.TickLabels =ticklabels_string;
 	end
 end
