@@ -1128,9 +1128,12 @@ item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1];
 handles.masktransp = uicontrol(handles.multip09,'Style','edit','String','50','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','masktransp','Callback',@mask.transp_Callback,'TooltipString','Transparency of the masking area display (red)');
 
 item=[0 item(2)+item(4) parentitem(3) 1.1];
-handles.uniform_vector_scale = uicontrol(handles.multip09,'Style','checkbox','String','uniform vector scale','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','uniform_vector_scale','TooltipString','Draw all vectors with the same size, independent of velocity');
+handles.uniform_vector_scale = uicontrol(handles.multip09,'Style','checkbox','String','uniform vector scale','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','uniform_vector_scale','TooltipString','Draw all vectors with the same size, independent of velocity','Callback',@plot.vector_scale_Callback);
 
-
+item=[0 item(2)+item(4) parentitem(3)/4*3 1.1];
+handles.power_vector_scale = uicontrol(handles.multip09,'Style','checkbox','String','power law vector scale','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','power_vector_scale','TooltipString','Draw vector scale with a sublinear power function: Large vector lengths are more and more attenuated the smaller the exponent is.','Callback',@plot.vector_scale_Callback);
+item=[parentitem(3)/4*3 item(2) parentitem(3)/4*1 1.1];
+handles.power_vector_scale_factor = uicontrol(handles.multip09,'Style','edit','String','0.3','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','power_vector_scale_factor','TooltipString','Draw vector scale with a sublinear power function: Large vector lengths are more and more attenuated the smaller the exponent is.','Callback',@plot.vector_scale_Callback);
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3)/2 1];
 handles.displ_image_txt = uicontrol(handles.multip09,'Style','text','String','Background:', 'HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','displ_image_txt');
@@ -1140,7 +1143,7 @@ handles.displ_image = uicontrol(handles.multip09,'Style','popupmenu', 'String',{
 
 
 
-item=[0 item(2)+item(4)+margin/4 parentitem(3) 9];
+item=[0 item(2)+item(4)+margin/8 parentitem(3) 8.5];
 handles.uipanel37 = uipanel(handles.multip09, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Vector colors', 'Tag','uipanel37','fontweight','bold');
 
 parentitem=get(handles.uipanel37, 'Position');
@@ -2166,16 +2169,27 @@ set(handles.ac_msgbox,'BackgroundColor', get (handles.ac_msgbox,'BackgroundColor
 
 %Image acquisition: load last device and COM port
 try
-    warning off
-    load('PIVlab_settings_default.mat','last_selected_device');
-    if exist('last_selected_device','var')
-        set(handles.ac_config, 'value',last_selected_device);
-    end
-    load('PIVlab_settings_default.mat','selected_com_port');
-    if exist('selected_com_port','var') && ~isempty(selected_com_port)
-        gui.put('selected_com_port',selected_com_port);
-    end
-    warning on
+	warning off
+	load('PIVlab_settings_default.mat','last_selected_device','last_selected_fps','last_selected_pulsedist','last_selected_energy');
+	if exist('last_selected_device','var')
+		set(handles.ac_config, 'value',last_selected_device);
+		acquisition.select_capture_config_Callback
+	end
+	if exist('last_selected_fps','var')
+		pause(0.01)
+		set(handles.ac_fps, 'value',last_selected_fps);
+	end
+	if exist('last_selected_pulsedist','var')
+		set(handles.ac_interpuls, 'String',last_selected_pulsedist);
+	end
+	if exist('last_selected_energy','var')
+		set(handles.ac_power, 'String',last_selected_energy);
+	end
+	load('PIVlab_settings_default.mat','selected_com_port');
+	if exist('selected_com_port','var') && ~isempty(selected_com_port)
+		gui.put('selected_com_port',selected_com_port);
+	end
+	warning on
 catch
 end
 gui.put('multitiff',0); %default for compatibility: Not a multitiff.

@@ -7,7 +7,13 @@ if (get (handles.uniform_vector_scale,'Value'))==1
 	u = u(:,:,1)./sqrt((u(:,:,1).^2+v(:,:,1).^2)); % normalized u
 	v = v(:,:,1)./sqrt((u(:,:,1).^2+v(:,:,1).^2)); % normalized v
 end
-
+if (get (handles.power_vector_scale,'Value'))==1
+	exponent_1=str2double(get(handles.power_vector_scale_factor,'String'));
+	signs_u=sign(u);
+	signs_v=sign(v);
+	u=(abs(u).^exponent_1).*signs_u;
+	v=(abs(v).^exponent_1).*signs_v;
+end
 if vecskip==1
 	q=quiver(x(typevector==1),y(typevector==1),...
 		(u(typevector==1)-(gui.retr('subtr_u')/gui.retr('calu')))*vecscale,...

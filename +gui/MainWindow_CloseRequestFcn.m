@@ -15,13 +15,17 @@ if strcmp(button,'Yes')==1
 		homedir=gui.retr('homedir');
 		pathname=gui.retr('pathname');
 		save('PIVlab_settings_default.mat','homedir','pathname','-append');
-        last_selected_device = get(handles.ac_config, 'value');
-        save('PIVlab_settings_default.mat','last_selected_device','-append');
-        selected_com_port = gui.retr('selected_com_port');
-        if ~isempty(selected_com_port)
-            save('PIVlab_settings_default.mat','selected_com_port','-append');
-        end
-    catch
+		%save last settings in acquisition menu
+		last_selected_device = get(handles.ac_config, 'value');
+		last_selected_fps = get(handles.ac_fps,'Value');
+		last_selected_pulsedist = get(handles.ac_interpuls,'String');
+		last_selected_energy =get(handles.ac_power,'String');
+		save('PIVlab_settings_default.mat','last_selected_device','last_selected_fps','last_selected_pulsedist','last_selected_energy','-append');
+		selected_com_port = gui.retr('selected_com_port');
+		if ~isempty(selected_com_port)
+			save('PIVlab_settings_default.mat','selected_com_port','-append');
+		end
+	catch
 	end
 	try
 		PIVlab_capture_lensctrl (1400,1400,0) %lens needs to be set to neutral otherwise re-enabling power might cause issues
