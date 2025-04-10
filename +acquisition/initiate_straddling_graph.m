@@ -18,12 +18,13 @@ if get(handles.ac_enable_straddling_figure, 'Value')==1
 	pco_first_frame_exposure = floor(str2double(get(handles.ac_interpuls,'String'))*str2double(get(handles.ac_power,'String'))/100)+1;
 	if strcmpi(gui.retr('sync_type'),'xmSync')
 		acquisition.straddling_graph_xmsync(blind_time,selected_fps,str2double(get(handles.ac_interpuls,'String')),str2double(get(handles.ac_power,'String')),4,is_dbl_shutter,pco_first_frame_exposure)
+	elseif isempty(gui.retr('sync_type'))
+		acquisition.straddling_graph_xmsync(blind_time,selected_fps,str2double(get(handles.ac_interpuls,'String')),str2double(get(handles.ac_power,'String')),4,is_dbl_shutter,pco_first_frame_exposure)
 	elseif strcmpi(gui.retr('sync_type'),'oltSync')
-
-%calculate pulse timing
-			pulse_sep=str2double(get(handles.ac_interpuls,'String'));
-			camera_sub_type=gui.retr('camera_sub_type');
-			camera_type=gui.retr('camera_type');
+		%calculate pulse timing
+		pulse_sep=str2double(get(handles.ac_interpuls,'String'));
+		camera_sub_type=gui.retr('camera_sub_type');
+		camera_type=gui.retr('camera_type');
 			bitmode =gui.retr('OPTOcam_bits');
 			ac_fps_value=get(handles.ac_fps,'Value');
 			ac_fps_str=get(handles.ac_fps,'String');
