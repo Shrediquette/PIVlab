@@ -11,8 +11,12 @@ if (get (handles.power_vector_scale,'Value'))==1
 	exponent_1=str2double(get(handles.power_vector_scale_factor,'String'));
 	signs_u=sign(u);
 	signs_v=sign(v);
+	mean_old=mean(abs(u(:)),'omitnan')+mean(abs(v(:)),'omitnan');
 	u=(abs(u).^exponent_1).*signs_u;
 	v=(abs(v).^exponent_1).*signs_v;
+	mean_new=mean(abs(u(:)),'omitnan')+mean(abs(v(:)),'omitnan');
+	u=u*mean_old/mean_new;
+	v=v*mean_old/mean_new;
 end
 if vecskip==1
 	q=quiver(x(typevector==1),y(typevector==1),...

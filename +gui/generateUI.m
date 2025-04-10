@@ -2173,7 +2173,6 @@ try
 	load('PIVlab_settings_default.mat','last_selected_device','last_selected_fps','last_selected_pulsedist','last_selected_energy');
 	if exist('last_selected_device','var')
 		set(handles.ac_config, 'value',last_selected_device);
-		acquisition.select_capture_config_Callback
 	end
 	if exist('last_selected_fps','var')
 		pause(0.01)
