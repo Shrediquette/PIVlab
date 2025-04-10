@@ -66,7 +66,7 @@ for multipass = 1:passes
 			%multipass validation, smoothing
 			utable_orig=utable;
 			vtable_orig=vtable;
-			[utable,vtable] = postproc.PIVlab_postproc (utable,vtable,[],[], [], 1,4, 1,1.5);
+			[utable,vtable] = postproc.PIVlab_postproc (utable,vtable,[],[], [], 1,4, 1,3);
 
 			maskedpoints=numel(find((typevector)==0));
 			amountnans=numel(find(isnan(utable)))-maskedpoints;
@@ -245,7 +245,7 @@ for multipass = 1:passes
 		image2_cut = zeros([interrogationarea interrogationarea BATCHSIZE], convert_image_class_type);
 		keep_all_images_in_memory=0; %keep all sub images in memory for later experiments or tests.
 		if keep_all_images_in_memory
-			all_sub_images_1 = result_conv; %if desired: keep all matrices in memory
+			all_sub_images_1 = result_conv; %#ok<UNRCH> %if desired: keep all matrices in memory
 			all_sub_images_2 = result_conv; %if desired: keep all matrices in memory
 		end
 		for batch_offset = 0:BATCHSIZE:N-1
@@ -271,7 +271,7 @@ for multipass = 1:passes
 			% Do 2D FFT
 			result_conv(:,:,batch_offset+(1:batch_len)) = do_correlations(image1_cut, image2_cut, do_pad, interrogationarea);
 			if keep_all_images_in_memory
-				all_sub_images_1(:,:,batch_offset+(1:batch_len))= image1_cut;%if desired: keep all matrices in memory
+				all_sub_images_1(:,:,batch_offset+(1:batch_len))= image1_cut; %#ok<UNRCH> %if desired: keep all matrices in memory
 				all_sub_images_2(:,:,batch_offset+(1:batch_len))= image2_cut;%if desired: keep all matrices in memory
 			end
 		end
@@ -430,7 +430,7 @@ for multipass = 1:passes
 			dz1 = [z1(1); diff(z1)];
 			i0 = find(dz1~=0);
 		else
-			dz1=[];
+			dz1=[]; %#ok<NASGU>
 			i0=[];
 		end
 		x1 = x(zi(i0));
