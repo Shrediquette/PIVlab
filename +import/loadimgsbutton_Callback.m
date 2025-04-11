@@ -303,7 +303,7 @@ if ~isequal(path,0)
 		gui.put('streamlinesY',[]);
 		gui.put('bg_img_A',[]);
 		gui.put('bg_img_B',[]);
-		set(handles.bg_subtract,'Value',0);
+		set(handles.bg_subtract,'Value',1);
 		set(handles.fileselector, 'value',1);
 
 		set(handles.minintens, 'string', 0);

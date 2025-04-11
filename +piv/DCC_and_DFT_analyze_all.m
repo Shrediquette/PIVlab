@@ -133,7 +133,7 @@ if ok==1
 		set(handles.totaltime,'String','');
 
 		if get(handles.algorithm_selection,'Value')==3 %dcc
-			if get(handles.bg_subtract,'Value')==1
+			if get(handles.bg_subtract,'Value')>1
 				bg_img_A = gui.retr('bg_img_A');
 				bg_img_B = gui.retr('bg_img_B');
 				bg_sub=1;
@@ -236,7 +236,7 @@ if ok==1
 			end
 			repeat_last_pass = get(handles.repeat_last,'Value');
 			delta_diff_min = str2double(get(handles.edit52x,'String'));
-			if get(handles.bg_subtract,'Value')==1
+			if get(handles.bg_subtract,'Value')>1
 				bg_img_A = gui.retr('bg_img_A');
 				bg_img_B = gui.retr('bg_img_B');
 				bg_sub=1;

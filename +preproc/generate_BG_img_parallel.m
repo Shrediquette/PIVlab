@@ -1,12 +1,23 @@
 function generate_BG_img_parallel
 handles=gui.gethand;
-if get(handles.bg_subtract,'Value')==1
+bg_operation=0;
+if get(handles.bg_subtract,'Value')==2 %subtract mean value
+	bg_operation=2;
+elseif get(handles.bg_subtract,'Value')==3 %subtract minimum vlaue
+	bg_operation=3;
+end
+if get(handles.bg_subtract,'Value')>1
 	bg_img_A = gui.retr('bg_img_A');
 	bg_img_B = gui.retr('bg_img_B');
 	sequencer=gui.retr('sequencer');%Timeresolved or pairwise 0=timeres.; 1=pairwise
 	if sequencer ~= 2 % bg subtraction only makes sense with time-resolved and pairwise sequencing style, not with reference style.
 		if isempty(bg_img_A) || isempty(bg_img_B)
-			answer = questdlg('Mean intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
+			if bg_operation ==2
+				answer = questdlg('Mean intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
+			end
+			if bg_operation ==3
+				answer = questdlg('Minimum intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
+			end
 			if strcmp(answer , 'OK')
 				%disp('BG not present, calculating now')
 				%% Calculate BG for all images....
@@ -101,19 +112,21 @@ if get(handles.bg_subtract,'Value')==1
 				end
 
 				hbar = gui.pivprogress(numel(imagelist_A),handles.preview_preprocess);
-				parfor	i=1:numel(imagelist_A)
+				image1x=image1;
+				image2x=image2;
+				parfor	iii=1:numel(imagelist_A)
 					image_to_add1=[];
 					image_to_add2=[];
 					counter=counter+1; %counts the amount of images --> do that elsewhere
 					if strcmp('b16_image',imagesource)
-						image_to_add1 = import.f_readB16(imagelist_A{i}); %will be double
+						image_to_add1 = import.f_readB16(imagelist_A{iii}); %will be double
 						if sequencer==1 %not time-resolved
-							image_to_add2 = import.f_readB16(imagelist_B{i});
+							image_to_add2 = import.f_readB16(imagelist_B{iii});
 						end
 					elseif strcmp('normal_pixel_image',imagesource)
-						image_to_add1 = import.imread_wrapper(imagelist_A{i},framenumlist_A(i),framepartlist_A(i,:));
+						image_to_add1 = import.imread_wrapper(imagelist_A{iii},framenumlist_A(iii),framepartlist_A(iii,:));
 						if sequencer==1 %not time-resolved
-							image_to_add2 = import.imread_wrapper(imagelist_B{i},framenumlist_B(i),framepartlist_B(i,:)); %will be double or uint8
+							image_to_add2 = import.imread_wrapper(imagelist_B{iii},framenumlist_B(iii),framepartlist_B(iii,:)); %will be double or uint8
 						end
 					elseif strcmp('from_video',imagesource)
 						disp('parallel bg calculation wird mit videoframes nicht gehen....')
@@ -150,19 +163,39 @@ if get(handles.bg_subtract,'Value')==1
 					%now everything is double [0...1]
 
 					%% sum images
-					image1=image1 +image_to_add1;
-					if sequencer==1 %not time-resolved
-						image2=image2+image_to_add2;
+					if bg_operation==2
+						image1=image1 +image_to_add1;
 					end
+						if bg_operation==3
+						image1x = min(image1x, image_to_add1);
+					end
+
+					if sequencer==1 %not time-resolved
+						if bg_operation==2
+							image2=image2+image_to_add2;
+						end
+						if bg_operation==3
+							image2x = min(image2x, image_to_add2);
+						end
+					end
+
 					hbar.iterate(1); %#ok<*PFBNS>
 				end %of for loop and image summing
 				close(hbar);
 
 				set (handles.preview_preprocess, 'string', 'Apply and preview current frame');
 				%divide the sum by the amount of summed images
-				image1_bg=image1/counter;
-				if sequencer==1 %not time-resolved
-					image2_bg=image2/counter;
+				if bg_operation==2
+					image1_bg=image1/counter;
+					if sequencer==1 %not time-resolved
+						image2_bg=image2/counter;
+					end
+				end
+				if bg_operation==3
+					image1_bg=image1x;
+					if sequencer==1 %not time-resolved
+						image2_bg=image2x;
+					end
 				end
 
 				%Convert back to original image class, if not double anyway
@@ -196,14 +229,14 @@ if get(handles.bg_subtract,'Value')==1
 				gui.update_progress(0)
 				gui.toolsavailable(1)
 			else % user has checkbox enabled, but doesn't want to calculate the background...
-				set(handles.bg_subtract,'Value',0);
+				set(handles.bg_subtract,'Value',1);
 			end
 		else
 			%disp('BG exists')
 		end
 
 	else
-		set(handles.bg_subtract,'Value',0);
+		set(handles.bg_subtract,'Value',1);
 		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'])
 		uiwait
 	end

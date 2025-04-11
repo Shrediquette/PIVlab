@@ -218,9 +218,9 @@ elseif valid_session_file == 1
 
 	try
 		if ~isempty(vars.bg_img_A)
-			set(handles.bg_subtract,'Value',1);
+			set(handles.bg_subtract,'Value',2);
 		else
-			set(handles.bg_subtract,'Value',0);
+			set(handles.bg_subtract,'Value',1);
 		end
 	catch
 		disp('Could not set bg checkbox')

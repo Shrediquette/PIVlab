@@ -20,7 +20,7 @@ else
 	rawimage=currentimage;
 end
 
-if get(handles.bg_subtract,'Value')==1
+if get(handles.bg_subtract,'Value')>1
 	if mod(selected,2)==1 %uneven image nr.
 		bg_img = gui.retr('bg_img_A');
 	else
@@ -28,7 +28,7 @@ if get(handles.bg_subtract,'Value')==1
 	end
 
 	if isempty(bg_img) %checkbox is enabled, but no bg is present
-		set(handles.bg_subtract,'Value',0);
+		set(handles.bg_subtract,'Value',1);
 	else
 		if size(currentimage,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
 			currentimage = rgb2gray(currentimage)-bg_img;

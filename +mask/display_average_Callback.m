@@ -2,8 +2,8 @@ function display_average_Callback (~,~,~)
 handles=gui.gethand;
 bg_img_A = gui.retr('bg_img_A');
 bg_img_B = gui.retr('bg_img_B');
-if get(handles.bg_subtract,'Value')==0
-	set(handles.bg_subtract,'Value',1);
+if get(handles.bg_subtract,'Value')==1
+	set(handles.bg_subtract,'Value',2);
 	bg_was_on=0;
 else
 	bg_was_on=1;
@@ -29,7 +29,7 @@ if ~isempty(bg_img_A)
 	set(gca,'xtick',[])
 end
 if bg_was_on==0
-	set(handles.bg_subtract,'Value',0)
+	set(handles.bg_subtract,'Value',1)
 	gui.put('bg_img_A',[]);
 	gui.put('bg_img_B',[]);
 end

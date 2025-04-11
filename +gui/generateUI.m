@@ -637,13 +637,14 @@ handles.minintens = uicontrol(handles.multip03,'Style','edit', 'String','0','Uni
 item=[parentitem(3)/2 item(2) parentitem(3)/3*1 1];
 handles.maxintens = uicontrol(handles.multip03,'Style','edit', 'String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','maxintens','Callback',@preproc.minintens_Callback,'TooltipString','Upper bound of the histogram [0...1]');
 
-item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 6];
+item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 4];
 handles.uipanel351 = uipanel(handles.multip03, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Background Subtraction', 'Tag','uipanel351','fontweight','bold');
 parentitem=get(handles.uipanel351, 'Position');
 item=[0 0 0 0];
-item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.1];
-handles.bg_subtract = uicontrol(handles.uipanel351,'Style','checkbox', 'value',0, 'String','Subtract mean intensity','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bg_subtract','Callback',@preproc.remove_bg_img, 'TooltipString','Calculates an average image out of all images, then subtracts that from every image.');
-item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/3 1.5];
+handles.bg_subtract = uicontrol(handles.uipanel351,'Style','popupmenu', 'String',{'off','subtract average intensity','subtract minimum intensity'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bg_subtract','Callback',@preproc.remove_bg_img, 'TooltipString','Calculates an average or minimum image out of all images, then subtracts that from every image.');
+
+item=[parentitem(3)/3 item(2) parentitem(3)/3*2 1.5];
 handles.bg_view = uicontrol(handles.uipanel351,'Style','pushbutton','String','View background image','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.bg_view_Callback,'Tag','bg_view','TooltipString','Display the generated background image. Click again to toggle between background A and B.');
 
 parentitem=get(handles.multip03, 'Position');

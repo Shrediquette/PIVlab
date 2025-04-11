@@ -37,7 +37,7 @@ if ~isempty(resultslist)
 			slicedframepart1(k,:)=framepart(i,:);
 			slicedframepart2(k,:)=framepart(i+1,:);
 		end
-		if get(handles.bg_subtract,'Value')==1
+		if get(handles.bg_subtract,'Value')>1
 			bg_img_A = gui.retr('bg_img_A');
 			bg_img_B = gui.retr('bg_img_B');
 			bg_sub=1;

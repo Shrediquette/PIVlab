@@ -1,12 +1,23 @@
 function generate_BG_img
 handles=gui.gethand;
-if get(handles.bg_subtract,'Value')==1
+bg_operation=0;
+if get(handles.bg_subtract,'Value')==2 %subtract mean value
+	bg_operation=2;
+elseif get(handles.bg_subtract,'Value')==3 %subtract minimum vlaue
+	bg_operation=3;
+end
+if get(handles.bg_subtract,'Value')>1
 	bg_img_A = gui.retr('bg_img_A');
 	bg_img_B = gui.retr('bg_img_B');
 	sequencer=gui.retr('sequencer');%Timeresolved or pairwise 0=timeres.; 1=pairwise
 	if sequencer ~= 2 % bg subtraction only makes sense with time-resolved and pairwise sequencing style, not with reference style.
 		if isempty(bg_img_A) || isempty(bg_img_B)
-			answer = questdlg('Mean intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
+			if bg_operation ==2
+				answer = questdlg('Mean intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
+			end
+			if bg_operation ==3
+				answer = questdlg('Minimum intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
+			end
 			if strcmp(answer , 'OK')
 				%disp('BG not present, calculating now')
 				%% Calculate BG for all images....
@@ -76,6 +87,7 @@ if get(handles.bg_subtract,'Value')==1
 				%als erstes: normaler for loop erstellt feste Liste mit Dateinamen.
 				%aus denen holt sich parfor loop die infos
 				%loop unten kann so bleiben wie er ist, lädt aber nicht bilder, sondern schreibt dateinamen in liste
+				
 				for i=start_bg:skip_bg:size(filepath,1)
 					counter=counter+1; %counts the amount of images --> do that elsewhere
 					%% update progress bar
@@ -149,10 +161,13 @@ if get(handles.bg_subtract,'Value')==1
 					end
 
 					%% sum images
-					image1=image1 +image_to_add1;
-					%just keep smallest element
-					%image1(image_to_add1<image1) = image_to_add1(image_to_add1<image1);
-					
+					if bg_operation==2
+						image1=image1 +image_to_add1;
+					end
+					if bg_operation==3
+						image1 = min(image1, image_to_add1);
+					end
+
 					if sequencer==1 %not time-resolved
 						img_size_info1=size(image2);
 						img_size_info2=size(image_to_add2);
@@ -160,18 +175,30 @@ if get(handles.bg_subtract,'Value')==1
 							uiwait(warndlg('Error: All images in a session  MUST have the same size!'));
 							break
 						end
-						image2=image2+image_to_add2;
-						%image2(image_to_add2<image2) = image_to_add2(image_to_add2<image2);
+						if bg_operation==2
+							image2=image2+image_to_add2;
+						end
+						if bg_operation==3
+							image2 = min(image2, image_to_add2);
+						end
 					end
 				end %of for loop and image summing
 
 
 				%divide the sum by the amount of summed images
-				image1_bg=image1/counter;
-				if sequencer==1 %not time-resolved
-					image2_bg=image2/counter;
+				if bg_operation==2
+					image1_bg=image1/counter;
+					if sequencer==1 %not time-resolved
+						image2_bg=image2/counter;
+					end
 				end
-
+				
+				if bg_operation==3
+					image1_bg=image1;
+					if sequencer==1 %not time-resolved
+						image2_bg=image2;
+					end
+				end
 				%Convert back to original image class, if not double anyway
 				if strcmp(classimage,'uint8')==1 %#ok<*STISA>
 					image1_bg=uint8(image1_bg*255);
@@ -203,7 +230,7 @@ if get(handles.bg_subtract,'Value')==1
 				gui.update_progress(0)
 				gui.toolsavailable(1)
 			else % user has checkbox enabled, but doesn't want to calculate the background...
-				set(handles.bg_subtract,'Value',0);
+				set(handles.bg_subtract,'Value',1);
 			end
 
 		else
@@ -211,9 +238,8 @@ if get(handles.bg_subtract,'Value')==1
 		end
 
 	else
-		set(handles.bg_subtract,'Value',0);
+		set(handles.bg_subtract,'Value',1);
 		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'])
 		uiwait
 	end
 end
-
