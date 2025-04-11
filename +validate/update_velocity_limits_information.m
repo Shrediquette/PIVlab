@@ -1,8 +1,8 @@
 function update_velocity_limits_information
 velrect=gui.retr('velrect');
 velrect_freehand=gui.retr('velrect_freehand');
-if ~isempty (velrect) || ~isempty(velrect_freehand)
 	handles=gui.gethand;
+if ~isempty (velrect) || ~isempty(velrect_freehand)
 	if gui.retr('darkmode')
 		bg_col=[0 80/255 0];
 	else
@@ -22,6 +22,13 @@ if ~isempty (velrect) || ~isempty(velrect_freehand)
 		set (handles.vel_limit_active, 'String', 'Freehand limit active', 'backgroundcolor', bg_col);
 	elseif state == 3
 		set (handles.vel_limit_active, 'String', 'Rectangle and freehand limit active', 'backgroundcolor', bg_col);
+	elseif state == 0
+		if gui.retr('darkmode')
+			bg_col=[35/255 35/255 35/255];
+		else
+			bg_col=[0.9411764705882353 0.9411764705882353 0.9411764705882353];
+		end
+		set (handles.vel_limit_active, 'String', 'Limit inactive', 'backgroundcolor', bg_col);
 	end
 	if ~isempty (velrect)
 		umin=velrect(1);
@@ -39,4 +46,11 @@ if ~isempty (velrect) || ~isempty(velrect_freehand)
 			end
 		end
 	end
+else % both empty
+	if gui.retr('darkmode')
+		bg_col=[35/255 35/255 35/255];
+	else
+		bg_col=[0.9411764705882353 0.9411764705882353 0.9411764705882353];
+	end
+	set (handles.vel_limit_active, 'String', 'Limit inactive', 'backgroundcolor', bg_col);
 end

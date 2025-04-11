@@ -118,7 +118,7 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 	end
 	if deriv==3 %magnitude
 		ismean=gui.retr('ismean');
-		if ismean(frame) ==1 % temporal derivative
+		if ~isempty(ismean) && ismean(frame) ==1 % temporal derivative
 			%not so nice workaround would be to check if filestring contains TKE, and then change the way that this is calculated...
 			%because magnitude is like (x.^2+v.^2).^0.5   ,   but total TKE is x+y
 			filename=gui.retr('filename');

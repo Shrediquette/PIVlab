@@ -41,7 +41,7 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 		limit_figure = findobj('Tag', 'limit_figure');
 
 		if isempty(limit_figure)
-			limit_figure = figure('Tag','limit_figure','MenuBar','none','DockControls','off','WindowStyle','modal','ToolBar','Figure','Name','Click + drag to select valid velocities','NumberTitle','off');
+			limit_figure = figure('Tag','limit_figure','MenuBar','none','DockControls','off','WindowStyle','modal','ToolBar','Figure','Name','Click + drag to select valid velocities','NumberTitle','off','CloseRequestFcn',@CustomCloseReq);
 			limit_ax = axes('Parent',limit_figure);
 		else
 			figure(limit_figure)
@@ -114,13 +114,28 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 			else
 				axes(limit_ax)
 				draw(regionOfInterest);
-				gui.put ('velrect_freehand',regionOfInterest.Position);
+				if exist ('regionOfInterest','var') && isprop(regionOfInterest,'Position')
+					while exist ('regionOfInterest','var') && isprop(regionOfInterest,'Position') && size(regionOfInterest.Position,1)<=1 %user doesnt click + drag
+						regionOfInterest.Label='Click and drag to draw freehand shape';
+						regionOfInterest.LabelVisible='on';
+						pause(1)
+						if exist ('regionOfInterest','var') && isprop(regionOfInterest,'Label')
+							regionOfInterest.Label='Close window when done';
+							regionOfInterest.LabelVisible='hover';
+							draw(regionOfInterest);
+						end
+					end
+					if exist ('regionOfInterest','var') && isprop(regionOfInterest,'Position') && regionOfInterest.Position(3)+regionOfInterest.Position(4) >0
+						gui.put ('velrect_freehand',regionOfInterest.Position);
+					end
+				end
 			end
-			addlistener(regionOfInterest,'MovingROI',@validate.RegionOfInterestevents);
-			addlistener(regionOfInterest,'DeletingROI',@validate.RegionOfInterestevents);
-			dummyevt.EventName = 'MovingROI';
-			validate.RegionOfInterestevents(regionOfInterest,dummyevt); %run the moving event once to update displayed length
-
+			if exist ('regionOfInterest','var') && isprop(regionOfInterest,'Position')
+				addlistener(regionOfInterest,'MovingROI',@validate.RegionOfInterestevents);
+				addlistener(regionOfInterest,'DeletingROI',@validate.RegionOfInterestevents);
+				dummyevt.EventName = 'MovingROI';
+				validate.RegionOfInterestevents(regionOfInterest,dummyevt); %run the moving event once to update displayed length
+			end
 		else %rectangular ROI
 			delete(findobj('tag', 'vel_limit_ROI'));
 			regionOfInterest = images.roi.Rectangle;
@@ -144,13 +159,39 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 			else
 				axes(limit_ax)
 				draw(regionOfInterest);
+				if exist ('regionOfInterest','var') && isprop(regionOfInterest,'Position')
+					while exist ('regionOfInterest','var') && isprop(regionOfInterest,'Position') && regionOfInterest.Position(3)+regionOfInterest.Position(4) ==0 %user doesnt click + drag
+						regionOfInterest.Label='Click and drag to draw rectangle';
+						regionOfInterest.LabelVisible='on';
+						pause(1)
+						if exist ('regionOfInterest','var') && isprop(regionOfInterest,'Label')
+							regionOfInterest.Label='Close window when done';
+							regionOfInterest.LabelVisible='hover';
+							draw(regionOfInterest);
+						end
+					end
+					if exist ('regionOfInterest','var') && isprop(regionOfInterest,'Position') && regionOfInterest.Position(3)+regionOfInterest.Position(4) >0
+						gui.put ('velrect',regionOfInterest.Position);
+					end
+				end
 			end
-			addlistener(regionOfInterest,'MovingROI',@validate.RegionOfInterestevents);
-			addlistener(regionOfInterest,'DeletingROI',@validate.RegionOfInterestevents);
-			dummyevt.EventName = 'MovingROI';
-			validate.RegionOfInterestevents(regionOfInterest,dummyevt); %run the moving event once to update displayed length
+			if exist ('regionOfInterest','var') && isprop(regionOfInterest,'Position')
+				addlistener(regionOfInterest,'MovingROI',@validate.RegionOfInterestevents);
+				addlistener(regionOfInterest,'DeletingROI',@validate.RegionOfInterestevents);
+				dummyevt.EventName = 'MovingROI';
+				validate.RegionOfInterestevents(regionOfInterest,dummyevt); %run the moving event once to update displayed length
+			end
 			%put ('roirect',roi.Position);
 		end
 	end
 	gui.toolsavailable(1)
+end
+
+function CustomCloseReq(A,~,~)
+gui.toolsavailable(1)
+%validate.update_velocity_limits_information
+try
+	close(A)
+catch ME
+	delete(A)
 end
