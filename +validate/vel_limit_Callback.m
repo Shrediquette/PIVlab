@@ -189,9 +189,5 @@ end
 
 function CustomCloseReq(A,~,~)
 gui.toolsavailable(1)
-%validate.update_velocity_limits_information
-try
-	close(A)
-catch ME
-	delete(A)
-end
+delete(A)
+
