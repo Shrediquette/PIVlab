@@ -848,11 +848,14 @@ handles.uipanel42x = uipanel(handles.multip06, 'Units','characters', 'Position',
 parentitem=get(handles.uipanel42x, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 2];
-handles.vel_limit = uicontrol(handles.uipanel42x,'Style','pushbutton','String','Select rectangle','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.vel_limit_Callback,'Tag','vel_limit','TooltipString','Display a velocity scatter plot and draw a window around the allowed velocities');
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/3 2];
+handles.vel_limit = uicontrol(handles.uipanel42x,'Style','pushbutton','String','Rectangle','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.vel_limit_Callback,'Tag','vel_limit','TooltipString','Display a velocity scatter plot and draw a window around the allowed velocities');
 
-item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
-handles.vel_limit_freehand = uicontrol(handles.uipanel42x,'Style','pushbutton','String','Select freehand','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.vel_limit_Callback,'Tag','vel_limit_freehand','TooltipString','Display a velocity scatter plot and freely draw around the allowed velocities');
+item=[parentitem(3)/3*1 item(2) parentitem(3)/3 2];
+handles.vel_limit_freehand = uicontrol(handles.uipanel42x,'Style','pushbutton','String','Freehand','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.vel_limit_Callback,'Tag','vel_limit_freehand','TooltipString','Display a velocity scatter plot and freely draw around the allowed velocities');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3 2];
+handles.vel_limit_auto = uicontrol(handles.uipanel42x,'Style','pushbutton','String','Auto','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.vel_limit_Callback,'Tag','vel_limit_auto','TooltipString','Display a velocity scatter plot and automatically draw a shape around them');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.1];
 handles.meanofall = uicontrol(handles.uipanel42x,'Style','checkbox','Value',1,'String','display all frames in scatterplot','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','meanofall','TooltipString','Use velocity data of all frames in the velocity scatter plot');
