@@ -1,5 +1,6 @@
 function load_session_Callback(auto_load_session, auto_load_session_filename)
 valid_session_file=1;
+display_hint=0;
 gui.put('num_handle_calls',0);
 sessionpath=gui.retr('sessionpath');
 if isempty(sessionpath)
