@@ -119,7 +119,7 @@ classdef pivprogress < handle
 					
 					if this.percent ~= last_par_percent
 						if ~isinf(remain_t)
-							%set(this.hdl, 'string' , ['Total progress: ' num2str(floor(100*this.percent)) '%' sprintf('\n') remain_string ]); %#ok<SPRINTFN>
+							set(this.hdl, 'string' , ['Total progress: ' num2str(floor(100*this.percent)) '%' sprintf('\n') remain_string ]); %#ok<SPRINTFN>
 							gui.update_progress(100*this.percent)
 						end
 						setappdata(0,'par_percent',this.percent)
