@@ -20,15 +20,15 @@ end
 if useGUI ==1
 	if ispc==1
 		try
-			[path, multitiff]=gui.uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 10000], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+			[path, multitiff]=gui.uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
 		catch
-			[path, multitiff]=gui.uipickfiles ('FilterSpec', pwd, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 10000], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+			[path, multitiff]=gui.uipickfiles ('FilterSpec', pwd, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
 		end
 	else
 		try
-			[path, multitiff]=gui.uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 10000], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+			[path, multitiff]=gui.uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
 		catch
-			[path, multitiff]=gui.uipickfiles ('FilterSpec', pwd, 'numfiles', [1 10000], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+			[path, multitiff]=gui.uipickfiles ('FilterSpec', pwd, 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
 		end
 	end
 	gui.put('expected_image_size',[])
