@@ -55,6 +55,7 @@ if get(handles.bg_subtract,'Value')>1
 				end
 				counter=1;
 
+				%{
 				%convert all image types to double, ranging from 0...1
 				if strcmp(classimage,'double')==1 %double stays double
 					%do nothing
@@ -68,6 +69,10 @@ if get(handles.bg_subtract,'Value')>1
 					image1=double(image1)/255;
 					image2=double(image2)/255;
 				end
+				%}
+				image1=double(image1);
+				image2=double(image2);
+
 				if sequencer==0 %time-resolved
 					start_bg=2;
 					skip_bg=1;
@@ -140,7 +145,7 @@ if get(handles.bg_subtract,'Value')>1
 							image_to_add2 = rgb2gray(image_to_add2);
 						end
 					end
-
+					%{
 					if strcmp(classimage,'single')==1
 						image_to_add1=double(image_to_add1);
 						if sequencer==1 %not time-resolved
@@ -161,12 +166,17 @@ if get(handles.bg_subtract,'Value')>1
 					end
 
 					%now everything is double [0...1]
+					%}
 
+					image_to_add1=double(image_to_add1);
+					if sequencer==1 %not time-resolved
+						image_to_add2=double(image_to_add2);
+					end
 					%% sum images
 					if bg_operation==2
 						image1=image1 +image_to_add1;
 					end
-						if bg_operation==3
+					if bg_operation==3
 						image1x = min(image1x, image_to_add1);
 					end
 
@@ -197,7 +207,7 @@ if get(handles.bg_subtract,'Value')>1
 						image2_bg=image2x;
 					end
 				end
-
+				%{
 				%Convert back to original image class, if not double anyway
 				if strcmp(classimage,'uint8')==1 %#ok<*STISA>
 					image1_bg=uint8(image1_bg*255);
@@ -215,6 +225,25 @@ if get(handles.bg_subtract,'Value')>1
 					image1_bg=uint16(image1_bg*65535);
 					if sequencer==1 %not time-resolved
 						image2_bg=uint16(image2_bg*65535);
+					end
+				end
+				%}
+				if strcmp(classimage,'uint8')==1 %#ok<*STISA>
+					image1_bg=uint8(image1_bg);
+					if sequencer==1 %not time-resolved
+						image2_bg=uint8(image2_bg);
+					end
+				end
+				if strcmp(classimage,'single')==1
+					image1_bg=single(image1_bg);
+					if sequencer==1 %not time-resolved
+						image2_bg=single(image2_bg);
+					end
+				end
+				if strcmp(classimage,'uint16')==1
+					image1_bg=uint16(image1_bg);
+					if sequencer==1 %not time-resolved
+						image2_bg=uint16(image2_bg);
 					end
 				end
 

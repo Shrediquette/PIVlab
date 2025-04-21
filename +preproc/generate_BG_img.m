@@ -55,6 +55,7 @@ if get(handles.bg_subtract,'Value')>1
 				end
 				counter=1;
 
+				%{
 				%convert all image types to double, ranging from 0...1
 				if strcmp(classimage,'double')==1 %double stays double
 					%do nothing
@@ -68,6 +69,11 @@ if get(handles.bg_subtract,'Value')>1
 					image1=double(image1)/255;
 					image2=double(image2)/255;
 				end
+				%}
+
+				image1=double(image1);
+				image2=double(image2);
+
 				if sequencer==0 %time-resolved
 					start_bg=2;
 					skip_bg=1;
@@ -87,7 +93,7 @@ if get(handles.bg_subtract,'Value')>1
 				%als erstes: normaler for loop erstellt feste Liste mit Dateinamen.
 				%aus denen holt sich parfor loop die infos
 				%loop unten kann so bleiben wie er ist, lädt aber nicht bilder, sondern schreibt dateinamen in liste
-				
+
 				for i=start_bg:skip_bg:size(filepath,1)
 					counter=counter+1; %counts the amount of images --> do that elsewhere
 					%% update progress bar
@@ -124,12 +130,20 @@ if get(handles.bg_subtract,'Value')>1
 							image_to_add2 = rgb2gray(image_to_add2);
 						end
 					end
+
+					image_to_add1=double(image_to_add1);
+					if sequencer==1 %not time-resolved
+						image_to_add2=double(image_to_add2);
+					end
+
+					%{
 					if strcmp(classimage,'double')==1
 						image_to_add1=image_to_add1;
 						if sequencer==1 %not time-resolved
 							image_to_add2=image_to_add2;
 						end
 					end
+
 					if strcmp(classimage,'single')==1
 						image_to_add1=double(image_to_add1);
 						if sequencer==1 %not time-resolved
@@ -148,8 +162,10 @@ if get(handles.bg_subtract,'Value')>1
 							image_to_add2=double(image_to_add2)/65535;
 						end
 					end
-
 					%now everything is double [0...1]
+					%}
+
+
 
 					%% check if image size matches other images
 					% remove this, takes only time
@@ -192,13 +208,15 @@ if get(handles.bg_subtract,'Value')>1
 						image2_bg=image2/counter;
 					end
 				end
-				
+
 				if bg_operation==3
 					image1_bg=image1;
 					if sequencer==1 %not time-resolved
 						image2_bg=image2;
 					end
 				end
+
+				%{
 				%Convert back to original image class, if not double anyway
 				if strcmp(classimage,'uint8')==1 %#ok<*STISA>
 					image1_bg=uint8(image1_bg*255);
@@ -216,6 +234,26 @@ if get(handles.bg_subtract,'Value')>1
 					image1_bg=uint16(image1_bg*65535);
 					if sequencer==1 %not time-resolved
 						image2_bg=uint16(image2_bg*65535);
+					end
+				end
+				%}
+				%Convert back to original image class, if not double anyway
+				if strcmp(classimage,'uint8')==1 %#ok<*STISA>
+					image1_bg=uint8(image1_bg);
+					if sequencer==1 %not time-resolved
+						image2_bg=uint8(image2_bg);
+					end
+				end
+				if strcmp(classimage,'single')==1
+					image1_bg=single(image1_bg);
+					if sequencer==1 %not time-resolved
+						image2_bg=single(image2_bg);
+					end
+				end
+				if strcmp(classimage,'uint16')==1
+					image1_bg=uint16(image1_bg);
+					if sequencer==1 %not time-resolved
+						image2_bg=uint16(image2_bg);
 					end
 				end
 
