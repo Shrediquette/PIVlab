@@ -4,6 +4,7 @@ MainWindow=getappdata(0,'hgui');
 m1 = uimenu(MainWindow,'Label','File');
 uimenu(m1,'Label','New session','Callback',@import.loadimgs_Callback,'Accelerator','N');
 m2 = uimenu(m1,'Label','Load');
+uimenu(m2,'Label','Load images','Callback',@load_images_dummy);
 uimenu(m2,'Label','Import PIVlab settings','Callback',@import.load_settings_Callback);
 uimenu(m2,'Label','Load PIVlab session','Separator','on','Callback',@import.load_session_Callback);
 m3 = uimenu(m1,'Label','Save');
@@ -58,3 +59,7 @@ menuhandles = findall(getappdata(0,'hgui'),'type','uimenu'); %das soll gemacht w
 set(menuhandles,'HandleVisibility','off');
 disp('-> Menu generated.')
 
+function load_images_dummy(~,~,~) % dummy function that performs two callbacks for loading images.
+    import.loadimgs_Callback
+    drawnow
+    import.loadimgsbutton_Callback([],[],1,[])
