@@ -150,7 +150,13 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 		alpha_ROI_map(:)=1;
 	end
 	hold on;
-	image(currentimage, 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',derivative_alpha.*alpha_pixel_map.*alpha_ROI_map);
+	alphamap=derivative_alpha.*alpha_pixel_map.*alpha_ROI_map;
+	alphamap(alphamap>1)=1;
+	alphamap(alphamap<0)=0;
+	%temporary workaround for bug in R2025 causing slow performance when not using alphadatamapping=scaled
+	alphamap(1,1)=0;
+	alphamap(end,end)=1;
+	image(currentimage, 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',alphamap,'AlphaDataMapping','scaled');
 	hold off;
 
 	%% colorbar
@@ -218,7 +224,13 @@ if 	render_mask==1 && get(handles.mask_edit_mode,'Value')==2 %mask preview mode
 		skip_mask_pixels=1;
 	end
 	hold on;
-	image(x,y,cat(3, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.7, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1), 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*(1-(str2num(get(handles.masktransp,'String'))/100)));
+	alphamapmask=converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*(1-(str2double(get(handles.masktransp,'String'))/100));
+	alphamapmask(alphamapmask>1)=1;
+	alphamapmask(alphamapmask<0)=0;
+	%temporary workaround for bug in R2025 causing slow performance when not using alphadatamapping=scaled
+	alphamapmask(1,1)=0;
+	alphamapmask(end,end)=1;
+	image(x,y,cat(3, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.7, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1), 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',alphamapmask,'AlphaDataMapping','scaled');
 	hold off
 end
 

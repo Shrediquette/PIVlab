@@ -27,7 +27,14 @@ if size(filepath,1) > 1 %did the user load images?
 	axis image
 	set(gui.retr('pivlab_axis'),'ytick',[])
 	set(gui.retr('pivlab_axis'),'xtick',[])
-	image(cat(3, pixel_mask*0.7, pixel_mask*0.1, pixel_mask*0.1), 'parent',gui.retr('pivlab_axis'), 'cdatamapping', 'direct','AlphaData',pixel_mask*0.9);
+
+	alphamap=pixel_mask*0.9;
+	alphamap(alphamap>1)=1;
+	alphamap(alphamap<0)=0;
+	%temporary workaround for bug in R2025 causing slow performance when not using alphadatamapping=scaled
+	alphamap(1,1)=0;
+	alphamap(end,end)=1;
+	image(cat(3, pixel_mask*0.7, pixel_mask*0.1, pixel_mask*0.1), 'parent',gui.retr('pivlab_axis'), 'cdatamapping', 'direct','AlphaData',alphamap,'AlphaDataMapping','scaled');
 	hold off
 end
 
