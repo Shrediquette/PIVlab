@@ -131,7 +131,6 @@ if ok==1
 		calc_time_start=tic;
 		hbar = gui.pivprogress(size(slicedfilepath1,2),handles.overall);
 		set(handles.totaltime,'String','');
-
 		if get(handles.algorithm_selection,'Value')==3 %dcc
 			if get(handles.bg_subtract,'Value')>1
 				bg_img_A = gui.retr('bg_img_A');
@@ -181,28 +180,25 @@ if ok==1
 				image1=currentimage1;
 				image2=currentimage2;
 
-
-				minintenst=minintens;
-				maxintenst=maxintens;
+				stretcher_A=[]; %initialize for parfor loop
+				stretcher_B=[];
 				if autolimit == 1
-					if toggler==0
-						if size(image1,3)>1
-							stretcher = stretchlim(rgb2gray(image1));
-						else
-							stretcher = stretchlim(image1);
-						end
+					if size(image1,3)>1
+						stretcher_A = stretchlim(rgb2gray(image1));
+						stretcher_B = stretchlim(rgb2gray(image2));
 					else
-						if size(image2,3)>1
-							stretcher = stretchlim(rgb2gray(image2));
-						else
-							stretcher = stretchlim(image2);
-						end
+						stretcher_A = stretchlim(image1);
+						stretcher_B = stretchlim(image2);
 					end
-					minintenst=stretcher(1);
-					maxintenst=stretcher(2);
+				else
+					stretcher_A(1)=minintens;
+					stretcher_B(1)=minintens;
+					stretcher_A(2)=maxintens;
+					stretcher_B(2)=maxintens;
 				end
-				image1 = preproc.PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-				image2 = preproc.PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+
+				image1 = preproc.PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,stretcher_A(1),stretcher_A(2));
+				image2 = preproc.PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,stretcher_B(1),stretcher_B(2));
 
 
 				if numel(masks_in_frame)< i
@@ -291,27 +287,26 @@ if ok==1
 				image1=currentimage1;
 				image2=currentimage2;
 
-				minintenst=minintens;
-				maxintenst=maxintens;
+				stretcher_A=[]; %initialize for parfor loop
+				stretcher_B=[];
 				if autolimit == 1
-					if toggler==0
-						if size(image1,3)>1
-							stretcher = stretchlim(rgb2gray(image1));
-						else
-							stretcher = stretchlim(image1);
-						end
+					if size(image1,3)>1
+						stretcher_A = stretchlim(rgb2gray(image1));
+						stretcher_B = stretchlim(rgb2gray(image2));
 					else
-						if size(image2,3)>1
-							stretcher = stretchlim(rgb2gray(image2));
-						else
-							stretcher = stretchlim(image2);
-						end
+						stretcher_A = stretchlim(image1);
+						stretcher_B = stretchlim(image2);
 					end
-					minintenst=stretcher(1);
-					maxintenst=stretcher(2);
+				else
+					stretcher_A(1)=minintens;
+					stretcher_B(1)=minintens;
+					stretcher_A(2)=maxintens;
+					stretcher_B(2)=maxintens;
 				end
-				image1 = preproc.PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-				image2 = preproc.PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+
+				image1 = preproc.PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,stretcher_A(1),stretcher_A(2));
+				image2 = preproc.PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,stretcher_B(1),stretcher_B(2));
+
 				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv.piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_pad,do_correlation_matrices,repeat_last_pass,delta_diff_min); %#ok<PFTUSW>
 				xlist{i}=x;
 				ylist{i}=y;
@@ -388,26 +383,27 @@ if ok==1
 				maxintens=str2double(get(handles.maxintens, 'string'));
 				%clipthresh=str2double(get(handles.clip_thresh, 'string'));
 				roirect=gui.retr('roirect');
-				if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+
+				stretcher_A=[]; %initialize for parfor loop
+				stretcher_B=[];
+				if autolimit == 1
 					if size(image1,3)>1
-						stretcher = stretchlim(rgb2gray(image1));
+						stretcher_A = stretchlim(rgb2gray(image1));
+						stretcher_B = stretchlim(rgb2gray(image2));
 					else
-						stretcher = stretchlim(image1);
+						stretcher_A = stretchlim(image1);
+						stretcher_B = stretchlim(image2);
 					end
-					minintens = stretcher(1);
-					maxintens = stretcher(2);
+				else
+					stretcher_A(1)=minintens;
+					stretcher_B(1)=minintens;
+					stretcher_A(2)=maxintens;
+					stretcher_B(2)=maxintens;
 				end
-				image1 = preproc.PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
-				if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-					if size(image2,3)>1
-						stretcher = stretchlim(rgb2gray(image2));
-					else
-						stretcher = stretchlim(image2);
-					end
-					minintens = stretcher(1);
-					maxintens = stretcher(2);
-				end
-				image2 = preproc.PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens);
+
+				image1 = preproc.PIVlab_preproc (image1,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,stretcher_A(1),stretcher_A(2));
+				image2 = preproc.PIVlab_preproc (image2,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,stretcher_B(1),stretcher_B(2));
+							
 				interrogationarea=str2double(get(handles.intarea, 'string'));
 				step=str2double(get(handles.step, 'string'));
 				subpixfinder=get(handles.subpix,'value');
