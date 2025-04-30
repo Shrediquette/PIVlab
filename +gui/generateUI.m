@@ -1192,7 +1192,7 @@ item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
 handles.text140 = uicontrol(handles.uipanel37,'Style','text','String','interpolated vectors','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text142', 'fontsize', 6);
 
 parentitem=get(handles.multip09, 'Position');
-item=[0 12.5+6.5+1.5 parentitem(3) 10];
+item=[0 12.5+6.5+1.5 parentitem(3) 9];
 handles.uipanel27 = uipanel(handles.multip09, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Derived parameter appearance', 'Tag','uipanel27','fontweight','bold');
 
 parentitem=get(handles.uipanel27, 'Position');
@@ -1226,7 +1226,7 @@ handles.colormap_interpolation = uicontrol(handles.uipanel27,'Style','popupmenu'
 handles.img_not_mask = uicontrol(handles.uipanel27,'Style','checkbox','String','Do not display mask','Units','characters','Visible','off','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','img_not_mask');
 
 parentitem=get(handles.multip09, 'Position');
-item=[0 12.5+6.5+1.5+10.5 parentitem(3) 6];
+item=[0 12.5+6.5+1.5+9.4 parentitem(3) 5.7];
 handles.uipanel27b = uipanel(handles.multip09, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Color legend', 'Tag','uipanel27b','fontweight','bold');
 
 parentitem=get(handles.uipanel27b, 'Position');
@@ -1245,8 +1245,16 @@ item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
 handles.colorbarnumberformat = uicontrol(handles.uipanel27b,'Style','popupmenu', 'String',{'compact notation' 'scientific notation' 'fixed-decimals'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colorbarnumberformat','TooltipString','Number format of the colorbar');
 
 parentitem=get(handles.multip09, 'Position');
-item=[0 0 0 0];
-item=[0 17.5+4+14+1+margin parentitem(3) 1.1];
+item=[0 17.5+4+14.2+margin/4 parentitem(3)/2 2];
+handles.ref_vect_txt = uicontrol(handles.multip09,'Style','text','String','Reference vector scale:', 'HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ref_vect_txt','TooltipString','Display a reference vector');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/6 1.5];
+handles.ref_vect_scl = uicontrol(handles.multip09,'Style','edit','String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ref_vect_scl','TooltipString','Scaling of the reference vector. Same units as vector units.');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3 2];
+handles.ref_vect_pos = uicontrol(handles.multip09,'Style','popupmenu', 'String',{'Off' 'Top left','Top right','Bottom right','Bottom left'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ref_vect_pos','TooltipString','Position of the reference vector');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.1];
 handles.enhance_images = uicontrol(handles.multip09,'Style','checkbox','String','Enhance PIV image display','Value',1,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','enhance_images','TooltipString','Improve contrast of PIV images for display');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
