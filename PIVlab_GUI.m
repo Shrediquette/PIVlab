@@ -270,19 +270,28 @@ if isempty(fh)
 					end
 				end
 			else%parameter supplied
-				if desired_num_cores > 1 && desired_num_cores ~= misc.pivparpool('size') %desired doesn't match existing pool
-					if desired_num_cores > maxNumCompThreads%desired too many cores
-						desired_num_cores=maxNumCompThreads;
-						disp('Selected too many cores. Adjusted to actually existing cores')
-					end
-					misc.pivparpool('close')
-					misc.pivparpool('open',desired_num_cores);
-					gui.put('parallel',1);
-				elseif desired_num_cores < 2 %leq than 1 core desired --> serial processing.
+				if ~isnumeric(desired_num_cores)
+					disp('You need to enter a number for the amount of cores, e.g. PIVlab_GUI(4)')
+					beep;
+					disp('Press a key to continue.')
+					pause
 					misc.pivparpool('close')
 					gui.put('parallel',0);
-				elseif desired_num_cores==misc.pivparpool('size')
-					gui.put('parallel',1);
+				else
+					if desired_num_cores > 1 && desired_num_cores ~= misc.pivparpool('size') %desired doesn't match existing pool
+						if desired_num_cores > maxNumCompThreads%desired too many cores
+							desired_num_cores=maxNumCompThreads;
+							disp('Selected too many cores. Adjusted to actually existing cores')
+						end
+						misc.pivparpool('close')
+						misc.pivparpool('open',desired_num_cores);
+						gui.put('parallel',1);
+					elseif desired_num_cores < 2 %leq than 1 core desired --> serial processing.
+						misc.pivparpool('close')
+						gui.put('parallel',0);
+					elseif desired_num_cores==misc.pivparpool('size')
+						gui.put('parallel',1);
+					end
 				end
 			end
 			if gui.retr('parallel')==1
