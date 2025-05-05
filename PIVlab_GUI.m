@@ -20,7 +20,7 @@ if isdeployed
 	splashscreen = figure('integerhandle','off','resize','off','windowstyle','modal','numbertitle','off','MenuBar','none','DockControls','off','Name','PIVlab standalone','Toolbar','none','Units','pixels','Position',[10 10 150 150],'tag','splashscreen','visible','off','handlevisibility','on');
 	%splashscreen = figure('integerhandle','off','resize','off','numbertitle','off','MenuBar','none','DockControls','off','Name','PIVlab standalone','Toolbar','none','Units','pixels','Position',[10 10 100 100],'tag','splashscreen','visible','off','handlevisibility','on');
 	splash_ax=axes(splashscreen,'units','normalized');
-	bgimg=imshow(imread(fullfile('images','pivlab_standalone_splashscreen_2.jpg')),'Parent',splash_ax,'border','tight');
+	imshow(imread(fullfile('images','pivlab_standalone_splashscreen_2.jpg')),'Parent',splash_ax,'border','tight');
 	set(splash_ax,'Position',[0 0 1 1])
 	set(gca,'DataAspectRatioMode','auto')
 	movegui(splashscreen,'center');
@@ -57,7 +57,7 @@ if isempty(fh)
 	else
 	end
 
-	v=ver('MATLAB');
+	v=ver('MATLAB'); %#ok<*VERMATLAB>
 
 	if ~exist('desired_num_cores','var')
 		if ~isdeployed
@@ -88,7 +88,7 @@ if isempty(fh)
 	gui.put('quickvisible',1);
 	gui.put('alreadydisplayed',0);
 	gui.put('video_selection_done',0);
-	if ~verLessThan('Matlab','25')
+	if ~verLessThan('Matlab','25') %#ok<*VERLESSMATLAB>
 		if ispref('PIVlab_ad','dark_mode_theme')
 			gui.put('darkmode',getpref('PIVlab_ad','dark_mode_theme'));
 			if getpref('PIVlab_ad','dark_mode_theme') == 1
@@ -405,12 +405,9 @@ if isempty(fh)
 		close(splashscreen)
 	end
 	gui.SetFullScreen
-
-	gui.displogo(1);drawnow;
-
-	set(MainWindow, 'Visible','on');
-
-
+	gui.displogo(1);
+	set(MainWindow, 'Visible','on');drawnow;
+    
 	%% Batch session  processing in GUI
 	if ~exist('batch_session_file','var') %no input argument --> no GUI batch processing
 		gui.put('batchModeActive',0)
