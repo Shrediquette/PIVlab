@@ -27,4 +27,6 @@ navigation:
     url: "/screenshots"
   - title: "Applications"
     url: "/applications"
+  - title: "Support"
+    url: "/support"
     
