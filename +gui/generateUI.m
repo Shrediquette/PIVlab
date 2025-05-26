@@ -2037,26 +2037,26 @@ handles.ac_serialstatus = uicontrol(handles.uipanelac_general,'Style','edit','un
 
 % Sync control
 parentitem=get(handles.multip24, 'Position');
-item=[0 10.5 parentitem(3) 12];
+item=[0 10.5 parentitem(3) 12+0.5];
 handles.uipanelac_laser = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Synchronizer control', 'Tag','uipanelac_laser','fontweight','bold');
 
 parentitem=get(handles.uipanelac_laser, 'Position');
 item=[0 0 0 0];
 
 item=[0 0 parentitem(3)/4*2.5 2];
-handles.ac_fpstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Frame rate [Hz]:','tag','ac_fpstxt');
+handles.ac_fpstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Frame rate in Hz:','tag','ac_fpstxt');
 
-item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
+item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1.6];
 handles.ac_fps = uicontrol(handles.uipanelac_laser,'Style','popupmenu','String',{'5' '3' '1.5' '1'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.sync_settings_Callback,'Tag','ac_fps','TooltipString','Frame rate during PIV image capture','interruptible','off','busyaction','cancel');
 
-item=[0 item(2)+item(4)+margin*0.2 parentitem(3)/4*2.5 1];
-handles.ac_interpulstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pulse distance [µs]:','tag','ac_interpulstxt');
+item=[0 item(2)+item(4)+margin*0.3 parentitem(3)/4*2.5 1];
+handles.ac_interpulstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pulse distance in µs:','tag','ac_interpulstxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
 handles.ac_interpuls = uicontrol(handles.uipanelac_laser,'Style','edit','String','250','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.sync_settings_Callback,'Tag','ac_interpuls','TooltipString','Pulse spacing of the laser','interruptible','off','busyaction','cancel');
 
 item=[0 item(2)+item(4)+margin*0.2 parentitem(3)/4*2.5 1];
-handles.ac_powertxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Laser energy [%]:','tag','ac_powertxt');
+handles.ac_powertxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Laser energy in %:','tag','ac_powertxt');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
 handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String','100','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.sync_settings_Callback,'Tag','ac_power','TooltipString','Laser energy','interruptible','off','busyaction','cancel');
@@ -2089,7 +2089,7 @@ handles.ac_device_control = uicontrol(handles.uipanelac_laser,'Style','pushbutto
 
 % Camera settings
 parentitem=get(handles.multip24, 'Position');
-item=[0 23 parentitem(3) 7];
+item=[0 23.5 parentitem(3) 7];
 handles.uipanelac_camsettings = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Camera settings', 'Tag','uipanelac_camsettings','fontweight','bold');
 
 parentitem=get(handles.uipanelac_camsettings, 'Position');
@@ -2124,7 +2124,7 @@ handles.ac_displ_hist = uicontrol(handles.uipanelac_camsettings,'Style','checkbo
 % Calib capture
 
 parentitem=get(handles.multip24, 'Position');
-item=[0 27.5+3 parentitem(3) 4.5];
+item=[0 27.5+3.5 parentitem(3) 4.5];
 
 handles.uipanelac_calib = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Live image', 'Tag','uipanelac_calib','fontweight','bold');
 
@@ -2132,7 +2132,7 @@ parentitem=get(handles.uipanelac_calib, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4) parentitem(3)/2 1];
-handles.ac_expotxt = uicontrol(handles.uipanelac_calib,'Style','text', 'String','Exposure [ms]: ','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_expotxt');
+handles.ac_expotxt = uicontrol(handles.uipanelac_calib,'Style','text', 'String','Exposure in ms: ','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_expotxt');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
 handles.ac_expo = uicontrol(handles.uipanelac_calib,'Style','edit','units','characters','HorizontalAlignment','right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','50','tag','ac_expo','TooltipString','Exposure of the camera during calibration image capture','Callback', @acquisition.exposure_Callback);
@@ -2145,7 +2145,7 @@ handles.ac_calibsave = uicontrol(handles.uipanelac_calib,'Style','pushbutton','S
 
 % PIV capture
 parentitem=get(handles.multip24, 'Position');
-item=[0 33+3 parentitem(3) 5];
+item=[0 33+3.5 parentitem(3) 5];
 handles.uipanelac_capture = uipanel(handles.multip24, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Capture PIV images', 'Tag','uipanelac_capture','fontweight','bold');
 
 parentitem=get(handles.uipanelac_capture, 'Position');
