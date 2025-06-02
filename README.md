@@ -1,4 +1,5 @@
 # PIVlab - particle image velocimetry (PIV) tool with GUI
+***The latest Matlab update (R2025a) introduces some major changes to the graphics system and how apps are handled. I managed to fix all the graphics related issues, but am still struggling with the new app handling. Until I have everything fixed, I recommend to NOT update to R2025a if you want to use PIVlab.***
 
 **[http://www.PIVlab.de](http://www.PIVlab.de)**
 
