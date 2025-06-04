@@ -32,6 +32,7 @@ minOptions.Corr=8;
 minOptions.progTol=1e-5;
 minOptions.optTol=1e-5;
 minOptions.LS_type=0;
+minOptions.useMex=0;
 
 %% Generate the Image Pyramid
 ImPy0 = wOFV.GenerateImPyramid(I0Org,PyramidLevels,FiltImg);

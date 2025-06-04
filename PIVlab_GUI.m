@@ -34,6 +34,10 @@ if isempty(fh)
 	disp('-> Starting PIVlab...')
 	MainWindow = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0 0.1 1 0.8],'ResizeFcn', @gui.MainWindow_ResizeFcn,'CloseRequestFcn', @gui.MainWindow_CloseRequestFcn,'tag','hgui','visible','off','KeyPressFcn', @gui.key_press);
 	set (MainWindow,'Units','Characters');
+    try
+        set (MainWindow,'icon',fullfile('images','appicon.png'));
+    catch
+    end
 	%clc
 	%% Initialize
 	handles = guihandles; %alle handles mit tag laden und ansprechbar machen
