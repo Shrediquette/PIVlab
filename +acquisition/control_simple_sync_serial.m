@@ -17,7 +17,7 @@ try
 	alreadyconnected=1;
 catch ME
 	alreadyconnected=0;
-	disp('hier ist serialport deleted nach dem ersten erfolgreichen aufzeichnen')
+	%disp('hier ist serialport deleted nach dem ersten erfolgreichen aufzeichnen')
 end
 if alreadyconnected
 	%Master frequency in Hz

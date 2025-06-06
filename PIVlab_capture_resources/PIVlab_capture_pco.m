@@ -27,7 +27,7 @@ set(gca,'xtick',[])
 colorbar
 
 %% delete data in image directory, manage rcordfiles
-filePattern = fullfile(ImagePath, 'PIVlab_pco_Cam*.tif');
+filePattern = fullfile(ImagePath, 'PIVlab_pco*.tif');
 pathparts = strsplit(filePattern,filesep);
 diskchar = [pathparts{1} filesep];
 %diskchar='C:\\';

@@ -62,7 +62,7 @@ if (~libisloaded('PCO_CAM_SDK'))
 %     disp(warnings);
 %    end 
 %    libfunctionsview('PCO_CAM_SDK');        
-   disp('PCO_CAM_SDK library is loaded!');
+
 end
 
 if((exist('glvar','var'))&& ...
@@ -89,7 +89,6 @@ ph_ptr = libpointer('voidPtrPtr');
 if(cam_open==0)
  [errorCode,out_ptr] = calllib('PCO_CAM_SDK', 'PCO_OpenCamera', ph_ptr, 0);
  if(errorCode == 0)
-  disp('PCO_OpenCamera done');
   cam_open=1;
   if((exist('glvar','var'))&& ...
      (isfield(glvar,'camera_open'))&& ...
@@ -101,9 +100,8 @@ if(cam_open==0)
    pco_errdisp('PCO_OpenCamera',errorCode);   
   if(unload)
    unloadlibrary('PCO_CAM_SDK');
-   disp('PCO_CAM_SDK unloadlibrary done');
   end 
-  commandwindow;
+  
   return ;   
  end
 else
@@ -164,7 +162,6 @@ if((do_close==1)&&(cam_open==1))
  if(errorCode)
   pco_errdisp('PCO_CloseCamera',errorCode);   
  else
-  disp('PCO_CloseCamera done');  
   cam_open=0;
   if((exist('glvar','var'))&& ...
     (isfield(glvar,'out_ptr')))
@@ -175,7 +172,6 @@ end
 
 if((unload==1)&&(cam_open==0))
  unloadlibrary('PCO_CAM_SDK');
- disp('PCO_CAM_SDK unloadlibrary done');
 end 
 
 
@@ -185,5 +181,5 @@ if((exist('glvar','var'))&& ...
 end
 
 clearvars ;
-commandwindow;
+
 end

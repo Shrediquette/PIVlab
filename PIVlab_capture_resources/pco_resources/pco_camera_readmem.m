@@ -60,7 +60,6 @@ if (~libisloaded('PCO_CAM_SDK'))
 	loadlibrary( sdkLibName,'sc2_cammatlab.h' ...
                 ,'addheader','sc2_camexport.h' ...
                 ,'alias','PCO_CAM_SDK');
-	disp('PCO_CAM_SDK library is loaded!');
 end
 
 % Declaration of internal variables
@@ -97,7 +96,6 @@ ph_ptr = libpointer('voidPtrPtr');
 if(cam_open==0)
  [errorCode,out_ptr] = calllib('PCO_CAM_SDK', 'PCO_OpenCamera', ph_ptr, 0);
  if(errorCode == 0)
-  disp('PCO_OpenCamera done');
   cam_open=1;
   if((exist('glvar','var'))&& ...
      (isfield(glvar,'camera_open'))&& ...
@@ -109,7 +107,6 @@ if(cam_open==0)
    pco_errdisp('PCO_OpenCamera',errorCode);   
   if(unload)
    unloadlibrary('PCO_CAM_SDK');
-   disp('PCO_CAM_SDK unloadlibrary done');
   end 
   return ;   
  end
@@ -609,7 +606,6 @@ function [glvar] = close_camera(out_ptr,unload,do_close,cam_open,glvar)
   if(errorCode)
    pco_errdisp('PCO_CloseCamera',errorCode);   
   else
-   disp('PCO_CloseCamera done');
    cam_open=0;
    if((exist('glvar','var'))&& ...
       (isfield(glvar,'camera_open'))&& ...
@@ -621,8 +617,7 @@ function [glvar] = close_camera(out_ptr,unload,do_close,cam_open,glvar)
  end
  if((unload==1)&&(cam_open==0))
   unloadlibrary('PCO_CAM_SDK');
-  disp('PCO_CAM_SDK unloadlibrary done');
-  commandwindow;
+ 
  end 
 end
 

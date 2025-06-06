@@ -13,7 +13,7 @@ else
 end
 if strcmp(caller,'double_images')
 	if result==1
-		pcofilePattern = fullfile(projectpath, 'PIVlab_pco_Cam*.tif');
+		pcofilePattern = fullfile(projectpath, 'PIVlab_pco*.tif');
 		direc= dir(pcofilePattern);
 		if ~isempty(direc)
 			direc=fullfile(projectpath,direc(1).name);

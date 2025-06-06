@@ -16,6 +16,7 @@ try
 catch
     imaq_error=1;
 end
+warning('off','imaq:gentl:noSupportedPixelFormat')
 if imaq_error==0
     if isempty(hwinf.InstalledAdaptors)
         imaq_error=2;

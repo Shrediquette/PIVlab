@@ -1,4 +1,5 @@
 function [OutputError, actually_saved_images] = PIVlab_capture_OPTOcam_save(OPTOcam_vid,nr_of_images,ImagePath,frame_nr_display,bitmode)
+warning('off','imaq:gentl:noSupportedPixelFormat')
 if bitmode==8
     bitmultiplicator=1;
 elseif bitmode==12

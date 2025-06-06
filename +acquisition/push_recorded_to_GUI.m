@@ -33,7 +33,7 @@ if multitiff==0
 		pathlist{i*2,1}=pathB; %#ok<AGROW>
 	end
 else
-	filePattern = fullfile(projectpath, 'PIVlab_pco_Cam*.tif');
+	filePattern = fullfile(projectpath, 'PIVlab_pco*.tif');
 	direc= dir(filePattern);filenames={};
 	[filenames{1:length(direc),1}] = deal(direc.name);
 	amount = length(filenames);

@@ -15,8 +15,7 @@ catch
     errordlg('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','Error!','modal')
     disp('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.')
     if ~isdeployed
-        commandwindow
-    end
+            end
 end
 found_correct_adaptor=0;
 for adaptorID=1:numel(hwinf.InstalledAdaptors)

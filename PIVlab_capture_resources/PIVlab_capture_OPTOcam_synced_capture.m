@@ -1,4 +1,5 @@
 function [OutputError,OPTOcam_vid] = PIVlab_capture_OPTOcam_synced_capture(OPTOcam_vid,nr_of_images,do_realtime,ROI_live,frame_nr_display,bitmode)
+warning('off','imaq:gentl:noSupportedPixelFormat')
 OPTOcam_climits=2^bitmode;
 hgui=getappdata(0,'hgui');
 image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam');
