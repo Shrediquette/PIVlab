@@ -93,15 +93,15 @@ int PCOCONVERT_API PCO_LoadPseudoLut(HANDLE ph, int format, char *filename);
 //        3 = ASCII  256*R,256*G,256*R
 
 
-int PCOCONVERT_API PCO_Convert16TO8(HANDLE ph, int mode, int icolmode, int width,int height, word *b16, byte *b8);
+int PCOCONVERT_API PCO_Convert16TO8(HANDLE ph, int mode, int icolmode, int width,int height, WORD *b16, BYTE *b8);
 //convert picture data in b16 to 8bit data in b8 (grayscale)
-int PCOCONVERT_API PCO_Convert16TO24(HANDLE ph, int mode, int icolmode, int width,int height, word *b16, byte *b24);
+int PCOCONVERT_API PCO_Convert16TO24(HANDLE ph, int mode, int icolmode, int width,int height, WORD *b16, BYTE *b24);
 //convert picture data in b16 to 24bit data in b24 (grayscale)
-int PCOCONVERT_API PCO_Convert16TOCOL(HANDLE ph, int mode, int icolmode, int width, int height, word *b16, byte *b8);
+int PCOCONVERT_API PCO_Convert16TOCOL(HANDLE ph, int mode, int icolmode, int width, int height, WORD *b16, BYTE *b8);
 //convert picture data in b16 to RGB data in b8 (color)
-int PCOCONVERT_API PCO_Convert16TOPSEUDO(HANDLE ph, int mode, int icolmode, int width, int height, word *b16, byte *b8);
+int PCOCONVERT_API PCO_Convert16TOPSEUDO(HANDLE ph, int mode, int icolmode, int width, int height, WORD *b16, BYTE *b8);
 //convert picture data in b16 to pseudo color data in b8 (color)
-int PCOCONVERT_API PCO_Convert16TOCOL16(HANDLE ph, int mode, int icolmode, int width, int height, word *b16in, word *b16out);
+int PCOCONVERT_API PCO_Convert16TOCOL16(HANDLE ph, int mode, int icolmode, int width, int height, WORD *b16in, WORD *b16out);
 //convert picture data in b16 to RGB data in b16 (color)
 //through table in structure of PCO_Convert
 //mode:   0       = normal
@@ -110,10 +110,10 @@ int PCOCONVERT_API PCO_Convert16TOCOL16(HANDLE ph, int mode, int icolmode, int w
 //width:  width of picture
 //height: height of picture
 //b12:    pointer to raw picture data array
-//b8:     pointer to byte data array (bw: 1 byte per pixel, rgb: 3 byte pp)
-//b24:    pointer to byte data array (RGB, 3 byte per pixel, grayscale)
+//b8:     pointer to BYTE data array (bw: 1 BYTE per pixel, rgb: 3 BYTE pp)
+//b24:    pointer to BYTE data array (RGB, 3 BYTE per pixel, grayscale)
 
-int PCOCONVERT_API PCO_GetWhiteBalance(HANDLE ph, int *color_temp, int *tint, int mode, int width, int height, word *gb12, int x_min, int y_min, int x_max, int y_max);
+int PCOCONVERT_API PCO_GetWhiteBalance(HANDLE ph, int *color_temp, int *tint, int mode, int width, int height, WORD *gb12, int x_min, int y_min, int x_max, int y_max);
 // gets white balanced values for color_temp and tint
 //color_temp: int pointer to get the calculated color temperature
 //tint: int pointer to get the calculated tint value
@@ -149,7 +149,7 @@ int PCOCONVERT_API PCO_GetMaxLimit(float *r_max, float *g_max, float *b_max, flo
 int PCOCONVERT_API PCO_GetColorValues(float *pfColorTemp, float *pfColorTint, int iRedMax, int iGreenMax, int iBlueMax);
 
 int PCOCONVERT_API PCO_WhiteBalanceToDisplayStruct(HANDLE ph, PCO_Display* strDisplay, int mode, int width, int height,
-                                                   word *gb12, int x_min, int y_min, int x_max, int y_max);
+                                                   WORD *gb12, int x_min, int y_min, int x_max, int y_max);
 // Calculates the white balance and sets the values to the strDisplay struct while maintaining the limits
 // Gets the struct strDisplay from the convert Handle internally.
 //mode:   0       = normal

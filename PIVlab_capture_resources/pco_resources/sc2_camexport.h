@@ -46,7 +46,7 @@ extern "C" {                           //  Assume C declarations for C++
 #endif  //C++
 
 #define PCO_SDK_VERMAJOR 1             // Shows the current version of the sc2_cam.dll
-#define PCO_SDK_VERMINOR 32
+#define PCO_SDK_VERMINOR 34
 
 // VERY IMPORTANT INFORMATION:
 /*******************************************************************/
@@ -796,10 +796,10 @@ SC2_SDK_FUNC int WINAPI PCO_SetIntensifiedMCP(HANDLE ph,
 //     DWORD dwReservedx, DWORD variables for future use 
 // Out: int -> Error message.
 
-SC2_SDK_FUNC int WINAPI PCO_GetSensorDarkOffset(HANDLE ph, WORD* wDarkOffset);
+SC2_SDK_FUNC int WINAPI PCO_GetSensorDarkOffset(HANDLE ph, WORD* pwDarkOffset);
 // Gets the sensor dark offset.
 // In: HANDLE ph -> Handle to a previously opened camera.
-//     WORD *wDarkOffset, Pointer to a WORD variable to receive the offset
+//     WORD *pwDarkOffset, Pointer to a WORD variable to receive the offset
 // Out: int -> Error message.
 
 /////////////////////////////////////////////////////////////////////
@@ -2088,8 +2088,19 @@ SC2_SDK_FUNC void WINAPI PCO_GetErrorTextSDK(DWORD dwError, char* pszErrorString
 // DWORD dwError = PCO_NOERROR;
 // DWORD dwErrorStringLength = 100;
 
+
+SC2_SDK_FUNC int WINAPI PCO_GetVersion_SDK(const char* pszInterfaceName, int iNameLength, int* piMajor, int* piMinor, int* piPatch, int* piBuild);
+// Returns version information about this dll and loaded interface dlls.
+// module names can be <"usb" | "usb3" | "gige" | "genicam" | "cl" | "clhs_kaya" | "clhs_me5">
+// const char* pszInterfaceName: String to get the name of the module, NULL returns versions of SDK
+// int iNameLength: Length of the string in bytes (can be 0)
+// int* piMajor: Pointer to int to get the Major version number (can be NULL)
+// int* piMinor: Pointer to int to get the Minor version number (can be NULL)
+// int* piPatch: Pointer to int to get the Patch version number (can be NULL)
+// int* piBuild: Pointer to int to get the Build version number (can be NULL)
+
 SC2_SDK_FUNC int WINAPI PCO_GetVersionInfoSC2_Cam(char* pszName, int iNameLength, char* pszPath, int iPathLength, int* piMajor, int* piMinor, int* piPatch, int* piBuild);
-// Returns version information about the dll. 
+// Deprecated. Returns version information about the dll. 
 // char* pszName: String to get the name of the module (can be NULL)
 // int iNameLength: Length of the string in bytes (can be 0)
 // char* pszPath: String to get the path of the module (can be NULL)

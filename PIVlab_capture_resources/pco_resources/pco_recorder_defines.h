@@ -21,6 +21,11 @@
 //Only for usb3 cameras and only for mode memory
 #define PCO_RECORDER_USE_USB3_MULTIREQUEST      0x2000
 
+// Only valid for File Mode and double image set
+#define PCO_RECORDER_DOUBLEIMG_SPLIT            0x8000
+// Splits double image in two sequentials streams for multi file modes
+#define PCO_RECORDER_DOUBLEIMG_SPLIT_SEQUENCE   0xC000 // 0x8000 | 0x4000
+
 //Recorder Mode
 #define PCO_RECORDER_MODE_FILE                  0x0001
 #define PCO_RECORDER_MODE_MEMORY                0x0002

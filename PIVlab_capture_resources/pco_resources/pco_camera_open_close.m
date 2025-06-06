@@ -33,19 +33,31 @@ function [errorCode,glvar] = pco_camera_open_close(glvar)
 
 % Test if library is loaded
 if (~libisloaded('PCO_CAM_SDK'))
-	% make sure the dll and h file specified below resides in your current
-	% folder
-	if(strcmp(computer('arch'),'win64'))
-		if ~exist('sc2_cam_mfile.m','file') %if prototype file not exists
-			loadlibrary('sc2_cam', 'sc2_cammatlab.h','addheader','sc2_common.h','addheader','sc2_camexport.h','alias','PCO_CAM_SDK', 'mfilename', 'sc2_cam_mfile');
-			disp('Making prototype file')
-		end
-		loadlibrary('sc2_cam', @sc2_cam_mfile,'alias','PCO_CAM_SDK') %loadlibrary with prototype file --> required for compiled apps. Does it work for non-compiled apps...?
-		%loadlibrary( 'sc2_cam','sc2_cammatlab.h','addheader','sc2_common.h'  ,'addheader','sc2_camexport.h'  ,'alias','PCO_CAM_SDK');
-	else
-		error('This platform is not supported.');
-	end
+    % make sure the dll and h file specified below resides in your current
+    % folder
+  if(strcmp(computer('arch'),'win64'))
+    loadlibrary( 'sc2_cam','sc2_cammatlab.h' ...
+                ,'addheader','sc2_common.h' ...
+                ,'addheader','sc2_camexport.h' ...
+                ,'alias','PCO_CAM_SDK');
+  elseif(strcmp(computer('arch'),'glnxa64'))
+    loadlibrary( 'libpco_sc2cam','sc2_cammatlab.h' ...
+                ,'addheader','sc2_common.h' ...
+                ,'addheader','sc2_camexport.h' ...
+                ,'addheader','pco_camexport.h' ...
+                ,'alias','PCO_CAM_SDK');
+  else
+    error('This platform is not supported.');
+  end
+
 	disp('PCO_CAM_SDK library is loaded!');
+
+  [errorCode] = calllib('PCO_CAM_SDK', 'PCO_InitializeLib');
+  if(errorCode)
+    pco_errdisp('PCO_InitializeLib',errorCode);   
+  else 
+    disp('PCO_InitializeLib done');
+  end 
 end
 
 if((exist('glvar','var'))&& ...
@@ -82,11 +94,12 @@ if(cam_open==0)
   end 
  else
   pco_errdisp('PCO_OpenCamera',errorCode);   
-  if(unload)
-   unloadlibrary('PCO_CAM_SDK');
-   disp('PCO_CAM_SDK unloadlibrary done');
+  if(unload) 
+    [errorCode] = calllib('PCO_CAM_SDK', 'PCO_CleanupLib');
+    unloadlibrary('PCO_CAM_SDK');
+    disp('PCO_CAM_SDK unloadlibrary done');
   end 
-  
+  commandwindow;
   return ;   
  end
 else
@@ -111,11 +124,18 @@ if((do_close==1)&&(cam_open==1))
 end
 
 if((unload==1)&&(cam_open==0))
- if(libisloaded('GRABFUNC'))
-  unloadlibrary('GRABFUNC');
- end
- unloadlibrary('PCO_CAM_SDK');
- disp('PCO_CAM_SDK unloadlibrary done');
+  [errorCode] = calllib('PCO_CAM_SDK', 'PCO_CleanupLib');
+  if(errorCode)
+    pco_errdisp('PCO_CleanupLib',errorCode);   
+  else
+    disp('PCO_CleanupLib done');
+  end
+
+  if(libisloaded('GRABFUNC'))
+    unloadlibrary('GRABFUNC');
+  end
+  unloadlibrary('PCO_CAM_SDK');
+  disp('PCO_CAM_SDK unloadlibrary done');
 end 
 
 if((exist('glvar','var'))&& ...
@@ -123,7 +143,7 @@ if((exist('glvar','var'))&& ...
  glvar.camera_open=cam_open;
 end
 
-
+commandwindow;
 end
 
 

@@ -27,27 +27,28 @@
 #define PCO_MATLAB_H
 
 #ifdef _WIN32
-#define WINAPI __stdcall
+    #define WINAPI __stdcall
 #else
-#define WINAPI
+    #define WINAPI
 #endif 
 
-#define BYTE unsigned char
-#define WORD unsigned short
-#define DWORD unsigned long
+#include <stdint.h>
+#include <stdarg.h>
+
+#define BYTE uint8_t
+#define WORD uint16_t
+#define DWORD uint32_t
 #define FLOAT float
 #define CHAR char
 
-#define SHORT short
-#define LONG long
-
-#define INT64 __int64
-#define UINT64 unsigned __int64
-#define UINT32 unsigned long
+#define INT64 int64_t
+#define UINT64 uint64_t
+#define UINT32 uint32_t
+#define SHORT int16_t
+#define LONG int32_t
 
 #define HANDLE void* 
 
 #define far 
 
 #endif
-

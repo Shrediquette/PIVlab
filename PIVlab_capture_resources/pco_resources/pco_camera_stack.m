@@ -630,5 +630,6 @@ function [glvar] = close_camera(out_ptr,unload,do_close,cam_open,glvar)
  if((unload==1)&&(cam_open==0))
   unloadlibrary('PCO_CAM_SDK');
   disp('PCO_CAM_SDK unloadlibrary done');
+  commandwindow;
  end 
 end

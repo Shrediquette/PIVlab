@@ -1,9 +1,18 @@
-#ifdef _WIN32
+#ifdef WIN32
 #include <windows.h>
 
-#elif defined(PCO_LINUX)
+#pragma intrinsic(_byteswap_ushort)
+#pragma intrinsic(_byteswap_ulong)
+#pragma intrinsic(_byteswap_uint64)
+#define bswap_16(s) _byteswap_ushort(s)
+#define bswap_32(s) _byteswap_ulong(s)
+#define bswap_64(s) _byteswap_uint64(s)
+
+#elif(PCO_LINUX)
 #include <stdint.h>
 #include <stdarg.h>
+#include <thread>
+#include <chrono>
 
 typedef int                 BOOL;
 #ifndef FALSE
@@ -78,6 +87,8 @@ typedef unsigned long long  DWORD_PTR;
 #define HIWORD(l)           ((WORD)((((DWORD_PTR)(l)) >> 16) & 0xffff))
 #define LOBYTE(w)           ((BYTE)(((DWORD_PTR)(w)) & 0xff))
 #define HIBYTE(w)           ((BYTE)((((DWORD_PTR)(w)) >> 8) & 0xff))
+#define Sleep_ms(ms)        std::this_thread::sleep_for(std::chrono::milliseconds(ms))
+
 
 typedef void*         HANDLE;
 typedef HANDLE        *PHANDLE;
@@ -102,6 +113,29 @@ typedef int           PCO_HANDLE;
 #define MAX_PATH 1024
 #endif
 
+// Apple specific defines: PCO_LINUX + __APPLE__
+
+#ifdef __APPLE__
+#define HOST_NAME_MAX FILENAME_MAX
+typedef unsigned long           ulong;
+
+    #define bswap_16(s) ((((s) << 8) & 0xff00U) | (((s) >> 8) & 0x00ffU))
+    #define bswap_32(l) ((((l) << 24) & 0xff000000) | (((l) << 8) & 0x00ff0000) | (((l) >> 8) & 0x0000ff00) | (((l) >> 24) & 0x000000ff))
+    #define bswap_64(ll) (                          \
+           (((ll) << 56) & 0xff00000000000000LL) |    \
+           (((ll) << 40) & 0x00ff000000000000LL) |    \
+           (((ll) << 24) & 0x0000ff0000000000LL) |    \
+           (((ll) <<  8) & 0x000000ff00000000LL) |    \
+           (((ll) >>  8) & 0x00000000ff000000LL) |    \
+           (((ll) >> 24) & 0x0000000000ff0000LL) |    \
+           (((ll) >> 40) & 0x000000000000ff00LL) |    \
+           (((ll) >> 56) & 0x00000000000000ffLL))
+
+#else // not __APPLE__ but PCO_LINUX
+#define bswap_16(s) __bswap_16(s)
+#define bswap_32(s) __bswap_32(s)
+#define bswap_64(s) __bswap_64(s)
+#endif
 
 #else
 #error Unknown/unsupported platform

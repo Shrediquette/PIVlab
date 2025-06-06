@@ -103,6 +103,7 @@ if(cam_open==0)
    unloadlibrary('PCO_CAM_SDK');
    disp('PCO_CAM_SDK unloadlibrary done');
   end 
+  commandwindow;
   return ;   
  end
 else
@@ -184,5 +185,5 @@ if((exist('glvar','var'))&& ...
 end
 
 clearvars ;
-
+commandwindow;
 end

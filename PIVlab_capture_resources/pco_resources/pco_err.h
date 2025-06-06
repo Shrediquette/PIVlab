@@ -194,8 +194,9 @@ DWORD GetErrorSource(DWORD dwerr);
 // ====================================================================================================== //
 // -- 3.5 COM devices ----------------------------------------------------------------------------------- //
 // ====================================================================================================== //
-#define PCO_ERROR_COM_ATF                  0x00500000    // error in ATF 
+#define PCO_ERROR_COM_ATF                  0x00500000    // error inside the ATF library 
 #define PCO_ERROR_COM_XCITE                0x00510000    // error inside the xcite lamp library
+#define PCO_ERROR_COM_OPTEM                0x00520000    // error inside the OPTEM library
 
 // ====================================================================================================== //
 // -- 4. Error Messages: -------------------------------------------------------------------------------- //
@@ -366,6 +367,8 @@ DWORD GetErrorSource(DWORD dwerr);
 #define PCO_WARNING_SDKDLL_COC_VALCHANGE            0xC0003003 // value change when testing COC
 #define PCO_WARNING_SDKDLL_COC_STR_SHORT            0xC0003004 // string buffer to short for replacement
 #define PCO_WARNING_SDKDLL_TIMING_SIGNAL_NOTSELECTED 0xC0003005 // timing signal is not selected
+#define PCO_WARNING_SDKDLL_LINE_TIMING_CHANGE       0xC0003006 // When pixelrate changes app must call PCO_GetCmosLineTiming
+                                                               // to get new dwCMOSLineTimeMinStep
 
 
   // The following error messages have been shifted to the common error code range:

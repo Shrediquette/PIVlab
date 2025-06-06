@@ -29,10 +29,9 @@
 
 #ifndef _WIN32
 #define PCO_LINUX
-#include "pco_linux_defs.h"
-#else
-#include "pco_matlab.h"
 #endif
+
+#include "pco_matlab.h"
 
 #if !defined PCO_ML_BUFLIST_DEF
 #define PCO_ML_BUFLIST_DEF

@@ -121,6 +121,8 @@
 #define CAMERATYPE_PCO_FAMILY_DICAM          0x1700 // pco.dicam
 #define CAMERATYPE_PCO_FAMILY_DIMAX          0x1900 // pco.dimax
 #define CAMERATYPE_PCO_FAMILY_PIXELFLY       0x1A00 // pco.pixelfly
+#define CAMERATYPE_PCO_FAMILY_OEM            0x1B00
+#define CAMERATYPE_PCO_FAMILY_HORIZON        0x1C00 // pco.horizon
 
 
 // PANDA Family
@@ -145,7 +147,8 @@
 #define CAMERASUBTYPE_PCO_EDGE_260_CLHS           0x0008 // pco.edge 26 CLHS
 #define CAMERASUBTYPE_PCO_EDGE_260_DS_CLHS        0x0009 // pco.edge 26 DS CLHS
 #define CAMERASUBTYPE_PCO_EDGE_260_NIR_CLHS       0x000A // pco.edge 26 NIR CLHS
-
+#define CAMERASUBTYPE_PCO_EDGE_94_BI_CLHS         0x000B // pco.edge 9.4 bi CLHS
+#define CAMERASUBTYPE_PCO_EDGE_OEM7               0x000C
 
 // DICAM Family
 #define CAMERASUBTYPE_PCO_DICAM_C1                0x0001 // pco.dicam C1
@@ -159,10 +162,17 @@
 
 // DIMAX Family
 #define CAMERASUBTYPE_PCO_DIMAX_OEM4              0x0001
-
+#define CAMERASUBTYPE_PCO_DIMAX_36_ST_CLHS        0x0002 // pco.dimax 3.6 ST CLHS (air/water)
 
 // PIXELFLY Family
-#define CAMERASUBTYPE_PCO_PIXELFLY_13_SWIR   0x0001 // pco.pixelfly 1.3 SWIR
+#define CAMERASUBTYPE_PCO_PIXELFLY_13_SWIR        0x0001 // pco.pixelfly 1.3 SWIR
+
+// OEMs
+#define CAMERASUBTYPE_PCO_OEM_OEM5                0x0001
+#define CAMERASUBTYPE_PCO_OEM_OEM6                0x0002
+
+// HORIZON Family
+#define CAMERASUBTYPE_PCO_HORIZON_91_TDI_CLHS     0x0001 // pco.horizon 9.1 TDI CLHS
 
 
 
@@ -269,6 +279,7 @@
 #define STATUS_POWERSAVE_LEFT                0x00000200
 #define STATUS_LOCKED_TO_IRIG                0x00000400
 
+#define STATUS_NON_PCO_STANDARD_SETTINGS     0x20000000
 #define STATUS_DESCRIPTOR_MUST_BE_RELOADED   0x40000000
 #define STATUS_IS_IN_BOOTLOADER              0x80000000
 
@@ -340,6 +351,7 @@
 
 #define SENSOR_LTN4323_BI_BW      0x2020      // BAE LTN4323 B/W
 #define SENSOR_LTN4323_BI_COL     0x2021      // BAE LTN4323 Color
+#define SENSOR_HWK4123_BI_BW      0x2030      // BAE HWK4123 B/W
 
 
 //obsolete #define SENSOR_CCD87           0x2010         // E2V
@@ -438,7 +450,8 @@ const PCO_SENSOR_TYPE_DEF far pco_sensor[] =
               { SENSOR_CIS2051_V1_BI_BW,       "Fairchild CIS2521 V1 I-Back BW"     },
 
               { SENSOR_LTN4323_BI_BW,          "BAE LTN4323 BW"                     },
-              { SENSOR_LTN4323_BI_COL,         "BAW LTN4323 Color"                  },
+              { SENSOR_LTN4323_BI_COL,         "BAE LTN4323 Color"                  },
+              { SENSOR_HWK4123_BI_BW,          "BAE HWK4123 BW"                     },
 
               { SENSOR_CMOSIS_CMV12000_BW,     "CMOSIS CMV12000 BW"                 },
               { SENSOR_CMOSIS_CMV12000_COL,    "CMOSIS CMV12000 Color"              },
@@ -1054,6 +1067,18 @@ extern const int far PCO_SENSOR_TYPE_DEF_NUM;
 #define MODULATECAPS_MODULATE_EXT_TRIG        0x00000002
 #define MODULATECAPS_MODULATE_EXT_EXP         0x00000004
 #define MODULATECAPS_MODULATE_ACQ_EXT_FRAME   0x00000008
+
+
+// ------------------------------------------------------------------------ //
+// -- Defines for Get/Set Sensor Readout Mode: ---------------------------- //
+// ------------------------------------------------------------------------ //
+#define SENSOR_READOUTMODE_TOP_BOTTOM                      0x01
+#define SENSOR_READOUTMODE_TOP_CENTER_BOTTOM_CENTER        0x02
+
+#define SENSOR_READOUTCTRL_STANDARD                        0x0001
+#define SENSOR_READOUTCTRL_REVERSE                         0x0002
+#define SENSOR_READOUTCTRL_EXTERNALCONTROL                 0x0004
+#define SENSOR_READOUTCTRL_ALTERNATING                     0x0008
 
 
 // ------------------------------------------------------------------------ //

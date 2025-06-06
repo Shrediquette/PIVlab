@@ -599,7 +599,7 @@ typedef struct
   WORD        wTimeBaseExposure;       // Timebase expos 0:ns, 1:us, 2:ms
   WORD        wCMOSParameter;          // Line Time mode: 0: off 1: on    // 8
   DWORD       dwCMOSDelayLines;        // See next line
-  DWORD       dwCMOSExposureLines;     // Delay and Exposure lines for lightsheet // 16
+  DWORD       dwCMOSExposureLines;     // Delay and Exposure lines for line scanning mode // 16
   DWORD       dwDelayTable[PCO_MAXDELEXPTABLE];// Delay table             // 80
   DWORD       ZZdwDummy1[110];                                            // 520
   DWORD       dwCMOSLineTimeMin;       // Minimum line time in ns
@@ -610,7 +610,7 @@ typedef struct
   DWORD       dwExposureTable[PCO_MAXDELEXPTABLE];// Exposure table       // 600
   DWORD       ZZdwDummy2[110];                                            // 1040
   DWORD       dwCMOSFlags;             // Flags indicating the option, whether it is possible to LS-Mode with slow/fast scan, etc.
-  DWORD       ZZdwDummy3;
+  DWORD       dwCMOSLineTimeMinStep;   // Minimum line time step in ns
   WORD        wTriggerMode;            // Trigger mode                    // 1050
                                        // 0: auto, 1: software trg, 2:extern 3: extern exp. ctrl
   WORD        wForceTrigger;           // Force trigger (Auto reset flag!)

@@ -15,7 +15,7 @@
 //-----------------------------------------------------------------//
 // (c) 2021 Excelitas PCO GmbH * Donaupark 11 *                    //
 // D-93309      Kelheim / Germany * Phone: +49 (0)9441 / 2005-0 *  //
-// Fax: +49 (0)9441 / 2005-20 * Email: pco@excelitas.com                 //
+// Fax: +49 (0)9441 / 2005-20 * Email: pco@excelitas.com           //
 //-----------------------------------------------------------------//
 
 #include "pco_recorder_defines.h"

@@ -36,7 +36,7 @@
 #define FALSE 0
 #endif
 
-#ifndef dword
+/*#ifndef dword
 #define dword DWORD
 #endif
 #ifndef word
@@ -44,7 +44,7 @@
 #endif
 #ifndef byte
 #define byte BYTE
-#endif
+#endif*/
 
 #define PCO_BW_CONVERT      1
 #define PCO_COLOR_CONVERT   2
@@ -89,8 +89,9 @@ typedef struct  {
   DWORD dwzzDummy1[61];                // 64 int
 }PCO_Bayer;
 
-#define CONVERT_FILTER_MODE_NLM       0x0001 // NLM filter mode
-#define CONVERT_FILTER_MODE_DENOISE   0x0002 // PCO denoiser filter mode
+#define CONVERT_FILTER_MODE_NLM            0x0001 // NLM filter mode
+#define CONVERT_FILTER_MODE_DENOISE        0x0002 // PCO denoiser filter mode
+#define CONVERT_FILTER_MODE_VEC_TRANSLATE  0x0004 // PCO vector translate mode
 
 typedef struct  {
   WORD  wSize;
@@ -104,6 +105,7 @@ typedef struct  {
 // Flags for actual input data
 #define CONVERT_SENSOR_COLORIMAGE     0x0001 // Input data is a color image (see Bayer struct)
 #define CONVERT_SENSOR_UPPERALIGNED   0x0002 // Input data is upper aligned
+#define CONVERT_SENSOR_NO_DENOISER    0x0004 // Input data must not be denoised
 typedef struct {
   WORD wSize;
   WORD wDummy;
@@ -113,7 +115,8 @@ typedef struct {
                                        // 0x00000001: Input is a color image (see Bayer struct!)
                                        // 0x00000002: Input is upper aligned
   int  iDarkOffset;                    // Hardware dark offset
-  DWORD dwzzDummy0;
+  WORD wIMAGE_SIZE_X_Offset;           // Sensor ROI x left, 0 is first pixel (zero based)
+  WORD wIMAGE_SIZE_Y_Offset;           // Sensor ROI y top, 0 is first pixel (zero based)
   SRGBCOLCORRCOEFF strColorCoeff;      // 9 double -> 18int // 24 int
   int  iCamNum;                        // Camera number (enumeration of cameras controlled by app)
   HANDLE hCamera;                      // Handle of the camera loaded, future use; set to zero.
@@ -153,6 +156,7 @@ typedef struct {
 
 #define CONVERT_CAPS_OPENCL            0x00000004 // OpenCL convert is possible
 #define CONVERT_CAPS_CUDA              0x00000008 // CUDA convert is possible
+#define CONVERT_CAPS_VEC_TRANSLATE     0x00000010 // Vector translation is possible
 
 typedef struct
 {
@@ -183,7 +187,7 @@ typedef struct
                                        // 0x00040000: Do color blur
                                        // 0x00400000: Demosaicking used is fast algorithm
 
-  int                 iGPU_Processing_mode;// Mode for processing: 0->CPU, 1->GPU // 261 int
+  int                 iGPU_Processing_mode;// Mode for processing: 0->CPU, 1->GPU, 2->OpenCL // 261 int
   int                 iConvertType;    // 1: BW, 2: color, 3: Pseudo-color, 4: 16bit-color
   char                szConvertInfo[60];  // GPU Name only
   DWORD               dwConvertCAPS;   // 0x00000001: Denoiser is possible
