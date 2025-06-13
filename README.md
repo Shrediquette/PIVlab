@@ -1,5 +1,6 @@
 # PIVlab - particle image velocimetry (PIV) tool with GUI
-***The latest Matlab update (R2025a) screws up UI element scaling. This was a silent change between the latest Matlab prerelease and the final release. I recommend to NOT update to R2025a if you want to use PIVlab. I am trying to fix this together with Matlab support.***
+***The latest Matlab update (R2025a) screws up UI element scaling. This was a silent change between the latest Matlab prerelease and the final release. I recommend to NOT update to R2025a if you want to use PIVlab. I am trying to fix this together with Matlab support (unfortunately slow this time). More info: [Matlab Answers post](https://de.mathworks.com/matlabcentral/answers/2177368-ui-scaling-changes-from-latest-2025a-prerelease-to-official-2025a-release) 
+Support ticket ref:!00Di00Ha1u.!500UU0R5bXL:ref ***
 
 **[http://www.PIVlab.de](http://www.PIVlab.de)**
 
