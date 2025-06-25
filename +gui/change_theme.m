@@ -17,6 +17,9 @@ end
 
 gui.destroyUI
 gui.generateUI
+
+
+
 gui.MainWindow_ResizeFcn(gcf)
 gui.preferences_Callback
 gui.clear_user_content

@@ -404,13 +404,23 @@ if isempty(fh)
 	end
 
 	misc.CheckUpdates
-	if isdeployed || exist('splash_ax','var')
-		pause(1)
-		close(splashscreen)
-	end
-	gui.SetFullScreen
-	gui.displogo(1);
-	set(MainWindow, 'Visible','on');drawnow;
+    if isdeployed || exist('splash_ax','var')
+        pause(1)
+        close(splashscreen)
+    end
+    gui.SetFullScreen
+    gui.displogo(1);
+
+    %% Apply fix for wrong UI scaling introduced between matlab 2025a prerelease5 and Matlab2025a
+    try
+        if ~isMATLABReleaseOlderThan("R2025a")
+            gui.fix_R2025a_GUI_sizing
+            disp('-> Applied GUI scaling bug fix for release 2025a...')
+        end
+    catch
+    end
+
+    set(MainWindow, 'Visible','on');drawnow;
     
 	%% Batch session  processing in GUI
 	if ~exist('batch_session_file','var') %no input argument --> no GUI batch processing
