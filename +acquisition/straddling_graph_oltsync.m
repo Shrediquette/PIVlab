@@ -1,6 +1,5 @@
 function straddling_graph_oltsync(timing_table,frame_time,cam_delay,camera_principle,camera_type)
 %zeilen: die verschiedenen pins; spalten:die zeiten
-
 bot_cam = 0.45;
 bot_las = 0.2;
 amp = 0.2;
@@ -20,6 +19,7 @@ else
 	clf(hf)
 end
 drawnow %drawing the annotations below takes ages.... Therefore directly display the empty figure to show some progress...
+pause(1)
 axh=axes(hf);
 axis tight
 %xlim([0 period*num_exposures_to_show])
