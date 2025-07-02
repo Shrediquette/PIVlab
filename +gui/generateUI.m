@@ -1910,6 +1910,13 @@ handles.paneltext4 = uicontrol(handles.multip21,'Style','text','String','Please 
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.flash_sync = uicontrol(handles.multip21,'Style','pushbutton','String','Flash firmware to synchronizer','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@gui.flash_sync_Callback,'Tag','flash_sync','TooltipString','Flash new firmware to OPTOLUTION synchronizer');
 
+item=[0 item(2)+item(4)+margin parentitem(3) 2];
+handles.detect_cam = uicontrol(handles.multip21,'Style','pushbutton','String','Detect connected cameras','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@acquisition.camera_info,'Tag','detect_cam','TooltipString','Detect connected cameras');
+
+item=[0 item(2)+item(4)+margin parentitem(3) 2];
+handles.detect_dongle = uicontrol(handles.multip21,'Style','pushbutton','String','Detect serial dongle','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@acquisition.serial_info,'Tag','detect_dongle','TooltipString','Detect if driver for the dongle is installed');
+
+
 %% Multip22
 handles.multip22 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Derive Temporal Parameters', 'Tag','multip22','fontweight','bold');
 parentitem=get(handles.multip22, 'Position');
