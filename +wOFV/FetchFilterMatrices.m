@@ -5,8 +5,10 @@ uiwait(warndlg('Wavelet filter matrices do not exist. They are downloaded and st
 gui.toolsavailable(1)
 gui.toolsavailable(0,'Downloading filter matrices...');drawnow
 FileName = fullfile(userpath, 'Filter Matrices.zip');
+disp(['Downloading zip file to: ' FileName])
 
 if ~verLessThan('matlab','9.11')
+    disp(['Downloading zip file from: ' 'https://files.osf.io/v1/resources/y48mk/providers/osfstorage/?zip='])
 	F = parfeval(backgroundPool,@download_stuff,0,FileName);
 	pause(1)
 	fig = uifigure;
@@ -44,6 +46,7 @@ end
 %% try again when primary repo failed
 if ~exist(FileName,'file')
 	if ~verLessThan('matlab','9.11')
+        disp(['Downloading zip file from: ' 'https://files.optolution.com/filter_matrices.zip'])
 		F = parfeval(backgroundPool,@download_stuff_alternate_location,0,FileName);
 		pause(1)
 		fig = uifigure;
