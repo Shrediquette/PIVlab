@@ -185,9 +185,9 @@ if value == 9 % OPTRONIS
 			gui.put('blind_time',3);
 		case 'Cyclone-25-150-M'
 			if ~verLessThan('matlab','25')
-				avail_freqs={'1000' '650' '300' '150' '100' '75' '50' '20'};
+				avail_freqs={'1000' '650' '300' '145' '100' '75' '50' '20'};
 			else
-				avail_freqs={'150' '100' '75' '50' '20'};
+				avail_freqs={'145' '100' '75' '50' '20'};
 			end
 			gui.put('max_cam_res',[5120,5120]);
 			gui.put('min_allowed_interframe',40);

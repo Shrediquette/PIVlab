@@ -73,7 +73,7 @@ if ~isempty(gui.retr('doing_roi')) && gui.retr('doing_roi')==1
 			des_x=1280;
 			des_y=240;
 
-		case 'Cyclone-25-150-M 5120x5120 (max. 150 fps)'
+		case 'Cyclone-25-150-M 5120x5120 (max. 145 fps)'
 			des_x=5120;
 			des_y=5120;
 		case 'Cyclone-25-150-M 5120x2160 (max. 300 fps)'

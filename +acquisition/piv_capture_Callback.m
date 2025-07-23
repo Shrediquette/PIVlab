@@ -278,7 +278,7 @@ if required_files_check
 							if ~verLessThan('matlab','25')
 								max_fps_with_current_settings = 1000;
 							else
-								max_fps_with_current_settings = 150;
+								max_fps_with_current_settings = 145;
 							end
 						otherwise
 							max_fps_with_current_settings=1111;

@@ -135,7 +135,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 						m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
 					case 'Cyclone-25-150-M'
 						%Hier: auswahl nur wenn r2025....
-						m0 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x5120 (max. 150 fps)','Callback',@roi.setdefaultroi);
+						m0 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x5120 (max. 145 fps)','Callback',@roi.setdefaultroi);
 						if ~verLessThan('matlab','25')
 							m1 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x2160 (max. 300 fps)','Callback',@roi.setdefaultroi);
 							m2 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x1080 (max. 650 fps)','Callback',@roi.setdefaultroi);
