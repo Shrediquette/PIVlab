@@ -110,10 +110,12 @@ disp('---------')
 	if isempty(serial_answer)
 		uiwait(msgbox(['No laser found.' sprintf('\n') 'Is the laser turned on?' sprintf('\n') 'Please try again.'],'modal'))
 	end
-	if strncmp(old_laser_device_id,serial_answer,20)==0 %if last laser ID DOES NOT equal current laser ID
-		get_laser_id = inputdlg(['Please enter the ID of your laser / synchronizer.' sprintf('\n') 'It can be found on the sticker on the device.' sprintf('\n') 'Firmware: ' convertStringsToChars(firmware_version)],'First time connection',1,{convertStringsToChars(serial_answer)});
-		if ~isempty(get_laser_id)
-			id=get_laser_id{1};
+    if strncmp(old_laser_device_id,serial_answer,20)==0 %if last laser ID DOES NOT equal current laser ID
+        serial_answer_cleaned = convertStringsToChars(serial_answer);
+        serial_answer_cleaned(isstrprop(serial_answer_cleaned, 'graphic'));
+        get_laser_id = inputdlg(['Please enter the ID of your laser / synchronizer.' sprintf('\n') 'It can be found on the sticker on the device.' sprintf('\n') 'Firmware: ' convertStringsToChars(firmware_version)],'First time connection',1,{serial_answer_cleaned});
+        if ~isempty(get_laser_id)
+            id=get_laser_id{1};
 			filepath = fileparts(which('PIVlab_GUI.m'));
 			save (fullfile(filepath, 'PIVlab_capture_resources', 'laser_device_id.mat'),'id')
 		end
@@ -123,4 +125,3 @@ disp('---------')
 else
 	acquisition.no_dongle_msgbox
 end
-
