@@ -91,7 +91,9 @@ if do_save_frames > 0
     if OPTRONIS_counter ==1
         cntr2=1;
         for i=bug_fix_skipped_frame + (1+fix_Optronis_skipped_frame) : 1 : do_save_frames
-            timestamp(cntr2)=extractOptronisMetadata(OPTRONIS_data(1,1:5,:,cntr2)).MicrosecondCounter;
+            %bitmode unterscheiden und entsprechend senden.....
+           % bitmode
+            timestamp(cntr2)=extractOptronisMetadata(OPTRONIS_data(1,1:5,:,cntr2)*bitmultiplicator).MicrosecondCounter;
             cntr2=cntr2+1;
         end
         diff_timestamps=diff(timestamp);
@@ -101,9 +103,10 @@ if do_save_frames > 0
         disp(['Mean delta t = ' num2str(mean(diff_timestamps,'omitnan'))])
         disp(['Max delta t = ' num2str(max(diff_timestamps,[],'omitnan'))])
         disp(['Min delta t = ' num2str(min(diff_timestamps,[],'omitnan'))])
-        disp(['Nr of outliers (may be bad encoding / decoding) = ' num2str(numel(outliers))])
+        disp(['Nr of outliers (may be bad counter encoding / decoding) = ' num2str(numel(outliers))])
         if numel(outliers) > 0
-            disp(['Outlier image nr = ' num2str(outliers/2)])
+            disp('Outlier image nr = ')
+            disp(num2str(outliers/2))
         end
     end
     for image_save_number=bug_fix_skipped_frame + (1+fix_Optronis_skipped_frame) : 2 : do_save_frames

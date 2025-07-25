@@ -1,10 +1,4 @@
 function metadata = extractOptronisMetadata(imageData)
-%enable counter information
-%{
-OPTRONIS_settings.Source.CounterInformation = 'On';
-pause(0.1)
-OPTRONIS_settings.Source.CounterInformation
-%}
 if strcmpi(class(imageData),'uint16')
     bitMode = 10;
 elseif strcmpi(class(imageData),'uint8')
