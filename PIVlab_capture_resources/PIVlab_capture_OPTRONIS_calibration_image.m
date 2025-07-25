@@ -74,6 +74,8 @@ if isempty(OPTRONIS_gain)
     OPTRONIS_gain=1;
 end
 
+
+
 %{
 disp('---- SuperDuper RennieDebugMode -----')
 
@@ -100,6 +102,11 @@ OPTRONIS_vid.PreviewFullBitDepth='On';
 if ~verLessThan('matlab','25')
     OPTRONIS_settings.Source.AGain = num2str(OPTRONIS_gain);
 end
+
+%No counter in calibration image
+OPTRONIS_settings.Source.CounterInformation = 'Off';
+
+
 %OPTRONIS trigger source cannot be set in Matlab. Therefore always set to
 %external. Synchronizer must always run.
 triggerconfig(OPTRONIS_vid, 'hardware','DeviceSpecific','DeviceSpecific');

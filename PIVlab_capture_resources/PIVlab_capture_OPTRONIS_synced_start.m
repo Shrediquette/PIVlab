@@ -64,6 +64,16 @@ if isempty(OPTRONIS_gain)
     OPTRONIS_gain=1;
 end
 
+OPTRONIS_counter = gui.retr('OPTRONIS_counter');
+if isempty(OPTRONIS_counter)
+    OPTRONIS_counter=0;
+end
+if OPTRONIS_counter==0
+    OPTRONIS_settings.Source.CounterInformation = 'Off';
+elseif OPTRONIS_counter ==1
+    OPTRONIS_settings.Source.CounterInformation = 'On';
+end
+
 if ~verLessThan('matlab','25')
     OPTRONIS_settings.Source.AGain = num2str(OPTRONIS_gain);
 end

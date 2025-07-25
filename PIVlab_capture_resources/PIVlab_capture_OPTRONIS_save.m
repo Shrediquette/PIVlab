@@ -24,6 +24,8 @@ else
     end
 end
 if do_save_frames > 0
+    set(frame_nr_display,'String','Getting data from RAM...');
+    drawnow;
     OPTRONIS_data = getdata(OPTRONIS_vid,do_save_frames+2);
     %% Detect if first frame is empty
     % There are a number of bugs with the OPTRONIS cameras and Matlabs IMAQ
@@ -79,8 +81,33 @@ if do_save_frames > 0
     %%
     cntr=0;
     starttime=tic;
+
+    timestamp=nan(nr_of_images*2,1);
+   
+    OPTRONIS_counter = gui.retr('OPTRONIS_counter');
+    if isempty(OPTRONIS_counter)
+        OPTRONIS_counter=0;
+    end
+    if OPTRONIS_counter ==1
+        cntr2=1;
+        for i=bug_fix_skipped_frame + (1+fix_Optronis_skipped_frame) : 1 : do_save_frames
+            timestamp(cntr2)=extractOptronisMetadata(OPTRONIS_data(1,1:5,:,cntr2)).MicrosecondCounter;
+            cntr2=cntr2+1;
+        end
+        diff_timestamps=diff(timestamp);
+        outliers=find(abs(diff_timestamps)>100000);
+        diff_timestamps(outliers)=nan;
+        disp('Image timestamps in microseconds (exposure starts):')
+        disp(['Mean delta t = ' num2str(mean(diff_timestamps,'omitnan'))])
+        disp(['Max delta t = ' num2str(max(diff_timestamps,[],'omitnan'))])
+        disp(['Min delta t = ' num2str(min(diff_timestamps,[],'omitnan'))])
+        disp(['Nr of outliers (may be bad encoding / decoding) = ' num2str(numel(outliers))])
+        if numel(outliers) > 0
+            disp(['Outlier image nr = ' num2str(outliers/2)])
+        end
+    end
     for image_save_number=bug_fix_skipped_frame + (1+fix_Optronis_skipped_frame) : 2 : do_save_frames
-        if do_save_frames > 0
+        if do_save_frames > 0 &&  getappdata(hgui,'cancel_capture') ~=1
             imgA_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',cntr) '_A.tif']);
             imgB_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',cntr) '_B.tif']);
             imwrite(OPTRONIS_data(:,:,:,image_save_number)*bitmultiplicator,imgA_path,'compression','none'); %tif file saving seems to be the fastest method for saving data...

@@ -38,11 +38,19 @@ if isempty(fh)
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/2 2];
 	handles.bitdepth = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'8','10'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','bitdepth');
 
-	item=[parentitem(3)/2*0 item(2)+item(4)+margin/2 parentitem(3)/2 2];
+	item=[parentitem(3)/2*0 item(2)+item(4)+margin/4 parentitem(3)/2 2];
 	handles.gain_txt = uicontrol(handles.mainpanel,'Style','text','String','Gain:','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/2 2];
 	handles.gain = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'1','2','4'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','gain');
+
+	item=[parentitem(3)/2*0 item(2)+item(4)+margin/4 parentitem(3)/2 2];
+	handles.counter_txt = uicontrol(handles.mainpanel,'Style','text','String','Enable image counter','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+	item=[parentitem(3)/2*1 item(2) parentitem(3)/2 2];
+	handles.counter = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'Off','On'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','counter');
+
+
 
 
     try
@@ -91,17 +99,17 @@ OPTRONIS_settings = get(OPTRONIS_vid);
 		DeviceFirmwareVersion2 = 'N/A';
 	end
 
-	item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
-	handles.temp_txt = uicontrol(handles.mainpanel,'Style','text','String',cam_temperature_string,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+	item=[0 item(2)+item(4)+margin/4 parentitem(3) 1];
+    handles.temp_txt = uicontrol(handles.mainpanel,'Style','text','String',cam_temperature_string,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
-	item=[0 item(2)+item(4) parentitem(3) 1];
-	handles.serial_txt = uicontrol(handles.mainpanel,'Style','text','String',['Serial Nr.: ' DeviceSerialNumber],'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+    item=[0 item(2)+item(4) parentitem(3) 1];
+    handles.serial_txt = uicontrol(handles.mainpanel,'Style','text','String',['Serial Nr.: ' DeviceSerialNumber],'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
-item=[0 item(2)+item(4) parentitem(3) 4];
-	handles.firmware_txt = uicontrol(handles.mainpanel,'Style','text','String',['Firmware: ' DeviceFirmwareVersion],'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+    item=[0 item(2)+item(4) parentitem(3) 2];
+    handles.firmware_txt = uicontrol(handles.mainpanel,'Style','text','String',['Firmware: ' DeviceFirmwareVersion],'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
-	item=[parentitem(3)/2 item(2)+item(4)+margin/2 parentitem(3)/2 2];
-	handles.apply_btn = uicontrol(handles.mainpanel,'Style','pushbutton','String','Apply','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@Apply_settings,'tag','apply_btn');
+    item=[parentitem(3)/2 item(2)+item(4)+margin/4 parentitem(3)/2 2];
+    handles.apply_btn = uicontrol(handles.mainpanel,'Style','pushbutton','String','Apply','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@Apply_settings,'tag','apply_btn');
 
 	OPTRONIS_bits=retr('OPTRONIS_bits');
 	if ~isempty(OPTRONIS_bits)
@@ -116,6 +124,21 @@ item=[0 item(2)+item(4) parentitem(3) 4];
     if isempty(OPTRONIS_gain)
         OPTRONIS_gain=1;
     end
+
+    OPTRONIS_counter=retr('OPTRONIS_counter');
+    if isempty(OPTRONIS_counter)
+        OPTRONIS_counter=0;
+    end
+
+    if ~isempty(OPTRONIS_counter)
+        if OPTRONIS_counter == 0
+            set(handles.counter,'Value',1);
+        elseif OPTRONIS_counter==1
+            set(handles.counter,'Value',2);
+        end
+    end
+    put('OPTRONIS_counter',OPTRONIS_counter);
+
 
     if ~isempty(OPTRONIS_gain)
         if OPTRONIS_gain == 1
@@ -142,6 +165,14 @@ put('OPTRONIS_bits',str2double(bitchoices{get(handles.bitdepth,'value')}));
 pause(0.01)
 gainchoices=get(handles.gain,'String');
 put('OPTRONIS_gain',str2double(gainchoices{get(handles.gain,'value')}));
+
+
+counterchoices=get(handles.counter,'String');
+if strcmpi(counterchoices{get(handles.counter,'value')},'off')
+    put('OPTRONIS_counter',0)
+elseif strcmpi(counterchoices{get(handles.counter,'value')},'on')
+    put('OPTRONIS_counter',1)
+end
 close (fh)
 
 
