@@ -194,7 +194,7 @@ if isempty(resultslist)==0
 
 						% Calculate velocity fluctuations
 						u_prime = umittelselected - repmat(u_mean, [1, 1, nt]);
-						v_prime = umittelselected - repmat(v_mean, [1, 1, nt]);
+						v_prime = vmittelselected - repmat(v_mean, [1, 1, nt]);
 
 						% Compute the squared mean fluctuations
 						u_prime_squared_mean = mean(u_prime.^2, 3);
