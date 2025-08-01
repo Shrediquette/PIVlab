@@ -266,7 +266,7 @@ if required_files_check
 							if ~verLessThan('matlab','25')
 								max_fps_with_current_settings = 10000;
 							else
-								max_fps_with_current_settings = 2165;
+								max_fps_with_current_settings = 2000;
 							end
 						case 'Cyclone-1HS-3500-M'
 							if ~verLessThan('matlab','25')

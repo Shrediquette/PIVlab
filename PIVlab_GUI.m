@@ -260,7 +260,7 @@ if isempty(fh)
 		try %checking for a parallel license file throws a huge error message wheh it is not available. This might scare users... Better: Try...catch block
 			if ~exist('desired_num_cores','var') %no input argument --> use all existing cores
 				if misc.pivparpool('size')<=0 %no exisitng pool
-					if isdeployed
+					%if isdeployed
 						answer = questdlg(['PIVlab can be run with parallel computing.' newline newline '- Recommended when processing multiple images.' newline '- Not required when acquiring images or processing mp4 and avi files.' newline newline 'Open parallel pool?'],'Parallel processing', 'Yes', 'No','Yes');
 						switch answer
 							case 'Yes'
@@ -268,10 +268,10 @@ if isempty(fh)
 								gui.put('parallel',1);
 							case 'No'
 						end
-					else
-						misc.pivparpool('open',maxNumCompThreads('automatic')); %use all cores
-						gui.put('parallel',1);
-					end
+					%else
+					%	misc.pivparpool('open',maxNumCompThreads('automatic')); %use all cores
+					%	gui.put('parallel',1);
+					%end
 				end
 			else%parameter supplied
 				if ~isnumeric(desired_num_cores)

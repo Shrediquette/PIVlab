@@ -96,19 +96,30 @@ if do_save_frames > 0
             timestamp(cntr2)=extractOptronisMetadata(OPTRONIS_data(1,1:5,:,cntr2)*bitmultiplicator).MicrosecondCounter;
             cntr2=cntr2+1;
         end
+        setpoint_delta_t=1/OPTRONIS_settings.Source.AcquisitionFrameRate*1000^2;
         diff_timestamps=diff(timestamp);
         outliers=find(abs(diff_timestamps)>100000);
         diff_timestamps(outliers)=nan;
+        error_delta_t=abs(diff_timestamps-setpoint_delta_t);
         disp('Image timestamps in microseconds (exposure starts):')
         disp(['Mean delta t = ' num2str(mean(diff_timestamps,'omitnan'))])
         disp(['Max delta t = ' num2str(max(diff_timestamps,[],'omitnan'))])
         disp(['Min delta t = ' num2str(min(diff_timestamps,[],'omitnan'))])
-        disp(['Nr of outliers (may be bad counter encoding / decoding) = ' num2str(numel(outliers))])
+        disp(['Nr of wrong delta t = ' num2str(numel(find(error_delta_t>=20)))])
+        disp(['Nr of outliers (most likely bad counter encoding / decoding) = ' num2str(numel(outliers))])
         if numel(outliers) > 0
             disp('Outlier image nr = ')
             disp(num2str(outliers/2))
         end
+        if numel(find(error_delta_t>=20)) > 0
+            disp('')
+            disp('!!! WARNING: Matlab might have skipped frames !!!')
+            disp('There is an issue with Matlab not being able to capture data fast enough.')
+            disp('Until Mathworks found a solution, we recommend to reduce the frame rate.')
+            disp('')
+        end
     end
+    skipr=0;
     for image_save_number=bug_fix_skipped_frame + (1+fix_Optronis_skipped_frame) : 2 : do_save_frames
         if do_save_frames > 0 &&  getappdata(hgui,'cancel_capture') ~=1
             imgA_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',cntr) '_A.tif']);
@@ -116,8 +127,13 @@ if do_save_frames > 0
             imwrite(OPTRONIS_data(:,:,:,image_save_number)*bitmultiplicator,imgA_path,'compression','none'); %tif file saving seems to be the fastest method for saving data...
             imwrite(OPTRONIS_data(:,:,:,image_save_number+1)*bitmultiplicator,imgB_path,'compression','none');
             cntr=cntr+1;
-            set(frame_nr_display,'String',['Saving images to disk: Image pair ' num2str(cntr) ' of ' num2str(do_save_frames/2)]);
-            drawnow limitrate;
+            if skipr<20
+                skipr=skipr+1;
+            else
+                skipr=0;
+                set(frame_nr_display,'String',['Saving images to disk: Image pair ' num2str(cntr) ' of ' num2str(do_save_frames/2)]);
+                drawnow limitrate;
+            end
         end
     end
     actually_saved_images=cntr;

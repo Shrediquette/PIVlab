@@ -66,7 +66,7 @@ end
 
 OPTRONIS_counter = gui.retr('OPTRONIS_counter');
 if isempty(OPTRONIS_counter)
-    OPTRONIS_counter=0;
+    OPTRONIS_counter=1;
 end
 if OPTRONIS_counter==0
     OPTRONIS_settings.Source.CounterInformation = 'Off';

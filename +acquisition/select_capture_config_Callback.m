@@ -167,9 +167,9 @@ if value == 9 % OPTRONIS
 	switch camera_sub_type
 		case 'Cyclone-2-2000-M'
 			if ~verLessThan('matlab','25')
-				avail_freqs={'10000' '5000' '2165' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
+				avail_freqs={'10000' '5000' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
 			else
-				avail_freqs={'2165' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
+				avail_freqs={'2000' '1750' '1500' '1000' '500' '250' '100' '50'};
 			end
 			gui.put('max_cam_res',[1920,1080]);
 			gui.put('min_allowed_interframe',20);
@@ -195,7 +195,7 @@ if value == 9 % OPTRONIS
 		otherwise
 			msgbox({'No camera found. Is it connected and powered on?' 'Is the ''Image Acquisition Toolbox Support Package for GenICam Interface'' installed?.'},'modal')
 			disp('Camera detection unsuccesful.')
-			avail_freqs={'2165' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
+			avail_freqs={'2000' '1750' '1500' '1000' '500' '250' '100' '50'};
 			gui.put('max_cam_res',[1920,1080]);
 			gui.put('min_allowed_interframe',20);
 			gui.put('blind_time',3);

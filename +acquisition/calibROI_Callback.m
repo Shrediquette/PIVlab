@@ -120,7 +120,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 				switch camera_sub_type
 					case 'Cyclone-2-2000-M'
 						%Hier: auswahl nur wenn r2025....
-						m0 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1920x1080 (max. 2165 fps)','Callback',@roi.setdefaultroi);
+						m0 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1920x1080 (max. 2000 fps)','Callback',@roi.setdefaultroi);
 						if ~verLessThan('matlab','25')
 							m2 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x480 (max. 5000 fps)','Callback',@roi.setdefaultroi);
 							m3 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1024x240 (max. 10000 fps)','Callback',@roi.setdefaultroi);
