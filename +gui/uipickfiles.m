@@ -332,8 +332,8 @@ navlist = uicontrol('Style','listbox',...
 	'Max',2);
 
 shift_info_txt = uicontrol('Style','text',...
-	'Position',[10 5 250 16],...
-	'String','Hold shift or ctrl to select multiple entries.','HorizontalAlignment','left','FontSize',8);
+	'Position',[10 5 350 16],...
+	'String','Hold shift or ctrl to select multiple entries. CTRL+F selects all.','HorizontalAlignment','left','FontSize',8);
 
 
 tri_up = repmat([1 1 1 1 0 1 1 1 1;1 1 1 0 0 0 1 1 1;1 1 0 0 0 0 0 1 1;...
@@ -814,20 +814,20 @@ setpref('uipickfiles','figure_position',fig_pos)
 		if length(path_cell) > 1 && strcmp(evt.Key,'backspace') && ...
 				isequal(evt.Modifier,cell(1,0))
 			% Backspace means go to parent folder.
-			dir_up_one()
-		elseif strcmp(evt.Key,'f') && isequal(evt.Modifier,{mod_key})
-			% Control-F (Command-F on Mac) means select all files.
-			value = find(~[fdir.isdir]);
-			set(navlist,'Value',value)
-		elseif strcmp(evt.Key,'rightarrow') && ...
-				isequal(evt.Modifier,cell(1,0))
-			% Right arrow key means select the file.
-			add()
-		elseif strcmp(evt.Key,'escape') && isequal(evt.Modifier,cell(1,0))
-			% Escape key means Cancel.
-			cancel()
-		end
-	end
+            dir_up_one()
+        elseif strcmp(evt.Key,'f') && isequal(evt.Modifier,{mod_key})
+            % Control-F (Command-F on Mac) means select all files.
+            value = find(~[fdir.isdir]);
+            set(navlist,'Value',value)
+        elseif strcmp(evt.Key,'rightarrow') && ...
+                isequal(evt.Modifier,cell(1,0))
+            % Right arrow key means select the file.
+            add()
+        elseif strcmp(evt.Key,'escape') && isequal(evt.Modifier,cell(1,0))
+            % Escape key means Cancel.
+            cancel()
+        end
+    end
 
 	function keypresslist(h,evt) %#ok<INUSL>
 		if strcmp(evt.Key,'backspace') && isequal(evt.Modifier,cell(1,0))
