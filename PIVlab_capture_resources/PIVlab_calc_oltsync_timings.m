@@ -140,9 +140,9 @@ for i=1:amount_pins
 			pin_string = [pin_string int2str(timing_table{i,j})];
 		end
 	end
-	if i~=amount_pins
-		pin_string = [pin_string ':'];
-	end
+	%if i~=amount_pins %new firmware v1.1 needs ":" at the end, old firmwares do still work
+	pin_string = [pin_string ':'];
+	%end
 end
 
 %send_string=['sequence:' int2str(frame_time) ':0,0:' pin_string]
