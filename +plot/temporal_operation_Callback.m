@@ -184,28 +184,14 @@ if isempty(resultslist)==0
 					eval(['umittelselected=umittel(:,:,[' str ']);']);
 					eval(['vmittelselected=vmittel(:,:,[' str ']);']);
 					if type==3
-						%Turbulent kinetic energy TKE, based on discussion with H.E. TOUHAMI, Université des Sciences et de la Technologie 'Houari
-						% Extract dimensions
-						nt = size(umittelselected,3);%#ok<NODEF>
+						%Turbulent kinetic energy TKE, based on discussion
+                        %with H.E. TOUHAMI, improved by Stefano M.
 
-						% Calculate the mean velocities over time
-						u_mean = mean(umittelselected, 3,'omitnan');%#ok<NODEF>
-						v_mean = mean(vmittelselected, 3,'omitnan');%#ok<NODEF>
+                        TKE_x=0.5*var(umittelselected,0,3,'omitnan');
+                        TKE_y=0.5*var(vmittelselected,0,3,'omitnan');
 
-						% Calculate velocity fluctuations
-						u_prime = umittelselected - repmat(u_mean, [1, 1, nt]);
-						v_prime = vmittelselected - repmat(v_mean, [1, 1, nt]);
-
-						% Compute the squared mean fluctuations
-						u_prime_squared_mean = mean(u_prime.^2, 3);
-						v_prime_squared_mean = mean(v_prime.^2, 3);
-
-						% Calculate TKE components
-						TKE_x = 0.5 * u_prime_squared_mean; % x-direction component
-						TKE_y = 0.5 * v_prime_squared_mean; % y-direction component
-
-						% Calculate the total TKE
-						%TKE = TKE_x + TKE_y; % currently not used. --> calculated in plot.derivative_calc.m
+                        % Calculate the total TKE
+                        %TKE = TKE_x + TKE_y; % currently not used. --> calculated in plot.derivative_calc.m
 
 						%remove non-valid measurements
 						TKE_x(typevectormean>=1.75)=nan; %discard everything that has less than 25% valid measurements
