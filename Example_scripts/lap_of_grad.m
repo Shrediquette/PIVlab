@@ -11,5 +11,5 @@ dxx = conv2(d2G, G, img, 'same');
 dyy = conv2(G, d2G, img, 'same');
 LoG = dxx + dyy;
 LoG = LoG - min(LoG(:));
-LoG = Log / max(LoG(:));
+LoG = LoG / max(LoG(:));
 end
