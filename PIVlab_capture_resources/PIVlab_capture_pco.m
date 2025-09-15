@@ -116,6 +116,7 @@ v_binning=binning; %1,2,4
 [errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetBinning', hcam_ptr,h_binning,v_binning); %2,4, etc.
 pco_errdisp('PCO_SetBinning',errorCode);
 %% ROI selection
+disp('Fix binning here...?')
 if strcmp(camera_type,'pco_panda')
 	xmin=ROI_general(1);
 	ymin=ROI_general(2);

@@ -67,32 +67,47 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 	end
 
 	%set colormap
-	if displaywhat ~=10 %10 is LIC
-		avail_maps=get(handles.colormap_choice,'string');
-		selected_index=get(handles.colormap_choice,'value');
-		if selected_index == 4 %HochschuleBremen map
-			load(fullfile('+plot','hsbmap.mat'),'hsb');
-			MAP = colormap(hsb);
-		elseif selected_index== 1 %parula
-			load(fullfile('+plot','parula.mat'),'parula')
-			MAP = colormap (parula);
-			elseif selected_index== 16 %plasma
-			load(fullfile('+plot','plasma.mat'),'plasma')
-			MAP = colormap (plasma);
-		else
-			MAP = colormap(avail_maps{selected_index});
-		end
-		%adjust colormap steps
-		cmap = MAP;
-		colormap_steps_list=get(handles.colormap_steps,'String');
-		colormap_steps_value=get(handles.colormap_steps,'Value');
-		colormap_steps=str2double(colormap_steps_list{colormap_steps_value});
-		cmap_new=interp1(1:size(cmap,1),cmap,linspace(1,size(cmap,1),colormap_steps));
-		%colormap(cmap_new);
-		MAP = colormap(cmap_new);
-	else %LIC can only be gray
-		MAP = colormap('gray');
-	end
+    if displaywhat ~=10 %10 is LIC
+        avail_maps=get(handles.colormap_choice,'string');
+        selected_index=get(handles.colormap_choice,'value');
+        if selected_index == 4 %HochschuleBremen map
+            try
+                load(fullfile('+plot','hsbmap.mat'),'hsb');
+                MAP = colormap(hsb);
+            catch
+                disp(['hsbmap.mat not found in ' fullfile('+plot','hsbmap.mat')])
+                MAP=colormap("parula");
+            end
+        elseif selected_index== 1 %parula
+            try
+                load(fullfile('+plot','parula.mat'),'parula')
+                MAP = colormap (parula);
+            catch
+                disp(['parula.mat not found in ' fullfile('+plot','parula.mat')])
+                MAP=colormap("parula");
+            end
+        elseif selected_index== 16 %plasma
+            try
+                load(fullfile('+plot','plasma.mat'),'plasma')
+                MAP = colormap (plasma);
+            catch
+                disp(['plasma.mat not found in ' fullfile('+plot','plasma.mat')])
+                MAP=colormap("parula");
+            end
+        else
+            MAP = colormap(avail_maps{selected_index});
+        end
+        %adjust colormap steps
+        cmap = MAP;
+        colormap_steps_list=get(handles.colormap_steps,'String');
+        colormap_steps_value=get(handles.colormap_steps,'Value');
+        colormap_steps=str2double(colormap_steps_list{colormap_steps_value});
+        cmap_new=interp1(1:size(cmap,1),cmap,linspace(1,size(cmap,1),colormap_steps));
+        %colormap(cmap_new);
+        MAP = colormap(cmap_new);
+    else %LIC can only be gray
+        MAP = colormap('gray');
+    end
 
 	currentimage = plot.rescale_maps(currentimage,is_it_vector_direction);
 

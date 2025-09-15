@@ -2,7 +2,7 @@ function piv_capture_Callback(~,~,~)
 try
 	acquisition.control_simple_sync_serial(0,0);
 catch
-	keyboard
+	%keyboard
 end
 gui.put('capturing',0);
 camera_type=gui.retr('camera_type');

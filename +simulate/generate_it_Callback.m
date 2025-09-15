@@ -78,6 +78,9 @@ switch flow_sim
 		[x,y]=meshgrid(linspace(-3,3,str2double(get(handles.img_sizex,'string'))),linspace(-3,3,str2double(get(handles.img_sizey,'string'))));
 		u = peaks(x,y)/3;
 		v = peaks(y,x)/3;
+        %matlab logo in u displacement:
+        %u=-1*membrane(1,str2double(get(handles.img_sizex,'string'))/2)*5;
+        %v=membrane(1,str2double(get(handles.img_sizex,'string'))/2)*0;
 end
 %% Create Particle Image
 set(handles.status_creation,'string','Calculating particles...');drawnow;
