@@ -12,10 +12,13 @@ try
     hwinfo = imaqhwinfo("gentl");
 catch ME
     % Error out if imaqhwinfo fails
+    gui.toolsavailable(1)
+    msgbox(['No cameras found.' newline newline 'Please verify the correct installation of drivers and Addons following the instructions on' newline newline 'https://www.pivlab.de/wiki/5-camera-setup/'],'Available Devices')
     error("Error while collecting information on connected GenTL hardware");
 end
 if isempty(hwinfo.DeviceIDs)
     % Error out if no devices found
+    gui.toolsavailable(1)
     disp("No GenTL hardware detected.");
 end
 deviceInfo = hwinfo.DeviceInfo;

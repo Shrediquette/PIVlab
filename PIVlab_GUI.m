@@ -413,7 +413,7 @@ if isempty(fh)
 
     %% Apply fix for wrong UI scaling introduced between matlab 2025a prerelease5 and Matlab2025a
     try
-        if ~isMATLABReleaseOlderThan("R2025a")
+        if ~isMATLABReleaseOlderThan("R2025a") && isMATLABReleaseOlderThan("R2025b")
             gui.fix_R2025a_GUI_sizing
             disp('-> Applied GUI scaling bug fix for release 2025a...')
         end
