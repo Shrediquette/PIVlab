@@ -284,7 +284,7 @@ history = update_history(history,current_dir,now,history_size);
 gray = get(0,'DefaultUIControlBackgroundColor');
 
 fig_pos = [0 0 740 580];
-%{
+
 fig = figure('Position',fig_pos,...
 	'Color',gray,...
 	'MenuBar','none',...
@@ -298,20 +298,7 @@ fig = figure('Position',fig_pos,...
 	'KeyPressFcn',@keypressmisc,...
 	'Visible','off');
 
-%}
-disp('modal wieder einschalten')
 
-fig = figure('Position',fig_pos,...
-	'Color',gray,...
-	'MenuBar','none',...
-	'Resize','off',...
-	'NumberTitle','off',...
-	'Name',prop.prompt,...
-	'IntegerHandle','off',...
-	'CloseRequestFcn',@cancel,...
-	'CreateFcn',{@movegui,'center'},...
-	'KeyPressFcn',@keypressmisc,...
-	'Visible','off');
 
 % Set system-dependent items.
 if ismac
@@ -393,10 +380,20 @@ sort_cb(3) = uicontrol('Style','checkbox',...
 	'String','Size',...
 	'FontSize',sort_ctrl_size,...
 	'Value',sort_state(3),...
-	'CData',tri_icon{sort_state(3)+2},...
-	'KeyPressFcn',@keypressmisc,...
-	'Callback',{@sort_type,3});
+    'CData',tri_icon{sort_state(3)+2},...
+    'KeyPressFcn',@keypressmisc,...
+    'Callback',{@sort_type,3});
 
+
+pickslist = uitable('Position',[380 10 350 230],'data',file_picks,'ClickedFcn',@clickpicks);%,'KeyPressFcn',@keypressnav);
+pickslist.RowStriping = 'off';
+pickslist.RowName = {};
+pickslist.ColumnName = {};
+pickslist.SelectionType = 'cell';
+pickslist.Multiselect = 'on';
+
+
+%{
 pickslist = uicontrol('Style','listbox',...
 	'Position',[380 10 350 230],...
 	'String',file_picks,...
@@ -404,7 +401,7 @@ pickslist = uicontrol('Style','listbox',...
 	'KeyPressFcn',@keypresslist,...
 	'Max',2,...
 	'Value',[]);
-
+%}
 addbut = uicontrol('Style','pushbutton',...
 	'Position',[270 275 80 40],...
 	'String','Add',...
@@ -682,40 +679,53 @@ setpref('uipickfiles','figure_position',fig_pos)
 			pick_full = fullfile(current_dir,pick);
 			dir_pick.name = pick_full;
 			if ~nodupes || ~any(strcmp(full_file_picks,pick_full))
-				file_picks{end + 1} = pick; %#ok<AGROW>
-				full_file_picks{end + 1} = pick_full; %#ok<AGROW>
-				dir_picks(end + 1) = dir_pick; %#ok<AGROW>
+                file_picks{end + 1} = pick; %#ok<AGROW>
+                full_file_picks{end + 1} = pick_full; %#ok<AGROW>
+                dir_picks(end + 1) = dir_pick; %#ok<AGROW>
 
-			end
-		end
-		if show_full_path
-			set(pickslist,'String',full_file_picks,'Value',[]);
-		else
-			set(pickslist,'String',file_picks,'Value',[]);
-		end
-		set([removebut,moveupbut,movedownbut],'Enable','off');
-	end
+            end
+        end
+        if show_full_path
+            %set(pickslist,'String',full_file_picks,'Value',[]);
 
-	function remove(varargin)
-		values = get(pickslist,'Value');
-		file_picks(values) = [];
-		full_file_picks(values) = [];
-		dir_picks(values) = [];
-		top = get(pickslist,'ListboxTop');
+        	pickslist.Data=full_file_picks';
+            pickslist.Selection=[];
+
+        else
+            pickslist.Data=file_picks';
+            pickslist.Selection=[];
+            %set(pickslist,'String',file_picks,'Value',[]);
+        end
+        set([removebut,moveupbut,movedownbut],'Enable','off');
+    end
+
+    function remove(varargin)
+        %values = get(pickslist,'Value');
+        values=pickslist.Selection(:,1);
+        values=values(:,1);
+        file_picks(values) = [];
+        full_file_picks(values) = [];
+        dir_picks(values) = [];
+        %{
+        top = get(pickslist,'ListboxTop');
 		num_above_top = sum(values < top);
 		top = top - num_above_top;
+        %}
 		num_picks = length(file_picks);
-		new_value = min(min(values) - num_above_top,num_picks);
+		
+        %new_value = min(min(values) - num_above_top,num_picks);
 		if num_picks == 0
-			new_value = [];
+		%	new_value = [];
 			set([removebut,moveupbut,movedownbut],'Enable','off')
 		end
 		if show_full_path
-			set(pickslist,'String',full_file_picks,'Value',new_value,...
-				'ListboxTop',top)
+		pickslist.Data=full_file_picks';
+        %	set(pickslist,'String',full_file_picks,'Value',new_value,...
+		%		'ListboxTop',top)
 		else
-			set(pickslist,'String',file_picks,'Value',new_value,...
-				'ListboxTop',top)
+		pickslist.Data=file_picks';
+        	%set(pickslist,'String',file_picks,'Value',new_value,...
+		%		'ListboxTop',top)
 		end
 	end
 
@@ -733,7 +743,7 @@ setpref('uipickfiles','figure_position',fig_pos)
 
 	function open(varargin)
 		%values = get(navlist,'Value');
-        values=navlist.Selection(:,1)
+        values=navlist.Selection(:,1);
 		if fdir(values).isdir
 			set(fig,'pointer','watch')
 			drawnow
@@ -879,40 +889,42 @@ setpref('uipickfiles','figure_position',fig_pos)
 	end
 
 	function clickpicks(varargin)
-		value = get(pickslist,'Value');
-		if isempty(value)
-			set([removebut,moveupbut,movedownbut],'Enable','off')
-		else
-			set(removebut,'Enable','on')
-			if min(value) == 1
-				set(moveupbut,'Enable','off')
-			else
-				set(moveupbut,'Enable','on')
-			end
-			if max(value) == length(file_picks)
-				set(movedownbut,'Enable','off')
-			else
-				set(movedownbut,'Enable','on')
-			end
-			try
-				pick = file_picks(value(1));
-				pick_full = fullfile(current_dir,pick{1,1});
-				figure(fig)
-				if numel(pick)-strfind(pick,'.b16')==3
-					temp_img=import.f_readB16(pick_full);
-					temp_img=imadjust(temp_img/max(temp_img(:)));
-					imshow (temp_img,'parent',ah1);
-				else
-					temp_img=imread(pick_full);
-					imshow (imadjust(temp_img,mean(stretchlim(temp_img),2)),'parent',ah1);
-				end
-				ylabel('enhanced image display')
-			catch
-			end
-		end
-		if strcmp(get(fig,'SelectionType'),'open')
-			remove();
-		end
+		%value = get(pickslist,'Value');
+		value=pickslist.Selection(:,1);
+        value=value(:,1);
+        if isempty(value)
+            set([removebut,moveupbut,movedownbut],'Enable','off')
+        else
+            set(removebut,'Enable','on')
+            if min(value) == 1
+                set(moveupbut,'Enable','off')
+            else
+                set(moveupbut,'Enable','on')
+            end
+            if max(value) == length(file_picks)
+                set(movedownbut,'Enable','off')
+            else
+                set(movedownbut,'Enable','on')
+            end
+            try
+                pick = file_picks(value(1));
+                pick_full = fullfile(current_dir,pick{1,1});
+                figure(fig)
+                if numel(pick)-strfind(pick,'.b16')==3
+                    temp_img=import.f_readB16(pick_full);
+                    temp_img=imadjust(temp_img/max(temp_img(:)));
+                    imshow (temp_img,'parent',ah1);
+                else
+                    temp_img=imread(pick_full);
+                    imshow (imadjust(temp_img,mean(stretchlim(temp_img),2)),'parent',ah1);
+                end
+                ylabel('enhanced image display')
+            catch
+            end
+        end
+        %if strcmp(get(fig,'SelectionType'),'open')
+        %    remove();
+        %end
 	end
 %%{
 	function recall(varargin)
@@ -1148,9 +1160,11 @@ setpref('uipickfiles','figure_position',fig_pos)
 	function showfullpath(varargin)
 		show_full_path = get(viewfullpath,'Value');
 		if show_full_path
-			set(pickslist,'String',full_file_picks)
+			%set(pickslist,'String',full_file_picks)
+            pickslist.Data=full_file_picks';
 		else
-			set(pickslist,'String',file_picks)
+			%set(pickslist,'String',file_picks)
+            pickslist.Data=file_picks';
 		end
 	end
 
@@ -1173,50 +1187,68 @@ setpref('uipickfiles','figure_position',fig_pos)
 	end
 
 	function moveup(varargin)
-		value = get(pickslist,'Value');
-		set(removebut,'Enable','on')
+		%value = get(pickslist,'Value');
+		value=pickslist.Selection(:,1);
+        set(removebut,'Enable','on')
 		n = length(file_picks);
 		omega = 1:n;
 		index = zeros(1,n);
 		index(value - 1) = omega(value);
 		index(setdiff(omega,value - 1)) = omega(setdiff(omega,value));
-		file_picks = file_picks(index);
-		full_file_picks = full_file_picks(index);
-		dir_picks = dir_picks(index);
-		value = value - 1;
-		if show_full_path
-			set(pickslist,'String',full_file_picks,'Value',value)
-		else
-			set(pickslist,'String',file_picks,'Value',value)
-		end
-		if min(value) == 1
-			set(moveupbut,'Enable','off')
-		end
-		set(movedownbut,'Enable','on')
-	end
+        file_picks = file_picks(index);
+        full_file_picks = full_file_picks(index);
+        dir_picks = dir_picks(index);
+        value = value - 1;
+        if show_full_path
+            pickslist.Data=full_file_picks';
+            mod_value=value;
+            mod_value(:,end+1)=1;
+            pickslist.Selection=mod_value;
+            %set(pickslist,'String',full_file_picks,'Value',value)
+        else
+            pickslist.Data=file_picks';
+            mod_value=value;
+            mod_value(:,end+1)=1;
+            pickslist.Selection=mod_value;
+            %set(pickslist,'String',file_picks,'Value',value)
+        end
+        if min(value) == 1
+            set(moveupbut,'Enable','off')
+        end
+        set(movedownbut,'Enable','on')
+    end
 
-	function movedown(varargin)
-		value = get(pickslist,'Value');
-		set(removebut,'Enable','on')
-		n = length(file_picks);
-		omega = 1:n;
-		index = zeros(1,n);
-		index(value + 1) = omega(value);
-		index(setdiff(omega,value + 1)) = omega(setdiff(omega,value));
-		file_picks = file_picks(index);
-		full_file_picks = full_file_picks(index);
-		dir_picks = dir_picks(index);
-		value = value + 1;
-		if show_full_path
-			set(pickslist,'String',full_file_picks,'Value',value)
-		else
-			set(pickslist,'String',file_picks,'Value',value)
-		end
-		if max(value) == n
-			set(movedownbut,'Enable','off')
-		end
-		set(moveupbut,'Enable','on')
-	end
+    function movedown(varargin)
+        %value = get(pickslist,'Value');
+        value=pickslist.Selection(:,1);
+        set(removebut,'Enable','on')
+        n = length(file_picks);
+        omega = 1:n;
+        index = zeros(1,n);
+        index(value + 1) = omega(value);
+        index(setdiff(omega,value + 1)) = omega(setdiff(omega,value));
+        file_picks = file_picks(index);
+        full_file_picks = full_file_picks(index);
+        dir_picks = dir_picks(index);
+        value = value + 1;
+        if show_full_path
+            pickslist.Data=full_file_picks';
+            mod_value=value;
+            mod_value(:,end+1)=1;
+            pickslist.Selection=mod_value;
+            %set(pickslist,'String',full_file_picks,'Value',value)
+        else
+            pickslist.Data=file_picks';
+            mod_value=value;
+            mod_value(:,end+1)=1;
+            pickslist.Selection=mod_value;
+            %set(pickslist,'String',file_picks,'Value',value)
+        end
+        if max(value) == n
+            set(movedownbut,'Enable','off')
+        end
+        set(moveupbut,'Enable','on')
+    end
 
 
 	function setfilspec(varargin)
