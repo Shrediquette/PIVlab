@@ -284,6 +284,7 @@ history = update_history(history,current_dir,now,history_size);
 gray = get(0,'DefaultUIControlBackgroundColor');
 
 fig_pos = [0 0 740 580];
+%{
 fig = figure('Position',fig_pos,...
 	'Color',gray,...
 	'MenuBar','none',...
@@ -297,6 +298,20 @@ fig = figure('Position',fig_pos,...
 	'KeyPressFcn',@keypressmisc,...
 	'Visible','off');
 
+%}
+disp('modal wieder einschalten')
+
+fig = figure('Position',fig_pos,...
+	'Color',gray,...
+	'MenuBar','none',...
+	'Resize','off',...
+	'NumberTitle','off',...
+	'Name',prop.prompt,...
+	'IntegerHandle','off',...
+	'CloseRequestFcn',@cancel,...
+	'CreateFcn',{@movegui,'center'},...
+	'KeyPressFcn',@keypressmisc,...
+	'Visible','off');
 
 % Set system-dependent items.
 if ismac
@@ -322,7 +337,7 @@ uicontrol('Style','frame',...
 	'Position',[255 260 110 70]);
 uicontrol('Style','frame',...
 	'Position',[275 135 110 100]);
-
+%{
 navlist = uicontrol('Style','listbox',...
 	'Position',[10 25 250 305],...
 	'String',filenames,...
@@ -330,10 +345,21 @@ navlist = uicontrol('Style','listbox',...
 	'Callback',@clicknav,...
 	'KeyPressFcn',@keypressnav,...
 	'Max',2);
+%}
+
+%%{
+navlist = uitable('Position',[10 25 250 305],'data',filenames,'ClickedFcn',@clicknav);%,'KeyPressFcn',@keypressnav);
+navlist.RowStriping = 'off';
+navlist.RowName = {};
+navlist.ColumnName = {};
+navlist.SelectionType = 'cell';
+navlist.Multiselect = 'on';
+
+%%}
 
 shift_info_txt = uicontrol('Style','text',...
 	'Position',[10 5 350 16],...
-	'String','Hold shift or ctrl to select multiple entries. CTRL+F selects all.','HorizontalAlignment','left','FontSize',8);
+	'String','Hold shift or ctrl to select multiple entries. CTRL+A selects all.','HorizontalAlignment','left','FontSize',8);
 
 
 tri_up = repmat([1 1 1 1 0 1 1 1 1;1 1 1 0 0 0 1 1 1;1 1 0 0 0 0 0 1 1;...
@@ -425,6 +451,14 @@ uparrow = [ ...
 cmap = NaN(128,3);
 cmap(double('0'),:) = [0 0 0];
 uparrow_im = ind2rgb(double(uparrow),cmap);
+
+try
+    theme=fig.Theme;
+    if strcmpi(theme.BaseColorStyle,'dark')
+        uparrow_im(uparrow_im==0)=1;
+    end
+catch
+end
 up_dir_but = uicontrol('Style','pushbutton',...
 	'Position',[240 350 20 20],...
 	'CData',uparrow_im,...
@@ -640,7 +674,8 @@ setpref('uipickfiles','figure_position',fig_pos)
 % ----------------- Callback nested functions ----------------
 
 	function add(varargin)
-		values = get(navlist,'Value');
+		%values = get(navlist,'Value');
+        values=navlist.Selection(:,1);
 		for i = 1:length(values)
 			dir_pick = fdir(values(i));
 			pick = dir_pick.name;
@@ -697,7 +732,8 @@ setpref('uipickfiles','figure_position',fig_pos)
 
 
 	function open(varargin)
-		values = get(navlist,'Value');
+		%values = get(navlist,'Value');
+        values=navlist.Selection(:,1)
 		if fdir(values).isdir
 			set(fig,'pointer','watch')
 			drawnow
@@ -724,7 +760,9 @@ setpref('uipickfiles','figure_position',fig_pos)
 			end
 
 			set(pathbox,'String',current_dir)
-			set(navlist,'ListboxTop',1,'Value',[],'String',filenames)
+			navlist.Selection=[];
+            navlist.Data = filenames;
+            %set(navlist,'ListboxTop',1,'Value',[],'String',filenames)
 			set(addbut,'Enable','off')
 			%			set(openbut,'Enable','off')
 			set(fig,'pointer','arrow')
@@ -732,8 +770,9 @@ setpref('uipickfiles','figure_position',fig_pos)
 	end
 
 	function clicknav(varargin)
-		value = get(navlist,'Value');
-		nval = length(value);
+		%value = get(navlist,'Value');
+		value=navlist.Selection(:,1);
+        nval = length(value);
 		dbl_click_fcn = @add;
 		switch nval
 			case 0
@@ -934,8 +973,10 @@ setpref('uipickfiles','figure_position',fig_pos)
 			set(up_dir_but','Enable','off')
 		end
 		set(pathbox,'String',current_dir)
-		set(navlist,'String',filenames,'Value',[])
-		set(addbut,'Enable','off')
+		%set(navlist,'String',filenames,'Value',[])
+		navlist.Data = filenames;
+        navlist.Selection=[];
+        set(addbut,'Enable','off')
 		%set(openbut,'Enable','off')
 		set(fig,'pointer','arrow')
 	end
@@ -1015,7 +1056,9 @@ setpref('uipickfiles','figure_position',fig_pos)
 			set(up_dir_but','Enable','off')
 		end
 		set(pathbox,'String',current_dir)
-		set(navlist,'String',filenames,'Value',selected)
+        navlist.Data=filenames;
+        navlist.Selection = [selected 1];
+		%set(navlist,'String',filenames,'Value',selected)
 		set(addbut,'Enable','off')
 		set(fig,'pointer','arrow')
 	end
@@ -1094,7 +1137,9 @@ setpref('uipickfiles','figure_position',fig_pos)
 			set(up_dir_but','Enable','off')
 		end
 		set(pathbox,'String',current_dir)
-		set(navlist,'String',filenames,'Value',[])
+		%set(navlist,'String',filenames,'Value',[])
+        navlist.Data = filenames;
+        navlist.Selection = [];
 		set(addbut,'Enable','off')
 		%set(openbut,'Enable','off')
 		set(fig,'pointer','arrow')
@@ -1212,7 +1257,9 @@ setpref('uipickfiles','figure_position',fig_pos)
 			@(x)file_sort(x,sort_state));
 		filenames = {fdir.name}';
 		filenames = annotate_file_names(filenames,fdir,fsdata);
-		set(navlist,'String',filenames,'Value',[])
+		navlist.Data=filenames;
+        navlist.Selection=[];
+        %set(navlist,'String',filenames,'Value',[])
 		set(addbut,'Enable','off')
 		set(fig,'pointer','arrow')
 	end
