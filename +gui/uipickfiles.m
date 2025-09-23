@@ -1737,30 +1737,6 @@ end
 
 % --------------------
 
-function success = generate_folder_icon(icon_path)
-% Black = 1, manila color = 2, transparent = 3.
-im = [ ...
-    3 3 3 1 1 1 1 3 3 3 3 3;
-    3 3 1 2 2 2 2 1 3 3 3 3;
-    3 1 1 1 1 1 1 1 1 1 1 3;
-    1 2 2 2 2 2 2 2 2 2 2 1;
-    1 2 2 2 2 2 2 2 2 2 2 1;
-    1 2 2 2 2 2 2 2 2 2 2 1;
-    1 2 2 2 2 2 2 2 2 2 2 1;
-    1 2 2 2 2 2 2 2 2 2 2 1;
-    1 2 2 2 2 2 2 2 2 2 2 1;
-    1 1 1 1 1 1 1 1 1 1 1 1];
-cmap = [0 0 0;255 220 130;255 255 255]/255;
-fid = fopen(icon_path,'w');
-if fid > 0
-    fclose(fid);
-    imwrite(im,cmap,icon_path,'Transparency',[1 1 0])
-end
-success = exist(icon_path,'file');
-end
-
-% --------------------
-
 %{
 function fsdata = set_folder_style(folder_style_pref)
 % Set style to preference.
@@ -2342,4 +2318,111 @@ else
 end
 csdata.matlab_folders = matlab_folders;
 
+end
+
+
+function success = generate_folder_icon(icon_path)
+% Black = 1, manila color = 2, transparent white = 3.
+im = [ ...
+	3 3 3 1 1 1 1 3 3 3 3 3;
+	3 3 1 2 2 2 2 1 3 3 3 3;
+	3 1 1 1 1 1 1 1 1 1 1 3;
+	1 2 2 2 2 2 2 2 2 2 2 1;
+	1 2 2 2 2 2 2 2 2 2 2 1;
+	1 2 2 2 2 2 2 2 2 2 2 1;
+	1 2 2 2 2 2 2 2 2 2 2 1;
+	1 2 2 2 2 2 2 2 2 2 2 1;
+	1 2 2 2 2 2 2 2 2 2 2 1;
+	1 1 1 1 1 1 1 1 1 1 1 1];
+cmap = [0 0 0;255 220 130;255 255 255]/255;
+fid = fopen(icon_path,'w');
+if fid > 0
+	fclose(fid);
+	imwrite(im,cmap,icon_path,'Transparency',[1 1 0])
+end
+success = isfile(icon_path);
+end
+
+% --------------------
+
+function success = generate_foldersc_icon(icon_path)
+% Black = 1, blue color = 2, darker blue = 3, transparent white = 4.
+im = [ ...
+	4 4 4 1 1 1 1 4 4 4 4 4;
+	4 4 1 2 2 2 2 1 4 4 4 4;
+	4 1 1 1 1 1 1 1 1 1 1 4;
+	1 2 2 2 2 2 3 2 2 2 2 1;
+	1 2 2 2 2 2 2 1 2 2 2 1;
+	1 2 2 2 1 1 1 1 1 2 2 1;
+	1 2 2 1 2 2 2 1 2 2 2 1;
+	1 2 1 2 2 2 3 2 2 2 2 1;
+	1 2 2 2 2 2 2 2 2 2 2 1;
+	1 1 1 1 1 1 1 1 1 1 1 1];
+cmap = [0 0 0;163 185 255;65 83 128;255 255 255]/255;
+fid = fopen(icon_path,'w');
+if fid > 0
+	fclose(fid);
+	imwrite(im,cmap,icon_path,'Transparency',[1 1 1 0])
+end
+success = isfile(icon_path);
+end
+
+% --------------------
+
+function success = generate_house_icon(icon_path)
+im = [6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6;
+	6 6 6 6 6 6 6 5 5 6 6 6 6 6 6 6;
+	6 6 6 6 6 6 5 8 8 5 6 8 8 8 6 6;
+	6 6 6 6 6 5 8 3 3 8 5 2 9 2 6 6;
+	6 6 6 6 5 8 3 3 3 3 8 5 9 2 6 6;
+	6 6 6 5 8 3 7 4 4 7 3 8 5 2 6 6;
+	6 6 5 8 3 3 1 1 1 1 3 3 8 5 6 6;
+	6 5 8 3 3 3 2 4 4 2 3 3 3 8 5 6;
+	5 8 2 3 3 3 3 3 3 3 3 3 3 2 8 5;
+	6 6 2 3 3 3 1 1 1 1 3 3 3 2 6 6;
+	6 6 2 3 3 3 1 8 8 1 3 3 3 2 6 6;
+	6 6 2 3 3 3 1 8 8 1 3 3 3 2 6 6;
+	6 6 2 3 3 3 1 1 2 1 3 3 3 2 6 6;
+	6 6 2 3 3 3 1 5 5 1 3 3 3 2 6 6;
+	6 6 2 3 3 3 1 7 7 1 3 3 3 2 6 6;
+	6 6 8 8 8 8 4 4 4 4 8 8 8 8 6 6];
+im = [im,6*ones(16,5)];
+cmap = [70 24 9;174 172 166;244 240 230;93 96 97;32 33 33;...
+	255 255 255;153 71 21;66 52 39;255 255 254]/255;
+fid = fopen(icon_path,'w');
+if fid > 0
+	fclose(fid);
+	imwrite(im,cmap,icon_path,'Transparency',[1 1 1 1 1 0 1 1 1])
+end
+success = isfile(icon_path);
+end
+
+% --------------------
+
+function success = generate_logo_icon(icon_path)
+im = [9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9;
+	9 9 9 9 9 9 9 9 9 9 10 9 9 9 9 9;
+	9 9 9 9 9 9 9 9 9 10 8 6 9 9 9 9;
+	9 9 9 9 9 9 9 9 9 4 3 7 10 9 9 9;
+	9 9 9 9 9 9 9 9 2 1 7 7 6 9 9 9;
+	9 9 9 9 9 9 9 2 1 1 7 7 3 9 9 9;
+	9 9 9 9 9 10 4 1 1 8 7 7 3 5 9 9;
+	9 9 9 9 10 1 1 1 1 8 7 7 3 6 5 9;
+	9 9 10 2 4 4 1 1 8 8 7 7 3 3 9 9;
+	10 2 2 2 4 4 1 1 8 3 3 7 7 3 6 9;
+	9 2 2 4 4 4 1 8 8 3 7 7 7 3 6 5;
+	9 9 10 2 4 1 8 8 8 3 7 7 6 6 3 5;
+	9 9 9 9 9 1 8 3 3 7 7 9 9 9 6 6;
+	9 9 9 9 9 5 3 7 7 7 5 9 9 9 9 5;
+	9 9 9 9 9 9 6 7 7 5 9 9 9 9 9 9;
+	9 9 9 9 9 9 5 6 5 9 9 9 9 9 9 9];
+im = [im,9*ones(16,5)];
+cmap = [73 50 49;132 193 188;182 60 15;97 146 141;246 224 205;...
+	223 153 109;230 113 15;123 33 18;255 255 255;202 212 210]/255;
+fid = fopen(icon_path,'w');
+if fid > 0
+	fclose(fid);
+	imwrite(im,cmap,icon_path,'Transparency',[1 1 1 1 1 1 1 1 0 1])
+end
+success = isfile(icon_path);
 end

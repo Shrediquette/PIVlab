@@ -13,30 +13,46 @@ if isempty (batchModeActive)
 end
 %remember imagesize of currently loaded images
 try
-	old_img_size=size(import.get_img(1));
+    old_img_size=size(import.get_img(1));
 catch
-	old_img_size=0;
+    old_img_size=0;
 end
 if useGUI ==1
-	if ispc==1
-		try
-			[path, multitiff]=gui.uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
-		catch
-			[path, multitiff]=gui.uipickfiles ('FilterSpec', pwd, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
-		end
-	else
-		try
-			[path, multitiff]=gui.uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
-		catch
-			[path, multitiff]=gui.uipickfiles ('FilterSpec', pwd, 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
-		end
-	end
-	gui.put('expected_image_size',[])
+    if ~verLessThan('matlab','25')
+        if ispc==1
+            try
+                [path, multitiff]=gui.uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+            catch
+                [path, multitiff]=gui.uipickfiles ('FilterSpec', pwd, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+            end
+        else
+            try
+                [path, multitiff]=gui.uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+            catch
+                [path, multitiff]=gui.uipickfiles ('FilterSpec', pwd, 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+            end
+        end
+    else
+        if ispc==1
+            try
+                [path, multitiff]=gui.uipickfiles_pre_2025 ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+            catch
+                [path, multitiff]=gui.uipickfiles_pre_2025 ('FilterSpec', pwd, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+            end
+        else
+            try
+                [path, multitiff]=gui.uipickfiles_pre_2025 ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+            catch
+                [path, multitiff]=gui.uipickfiles_pre_2025 ('FilterSpec', pwd, 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
+            end
+        end
+    end
+    gui.put('expected_image_size',[])
 end
 
 if ~isequal(path,0)
-	%remove directories from list
-	for kk=size(path,1):-1:1
+    %remove directories from list
+    for kk=size(path,1):-1:1
 		if path(kk).isdir == 1
 			path(kk)=[];
 		end
