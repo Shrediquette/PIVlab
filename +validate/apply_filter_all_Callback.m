@@ -167,7 +167,7 @@ if ~isempty(resultslist)
 		resultslist(9, :) = typevector_new;
 		gui.put('resultslist', resultslist);
 	end
-	%set (handles.apply_filter_all, 'string', 'Apply to all frames');
+	set (handles.apply_filter_all, 'string', 'Apply to all frames');
 	gui.update_progress(0)
 	gui.toolsavailable(1)
 	gui.sliderdisp(gui.retr('pivlab_axis'));
