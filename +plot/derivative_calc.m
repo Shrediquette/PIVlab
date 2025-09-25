@@ -63,14 +63,20 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 	if get(handles.smooth, 'Value') == 1
 		smoothfactor=floor(get(handles.smoothstr, 'Value'));
 		try
-			if get(handles.algorithm_selection,'Value')~=4 %not optical flow
-				u = misc.smoothn(u,smoothfactor/10); 
-				v = misc.smoothn(v,smoothfactor/10); 
-			else %optical flow
-				u = misc.smoothn(u,smoothfactor/10*20); 
-				v = misc.smoothn(v,smoothfactor/10*20); 
-			end
-			%clc
+            u_old=u;
+            v_old=v;
+            if get(handles.algorithm_selection,'Value')~=4 %not optical flow
+                u = misc.smoothn(u,smoothfactor/10);
+                v = misc.smoothn(v,smoothfactor/10);
+            else %optical flow
+                u = misc.smoothn(u,smoothfactor/10*20);
+                v = misc.smoothn(v,smoothfactor/10*20);
+            end
+            if get(handles.interpol_missing,'value')==0 %user does not want to interpolate missing data, but wants to smooth anyway
+                u(isnan(u_old))=nan;
+                v(isnan(v_old))=nan;
+            end
+            %clc
 			%disp ('Using smoothn.m from Damien Garcia for data smoothing.')
 			%disp (['Input smoothing parameter S for smoothn is: ' num2str(smoothfactor/10)])
 			%disp ('see the documentation here: https://de.mathworks.com/matlabcentral/fileexchange/25634-smoothn')
