@@ -375,11 +375,6 @@ if isauto
             'has been reached. Put s as an input variable if required.'])
     end
 end
-if nargout<3 && ~exitflag
-    warning('MATLAB:smoothn:MaxIter',...
-        ['Maximum number of iterations (' int2str(MaxIter) ') has ',...
-        'been exceeded. Increase MaxIter option or decrease TolZ value.'])
-end
 
 
 %% GCV score
