@@ -313,7 +313,7 @@ fig = figure('Position',fig_pos,...
     'CloseRequestFcn',@cancel,...
     'CreateFcn',{@movegui,'center'},...
     'KeyPressFcn',@keypressmisc,...
-    'Visible','off');
+    'Visible','off','interruptible','off','BusyAction','cancel');
 
 % Set system-dependent items.
 if ismac
@@ -350,7 +350,7 @@ navlist = uicontrol('Style','listbox',...
 %}
 
 %%{
-navlist = uitable('Position',[10 25 250 305],'data',filenames,'ClickedFcn',@clicknav,'KeyPressFcn',@keypressnav);
+navlist = uitable('Position',[10 25 250 305],'data',filenames,'ClickedFcn',@clicknav,'KeyPressFcn',@keypressnav,'interruptible','off','BusyAction','cancel');
 navlist.RowStriping = 'off';
 navlist.RowName = {};
 navlist.ColumnName = {};
@@ -404,7 +404,7 @@ sort_cb(3) = uicontrol('Style','checkbox',...
     'Callback',{@sort_type,3});
 
 
-pickslist = uitable('Position',[380 10 350 230],'data',file_picks,'ClickedFcn',@clickpicks,'KeyPressFcn',@keypresslist);
+pickslist = uitable('Position',[380 10 350 230],'data',file_picks,'ClickedFcn',@clickpicks,'KeyPressFcn',@keypresslist,'interruptible','off','BusyAction','cancel');
 pickslist.RowStriping = 'off';
 pickslist.RowName = {};
 pickslist.ColumnName = {};
@@ -629,7 +629,7 @@ if ~isempty(prop.numfiles)
 end
 
 
-ah1 = axes('units', 'pixels', 'Position',[388 308 350 270], 'xtick', [],'ytick',[]);
+ah1 = axes('units', 'pixels', 'Position',[388 308 350 270], 'xtick', [],'ytick',[],'interruptible','off','BusyAction','cancel');
 try
     imshow(imread(fullfile('images','pivlab_logo1.jpg')),'parent',ah1,'interpolation','bilinear');
 catch
