@@ -52,7 +52,11 @@ mask = mask_inpt_roi;
 max_repetitions=6; %maximum amount of repetitions of the last pass
 repetition=0;
 %repeat_last_pass=0; %set in GUI: enable repetition of last pass
-%delta_diff_min=0.025;  %set in GUI: the quality increase from one pass to the other should at least be this good. This is sort of the slope of the "quality"
+try 
+    delta_diff_min;
+catch
+    delta_diff_min=0.025;  %set in GUI: the quality increase from one pass to the other should at least be this good. This is sort of the slope of the "quality"
+end
 delta_diff=1; %initialize with bad value
 for multipass = 1:passes
 	%this while loop will run at least once. when repeat_last_pass is 0, then the while loop will break after the first execution.

@@ -49,7 +49,7 @@ end
 
 function img = dewarp(img, tform)
     % Dewarp images
-    [~, ref] = imwarp(imag, tform, 'cubic'); % There may be a prettier way to get the ref object
+    [~, ref] = imwarp(img, tform, 'cubic'); % There may be a prettier way to get the ref object
     ref.ImageSize = size(img); % imwarp normally dramatically scales down the image
     [img, ~] = imwarp(img, tform, 'cubic', 'OutputView', ref);
 end
