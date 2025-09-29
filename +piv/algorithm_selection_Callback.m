@@ -17,6 +17,7 @@ if selection ==1 % piv fft multi
 	set(handles.text14,'visible','on')
 	set(handles.subpix,'visible','on')
 	set(handles.uipanel_ofv1,'visible','off')
+    set(handles.uipanel_ofv2,'visible','off')
 	set(handles.textSuggest,'visible','on')
 	set(handles.SuggestSettings,'visible','on')
 	if get(handles.checkbox26,'value') ~=0
@@ -40,6 +41,7 @@ if selection ==2 % ensemble
 	set(handles.text14,'visible','on')
 	set(handles.subpix,'visible','on')
 	set(handles.uipanel_ofv1,'visible','off')
+    set(handles.uipanel_ofv2,'visible','off')
 	set(handles.textSuggest,'visible','on')
 	set(handles.SuggestSettings,'visible','on')
 	piv.dispinterrog
@@ -56,12 +58,14 @@ if selection==3 % DCC
 	set(handles.text14,'visible','on')
 	set(handles.subpix,'visible','on')
 	set(handles.uipanel_ofv1,'visible','off')
+    set(handles.uipanel_ofv2,'visible','off')
 	set(handles.textSuggest,'visible','on')
 	set(handles.SuggestSettings,'visible','on')
 	piv.dispinterrog
 end
 if selection ==4 %wOFV
 	set(handles.uipanel_ofv1,'visible','on')
+    set(handles.uipanel_ofv2,'visible','on')
 	set(handles.uipanel42,'visible','off')
 	set(handles.uipanel41,'visible','off')
 	set(handles.CorrQuality,'visible','off')

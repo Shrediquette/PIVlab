@@ -711,6 +711,24 @@ handles.text_ofv_eta = uicontrol(handles.uipanel_ofv1,'Style','text','units','ch
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
 handles.ofv_eta = uicontrol(handles.uipanel_ofv1,'Style','edit', 'String','40','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_eta','TooltipString','smoothness determined by the regularization parameter');
 
+
+parentitem=get(handles.multip04, 'Position');
+item=[0 0 0 0];
+
+item=[0 7+8.5 parentitem(3) 12];
+
+handles.uipanel_ofv2 = uipanel(handles.multip04, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','References', 'Tag','uipanel_ofv2','fontweight','bold','Visible','off');
+parentitem=get(handles.uipanel_ofv2, 'Position');
+item=[0 0 0 0];
+
+
+item=[0 item(2)+item(4) parentitem(3) 5];
+handles.text_source = uicontrol(handles.uipanel_ofv2,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Schmidt, B. E., and J. A. Sutton. "High-resolution velocimetry from tracer particle fields using a wavelet-based optical flow method." Experiments in Fluids 60.3 (2019): 37.');
+
+item=[0 item(2)+item(4) parentitem(3) 5];
+handles.text_source = uicontrol(handles.uipanel_ofv2,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Schmidt, Bryan E., et al. "Sensitivity of wavelet-based optical flow velocimetry (wOFV) to common experimental error sources." Measurement Science and Technology 36.1 (2024): 015303.');
+
+
 parentitem=get(handles.multip04, 'Position');
 item=[0 7 parentitem(3) 6];
 handles.uipanel41 = uipanel(handles.multip04, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Pass 1', 'Tag','uipanel41','fontweight','bold');
@@ -965,7 +983,7 @@ handles.text27 = uicontrol(handles.multip07,'Style','text','String','time step i
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
 handles.time_inp = uicontrol(handles.multip07,'Style','edit','String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@calibrate.time_inp_Callback,'Tag','time_inp','TooltipString','Enter the delta t between two images here. Enter 0 if you want to measure displacements instead of velocities.');
 
-item=[0 item(2)+item(4)+margin/2 parentitem(3) 7.5];
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 8];
 handles.uipanel_offsets = uipanel(handles.multip07, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Setup Offsets', 'Tag','uipanel_offsets','fontweight','bold');
 parentitem=get(handles.uipanel_offsets, 'Position');
 item=[0 0 0 0];
@@ -973,16 +991,16 @@ item=[0 0 0 0];
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/4*3 1];
 handles.text27a = uicontrol(handles.uipanel_offsets,'Style','text','String','x increases towards the','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text27a');
 
-item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
 handles.x_axis_direction = uicontrol(handles.uipanel_offsets,'Style','popupmenu','String',{'right','left'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','x_axis_direction','TooltipString','Direction of the x axis');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/4*3 1];
 handles.text27b = uicontrol(handles.uipanel_offsets,'Style','text','String','y increases towards the','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text27b');
 
-item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
 handles.y_axis_direction = uicontrol(handles.uipanel_offsets,'Style','popupmenu','String',{'bottom','top'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','y_axis_direction','TooltipString','Direction of the y axis');
 
-item=[0 item(2)+item(4)+margin/2 parentitem(3)/1.5 2];
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/1.5 2];
 handles.set_x_offset = uicontrol(handles.uipanel_offsets,'Style','pushbutton','String','Set x & y offsets','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @calibrate.set_offset_Callback,'Tag','set_x_offset','TooltipString','Click into your calibration image and tell PIVlab what physical x and y coordinates this point represents.');
 
 item=[0 0 0 0];
@@ -1188,7 +1206,7 @@ handles.interpg = uicontrol(handles.uipanel37,'Style','edit','String','0.5','Uni
 item=[parentitem(3)/5*2 item(2) parentitem(3)/5 1.5];
 handles.interpb = uicontrol(handles.uipanel37,'Style','edit','String','0','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpb');
 
-item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
+item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 1,5];
 handles.text140 = uicontrol(handles.uipanel37,'Style','text','String','interpolated vectors','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text142', 'fontsize', 6);
 
 parentitem=get(handles.multip09, 'Position');
