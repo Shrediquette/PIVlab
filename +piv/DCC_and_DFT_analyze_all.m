@@ -266,28 +266,33 @@ if ok==1
 
 				if numel(masks_in_frame)< i
 					mask_positions=cell(0);
-				else
-					mask_positions=masks_in_frame{i};
-				end
-				converted_mask=mask.convert_masks_to_binary(size(currentimage1(:,:,1)),mask_positions);
+                else
+                    mask_positions=masks_in_frame{i};
+                end
+                converted_mask=mask.convert_masks_to_binary(size(currentimage1(:,:,1)),mask_positions);
 
-				if bg_sub==1
-					if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
-						currentimage1 = rgb2gray(currentimage1)-bg_img_A;
-						currentimage2 = rgb2gray(currentimage2)-bg_img_B;
-					else
-						currentimage1 = currentimage1-bg_img_A;
-						currentimage2 = currentimage2-bg_img_B;
-					end
-				end
+                if size(currentimage1,3)>3
+                    currentimage1=currentimage1(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
+                    currentimage2=currentimage2(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
+                end
 
-				%get and save the image size (assuming that every image of a session has the same size)
-				currentimage1(currentimage1<0)=0; %bg subtraction may yield negative
-				currentimage2(currentimage2<0)=0; %bg subtraction may yield negative
-				image1=currentimage1;
-				image2=currentimage2;
+                if bg_sub==1
+                    if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+                        currentimage1 = rgb2gray(currentimage1)-bg_img_A;
+                        currentimage2 = rgb2gray(currentimage2)-bg_img_B;
+                    else
+                        currentimage1 = currentimage1-bg_img_A;
+                        currentimage2 = currentimage2-bg_img_B;
+                    end
+                end
 
-				stretcher_A=[]; %initialize for parfor loop
+                %get and save the image size (assuming that every image of a session has the same size)
+                currentimage1(currentimage1<0)=0; %bg subtraction may yield negative
+                currentimage2(currentimage2<0)=0; %bg subtraction may yield negative
+                image1=currentimage1;
+                image2=currentimage2;
+
+                stretcher_A=[]; %initialize for parfor loop
 				stretcher_B=[];
 				if autolimit == 1
 					if size(image1,3)>1

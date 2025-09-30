@@ -812,6 +812,9 @@ setpref('uipickfiles','figure_position',fig_pos)
                 imshow (temp_img,'parent',ah1);
             else
                 temp_img=imread(pick_full);
+                if size (temp_img,3)>3
+                    temp_img=temp_img(:,:,1:3); % Chronos workaround
+                end
                 imshow(imadjust(temp_img,mean(stretchlim(temp_img),2)),'parent',ah1);
                 info = imfinfo(pick_full);
                 if isfield(info,'Compression')

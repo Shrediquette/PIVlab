@@ -8,16 +8,19 @@ if gui.retr('video_selection_done') == 0
 	if strcmp(ext,'.b16')
 		currentimage=import.f_readB16(filepath{selected});
 		rawimage=currentimage;
-	else
-		%currentimage=imread(filepath{selected},framenum(selected));
-		currentimage=import.imread_wrapper(filepath{selected},framenum(selected),framepart(selected,:));
-		rawimage=currentimage;
-	end
+    else
+        %currentimage=imread(filepath{selected},framenum(selected));
+        currentimage=import.imread_wrapper(filepath{selected},framenum(selected),framepart(selected,:));
+        if size(currentimage,3)>3
+            currentimage=currentimage(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
+        end
+        rawimage=currentimage;
+    end
 else
-	video_reader_object = gui.retr('video_reader_object');
-	video_frame_selection=gui.retr('video_frame_selection');
-	currentimage = read(video_reader_object,video_frame_selection(selected));
-	rawimage=currentimage;
+    video_reader_object = gui.retr('video_reader_object');
+    video_frame_selection=gui.retr('video_frame_selection');
+    currentimage = read(video_reader_object,video_frame_selection(selected));
+    rawimage=currentimage;
 end
 
 if get(handles.bg_subtract,'Value')>1

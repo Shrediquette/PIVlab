@@ -9,6 +9,9 @@ end
 image_display_type=get(handles.displ_image,'Value'); %1 = piv image, 2= black, 3 = white
 [currentimage,~]=import.get_img(selected);
 if size(currentimage,3)>1 % color image
+    if size(currentimage,3)>3
+        currentimage=currentimage(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
+    end
 	currentimage=rgb2gray(currentimage); %convert to gray, always.
 end
 

@@ -46,12 +46,16 @@ if get(handles.bg_subtract,'Value')>1
 				end
 				classimage=class(image1); %memorize the original image format (double, uint8 etc)
 
-				if size(image1,3)>1
-					image1=rgb2gray(image1); %rgb2gray conserves the variable class (single, double, uint8, uint16)
-					image2=rgb2gray(image2);
-					colorimg=1;
-				else
-					colorimg=0;
+                if size(image1,3)>1
+                    if size(image1,3)>3
+                        image1=image1(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
+                        image2=image2(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
+                    end
+                    image1=rgb2gray(image1); %rgb2gray conserves the variable class (single, double, uint8, uint16)
+                    image2=rgb2gray(image2);
+                    colorimg=1;
+                else
+                    colorimg=0;
 				end
 				counter=1;
 
@@ -116,22 +120,28 @@ if get(handles.bg_subtract,'Value')>1
 						end
 					elseif strcmp('from_video',imagesource)
 						image_to_add1 = read(video_reader_object,video_frame_selection(i));
-						if sequencer==1 %not time-resolved
-							image_to_add2 = read(video_reader_object,video_frame_selection(i+1));
-						end
-					end
+                        if sequencer==1 %not time-resolved
+                            image_to_add2 = read(video_reader_object,video_frame_selection(i+1));
+                        end
+                    end
 
-					%% convert images to a grayscale double
-					%images arrive in their original format here
-					%convert everything to grayscale and double [0...1]
-					if colorimg==1
-						image_to_add1 = rgb2gray(image_to_add1); %will conserve image class
-						if sequencer==1 %not time-resolved
-							image_to_add2 = rgb2gray(image_to_add2);
-						end
-					end
+                    %% convert images to a grayscale double
+                    %images arrive in their original format here
+                    %convert everything to grayscale and double [0...1]
+                    if colorimg==1
+                        if size(image_to_add1,3)>3
+                            image_to_add1=image_to_add1(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
+                            if sequencer==1
+                                image_to_add2=image_to_add2(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
+                            end
+                        end
+                        image_to_add1 = rgb2gray(image_to_add1); %will conserve image class
+                        if sequencer==1 %not time-resolved
+                            image_to_add2 = rgb2gray(image_to_add2);
+                        end
+                    end
 
-					image_to_add1=double(image_to_add1);
+                    image_to_add1=double(image_to_add1);
 					if sequencer==1 %not time-resolved
 						image_to_add2=double(image_to_add2);
 					end
