@@ -216,6 +216,17 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 			xlabel(coloobj,name{gui.retr('displaywhat')},'fontsize',12,'fontweight','bold'); %11
 		end
 
+        %do not modify ticklocations, only the label
+%{
+Tick=coloobj.Ticks;
+ticklabels = minscale_adjusted + Tick/max(Tick) * (maxscale_adjusted-minscale_adjusted)
+ticklabels_string=num2str(ticklabels(:),'%0.3f');
+coloobj.TickLabels =ticklabels_string;
+%}
+        %pause(2);
+        %bar_width=coloobj.Position(3);
+        %coloobj.Position(3)=bar_width*0.95;
+        %coloobj.Position(1)=coloobj.Position(1) + bar_width*0.05*0.5;
 		tickamount=min([colormap_steps 8])+1; % depends on the amount of colormap steps
 		coloobj.Ticks=linspace(0,colormap_steps,tickamount);
 		ticklabels=linspace(minscale_adjusted,maxscale_adjusted,tickamount);
