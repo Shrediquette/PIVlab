@@ -1,5 +1,5 @@
 function [x, y, u, v, typevec,corr_map] = piv_analysis(dir, filename1, filename2,...
-    preprocess_setting, piv_setting, nr_of_cores, graph, tform)
+    preprocess_setting, piv_setting, nr_of_cores, graph, tform, tform_base)
     % wrapper function to do PIV preprocess and PIV fft for a pair of image
 
     % INPUT
@@ -18,13 +18,24 @@ function [x, y, u, v, typevec,corr_map] = piv_analysis(dir, filename1, filename2
     % u, v: resulted components of vector field
     % typevec: type vector
     % corr_map: corellation map
+    arguments
+        dir (1,1) string 
+        filename1 (1,1) string
+        filename2 (1,1) string
+        preprocess_setting cell
+        piv_setting cell
+        nr_of_cores 
+        graph 
+        tform 
+        tform_base = []
+    end
 
     image1 = imread(fullfile(dir, filename1)); % read images
     image2 = imread(fullfile(dir, filename2));
     % If a tform argument exists then apply it to the images
     if nargin == 8
-        image1 = dewarp(image1, tform);
-        image2 = dewarp(image2, tform);
+        image1 = dewarp(image1, tform, tform_base);
+        image2 = dewarp(image2, tform, tform_base);
     end
     image1 = preproc.PIVlab_preproc(image1, preprocess_setting{1:10,2});
     image2 = preproc.PIVlab_preproc(image2, preprocess_setting{1:10,2});
@@ -47,9 +58,12 @@ function [x, y, u, v, typevec,corr_map] = piv_analysis(dir, filename1, filename2
 end
 
 
-function img = dewarp(img, tform)
+function img = dewarp(img, tform, tform_base)
     % Dewarp images
     [~, ref] = imwarp(img, tform, 'cubic'); % There may be a prettier way to get the ref object
     ref.ImageSize = size(img); % imwarp normally dramatically scales down the image
     [img, ~] = imwarp(img, tform, 'cubic', 'OutputView', ref);
+    if tform_base
+        img = imwarp(img, tform_base, 'cubic', 'OutputView', ref);
+    end
 end
