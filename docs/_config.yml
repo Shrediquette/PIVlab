@@ -25,8 +25,8 @@ navigation:
     url: "/hardware"
   - title: "Screenshots"
     url: "/screenshots"
-  - title: "Applications"
-    url: "/applications"
+  - title: "References"
+    url: "/references"
   - title: "Service and Support"
     url: "/support"
     
