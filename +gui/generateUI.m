@@ -726,7 +726,7 @@ item=[0 item(2)+item(4) parentitem(3) 5];
 handles.text_source = uicontrol(handles.uipanel_ofv2,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Schmidt, B. E., and J. A. Sutton. "High-resolution velocimetry from tracer particle fields using a wavelet-based optical flow method." Experiments in Fluids 60.3 (2019): 37.');
 
 item=[0 item(2)+item(4) parentitem(3) 5];
-handles.text_source = uicontrol(handles.uipanel_ofv2,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Schmidt, Bryan E., et al. "Sensitivity of wavelet-based optical flow velocimetry (wOFV) to common experimental error sources." Measurement Science and Technology 36.1 (2024): 015303.');
+handles.text_source = uicontrol(handles.uipanel_ofv2,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Jassal, G.R., Thielicke, W. and Schmidt, B.E. (2025) "An Optical Flow Algorithm with Automatic Parameter Adjustment for Fluid Velocimetry", Journal of Open Research Software, 13(1), p. 22.');
 
 
 parentitem=get(handles.multip04, 'Position');
