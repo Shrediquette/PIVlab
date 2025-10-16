@@ -113,15 +113,19 @@ if ~isempty(resultslist)
 						currentimage1=import.imread_wrapper(slicedfilepath1{i},slicedframenum1(i),slicedframepart1(i,:))
 						currentimage2=import.imread_wrapper(slicedfilepath2{i},slicedframenum2(i),slicedframepart2(i,:))
 					end
-					rawimageA=currentimage1;
-					rawimageB=currentimage2;
-					if bg_sub==1
-						if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
-							currentimage1 = rgb2gray(currentimage1)-bg_img_A;
-							currentimage2 = rgb2gray(currentimage2)-bg_img_B;
-						else
-							currentimage1 = currentimage1-bg_img_A;
-							currentimage2 = currentimage2-bg_img_B;
+                    rawimageA=currentimage1;
+                    rawimageB=currentimage2;
+                    if bg_sub==1
+                        if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+                            if size(currentimage1,3)>3
+                                currentimage1=currentimage1(:,:,1:3);
+                                currentimage2=currentimage2(:,:,1:3);
+                            end
+                            currentimage1 = rgb2gray(currentimage1)-bg_img_A;
+                            currentimage2 = rgb2gray(currentimage2)-bg_img_B;
+                        else
+                            currentimage1 = currentimage1-bg_img_A;
+                            currentimage2 = currentimage2-bg_img_B;
 						end
 					end
 					currentimage1(currentimage1<0)=0; %bg subtraction may yield negative
