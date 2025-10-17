@@ -122,7 +122,7 @@ if value == 8 % OPTOcam
 	gui.put('f1exp',352) % Exposure start -> Q1 delay
 	gui.put('f1exp_cam',350); %exposure time setting first frame
 	gui.put('master_freq',15);
-	avail_freqs={'400' '320' '160' '100' '80' '60' '50' '25'}; %10 fps removed, camera might skip frames.
+	avail_freqs={'400' '320' '160' '100' '80' '60' '50' '25' '5'}; %low fps removed, camera might skip frames.
 	gui.put('max_cam_res',[1936,1216]);
 	%default min_interframe is for 8 bits.
 	OPTOcam_bits =gui.retr('OPTOcam_bits');
