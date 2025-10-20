@@ -126,6 +126,24 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
                 end
             end
             gui.sliderdisp(export_axis);
+            %%{
+            if i==1
+                pause(0.1)
+                target_size = export_axis.Position(1); %get the target size
+            end
+            retries=0;
+            while gca().Position(1) ~= target_size %new Matlabs have issues rendering correctly when focus is stolen from window.
+                pause(0.1)
+                disp ('Getting focus back')
+                figure(export_figure); %get back the focus
+                retries=retries+1;
+                if retries>3
+                    disp('Could not export correctly.')
+                    break
+                end
+            end
+            %%}
+
             switch selected_format
                 case 'PNG'
                     if use_exportfig
@@ -144,7 +162,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
                         export.autocrop(fullfile(pathname,newfilename),1);
                     else
                         if ~isMATLABReleaseOlderThan("R2025a")
-    						exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution,'Padding',10);
+                            exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution,'Padding',10);
                         else
                             exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution);
                         end
@@ -170,7 +188,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
                         export_image=export_image(croprect(1):croprect(2),croprect(3):croprect(4),:);
                     end
                     if i==startframe
-                        v = VideoWriter(fullfile(pathname,filename),'Uncompressed AVI'); %#ok<TNMLP>
+                        v = VideoWriter(fullfile(pathname,filename),'Uncompressed AVI');
                         v.FrameRate=fps;
                         open(v);
                     end
@@ -187,7 +205,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
                         export_image=export_image(croprect(1):croprect(2),croprect(3):croprect(4),:);
                     end
                     if i==startframe
-                        v = VideoWriter(fullfile(pathname,filename),'MPEG-4'); %#ok<TNMLP>
+                        v = VideoWriter(fullfile(pathname,filename),'MPEG-4');
                         v.FrameRate=fps;
                         v.Quality=quality;
                         open(v);
