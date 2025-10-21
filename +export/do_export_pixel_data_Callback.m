@@ -25,6 +25,31 @@ if isempty(imgsavepath)
     imgsavepath=gui.retr('pathname');
 end
 
+%% get desired resolution
+resolution=str2double(get(handles.resolution_setting,'String'));
+sppi = get(groot,"ScreenPixelsPerInch"); %screen dpi
+[currentimage,~]=import.get_img(1);
+original_height = round(size(currentimage,1)*resolution/100) +20; %10 pixel padding by default
+original_width = round(size(currentimage,2)*resolution/100) +20;
+
+%get colorbarposition, then take the dimension without colorbar as output image dimension
+try
+    colorbarpos=get(handles.colorbarpos,'value');
+catch
+    colorbarpos=1;
+end
+if colorbarpos==1 %no colorbar
+    original_width = 'auto';
+else
+    posichoice = get(handles.colorbarpos,'String');
+    if strcmp(posichoice{get(handles.colorbarpos,'Value')},'EastOutside') || strcmp(posichoice{get(handles.colorbarpos,'Value')},'WestOutside')
+        original_width = 'auto';
+    end
+    if strcmp(posichoice{get(handles.colorbarpos,'Value')},'NorthOutside') || strcmp(posichoice{get(handles.colorbarpos,'Value')},'SouthOutside')
+        original_height = 'auto';
+    end
+end
+
 str=get(handles.export_still_or_animation,'String');
 value=get(handles.export_still_or_animation,'Value');
 selected_format=str{value};
@@ -68,7 +93,6 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
     gui.put('imgsavepath',pathname );
     [Dir, Name, Ext] = fileparts(filename);
 
-    resolution=str2double(get(handles.resolution_setting,'String'));
     quality=str2double(get(handles.quality_setting,'String'));
     fps=str2double(get(handles.fps_setting,'String'));
 
@@ -84,36 +108,16 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
     else
         use_exportfig =0;
     end
-    %use_exportfig =1;
-    %change the aspect ratio of the figure window to match the aspect of the underlying data. Needs to deal with colorbars and axes resizing.
-    %{
-	%testweise ausgeschaltet
-	axes_childs=get(pivlab_axis,'Children');
-	pixel_height=size(axes_childs(end).CData,1); %lowest layer is pixel image
-	pixel_width=size(axes_childs(end).CData,2);
-	data_aspect_ratio=pixel_width/pixel_height;
-	last_units=get(export_figure,'Units');
-	set(export_figure,'Units','pixels');
-	drawnow
-	current_figure_size=get(export_figure,'position');
-	current_figure_aspect_ratio=current_figure_size(3)/current_figure_size(4);
-	if data_aspect_ratio<current_figure_aspect_ratio
-		set(export_figure,'position',[current_figure_size(1),current_figure_size(2),current_figure_size(4)*data_aspect_ratio,current_figure_size(4)]);
-	else %higher than wide
-		set(export_figure,'position',[current_figure_size(1),current_figure_size(2),current_figure_size(3),current_figure_size(4)/data_aspect_ratio]);
-	end
-	set(export_figure,'Units',last_units);
-    %}
+
     export_axis=axes('parent',export_figure);
     gui.put('export_axis',export_axis);
     pause(0.01)
     try
-        %~isempty(findobj(export_figure,'type','figure')) %figure still exists
         firstframe=1;
         for i=startframe:endframe
-
             if startframe ~=endframe
-                set(export_figure,'Name',[num2str(round((i-1)/(endframe-startframe)*100)) ' % Exporting, please wait. Please don''t close or resize this window.']);
+                percentage_done = round((i-startframe)/(endframe-startframe)*100);
+                set(export_figure,'Name',[num2str(percentage_done) ' % Exporting, please wait. Please don''t close or resize this window.']);
             else
                 set(export_figure,'Name','Exporting one image, please wait. Please don''t close or resize this window.');
             end
@@ -126,14 +130,13 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
                 end
             end
             gui.sliderdisp(export_axis);
-            %%{
-            if i==1
+            if i==startframe
                 pause(0.1)
                 target_size = export_axis.Position(1); %get the target size
             end
             retries=0;
             while gca().Position(1) ~= target_size %new Matlabs have issues rendering correctly when focus is stolen from window.
-                pause(0.1)
+                pause(0.01)
                 disp ('Getting focus back')
                 figure(export_figure); %get back the focus
                 retries=retries+1;
@@ -142,7 +145,6 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
                     break
                 end
             end
-            %%}
 
             switch selected_format
                 case 'PNG'
@@ -151,7 +153,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
                         export.autocrop(fullfile(pathname,newfilename),0);
                     else
                         if ~isMATLABReleaseOlderThan("R2025a")
-                            exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution,'Padding',10)
+                            exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','Padding',10,'width',original_width,'height',original_height)
                         else
                             exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution)
                         end
@@ -162,7 +164,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
                         export.autocrop(fullfile(pathname,newfilename),1);
                     else
                         if ~isMATLABReleaseOlderThan("R2025a")
-                            exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution,'Padding',10);
+                            exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','Padding',10,'width',original_width,'height',original_height)
                         else
                             exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution);
                         end

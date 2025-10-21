@@ -1736,11 +1736,17 @@ item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
 handles.fps_setting = uicontrol(handles.multip16,'Style','edit','String','30','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','fps_setting','TooltipString','Frame rate of the video file');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
-handles.resolutionstring = uicontrol(handles.multip16,'Style','text','String','Resolution (dpi)','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','resolutionstring');
-
+if ~isMATLABReleaseOlderThan("R2025a")
+    handles.resolutionstring = uicontrol(handles.multip16,'Style','text','String','Resolution (dpi)','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','resolutionstring');
+else
+    handles.resolutionstring = uicontrol(handles.multip16,'Style','text','String','Image size (%)','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','resolutionstring');
+end
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.resolution_setting = uicontrol(handles.multip16,'Style','edit','String','150','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','resolution_setting','TooltipString','Resolution of the output file');
-
+if ~isMATLABReleaseOlderThan("R2025a")
+    handles.resolution_setting = uicontrol(handles.multip16,'Style','edit','String','100','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','resolution_setting','TooltipString','Scaling of the output file (relative to the raw input images)');
+else
+    handles.resolution_setting = uicontrol(handles.multip16,'Style','edit','String','150','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','resolution_setting','TooltipString','Resolution of the output image');
+end
 item=[0 item(2)+item(4)+margin*2 parentitem(3) 2];
 handles.do_export_pixel_data_single = uicontrol(handles.multip16,'Style','pushbutton','String','Export single frame','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@export.do_export_pixel_data_Callback,'Tag','do_export_pixel_data_single','TooltipString','Save image for currently active frame');
 
