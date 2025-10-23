@@ -1,51 +1,87 @@
 function MainWindow_CloseRequestFcn(hObject, ~, ~)
 handles=gui.gethand;
 batchModeActive=gui.retr('batchModeActive');
+yes_synonyms = { ...
+    'Absolutely', ...
+    'Definitely', ...
+    'Yes', ...
+    'Of course', ...
+    'Certainly', ...
+    'Indeed', ...
+    'Sure thing', ...
+    'Right', ...
+    'Yup', ...
+    'Yep', ...
+    'Yeah', ...
+    'Aye', ...
+    'You bet', ...
+    'For sure', ...
+    'Roger that', ...
+    'Heck yeah', ...
+    'Yes please', ...
+    'Si señor', ...
+    };
+yes=yes_synonyms{randi(numel(yes_synonyms))};
+no_synonyms = { ...
+    'Nope', ...
+    'No', ...
+    'Nah', ...
+    'No way', ...
+    'Negative', ...
+    'Never', ...
+    'Not really', ...
+    'Absolutely not', ...
+    'By no means', ...
+    'No sir', ...
+    'Not today', ...
+    'Probably not', ...
+    'No thanks', ...
+    'I think not', ...
+    };
+no=no_synonyms{randi(numel(no_synonyms))};
+
 if batchModeActive == 0
-	button = questdlg('Do you want to quit PIVlab?','Quit?','Yes','Cancel','Cancel');
+    button=gui.custom_msgbox('quest',getappdata(0,'hgui'),'Quit?','Do you want to quit PIVlab?','modal',{yes no},no);
 else
-	button = 'Yes';
+    button = yes;
 end
 try
-	gui.toolsavailable(1)
+    gui.toolsavailable(1)
 catch
 end
-if strcmp(button,'Yes')==1
-	try
-		homedir=gui.retr('homedir');
-		pathname=gui.retr('pathname');
-		save('PIVlab_settings_default.mat','homedir','pathname','-append');
-		%save last settings in acquisition menu
-		last_selected_device = get(handles.ac_config, 'value');
-		last_selected_fps = get(handles.ac_fps,'Value');
-		last_selected_pulsedist = get(handles.ac_interpuls,'String');
-		last_selected_energy =get(handles.ac_power,'String');
-		save('PIVlab_settings_default.mat','last_selected_device','last_selected_fps','last_selected_pulsedist','last_selected_energy','-append');
-		selected_com_port = gui.retr('selected_com_port');
-		if ~isempty(selected_com_port)
-			save('PIVlab_settings_default.mat','selected_com_port','-append');
-		end
-	catch
-	end
-	try
-		PIVlab_capture_lensctrl (1400,1400,0) %lens needs to be set to neutral otherwise re-enabling power might cause issues
-	catch
-	end
-
-	try
-		
-		hgui = getappdata(0,'hgui');
-		serpo=getappdata(hgui,'serpo');
-		string3='WarningSignDisable!';
-		pause(1)
-		writeline(serpo,string3); %disable the lighting of the laser warning sign
-		pause(0.5)
-	catch
-	end
-	try
-		delete(hObject);
-	catch
-		close(gcf,'force');
-	end
+if strcmp(button,yes)==1
+    try
+        homedir=gui.retr('homedir');
+        pathname=gui.retr('pathname');
+        save('PIVlab_settings_default.mat','homedir','pathname','-append');
+        %save last settings in acquisition menu
+        last_selected_device = get(handles.ac_config, 'value');
+        last_selected_fps = get(handles.ac_fps,'Value');
+        last_selected_pulsedist = get(handles.ac_interpuls,'String');
+        last_selected_energy =get(handles.ac_power,'String');
+        save('PIVlab_settings_default.mat','last_selected_device','last_selected_fps','last_selected_pulsedist','last_selected_energy','-append');
+        selected_com_port = gui.retr('selected_com_port');
+        if ~isempty(selected_com_port)
+            save('PIVlab_settings_default.mat','selected_com_port','-append');
+        end
+    catch
+    end
+    try
+        PIVlab_capture_lensctrl (1400,1400,0) %lens needs to be set to neutral otherwise re-enabling power might cause issues
+    catch
+    end
+    try
+        hgui = getappdata(0,'hgui');
+        serpo=getappdata(hgui,'serpo');
+        string3='WarningSignDisable!';
+        pause(1)
+        writeline(serpo,string3); %disable the lighting of the laser warning sign
+        pause(0.5)
+    catch
+    end
+    try
+        delete(hObject);
+    catch
+        close(gcf,'force');
+    end
 end
-

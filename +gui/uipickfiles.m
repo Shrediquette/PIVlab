@@ -1188,8 +1188,7 @@ setpref('uipickfiles','figure_position',fig_pos)
         % Check for existance of folder.
         if ~exist(proposed_path,'dir')
             set(fig,'pointer','arrow')
-            uiwait(errordlg(['Folder "',proposed_path,...
-                '" does not exist.'],'','modal'))
+            gui.custom_msgbox('error',fig,'Error',['Folder "',proposed_path,'" does not exist.'],'modal');
             return
         end
         current_dir = proposed_path;
@@ -1375,11 +1374,11 @@ setpref('uipickfiles','figure_position',fig_pos)
         if ~isempty(prop.numfiles)
             if numfiles < prop.numfiles(1)
                 msg = {'Too few items selected.',numstr};
-                uiwait(errordlg(msg,'','modal'))
+                gui.custom_msgbox('error',fig,'Error',msg,'modal');
                 return
             elseif numfiles > prop.numfiles(end)
                 msg = {'Too many items selected.',numstr};
-                uiwait(errordlg(msg,'','modal'))
+                gui.custom_msgbox('error',fig,'Error',msg,'modal');
                 return
             end
         end

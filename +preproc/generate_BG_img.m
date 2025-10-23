@@ -182,7 +182,7 @@ if get(handles.bg_subtract,'Value')>1
 					img_size_info1=size(image1);
 					img_size_info2=size(image_to_add1);
 					if img_size_info1(1) ~= img_size_info2(1) || img_size_info1(2) ~= img_size_info2(2)
-						uiwait(warndlg('Error: All images in a session  MUST have the same size!'));
+                		gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: All images in a session MUST have the same size!','modal');
 						break
 					end
 
@@ -198,7 +198,7 @@ if get(handles.bg_subtract,'Value')>1
 						img_size_info1=size(image2);
 						img_size_info2=size(image_to_add2);
 						if img_size_info1(1) ~= img_size_info2(1) || img_size_info1(2) ~= img_size_info2(2)
-							uiwait(warndlg('Error: All images in a session  MUST have the same size!'));
+                    		gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: All images in a session MUST have the same size!','modal');
 							break
 						end
 						if bg_operation==2
@@ -287,7 +287,6 @@ if get(handles.bg_subtract,'Value')>1
 
 	else
 		set(handles.bg_subtract,'Value',1);
-		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'])
-		uiwait
+		gui.custom_msgbox('warn',getappdata(0,'hgui'),'Not available',['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'],'modal');
 	end
 end

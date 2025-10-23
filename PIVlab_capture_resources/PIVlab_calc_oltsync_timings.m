@@ -73,7 +73,7 @@ if strcmp(camera_type,'OPTRONIS')
             blind_time=27;
             cam_delay=3;
         otherwise
-            msgbox('This camera sub type is not known.','modal')
+            gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','This camera sub type is not known.','modal');
             blind_time=8;
             cam_delay=3;
     end

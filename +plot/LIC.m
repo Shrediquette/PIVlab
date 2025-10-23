@@ -57,8 +57,7 @@ try
 	out=LICImage;
 	delete(findobj('tag', 'waitplease'));
 catch
-	h=errordlg(['Could not run the LIC tool.' sprintf('\n') 'Probably the tool is not compiled correctly.' sprintf('\n')  'Please execute the following command in Matlab:' sprintf('\n') sprintf('\n') '     mex +plot\fastLICFunction.c     ' sprintf('\n') sprintf('\n') 'Then try again.'],'Error','on');
-	uiwait(h);
+gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',['Could not run the LIC tool.' sprintf('\n') 'Probably the tool is not compiled correctly.' sprintf('\n')  'Please execute the following command in Matlab:' sprintf('\n') sprintf('\n') '     mex +plot\fastLICFunction.c     ' sprintf('\n') sprintf('\n') 'Then try again.'],'modal');
 	out=zeros(size(vx));
 end
 

@@ -21,7 +21,7 @@ if size(resultslist,2)>=1
 	end
 	gui.switchui('multip16');
 else
-	msgbox('No analyses yet...')
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Nothing to export','No analyses yet...','modal');
 end
 %populate the popup menu
 avail_file_formats={'PNG','JPG','PDF','Matlab Figure'};

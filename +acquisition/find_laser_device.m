@@ -108,8 +108,7 @@ disp('---------')
 disp('---------')
 	%}
 	if isempty(serial_answer)
-		uiwait(msgbox(['No laser found.' sprintf('\n') 'Is the laser turned on?' sprintf('\n') 'Please try again.'],'modal'))
-        %uialert(getappdata(0,'hgui'),['No laser found.' sprintf('\n') 'Is the laser turned on?' sprintf('\n') 'Please try again.'],'Synchronizer?')
+        gui.custom_msgbox('warn',getappdata(0,'hgui'),'No laser found',['No laser found.' sprintf('\n') 'Is the laser turned on?' sprintf('\n') 'Please try again.'],'modal');
 	end
     if strncmp(old_laser_device_id,serial_answer,20)==0 %if last laser ID DOES NOT equal current laser ID
         serial_answer_cleaned = convertStringsToChars(serial_answer);

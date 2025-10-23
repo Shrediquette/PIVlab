@@ -6,8 +6,7 @@ function filepath = Check_if_image_files_exist(filepath, selected)
 if isempty(filepath) == 0 && exist(filepath{selected},'file') ~=2
 	for i=1:size(filepath,1)
 		while exist(filepath{i,1},'file') ~=2
-			errordlg(['The image ' sprintf('\n') filepath{i,1} sprintf('\n') '(and probably some more...) could not be found.' sprintf('\n') 'Please select the path where the images are located.'],'File not found!','on')
-			uiwait
+			gui.custom_msgbox('error',getappdata(0,'hgui'),'Image files not found',['The image ' sprintf('\n') filepath{i,1} sprintf('\n') '(and probably some more...) could not be found.' sprintf('\n') 'Please select the path where the images are located.'],'modal');
 			new_dir = uigetdir(pwd,'Please specify the path to all the images');
 			if new_dir==0
 				break

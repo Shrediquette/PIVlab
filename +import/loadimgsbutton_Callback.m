@@ -109,7 +109,7 @@ if ~isequal(path,0)
 
 		if pcopanda_dbl_image==1 && sequencer ~=1
 			if ~batchModeActive
-				uiwait(msgbox(['Detected a pco.panda generated double image multi-tiff file.' newline newline 'Sequencing style was changed to "pairwise" to account for the double images.'],'modal'));
+                gui.custom_msgbox('success',getappdata(0,'hgui'),'Double image multi-tiff file',['Detected a pco.panda generated double image multi-tiff file.' newline newline 'Sequencing style was changed to "pairwise" to account for the double images.'],'modal');
 			end
 			sequencer=1;
 			gui.put('sequencer',sequencer);
@@ -351,16 +351,16 @@ if ~isequal(path,0)
 		else
 			appname='PIVlab standalone';
 		end
-		set(getappdata(0,'hgui'), 'Name',[appname ' ' gui.retr('PIVver') '   [Path: ' pathname ']']) %for people like me that always forget what dataset they are currently working on...
-		set (handles.amount_nans, 'BackgroundColor',[0.9 0.9 0.9])
-		set (handles.amount_nans,'string','')
-		set (handles.remove_imgs,'enable','on');
-		else
-			gui.displogo(0)
-			errordlg('Selection must contain at least two images ( = 1 pair of images)','Error','on')
-		end
-	else
-		gui.displogo(0)
-		errordlg('Selection must contain at least two images ( = 1 pair of images)','Error','on')
-	end
+        set(getappdata(0,'hgui'), 'Name',[appname ' ' gui.retr('PIVver') '   [Path: ' pathname ']']) %for people like me that always forget what dataset they are currently working on...
+        set (handles.amount_nans, 'BackgroundColor',[0.9 0.9 0.9])
+        set (handles.amount_nans,'string','')
+        set (handles.remove_imgs,'enable','on');
+        else
+            gui.displogo(0)
+            gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Selection must contain at least two images ( = 1 pair of images)','modal');
+        end
+    else
+        gui.displogo(0)
+        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Selection must contain at least two images ( = 1 pair of images)','modal');
+    end
 end

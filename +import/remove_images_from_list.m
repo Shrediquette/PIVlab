@@ -81,8 +81,7 @@ if gui.retr('video_selection_done') ~= 1
 			gui.toolsavailable(0)
 			set(handles.remove_imgs,'Enable','on');
 			set(handles.filenamebox,'Enable','on');
-			uiwait(msgbox(['One image could not be assigned to a pair. Number of images in the list must be even.' newline newline 'Please remove another image from the list to continue.'],'Error: Uneven amount of images!','modal'))
-			%'One image could not be assigned to a pair. Number of images in the list must be even. Please remove another image from the list.'
+			gui.custom_msgbox('warn',getappdata(0,'hgui'),'Warning: Uneven amount of images!',['One image could not be assigned to a pair. Number of images in the list must be even.' newline newline 'Please remove another image from the list to continue.'],'modal');
 		else
 			standard_bg_color=gui.retr('standard_bg_color');
 			if isempty(standard_bg_color)
@@ -92,8 +91,8 @@ if gui.retr('video_selection_done') ~= 1
 			gui.toolsavailable(1)
 		end
 	else
-		uiwait(msgbox('At least two images (one pair) must remain in the list.','Error: Not possible.','modal'))
+		gui.custom_msgbox('error',getappdata(0,'hgui'),'Error: Not possible.','At least two images (one pair) must remain in the list.','modal');
 	end
 else
-	uiwait(msgbox('This is only possible for image files.','Error: Not possible for video files','modal'))
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error: Not possible for video files','This is only possible for image files.','modal');
 end

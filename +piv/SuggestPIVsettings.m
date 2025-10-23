@@ -4,7 +4,7 @@ selected=2*floor(get(handles.fileselector, 'value'))-1;
 filepath=gui.retr('filepath');
 ok=gui.checksettings;
 if ok==1
-	uiwait(msgbox({'Please select a rectangle';'that encloses the area that';'you want to analyze.'},'Suggestion for PIV settings','modal'));
+	gui.custom_msgbox('msg',getappdata(0,'hgui'),'Suggestion for PIV settings',{'Please select a rectangle';'that encloses the area that';'you want to analyze.'},'modal',{'OK'},'OK');
 	regionOfInterest = images.roi.Rectangle;
 	%regionOfInterest.EdgeAlpha=0.75;
 	regionOfInterest.LabelVisible = 'on';
@@ -33,7 +33,7 @@ if ok==1
 
 	if numel(roirect) == 4
 		if roirect(3) < 64 || roirect(4)< 64
-			uiwait(msgbox({'The rectangle you selected is too small.';'Please select a larger rectangle.';'(should be larger than 64 x 64 pixels)'},'Suggestion for PIV settings','modal'));
+			gui.custom_msgbox('warn',getappdata(0,'hgui'),'Suggestion for PIV settings',{'The rectangle you selected is too small.';'Please select a larger rectangle.';'(should be larger than 64 x 64 pixels)'},'modal');
 		else
 			text(50,50,'Please wait...','color','r','fontsize',14, 'BackgroundColor', 'k','tag','hint');
 			drawnow
@@ -117,8 +117,7 @@ if ok==1
 				v=misc.inpaint_nans(v,4);
 				[EtaPred,PatchSizePred] = wOFV.PredictSmoothnessCoefficient(x,y,u,v,A,B);
 				gui.toolsavailable(1)
-				uiwait(msgbox({'These are the recommendations for wOFV parameters:';[''];['Smoothness (eta): ' num2str(EtaPred)];['Patch size: ' num2str(PatchSizePred)];[''];'The settings are updated automatically.'},'Suggestion for wOFV settings','modal'));
-
+                gui.custom_msgbox('msg',getappdata(0,'hgui'),'Suggestion for wOFV settings',{'These are the recommendations for wOFV parameters:';[''];['Smoothness (eta): ' num2str(EtaPred)];['Patch size: ' num2str(PatchSizePred)];[''];'The settings are updated automatically.'},'modal',{'OK'},'OK');
 				set (handles.ofv_median,'Value', 1); %revert to default?
 				set(handles.ofv_pyramid_levels,'Value', 3); %revert to default?
 				set (handles.ofv_eta,'String', num2str(EtaPred)); %predicted value
@@ -146,7 +145,7 @@ if ok==1
 				delete(findobj('tag','hint'));
 			else
 				%[recommended1 recommended2 recommended3]
-				uiwait(msgbox({'These are the recommendations for the size of the final interrogation area:';[''];['Based on the displacements: ' num2str(recommended1) ' pixels'];['Based on the particle count: ' num2str(recommended2) ' pixels'];['Based on practical experience: ' num2str(recommended3) ' pixels'];[''];'The settings are automatically updated with the median of the recommendation.'},'Suggestion for PIV settings','modal'));
+				gui.custom_msgbox('msg',getappdata(0,'hgui'),'Suggestion for PIV settings',{'These are the recommendations for the size of the final interrogation area:';[''];['Based on the displacements: ' num2str(recommended1) ' pixels'];['Based on the particle count: ' num2str(recommended2) ' pixels'];['Based on practical experience: ' num2str(recommended3) ' pixels'];[''];'The settings are automatically updated with the median of the recommendation.'},'modal',{'OK'},'OK');
 				set(handles.algorithm_selection,'Value', 1)
 				set (handles.intarea, 'String', recommendation*2); %two times the minimum recommendation
 				set (handles.step, 'String', recommendation);

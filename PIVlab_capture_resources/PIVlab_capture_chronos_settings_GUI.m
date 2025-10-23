@@ -188,7 +188,7 @@ if communication_ok
 		
 	end
 else
-	msgbox(['Could not connect to ' cameraIP],'Error','error','modal');
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',['Could not connect to ' cameraIP],'modal');
 	toolsavailable(1)
 	set (handles.apply_btn,'String','Apply');
 end

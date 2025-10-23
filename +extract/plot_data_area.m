@@ -19,7 +19,7 @@ yposition=gui.retr('yposition');
 extract_type = gui.retr('extract_type');
 if ~strcmp(extract_type,'extract_poly_area') && ~strcmp(extract_type,'extract_rectangle_area') && ~strcmp(extract_type,'extract_circle_area') && ~strcmp(extract_type,'extract_circle_series_area')
 	if refreshdisplay
-		msgbox('No area was drawn. Click ''Draw!'' on the left panel to start drawing an extraction area.','Error','error','modal')
+		gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No area was drawn. Click ''Draw!'' on the left panel to start drawing an extraction area.','modal');
 	end
 else
 	if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1

@@ -77,9 +77,9 @@ end
 			end
 		end
 		if cnt > 1
-			msgbox('Too many devices detected. Please remove all devices except the synchronizer.','modal')
+			gui.custom_msgbox('error',getappdata(0,'hgui'),'Too many devices','Too many devices detected. Please remove all devices except the synchronizer.','modal');
 		elseif cnt < 1
-			msgbox('Could not detect the synchronizer. Please connect via USB and turn the synchronizer on.','modal')
+            gui.custom_msgbox('warn',getappdata(0,'hgui'),'Synchronizer not found','Could not detect the synchronizer. Please connect via USB and turn the synchronizer on.','modal');
 		elseif cnt == 1
 			ser_info = 'COM?';
 			command = [fullfile(tempfilepath,'tycmd.exe') ' list -v'];
@@ -111,7 +111,7 @@ end
 				set(handles.infotext,'String','Error');
 				set(handles.infotext,'Backgroundcolor',[0.75 0 0]);
 				set(handles.infotext,'foregroundColor','k');
-				msgbox(cmdout)
+				gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',cmdout,'modal');
 			end
 		end
 	end

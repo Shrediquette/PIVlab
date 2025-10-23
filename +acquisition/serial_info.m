@@ -54,6 +54,6 @@ else
         answer_status=['Did not receive reply from the laser (laser turned off?)'];
     end
 end
-msgbox(['Information about the wireless dongle connection:' newline newline driver_status newline access_status newline answer_status],'Dongle status')
+gui.custom_msgbox('success',getappdata(0,'hgui'),'Wireless dongle status',['Information about the wireless dongle connection:' newline newline driver_status newline access_status newline answer_status],'modal');
 gui.toolsavailable(1)
 end

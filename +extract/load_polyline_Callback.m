@@ -27,8 +27,8 @@ if size(filepath,1) > 1 %did the user load images?
 				delete(findobj('tag', 'extractline'))
 				delete(findobj('tag','areaint'));
 				extract.update_display(extract_type, xposition, yposition);
-			else
-				msgbox('You tried to load polyline coordinates from the area extraction panel or vice versa.','Error','error','modal')
+            else
+                gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','You tried to load polyline coordinates from the area extraction panel or vice versa.','modal');
 			end
 		else
 			disp ('No polyline coordinate data found in selected file.')

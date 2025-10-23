@@ -50,7 +50,7 @@ if file_selection_ok
 						delete(fullfile(PathName,FileName));
 						writecell(returned_header,fullfile(PathName,FileName)); %initiate file
 					catch ME
-						msgbox('No write access to file. Is it currently open somewhere else?','Error','error','modal')
+						gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No write access to file. Is it currently open somewhere else?','modal');
 						write_error=1;
 					end
 				end

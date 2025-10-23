@@ -127,13 +127,7 @@ if isempty(fh)
         end
 
     catch
-        if isdeployed
-            uiwait(msgbox(['No write access in ' userpath newline newline 'PIVlab will not work properly like this.' newline 'Please make sure that there is write permission for the folder ' userpath ],'modal'));
-        else
             disp(['-> No write access in ' pwd '. PIVlab won''t work like this.'])
-            disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
-            beep;commandwindow;pause
-        end
     end
 
 
@@ -256,86 +250,6 @@ if isempty(fh)
                 beep;commandwindow;pause
             end
         end
-        %% Check parallel computing toolbox availability
-        gui.put('parallel',0);
-        try %checking for a parallel license file throws a huge error message wheh it is not available. This might scare users... Better: Try...catch block
-            if ~exist('desired_num_cores','var') %no input argument --> use all existing cores
-                if misc.pivparpool('size')<=0 %no exisitng pool
-                    %if isdeployed
-                    answer = questdlg(['PIVlab can be run with parallel computing.' newline newline '- Recommended when processing multiple images.' newline '- Not required when acquiring images or processing mp4 and avi files.' newline newline 'Open parallel pool?'],'Parallel processing', 'Yes', 'No','Yes');
-                    switch answer
-                        case 'Yes'
-                            misc.pivparpool('open',maxNumCompThreads('automatic')); %use matlab suggested num of cores
-                            gui.put('parallel',1);
-                        case 'No'
-                    end
-                    %else
-                    %	misc.pivparpool('open',maxNumCompThreads('automatic')); %use all cores
-                    %	gui.put('parallel',1);
-                    %end
-                end
-            else%parameter supplied
-                if ~isnumeric(desired_num_cores)
-                    disp('You need to enter a number for the amount of cores, e.g. PIVlab_GUI(4)')
-                    beep;
-                    disp('Press a key to continue.')
-                    pause
-                    misc.pivparpool('close')
-                    gui.put('parallel',0);
-                else
-                    if desired_num_cores > 1 && desired_num_cores ~= misc.pivparpool('size') %desired doesn't match existing pool
-                        if desired_num_cores > maxNumCompThreads%desired too many cores
-                            desired_num_cores=maxNumCompThreads;
-                            disp('Selected too many cores. Adjusted to actually existing cores')
-                        end
-                        misc.pivparpool('close')
-                        misc.pivparpool('open',desired_num_cores);
-                        gui.put('parallel',1);
-                    elseif desired_num_cores < 2 %leq than 1 core desired --> serial processing.
-                        misc.pivparpool('close')
-                        gui.put('parallel',0);
-                    elseif desired_num_cores==misc.pivparpool('size')
-                        gui.put('parallel',1);
-                    end
-                end
-            end
-            if gui.retr('parallel')==1
-                if ~exist('splash_ax','var')
-                    disp(['-> Distributed Computing Toolbox found. Parallel pool (' int2str(misc.pivparpool('size')) ' workers) active (default settings).'])
-                else
-                    text_content=get(handle_splash_text,'String');
-                    text_content{end+1}=['-> Distributed Computing Toolbox found.' newline '-> Parallel pool (' int2str(misc.pivparpool('size')) ' workers) active (default settings).'];
-                    set (handle_splash_text, 'String',text_content);drawnow;pause(1)
-                end
-
-            else
-                if ~exist('splash_ax','var')
-                    disp('-> Distributed Computing disabled.')
-                else
-                    text_content=get(handle_splash_text,'String');
-                    text_content{end+1}='-> Distributed Computing disabled.';
-                    set (handle_splash_text, 'String',text_content);drawnow;pause(1)
-                end
-
-            end
-        catch
-            pause(1) %Believe it or not, without this 'pause', matlab only doesn't display the GUI...
-            disp('-> Running without parallelization (no distributed computing toolbox installed).')
-        end
-
-        handles=gui.gethand;
-        load (fullfile('images','icons.mat'),'parallel_off','parallel_on');
-        if gui.retr('darkmode')
-            parallel_on=1-parallel_on+35/255;
-            parallel_off=1-parallel_off+35/255;
-            parallel_on(parallel_on>1)=1;
-            parallel_off(parallel_off>1)=1;
-        end
-        if gui.retr('parallel') == 1
-            set(handles.toggle_parallel, 'cdata',parallel_on,'TooltipString','Parallel processing on. Click to turn off.');
-        else
-            set(handles.toggle_parallel, 'cdata',parallel_off,'TooltipString','Parallel processing off. Click to turn on.');
-        end
 
     catch
         disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
@@ -423,6 +337,96 @@ if isempty(fh)
     end
 
     set(MainWindow, 'Visible','on');drawnow;
+    try
+        gui.toolsavailable(0,'Changing parallel pool...')
+        %% Check parallel computing toolbox availability
+        gui.put('parallel',0);
+        try %checking for a parallel license file throws a huge error message wheh it is not available. This might scare users... Better: Try...catch block
+            if ~exist('desired_num_cores','var') %no input argument --> use all existing cores
+                if misc.pivparpool('size')<=0 %no exisitng pool
+                    %if isdeployed
+                    pause(0.1)
+                    answer=gui.custom_msgbox('quest',getappdata(0,'hgui'),'Open parallel pool?',['PIVlab can be run with parallel computing.' newline newline '- Recommended when processing multiple images.' newline '- Not required when acquiring images or processing mp4 and avi files.' newline newline 'Open parallel pool?'],'modal',{'Yes' 'No'},'No');
+                    pause(0.1)
+                    %answer = questdlg(['PIVlab can be run with parallel computing.' newline newline '- Recommended when processing multiple images.' newline '- Not required when acquiring images or processing mp4 and avi files.' newline newline 'Open parallel pool?'],'Parallel processing', 'Yes', 'No','Yes');
+                    switch answer
+                        case 'Yes'
+                            misc.pivparpool('open',maxNumCompThreads('automatic')); %use matlab suggested num of cores
+                            gui.put('parallel',1);
+                        case 'No'
+                    end
+                    %else
+                    %	misc.pivparpool('open',maxNumCompThreads('automatic')); %use all cores
+                    %	gui.put('parallel',1);
+                    %end
+                end
+            else%parameter supplied
+                if ~isnumeric(desired_num_cores)
+                    disp('You need to enter a number for the amount of cores, e.g. PIVlab_GUI(4)')
+                    beep;
+                    disp('Press a key to continue.')
+                    pause
+                    misc.pivparpool('close')
+                    gui.put('parallel',0);
+                else
+                    if desired_num_cores > 1 && desired_num_cores ~= misc.pivparpool('size') %desired doesn't match existing pool
+                        if desired_num_cores > maxNumCompThreads%desired too many cores
+                            desired_num_cores=maxNumCompThreads;
+                            disp('Selected too many cores. Adjusted to actually existing cores')
+                        end
+                        misc.pivparpool('close')
+                        misc.pivparpool('open',desired_num_cores);
+                        gui.put('parallel',1);
+                    elseif desired_num_cores < 2 %leq than 1 core desired --> serial processing.
+                        misc.pivparpool('close')
+                        gui.put('parallel',0);
+                    elseif desired_num_cores==misc.pivparpool('size')
+                        gui.put('parallel',1);
+                    end
+                end
+            end
+            if gui.retr('parallel')==1
+                if ~exist('splash_ax','var')
+                    disp(['-> Distributed Computing Toolbox found. Parallel pool (' int2str(misc.pivparpool('size')) ' workers) active (default settings).'])
+                else
+                    text_content=get(handle_splash_text,'String');
+                    text_content{end+1}=['-> Distributed Computing Toolbox found.' newline '-> Parallel pool (' int2str(misc.pivparpool('size')) ' workers) active (default settings).'];
+                    set (handle_splash_text, 'String',text_content);drawnow;pause(1)
+                end
+
+            else
+                if ~exist('splash_ax','var')
+                    disp('-> Distributed Computing disabled.')
+                else
+                    text_content=get(handle_splash_text,'String');
+                    text_content{end+1}='-> Distributed Computing disabled.';
+                    set (handle_splash_text, 'String',text_content);drawnow;pause(1)
+                end
+
+            end
+        catch
+            pause(1) %Believe it or not, without this 'pause', matlab only doesn't display the GUI...
+            disp('-> Running without parallelization (no distributed computing toolbox installed).')
+        end
+
+        handles=gui.gethand;
+        load (fullfile('images','icons.mat'),'parallel_off','parallel_on');
+        if gui.retr('darkmode')
+            parallel_on=1-parallel_on+35/255;
+            parallel_off=1-parallel_off+35/255;
+            parallel_on(parallel_on>1)=1;
+            parallel_off(parallel_off>1)=1;
+        end
+        if gui.retr('parallel') == 1
+            set(handles.toggle_parallel, 'cdata',parallel_on,'TooltipString','Parallel processing on. Click to turn off.');
+        else
+            set(handles.toggle_parallel, 'cdata',parallel_off,'TooltipString','Parallel processing off. Click to turn on.');
+        end
+        gui.toolsavailable(1)
+
+    catch
+        disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
+    end
 
     %% Batch session  processing in GUI
     if ~exist('batch_session_file','var') %no input argument --> no GUI batch processing

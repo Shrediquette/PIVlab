@@ -18,5 +18,4 @@ string={...
 	'the development is partly sponsored by www.OPTOLUTION.com.';
 
 	};
-helpdlg(string,'About')
-
+gui.custom_msgbox('msg',getappdata(0,'hgui'),'About',string,'modal',{'OK'},'OK');

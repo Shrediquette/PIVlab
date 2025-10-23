@@ -74,6 +74,6 @@ else %no calibration performed yet
 	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
 	set(handles.x_axis_direction,'value',1);
 	set(handles.y_axis_direction,'value',1);
-	msgbox ('You need to select a reference distance befor applying a calibration.','modal')
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Reference distance','You need to select a reference distance befor applying a calibration.','modal');
 end
 

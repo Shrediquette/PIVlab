@@ -42,8 +42,8 @@ if strcmp(extract_type,'extract_circle_series') || strcmp(extract_type,'extract_
 	yposition=extract_poly.Radius;
 	try
 		x=resultslist{1,currentframe};
-	catch
-		msgbox('You cannot load coordinates for non-analyzed frames.','Error','error','modal')
+    catch
+        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','You cannot load coordinates for non-analyzed frames.','modal');
 	end
 	stepsize=ceil((x(1,2)-x(1,1))/1);
 	radii=linspace(stepsize,extract_poly.Radius-stepsize,round(((extract_poly.Radius-stepsize)/stepsize)));

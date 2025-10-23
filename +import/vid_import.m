@@ -92,7 +92,7 @@ batchModeActive=gui.retr('batchModeActive');
 if isempty (batchModeActive) || batchModeActive == 0
 	if ~ispref('PIVlab_ad','video_warn') || getpref('PIVlab_ad','video_warn') == 0
 		pause(0.1);drawnow
-		uiwait(msgbox('Hint: If possible you should always prefer image files over video files, e.g. by converting them to a lossless format before importing in PIVlab.','modal'))
+		gui.custom_msgbox('msg',getappdata(0,'hgui'),'PIVlab is better with image files','Hint: If possible you should always prefer image files over video files, e.g. by converting them to a lossless format before importing in PIVlab.','modal',{'OK'},'OK');
 		setpref('PIVlab_ad','video_warn',1)
 	end
 end
@@ -192,7 +192,7 @@ end
 					set(handles.skipframe,'enable','on')
 				end
 			else
-				errordlg({'Matlab could not import this video file. Most likely, the video codec cannot be used by Matlab. This is not a PIVlab-related issue. The exact error message is: ' sprintf('\n') ME.identifier sprintf('\n') ME.message});
+                gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',{'Matlab could not import this video file. Most likely, the video codec cannot be used by Matlab. This is not a PIVlab-related issue. The exact error message is: ' sprintf('\n') ME.identifier sprintf('\n') ME.message},'modal');
 			end
 		end
 		

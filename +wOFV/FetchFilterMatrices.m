@@ -1,7 +1,7 @@
 function FetchFilterMatrices()
 %Jassal, G., & Schmidt, B. E. (2024, August 12). wOFV Filter Matrices. https://doi.org/10.17605/OSF.IO/Y48MK
 gui.update_progress(0)
-uiwait(warndlg('Wavelet filter matrices do not exist. They are downloaded and stored for later use now.','No filter matrices found','modal'));
+gui.custom_msgbox('success',getappdata(0,'hgui'),'No filter matrices found','Wavelet filter matrices do not exist. They are downloaded and stored for later use now.','modal');
 gui.toolsavailable(1)
 gui.toolsavailable(0,'Downloading filter matrices...');drawnow
 FileName = fullfile(userpath, 'Filter Matrices.zip');
@@ -89,7 +89,7 @@ if exist(FileName,'file')
     gui.toolsavailable(0,'Busy, please wait...');drawnow
 else
     gui.toolsavailable(1)
-    uiwait(warndlg({'Data could not be downloaded from repository:' 'https://files.osf.io/v1/resources/y48mk/providers/osfstorage/?zip='},'No filter matrices found','modal'));
+    gui.custom_msgbox('warn',getappdata(0,'hgui'),'No filter matrices found',{'Data could not be downloaded from repository:' 'https://files.osf.io/v1/resources/y48mk/providers/osfstorage/?zip='},'modal');
 end
 
 function download_stuff (FileName)

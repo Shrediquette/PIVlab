@@ -100,22 +100,13 @@ if ready==1
 		elseif strcmp(camera_type,'chronos')
 			cameraIP=gui.retr('Chronos_IP');
 			if isempty(cameraIP)
-				uiwait(msgbox({'Chronos Setup not performed.' 'Please click "Setup" in "Camera settings"'}))
+                gui.custom_msgbox('error',getappdata(0,'hgui'),'Chronos not configured',{'Chronos Setup not performed.' 'Please click "Setup" in "Camera settings"'},'modal');
 			else
 				[errorcode, caliimg] = PIVlab_capture_chronos_calibration_image(cameraIP,expos);
 			end
 		end
 		gui.put('caliimg',caliimg);
 		gui.put('fresh_calib_image',1);
-		%{
-		catch
-			set(handles.ac_calibcapture,'String','Start')
-			uiwait(msgbox('Camera not connected'))
-			displogo
-			put('capturing',0);
-			toolsavailable(1)
-		end
-		%}
 	elseif capture_ok==1 && capturing == 1
 		gui.put('cancel_capture',1);
 		gui.put('capturing',0);

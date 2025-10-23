@@ -29,7 +29,7 @@ firmware_version_num=str2double(firmware_version);
 latest_firmware_num=str2double(latest_firmware);
 if ~isnan(latest_firmware_num) && ~isnan(firmware_version_num)
 	if str2double(firmware_version) < str2double(latest_firmware)
-		uiwait(msgbox({'A new firmware for your synchronizer has been published.' 'Please contact OPTOLUTION to get the file:' 'info@optolution.com'},'modal'))
+		gui.custom_msgbox('success',getappdata(0,'hgui'),'New firmware found',{'A new firmware for your synchronizer has been published.' 'Please contact OPTOLUTION to get the file:' 'info@optolution.com'},'modal');
 	end
 else
 	disp('Could not check for synchronizer updates.')

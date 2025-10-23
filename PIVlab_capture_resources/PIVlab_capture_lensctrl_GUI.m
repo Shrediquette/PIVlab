@@ -490,7 +490,7 @@ if do_calib==1
 		stdRoll=std(Roll)/100;
 		stdPitch=std(Pitch)/100;
 		if (stdRoll + stdPitch) > 0.1
-			msgbox('Camera was shaking too much!','modal')
+            gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Camera was shaking too much!','modal');
 		else
 			set(handles.calibrate,'Background',[0 1 0.1]);
 			set(handles.calibrate,'String','Calibration ok!');drawnow;pause(0.5)

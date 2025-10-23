@@ -4,7 +4,7 @@ gui.switchui('multip24')
 acquisition.select_capture_config_Callback
 
 if verLessThan('matlab','9.7') %R2019b
-	uiwait(msgbox('Image capture and synchronizer control in PIVlab requires at least MATLAB version 9.7 (R2019b).','modal'))
+	gui.custom_msgbox('error',getappdata(0,'hgui'),'Newer Matlab required','Image capture and synchronizer control in PIVlab requires at least MATLAB version 9.7 (R2019b).', 'modal');
 end
 handles=gui.gethand;
 if isempty(get(handles.ac_project,'String')) %if user hasnt entered a project path...

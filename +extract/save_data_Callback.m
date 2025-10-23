@@ -84,7 +84,7 @@ for i=startfr:endfr
 					delete(fullfile(PathName,FileName_final));
 					writecell(strsplit(header,','),fullfile(PathName,FileName_final))
 				catch ME
-					uiwait(msgbox('No write access to file. Is it currently open somewhere else?','Error','error','modal'))
+					gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No write access to file. Is it currently open somewhere else?','modal');
 					write_error=1;
 				end
 			end

@@ -8,24 +8,24 @@ if isempty(binning)
 	binning=1;
 end
 if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'chronos')  %ROI selection not yet available for pixelfly and chronos
-	uiwait(msgbox('ROI selection is not (yet) available for the selected camera type.'))
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Not available','ROI selection is not (yet) available for the selected camera type.','modal');
 end
 
 if strcmp(camera_type,'flir')
-	uiwait(msgbox('ROI selection for the FLIR camera series will be implemented soon!','modal'))
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Not available','ROI selection for the FLIR camera series will be implemented soon!','modal');
 end
 
 if strcmp(camera_type,'OPTRONIS')
     if verLessThan('matlab','25')
-        uiwait(msgbox('ROI selection for the OPTRONIS can only be done with Matlab versions > R2025a.','modal'))
+        gui.custom_msgbox('error',getappdata(0,'hgui'),'Not available','ROI selection for the OPTRONIS can only be done with Matlab versions > R2025a.','modal');
         camera_type='NaN'; %prevent execution of ROI selection for versions < R2025a
     end
 end
 if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(camera_type,'OPTOcam') || strcmp(camera_type,'OPTRONIS')
-	try
-		expos=round(str2num(get(handles.ac_expo,'String'))*1000);
-	catch
-		set(handles.ac_expo,'String','100');
+    try
+        expos=round(str2num(get(handles.ac_expo,'String'))*1000);
+    catch
+        set(handles.ac_expo,'String','100');
 		expos=100000;
 	end
 	projectpath=get(handles.ac_project,'String');
@@ -39,7 +39,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'basler') || strcmp(cam
 				[~, roi_image,~]=PIVlab_capture_pco(6,expos,'oneimage_calibration',projectpath,binning,[1,1, max_cam_res(1)/binning,max_cam_res(2)/binning],camera_type);
 			catch ME
 				disp(ME)
-				uiwait(msgbox('Camera not connected'))
+                gui.custom_msgbox('error',getappdata(0,'hgui'),'Camera not connected','Camera not connected','modal');
 				gui.displogo
 				capture_ok=0;
 			end

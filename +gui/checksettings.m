@@ -32,7 +32,7 @@ if isnan(str2double(get(handles.step, 'string')))
 	mess{size(mess,2)+1}='Step size contains NaN';
 end
 if size(mess,2)>0 %error somewhere
-	msgbox(['Errors found:' mess],'Errors detected.','warn','modal')
+    gui.custom_msgbox('warn',getappdata(0,'hgui'),'Error',['Errors found:' mess],'modal');
 	ok=0;
 else
 	ok=1;

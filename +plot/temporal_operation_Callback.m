@@ -48,7 +48,7 @@ if isempty(resultslist)==0
 
 		strnum=str2num(str);
 		if isempty(strnum)==1 || isempty(strfind(str,'.'))==0 || isempty(strfind(str,';'))==0
-			msgbox(['Error in frame selection syntax. Please use the following syntax (examples):' sprintf('\n') '1:3' sprintf('\n') '1,3,7,9' sprintf('\n') '1:3,7,8,9,11:13' ],'Error','error','modal')
+			gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',['Error in frame selection syntax. Please use the following syntax (examples):' sprintf('\n') '1:3' sprintf('\n') '1,3,7,9' sprintf('\n') '1:3,7,8,9,11:13' ],'modal');
 			selectionok=0;
 		end
 		if selectionok==1
@@ -107,23 +107,23 @@ if isempty(resultslist)==0
 					if size(resultslist,2)>=strnum(i) %dann ok
 						x_tmp=resultslist{1,strnum(i)};
 						if isempty(x_tmp)==1 %dann nicht ok
-							msgbox('Your selected range includes non-analyzed frames.','Error','error','modal')
+							gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Your selected range includes non-analyzed frames.','modal');
 							selectionok=0;
 							break
 						end
 					else
-						msgbox('Your selected range includes non-analyzed frames.','Error','error','modal')
-						selectionok=0;
-						break
-					end
-					if size(ismean,1)>=strnum(i)
-						if ismean(strnum(i))==1
-							msgbox('You must not include frames in your selection that already consist of mean vectors.','Error','error','modal')
-							selectionok=0;
-							break
-						end
-					else
-						msgbox('Your selected range exceeds the amount of analyzed frames.','Error','error','modal')
+						gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Your selected range includes non-analyzed frames.','modal');
+                        selectionok=0;
+                        break
+                    end
+                    if size(ismean,1)>=strnum(i)
+                        if ismean(strnum(i))==1
+                            gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','You must not include frames in your selection that already consist of mean vectors.','modal');
+    						selectionok=0;
+                            break
+                        end
+                    else
+						gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Your selected range exceeds the amount of analyzed frames.','modal');
 						selectionok=0;
 						break
 					end
@@ -278,7 +278,7 @@ if isempty(resultslist)==0
 					gui.sliderdisp(gui.retr('pivlab_axis'))
 				end
 			else %user tried to average analyses with different sizes
-				errordlg('All analyses of one session have to be of the same size and have to be analyzed with identical PIV settings.','Averaging / summing not possible...')
+				gui.custom_msgbox('error',getappdata(0,'hgui'),'Averaging / summing not possible...','All analyses of one session have to be of the same size and have to be analyzed with identical PIV settings.','modal');
 			end
 		end
 	end

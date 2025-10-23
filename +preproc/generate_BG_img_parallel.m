@@ -276,8 +276,7 @@ if get(handles.bg_subtract,'Value')>1
 
 	else
 		set(handles.bg_subtract,'Value',1);
-		warndlg(['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'])
-		uiwait
+		gui.custom_msgbox('warn',getappdata(0,'hgui'),'Not available',['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'],'modal');
 	end
 end
 

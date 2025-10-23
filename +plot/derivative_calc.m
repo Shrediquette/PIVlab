@@ -27,20 +27,19 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 		typevector=resultslist{5,frame};
 	end
 	if get(handles.interpol_missing,'value')==1
-		if any(any(isnan(u))) || any(any(isnan(v)))
-			if isempty(strfind(get(handles.apply_deriv_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.ascii_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.save_mat_all,'string'), 'Please'))==1%not in batch
-				drawnow;
-				if gui.retr('alreadydisplayed') == 1
-				else
-					msgbox('Your dataset contains NaNs. A vector interpolation will be performed automatically to interpolate missing vectors.', 'modal')
-					uiwait
-				end
-				gui.put('alreadydisplayed',1);
-			end
-			typevector_original=typevector;
-			u(isnan(v))=NaN;
-			v(isnan(u))=NaN;
-			typevector(isnan(u))=2;
+        if any(any(isnan(u))) || any(any(isnan(v)))
+            if isempty(strfind(get(handles.apply_deriv_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.ascii_all,'string'), 'Please'))==1 && isempty(strfind(get(handles.save_mat_all,'string'), 'Please'))==1%not in batch
+                drawnow;
+                if gui.retr('alreadydisplayed') == 1
+                else
+                    gui.custom_msgbox('msg',getappdata(0,'hgui'),'NaNs','Your dataset contains NaNs. A vector interpolation will be performed automatically to interpolate missing vectors.','modal',{'OK'},'OK');
+                end
+                gui.put('alreadydisplayed',1);
+            end
+            typevector_original=typevector;
+            u(isnan(v))=NaN;
+            v(isnan(u))=NaN;
+            typevector(isnan(u))=2;
 			typevector(typevector_original==0)=0;
 			u=misc.inpaint_nans(u,4);
 			v=misc.inpaint_nans(v,4);
@@ -54,8 +53,7 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 			drawnow;
 			if gui.retr('alreadydisplayed') == 1
 			else
-				msgbox('Your dataset contains NaNs. Derived parameters will have a lot of missing data. Redo the vector validation with the option to interpolate missing data turned on.', 'modal')
-				uiwait
+				gui.custom_msgbox('msg',getappdata(0,'hgui'),'NaNs','Your dataset contains NaNs. Derived parameters will have a lot of missing data. Redo the vector validation with the option to interpolate missing data turned on.','modal',{'OK'},'OK');
 			end
 			gui.put('alreadydisplayed',1);
 		end

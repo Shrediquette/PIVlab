@@ -19,10 +19,10 @@ if size(filepath,1) > 1 %did the user load images?
 			gui.toolsavailable(1)
 		else
 			gui.toolsavailable(1)
-			msgbox('No masks found in file.','modal');
+			gui.custom_msgbox('error',getappdata(0,'hgui'),'No masks found','No masks found in file.','modal');
 		end
 	end
 else
-	msgbox('Before loading masks, you need to import images for your analyses.','modal');
+    gui.custom_msgbox('warn',getappdata(0,'hgui'),'No image data yet','Before loading masks, you need to import images for your analyses.','modal');
 end
 

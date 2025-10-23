@@ -284,11 +284,11 @@ elseif valid_session_file == 1
 	end
 end
 if valid_session_file==0
-	uiwait(msgbox('This is not a valid PIVlab session file.','modal'))
+	gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','This is not a valid PIVlab session file.','modal');
 	display_hint=0;
 end
 gui.toolsavailable(1)
 if display_hint==1
-	uiwait(msgbox('You loaded a session from an older PIVlab release. This is not recommended and may lead to display problems in the GUI.','modal'))
+	gui.custom_msgbox('warn',getappdata(0,'hgui'),'Warning','You loaded a session from an older PIVlab release. This is not recommended and may lead to display problems in the GUI.','modal');
 end
 

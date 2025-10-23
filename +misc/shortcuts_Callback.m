@@ -6,5 +6,5 @@ try
 		open(which('PIVlab_shortcuts.pdf'))
 	end
 catch
-	msgbox('Could not open "help\PIVlab_Shortcuts.pdf".')
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Could not open "help\PIVlab_Shortcuts.pdf".','modal');
 end

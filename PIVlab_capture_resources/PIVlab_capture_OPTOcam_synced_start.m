@@ -51,14 +51,14 @@ if imaq_error==0 && found_correct_adaptor ==1
     end
 end
 if imaq_error==1
-    errordlg('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','Error!','modal')
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','modal');
     disp('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.')
 elseif imaq_error==2
     disp('ERROR: gentl adaptor not found. Please install the GenICam / GenTL support package from here:')
     disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
-    errordlg({'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'Error, support package missing','modal')
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error, support package missing',{'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'modal');
 elseif imaq_error==3
-    errordlg('Error: Camera not found! Is it connected?','Error!','modal')
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Camera not found! Is it connected?','modal');
 end
 
 disp(['Found camera: ' OPTOcam_name])
@@ -202,7 +202,7 @@ end
 
 
 if strcmpi(event.Data.MessageID,'imaq:imaqmex:outofmemory')
-    msgbox('Out of memory. RAM is full, most likely, you need to lower the amount of frames to capture to fix this error.','modal');
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Memory full','Out of memory. RAM is full, most likely, you need to lower the amount of frames to capture to fix this error.','modal');
 else
-    msgbox('Image capture timeout. Most likely, memory is full and you need to lower the amount of frames to capture to fix this error. It is also possible that the synchronization cable is not plugged in correctly.','modal');
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Image capture timeout. Most likely, memory is full and you need to lower the amount of frames to capture to fix this error. It is also possible that the synchronization cable is not plugged in correctly.','modal');
 end

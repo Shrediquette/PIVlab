@@ -33,8 +33,8 @@ if isempty(resultslist)==0
 				set(handles.fileselector, 'value', currentframe-1);
 			end
 			gui.sliderdisp(gui.retr('pivlab_axis'));
-		else
-			uiwait(msgbox('You can only delete frames with derived temporal parameters.','Notice','modal'));
+        else
+            gui.custom_msgbox('warn',getappdata(0,'hgui'),'Notice','You can only delete frames containing derived temporal parameters.','modal');
 		end
 	end
 end
