@@ -1,16 +1,18 @@
-function [img, features, points_obj] = image_feature_extraction(img)
+function [img_p, features, points_obj] = image_feature_extraction(img)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
-    img = imadjust(imflatfield(img, 200), stretchlim(img), [0 1], 0.7);
-    img = imdiffusefilt(img,NumberOfIterations=50, ConductionMethod="quadratic", GradientThreshold=40);
+    %img_p = imdiffusefilt(img, NumberOfIterations=3, ConductionMethod="quadratic", GradientThreshold=[9 7 6]);
+    %img_p = imnlmfilt(img,"DegreeOfSmoothing",10, "SearchWindowSize",17, "ComparisonWindowSize",15);
+    %
+    img_p = imgaussfilt(imflatfield(img,300), 21, FilterSize=51);
+    img_p = imadjust(img_p);%,[0.0 0.15],[0 1], 0.5);%, stretchlim(img_p), [0 1], 0.7);
     regions = detectMSERFeatures(...
-        img, ...
-        ThresholdDelta=7, ...
-        RegionAreaRange=[1000, 1e6], ...
-        MaxAreaVariation=100 ...
+        img_p, ...
+        ThresholdDelta=1, ...
+        RegionAreaRange=[500, 1e6] ...
     );
-    [features, points_obj] = extractFeatures(img, regions);
-    show_regions(img, regions) % Show the detected regions
+    [features, points_obj] = extractFeatures(img_p, regions);
+    %show_regions(img_p, regions) % Show the detected regions
 end
 
 
