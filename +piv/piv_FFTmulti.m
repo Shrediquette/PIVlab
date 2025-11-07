@@ -66,8 +66,7 @@ for multipass = 1:passes
 			%multipass validation, smoothing
 			utable_orig=utable;
 			vtable_orig=vtable;
-			[utable,vtable] = postproc.PIVlab_postproc (utable,vtable,[],[], [], 1,4, 1,3);
-
+			[utable,vtable] = postproc.PIVlab_postproc (utable,vtable,[],[], [], 1,8, 1,5);
 			maskedpoints=numel(find((typevector)==0));
 			amountnans=numel(find(isnan(utable)))-maskedpoints;
 			discarded=amountnans/(size(utable,1)*size(utable,2))*100;
@@ -109,8 +108,8 @@ for multipass = 1:passes
 				vtable=misc.inpaint_nans(vtable,4);
 				%smooth predictor
 				if multipass < passes
-					utable = misc.smoothn(utable,0.9); %stronger smoothing for first passes
-					vtable = misc.smoothn(vtable,0.9);
+					utable = misc.smoothn(utable,4); %stronger smoothing for first passes
+					vtable = misc.smoothn(vtable,4);
 				else
 					utable = misc.smoothn(utable); %weaker smoothing for last pass(nb: BEFORE the image deformation. So the output is not smoothed!)
 					vtable = misc.smoothn(vtable);
