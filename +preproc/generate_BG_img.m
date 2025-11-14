@@ -13,10 +13,10 @@ if get(handles.bg_subtract,'Value')>1
 	if sequencer ~= 2 % bg subtraction only makes sense with time-resolved and pairwise sequencing style, not with reference style.
 		if isempty(bg_img_A) || isempty(bg_img_B)
 			if bg_operation ==2
-				answer = questdlg('Mean intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
+				answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Background subtraction','Mean intensity background image needs to be calculated. Press ok to start.','modal',{'OK','Cancel'},'OK');
 			end
 			if bg_operation ==3
-				answer = questdlg('Minimum intensity background image needs to be calculated. Press ok to start.', 'Background subtraction', 'OK','Cancel','OK');
+				answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Background subtraction','Minimum intensity background image needs to be calculated. Press ok to start.','modal',{'OK','Cancel'},'OK');
 			end
 			if strcmp(answer , 'OK')
 				%disp('BG not present, calculating now')
