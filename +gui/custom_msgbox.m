@@ -14,13 +14,16 @@ if verLessThan('matlab','25') || debug == 1 %Matlab < 2025
         case 'success'
             answer=msgbox(message,windowtitle,modal);
         case 'quest'
-            if numel (options) == 2
-                answer = questdlg(message, windowtitle, options{1},options{2},default);
-            elseif numel (options) == 3
-                answer = questdlg(message, windowtitle, options{1},options{2},options{3},default);
-            end
-        otherwise
-            answer=[];
+			numel(options)
+			if numel (options) == 2
+				answer = questdlg(message, windowtitle, options{1},options{2},default);
+			elseif numel (options) == 1
+				answer = questdlg(message, windowtitle, options{1},default);
+			elseif numel (options) == 3
+				answer = questdlg(message, windowtitle, options{1},options{2},options{3},default);
+			end
+		otherwise
+			answer=[];
             disp('type not supported');
     end
 end
