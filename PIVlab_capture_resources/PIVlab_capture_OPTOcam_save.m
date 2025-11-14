@@ -13,8 +13,8 @@ if getappdata(hgui,'cancel_capture') ~=1 %capture was not cancelled --> save ima
     do_save_frames=OPTOcam_frames_to_capture;
 else
     if OPTOcam_vid.FramesAcquired > 2
-        selec=questdlg('Recording cancelled. Save acquired images?','Recording cancelled','Yes','No','No');
-        if strcmpi(selec,'Yes')
+        selec = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Recording cancelled','Recording cancelled. Save acquired images?','modal',{'Yes','No'},'No');
+		if strcmpi(selec,'Yes')
             do_save_frames = (floor(OPTOcam_vid.FramesAcquired/2))*2;
             gui.put('cancel_capture',0); %set cancel to zero to enable getting captured frames to gui.
         end

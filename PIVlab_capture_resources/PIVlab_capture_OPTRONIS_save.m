@@ -16,7 +16,7 @@ if getappdata(hgui,'cancel_capture') ~=1 %capture was not cancelled --> save all
     do_save_frames=OPTRONIS_frames_to_capture;
 else
     if OPTRONIS_vid.FramesAcquired > 4
-        selec=questdlg('Recording cancelled. Save acquired images?','Recording cancelled','Yes','No','No');
+        selec = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Recording cancelled','Recording cancelled. Save acquired images?','modal',{'Yes','No'},'No');
         if strcmpi(selec,'Yes')
             do_save_frames = (floor(OPTRONIS_vid.FramesAcquired/2))*2-2;
             gui.put('cancel_capture',0); %set cancel to zero to enable getting captured frames to gui.
