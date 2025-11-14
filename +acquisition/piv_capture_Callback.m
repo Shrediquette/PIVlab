@@ -15,7 +15,7 @@ if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') %calib
     end
 end
 if required_files_check
-    button = questdlg('Arm LASER and camera?','Warning','Yes','Cancel','Yes');
+	button = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Warning','Arm Laser and camera?','modal',{'Yes','Cancel'},'Yes');
     if strmatch(button,'Yes')==1
         handles=gui.gethand;
         gui.put('cancel_capture',0);

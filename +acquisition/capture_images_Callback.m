@@ -73,7 +73,7 @@ try
 catch
 end
 if gui.retr('parallel')==1
-	button = questdlg('It is highly recommended to turn off parallel processing during image capture to save RAM.','Shut down parallel pool?','OK','Cancel','OK');
+	button = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Shut down parallel pool?','It is highly recommended to turn off parallel processing during image capture to save RAM.','modal',{'OK','Cancel'},'OK');
 	if strncmp(button,'OK',3)==1
 		gui.put('parallel',1); %sets to "parallel on" and then presses the toggle button --> will turn off.
 		misc.toggle_parallel_Callback

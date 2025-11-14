@@ -1,6 +1,5 @@
 function [suggested_interframe] = automatic_interframe(~,~,~)
-
-button = questdlg('This will switch on the laser!','Warning','OK','Cancel','Cancel');
+button = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Warning','This will switch on the laser!','modal',{'OK','Cancel'},'Cancel');
 if strmatch(button,'OK')==1
     hgui=getappdata(0,'hgui');
     setappdata(hgui,'cancel_capture',0);

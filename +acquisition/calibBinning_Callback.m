@@ -11,8 +11,8 @@ else
     definput = num2str(binning);
     prompt = {'Select pixel binning size to increase sensor sensitivity:' 'A size of 1 disables pixel binning.'};
     dlgtitle = 'Pixel binning Configuration';
-    answer = questdlg(prompt, dlgtitle, '1','2','4',definput);
-    if ~isempty(answer)
+    answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),dlgtitle,prompt,'modal',{'1','2','4'},definput);
+	if ~isempty(answer)
         gui.put('binning',str2double(answer));
         roi.clear_roi_Callback %PIV-ROI must be cleared when camera resolution is chnaged.
         set(handles.ac_realtime,'Value',0);%reset realtime roi
