@@ -336,9 +336,9 @@ if isempty(fh)
     catch
     end
 
+	gui.toolsavailable(0,'Changing parallel pool...')
     set(MainWindow, 'Visible','on');drawnow;
     try
-        gui.toolsavailable(0,'Changing parallel pool...')
         %% Check parallel computing toolbox availability
         gui.put('parallel',0);
         try %checking for a parallel license file throws a huge error message wheh it is not available. This might scare users... Better: Try...catch block
