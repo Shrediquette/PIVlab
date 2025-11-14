@@ -350,7 +350,6 @@ if isempty(fh)
 					pause(0.05)
                     answer=gui.custom_msgbox('quest',getappdata(0,'hgui'),'Open parallel pool?',['PIVlab can be run with parallel computing.' newline newline '- Recommended when processing multiple images.' newline '- Not required when acquiring images or processing mp4 and avi files.' newline newline 'Open parallel pool?'],'modal',{'Yes' 'No'},'No');
                     pause(0.1)
-                    %answer = questdlg(['PIVlab can be run with parallel computing.' newline newline '- Recommended when processing multiple images.' newline '- Not required when acquiring images or processing mp4 and avi files.' newline newline 'Open parallel pool?'],'Parallel processing', 'Yes', 'No','Yes');
                     switch answer
                         case 'Yes'
                             misc.pivparpool('open',maxNumCompThreads('automatic')); %use matlab suggested num of cores
