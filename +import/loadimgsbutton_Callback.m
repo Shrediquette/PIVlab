@@ -89,7 +89,7 @@ if ~isequal(path,0)
 			proposed_sequencing = 2;
 		end
 		if sequencer==0 && proposed_sequencing==1 && ~batchModeActive
-			ans_w=questdlg(['File name ending "A" and "B" detected. This indicates that you should use the "Pairwise" sequencing style instead of "Time resolved".' newline newline 'Should I fix this for you?'],'Sure?','Yes','No','Yes');
+			ans_w = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Sure?',['File name ending "A" and "B" detected. This indicates that you should use the "Pairwise" sequencing style instead of "Time resolved".' newline newline 'Should I fix this for you?'],'modal',{'Yes','No'},'Yes');
 			if strcmp(ans_w,'Yes')
 				sequencer=1;
 				gui.put('sequencer',sequencer);
