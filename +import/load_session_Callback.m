@@ -288,7 +288,8 @@ if valid_session_file==0
 	display_hint=0;
 end
 gui.toolsavailable(1)
-if display_hint==1
+
+if display_hint==1 && gui.retr('batchModeActive') == 0
 	gui.custom_msgbox('warn',getappdata(0,'hgui'),'Warning','You loaded a session from an older PIVlab release. This is not recommended and may lead to display problems in the GUI.','modal');
 end
 
