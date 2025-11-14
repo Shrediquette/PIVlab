@@ -1,7 +1,6 @@
 function FetchPylon()
 %gui.update_progress(0)
-answer = questdlg(['OPTOcam could not be detected.' newline 'Download and install OPTOcam driver?'],'Camera not found', 'Yes', 'No','Yes');
-
+answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Camera not found',['OPTOcam could not be detected.' newline 'Download and install OPTOcam driver?'],'modal',{'Yes','No'},'Yes');
 switch answer
 	case 'Yes'
 		%gui.toolsavailable(1)

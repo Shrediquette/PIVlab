@@ -440,7 +440,7 @@ end
 
 function calibrate_level_Callback(caller,~)
 do_calib=0;
-answer = questdlg({'Please level the camera (using a precision spirit level) and press "Start".' ' ' 'The sensor is factory calibrated, so manual calibration is usually not necessary.'}, 'Level calibration', 'Start','Cancel','Start');
+answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Level calibration',{'Please level the camera (using a precision spirit level) and press "Start".' ' ' 'The sensor is factory calibrated, so manual calibration is usually not necessary.'},'modal',{'Start','Cancel'},'Start');
 switch answer
 	case 'Start'
 		do_calib=1;
