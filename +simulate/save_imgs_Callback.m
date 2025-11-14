@@ -11,7 +11,7 @@ if isempty(gen_image_1)==0
 		FileName_1=[Name '_01' Ext];
 		FileName_2=[Name '_02' Ext];
 		if exist(fullfile(PathName,FileName_1),'file') >0 || exist(fullfile(PathName,FileName_2),'file') >0
-			butt = questdlg(['Warning: File ' FileName_1 ' already exists.'],'File exists','Overwrite','Cancel','Overwrite');
+			butt = gui.custom_msgbox('quest',getappdata(0,'hgui'),'File exists',['Warning: File ' FileName_1 ' already exists.'],'modal',{'Overwrite','Cancel'},'Overwrite');
 			if strncmp(butt, 'Overwrite',9) == 1
 				write_it=1;
 			else
