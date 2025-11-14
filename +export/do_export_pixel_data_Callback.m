@@ -70,8 +70,8 @@ switch selected_format
 end
 continue_export=1;
 if startframe ~=endframe && gui.retr('displaywhat')>1 && get(handles.autoscaler,'Value') == 1 %user wants to export multiple frames and displays derivatives, and hasn't enabled a fixed colormap range
-    answer = questdlg('You haven''t set fixed limits to the colormap. This might result in flickering of the colormap. Please select fixed limits of the colormap (disable autoscale). Continue anyway? ', 'Colormap limits are not fixed', 'Yes','No','No');
-    if strcmp(answer , 'No')
+    answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Colormap limits are not fixed','You haven''t set fixed limits to the colormap. This might result in flickering of the colormap. Please select fixed limits of the colormap (disable autoscale). Continue anyway? ','modal',{'Yes','No'},'No');
+	if strcmp(answer , 'No')
         continue_export=0;
         gui.switchui('multip08');drawnow;
         old_bg=get(handles.autoscaler,'foregroundcolor');
