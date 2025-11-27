@@ -1737,9 +1737,9 @@ handles.fps_setting = uicontrol(handles.multip16,'Style','edit','String','30','U
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 if ~isMATLABReleaseOlderThan("R2025a")
-    handles.resolutionstring = uicontrol(handles.multip16,'Style','text','String','Resolution (dpi)','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','resolutionstring');
-else
     handles.resolutionstring = uicontrol(handles.multip16,'Style','text','String','Image size (%)','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','resolutionstring');
+else
+    handles.resolutionstring = uicontrol(handles.multip16,'Style','text','String','Resolution (dpi)','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','resolutionstring');
 end
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
 if ~isMATLABReleaseOlderThan("R2025a")

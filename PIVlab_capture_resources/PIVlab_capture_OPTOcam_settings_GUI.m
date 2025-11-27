@@ -12,7 +12,7 @@ if isempty(fh)
         mainpos=[0    2.8571  240.0000   50.9524];
     end
 
-	OPTOcam_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','OPTOcam settings','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4+4 35 11+1.5+4],'tag','OPTOcam_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
+	OPTOcam_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','OPTOcam settings','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4+4 35 11+1.5+4+2],'tag','OPTOcam_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
 	set (OPTOcam_control_window,'Units','Characters');
 
 
@@ -24,7 +24,7 @@ if isempty(fh)
 
 	margin=1.5;
 
-	panelheight=12+4;
+	panelheight=12+4+2;
 	handles.mainpanel = uipanel(OPTOcam_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight parentitem(3)-2 panelheight],'title','OPTOcam Settings','fontweight','bold');
 
 
@@ -32,16 +32,16 @@ if isempty(fh)
 	parentitem=get(handles.mainpanel, 'Position');
 	item=[0 0 0 0];
 	
-	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
+	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1.5];
 	handles.bitdepth_txt = uicontrol(handles.mainpanel,'Style','text','String','Bit depth:','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
-	item=[parentitem(3)/2*1 item(2) parentitem(3)/2 1];
+	item=[parentitem(3)/2*1 item(2) parentitem(3)/2 1.5];
 	handles.bitdepth = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'8','12'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','bitdepth');
 
-	item=[parentitem(3)/2*0 item(2)+item(4)+margin/2 parentitem(3)/2 1];
+	item=[parentitem(3)/2*0 item(2)+item(4)+margin/2 parentitem(3)/2 1.5];
 	handles.gain_txt = uicontrol(handles.mainpanel,'Style','text','String','Gain:','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
-	item=[parentitem(3)/2*1 item(2) parentitem(3)/2 1];
+	item=[parentitem(3)/2*1 item(2) parentitem(3)/2 1.5];
 	handles.gain = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'0','10','20','30'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','gain');
 
 	try
@@ -78,14 +78,14 @@ if isempty(fh)
 
 
 
-	item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
+	item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 	handles.temp_txt = uicontrol(handles.mainpanel,'Style','text','String',cam_temperature_string,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
-	item=[0 item(2)+item(4) parentitem(3) 1];
-	handles.serial_txt = uicontrol(handles.mainpanel,'Style','text','String',['Serial Nr.: ' DeviceSerialNumber],'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+	item=[0 item(2)+item(4) parentitem(3) 1.5];
+	handles.serial_txt = uicontrol(handles.mainpanel,'Style','edit','String',['Serial Nr.: ' DeviceSerialNumber],'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4) parentitem(3) 6];
-	handles.firmware_txt = uicontrol(handles.mainpanel,'Style','text','String',['Firmware: ' DeviceFirmwareVersion2],'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+	handles.firmware_txt = uicontrol(handles.mainpanel,'Style','text','String',['Firmware: ' DeviceFirmwareVersion2],'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'FontSize',7);
 
 	item=[parentitem(3)/2 item(2)+item(4)+margin/2 parentitem(3)/2 2];
 	handles.apply_btn = uicontrol(handles.mainpanel,'Style','pushbutton','String','Apply','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@Apply_settings,'tag','apply_btn');
