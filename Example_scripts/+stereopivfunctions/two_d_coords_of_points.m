@@ -1,4 +1,4 @@
-function [coords, normal, mu] = two_d_coords_of_points(points)
+function [coords, normal, mu, rt] = two_d_coords_of_points(points)
 %UNTITLED4 Summary of this function goes here
 %   Detailed explanation goes here
     [normal, mu] = find_normal_of_plane(points);
