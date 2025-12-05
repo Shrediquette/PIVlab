@@ -111,6 +111,9 @@ pco_errdisp('PCO_GetCameraDescription',errorCode);
 
 %% Pixel Binning
 %binning funktioniert nur wenn gleichzeitig ROI gesetzt wird.
+if isempty(binning)
+    binning=1;
+end
 h_binning=binning; %1,2,4
 v_binning=binning; %1,2,4
 [errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetBinning', hcam_ptr,h_binning,v_binning); %2,4, etc.
@@ -239,32 +242,43 @@ try
         imacount=min(MaxImgCountArr);
         disp(['imacount changed to ' num2str(imacount)]);
     end
-	%}
-	ImgCountArr=zeros(1,camcount,'uint32');
-	if ~isinf(imacount)
-		ImgCountArr(1)=imacount;
-	else
-		ImgCountArr(1)=5; %ringbuffer for 5 images seems to be minimum.
-	end
-
-	if triggermode==2 && ~isinf(imacount) %external trigger, PIV recording
+    %}
+    ImgCountArr=zeros(1,camcount,'uint32');
+    if ~isinf(imacount)
+        ImgCountArr(1)=imacount;
+    else
+        ImgCountArr(1)=5; %ringbuffer for 5 images seems to be minimum.
+    end
+    %%{
+    if triggermode==2 && ~isinf(imacount) %external trigger, PIV recording
+        [errorCode] = calllib('PCO_CAM_RECORDER', 'PCO_RecorderInit' ...
+            ,hrec_ptr ...
+            ,ImgCountArr,camcount ...
+            ,PCO_RECORDER_FILE_MULTITIF ...
+            ,1,fullfile(ImagePath, 'PIVlab_pco.tif'),[]);
+        pco_errdisp('PCO_RecorderInit',errorCode);
+    end
+    %%}
+    %{
+    if triggermode==2 && ~isinf(imacount) %external trigger, PIV recording
 		[errorCode] = calllib('PCO_CAM_RECORDER', 'PCO_RecorderInit' ...
 			,hrec_ptr ...
 			,ImgCountArr,camcount ...
-			,PCO_RECORDER_FILE_MULTITIF ...
+			,PCO_RECORDER_FILE_TIF ...
 			,1,fullfile(ImagePath, 'PIVlab_pco.tif'),[]);
 		pco_errdisp('PCO_RecorderInit',errorCode);
-	end
-	if triggermode==0 || isinf(imacount) %Internal trigger, or data should not be saved.
-		[errorCode] = calllib('PCO_CAM_RECORDER', 'PCO_RecorderInit' ...
-			,hrec_ptr ...
-			,ImgCountArr,camcount ...
-			,PCO_RECORDER_MEMORY_RINGBUF ...
-			,0,[],[]);
-		pco_errdisp('PCO_RecorderInit',errorCode);
-	end
+    end
+    %}
+    if triggermode==0 || isinf(imacount) %Internal trigger, or data should not be saved.
+        [errorCode] = calllib('PCO_CAM_RECORDER', 'PCO_RecorderInit' ...
+            ,hrec_ptr ...
+            ,ImgCountArr,camcount ...
+            ,PCO_RECORDER_MEMORY_RINGBUF ...
+            ,0,[],[]);
+        pco_errdisp('PCO_RecorderInit',errorCode);
+    end
 
-	if errorCode ~= 0
+    if errorCode ~= 0
 		clear camera_array;
 		ME = MException('PCO_ERROR:RecorderInit','Cannot continue script when initialisation of recorder fails');
 		set(frame_nr_display,'String',['Camera not found. [3]' newline 'If problem persists, you might' newline 'need to restart Matlab.']);
