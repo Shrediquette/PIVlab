@@ -99,10 +99,10 @@ if ~isequal(path,0)
 	end
 
 	pcopanda_dbl_image=0;
-	if multitiff 	 %check if frames captured by pco panda as double image array.
+	%if multitiff 	 %check if frames captured by pco panda as double image array.
 		temp_info=imfinfo(path(1).name);
 		if isfield(temp_info,'Software')
-			if strcmp (temp_info(1).Software,'PCO_Recorder')
+			if strncmp (temp_info(1).Software,'PCO_Recorder',10)
 				pcopanda_dbl_image=1;
 			end
 		end
@@ -115,7 +115,7 @@ if ~isequal(path,0)
 			gui.put('sequencer',sequencer);
 			save('PIVlab_settings_default.mat','sequencer','-append');
 		end
-	end
+    %end
 	gui.put('pcopanda_dbl_image',pcopanda_dbl_image);
 
 	if multitiff
@@ -126,36 +126,53 @@ if ~isequal(path,0)
 		loopcntr=sum(frames_per_image_file);
 	else % single image files.
 		loopcntr=size(path,1);
-	end
+    end
 
-	if sequencer==1 % AB
-		if ~multitiff
-			for i=1:loopcntr
-				if exist('filepath','var')==0 %first loop
-					filepath{1,1}=path(i).name;
-					framenum(1,1)=1;
-				else
-					filepath{size(filepath,1)+1,1}=path(i).name; %#ok<AGROW>
-					framenum(size(framenum,1)+1,1)=1;
-				end
-			end
-		else % multitiff
-			if ~pcopanda_dbl_image
-
-				filepath=cell(0);
-				framenum=[];
-				cntr=1;
-				for i=1:size(path,1)
-					for jj=1:frames_per_image_file(i)
-						filepath{cntr,1}=path(i).name;
-						framenum(cntr,1)=jj;
-						cntr=cntr+1;
-					end
-				end
-			else
-				filepath=cell(0);
-				framenum=[];
-				framepart=[];
+    if sequencer==1 % AB
+        if ~multitiff
+            for i=1:loopcntr
+                if exist('filepath','var')==0 %first loop
+                    filepath{1,1}=path(i).name;
+                    framenum(1,1)=1;
+                else
+                    filepath{size(filepath,1)+1,1}=path(i).name; %#ok<AGROW>
+                    framenum(size(framenum,1)+1,1)=1;
+                end
+            end
+            if pcopanda_dbl_image %dbl image, aber kein multitiff.
+                filepath=cell(0);
+                framenum=[];
+                framepart=[];
+                cntr=1;
+                img_height=size(imread(path(1).name,1),1); %read one file to detect image height to devide it by two later.
+                for i=1:size(path,1)
+                    filepath{cntr,1}=path(i).name;
+                    filepath{cntr+1,1}=path(i).name;
+                    framenum(cntr,1)=1;
+                    framenum(cntr+1,1)=1;
+                    framepart(cntr,1)=1;
+                    framepart(cntr,2)=img_height/2;
+                    framepart(cntr+1,1)=img_height/2+1;
+                    framepart(cntr+1,2)=img_height;
+                    cntr=cntr+2;
+                end
+            end
+        else % multitiff
+            if ~pcopanda_dbl_image
+                filepath=cell(0);
+                framenum=[];
+                cntr=1;
+                for i=1:size(path,1)
+                    for jj=1:frames_per_image_file(i)
+                        filepath{cntr,1}=path(i).name;
+                        framenum(cntr,1)=jj;
+                        cntr=cntr+1;
+                    end
+                end
+            else
+                filepath=cell(0);
+                framenum=[];
+                framepart=[];
 				cntr=1;
 				img_height=size(imread(path(1).name,1),1); %read one file to detect image height to devide it by two later.
 				for i=1:size(path,1)

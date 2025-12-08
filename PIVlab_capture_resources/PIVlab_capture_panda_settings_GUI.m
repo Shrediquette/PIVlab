@@ -1,6 +1,5 @@
 function PIVlab_capture_panda_settings_GUI
 fh = findobj('tag', 'panda_control_window');
-
 if isempty(fh)
 	try
 		hgui=getappdata(0,'hgui');
@@ -35,10 +34,17 @@ if isempty(fh)
 	item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
 	handles.timestamp_txt = uicontrol(handles.mainpanel,'Style','text','String','Time stamp:','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
-	item=[parentitem(3)/2*1 item(2) parentitem(3)/2 1];
+	item=[parentitem(3)/2*1 item(2) parentitem(3)/2 1.5];
 	handles.timestamp = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'none','ASCII','binary','both'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','timestamp');
 
-	item=[parentitem(3)/2 item(2)+item(4)+margin parentitem(3)/2 2];
+
+    item=[parentitem(3)/2*0 item(2)+item(4) parentitem(3)/2 1];
+	handles.filetype_txt = uicontrol(handles.mainpanel,'Style','text','String','File type:','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+	item=[parentitem(3)/2*1 item(2) parentitem(3)/2 1.5];
+	handles.filetype = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'Single TIFF','Multi TIFF'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','filetype');
+    
+    item=[parentitem(3)/2 item(2)+item(4)+margin parentitem(3)/2 2];
 	handles.apply_btn = uicontrol(handles.mainpanel,'Style','pushbutton','String','Apply','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@Apply_settings,'tag','apply_btn');
 
 else %Figure handle does already exist --> bring UI to foreground.
@@ -57,14 +63,28 @@ elseif strcmp(panda_timestamp,'binary')
 	set(handles.timestamp,'value',3);
 end
 
+panda_filetype=getappdata(hgui,'panda_filetype');
+if isempty (panda_filetype)
+	panda_filetype='Single TIFF';
+end
+if strcmp(panda_filetype,'Single TIFF')
+	set(handles.filetype,'value',1);
+elseif strcmp(panda_filetype,'Multi TIFF')
+	set(handles.filetype,'value',2);
+end
+
+
 
 function Apply_settings(~,~,~)
 fh = findobj('tag', 'panda_control_window');
 handles=gethand;
 
 timestamp=get(handles.timestamp,'String');
-
 put('panda_timestamp',(timestamp{get(handles.timestamp,'value')}));
+
+filetype=get(handles.filetype,'String');
+put('panda_filetype',(filetype{get(handles.filetype,'value')}));
+
 pause(0.01)
 
 

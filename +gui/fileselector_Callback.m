@@ -16,4 +16,3 @@ if size(filepath,1) > 1 || gui.retr('video_selection_done') == 1
 		set(handles.filenamebox,'value',1);
 	end
 end
-

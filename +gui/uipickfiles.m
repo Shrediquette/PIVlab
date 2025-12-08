@@ -826,7 +826,7 @@ setpref('uipickfiles','figure_position',fig_pos)
                 end
                 dbl_img=[];
                 if isfield(info,'Software')
-                    if strcmpi (info(1).Software, 'PCO_Recorder')
+                    if strncmp (info(1).Software,'PCO_Recorder',10)
                         dbl_img='dual shutter';
                     end
                 end
