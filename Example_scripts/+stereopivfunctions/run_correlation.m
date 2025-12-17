@@ -1,5 +1,6 @@
 function [x,y,u,v,typevector, correlation_map] = run_correlation(image_dir, filenames1, filenames2, p, s, nr_of_cores, tform, output_view)
-%UNTITLED5 Summary of this function goes here
+%RUN_CORRELATION Taken from the "Example_PIVlab_commandline" script with
+%small addition for passing the required transform data
 %   Detailed explanation goes here
     arguments
         image_dir

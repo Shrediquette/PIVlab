@@ -12,6 +12,7 @@ function [x, y, u, v, typevec,corr_map] = piv_analysis(dir, filename1, filename2
     % graph: bool, whether to display graphical output ( not available
     % for parallel worker)
     % tform: tform2d for unwarping images
+    % output_view: imref2d for the output view for the transformed images
     
     % OUTPUT
     % x, y: coordinates of vectors

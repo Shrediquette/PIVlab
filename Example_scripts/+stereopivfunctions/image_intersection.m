@@ -1,5 +1,6 @@
 function [img1m, img2m, piv_mask] = image_intersection(img1, img2)
-%IMAGE_INTERSECTION Summary of this function goes here
+%IMAGE_INTERSECTION The mask for a pair of images in a common view where
+%both images contain non-zero data
 %   Detailed explanation goes here    
     mask = make_intersction_mask(img1, img2);
 
@@ -8,11 +9,6 @@ function [img1m, img2m, piv_mask] = image_intersection(img1, img2)
     img1m(mask) = img1(mask);
     img2m(mask) = img2(mask);
     piv_mask = not(mask);
-    %[ix, iy] = find(mask);
-    %limits = [min(ix),max(ix); min(iy),max(iy)];
-    %img1m = img1m(limits(1,1):limits(1,2), limits(2,1):limits(2,2));
-    %img2m = img2m(limits(1,1):limits(1,2), limits(2,1):limits(2,2));
-
 end
 
 

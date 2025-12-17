@@ -1,19 +1,28 @@
 function [img_p, features, points_obj] = image_feature_extraction(img)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
-    %img_p = imdiffusefilt(img, NumberOfIterations=3, ConductionMethod="quadratic", GradientThreshold=[9 7 6]);
-    %img_p = imnlmfilt(img,"DegreeOfSmoothing",10, "SearchWindowSize",17, "ComparisonWindowSize",15);
-    %
+%IMAGE_FEATURE_EXTRACTION preprocess an image and detect MSER features
+%   This function has been designed to aid feature detection on images of
+%   vapour. 
+% Arguments:
+%   img: An image object process
+% Ouputs:
+%   img_p: The processed image used in the feature detection
+%   features: The detected features
+%   points_obj: THe points associated with the features
+
+    test = false;
+
     % Try imhistmatch
     img_p = imgaussfilt(imflatfield(img,300), 21, FilterSize=51);
-    img_p = imadjust(img_p);%,[0.0 0.15],[0 1], 0.5);%, stretchlim(img_p), [0 1], 0.7);
+    img_p = imadjust(img_p);
     regions = detectMSERFeatures(...
         img_p, ...
         ThresholdDelta=1, ...
         RegionAreaRange=[500, 1e6] ...
     );
     [features, points_obj] = extractFeatures(img_p, regions);
-    %show_regions(img_p, regions) % Show the detected regions
+    if test
+        show_regions(img_p, regions) % Show the detected regions
+    end
 end
 
 
