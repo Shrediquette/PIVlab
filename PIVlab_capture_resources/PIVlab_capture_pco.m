@@ -250,7 +250,7 @@ try
         ImgCountArr(1)=5; %ringbuffer for 5 images seems to be minimum.
     end
 
-    panda_filetype=getappdata(hgui,'panda_filetype')
+    panda_filetype=getappdata(hgui,'panda_filetype');
     if isempty (panda_filetype)
         panda_filetype='Single TIFF';
     end

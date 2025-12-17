@@ -82,6 +82,7 @@ if ready==1
 		set(handles.ac_displ_sharp,'enable','on');
 		set(handles.ac_displ_grid,'enable','on');
 		set(handles.ac_displ_hist,'enable','on');
+        set(handles.ac_calibsnapshot,'enable','on')
 
 		%try
 		set(handles.ac_calibcapture,'String','Stop')
