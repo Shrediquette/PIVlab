@@ -1,8 +1,7 @@
 function capture_images_Callback(~,~,~) %Menu item is called
 filepath = fileparts(which('PIVlab_GUI.m'));
-gui.switchui('multip24')
 acquisition.select_capture_config_Callback
-
+gui.switchui('multip24')
 if verLessThan('matlab','9.7') %R2019b
 	gui.custom_msgbox('error',getappdata(0,'hgui'),'Newer Matlab required','Image capture and synchronizer control in PIVlab requires at least MATLAB version 9.7 (R2019b).', 'modal');
 end
@@ -59,7 +58,7 @@ gui.put('ac_lower_clim',0);
 gui.put('ac_upper_clim',2^16);
 delete(findobj('tag','shortcutlist'));
 %Keyboard shortcuts
-text(10,10,['Image acquisition keyboard shortcuts' sprintf('\n') 'CTRL SHIFT C : Toggle crosshair' sprintf('\n') 'CTRL SHIFT X : Toggle sharpness measure' sprintf('\n') 'CTRL SHIFT + : Increase display brightness' sprintf('\n') 'CTRL SHIFT - : Decrease display brightness' sprintf('\n') 'CTRL SHIFT K : Toggle between log and lin color scale' sprintf('\n') 'CTRL SHIFT H : Toggle histogram display'],'tag','shortcutlist','Color','black','BackgroundColor','white','VerticalAlignment','top');
+%text(10,10,['Image acquisition keyboard shortcuts' sprintf('\n') 'CTRL SHIFT C : Toggle crosshair' sprintf('\n') 'CTRL SHIFT X : Toggle sharpness measure' sprintf('\n') 'CTRL SHIFT + : Increase display brightness' sprintf('\n') 'CTRL SHIFT - : Decrease display brightness' sprintf('\n') 'CTRL SHIFT K : Toggle between log and lin color scale' sprintf('\n') 'CTRL SHIFT H : Toggle histogram display'],'tag','shortcutlist','Color','black','BackgroundColor','white','VerticalAlignment','top');
 try
 	if ~alreadyconnected
 		if ispref('PIVlab_ad','enable_ad') &&  getpref('PIVlab_ad','enable_ad') ==0
