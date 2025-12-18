@@ -109,8 +109,12 @@ if ready==1
 		gui.put('caliimg',caliimg);
 		gui.put('fresh_calib_image',1);
 	elseif capture_ok==1 && capturing == 1
+        disp('stop clicked')
 		gui.put('cancel_capture',1);
 		gui.put('capturing',0);
+
+
+
 		set(handles.ac_calibcapture,'String','Start')
 		gui.toolsavailable(1)
 		set(handles.ac_calibsave,'enable','on')

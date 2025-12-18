@@ -52,12 +52,38 @@ if(errorCode~=PCO_NOERROR)
 	glvar.do_close=1;
 	glvar.do_libunload=1;
 	pco_camera_open_close(glvar);
-	figure(hgui)
-	set(frame_nr_display,'String',['Camera not found. Is the pco.USB driver installed? Is it connected?' newline 'If problem persists, you might' newline 'need to restart Matlab.']);
-	return;
+    figure(hgui)
+    set(frame_nr_display,'String',['Camera not found. Is the pco.USB driver installed? Is it connected?' newline 'If problem persists, you might' newline 'need to restart Matlab.']);
+    %% RESET camera and recorder when camera crashed.
+    try
+        pause(1)
+        disp('resetting library and recorder...')
+        loadlibrary('sc2_cam','sc2_cammatlab.h' ...
+            ,'addheader','sc2_common.h' ...
+            ,'addheader','sc2_camexport.h' ...
+            ,'alias','PCO_CAM_SDK' ...
+            );
+        %libfunctionsview('PCO_CAM_SDK')
+        calllib('PCO_CAM_SDK', 'PCO_ResetLib')
+        loadlibrary('pco_recorder','sc2_cammatlab.h' ...
+            ,'addheader','pco_recorder_export.h' ...
+            ,'alias','PCO_CAM_RECORDER');
+        calllib('PCO_CAM_RECORDER', 'PCO_RecorderResetLib',0);
+        calllib('PCO_CAM_SDK', 'PCO_RebootCamera',0);
+        unloadlibrary('PCO_CAM_SDK');
+        unloadlibrary('PCO_CAM_RECORDER');
+        pause(1)
+        gui.put('cancel_capture',1);
+        gui.put('capturing',0);
+        handles=gui.gethand;
+        set(handles.ac_calibcapture,'String','Start')
+        gui.toolsavailable(1)
+    catch
+        disp('resetting not successful...')
+    end
+    return;
 end
 hcam_ptr=glvar.out_ptr;
-
 %% Set to double /single shutter
 if triggermode == 2
 	[errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetDoubleImageMode', hcam_ptr,1); %on
@@ -399,6 +425,10 @@ try
 	end
 	%% loop running while recording
 	while IsRunning && getappdata(hgui,'cancel_capture') ~=1
+        cancel_capture=getappdata(hgui,'cancel_capture');
+        if cancel_capture %duplicate statement, does it help?
+            break
+        end
 		%{
         [errorCode,~,~...
 			,IsRunning,~,~...
@@ -650,11 +680,6 @@ try
 				sharpness_focus_table=[];
 				sharp_loop_cnt=[];
 			end
-
-
-
-
-
 		end
 		old_ProcImgCount=ProcImgCount;
 		if ~isinf(imacount) && triggermode==2 && (ProcImgCount>=ReqImgCount) %actually a duplicate exiting the while loop.
@@ -708,7 +733,7 @@ catch ME
 		close();
 		clearvars -except ME hgui;
 		rethrow(ME)
-	end
+    end
 end
 
 clearvars -except glvar errorCode image_stack OutputError hgui framerate_max hgui;
@@ -721,6 +746,7 @@ if(glvar.camera_open==1)
 end
 %clear glvar;
 unloadlibrary('PCO_CAM_RECORDER')
+
 
 function HistWindow_CloseRequestFcn(hObject,~)
 hgui=getappdata(0,'hgui');
