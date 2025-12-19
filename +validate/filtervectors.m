@@ -72,7 +72,7 @@ if size(resultslist,2)>=frame
 			u(nanMask_u)=0;
 			v(nanMask_v)=0;
 			roi = images.roi.Freehand('Position',velrect_freehand);
-			tf = inROI(roi,u*calu,v*calv);
+			tf = inROI(roi,double(u*calu),double(v*calv));
 			%restore nans from previous filters
 			u(nanMask_u)=NaN;
 			v(nanMask_v)=NaN;
