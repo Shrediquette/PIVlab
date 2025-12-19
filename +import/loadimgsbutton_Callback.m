@@ -351,11 +351,20 @@ if ~isequal(path,0)
 
             %Clear all things
             validate.clear_vel_limit_Callback([],[]) %clear velocity limits
+
+
+            gui.put('cam_use_calibration',0);
+            handles.calib_usecalibration.Value = 0;
+            gui.put('cameraParams',[]);
+            gui.put('cam_selected_target_images',[]);
+
             new_img_size=size(import.get_img(1));
             if pcopanda_dbl_image
                 new_img_size(1)=new_img_size(1)/2;
             end
+
             gui.put('expected_image_size',new_img_size);
+
             if old_img_size ~= 0%ROI should be cleared only when image size of loaded imgs is different from before...
                 if new_img_size(1) ~= old_img_size(1) || new_img_size(2) ~= old_img_size(2)
                     roi.clear_roi_Callback

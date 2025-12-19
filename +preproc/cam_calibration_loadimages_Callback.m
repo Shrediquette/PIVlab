@@ -1,4 +1,5 @@
 function cam_calibration_loadimages_Callback(~, ~, ~)
+handles=gui.gethand;
 [cam_selected_target_images,location]=uigetfile(...
     {'*.bmp;*.tif;*.tiff;*.jpg;*.png','Image files';
    '*.bmp','Bitmaps'; ...
@@ -10,4 +11,5 @@ function cam_calibration_loadimages_Callback(~, ~, ~)
 if ~isempty(cam_selected_target_images)
     pathfiles=fullfile(location,cam_selected_target_images);
     gui.put('cam_selected_target_images',pathfiles)
+    handles.calib_usecalibration.Value = 0;
 end

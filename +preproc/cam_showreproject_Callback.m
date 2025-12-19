@@ -8,5 +8,5 @@ if ~isempty(cameraParams) && ~isempty (cam_selected_target_images)
     nexttile
     showExtrinsics(cameraParams)%,'Parent',gui.retr('pivlab_axis'));
     nexttile
-    showReprojectionErrors(cameraParams);
+    showReprojectionErrors(cameraParams,'BarGraph');
 end

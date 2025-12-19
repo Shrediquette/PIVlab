@@ -2,49 +2,49 @@ function generate_BG_img
 handles=gui.gethand;
 bg_operation=0;
 if get(handles.bg_subtract,'Value')==2 %subtract mean value
-	bg_operation=2;
+    bg_operation=2;
 elseif get(handles.bg_subtract,'Value')==3 %subtract minimum vlaue
-	bg_operation=3;
+    bg_operation=3;
 end
 if get(handles.bg_subtract,'Value')>1
-	bg_img_A = gui.retr('bg_img_A');
-	bg_img_B = gui.retr('bg_img_B');
-	sequencer=gui.retr('sequencer');%Timeresolved or pairwise 0=timeres.; 1=pairwise
-	if sequencer ~= 2 % bg subtraction only makes sense with time-resolved and pairwise sequencing style, not with reference style.
-		if isempty(bg_img_A) || isempty(bg_img_B)
-			if bg_operation ==2
-				answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Background subtraction','Mean intensity background image needs to be calculated. Press ok to start.','modal',{'OK','Cancel'},'OK');
-			end
-			if bg_operation ==3
-				answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Background subtraction','Minimum intensity background image needs to be calculated. Press ok to start.','modal',{'OK','Cancel'},'OK');
-			end
-			if strcmp(answer , 'OK')
-				%disp('BG not present, calculating now')
-				%% Calculate BG for all images....
-				% read first image to determine properties
-				filepath = gui.retr('filepath');
-				framenum = gui.retr ('framenum');
-				framepart = gui.retr ('framepart');
+    bg_img_A = gui.retr('bg_img_A');
+    bg_img_B = gui.retr('bg_img_B');
+    sequencer=gui.retr('sequencer');%Timeresolved or pairwise 0=timeres.; 1=pairwise
+    if sequencer ~= 2 % bg subtraction only makes sense with time-resolved and pairwise sequencing style, not with reference style.
+        if isempty(bg_img_A) || isempty(bg_img_B)
+            if bg_operation ==2
+                answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Background subtraction','Mean intensity background image needs to be calculated. Press ok to start.','modal',{'OK','Cancel'},'OK');
+            end
+            if bg_operation ==3
+                answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Background subtraction','Minimum intensity background image needs to be calculated. Press ok to start.','modal',{'OK','Cancel'},'OK');
+            end
+            if strcmp(answer , 'OK')
+                %disp('BG not present, calculating now')
+                %% Calculate BG for all images....
+                % read first image to determine properties
+                filepath = gui.retr('filepath');
+                framenum = gui.retr ('framenum');
+                framepart = gui.retr ('framepart');
 
-				if gui.retr('video_selection_done') == 0
-					[~,~,ext] = fileparts(filepath{1});
-					if strcmp(ext,'.b16')
-						image1=import.f_readB16(filepath{1});
-						image2=import.f_readB16(filepath{2});
-						imagesource='b16_image';
-					else
-						image1=import.imread_wrapper(filepath{1},framenum(1),framepart(1,:));
-						image2=import.imread_wrapper(filepath{2},framenum(2),framepart(2,:));
-						imagesource='normal_pixel_image';
-					end
-				else
-					video_reader_object = gui.retr('video_reader_object');
-					video_frame_selection=gui.retr('video_frame_selection');
-					image1 = read(video_reader_object,video_frame_selection(1));
-					image2 = read(video_reader_object,video_frame_selection(2));
-					imagesource='from_video';
-				end
-				classimage=class(image1); %memorize the original image format (double, uint8 etc)
+                if gui.retr('video_selection_done') == 0
+                    [~,~,ext] = fileparts(filepath{1});
+                    if strcmp(ext,'.b16')
+                        image1=import.f_readB16(filepath{1});
+                        image2=import.f_readB16(filepath{2});
+                        imagesource='b16_image';
+                    else
+                        image1=import.imread_wrapper(filepath{1},framenum(1),framepart(1,:));
+                        image2=import.imread_wrapper(filepath{2},framenum(2),framepart(2,:));
+                        imagesource='normal_pixel_image';
+                    end
+                else
+                    video_reader_object = gui.retr('video_reader_object');
+                    video_frame_selection=gui.retr('video_frame_selection');
+                    image1 = read(video_reader_object,video_frame_selection(1));
+                    image2 = read(video_reader_object,video_frame_selection(2));
+                    imagesource='from_video';
+                end
+                classimage=class(image1); %memorize the original image format (double, uint8 etc)
 
                 if size(image1,3)>1
                     if size(image1,3)>3
@@ -56,10 +56,10 @@ if get(handles.bg_subtract,'Value')>1
                     colorimg=1;
                 else
                     colorimg=0;
-				end
-				counter=1;
+                end
+                counter=1;
 
-				%{
+                %{
 				%convert all image types to double, ranging from 0...1
 				if strcmp(classimage,'double')==1 %double stays double
 					%do nothing
@@ -73,53 +73,53 @@ if get(handles.bg_subtract,'Value')>1
 					image1=double(image1)/255;
 					image2=double(image2)/255;
 				end
-				%}
+                %}
 
-				image1=double(image1);
-				image2=double(image2);
+                image1=double(image1);
+                image2=double(image2);
 
-				if sequencer==0 %time-resolved
-					start_bg=2;
-					skip_bg=1;
-				else
-					start_bg=3;
-					skip_bg=2;
-				end
-				%perform image addition
-				%if timeresolved: generate only one background image from all
-				%images
-				%if not: generate two background images. One from even frames,
-				%one from odd frames
-				gui.toolsavailable(0,'Busy, please wait...')
-				updatecntr=0;
+                if sequencer==0 %time-resolved
+                    start_bg=2;
+                    skip_bg=1;
+                else
+                    start_bg=3;
+                    skip_bg=2;
+                end
+                %perform image addition
+                %if timeresolved: generate only one background image from all
+                %images
+                %if not: generate two background images. One from even frames,
+                %one from odd frames
+                gui.toolsavailable(0,'Busy, please wait...')
+                updatecntr=0;
 
-				%das innere zu einer function machen und außen parfor...?
-				%als erstes: normaler for loop erstellt feste Liste mit Dateinamen.
-				%aus denen holt sich parfor loop die infos
-				%loop unten kann so bleiben wie er ist, lädt aber nicht bilder, sondern schreibt dateinamen in liste
+                %das innere zu einer function machen und außen parfor...?
+                %als erstes: normaler for loop erstellt feste Liste mit Dateinamen.
+                %aus denen holt sich parfor loop die infos
+                %loop unten kann so bleiben wie er ist, lädt aber nicht bilder, sondern schreibt dateinamen in liste
 
-				for i=start_bg:skip_bg:size(filepath,1)
-					counter=counter+1; %counts the amount of images --> do that elsewhere
-					%% update progress bar
-					updatecntr=updatecntr+1;
-					if updatecntr==5
-						gui.update_progress((round(i/size(filepath,1)*100)))
-						%set(handles.preview_preprocess, 'String', ['Progress: ' num2str(round(i/size(filepath,1)*99)) ' %']);drawnow expose;
-						updatecntr=0;
-					end
-					%% read image 1 and 2, different functions for different image types
-					if strcmp('b16_image',imagesource)
-						image_to_add1 = import.f_readB16(filepath{i}); %will be double
-						if sequencer==1 %not time-resolved
-							image_to_add2 = import.f_readB16(filepath{i+1});
-						end
-					elseif strcmp('normal_pixel_image',imagesource)
-						image_to_add1 = import.imread_wrapper(filepath{i},framenum(i),framepart(i,:));
-						if sequencer==1 %not time-resolved
-							image_to_add2 = import.imread_wrapper(filepath{i+1},framenum(i+1),framepart(i+1,:)); %will be double or uint8
-						end
-					elseif strcmp('from_video',imagesource)
-						image_to_add1 = read(video_reader_object,video_frame_selection(i));
+                for i=start_bg:skip_bg:size(filepath,1)
+                    counter=counter+1; %counts the amount of images --> do that elsewhere
+                    %% update progress bar
+                    updatecntr=updatecntr+1;
+                    if updatecntr==5
+                        gui.update_progress((round(i/size(filepath,1)*100)))
+                        %set(handles.preview_preprocess, 'String', ['Progress: ' num2str(round(i/size(filepath,1)*99)) ' %']);drawnow expose;
+                        updatecntr=0;
+                    end
+                    %% read image 1 and 2, different functions for different image types
+                    if strcmp('b16_image',imagesource)
+                        image_to_add1 = import.f_readB16(filepath{i}); %will be double
+                        if sequencer==1 %not time-resolved
+                            image_to_add2 = import.f_readB16(filepath{i+1});
+                        end
+                    elseif strcmp('normal_pixel_image',imagesource)
+                        image_to_add1 = import.imread_wrapper(filepath{i},framenum(i),framepart(i,:));
+                        if sequencer==1 %not time-resolved
+                            image_to_add2 = import.imread_wrapper(filepath{i+1},framenum(i+1),framepart(i+1,:)); %will be double or uint8
+                        end
+                    elseif strcmp('from_video',imagesource)
+                        image_to_add1 = read(video_reader_object,video_frame_selection(i));
                         if sequencer==1 %not time-resolved
                             image_to_add2 = read(video_reader_object,video_frame_selection(i+1));
                         end
@@ -142,11 +142,11 @@ if get(handles.bg_subtract,'Value')>1
                     end
 
                     image_to_add1=double(image_to_add1);
-					if sequencer==1 %not time-resolved
-						image_to_add2=double(image_to_add2);
-					end
+                    if sequencer==1 %not time-resolved
+                        image_to_add2=double(image_to_add2);
+                    end
 
-					%{
+                    %{
 					if strcmp(classimage,'double')==1
 						image_to_add1=image_to_add1;
 						if sequencer==1 %not time-resolved
@@ -173,60 +173,60 @@ if get(handles.bg_subtract,'Value')>1
 						end
 					end
 					%now everything is double [0...1]
-					%}
+                    %}
 
 
 
-					%% check if image size matches other images
-					% remove this, takes only time
-					img_size_info1=size(image1);
-					img_size_info2=size(image_to_add1);
-					if img_size_info1(1) ~= img_size_info2(1) || img_size_info1(2) ~= img_size_info2(2)
-                		gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: All images in a session MUST have the same size!','modal');
-						break
-					end
+                    %% check if image size matches other images
+                    % remove this, takes only time
+                    img_size_info1=size(image1);
+                    img_size_info2=size(image_to_add1);
+                    if img_size_info1(1) ~= img_size_info2(1) || img_size_info1(2) ~= img_size_info2(2)
+                        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: All images in a session MUST have the same size!','modal');
+                        break
+                    end
 
-					%% sum images
-					if bg_operation==2
-						image1=image1 +image_to_add1;
-					end
-					if bg_operation==3
-						image1 = min(image1, image_to_add1);
-					end
+                    %% sum images
+                    if bg_operation==2
+                        image1=image1 +image_to_add1;
+                    end
+                    if bg_operation==3
+                        image1 = min(image1, image_to_add1);
+                    end
 
-					if sequencer==1 %not time-resolved
-						img_size_info1=size(image2);
-						img_size_info2=size(image_to_add2);
-						if img_size_info1(1) ~= img_size_info2(1) || img_size_info1(2) ~= img_size_info2(2)
-                    		gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: All images in a session MUST have the same size!','modal');
-							break
-						end
-						if bg_operation==2
-							image2=image2+image_to_add2;
-						end
-						if bg_operation==3
-							image2 = min(image2, image_to_add2);
-						end
-					end
-				end %of for loop and image summing
+                    if sequencer==1 %not time-resolved
+                        img_size_info1=size(image2);
+                        img_size_info2=size(image_to_add2);
+                        if img_size_info1(1) ~= img_size_info2(1) || img_size_info1(2) ~= img_size_info2(2)
+                            gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: All images in a session MUST have the same size!','modal');
+                            break
+                        end
+                        if bg_operation==2
+                            image2=image2+image_to_add2;
+                        end
+                        if bg_operation==3
+                            image2 = min(image2, image_to_add2);
+                        end
+                    end
+                end %of for loop and image summing
 
 
-				%divide the sum by the amount of summed images
-				if bg_operation==2
-					image1_bg=image1/counter;
-					if sequencer==1 %not time-resolved
-						image2_bg=image2/counter;
-					end
-				end
+                %divide the sum by the amount of summed images
+                if bg_operation==2
+                    image1_bg=image1/counter;
+                    if sequencer==1 %not time-resolved
+                        image2_bg=image2/counter;
+                    end
+                end
 
-				if bg_operation==3
-					image1_bg=image1;
-					if sequencer==1 %not time-resolved
-						image2_bg=image2;
-					end
-				end
+                if bg_operation==3
+                    image1_bg=image1;
+                    if sequencer==1 %not time-resolved
+                        image2_bg=image2;
+                    end
+                end
 
-				%{
+                %{
 				%Convert back to original image class, if not double anyway
 				if strcmp(classimage,'uint8')==1 %#ok<*STISA>
 					image1_bg=uint8(image1_bg*255);
@@ -246,47 +246,53 @@ if get(handles.bg_subtract,'Value')>1
 						image2_bg=uint16(image2_bg*65535);
 					end
 				end
-				%}
-				%Convert back to original image class, if not double anyway
-				if strcmp(classimage,'uint8')==1 %#ok<*STISA>
-					image1_bg=uint8(image1_bg);
-					if sequencer==1 %not time-resolved
-						image2_bg=uint8(image2_bg);
-					end
-				end
-				if strcmp(classimage,'single')==1
-					image1_bg=single(image1_bg);
-					if sequencer==1 %not time-resolved
-						image2_bg=single(image2_bg);
-					end
-				end
-				if strcmp(classimage,'uint16')==1
-					image1_bg=uint16(image1_bg);
-					if sequencer==1 %not time-resolved
-						image2_bg=uint16(image2_bg);
-					end
-				end
+                %}
+                %Convert back to original image class, if not double anyway
+                if strcmp(classimage,'uint8')==1 %#ok<*STISA>
+                    image1_bg=uint8(image1_bg);
+                    if sequencer==1 %not time-resolved
+                        image2_bg=uint8(image2_bg);
+                    end
+                end
+                if strcmp(classimage,'single')==1
+                    image1_bg=single(image1_bg);
+                    if sequencer==1 %not time-resolved
+                        image2_bg=single(image2_bg);
+                    end
+                end
+                if strcmp(classimage,'uint16')==1
+                    image1_bg=uint16(image1_bg);
+                    if sequencer==1 %not time-resolved
+                        image2_bg=uint16(image2_bg);
+                    end
+                end
 
-				%make results accessible to the rest of the GUI:
-				gui.put('bg_img_A',image1_bg);
-				if sequencer==1 %not time-resolved
-					gui.put('bg_img_B',image2_bg);
-				else
-					gui.put('bg_img_B',image1_bg); %timeresolved --> same bg image for a and b
-				end
-				set(handles.preview_preprocess, 'String', 'Apply and preview current frame');drawnow;
-				gui.update_progress(0)
-				gui.toolsavailable(1)
-			else % user has checkbox enabled, but doesn't want to calculate the background...
-				set(handles.bg_subtract,'Value',1);
-			end
+                %make results accessible to the rest of the GUI:
 
-		else
-			%disp('BG exists')
-		end
+                image1_bg = preproc.cam_undistort(image1_bg,'cubic');
+                if sequencer==1 %not time-resolved
+                    image2_bg = preproc.cam_undistort(image2_bg,'cubic');
+                end
 
-	else
-		set(handles.bg_subtract,'Value',1);
-		gui.custom_msgbox('warn',getappdata(0,'hgui'),'Not available',['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'],'modal');
-	end
+                gui.put('bg_img_A',image1_bg);
+                if sequencer==1 %not time-resolved
+                    gui.put('bg_img_B',image2_bg);
+                else
+                    gui.put('bg_img_B',image1_bg); %timeresolved --> same bg image for a and b
+                end
+                set(handles.preview_preprocess, 'String', 'Apply and preview current frame');drawnow;
+                gui.update_progress(0)
+                gui.toolsavailable(1)
+            else % user has checkbox enabled, but doesn't want to calculate the background...
+                set(handles.bg_subtract,'Value',1);
+            end
+
+        else
+            %disp('BG exists')
+        end
+
+    else
+        set(handles.bg_subtract,'Value',1);
+        gui.custom_msgbox('warn',getappdata(0,'hgui'),'Not available',['Background removal is only available with the following sequencing styles:' sprintf('\n') '* Time resolved: [A+B], [B+C], [C+D], ...' sprintf('\n') '* Pairwise: [A+B], [C+D], [E+F], ...'],'modal');
+    end
 end

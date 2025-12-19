@@ -22,12 +22,14 @@ m4 = uimenu(m1,'Label','Exit','Separator','on','Callback',@gui.exitpivlab_Callba
 m51 = uimenu(MainWindow,'Label','Image acquisition');
 uimenu(m51,'Label','Capture PIV images','Callback',@acquisition.capture_images_Callback);
 m5 = uimenu(MainWindow,'Label','Image settings');
-uimenu(m5,'Label','Define region of interest (ROI)','Callback',@roi.img_ROI_Callback,'Accelerator','E');
-uimenu(m5,'Label','Define masks to exclude regions from analysis','Callback',@mask.img_mask_new_Callback);
-uimenu(m5,'Label','Image pre-processing','Callback',@preproc.Uielement_Callback,'Accelerator','I');
 m5_1=uimenu(m5,'Label','Camera calibration and rectification');
 uimenu(m5_1,'Label','Camera calibration','Callback',@preproc.cam_calibration_Callback);
 uimenu(m5_1,'Label','Image rectification','Callback',@preproc.cam_rectification_Callback);
+uimenu(m5,'Label','Image pre-processing','Callback',@preproc.Uielement_Callback,'Accelerator','I');
+
+uimenu(m5,'Label','Define region of interest (ROI)','Callback',@roi.img_ROI_Callback,'Accelerator','E');
+uimenu(m5,'Label','Define masks to exclude regions from analysis','Callback',@mask.img_mask_new_Callback);
+
 m6 = uimenu(MainWindow,'Label','Analysis');
 uimenu(m6,'Label','PIV settings','Callback',@piv.sett_Callback,'Accelerator','S');
 uimenu(m6,'Label','ANALYZE!','Callback',@piv.do_analys_Callback,'Accelerator','A');
