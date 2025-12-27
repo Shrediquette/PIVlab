@@ -127,41 +127,6 @@ end
 
 %{
 
-keyboard
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-% View reprojection errors
-%h1=figure; showReprojectionErrors(cameraParams);
-
-
-
-
-figure;
-showExtrinsics(cameraParams,'Parent',gui.retr('pivlab_axis'));
-figure; 
-imshow(imageFileNames{1}); 
-hold on;
-plot(imagePoints(:,1,1), imagePoints(:,2,1),'go');
-plot(cameraParams.ReprojectedPoints(:,1,1),cameraParams.ReprojectedPoints(:,2,1),'r+');
-legend('Detected Points','ReprojectedPoints');
-hold off;
-%% undistort image
-I = imread(imageFileNames{1});
-J1 = undistortImage(I,cameraParams,'cubic','OutputView','valid');
-figure;imagesc(I);figure;imagesc(J1)
-
 
 %% another functionality: warp two images together when I have an image of a charuco board.
 %{

@@ -854,8 +854,12 @@ setpref('uipickfiles','figure_position',fig_pos)
 
     function clicknav(varargin)
         %value = get(navlist,'Value');
-        value=navlist.Selection(:,1);
-        nval = length(value);
+        try
+            value=navlist.Selection(:,1);
+            nval = length(value);
+        catch
+            nval=0;
+        end
         dbl_click_fcn = @add;
         switch nval
             case 0

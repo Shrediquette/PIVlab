@@ -2291,6 +2291,27 @@ handles.calib_viewtype = uicontrol(handles.calib_imagedata,'Style','popupmenu','
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
 handles.calib_usecalibration = uicontrol(handles.calib_imagedata,'Style','checkbox','String','Enable camera calibration', 'Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_usecalibration','TooltipString','Extract data for all frames of the current session','Callback', @preproc.cam_enable_cam_calib_Callback);
 
+%% camera rectification
+handles.multip27 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Image rectification', 'Tag','multip27','fontweight','bold');
+parentitem=get(handles.multip27, 'Position');
+item=[0 0 0 0];
+
+item=[0 item(2)+item(4) parentitem(3) 32];
+handles.rect_imagedata = uipanel(handles.multip27, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Rectification image data', 'Tag','rect_imagedata','fontweight','bold');
+
+parentitem=get(handles.rect_imagedata, 'Position');
+item=[0 0 0 0];
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
+handles.rect_load_imgs = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Load target image','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_loadimages_Callback,'Tag','rect_load_imgs','TooltipString','Load images of the calibration target');
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
+handles.rect_show_points = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Show detected markers','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_points_Callback,'Tag','rect_show_points','TooltipString','Load images of the calibration target');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
+handles.calib_userectification = uicontrol(handles.rect_imagedata,'Style','checkbox','String','Enable image rectification', 'Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_userectification','TooltipString','Extract data for all frames of the current session','Callback', @preproc.cam_enable_cam_rectification_Callback);
+
+
 
 %% Image acquisition: load last device and COM port
 try

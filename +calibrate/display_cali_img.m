@@ -19,6 +19,15 @@ if get(handles.optimize_calib_img,'value')==1
 		end
 	end
 end
+%%undistort calibration image (treat it the same way as the PIV images)
+caliimg = preproc.cam_undistort(caliimg,'cubic');
+data_size=gui.retr('expected_image_size');
+if ~isempty (data_size)
+    if size(caliimg,1) ~= data_size(1) || size(caliimg,2) ~= data_size(2)
+        gui.custom_msgbox('warn',getappdata(0,'hgui'),'Size inconsistent',{'Your calibration image has a size that differs from your PIV data. Usually, calibration images and PIV data must have identical size.' '' 'Probably your calibration will be incorrect.'},'modal');
+    end
+end
+
 pivlab_axis=gui.retr('pivlab_axis');
 image(caliimg, 'parent',pivlab_axis, 'cdatamapping', 'scaled');
 colormap('gray');

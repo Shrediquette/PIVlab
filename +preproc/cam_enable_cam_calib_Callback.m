@@ -17,19 +17,6 @@ if isempty (cameraParams)
 end
 cam_selected_target_images = gui.retr('cam_selected_target_images');
 
-%{
-if ~isempty (cameraParams)
-    A = gui.retr('expected_image_size') %wird sich ändern wenn undistortion angeschaltet.
-    B = cameraParams.ImageSize; %enthält immer die größe des Originalpixelbildes.
-    if A(1)==B(1) && A(2)==B(2)
-    else
-        gui.put('cam_use_calibration',0);
-        handles.calib_usecalibration.Value = 0;
-        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','The calibration target images and the PIV images do not have the same size.','modal')
-        return
-    end
-end
-%}
 if ~strcmpi(caller,'calib_viewtype')
     res=gui.custom_msgbox('msg',getappdata(0,'hgui'),'Warning','Masks, ROI, background images, and results will be reset when changing this setting. Continue?','modal',{'OK','Cancel'},'OK');
 else
@@ -76,6 +63,10 @@ end
 
 %% check what the image size will be after image undistortion
 if handles.calib_usecalibration.Value ==1
+    
+    handles.calib_userectification.Value =0; %new cam calib disables existing rectification.
+    gui.put('cam_use_rectification',0);
+    
     % wir müssen hier schon das erste Bild laden um die echte Dateigröße zu bekommen. Dann berechnen wie sich die ändert, dann expected image size setzen.
     gui.put('cam_use_calibration',0); %so we get the raw image without any undistortion
     [currentimage,~] = import.get_img(1);
@@ -93,25 +84,17 @@ if handles.calib_usecalibration.Value ==1
         gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Calibration images and PIV images must have identical size.','modal');
         return
     end
-
-
-
     expected_image_size_after_camera_calibration = size(preproc.cam_undistort(currentimage,'cubic'));
-    expected_image_size_after_camera_calibration=expected_image_size_after_camera_calibration(1:2)
-    
-    'darf ich das hier setzen...? Was passiert dann?'
+    expected_image_size_after_camera_calibration=expected_image_size_after_camera_calibration(1:2);
     gui.put('expected_image_size',expected_image_size_after_camera_calibration);
-
 else
     if ~isempty(gui.retr('filepath'))
         gui.put('cam_use_calibration',0);
+        gui.put('expected_image_size',[]);
         [currentimage,~] = import.get_img(1);
         expected_image_size = size(currentimage);
         expected_image_size=expected_image_size(1:2);
         gui.put('expected_image_size',expected_image_size);
     end
 end
-'expected_image_size'
-gui.retr('expected_image_size')
-
 gui.sliderdisp(gui.retr('pivlab_axis'));

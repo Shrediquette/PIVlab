@@ -18,13 +18,7 @@ if ~isequal(filename,0)
 		caliimg=import.f_readB16(fullfile(pathname, filename));
 	else
 		caliimg=imread(fullfile(pathname, filename));
-	end
-	data_size=gui.retr('expected_image_size');
-	if ~isempty (data_size)
-		if size(caliimg,1) ~= data_size(1) || size(caliimg,2) ~= data_size(2)
-			gui.custom_msgbox('warn',getappdata(0,'hgui'),'Size inconsistent',{'Your calibration image has a size that differs from your PIV data. Usually, calibration images and PIV data must have identical size.' '' 'Probably your calibration will be incorrect.'},'modal');
-		end
-	end
+    end
 	gui.put('caliimg', caliimg);
 	gui.put('cali_folder', pathname);
 	calibrate.display_cali_img (caliimg)
