@@ -19,10 +19,8 @@ else
     end
 end
 
-
-rows 
 if ~isempty(expected_image_size)
-cols=[1,expected_image_size(2)]
+    cols=[1,expected_image_size(2)];
 else
-   cols= []
+    cols= [];
 end

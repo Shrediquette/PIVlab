@@ -26,7 +26,7 @@ elseif image_display_type==2 %black
 elseif image_display_type==3 %white
 	image(cat(3, (currentimage+1)*inf, (currentimage+1)*inf, (currentimage+1)*inf), 'parent',target_axis, 'cdatamapping', 'scaled');
 end
-disp(['Size of the image currently being display via sliderdisp: ' num2str(size(currentimage))])
+%disp(['Size of the image currently being display via sliderdisp: ' num2str(size(currentimage))])
 
 colormap('gray');
 axis image
