@@ -107,11 +107,16 @@ if ~isequal(path,0)
 
     pcopanda_dbl_image=0;
     %if multitiff 	 %check if frames captured by pco panda as double image array.
-    temp_info=imfinfo(path(1).name);
-    if isfield(temp_info,'Software')
-        if strncmp (temp_info(1).Software,'PCO_Recorder',10)
-            pcopanda_dbl_image=1;
+    [~,~,ext] = fileparts(path(1).name);
+    if ~strcmpi(ext,'.b16')
+        temp_info=imfinfo(path(1).name);
+        if isfield(temp_info,'Software')
+            if strncmp (temp_info(1).Software,'PCO_Recorder',10)
+                pcopanda_dbl_image=1;
+            end
         end
+    else
+        pcopanda_dbl_image=0;
     end
 
     if pcopanda_dbl_image==1 && sequencer ~=1

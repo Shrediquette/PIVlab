@@ -1,4 +1,8 @@
 function var = retr(name)
-hgui=getappdata(0,'hgui');
-var=getappdata(hgui, name);
-
+try
+    hgui=getappdata(0,'hgui');
+    var=getappdata(hgui, name);
+catch
+    var=[];
+    disp('bug in retr')
+end

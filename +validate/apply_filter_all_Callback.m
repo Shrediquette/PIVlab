@@ -101,8 +101,8 @@ if ~isempty(resultslist)
 			typevector_original(num_frames_to_process-1)={[]};
 			resultslist(1,num_frames_to_process-1)={[]};
 		end
-		parfor i=1:num_frames_to_process-1 %without parallel processing toolbox, this is just a normal for loop.
-			if ~isempty(x(i))
+        parfor i=1:num_frames_to_process-1 %without parallel processing toolbox, this is just a normal for loop.
+            if ~isempty(x(i))
 				if do_contrast_filter == 1 || do_bright_filter == 1
 					%% load images in a parfor loop
 					[~,~,ext] = fileparts(slicedfilepath1{i});
@@ -110,8 +110,8 @@ if ~isempty(resultslist)
 						currentimage1=import.f_readB16(slicedfilepath1{i});
 						currentimage2=import.f_readB16(slicedfilepath2{i});
 					else
-						currentimage1=import.imread_wrapper(slicedfilepath1{i},slicedframenum1(i),slicedframepart1(i,:))
-						currentimage2=import.imread_wrapper(slicedfilepath2{i},slicedframenum2(i),slicedframepart2(i,:))
+						currentimage1=import.imread_wrapper(slicedfilepath1{i},slicedframenum1(i),slicedframepart1(i,:));
+						currentimage2=import.imread_wrapper(slicedfilepath2{i},slicedframenum2(i),slicedframepart2(i,:));
 					end
                     rawimageA=currentimage1;
                     rawimageB=currentimage2;

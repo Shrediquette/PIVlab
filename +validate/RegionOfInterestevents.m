@@ -12,7 +12,7 @@ if strcmpi('vel_limit_ROI_freehand',src.Tag)
 			scatplot=src.Parent.Children.findobj('Type','Scatter');
 			xdata=scatplot.XData;
 			ydata=scatplot.YData;
-			tf = inROI(src,xdata,ydata);
+			tf = inROI(src,double(xdata),double(ydata));
 			CData=[1-double(tf) double(tf) double(tf)*0];
 			set(scatplot,'CData',CData);
 	end
@@ -31,7 +31,7 @@ elseif strcmpi('vel_limit_ROI',src.Tag)
 			ydata=scatplot.YData;
 			%xdata(isnan(xdata))=[];
 			%ydata(isnan(ydata))=[];
-			tf = inROI(src,xdata,ydata);
+			tf = inROI(src,double(xdata),double(ydata));
 			CData=[1-double(tf) double(tf) double(tf)*0];
 			set(scatplot,'CData',CData,'XData',xdata,'YData',ydata);
 	end

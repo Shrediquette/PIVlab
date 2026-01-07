@@ -18,9 +18,10 @@ else
         image_data = image_data (rows(1):rows(2),:,:);
     end
 end
-
+%{
 if ~isempty(expected_image_size)
     cols=[1,expected_image_size(2)];
 else
     cols= [];
 end
+%}

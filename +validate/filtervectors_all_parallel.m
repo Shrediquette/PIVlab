@@ -35,12 +35,12 @@ if ~isempty(x)
 end
 
 % freehand velocity limit filter (new in v3.10)
-if ~isempty(roi_freehand)
+if ~isempty(roi_freehand) && ~isempty(u)
 	nanMask_u = isnan(u); % Define nan mask
 	nanMask_v = isnan(v); % Define nan mask
 	u(nanMask_u)=0;
 	v(nanMask_v)=0;
-	tf = inROI(roi_freehand,u*calu,v*calv);
+	tf = inROI(roi_freehand,double(u*calu),double(v*calv));
 	%restore nans from previous filters
 	u(nanMask_u)=NaN;
 	v(nanMask_v)=NaN;

@@ -123,6 +123,7 @@ if get(handles.bg_subtract,'Value')>1
                 hbar = gui.pivprogress(numel(imagelist_A),handles.preview_preprocess);
                 image1x=image1;
                 image2x=image2;
+                
                 parfor	iii=1:numel(imagelist_A)
                     image_to_add1=[];
                     image_to_add2=[];
@@ -140,6 +141,7 @@ if get(handles.bg_subtract,'Value')>1
                     elseif strcmp('from_video',imagesource)
                         disp('parallel bg calculation wird mit videoframes nicht gehen....')
                     end
+                    
                     %% convert images to a grayscale double
                     %images arrive in their original format here
                     %convert everything to grayscale and double [0...1]
