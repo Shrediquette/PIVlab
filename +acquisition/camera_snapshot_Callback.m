@@ -16,17 +16,17 @@ if ~isempty(h1)
         try
             snaptxt=text(size_img(2)/2,size_img(1)/2,'SNAPSHOT','BackgroundColor','k','Color','y','tag','captureinfo','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',24,'FontWeight','bold');
             drawnow;
-            pause(0.1)
+            pause(0.01)
             if exist('snaptxt','var')
                 snaptxt.Color='k';snaptxt.BackgroundColor='y';
             end
             drawnow;
-            pause(0.1)
+            pause(0.01)
             if exist('snaptxt','var')
                 snaptxt.Color='y';snaptxt.BackgroundColor='k';
             end
             drawnow;
-            pause(0.05)
+            pause(0.005)
         catch
         end
     end
@@ -34,5 +34,9 @@ if ~isempty(h1)
         img=img(:,:,1);
     end
     imwrite(mat2gray(img),imgA_path,'tif','Compression','none');
+    try
+        sound(audioread(fullfile('+misc','cam_shuttr.mp3')),48000);
+    catch
+    end
 end
 delete(findobj('tag','captureinfo'));

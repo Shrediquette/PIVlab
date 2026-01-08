@@ -474,6 +474,9 @@ try
                 if ~strcmpi(TriggerModeString,'oneimage_piv') %dont show the image that is captured after ROI is selected (it is only captured to measure max framerate)
                     set(image_handle_pco,'CData',(image_stack));
                     set(frame_nr_display,'String','Live image');
+                   %disp('autodetect here')
+                   %try catch here einfach drum rum.... Und dann immer ausführen
+                    %PIVlab_capture_charuco_detector(image_stack,image_handle_pco);
                 end
             end
             if strcmpi(TriggerModeString,'oneimage_calibration') || strcmpi(TriggerModeString,'oneimage_piv')

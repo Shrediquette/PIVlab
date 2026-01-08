@@ -23,6 +23,7 @@ m51 = uimenu(MainWindow,'Label','Image acquisition');
 uimenu(m51,'Label','Capture PIV images','Callback',@acquisition.capture_images_Callback);
 m5 = uimenu(MainWindow,'Label','Image settings');
 m5_1=uimenu(m5,'Label','Camera calibration and rectification');
+uimenu(m5_1,'Label','Setup marker board','Callback',@preproc.cam_marker_setup_Callback);
 uimenu(m5_1,'Label','Camera calibration','Callback',@preproc.cam_calibration_Callback);
 uimenu(m5_1,'Label','Image rectification','Callback',@preproc.cam_rectification_Callback);
 uimenu(m5,'Label','Image pre-processing','Callback',@preproc.Uielement_Callback,'Accelerator','I');
