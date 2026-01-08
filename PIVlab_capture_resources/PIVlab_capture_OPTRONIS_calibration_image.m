@@ -185,7 +185,17 @@ caxis([0 2^bitmode]); %seems to be a workaround to force preview to show full da
 displayed_img_amount=0;
 while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
 	ima = image_handle_OPTRONIS.CData;%*16; %stretch 12 bit to 16 bit
-	%% sharpness indicator
+	
+    %% live charuco
+    do_charuco_detection = gui.retr('do_charuco_detection');
+    if isempty(do_charuco_detection)
+        do_charuco_detection=0;
+    end
+    if do_charuco_detection
+        PIVlab_capture_charuco_detector(ima,PIVlab_axis,image_handle_OPTRONIS);
+    end
+    
+    %% sharpness indicator
 	sharpness_enabled = getappdata(hgui,'sharpness_enabled');
 	if sharpness_enabled == 1 % sharpness indicator
 		textx=1240;

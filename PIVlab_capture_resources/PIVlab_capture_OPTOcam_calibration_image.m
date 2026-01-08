@@ -116,6 +116,16 @@ displayed_img_amount=0;
 while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
     ima = image_handle_OPTOcam.CData;
     ima_out = bitshift(ima,4); %stretch 12 bit to 16 bit
+    
+    %% live charuco
+    do_charuco_detection = gui.retr('do_charuco_detection');
+    if isempty(do_charuco_detection)
+        do_charuco_detection=0;
+    end
+    if do_charuco_detection
+        PIVlab_capture_charuco_detector(ima_out,PIVlab_axis,image_handle_OPTOcam);
+    end
+
     %% sharpness indicator
     sharpness_enabled = getappdata(hgui,'sharpness_enabled');
     if sharpness_enabled == 1 % sharpness indicator

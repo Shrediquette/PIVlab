@@ -2281,7 +2281,7 @@ handles.multip28 = uipanel(MainWindow, 'Units','characters', 'Position', [0+marg
 parentitem=get(handles.multip28, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4) parentitem(3) 32];
+item=[0 item(2)+item(4) parentitem(3) 15];
 handles.calib_markersetup = uipanel(handles.multip28, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Properties', 'Tag','calib_markersetup','fontweight','bold');
 
 parentitem=get(handles.calib_markersetup, 'Position');
@@ -2322,6 +2322,19 @@ uicontrol(handles.calib_markersetup,'Style','text','String','Marker size:','Unit
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
 handles.calib_markersize = uicontrol(handles.calib_markersetup,'Style','edit','String','8','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_markersize','TooltipString','Select the type of calibration marker board');
+
+item=[0 0 0 0];
+parentitem=get(handles.multip28, 'Position');
+item=[0 item(2)+item(4)+15+margin parentitem(3) 5];
+handles.calib_livedetection = uipanel(handles.multip28, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Image acquisition settings', 'Tag','calib_livedetection','fontweight','bold');
+parentitem=get(handles.calib_livedetection, 'Position');
+item=[0 0 0 0];
+
+item=[0 item(2) parentitem(3) 1.5];
+handles.calib_dolivedetect = uicontrol(handles.calib_livedetection,'Style','checkbox','String','Enable live detection + storage','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_live_detect_Callback,'Tag','calib_dolivedetect','TooltipString','Do realtime marker detection and image storage.');
+
+
+
 
 %% Image acquisition: load last device and COM port
 try
