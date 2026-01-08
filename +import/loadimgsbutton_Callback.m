@@ -357,11 +357,11 @@ if ~isequal(path,0)
             %Clear all things
             validate.clear_vel_limit_Callback([],[]) %clear velocity limits
 
-
-            gui.put('cam_use_calibration',0);
-            handles.calib_usecalibration.Value = 0;
-            gui.put('cameraParams',[]);
-            gui.put('cam_selected_target_images',[]);
+			disp('should calibration data be cleared on load...?')
+            %gui.put('cam_use_calibration',0);
+            %handles.calib_usecalibration.Value = 0;
+            %gui.put('cameraParams',[]);
+            %gui.put('cam_selected_target_images',[]);
 
             new_img_size=size(import.get_img(1));
             if pcopanda_dbl_image
