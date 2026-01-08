@@ -125,7 +125,7 @@ if strcmp(camera_type,'pco_panda')
         pco_errdisp('PCO_GetHWIOSignal',errorCode);
     end
 elseif strcmp(camera_type,'pco_pixelfly')
-    disp('hier muss sicher was hin für die pixelfly...')
+    disp('hier muss sicher was hin fÃ¼r die pixelfly...')
     %no special treatment
 end
 %% camera description
@@ -196,7 +196,7 @@ end
 
 %% exposure mode (auto vs. external trigger)
 subfunc.fh_set_triggermode(hcam_ptr,triggermode); %0=auto, 2= external trigger
-subfunc.fh_set_exposure_times(hcam_ptr,exposure_time,1,0,1); %set units to µs
+subfunc.fh_set_exposure_times(hcam_ptr,exposure_time,1,0,1); %set units to Âµs
 subfunc.fh_get_triggermode(hcam_ptr);
 framerate_max=1/subfunc.fh_show_frametime(hcam_ptr);
 
@@ -466,23 +466,31 @@ try
                     set(image_handle_pco,'CData',(image_stack(act_ysize/2+1:end  ,  1:act_xsize)));
                 end
                 if ~isinf(imacount)
-                    set(frame_nr_display,'String',['Image nr.: ' int2str(ProcImgCount)]);
-                else
-                    set(frame_nr_display,'String','PIV preview');
-                end
-            else %Calibration mode
-                if ~strcmpi(TriggerModeString,'oneimage_piv') %dont show the image that is captured after ROI is selected (it is only captured to measure max framerate)
-                    set(image_handle_pco,'CData',(image_stack));
-                    set(frame_nr_display,'String','Live image');
-                   %disp('autodetect here')
-                   %try catch here einfach drum rum.... Und dann immer ausführen
-                    %PIVlab_capture_charuco_detector(image_stack,image_handle_pco);
-                end
-            end
-            if strcmpi(TriggerModeString,'oneimage_calibration') || strcmpi(TriggerModeString,'oneimage_piv')
-                break;
-            end
-            %% Additional functions that process realtime image data go here.
+					set(frame_nr_display,'String',['Image nr.: ' int2str(ProcImgCount)]);
+				else
+					set(frame_nr_display,'String','PIV preview');
+				end
+			else %Calibration mode
+				if ~strcmpi(TriggerModeString,'oneimage_piv') %dont show the image that is captured after ROI is selected (it is only captured to measure max framerate)
+					set(image_handle_pco,'CData',(image_stack));
+					set(frame_nr_display,'String','Live image');
+					%disp('autodetect here')
+					%try catch here einfach drum rum.... Und dann immer ausfÃ¼hren
+					if ~strcmpi(TriggerModeString,'oneimage_calibration')
+						do_charuco_detection = gui.retr('do_charuco_detection');
+						if isempty(do_charuco_detection)
+							do_charuco_detection=0;
+						end
+						if do_charuco_detection
+							PIVlab_capture_charuco_detector(image_stack,PIVlab_axis,image_handle_pco);
+						end
+					end
+				end
+			end
+			if strcmpi(TriggerModeString,'oneimage_calibration') || strcmpi(TriggerModeString,'oneimage_piv')
+				break;
+			end
+			%% Additional functions that process realtime image data go here.
             live_data=get(image_handle_pco,'CData');
             %% Image sharpness display
             sharpness_enabled = getappdata(hgui,'sharpness_enabled');
@@ -558,7 +566,7 @@ try
 
             %% Autofocus
             %% Lens control
-            %Sowieso machen: Nicht lineare schritte für die anzufahrenden fokuspositionen. Diese Liste vorher ausrechnen und dann nur index anspringen
+            %Sowieso machen: Nicht lineare schritte fÃ¼r die anzufahrenden fokuspositionen. Diese Liste vorher ausrechnen und dann nur index anspringen
             autofocus_enabled = getappdata(hgui,'autofocus_enabled');
             if autofocus_enabled == 1
                 delaycounter=delaycounter+1;

@@ -46,6 +46,7 @@ else
     ready=1;
 end
 if ready==1
+	gui.put('last_auto_detected_charuco_position',[])
     handles=gui.gethand;
     try
         expos=round(str2num(get(handles.ac_expo,'String'))*1000);

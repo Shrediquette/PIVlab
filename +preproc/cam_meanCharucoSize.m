@@ -127,6 +127,7 @@ avg_vert = mean(all_dy(good));
 %all_dy(good)
 
 disp('avg_vert seems incorrect often. maybe remove?')
+disp('das hier muss verbessert werden')
 
 fprintf('Detected %d columns. Avg horizontal spacing = %.3f. Avg vertical spacing = %.3f\n', ...
         numCols, avg_horiz, avg_vert);
