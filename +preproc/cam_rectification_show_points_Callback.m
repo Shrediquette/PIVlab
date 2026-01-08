@@ -3,7 +3,7 @@ handles=gui.gethand;
 cameraParams=gui.retr('cameraParams');
 cam_selected_rectification_image = gui.retr('cam_selected_rectification_image');
 if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
-    detector = vision.calibration.monocular.CharucoBoardDetector();
+    %detector = vision.calibration.monocular.CharucoBoardDetector();
     patternDims = [str2double(handles.calib_rows.String),str2double(handles.calib_columns.String)];
     if contains(handles.calib_boardtype.String{handles.calib_boardtype.Value}, 'DICT_4X4_1000')
         markerFamily = 'DICT_4X4_1000';
@@ -18,8 +18,15 @@ if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
         return
     end
     minMarkerID = 0;
-    % histeq machen von jedem Bild. Dann muss man das aber als loop mit bilddateien machen, nicht mit bilderliste... Schade.
-    [imagePoints1, ~] = detectPatternPoints(detector, cam_selected_rectification_image, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
+ 
+	%% Slower but more robust due to image preprocessing:
+	%%{
+		tmp_img=imread(cam_selected_rectification_image);
+		tmp_img=imadjust(tmp_img);
+		imagePoints1 = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
+	%%}
+    %% faster but no preproc possible
+	%[imagePoints1, ~] = detectPatternPoints(detector, cam_selected_rectification_image, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
     if isempty(imagePoints1)
         gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No ChArUco markers detected.','modal')
         return
