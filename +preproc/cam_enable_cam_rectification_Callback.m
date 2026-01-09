@@ -1,7 +1,5 @@
 function cam_enable_cam_rectification_Callback(caller,~,~)
-
 handles=gui.gethand;
-
 filepath=gui.retr('filepath');
 if size(filepath,1) <= 1 && handles.calib_userectification.Value == 1 %did the user load piv images?
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No PIV images were loaded.','modal');
@@ -17,7 +15,6 @@ if isempty (cameraParams)
 end
 cam_selected_rectification_image = gui.retr('cam_selected_rectification_image');
 
-%
 if ~strcmpi(caller,'calib_viewtype')
     res=gui.custom_msgbox('msg',getappdata(0,'hgui'),'Warning','Masks, ROI, background images, and results will be reset when changing this setting. Continue?','modal',{'OK','Cancel'},'OK');
 else
@@ -31,7 +28,6 @@ if ~strcmpi(res,'OK')
     end
     return
 end
-
 if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
     %disp('muss bei jeder Änderung eigentlich masken löschen, ROI löschen, ergebnisse löschen...')
     gui.put ('resultslist', []); %clears old results
@@ -45,7 +41,7 @@ if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
     gui.put('bg_img_A',[]);
     gui.put('bg_img_B',[]);
     set(handles.bg_subtract,'Value',1);
-   % set(handles.fileselector, 'value',1);
+    % set(handles.fileselector, 'value',1);
     set(handles.minintens, 'string', 0);
     set(handles.maxintens, 'string', 1);
     roi.clear_roi_Callback
@@ -66,7 +62,6 @@ if strcmpi (originCheckerColor,'white') && mod(str2double(handles.calib_rows.Str
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Number of rows of the ChArUco board, dim1, must be even when OriginCheckerColor is white.','modal')
     return
 end
-
 if ~isempty(cam_selected_rectification_image)
     %handles.calib_usecalibration.Value = 0;
     gui.toolsavailable(0,'Detecting markers...');drawnow;
@@ -83,31 +78,25 @@ if ~isempty(cam_selected_rectification_image)
         return
     end
     minMarkerID = 0;
-	%% Slower but more robust due to image preprocessing:
-	%%{
-	tmp_img=imread(cam_selected_rectification_image);
-	tmp_img=imadjust(tmp_img);
-	imagePoints1 = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
-	%%}
-	%% faster but no preproc possible
-	%[imagePoints1, ~] = detectPatternPoints(detector, cam_selected_rectification_image, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
-	if isempty(imagePoints1)
-		gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No ChArUco markers detected.','modal')
-		gui.toolsavailable(1)
-		return
-	end
+    %% Slower but more robust due to image preprocessing:
+    %%{
+    tmp_img=imread(cam_selected_rectification_image);
+    tmp_img=imadjust(tmp_img);
+    imagePoints1 = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
+    %%}
+    %% faster but no preproc possible
+    %[imagePoints1, ~] = detectPatternPoints(detector, cam_selected_rectification_image, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
+    if isempty(imagePoints1)
+        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No ChArUco markers detected.','modal')
+        gui.toolsavailable(1)
+        return
+    end
 end
-
 [mean_checker_size_x,mean_checker_size_y]=preproc.cam_meanCharucoSize(imagePoints1);
-
 worldPoints = patternWorldPoints("charuco-board",patternDims,(mean_checker_size_y+mean_checker_size_x)/2);%checkerSize); %checkersize muss die Größe haben, die die quadrate im eingangsbild in pixeln haben.
-
 worldPoints(isnan(imagePoints1))=NaN;
-
 imagePoints1 = rmmissing(imagePoints1); %remove missing entries... does that work simply like this? --> yes. If matching world points are also removed.
 worldPoints = rmmissing(worldPoints);
-
-
 
 if strcmpi (class(cameraParams),'cameraParameters')
     undistortedPoints = undistortPoints(imagePoints1,cameraParams.Intrinsics);
@@ -115,23 +104,17 @@ elseif strcmpi (class(cameraParams),'fisheyeParameters')
     undistortedPoints = undistortFisheyePoints(imagePoints1,cameraParams.Intrinsics);
 
 end
+rectification_tform = fitgeotform2d(undistortedPoints,worldPoints,'projective'); % standard für schräge ansicht
+%rectification_tform = fitgeotform2d(undistortedPoints,worldPoints,'polynomial',4); % langsam, aber gar nicht so schlecht, könnte für Rohre gehen...
 
-
-
-
-
-
-
-rectification_tform = fitgeotform2d(undistortedPoints,worldPoints,'projective');
 gui.put('rectification_tform',rectification_tform);
-
 gui.toolsavailable(1)
 
 %% check what the image size will be after image undistortion
 if handles.calib_userectification.Value ==1
- gui.put('expected_image_size',[]);
+    gui.put('expected_image_size',[]);
     gui.put('cam_use_rectification',1);
-     [currentimage,~] = import.get_img(1);
+    [currentimage,~] = import.get_img(1);
     expected_image_size_after_rectification = size(currentimage(:,:,1));
     gui.put('expected_image_size',expected_image_size_after_rectification);
 else
