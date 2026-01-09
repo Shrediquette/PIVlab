@@ -3,6 +3,7 @@ try
     hgui=getappdata(0,'hgui');
     var=getappdata(hgui, name);
 catch
-    var=[];
+    hgui=gcf();
+    var=getappdata(hgui, name);
     disp('bug in retr')
 end

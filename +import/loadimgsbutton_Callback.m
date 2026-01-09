@@ -17,13 +17,23 @@ try
     if isempty(pcopanda_dbl_image)
         pcopanda_dbl_image=0;
     end
+    %to determine the raw image size, we call get_img with camera
+    %undistortion und rectification DISABLED
+
+    cam_use_calibration = gui.retr('cam_use_calibration');
+    cam_use_rectification = gui.retr('cam_use_rectification');
+    gui.put('cam_use_calibration',0);
+    gui.put('cam_use_rectification',0);
     old_img_size=size(import.get_img(1));
+    gui.put('cam_use_calibration',cam_use_calibration);
+    gui.put('cam_use_rectification',cam_use_rectification);
     if pcopanda_dbl_image
         %old_img_size(1)=old_img_size(1)/2;
     end
 catch
     old_img_size=0;
 end
+
 if useGUI ==1
     if ~verLessThan('matlab','25')
         if ispc==1

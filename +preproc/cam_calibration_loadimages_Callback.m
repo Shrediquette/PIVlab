@@ -1,5 +1,4 @@
 function cam_calibration_loadimages_Callback(~, ~, ~)
-filepath=gui.retr('filepath');
 handles=gui.gethand;
 [cam_selected_target_images,location]=uigetfile(...
 	{'*.bmp;*.tif;*.tiff;*.jpg;*.png','Image files';

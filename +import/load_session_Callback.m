@@ -24,7 +24,8 @@ end
 
 if isequal(FileName,0) | isequal(PathName,0)
 elseif valid_session_file == 1
-	gui.put('expected_image_size',[])
+	%gui.put('expected_image_size',[])
+    disp('Info: Not resetting the expected image size after loading a session.') % see bottom for a method to regenerate the expected image size
 	clear iptPointerManager
 	gui.put('sessionpath',PathName );
 	gui.put('derived',[]);
@@ -41,7 +42,7 @@ elseif valid_session_file == 1
 
 	try
 		%even if a variable doesn't exist, this doesn't throw an error...
-		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu', 'calv','calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'colormap_steps', 'colormap_interpolation', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'framenum','framepart', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','algorithm_selection','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B','x_axis_direction','y_axis_direction','size_of_the_image','points_offsetx','points_offsety','offset_x_true','offset_y_true','bright_filter_thresh','contrast_filter_thresh','do_bright_filter','do_contrast_filter','repeat_last','repeat_last_thresh','do_corr2_filter','corr_filter_thresh','notch_L_thresh','notch_H_thresh','notch_filter','masks_in_frame','pcopanda_dbl_image','velrect_freehand');
+		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu', 'calv','calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_choice', 'colormap_steps', 'colormap_interpolation', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'framenum','framepart', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','algorithm_selection','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize','mask_auto_box','Autolimit','minintens','maxintens','CorrQuality_nr','enhance_disp','video_selection_done','video_frame_selection','video_reader_object','bg_img_A','bg_img_B','x_axis_direction','y_axis_direction','size_of_the_image','points_offsetx','points_offsety','offset_x_true','offset_y_true','bright_filter_thresh','contrast_filter_thresh','do_bright_filter','do_contrast_filter','repeat_last','repeat_last_thresh','do_corr2_filter','corr_filter_thresh','notch_L_thresh','notch_H_thresh','notch_filter','masks_in_frame','pcopanda_dbl_image','velrect_freehand','calib_boardtype','calib_origincolor','calib_rows','calib_columns','calib_checkersize','calib_markersize','calib_dolivedetect','calib_fisheye','calib_viewtype','calib_usecalibration','calib_userectification','cam_selected_rectification_image','cam_selected_target_images','cam_use_calibration','cam_use_rectification','cameraParams','rectification_tform','expected_image_size');
 	catch
 		disp('Old version compatibility.')
 		vars=load(fullfile(PathName,FileName),'yposition', 'FileName', 'PathName', 'add_header', 'addfileinfo', 'autoscale_vec', 'caliimg', 'calu','calv', 'calxy', 'cancel', 'clahe_enable', 'clahe_size', 'colormap_steps','colormap_choice', 'colormap_interpolation', 'delimiter', 'derived', 'displaywhat', 'distance', 'enable_highpass', 'enable_intenscap', 'epsilon', 'filename', 'filepath', 'highp_size', 'homedir', 'img_not_mask', 'intarea', 'interpol_missing', 'loc_med_thresh', 'loc_median', 'manualdeletion', 'pathname', 'pointscali', 'resultslist', 'roirect', 'sequencer', 'sessionpath', 'stdev_check', 'stdev_thresh', 'stepsize', 'subpix', 'subtr_u', 'subtr_v', 'toggler', 'vectorscale', 'velrect', 'wasdisabled', 'xposition','realdist_string','time_inp_string','streamlinesX','streamlinesY','manmarkersX','manmarkersY','imginterpol','algorithm_selection','pass2','pass3','pass4','pass2val','pass3val','pass4val','step2','step3','step4','holdstream','streamlamount','streamlcolor','ismean','wienerwurst','wienerwurstsize');
@@ -248,15 +249,32 @@ elseif valid_session_file == 1
 			vars.filepath=import.Check_if_image_files_exist(vars.filepath,1);
 			img_height=size(imread(vars.filepath{1}),1); %read one file to detect image height to devide it by two later.
 			for i=1:size(vars.filepath,1)
-				framenum(i,1)=1;
-				framepart(i,1)=1;
-				framepart(i,2)=img_height;
-			end
-			gui.put ('framenum',framenum);
-			gui.put ('framepart',framepart);
-		end
-	end
-	%reset zoom
+                framenum(i,1)=1;
+                framepart(i,1)=1;
+                framepart(i,2)=img_height;
+            end
+            gui.put ('framenum',framenum);
+            gui.put ('framepart',framepart);
+        end
+    end
+    %new settings for camera calibration (v3.13)
+    try
+        handles.calib_boardtype.Value=vars.calib_boardtype;
+        handles.calib_origincolor.Value=vars.calib_origincolor;
+        handles.calib_rows.String=vars.calib_rows;
+        handles.calib_columns.String=vars.calib_columns;
+        handles.calib_checkersize.String=vars.calib_checkersize;
+        handles.calib_markersize.String=vars.calib_markersize;
+        handles.calib_dolivedetect.Value=vars.calib_dolivedetect;
+        handles.calib_fisheye.Value=vars.calib_fisheye;
+        handles.calib_viewtype.Value=vars.calib_viewtype;
+        handles.calib_usecalibration.Value=vars.calib_usecalibration;
+        handles.calib_userectification.Value=vars.calib_userectification;
+    catch
+        disp('couldnt set cam undistortion GUI elements for load_session')
+    end
+
+    %reset zoom
 	set(handles.panon,'Value',0);
 	set(handles.zoomon,'Value',0);
 	gui.put('xzoomlimit', []);
@@ -293,3 +311,19 @@ if display_hint==1 && gui.retr('batchModeActive') == 0
 	gui.custom_msgbox('warn',getappdata(0,'hgui'),'Warning','You loaded a session from an older PIVlab release. This is not recommended and may lead to display problems in the GUI.','modal');
 end
 
+%regenerate expected image size...
+%{
+cam_use_calibration = gui.retr('cam_use_calibration');
+cam_use_rectification = gui.retr('cam_use_rectification');
+gui.put('cam_use_calibration',0);
+gui.put('cam_use_rectification',0);
+new_img_size=size(import.get_img(1));
+gui.put('cam_use_calibration',cam_use_calibration);
+gui.put('cam_use_rectification',cam_use_rectification);
+
+if pcopanda_dbl_image
+    new_img_size(1)=new_img_size(1)/2;
+end
+
+gui.put('expected_image_size',new_img_size);
+%}

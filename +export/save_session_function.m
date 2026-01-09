@@ -125,7 +125,7 @@ catch
 end
 try
 	%neu v2.54
-	do_corr2_filter=get(handles.do_corr2_filter,'value');
+	do_corr2_filter=get(handles.do_corr2_filter,'value'); %#ok<*NASGU>
 	corr_filter_thresh=get(handles.corr_filter_thresh,'string');
 	notch_L_thresh=get(handles.notch_L_thresh,'string');
 	notch_H_thresh=get(handles.notch_H_thresh,'string');
@@ -147,6 +147,20 @@ try
 catch
 	disp('Could not fetch bg imgs')
 end
+
+%new settings for camera calibration (v3.13)
+calib_boardtype=handles.calib_boardtype.Value;
+calib_origincolor=handles.calib_origincolor.Value;
+calib_rows=handles.calib_rows.String;
+calib_columns=handles.calib_columns.String;
+calib_checkersize=handles.calib_checkersize.String;
+calib_markersize=handles.calib_markersize.String;
+calib_dolivedetect=handles.calib_dolivedetect.Value;
+calib_fisheye=handles.calib_fisheye.Value;
+calib_viewtype=handles.calib_viewtype.Value;
+calib_usecalibration=handles.calib_usecalibration.Value;
+calib_userectification=handles.calib_userectification.Value;
+
 
 clear handles
 clear existing_handles

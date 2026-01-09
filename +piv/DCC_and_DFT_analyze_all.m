@@ -157,18 +157,21 @@ if ok==1
 				[~,~,ext] = fileparts(slicedfilepath1{i});
 				if strcmp(ext,'.b16')
 					currentimage1=import.f_readB16(slicedfilepath1{i});
-					currentimage2=import.f_readB16(slicedfilepath2{i});
-
-				else
-					currentimage1=import.imread_wrapper(slicedfilepath1{i},slicedframenum1(i),slicedframepart1(i,:))
-					currentimage2=import.imread_wrapper(slicedfilepath2{i},slicedframenum2(i),slicedframepart2(i,:))
-				end
-				if bg_sub==1
-					if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
-						currentimage1 = rgb2gray(currentimage1)-bg_img_A;
-						currentimage2 = rgb2gray(currentimage2)-bg_img_B;
-					else
-						currentimage1 = currentimage1-bg_img_A;
+                    currentimage2=import.f_readB16(slicedfilepath2{i});
+                    currentimage1 = preproc.cam_undistort(currentimage1,'cubic');
+                    currentimage2 = preproc.cam_undistort(currentimage2,'cubic');
+                else
+                    currentimage1=import.imread_wrapper(slicedfilepath1{i},slicedframenum1(i),slicedframepart1(i,:))
+                    currentimage2=import.imread_wrapper(slicedfilepath2{i},slicedframenum2(i),slicedframepart2(i,:))
+                    currentimage1 = preproc.cam_undistort(currentimage1,'cubic');
+                    currentimage2 = preproc.cam_undistort(currentimage2,'cubic');
+                end
+                if bg_sub==1
+                    if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
+                        currentimage1 = rgb2gray(currentimage1)-bg_img_A;
+                        currentimage2 = rgb2gray(currentimage2)-bg_img_B;
+                    else
+                        currentimage1 = currentimage1-bg_img_A;
 						currentimage2 = currentimage2-bg_img_B;
 					end
 				end
@@ -246,35 +249,36 @@ if ok==1
 				%masks_in_frame=cell(size(slicedfilepath1,2),1);
 				masks_in_frame=cell(1,size(slicedfilepath1,2));
 			end
-
-
-			parfor i=1:size(slicedfilepath1,2)
+            parfor i=1:size(slicedfilepath1,2)
 				%------------------------
 				if exist(fullfile(userpath,'cancel_piv'),'file')
 					close(hbar);
 					continue
-				end
+                end
 
-				[~,~,ext] = fileparts(slicedfilepath1{i});
-				if strcmp(ext,'.b16')
-					currentimage1=import.f_readB16(slicedfilepath1{i});
-					currentimage2=import.f_readB16(slicedfilepath2{i});
-				else
-					currentimage1=import.imread_wrapper(slicedfilepath1{i},slicedframenum1(i),slicedframepart1(i,:))
-					currentimage2=import.imread_wrapper(slicedfilepath2{i},slicedframenum2(i),slicedframepart2(i,:))
-				end
+                [~,~,ext] = fileparts(slicedfilepath1{i});
+                if strcmp(ext,'.b16')
+                    currentimage1=import.f_readB16(slicedfilepath1{i});
+                    currentimage2=import.f_readB16(slicedfilepath2{i});
+                    currentimage1 = preproc.cam_undistort(currentimage1,'cubic');
+                    currentimage2 = preproc.cam_undistort(currentimage2,'cubic');
+                else
+                    currentimage1=import.imread_wrapper(slicedfilepath1{i},slicedframenum1(i),slicedframepart1(i,:));
+                    currentimage2=import.imread_wrapper(slicedfilepath2{i},slicedframenum2(i),slicedframepart2(i,:));
+                    if size(currentimage1,3)>3
+                        currentimage1=currentimage1(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
+                        currentimage2=currentimage2(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
+                    end
+                    currentimage1 = preproc.cam_undistort(currentimage1,'cubic');
+                    currentimage2 = preproc.cam_undistort(currentimage2,'cubic');
+                end
 
-				if numel(masks_in_frame)< i
-					mask_positions=cell(0);
+                if numel(masks_in_frame)< i
+                    mask_positions=cell(0);
                 else
                     mask_positions=masks_in_frame{i};
                 end
                 converted_mask=mask.convert_masks_to_binary(size(currentimage1(:,:,1)),mask_positions);
-
-                if size(currentimage1,3)>3
-                    currentimage1=currentimage1(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
-                    currentimage2=currentimage2(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
-                end
 
                 if bg_sub==1
                     if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.

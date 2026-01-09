@@ -12,7 +12,7 @@ if ~isequal(FileName,0)
 	import.read_settings (FileName,PathName) %When UI is set up, read settings.
 	gui.switchui('multip01')
 	try
-		gui.put('expected_image_size',[])
+        gui.put('expected_image_size',[])
 		gui.put('existing_handles',[]);
 		handles=gui.gethand;
 		gui.sliderrange(1)

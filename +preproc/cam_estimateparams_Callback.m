@@ -36,33 +36,33 @@ if ~isempty(cam_selected_target_images)
     end
     minMarkerID = 0;
 
-	%% Slower but more robust due to image preprocessing:
-	%%{
-	d = uiprogressdlg(gcf,'Title','ChArUco board pattern detection...','Message','Starting ChArUco board pattern detection...');
-	imagesUsed=false(numel(cam_selected_target_images),1);
-	imagePoints=[];
-	for i=1:numel(cam_selected_target_images)
-		tmp_img=imread(cam_selected_target_images{i});
-		tmp_img=imadjust(tmp_img);
-		imagePoints_single = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
-		if numel(imagePoints_single)>0
-			if numel(imagePoints)==0
-				imagePoints(:,:,end)=imagePoints_single;
-			else
-				imagePoints(:,:,end+1)=imagePoints_single;
-			end
-			imagesUsed(i)=true;
-		end
-		[~,name,ext] = fileparts(cam_selected_target_images{i});
-		percentage_detected=  round(numel(find(~isnan(imagePoints_single)))  / numel(imagePoints_single) * 100);
-		d.Message = [name ext '  -->  '  num2str(percentage_detected) ' % valid markers.' ];
-		d.Value=i/numel(cam_selected_target_images);
-	end
-	close(d)
-	%%}
-	%% Faster, but dark images are ignored:
-	%[imagePoints, imagesUsed] = detectPatternPoints(detector, cam_selected_target_images, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
-  	if isempty(imagePoints)
+    %% Slower but more robust due to image preprocessing:
+    %%{
+    d = uiprogressdlg(gcf,'Title','ChArUco board pattern detection...','Message','Starting ChArUco board pattern detection...');
+    imagesUsed=false(numel(cam_selected_target_images),1);
+    imagePoints=[];
+    for i=1:numel(cam_selected_target_images)
+        tmp_img=imread(cam_selected_target_images{i});
+        tmp_img=imadjust(tmp_img);
+        imagePoints_single = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
+        if numel(imagePoints_single)>0
+            if numel(imagePoints)==0
+                imagePoints(:,:,end)=imagePoints_single;
+            else
+                imagePoints(:,:,end+1)=imagePoints_single;
+            end
+            imagesUsed(i)=true;
+        end
+        [~,name,ext] = fileparts(cam_selected_target_images{i});
+        percentage_detected=  round(numel(find(~isnan(imagePoints_single)))  / numel(imagePoints_single) * 100);
+        d.Message = [name ext '  -->  '  num2str(percentage_detected) ' % valid markers.' ];
+        d.Value=i/numel(cam_selected_target_images);
+    end
+    close(d)
+    %%}
+    %% Faster, but dark images are ignored:
+    %[imagePoints, imagesUsed] = detectPatternPoints(detector, cam_selected_target_images, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
+    if isempty(imagePoints)
         gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No ChArUco markers detected.','modal')
         gui.toolsavailable(1)
         return
@@ -79,19 +79,19 @@ if ~isempty(cam_selected_target_images)
     % Generate world coordinates for the planar pattern keypoints
     worldPoints = generateWorldPoints(detector, 'PatternDims', patternDims, 'CheckerSize', checkerSize);
 
-	% Calibrate the camera
-	try
-		if handles.calib_fisheye.Value == 0
-			[cameraParams, imagesUsed, ~] = estimateCameraParameters(imagePoints, worldPoints, 'EstimateSkew', false, 'EstimateTangentialDistortion', true, 'NumRadialDistortionCoefficients', 2, 'WorldUnits', 'millimeters', 	'InitialIntrinsicMatrix', [], 'InitialRadialDistortion', [], 'ImageSize', [mrows, ncols]);
-		else
-			[cameraParams, imagesUsed, ~] = estimateFisheyeParameters(imagePoints, worldPoints, [mrows, ncols]);
-		end
-		gui.toolsavailable(1)
-		gui.toolsavailable(0,'Refining camera parameters...');drawnow;
+    % Calibrate the camera
+    try
+        if handles.calib_fisheye.Value == 0
+            [cameraParams, imagesUsed, ~] = estimateCameraParameters(imagePoints, worldPoints, 'EstimateSkew', false, 'EstimateTangentialDistortion', true, 'NumRadialDistortionCoefficients', 2, 'WorldUnits', 'millimeters', 	'InitialIntrinsicMatrix', [], 'InitialRadialDistortion', [], 'ImageSize', [mrows, ncols]);
+        else
+            [cameraParams, imagesUsed, ~] = estimateFisheyeParameters(imagePoints, worldPoints, [mrows, ncols]);
+        end
+        gui.toolsavailable(1)
+        gui.toolsavailable(0,'Refining camera parameters...');drawnow;
 
-		imageFileNames = imageFileNames(imagesUsed);
+        imageFileNames = imageFileNames(imagesUsed);
 
-		errors = cameraParams.ReprojectionErrors;
+        errors = cameraParams.ReprojectionErrors;
         numImages = size(errors, 3);
         meanErrorPerImage = zeros(numImages, 1);
 

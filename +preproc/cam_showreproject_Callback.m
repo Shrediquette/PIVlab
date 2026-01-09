@@ -7,10 +7,10 @@ if ~isempty(cameraParams) && ~isempty (cam_selected_target_images)
     tiledlayout(1,2)
     nexttile
     try
-	showExtrinsics(cameraParams)%,'Parent',gui.retr('pivlab_axis'));
-	catch
-		disp('Could not display fisheye Extrinsics.')
-	end
+    	showExtrinsics(cameraParams)%,'Parent',gui.retr('pivlab_axis'));
+    catch
+        disp('Could not display fisheye Extrinsics.')
+    end
     nexttile
     showReprojectionErrors(cameraParams,'BarGraph');
 end

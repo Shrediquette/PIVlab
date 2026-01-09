@@ -168,3 +168,19 @@ end
 gui.put('expected_image_size',[])
 calibrate.pixeldist_changed_Callback()
 
+%new settings for camera calibration (v3.13)
+try
+    handles.calib_boardtype.Value=calib_boardtype;
+    handles.calib_origincolor.Value=calib_origincolor;
+    handles.calib_rows.String=calib_rows;
+    handles.calib_columns.String=calib_columns;
+    handles.calib_checkersize.String=calib_checkersize;
+    handles.calib_markersize.String=calib_markersize;
+    handles.calib_dolivedetect.Value=calib_dolivedetect;
+    handles.calib_fisheye.Value=calib_fisheye;
+    handles.calib_viewtype.Value=calib_viewtype;
+    handles.calib_usecalibration.Value=calib_usecalibration;
+    handles.calib_userectification.Value=calib_userectification;
+catch
+    disp('couldnt set cam undistortion GUI elements')
+end

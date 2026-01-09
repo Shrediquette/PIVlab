@@ -117,6 +117,20 @@ if isempty(pointscali)
 	clear pointscali
 end
 
+%new settings for camera calibration (v3.13)
+calib_boardtype=handles.calib_boardtype.Value; %#ok<*NASGU>
+calib_origincolor=handles.calib_origincolor.Value;
+calib_rows=handles.calib_rows.String;
+calib_columns=handles.calib_columns.String;
+calib_checkersize=handles.calib_checkersize.String;
+calib_markersize=handles.calib_markersize.String;
+calib_dolivedetect=handles.calib_dolivedetect.Value;
+calib_fisheye=handles.calib_fisheye.Value;
+calib_viewtype=handles.calib_viewtype.Value;
+calib_usecalibration=handles.calib_usecalibration.Value;
+calib_userectification=handles.calib_userectification.Value;
+
+
 if ispc==1
 	[FileName,PathName] = uiputfile('*.mat','Save current settings as...',['PIVlab_set_' getenv('USERNAME') '.mat']);
 else

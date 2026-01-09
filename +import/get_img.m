@@ -10,7 +10,6 @@ if gui.retr('video_selection_done') == 0
         currentimage = preproc.cam_undistort(currentimage,'cubic');
         rawimage=currentimage;
     else
-        %currentimage=imread(filepath{selected},framenum(selected));
         currentimage=import.imread_wrapper(filepath{selected},framenum(selected),framepart(selected,:));
         if size(currentimage,3)>3
             currentimage=currentimage(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
@@ -51,19 +50,23 @@ expected_image_size=gui.retr('expected_image_size');
 if isempty(gui.retr('size_warning_has_been_shown'))
     gui.put('size_warning_has_been_shown',0);
 end
+%--> how does this warning help? I think I can skip it
+%%{
 if isempty(expected_image_size) %expected_image_size is empty, we have not read an image before
 %    expected_image_size = size_of_the_image;
 %    gui.put('expected_image_size',expected_image_size);
 else %expected_image_size is not empty, an image has been read before
     if 	(expected_image_size(1) ~= size_of_the_image(1) || expected_image_size(2) ~= size_of_the_image(2)) && gui.retr('size_warning_has_been_shown') == 0
-        piv.cancelbutt_Callback
-        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: All images in a session MUST have the same size!','modal');
-        gui.put('size_warning_has_been_shown',1);
-        warning off
-        recycle('off');
-        delete(fullfile(userpath,'cancel_piv'));
-        warning on
+        disp('Warning: All images in a session MUST have the same size!');
+        %piv.cancelbutt_Callback
+        %gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: All images in a session MUST have the same size!','modal');
+        %gui.put('size_warning_has_been_shown',1);
+        %warning off
+        %recycle('off');
+        %delete(fullfile(userpath,'cancel_piv'));
+        %warning on
     end
 end
+%%}
 gui.put('size_of_the_image',size_of_the_image);
 currentimage(currentimage<0)=0; %bg subtraction may yield negative
