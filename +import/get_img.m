@@ -3,25 +3,38 @@ handles=gui.gethand;
 filepath = gui.retr('filepath');
 framenum = gui.retr ('framenum');
 framepart = gui.retr ('framepart');
+view_raw=handles.calib_viewtype.Value;
+if view_raw==1
+    view='valid';
+elseif view_raw==2
+    view='same';
+elseif view_raw==3
+    view='full';
+end
+cam_use_calibration = gui.retr('cam_use_calibration');
+cam_use_rectification = gui.retr('cam_use_rectification');
+cameraParams=gui.retr('cameraParams');
+rectification_tform = gui.retr('rectification_tform');
+
 if gui.retr('video_selection_done') == 0
     [~,~,ext] = fileparts(filepath{selected});
     if strcmp(ext,'.b16')
         currentimage=import.f_readB16(filepath{selected});
-        currentimage = preproc.cam_undistort(currentimage,'cubic');
+        currentimage = preproc.cam_undistort(currentimage,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
         rawimage=currentimage;
     else
         currentimage=import.imread_wrapper(filepath{selected},framenum(selected),framepart(selected,:));
         if size(currentimage,3)>3
             currentimage=currentimage(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
         end
-        currentimage = preproc.cam_undistort(currentimage,'cubic');
+        currentimage = preproc.cam_undistort(currentimage,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
         rawimage=currentimage;
     end
 else
     video_reader_object = gui.retr('video_reader_object');
     video_frame_selection=gui.retr('video_frame_selection');
     currentimage = read(video_reader_object,video_frame_selection(selected));
-    currentimage = preproc.cam_undistort(currentimage,'cubic');
+    currentimage = preproc.cam_undistort(currentimage,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
     rawimage=currentimage;
 end
 if get(handles.bg_subtract,'Value')>1

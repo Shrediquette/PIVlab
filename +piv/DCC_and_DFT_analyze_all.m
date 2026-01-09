@@ -138,33 +138,45 @@ if ok==1
 				bg_sub=1;
 			else
 				bg_img_A=[];
-				bg_img_B=[];
-				bg_sub=0;
-			end
+                bg_img_B=[];
+                bg_sub=0;
+            end
 
-			masks_in_frame=gui.retr('masks_in_frame');
-			if isempty(masks_in_frame)
-				%masks_in_frame=cell(size(slicedfilepath1,2),1);
-				masks_in_frame=cell(1,size(slicedfilepath1,2));
-			end
+            masks_in_frame=gui.retr('masks_in_frame');
+            if isempty(masks_in_frame)
+                %masks_in_frame=cell(size(slicedfilepath1,2),1);
+                masks_in_frame=cell(1,size(slicedfilepath1,2));
+            end
+            view_raw=handles.calib_viewtype.Value;
+            if view_raw==1
+                view='valid';
+            elseif view_raw==2
+                view='same';
+            elseif view_raw==3
+                view='full';
+            end
+            cam_use_calibration = gui.retr('cam_use_calibration');
+            cam_use_rectification = gui.retr('cam_use_rectification');
+            cameraParams=gui.retr('cameraParams');
+            rectification_tform = gui.retr('rectification_tform');
 
-			parfor i=1:size(slicedfilepath1,2)
-				if exist(fullfile(userpath,'cancel_piv'),'file')
-					close(hbar);
-					continue
-				end
+            parfor i=1:size(slicedfilepath1,2)
+                if exist(fullfile(userpath,'cancel_piv'),'file')
+                    close(hbar);
+                    continue
+                end
 
-				[~,~,ext] = fileparts(slicedfilepath1{i});
-				if strcmp(ext,'.b16')
-					currentimage1=import.f_readB16(slicedfilepath1{i});
+                [~,~,ext] = fileparts(slicedfilepath1{i});
+                if strcmp(ext,'.b16')
+                    currentimage1=import.f_readB16(slicedfilepath1{i});
                     currentimage2=import.f_readB16(slicedfilepath2{i});
-                    currentimage1 = preproc.cam_undistort(currentimage1,'cubic');
-                    currentimage2 = preproc.cam_undistort(currentimage2,'cubic');
+                    currentimage1 = preproc.cam_undistort(currentimage1,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
+                    currentimage2 = preproc.cam_undistort(currentimage2,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
                 else
                     currentimage1=import.imread_wrapper(slicedfilepath1{i},slicedframenum1(i),slicedframepart1(i,:))
                     currentimage2=import.imread_wrapper(slicedfilepath2{i},slicedframenum2(i),slicedframepart2(i,:))
-                    currentimage1 = preproc.cam_undistort(currentimage1,'cubic');
-                    currentimage2 = preproc.cam_undistort(currentimage2,'cubic');
+                    currentimage1 = preproc.cam_undistort(currentimage1,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
+                    currentimage2 = preproc.cam_undistort(currentimage2,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
                 end
                 if bg_sub==1
                     if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
@@ -248,20 +260,33 @@ if ok==1
 			if isempty(masks_in_frame)
 				%masks_in_frame=cell(size(slicedfilepath1,2),1);
 				masks_in_frame=cell(1,size(slicedfilepath1,2));
-			end
+            end
+            view_raw=handles.calib_viewtype.Value;
+            if view_raw==1
+                view='valid';
+            elseif view_raw==2
+                view='same';
+            elseif view_raw==3
+                view='full';
+            end
+            cam_use_calibration = gui.retr('cam_use_calibration');
+            cam_use_rectification = gui.retr('cam_use_rectification');
+            cameraParams=gui.retr('cameraParams');
+            rectification_tform = gui.retr('rectification_tform');
+
             parfor i=1:size(slicedfilepath1,2)
-				%------------------------
-				if exist(fullfile(userpath,'cancel_piv'),'file')
-					close(hbar);
-					continue
+                %------------------------
+                if exist(fullfile(userpath,'cancel_piv'),'file')
+                    close(hbar);
+                    continue
                 end
 
                 [~,~,ext] = fileparts(slicedfilepath1{i});
                 if strcmp(ext,'.b16')
                     currentimage1=import.f_readB16(slicedfilepath1{i});
                     currentimage2=import.f_readB16(slicedfilepath2{i});
-                    currentimage1 = preproc.cam_undistort(currentimage1,'cubic');
-                    currentimage2 = preproc.cam_undistort(currentimage2,'cubic');
+                    currentimage1 = preproc.cam_undistort(currentimage1,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
+                    currentimage2 = preproc.cam_undistort(currentimage2,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
                 else
                     currentimage1=import.imread_wrapper(slicedfilepath1{i},slicedframenum1(i),slicedframepart1(i,:));
                     currentimage2=import.imread_wrapper(slicedfilepath2{i},slicedframenum2(i),slicedframepart2(i,:));
@@ -269,8 +294,8 @@ if ok==1
                         currentimage1=currentimage1(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
                         currentimage2=currentimage2(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
                     end
-                    currentimage1 = preproc.cam_undistort(currentimage1,'cubic');
-                    currentimage2 = preproc.cam_undistort(currentimage2,'cubic');
+                    currentimage1 = preproc.cam_undistort(currentimage1,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
+                    currentimage2 = preproc.cam_undistort(currentimage2,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
                 end
 
                 if numel(masks_in_frame)< i

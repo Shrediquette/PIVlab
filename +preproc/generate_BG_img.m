@@ -268,10 +268,22 @@ if get(handles.bg_subtract,'Value')>1
                 end
 
                 %make results accessible to the rest of the GUI:
+                view_raw=handles.calib_viewtype.Value;
+                if view_raw==1
+                    view='valid';
+                elseif view_raw==2
+                    view='same';
+                elseif view_raw==3
+                    view='full';
+                end
+                cam_use_calibration = gui.retr('cam_use_calibration');
+                cam_use_rectification = gui.retr('cam_use_rectification');
+                cameraParams=gui.retr('cameraParams');
+                rectification_tform = gui.retr('rectification_tform');
 
-                image1_bg = preproc.cam_undistort(image1_bg,'cubic');
+                image1_bg = preproc.cam_undistort(image1_bg,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
                 if sequencer==1 %not time-resolved
-                    image2_bg = preproc.cam_undistort(image2_bg,'cubic');
+                    image2_bg = preproc.cam_undistort(image2_bg,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
                 end
 
                 gui.put('bg_img_A',image1_bg);

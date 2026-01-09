@@ -20,7 +20,20 @@ if get(handles.optimize_calib_img,'value')==1
 	end
 end
 %%undistort calibration image (treat it the same way as the PIV images)
-caliimg = preproc.cam_undistort(caliimg,'cubic');
+view_raw=handles.calib_viewtype.Value;
+if view_raw==1
+    view='valid';
+elseif view_raw==2
+    view='same';
+elseif view_raw==3
+    view='full';
+end
+cam_use_calibration = gui.retr('cam_use_calibration');
+cam_use_rectification = gui.retr('cam_use_rectification');
+cameraParams=gui.retr('cameraParams');
+rectification_tform = gui.retr('rectification_tform');
+
+caliimg = preproc.cam_undistort(caliimg,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
 data_size=gui.retr('expected_image_size');
 if ~isempty (data_size)
     if size(caliimg,1) ~= data_size(1) || size(caliimg,2) ~= data_size(2)
