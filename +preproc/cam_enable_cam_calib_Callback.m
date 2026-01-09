@@ -1,14 +1,11 @@
 function cam_enable_cam_calib_Callback(caller,~,~)
-
 handles=gui.gethand;
-
 filepath=gui.retr('filepath');
 if size(filepath,1) <= 1 && handles.calib_usecalibration.Value == 1 %did the user load piv images?
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No PIV images were loaded.','modal');
     handles.calib_usecalibration.Value = 0;
     return
 end
-
 cameraParams=gui.retr('cameraParams');
 if isempty (cameraParams)
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','"Estimate cam parameters" or "Load parameters" needs to be performed first','modal');
@@ -31,6 +28,9 @@ if ~strcmpi(res,'OK')
     return
 end
 
+if handles.calib_usecalibration.Value == 1
+    gui.toolsavailable(0,'Applying undistortion...');drawnow;
+end
 if ~isempty (cameraParams) && ~isempty(cam_selected_target_images)
     %disp('muss bei jeder Änderung eigentlich masken löschen, ROI löschen, ergebnisse löschen...')
     gui.put ('resultslist', []); %clears old results
@@ -97,4 +97,5 @@ else
         gui.put('expected_image_size',expected_image_size);
     end
 end
+gui.toolsavailable(1);
 gui.sliderdisp(gui.retr('pivlab_axis'));

@@ -357,13 +357,17 @@ if ~isequal(path,0)
             %Clear all things
             validate.clear_vel_limit_Callback([],[]) %clear velocity limits
 
-			disp('should calibration data be cleared on load...?')
-            %gui.put('cam_use_calibration',0);
-            %handles.calib_usecalibration.Value = 0;
-            %gui.put('cameraParams',[]);
-            %gui.put('cam_selected_target_images',[]);
+    		%to determine the raw image size, we call get_img with camera
+            %undistortion und rectification DISABLED
 
+            cam_use_calibration = gui.retr('cam_use_calibration');
+            cam_use_rectification = gui.retr('cam_use_rectification');
+            gui.put('cam_use_calibration',0);
+            gui.put('cam_use_rectification',0);
             new_img_size=size(import.get_img(1));
+            gui.put('cam_use_calibration',cam_use_calibration);
+            gui.put('cam_use_rectification',cam_use_rectification);
+
             if pcopanda_dbl_image
                 new_img_size(1)=new_img_size(1)/2;
             end
@@ -373,6 +377,14 @@ if ~isequal(path,0)
             if old_img_size ~= 0%ROI should be cleared only when image size of loaded imgs is different from before...
                 if new_img_size(1) ~= old_img_size(1) || new_img_size(2) ~= old_img_size(2)
                     roi.clear_roi_Callback
+                    %camera calibration data is cleared when newly
+                    %loaded images have a different size
+                    gui.put('cam_use_calibration',0);
+                    gui.put('cam_use_rectification',0);
+                    handles.calib_usecalibration.Value = 0;
+                    handles.calib_userectification.Value = 0;
+                    gui.put('cameraParams',[]);
+                    gui.put('cam_selected_target_images',[]);
                 end
             end
 
