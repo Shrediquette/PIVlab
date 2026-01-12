@@ -4,15 +4,7 @@ if strcmpi(ext,'.tif') || strcmpi(ext,'.tiff') %for a tiff file, imread accepts 
     if isempty(rows)
         image_data=imread(filename,layernr);
     else
-        disp('achtung dieser abschnitt geändert. Effekt ist mir unklar. Abschnitt sieht so aus als wäre er nichtig.')
-        disp('BEI DUAL TIFF UND MULTITIFF WERDEN DIE ROIs FALSCH WÄHREND DER ANALYSE!!!')
-        %evtl. rausfinden wer wann was falsch bekommt per dbstack:
-        %Analysieren wer die Funktion gerade aufruft.
-        
-        %statt dem unten mache ich:
-        
         image_data=imread(filename,layernr,'PixelRegion', {rows [1,inf]}); %alle cols die es gibt.
-
         %{
         
         if ~isempty(expected_image_size)

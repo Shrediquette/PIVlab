@@ -82,7 +82,8 @@ if ~isempty(cam_selected_rectification_image)
     %%{
     tmp_img=imread(cam_selected_rectification_image);
     tmp_img=imadjust(tmp_img);
-    imagePoints1 = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
+    tmp_img=imsharpen(tmp_img);
+    imagePoints1 = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'RefineCorners',true);
     %%}
     %% faster but no preproc possible
     %[imagePoints1, ~] = detectPatternPoints(detector, cam_selected_rectification_image, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
@@ -92,7 +93,9 @@ if ~isempty(cam_selected_rectification_image)
         return
     end
 end
-[mean_checker_size_x,mean_checker_size_y]=preproc.cam_meanCharucoSize(imagePoints1);
+
+[mean_checker_size_x,mean_checker_size_y]=preproc.cam_meanCharucoSize(tmp_img,markerFamily,checkerSize,markerSize);
+
 worldPoints = patternWorldPoints("charuco-board",patternDims,(mean_checker_size_y+mean_checker_size_x)/2);%checkerSize); %checkersize muss die Größe haben, die die quadrate im eingangsbild in pixeln haben.
 worldPoints(isnan(imagePoints1))=NaN;
 imagePoints1 = rmmissing(imagePoints1); %remove missing entries... does that work simply like this? --> yes. If matching world points are also removed.
@@ -102,7 +105,6 @@ if strcmpi (class(cameraParams),'cameraParameters')
     undistortedPoints = undistortPoints(imagePoints1,cameraParams.Intrinsics);
 elseif strcmpi (class(cameraParams),'fisheyeParameters')
     undistortedPoints = undistortFisheyePoints(imagePoints1,cameraParams.Intrinsics);
-
 end
 rectification_tform = fitgeotform2d(undistortedPoints,worldPoints,'projective'); % standard für schräge ansicht
 %rectification_tform = fitgeotform2d(undistortedPoints,worldPoints,'polynomial',4); % langsam, aber gar nicht so schlecht, könnte für Rohre gehen...

@@ -9,7 +9,14 @@ if cam_use_calibration
     elseif strcmpi (class(cameraParams),'fisheyeParameters')
         %disp(['Size of the incoming image to cam_undistort: ' num2str(size(img_in))])
         %disp(['Size of the camera params: ' num2str(cameraParams.Intrinsics.ImageSize)]);
-        img_out = undistortFisheyeImage(img_in,cameraParams.Intrinsics,method,'OutputView',view,'ScaleFactor',1);
+        try
+            img_out = undistortFisheyeImage(img_in,cameraParams.Intrinsics,method,'OutputView',view,'ScaleFactor',1);
+        catch ME
+            gui.toolsavailable(1)
+            gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',ME.message,'modal');
+            img_out=img_in;
+            return
+        end
         %disp(['Size of the outgoing image from cam_undistort: ' num2str(size(img_out))])
     end
     if cam_use_rectification

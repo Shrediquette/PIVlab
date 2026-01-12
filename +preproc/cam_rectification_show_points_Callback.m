@@ -23,7 +23,8 @@ if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
 	%%{
 		tmp_img=imread(cam_selected_rectification_image);
 		tmp_img=imadjust(tmp_img);
-		imagePoints1 = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
+        tmp_img=imsharpen(tmp_img);
+		imagePoints1 = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'RefineCorners',true);
 	%%}
     %% faster but no preproc possible
 	%[imagePoints1, ~] = detectPatternPoints(detector, cam_selected_rectification_image, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
@@ -33,8 +34,8 @@ if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
     end
     imshow(imread(cam_selected_rectification_image),'Parent',gui.retr('pivlab_axis'))
     hold on
-    plot(imagePoints1(:,1),imagePoints1(:,2),'yo')
-    plot(imagePoints1(:,1),imagePoints1(:,2),'rx','MarkerSize',20)
+    plot(imagePoints1(:,1),imagePoints1(:,2),'yo','MarkerFaceColor','y','Markersize',10)
+    plot(imagePoints1(:,1),imagePoints1(:,2),'rx','MarkerSize',20,'LineWidth',2)
     hold off
 else
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Camera calibration not activated or no images for camera rectification loaded.','modal')

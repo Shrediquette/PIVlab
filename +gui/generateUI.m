@@ -2272,6 +2272,9 @@ handles.rect_load_imgs = uicontrol(handles.rect_imagedata,'Style','pushbutton','
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.rect_show_points = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Show detected markers','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_points_Callback,'Tag','rect_show_points','TooltipString','Load images of the calibration target');
 
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
+handles.rect_show_rectified = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Show rectified board','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_rectified_Callback,'Tag','rect_show_rectified','TooltipString','Load images of the calibration target');
+
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
 handles.calib_userectification = uicontrol(handles.rect_imagedata,'Style','checkbox','String','Enable image rectification', 'Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_userectification','TooltipString','Extract data for all frames of the current session','Callback', @preproc.cam_enable_cam_rectification_Callback);
 

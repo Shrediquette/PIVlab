@@ -1,0 +1,13 @@
+Please note: These example images were captured to show an extreme case of distortion and misalignment. The purpose is to show the effect of camera calibration and image rectification. This is not how your PIV data should look like!
+
+The image data is compressed as jpg to keep PIVlab's download size acceptable. You should never use compressed image formats! 
+
+Captured in an aquarium with 55 µm Polyamide particles. The camera was equipped with a high-distortion (fisheye) S-mount lens.
+Pulse separation (time step) : 750 µs
+
+The Charuco marker board has the following properties:
+Origin color: White
+Rows: 8
+Columns: 11
+Checker size: 8 mm
+Marker size: 6 mm
