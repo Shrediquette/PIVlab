@@ -378,9 +378,11 @@ if ~isequal(path,0)
             gui.put('cam_use_calibration',cam_use_calibration);
             gui.put('cam_use_rectification',cam_use_rectification);
 
-            if pcopanda_dbl_image
+            %{
+            if pcopanda_dbl_image %not necessary, bacause get_img already returns the correct size for double images because framepart is set.
                 new_img_size(1)=new_img_size(1)/2;
             end
+            %}
 
             gui.put('expected_image_size',new_img_size);
 

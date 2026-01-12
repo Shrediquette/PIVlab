@@ -2330,8 +2330,19 @@ handles.calib_livedetection = uipanel(handles.multip28, 'Units','characters', 'P
 parentitem=get(handles.calib_livedetection, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2) parentitem(3) 1.5];
+item=[0 item(2)+margin / 4 parentitem(3) 1.5];
 handles.calib_dolivedetect = uicontrol(handles.calib_livedetection,'Style','checkbox','String','Enable live detection + storage','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_live_detect_Callback,'Tag','calib_dolivedetect','TooltipString','Do realtime marker detection and image storage.');
+
+item=[0 0 0 0];
+parentitem=get(handles.multip28, 'Position');
+item=[0 item(2)+item(4)+20+margin*2 parentitem(3) 5];
+handles.calib_generate = uipanel(handles.multip28, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Marker board generation', 'Tag','calib_generate','fontweight','bold');
+parentitem=get(handles.calib_generate, 'Position');
+item=[0 0 0 0];
+
+item=[0 item(2)+margin / 4 parentitem(3) 1.5];
+handles.calib_generateboard = uicontrol(handles.calib_generate,'Style','pushbutton','String','Generate Charuco board','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_generateboard_Callback,'Tag','calib_generateboard','TooltipString','Generate a suitable Charuco board');
+
 
 
 

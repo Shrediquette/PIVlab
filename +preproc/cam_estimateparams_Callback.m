@@ -1,18 +1,8 @@
 function cam_estimateparams_Callback(~, ~, ~)
 warning off 'MATLAB:imagesci:imfinfo:unknownXMPpacket'
 handles=gui.gethand;
-
 cam_selected_target_images = gui.retr('cam_selected_target_images');
-
-contains(handles.calib_boardtype.String{handles.calib_boardtype.Value}, 'DICT_4X4_1000')
-
-
-str2double(handles.calib_rows.String)
-
-str2double(handles.calib_columns.String)
-
-handles.calib_usecalibration.Value
-originCheckerColor = handles.calib_origincolor.String{handles.calib_origincolor.Value} ;
+originCheckerColor = handles.calib_origincolor.String{handles.calib_origincolor.Value};
 if strcmpi (originCheckerColor,'white') && mod(str2double(handles.calib_rows.String),2)~=0
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Number of rows of the ChArUco board, dim1, must be even when OriginCheckerColor is white.','modal')
     return
