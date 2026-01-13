@@ -84,6 +84,7 @@ if ready==1
         set(handles.ac_displ_grid,'enable','on');
         set(handles.ac_displ_hist,'enable','on');
         set(handles.ac_calibsnapshot,'enable','on')
+        gui.put('old_charuco_img',[]);
 
         %try
         set(handles.ac_calibcapture,'String','Stop')
@@ -115,5 +116,6 @@ if ready==1
         set(handles.ac_calibcapture,'String','Start')
         gui.toolsavailable(1)
         set(handles.ac_calibsave,'enable','on')
+        gui.put('old_charuco_img',[]);
     end
 end

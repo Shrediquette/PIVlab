@@ -70,7 +70,7 @@ if isempty(expected_image_size) %expected_image_size is empty, we have not read 
 %    gui.put('expected_image_size',expected_image_size);
 else %expected_image_size is not empty, an image has been read before
     if 	(expected_image_size(1) ~= size_of_the_image(1) || expected_image_size(2) ~= size_of_the_image(2)) && gui.retr('size_warning_has_been_shown') == 0
-        disp('Warning: All images in a session MUST have the same size!');
+        disp('Info: Image size has changed.');
         %piv.cancelbutt_Callback
         %gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: All images in a session MUST have the same size!','modal');
         %gui.put('size_warning_has_been_shown',1);

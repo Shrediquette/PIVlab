@@ -34,7 +34,7 @@ if ~isempty(cam_selected_target_images)
     for i=1:numel(cam_selected_target_images)
         tmp_img=imread(cam_selected_target_images{i});
         tmp_img=imadjust(tmp_img);
-        imagePoints_single = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
+        imagePoints_single = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
         if numel(imagePoints_single)>0
             if numel(imagePoints)==0
                 imagePoints(:,:,end)=imagePoints_single;
@@ -134,9 +134,6 @@ else
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No calibration image data was loaded.','modal')
 
 end
-
-
-
 
 
 
