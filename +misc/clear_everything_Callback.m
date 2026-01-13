@@ -9,4 +9,3 @@ set(handles.messagetext, 'String','');
 set (handles.amount_nans, 'BackgroundColor',[0.9 0.9 0.9])
 set (handles.amount_nans,'string','')
 gui.sliderdisp(gui.retr('pivlab_axis'))
-

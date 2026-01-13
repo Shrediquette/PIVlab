@@ -9,6 +9,10 @@ if cam_use_calibration
     elseif strcmpi (class(cameraParams),'fisheyeParameters')
         %disp(['Size of the incoming image to cam_undistort: ' num2str(size(img_in))])
         %disp(['Size of the camera params: ' num2str(cameraParams.Intrinsics.ImageSize)]);
+        %disp('calibrated with:')
+        %cameraParams.Intrinsics.ImageSize
+        %disp('Input image:')
+        %size(img_in)
         try
             img_out = undistortFisheyeImage(img_in,cameraParams.Intrinsics,method,'OutputView',view,'ScaleFactor',1);
         catch ME
