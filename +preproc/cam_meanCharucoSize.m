@@ -2,6 +2,7 @@ function [avg_vert,avg_horiz] = cam_meanCharucoSize(tmp_img,markerFamily,checker
 %Measures the size of the Aruco markers, then uses the ratio of markersize
 %and checkersize to calculate the size of the checkers.
 [~,locs] = readArucoMarker(tmp_img,markerFamily,'WindowSizeRange',[3 23],'MarkerSizeRange',[0.005 1],'ResolutionPerBit',4,'SquarenessTolerance',0.03); %schnellere detektierung wenn bekannt. Am besten: Erstmal so gucken welche Familie dominant. Dann zweiter durchgang mit nur dieser familie
+
 N = size(locs,3);
 width  = zeros(N,1);
 height = zeros(N,1);

@@ -2326,6 +2326,9 @@ uicontrol(handles.calib_markersetup,'Style','text','String','Marker size:','Unit
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
 handles.calib_markersize = uicontrol(handles.calib_markersetup,'Style','edit','String','8','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_markersize','TooltipString','Size of the markers');
 
+item=[0 item(2)+item(4)+margin parentitem(3)/1.5 1.5];
+handles.calib_find_params = uicontrol(handles.calib_markersetup,'Style','pushbutton','String','Guess parameters','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_find_params','TooltipString','Automatically guess charuco parameters','Callback', @preproc.cam_find_charuco_parameters_Callback);
+
 item=[0 0 0 0];
 parentitem=get(handles.multip28, 'Position');
 item=[0 item(2)+item(4)+15+margin parentitem(3) 5];

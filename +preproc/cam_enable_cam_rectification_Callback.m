@@ -126,6 +126,14 @@ if strcmpi (class(cameraParams),'cameraParameters')
 elseif strcmpi (class(cameraParams),'fisheyeParameters')
     undistortedPoints = undistortFisheyePoints(imagePoints1,cameraParams.Intrinsics);
 end
+
+if patternDims(1) > patternDims(2) %Fixes the issue that high slender calibration bards result in rotated output
+    % swap axes
+    worldPoints = worldPoints(:, [2 1]);
+    % flip y axis
+    worldPoints(:,2) = -worldPoints(:,2);
+end
+
 rectification_tform = fitgeotform2d(undistortedPoints,worldPoints,'projective'); % standard für schräge ansicht
 %rectification_tform = fitgeotform2d(undistortedPoints,worldPoints,'polynomial',4); % langsam, aber gar nicht so schlecht, könnte für Rohre gehen...
 
