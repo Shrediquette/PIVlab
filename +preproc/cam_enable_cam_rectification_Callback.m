@@ -1,6 +1,7 @@
 function cam_enable_cam_rectification_Callback(caller,~,~)
 handles=gui.gethand;
 filepath=gui.retr('filepath');
+filename=gui.retr('filename');
 if size(filepath,1) <= 1 && handles.calib_userectification.Value == 1 %did the user load piv images?
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No PIV images were loaded.','modal');
     handles.calib_userectification.Value = 0;
@@ -14,6 +15,13 @@ if isempty (cameraParams)
     return
 end
 cam_selected_rectification_image = gui.retr('cam_selected_rectification_image');
+if isempty (cam_selected_rectification_image)
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No target image selected.','modal');
+    handles.calib_userectification.Value = 0;
+    return
+end
+
+
 
 if ~strcmpi(caller,'calib_viewtype')
     res=gui.custom_msgbox('msg',getappdata(0,'hgui'),'Warning','Masks, ROI, background images, and results will be reset when changing this setting. Continue?','modal',{'OK','Cancel'},'OK');
@@ -33,7 +41,6 @@ if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
     gui.put ('resultslist', []); %clears old results
     gui.put ('derived',[]);
     gui.put('displaywhat',1);%vectors
-    gui.put('ismean',[]);
     gui.put('framemanualdeletion',[]);
     gui.put('manualdeletion',[]);
     gui.put('streamlinesX',[]);
@@ -41,11 +48,24 @@ if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
     gui.put('bg_img_A',[]);
     gui.put('bg_img_B',[]);
     set(handles.bg_subtract,'Value',1);
-    % set(handles.fileselector, 'value',1);
+    set(handles.fileselector, 'value',1);
     set(handles.minintens, 'string', 0);
     set(handles.maxintens, 'string', 1);
     roi.clear_roi_Callback
     gui.put('masks_in_frame',[]);
+    ismean=gui.retr('ismean');
+    for i=size(ismean,1):-1:1 %remove averaged results
+        if ismean(i,1)==1
+            filepath(i*2,:)=[];
+            filename(i*2,:)=[];
+
+            filepath(i*2-1,:)=[];
+            filename(i*2-1,:)=[];
+        end
+    end
+    gui.put('filepath',filepath);
+    gui.put('filename',filename);
+    gui.put('ismean',[]);
 end
 if handles.calib_userectification.Value == 1
     if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)

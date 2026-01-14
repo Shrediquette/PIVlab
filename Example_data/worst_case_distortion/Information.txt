@@ -6,7 +6,7 @@ Captured in an aquarium with 55 µm Polyamide particles. The camera was equipped
 Pulse separation (time step) : 750 µs
 
 The Charuco marker board has the following properties:
-Origin color: White
+Origin color: White (important!)
 Rows: 8
 Columns: 11
 Checker size: 8 mm

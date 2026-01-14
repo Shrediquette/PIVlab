@@ -14,7 +14,7 @@ if cam_use_calibration
         %disp('Input image:')
         %size(img_in)
         try
-            img_out = undistortFisheyeImage(img_in,cameraParams.Intrinsics,method,'OutputView',view,'ScaleFactor',1);
+            img_out = undistortFisheyeImage(img_in,cameraParams.Intrinsics,method,'OutputView',view,'ScaleFactor',2);
         catch ME
             gui.toolsavailable(1)
             gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',ME.message,'modal');

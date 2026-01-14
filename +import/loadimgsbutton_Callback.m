@@ -27,9 +27,6 @@ try
     old_img_size=size(import.get_img(1));
     gui.put('cam_use_calibration',cam_use_calibration);
     gui.put('cam_use_rectification',cam_use_rectification);
-    if pcopanda_dbl_image
-        %old_img_size(1)=old_img_size(1)/2;
-    end
 catch
     old_img_size=0;
 end

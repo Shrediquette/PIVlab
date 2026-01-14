@@ -2229,31 +2229,31 @@ item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.calib_load_imgs = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Load target images','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_calibration_loadimages_Callback,'Tag','calib_load_imgs','TooltipString','Load images of the calibration target');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
-handles.calib_fisheye = uicontrol(handles.calib_imagedata,'Style','checkbox','units','characters','HorizontalAlignment','right','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3) item(4)],'Value',0,'String','fisheye camera','tag','calib_fisheye','TooltipString','Save PIV double images');
+handles.calib_fisheye = uicontrol(handles.calib_imagedata,'Style','checkbox','units','characters','HorizontalAlignment','right','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3) item(4)],'Value',0,'String','fisheye camera','tag','calib_fisheye','TooltipString','Enable fisheye camera model for very high distortion lenses. Slow.');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
-handles.calib_estimateparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Estimate cam parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_estimateparams_Callback,'Tag','calib_estimateparams','TooltipString','Load images of the calibration target');
+handles.calib_estimateparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Estimate cam parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_estimateparams_Callback,'Tag','calib_estimateparams','TooltipString','Detect charuco markers and estimate camera parameters');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3)/2 1.5];
-handles.calib_saveparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Save parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_saveparams_Callback,'Tag','calib_saveparams','TooltipString','Load images of the calibration target');
+handles.calib_saveparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Save parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_saveparams_Callback,'Tag','calib_saveparams','TooltipString','Save the camera parameters to a file');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_loadparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Load parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_loadparams_Callback,'Tag','calib_loadparams','TooltipString','Load images of the calibration target');
+handles.calib_loadparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Load parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_loadparams_Callback,'Tag','calib_loadparams','TooltipString','Load camera parameters from a file');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 1.5];
-handles.calib_clearparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Clear parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_clearparams_Callback,'Tag','calib_clearparams','TooltipString','Load images of the calibration target');
+handles.calib_clearparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Clear parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_clearparams_Callback,'Tag','calib_clearparams','TooltipString','Clear camera parameters');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
-handles.calib_showreproject = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Show reprojection errors','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_showreproject_Callback,'Tag','calib_showreproject','TooltipString','Load images of the calibration target');
+handles.calib_showreproject = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Show reprojection errors','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_showreproject_Callback,'Tag','calib_showreproject','TooltipString','Show reprojection errors (should be below 1 pixel for a valid undistortion)');
 
 item=[0 item(2)+item(4)+margin parentitem(3)/3*2 1.5];
 uicontrol(handles.calib_imagedata,'Style','text','String','Output image size:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
-handles.calib_viewtype = uicontrol(handles.calib_imagedata,'Style','popupmenu','String',{'Cut away black borders' 'Same size as input image' 'Include black borders'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_viewtype','TooltipString','Select the type of calibration marker board','Callback',@preproc.cam_change_viewtype_Callback);
+handles.calib_viewtype = uicontrol(handles.calib_imagedata,'Style','popupmenu','String',{'Cut away black borders' 'Same size as input image' 'Include black borders'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_viewtype','TooltipString','Select how black borders should be treated','Callback',@preproc.cam_change_viewtype_Callback);
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
-handles.calib_usecalibration = uicontrol(handles.calib_imagedata,'Style','checkbox','String','Enable camera calibration', 'Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_usecalibration','TooltipString','Extract data for all frames of the current session','Callback', @preproc.cam_enable_cam_calib_Callback);
+handles.calib_usecalibration = uicontrol(handles.calib_imagedata,'Style','checkbox','String','Enable camera calibration', 'Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_usecalibration','TooltipString','Enable camera calibration / undistortion','Callback', @preproc.cam_enable_cam_calib_Callback);
 
 %% camera rectification
 handles.multip27 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Image rectification', 'Tag','multip27','fontweight','bold');
@@ -2267,16 +2267,16 @@ parentitem=get(handles.rect_imagedata, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
-handles.rect_load_imgs = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Load target image','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_loadimages_Callback,'Tag','rect_load_imgs','TooltipString','Load images of the calibration target');
+handles.rect_load_imgs = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Load target image','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_loadimages_Callback,'Tag','rect_load_imgs','TooltipString','Load an image of the calibration target aligned with your target coordinate system and inside the laser sheet.');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
-handles.rect_show_points = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Show detected markers','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_points_Callback,'Tag','rect_show_points','TooltipString','Load images of the calibration target');
+handles.rect_show_points = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Show detected markers','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_points_Callback,'Tag','rect_show_points','TooltipString','Show all points that can be detected');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
-handles.rect_show_rectified = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Show rectified board','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_rectified_Callback,'Tag','rect_show_rectified','TooltipString','Load images of the calibration target');
+handles.rect_show_rectified = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Show rectified board','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_rectified_Callback,'Tag','rect_show_rectified','TooltipString','Show a preview of the undistorted calibration board');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
-handles.calib_userectification = uicontrol(handles.rect_imagedata,'Style','checkbox','String','Enable image rectification', 'Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_userectification','TooltipString','Extract data for all frames of the current session','Callback', @preproc.cam_enable_cam_rectification_Callback);
+handles.calib_userectification = uicontrol(handles.rect_imagedata,'Style','checkbox','String','Enable image rectification', 'Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_userectification','TooltipString','Use image rectification','Callback', @preproc.cam_enable_cam_rectification_Callback);
 
 
 %% Marker board setup
@@ -2300,31 +2300,31 @@ item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 uicontrol(handles.calib_markersetup,'Style','text','String','Origin color:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_origincolor = uicontrol(handles.calib_markersetup,'Style','popupmenu','String',{'Black' 'White'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_origincolor','TooltipString','Select the type of calibration marker board');
+handles.calib_origincolor = uicontrol(handles.calib_markersetup,'Style','popupmenu','String',{'Black' 'White'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_origincolor','TooltipString','Color of the top left checker');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 uicontrol(handles.calib_markersetup,'Style','text','String','Rows:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_rows = uicontrol(handles.calib_markersetup,'Style','edit','String','23','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_rows','TooltipString','Select the type of calibration marker board');
+handles.calib_rows = uicontrol(handles.calib_markersetup,'Style','edit','String','23','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_rows','TooltipString','Amount of rows of the checkerboard');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 uicontrol(handles.calib_markersetup,'Style','text','String','Columns:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_columns = uicontrol(handles.calib_markersetup,'Style','edit','String','24','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_columns','TooltipString','Select the type of calibration marker board');
+handles.calib_columns = uicontrol(handles.calib_markersetup,'Style','edit','String','24','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_columns','TooltipString','Amount of columns of the checkerboard');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 uicontrol(handles.calib_markersetup,'Style','text','String','Checker size:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_checkersize = uicontrol(handles.calib_markersetup,'Style','edit','String','10','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_checkersize','TooltipString','Select the type of calibration marker board');
+handles.calib_checkersize = uicontrol(handles.calib_markersetup,'Style','edit','String','10','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_checkersize','TooltipString','Size of the checkers');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 uicontrol(handles.calib_markersetup,'Style','text','String','Marker size:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_markersize = uicontrol(handles.calib_markersetup,'Style','edit','String','8','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_markersize','TooltipString','Select the type of calibration marker board');
+handles.calib_markersize = uicontrol(handles.calib_markersetup,'Style','edit','String','8','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_markersize','TooltipString','Size of the markers');
 
 item=[0 0 0 0];
 parentitem=get(handles.multip28, 'Position');
