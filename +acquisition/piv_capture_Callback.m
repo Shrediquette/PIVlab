@@ -164,6 +164,7 @@ if required_files_check
             elseif value == 3 || value == 4 %pco cameras with laser diode
                 %Start-up sequence for PIVlab LD-PS (much quicker)
                 waitbar(.01,f,'Starting laser...');
+                close(f)
                 las_percent=str2double(get(handles.ac_power,'String'));
                 pulse_sep=str2double(get(handles.ac_interpuls,'String'));
                 if strcmpi(gui.retr('sync_type'),'xmSync')
@@ -175,7 +176,6 @@ if required_files_check
                 gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK')
                 acquisition.control_simple_sync_serial(1,0);
                 gui.put('laser_running',1);
-                close(f)
             elseif value== 5 || value == 6 || value==7 || value==8 || value==9%chronos and basler and flir and OPTOcam and OPTRONIS: Camera needs to be started first, afterwards the laser is enabled.
                 close(f)
             end
