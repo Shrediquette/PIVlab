@@ -166,6 +166,10 @@
 
 // PIXELFLY Family
 #define CAMERASUBTYPE_PCO_PIXELFLY_13_SWIR        0x0001 // pco.pixelfly 1.3 SWIR
+#define CAMERASUBTYPE_PCO_PIXELFLY_100_BI_CLHS    0x0002 // pco.pixelfly 10 bi CLHS
+#define CAMERASUBTYPE_PCO_PIXELFLY_100_BI_C_CLHS  0x0003 // pco.pixelfly 10 bi Color CLHS
+#define CAMERASUBTYPE_PCO_PIXELFLY_260_CLHS       0x0004 // pco.pixelfly 26 CLHS
+#define CAMERASUBTYPE_PCO_PIXELFLY_260_C_CLHS     0x0005 // pco.pixelfly 26 Color CLHS
 
 // OEMs
 #define CAMERASUBTYPE_PCO_OEM_OEM5                0x0001
@@ -341,6 +345,8 @@
 #define SENSOR_KAI16000AXA        0x0160      // Kodak t:4960x3324, e:4904x3280, a:4872x3248
 #define SENSOR_KAI16000CXA        0x0161      // Kodak
 
+#define SENSOR_S11156_2048_02     0x0200      // Hamamatsu S11156-2048-02
+
 #define SENSOR_MV13BW             0x1010      // Micron
 #define SENSOR_MV13COL            0x1011      // Micron
 
@@ -350,8 +356,8 @@
 #define SENSOR_CIS2051_V1_BI_BW   0x2010      //Fairchild back illuminated
 
 #define SENSOR_LTN4323_BI_BW      0x2020      // BAE LTN4323 B/W
-#define SENSOR_LTN4323_BI_COL     0x2021      // BAE LTN4323 Color
 #define SENSOR_HWK4123_BI_BW      0x2030      // BAE HWK4123 B/W
+#define SENSOR_MST4323_BI_COL     0x2041      // BAE MST4323 Color
 
 
 //obsolete #define SENSOR_CCD87           0x2010         // E2V
@@ -383,6 +389,9 @@
 #define SENSOR_GPIXEL_GMAX0505_COL        0x5007  // Gpixel GMAX0505 26M
 
 #define SENSOR_GPIXEL_GSPRINT1105_BW      0x5008  // Gpixel GSPRINT1105 5M 
+
+#define SENSOR_GPIXEL_GLT5009BI_BW        0x500A  // Gpixel GLT5009 RevC TDI 9.1M
+
 // ------------------------------------------------------------------------ //
 // -- Defines for Get Info String Command: -------------------------------- //
 // ------------------------------------------------------------------------ //
@@ -432,6 +441,8 @@ const PCO_SENSOR_TYPE_DEF far pco_sensor[] =
               { SENSOR_KAI11002CM,             "Kodak KAI11002CM"                   },
               { SENSOR_KAI16000AXA,            "Kodak KAI16000AXA"                  },
               { SENSOR_KAI16000CXA,            "Kodak KAI16000CXA"                  },
+              
+              { SENSOR_S11156_2048_02,         "Hamamatsu S11156-2048-02"           },
 
                // Mircon sensor types
               { SENSOR_MV13BW,                 "Micron MV13BW"                      },
@@ -450,8 +461,8 @@ const PCO_SENSOR_TYPE_DEF far pco_sensor[] =
               { SENSOR_CIS2051_V1_BI_BW,       "Fairchild CIS2521 V1 I-Back BW"     },
 
               { SENSOR_LTN4323_BI_BW,          "BAE LTN4323 BW"                     },
-              { SENSOR_LTN4323_BI_COL,         "BAE LTN4323 Color"                  },
               { SENSOR_HWK4123_BI_BW,          "BAE HWK4123 BW"                     },
+              { SENSOR_MST4323_BI_COL,         "BAE MST4323 Color"                  },
 
               { SENSOR_CMOSIS_CMV12000_BW,     "CMOSIS CMV12000 BW"                 },
               { SENSOR_CMOSIS_CMV12000_COL,    "CMOSIS CMV12000 Color"              },

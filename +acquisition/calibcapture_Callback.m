@@ -1,7 +1,7 @@
 function calibcapture_Callback(~,~,~)
 filepath = fileparts(which('PIVlab_GUI.m'));
 camera_type=gui.retr('camera_type');
-if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') %calib
+if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') %calib
     if exist('pco_camera_load_defines.m','file') && exist('pco_recorder.dll','file') %pco.matlab must have been added to matlab search path
         %addpath(fullfile(filepath, 'PIVlab_capture_resources\PCO_resources\scripts'));
         ready=1;
@@ -88,7 +88,7 @@ if ready==1
 
         %try
         set(handles.ac_calibcapture,'String','Stop')
-        if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') %pco cameras
+        if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')%pco cameras
             [~, caliimg,~]=PIVlab_capture_pco(6,expos,'Calibration',projectpath,binning,ac_ROI_general,camera_type);
         elseif strcmp(camera_type,'basler')
             [errorcode, caliimg]=PIVlab_capture_basler_calibration_image(inf,expos,ac_ROI_general);

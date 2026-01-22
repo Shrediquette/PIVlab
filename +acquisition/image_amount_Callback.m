@@ -1,6 +1,6 @@
 function image_amount_Callback(~,~,~)
 camera_type=gui.retr('camera_type');
-if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'chronos') || strcmp(camera_type,'pco_pixelfly')
+if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'chronos') || strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_edge26')
 	%these cameras do not capture into RAM
 else
 	handles=gui.gethand;

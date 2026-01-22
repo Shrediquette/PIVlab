@@ -64,7 +64,7 @@ if alreadyconnected
 		flush(serpo);pause(0.1)
 		camera_type=gui.retr('camera_type');
 		if strcmpi(gui.retr('sync_type'),'xmSync')
-			if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly')
+			if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_edge26')
 				send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(master_freq) ';CAM:' int2str(cam_prescaler) ';ENER:' int2str(energy_us) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(f1exp) ';INTERF:' int2str(pulse_sep) ';EXTDLY:' int2str(extdly) ';EXTSKP:' int2str(extskp) ';LASER:enable'];
 			else
 				send_string=['TALKINGTO:' laser_device_id ';FREQ:' int2str(str2double(ac_fps_str(ac_fps_value))*bugfix_factor) ';CAM:' int2str(0) ';ENER:' int2str(0) ';ener%:' int2str(las_percent) ';F1EXP:' int2str(0) ';INTERF:' int2str(round(pulse_sep/bugfix_factor)) ';EXTDLY:' int2str(0) ';EXTSKP:' int2str(0) ';LASER:enable'];

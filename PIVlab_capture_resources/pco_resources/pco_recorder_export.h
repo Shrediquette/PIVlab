@@ -22,6 +22,9 @@
 
 #ifdef PCO_LINUX
  #define WINAPI
+ #define PCO_REC_FUNC
+#else
+ #define PCO_REC_FUNC
 #endif
 
 #ifdef __cplusplus
@@ -36,7 +39,7 @@ extern "C" {                           //  Assume C declarations for C++
   @param iPatch   Pointer to get the patch version (can be set to NULL if not relevant)
   @param iBuild   Pointer to get the build number (can be set to NULL if not relevant)
   */
-  void WINAPI PCO_RecorderGetVersion(int* iMajor,
+  PCO_REC_FUNC void WINAPI PCO_RecorderGetVersion(int* iMajor,
     int* iMinor,
     int* iPatch,
     int* iBuild);
@@ -60,7 +63,7 @@ extern "C" {                           //  Assume C declarations for C++
                       with the image (can be set to NULL if no metadata should be saved)
   @return Error code (e.g if the required file type is not available)
   */
-  int WINAPI PCO_RecorderSaveImage(void* pImgBuf,
+  PCO_REC_FUNC int WINAPI PCO_RecorderSaveImage(void* pImgBuf,
     WORD wWidth,
     WORD wHeight,
     const char* cFileType,
@@ -91,7 +94,7 @@ extern "C" {                           //  Assume C declarations for C++
                       with the image (can be set to NULL if no metadata should be saved)
   @return Error code (e.g if the required file type is not available)
   */
-  int WINAPI PCO_RecorderSaveOverlay(void* pImgBufR,
+  PCO_REC_FUNC int WINAPI PCO_RecorderSaveOverlay(void* pImgBufR,
     void* pImgBufG,
     void* pImgBufB,
     WORD wWidth,
@@ -109,7 +112,7 @@ extern "C" {                           //  Assume C declarations for C++
                  still running
   @return Error code
   */
-  int WINAPI PCO_RecorderResetLib(bool bSilent);
+  PCO_REC_FUNC int WINAPI PCO_RecorderResetLib(bool bSilent);
 
   /**
   @brief  Creates the recorder
@@ -135,7 +138,7 @@ extern "C" {                           //  Assume C declarations for C++
   @return Error code
   */
 #ifndef MATLAB
-  int WINAPI PCO_RecorderCreate(HANDLE* phRec,
+  PCO_REC_FUNC int WINAPI PCO_RecorderCreate(HANDLE* phRec,
     HANDLE* phCamArr,
     const DWORD* dwImgDistributionArr,
     WORD wArrLength,
@@ -156,7 +159,7 @@ extern "C" {                           //  Assume C declarations for C++
     void* cam_ptr4;
   }PCO_cam_ptr_List;
 
-  int WINAPI PCO_RecorderCreate(HANDLE* phRec,
+  PCO_REC_FUNC int WINAPI PCO_RecorderCreate(HANDLE* phRec,
     PCO_cam_ptr_List* CamArr,
     const DWORD* dwImgDistributionArr,
     WORD wArrLength, WORD wRecMode,
@@ -172,7 +175,7 @@ extern "C" {                           //  Assume C declarations for C++
   @param phRec    Handle to previously created recorder
   @return Error code
   */
-  int WINAPI PCO_RecorderDelete(HANDLE phRec);
+  PCO_REC_FUNC int WINAPI PCO_RecorderDelete(HANDLE phRec);
 
   /**
   @brief  For memory recorder:    Allocate the required memory for each camRecorder object
@@ -196,7 +199,7 @@ extern "C" {                           //  Assume C declarations for C++
                           (only for record mode camram, ignorde otherwise)
   @return Error code
   */
-  int WINAPI PCO_RecorderInit(HANDLE phRec,
+  PCO_REC_FUNC int WINAPI PCO_RecorderInit(HANDLE phRec,
     DWORD* dwImgCountArr,
     WORD wArrLength,
     WORD wType,
@@ -216,7 +219,7 @@ extern "C" {                           //  Assume C declarations for C++
   @param phCam    Handle to particular camera (or NULL for all cameras)
   @return Error code
   */
-  int WINAPI PCO_RecorderCleanup(HANDLE phRec, HANDLE phCam);
+  PCO_REC_FUNC int WINAPI PCO_RecorderCleanup(HANDLE phRec, HANDLE phCam);
 
   /**
   @brief  Get the current recorder and camera settings
@@ -235,7 +238,7 @@ extern "C" {                           //  Assume C declarations for C++
                           (0 for Metadata Mode OFF), can be set to NULL if not relevant
   @return Error code
   */
-  int WINAPI PCO_RecorderGetSettings(HANDLE phRec,
+  PCO_REC_FUNC int WINAPI PCO_RecorderGetSettings(HANDLE phRec,
     HANDLE phCam,
     DWORD* dwRecMode,
     DWORD* dwMaxImgCount,
@@ -252,7 +255,7 @@ extern "C" {                           //  Assume C declarations for C++
   @param phCam    Handle to particular camera (or NULL for all cameras)
   @return Error code
   */
-  int WINAPI PCO_RecorderStartRecord(HANDLE phRec, HANDLE phCam);
+  PCO_REC_FUNC int WINAPI PCO_RecorderStartRecord(HANDLE phRec, HANDLE phCam);
 
   /**
   @brief  Stop the record of images for the selected camera
@@ -262,7 +265,7 @@ extern "C" {                           //  Assume C declarations for C++
   @param phCam    Handle to particular camera (or NULL for all cameras)
   @return Error code
   */
-  int WINAPI PCO_RecorderStopRecord(HANDLE phRec, HANDLE phCam);
+  PCO_REC_FUNC int WINAPI PCO_RecorderStopRecord(HANDLE phRec, HANDLE phCam);
 
   /**
   @brief  Activate or deactivate the auto exposure functionality for the selected camera
@@ -279,7 +282,7 @@ extern "C" {                           //  Assume C declarations for C++
   @param wExpBase         Exposure unit of the transferred exposure time range (0:ns, 1:us, 2:ms)
   @return Error code
   */
-  int WINAPI PCO_RecorderSetAutoExposure(HANDLE phRec,
+  PCO_REC_FUNC int WINAPI PCO_RecorderSetAutoExposure(HANDLE phRec,
     HANDLE phCam,
     bool bAutoExpState,
     WORD wSmoothness,
@@ -307,7 +310,7 @@ extern "C" {                           //  Assume C declarations for C++
                       (only for custom region, set to 0 otherwise)
   @return Error code
   */
-  int WINAPI PCO_RecorderSetAutoExpRegions(HANDLE phRec,
+  PCO_REC_FUNC int WINAPI PCO_RecorderSetAutoExpRegions(HANDLE phRec,
     HANDLE phCam,
     WORD wRegionType,
     WORD* wRoiX0Arr,
@@ -332,7 +335,7 @@ extern "C" {                           //  Assume C declarations for C++
                               for the compression / equilibration of the specific camera
   @return Error code
   */
-  int WINAPI PCO_RecorderSetCompressionParams(HANDLE phRec,
+  PCO_REC_FUNC int WINAPI PCO_RecorderSetCompressionParams(HANDLE phRec,
     HANDLE phCam,
     PCO_Recorder_CompressionParams* strCompressionParams);
 
@@ -363,7 +366,7 @@ extern "C" {                           //  Assume C declarations for C++
                           can be set to NULL if not relevant
   @return Error code
   */
-  int WINAPI PCO_RecorderGetStatus(HANDLE phRec,
+  PCO_REC_FUNC int WINAPI PCO_RecorderGetStatus(HANDLE phRec,
     HANDLE phCam,
     bool* bIsRunning,
     bool* bAutoExpState,
@@ -389,7 +392,7 @@ extern "C" {                           //  Assume C declarations for C++
                       can be set to NULL if not relevant
   @return Error code
   */
-  int WINAPI PCO_RecorderGetImageAddress(HANDLE phRec,
+  PCO_REC_FUNC int WINAPI PCO_RecorderGetImageAddress(HANDLE phRec,
     HANDLE phCam,
     DWORD dwImgIdx,
     void** wImgBuf,
@@ -417,7 +420,7 @@ extern "C" {                           //  Assume C declarations for C++
                       (can be set to NULL if not required)
   @return Error code
   */
-  int WINAPI PCO_RecorderCopyImage(HANDLE phRec,
+  PCO_REC_FUNC int WINAPI PCO_RecorderCopyImage(HANDLE phRec,
     HANDLE phCam,
     DWORD dwImgIdx,
     WORD wRoiX0,
@@ -445,7 +448,7 @@ extern "C" {                           //  Assume C declarations for C++
   @param wImgBuf      Array to copy the averaged image data to
   @return Error code
   */
-  int WINAPI PCO_RecorderCopyAverageImage(HANDLE phRec,
+  PCO_REC_FUNC int WINAPI PCO_RecorderCopyAverageImage(HANDLE phRec,
     HANDLE phCam,
     DWORD dwStartIdx,
     DWORD dwStopIdx,
@@ -484,7 +487,7 @@ extern "C" {                           //  Assume C declarations for C++
                       (can be set to NULL if not required)
   @return Error code
   */
-  int WINAPI PCO_RecorderCopyImageCompressed(HANDLE phRec,
+  PCO_REC_FUNC int WINAPI PCO_RecorderCopyImageCompressed(HANDLE phRec,
     HANDLE phCam,
     DWORD dwImgIdx,
     WORD wRoiX0,
@@ -508,7 +511,7 @@ extern "C" {                           //  Assume C declarations for C++
   @param bOverwrite   Flag to indicate if the file, when it already exists, should be overwritten
   @return Error code
   */
-  int WINAPI PCO_RecorderExportImage(HANDLE phRec,
+  PCO_REC_FUNC int WINAPI PCO_RecorderExportImage(HANDLE phRec,
     HANDLE phCam,
     DWORD dwImgIdx,
     const char* szFilePath,

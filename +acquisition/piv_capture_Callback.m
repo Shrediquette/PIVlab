@@ -7,7 +7,7 @@ end
 gui.put('capturing',0);
 camera_type=gui.retr('camera_type');
 required_files_check=1;
-if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') %calib
+if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') %calib
     if exist('pco_camera_load_defines.m','file') && exist('pco_recorder.dll','file') %pco.matlab must be installed and permanently added to the search path
         required_files_check=1;
     else

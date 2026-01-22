@@ -60,6 +60,23 @@ if value == 2 || value == 4% pco panda with evergreen or LD-PS
 	end
 	%end
 end
+if value == 10% pco edge 26ds clhs with LD-PS
+	gui.put('camera_type','pco_edge26');
+	gui.put('f1exp',352) % Exposure start -> Q1 delay
+	gui.put('f1exp_cam',350); %exposure time setting first frame
+		gui.put('master_freq',45); %
+disp('I think these are not used in new synchronizer... Are they?')
+	avail_freqs={'780' '350' '180' '100' '70' '25'};
+	gui.put('max_cam_res',[5120,5120]);
+	gui.put('min_allowed_interframe',5);
+	gui.put('blind_time',1);
+	set(handles.ac_fps,'string',avail_freqs);
+	%if get(handles.ac_fps,'value') > numel(avail_freqs)
+	if old_setting ~= value
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
+	%end
+end
 if value == 5 % chronos LD-PS
 	gui.put('camera_type','chronos');
 	gui.put('f1exp',352) % Exposure start -> Q1 delay

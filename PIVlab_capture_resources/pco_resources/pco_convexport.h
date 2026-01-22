@@ -38,10 +38,14 @@
     #define PCOCONVERT_API __attribute__ ((__visibility__("default")))
   #endif
 #else
-  #if defined _WIN32
-    #define PCOCONVERT_API __declspec(dllimport) WINAPI
+  #if defined PCOCONVERT_STATIC
+    #define PCOCONVERT_API
   #else
-    #define PCOCONVERT_API __attribute__ ((__visibility__("default")))
+    #if defined _WIN32
+      #define PCOCONVERT_API __declspec(dllimport) WINAPI
+    #else
+      #define PCOCONVERT_API __attribute__ ((__visibility__("default")))
+    #endif
   #endif
 #endif
 

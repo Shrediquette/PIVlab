@@ -5,7 +5,7 @@ function [timing_table, pin_string, cam_delay, frame_time] = PIVlab_calc_oltsync
 %f1exp_cam is calculated as      floor(pulse_sep*las_percent/100)+1; %+1 because in the snychronizer, the cam expo is started 1 us before the ld pulse
 %it has therefore the length of the laser pulse
 
-if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda')
+if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')
 	camera_principle='double_shutter';
 else
 	camera_principle='normal_shutter';
@@ -31,6 +31,12 @@ end
 
 if strcmp(camera_type,'pco_panda')
 	blind_time=2;
+	cam_delay=3;
+end
+
+if strcmp(camera_type,'pco_edge26')
+	disp('blind time und camera delay müssen noch bestimmt werden.')
+    blind_time=2;
 	cam_delay=3;
 end
 

@@ -10,7 +10,7 @@ if get(handles.ac_enable_straddling_figure, 'Value')==1
 	end
 	camera_type=gui.retr('camera_type');
 
-	if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly')
+	if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_edge26')
 		is_dbl_shutter = 1;
 	else
 		is_dbl_shutter = 0;
@@ -31,7 +31,7 @@ if get(handles.ac_enable_straddling_figure, 'Value')==1
 			framerate=str2double(ac_fps_str(ac_fps_value));
 			f1exp_cam=gui.retr('f1exp_cam');
 			las_percent=str2double(get(handles.ac_power,'String'));
-			if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda')
+			if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')
 				camera_principle='double_shutter';
 			else
 				camera_principle='normal_shutter';

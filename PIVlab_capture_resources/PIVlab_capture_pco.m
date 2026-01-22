@@ -99,7 +99,7 @@ if(errorCode)
     pco_errdisp('PCO_SetDoubleImageMode',errorCode);
 end
 
-if strcmp(camera_type,'pco_panda')
+if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')
     %% set I/O lines
     hwio_sig=libstruct('PCO_Signal');
     set(hwio_sig,'wSize',hwio_sig.structsize);
@@ -142,21 +142,68 @@ if isempty(binning)
 end
 h_binning=binning; %1,2,4
 v_binning=binning; %1,2,4
+
+disp('Setting Binning to:')
+disp([num2str(h_binning) ' | ' num2str(v_binning)])
+
 [errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetBinning', hcam_ptr,h_binning,v_binning); %2,4, etc.
 pco_errdisp('PCO_SetBinning',errorCode);
 %% ROI selection
 %kommt nur richtig voreingestellt wenn calibration mode
-if strcmp(camera_type,'pco_panda')
+if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')
+
+    STEP = 32;
+    MINVAL = 1;
+    MAXVAL = 5120/h_binning;
     xmin=ROI_general(1);
     ymin=ROI_general(2);
     xmax=ROI_general(1)+ROI_general(3)-1;
     ymax=ROI_general(2)+ROI_general(4)-1;
-
-    %dieser Code failt:
+    %{
+    xmin = max(MINVAL, xmin);
+    ymin = max(MINVAL, ymin);
+    xmax = min(MAXVAL, xmax);
+    ymax = min(MAXVAL, ymax);
+    if xmax <= xmin
+        xmax = min(xmin + STEP - 1, MAXVAL);
+    end
+    if ymax <= ymin
+        ymax = min(ymin + STEP - 1, MAXVAL);
+    end
+    xmin = floor((xmin-1)/STEP)*STEP + 1;
+    ymin = floor((ymin-1)/STEP)*STEP + 1;
+    xmax = ceil( xmax    /STEP)*STEP;
+    ymax = ceil( ymax    /STEP)*STEP;
+    xmin = max(MINVAL, xmin);
+    ymin = max(MINVAL, ymin);
+    xmax = min(MAXVAL, xmax);
+    ymax = min(MAXVAL, ymax);
+    %}
+    disp('Setting ROI to (corner coordinates x1 y1 x2 y2):')
+    disp([num2str(xmin) ' | ' num2str(ymin) ' | ' num2str(xmax) ' | ' num2str(ymax)])
     [errorCode] = calllib('PCO_CAM_SDK', 'PCO_SetROI', hcam_ptr,xmin,ymin,xmax,ymax);
     pco_errdisp('PCO_SetROI',errorCode);
+
     errorCode = calllib('PCO_CAM_SDK', 'PCO_ArmCamera', hcam_ptr);
     pco_errdisp('PCO_ArmCamera',errorCode);
+
+    %% New, sdk says SetImageParameters must be called, mandatory for CLHS, recommended for other interfaces
+    disp('PCO_SetImageParameters for CLHS')
+    act_xsize=uint16(0);
+    act_ysize=uint16(0);
+    max_xsize=uint16(0);
+    max_ysize=uint16(0);
+    %use PCO_GetSizes because this always returns accurat image size for next recording
+    [errorCode,~,act_xsize,act_ysize]  = calllib('PCO_CAM_SDK', 'PCO_GetSizes', hcam_ptr,act_xsize,act_ysize,max_xsize,max_ysize);
+    pco_errdisp('PCO_GetSizes',errorCode);
+
+    flags=2; %IMAGEPARAMETERS_READ_WHILE_RECORDING;
+    errorCode = calllib('PCO_CAM_SDK', 'PCO_SetImageParameters', hcam_ptr,act_xsize,act_ysize,flags,[],0);
+    if(errorCode)
+        pco_errdisp('PCO_CamLinkSetImageParameters',errorCode);
+        return;
+    end
+
     %if PCO_ArmCamera does fail no images can be grabbed
     if(errorCode~=PCO_NOERROR)
         if(glvar.camera_open==1)
@@ -193,6 +240,7 @@ if(bitand(cam_desc.dwGeneralCapsDESC1,GENERALCAPS1_NO_TIMESTAMP)==0)
     end
     disp(['setting timestamp = ' panda_timestamp]);
 end
+
 
 %% exposure mode (auto vs. external trigger)
 subfunc.fh_set_triggermode(hcam_ptr,triggermode); %0=auto, 2= external trigger
@@ -466,37 +514,37 @@ try
                     set(image_handle_pco,'CData',(image_stack(act_ysize/2+1:end  ,  1:act_xsize)));
                 end
                 if ~isinf(imacount)
-					set(frame_nr_display,'String',['Image nr.: ' int2str(ProcImgCount)]);
-				else
-					set(frame_nr_display,'String','PIV preview');
-				end
-			else %Calibration mode
-				if ~strcmpi(TriggerModeString,'oneimage_piv') %dont show the image that is captured after ROI is selected (it is only captured to measure max framerate)
-					set(image_handle_pco,'CData',(image_stack));
-					set(frame_nr_display,'String','Live image');
-					%disp('autodetect here')
-					%try catch here einfach drum rum.... Und dann immer ausführen
-					if ~strcmpi(TriggerModeString,'oneimage_calibration')
-						do_charuco_detection = gui.retr('do_charuco_detection');
-						if isempty(do_charuco_detection)
-							do_charuco_detection=0;
-						end
-						if do_charuco_detection
-							PIVlab_capture_charuco_detector(image_stack,PIVlab_axis,image_handle_pco);
-						end
-					end
-				end
-			end
-			if strcmpi(TriggerModeString,'oneimage_calibration') || strcmpi(TriggerModeString,'oneimage_piv')
-				break;
-			end
-			%% Additional functions that process realtime image data go here.
+                    set(frame_nr_display,'String',['Image nr.: ' int2str(ProcImgCount)]);
+                else
+                    set(frame_nr_display,'String','PIV preview');
+                end
+            else %Calibration mode
+                if ~strcmpi(TriggerModeString,'oneimage_piv') %dont show the image that is captured after ROI is selected (it is only captured to measure max framerate)
+                    set(image_handle_pco,'CData',(image_stack));
+                    set(frame_nr_display,'String','Live image');
+                    %disp('autodetect here')
+                    %try catch here einfach drum rum.... Und dann immer ausführen
+                    if ~strcmpi(TriggerModeString,'oneimage_calibration')
+                        do_charuco_detection = gui.retr('do_charuco_detection');
+                        if isempty(do_charuco_detection)
+                            do_charuco_detection=0;
+                        end
+                        if do_charuco_detection
+                            PIVlab_capture_charuco_detector(image_stack,PIVlab_axis,image_handle_pco);
+                        end
+                    end
+                end
+            end
+            if strcmpi(TriggerModeString,'oneimage_calibration') || strcmpi(TriggerModeString,'oneimage_piv')
+                break;
+            end
+            %% Additional functions that process realtime image data go here.
             live_data=get(image_handle_pco,'CData');
             %% Image sharpness display
             sharpness_enabled = getappdata(hgui,'sharpness_enabled');
             if sharpness_enabled == 1 %cross-hair and sharpness indicator
                 %% sharpness indicator for particle images
-                if strcmp(camera_type,'pco_panda')
+                if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')
                     textx=ROI_general(3)-10;
                     texty=ROI_general(4)-50;
                 else

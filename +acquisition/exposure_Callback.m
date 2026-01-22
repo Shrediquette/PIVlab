@@ -9,7 +9,7 @@ if strcmp(camera_type,'pco_pixelfly')
 		set(handles.ac_expo,'String','2000')
 	end
 end
-if strcmp(camera_type,'pco_panda')
+if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')
 	if str2double(get(handles.ac_expo,'String')) < 6
 		set(handles.ac_expo,'String','6')
 	end

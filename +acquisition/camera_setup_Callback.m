@@ -10,7 +10,7 @@ elseif strcmp(camera_type,'OPTRONIS')
     else
         gui.custom_msgbox('warn',getappdata(0,'hgui'),'Newer Matlab required','OPTRONIS cameras require at least Matlab R2025a to set bit depth and gain.','modal');
     end
-elseif strcmp(camera_type,'pco_panda')
+elseif strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')
     PIVlab_capture_panda_settings_GUI
 else
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Not available','Not available for the selected camera model.','modal');

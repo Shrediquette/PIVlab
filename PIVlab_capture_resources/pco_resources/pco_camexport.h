@@ -31,6 +31,8 @@
   #else
    #define SC2_SDK_FUNC __declspec(dllexport)
   #endif
+ #elif SC2_CAM_STATIC
+  #define SC2_SDK_FUNC
  #else
   #define SC2_SDK_FUNC __declspec(dllimport)
  #endif

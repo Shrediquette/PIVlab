@@ -25,7 +25,7 @@
 
 
 #ifdef PCO_LINUX
- #define SC2_SDK_FUNC 
+ #define SC2_SDK_FUNC
  #define WINAPI
 #endif
 
@@ -36,6 +36,8 @@
   #else
    #define SC2_SDK_FUNC __declspec(dllexport)
   #endif
+ #elif SC2_CAM_STATIC
+  #define SC2_SDK_FUNC
  #else
   #define SC2_SDK_FUNC __declspec(dllimport)
  #endif
@@ -46,7 +48,7 @@ extern "C" {                           //  Assume C declarations for C++
 #endif  //C++
 
 #define PCO_SDK_VERMAJOR 1             // Shows the current version of the sc2_cam.dll
-#define PCO_SDK_VERMINOR 34
+#define PCO_SDK_VERMINOR 35
 
 // VERY IMPORTANT INFORMATION:
 /*******************************************************************/
@@ -2253,104 +2255,16 @@ SC2_SDK_FUNC int WINAPI PCO_SetFlimRelativePhase(HANDLE ph,
 /////// Lens Control commands ///////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 
+// All Lens Control commands are deprecated. Please use pco_lenstrl library instead
 SC2_SDK_FUNC int WINAPI PCO_InitLensControl(HANDLE hCamera, HANDLE *phLensControl);
-// Initializes a new lens control object and returns the handle to the internal structures when phLensControl is NULL.
-// Also reinitializes an already existing lens control object when called with a valid phLensControl.
-// E.g. when the lens is changed in front of the Birger ring the lens functions will return an error as there is no lens 
-// for a short time. To get the lens back after re-plug, call PCO_InitLensControl. You can use a windows timer function
-// in order to call the init function till it returns without error. Processing can be continued normally after successful
-// re-initialization.
-// Please query the descriptor for availability of the lens control functionality:
-//   if(strCamera->strSensor.strDescription.dwGeneralCapsDESC1 & GENERALCAPS1_USER_INTERFACE) == GENERALCAPS1_USER_INTERFACE)
-//     ...
-// In: HANDLE ph -> Handle to a previously opened camera.
-//     HANDLE *phLensControl -> Pointer to a PCO_LensControl structure, which holds all necessary parameters
-// Out: int -> Error message.
-//
-// Here's a short code listing on how to deal with a lens control device (Camera already opened, no error handling):
-// HANDLE hLensControl = NULL;
-// PCO_LensControl* phLensControl;
-// int err = PCO_InitLensControl(hCamera, (HANDLE*) &hLensControl);               // Initializes a lens control object
-// phLensControl = (PCO_LensControl*) hLensControl;                               // Cast the stuct ptr to get access to the values
-// DWORD dwflagsin = 0, dwflagsout = 0;
-// DWORD dwAperturePos = phLensControl->pstrLensControlParameters->dwApertures[0];// Gets the first F/n value
-// LONG lFocusPos = 0;
-// err = PCO_SetApertureF(phLensControl, &dwAperturePos, dwflagsin, &dwflagsout); // Sets the aperture as F/n value
-// err = PCO_GetAperture(phLensConrtol, &dwAperturePos, &dwflagsout);             // Gets the aperture as index value
-// err = PCO_GetFocus(phLensControl, &lFocusPos, &dwflagsout);                    // Gets the focus (0...0x3FFF)
-// err = PCO_SetFocus(phLensControl, &lFocusPos, dwflagsin, &dwflagsout);         // Sets the focus
-// err = PCO_CloseLensControl(hLensControl);                                      // Closes the lens control object
-
 SC2_SDK_FUNC int WINAPI PCO_CleanupLensControl();
-// Cleans up all internal lens control objects, which were created. It closes and deletes all lens control objects.
-// This is an internally used helper function, which is also exported.
-
 SC2_SDK_FUNC int WINAPI PCO_CloseLensControl(HANDLE hLensControl);
-// Closes and deletes a lens control object. The handle will be invalid afterwards.
-// In: HANDLE ph -> Handle to a previously opened lens control object.
-// Out: int -> Error message.
-
 SC2_SDK_FUNC int WINAPI PCO_GetLensFocus(HANDLE hLens, LONG *lFocusPos, DWORD *dwflags);
-// Gets the current focus of the lens control device as value between 0...0x3FFF.
-// In: HANDLE hLens -> Handle to a previously opened lens control object.
-//     LONG* lFocusPos -> Pointer to a long value to receive the current focus position
-//     DWORD* dwflags -> Pointer to a DWORD value to receive status flags
-// Out: int -> Error message.
-
 SC2_SDK_FUNC int WINAPI PCO_SetLensFocus(HANDLE hLens, LONG *lFocusPos, DWORD dwflagsin, DWORD *dwflagsout);
-// Sets the focus of the lens control device to a new position. Value must be between 0...0x3FFF.
-// In: HANDLE hLens -> Handle to a previously opened lens control object.
-//     LONG* lFocusPos -> Pointer to a long value to set the new and receive the current focus position
-//     DWORD dwflagsin -> DWORD variable to control the function
-//                        Set LENSCONTROL_IN_LENSVALUE_RELATIVE to change the focus relative to the current position 
-//     DWORD* dwflagsout -> Pointer to a DWORD value to receive status flags
-//                          LENSCONTROL_OUT_LENSWASCHANGED indicates that the focus changed
-//                          LENSCONTROL_OUT_LENSHITSTOP indicates that a stop was hit (either 0 or 0x3FFF)
-// Out: int -> Error message.
-
 SC2_SDK_FUNC int WINAPI PCO_GetAperture(HANDLE hLens, WORD *wAperturePos, DWORD *dwflags);
-// Gets the current aperture position of the lens control device in steps. Position ranging from 0...max steps (dwFNumberNumStops)
-// In: HANDLE hLens -> Handle to a previously opened lens control object.
-//     WORD* wAperturePos -> Pointer to a WORD value to receive the current aperture position
-//     DWORD* dwflags -> Pointer to a DWORD value to receive status flags
-// Out: int -> Error message.
-
 SC2_SDK_FUNC int WINAPI PCO_SetAperture(HANDLE hLens, WORD *wAperturePos, DWORD dwflagsin, DWORD *dwflagsout);
-// Sets the current aperture position of the lens control device in steps. Position ranging from 0...max steps (dwFNumberNumStops)
-// In: HANDLE hLens -> Handle to a previously opened lens control object.
-//     WORD* wAperturePos -> Pointer to a WORD value to set the new and receive the current aperture position
-//     DWORD dwflagsin -> DWORD variable to control the function
-//                        Set LENSCONTROL_IN_LENSVALUE_RELATIVE to change the aperture relative to the current position 
-//     DWORD* dwflagsout -> Pointer to a DWORD value to receive status flags
-//                          LENSCONTROL_OUT_LENSWASCHANGED indicates that the aperture changed
-// Out: int -> Error message.
-
 SC2_SDK_FUNC int WINAPI PCO_GetApertureF(HANDLE hLens, DWORD *dwfAperturePos, WORD *wAperturePos, DWORD *dwflags);
-// Gets the current aperture position of the lens control device in f/position * 10 (member of dwApertures)
-// The dwApertures array is reinitialized in case the zoom changes and either PCO_GetApertureF or PCO_SetApertureF are called.
-// Change in zoom will be shown in dwflags as LENSCONTROL_OUT_ZOOMHASCHANGED
-// In: HANDLE hLens -> Handle to a previously opened lens control object.
-//     DWORD* dwAperturePos -> Pointer to a DWORD value to receive the current aperture position in f/x * 10 (e.g. f/5.4 -> 54)
-//     WORD* wAperturePos -> Pointer to a WORD value to receive the current aperture position; Can be NULL
-//     DWORD* dwflags -> Pointer to a DWORD value to receive status flags:
-//                       LENSCONTROL_OUT_ZOOMHASCHANGED indicates that the dwApertures array was changed due to zoom change
-// Out: int -> Error message.
-
 SC2_SDK_FUNC int WINAPI PCO_SetApertureF(HANDLE hLens, DWORD *dwfAperturePos, DWORD dwflagsin, DWORD *dwflagsout);
-// Sets the current aperture position of the lens control device in f/position * 10 (member of dwApertures)
-// Please select a member of the current dwApertures array.
-// The dwApertures array is reinitialized in case the zoom changes and either PCO_GetApertureF or PCO_SetApertureF are called.
-// Change in zoom will be shown in dwflagsout as LENSCONTROL_OUT_ZOOMHASCHANGED
-// In: HANDLE hLens -> Handle to a previously opened lens control object.
-//     DWORD* dwAperturePos -> Pointer to a DWORD value to receive the current aperture position in f/x * 10 (e.g. f/5.4 -> 54)
-//     DWORD dwflagsin -> DWORD value to set control flags
-//     DWORD* dwflagsout -> Pointer to a DWORD value to receive status flags:
-//                       LENSCONTROL_OUT_ZOOMHASCHANGED indicates that the dwApertures array was changed due to zoom change
-//                       LENSCONTROL_OUT_LENSWASCHANGED indicates that the aperture changed
-// Out: int -> Error message.
-// DWOD dwAperturePosF = phLensControl->pstrLensControlParameters->dwApertures[wAperturePos++];
-// err = PCO_SetApertureF(phLensControl, &dwAperturePosF, dwflagsin, &dwflagsout);
-
 
 SC2_SDK_FUNC int WINAPI PCO_SendBirgerCommand(HANDLE hLens, PCO_Birger* pstrBirger, char* szcmd, int inumdelim);
 // Sends a telegram to a Birger ring device and returns the result in the PCO_Birger structure

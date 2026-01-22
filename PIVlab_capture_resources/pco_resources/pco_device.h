@@ -61,10 +61,10 @@
 #define PCO_SCAN_FOR_UNUSED_AT_ME4         0x8007  //any unused and connected camera on ME4  interface
 
 
-#define PCODEVICE_STATUS_BITS_CONNECTED 0x00000001
-#define PCODEVICE_STATUS_BITS_LISTED    0x00000002
-#define PCODEVICE_STATUS_BITS_ATTACHED  0x00000004
-#define PCODEVICE_STATUS_BITS_OPENED    0x00000008
+#define PCODEVICE_STATUS_BITS_CONNECTED 0x00000001  // physical connection detected by interface
+#define PCODEVICE_STATUS_BITS_LISTED    0x00000002  // device known, connection may be lost
+#define PCODEVICE_STATUS_BITS_ATTACHED  0x00000004  // attached and owned by process
+#define PCODEVICE_STATUS_BITS_OPENED    0x00000008  // open call to com / grab
 
 #define PCODEVICE_STATUS_BITS_GRAB      0x00000010
 

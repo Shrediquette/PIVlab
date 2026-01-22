@@ -5,7 +5,7 @@ projectpath=get(handles.ac_project,'String');
 pathlist={};
 pathfilelist={};
 file_existing=zeros(imageamount,1);
-if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly') %these cameras will from now on save as multitiff, because this is most efficient data type according to pco
+if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_edge26') %these cameras will from now on save as multitiff, because this is most efficient data type according to pco
     %check if multitiff
     filePattern = fullfile(projectpath, 'PIVlab_pco*.tif');
     direc= dir(filePattern);filenames={};
