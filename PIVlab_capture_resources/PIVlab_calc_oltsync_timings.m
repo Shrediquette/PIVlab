@@ -35,9 +35,8 @@ if strcmp(camera_type,'pco_panda')
 end
 
 if strcmp(camera_type,'pco_edge26')
-	disp('blind time und camera delay müssen noch bestimmt werden.')
     blind_time=2;
-	cam_delay=3;
+	cam_delay=2;
 end
 
 if strcmp(camera_type,'chronos')

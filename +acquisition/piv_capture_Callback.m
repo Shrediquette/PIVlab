@@ -161,7 +161,7 @@ if required_files_check
                 waitbar(1,f,'Starting camera...');
                 pause(1)
                 close(f)
-            elseif value == 3 || value == 4 %pco cameras with laser diode
+            elseif value == 3 || value == 4  || value == 10 %pco cameras with laser diode
                 %Start-up sequence for PIVlab LD-PS (much quicker)
                 waitbar(.01,f,'Starting laser...');
                 close(f)
@@ -174,6 +174,7 @@ if required_files_check
                     gui.put('f1exp_cam',f1exp_cam);
                 end
                 gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK')
+                disp('das muss hier dann auch weg. Wird in pco capture funtion gesteuert... Leider, geht nicht anders.')
                 acquisition.control_simple_sync_serial(1,0);
                 gui.put('laser_running',1);
             elseif value== 5 || value == 6 || value==7 || value==8 || value==9%chronos and basler and flir and OPTOcam and OPTRONIS: Camera needs to be started first, afterwards the laser is enabled.
@@ -182,7 +183,7 @@ if required_files_check
             camera_type=gui.retr('camera_type');
 
             value=get(handles.ac_config,'value');
-            if value== 3 || value == 4 %setup with LD-PS and pco
+            if value== 3 || value == 4 || value == 10  %setup with LD-PS and pco
                 %require a calculation of the exposure time which depends on the laser pulse length
                 las_percent=str2double(get(handles.ac_power,'String'));
                 pulse_sep=str2double(get(handles.ac_interpuls,'String'));
@@ -208,7 +209,7 @@ if required_files_check
                 gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK')
                 acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
                 [OutputError,ima,frame_nr_display] = PIVlab_capture_chronos_synced_capture(cameraIP,imageamount,cam_fps,do_realtime,ac_ROI_realtime); %capture n images, display livestream
-            elseif value == 1 || value == 2 || value == 3 || value == 4  %pco cameras
+            elseif value == 1 || value == 2 || value == 3 || value == 4 ||value == 10  %pco cameras
                 PIVlab_capture_pco(imageamount,f1exp_cam,'Synchronizer',projectpath,binning,ac_ROI_general, camera_type);
                 %                PIVlab_capture_pco(imageamount,f1exp_cam,'Synchronizer',projectpath,binning,[ac_ROI_general(1) ac_ROI_general(2) ac_ROI_general(3)/binning ac_ROI_general(4)/binning],camera_type);
             elseif value == 6  %basler cameras

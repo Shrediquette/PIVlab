@@ -11,7 +11,7 @@ if isempty(fh)
 		mainpos=[0    2.8571  240.0000   50.9524];
 	end
 
-	panda_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','pco.panda settings','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4+4 35 11+1.5],'tag','panda_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
+	panda_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','pco.panda/pco.edge settings','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4+4 35 11+1.5],'tag','panda_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
 	set (panda_control_window,'Units','Characters');
 
 
@@ -24,7 +24,7 @@ if isempty(fh)
 	margin=1.5;
 
 	panelheight=12;
-	handles.mainpanel = uipanel(panda_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight parentitem(3)-2 panelheight],'title','pco.panda Settings','fontweight','bold');
+	handles.mainpanel = uipanel(panda_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight parentitem(3)-2 panelheight],'title','panda and edge Settings','fontweight','bold');
 
 
 	%% mainpanel
@@ -42,7 +42,7 @@ if isempty(fh)
 	handles.filetype_txt = uicontrol(handles.mainpanel,'Style','text','String','File type:','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 	item=[parentitem(3)/2*1 item(2) parentitem(3)/2 1.5];
-	handles.filetype = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'Single TIFF','Multi TIFF'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','filetype');
+	handles.filetype = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'Single TIFF','Multi TIFF', 'Computer RAM -> single TIFF files'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','filetype');
     
     item=[parentitem(3)/2 item(2)+item(4)+margin parentitem(3)/2 2];
 	handles.apply_btn = uicontrol(handles.mainpanel,'Style','pushbutton','String','Apply','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@Apply_settings,'tag','apply_btn');

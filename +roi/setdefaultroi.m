@@ -20,7 +20,7 @@ if ~isempty(gui.retr('doing_roi')) && gui.retr('doing_roi')==1
         case 'pco.edge 26 DS 350 Hz'
             des_x=1920;
             des_y=1080;
-        case 'pco.edge 26 DS 780 Hz'
+        case 'pco.edge 26 DS 750 Hz'
             des_x=640;
             des_y=480;
 

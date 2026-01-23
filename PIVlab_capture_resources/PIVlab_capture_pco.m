@@ -232,7 +232,12 @@ if(bitand(cam_desc.dwGeneralCapsDESC1,GENERALCAPS1_NO_TIMESTAMP)==0)
     if strcmp(panda_timestamp,'none')
         subfunc.fh_enable_timestamp(hcam_ptr,TIMESTAMP_MODE_OFF);
     elseif strcmp(panda_timestamp,'ASCII')
-        subfunc.fh_enable_timestamp(hcam_ptr,TIMESTAMP_MODE_ASCII);
+        if strcmp(camera_type,'pco_edge26')
+            subfunc.fh_enable_timestamp(hcam_ptr,TIMESTAMP_MODE_BINARYANDASCII);
+            disp('pco.edge does not support ASCII only, switching to BINARYANDASCII')
+        else
+            subfunc.fh_enable_timestamp(hcam_ptr,TIMESTAMP_MODE_ASCII);
+        end
     elseif strcmp(panda_timestamp,'binary')
         subfunc.fh_enable_timestamp(hcam_ptr,TIMESTAMP_MODE_BINARY);
     elseif strcmp(panda_timestamp,'both')
@@ -293,9 +298,23 @@ try
     camera_array=libstruct('PCO_cam_ptr_List',ml_camlist);
     hreci_ptr = libpointer('voidPtrPtr');
 
-    %je nach modus in RAM ringbuffer oder als datei:
+    panda_filetype=getappdata(hgui,'panda_filetype');
+    if isempty (panda_filetype)
+        panda_filetype='Single TIFF';
+    end
+
+    % RAM ringbuffer for the calibration images or as tif files for streaming or capture to RAM, then save images later for fast cameras:
     if triggermode==2 && ~isinf(imacount) %external trigger, PIV recording
-        [errorCode,hrec_ptr,~,~,MaxImgCountArr] = calllib('PCO_CAM_RECORDER', 'PCO_RecorderCreate',hreci_ptr,camera_array ,pImgDistributionArr,camcount,PCO_RECORDER_MODE_FILE,diskchar,pMaxImgCountArr);
+        if ~strcmpi(panda_filetype,'Computer RAM -> single TIFF files')
+            [errorCode,hrec_ptr,~,~,MaxImgCountArr] = calllib('PCO_CAM_RECORDER', 'PCO_RecorderCreate',hreci_ptr,camera_array ,pImgDistributionArr,camcount,PCO_RECORDER_MODE_FILE,diskchar,pMaxImgCountArr);
+        else
+            [errorCode,hrec_ptr,~,ImgDistributionArr,~,MaxImgCountArr] = calllib('PCO_CAM_RECORDER', 'PCO_RecorderCreate' ,hreci_ptr ,camera_array ,pImgDistributionArr ,camcount ,PCO_RECORDER_MODE_MEMORY ,diskchar ,pMaxImgCountArr);
+            disp(['Maximum amount of images that fits into RAM:     ',int2str(MaxImgCountArr)]);
+            if imacount>min(MaxImgCountArr)
+                imacount=min(MaxImgCountArr);
+                disp(['image account reduced to ' num2str(imacount)]);
+            end
+        end
     end
     if triggermode==0 || isinf(imacount) %Internal trigger, or data should not be saved.
         [errorCode,hrec_ptr,~,~,MaxImgCountArr] = calllib('PCO_CAM_RECORDER', 'PCO_RecorderCreate',hreci_ptr,camera_array ,pImgDistributionArr,camcount,PCO_RECORDER_MODE_MEMORY,diskchar,pMaxImgCountArr);
@@ -310,23 +329,12 @@ try
         subfunc.fh_lasterr(errorCode);
         throw(ME);
     end
-    %disp(['MaxImgCount:     ',int2str(MaxImgCountArr)]);
-    %{
-    if imacount>min(MaxImgCountArr)
-        imacount=min(MaxImgCountArr);
-        disp(['imacount changed to ' num2str(imacount)]);
-    end
-    %}
+
     ImgCountArr=zeros(1,camcount,'uint32');
-    if ~isinf(imacount)
+    if ~isinf(imacount) 
         ImgCountArr(1)=imacount;
     else
         ImgCountArr(1)=5; %ringbuffer for 5 images seems to be minimum.
-    end
-
-    panda_filetype=getappdata(hgui,'panda_filetype');
-    if isempty (panda_filetype)
-        panda_filetype='Single TIFF';
     end
 
     if strcmp(panda_filetype,'Single TIFF')
@@ -347,8 +355,16 @@ try
                 ,1,fullfile(ImagePath, 'PIVlab_pco.tif'),[]);
             pco_errdisp('PCO_RecorderInit',errorCode);
         end
+    elseif strcmp(panda_filetype,'Computer RAM -> single TIFF files')
+        if triggermode==2 && ~isinf(imacount) %external trigger, PIV recording
+            [errorCode] = calllib('PCO_CAM_RECORDER', 'PCO_RecorderInit' ...
+                ,hrec_ptr ...
+                ,ImgCountArr,camcount ...
+                ,PCO_RECORDER_MEMORY_SEQUENCE ...
+                ,1,[],[]);
+            pco_errdisp('PCO_RecorderInit',errorCode);
+        end
     end
-
     if triggermode==0 || isinf(imacount) %Internal trigger, or data should not be saved.
         [errorCode] = calllib('PCO_CAM_RECORDER', 'PCO_RecorderInit' ...
             ,hrec_ptr ...
@@ -366,11 +382,14 @@ try
         throw(ME);
     end
     IsRunning   =true;
-    IsNotValid  =false;
+     IsNotValid   =false;
     ProcImgCount=uint32(0);
     ReqImgCount =uint32(0);
     StartTime   =uint32(0);
     StopTime    =uint32(0);
+
+
+
     %{
 	[errorCode,~,~...
 		,IsRunning,~,~...
@@ -751,6 +770,33 @@ try
     set(frame_nr_display,'String','');
     [errorCode]=calllib('PCO_CAM_RECORDER','PCO_RecorderStopRecord',hrec_ptr,hcam_ptr);
     pco_errdisp('PCO_RecorderStopRecord',errorCode);
+
+
+    %% save images from RAM to disk
+    if strcmpi(panda_filetype,'Computer RAM -> single TIFF files') && ~isinf(imacount) && ~strcmpi(TriggerModeString,'oneimage_piv')
+        set(frame_nr_display,'String',['Capture complete, getting data from RAM...']);
+        drawnow
+        disp('Das muss natürlich ganz anders...')
+        'wahrscheinlich muss man das aufsplitten, damit man den Laser stoppen kann sobald alle aufnahmen gemacht sind.'
+        'in dem Zuge auch gleich umbasteln, so dass erst die Kamera scharf gemacht wird, und dann der Laser angeht'
+        'aber das ird schwierig, weil auf den recorder kann ich ja nur aus dieser funktion zu greifen...'
+        'Vielleicht doch eher in diese Funktion den Code zum stoppen des Lasers rein?'
+        'Ich denke ich muss einfach das hier reinziehen oben und unten:'
+       % ' acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser'
+       %daran denken: Nur machen wenn LD-PS
+     
+        for cntr = 0:ProcImgCount-1
+            file_name=fullfile(ImagePath,['PIVlab_pco_' sprintf('%6.6d',cntr) '.tif']);
+            [errorCode] = calllib( 'PCO_CAM_RECORDER', 'PCO_RecorderExportImage', hrec_ptr,hcam_ptr,cntr,file_name,1);
+            pco_errdisp('PCO_RecorderExportImage',errorCode);
+            set(frame_nr_display,'String',['Saving images from RAM ' int2str(cntr+1) ' ...']);
+            drawnow limitrate
+        end
+
+    end
+
+
+
     [errorCode]=calllib('PCO_CAM_RECORDER','PCO_RecorderDelete',hrec_ptr);
     pco_errdisp('PCO_RecorderDelete',errorCode);
 
