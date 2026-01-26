@@ -58,7 +58,7 @@ if(errorCode~=PCO_NOERROR)
     glvar.do_libunload=1;
     pco_camera_open_close(glvar);
     figure(hgui)
-    set(frame_nr_display,'String',['Camera not found. Is the pco.USB driver installed? Is it connected?' newline 'If problem persists, you might' newline 'need to restart Matlab.']);
+    set(frame_nr_display,'String',['Camera not found. Is the suitable pco interface driver installed? Is it connected?' newline 'If problem persists, you might' newline 'need to restart Matlab.']);
     %% RESET camera and recorder when camera crashed.
     try
         pause(1)
@@ -784,7 +784,7 @@ try
     end
 
     %% save images from RAM to disk
-    if strcmpi(panda_filetype,'Computer RAM -> single TIFF files') && ~isinf(imacount) && ~strcmpi(TriggerModeString,'oneimage_piv') && ~strcmpi(TriggerModeString,'oneimage_calibration')
+    if strcmpi(panda_filetype,'Computer RAM -> single TIFF files') && ~isinf(imacount) && ~strcmpi(TriggerModeString,'oneimage_piv') && ~strcmpi(TriggerModeString,'oneimage_calibration') &&  triggermode~=0
         set(frame_nr_display,'String',['Capture complete, getting data from RAM...']);
         drawnow
         for cntr = 0:ProcImgCount-1

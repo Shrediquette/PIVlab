@@ -65,7 +65,7 @@ if value == 10% pco edge 26ds clhs with LD-PS
 	gui.put('f1exp',352) % Exposure start -> Q1 delay
 	gui.put('f1exp_cam',350); %exposure time setting first frame
 		gui.put('master_freq',45); %
-disp('I think these are not used in new synchronizer... Are they?')
+%disp('I think these are not used in new synchronizer... Are they?')
 	avail_freqs={'750' '300' '180' '100' '70' '25'};
 	gui.put('max_cam_res',[5120,5120]);
 	gui.put('min_allowed_interframe',5);
