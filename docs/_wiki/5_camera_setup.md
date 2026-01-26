@@ -21,7 +21,7 @@ title: Camera Setup
 1. Install the PCO interface drivers (USB 3.0 for the panda camera, USB 2.0 for the pixelfly, CLHS KAYA for the edge): https://www.excelitas.com/product/pco-interface-drivers
 2. Plug in your pco camera. Take care to fully insert the connector (**this is a common pitfall!** Tighten the screws on the USB plug on the panda and gently wiggle the plug on the edge.) Do NOT use a USB hub for the panda! The camera needs the full bandwith of the USB port. Please make sure that the computer you are using is connected to a power supply. Otherwise it may limit the bandwidth of the USB port / CLHGS grabber for energy saving reasons.
 
-### Instructions for PIVlab toolbox version >= 3.07 (for older versions, see below)
+### Instructions for PIVlab toolbox version
 1. Install pco camware: https://www.excelitas.com/product/pco-camera-control-software
 2. Install pco.matlab: https://www.excelitas.com/product/pco-software-development-kits
 3. Install the PCO interface drivers (USB 3.0 for the panda camera, USB 2.0 for the pixelfly, CLHS KAYA for the edge): https://www.excelitas.com/product/pco-interface-drivers
@@ -29,23 +29,7 @@ title: Camera Setup
 5. Open the folder of the pco.matlab installation from step 2 (typically in "C:\Program Files\PCO Digital Camera Toolbox\pco.matlab"), and run pco.matlab\scripts\setup_files.m in Matlab
 6. In Matlab, add the pco.matlab folder to the search path permanently: Click on the "Home" tab, then "Set Path", then "Add with subfolders". Select the pco.matlab folder, then click "Save", then "Close".
 7. Plug in your pco camera. Take care to fully insert the connector (**this is a common pitfall!** Tighten the screws on the USB plug on the panda and gently wiggle the plug on the edge.) Do NOT use a USB hub for the panda! The camera needs the full bandwith of the USB port. Please make sure that the computer you are using is connected to a power supply. Otherwise it may limit the bandwidth of the USB port / CLHGS grabber for energy saving reasons.
-
 8. Run pco_camera_info.m in the pco.matlab\scripts folder to see information about your pco camera. This should run without errors.
-   Done. You can now use your pco camera in the PIVlab_GUI.
-
-### Instructions for PIVlab toolbox until version 3.06
-1. Install pco camware: https://www.excelitas.com/product/pco-camera-control-software
-2. Install pco.matlab: https://www.excelitas.com/product/pco-software-development-kits
-3. Install the PCO USB 3.0 Interface Driver for the panda camera, or the 2.0 Driver for the pixelfly: https://www.excelitas.com/product/pco-interface-drivers
-4. Download and install Matlab Compiler: https://de.mathworks.com/matlabcentral/fileexchange/52848-matlab-support-for-mingw-w64-c-c-compiler
-5. Navigate to your PIVlab installation. The folder depends on how you installed PIVlab:
-* If you installed the mltbx file, then, on the MATLAB® Home tab, in the Environment section, click Add-Ons > Manage Add-ons. Then click on the three vertical dots and choose "Open Folder". If PIVlab appears twice in this list, you will have to do the following steps for all of these entries.
-* If you just downloaded and unzipped the zip archive, then navigate to the destination folder you chose.
-6. Open the folder of the pco.matlab installation from step 2, and run pco.matlab\scripts\setup_files.m in Matlab
-7. Now copy all the contents of folder "scripts" **_except_** pco_camera_open_close.m and pco_camera_subfunction.m to "PIVlab\PIVlab_capture_resources\PCO_resources\scripts in the PIVlab folder you located in step 4.
-8. Plug in your pco camera **(do NOT use a USB hub! The camera needs the full bandwith of the USB port)**. Please take care to fully insert (tighten the two screws!) the USB cable in the camera. Please make sure that the computer you are using is connected to a power supply. Otherwise it may limit the bandwidth of the USB port for energy saving reasons.
-
-9. Run pco_camera_info.m in the scripts folder to see information about your pco camera. This should run without errors.
    Done. You can now use your pco camera in the PIVlab_GUI.
 
 # Setting up OPTRONIS cameras
