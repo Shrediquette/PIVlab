@@ -9,6 +9,11 @@ elseif  strcmpi(TriggerModeString,'oneimage_calibration')
 elseif  strcmpi(TriggerModeString,'oneimage_piv')
     triggermode=0; %internal trigger, dual image (actually only for measuring max acquisition speed)
 end
+panda_filetype=getappdata(hgui,'panda_filetype');
+if isempty (panda_filetype)
+    panda_filetype='Single TIFF';
+end
+
 OutputError=0;
 image_stack=[];
 framerate_max=1;
@@ -298,11 +303,6 @@ try
     camera_array=libstruct('PCO_cam_ptr_List',ml_camlist);
     hreci_ptr = libpointer('voidPtrPtr');
 
-    panda_filetype=getappdata(hgui,'panda_filetype');
-    if isempty (panda_filetype)
-        panda_filetype='Single TIFF';
-    end
-
     % RAM ringbuffer for the calibration images or as tif files for streaming or capture to RAM, then save images later for fast cameras:
     if triggermode==2 && ~isinf(imacount) %external trigger, PIV recording
         if ~strcmpi(panda_filetype,'Computer RAM -> single TIFF files')
@@ -331,7 +331,7 @@ try
     end
 
     ImgCountArr=zeros(1,camcount,'uint32');
-    if ~isinf(imacount) 
+    if ~isinf(imacount)
         ImgCountArr(1)=imacount;
     else
         ImgCountArr(1)=5; %ringbuffer for 5 images seems to be minimum.
@@ -382,7 +382,7 @@ try
         throw(ME);
     end
     IsRunning   =true;
-     IsNotValid   =false;
+    IsNotValid   =false;
     ProcImgCount=uint32(0);
     ReqImgCount =uint32(0);
     StartTime   =uint32(0);
@@ -489,6 +489,13 @@ try
     old_ProcImgCount=ProcImgCount;
     if triggermode==2 % external trigger, PIV mode
         set(frame_nr_display,'String','Waiting for trigger...');
+    end
+
+    %% enable laser before capture for pco. Their capture code cannot be split into preparation / capture / save, so the synchronizer commands are inside this capture function.
+    if triggermode==2 % only in PIV mode where laser is running
+        gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK')
+        acquisition.control_simple_sync_serial(1,0);
+        gui.put('laser_running',1);
     end
     %% loop running while recording
     while IsRunning && getappdata(hgui,'cancel_capture') ~=1
@@ -628,7 +635,6 @@ try
                     close(hist_fig)
                 end
             end
-
 
 
             %% Autofocus
@@ -771,35 +777,27 @@ try
     [errorCode]=calllib('PCO_CAM_RECORDER','PCO_RecorderStopRecord',hrec_ptr,hcam_ptr);
     pco_errdisp('PCO_RecorderStopRecord',errorCode);
 
+    %% disable laser after capturing finished
+    if triggermode==2 % only in PIV mode where laser is running
+        acquisition.control_simple_sync_serial(0,0);pause(0.1);acquisition.control_simple_sync_serial(0,0);
+        gui.put('laser_running',0);
+    end
 
     %% save images from RAM to disk
-    if strcmpi(panda_filetype,'Computer RAM -> single TIFF files') && ~isinf(imacount) && ~strcmpi(TriggerModeString,'oneimage_piv')
+    if strcmpi(panda_filetype,'Computer RAM -> single TIFF files') && ~isinf(imacount) && ~strcmpi(TriggerModeString,'oneimage_piv') && ~strcmpi(TriggerModeString,'oneimage_calibration')
         set(frame_nr_display,'String',['Capture complete, getting data from RAM...']);
         drawnow
-        disp('Das muss natürlich ganz anders...')
-        'wahrscheinlich muss man das aufsplitten, damit man den Laser stoppen kann sobald alle aufnahmen gemacht sind.'
-        'in dem Zuge auch gleich umbasteln, so dass erst die Kamera scharf gemacht wird, und dann der Laser angeht'
-        'aber das ird schwierig, weil auf den recorder kann ich ja nur aus dieser funktion zu greifen...'
-        'Vielleicht doch eher in diese Funktion den Code zum stoppen des Lasers rein?'
-        'Ich denke ich muss einfach das hier reinziehen oben und unten:'
-       % ' acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser'
-       %daran denken: Nur machen wenn LD-PS
-     
         for cntr = 0:ProcImgCount-1
             file_name=fullfile(ImagePath,['PIVlab_pco_' sprintf('%6.6d',cntr) '.tif']);
             [errorCode] = calllib( 'PCO_CAM_RECORDER', 'PCO_RecorderExportImage', hrec_ptr,hcam_ptr,cntr,file_name,1);
             pco_errdisp('PCO_RecorderExportImage',errorCode);
-            set(frame_nr_display,'String',['Saving images from RAM ' int2str(cntr+1) ' ...']);
+            set(frame_nr_display,'String',['Saving images from RAM ' int2str(cntr+1) ' of ' int2str(ProcImgCount)]);
             drawnow limitrate
         end
-
     end
-
-
 
     [errorCode]=calllib('PCO_CAM_RECORDER','PCO_RecorderDelete',hrec_ptr);
     pco_errdisp('PCO_RecorderDelete',errorCode);
-
 
 catch ME
     errorCode=subfunc.fh_lasterr();
@@ -866,7 +864,6 @@ end
 function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');
 if running == 1
-
     hgui=getappdata(0,'hgui');
     PIVlab_axis = findobj(hgui,'Type','Axes');
     %image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam');
@@ -885,7 +882,6 @@ if running == 1
         bg_col= [0.25 0.25 0.25];
         axes(PIVlab_axis);
         text(postix(2)/2,postiy(2)/2,'Autofocus running, please wait...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',24, 'BackgroundColor', bg_col,'tag','auto_focus_active','margin',10,'Clipping','on');
-
     end
 else
     delete(auto_focus_active_hint);

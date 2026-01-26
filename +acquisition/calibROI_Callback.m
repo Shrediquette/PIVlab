@@ -95,7 +95,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
                 m0 = uimenu(c_menu,'Label','pco.edge 26 DS 70 Hz','Callback',@roi.setdefaultroi);
                 m1 = uimenu(c_menu,'Label','pco.edge 26 DS 100 Hz','Callback',@roi.setdefaultroi);
                 m2 = uimenu(c_menu,'Label','pco.edge 26 DS 180 Hz','Callback',@roi.setdefaultroi);
-                m3 = uimenu(c_menu,'Label','pco.edge 26 DS 350 Hz','Callback',@roi.setdefaultroi);
+                m3 = uimenu(c_menu,'Label','pco.edge 26 DS 300 Hz','Callback',@roi.setdefaultroi);
                 m4 = uimenu(c_menu,'Label','pco.edge 26 DS 750 Hz','Callback',@roi.setdefaultroi);
             end
             if strcmp(camera_type,'pco_panda')

@@ -71,6 +71,8 @@ if strcmp(panda_filetype,'Single TIFF')
 	set(handles.filetype,'value',1);
 elseif strcmp(panda_filetype,'Multi TIFF')
 	set(handles.filetype,'value',2);
+elseif strcmp(panda_filetype,'Computer RAM -> single TIFF files')
+	set(handles.filetype,'value',3);    
 end
 
 

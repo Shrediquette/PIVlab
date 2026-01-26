@@ -6,6 +6,35 @@ catch
 end
 gui.put('capturing',0);
 camera_type=gui.retr('camera_type');
+ handles=gui.gethand;
+ hgui=getappdata(0,'hgui');
+
+ %% pco.edge only: display a warning if user selected to stream data to the disk
+ % this might skip frames. User should always capture to RAM; then save to disk
+ if strcmp(camera_type,'pco_edge26')
+     if get(handles.ac_pivcapture_save,'Value')==1
+         panda_filetype=getappdata(hgui,'panda_filetype');
+         if isempty (panda_filetype)
+             panda_filetype='Single TIFF';
+         end
+         if ~strcmpi(panda_filetype,'Computer RAM -> single TIFF files')
+             ramsave = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Warning',['The data of the pco.edge 26 DS CLHS should be captured to RAM, otherwise frames might be skipped.' newline newline 'How should I proceed with the capture?'],'modal',{'Enable RAM capture','Stream to disk', 'Cancel'},'Stream to disk');
+             if strmatch(ramsave,'Cancel')==1
+                 return
+             elseif strmatch(ramsave,'Enable RAM capture')==1
+                 setappdata(hgui,'panda_filetype','Computer RAM -> single TIFF files');
+                 % capture can continue normally
+             elseif strmatch(ramsave,'Stream to disk')==1
+                 %dont change anything
+                 % capture can continue normally
+             end
+         end
+     end
+ end
+
+
+
+
 required_files_check=1;
 if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') %calib
     if exist('pco_camera_load_defines.m','file') && exist('pco_recorder.dll','file') %pco.matlab must be installed and permanently added to the search path
@@ -17,7 +46,7 @@ end
 if required_files_check
 	button = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Warning','Arm Laser and camera?','modal',{'Yes','Cancel'},'Yes');
     if strmatch(button,'Yes')==1
-        handles=gui.gethand;
+       
         gui.put('cancel_capture',0);
         projectpath=get(handles.ac_project,'String');
         if get(handles.ac_pivcapture_save,'Value')==1 %check settings only when user wants to save data
@@ -173,10 +202,9 @@ if required_files_check
                     f1exp_cam =floor(pulse_sep*las_percent/100);
                     gui.put('f1exp_cam',f1exp_cam);
                 end
-                gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK')
-                disp('das muss hier dann auch weg. Wird in pco capture funtion gesteuert... Leider, geht nicht anders.')
-                acquisition.control_simple_sync_serial(1,0);
-                gui.put('laser_running',1);
+%                gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK')
+%                acquisition.control_simple_sync_serial(1,0);
+%                gui.put('laser_running',1);
             elseif value== 5 || value == 6 || value==7 || value==8 || value==9%chronos and basler and flir and OPTOcam and OPTRONIS: Camera needs to be started first, afterwards the laser is enabled.
                 close(f)
             end
@@ -343,8 +371,13 @@ if required_files_check
             if (~isempty(gui.retr('ac_enable_seeding1')) && gui.retr('ac_enable_seeding1') ~=0) || (~isempty(gui.retr('ac_enable_device1')) && gui.retr('ac_enable_device1') ~=0) || (~isempty(gui.retr('ac_enable_device2')) && gui.retr('ac_enable_device2') ~=0) || (~isempty(gui.retr('ac_enable_flowlab')) && gui.retr('ac_enable_flowlab') ~=0)
                 acquisition.external_device_control(0); % stops all external devices
             end
-            acquisition.control_simple_sync_serial(0,0);pause(0.1);acquisition.control_simple_sync_serial(0,0);
-            gui.put('laser_running',0);
+
+            if value~= 3 && value ~= 4 && value ~= 10  %setup without LD-PS and pco
+                %disable laser after capture for every cam, except pco. Their capture code cannot be split into preparation / capture / save, so the synchronizer commands are inside their capture function.
+                acquisition.control_simple_sync_serial(0,0);pause(0.1);acquisition.control_simple_sync_serial(0,0);
+                gui.put('laser_running',0);
+            end
+
             if value == 5 %chronos
                 %when Chronos:save the images when finished recording to camera ram
                 if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
@@ -380,7 +413,6 @@ if required_files_check
                 if found_the_data==1
                     gui.put('sessionpath',projectpath );
                     set(handles.time_inp,'String',num2str(str2num(get(handles.ac_interpuls,'String'))/1000));
-                    hgui=getappdata(0,'hgui');
                     serpo=getappdata(hgui,'serpo');
                     export.save_session_function (projectpath,'PIVlab_Capture_Session.mat');
                     gui.put('serpo',serpo); %Serpo gets inaccessible after savesession. Probably because there are a number of variables cleared to allow saving without crashing.

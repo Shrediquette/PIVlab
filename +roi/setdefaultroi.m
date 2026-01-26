@@ -17,12 +17,12 @@ if ~isempty(gui.retr('doing_roi')) && gui.retr('doing_roi')==1
         case 'pco.edge 26 DS 180 Hz'
             des_x=2400;
             des_y=1920;
-        case 'pco.edge 26 DS 350 Hz'
+        case 'pco.edge 26 DS 300 Hz'
             des_x=1920;
             des_y=1080;
         case 'pco.edge 26 DS 750 Hz'
-            des_x=640;
-            des_y=480;
+            des_x=608;
+            des_y=448;
 
         case 'pco.panda 45 Hz'
             des_x=480;
