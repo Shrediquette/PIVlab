@@ -4,7 +4,7 @@ OPTOcam_climits=2^bitmode;
 hgui=getappdata(0,'hgui');
 image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam');
 OutputError=0;
-
+OPTOcam_settings = get(OPTOcam_vid);
 OPTOcam_frames_to_capture = nr_of_images*2;
 set(frame_nr_display,'backgroundcolor','k');
 %% capture data
@@ -214,6 +214,8 @@ end
 
 stoppreview(OPTOcam_vid)
 stop(OPTOcam_vid);
+executeCommand(OPTOcam_settings.Source,"BslSensorOff")
+disp('Sending sensor to sleep mode.')
 
 if ~isinf(OPTOcam_frames_to_capture)
     set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTOcam_vid.FramesAcquired/2))]);

@@ -76,6 +76,8 @@ elseif bitmode==12
 end
 
 OPTOcam_settings = get(OPTOcam_vid);
+executeCommand(OPTOcam_settings.Source,"BslSensorOn")
+disp('Waking up sensor from sleep mode.')
 OPTOcam_settings.Source.DeviceLinkThroughputLimitMode = 'off';
 OPTOcam_settings.PreviewFullBitDepth='On';
 OPTOcam_vid.PreviewFullBitDepth='On';

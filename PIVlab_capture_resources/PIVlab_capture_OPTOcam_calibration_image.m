@@ -63,6 +63,8 @@ OPTOcam_supported_formats = info.DeviceInfo(CamID).SupportedFormats;
 OPTOcam_vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,'Mono12'); %calibration image in 12 bit always.
 
 OPTOcam_settings = get(OPTOcam_vid);
+executeCommand(OPTOcam_settings.Source,"BslSensorOn")
+disp('Waking up sensor from sleep mode.')
 OPTOcam_settings.Source.DeviceLinkThroughputLimitMode = 'off';
 OPTOcam_settings.PreviewFullBitDepth='On';
 OPTOcam_vid.PreviewFullBitDepth='On';
@@ -326,6 +328,8 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
 
 end
 stoppreview(OPTOcam_vid)
+executeCommand(OPTOcam_settings.Source,"BslSensorOff")
+disp('Sending sensor to sleep mode.')
 
 function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');
