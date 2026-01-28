@@ -76,7 +76,7 @@ if ~exist(FileName,'file')
 		close(fig)
 	end
 end
-
+pause(1)
 if exist(FileName,'file')
 	gui.toolsavailable(1)
 	gui.toolsavailable(0,'Unzipping filter matrices...');drawnow
@@ -94,10 +94,10 @@ end
 
 function download_stuff (FileName)
 FileUrl = 'https://files.osf.io/v1/resources/y48mk/providers/osfstorage/?zip=';
-options = weboptions('Timeout',4);
+options = weboptions('Timeout',6);
 websave(FileName,FileUrl,options);
 
 function download_stuff_alternate_location (FileName)
 FileUrl = 'https://files.optolution.com/filter_matrices.zip';
-options = weboptions('Timeout',4);
+options = weboptions('Timeout',6);
 websave(FileName,FileUrl,options);
