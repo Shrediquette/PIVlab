@@ -1,4 +1,5 @@
 function [outputArg1,outputArg2] = cam_find_charuco_parameters_Callback(~,~,~)
+%% first try to detect QR code. If not successful, try to detect charuco board itself. But this seems difficult and fails if not perfect image quality.
 warning off 'vision:calibrate:boardShouldBeAsymmetric'
 handles=gui.gethand;
 [filename,location]=uigetfile(...
@@ -19,6 +20,24 @@ if ~isempty(filename)
 
     tmp_img=imadjust(tmp_img(:,:,1));
 
+    %% QR detection
+    [detectionOK, markerFamily, originCheckerColor,patternDims,checkerSize,markerSize] = preproc.cam_get_charuco_info_from_QRcode (tmp_img);
+    if detectionOK
+        if strcmp(originCheckerColor,'Black')
+            handles.calib_origincolor.Value = 1;
+        elseif strcmp(originCheckerColor,'White')
+            handles.calib_origincolor.Value = 2;
+        end
+        handles.calib_rows.String = num2str(patternDims(1));
+        handles.calib_columns.String = num2str(patternDims(2));
+        if strcmp(markerFamily,'DICT_4X4_1000')
+            handles.calib_boardtype.Value = 1;
+        end
+        handles.calib_checkersize.String = num2str(checkerSize);
+        handles.calib_markersize.String = num2str(markerSize);
+        gui.custom_msgbox('msg',getappdata(0,'hgui'),'Results from QR code',['Origin checker color: ' originCheckerColor newline 'Marker family: ' markerFamily newline 'Rows: ' int2str(patternDims(1)) newline 'Columns: ' int2str(patternDims(2)) newline 'Checker Size: ' int2str(checkerSize) newline 'Marker Size: ' int2str(markerSize)],'modal','OK','OK');
+        return
+    end
 
     [ids,locs,detectedFamily] = readArucoMarker(tmp_img);
 
@@ -85,9 +104,7 @@ if ~isempty(filename)
         OriginCheckerColor = 'White';
     end
 
-
-
-    gui.custom_msgbox('msg',getappdata(0,'hgui'),'Results (may be inaccurate)',['Origin checker color: ' OriginCheckerColor  'Marker family: ' mostCommonFamily  'Rows: ' int2str(boardSize(1))  'Columns: ' int2str(boardSize(2)) ],'modal','OK','OK')
+    gui.custom_msgbox('msg',getappdata(0,'hgui'),'Results (may be inaccurate)',['Origin checker color: ' OriginCheckerColor  'Marker family: ' mostCommonFamily  'Rows: ' int2str(boardSize(1))  'Columns: ' int2str(boardSize(2)) ],'modal','OK','OK');
 
     if strcmpi('DICT_4X4_1000',mostCommonFamily)
         handles.calib_boardtype.Value = 1;

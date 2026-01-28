@@ -4,7 +4,11 @@ handles=gui.gethand;
 cam_selected_target_images = gui.retr('cam_selected_target_images');
 originCheckerColor = handles.calib_origincolor.String{handles.calib_origincolor.Value};
 if strcmpi (originCheckerColor,'white') && mod(str2double(handles.calib_rows.String),2)~=0
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Number of rows of the ChArUco board, dim1, must be even when OriginCheckerColor is white.','modal')
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Number of rows of the ChArUco board, dim1, must be even when OriginCheckerColor is white.','modal');
+    return
+end
+if isempty(cam_selected_target_images) || ~iscell(cam_selected_target_images) || numel(cam_selected_target_images) <=1
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Not enough marker board images selected.','modal')
     return
 end
 
@@ -29,49 +33,38 @@ if ~isempty(cam_selected_target_images)
         tmp_img=imread(cam_selected_target_images{i});
         tmp_img=tmp_img(:,:,1);
         tmp_img=imadjust(tmp_img);
-        msg=readBarcode(tmp_img,'QR-CODE');
-        if ~isempty(msg)
-            if contains(msg,'F') && contains(msg,'O') && contains(msg,'R') && contains(msg,'C') && contains(msg,'S') && contains(msg,'M') && contains(msg,',') && contains(msg,':')
-                %String is e.g.: F:1,O:b,R:123,C:345,S:800,M:100
-                C = strsplit(msg,',');
-                if size(C,2) == 6
-                    qr_markerFamily=str2double(C{1}(3:end));
-                    if qr_markerFamily == 1
-                        qr_markerFamily = 'DICT_4X4_1000';
-                    else
-                        qr_markerFamily = 'not supported';
+        [detectionOK,qr_markerFamily, qr_originCheckerColor,qr_patternDims,qr_checkerSize,qr_markerSize] = preproc.cam_get_charuco_info_from_QRcode (tmp_img);
+        %check if it differs from manually entered numbers
+        if detectionOK
+            if  ~strcmp(markerFamily,qr_markerFamily) || ~strcmp(originCheckerColor,qr_originCheckerColor) ||  patternDims(1) ~= qr_patternDims(1) ||  patternDims(2) ~= qr_patternDims(2) || checkerSize ~= qr_checkerSize || markerSize ~= qr_markerSize
+                button = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Warning',['User supplied information for Charuco board differs from the information found in the QR code on the board.' newline newline 'Use the information from the QR code on the board?'],'modal',{'Yes','No'},'Yes');
+                if strmatch(button,'Yes')==1
+                    markerFamily = qr_markerFamily;
+                    originCheckerColor = qr_originCheckerColor;
+                    patternDims = qr_patternDims;
+                    checkerSize = qr_checkerSize;
+                    markerSize = qr_markerSize;
+                    if strcmp(originCheckerColor,'Black')
+                        handles.calib_origincolor.Value = 1;
+                    elseif strcmp(originCheckerColor,'White')
+                        handles.calib_origincolor.Value = 2;
                     end
-                    qr_originCheckerColor = C{2}(3:end);
-                    if strcmp (qr_originCheckerColor,'b')
-                        qr_originCheckerColor = 'Black';
-                    elseif strcmp (qr_originCheckerColor,'w')
-                        qr_originCheckerColor = 'White';
-                    else
-                        qr_originCheckerColor = 'unknown';
+                    handles.calib_rows.String = num2str(patternDims(1));
+                    handles.calib_columns.String = num2str(patternDims(2));
+                    if strcmp(markerFamily,'DICT_4X4_1000')
+                        handles.calib_boardtype.Value = 1;
                     end
-                    qr_patternDims(1)=str2double(C{3}(3:end));
-                    qr_patternDims(2)=str2double(C{4}(3:end));
-                    qr_checkerSize=str2double(C{5}(3:end));
-                    qr_markerSize=str2double(C{6}(3:end));
-                    %check if it differs from manually entered numbers
-                    if  ~strcmp(markerFamily,qr_markerFamily) || ~strcmp(originCheckerColor,qr_originCheckerColor) ||  patternDims(1) ~= qr_patternDims(1) ||  patternDims(2) ~= qr_patternDims(2) || checkerSize ~= qr_checkerSize || markerSize ~= qr_markerSize
-                        button = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Warning','User supplied information for Charuco board differs from the information found on the QR code on the board. Use the information from the QR code on the board?','modal',{'Yes','No'},'Yes');
-                        if strmatch(button,'Yes')==1
-                            markerFamily = qr_markerFamily;
-                            originCheckerColor = qr_originCheckerColor;
-                            patternDims = qr_patternDims;
-                            checkerSize = qr_checkerSize;
-                            markerSize = qr_markerSize;
-                        end
-                    end
-                    break
+                    handles.calib_checkersize.String = num2str(checkerSize);
+                    handles.calib_markersize.String = num2str(markerSize);
                 end
+            else
+                disp('QR info and user info match.')
             end
+            break
         end
     end
-
-        %% Slower but more robust due to image preprocessing:
-        %%{
+    %% Slower but more robust due to image preprocessing:
+    %%{
     d = uiprogressdlg(gcf,'Title','ChArUco board pattern detection...','Message','Starting ChArUco board pattern detection...');
     imagesUsed=false(numel(cam_selected_target_images),1);
     imagePoints=[];
@@ -171,13 +164,12 @@ if ~isempty(cam_selected_target_images)
         gui.custom_msgbox('msg',getappdata(0,'hgui'),'Success',{'Camera parameter estimation successful.' ;  ['Detected ' num2str(percentage_detected) '% of the available checkers.']},'modal',{'OK'},'OK')
 
     catch ME
-        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',{'Are the numbers for columns and rows correct?' ;' '; ME.message},'modal')
+        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',{'Problem with camera calibration: ' ;' '; ME.message},'modal');
     end
 
     gui.toolsavailable(1)
 else
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No calibration image data was loaded.','modal')
-
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No calibration image data was loaded.','modal');
 end
 
 
