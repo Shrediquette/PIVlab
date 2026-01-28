@@ -77,19 +77,24 @@ if ~exist(FileName,'file')
 	end
 end
 pause(1)
-if exist(FileName,'file')
+try
+	if exist(FileName,'file')
+		gui.toolsavailable(1)
+		gui.toolsavailable(0,'Unzipping filter matrices...');drawnow
+		disp('Filter Matrices downloaded, unzipping...')
+		[filepath,~,~]=  fileparts(which('PIVlab_GUI.m'));
+		unzip(FileName,fullfile(filepath,'+wOFV','Filter matrices'))
+		disp('Filter Matrices stored.')
+		delete(FileName)
+		gui.toolsavailable(1)
+		gui.toolsavailable(0,'Busy, please wait...');drawnow
+	else
+		gui.toolsavailable(1)
+		gui.custom_msgbox('warn',getappdata(0,'hgui'),'No filter matrices found',{'Data could not be downloaded from repository:' 'https://files.osf.io/v1/resources/y48mk/providers/osfstorage/?zip='},'modal');
+	end
+catch ME
 	gui.toolsavailable(1)
-	gui.toolsavailable(0,'Unzipping filter matrices...');drawnow
-    disp('Filter Matrices downloaded, unzipping...')
-    [filepath,~,~]=  fileparts(which('PIVlab_GUI.m'));
-    unzip(FileName,fullfile(filepath,'+wOFV','Filter matrices'))
-    disp('Filter Matrices stored.')
-    delete(FileName)
-    gui.toolsavailable(1)
-    gui.toolsavailable(0,'Busy, please wait...');drawnow
-else
-    gui.toolsavailable(1)
-    gui.custom_msgbox('warn',getappdata(0,'hgui'),'No filter matrices found',{'Data could not be downloaded from repository:' 'https://files.osf.io/v1/resources/y48mk/providers/osfstorage/?zip='},'modal');
+	gui.custom_msgbox('warn',getappdata(0,'hgui'),'No filter matrices found',ME.message,'modal');
 end
 
 function download_stuff (FileName)
