@@ -25,14 +25,59 @@ if ~isempty(cam_selected_target_images)
         return
     end
     minMarkerID = 0;
+    for i=1:numel(cam_selected_target_images)
+        tmp_img=imread(cam_selected_target_images{i});
+        tmp_img=tmp_img(:,:,1);
+        tmp_img=imadjust(tmp_img);
+        msg=readBarcode(tmp_img,'QR-CODE');
+        if ~isempty(msg)
+            if contains(msg,'F') && contains(msg,'O') && contains(msg,'R') && contains(msg,'C') && contains(msg,'S') && contains(msg,'M') && contains(msg,',') && contains(msg,':')
+                %String is e.g.: F:1,O:b,R:123,C:345,S:800,M:100
+                C = strsplit(msg,',');
+                if size(C,2) == 6
+                    qr_markerFamily=str2double(C{1}(3:end));
+                    if qr_markerFamily == 1
+                        qr_markerFamily = 'DICT_4X4_1000';
+                    else
+                        qr_markerFamily = 'not supported';
+                    end
+                    qr_originCheckerColor = C{2}(3:end);
+                    if strcmp (qr_originCheckerColor,'b')
+                        qr_originCheckerColor = 'Black';
+                    elseif strcmp (qr_originCheckerColor,'w')
+                        qr_originCheckerColor = 'White';
+                    else
+                        qr_originCheckerColor = 'unknown';
+                    end
+                    qr_patternDims(1)=str2double(C{3}(3:end));
+                    qr_patternDims(2)=str2double(C{4}(3:end));
+                    qr_checkerSize=str2double(C{5}(3:end));
+                    qr_markerSize=str2double(C{6}(3:end));
+                    %check if it differs from manually entered numbers
+                    if  ~strcmp(markerFamily,qr_markerFamily) || ~strcmp(originCheckerColor,qr_originCheckerColor) ||  patternDims(1) ~= qr_patternDims(1) ||  patternDims(2) ~= qr_patternDims(2) || checkerSize ~= qr_checkerSize || markerSize ~= qr_markerSize
+                        button = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Warning','User supplied information for Charuco board differs from the information found on the QR code on the board. Use the information from the QR code on the board?','modal',{'Yes','No'},'Yes');
+                        if strmatch(button,'Yes')==1
+                            markerFamily = qr_markerFamily;
+                            originCheckerColor = qr_originCheckerColor;
+                            patternDims = qr_patternDims;
+                            checkerSize = qr_checkerSize;
+                            markerSize = qr_markerSize;
+                        end
+                    end
+                    break
+                end
+            end
+        end
+    end
 
-    %% Slower but more robust due to image preprocessing:
-    %%{
+        %% Slower but more robust due to image preprocessing:
+        %%{
     d = uiprogressdlg(gcf,'Title','ChArUco board pattern detection...','Message','Starting ChArUco board pattern detection...');
     imagesUsed=false(numel(cam_selected_target_images),1);
     imagePoints=[];
     for i=1:numel(cam_selected_target_images)
         tmp_img=imread(cam_selected_target_images{i});
+        tmp_img=tmp_img(:,:,1);
         tmp_img=imadjust(tmp_img);
         imagePoints_single = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
         if numel(imagePoints_single)>0
