@@ -1,11 +1,11 @@
-function [detectionOK, qr_markerFamily, qr_originCheckerColor,qr_patternDims,qr_checkerSize,qr_markerSize] = cam_get_charuco_info_from_QRcode (img)
+function [detectionOK, qr_markerFamily, qr_originCheckerColor,qr_patternDims,qr_checkerSize,qr_markerSize,loc] = cam_get_charuco_info_from_QRcode (img)
 detectionOK = 0;
 qr_markerFamily=[];
 qr_originCheckerColor=[];
 qr_patternDims=[];
 qr_checkerSize=[];
 qr_markerSize=[];
-msg=readBarcode(img,'QR-CODE');
+[msg,~,loc]=readBarcode(img,'QR-CODE');
 if ~isempty(msg)
     if contains(msg,'F') && contains(msg,'O') && contains(msg,'R') && contains(msg,'C') && contains(msg,'S') && contains(msg,'M') && contains(msg,',') && contains(msg,':')
         %String is e.g.: F:1,O:b,R:123,C:345,S:800,M:100

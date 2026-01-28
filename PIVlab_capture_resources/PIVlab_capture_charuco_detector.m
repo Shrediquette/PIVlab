@@ -1,6 +1,6 @@
 function PIVlab_capture_charuco_detector(img,figure_handle,image_handle)
 handles=gui.gethand;
-patternDims = [str2double(handles.calib_rows.String),str2double(handles.calib_columns.String)];
+
 img_original=img;
 if numel(img) > 20000000 % more than 20 megapixels image --> reduce resolution for charuco detection
     large_img=1;
@@ -13,7 +13,6 @@ end
 img=mat2gray(img);
 img=histeq(img);
 [ids,locs] = readArucoMarker(img,'DICT_4X4_1000','WindowSizeRange',[3 23],'MarkerSizeRange',[0.005 1],'ResolutionPerBit',16,'SquarenessTolerance',0.03); %schnellere detektierung wenn bekannt. Am besten: Erstmal so gucken welche Familie dominant. Dann zweiter durchgang mit nur dieser familie
-
 if large_img
     locs=locs*2;
 end
@@ -29,6 +28,17 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
     locs_center_y=squeeze(mean(locs(:,2,:),'omitnan'));
     mean_loc_x=mean(locs_center_x,'omitnan');
     mean_loc_y=mean(locs_center_y,'omitnan');
+    [detectionOK, qr_markerFamily, qr_originCheckerColor,qr_patternDims,qr_checkerSize,qr_markerSize,loc] = preproc.cam_get_charuco_info_from_QRcode (img);
+    if detectionOK && ~isempty(qr_patternDims(1)) && ~isempty(qr_patternDims(2))
+        handles.calib_rows.String = num2str(qr_patternDims(1));
+        handles.calib_columns.String = num2str(qr_patternDims(2));
+        patternDims(1)=qr_patternDims(1);
+        patternDims(2)=qr_patternDims(2);
+    else
+        patternDims = [str2double(handles.calib_rows.String),str2double(handles.calib_columns.String)];
+    end
+
+
     percentage_detected=round(numMarkers/(patternDims(1)*patternDims(2)/2)*100,0);
     if percentage_detected > 100
         percentage_detected = 100;
@@ -62,7 +72,7 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
                     gui.put('last_auto_detected_charuco_position',[locs;newLoc]); %saves a list of all detected centers of board so far detected
                     infotxt2='Steady';
                 else
-                   infotxt2='Shaking';
+                    infotxt2='Shaking';
                 end
                 gui.put('old_charuco_img',img_original(1:2:end,1:2:end,:));
             end
@@ -71,38 +81,10 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
     hold on
     scatter(locs_center_x,locs_center_y,'green','tag','charucolabel','Parent',figure_handle)
     hold off
-    rectangle('Position',[min(locs_center_x), min(locs_center_y),max(locs_center_x) - min(locs_center_x), max(locs_center_y) - min(locs_center_y) ],'tag','charucolabel','EdgeColor','r','LineWidth',2,'Parent',figure_handle)
+    rectangle('Position',[min(locs_center_x), min(locs_center_y),max(locs_center_x) - min(locs_center_x), max(locs_center_y) - min(locs_center_y) ],'tag','charucolabel','EdgeColor','r','LineWidth',2,'Parent',figure_handle,'Curvature',0.15)
     text(mean_loc_x,mean_loc_y,['Markers: ' num2str(percentage_detected) ' %' newline infotxt newline infotxt2],'tag','charucolabel','Color','r','FontSize',36,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
+    if detectionOK %QR code detected
+     rectangle('position',[min(loc(:,1)), min(loc(:,2)), max(loc(:,1)) - min(loc(:,1)) , max(loc(:,2)) - min(loc(:,2))],'tag','charucolabel','EdgeColor','b','LineWidth',6,'Parent',figure_handle,'Curvature',0.5)  
+     text(mean(loc(:,1)),mean(loc(:,2)),['QR'],'tag','charucolabel','Color','w','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
+    end
 end
-
-%% Display coverage (it is okay, but find a better way.....)
-%{
-	locs=gui.retr('last_auto_detected_charuco_position');
-	if ~isempty(locs)
-		%man müsste den bereich markieren den das angezeigte rectangle einnimt...
-		image_width=size(img_original,2);
-		image_height=size(img_original,1);
-
-		% Coverage setup
-		Nx = 10;
-		Ny = 10;
-
-		xEdges = linspace(1, image_width+1, Nx+1);
-		yEdges = linspace(1, image_height+1, Ny+1);
-
-		% Occupancy matrix (Nx × Ny logical)
-		occ = ones(Nx, Ny)*1.8;
-
-		ix = discretize(locs(:,1), xEdges);
-		iy = discretize(locs(:,2), yEdges);
-
-		for k = 1:numel(ix)
-			if ~isnan(ix(k)) && ~isnan(iy(k))
-				occ(iy(k), ix(k)) = 0.65;
-			end
-		end
-		
-		occ_resize=imresize(occ,[image_height, image_width],'nearest');
-		set(image_handle,'CData',double(img_original).*occ_resize)
-	end
-%}

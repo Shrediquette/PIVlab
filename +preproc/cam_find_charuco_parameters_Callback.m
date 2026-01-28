@@ -21,7 +21,7 @@ if ~isempty(filename)
     tmp_img=imadjust(tmp_img(:,:,1));
 
     %% QR detection
-    [detectionOK, markerFamily, originCheckerColor,patternDims,checkerSize,markerSize] = preproc.cam_get_charuco_info_from_QRcode (tmp_img);
+    [detectionOK, markerFamily, originCheckerColor,patternDims,checkerSize,markerSize,~] = preproc.cam_get_charuco_info_from_QRcode (tmp_img);
     if detectionOK
         if strcmp(originCheckerColor,'Black')
             handles.calib_origincolor.Value = 1;

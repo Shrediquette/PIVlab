@@ -1,4 +1,5 @@
 function cam_generateboard_Callback (~,~,~)
+
 handles=gui.gethand;
 originCheckerColor = handles.calib_origincolor.String{handles.calib_origincolor.Value};
 patternDims = [str2double(handles.calib_rows.String),str2double(handles.calib_columns.String)];
@@ -20,12 +21,19 @@ if markerSize >= checkerSize
     return
 end
 if patternDims(1)*patternDims(2) > 1000
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Too many checkers (1000 checkers are the maximum). Reduce the amount of rows or columns. ','modal');
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',['Too many checkers (1000 checkers are the maximum). Reduce the amount of rows or columns, so that' newline 'Rows * Columns <= 1000.'],'modal');
     return
 end
 minMarkerID = 0;
 imageSize (1) =ceil(patternDims(1)*checkerSize* 300 / 25.4)+2; %size in pixels at 300 dpi
 imageSize (2) = ceil(patternDims(2)*checkerSize* 300 / 25.4)+2; %size in pixels at 300 dpi
+
+answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Generate board?',['Generate a board with a size of ' num2str(imageSize(2)) '*' num2str(imageSize(1)) ' pixels?' newline 'At 300 dpi, this is ' num2str(round(imageSize(2)/300*25.4)) '*' num2str(round(imageSize(1)/300*25.4)) ' mm.' newline 'Save the image, then print at 300 dpi and 100 % scaling.'],'modal',{'Yes','Cancel'},'Yes');
+if ~strcmpi(answer,'Yes')
+    gui.toolsavailable(1)
+    return
+end
+gui.toolsavailable(0,'Generating board...');drawnow;
 I = double(generateCharucoBoard(imageSize,patternDims,markerFamily,checkerSize,markerSize,"OriginCheckerColor",originCheckerColor,"MinMarkerID",minMarkerID,"MarginSize",1))/255;
 
 %% add logo, text information and qr code to image
@@ -41,7 +49,11 @@ else
 end
 data=['F:' num2str(qr_fam) ',O:' qr_orig ',R:' num2str(patternDims(1)) ',C:' num2str(patternDims(2)) ',S:' num2str(checkerSize) ',M:' num2str(markerSize)];
 
-qr_size=ceil(checkerSize* 300 / 25.4 *3.5); %size of three checkers...
+qr_size=ceil(checkerSize* 300 / 25.4 *3); 
+if qr_size > (imageSize(2) * 0.2) % limit QR size to 20 % of image width
+    qr_size = imageSize(2) * 0.2;
+end
+
 qr = preproc.cam_encode_qr (data,qr_size);
 white_pad=ones(size(qr,1),size(I,2)-size(qr,2));
 white_pad = [white_pad  qr];
@@ -61,17 +73,17 @@ pad_top    = ceil(pad_vert);
 pad_bottom = floor(pad_vert);
 
 % horizontal padding (left-aligned)
-pad_left  = 0;
-pad_right = sza(2) - szb(2);
+pad_left  = 20;
+pad_right = sza(2) - szb(2)-20;
 
 olt_logo_padded = padarray(olt_logo, [pad_top pad_left], 255, 'pre');
 olt_logo_padded = padarray(olt_logo_padded, [pad_bottom pad_right], 255, 'post');
 white_pad=white_pad.*olt_logo_padded;
 I=[white_pad;I];
-I = insertText(I,[numcols + 10,qr_size/2],[originCheckerColor ',' markerFamily ',' num2str(patternDims(1)) 'x' num2str(patternDims(2)) ',' num2str(checkerSize) 'mm,' num2str(markerSize) 'mm'],'FontSize',40);
+I = insertText(I,[10,10],[originCheckerColor ',' markerFamily ',' num2str(patternDims(1)) 'x' num2str(patternDims(2)) ',' num2str(checkerSize) 'mm,' num2str(markerSize) 'mm'],'FontSize',round(numrows/2),'FontColor','black','TextBoxColor','white','BoxOpacity',0,'Font','Arial Black');
+gui.toolsavailable(1)
 figure;imshow(I)
 [file, location] = uiputfile('*.tif','Save charuco board as...',[markerFamily '_' num2str(patternDims(1)) 'x' num2str(patternDims(2)) '_' num2str(checkerSize) 'mm_' num2str(markerSize) 'mm_300dpi.tif']);
 if file ~=0
     imwrite(I,fullfile(location,file),'tif','Resolution',300);
 end
-disp('skalierung muss noch verfeinert werden für Grenzfälle.')

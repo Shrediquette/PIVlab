@@ -33,7 +33,7 @@ if ~isempty(cam_selected_target_images)
         tmp_img=imread(cam_selected_target_images{i});
         tmp_img=tmp_img(:,:,1);
         tmp_img=imadjust(tmp_img);
-        [detectionOK,qr_markerFamily, qr_originCheckerColor,qr_patternDims,qr_checkerSize,qr_markerSize] = preproc.cam_get_charuco_info_from_QRcode (tmp_img);
+        [detectionOK,qr_markerFamily, qr_originCheckerColor,qr_patternDims,qr_checkerSize,qr_markerSize,~] = preproc.cam_get_charuco_info_from_QRcode (tmp_img);
         %check if it differs from manually entered numbers
         if detectionOK
             if  ~strcmp(markerFamily,qr_markerFamily) || ~strcmp(originCheckerColor,qr_originCheckerColor) ||  patternDims(1) ~= qr_patternDims(1) ||  patternDims(2) ~= qr_patternDims(2) || checkerSize ~= qr_checkerSize || markerSize ~= qr_markerSize
