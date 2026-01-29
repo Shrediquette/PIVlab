@@ -1,8 +1,9 @@
 function qr = cam_encode_qr (data,sz)
 % e.g. 'F:1,O:b,R:23,C:24,S:10,M:7';
 % Java imports
-if ~any(contains(javaclasspath, 'core-3.5.3.jar'))
-    javaaddpath('core-3.5.3.jar')
+
+if ~any(contains(javaclasspath, 'QR_gen.jar'))
+    javaaddpath(fullfile('+preproc','QR_gen.jar'))
 end
 import com.google.zxing.*;
 import com.google.zxing.common.*;
