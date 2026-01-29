@@ -10,14 +10,10 @@ handles=gui.gethand;
     '*.png','PNG'; ...
     '*.*',  'All Files'}...
     ,"MultiSelect","off",'Select images of the calibration target',gui.retr('pathname'));
-if ~isempty(filename)
-
-
+if ~isequal(filename,0)
     tmp_img=imread(fullfile(location,filename));
-
     tmp_img2=mat2gray(tmp_img(:,:,1));
     tmp_img2=histeq(tmp_img2);
-
     tmp_img=imadjust(tmp_img(:,:,1));
 
     %% QR detection
