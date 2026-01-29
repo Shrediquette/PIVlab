@@ -5,7 +5,17 @@ qr_originCheckerColor=[];
 qr_patternDims=[];
 qr_checkerSize=[];
 qr_markerSize=[];
-[msg,~,loc]=readBarcode(img,'QR-CODE'); % will only return the first detected Barcode
+
+[msg,~,loc]=readBarcode(img(:,:,1),'QR-CODE'); % will only return the first detected Barcode
+%{
+%second try for better success....
+if isempty(loc) %attempt a second time with quick blur
+	img2 = img + uint8(10*rand(size(img)));
+	img2 = imresize(img2, 0.25, 'bilinear');
+	img2 = imresize(img2, size(img2), 'nearest');
+	[msg,~,loc]=readBarcode(img2(:,:,1),'QR-CODE'); % will only return the first detected Barcode
+end
+%}
 if ~isempty(msg)
 	try
 		msg = uint8(char(msg));
