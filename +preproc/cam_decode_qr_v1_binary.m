@@ -26,7 +26,7 @@ str = sprintf('F:%d,O:%c,R:%d,C:%d,S:%d,M:%d', ...
 
 %{
 %% testing a single conversion:
-string= 'F:1,O:b,R:23,C:24,S:10,M:7';
+string='F:1,O:b,R:10,C:25,S:8,M:6'
 payload = preproc.cam_encode_qr_v1_binary(string)
 qrString = native2unicode(payload, 'ISO-8859-1')
 import com.google.zxing.*;
@@ -54,18 +54,19 @@ decoded = preproc.cam_decode_qr_v1_binary(payload_rx)
 
 F_vals = 1:3;
 O_vals = ['b','w'];
-R_vals = 1:1000;
-C_vals = 1:1000;
-S_vals = 1:100;
-M_vals = 1:100;
+R_vals = 1:25:1000;
+C_vals = 1:25:1000;
+S_vals = 1:20;
+M_vals = 1:15;
 
 cnt = 0;
 for F = F_vals
 for O = O_vals
-for R = R_vals(1:50:end)   % or full range if you want
-for C = C_vals(1:50:end)
-for S = S_vals(1:10:end)
-for M = M_vals(1:10:end)
+for R = R_vals(1:1:end)   % or full range if you want
+disp(num2str(R))
+for C = C_vals(1:1:end)
+for S = S_vals(1:1:end)
+for M = M_vals(1:1:end)
 
     in = sprintf('F:%d,O:%c,R:%d,C:%d,S:%d,M:%d',F,O,R,C,S,M);
     p  = preproc.cam_encode_qr_v1_binary(in);
@@ -88,10 +89,10 @@ fprintf('Binary-only tests passed: %d\n',cnt);
 
 F_vals = 1:3;
 O_vals = ['b','w'];
-R_vals = [1 23 500 1000];
-C_vals = [1 24 500 1000];
-S_vals = [1 10 100];
-M_vals = [1 7 100];
+R_vals = [3:7:40]%[1 23 500 1000];
+C_vals = [3:7:40]%[1 24 500 1000];
+S_vals = [5:7:30]%[1 10 100];
+M_vals = [5:7:30]%[1 7 100];
 
 writer = com.google.zxing.qrcode.QRCodeWriter();
 
@@ -111,7 +112,7 @@ for M = M_vals
     bitMatrix = writer.encode( ...
         qrString, ...
         com.google.zxing.BarcodeFormat.QR_CODE, ...
-        200, 200);   % smaller = faster
+        29, 29);   % smaller = faster
 
     w = bitMatrix.getWidth();
     h = bitMatrix.getHeight();
@@ -131,10 +132,11 @@ for M = M_vals
         error('QR mismatch:\nIN : %s\nOUT: %s',in,out);
     end
 
-    cnt = cnt+1
+    cnt = cnt+1;
 end
 end
 end
+disp(num2str(cnt))
 end
 end
 end
