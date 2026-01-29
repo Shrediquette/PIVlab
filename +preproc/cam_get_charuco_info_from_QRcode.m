@@ -5,7 +5,11 @@ qr_originCheckerColor=[];
 qr_patternDims=[];
 qr_checkerSize=[];
 qr_markerSize=[];
-[msg,~,loc]=readBarcode(img,'QR-CODE');
+[msg,~,loc]=readBarcode(img,'QR-CODE'); % will only return the first detected Barcode
+
+%msg = preproc.cam_decode_qr_v1_binary(msg);
+%try to get encoding / decoding to work....
+
 if ~isempty(msg)
     if contains(msg,'F') && contains(msg,'O') && contains(msg,'R') && contains(msg,'C') && contains(msg,'S') && contains(msg,'M') && contains(msg,',') && contains(msg,':')
         %String is e.g.: F:1,O:b,R:123,C:345,S:800,M:100

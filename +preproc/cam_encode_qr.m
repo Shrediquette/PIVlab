@@ -1,7 +1,10 @@
 function qr = cam_encode_qr (data,sz)
-% e.g. 'F:1,O:b,R:23,C:24,S:10,M:7';
-% Java imports
+% input is e.g. 'F:1,O:b,R:23,C:24,S:10,M:7';
+%convert to save characters and use larger pixels in the QR code:
+%data=native2unicode(preproc.cam_encode_qr_v1_binary(data), 'ISO-8859-1');
+%try to get encoding decoding to work..
 
+% Java imports
 if ~any(contains(javaclasspath, 'QR_gen.jar'))
     javaaddpath(fullfile('+preproc','QR_gen.jar'))
 end
