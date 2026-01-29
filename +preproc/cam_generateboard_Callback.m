@@ -29,11 +29,13 @@ marginsize=round(checkerSize* 300 / 25.4*3);
 imageSize (1) =ceil(patternDims(1)*checkerSize* 300 / 25.4)+2*marginsize; %size in pixels at 300 dpi
 imageSize (2) = ceil(patternDims(2)*checkerSize* 300 / 25.4)+2*marginsize; %size in pixels at 300 dpi
 
+
 answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Generate board?',['Generate a board with a size of ' num2str(imageSize(2)) '*' num2str(imageSize(1)) ' pixels?' newline 'At 300 dpi, this is ' num2str(round(imageSize(2)/300*25.4)) '*' num2str(round(imageSize(1)/300*25.4)) ' mm.' newline 'Save the image, then print at 300 dpi and 100 % scaling.'],'modal',{'Yes','Cancel'},'Yes');
 if ~strcmpi(answer,'Yes')
     gui.toolsavailable(1)
     return
 end
+
 gui.toolsavailable(0,'Generating board...');drawnow;
 I = double(generateCharucoBoard(imageSize,patternDims,markerFamily,checkerSize,markerSize,"OriginCheckerColor",originCheckerColor,"MinMarkerID",minMarkerID,"MarginSize",marginsize))/255;
 %% add logo, text information and qr code to image
@@ -101,6 +103,7 @@ I=I.*QR_background;
 
 %I = insertText(I,[10,10],[originCheckerColor ',' markerFamily ',' num2str(patternDims(1)) 'x' num2str(patternDims(2)) ',' num2str(checkerSize) 'mm,' num2str(markerSize) 'mm'],'FontSize',round(numrows/2),'FontColor','black','TextBoxColor','white','BoxOpacity',0,'Font','Arial Black');
 gui.toolsavailable(1)
+
 figure;imshow(I)
 [file, location] = uiputfile('*.tif','Save charuco board as...',[markerFamily '_' num2str(patternDims(1)) 'x' num2str(patternDims(2)) '_' num2str(checkerSize) 'mm_' num2str(markerSize) 'mm_300dpi.tif']);
 if file ~=0

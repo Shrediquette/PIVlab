@@ -82,11 +82,22 @@ if ~isempty(cam_selected_target_images)
             imagesUsed(i)=true;
         end
         [~,name,ext] = fileparts(cam_selected_target_images{i});
-        percentage_detected=  round(numel(find(~isnan(imagePoints_single)))  / numel(imagePoints_single) * 100);
+        percentage_detected=  round(numel(find(~isnan(imagePoints_single)))  / (numel(imagePoints_single)+0.00001) * 100);
         d.Message = [name ext '  -->  '  num2str(percentage_detected) ' % valid markers.' ];
         d.Value=i/numel(cam_selected_target_images);
-    end
+	end
     close(d)
+		%debug
+%{
+		for i=1:size(imagePoints,3)
+			figure;
+			imshow(imread(cam_selected_target_images{i}));
+			hold on;
+			plot(imagePoints(:,1,i), imagePoints(:,2,i),'ro');
+			legend('Detected Points','ReprojectedPoints');
+			hold off;
+		end
+%}
     %%}
     %% Faster, but dark images are ignored:
     %[imagePoints, imagesUsed] = detectPatternPoints(detector, cam_selected_target_images, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
@@ -150,7 +161,7 @@ if ~isempty(cam_selected_target_images)
 
         gui.put('cameraParams',cameraParams);
 
-        imshow(imageFileNames{1},'Parent',gui.retr('pivlab_axis'));
+        imshow(imread(imageFileNames{1}),'Parent',gui.retr('pivlab_axis'));
         hold on;
         plot(imagePoints(:,1,1), imagePoints(:,2,1),'go');
         plot(cameraParams.ReprojectedPoints(:,1,1),cameraParams.ReprojectedPoints(:,2,1),'r+');
