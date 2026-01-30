@@ -493,7 +493,7 @@ try
 
     %% enable laser before capture for pco. Their capture code cannot be split into preparation / capture / save, so the synchronizer commands are inside this capture function.
     if triggermode==2 % only in PIV mode where laser is running
-        gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK')
+        gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK');
         acquisition.control_simple_sync_serial(1,0);
         gui.put('laser_running',1);
     end

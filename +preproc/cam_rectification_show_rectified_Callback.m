@@ -13,7 +13,7 @@ if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
     originCheckerColor = handles.calib_origincolor.String{handles.calib_origincolor.Value} ;
 
     if markerSize >= checkerSize
-        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Marker size must be smaller than checker size.','modal')
+        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Marker size must be smaller than checker size.','modal');
         gui.toolsavailable(1)
         return
     end
@@ -29,7 +29,7 @@ if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
     %% faster but no preproc possible
     %[imagePoints1, ~] = detectPatternPoints(detector, cam_selected_rectification_image, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
     if isempty(imagePoints1)
-        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No ChArUco markers detected.','modal')
+        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No ChArUco markers detected.','modal');
         return
     end
 
@@ -58,5 +58,5 @@ if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
     img_out = preproc.cam_undistort(imread(cam_selected_rectification_image),'cubic',view,1,1,cameraParams,rectification_tform);
     imshow(img_out,'Parent',gui.retr('pivlab_axis'))
 else
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Camera calibration not activated or no images for camera rectification loaded.','modal')
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Camera calibration not activated or no images for camera rectification loaded.','modal');
 end

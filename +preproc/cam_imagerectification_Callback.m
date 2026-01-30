@@ -14,7 +14,7 @@ str2double(handles.calib_columns.String)
 handles.calib_usecalibration.Value
 originCheckerColor = handles.calib_origincolor.String{handles.calib_origincolor.Value} ;
 if strcmpi (originCheckerColor,'white') && mod(str2double(handles.calib_rows.String),2)~=0
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Number of rows of the ChArUco board, dim1, must be even when OriginCheckerColor is white.','modal')
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Number of rows of the ChArUco board, dim1, must be even when OriginCheckerColor is white.','modal');
     return
 end
 
@@ -30,7 +30,7 @@ if ~isempty(cam_selected_target_images)
     checkerSize = str2double(handles.calib_checkersize.String);
     markerSize = str2double(handles.calib_markersize.String);
     if markerSize >= checkerSize
-        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Marker size must be smaller than checker size.','modal')
+        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Marker size must be smaller than checker size.','modal');
         gui.toolsavailable(1)
         return
     end
@@ -38,7 +38,7 @@ if ~isempty(cam_selected_target_images)
     % histeq machen von jedem Bild. Dann muss man das aber als loop mit bilddateien machen, nicht mit bilderliste... Schade.
     [imagePoints, imagesUsed] = detectPatternPoints(detector, cam_selected_target_images, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
     if isempty(imagePoints)
-        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No ChArUco markers detected.','modal')
+        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No ChArUco markers detected.','modal');
         gui.toolsavailable(1)
         return
     end
@@ -108,15 +108,15 @@ if ~isempty(cam_selected_target_images)
         detected_grid_points = sum(~isnan(imagePoints(:)))/2;
         percentage_detected=round(detected_grid_points/possible_grid_points*100,1);
 
-        gui.custom_msgbox('msg',getappdata(0,'hgui'),'Success',{'Camera parameter estimation successful.' ;  ['Detected ' num2str(percentage_detected) '% of the available checkers.']},'modal',{'OK'},'OK')
+        gui.custom_msgbox('msg',getappdata(0,'hgui'),'Success',{'Camera parameter estimation successful.' ;  ['Detected ' num2str(percentage_detected) '% of the available checkers.']},'modal',{'OK'},'OK');
 
     catch ME
-        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',{'Are the numbers for columns and rows correct?' ;' '; ME.message},'modal')
+        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',{'Are the numbers for columns and rows correct?' ;' '; ME.message},'modal');
     end
 
     gui.toolsavailable(1)
 else
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No calibration image data was loaded.','modal')
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No calibration image data was loaded.','modal');
 
 end
 

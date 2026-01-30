@@ -8,7 +8,7 @@ if strcmpi (originCheckerColor,'white') && mod(str2double(handles.calib_rows.Str
     return
 end
 if isempty(cam_selected_target_images) || ~iscell(cam_selected_target_images) || numel(cam_selected_target_images) <=1
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Not enough marker board images selected.','modal')
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Not enough marker board images selected.','modal');
     return
 end
 
@@ -24,7 +24,7 @@ if ~isempty(cam_selected_target_images)
     checkerSize = str2double(handles.calib_checkersize.String);
     markerSize = str2double(handles.calib_markersize.String);
     if markerSize >= checkerSize
-        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Marker size must be smaller than checker size.','modal')
+        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Marker size must be smaller than checker size.','modal');
         gui.toolsavailable(1)
         return
     end
@@ -102,7 +102,7 @@ if ~isempty(cam_selected_target_images)
     %% Faster, but dark images are ignored:
     %[imagePoints, imagesUsed] = detectPatternPoints(detector, cam_selected_target_images, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
     if isempty(imagePoints)
-        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No ChArUco markers detected.','modal')
+        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No ChArUco markers detected.','modal');
         gui.toolsavailable(1)
         return
     end
@@ -172,7 +172,7 @@ if ~isempty(cam_selected_target_images)
         detected_grid_points = sum(~isnan(imagePoints(:)))/2;
         percentage_detected=round(detected_grid_points/possible_grid_points*100,1);
 
-        gui.custom_msgbox('msg',getappdata(0,'hgui'),'Success',{'Camera parameter estimation successful.' ;  ['Detected ' num2str(percentage_detected) '% of the available checkers.']},'modal',{'OK'},'OK')
+        gui.custom_msgbox('msg',getappdata(0,'hgui'),'Success',{'Camera parameter estimation successful.' ;  ['Detected ' num2str(percentage_detected) '% of the available checkers.']},'modal',{'OK'},'OK');
 
     catch ME
         gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',{'Problem with camera calibration: ' ;' '; ME.message},'modal');

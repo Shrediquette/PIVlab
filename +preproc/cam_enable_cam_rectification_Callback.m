@@ -79,7 +79,7 @@ else
 end
 originCheckerColor = handles.calib_origincolor.String{handles.calib_origincolor.Value} ;
 if strcmpi (originCheckerColor,'white') && mod(str2double(handles.calib_rows.String),2)~=0
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Number of rows of the ChArUco board, dim1, must be even when OriginCheckerColor is white.','modal')
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Number of rows of the ChArUco board, dim1, must be even when OriginCheckerColor is white.','modal');
     return
 end
 if ~isempty(cam_selected_rectification_image)
@@ -93,7 +93,7 @@ if ~isempty(cam_selected_rectification_image)
     checkerSize = str2double(handles.calib_checkersize.String);
     markerSize = str2double(handles.calib_markersize.String);
     if markerSize >= checkerSize
-        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Marker size must be smaller than checker size.','modal')
+        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Marker size must be smaller than checker size.','modal');
         gui.toolsavailable(1)
         return
     end
@@ -108,7 +108,7 @@ if ~isempty(cam_selected_rectification_image)
     %% faster but no preproc possible
     %[imagePoints1, ~] = detectPatternPoints(detector, cam_selected_rectification_image, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
     if isempty(imagePoints1)
-        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No ChArUco markers detected.','modal')
+        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No ChArUco markers detected.','modal');
         gui.toolsavailable(1)
         return
     end

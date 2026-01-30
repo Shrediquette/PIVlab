@@ -177,7 +177,7 @@ if required_files_check
             if value==1 || value==2 %setup withOUT LD-PS
                 %Start-up sequence for normal Q-Switched laser
                 waitbar(.5,f,'Starting laser...');
-                gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK')
+                gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK');
                 acquisition.control_simple_sync_serial(1,0);
                 gui.put('laser_running',1);
                 pause(1)
@@ -234,7 +234,7 @@ if required_files_check
                 cameraIP=gui.retr('Chronos_IP');
                 acquisition.control_simple_sync_serial(0,0) %stop triggering when already running.
                 [OutputError] = PIVlab_capture_chronos_synced_start(cameraIP,cam_fps); %prepare cam and start camera (waiting for trigger...)
-                gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK')
+                gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK');
                 acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
                 [OutputError,ima,frame_nr_display] = PIVlab_capture_chronos_synced_capture(cameraIP,imageamount,cam_fps,do_realtime,ac_ROI_realtime); %capture n images, display livestream
             elseif value == 1 || value == 2 || value == 3 || value == 4 ||value == 10  %pco cameras
@@ -242,12 +242,12 @@ if required_files_check
                 %                PIVlab_capture_pco(imageamount,f1exp_cam,'Synchronizer',projectpath,binning,[ac_ROI_general(1) ac_ROI_general(2) ac_ROI_general(3)/binning ac_ROI_general(4)/binning],camera_type);
             elseif value == 6  %basler cameras
                 [OutputError,basler_vid,frame_nr_display] = PIVlab_capture_basler_synced_start(imageamount,ac_ROI_general); %prepare cam and start camera (waiting for trigger...)
-                gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK')
+                gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK');
                 acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
                 [OutputError,basler_vid] = PIVlab_capture_basler_synced_capture(basler_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display); %capture n images, display livestream
             elseif value == 7  %flir cameras
                 [OutputError,flir_vid,frame_nr_display] = PIVlab_capture_flir_synced_start(imageamount,cam_fps); %prepare cam and start camera (waiting for trigger...)
-                gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK')
+                gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK');
                 acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
                 [OutputError,flir_vid] = PIVlab_capture_flir_synced_capture(flir_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display); %capture n images, display livestream
             elseif value == 8  %OPTOcam
@@ -274,7 +274,7 @@ if required_files_check
                     Error_Reason{end+1,1}='Please increase the pulse distance, or decrease the bit mode.';
                 end
                 if OPTOcam_settings_check == 1
-                    gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK')
+                    gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK');
                     acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
                     [OutputError,OPTOcam_vid] = PIVlab_capture_OPTOcam_synced_capture(OPTOcam_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTOcam_bits); %capture n images, display livestream
                 else
@@ -358,7 +358,7 @@ if required_files_check
                 min_allowed_interframe = gui.retr('min_allowed_interframe');
                 pulse_sep=str2double(get(handles.ac_interpuls,'String'));
                 if OPTRONIS_settings_check == 1
-                    gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK')
+                    gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK');
                     acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
                     [OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits); %capture n images, display livestream
                 else

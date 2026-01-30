@@ -52,7 +52,7 @@ if ~isequal(filename,0)
         boardSize=boardSizeB;
     end
     if isempty(imagePoints)
-        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Could not estimate parameters','modal')
+        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Could not estimate parameters','modal');
         return
     end
     num_markers=boardSize(1)*boardSize(2);
