@@ -12,7 +12,6 @@
 % f_readB16 by Carl Hall
 % natsort, natsortfiles by Stephen23
 %% TODO:
-
 function PIVlab_GUI(desired_num_cores,batch_session_file)
 %% display splash screen in deployed version
 %isdeployed=1 %debug splash screen
@@ -32,7 +31,7 @@ end
 fh = findobj('tag', 'hgui');
 if isempty(fh)
     disp('-> Starting PIVlab...')
-    MainWindow = figure('numbertitle','off','MenuBar','none','Windowstyle','normal','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0 0.1 1 0.8],'ResizeFcn', @gui.MainWindow_ResizeFcn,'CloseRequestFcn', @gui.MainWindow_CloseRequestFcn,'tag','hgui','visible','off','KeyPressFcn', @gui.key_press);
+    MainWindow = figure('numbertitle','off','MenuBar','none','Windowstyle','normal','DockControls','off','Name','INITIALIZING...','Toolbar','none','Units','normalized','Position',[0 0.1 1 0.8],'tag','hgui','visible','off');
     set (MainWindow,'Units','Characters');
     try
         set (MainWindow,'icon',fullfile('images','appicon.png'));
@@ -44,7 +43,7 @@ if isempty(fh)
     handles = guihandles; %alle handles mit tag laden und ansprechbar machen
     guidata(MainWindow,handles)
     setappdata(0,'hgui',MainWindow);
-    version = '3.12';
+    version = '3.13';
     gui.put('PIVver', version);
     try
         warning off
@@ -53,7 +52,6 @@ if isempty(fh)
     catch
         build_date=' ';
     end
-
     if ~exist ('build_date','var')
         build_date=' ';
     end
@@ -61,15 +59,12 @@ if isempty(fh)
         build_date=' ';
     else
     end
-
     v=ver('MATLAB'); %#ok<*VERMATLAB>
-
     if ~exist('desired_num_cores','var')
         if ~isdeployed
             disp('-> Use the command "PIVlab_GUI(Nr_of_cores)" to select the amount of computation cores.')
         end
     end
-
     if ~exist('splash_ax','var')
         disp(['-> PIVlab ' version ', built on: ' char(datetime(build_date)) ' ...'])
         disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
@@ -77,7 +72,6 @@ if isempty(fh)
         text_content=get(handle_splash_text,'String');
         set (handle_splash_text, 'String',[text_content newline '-> Starting PIVlab ' version ' ...' newline '-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.']);drawnow
     end
-
     margin=1.5;%1.5; %for Matlab 2025 this probably needs to be increased to 2.5, together with more fixes on all panels...
     panelwidth=45;
     panelheighttools=13;%12;
@@ -125,12 +119,9 @@ if isempty(fh)
             text_content{end+1} = '-> Write access in current folder ok.';
             set (handle_splash_text, 'String',text_content);drawnow
         end
-
     catch
-            disp(['-> No write access in ' pwd '. PIVlab won''t work like this.'])
+        disp(['-> No write access in ' pwd '. PIVlab won''t work like this.'])
     end
-
-
     %% Load defaults
     try
         psdfile=which('PIVlab_settings_default.mat');
@@ -172,7 +163,6 @@ if isempty(fh)
                 text_content{end+1}='-> All required package folders found.';
                 set (handle_splash_text, 'String',text_content);drawnow
             end
-
         end
     catch
         disp('-> Problem detecting required package folders.')
@@ -180,7 +170,6 @@ if isempty(fh)
     %%
     gui.generateUI
     gui.generateMenu
-
     %% Prepare axes
     gui.switchui('multip01');
     pivlab_axis=axes('units','characters','parent',MainWindow);
@@ -200,7 +189,6 @@ if isempty(fh)
                 text_content{end+1}='-> Matlab version check ok.';
                 set (handle_splash_text, 'String',text_content);drawnow
             end
-
         else
             disp('WARNING: Your Matlab version is too old for running PIVlab.')
             disp('WARNING: You need at least version 9.7 (R2019b) to use all features.')
@@ -230,7 +218,6 @@ if isempty(fh)
                     text_content{end+1}='-> Image Processing Toolbox found.';
                     set (handle_splash_text, 'String',text_content);drawnow
                 end
-
             catch
                 disp(' ')
                 disp('Image Processing Toolbox not accessible! PIVlab won''t work like this.')
@@ -250,11 +237,41 @@ if isempty(fh)
                 beep;commandwindow;pause
             end
         end
-
     catch
         disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
     end
-
+    %% Check computer vision toolbox
+    try
+        readBarcode(rand(10,10));
+        if ~exist('splash_ax','var')
+            disp('-> Computer Vision Toolbox found.')
+        else
+            text_content=get(handle_splash_text,'String');
+            text_content{end+1}='-> Computer Vision Toolbox found.';
+            set (handle_splash_text, 'String',text_content);drawnow
+        end
+    catch
+        disp('WARNING: Computer Vision Toolbox not found.')
+        disp('Image undistortion and rectification and Stereo-PIV will not work.')
+        disp('Use the standalone tool from http://PIVlab.de if you need these features')
+    end
+    %% Check image acquisition toolbox
+    try
+        warning off
+        imaqreset;
+        warning on
+        if ~exist('splash_ax','var')
+            disp('-> Image Acquisition Toolbox found.')
+        else
+            text_content=get(handle_splash_text,'String');
+            text_content{end+1}='-> Image Acquisition Toolbox found.';
+            set (handle_splash_text, 'String',text_content);drawnow
+        end
+    catch
+        disp('WARNING: Image Acquisition Toolbox not found.')
+        disp('Image capture inside PIVlab will only work with pco cameras.')
+        disp('Use the standalone tool from http://PIVlab.de if you need to capture data with other cameras.')
+    end
     %% Variable initialization
     gui.put ('toggler',0);
     gui.put('calu',1);
@@ -265,8 +282,6 @@ if isempty(fh)
     gui.put('subtr_u', 0);
     gui.put('subtr_v', 0);
     gui.put('displaywhat',1);%vectors
-
-
     %% read current and last directory.....:
     warning('off','all') %if the variables don't exist, an ugly warning is displayed
     load('PIVlab_settings_default.mat','homedir');
@@ -299,7 +314,6 @@ if isempty(fh)
     gui.put('homedir',homedir);
     gui.put('pathname',pathname);
     save('PIVlab_settings_default.mat','homedir','pathname','-append');
-
     %% Read and apply default settings
     try
         %XP Wu modification:
@@ -318,7 +332,6 @@ if isempty(fh)
     catch
         disp('Could not load default settings. But this doesn''t really matter.')
     end
-
     misc.CheckUpdates
     if isdeployed || exist('splash_ax','var')
         pause(1)
@@ -326,7 +339,6 @@ if isempty(fh)
     end
     gui.SetFullScreen
     gui.displogo(1);
-
     %% Apply fix for wrong UI scaling introduced between matlab 2025a prerelease5 and Matlab2025a
     try
         if ~isMATLABReleaseOlderThan("R2025a") && isMATLABReleaseOlderThan("R2025b")
@@ -335,9 +347,7 @@ if isempty(fh)
         end
     catch
     end
-
-	gui.toolsavailable(0,'Changing parallel pool...')
-    set(MainWindow, 'Visible','on');drawnow;
+    gui.toolsavailable(0,'Changing parallel pool...')
     try
         %% Check parallel computing toolbox availability
         gui.put('parallel',0);
@@ -346,8 +356,8 @@ if isempty(fh)
                 if misc.pivparpool('size')<=0 %no exisitng pool
                     %if isdeployed
                     pause(0.05)
-					figure(MainWindow)
-					pause(0.05)
+                    figure(MainWindow)
+                    pause(0.05)
                     answer=gui.custom_msgbox('quest',getappdata(0,'hgui'),'Open parallel pool?',['PIVlab can be run with parallel computing.' newline newline '- Recommended when processing multiple images.' newline '- Not required when acquiring images or processing mp4 and avi files.' newline newline 'Open parallel pool?'],'modal',{'Yes' 'No'},'No');
                     pause(0.1)
                     switch answer
@@ -394,7 +404,6 @@ if isempty(fh)
                     text_content{end+1}=['-> Distributed Computing Toolbox found.' newline '-> Parallel pool (' int2str(misc.pivparpool('size')) ' workers) active (default settings).'];
                     set (handle_splash_text, 'String',text_content);drawnow;pause(1)
                 end
-
             else
                 if ~exist('splash_ax','var')
                     disp('-> Distributed Computing disabled.')
@@ -403,13 +412,11 @@ if isempty(fh)
                     text_content{end+1}='-> Distributed Computing disabled.';
                     set (handle_splash_text, 'String',text_content);drawnow;pause(1)
                 end
-
             end
         catch
             pause(1) %Believe it or not, without this 'pause', matlab only doesn't display the GUI...
             disp('-> Running without parallelization (no distributed computing toolbox installed).')
         end
-
         handles=gui.gethand;
         load (fullfile('images','icons.mat'),'parallel_off','parallel_on');
         if gui.retr('darkmode')
@@ -424,11 +431,22 @@ if isempty(fh)
             set(handles.toggle_parallel, 'cdata',parallel_off,'TooltipString','Parallel processing off. Click to turn on.');
         end
         gui.toolsavailable(1)
-
     catch
         disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
     end
-
+    %disp('fcs')
+    set(MainWindow,'ResizeFcn', @gui.MainWindow_ResizeFcn,'CloseRequestFcn', @gui.MainWindow_CloseRequestFcn,'KeyPressFcn', @gui.key_press);
+    pause(0.1)
+    gui.MainWindow_ResizeFcn(gcf)
+    %disp('vis')
+    pause(0.5);	set(MainWindow, 'Visible','on');	pause(0.25);	drawnow;
+    if ~exist('splash_ax','var')
+        disp('-> GUI initialization finished.')
+    else
+        text_content=get(handle_splash_text,'String');
+        text_content{end+1} = '-> GUI initialization finished.';
+        set (handle_splash_text, 'String',text_content);drawnow
+    end
     %% Batch session  processing in GUI
     if ~exist('batch_session_file','var') %no input argument --> no GUI batch processing
         gui.put('batchModeActive',0)
@@ -455,7 +473,6 @@ if isempty(fh)
             gui.put('batchModeActive',0)
         end
     end
-
 else %Figure handle does already exist --> bring PIVlab to foreground.
     disp('Only one instance of PIVlab is allowed to run.')
     figure(fh)
