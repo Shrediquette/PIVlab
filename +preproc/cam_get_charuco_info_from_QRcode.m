@@ -21,7 +21,6 @@ if ~isempty(msg)
 		msg = uint8(char(msg));
 		msg = preproc.cam_decode_qr_v1_binary(msg);
 	catch
-		disp('could not decode')
 		msg='';
 	end
 	if contains(msg,'F') && contains(msg,'O') && contains(msg,'R') && contains(msg,'C') && contains(msg,'S') && contains(msg,'M') && contains(msg,',') && contains(msg,':')

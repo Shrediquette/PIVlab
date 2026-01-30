@@ -34,6 +34,9 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
         handles.calib_columns.String = num2str(qr_patternDims(2));
         patternDims(1)=qr_patternDims(1);
         patternDims(2)=qr_patternDims(2);
+        if large_img
+            loc=loc*2;
+        end
     else
         patternDims = [str2double(handles.calib_rows.String),str2double(handles.calib_columns.String)];
     end
@@ -84,7 +87,7 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
     rectangle('Position',[min(locs_center_x), min(locs_center_y),max(locs_center_x) - min(locs_center_x), max(locs_center_y) - min(locs_center_y) ],'tag','charucolabel','EdgeColor','r','LineWidth',2,'Parent',figure_handle,'Curvature',0.15)
     text(mean_loc_x,mean_loc_y,['Markers: ' num2str(percentage_detected) ' %' newline infotxt newline infotxt2],'tag','charucolabel','Color','r','FontSize',36,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
     if detectionOK %QR code detected
-     rectangle('position',[min(loc(:,1)), min(loc(:,2)), max(loc(:,1)) - min(loc(:,1)) , max(loc(:,2)) - min(loc(:,2))],'tag','charucolabel','EdgeColor','b','LineWidth',6,'Parent',figure_handle,'Curvature',0.5)  
+     rectangle('position',[min(loc(:,1))-20, min(loc(:,2))-20, max(loc(:,1)) - min(loc(:,1))+20 , max(loc(:,2)) - min(loc(:,2))+20],'tag','charucolabel','EdgeColor','b','LineWidth',6,'Parent',figure_handle,'Curvature',0.5)  
      text(mean(loc(:,1)),mean(loc(:,2)),['QR'],'tag','charucolabel','Color','w','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
     end
 end
