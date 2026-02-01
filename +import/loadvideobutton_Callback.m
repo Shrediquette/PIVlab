@@ -15,11 +15,12 @@ end
 import.vid_import(pathname);
 uiwait
 if getappdata(hgui,'video_selection_done')
-	gui.put('expected_image_size',[])
 	pathname = getappdata(hgui,'pathname');
 	filename = getappdata(hgui,'filename');
 	filepath = getappdata(hgui,'filepath');
 	%save video file object in GUI
+	vidobj=VideoReader(filepath{1});
+	gui.put('expected_image_size',[vidobj.Height vidobj.Width]);
 	gui.put('video_reader_object',VideoReader(filepath{1}));
 	if get(handles.zoomon,'Value')==1
 		set(handles.zoomon,'Value',0);
