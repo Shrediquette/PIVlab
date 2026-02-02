@@ -65,7 +65,13 @@ if ~isempty(cam_selected_target_images)
     end
     %% Slower but more robust due to image preprocessing:
     %%{
-    d = uiprogressdlg(gcf,'Title','ChArUco board pattern detection...','Message','Starting ChArUco board pattern detection...');
+    if isMATLABReleaseOlderThan("R2025b")
+        fig = uifigure;
+        d = uiprogressdlg(fig,'Title','ChArUco board pattern detection...','Message','Starting ChArUco board pattern detection...');
+    else
+        d = uiprogressdlg(gcf,'Title','ChArUco board pattern detection...','Message','Starting ChArUco board pattern detection...');
+    end
+    
     imagesUsed=false(numel(cam_selected_target_images),1);
     imagePoints=[];
     for i=1:numel(cam_selected_target_images)
