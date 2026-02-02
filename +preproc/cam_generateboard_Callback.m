@@ -1,5 +1,5 @@
 function cam_generateboard_Callback (~,~,~)
-dpi=600;
+dpi=300;
 handles=gui.gethand;
 originCheckerColor = handles.calib_origincolor.String{handles.calib_origincolor.Value};
 patternDims = [str2double(handles.calib_rows.String),str2double(handles.calib_columns.String)];
