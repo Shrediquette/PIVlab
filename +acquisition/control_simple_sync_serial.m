@@ -59,7 +59,8 @@ if alreadyconnected
 	catch
 		bugfix_factor=1;
 	end
-
+    %disp('sending disabled')
+    %%{
 	if switch_it==1
 		flush(serpo);pause(0.1)
 		camera_type=gui.retr('camera_type');
@@ -91,9 +92,9 @@ if alreadyconnected
 			elseif strcmpi(triggermode,'startrising')
 				triggerconfig=':3,0:';
 			end
-
 			send_string=['TALKINGTO:' laser_device_id ':sequence:' int2str(frame_time) triggerconfig pin_string];
-			writeline(serpo,send_string);
+			
+            writeline(serpo,send_string);
 			pause(0.05)
 			serial_answer=readline(serpo);
 			% check if sequence is ok. If not --> dont turn laser on
@@ -108,7 +109,7 @@ if alreadyconnected
 				set(handles.ac_laserstatus,'BackgroundColor',[1 1 0]); %yellow=warning
 				set(handles.ac_laserstatus,'String','!Sequence!');drawnow;
 			end
-		end
+     	end
 	else
 		flush(serpo);pause(0.1)
 		if strcmpi(gui.retr('sync_type'),'xmSync')
@@ -118,7 +119,8 @@ if alreadyconnected
 			send_string=['TALKINGTO:' laser_device_id ':stop'];
 			writeline(serpo,send_string);
 		end
-	end
+    end
+    %%}
 	pause(0.1)
 	warning off
 	serial_answer = acquisition.process_sync_reply(serpo);

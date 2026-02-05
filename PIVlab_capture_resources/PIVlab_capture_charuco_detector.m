@@ -59,7 +59,7 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
         threshold_location_change_x = size(img,2)/10; %with full panda resolution: ca. 500 px
         threshold_location_change_y = size(img,1)/10;
         isNew = all( dx > threshold_location_change_x | dy > threshold_location_change_y );
-        not_moving_threshold = 0.05;
+        not_moving_threshold = 0.06;
         infotxt='Existing position';
         if isNew
             infotxt='New position';
@@ -80,6 +80,45 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
                 gui.put('old_charuco_img',img_original(1:2:end,1:2:end,:));
             end
         end
+        if size(locs,1) > 5
+            %disp ('now calculate intrinsics once')
+            %read saved images, get points. Aber die intrinsics müssten bleiben zwischen verschiedenen läufen.
+        end
+        %% estimate alpha and beta
+%{
+%hier müsste man sammeln alle bisheringen marker bilder. Dann daraus intrinsics berechnen. Vielleicht einmalig wenn bestimmte Anzahl guter bilde rrereciht?
+camera_1_parameters = estimateCameraParameters(camera_1_points, worldPoints1, ImageSize=image_size);
+camExtrinsics1 = estimateExtrinsics(imagePoints1_original,worldPoints1_original,camera_1_parameters.Intrinsics);
+R1=camExtrinsics1.R;
+t1=camExtrinsics1.Translation;
+z_cam = [0; 0; 1];
+z_world1 = R1 * z_cam;
+alpha1 = atan2(z_world1(1), z_world1(3));   % yaw (X–Z plane)
+beta1  = atan2(z_world1(2), z_world1(3));   % pitch (Y–Z plane)
+alpha_deg1 = rad2deg(alpha1); %should be camera yaw
+beta_deg1  = rad2deg(beta1); % should be camera pitch
+
+
+% Roll (untested)
+% Kamera -> Welt Rotation
+R_wc = R1.';
+% Kamera-X-Achse im Weltkoordinatensystem
+x_cam_w = R_wc(:,1);
+% Projektion in die Welt-XY-Ebene
+x_proj = x_cam_w;
+x_proj(3) = 0;
+x_proj = x_proj / norm(x_proj);
+% Roll (Rotation um optische Achse)
+roll = atan2(x_proj(2), x_proj(1));
+roll_deg = rad2deg(roll);
+
+
+
+
+
+%}
+
+
     end
     hold on
     scatter(locs_center_x,locs_center_y,'green','tag','charucolabel','Parent',figure_handle)

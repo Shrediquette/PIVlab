@@ -23,19 +23,22 @@ if size(filepath,1) > 1 %did the user load images?
 				pixel_mask=imread(fullfile(PathName,FileName));
 			else
 				pixel_mask=imread(fullfile(PathName,FileName{i}));
-			end
-			pixel_mask=pixel_mask(:,:,1);
-			pixel_mask=imbinarize(pixel_mask);
-			CC = bwconncomp(pixel_mask);
+            end
+            pixel_mask=pixel_mask(:,:,1);
+            if ~islogical(pixel_mask)
+    			pixel_mask=imbinarize(pixel_mask);
+            end
+            CC = bwconncomp(pixel_mask);
 			CC2 = bwconncomp(1-pixel_mask);
 			numconnected=CC.NumObjects + CC2.NumObjects;
-			if numconnected > 100
+			if numconnected > 300
 				disp('Many mask blobs detected. Now filtering the mask input images.')
 				pixel_mask = imclose(pixel_mask,strel('disk',5)); %remove small holes
-				pixel_mask = bwareaopen(pixel_mask,25); %remove areas with less than 25 pixels area
+				pixel_mask = bwareaopen(pixel_mask,10); %remove areas with less than 25 pixels area
+                pixel_mask = bwareafilt(pixel_mask,[100 inf]); %only try to get blobs with more than 400 pixels
+			    %pixel_mask = bwareafilt(pixel_mask, 100);
 			end
-			pixel_mask = bwareafilt(pixel_mask,[400 inf]); %only try to get blobs with more than 400 pixels
-			pixel_mask = bwareafilt(pixel_mask, 100);
+
 			blocations = bwboundaries(pixel_mask,'holes');
 			%imshow(A, 'Parent',pivlab_axis);
 			handles=gui.gethand;
