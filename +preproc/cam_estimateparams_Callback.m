@@ -175,10 +175,14 @@ if ~isempty(cam_selected_target_images)
         hold off;
 
         possible_grid_points = (patternDims(1)-1) * (patternDims(2)-1) * sum(imagesUsed);
-        detected_grid_points = sum(~isnan(imagePoints(:)))/2;
-        percentage_detected=round(detected_grid_points/possible_grid_points*100,1);
+		detected_grid_points = sum(~isnan(imagePoints(:)))/2;
+		percentage_detected=round(detected_grid_points/possible_grid_points*100,1);
 
-        gui.custom_msgbox('msg',getappdata(0,'hgui'),'Success',{'Camera parameter estimation successful.' ;  ['Detected ' num2str(percentage_detected) '% of the available checkers.']},'modal',{'OK'},'OK');
+		err = cameraParams.ReprojectionErrors;
+		errNorm = sqrt(err(:,1,:).^2 + err(:,2,:).^2);
+		meanReprojError = mean(errNorm(:), 'omitnan');
+
+        gui.custom_msgbox('msg',getappdata(0,'hgui'),'Success',{'Success.' ;  ['Detected ' num2str(percentage_detected) '% of checkers.' ] ; ['Mean reprojection eror: ' num2str(round(meanReprojError,2)) ' px']},'modal',{'OK'},'OK');
 
     catch ME
         gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',{'Problem with camera calibration: ' ;' '; ME.message},'modal');
