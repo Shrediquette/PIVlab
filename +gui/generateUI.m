@@ -2147,10 +2147,12 @@ handles.ac_displ_sharp = uicontrol(handles.uipanelac_camsettings,'Style','checkb
 item=[parentitem(3)/3 item(2) parentitem(3)/3 1.5];
 handles.ac_displ_grid = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Grid','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','ac_displ_grid','TooltipString','Display grid','Callback', @acquisition.display_cam_overlay_Callback,'Visible','on');
 
-item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
+%item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
 %not working at the moment...
 handles.ac_displ_hist = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Histogram','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','ac_displ_hist','TooltipString','Display histogram','Callback', @acquisition.display_cam_overlay_Callback,'Visible','off');
 
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
+handles.calib_dolivedetect = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Calibration','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Callback', @preproc.cam_live_detect_Callback,'Tag','calib_dolivedetect','TooltipString','Do realtime marker detection and image storage.');
 
 % Calib capture
 
@@ -2329,6 +2331,7 @@ handles.calib_markersize = uicontrol(handles.calib_markersetup,'Style','edit','S
 item=[0 item(2)+item(4)+margin parentitem(3)/1.5 1.5];
 handles.calib_find_params = uicontrol(handles.calib_markersetup,'Style','pushbutton','String','Guess parameters','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_find_params','TooltipString','Automatically guess charuco parameters','Callback', @preproc.cam_find_charuco_parameters_Callback);
 
+%{
 item=[0 0 0 0];
 parentitem=get(handles.multip28, 'Position');
 item=[0 item(2)+item(4)+15+margin parentitem(3) 5];
@@ -2338,7 +2341,7 @@ item=[0 0 0 0];
 
 item=[0 item(2)+margin / 4 parentitem(3) 1.5];
 handles.calib_dolivedetect = uicontrol(handles.calib_livedetection,'Style','checkbox','String','Enable live detection + storage','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_live_detect_Callback,'Tag','calib_dolivedetect','TooltipString','Do realtime marker detection and image storage.');
-
+%}
 item=[0 0 0 0];
 parentitem=get(handles.multip28, 'Position');
 item=[0 item(2)+item(4)+20+margin*2 parentitem(3) 5];
