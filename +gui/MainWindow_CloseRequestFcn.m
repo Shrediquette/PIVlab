@@ -41,6 +41,7 @@ no_synonyms = { ...
 no=no_synonyms{randi(numel(no_synonyms))};
 
 if batchModeActive == 0
+    figure(hObject);drawnow
     button=gui.custom_msgbox('quest',getappdata(0,'hgui'),'Quit?','Do you want to quit PIVlab?','modal',{yes no},no);
 else
     button = yes;
