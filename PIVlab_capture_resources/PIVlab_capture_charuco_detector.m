@@ -78,7 +78,7 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
     infotxt=[newline 'Not enough markers'];
     infotxt2='';
     orientation_message='';
-    if percentage_detected > 50
+    if percentage_detected > 33
         locs=gui.retr('last_auto_detected_charuco_position');
         if isempty(locs)
             locs=[inf,inf];
@@ -86,8 +86,9 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
         newLoc=[mean_loc_x, mean_loc_y];
         dx = abs(locs(:,1) - newLoc(1));
         dy = abs(locs(:,2) - newLoc(2));
-        threshold_location_change_x = size(img,2)/10; %with full panda resolution: ca. 500 px
-        threshold_location_change_y = size(img,1)/10;
+        disp('hier sollte man mal überlegen b nicht eine Änderung von minimum und maximum besser wäre als der Mittelwert. Besonders wenn der target so gross ist, dass Er das komplette FOV ausfüllt.')
+        threshold_location_change_x = size(img,2)/15; %with full panda resolution: ca. 500 px
+        threshold_location_change_y = size(img,1)/15;
         isNew = all( dx > threshold_location_change_x | dy > threshold_location_change_y );
         not_moving_threshold = 0.06;
         infotxt=[newline 'Existing position'];
