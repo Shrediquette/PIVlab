@@ -57,6 +57,7 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 			markerFamily = 'DICT_4X4_1000';
 		else
 			markerFamily = 'DICT_4X4_1000'; % no alternative
+			disp('unsupported marker family')
 		end
 		originCheckerColor = handles.calib_origincolor.String{handles.calib_origincolor.Value};
 		checkerSize=str2double(handles.calib_checkersize.String);
