@@ -123,14 +123,14 @@ if parallel_avail==1
     coreInfo=ppool.NumWorkers; %reduce amount of available cores to the available limit.
     maxNumCompThreads(coreInfo);
 end
-numtests=20;
+numtests=40;
 try
     delete(gcp('nocreate'))
 catch
 end
 for i=1:3
     tic
-    A=rand(2560,2560);A(A<0.5)=0;%generate fake particle images
+    A=rand(2000,2000);A(A<0.5)=0;%generate fake particle images
     A=uint8(imgaussfilt(A,2)*255);
     B=circshift(A,5);
     subtracter=toc;
@@ -138,7 +138,7 @@ end
 
 tic
 for i=1:numtests
-    A=rand(2560,2560);A(A<0.5)=0;%generate fake particle images
+    A=rand(2000,2000);A(A<0.5)=0;%generate fake particle images
     A=uint8(imgaussfilt(A,2)*255);
     B=circshift(A,5);
     A=preproc.PIVlab_preproc(A,[],1,15,0,0,0,0,0,0,1);
@@ -158,7 +158,7 @@ if parallel_avail==1
         pause(1)
         tic
         parfor i=1:numtests
-            A=rand(2560,2560);A(A<0.5)=0;%generate fake particle images
+            A=rand(2000,2000);A(A<0.5)=0;%generate fake particle images
             A=uint8(imgaussfilt(A,2)*255);
             B=circshift(A,5);
             A=preproc.PIVlab_preproc(A,[],1,15,0,0,0,0,0,0,1);
@@ -194,7 +194,7 @@ ylabel(ax(2), 'DFT speed [ms]');
 if parallel_avail==1
     figure;
     bar([1 (2:2:coreInfo)], proctime,'linewidth',2)
-    title('Speed for a representative PIV analysis.')
+    title('Speed for a representative PIV analysis (4 MP, three passes).')
     xlabel('Nr. of cores')
     ylabel('Speed in s')
 else
