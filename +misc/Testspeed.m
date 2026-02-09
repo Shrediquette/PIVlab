@@ -109,6 +109,60 @@ if parallel_avail==1
     end
     serial_speed=toc*10;
 end
+
+%% real piv calculation, multiple workers, find optimum
+
+disp('...testing typical PIV performance...')
+
+
+[~, coreInfo] = evalc('feature(''numcores'')');
+numtests=20;
+delete(gcp('nocreate'))
+for i=1:3
+	tic
+	A=rand(2560,2560);A(A<0.5)=0;%generate fake particle images
+	A=uint8(imgaussfilt(A,2)*255);
+	B=circshift(A,5);
+	subtracter=toc;
+end
+
+tic
+for i=1:numtests
+	A=rand(2560,2560);A(A<0.5)=0;%generate fake particle images
+	A=uint8(imgaussfilt(A,2)*255);
+	B=circshift(A,5);
+	A=preproc.PIVlab_preproc(A,[],1,15,0,0,0,0,0,0,1);
+	B=preproc.PIVlab_preproc(B,[],1,15,0,0,0,0,0,0,1);
+	[x,y,u,v,type,~,~]=piv.piv_FFTmulti(A,B,128,64,1,[],[],3,64,32,32,'*linear',0,0,0,0,0,0);
+	[u,v]=postproc.PIVlab_postproc(u,v,1,1,[],1,8,1,3);
+end
+proctime=toc/numtests;
+proctime=proctime-subtracter;
+
+if parallel_avail==1
+	cntr=1;
+	for cores=(2:2:coreInfo)
+		disp(['testing with ' num2str(cores) ' cores.'])
+		delete(gcp('nocreate'))
+		ppool=parpool(cores);
+		pause(1)
+		tic
+		parfor i=1:numtests
+			A=rand(2560,2560);A(A<0.5)=0;%generate fake particle images
+			A=uint8(imgaussfilt(A,2)*255);
+			B=circshift(A,5);
+			A=preproc.PIVlab_preproc(A,[],1,15,0,0,0,0,0,0,1);
+			B=preproc.PIVlab_preproc(B,[],1,15,0,0,0,0,0,0,1);
+			[x,y,u,v,type,~,~]=piv.piv_FFTmulti(A,B,128,64,1,[],[],3,64,32,32,'*linear',0,0,0,0,0,0);
+			[u,v]=postproc.PIVlab_postproc(u,v,1,1,[],1,8,1,3);
+		end
+		proctime(cntr)=toc/numtests;
+		proctime(cntr)=proctime(cntr)-subtracter;
+		cntr=cntr+1;
+	end
+end
+
+
 disp('...finished')
 %%
 disp('----------------------------------------')
