@@ -25,7 +25,7 @@ m5 = uimenu(MainWindow,'Label','Image settings');
 m5_1=uimenu(m5,'Label','Camera calibration (lens / distortion)');
 uimenu(m5_1,'Label','Setup / define / generate marker board','Callback',@preproc.cam_marker_setup_Callback);
 uimenu(m5_1,'Label','Camera calibration (undistortion)','Callback',@preproc.cam_calibration_Callback);
-uimenu(m5_1,'Label','Image rectification','Callback',@preproc.cam_rectification_Callback);
+uimenu(m5_1,'Label','Image rectification / alignment','Callback',@preproc.cam_rectification_Callback);
 uimenu(m5,'Label','Image pre-processing / enhancement','Callback',@preproc.Uielement_Callback,'Accelerator','I');
 
 uimenu(m5,'Label','Define region of interest (ROI)','Callback',@roi.img_ROI_Callback,'Accelerator','E');
@@ -34,9 +34,6 @@ uimenu(m5,'Label','Define masks (exclude regions from analysis)','Callback',@mas
 m6 = uimenu(MainWindow,'Label','Analysis');
 uimenu(m6,'Label','PIV settings','Callback',@piv.sett_Callback,'Accelerator','S');
 m6a=uimenu(m6,'Label','Stereo PIV settings','Callback',[]);
-uimenu(m6a,'Label','Set stereo camera image folders','Callback',[]);
-uimenu(m6a,'Label','Undistort stereo cameras','Callback',[]);
-uimenu(m6a,'Label','Stereo rectification and calibration','Callback',[]);
 uimenu(m6a,'Label','Disparity correction','Callback',[]);
 uimenu(m6,'Label','ANALYZE!','Callback',@piv.do_analys_Callback,'Accelerator','A');
 m7 = uimenu(MainWindow,'Label','Spatial calibration (px → mm)');
