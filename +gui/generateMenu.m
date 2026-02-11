@@ -33,6 +33,11 @@ uimenu(m5,'Label','Define masks (exclude regions from analysis)','Callback',@mas
 
 m6 = uimenu(MainWindow,'Label','Analysis');
 uimenu(m6,'Label','PIV settings','Callback',@piv.sett_Callback,'Accelerator','S');
+m6a=uimenu(m6,'Label','Stereo PIV settings','Callback',[]);
+uimenu(m6a,'Label','Set stereo camera image folders','Callback',[]);
+uimenu(m6a,'Label','Undistort stereo cameras','Callback',[]);
+uimenu(m6a,'Label','Stereo rectification and calibration','Callback',[]);
+uimenu(m6a,'Label','Disparity correction','Callback',[]);
 uimenu(m6,'Label','ANALYZE!','Callback',@piv.do_analys_Callback,'Accelerator','A');
 m7 = uimenu(MainWindow,'Label','Spatial calibration (px → mm)');
 uimenu(m7,'Label','Calibrate using current or external image','Callback',@calibrate.cal_actual_Callback,'Accelerator','Z');

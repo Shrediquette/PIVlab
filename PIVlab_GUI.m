@@ -73,7 +73,7 @@ if isempty(fh)
         set (handle_splash_text, 'String',[text_content newline '-> Starting PIVlab ' version ' ...' newline '-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.']);drawnow
     end
     margin=1.5;%1.5; %for Matlab 2025 this probably needs to be increased to 2.5, together with more fixes on all panels...
-    panelwidth=45;
+    panelwidth=50;
     panelheighttools=13;%12;
     panelheightpanels=45;%35;
     do_correlation_matrices=0; % enable or disable the output of raw correlation matrices

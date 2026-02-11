@@ -1,5 +1,5 @@
 margin=1.5;
-panelwidth=45;
+panelwidth=50;
 panelheighttools=13;
 panelheightpanels=45;
 quickheight = 3.5;
