@@ -372,6 +372,7 @@ if ~isequal(path,0)
             gui.put('cam_use_calibration',0);
             gui.put('cam_use_rectification',0);
             new_img_size=size(import.get_img(1));
+			new_img_size=new_img_size(1:2);
             gui.put('cam_use_calibration',cam_use_calibration);
             gui.put('cam_use_rectification',cam_use_rectification);
 
