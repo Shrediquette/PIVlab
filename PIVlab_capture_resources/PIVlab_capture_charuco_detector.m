@@ -1,6 +1,5 @@
-function PIVlab_capture_charuco_detector(img,figure_handle,image_handle)
+function PIVlab_capture_charuco_detector(img,figure_handle,~)
 handles=gui.gethand;
-
 img_original=img;
 if numel(img) > 20000000 % more than 20 megapixels image --> reduce resolution for charuco detection
     large_img=1;
@@ -28,6 +27,11 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
     locs_center_y=squeeze(mean(locs(:,2,:),'omitnan'));
     mean_loc_x=mean(locs_center_x,'omitnan');
     mean_loc_y=mean(locs_center_y,'omitnan');
+    min_x = min(locs(:,1));
+    max_x = max(locs(:,1));
+    min_y = min(locs(:,2));
+    max_y = max(locs(:,2));
+    newBox = [min_x max_x min_y max_y];
     %mask charucos during QR detection
     mask = ones(size(img));
     if large_img
@@ -79,17 +83,25 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
     infotxt2='';
     orientation_message='';
     if percentage_detected > 33
-        locs=gui.retr('last_auto_detected_charuco_position');
-        if isempty(locs)
-            locs=[inf,inf];
+        oldBoxes = gui.retr('last_auto_detected_charuco_boxes');
+        if isempty(oldBoxes)
+            oldBoxes = [inf inf inf inf];
         end
-        newLoc=[mean_loc_x, mean_loc_y];
-        dx = abs(locs(:,1) - newLoc(1));
-        dy = abs(locs(:,2) - newLoc(2));
-        disp('hier sollte man mal überlegen b nicht eine Änderung von minimum und maximum besser wäre als der Mittelwert. Besonders wenn der target so gross ist, dass Er das komplette FOV ausfüllt.')
-        threshold_location_change_x = size(img,2)/15; %with full panda resolution: ca. 500 px
-        threshold_location_change_y = size(img,1)/15;
-        isNew = all( dx > threshold_location_change_x | dy > threshold_location_change_y );
+
+        dx_min = abs(oldBoxes(:,1) - newBox(1));
+        dx_max = abs(oldBoxes(:,2) - newBox(2));
+        dy_min = abs(oldBoxes(:,3) - newBox(3));
+        dy_max = abs(oldBoxes(:,4) - newBox(4));
+
+        threshold_x = size(img,2)/7;
+        threshold_y = size(img,1)/7;
+
+        isNew = all( ...
+            dx_min > threshold_x | ...
+            dx_max > threshold_x | ...
+            dy_min > threshold_y | ...
+            dy_max > threshold_y ...
+            );
         not_moving_threshold = 0.06;
         infotxt=[newline 'Existing position'];
         if isNew
@@ -103,7 +115,12 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
                 disp(['Image delta = ' num2str(motion_metric)]);
                 if motion_metric < not_moving_threshold
                     acquisition.camera_snapshot_Callback
-                    gui.put('last_auto_detected_charuco_position',[locs;newLoc]); %saves a list of all detected centers of board so far detected
+                    if isempty(oldBoxes)
+                        oldBoxes = newBox;
+                    else
+                        oldBoxes = [oldBoxes; newBox];
+                    end
+                    gui.put('last_auto_detected_charuco_boxes',oldBoxes);
                     infotxt2=[newline 'Steady!'];
                 else
                     infotxt2=[newline 'Shaking...'];

@@ -46,7 +46,7 @@ else
     ready=1;
 end
 if ready==1
-	gui.put('last_auto_detected_charuco_position',[])
+    gui.put('last_auto_detected_charuco_boxes',[])
     handles=gui.gethand;
     try
         expos=round(str2num(get(handles.ac_expo,'String'))*1000);
@@ -82,7 +82,7 @@ if ready==1
         set(handles.zoomon,'enable','on');
         set(handles.ac_displ_sharp,'enable','on');
         set(handles.ac_displ_grid,'enable','on');
-		set(handles.calib_dolivedetect,'enable','on');
+        set(handles.calib_dolivedetect,'enable','on');
         set(handles.ac_displ_hist,'enable','on');
         set(handles.ac_calibsnapshot,'enable','on')
         gui.put('old_charuco_img',[]);
