@@ -2228,6 +2228,9 @@ parentitem=get(handles.calib_imagedata, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
+handles.calib_undist_cam_label=uicontrol(handles.calib_imagedata,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'FontWeight','bold','Tag','calib_undist_cam_label');
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.calib_load_imgs = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Load target images','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_calibration_loadimages_Callback,'Tag','calib_load_imgs','TooltipString','Load images of the calibration target');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
@@ -2267,6 +2270,9 @@ handles.rect_imagedata = uipanel(handles.multip27, 'Units','characters', 'Positi
 
 parentitem=get(handles.rect_imagedata, 'Position');
 item=[0 0 0 0];
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
+handles.calib_rect_cam_label=uicontrol(handles.rect_imagedata,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'FontWeight','bold','Tag','calib_rect_cam_label');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.rect_load_imgs = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Load target image','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_loadimages_Callback,'Tag','rect_load_imgs','TooltipString','Load an image of the calibration target aligned with your target coordinate system and inside the laser sheet.');

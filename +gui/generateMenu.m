@@ -24,8 +24,12 @@ uimenu(m51,'Label','Capture PIV images','Callback',@acquisition.capture_images_C
 m5 = uimenu(MainWindow,'Label','Image settings');
 m5_1=uimenu(m5,'Label','Camera calibration (lens / distortion)');
 uimenu(m5_1,'Label','Setup / define / generate marker board','Callback',@preproc.cam_marker_setup_Callback);
-uimenu(m5_1,'Label','Camera calibration (undistortion)','Callback',@preproc.cam_calibration_Callback);
-uimenu(m5_1,'Label','Image rectification / alignment','Callback',@preproc.cam_rectification_Callback);
+m5_2=uimenu(m5_1,'Label','Camera calibration (undistortion)');
+uimenu(m5_2,'Label','Camera 1','Callback',@preproc.cam_calibration_Callback);
+uimenu(m5_2,'Label','Camera 2','Callback',@preproc.cam_calibration_Callback,'enable','off');
+m5_3=uimenu(m5_1,'Label','Image rectification / alignment');
+uimenu(m5_3,'Label','Camera 1','Callback',@preproc.cam_rectification_Callback);
+uimenu(m5_3,'Label','Camera 2','Callback',@preproc.cam_rectification_Callback,'enable','off');
 uimenu(m5,'Label','Image pre-processing / enhancement','Callback',@preproc.Uielement_Callback,'Accelerator','I');
 
 uimenu(m5,'Label','Define region of interest (ROI)','Callback',@roi.img_ROI_Callback,'Accelerator','E');
