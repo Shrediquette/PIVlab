@@ -1908,7 +1908,7 @@ item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.paneltext = uicontrol(handles.multip21,'Style','text','String','Width of the panels','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','paneltext');
 
 item=[0 item(2)+item(4) parentitem(3)/2 2];
-handles.panelslider = uicontrol(handles.multip21,'Style','slider','max',50,'min',30,'sliderstep',[0.05 0.05],'Value',37,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','panelslider','TooltipString','Width of the panel that you see on the left side');
+handles.panelslider = uicontrol(handles.multip21,'Style','slider','max',80,'min',30,'sliderstep',[0.05 0.05],'Value',50,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','panelslider','TooltipString','Width of the panel that you see on the left side');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
 handles.pref_apply = uicontrol(handles.multip21,'Style','pushbutton','String','Apply','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@gui.pref_apply_Callback,'Tag','prefapply','TooltipString','Apply the new width. All data from the UI will be cleared');
