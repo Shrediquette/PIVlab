@@ -137,6 +137,13 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 			if ~isempty(cameraParams)
 				detector = vision.calibration.monocular.CharucoBoardDetector();
 				worldPoints1 = generateWorldPoints(detector, 'PatternDims', patternDims, 'CheckerSize', checkerSize);
+
+				if patternDims(1) > patternDims(2) %Fixes the issue that high slender calibration bards result in rotated output
+					% swap axes
+					worldPoints1 = worldPoints1(:, [2 1]);
+					% flip y axis
+					worldPoints1(:,2) = -worldPoints1(:,2);
+				end
 				offs_x=max(worldPoints1(:,1));
 				offs_y=max(worldPoints1(:,2));
 				worldPoints1(isnan(imagePoints1))=NaN;
@@ -164,7 +171,7 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 					% Roll (Rotation um optische Achse)
 					roll = atan2(x_proj(2), x_proj(1));
 					roll_deg = rad2deg(roll);
-					orientation_message=['Yaw: ' num2str(round(alpha_deg)) ' ; Pitch: ' num2str(round(beta_deg)) ' ; Roll: ' num2str(round(roll_deg)) newline 'X: ' num2str(round((t1(1)+offs_x)/1000,2)) ' ; Y: ' num2str(round((t1(2)-offs_y)/1000,2)) ' ; Z: ' num2str(round(t1(3)/1000,2))];
+					orientation_message=['Yaw: ' num2str(round(alpha_deg)) ' ; Pitch: ' num2str(round(beta_deg)) ' ; Roll: ' num2str(round(roll_deg)) newline 'X: ' num2str(round((t1(1)+offs_x)/1000,2)) ' ; Y: ' num2str(round((t1(2)+offs_y)/1000,2)) ' ; Z: ' num2str(round(t1(3)/1000,2))];
 				else
 					orientation_message='Perform camera calibration to display yaw / pitch / roll angle of camera';
 				end
