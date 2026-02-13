@@ -2,11 +2,11 @@ clc
 clear all
 close all
 imaqreset
-ImagePath = 'D:\PIV Data\stereotest_optocam2\piv_images'
+ImagePath = 'D:\PIV Data\stereotest_optocam2\temp'
 frame_rate=80
 interframe = 300
 laser_energy= 75
-nr_of_images=100
+nr_of_images=1000
 exposure_time= floor(1/frame_rate*1000*1000-44)/1;
 OPTOcam_frames_to_capture = nr_of_images*2;
 
@@ -24,7 +24,11 @@ OPTOcam_vid2 = videoinput(info.AdaptorName,info.DeviceInfo(2).DeviceID,'Mono8');
 %device throughputlimit für beide kameras machen...
 
 OPTOcam_settings1 = get(OPTOcam_vid1);
-OPTOcam_settings1.Source.DeviceLinkThroughputLimitMode = 'off';
+OPTOcam_settings1.Source.DeviceLinkThroughputLimit = 200000000; % müsste für 80 fps gehen
+OPTOcam_settings1.Source.DeviceLinkThroughputLimitMode = 'On';
+
+
+
 OPTOcam_settings1.PreviewFullBitDepth='On';
 OPTOcam_vid1.PreviewFullBitDepth='On';
 triggerconfig(OPTOcam_vid1, 'hardware');
@@ -42,7 +46,8 @@ OPTOcam_settings1.Source.ReverseX = 'True';
 OPTOcam_settings1.Source.ReverseY = 'True';
 
 OPTOcam_settings2 = get(OPTOcam_vid2);
-OPTOcam_settings2.Source.DeviceLinkThroughputLimitMode = 'off';
+OPTOcam_settings2.Source.DeviceLinkThroughputLimit = 200000000; % müsste für 80 fps gehen
+OPTOcam_settings2.Source.DeviceLinkThroughputLimitMode = 'On';
 OPTOcam_settings2.PreviewFullBitDepth='On';
 OPTOcam_vid2.PreviewFullBitDepth='On';
 triggerconfig(OPTOcam_vid2, 'hardware');
@@ -83,12 +88,13 @@ preview(OPTOcam_vid2,prev2);
 pause(0.5)
 
 %% start laser
+laser_ID = 'oltSync:00-1c-a8-8e';
 clear serpo
 [~, pin_string,~,frame_time] = PIVlab_calc_oltsync_timings('OPTOcam','',8,frame_rate,0,interframe,laser_energy);
 triggerconfig=':0,0:';
 
-send_string=['TALKINGTO:' 'oltSync:00-1a-0c-9e' ':sequence:' int2str(frame_time) triggerconfig pin_string]
-serpo=serialport("COM3",9600,'Timeout',2);
+send_string=['TALKINGTO:' laser_ID ':sequence:' int2str(frame_time) triggerconfig pin_string]
+serpo=serialport("COM9",9600,'Timeout',2);
 configureTerminator(serpo,'CR/LF');
 
 writeline(serpo,send_string);
@@ -98,16 +104,17 @@ serial_answer=readline(serpo);
 if strcmpi(serial_answer,'Sequence:OK')
     disp('Sequence reported OK')
     pause(0.05)
-    send_string=['TALKINGTO:' 'oltSync:00-1a-0c-9e' ':start'];
+    send_string=['TALKINGTO:' laser_ID ':start'];
     writeline(serpo,send_string);
 end
 if strcmpi(serial_answer,'Sequence:Error')
     disp('Sequence not correct')
 end
 
-
+fig=gcf();
 while OPTOcam_vid1.FramesAcquired < (OPTOcam_frames_to_capture)
     drawnow limitrate
+    fig.Name=[num2str(round(OPTOcam_vid1.FramesAcquired/OPTOcam_frames_to_capture*100,1)) ' %'];
 end
 
 stoppreview(OPTOcam_vid1)
@@ -117,11 +124,11 @@ stop(OPTOcam_vid2);
 
 
 %% stop laser
-send_string=['TALKINGTO:' 'oltSync:00-1a-0c-9e' ':stop'];
+send_string=['TALKINGTO:' laser_ID ':stop'];
 writeline(serpo,send_string);
 pause(0.1)
 clear serpo
-
+%{
 if ~isinf(nr_of_images)
     disp('saving...')
     OPTOcam_data1 = getdata(OPTOcam_vid1,OPTOcam_frames_to_capture);
@@ -137,9 +144,8 @@ if ~isinf(nr_of_images)
         imgB_path=fullfile(ImagePath,['CAM2_PIVlab_' sprintf('%4.4d',cntr) '_B.tif']);
         imwrite(OPTOcam_data2(:,:,:,image_save_number),imgA_path,'compression','none'); %tif file saving seems to be the fastest method for saving data...
         imwrite(OPTOcam_data2(:,:,:,image_save_number+1),imgB_path,'compression','none');
-
-
         cntr=cntr+1
     end
 end
 disp('done')
+%}
