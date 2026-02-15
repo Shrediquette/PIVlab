@@ -24,7 +24,7 @@ end
 
 
 if ~strcmpi(caller,'calib_viewtype')
-    res=gui.custom_msgbox('msg',getappdata(0,'hgui'),'Warning','Masks, ROI, background images, and results will be reset when changing this setting. Continue?','modal',{'OK','Cancel'},'OK');
+    res=gui.custom_msgbox('quest',getappdata(0,'hgui'),'Warning','Masks, ROI, background images, and results will be reset when changing this setting. Continue?','modal',{'OK','Cancel'},'OK');
 else
     res='OK';
 end
