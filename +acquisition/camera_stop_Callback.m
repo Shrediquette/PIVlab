@@ -1,6 +1,8 @@
 function camera_stop_Callback(~,evt,~)
 gui.put('cancel_capture',1);
-acquisition.control_simple_sync_serial(0,0);
+if ~strcmpi(gui.retr('camera_type'),'webcam')
+	acquisition.control_simple_sync_serial(0,0);
+end
 %external_device_control(0);
 gui.put('laser_running',0);
 gui.put('capturing',0);
