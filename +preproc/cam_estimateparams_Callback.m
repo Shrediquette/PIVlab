@@ -7,6 +7,10 @@ if strcmpi (originCheckerColor,'white') && mod(str2double(handles.calib_rows.Str
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Number of rows of the ChArUco board, dim1, must be even when OriginCheckerColor is white.','modal');
     return
 end
+if str2double(handles.calib_rows.String)<3 || str2double(handles.calib_columns.String)<3
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Number of rows and columns of the ChArUco board must be >= 3.','modal');
+    return
+end
 if isempty(cam_selected_target_images) || ~iscell(cam_selected_target_images) || numel(cam_selected_target_images) <=1
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Not enough marker board images selected.','modal');
     return
@@ -78,7 +82,13 @@ if ~isempty(cam_selected_target_images)
         tmp_img=imread(cam_selected_target_images{i});
         tmp_img=tmp_img(:,:,1);
         tmp_img=imadjust(tmp_img);
-        imagePoints_single = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
+        try
+            imagePoints_single = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
+        catch ME
+         gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',ME.message,'modal','OK');
+            gui.toolsavailable(1)
+            return
+        end
         if numel(imagePoints_single)>0
             if numel(imagePoints)==0
                 imagePoints(:,:,end)=imagePoints_single;
