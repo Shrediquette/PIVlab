@@ -52,10 +52,10 @@ handles.panon = uicontrol(handles.tools,'Style','togglebutton','units', 'charact
 
 load (fullfile('images','icons.mat'))
 if gui.retr('darkmode')
-	zoompic=1-zoompic+35/255;
-	panpic=1-panpic+35/255;
-	zoompic(zoompic>1)=1;
-	panpic(panpic>1)=1;
+    zoompic=1-zoompic+35/255;
+    panpic=1-panpic+35/255;
+    zoompic(zoompic>1)=1;
+    panpic(panpic>1)=1;
 end
 set(handles.zoomon, 'cdata',zoompic);
 set(handles.panon, 'cdata',panpic);
@@ -77,12 +77,12 @@ handles.quick6 = uicontrol(handles.quick,'Style','togglebutton','units', 'charac
 
 load (fullfile('images','icons_quick.mat'))
 if gui.retr('darkmode')
-	loadpic=255-loadpic+35;
-	maskpic=255-maskpic+35;
-	prepic=255-prepic+35;
-	settpic=255-settpic+35;
-	anapic=255-anapic+35;
-	calpic=255-calpic+35;
+    loadpic=255-loadpic+35;
+    maskpic=255-maskpic+35;
+    prepic=255-prepic+35;
+    settpic=255-settpic+35;
+    anapic=255-anapic+35;
+    calpic=255-calpic+35;
 end
 set(handles.quick1, 'cdata',loadpic);
 set(handles.quick2, 'cdata',maskpic);
@@ -520,7 +520,7 @@ item=[0 item(2)+item(4) parentitem(3) 1.5];
 handles.automask_generate_all = uicontrol(handles.uipanel25_2,'Style','pushbutton','String','Make mask for all frames','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask.automask_generate_all_Callback,'Tag','automask_generate_all','TooltipString','Automatic generation of a mask for all frames');
 
 
-%panel image display options 
+%panel image display options
 parentitem=get(handles.multip25, 'Position');
 item=[0 12 parentitem(3) 5];
 handles.uipanel25_10 = uipanel(handles.multip25, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Image display options', 'Tag','uipanel25_10','fontweight','bold');
@@ -1888,20 +1888,20 @@ parentitem=get(handles.multip21, 'Position');
 item=[0 0 0 0]; %reset positioning
 
 if ~verLessThan('Matlab','25')
-	item=[0 item(2)+item(4)+margin/4 parentitem(3) 1];
-	handles.matlab_theme_txt = uicontrol(handles.multip21,'Style','text','String','Color theme','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','matlab_theme_txt');
+    item=[0 item(2)+item(4)+margin/4 parentitem(3) 1];
+    handles.matlab_theme_txt = uicontrol(handles.multip21,'Style','text','String','Color theme','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','matlab_theme_txt');
 
-	item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
-	handles.matlab_theme = uicontrol(handles.multip21,'Style','popupmenu','String',{'Dark','Light'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','matlab_theme','TooltipString','Change Matlab Theme','Callback',@gui.change_theme);
+    item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
+    handles.matlab_theme = uicontrol(handles.multip21,'Style','popupmenu','String',{'Dark','Light'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','matlab_theme','TooltipString','Change Matlab Theme','Callback',@gui.change_theme);
 
-	
-	current_theme = MainWindow.Theme.BaseColorStyle;
 
-	if strcmpi(current_theme, 'Dark')
-		set( handles.matlab_theme,'Value',1);
-	elseif strcmpi(current_theme, 'Light')
-		set( handles.matlab_theme,'Value',2);
-	end
+    current_theme = MainWindow.Theme.BaseColorStyle;
+
+    if strcmpi(current_theme, 'Dark')
+        set( handles.matlab_theme,'Value',1);
+    elseif strcmpi(current_theme, 'Light')
+        set( handles.matlab_theme,'Value',2);
+    end
 end
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
@@ -2055,18 +2055,18 @@ handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'Stri
 item=[0 item(2)+item(4) parentitem(3) 2];
 
 available_PIV_configurations = { ...
-	%	'Nd:YAG (SimpleSync) + pco.pixelfly usb' ...
-	%	'Nd:YAG (SimpleSync) + pco.panda 26 DS' ...
-	'Webcam demo (no synchronizer)' ...
-	'PIVlab LD-PS + OPTOcam 2/80' ...
-	'PIVlab LD-PS + pco.edge 26 DS CLHS' ...
-	'PIVlab LD-PS + pco.panda 26 DS' ...
-	'PIVlab LD-PS + pco.pixelfly usb' ...
-	'PIVlab LD-PS + OPTRONIS Cyclone' ...
-	'PIVlab LD-PS + Chronos' ...
-	'PIVlab LD-PS + Basler acA2000-165um' ...
-	'PIVlab LD-PS + FLIR FFY-U3-16S2M' ...
-	};
+    %	'Nd:YAG (SimpleSync) + pco.pixelfly usb' ...
+    %	'Nd:YAG (SimpleSync) + pco.panda 26 DS' ...
+    'Webcam demo (no synchronizer)' ...
+    'PIVlab LD-PS + OPTOcam 2/80' ...
+    'PIVlab LD-PS + pco.edge 26 DS CLHS' ...
+    'PIVlab LD-PS + pco.panda 26 DS' ...
+    'PIVlab LD-PS + pco.pixelfly usb' ...
+    'PIVlab LD-PS + OPTRONIS Cyclone' ...
+    'PIVlab LD-PS + Chronos' ...
+    'PIVlab LD-PS + Basler acA2000-165um' ...
+    'PIVlab LD-PS + FLIR FFY-U3-16S2M' ...
+    };
 
 handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',available_PIV_configurations,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@acquisition.select_capture_config_Callback);
 
@@ -2379,26 +2379,34 @@ handles.calib_generateboard = uicontrol(handles.calib_generate,'Style','pushbutt
 
 %% Image acquisition: load last device and COM port
 try
-	warning off
-	load('PIVlab_settings_default.mat','last_selected_device','last_selected_fps','last_selected_pulsedist','last_selected_energy');
-	if exist('last_selected_device','var')
-		set(handles.ac_config, 'value',last_selected_device);
-	end
-	if exist('last_selected_fps','var')
-		pause(0.01)
-		set(handles.ac_fps, 'value',last_selected_fps);
-	end
-	if exist('last_selected_pulsedist','var')
-		set(handles.ac_interpuls, 'String',last_selected_pulsedist);
-	end
-	if exist('last_selected_energy','var')
-		set(handles.ac_power, 'String',last_selected_energy);
-	end
-	load('PIVlab_settings_default.mat','selected_com_port');
-	if exist('selected_com_port','var') && ~isempty(selected_com_port)
-		gui.put('selected_com_port',selected_com_port);
-	end
-	warning on
+    warning off
+    load('PIVlab_settings_default.mat','last_selected_device','last_selected_fps','last_selected_pulsedist','last_selected_energy');
+    if exist('last_selected_device','var')
+        if ~isempty(last_selected_device)
+            set(handles.ac_config, 'value',last_selected_device);
+        else
+            set(handles.ac_config, 'value',1);
+        end
+    end
+    if exist('last_selected_fps','var')
+        if ~isempty(last_selected_fps)
+            pause(0.01)
+            set(handles.ac_fps, 'value',last_selected_fps);
+        else
+            set(handles.ac_fps, 'value',1);
+        end
+    end
+    if exist('last_selected_pulsedist','var')
+        set(handles.ac_interpuls, 'String',last_selected_pulsedist);
+    end
+    if exist('last_selected_energy','var')
+        set(handles.ac_power, 'String',last_selected_energy);
+    end
+    load('PIVlab_settings_default.mat','selected_com_port');
+    if exist('selected_com_port','var') && ~isempty(selected_com_port)
+        gui.put('selected_com_port',selected_com_port);
+    end
+    warning on
 catch
 end
 gui.put('multitiff',0); %default for compatibility: Not a multitiff.

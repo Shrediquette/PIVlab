@@ -231,6 +231,7 @@ if strcmpi(config_string,'Webcam demo (no synchronizer)')
 		camlist=webcamlist;
 	catch
 		webcam_err=1;
+        camlist=[];
 	end
 	if isempty(camlist)
 		webcam_err=1;
@@ -251,6 +252,8 @@ if strcmpi(config_string,'Webcam demo (no synchronizer)')
 		end
 	else
 		gui.custom_msgbox('error',getappdata(0,'hgui'),'No webcam','Could not access webcam. This function requires the MATLAB Support Package for USB Webcams add-on (it is free, google for it please)','modal');
+        set(handles.ac_config,'value',2);
+        return
 	end
 	%disable controls for syncrhonizer
 	handles.ac_fps.Enable = 'off';

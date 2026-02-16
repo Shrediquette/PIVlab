@@ -34,16 +34,17 @@ if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
     end
 
     [mean_checker_size_x,mean_checker_size_y]=preproc.cam_meanCharucoSize(tmp_img,markerFamily,checkerSize,markerSize);
+    disp('Here I can add upscale factor to rectification process')
     worldPoints = patternWorldPoints("charuco-board",patternDims,(mean_checker_size_y+mean_checker_size_x)/2);%checkerSize); %checkersize muss die Größe haben, die die quadrate im eingangsbild in pixeln haben.
-    
-	if patternDims(1) > patternDims(2) %Fixes the issue that high slender calibration bards result in rotated output
-		% swap axes
-		worldPoints = worldPoints(:, [2 1]);
-		% flip y axis
-		worldPoints(:,2) = -worldPoints(:,2);
-	end
-	
-	worldPoints(isnan(imagePoints1))=NaN;
+
+    if patternDims(1) > patternDims(2) %Fixes the issue that high slender calibration bards result in rotated output
+        % swap axes
+        worldPoints = worldPoints(:, [2 1]);
+        % flip y axis
+        worldPoints(:,2) = -worldPoints(:,2);
+    end
+
+    worldPoints(isnan(imagePoints1))=NaN;
     imagePoints1 = rmmissing(imagePoints1); %remove missing entries... does that work simply like this? --> yes. If matching world points are also removed.
     worldPoints = rmmissing(worldPoints);
 

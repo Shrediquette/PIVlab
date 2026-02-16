@@ -101,8 +101,13 @@ if ~isempty(cam_selected_target_images)
         percentage_detected=  round(numel(find(~isnan(imagePoints_single)))  / (numel(imagePoints_single)+0.00001) * 100);
         d.Message = [name ext '  -->  '  num2str(percentage_detected) ' % valid markers.' ];
         d.Value=i/numel(cam_selected_target_images);
-	end
-    close(d)
+    end
+    if isMATLABReleaseOlderThan("R2025b")
+        close(fig)
+    else
+        close(d)
+    end
+
 		%debug
 %{
 		for i=1:size(imagePoints,3)
@@ -202,95 +207,3 @@ if ~isempty(cam_selected_target_images)
 else
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No calibration image data was loaded.','modal');
 end
-
-
-
-%{
-
-
-%% another functionality: warp two images together when I have an image of a charuco board.
-%{
-imageFileName1 = 'C:\Users\trash\Downloads\moving board\CAM1_PIVlab_0000_A.tif';
-imageFileName2 = 'C:\Users\trash\Downloads\moving board\CAM2_PIVlab_0000_A.tif';
-image1=imread(imageFileName1);
-image2=imread(imageFileName2);
-
-%images should be undistorted before doing the overlap
-%image1 = undistortImage(image1,params,'cubic','OutputView','valid'); %auch hier: params sollten eigentlich pro Kamera errechnet werden.
-%image2 = undistortImage(image2,params,'cubic','OutputView','valid');
-
-
-
-[imagePoints1] = detectCharucoBoardPoints(imageFileName1,patternDims,markerFamily,checkerSize,markerSize);
-[imagePoints2] = detectCharucoBoardPoints(imageFileName2,patternDims,markerFamily,checkerSize,markerSize);
-worldPoints = patternWorldPoints("charuco-board",patternDims,checkerSize);
-
-
-%[gH, inlierIdx] = estimateGeometricTransform2D(imagePoints1, imagePoints2, 'projective', 'MaxNumTrials',2000,'Confidence',99.9,'MaxDistance',4);
-
-[gH, inlierIdx] = estgeotform2d(imagePoints1, imagePoints2, 'projective', 'MaxNumTrials',2000,'Confidence',99.9,'MaxDistance',4);
-
-tform = projective2d(gH.T);
-ref = imref2d(size(image2));
-I1_warped = imwarp(image1, tform, 'OutputView', ref);
-
-% Visualize
-figure;
-imshowpair(image2, I1_warped);
-%}
-
-%% another functionality: Image rectification. How to do it?
-
-imageNrToProcess = 3;
-[imagePoints1] = detectPatternPoints(detector, imageFileNames{imageNrToProcess}, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
-
-
-[mean_checker_size_x,mean_checker_size_y]=meanCharucoSize(imagePoints1)
-
-
-worldPoints = patternWorldPoints("charuco-board",patternDims,(mean_checker_size_y+mean_checker_size_x)/2);%checkerSize); %checkersize muss die Größe haben, die die quadrate im eingangsbild in pixeln haben.
-
-worldPoints(isnan(imagePoints1))=NaN;
-
-imagePoints1 = rmmissing(imagePoints1); %remove missing entries... does that work simply like this? --> yes. If matching world points are also removed.
-worldPoints = rmmissing(worldPoints);
-
-
-undistortedPoints = undistortPoints(imagePoints1,cameraParams.Intrinsics);
-I=imread(imageFileNames{imageNrToProcess});
-[J1, ~] = undistortImage(I,cameraParams.Intrinsics,"cubic");
-tform = fitgeotform2d(undistortedPoints,worldPoints,'Projective');
-undistorted_rectified = imwarp(J1,tform);
-figure;imshow(I)
-figure;imshow(J1)
-figure;imshow(undistorted_rectified)
-
-
-
-for i=0:99
-    fnameA=['D:\PIV Data\PIV_mit_charuco\PIVlab_' sprintf('%4.4d',i) '_A.tif'];
-    fnameB=['D:\PIV Data\PIV_mit_charuco\PIVlab_' sprintf('%4.4d',i) '_B.tif'];
-   tic
-
-   %% do this in real time, or once before analysis?
-   %% takes 0.1 seconds for OPTOcam... but way longer for panda I guess...?
-   %% Man könnte in sliderdisp nearest neighbor nehmen, und nur für die analyse dann die ordentliche variante.
-    [A, ~] = undistortImage(imread(fnameA),cameraParams.Intrinsics,"cubic");
-    A = imwarp(A,tform);
-    [B, ~] = undistortImage(imread(fnameB),cameraParams.Intrinsics,"cubic");
-    B = imwarp(B,tform);
-    toc
-
-    %imwrite(A,['D:\PIV Data\PIV_mit_charuco\PIVlab_rectified_' sprintf('%4.4d',i) '_A.tif'])
-    %imwrite(B,['D:\PIV Data\PIV_mit_charuco\PIVlab_rectified_' sprintf('%4.4d',i) '_B.tif'])
-end
-
-
-%% Jetzt müsste man sich einen Workflow ausdenken wie man das macht.
-% Erst Mit vielen Charuco Bildern beide Kameras kalibrieren. (Man könnte auch Charuco fix machen und Kameras drumrum bewegen)
-% Dann ein Board genau in Laserebene. Mit beiden Kameras ein Foto von Charuco
-% Dann diese beiden Bilder undistorten
-% Dann rektifizieren
-% Dann alignment
-
-%}
