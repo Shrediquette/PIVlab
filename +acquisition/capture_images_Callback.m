@@ -69,12 +69,10 @@ if gui.retr('parallel')==1
 end
 try
 	if ~alreadyconnected
-		if ispref('PIVlab_ad','enable_ad') &&  getpref('PIVlab_ad','enable_ad') ==0
-			%do not display ad
+		if exist('laser_device_id.mat','file') ~= 2 %after a frist connection to a synchronizer, this will not be shown anymore.
+			misc.hardware_Ad
 		else
-			if exist('laser_device_id.mat','file') ~= 2
-				misc.hardware_Ad
-			end
+			gui.displogo
 		end
 	end
 catch

@@ -16,17 +16,17 @@ if ~isempty(h1)
         try
             snaptxt=text(size_img(2)/2,size_img(1)/2,'SNAPSHOT','BackgroundColor','k','Color','y','tag','captureinfo','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',24,'FontWeight','bold');
             drawnow;
-            pause(0.01)
+            pause(0.05)
             if exist('snaptxt','var')
                 snaptxt.Color='k';snaptxt.BackgroundColor='y';
             end
             drawnow;
-            pause(0.01)
+            pause(0.05)
             if exist('snaptxt','var')
                 snaptxt.Color='y';snaptxt.BackgroundColor='k';
             end
             drawnow;
-            pause(0.005)
+            pause(0.05)
         catch
         end
     end
