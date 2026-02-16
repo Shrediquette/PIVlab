@@ -174,20 +174,22 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 					orientation_message=['Yaw: ' num2str(round(alpha_deg)) ' ; Pitch: ' num2str(round(beta_deg)) ' ; Roll: ' num2str(round(roll_deg)) newline 'X: ' num2str(round((t1(1)+offs_x)/1000,2)) ' ; Y: ' num2str(round((t1(2)+offs_y)/1000,2)) ' ; Z: ' num2str(round(t1(3)/1000,2))];
 				else
 					orientation_message='Perform camera calibration to display yaw / pitch / roll angle of camera';
-				end
-			else
-				orientation_message='Perform camera calibration to display yaw / pitch / roll angle of camera';
-			end
-		end
-	end
-	hold on
-	scatter(locs_center_x,locs_center_y,'green','tag','charucolabel','Parent',figure_handle)
-	hold off
-	rectangle('Position',[min(locs_center_x), min(locs_center_y),max(locs_center_x) - min(locs_center_x), max(locs_center_y) - min(locs_center_y) ],'tag','charucolabel','EdgeColor','r','LineWidth',2,'Parent',figure_handle,'Curvature',0.15)
-	text(mean_loc_x,mean_loc_y,[orientation_message],'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',18,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','top','Parent',figure_handle)
-	text(mean_loc_x,mean_loc_y,['Markers: ' num2str(percentage_detected) ' %'  infotxt  infotxt2],'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','bottom','Parent',figure_handle)
-	if detectionOK %QR code detected
-		rectangle('position',[min(loc(:,1))-20, min(loc(:,2))-20, max(loc(:,1)) - min(loc(:,1))+20 , max(loc(:,2)) - min(loc(:,2))+20],'tag','charucolabel','EdgeColor','b','LineWidth',6,'Parent',figure_handle,'Curvature',0.5)
-		text(mean(loc(:,1)),mean(loc(:,2)),'QR','tag','charucolabel','Color','w','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
-	end
+                end
+            else
+                orientation_message='Perform camera calibration to display yaw / pitch / roll angle of camera';
+            end
+        end
+    end
+    if percentage_detected >= 3
+    	hold on
+    	scatter(locs_center_x,locs_center_y,'green','tag','charucolabel','Parent',figure_handle)
+    	hold off
+    	rectangle('Position',[min(locs_center_x), min(locs_center_y),max(locs_center_x) - min(locs_center_x), max(locs_center_y) - min(locs_center_y) ],'tag','charucolabel','EdgeColor','r','LineWidth',2,'Parent',figure_handle,'Curvature',0.15)
+    	text(mean_loc_x,mean_loc_y,orientation_message,'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',18,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','top','Parent',figure_handle)
+    	text(mean_loc_x,mean_loc_y,['Markers: ' num2str(percentage_detected) ' %'  infotxt  infotxt2],'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','bottom','Parent',figure_handle)
+    	if detectionOK %QR code detected
+    		rectangle('position',[min(loc(:,1))-20, min(loc(:,2))-20, max(loc(:,1)) - min(loc(:,1))+20 , max(loc(:,2)) - min(loc(:,2))+20],'tag','charucolabel','EdgeColor','b','LineWidth',6,'Parent',figure_handle,'Curvature',0.5)
+    		text(mean(loc(:,1)),mean(loc(:,2)),'QR','tag','charucolabel','Color','w','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
+        end
+    end
 end
