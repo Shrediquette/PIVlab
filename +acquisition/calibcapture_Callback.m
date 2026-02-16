@@ -98,17 +98,19 @@ if ready==1
         elseif strcmp(camera_type,'OPTRONIS')
             acquisition.control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
             [errorcode, caliimg]=PIVlab_capture_OPTRONIS_calibration_image(inf,expos,ac_ROI_general);
-            acquisition.control_simple_sync_serial(0,2);
-        elseif strcmp(camera_type,'flir')
-            [errorcode, caliimg]=PIVlab_capture_flir_calibration_image(expos);
-        elseif strcmp(camera_type,'chronos')
-            cameraIP=gui.retr('Chronos_IP');
-            if isempty(cameraIP)
-                gui.custom_msgbox('error',getappdata(0,'hgui'),'Chronos not configured',{'Chronos Setup not performed.' 'Please click "Setup" in "Camera settings"'},'modal');
-            else
-                [errorcode, caliimg] = PIVlab_capture_chronos_calibration_image(cameraIP,expos);
-            end
-        end
+			acquisition.control_simple_sync_serial(0,2);
+		elseif strcmp(camera_type,'flir')
+			[errorcode, caliimg]=PIVlab_capture_flir_calibration_image(expos);
+		elseif strcmp(camera_type,'chronos')
+			cameraIP=gui.retr('Chronos_IP');
+			if isempty(cameraIP)
+				gui.custom_msgbox('error',getappdata(0,'hgui'),'Chronos not configured',{'Chronos Setup not performed.' 'Please click "Setup" in "Camera settings"'},'modal');
+			else
+				[errorcode, caliimg] = PIVlab_capture_chronos_calibration_image(cameraIP,expos);
+			end
+		elseif strcmp(camera_type,'webcam')
+			[errorcode, caliimg]=PIVlab_capture_webcam_calibration([]);
+		end
         gui.put('caliimg',caliimg);
         gui.put('fresh_calib_image',1);
     elseif capture_ok==1 && capturing == 1

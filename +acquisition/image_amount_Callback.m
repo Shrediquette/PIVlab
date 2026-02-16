@@ -17,17 +17,18 @@ else
 		ac_ROI_general=[1 1 max_cam_res(1) max_cam_res(2)];
 	end
 	value=get(handles.ac_config,'value');
+	config_string = handles.ac_config.String(value);
 	bitmode=8;
-	if value == 6  %basler cameras
+	if strcmpi(config_string,'PIVlab LD-PS + Basler acA2000-165um')  %basler cameras
 		bitmode=8;
-	elseif value == 7  %flir cameras
+	elseif strcmpi(config_string,'PIVlab LD-PS + FLIR FFY-U3-16S2M')  %flir cameras
 		bitmode=8;
-	elseif value == 8  %OPTOcam
+	elseif strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2/80')  %OPTOcam
 		bitmode =gui.retr('OPTOcam_bits');
 		if isempty (bitmode)
 			bitmode=8;
 		end
-	elseif value == 9  %OPTRONIS
+	elseif strcmpi(config_string,'PIVlab LD-PS + OPTRONIS Cyclone')  %OPTRONIS
 		bitmode =gui.retr('OPTRONIS_bits');
 		if isempty (bitmode)
 			bitmode=8;
