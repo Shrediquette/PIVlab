@@ -249,15 +249,21 @@ if strcmpi(config_string,'Webcam demo (no synchronizer)')
 		%if get(handles.ac_fps,'value') > numel(avail_freqs)
 		if ~strcmpi(config_string,old_setting)
 			set(handles.ac_fps,'value',numel(avail_freqs))
-		end
-	else
-		gui.custom_msgbox('error',getappdata(0,'hgui'),'No webcam','Could not access webcam. This function requires the MATLAB Support Package for USB Webcams add-on (it is free, google for it please)','modal');
+        end
+    else
+        if ~verLessThan('matlab','25')
+            message='Tried to access the webcam for demoing PIVlab''s PIV capture features. But the webcam could not be accessed. This function requires the MATLAB Support Package for USB Webcams add-on. It is free and can be downloaded <a href="https://www.mathworks.com/matlabcentral/fileexchange/45182-matlab-support-package-for-usb-webcams">here</a>.';
+            uialert(getappdata(0,'hgui'),message,'No webcam','icon','warning','Interpreter','html');
+        else
+            disp('https://www.mathworks.com/matlabcentral/fileexchange/45182-matlab-support-package-for-usb-webcams')
+            gui.custom_msgbox('error',getappdata(0,'hgui'),'No webcam','Could not access webcam. This function requires the free MATLAB Support Package for USB Webcams add-on (the link is now displayed in the command window).','modal');
+        end
         set(handles.ac_config,'value',2);
         return
-	end
-	%disable controls for syncrhonizer
-	handles.ac_fps.Enable = 'off';
-	handles.ac_interpuls.Enable = 'off';
+    end
+    %disable controls for syncrhonizer
+    handles.ac_fps.Enable = 'off';
+    handles.ac_interpuls.Enable = 'off';
 	handles.ac_power.Enable = 'off';
 	handles.ac_enable_straddling_figure.Enable = 'off';
 	handles.ac_lasertoggle.Enable = 'off';
