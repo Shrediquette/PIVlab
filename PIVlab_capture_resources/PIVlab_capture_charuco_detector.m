@@ -148,11 +148,15 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 				offs_y=max(worldPoints1(:,2));
 				worldPoints1(isnan(imagePoints1))=NaN;
 				imagePoints1 = rmmissing(imagePoints1); %remove missing entries... does that work simply like this? --> yes. If matching world points are also removed.
-				worldPoints1 = rmmissing(worldPoints1);
-				if size(worldPoints1,1)>3
-					camExtrinsics1 = estimateExtrinsics(imagePoints1,worldPoints1,cameraParams.Intrinsics);
-					R1=camExtrinsics1.R;
-					t1=camExtrinsics1.Translation;
+                worldPoints1 = rmmissing(worldPoints1);
+                if size(worldPoints1,1)>3
+                    try
+                        camExtrinsics1 = estimateExtrinsics(imagePoints1,worldPoints1,cameraParams.Intrinsics);
+                    catch
+                        return
+                    end
+                    R1=camExtrinsics1.R;
+                    t1=camExtrinsics1.Translation;
 					z_cam = [0; 0; 1];
 					z_world1 = R1 * z_cam;
 					alpha1 = atan2(z_world1(1), z_world1(3));   % yaw (X–Z plane)
