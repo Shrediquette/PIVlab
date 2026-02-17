@@ -24,6 +24,10 @@ if patternDims(1)*patternDims(2) > 1000
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',['Too many checkers (1000 checkers are the maximum). Reduce the amount of rows or columns, so that' newline 'Rows * Columns <= 1000.'],'modal');
     return
 end
+if patternDims(1) == patternDims(2)
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Amount of rows and columns should not be equal to avoid ambiguity.','modal');
+    return
+end
 minMarkerID = 0;
 %margins are 3 checkers wide
 marginsize=round(checkerSize* dpi / 25.4*3);
