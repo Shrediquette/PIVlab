@@ -2298,6 +2298,9 @@ handles.rect_show_points = uicontrol(handles.rect_imagedata,'Style','pushbutton'
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.rect_show_rectified = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Show rectified board','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_rectified_Callback,'Tag','rect_show_rectified','TooltipString','Show a preview of the undistorted calibration board');
 
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
+handles.rect_show_cam_position = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Show camera position','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_cam_position_Callback,'Tag','rect_show_cam_position','TooltipString','Show a 3D scene of camera and board position');
+
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
 handles.calib_userectification = uicontrol(handles.rect_imagedata,'Style','checkbox','String','Enable image rectification', 'Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_userectification','TooltipString','Use image rectification','Callback', @preproc.cam_enable_cam_rectification_Callback);
 

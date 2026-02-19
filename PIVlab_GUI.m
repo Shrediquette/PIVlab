@@ -44,7 +44,9 @@ if isempty(fh)
     guidata(MainWindow,handles)
     setappdata(0,'hgui',MainWindow);
     version = '3.13';
+    isbeta=1;
     gui.put('PIVver', version);
+    gui.put('isbeta', isbeta);
     try
         warning off
         load('PIVlab_settings_default.mat','build_date');
@@ -67,10 +69,17 @@ if isempty(fh)
     end
     if ~exist('splash_ax','var')
         disp(['-> PIVlab ' version ', built on: ' char(datetime(build_date)) ' ...'])
+        if isbeta==1
+            disp('-> BETA VERSION')
+        end
         disp(['-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.'])
     else
         text_content=get(handle_splash_text,'String');
-        set (handle_splash_text, 'String',[text_content newline '-> Starting PIVlab ' version ' ...' newline '-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.']);drawnow
+        if isbeta==1
+            set (handle_splash_text, 'String',[text_content newline '-> Starting PIVlab ' version ' ...' newline 'BETA VERSION' newline '-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.']);drawnow
+        else
+            set (handle_splash_text, 'String',[text_content newline '-> Starting PIVlab ' version ' ...' newline '-> Using MATLAB version ' v.Version ' ' v.Release ' on ' computer '.']);drawnow
+        end
     end
     margin=1.5;%1.5; %for Matlab 2025 this probably needs to be increased to 2.5, together with more fixes on all panels...
     panelwidth=50;
@@ -219,20 +228,30 @@ if isempty(fh)
                     set (handle_splash_text, 'String',text_content);drawnow
                 end
             catch
-                disp(' ')
-                disp('Image Processing Toolbox not accessible! PIVlab won''t work like this.')
+                disp(' ');disp(' ');disp(' ');disp(' ');disp(' ');disp(' ');
+                disp('Image Processing Toolbox not accessible! PIVlab WON''T WORK LIKE THIS')
                 disp('A license has been found, but the toolbox could not be accessed.')
-                disp('This is not a PIVlab related issue. Before you can use PIVlab, you need to make sure that the following command can be run without error message from the MATLAB command line:')
+                disp('This is not an issue caused by PIVlab. This is a problem with your Matlab installation. Before you can use PIVlab, you need to make sure that the following command can be run without error message from the MATLAB command line:')
                 disp('"J = adapthisteq(rand(8,8))" (enter this without quotes)')
-                disp(' ')
-                disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
+                disp('Ask your IT department for support or contact Mathworks support.')
+                disp(' ');disp(' ');disp(' ');
+                disp('Here is information about your installed toolboxes and licenses:')
+                ver -support
+                disp(' ');disp(' ');disp(' ');
+                disp('Press any key to continue... (but remember, PIVlab WON''T WORK LIKE THIS! IT REALLY WON''T!)')
                 if ~isdeployed
                     beep;commandwindow;pause
                 end
             end
         else
+            disp(' ');disp(' ');disp(' ');disp(' ');disp(' ');disp(' ');
             disp('ERROR: Image Processing Toolbox not found! PIVlab won''t work like this.')
-            disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
+            disp('Ask your IT department for support or contact Mathworks support.')
+            disp(' ');disp(' ');disp(' ');
+            disp('Here is information about your installed toolboxes and licenses:')
+            ver -support
+            disp(' ');disp(' ');disp(' ');
+            disp(('Press any key to continue... (but remember, PIVlab WON''T WORK LIKE THIS! IT REALLY WON''T!)'))
             if ~isdeployed
                 beep;commandwindow;pause
             end
@@ -397,21 +416,9 @@ if isempty(fh)
                 end
             end
             if gui.retr('parallel')==1
-                if ~exist('splash_ax','var')
-                    disp(['-> Distributed Computing Toolbox found. Parallel pool (' int2str(misc.pivparpool('size')) ' workers) active (default settings).'])
-                else
-                    text_content=get(handle_splash_text,'String');
-                    text_content{end+1}=['-> Distributed Computing Toolbox found.' newline '-> Parallel pool (' int2str(misc.pivparpool('size')) ' workers) active (default settings).'];
-                    set (handle_splash_text, 'String',text_content);drawnow;pause(1)
-                end
+                disp(['-> Distributed Computing Toolbox found. Parallel pool (' int2str(misc.pivparpool('size')) ' workers) active (default settings).'])
             else
-                if ~exist('splash_ax','var')
-                    disp('-> Distributed Computing disabled.')
-                else
-                    text_content=get(handle_splash_text,'String');
-                    text_content{end+1}='-> Distributed Computing disabled.';
-                    set (handle_splash_text, 'String',text_content);drawnow;pause(1)
-                end
+                disp('-> Distributed Computing disabled.')
             end
         catch
             pause(1) %Believe it or not, without this 'pause', matlab only doesn't display the GUI...
@@ -440,13 +447,7 @@ if isempty(fh)
     gui.MainWindow_ResizeFcn(gcf)
     %disp('vis')
     pause(0.5);	set(MainWindow, 'Visible','on');	pause(0.25);	drawnow;
-    if ~exist('splash_ax','var')
-        disp('-> GUI initialization finished.')
-    else
-        text_content=get(handle_splash_text,'String');
-        text_content{end+1} = '-> GUI initialization finished.';
-        set (handle_splash_text, 'String',text_content);drawnow
-    end
+    disp('-> GUI initialization finished.')
     %% Batch session  processing in GUI
     if ~exist('batch_session_file','var') %no input argument --> no GUI batch processing
         gui.put('batchModeActive',0)
