@@ -229,9 +229,12 @@ if strcmpi(config_string,'Webcam demo (no synchronizer)')
 	webcam_err=0;
 	try
 		camlist=webcamlist;
-	catch
+        disp(camlist{:})
+    catch ME
 		webcam_err=1;
         camlist=[];
+        disp(ME.message)
+        %matlabpath
 	end
 	if isempty(camlist)
 		webcam_err=1;

@@ -40,3 +40,5 @@ resources
 **/Standalone/**/*
 **/PIVlab_capture_resources/_play_with_webcam.*
 **/ftp_info.*
+**/.github/*
+**/resources/*
