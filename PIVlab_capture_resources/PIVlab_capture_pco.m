@@ -570,14 +570,7 @@ try
             sharpness_enabled = getappdata(hgui,'sharpness_enabled');
             if sharpness_enabled == 1 %cross-hair and sharpness indicator
                 %% sharpness indicator for particle images
-                if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')
-                    textx=ROI_general(3)-10;
-                    texty=ROI_general(4)-50;
-                else
-                    textx=1300;
-                    texty=950;
-                end
-                [~,~] = PIVlab_capture_sharpness_indicator (live_data,textx,texty);
+                [~,~] = PIVlab_capture_sharpness_indicator (live_data,1);
             else
                 delete(findobj('tag','sharpness_display_text'));
             end
@@ -672,7 +665,7 @@ try
                             if toc(delay_time_1)>=delay_time %only every second image is taken for analysis. This gives more time to the servo to reach position
                                 delay_time_1=tic;
                                 sharp_loop_cnt=sharp_loop_cnt+1;
-                                [sharpness,~] = PIVlab_capture_sharpness_indicator (live_data,[],[]);
+                                [sharpness,~] = PIVlab_capture_sharpness_indicator (live_data,0);
                                 sharpness_focus_table(sharp_loop_cnt,1)=focus;
                                 sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
                                 focus=focus+focus_step_raw;
@@ -721,7 +714,7 @@ try
                                 if toc(delay_time_1)>=delay_time %only every second image is taken for analysis. This gives more time to the servo to reach position
                                     delay_time_1=tic;
                                     sharp_loop_cnt=sharp_loop_cnt+1;
-                                    [sharpness,~] = PIVlab_capture_sharpness_indicator (live_data,[],[]);
+                                    [sharpness,~] = PIVlab_capture_sharpness_indicator (live_data,0);
                                     sharpness_focus_table(sharp_loop_cnt,1)=focus;
                                     sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
                                     %original focus=focus-focus_step_fine;

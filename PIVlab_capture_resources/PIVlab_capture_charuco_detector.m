@@ -137,26 +137,25 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 			if ~isempty(cameraParams)
 				detector = vision.calibration.monocular.CharucoBoardDetector();
 				worldPoints1 = generateWorldPoints(detector, 'PatternDims', patternDims, 'CheckerSize', checkerSize);
-
 				if patternDims(1) > patternDims(2) %Fixes the issue that high slender calibration bards result in rotated output
 					% swap axes
 					worldPoints1 = worldPoints1(:, [2 1]);
 					% flip y axis
 					worldPoints1(:,2) = -worldPoints1(:,2);
 				end
-				offs_x=max(worldPoints1(:,1));
-				offs_y=max(worldPoints1(:,2));
+				offs_x=max(worldPoints1(:,1))/2;
+				offs_y=max(worldPoints1(:,2))/2;
 				worldPoints1(isnan(imagePoints1))=NaN;
 				imagePoints1 = rmmissing(imagePoints1); %remove missing entries... does that work simply like this? --> yes. If matching world points are also removed.
-                worldPoints1 = rmmissing(worldPoints1);
-                if size(worldPoints1,1)>3
-                    try
-                        camExtrinsics1 = estimateExtrinsics(imagePoints1,worldPoints1,cameraParams.Intrinsics);
-                    catch
-                        return
-                    end
-                    R1=camExtrinsics1.R;
-                    t1=camExtrinsics1.Translation;
+				worldPoints1 = rmmissing(worldPoints1);
+				if size(worldPoints1,1)>3
+					try
+						camExtrinsics1 = estimateExtrinsics(imagePoints1,worldPoints1,cameraParams.Intrinsics);
+					catch
+						return
+					end
+					R1=camExtrinsics1.R;
+					t1=camExtrinsics1.Translation;
 					z_cam = [0; 0; 1];
 					z_world1 = R1 * z_cam;
 					alpha1 = atan2(z_world1(1), z_world1(3));   % yaw (X–Z plane)
@@ -178,22 +177,33 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 					orientation_message=['Yaw: ' num2str(round(alpha_deg)) ' ; Pitch: ' num2str(round(beta_deg)) ' ; Roll: ' num2str(round(roll_deg,1)) newline 'X: ' num2str(round((t1(1)+offs_x)/1000,2)) ' ; Y: ' num2str(round((t1(2)+offs_y)/1000,2)) ' ; Z: ' num2str(round(t1(3)/1000,2))];
 				else
 					orientation_message='Perform camera calibration to display yaw / pitch / roll angle of camera';
-                end
-            else
-                orientation_message='Perform camera calibration to display yaw / pitch / roll angle of camera';
-            end
-        end
-    end
-    if percentage_detected >= 3
-    	hold on
-    	scatter(locs_center_x,locs_center_y,'green','tag','charucolabel','Parent',figure_handle)
-    	hold off
-    	rectangle('Position',[min(locs_center_x), min(locs_center_y),max(locs_center_x) - min(locs_center_x), max(locs_center_y) - min(locs_center_y) ],'tag','charucolabel','EdgeColor','r','LineWidth',2,'Parent',figure_handle,'Curvature',0.15)
-    	text(mean_loc_x,mean_loc_y,orientation_message,'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',18,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','top','Parent',figure_handle)
-    	text(mean_loc_x,mean_loc_y,['Markers: ' num2str(percentage_detected) ' %'  infotxt  infotxt2],'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','bottom','Parent',figure_handle)
-    	if detectionOK %QR code detected
-    		rectangle('position',[min(loc(:,1))-20, min(loc(:,2))-20, max(loc(:,1)) - min(loc(:,1))+20 , max(loc(:,2)) - min(loc(:,2))+20],'tag','charucolabel','EdgeColor','b','LineWidth',6,'Parent',figure_handle,'Curvature',0.5)
-    		text(mean(loc(:,1)),mean(loc(:,2)),'QR','tag','charucolabel','Color','w','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
-        end
-    end
+				end
+			else
+				orientation_message='Perform camera calibration to display yaw / pitch / roll angle of camera';
+			end
+		end
+	end
+	if percentage_detected >= 3
+		mean_loc_x_old=gui.retr('mean_loc_x');
+		mean_loc_y_old=gui.retr('mean_loc_y');
+		if isempty(mean_loc_x_old)
+			mean_loc_x_old=size(img,2)/2;
+			mean_loc_y_old=size(img,1)/2;
+		end
+		lowpassed_mean_loc_x=mean_loc_x*0.1+mean_loc_x_old*0.9;
+		lowpassed_mean_loc_y=mean_loc_y*0.1+mean_loc_y_old*0.9;
+		gui.put('mean_loc_x',lowpassed_mean_loc_x);
+		gui.put('mean_loc_y',lowpassed_mean_loc_y);
+		hold on
+		scatter(locs_center_x,locs_center_y,'green','tag','charucolabel','Parent',figure_handle)
+		hold off
+		rectangle('Position',[min(locs_center_x), min(locs_center_y),max(locs_center_x) - min(locs_center_x), max(locs_center_y) - min(locs_center_y) ],'tag','charucolabel','EdgeColor','r','LineWidth',2,'Parent',figure_handle,'Curvature',0.15)
+	
+		text(lowpassed_mean_loc_x,lowpassed_mean_loc_y,orientation_message,'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',18,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','top','Parent',figure_handle)
+		text(lowpassed_mean_loc_x,lowpassed_mean_loc_y,['Markers: ' num2str(percentage_detected) ' %'  infotxt  infotxt2],'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','bottom','Parent',figure_handle)
+		if detectionOK %QR code detected
+			rectangle('position',[min(loc(:,1))-20, min(loc(:,2))-20, max(loc(:,1)) - min(loc(:,1))+20 , max(loc(:,2)) - min(loc(:,2))+20],'tag','charucolabel','EdgeColor','b','LineWidth',6,'Parent',figure_handle,'Curvature',0.5)
+			text(mean(loc(:,1)),mean(loc(:,2)),'QR','tag','charucolabel','Color','w','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
+		end
+	end
 end

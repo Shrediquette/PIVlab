@@ -46,9 +46,7 @@ while getappdata(hgui,'cancel_capture') ~=1 && captured_amount < img_amount
 	%% sharpness indicator
 	sharpness_enabled = getappdata(hgui,'sharpness_enabled');
 	if sharpness_enabled == 1 % sharpness indicator
-		textx=floor(size(A,2)/2);
-		texty=floor(size(A,1)/2);
-		[~,~] = PIVlab_capture_sharpness_indicator (ima,textx,texty);
+		[~,~] = PIVlab_capture_sharpness_indicator (ima,1);
 	else
 		delete(findobj('tag','sharpness_display_text'));
 	end

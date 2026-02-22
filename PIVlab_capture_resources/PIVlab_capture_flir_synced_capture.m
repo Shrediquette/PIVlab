@@ -15,9 +15,7 @@ while flir_vid.FramesAcquired < (flir_frames_to_capture) &&  getappdata(hgui,'ca
 	%% sharpness indicator
 	sharpness_enabled = getappdata(hgui,'sharpness_enabled');
 	if sharpness_enabled == 1 % sharpness indicator
-		textx=1240;
-		texty=950;
-		[~,~] = PIVlab_capture_sharpness_indicator (ima,textx,texty);
+		[~,~] = PIVlab_capture_sharpness_indicator (ima,1);
 	else
 		delete(findobj('tag','sharpness_display_text'));
 	end

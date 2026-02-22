@@ -25,9 +25,7 @@ while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdat
 	%% sharpness indicator
 	sharpness_enabled = getappdata(hgui,'sharpness_enabled');
 	if sharpness_enabled == 1 % sharpness indicator
-        textx=1000;
-        texty=100;
-        [~,~] = PIVlab_capture_sharpness_indicator (ima,textx,texty);
+        [~,~] = PIVlab_capture_sharpness_indicator (ima,1);
     else
         delete(findobj('tag','sharpness_display_text'));
     end
@@ -123,7 +121,7 @@ while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdat
                     if toc(delay_time_1)>=delay_time %only every second image is taken for analysis. This gives more time to the servo to reach position
                         delay_time_1=tic;
                         sharp_loop_cnt=sharp_loop_cnt+1;
-                        [sharpness,~] = PIVlab_capture_sharpness_indicator (ima,[],[]);
+                        [sharpness,~] = PIVlab_capture_sharpness_indicator (ima,0);
                         sharpness_focus_table(sharp_loop_cnt,1)=focus;
                         sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
                         focus=focus+focus_step_raw;
@@ -173,7 +171,7 @@ while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdat
                         if toc(delay_time_1)>=delay_time %only every second image is taken for analysis. This gives more time to the servo to reach position
                             delay_time_1=tic;
                             sharp_loop_cnt=sharp_loop_cnt+1;
-                            [sharpness,~] = PIVlab_capture_sharpness_indicator (ima,[],[]);
+                            [sharpness,~] = PIVlab_capture_sharpness_indicator (ima,0);
                             sharpness_focus_table(sharp_loop_cnt,1)=focus;
                             sharpness_focus_table(sharp_loop_cnt,2)=sharpness;
                             %original focus=focus-focus_step_fine;
