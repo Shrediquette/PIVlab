@@ -24,9 +24,6 @@ if cam_use_calibration
         %disp(['Size of the outgoing image from cam_undistort: ' num2str(size(img_out))])
     end
     if cam_use_rectification
-
-
-        
         img_out = imwarp(img_out,rectification_tform);
         %disp(['Size of the outgoing image from rectify: ' num2str(size(img_out))])
     end

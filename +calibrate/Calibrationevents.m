@@ -12,7 +12,7 @@ switch(evname)
 		if Cali_length < 0.1
 			src.Label = ['Click and drag with the mouse to draw a line'];
 		else
-			src.Label = ['Length :' num2str(Cali_length) ' px'];
+			src.Label = ['Length: ' num2str(round(Cali_length,2)) ' px'];
 		end
 		gui.put('pointscali',Cali_coords);
 		calibrate.pixeldist_changed_Callback()
