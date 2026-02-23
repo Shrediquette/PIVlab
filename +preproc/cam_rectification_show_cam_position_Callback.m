@@ -116,8 +116,8 @@ hold on
 plot3(0,0,0,"g*",'Parent',camax);
 absPose1 = extr2pose(camExtrinsics1);
 %absPose2 = extr2pose(camExtrinsics2);
-plotcam1 = plotCamera(AbsolutePose=absPose1,Size=5,Color="blue",AxesVisible=true,Label=['Cam1' newline orientation_message],Parent=camax);
-%plotcam2 = plotCamera(AbsolutePose=absPose2,Size=30,Color="red",AxesVisible=true,Label="Cam2",Parent=camax);
+plotcam1 = plotCamera(AbsolutePose=absPose1,Size=5,Color="red",AxesVisible=true,Label=['Cam1' newline orientation_message],Parent=camax);
+%plotcam2 = plotCamera(AbsolutePose=absPose2,Size=30,Color="blue",AxesVisible=true,Label="Cam2",Parent=camax);
 axis equal
 grid on
 set(camax,CameraUpVector=[0 -1 0]);

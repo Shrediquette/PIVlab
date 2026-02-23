@@ -21,8 +21,8 @@ new_map=colormap('gray');
 new_map(1:3,:)=[0 0.2 0;0 0.2 0;0 0.2 0];
 new_map(end-2:end,:)=[1 0.7 0.7;1 0.7 0.7;1 0.7 0.7];
 colormap(new_map);axis image;
-set(gca,'ytick',[])
-set(gca,'xtick',[])
+set(gui.retr('pivlab_axis'),'ytick',[])
+set(gui.retr('pivlab_axis'),'xtick',[])
 colorbar
 
 

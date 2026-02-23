@@ -68,3 +68,42 @@ end
 clear filename_update current_url fileID_update outfilename web_version trash_upd
 disp (['-> ' update_msg])
 gui.put('update_msg',update_msg);
+
+
+%{
+better implementation would be:
+url = 'https://api.github.com/repos/shrediquette/PIVlab/releases/latest';
+options = weboptions( ...
+    'Timeout', 3, ...
+    'ContentType', 'json', ...
+    'HeaderFields', {'User-Agent', 'MATLAB'} );
+try
+    data = webread(url, options);
+catch
+    return   % silent fail (no internet, firewall, etc.)
+end
+if ~isfield(data, 'tag_name')
+    return
+end
+latestVersion = strip(data.tag_name);
+latestVersion = erase(latestVersion, 'v');   % remove leading v if present
+if isNewerVersion(latestVersion, currentVersion)
+    msg = sprintf(['A newer version (%s) is available.\n' ...
+                   'You are running %s.'], ...
+                   latestVersion, currentVersion);
+    warndlg(msg, 'Update available');
+end
+function tf = isNewerVersion(latest, current)
+
+latestParts  = sscanf(latest,  '%d.%d.%d');
+currentParts = sscanf(current, '%d.%d.%d');
+
+n = max(length(latestParts), length(currentParts));
+latestParts(end+1:n)  = 0;
+currentParts(end+1:n) = 0;
+
+tf = any(latestParts > currentParts) && ...
+     ~any(latestParts < currentParts);
+
+end
+%}
