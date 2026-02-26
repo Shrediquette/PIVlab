@@ -1,4 +1,7 @@
 function loadimgsbutton_Callback(~,~,useGUI,path)
+if useGUI ==1
+    gui.toolsavailable(0);drawnow
+end
 hgui=getappdata(0,'hgui');
 if ispc==1
     pathname=[gui.retr('pathname') '\'];
@@ -63,7 +66,7 @@ if useGUI ==1
     end
     gui.put('expected_image_size',[])
 end
-
+gui.toolsavailable(1)
 if ~isequal(path,0)
     %remove directories from list
     for kk=size(path,1):-1:1
@@ -364,7 +367,7 @@ if ~isequal(path,0)
             %Clear all things
             validate.clear_vel_limit_Callback([],[]) %clear velocity limits
 
-    		%to determine the raw image size, we call get_img with camera
+            %to determine the raw image size, we call get_img with camera
             %undistortion und rectification DISABLED
 
             cam_use_calibration = gui.retr('cam_use_calibration');
@@ -372,7 +375,7 @@ if ~isequal(path,0)
             gui.put('cam_use_calibration',0);
             gui.put('cam_use_rectification',0);
             new_img_size=size(import.get_img(1));
-			new_img_size=new_img_size(1:2);
+            new_img_size=new_img_size(1:2);
             gui.put('cam_use_calibration',cam_use_calibration);
             gui.put('cam_use_rectification',cam_use_rectification);
 
