@@ -51,10 +51,8 @@ end
 
 %[mean_checker_size_x,mean_checker_size_y]=preproc.cam_meanCharucoSize(tmp_img,markerFamily,checkerSize,markerSize);
 
+worldPoints = patternWorldPoints("charuco-board",patternDims,checkerSize);%checkerSize); %here, checkersize units are also mm to get correct extrinsics of camera.
 
-
-worldPoints = patternWorldPoints("charuco-board",patternDims,checkerSize);%checkerSize); %checkersize muss die Größe haben, die die quadrate im eingangsbild in pixeln haben.
-disp('Here I can add upscale factor to rectification process')
 worldPoints(isnan(imagePoints1))=NaN;
 imagePoints1 = rmmissing(imagePoints1); %remove missing entries... does that work simply like this? --> yes. If matching world points are also removed.
 worldPoints = rmmissing(worldPoints);

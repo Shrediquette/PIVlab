@@ -270,6 +270,7 @@ elseif valid_session_file == 1
         handles.calib_viewtype.Value=vars.calib_viewtype;
         handles.calib_usecalibration.Value=vars.calib_usecalibration;
         handles.calib_userectification.Value=vars.calib_userectification;
+        handles.calib_upscale.Value=vars.calib_upscale;
     catch
         disp('couldnt set cam undistortion GUI elements for load_session')
     end

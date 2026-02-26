@@ -160,7 +160,7 @@ calib_fisheye=handles.calib_fisheye.Value;
 calib_viewtype=handles.calib_viewtype.Value;
 calib_usecalibration=handles.calib_usecalibration.Value;
 calib_userectification=handles.calib_userectification.Value;
-
+handles.calib_upscale=handles.calib_upscale.Value;
 
 clear handles
 clear existing_handles

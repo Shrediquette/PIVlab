@@ -181,6 +181,7 @@ try
     handles.calib_viewtype.Value=calib_viewtype;
     handles.calib_usecalibration.Value=calib_usecalibration;
     handles.calib_userectification.Value=calib_userectification;
+    handles.calib_upscale.Value=calib_upscale;
 catch
     disp('couldnt set cam undistortion GUI elements')
 end

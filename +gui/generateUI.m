@@ -2301,6 +2301,12 @@ handles.rect_show_rectified = uicontrol(handles.rect_imagedata,'Style','pushbutt
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.rect_show_cam_position = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Show camera position','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_cam_position_Callback,'Tag','rect_show_cam_position','TooltipString','Show a 3D scene of camera and board position');
 
+item=[0 item(2)+item(4)+margin parentitem(3)/2 1.5];
+uicontrol(handles.rect_imagedata,'Style','text','String','Upscaling:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1.5];
+handles.calib_upscale = uicontrol(handles.rect_imagedata,'Style','popupmenu','String',{'1x' '2x'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_upscale','TooltipString','Upscaling factor reducing then effect of image interpolations, but making analyses slower','Callback', @preproc.cam_rectification_upscale_Callback);
+
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
 handles.calib_userectification = uicontrol(handles.rect_imagedata,'Style','checkbox','String','Enable image rectification', 'Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_userectification','TooltipString','Use image rectification','Callback', @preproc.cam_enable_cam_rectification_Callback);
 
