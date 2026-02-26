@@ -2266,6 +2266,9 @@ handles.calib_clearparams = uicontrol(handles.calib_imagedata,'Style','pushbutto
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.calib_showreproject = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Show reprojection errors','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_showreproject_Callback,'Tag','calib_showreproject','TooltipString','Show reprojection errors (should be below 1 pixel for a valid undistortion)');
 
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
+handles.calib_showdistortion = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Show lens distortion','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_showdistortion_Callback,'Tag','calib_showdistortion','TooltipString','Show camera lens distortion');
+
 item=[0 item(2)+item(4)+margin parentitem(3)/3*2 1.5];
 uicontrol(handles.calib_imagedata,'Style','text','String','Output image size:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
