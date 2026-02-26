@@ -14,6 +14,7 @@ end
 cam_use_calibration = gui.retr('cam_use_calibration');
 cam_use_rectification = gui.retr('cam_use_rectification');
 cameraParams=gui.retr('cameraParams');
+
 rectification_tform = gui.retr('rectification_tform');
 
 if gui.retr('video_selection_done') == 0

@@ -9,14 +9,11 @@ else
 	[PathName,FileName,ext] = fileparts(auto_save_session_filename);
 	FileName = [FileName ext];
 end
-
-
 if isequal(FileName,0) | isequal(PathName,0)
 else
 	%gui.put('expected_image_size',[])
 	gui.put('sessionpath',PathName );
 	gui.put('existing_handles',[]);gui.put('num_handle_calls',[])
 	clear ('existing_handles','num_handle_calls');
-	export.save_session_function (PathName,FileName)
+    export.save_session_function (PathName,FileName)
 end
-

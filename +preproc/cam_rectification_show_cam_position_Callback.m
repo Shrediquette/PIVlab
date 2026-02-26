@@ -107,7 +107,7 @@ roll = atan2(x_proj(2), x_proj(1));
 roll_deg = rad2deg(roll);
 orientation_message=['Yaw: ' num2str(round(alpha_deg)) ' ; Pitch: ' num2str(round(beta_deg)) ' ; Roll: ' num2str(round(roll_deg,1))];
 
-camfig=figure;
+camfig=figure('Name','Camera position in 3D','DockControls','off','WindowStyle','normal','Scrollable','off','MenuBar','figure','Resize','on','ToolBar','none','NumberTitle','off');
 camax=axes(camfig);
 plot3(worldPoints(:,1),worldPoints(:,2),zeros(size(worldPoints, 1),1),"*",'Parent',camax);
 hold on

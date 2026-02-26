@@ -4,46 +4,16 @@ handles=gui.gethand;
 app=getappdata(hgui);
 gui.toolsavailable(1)
 gui.toolsavailable(0,'Busy, saving session...');drawnow
-%disp('hier was aendrn mit savehint')
-%text(150,150,'Please wait, saving session. This might take a while.','color','y','fontsize',13, 'BackgroundColor', 'k','tag','savehint')
-%Newer versions of Matlab do really funny things when the following vars are not empty...:
-app.GUIDEOptions =[];
-app.GUIOnScreen  =[];
-app.Listeners  =[];
-app.SavedVisible  =[];
-app.ScribePloteditEnable  =[];
-app.UsedByGUIData_m  =[];
-app.lastValidTag =[];
-iptPointerManager=[];
-app.ZoomObject=[]; %Matlab crashes if this is not empty. Weird...
-app.ZoomFigureState=[];
-app.ZoomOnState=[];
-app.PanFigureState=[];
-app.uitools_FigureToolManager=[];
-app.existing_handles=[];
-app.num_handle_calls=[];
-
-try
-	iptPointerManager(gcf, 'disable');
-catch
+deli={'UsedByGUIData_m' 'existing_handles' 'handle_toolprogress_bg' 'handle_toolprogress_fg' 'pivlab_axis'};
+for i=1:numel(deli)
+    if isfield(app,deli{i})
+        app=rmfield(app,deli{i});
+    end
 end
-clear hgui iptPointerManager GUIDEOptions GUIOnScreen Listeners SavedVisible ScribePloteditEnable UsedByGUIData_m ZoomObject existing_handles num_handle_calls
-deli={'UsedByGUIData_m', 'uitools_FigureToolManager','PanFigureState','ZoomOnState','ZoomFigureState','ZoomObject','lastValidTag','SavedVisible','Listeners','GUIOnScreen','GUIDEOptions','ScribePloteditEnable','nonexistingfield'};
-for i=1:size(deli,2)
-	try
-		app=rmfield(app,deli{i});
-	catch
-	end
-end
-clear deli
-%save('-v6', fullfile(PathName,FileName), '-struct', 'app')
-%save(fullfile(PathName,FileName), '-struct', 'app') % AKTUELL PUBLIZIERT
+clear hgui deli i
 warning off
 save(fullfile(PathName,FileName), '-struct', 'app','-v7.3')% riesig aber nur das geht...
 warning on
-
-clear app %hgui iptPointerManager
-clear hgui iptPointerManager GUIDEOptions GUIOnScreen Listeners SavedVisible ScribePloteditEnable UsedByGUIData_m
 
 clahe_enable=get(handles.clahe_enable,'value');
 clahe_size=get(handles.clahe_size,'string');
@@ -123,6 +93,7 @@ try
 	do_contrast_filter=get(handles.do_contrast_filter,'Value');
 catch
 end
+
 try
 	%neu v2.54
 	do_corr2_filter=get(handles.do_corr2_filter,'value'); %#ok<*NASGU>
@@ -160,17 +131,13 @@ calib_fisheye=handles.calib_fisheye.Value;
 calib_viewtype=handles.calib_viewtype.Value;
 calib_usecalibration=handles.calib_usecalibration.Value;
 calib_userectification=handles.calib_userectification.Value;
-handles.calib_upscale=handles.calib_upscale.Value;
+calib_upscale=handles.calib_upscale.Value;
 
 clear handles
-clear existing_handles
-clear num_handle_calls
-
-%save('-v6', fullfile(PathName,FileName), '-append');
-%save(fullfile(PathName,FileName), '-append');
-save(fullfile(PathName,FileName), '-append');
-
-%delete(findobj('tag','savehint'));
+cameraParams=gui.retr('cameraParams');
+save(fullfile(PathName,FileName), '-append', '-regexp', '^(?!app$).*');
+if ~isempty(cameraParams)
+    gui.put('cameraParams', cameraParams); % OMG, Matlab clears this variable randomly when writing a mat file...
+end
 gui.toolsavailable(1)
 drawnow;
-
