@@ -1940,6 +1940,9 @@ handles.detect_cam = uicontrol(handles.multip21,'Style','pushbutton','String','D
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.detect_dongle = uicontrol(handles.multip21,'Style','pushbutton','String','Detect serial dongle','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@acquisition.serial_info,'Tag','detect_dongle','TooltipString','Detect if driver for the dongle is installed');
 
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
+handles.test_sync = uicontrol(handles.multip21,'Style','pushbutton','String','Send test string (disable interlock!)','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@gui.test_sync_Callback,'Tag','test_sync','TooltipString','Check all channels of the synchronizer (WARNING! Turn off interlocks!)');
+
 
 %% Multip22
 handles.multip22 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Derive Temporal Parameters', 'Tag','multip22','fontweight','bold');
