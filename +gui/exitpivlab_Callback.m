@@ -1,4 +1,8 @@
 function exitpivlab_Callback(~, ~, ~)
-%close(gcf,'force')
-gui.MainWindow_CloseRequestFcn
+try
+    hgui=getappdata(0,'hgui');
+    gui.MainWindow_CloseRequestFcn(hgui)
+catch
+    close(gcf,'force')
+end
 
