@@ -51,12 +51,12 @@ else
         end
     catch e
         access_status = 'Could not open the COM port (COM port is in use by other app?)';
-        answer_status=['Did not receive reply from the laser (laser turned off?)'];
+        answer_status='Did not receive reply from the laser (laser turned off?)';
     end
 end
-button=gui.custom_msgbox('quest',getappdata(0,'hgui'),'Synchronizer test',['Information about the wireless dongle connection: '  driver_status ' ; ' access_status ' ; ' answer_status newline 'Activate synchronizer / laser test?'],'modal',{'OK','Cancel'},'Cancel');
+button=gui.custom_msgbox('quest',getappdata(0,'hgui'),'Synchronizer test',['Information about the wireless dongle connection: '  driver_status ' ; ' access_status ' ; ' answer_status newline 'Activate synchronizer / laser test (trigger required)?'],'modal',{'OK','Cancel'},'Cancel');
 if strcmp(button,'OK')
-    serout=['TALKINGTO:' convertStringsToChars(serial_answer) ':sequence:10000:0,0:100,105:110,120:120,135:130,150:140,165:'];
+    serout=['TALKINGTO:' convertStringsToChars(serial_answer) ':sequence:10000:3,0:100,105:110,120:120,135:130,150:140,165:'];
     writeline(s,serout);
     pause(0.3)
     warning off
