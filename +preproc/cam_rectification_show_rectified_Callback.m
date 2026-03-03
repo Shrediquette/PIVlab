@@ -47,11 +47,8 @@ if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
     imagePoints1 = rmmissing(imagePoints1); %remove missing entries... does that work simply like this? --> yes. If matching world points are also removed.
     worldPoints = rmmissing(worldPoints);
 
-    if strcmpi (class(cameraParams),'cameraParameters')
-        undistortedPoints = undistortPoints(imagePoints1,cameraParams.Intrinsics);
-    elseif strcmpi (class(cameraParams),'fisheyeParameters')
-        undistortedPoints = undistortFisheyePoints(imagePoints1,cameraParams.Intrinsics);
-    end
+    undistortedPoints = undistortPoints(imagePoints1,cameraParams.Intrinsics);
+
     rectification_tform = fitgeotform2d(undistortedPoints,worldPoints,'projective'); % standard für schräge ansicht
     %rectification_tform = fitgeotform2d(undistortedPoints,worldPoints,'polynomial',4); % langsam, aber gar nicht so schlecht, könnte für Rohre gehen...
 

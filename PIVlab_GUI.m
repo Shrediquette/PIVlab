@@ -291,6 +291,15 @@ if isempty(fh)
         disp('Image capture inside PIVlab will only work with pco cameras.')
         disp('Use the standalone tool from http://PIVlab.de if you need to capture data with other cameras.')
     end
+    try
+        v=opencv.opencv_version;
+        if startsWith(v,'4.')
+            disp('-> OpenCV 4.X found')
+        end
+    catch
+    end
+
+
     %% Variable initialization
     gui.put ('toggler',0);
     gui.put('calu',1);

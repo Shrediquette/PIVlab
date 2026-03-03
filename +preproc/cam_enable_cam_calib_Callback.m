@@ -85,13 +85,8 @@ if handles.calib_usecalibration.Value ==1
     [currentimage,~] = import.get_img(1);
     gui.put('cam_use_calibration',1);
     expected_image_size_before_calibration = size(currentimage(:,:,1));
-
-    if strcmpi (class(cameraParams),'cameraParameters')
-        cam_calibration_performed_for_size= cameraParams.ImageSize;
-    elseif strcmpi (class(cameraParams),'fisheyeParameters')
-        cam_calibration_performed_for_size=cameraParams.Intrinsics.ImageSize;
-    end
-    if cam_calibration_performed_for_size(1) ~= expected_image_size_before_calibration(1) || cam_calibration_performed_for_size(2) ~= expected_image_size_before_calibration(2)
+          cam_calibration_performed_for_size= cameraParams.ImageSize;
+     if cam_calibration_performed_for_size(1) ~= expected_image_size_before_calibration(1) || cam_calibration_performed_for_size(2) ~= expected_image_size_before_calibration(2)
         gui.put('cam_use_calibration',0);
         handles.calib_usecalibration.Value = 0;
         gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Calibration images and PIV images must have identical size.','modal');

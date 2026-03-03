@@ -177,7 +177,6 @@ try
     handles.calib_checkersize.String=calib_checkersize;
     handles.calib_markersize.String=calib_markersize;
     handles.calib_dolivedetect.Value=calib_dolivedetect;
-    handles.calib_fisheye.Value=calib_fisheye;
     handles.calib_viewtype.Value=calib_viewtype;
     handles.calib_usecalibration.Value=calib_usecalibration;
     handles.calib_userectification.Value=calib_userectification;

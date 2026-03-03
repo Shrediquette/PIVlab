@@ -6,9 +6,4 @@ if filen ~=0
     gui.put('cameraParams',cameraParams);
     gui.put('cam_selected_target_images',cam_selected_target_images);
     handles.calib_usecalibration.Value = 0;
-    if strcmpi (class(cameraParams),'cameraParameters')
-        handles.calib_fisheye.Value = 0;
-    elseif strcmpi (class(cameraParams),'fisheyeParameters')
-        handles.calib_fisheye.Value = 1;
-    end
 end

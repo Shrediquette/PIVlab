@@ -125,7 +125,6 @@ calib_columns=handles.calib_columns.String;
 calib_checkersize=handles.calib_checkersize.String;
 calib_markersize=handles.calib_markersize.String;
 calib_dolivedetect=handles.calib_dolivedetect.Value;
-calib_fisheye=handles.calib_fisheye.Value;
 calib_viewtype=handles.calib_viewtype.Value;
 calib_usecalibration=handles.calib_usecalibration.Value;
 calib_userectification=handles.calib_userectification.Value;

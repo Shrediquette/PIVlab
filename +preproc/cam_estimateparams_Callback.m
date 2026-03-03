@@ -75,7 +75,7 @@ if ~isempty(cam_selected_target_images)
     else
         d = uiprogressdlg(gcf,'Title','ChArUco board pattern detection...','Message','Starting ChArUco board pattern detection...');
     end
-    
+
     imagesUsed=false(numel(cam_selected_target_images),1);
     imagePoints=[];
     for i=1:numel(cam_selected_target_images)
@@ -85,7 +85,7 @@ if ~isempty(cam_selected_target_images)
         try
             imagePoints_single = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
         catch ME
-         gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',ME.message,'modal','OK');
+            gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',ME.message,'modal','OK');
             gui.toolsavailable(1)
             return
         end
@@ -108,8 +108,8 @@ if ~isempty(cam_selected_target_images)
         close(d)
     end
 
-		%debug
-%{
+    %debug
+    %{
 		for i=1:size(imagePoints,3)
 			figure;
 			imshow(imread(cam_selected_target_images{i}));
@@ -118,7 +118,7 @@ if ~isempty(cam_selected_target_images)
 			legend('Detected Points','ReprojectedPoints');
 			hold off;
 		end
-%}
+    %}
     %%}
     %% Faster, but dark images are ignored:
     %[imagePoints, imagesUsed] = detectPatternPoints(detector, cam_selected_target_images, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
@@ -141,17 +141,17 @@ if ~isempty(cam_selected_target_images)
 
     % Calibrate the camera
     try
-        if handles.calib_fisheye.Value == 0
-            [cameraParams, imagesUsed, ~] = estimateCameraParameters(imagePoints, worldPoints, 'EstimateSkew', false, 'EstimateTangentialDistortion', true, 'NumRadialDistortionCoefficients', 2, 'WorldUnits', 'millimeters', 	'InitialIntrinsicMatrix', [], 'InitialRadialDistortion', [], 'ImageSize', [mrows, ncols]);
-        else
-            [cameraParams, imagesUsed, ~] = estimateFisheyeParameters(imagePoints, worldPoints, [mrows, ncols]);
-        end
+       
+            [cameraParams, imagesUsed, stats] = opencv.pivlab_estimateCameraParameters(imagePoints, worldPoints, [mrows, ncols]);
+       
         gui.toolsavailable(1)
+
         gui.toolsavailable(0,'Refining camera parameters...');drawnow;
 
         imageFileNames = imageFileNames(imagesUsed);
 
-        errors = cameraParams.ReprojectionErrors;
+        %errors = cameraParams.ReprojectionErrors;
+        errors = stats.ReprojectionErrors;
         numImages = size(errors, 3);
         meanErrorPerImage = zeros(numImages, 1);
 
@@ -167,13 +167,9 @@ if ~isempty(cam_selected_target_images)
             disp(['Skipping ' num2str(numel(badImages)) ' image(s) due to high reprojection errors.'])
             imagePoints = imagePoints(:, :, goodImages);
             imageFileNames = imageFileNames(goodImages);
-            if handles.calib_fisheye.Value == 0
-                [cameraParams, imagesUsed, ~] = estimateCameraParameters(imagePoints, worldPoints, 'EstimateSkew', false, 'EstimateTangentialDistortion', true, 'NumRadialDistortionCoefficients', 2, 'WorldUnits', 'millimeters',  'ImageSize', [mrows, ncols],'InitialK',cameraParams.K,'InitialRadialDistortion',cameraParams.RadialDistortion);
-                %[cameraParams, imagesUsed, ~] = estimateCameraParameters(imagePoints, worldPoints, 'EstimateSkew', false, 'EstimateTangentialDistortion', true, 'NumRadialDistortionCoefficients', 2, 'WorldUnits', 'millimeters', 	'InitialIntrinsicMatrix', [], 'InitialRadialDistortion', [], 'ImageSize', [mrows, ncols]);
-            else
-                [cameraParams, imagesUsed, ~] = estimateFisheyeParameters(imagePoints, worldPoints, [mrows, ncols]);
-            end
-            imageFileNames = imageFileNames(imagesUsed);
+          
+               [cameraParams, imagesUsed, stats] = opencv.pivlab_estimateCameraParameters(imagePoints, worldPoints, [mrows, ncols], cameraParams);
+               imageFileNames = imageFileNames(imagesUsed);
             disp('Images used:')
             for i=1:numel(imageFileNames)
                 disp(imageFileNames{i})
@@ -185,19 +181,20 @@ if ~isempty(cam_selected_target_images)
         imshow(imread(imageFileNames{1}),'Parent',gui.retr('pivlab_axis'));
         hold on;
         plot(imagePoints(:,1,1), imagePoints(:,2,1),'go');
-        plot(cameraParams.ReprojectedPoints(:,1,1),cameraParams.ReprojectedPoints(:,2,1),'r+');
+        plot(stats.ReprojectedPoints(:,1,1),stats.ReprojectedPoints(:,2,1),'r+');
         legend('Detected Points','ReprojectedPoints');
         hold off;
 
         possible_grid_points = (patternDims(1)-1) * (patternDims(2)-1) * sum(imagesUsed);
-		detected_grid_points = sum(~isnan(imagePoints(:)))/2;
-		percentage_detected=round(detected_grid_points/possible_grid_points*100,1);
+        detected_grid_points = sum(~isnan(imagePoints(:)))/2;
+        percentage_detected=round(detected_grid_points/possible_grid_points*100,1);
 
-		err = cameraParams.ReprojectionErrors;
-		errNorm = sqrt(err(:,1,:).^2 + err(:,2,:).^2);
-		meanReprojError = mean(errNorm(:), 'omitnan');
+        err = stats.ReprojectionErrors;
+        errNorm = sqrt(err(:,1,:).^2 + err(:,2,:).^2);
+        meanReprojError = mean(errNorm(:), 'omitnan');
 
         gui.custom_msgbox('msg',getappdata(0,'hgui'),'Success',{'Success.' ;  ['Detected ' num2str(percentage_detected) '% of checkers.' ] ; ['Mean reprojection eror: ' num2str(round(meanReprojError,2)) ' px']},'modal',{'OK'},'OK');
+
 
     catch ME
         gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',{'Problem with camera calibration: ' ;' '; ME.message},'modal');

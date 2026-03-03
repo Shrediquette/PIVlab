@@ -122,14 +122,10 @@ worldPoints(isnan(imagePoints1))=NaN;
 imagePoints1 = rmmissing(imagePoints1); %remove missing entries... does that work simply like this? --> yes. If matching world points are also removed.
 worldPoints = rmmissing(worldPoints);
 
-if strcmpi (class(cameraParams),'cameraParameters')
-	undistortedPoints = undistortPoints(imagePoints1,cameraParams.Intrinsics);
-elseif strcmpi (class(cameraParams),'fisheyeParameters')
-	undistortedPoints = undistortFisheyePoints(imagePoints1,cameraParams.Intrinsics);
-end
+undistortedPoints = undistortPoints(imagePoints1,cameraParams.Intrinsics);
 
 if patternDims(1) > patternDims(2) %Fixes the issue that high slender calibration bards result in rotated output
-	% swap axes
+    % swap axes
 	worldPoints = worldPoints(:, [2 1]);
 	% flip y axis
 	worldPoints(:,2) = -worldPoints(:,2);

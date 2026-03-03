@@ -2249,9 +2249,6 @@ item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.calib_load_imgs = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Load target images','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_calibration_loadimages_Callback,'Tag','calib_load_imgs','TooltipString','Load images of the calibration target');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
-handles.calib_fisheye = uicontrol(handles.calib_imagedata,'Style','checkbox','units','characters','HorizontalAlignment','right','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3) item(4)],'Value',0,'String','fisheye camera','tag','calib_fisheye','TooltipString','Enable fisheye camera model for very high distortion lenses. Slow.');
-
-item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.calib_estimateparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Estimate cam parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_estimateparams_Callback,'Tag','calib_estimateparams','TooltipString','Detect charuco markers and estimate camera parameters');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3)/2 1.5];
