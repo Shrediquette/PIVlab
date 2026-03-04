@@ -107,7 +107,6 @@ if ~isempty(cam_selected_target_images)
     else
         close(d)
     end
-
     %debug
     %{
 		for i=1:size(imagePoints,3)
@@ -129,7 +128,6 @@ if ~isempty(cam_selected_target_images)
     end
     gui.toolsavailable(1)
     gui.toolsavailable(0,'Calculating camera parameters...');drawnow;
-
     imageFileNames = cam_selected_target_images(imagesUsed);
 
     % Read the first image to obtain image size
@@ -138,28 +136,20 @@ if ~isempty(cam_selected_target_images)
 
     % Generate world coordinates for the planar pattern keypoints
     worldPoints = generateWorldPoints(detector, 'PatternDims', patternDims, 'CheckerSize', checkerSize);
-
     % Calibrate the camera
     try
-       
-            [cameraParams, imagesUsed, stats] = opencv.pivlab_estimateCameraParameters(imagePoints, worldPoints, [mrows, ncols]);
-       
+        [cameraParams, imagesUsed, stats] = opencv.pivlab_estimateCameraParameters(imagePoints, worldPoints, [mrows, ncols]);
         gui.toolsavailable(1)
-
         gui.toolsavailable(0,'Refining camera parameters...');drawnow;
-
         imageFileNames = imageFileNames(imagesUsed);
-
         %errors = cameraParams.ReprojectionErrors;
         errors = stats.ReprojectionErrors;
         numImages = size(errors, 3);
         meanErrorPerImage = zeros(numImages, 1);
-
         for i = 1:numImages
             e = errors(:, :, i);
             meanErrorPerImage(i) = mean(sqrt(sum(e.^2, 2)),'omitnan');
         end
-
         threshold = mean(meanErrorPerImage) + 1.5*std(meanErrorPerImage);
         badImages = find(meanErrorPerImage > threshold);
         goodImages = find(meanErrorPerImage <= threshold);
@@ -167,9 +157,8 @@ if ~isempty(cam_selected_target_images)
             disp(['Skipping ' num2str(numel(badImages)) ' image(s) due to high reprojection errors.'])
             imagePoints = imagePoints(:, :, goodImages);
             imageFileNames = imageFileNames(goodImages);
-          
-               [cameraParams, imagesUsed, stats] = opencv.pivlab_estimateCameraParameters(imagePoints, worldPoints, [mrows, ncols], cameraParams);
-               imageFileNames = imageFileNames(imagesUsed);
+            [cameraParams, imagesUsed, stats] = opencv.pivlab_estimateCameraParameters(imagePoints, worldPoints, [mrows, ncols], cameraParams);
+            imageFileNames = imageFileNames(imagesUsed);
             disp('Images used:')
             for i=1:numel(imageFileNames)
                 disp(imageFileNames{i})
@@ -177,6 +166,7 @@ if ~isempty(cam_selected_target_images)
         end
 
         gui.put('cameraParams',cameraParams);
+        gui.put('cameraStats',stats);
 
         imshow(imread(imageFileNames{1}),'Parent',gui.retr('pivlab_axis'));
         hold on;
@@ -192,14 +182,10 @@ if ~isempty(cam_selected_target_images)
         err = stats.ReprojectionErrors;
         errNorm = sqrt(err(:,1,:).^2 + err(:,2,:).^2);
         meanReprojError = mean(errNorm(:), 'omitnan');
-
-        gui.custom_msgbox('msg',getappdata(0,'hgui'),'Success',{'Success.' ;  ['Detected ' num2str(percentage_detected) '% of checkers.' ] ; ['Mean reprojection eror: ' num2str(round(meanReprojError,2)) ' px']},'modal',{'OK'},'OK');
-
-
+        gui.custom_msgbox('msg',getappdata(0,'hgui'),'Success',{'Success.' ;  ['Detected ' num2str(percentage_detected) '% of checkers.' ] ; ['Mean reprojection error: ' num2str(round(meanReprojError,2)) ' px']},'modal',{'OK'},'OK');
     catch ME
         gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',{'Problem with camera calibration: ' ;' '; ME.message},'modal');
     end
-
     gui.toolsavailable(1)
 else
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No calibration image data was loaded.','modal');

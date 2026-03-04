@@ -2263,13 +2263,22 @@ handles.calib_loadparams = uicontrol(handles.calib_imagedata,'Style','pushbutton
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 1.5];
 handles.calib_clearparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Clear parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_clearparams_Callback,'Tag','calib_clearparams','TooltipString','Clear camera parameters');
 
-item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
+item=[0 item(2)+item(4)+margin parentitem(3) 1.5];
+uicontrol(handles.calib_imagedata,'Style','text', 'String','Calibration checks','Fontweight','bold','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
 handles.calib_showreproject = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Show reprojection errors','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_showreproject_Callback,'Tag','calib_showreproject','TooltipString','Show reprojection errors (should be below 1 pixel for a valid undistortion)');
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
+handles.calib_showcams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Show camera positions','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_show_cam_position_Callback,'Tag','calib_showcams','TooltipString','Show positions of the cameras');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.calib_showdistortion = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Show lens distortion','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_showdistortion_Callback,'Tag','calib_showdistortion','TooltipString','Show camera lens distortion');
 
-item=[0 item(2)+item(4)+margin parentitem(3)/3*2 1.5];
+item=[0 item(2)+item(4)+margin parentitem(3) 1.5];
+uicontrol(handles.calib_imagedata,'Style','text', 'String','Apply calibration','Units','characters','Fontweight','bold', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/3*2 1.5];
 uicontrol(handles.calib_imagedata,'Style','text','String','Output image size:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];

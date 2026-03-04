@@ -2,6 +2,9 @@
 clear all
 clc
 %{
+%auswählen Microsoft visual c++
+mex -setup C
+mex -setup C++
 mex -I"C:\Users\thiel\Documents\MATLAB\opencv_test\opencv\build\include" ...
     -L"C:\Users\thiel\Documents\MATLAB\opencv_test\opencv\build\x64\vc16\lib" ...
     -lopencv_world4130 ...

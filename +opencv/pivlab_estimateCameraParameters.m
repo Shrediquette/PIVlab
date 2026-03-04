@@ -1,10 +1,17 @@
 function [cameraParams, imagesUsed, stats] = ...
     pivlab_estimateCameraParameters(imagePoints, worldPoints, imageSize, varargin)
-'show reprojection errors muss noch gemacht werden...!'
+
+if isdeployed %run this only in non-deployed version
+    useopencv=0;
+else
+    useopencv=1;
+end
+useopencv=1;
+
 % ============================================================
 % DESKTOP MATLAB VERSION
 % ============================================================
-if isdeployed %run this only in non-deployed version
+if useopencv==0 %run this only in non-deployed version
     disp('--Matlab camera estimation--')
     if nargin == 4
         initParams = varargin{1};
@@ -69,6 +76,7 @@ else
         'RadialDistortion', D2(1:2), ...
         'TangentialDistortion', D2(3:4), ...
         'RotationVectors', rvecs2, ...
+        'WorldPoints', worldPoints, ...
         'TranslationVectors', tvecs2, ...
         'ImageSize', imageSize);
 
