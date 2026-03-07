@@ -90,7 +90,9 @@ if handles.calib_usecalibration.Value ==1
         gui.put('cam_use_calibration',0);
         handles.calib_usecalibration.Value = 0;
         gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Calibration images and PIV images must have identical size.','modal');
-        return
+        handles.calib_usecalibration.Value = 0;
+		gui.toolsavailable(1)
+		return
     end
     view_raw=handles.calib_viewtype.Value;
     if view_raw==1
