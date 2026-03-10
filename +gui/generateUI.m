@@ -2192,7 +2192,7 @@ item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/4 1.5];
 handles.ac_calibcapture = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Start','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @acquisition.calibcapture_Callback,'Tag','ac_calibcapture','TooltipString','Start live view of the camera','interruptible','on','BusyAction','queue');
 
 item=[parentitem(3)/4*1 item(2) parentitem(3)/4 1.5];
-handles.ac_calibsnapshot = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Snapshot','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @acquisition.camera_snapshot_Callback,'Tag','ac_calibsnapshot','TooltipString','Save current display','enable','on');
+handles.ac_calibsnapshot = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Snapshot','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @acquisition.camera_snapshot_Callback,'Tag','ac_calibsnapshot','TooltipString','Save current display','enable','on','interruptible','on','BusyAction','queue');
 
 item=[parentitem(3)/4*2 item(2) parentitem(3)/4 1.5];
 handles.ac_calibsave = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Save','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @acquisition.camera_stop_Callback,'Tag','ac_calibsave','TooltipString','Save last image','enable','off');
@@ -2216,7 +2216,7 @@ item=[parentitem(3)/2+parentitem(3)/4 item(2) parentitem(3)/4 1];
 handles.ac_realtime = uicontrol(handles.uipanelac_capture,'Style','checkbox','units','characters','HorizontalAlignment','right','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3) item(4)],'Value',0,'String','Live','tag','ac_realtime','TooltipString','Enable real-time PIV','Callback',@acquisition.realtime_Callback,'Visible','off');
 
 item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/3 1.5];
-handles.ac_pivcapture = uicontrol(handles.uipanelac_capture,'Style','pushbutton','String','Start','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.piv_capture_Callback,'Tag','ac_pivcapture','TooltipString','Start PIV image capture and laser');
+handles.ac_pivcapture = uicontrol(handles.uipanelac_capture,'Style','pushbutton','String','Start','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.piv_capture_Callback,'Tag','ac_pivcapture','TooltipString','Start PIV image capture and laser','interruptible','on','BusyAction','queue');
 
 item=[parentitem(3)/3*1 item(2) parentitem(3)/5 1.5];
 handles.ac_pivcapture_save = uicontrol(handles.uipanelac_capture,'Style','checkbox','units','characters','HorizontalAlignment','right','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3) item(4)],'Value',0,'String','Save','tag','ac_pivcapture_save','TooltipString','Save PIV double images','Callback',@acquisition.pivcapture_save_Callback);
