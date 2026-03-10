@@ -96,6 +96,7 @@ for multipass = 1:passes
 						beep on
 						beep
 						if ~isdeployed
+                            %#exclude commandwindow
 							commandwindow
 						end
 					end
@@ -201,6 +202,7 @@ for multipass = 1:passes
 			catch
 				disp('Error: Most likely, your ROI is too small and/or the interrogation area too large.')
 				if ~isdeployed
+                    %#exclude commandwindow
 					commandwindow
 				end
 				utable=zeros(size(xtable));

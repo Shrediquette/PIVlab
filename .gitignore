@@ -1,2 +1,12 @@
 
 *.asv
+
+/.git/
+
+/.git/
+
+/ftp_info.txt
+
+/clean_and_package_PIVlab.m
+
+/_Github token.txt

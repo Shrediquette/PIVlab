@@ -15,7 +15,9 @@ try
 		gui.toolsavailable(0,'Please wait, opening parallel pool...')
 		pause(0.1)
 		try
-			desired_num_cores=maxNumCompThreads('automatic');
+            c = parcluster("Processes");
+             %use matlab suggested num of cores
+			desired_num_cores=c.NumWorkers;
 		catch
 			desired_num_cores=feature('numCores');
 		end

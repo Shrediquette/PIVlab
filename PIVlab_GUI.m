@@ -158,6 +158,7 @@ if isempty(fh)
                 disp(['ERROR: A required package folder was not found: ' pivFiles{1,i}]);
                 disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
                 if ~isdeployed
+                    %#exclude commandwindow
                     beep;commandwindow;pause
                 end
             else
@@ -203,6 +204,7 @@ if isempty(fh)
             disp('WARNING: You need at least version 9.7 (R2019b) to use all features.')
             disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
             if ~isdeployed
+                %#exclude commandwindow
                 beep;commandwindow;pause
             end
         end
@@ -211,6 +213,7 @@ if isempty(fh)
         disp('WARNING: You need at least version 9.7 (R2019b) to use all features.')
         disp('Press any key to continue... (but remember, PIVlab won''t work like this...)')
         if ~isdeployed
+            %#exclude commandwindow
             beep;commandwindow;pause
         end
     end
@@ -240,6 +243,7 @@ if isempty(fh)
                 disp(' ');disp(' ');disp(' ');
                 disp('Press any key to continue... (but remember, PIVlab WON''T WORK LIKE THIS! IT REALLY WON''T!)')
                 if ~isdeployed
+                    %#exclude commandwindow
                     beep;commandwindow;pause
                 end
             end
@@ -253,6 +257,7 @@ if isempty(fh)
             disp(' ');disp(' ');disp(' ');
             disp(('Press any key to continue... (but remember, PIVlab WON''T WORK LIKE THIS! IT REALLY WON''T!)'))
             if ~isdeployed
+                %#exclude commandwindow
                 beep;commandwindow;pause
             end
         end
@@ -390,7 +395,9 @@ if isempty(fh)
                     pause(0.1)
                     switch answer
                         case 'Yes'
-                            misc.pivparpool('open',maxNumCompThreads('automatic')); %use matlab suggested num of cores
+                            c = parcluster("Processes");
+                            misc.pivparpool('open',c.NumWorkers); %use matlab suggested num of cores
+                            %misc.pivparpool('open',maxNumCompThreads('automatic')); %use matlab suggested num of cores
                             gui.put('parallel',1);
                         case 'No'
                     end

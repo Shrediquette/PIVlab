@@ -228,6 +228,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
         disp(ME.identifier)
         disp(ME.message)
         if ~isdeployed
+            %#exclude commandwindow
             commandwindow;
         end
     end

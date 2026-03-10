@@ -304,6 +304,7 @@ if ~isequal(path,0)
         end
         save sequencing_error_report.mat;
         if ~isdeployed
+            %#exclude commandwindow
             commandwindow
         end
     end
