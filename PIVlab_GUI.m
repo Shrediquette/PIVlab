@@ -299,7 +299,7 @@ if isempty(fh)
     try
         v=opencv.opencv_version;
         if startsWith(v,'4.')
-            disp('-> OpenCV 4.X found')
+            disp(['-> OpenCV ' v ' found.'])
         end
     catch
     end

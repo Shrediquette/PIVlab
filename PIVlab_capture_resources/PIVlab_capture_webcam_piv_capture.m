@@ -103,4 +103,9 @@ while getappdata(hgui,'cancel_capture') ~=1 && captured_amount < img_amount
 	end
 	captured_amount=captured_amount+1;
 end
-set(frame_nr_display,'String','Getting image data to GUI');
+
+if ~isinf(img_amount)
+	set(frame_nr_display,'String','Getting image data to GUI...');
+else
+	set(frame_nr_display,'String','Preview stopped.');
+end
