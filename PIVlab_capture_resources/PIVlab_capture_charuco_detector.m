@@ -17,6 +17,10 @@ if large_img
 end
 ids=ids';
 delete(findobj('tag','charucolabel'));
+calibration_demo_mode = gui.retr('calibration_demo_mode');
+		if isempty(calibration_demo_mode)
+			calibration_demo_mode=0;
+		end
 if ~isempty(locs) && size(locs,3) == size(ids,1)
 	id_thresh = mean(ids,'omitnan')+2*std(ids,'omitnan');
 	ids(ids>id_thresh) = nan;
@@ -87,7 +91,12 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 		if isempty(oldBoxes)
 			oldBoxes = [inf inf inf inf];
 		end
-
+		if calibration_demo_mode % in demo mode, do not remember all positions, but only the last two.
+			try
+				oldBoxes(1:size(oldBoxes,1)-2,:)=[];
+			catch
+			end
+		end
 		dx_min = abs(oldBoxes(:,1) - newBox(1));
 		dx_max = abs(oldBoxes(:,2) - newBox(2));
 		dy_min = abs(oldBoxes(:,3) - newBox(3));
@@ -107,6 +116,7 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 		if isNew
 			infotxt=[newline 'New position'];
 			old_charuco_img=gui.retr('old_charuco_img');
+		
 			if isempty(old_charuco_img)
 				gui.put('old_charuco_img',img_original(1:2:end,1:2:end,:));
 			else
@@ -114,7 +124,19 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 				motion_metric = mean(diff(:)) / mean(double(old_charuco_img(:)));
 				disp(['Image delta = ' num2str(motion_metric)]);
 				if motion_metric < not_moving_threshold
-					acquisition.camera_snapshot_Callback
+					if ~calibration_demo_mode
+						acquisition.camera_snapshot_Callback
+					else
+						demotxt=text(size(img_original,2)/2,size(img_original,1)/6*5,'SNAPSHOT!','tag','demolabel','Color','y','Backgroundcolor','k','FontSize',70,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','top','Parent',figure_handle);
+						pause(0.1)
+						demotxt.Color='r';
+						pause(0.1)
+						demotxt.Color='y';
+						pause(0.1)
+						demotxt.Color='r';
+						pause(0.1)
+						delete(findobj('tag','demolabel'));
+					end
 					if isempty(oldBoxes)
 						oldBoxes = newBox;
 					else
@@ -201,6 +223,9 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 	
 		text(lowpassed_mean_loc_x,lowpassed_mean_loc_y,orientation_message,'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',18,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','top','Parent',figure_handle)
 		text(lowpassed_mean_loc_x,lowpassed_mean_loc_y,['Markers: ' num2str(percentage_detected) ' %'  infotxt  infotxt2],'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','bottom','Parent',figure_handle)
+		if calibration_demo_mode
+			text (50,50,'Demonstration of the new camera calibration feature with automatic image capture and pose estimation.','tag','charucolabel','Color','y','FontSize',14,'FontWeight','bold')
+		end
 		if detectionOK %QR code detected
 			rectangle('position',[min(loc(:,1))-20, min(loc(:,2))-20, max(loc(:,1)) - min(loc(:,1))+20 , max(loc(:,2)) - min(loc(:,2))+20],'tag','charucolabel','EdgeColor','b','LineWidth',6,'Parent',figure_handle,'Curvature',0.5)
 			text(mean(loc(:,1)),mean(loc(:,2)),'QR','tag','charucolabel','Color','w','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
