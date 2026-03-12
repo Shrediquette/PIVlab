@@ -130,6 +130,8 @@ calib_usecalibration=handles.calib_usecalibration.Value;
 calib_userectification=handles.calib_userectification.Value;
 calib_upscale=handles.calib_upscale.Value;
 
+%%Stereo-PIV related settings
+stereomode=gui.retr('stereomode');
 
 if ispc==1
 	[FileName,PathName] = uiputfile('*.mat','Save current settings as...',['PIVlab_set_' getenv('USERNAME') '.mat']);

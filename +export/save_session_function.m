@@ -132,6 +132,10 @@ calib_usecalibration=handles.calib_usecalibration.Value;
 calib_userectification=handles.calib_userectification.Value;
 calib_upscale=handles.calib_upscale.Value;
 
+%%stereoPIV
+stereomode=gui.retr('stereomode');
+
+
 clear handles
 cameraParams=gui.retr('cameraParams');
 save(fullfile(PathName,FileName), '-append', '-regexp', '^(?!app$).*');

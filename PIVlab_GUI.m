@@ -152,7 +152,7 @@ if isempty(fh)
     addpath(fullfile(tempfilepath, 'PIVlab_capture_resources','pco_resources'));
     try
         ctr=0;
-        pivFiles = {'+acquisition' '+calibrate' '+export' '+extract' '+gui' '+import' '+mask' '+misc' '+piv' '+plot' '+postproc' '+preproc' '+roi' '+simulate' '+validate' '+wOFV' 'OptimizationSolvers' 'PIVlab_capture_resources'};
+        pivFiles = {'+acquisition' '+calibrate' '+export' '+extract' '+gui' '+import' '+mask' '+misc' '+piv' '+plot' '+postproc' '+preproc' '+roi' '+simulate' '+validate' '+wOFV' '+opencv' 'OptimizationSolvers' 'PIVlab_capture_resources'};
         for i=1:size(pivFiles,2)
             if exist(fullfile(tempfilepath,pivFiles{1,i}),'dir')~=7
                 disp(['ERROR: A required package folder was not found: ' pivFiles{1,i}]);
