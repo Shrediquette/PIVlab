@@ -1,7 +1,11 @@
 function PIVlab_capture_charuco_detector(img,figure_handle,~)
 handles=gui.gethand;
+calibration_demo_mode = gui.retr('calibration_demo_mode');
+if isempty(calibration_demo_mode)
+    calibration_demo_mode=0;
+end
 img_original=img;
-if numel(img) > 20000000 % more than 20 megapixels image --> reduce resolution for charuco detection
+if numel(img) > 20000000 | calibration_demo_mode  % more than 20 megapixels image --> reduce resolution for charuco detection
 	large_img=1;
 else
 	large_img=0;
@@ -9,21 +13,26 @@ end
 if large_img
 	img=img(1:2:end,1:2:end,1);
 end
+
 img=mat2gray(img);
 img=histeq(img);
-[ids,locs] = readArucoMarker(img,'DICT_4X4_1000','WindowSizeRange',[3 23],'MarkerSizeRange',[0.005 1],'ResolutionPerBit',16,'SquarenessTolerance',0.03); %schnellere detektierung wenn bekannt. Am besten: Erstmal so gucken welche Familie dominant. Dann zweiter durchgang mit nur dieser familie
+if calibration_demo_mode
+    img=adapthisteq(img);
+    %img(img> 0.5)=1;
+    %img(img<= 0.5)=0;
+else
+   
+end
+ [ids,locs] = readArucoMarker(img,'DICT_4X4_1000','WindowSizeRange',[3 23],'MarkerSizeRange',[0.005 1],'ResolutionPerBit',16,'SquarenessTolerance',0.03); %schnellere detektierung wenn bekannt. Am besten: Erstmal so gucken welche Familie dominant. Dann zweiter durchgang mit nur dieser familie
 if large_img
 	locs=locs*2;
 end
 ids=ids';
 delete(findobj('tag','charucolabel'));
-calibration_demo_mode = gui.retr('calibration_demo_mode');
-		if isempty(calibration_demo_mode)
-			calibration_demo_mode=0;
-		end
+
 if ~isempty(locs) && size(locs,3) == size(ids,1)
-	id_thresh = mean(ids,'omitnan')+2*std(ids,'omitnan');
-	ids(ids>id_thresh) = nan;
+    id_thresh = mean(ids,'omitnan')+2*std(ids,'omitnan');
+    ids(ids>id_thresh) = nan;
 	locs(:,:,isnan(ids))=[];
 	ids(isnan(ids))=[];
 	numMarkers = numel(ids);
@@ -93,21 +102,22 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 		end
 		if calibration_demo_mode % in demo mode, do not remember all positions, but only the last two.
 			try
-				oldBoxes(1:size(oldBoxes,1)-2,:)=[];
+				oldBoxes(1:size(oldBoxes,1)-1,:)=[];
 			catch
 			end
-		end
-		dx_min = abs(oldBoxes(:,1) - newBox(1));
-		dx_max = abs(oldBoxes(:,2) - newBox(2));
-		dy_min = abs(oldBoxes(:,3) - newBox(3));
-		dy_max = abs(oldBoxes(:,4) - newBox(4));
+        end
+        dx_min = abs(oldBoxes(:,1) - newBox(1));
+        dx_max = abs(oldBoxes(:,2) - newBox(2));
+        dy_min = abs(oldBoxes(:,3) - newBox(3));
+        dy_max = abs(oldBoxes(:,4) - newBox(4));
 
-		threshold_x = size(img,2)/7;
-		threshold_y = size(img,1)/7;
 
-		isNew = all( ...
-			dx_min > threshold_x | ...
-			dx_max > threshold_x | ...
+        threshold_x = size(img,2)/7;
+        threshold_y = size(img,1)/7;
+
+        isNew = all( ...
+            dx_min > threshold_x | ...
+            dx_max > threshold_x | ...
 			dy_min > threshold_y | ...
 			dy_max > threshold_y ...
 			);
@@ -213,20 +223,24 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 			mean_loc_y_old=size(img,1)/2;
 		end
 		lowpassed_mean_loc_x=mean_loc_x*0.1+mean_loc_x_old*0.9;
-		lowpassed_mean_loc_y=mean_loc_y*0.1+mean_loc_y_old*0.9;
-		gui.put('mean_loc_x',lowpassed_mean_loc_x);
-		gui.put('mean_loc_y',lowpassed_mean_loc_y);
-		hold on
-		scatter(locs_center_x,locs_center_y,'green','tag','charucolabel','Parent',figure_handle)
-		hold off
-		rectangle('Position',[min(locs_center_x), min(locs_center_y),max(locs_center_x) - min(locs_center_x), max(locs_center_y) - min(locs_center_y) ],'tag','charucolabel','EdgeColor','r','LineWidth',2,'Parent',figure_handle,'Curvature',0.15)
-	
-		text(lowpassed_mean_loc_x,lowpassed_mean_loc_y,orientation_message,'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',18,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','top','Parent',figure_handle)
-		text(lowpassed_mean_loc_x,lowpassed_mean_loc_y,['Markers: ' num2str(percentage_detected) ' %'  infotxt  infotxt2],'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','bottom','Parent',figure_handle)
-		if calibration_demo_mode
-			text (50,50,'Demonstration of the new camera calibration feature with automatic image capture and pose estimation.','tag','charucolabel','Color','y','FontSize',14,'FontWeight','bold')
-		end
-		if detectionOK %QR code detected
+        lowpassed_mean_loc_y=mean_loc_y*0.1+mean_loc_y_old*0.9;
+        gui.put('mean_loc_x',lowpassed_mean_loc_x);
+        gui.put('mean_loc_y',lowpassed_mean_loc_y);
+        hold on
+        if calibration_demo_mode
+    		scatter(locs_center_x,locs_center_y,1000,'green','tag','charucolabel','Parent',figure_handle,'LineWidth',5)
+        else
+            scatter(locs_center_x,locs_center_y,200,'green','tag','charucolabel','Parent',figure_handle,'LineWidth',2)
+        end
+        hold off
+        rectangle('Position',[min(locs_center_x), min(locs_center_y),max(locs_center_x) - min(locs_center_x), max(locs_center_y) - min(locs_center_y) ],'tag','charucolabel','EdgeColor','r','LineWidth',2,'Parent',figure_handle,'Curvature',0.15)
+
+        text(lowpassed_mean_loc_x,lowpassed_mean_loc_y,orientation_message,'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',18,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','top','Parent',figure_handle)
+        text(lowpassed_mean_loc_x,lowpassed_mean_loc_y,['Markers: ' num2str(percentage_detected) ' %'  infotxt  infotxt2],'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','bottom','Parent',figure_handle)
+        if calibration_demo_mode
+            text (50,50,'Demonstration of the new camera calibration feature with automatic image capture and pose estimation.','tag','charucolabel','Color','k','FontSize',16,'FontWeight','bold')
+        end
+        if detectionOK %QR code detected
 			rectangle('position',[min(loc(:,1))-20, min(loc(:,2))-20, max(loc(:,1)) - min(loc(:,1))+20 , max(loc(:,2)) - min(loc(:,2))+20],'tag','charucolabel','EdgeColor','b','LineWidth',6,'Parent',figure_handle,'Curvature',0.5)
 			text(mean(loc(:,1)),mean(loc(:,2)),'QR','tag','charucolabel','Color','w','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
 		end
