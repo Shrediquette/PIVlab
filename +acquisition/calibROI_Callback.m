@@ -201,6 +201,11 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             delete(ac_ROI_general_handle)
             rectangle('Position',position,'EdgeColor','y','linewidth',2)
 
+            % clear camera calibration, which has become invalid as the camera image size has changed
+            handles.calib_usecalibration.Value = 0;
+            gui.put('cameraParams',[]);
+            gui.put('cam_selected_target_images',[]);
+
             if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')
                 %% jetzt nochmal mit finalen einstellungen bild capturen zum messen der framerate...
                 %Camera fps
