@@ -46,6 +46,8 @@ else
         end
         if ~isempty(serial_answer)
             answer_status=['Received reply from the laser: ' convertStringsToChars(serial_answer)];
+            clc
+            disp(convertStringsToChars(serial_answer))
         else
             answer_status=['Did not receive reply from the laser after ' num2str(attempts) ' attempts (laser turned off?)'];
         end
