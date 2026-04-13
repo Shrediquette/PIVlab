@@ -79,7 +79,7 @@ if ok==1
     highpsize=str2double(get(handles.highp_size, 'string'));
     wienerwurst=get(handles.wienerwurst, 'value');
     wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-    do_correlation_matrices=gui.retr('do_correlation_matrices');
+    do_correlation_matrices=0;
     preproc.Autolimit_Callback
     minintens=str2double(get(handles.minintens, 'string'));
     maxintens=str2double(get(handles.maxintens, 'string'));
@@ -183,7 +183,7 @@ if ok==1
                 [x,y,u,v,typevector]=wOFV.RunMain_Parallel_DatasetProc(image1,image2,converted_mask,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,Fmats,PatchSize);
             end
 
-            correlation_matrices=[];%not available for DCC
+            %correlation_matrices=[];%not available for DCC
             correlation_map=zeros(size(x));
 
             resultslist{1,(i+1)/2}=x;
@@ -195,7 +195,7 @@ if ok==1
             if get(handles.algorithm_selection,'Value')==3 %dcc
 
             end
-            correlation_matrices_list{(i+1)/2}=correlation_matrices;
+            %correlation_matrices_list{(i+1)/2}=correlation_matrices;
             resultslist{12,(i+1)/2}=correlation_map;
             gui.put('resultslist',resultslist);
             set(handles.fileselector, 'value', (i+1)/2);
@@ -244,7 +244,7 @@ if ok==1
         disp('https://groups.google.com/g/PIVlab/c/2O2EXgGg6Uc')
         disp(ME)
     end
-    assignin('base','correlation_matrices',correlation_matrices_list);
+    %assignin('base','correlation_matrices',correlation_matrices_list);
 end
 gui.toolsavailable(1);
 gui.update_progress(0)

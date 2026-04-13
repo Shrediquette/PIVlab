@@ -79,11 +79,11 @@ if ok==1
 		interrogationarea=str2double(get(handles.intarea, 'string'));
 		step=str2double(get(handles.step, 'string'));
 		subpixfinder=get(handles.subpix,'value');
-		do_correlation_matrices=gui.retr('do_correlation_matrices');
+		do_correlation_matrices=0;
 		if get(handles.algorithm_selection,'Value')==3 %DCC
 			[x, y, u, v, typevector] = piv.piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
 			correlation_map=zeros(size(u)); %nor correlation map available with DCC
-			correlation_matrices=[];
+			%correlation_matrices=[];
 		elseif get(handles.algorithm_selection,'Value')==1 || get(handles.algorithm_selection,'Value')==2 %fft and ensemble
 			passes=1;
 			if get(handles.checkbox26,'value')==1
@@ -139,7 +139,7 @@ if ok==1
             end     
 
 			correlation_map=zeros(size(x)); %no correlation map available with OFV (?) Nope!
-			correlation_matrices=[];
+			%correlation_matrices=[];
 		end
 		gui.toolsavailable(1);
 		resultslist{1,(selected+1)/2}=x;
@@ -165,7 +165,7 @@ if ok==1
 		set(handles.messagetext, 'String','');
 		gui.put('subtr_u', 0);
 		gui.put('subtr_v', 0);
-		assignin('base','correlation_matrices',correlation_matrices);
+		%assignin('base','correlation_matrices',correlation_matrices);
 		gui.sliderdisp(gui.retr('pivlab_axis'))
 	end
 

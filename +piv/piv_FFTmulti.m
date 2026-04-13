@@ -1,4 +1,4 @@
-function [xtable, ytable, utable, vtable, typevector, correlation_map,correlation_matrices] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask_inpt, roi_inpt,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_linear_correlation,do_correlation_matrices,repeat_last_pass,delta_diff_min)
+function [xtable, ytable, utable, vtable, typevector, correlation_map,correlation_matrices,all_xy_tables] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask_inpt, roi_inpt,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_linear_correlation,do_correlation_matrices,repeat_last_pass,delta_diff_min)
 % For unittests
 if nargin == 0
 	xtable = localfunctions;
@@ -34,6 +34,10 @@ else
 	mask_inpt_roi = mask_inpt;
 end
 
+if do_correlation_matrices==1
+	correlation_matrices=cell(0);
+end
+
 %% Convert image classes (if desired) to save RAM in the FFT correlation with huge images
 image1_roi = convert_image_class(image1_roi, convert_image_class_type);
 image2_roi = convert_image_class(image2_roi, convert_image_class_type);
@@ -54,6 +58,7 @@ repetition=0;
 %repeat_last_pass=0; %set in GUI: enable repetition of last pass
 %delta_diff_min=0.025;  %set in GUI: the quality increase from one pass to the other should at least be this good. This is sort of the slope of the "quality"
 delta_diff=1; %initialize with bad value
+all_xy_tables=cell(passes,2);
 for multipass = 1:passes
 	%this while loop will run at least once. when repeat_last_pass is 0, then the while loop will break after the first execution.
 	while  delta_diff > delta_diff_min && repetition < max_repetitions
@@ -193,6 +198,8 @@ for multipass = 1:passes
 		ytable_old = ytable(:,1);
 		xtable = single(repmat((minix:step:maxix)  + xroi - padx_orig + interrogationarea/2, numelementsy, 1));
 		ytable = single(repmat((miniy:step:maxiy)' + yroi - pady_orig + interrogationarea/2, 1, numelementsx));
+		all_xy_tables{multipass,1}=xtable;
+		all_xy_tables{multipass,2}=ytable;
 		if multipass > 1
 			%xtable alt und neu geben koordinaten wo die vektoren herkommen.
 			%d.h. u und v auf die gewÃ¯Â¿Â½nschte grÃ¯Â¿Â½Ã¯Â¿Â½e bringen+interpolieren
@@ -467,9 +474,12 @@ for multipass = 1:passes
 			break
 		end
 	end
-
+	if do_correlation_matrices
+		correlation_matrices{multipass}=result_conv;
+	else
+		correlation_matrices=[];
+	end
 end
-
 %{
 %mal alle daten die ich brauche speichern. Als Beispielsatz. Dann damit experimentieren wie in echt...
 %% Hier uncertainty...?
@@ -553,13 +563,6 @@ figure(getappdata(0,'hgui'))
 %gg=100;figure;imagesc(multiplied_images(:,:,gg));figure;imagesc(image1_cut(:,:,gg));figure;imagesc(image2_cut(:,:,gg));figure;imagesc(multiplied_images_binary(:,:,gg))
 %}
 
-
-% Output correlation matrices
-if do_correlation_matrices==1
-	correlation_matrices=result_conv;
-else
-	correlation_matrices = [];
-end
 end
 
 

@@ -2397,7 +2397,22 @@ item=[0 0 0 0];
 item=[0 item(2)+margin / 4 parentitem(3) 1.5];
 handles.calib_generateboard = uicontrol(handles.calib_generate,'Style','pushbutton','String','Generate Charuco board','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_generateboard_Callback,'Tag','calib_generateboard','TooltipString','Generate a suitable Charuco board');
 
+%% Marker board setup
+handles.multip29 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Display correlation matrices', 'Tag','multip29','fontweight','bold');
+parentitem=get(handles.multip29, 'Position');
+item=[0 0 0 0];
 
+item=[0 item(2)+item(4) parentitem(3) 15];
+handles.plot_correlation_matrices= uipanel(handles.multip29, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Properties', 'Tag','calib_markersetup','fontweight','bold');
+
+parentitem=get(handles.plot_correlation_matrices, 'Position');
+item=[0 0 0 0];
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
+handles.retrieve_correlation_matrices = uicontrol(handles.plot_correlation_matrices,'Style','pushbutton','String','Retrieve correlation matrices','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','retrieve_correlation_matrices','TooltipString','Get correlation matrices for all passes for currently displayed frame','Callback', @plot.correlation_matrices_calculate);
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 5];
+uicontrol(handles.plot_correlation_matrices,'Style','text','String','After retrieving the correlation matrices, click on the vectors to show the correlation matrices of all passes.','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 
 

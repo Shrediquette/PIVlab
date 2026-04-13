@@ -85,8 +85,8 @@ if isempty(fh)
     panelwidth=50;
     panelheighttools=13;%12;
     panelheightpanels=45;%35;
-    do_correlation_matrices=0; % enable or disable the output of raw correlation matrices
-    gui.put('do_correlation_matrices',do_correlation_matrices);
+    %do_correlation_matrices=0; % enable or disable the output of raw correlation matrices
+    %gui.put('do_correlation_matrices',do_correlation_matrices);
     gui.put('panelwidth',panelwidth);
     gui.put('margin',margin);
     gui.put('panelheighttools',panelheighttools);

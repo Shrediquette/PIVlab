@@ -101,7 +101,7 @@ if ok==1
 		set(handles.overall, 'string' , ['Total progress: 0%']);
 		drawnow; %#ok<*NBRAK>
 
-		do_correlation_matrices=gui.retr('do_correlation_matrices');
+		do_correlation_matrices=0;
 		slicedfilepath1=cell(0);
 		slicedfilepath2=cell(0);
 		slicedframenum1=[];
@@ -114,7 +114,7 @@ if ok==1
 		vlist=cell(0);
 		typelist=cell(0);
 		corrlist=cell(0);
-		correlation_matrices_list=cell(0);
+		%correlation_matrices_list=cell(0);
 		for i=1:2:num_frames_to_process
 			k=(i+1)/2;
 			slicedfilepath1{k}=filepath{i};
@@ -231,7 +231,7 @@ if ok==1
 				vlist{i}=v;
 				typelist{i}=typevector;
 				corrlist{i}=zeros(size(typevector)); %no correlation coefficient in DCC.
-				correlation_matrices_list{i}=[];%no correlation matrix output for dcc
+				%correlation_matrices_list{i}=[];%no correlation matrix output for dcc
 				hbar.iterate(1);
 			end
 		elseif get(handles.algorithm_selection,'Value')==1
@@ -348,7 +348,7 @@ if ok==1
 				vlist{i}=v;
 				typelist{i}=typevector;
 				corrlist{i}=correlation_map;
-				correlation_matrices_list{i}=correlation_matrices;
+				%correlation_matrices_list{i}=correlation_matrices;
 				hbar.iterate(1);
 			end
 		end
@@ -411,7 +411,7 @@ if ok==1
 				highpsize=str2double(get(handles.highp_size, 'string'));
 				wienerwurst=get(handles.wienerwurst, 'value');
 				wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-				do_correlation_matrices=gui.retr('do_correlation_matrices');
+				do_correlation_matrices=0;
 				preproc.Autolimit_Callback
 				minintens=str2double(get(handles.minintens, 'string'));
 				maxintens=str2double(get(handles.maxintens, 'string'));
@@ -454,7 +454,7 @@ if ok==1
 
 				if get(handles.algorithm_selection,'Value')==3 %dcc
 					[x, y, u, v, typevector] = piv.piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
-					correlation_matrices=[];%not available for DCC
+					%correlation_matrices=[];%not available for DCC
 				elseif get(handles.algorithm_selection,'Value')==1
 					passes=1;
 					if get(handles.checkbox26,'value')==1
@@ -486,7 +486,7 @@ if ok==1
 				if get(handles.algorithm_selection,'Value')==3 %dcc
 					correlation_map=zeros(size(x));
 				end
-				correlation_matrices_list{(i+1)/2}=correlation_matrices;
+				%correlation_matrices_list{(i+1)/2}=correlation_matrices;
 				resultslist{12,(i+1)/2}=correlation_map;
 				gui.put('resultslist',resultslist);
 				set(handles.fileselector, 'value', (i+1)/2);
@@ -539,7 +539,7 @@ if ok==1
 		disp('https://groups.google.com/g/PIVlab/c/2O2EXgGg6Uc')
 		disp(ME)
 	end
-	assignin('base','correlation_matrices',correlation_matrices_list);
+	%assignin('base','correlation_matrices',correlation_matrices_list);
 end
 gui.toolsavailable(1);
 gui.update_progress(0)
