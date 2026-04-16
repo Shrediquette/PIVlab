@@ -78,7 +78,20 @@ end
 OPTOcam_settings = get(OPTOcam_vid);
 executeCommand(OPTOcam_settings.Source,"BslSensorOn")
 disp('Waking up sensor from sleep mode.')
-OPTOcam_settings.Source.DeviceLinkThroughputLimitMode = 'off';
+pause(0.1)
+
+%% setting USB speed to be slightly higher than required
+OPTOcam_settings.Source.DeviceLinkThroughputLimitMode = 'on';
+bitmultiply = bitmode*0.25 -1;
+ThroughputLimit=round(2500000 * frame_rate * bitmultiply * 1.025); % required USB bandwidth at 8 bit.
+if ThroughputLimit > 2500000 * 160 *1.025
+	ThroughputLimit = round(2500000 * 160*1.025);
+elseif ThroughputLimit < 2500000 * 16
+	ThroughputLimit = 2500000 * 16;
+end
+OPTOcam_settings.Source.DeviceLinkThroughputLimit=ThroughputLimit;
+pause(0.1)
+
 OPTOcam_settings.PreviewFullBitDepth='On';
 OPTOcam_vid.PreviewFullBitDepth='On';
 
@@ -134,6 +147,12 @@ if isempty (OPTOcam_gain)
 end
 OPTOcam_settings.Source.Gain = OPTOcam_gain;
 
+%% display timing information
+max_fps_with_current_settings = 1/((get(OPTOcam_vid.Source,'SensorReadoutTime') + get(OPTOcam_vid.Source,'BslExposureStartDelay'))/1000/1000);
+disp(['Maximum fps with current settings: ' num2str(max_fps_with_current_settings) ' fps.'])
+disp(['Requested fps: ' num2str(frame_rate) ' fps.']);
+disp(['DeviceLinkThroughputLimitMode set to: ' num2str(ThroughputLimit) '.'])
+
 %% start acqusition (waiting for trigger)
 OPTOcam_frames_to_capture = nr_of_images*2;
 OPTOcam_vid.FramesPerTrigger = OPTOcam_frames_to_capture;
@@ -160,6 +179,7 @@ if ~isinf(nr_of_images)
     end
 end
 drawnow;
+pause(0.05)
 
 function CustomIMAQErrorFcn(obj, event, varargin)
 stop(obj)
