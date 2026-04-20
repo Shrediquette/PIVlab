@@ -18,6 +18,7 @@ arguments
 	opts.do_correlation_matrices = 0
 	opts.repeat_last_pass = 0
 	opts.delta_diff_min = 0.025
+	opts.limit_peak_search_area = 1
 end
 % For unittests
 if isempty(fieldnames(opts))
@@ -75,7 +76,7 @@ delta_diff_min = opts.delta_diff_min;
 
 %profile on
 %this funtion performs the  PIV analysis.
-limit_peak_search_area=1; %new in 2.41: Default is to limit the peak search area in pass 2-4.
+limit_peak_search_area=opts.limit_peak_search_area; %new in 2.41: Default is to limit the peak search area in pass 2-4.
 if repeat == 0
 	convert_image_class_type = 'single'; % 'single', 'double': do the cross-correlation with single and not double precision. Saves 50% memory.
 else %repeted correlation needs double as type
