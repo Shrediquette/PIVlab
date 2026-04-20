@@ -262,6 +262,7 @@ if strcmpi(config_string,'Webcam demo (no synchronizer)')
             gui.custom_msgbox('error',getappdata(0,'hgui'),'No webcam','Could not access webcam. This function requires the free MATLAB Support Package for USB Webcams add-on (the link is now displayed in the command window).','modal');
         end
         set(handles.ac_config,'value',2);
+		acquisition.select_capture_config_Callback
         return
     end
     %disable controls for syncrhonizer
