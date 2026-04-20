@@ -1,9 +1,77 @@
-function [xtable, ytable, utable, vtable, typevector, correlation_map,correlation_matrices,all_xy_tables] = piv_FFTmulti (image1,image2,interrogationarea, step, subpixfinder, mask_inpt, roi_inpt,passes,int2,int3,int4,imdeform,repeat,mask_auto,do_linear_correlation,do_correlation_matrices,repeat_last_pass,delta_diff_min)
+function [xtable, ytable, utable, vtable, typevector, correlation_map,correlation_matrices,all_xy_tables] = piv_FFTmulti (opts)
+arguments
+	opts.image1
+	opts.image2
+	opts.interrogationarea
+	opts.step = []
+	opts.subpixfinder = 1
+	opts.mask_inpt = []
+	opts.roi_inpt = []
+	opts.passes = 1
+	opts.int2 = []
+	opts.int3 = []
+	opts.int4 = []
+	opts.imdeform = '*linear'
+	opts.repeat = 0
+	opts.mask_auto = 0
+	opts.do_linear_correlation = 0
+	opts.do_correlation_matrices = 0
+	opts.repeat_last_pass = 0
+	opts.delta_diff_min = 0.025
+end
 % For unittests
-if nargin == 0
+if isempty(fieldnames(opts))
 	xtable = localfunctions;
+	ytable = [];
+	utable = [];
+	vtable = [];
+	typevector = [];
+	correlation_map = [];
+	correlation_matrices = [];
+	all_xy_tables = [];
 	return
 end
+
+required_fields = {'image1', 'image2', 'interrogationarea'};
+if ~all(isfield(opts, required_fields))
+	error('piv:piv_FFTmulti:MissingRequiredInputs', ...
+		'image1, image2, and interrogationarea must be provided as name-value arguments.')
+end
+
+image1 = opts.image1;
+image2 = opts.image2;
+interrogationarea = opts.interrogationarea;
+if isempty(opts.step)
+	step = interrogationarea / 2;
+else
+	step = opts.step;
+end
+subpixfinder = opts.subpixfinder;
+mask_inpt = opts.mask_inpt;
+roi_inpt = opts.roi_inpt;
+passes = opts.passes;
+if isempty(opts.int2)
+	int2 = interrogationarea / 2;
+else
+	int2 = opts.int2;
+end
+if isempty(opts.int3)
+	int3 = int2 / 2;
+else
+	int3 = opts.int3;
+end
+if isempty(opts.int4)
+	int4 = int3 / 2;
+else
+	int4 = opts.int4;
+end
+imdeform = opts.imdeform;
+repeat = opts.repeat;
+mask_auto = opts.mask_auto;
+do_linear_correlation = opts.do_linear_correlation;
+do_correlation_matrices = opts.do_correlation_matrices;
+repeat_last_pass = opts.repeat_last_pass;
+delta_diff_min = opts.delta_diff_min;
 
 %profile on
 %this funtion performs the  PIV analysis.
@@ -71,7 +139,9 @@ for multipass = 1:passes
 			%multipass validation, smoothing
 			utable_orig=utable;
 			vtable_orig=vtable;
-			[utable,vtable] = postproc.PIVlab_postproc (utable,vtable,[],[], [], 1,8, 1,5);
+			[utable,vtable] = postproc.PIVlab_postproc( ...
+				u=utable, v=vtable, valid_vel=[], do_stdev_check=1, stdthresh=8, ...
+				do_local_median=1, neigh_thresh=5);
 			maskedpoints=numel(find((typevector)==0));
 			amountnans=numel(find(isnan(utable)))-maskedpoints;
 			discarded=amountnans/(size(utable,1)*size(utable,2))*100;
@@ -846,7 +916,11 @@ B((Pstart:Pend)-25, (Pstart:Pend)+20) = patch; % The patch is shifted by (-25, 2
 A = medfilt2(A, [9 9], 'symmetric');
 B = medfilt2(B, [9 9], 'symmetric');
 % Calculate velocity vectors
-[xtable, ytable, utable, vtable] = piv.piv_FFTmulti(A, B, 80, 40, 1, [], [], 3, 40, 20, 0, '*linear', 0, 0, 0, 0, 0, 0);
+[xtable, ytable, utable, vtable] = piv.piv_FFTmulti( ...
+	image1=A, image2=B, interrogationarea=80, step=40, subpixfinder=1, ...
+	mask_inpt=[], roi_inpt=[], passes=3, int2=40, int3=20, int4=0, ...
+	imdeform='*linear', repeat=0, mask_auto=0, do_linear_correlation=0, ...
+	do_correlation_matrices=0, repeat_last_pass=0, delta_diff_min=0);
 testCase.assertFalse(any(isnan(utable(:))));
 testCase.assertFalse(any(isnan(vtable(:))));
 % Verify that velocity vectors are close to actual solution

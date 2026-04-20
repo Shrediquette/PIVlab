@@ -50,7 +50,10 @@ end
 
 if ~isempty(x)
 	%vector-based filtering
-	[u,v] = postproc.PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
+[u,v] = postproc.PIVlab_postproc( ...
+    u=u, v=v, calu=calu, calv=calv, valid_vel=valid_vel, ...
+    do_stdev_check=do_stdev_check, stdthresh=stdthresh, ...
+    do_local_median=do_local_median, neigh_thresh=neigh_thresh);
 else
 	u=[];v=[];
 end
@@ -63,4 +66,3 @@ if interpol_missing==1
 	u=misc.inpaint_nans(u,4);
 	v=misc.inpaint_nans(v,4);
 end
-

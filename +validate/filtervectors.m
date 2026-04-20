@@ -81,7 +81,10 @@ if size(resultslist,2)>=frame
 		end
 
 		%vector-based filtering
-		[u,v] = postproc.PIVlab_postproc (u,v,calu,calv,valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh);
+[u,v] = postproc.PIVlab_postproc( ...
+    u=u, v=v, calu=calu, calv=calv, valid_vel=valid_vel, ...
+    do_stdev_check=do_stdev_check, stdthresh=stdthresh, ...
+    do_local_median=do_local_median, neigh_thresh=neigh_thresh);
 
 		typevector(isnan(u))=2;
 		typevector(isnan(v))=2;
@@ -105,4 +108,3 @@ if size(resultslist,2)>=frame
 		gui.put('resultslist', resultslist);
 	end
 end
-

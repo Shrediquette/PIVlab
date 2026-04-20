@@ -1,7 +1,32 @@
-function out = PIVlab_preproc (in,roirect,clahe, clahesize,highp,highpsize,intenscap,wienerwurst,wienerwurstsize,minintens,maxintens)
+function out = PIVlab_preproc (opts)
+arguments
+    opts.in
+    opts.roirect = []
+    opts.clahe = 1
+    opts.clahesize = 64
+    opts.highp = 0
+    opts.highpsize = 15
+    opts.intenscap = 0
+    opts.wienerwurst = 0
+    opts.wienerwurstsize = 3
+    opts.minintens = 0
+    opts.maxintens = 1
+end
 %preprocessing does not change the image class anymore
 %works with uint8, uint16, singe and double RGB and gray images.
 %this function preprocesses the images
+in = opts.in;
+roirect = opts.roirect;
+clahe = opts.clahe;
+clahesize = opts.clahesize;
+highp = opts.highp;
+highpsize = opts.highpsize;
+intenscap = opts.intenscap;
+wienerwurst = opts.wienerwurst;
+wienerwurstsize = opts.wienerwurstsize;
+minintens = opts.minintens;
+maxintens = opts.maxintens;
+
 if size(in,3)>1
 	in=rgb2gray(in); % rgb2gray keeps image class
 end

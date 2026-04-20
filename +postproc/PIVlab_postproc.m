@@ -1,5 +1,26 @@
 % Vector map post processing in PIVlab
-function [u_out,v_out] = PIVlab_postproc (u,v,calu,calv, valid_vel, do_stdev_check,stdthresh, do_local_median,neigh_thresh)
+function [u_out,v_out] = PIVlab_postproc (opts)
+arguments
+    opts.u
+    opts.v
+    opts.calu = 1
+    opts.calv = 1
+    opts.valid_vel = []
+    opts.do_stdev_check = 0
+    opts.stdthresh = 7
+    opts.do_local_median = 0
+    opts.neigh_thresh = 3
+end
+u = opts.u;
+v = opts.v;
+calu = opts.calu;
+calv = opts.calv;
+valid_vel = opts.valid_vel;
+do_stdev_check = opts.do_stdev_check;
+stdthresh = opts.stdthresh;
+do_local_median = opts.do_local_median;
+neigh_thresh = opts.neigh_thresh;
+
 %% velocity limits
 if numel(valid_vel)>0 %velocity limits were activated
     umin=valid_vel(1);
