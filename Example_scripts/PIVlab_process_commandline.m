@@ -70,6 +70,7 @@ mask_auto = 0;            % disable autocorrelation in first pass
 do_linear_correlation = 0;% 0 = circular, 1 = linear
 repeat_last_pass = 0;     % repeat the last pass
 delta_diff_min = 0.025;   % stop repeated last pass below this improvement
+limit_peak_search_area = 1;% 1 = limit peak search to central region (recommended), 0 = search full correlation map
 
 %% Define mask (optional)
 % To mask a region, create a logical matrix the same size as the images where true = masked out.
@@ -163,7 +164,8 @@ for pair_idx = 1:num_pairs
         mask_auto=mask_auto, ...
         do_linear_correlation=do_linear_correlation, ...
         repeat_last_pass=repeat_last_pass, ...
-        delta_diff_min=delta_diff_min);
+        delta_diff_min=delta_diff_min, ...
+        limit_peak_search_area=limit_peak_search_area);
 
     %% Postprocess the vector field
     [u_filt(:,:,pair_idx), v_filt(:,:,pair_idx)] = postproc.PIVlab_postproc( ...
