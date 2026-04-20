@@ -181,9 +181,15 @@ if src.Button == 1
 					pass_info(1,1)=imagey(1,1);
 					pass_info(1,2)=imagex(1,1);
 					idx_to_plot = sub2ind(size(correlation_matrices_data.all_xy_tables{pass,1}),pass_info(1),pass_info(2));
-					imagesc(correlation_matrices_data.correlation_matrices{pass}(:,:,idx_to_plot));axis image;
+					surf(correlation_matrices_data.correlation_matrices{pass}(:,:,idx_to_plot));
+					shading flat;
+					view(0, 90);
+					axis tight;
+					set(gca, 'DataAspectRatio', [1 1 diff(zlim)/min(diff(xlim),diff(ylim))]);
+					set(gca, 'YDir', 'reverse');
 					title(['Pass nr. ' num2str(pass) ' (' num2str(size(correlation_matrices_data.correlation_matrices{pass},2)) 'x' num2str(size(correlation_matrices_data.correlation_matrices{pass},1)) ')'])
 				end
+				rotate3d(fig,'on');
 			else
 				gui.custom_msgbox('error',getappdata(0,'hgui'),'Outdated','Correlation matrices need to be retrieved first.','modal');
 			end
