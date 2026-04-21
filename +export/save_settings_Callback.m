@@ -127,6 +127,7 @@ calib_markersize=handles.calib_markersize.String;
 calib_dolivedetect=handles.calib_dolivedetect.Value;
 calib_viewtype=handles.calib_viewtype.Value;
 calib_usecalibration=handles.calib_usecalibration.Value;
+calib_use_tilted_model=handles.calib_use_tilted_model.Value;
 calib_userectification=handles.calib_userectification.Value;
 calib_upscale=handles.calib_upscale.Value;
 

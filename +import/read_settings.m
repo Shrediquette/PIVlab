@@ -179,6 +179,7 @@ try
     handles.calib_dolivedetect.Value=calib_dolivedetect;
     handles.calib_viewtype.Value=calib_viewtype;
     handles.calib_usecalibration.Value=calib_usecalibration;
+	handles.calib_use_tilted_model.Value=calib_use_tilted_model;
     handles.calib_userectification.Value=calib_userectification;
     handles.calib_upscale.Value=calib_upscale;
 catch

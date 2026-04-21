@@ -32,8 +32,12 @@ cam_use_calibration = gui.retr('cam_use_calibration');
 cam_use_rectification = gui.retr('cam_use_rectification');
 cameraParams=gui.retr('cameraParams');
 rectification_tform = gui.retr('rectification_tform');
+cam_use_tilted_model = gui.retr('cam_use_tilted_model');
+cam_tilted_D   = gui.retr('cam_tilted_D');
+cam_K_opencv   = gui.retr('cam_K_opencv');
+if isempty(cam_use_tilted_model); cam_use_tilted_model = false; end
 
-caliimg = preproc.cam_undistort(caliimg,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
+caliimg = preproc.cam_undistort(caliimg,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform,cam_use_tilted_model,cam_tilted_D,cam_K_opencv);
 data_size=gui.retr('expected_image_size');
 if ~isempty (data_size)
     if size(caliimg,1) ~= data_size(1) || size(caliimg,2) ~= data_size(2)

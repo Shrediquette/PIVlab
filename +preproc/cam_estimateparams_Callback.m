@@ -137,8 +137,9 @@ if ~isempty(cam_selected_target_images)
     % Generate world coordinates for the planar pattern keypoints
     worldPoints = generateWorldPoints(detector, 'PatternDims', patternDims, 'CheckerSize', checkerSize);
     % Calibrate the camera
+    use_tilted_model = logical(get(handles.calib_use_tilted_model, 'Value'));
     try
-        [cameraParams, imagesUsed, stats] = opencv.pivlab_estimateCameraParameters(imagePoints, worldPoints, [mrows, ncols]);
+        [cameraParams, imagesUsed, stats] = opencv.pivlab_estimateCameraParameters(imagePoints, worldPoints, [mrows, ncols], 'use_tilted_model', use_tilted_model);
         gui.toolsavailable(1)
         gui.toolsavailable(0,'Refining camera parameters...');drawnow;
         imageFileNames = imageFileNames(imagesUsed);
@@ -157,7 +158,7 @@ if ~isempty(cam_selected_target_images)
             disp(['Skipping ' num2str(numel(badImages)) ' image(s) due to high reprojection errors.'])
             imagePoints = imagePoints(:, :, goodImages);
             imageFileNames = imageFileNames(goodImages);
-            [cameraParams, imagesUsed, stats] = opencv.pivlab_estimateCameraParameters(imagePoints, worldPoints, [mrows, ncols], cameraParams);
+            [cameraParams, imagesUsed, stats] = opencv.pivlab_estimateCameraParameters(imagePoints, worldPoints, [mrows, ncols], cameraParams, 'use_tilted_model', use_tilted_model);
             imageFileNames = imageFileNames(imagesUsed);
             disp('Images used:')
             for i=1:numel(imageFileNames)
@@ -167,6 +168,9 @@ if ~isempty(cam_selected_target_images)
 
         gui.put('cameraParams',cameraParams);
         gui.put('cameraStats',stats);
+        gui.put('cam_use_tilted_model', use_tilted_model);
+        gui.put('cam_tilted_D',   stats.D_full);
+        gui.put('cam_K_opencv',   stats.K_opencv);
 
         imshow(imread(imageFileNames{1}),'Parent',gui.retr('pivlab_axis'));
         hold on;

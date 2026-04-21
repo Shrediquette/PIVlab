@@ -129,6 +129,7 @@ calib_markersize=handles.calib_markersize.String;
 calib_dolivedetect=handles.calib_dolivedetect.Value;
 calib_viewtype=handles.calib_viewtype.Value;
 calib_usecalibration=handles.calib_usecalibration.Value;
+calib_use_tilted_model=handles.calib_use_tilted_model.Value;
 calib_userectification=handles.calib_userectification.Value;
 calib_upscale=handles.calib_upscale.Value;
 
@@ -137,7 +138,10 @@ stereomode=gui.retr('stereomode');
 
 
 clear handles
-cameraParams=gui.retr('cameraParams');
+cameraParams         = gui.retr('cameraParams');
+cam_use_tilted_model = gui.retr('cam_use_tilted_model');
+cam_tilted_D         = gui.retr('cam_tilted_D');
+cam_K_opencv         = gui.retr('cam_K_opencv');
 save(fullfile(PathName,FileName), '-append', '-regexp', '^(?!app$).*');
 if ~isempty(cameraParams)
     gui.put('cameraParams', cameraParams); % OMG, Matlab clears this variable randomly when writing a mat file...

@@ -2242,7 +2242,7 @@ handles.multip26 = uipanel(MainWindow, 'Units','characters', 'Position', [0+marg
 parentitem=get(handles.multip26, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4) parentitem(3) 32];
+item=[0 item(2)+item(4) parentitem(3) 34];
 handles.calib_imagedata = uipanel(handles.multip26, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Calibration image data', 'Tag','calib_imagedata','fontweight','bold');
 
 parentitem=get(handles.calib_imagedata, 'Position');
@@ -2253,6 +2253,9 @@ handles.calib_undist_cam_label=uicontrol(handles.calib_imagedata,'Style','text',
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.calib_load_imgs = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Load target images','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_calibration_loadimages_Callback,'Tag','calib_load_imgs','TooltipString','Load images of the calibration target');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
+handles.calib_use_tilted_model = uicontrol(handles.calib_imagedata,'Style','checkbox','String','Scheimpflug adapter (tilted sensor model)','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_use_tilted_model','Callback', @preproc.cam_togglescheimpflug_Callback,'TooltipString','Enable CALIB_TILTED_MODEL for cameras with a Scheimpflug adapter');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.calib_estimateparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Estimate cam parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_estimateparams_Callback,'Tag','calib_estimateparams','TooltipString','Detect charuco markers and estimate camera parameters');
@@ -2450,5 +2453,5 @@ catch
 end
 gui.put('multitiff',0); %default for compatibility: Not a multitiff.
 gui.put('pcopanda_dbl_image',0); %default for compatibility: Not a multitiff.
-
+gui.put('stereomode',0); % default: Not stereo mode
 disp('-> UI generated.')
