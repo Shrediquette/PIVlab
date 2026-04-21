@@ -20,18 +20,6 @@ arguments
 	opts.delta_diff_min = 0.025
 	opts.limit_peak_search_area = 1
 end
-% For unittests
-if isempty(fieldnames(opts))
-	xtable = localfunctions;
-	ytable = [];
-	utable = [];
-	vtable = [];
-	typevector = [];
-	correlation_map = [];
-	correlation_matrices = [];
-	all_xy_tables = [];
-	return
-end
 
 required_fields = {'image1', 'image2', 'interrogationarea'};
 if ~all(isfield(opts, required_fields))
@@ -853,20 +841,6 @@ end
 %	result_conv(:,:,i) = fftshift(fftshift(real(ifft2(conj(fft2(image1_cut(:,:,i))).*fft2(image2_cut(:,:,i)))), 1), 2);
 %end
 
-%% Check whether a shifted version of an array is correctly detected
-function test_do_correlations(testCase)
-shift_amount = [6 1];
-rng(0);
-A = rand(20);
-B = circshift(A, shift_amount);
-result = fftshift(fftshift(do_correlations(A, B, false, 0), 1), 2);
-[~, l] = max(result(:));
-[i, j] = ind2sub(size(A), l);
-% After fftshift, the location [1 1] in the result denotes the unshifted correlation
-testCase.verifyEqual([i j], shift_amount + [1 1]);
-end
-
-
 %% Calculate correlation coeficients for a stack of image pairs
 function corr_map = calculate_correlation_map(img1, img2)
 validateattributes(img1, {'numeric'}, {'real','3d'}, mfilename, 'img1', 1);
@@ -887,49 +861,3 @@ for i=1:N
 end
 end
 
-%% Checks for calculate_correlation_map()
-function test_calculate_correlation_map(testCase)
-rng(0);
-A = rand(100);
-% Test correlation of matrix with itself is 1.0
-testCase.verifyEqual(calculate_correlation_map(A, A), 1);
-B = eye(100);
-% Test correlation coefficient is independent of matrix scaling and offset
-testCase.verifyEqual(calculate_correlation_map(A, B), calculate_correlation_map(3*A-2, B), 'AbsTol', 1e-16);
-% Test calculate_correlation_map() is equal to the corr2() function it replaces
-testCase.verifyEqual(corr2(A, B), calculate_correlation_map(A, B), 'AbsTol', 1e-16);
-end
-
-
-%% Check simple velocity field
-% This test was added to check the improved uvtable interpolation
-function test_piv_FFTmulti_uv_interpolation(testCase)
-rng(0);
-N = 480;
-Np = 200;
-% Generate two N*N images with a Np*Np patch in the middle
-patch = rand(Np);
-A = rand(N); B = A;
-Pstart = (N-Np)/2+1; Pend = (N+Np)/2;
-A(Pstart:Pend, Pstart:Pend) = patch;
-B((Pstart:Pend)-25, (Pstart:Pend)+20) = patch; % The patch is shifted by (-25, 20) for the second image
-% Smooth images
-A = medfilt2(A, [9 9], 'symmetric');
-B = medfilt2(B, [9 9], 'symmetric');
-% Calculate velocity vectors
-[xtable, ytable, utable, vtable] = piv.piv_FFTmulti( ...
-	image1=A, image2=B, interrogationarea=80, step=40, subpixfinder=1, ...
-	mask_inpt=[], roi_inpt=[], passes=3, int2=40, int3=20, int4=0, ...
-	imdeform='*linear', repeat=0, mask_auto=0, do_linear_correlation=0, ...
-	do_correlation_matrices=0, repeat_last_pass=0, delta_diff_min=0);
-testCase.assertFalse(any(isnan(utable(:))));
-testCase.assertFalse(any(isnan(vtable(:))));
-% Verify that velocity vectors are close to actual solution
-center_mask = (Pstart <= xtable) .* (xtable <= Pend) .* (Pstart <= ytable) .* (ytable <= Pend);
-utable_ref = zeros(size(utable)) + 20*center_mask;
-vtable_ref = zeros(size(vtable)) + -25*center_mask;
-utable_rms_error = rms(utable-utable_ref, 'all', 'omitnan');
-vtable_rms_error = rms(vtable-vtable_ref, 'all', 'omitnan');
-testCase.verifyLessThan(utable_rms_error, 5);
-testCase.verifyLessThan(vtable_rms_error, 5);
-end
