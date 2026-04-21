@@ -14,7 +14,10 @@
 //   img_out = opencv_undistort(img_in, K, D)
 //   img_out = opencv_undistort(img_in, K, D, view)
 //
-// img_in : uint8, H x W (grayscale) or H x W x 3 (colour), MATLAB column-major
+// img_in : uint8, uint16, double, or single — HxW (grayscale) or HxWx3 (colour),
+//          MATLAB column-major storage. Output class matches input class exactly,
+//          with no rescaling — a narrow uint16 range such as [65500,65535] is
+//          preserved as-is.
 // K      : 3x3 double, OpenCV-format intrinsic matrix
 //          [fx  0  cx]
 //          [0  fy  cy]
@@ -36,10 +39,16 @@ void mexFunction(int nlhs, mxArray *plhs[],
         mexErrMsgTxt("One output required.");
 
     // ----------------------------
-    // img_in: must be uint8
+    // img_in: uint8, uint16, double, or single
     // ----------------------------
-    if (!mxIsUint8(prhs[0]))
-        mexErrMsgTxt("img_in must be uint8.");
+    mxClassID in_class = mxGetClassID(prhs[0]);
+    int cv_depth;
+    if      (in_class == mxUINT8_CLASS)  cv_depth = CV_8U;
+    else if (in_class == mxUINT16_CLASS) cv_depth = CV_16U;
+    else if (in_class == mxDOUBLE_CLASS) cv_depth = CV_64F;
+    else if (in_class == mxSINGLE_CLASS) cv_depth = CV_32F;
+    else
+        mexErrMsgTxt("img_in must be uint8, uint16, double, or single.");
 
     int ndims_in = (int)mxGetNumberOfDimensions(prhs[0]);
     const mwSize* imgDims = mxGetDimensions(prhs[0]);
@@ -50,28 +59,29 @@ void mexFunction(int nlhs, mxArray *plhs[],
     if (C != 1 && C != 3)
         mexErrMsgTxt("img_in must be grayscale (HxW) or RGB (HxWx3).");
 
-    uint8_t* imgData = (uint8_t*)mxGetData(prhs[0]);
+    // Bytes per scalar element — used for type-agnostic memcpy
+    size_t es = mxGetElementSize(prhs[0]);
+
+    const uint8_t* imgData = (const uint8_t*)mxGetData(prhs[0]);
 
     // Convert MATLAB column-major HxW(xC) to OpenCV row-major HxW(xC)
-    cv::Mat img_cv;
+    int cv_type = CV_MAKETYPE(cv_depth, C);
+    cv::Mat img_cv(H, W, cv_type);
+
     if (C == 1)
     {
-        img_cv.create(H, W, CV_8UC1);
         for (int r = 0; r < H; ++r)
             for (int c = 0; c < W; ++c)
-                img_cv.at<uint8_t>(r, c) = imgData[r + c*H];
+                memcpy(img_cv.ptr(r) + c * es,
+                       imgData + (r + c * H) * es, es);
     }
-    else
+    else  // C == 3: MATLAB planar R,G,B → OpenCV interleaved
     {
-        img_cv.create(H, W, CV_8UC3);
         for (int r = 0; r < H; ++r)
             for (int c = 0; c < W; ++c)
-            {
-                // MATLAB stores planes separately (R plane, G plane, B plane)
-                img_cv.at<cv::Vec3b>(r, c)[0] = imgData[r + c*H + 0*H*W]; // R
-                img_cv.at<cv::Vec3b>(r, c)[1] = imgData[r + c*H + 1*H*W]; // G
-                img_cv.at<cv::Vec3b>(r, c)[2] = imgData[r + c*H + 2*H*W]; // B
-            }
+                for (int ch = 0; ch < 3; ++ch)
+                    memcpy(img_cv.ptr(r) + (c * 3 + ch) * es,
+                           imgData + (r + c * H + ch * H * W) * es, es);
     }
 
     // ----------------------------
@@ -148,23 +158,22 @@ void mexFunction(int nlhs, mxArray *plhs[],
     mwSize outDims[3] = {(mwSize)H, (mwSize)W, (mwSize)Cout};
     int ndims_out = (Cout == 1) ? 2 : 3;
 
-    plhs[0] = mxCreateNumericArray(ndims_out, outDims, mxUINT8_CLASS, mxREAL);
+    plhs[0] = mxCreateNumericArray(ndims_out, outDims, in_class, mxREAL);
     uint8_t* outData = (uint8_t*)mxGetData(plhs[0]);
 
     if (Cout == 1)
     {
         for (int r = 0; r < H; ++r)
             for (int c = 0; c < W; ++c)
-                outData[r + c*H] = img_out.at<uint8_t>(r, c);
+                memcpy(outData + (r + c * H) * es,
+                       img_out.ptr(r) + c * es, es);
     }
     else
     {
         for (int r = 0; r < H; ++r)
             for (int c = 0; c < W; ++c)
-            {
-                outData[r + c*H + 0*H*W] = img_out.at<cv::Vec3b>(r, c)[0]; // R
-                outData[r + c*H + 1*H*W] = img_out.at<cv::Vec3b>(r, c)[1]; // G
-                outData[r + c*H + 2*H*W] = img_out.at<cv::Vec3b>(r, c)[2]; // B
-            }
+                for (int ch = 0; ch < 3; ++ch)
+                    memcpy(outData + (r + c * H + ch * H * W) * es,
+                           img_out.ptr(r) + (c * 3 + ch) * es, es);
     }
 }
