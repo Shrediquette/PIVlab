@@ -13,6 +13,9 @@ tests = functiontests(localfunctions);
 end
 
 function setup(testCase)
+% Ensure the PIVlab root (which contains +opencv/) is on the path
+projectRoot = fileparts(fileparts(mfilename('fullpath')));
+addpath(projectRoot);
 % Synthetic 100x100 camera with mild barrel distortion.
 % K is in OpenCV format: [fx 0 cx; 0 fy cy; 0 0 1]
 testCase.TestData.K = [80  0  50;
