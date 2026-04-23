@@ -115,6 +115,7 @@ end
 try
 	bg_img_A=gui.retr('bg_img_A');
 	bg_img_B=gui.retr('bg_img_B');
+	bg_mode=get(handles.bg_subtract,'Value');
 catch
 	disp('Could not fetch bg imgs')
 end

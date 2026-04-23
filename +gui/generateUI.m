@@ -640,8 +640,9 @@ handles.minintens = uicontrol(handles.multip03,'Style','edit', 'String','0','Uni
 item=[parentitem(3)/2 item(2) parentitem(3)/3*1 1];
 handles.maxintens = uicontrol(handles.multip03,'Style','edit', 'String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','maxintens','Callback',@preproc.minintens_Callback,'TooltipString','Upper bound of the histogram [0...1]');
 
-item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 4];
+item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 7];
 handles.uipanel351 = uipanel(handles.multip03, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Background Subtraction', 'Tag','uipanel351','fontweight','bold');
+
 parentitem=get(handles.uipanel351, 'Position');
 item=[0 0 0 0];
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/3 1.5];
@@ -650,9 +651,15 @@ handles.bg_subtract = uicontrol(handles.uipanel351,'Style','popupmenu', 'String'
 item=[parentitem(3)/3 item(2) parentitem(3)/3*2 1.5];
 handles.bg_view = uicontrol(handles.uipanel351,'Style','pushbutton','String','View background image','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.bg_view_Callback,'Tag','bg_view','TooltipString','Display the generated background image. Click again to toggle between background A and B.');
 
+item=[0 item(2)+item(4)+margin/2 parentitem(3)/2 1.5];
+handles.bg_save = uicontrol(handles.uipanel351,'Style','pushbutton','String','Save','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.bg_save_Callback,'Tag','bg_save','TooltipString','Save the backgound image');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
+handles.bg_load = uicontrol(handles.uipanel351,'Style','pushbutton','String','Load','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.bg_load_Callback,'Tag','bg_load','TooltipString','Load the backgound image');
+
 parentitem=get(handles.multip03, 'Position');
 item=[0 0 0 0];
-item=[0 item(2)+item(4)+28 parentitem(3) 2];
+item=[0 item(2)+item(4)+32 parentitem(3) 2];
 handles.preview_preprocess = uicontrol(handles.multip03,'Style','pushbutton','String','Apply and preview current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.preview_preprocess_Callback,'Tag','preview_preprocess','TooltipString','Preview the effect of image pre-processing');
 
 item=[0+item(3)/2 item(2)+item(4)+margin/4 parentitem(3)/2 1.5];
