@@ -71,7 +71,7 @@ testCase.verifyTrue(any(isfinite(resultslist{4,1}(:))), 'V field contains no fin
 end
 
 function guiFigure = launchPIVlabForTesting()
-PIVlab_GUI();
+PIVlab_GUI(1);
 drawnow;
 gui.put('batchModeActive', 1);
 gui.put('sequencer', 1);
