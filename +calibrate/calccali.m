@@ -3,6 +3,13 @@ gui.put('derived',[]) %calibration makes previously derived params incorrect
 handles=gui.gethand;
 
 pointscali=gui.retr('pointscali');
+if isempty(pointscali)
+	pixeldist_val=str2double(get(handles.pixeldist,'String'));
+	if ~isnan(pixeldist_val) && pixeldist_val > 0
+		calibrate.pixeldist_changed_Callback(handles.pixeldist);
+		pointscali=gui.retr('pointscali');
+	end
+end
 if numel(pointscali)>0
 	xposition=pointscali(:,1);
 	yposition=pointscali(:,2);
