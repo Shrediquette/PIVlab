@@ -63,14 +63,15 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
         gui.put('capturing',0);
 
         if capture_ok==1
-            displaysize_x=floor(get(gca,'XLim'));
-            displaysize_y=floor(get(gca,'YLim'));
+			target_axis=gui.retr('pivlab_axis');
+            displaysize_x=floor(get(target_axis,'XLim'));
+            displaysize_y=floor(get(target_axis,'YLim'));
             ac_ROI_general=[];
             warning off
             load('PIVlab_settings_default.mat','ac_ROI_general');
             warning on
 
-            bla=findobj(gca,'type','image');
+            bla=findobj(target_axis,'type','image');
             current_image_size=size(bla.CData);
 
             if isempty(ac_ROI_general)
@@ -79,7 +80,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             gui.put('doing_roi',1)
             stretched_image=adapthisteq(bla.CData);
             bla.CData=stretched_image;
-            ac_ROI_general_handle = drawrectangle(gca,'Position',ac_ROI_general,'LabelVisible','hover','Deletable',0,'DrawingArea',[1 1 current_image_size(2) current_image_size(1)],'tag','new_ROImethod','StripeColor','y');
+            ac_ROI_general_handle = drawrectangle(target_axis,'Position',ac_ROI_general,'LabelVisible','hover','Deletable',0,'DrawingArea',[1 1 current_image_size(2) current_image_size(1)],'tag','new_ROImethod','StripeColor','y');
             addlistener(ac_ROI_general_handle,'MovingROI',@roi.ROIallevents);
             addlistener(ac_ROI_general_handle,'ROIMoved',@roi.ROIallevents);
             evt.EventName='ROIMoved';

@@ -70,7 +70,7 @@ if capturing==0
             plot.streamlines(target_axis,u, v, typevector, x, y, handles);
 
             if target_axis==gui.retr('pivlab_axis')
-                img_handle=findobj('type','image');
+                img_handle=findobj(target_axis,'type','image');
                 set(img_handle, 'ButtonDownFcn', @gui.veclick, 'PickableParts', 'visible');
                 set(q, 'ButtonDownFcn', @gui.veclick, 'PickableParts', 'visible');
                 set(q2, 'ButtonDownFcn', @gui.veclick, 'PickableParts', 'visible');
@@ -80,18 +80,17 @@ if capturing==0
             end
             if strncmp(get(handles.multip12, 'visible'), 'on',2) || strncmp(get(handles.multip17, 'visible'), 'on',2) %extract poly panel visible
                 %draw extraction polygon when frame was changed.
-                pivlab_axis=gui.retr('pivlab_axis');
-                delete(findobj(pivlab_axis,'tag', 'extractpoint'));
-                delete(findobj(pivlab_axis,'tag', 'extractline'));
-                delete(findobj(pivlab_axis,'tag', 'circstring'));
-                delete(findobj(pivlab_axis,'Tag', 'extract_poly'))
-                delete(findobj(pivlab_axis,'Tag', 'extract_poly_area'))
+                delete(findobj(target_axis,'tag', 'extractpoint'));
+                delete(findobj(target_axis,'tag', 'extractline'));
+                delete(findobj(target_axis,'tag', 'circstring'));
+                delete(findobj(target_axis,'Tag', 'extract_poly'))
+                delete(findobj(target_axis,'Tag', 'extract_poly_area'))
 
                 xposition = gui.retr('xposition');
                 yposition = gui.retr('yposition');
                 extract_type = gui.retr('extract_type');
                 if ~isempty(xposition) && ~isempty(yposition) && ~isempty(extract_type)
-                    extract.update_display(extract_type, xposition, yposition)
+                    extract.update_display(extract_type, xposition, yposition, target_axis)
                 end
             end
             plot.manually_discarded_vectors(target_axis,handles, x, y);
