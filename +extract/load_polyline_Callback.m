@@ -1,8 +1,12 @@
-function load_polyline_Callback (caller,~)
+function load_polyline_Callback (caller,~,coordinateFile)
 filepath=gui.retr('filepath');
-handles=gui.gethand;
 if size(filepath,1) > 1 %did the user load images?
-	[polyfile,polypath] = uigetfile('*.mat','Load coordinate','PIVlab_coordinates.mat');
+	if nargin >= 3 && ~isempty(coordinateFile)
+		[polypath,polyfile,polyext] = fileparts(coordinateFile);
+		polyfile = [polyfile polyext];
+	else
+		[polyfile,polypath] = uigetfile('*.mat','Load coordinate','PIVlab_coordinates.mat');
+	end
 	if isequal(polyfile,0) | isequal(polypath,0)
 		%do nothing
 	else
@@ -35,4 +39,3 @@ if size(filepath,1) > 1 %did the user load images?
 		end
 	end
 end
-

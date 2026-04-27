@@ -1,6 +1,16 @@
 %gui.custom_msgbox('msg',getappdata(0,'hgui'),'Title','Message','modal',{'Btn1','Btn2'},'Btn1');
 %gui.custom_msgbox('error',getappdata(0,'hgui'),'Title','Message','modal');
 function answer=custom_msgbox(type,target,windowtitle,message,modal,options,default)
+if isappdata(0,'PIVlabTestMode') && isequal(getappdata(0,'PIVlabTestMode'),true)
+    if nargin >= 7 && ~isempty(default)
+        answer=default;
+    elseif nargin >= 6 && ~isempty(options)
+        answer=options{1};
+    else
+        answer=[];
+    end
+    return
+end
 debug=0;
 %% Todo: evtl uiwait einbauen wenn modal...?
 if verLessThan('matlab','25') || debug == 1 %Matlab < 2025
