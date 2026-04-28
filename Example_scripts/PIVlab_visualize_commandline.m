@@ -81,11 +81,12 @@ hold off
 title('Mean velocity field')
 
 %% Plot 3: mean velocity magnitude overlaid on the background image
-figure
+f3=figure;
+axh3=axes(f3);
 imshow(background_image_rgb)
 hold on
 contourf(x_plot, y_plot, mean_speed, 64, 'LineColor', 'none');
-set(findobj(gca, 'Type', 'Contour'), 'FaceAlpha', 0.75)
+set(findobj(axh3, 'Type', 'Contour'), 'FaceAlpha', 0.75)
 quiver(x_plot, y_plot, mean_u, mean_v, 'k')
 plot(profile_x, profile_y, 'w-', 'LineWidth', 2)
 hold off
@@ -94,18 +95,20 @@ c.Label.String = ['Mean velocity magnitude in ' velocity_unit_label];
 title('Mean velocity magnitude')
 
 %% Plot 4: temporal standard deviation overlaid on the background image
-figure
+f4=figure;
+axh4=axes(f4);
 imshow(background_image_rgb)
 hold on
 contourf(x_plot, y_plot, std_speed, 64, 'LineColor', 'none');
-set(findobj(gca, 'Type', 'Contour'), 'FaceAlpha', 0.75)
+set(findobj(axh4, 'Type', 'Contour'), 'FaceAlpha', 0.75)
 hold off
 c1 = colorbar;
 c1.Label.String = ['Temporal standard deviation in ' velocity_unit_label];
 title('Temporal standard deviation of velocity magnitude')
 
 %% Plot 5: velocity profile along the selected line
-figure
+f5=figure;
+axh5=axes(f5);
 plot(profile_y, mean_speed_profile, 'b', 'LineWidth', 1.5)
 grid on
 title('Mean velocity magnitude along the selected line')
@@ -115,11 +118,12 @@ ylabel(['Mean velocity magnitude in ' velocity_unit_label])
 %% Plot 6: mean correlation map (higher values indicate better PIV quality)
 mean_corr = mean(correlation_map, 3, 'omitnan');
 
-figure
+f6=figure;
+axh6=axes(f6);
 imshow(background_image_rgb)
 hold on
 contourf(x_plot, y_plot, mean_corr, 64, 'LineColor', 'none');
-set(findobj(gca, 'Type', 'Contour'), 'FaceAlpha', 0.75)
+set(findobj(axh6, 'Type', 'Contour'), 'FaceAlpha', 0.75)
 hold off
 c2 = colorbar;
 c2.Label.String = 'Mean peak correlation [-]';

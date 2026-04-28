@@ -61,16 +61,14 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		[n, xout]=hist(sqrt((u*calu-gui.retr('subtr_u')).^2+(v*calv-gui.retr('subtr_v')).^2),nrofbins);
 		xdescript='velocity magnitude';
 	elseif choice_plot==4 %sub-pixels
-
 		number=[u;v];
 		frac = mod(abs(number),1);
-
 		[n, xout]=hist(frac,nrofbins);
 		xdescript='sub-pixel';
 	end
-
-	h2=bar(xout,n);
-	set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
+	axh=axes(h);
+	h2=bar(axh,xout,n);
+	set (axh, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
 	if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 		xlabel([xdescript ' [px/frame]']);
 	else %calibrated
@@ -83,4 +81,3 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	end
 	ylabel('frequency');
 end
-

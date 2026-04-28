@@ -1,4 +1,5 @@
 function zoom_reset_zoom(~,~)
+current_ax=gui.retr('pivlab_axis');
 handles=gui.gethand;
 setappdata(getappdata(0,'hgui'),'xzoomlimit',[]);
 setappdata(getappdata(0,'hgui'),'yzoomlimit',[]);
@@ -6,8 +7,8 @@ setappdata(getappdata(0,'hgui'),'yzoomlimit',[]);
 zoom out
 set(handles.zoomon,'Value',0);
 set(handles.panon,'Value',0);
-zoom(gca,'off')
-pan(gca,'off')
+zoom(current_ax,'off')
+pan(current_ax,'off')
 expected_image_size=gui.retr('expected_image_size');
 pcopanda_dbl_image=gui.retr('pcopanda_dbl_image');
 if isempty(pcopanda_dbl_image)
@@ -15,7 +16,6 @@ if isempty(pcopanda_dbl_image)
 end
 
 if isempty(expected_image_size) %happens when no images are yet loaded
-    current_ax=gui.retr('pivlab_axis');
     current_img=findall(current_ax,'Type','Image');
     if ~isempty(current_img)
         current_img=current_img(1);

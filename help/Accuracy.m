@@ -197,22 +197,25 @@ v_real_reduced(:,1)=[];v_real_reduced(:,end)=[];v_real_reduced(1,:)=[];v_real_re
 figure;imshow(A,'initialmagnification', 100);title('Artificial PIV image A')
 figure;imshow(B,'initialmagnification', 100);title('Artificial PIV image B')
 
-figure
+f1=figure;
+axh1=axes(f1);
 image((double(image1)+double(image2))/10);colormap('gray');
 hold on
 quiver(x,y,u_real_reduced,v_real_reduced,'g','AutoScaleFactor', 1.5);
 hold off;
 axis image;
-set(gca,'xtick',[],'ytick',[])
+set(axh1,'ytick',[])
+set(axh1,'xtick',[])
 title('Vector map of real velocities')
 
-figure
+f2=figure;
+axh2=axes(f2);
 image((double(image1)+double(image2))/10);colormap('gray');
 hold on
 quiver(x,y,u,v,'g','AutoScaleFactor', 1.5);
 hold off;
 axis image;
-set(gca,'xtick',[],'ytick',[])
+set(axh2,'xtick',[],'ytick',[])
 title('Vector map of PIV analysis')
 
 figure;imagesc(sqrt(u_real_reduced.^2+v_real_reduced.^2));title('Real displacement magnitude');
@@ -229,4 +232,3 @@ disp([ 'Mean (n = ' num2str(numel(x)) ') error u displacement: ' num2str(abs(mea
 disp([ 'Mean (n = ' num2str(numel(x)) ') error v displacement: ' num2str(abs(mean2(v-v_real_reduced))) ' +- ' num2str(std2(v-v_real_reduced)) ' px'])
 disp(['See figures for the detailed results.'])
 clear i j typevector
-

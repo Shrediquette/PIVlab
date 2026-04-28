@@ -42,12 +42,13 @@ else
 		height_reduct=5;y_shift=6;
 	end
 end
+target_axis=gui.retr('pivlab_axis');
 if (panelheighttools+panelheightpanels+margin*0.25+margin*0.25+quickheight*2 ) <= Figure_Size(4)
 	%panels + tools DO fit vertically
 	try
 		set (findobj('-regexp','Tag','multip'), 'position', [0+margin*0.5 Figure_Size(4)-panelheightpanels-margin*0.25 panelwidth panelheightpanels]);
 		set (handles.tools, 'position', [0+margin*0.5 0+margin*0.5 panelwidth panelheighttools]);
-		set (gca, 'position', [x_shift+panelwidth+margin   y_shift+margin  Figure_Size(3)-panelwidth-margin-width_reduct   Figure_Size(4)-quickheight-height_reduct]);
+		set (target_axis, 'position', [x_shift+panelwidth+margin   y_shift+margin  Figure_Size(3)-panelwidth-margin-width_reduct   Figure_Size(4)-quickheight-height_reduct]);
 		set (handles.quick,'Visible','on');
 		set (handles.quick, 'position',[0+margin*0.5 0+margin*0.5+panelheighttools+quickheight quickwidth quickheight])
 		set (handles.toolprogress,'Visible','on');
@@ -69,7 +70,7 @@ else
 			set (handles.tools, 'position', [0+margin*0.5 0+margin*0.5 panelwidth panelheighttools]);
 			set(handles.quick, 'position',[0+margin*0.5  0+margin*0.5+panelheighttools+quickheight quickwidth quickheight])
 			set (handles.toolprogress, 'position',[0+margin*0.5 0+margin*0.5+panelheighttools quickwidth quickheight])
-			set (gca, 'position', [x_shift+panelwidth+margin   y_shift+margin  Figure_Size(3)-panelwidth-margin-width_reduct   Figure_Size(4)-quickheight-height_reduct]);
+			set (target_axis, 'position', [x_shift+panelwidth+margin   y_shift+margin  Figure_Size(3)-panelwidth-margin-width_reduct   Figure_Size(4)-quickheight-height_reduct]);
 		catch ME
 			disp('PIVLAB: Unexpected figure resize behaviour. Please report this issue here:')
 			disp('https://groups.google.com/forum/#!forum/pivlab ')
@@ -81,7 +82,7 @@ else
 			set (handles.tools, 'position', [0+margin*0.5+panelwidth+margin 0+margin*0.5 panelwidth panelheighttools]);
 			set(handles.quick, 'position',[0+margin*0.5+panelwidth+margin  0+margin*0.5+panelheighttools+quickheight quickwidth quickheight])
 			set (handles.toolprogress, 'position',[0+margin*0.5+panelwidth+margin 0+margin*0.5+panelheighttools quickwidth quickheight])
-			set (gca, 'position', [x_shift+margin+panelwidth+margin+panelwidth y_shift+margin Figure_Size(3)-panelwidth-panelwidth-margin-margin-width_reduct Figure_Size(4)-margin-quickheight-height_reduct]);
+			set (target_axis, 'position', [x_shift+margin+panelwidth+margin+panelwidth y_shift+margin Figure_Size(3)-panelwidth-panelwidth-margin-margin-width_reduct Figure_Size(4)-margin-quickheight-height_reduct]);
 		catch ME
 			disp('PIVLAB: Unexpected figure resize behaviour. Please report this issue here:')
 			disp('https://groups.google.com/forum/#!forum/pivlab ')

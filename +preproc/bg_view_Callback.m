@@ -35,8 +35,8 @@ if get(handles.bg_subtract,'Value')>1
 			end
 			colormap('gray');
 			axis image;
-			set(gca,'ytick',[])
-			set(gca,'xtick',[])
+			set(gui.retr('pivlab_axis'),'ytick',[])
+			set(gui.retr('pivlab_axis'),'xtick',[])
 		end
 	end
 

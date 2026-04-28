@@ -21,7 +21,7 @@ if isdeployed
     splash_ax=axes(splashscreen,'units','normalized');
     imshow(imread(fullfile('images','pivlab_standalone_splashscreen_2.jpg')),'Parent',splash_ax,'border','tight');
     set(splash_ax,'Position',[0 0 1 1])
-    set(gca,'DataAspectRatioMode','auto')
+    set(splash_ax,'DataAspectRatioMode','auto')
     movegui(splashscreen,'center');
     set(splashscreen,'visible','on')
     handle_splash_text = text(splash_ax,300,590,'Generating figure window, please wait...','Color','w','VerticalAlignment','bottom','HorizontalAlignment','center','FontName','FixedWidth','Fontweight','bold','FontSize',9,'Interpreter','none');
@@ -184,7 +184,7 @@ if isempty(fh)
     gui.switchui('multip01');
     pivlab_axis=axes('units','characters','parent',MainWindow);
     axis image;
-    set(gca,'ActivePositionProperty','outerposition');%,'Box','off','DataAspectRatioMode','auto','Layer','bottom','Units','normalized');
+    set(pivlab_axis,'ActivePositionProperty','outerposition');%,'Box','off','DataAspectRatioMode','auto','Layer','bottom','Units','normalized');
     set(MainWindow, 'Name',['PIVlab ' gui.retr('PIVver')])% ' by William Thielicke and Eize J. Stamhuis'])
     gui.put('pivlab_axis',pivlab_axis);
     %%

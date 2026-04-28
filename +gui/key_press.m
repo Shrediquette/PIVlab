@@ -32,10 +32,11 @@ if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(even
 		gui.put('ac_lower_clim',0);
 		caxis([0 ac_upper_clim])
 	elseif strcmp(event.Key,'k')
-		if strmatch (get(gca,'ColorScale'),'log') %#ok<*MATCH2>
-			set(gca,'ColorScale','linear')
+		target_axis=gui.retr('pivlab_axis');
+		if strmatch (get(target_axis,'ColorScale'),'log') %#ok<*MATCH2>
+			set(target_axis,'ColorScale','linear')
 		else
-			set(gca,'ColorScale','log')
+			set(target_axis,'ColorScale','log')
 		end
 	elseif strcmp(event.Key,'h') %
 		hist_enabled=gui.retr('hist_enabled');
@@ -45,20 +46,3 @@ if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(even
 		gui.put('hist_enabled',1-hist_enabled);
 	end
 end
-%{
-if strcmp(event.Key,'uparrow') %
-	old_xlims=get(gca,'xlim');
-	centr=get(gcf(),'CurrentPoint');
-	new_xlims=old_xlims*0.9
-	set(gca,'xlim',new_xlims)
-
-	%zoom(1.1)
-	%get mousepointerpos, pan there....
-
-	get(gca,'xlim')
-end
-if strcmp(event.Key,'downarrow') %
-	disp('downdowndown')
-	zoom(0.9)
-end
-%}

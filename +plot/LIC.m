@@ -10,7 +10,7 @@ iterations=2;
 pivlab_axis=gui.retr('pivlab_axis');
 old_units=get(pivlab_axis,'Units');
 set(pivlab_axis,'Units','Pixels');
-axessize=get(gca,'position');
+axessize=get(pivlab_axis,'position');
 set(pivlab_axis,'Units',old_units);
 axessize=axessize(3:4);
 %was ist grÃ¶ÃŸer, x oder y. dann entsprechend die x oder y grÃ¶ÃŸe der axes nehemn
@@ -26,7 +26,6 @@ vx=misc.inpaint_nans(vx); %otherwise LIC will make Matlab crash
 vy=misc.inpaint_nans(vy);
 vx=imresize(vx,scalefactor*LICreso,'bicubic');
 vy=imresize(vy,scalefactor*LICreso,'bicubic');
-
 
 %{
 this function is from:
@@ -60,4 +59,3 @@ catch
 gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',['Could not run the LIC tool.' sprintf('\n') 'Probably the tool is not compiled correctly.' sprintf('\n')  'Please execute the following command in Matlab:' sprintf('\n') sprintf('\n') '     mex +plot\fastLICFunction.c     ' sprintf('\n') sprintf('\n') 'Then try again.'],'modal');
 	out=zeros(size(vx));
 end
-

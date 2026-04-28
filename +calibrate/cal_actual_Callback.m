@@ -9,8 +9,8 @@ if numel(pointscali)>0
 		image(caliimg, 'parent',pivlab_axis, 'cdatamapping', 'scaled');
 		colormap('gray');
 		axis image;
-		set(gca,'ytick',[])
-		set(gca,'xtick',[])
+		set(gui.retr('pivlab_axis'),'ytick',[])
+		set(gui.retr('pivlab_axis'),'xtick',[])
 	else
 		gui.sliderdisp(gui.retr('pivlab_axis'))
 	end

@@ -7,7 +7,8 @@ if size(filepath,1) > 1 %did the user load images?
 	end
 
 	preproc.preview_preprocess_Callback
-	preprocessed_img=findobj(gca,'type','image');
+	target_axis=gui.retr('pivlab_axis');
+	preprocessed_img=findobj(target_axis,'type','image');
 	preprocessed_img=(preprocessed_img.CData);
 	toggler=gui.retr('toggler');
 	if toggler==0

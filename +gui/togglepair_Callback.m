@@ -22,8 +22,9 @@ if capturing==0
 			yzoomlimit=gui.retr('yzoomlimit');
 			preproc.preview_preprocess_Callback
 			if isempty(xzoomlimit)==0
-				set(gca,'xlim',xzoomlimit)
-				set(gca,'ylim',yzoomlimit)
+				target_axis=gui.retr('pivlab_axis');
+				set(target_axis,'xlim',xzoomlimit)
+				set(target_axis,'ylim',yzoomlimit)
 			end
 		else
 			gui.sliderdisp(gui.retr('pivlab_axis'))

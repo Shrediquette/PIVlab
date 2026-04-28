@@ -25,8 +25,8 @@ if ~isempty(bg_img_A)
 	image(bg_img_AB, 'parent',pivlab_axis, 'cdatamapping', 'scaled');
 	colormap('gray');
 	axis image;
-	set(gca,'ytick',[])
-	set(gca,'xtick',[])
+	set(gui.retr('pivlab_axis'),'ytick',[])
+	set(gui.retr('pivlab_axis'),'xtick',[])
 end
 if bg_was_on==0
 	set(handles.bg_subtract,'Value',1)

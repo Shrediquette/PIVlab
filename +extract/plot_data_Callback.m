@@ -267,8 +267,9 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 				rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
 				set(h,'position', rect);
 				set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
+				axh=axes(h);
 				h2=plot(distance*calxy,c);
-				set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
+				set (axh, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
 				h_extractionplot=gui.retr('h_extractionplot');
 				h_extractionplot(size(h_extractionplot,1)+1,1)=h;
 				gui.put ('h_extractionplot', h_extractionplot);
@@ -311,11 +312,12 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 					rect = [screensize(3)/4-300, screensize(4)/2-250, 600, 500];
 					set(h,'position', rect);
 					set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',[current ', frame ' num2str(currentframe)],'tag', 'derivplotwindow');
+					axh=axes(h);
 					plot (1:numel(length), integral);
 					hold on;
 					scattergroup1=scatter(1:numel(length), integral, 80, 'ko');
 					hold off;
-					set (gca, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
+					set (axh, 'xgrid', 'on', 'ygrid', 'on', 'TickDir', 'in')
 					xlabel('circle series nr. (circle with max. circulation highlighted)');
 					if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 						ylabel('tangent velocity loop integral (circulation) [px^2/frame]');

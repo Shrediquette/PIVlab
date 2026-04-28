@@ -228,7 +228,8 @@ end
 
 hold off;
 legend({'Camera Exposure', 'Laser Active'},'Location','southeast')
-set(gca,'InnerPosition',[0.01 0.1 0.98 0.9])
+
+set(axh,'InnerPosition',[0.01 0.1 0.98 0.9])
 end
 
 function straddling_figure_CloseRequestFcn(hObject, ~, ~)

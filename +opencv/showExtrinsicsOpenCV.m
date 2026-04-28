@@ -1,4 +1,4 @@
-function showExtrinsicsOpenCV(cameraParams)
+function showExtrinsicsOpenCV(cameraParams,fig)
 
 R = cameraParams.RotationMatrices;
 t = cameraParams.TranslationVectors;
@@ -18,7 +18,7 @@ board = [xmin ymin 0;
 
 camSize = max(xmax-xmin,ymax-ymin)/15;
 
-
+axh=axes(fig);
 hold on
 axis equal
 grid on
@@ -69,6 +69,6 @@ for i = 1:numImages
         AxesVisible=true)
 
 end
-set(gca,CameraUpVector=[0 -1 0])
+set(axh,CameraUpVector=[0 -1 0])
 %cameratoolbar("SetCoordSys","y")
 camproj("perspective")

@@ -10,8 +10,8 @@ if src.Button == 1
 	y=resultslist{2,(currentframe+1)/2};
 
 	[x_cal,y_cal]=calibrate.xy (x,y);
-
-	pos=get(gca,'CurrentPoint');
+	target_axis=gui.retr('pivlab_axis');
+	pos=get(target_axis,'CurrentPoint');
 
 	xposition=round(pos(1,1));
 	yposition=round(pos(1,2));
@@ -171,7 +171,7 @@ if src.Button == 1
 				% find the corresponding correlation amtrices of the first passes
 				%info(1,2) %x koordinate
 				for pass = 1 : correlation_matrices_data.passes
-					nexttile
+					axh=nexttile;
 					x_pass=correlation_matrices_data.all_xy_tables{pass,1};
 					y_pass=correlation_matrices_data.all_xy_tables{pass,2};
 					findx=abs(x_pass/x(info(1,1),info(1,2))-1);
@@ -181,15 +181,15 @@ if src.Button == 1
 					pass_info(1,1)=imagey(1,1);
 					pass_info(1,2)=imagex(1,1);
 					idx_to_plot = sub2ind(size(correlation_matrices_data.all_xy_tables{pass,1}),pass_info(1),pass_info(2));
-					surf(correlation_matrices_data.correlation_matrices{pass}(:,:,idx_to_plot));
-					shading flat;
-					view(0, 90);
+					imagesc(correlation_matrices_data.correlation_matrices{pass}(:,:,idx_to_plot));
+					%shading flat;
+					%view(0, 90);
 					axis tight;
-					set(gca, 'DataAspectRatio', [1 1 diff(zlim)/min(diff(xlim),diff(ylim))]);
-					set(gca, 'YDir', 'reverse');
+					set(axh, 'DataAspectRatio', [1 1 1]);
+					set(axh, 'YDir', 'reverse');
 					title(['Pass nr. ' num2str(pass) ' (' num2str(size(correlation_matrices_data.correlation_matrices{pass},2)) 'x' num2str(size(correlation_matrices_data.correlation_matrices{pass},1)) ')'])
 				end
-				rotate3d(fig,'on');
+				%rotate3d(fig,'on');
 			else
 				gui.custom_msgbox('error',getappdata(0,'hgui'),'Outdated','Correlation matrices need to be retrieved first.','modal');
 			end

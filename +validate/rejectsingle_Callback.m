@@ -20,7 +20,8 @@ if size(resultslist,2)>=frame %2nd dimesnion = frame
 	end
 
 	if numel(u)>0
-		delete(findobj(gca,'tag','manualdot'));
+		target_axis=gui.retr('pivlab_axis');
+		delete(findobj(target_axis,'tag','manualdot'));
 		text(50,10,'Right mouse button exits manual validation mode.','color','g','fontsize',8, 'BackgroundColor', 'k', 'tag', 'hint')
 		gui.toolsavailable(0);
 		button = 1;
@@ -52,8 +53,8 @@ if size(resultslist,2)>=frame %2nd dimesnion = frame
 		manualdeletion{frame}=framemanualdeletion;
 		gui.put('manualdeletion',manualdeletion);
 
-		delete(findobj(gca,'Type','text','color','r'));
-		delete(findobj(gca,'tag','hint'));
+		delete(findobj(target_axis,'Type','text','color','r'));
+		delete(findobj(target_axis,'tag','hint'));
 		text(50,50,'Result will be shown after applying vector validation','color','r','fontsize',10, 'fontweight','bold', 'BackgroundColor', 'k')
 	end
 end

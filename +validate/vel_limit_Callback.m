@@ -7,7 +7,6 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 	gui.toolsavailable(0)
 	x=resultslist{1,(currentframe+1)/2};
 	if size(x,1)>1
-		%oldsize=get(gca,'outerposition');
 		if get(handles.meanofall,'value')==1 %calculating mean doesn't mae sense...
 			index=1;
 			foundfirst=0;

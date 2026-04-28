@@ -58,7 +58,8 @@ else
     camera_sub_type='unknown';
 end
 disp(['Found camera: ' camera_sub_type])
-Kinder=get(gca,'Children');
+target_axis=gui.retr('pivlab_axis');
+Kinder=get(target_axis,'Children');
 for k=1:size(Kinder,1)
     if isprop(Kinder(k),'CData')
         img_size1=size(Kinder(k).CData,1);

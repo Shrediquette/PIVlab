@@ -55,6 +55,7 @@ else
 	hf = figure(straddling_figure);
 	clf(hf)
 end
+axh=axes(hf);
 drawnow %anootation taking ages, therefore showing something here already.
 
 plot(exposure_active_x,exposure_active_y,'linewidth',2)
@@ -147,10 +148,7 @@ for i=0:2:num_exposures_to_show-1
 end
 
 legend({'Camera Exposure', 'Laser Active'},'Location','southeast')
-set(gca,'InnerPosition',[0.01 0.1 0.98 0.9])
-%grid on
-%set(gca,'YGrid','off')
-%set(gcf,'handlevisibility','callback')
+set(axh,'InnerPosition',[0.01 0.1 0.98 0.9])
 end
 
 function straddling_figure_CloseRequestFcn(hObject, ~, ~)

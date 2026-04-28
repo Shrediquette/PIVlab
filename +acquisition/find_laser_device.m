@@ -73,7 +73,8 @@ if alreadyconnected
 
         delete(findobj('tag','laser_info_box'));
         try
-            Kinder=get(gca,'Children');
+			target_axis=gui.retr('pivlab_axis');
+            Kinder=get(target_axis,'Children');
             for k=1:size(Kinder,1)
                 if isprop(Kinder(k),'CData')
                     img_size=size(Kinder(k).CData,1);

@@ -98,9 +98,13 @@ image2 = preproc.PIVlab_preproc( ...
         catch
             cancel = 1;
             hgui=getappdata(0,'hgui');
-            setappdata(hgui, 'cancel', cancel);
-            text(gca(getappdata(0,'hgui')),10,10,'Error: Image dimensions inconsistent!','color',[1 0 0],'fontsize',20)
-            drawnow;
+			setappdata(hgui, 'cancel', cancel);
+			disp('')
+			disp('Error: Image dimensions inconsistent!')
+			if ~isdeployed
+				commandwindow
+			end
+			drawnow;
             break
         end
     end

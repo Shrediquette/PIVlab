@@ -135,7 +135,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
                 target_size = export_axis.Position(1); %get the target size
             end
             retries=0;
-            while gca().Position(1) ~= target_size %new Matlabs have issues rendering correctly when focus is stolen from window.
+            while gca().Position(1) ~= target_size %new Matlabs have issues rendering correctly when focus is stolen from window. gca gets the axis currently in focus and compares its size to the size of the desired export axis. If the focus was lost, then these will differ.
                 pause(0.01)
                 disp ('Getting focus back')
                 figure(export_figure); %get back the focus

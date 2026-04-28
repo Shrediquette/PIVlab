@@ -49,6 +49,6 @@ pivlab_axis=gui.retr('pivlab_axis');
 image(caliimg, 'parent',pivlab_axis, 'cdatamapping', 'scaled');
 colormap('gray');
 axis image;
-set(gca,'ytick',[])
-set(gca,'xtick',[])
+set(gui.retr('pivlab_axis'),'ytick',[])
+set(gui.retr('pivlab_axis'),'xtick',[])
 

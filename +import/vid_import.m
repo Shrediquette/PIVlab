@@ -53,7 +53,7 @@ handles.importvideo = uicontrol(fig_handle,'Style','pushbutton','String','Import
 item=[0 item(2)+item(4)+margin parentitem(3) 13];
 axes_handle=axes('Parent',fig_handle,'units','characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 axis image;
-set(gca,'ActivePositionProperty','outerposition');%,'Box','off','DataAspectRatioMode','auto','Layer','bottom','Units','normalized');
+set(axes_handle,'ActivePositionProperty','outerposition');%,'Box','off','DataAspectRatioMode','auto','Layer','bottom','Units','normalized');
 
 %axes for scroll bar
 fig_size = get(fig_handle, 'Position');
