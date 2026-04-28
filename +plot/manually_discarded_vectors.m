@@ -11,13 +11,13 @@ if strncmp(get(handles.multip06, 'visible'), 'on',2) %validation panel visible
 		end
 	end
 	if isempty(framemanualdeletion)==0
-		hold on;
+		hold(target_axis,'on');
 		if str2num(get(handles.masktransp,'String')) < 100
 			for i=1:size(framemanualdeletion,1)
 				scatter (x(framemanualdeletion(i,1),framemanualdeletion(i,2)),y(framemanualdeletion(i,1),framemanualdeletion(i,2)), 'rx', 'tag','manualdot','parent',target_axis)
 			end
 		end
-		hold off;
+		hold(target_axis,'off');
 	end
 end
 

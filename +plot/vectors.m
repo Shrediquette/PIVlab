@@ -1,6 +1,6 @@
 function [q, q2] = vectors(target_axis,handles, vecskip, x, typevector, y, u, vecscale, v, vectorcolor)
 
-hold on;
+hold(target_axis,'on');
 vectorcolorintp=[str2double(get(handles.interpr,'string')) str2double(get(handles.interpg,'string')) str2double(get(handles.interpb,'string'))];
 
 %normalize vector lengths so we can better see flow directions of small velocities:
@@ -58,5 +58,5 @@ if ref_choice ~=1
     ref_position = ref_choices(ref_choice);
     plot.reference_vector(x,y,vecscale,target_axis,ref_position);
 end
-hold off;
+hold(target_axis,'off');
 target_axis.Clipping = "on";

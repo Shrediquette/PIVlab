@@ -5,10 +5,10 @@ if get(handles.displmarker,'value')==1
 	manmarkersY=gui.retr('manmarkersY');
 	delete(findobj('tag','manualmarker'));
 	if numel(manmarkersX)>0
-		hold on
+		hold(target_axis,'on');
 		plot(manmarkersX,manmarkersY, 'o','MarkerEdgeColor','k','MarkerFaceColor',[.2 .2 1], 'MarkerSize',9, 'tag', 'manualmarker','parent',target_axis);
 		plot(manmarkersX,manmarkersY, '*','MarkerEdgeColor','w', 'tag', 'manualmarker','parent',target_axis);
-		hold off
+		hold(target_axis,'off');
 	end
 end
 

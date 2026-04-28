@@ -28,8 +28,8 @@ elseif image_display_type==3 %white
 end
 %disp(['Size of the image currently being display via sliderdisp: ' num2str(size(currentimage))])
 
-colormap('gray');
-axis image
+colormap(target_axis,'gray');
+axis(target_axis,'image');
 
 derived=gui.retr('derived');
 
@@ -169,7 +169,7 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 	else
 		alpha_ROI_map(:)=1;
 	end
-	hold on;
+	hold(target_axis,'on');
 	alphamap=derivative_alpha.*alpha_pixel_map.*alpha_ROI_map;
 	alphamap(alphamap>1)=1;
 	alphamap(alphamap<0)=0;
@@ -177,7 +177,7 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 	alphamap(1,1)=0;
 	alphamap(end,end)=1;
 	image(currentimage, 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',alphamap,'AlphaDataMapping','scaled');
-	hold off;
+	hold(target_axis,'off');
 
 	%% colorbar
 	if get(handles.colorbarpos,'value')~=1
@@ -254,7 +254,7 @@ if 	render_mask==1 && get(handles.mask_edit_mode,'Value')==2 %mask preview mode
 	if skip_mask_pixels<1
 		skip_mask_pixels=1;
 	end
-	hold on;
+	hold(target_axis,'on');
 	alphamapmask=converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*(1-(str2double(get(handles.masktransp,'String'))/100));
 	alphamapmask(alphamapmask>1)=1;
 	alphamapmask(alphamapmask<0)=0;
@@ -262,6 +262,6 @@ if 	render_mask==1 && get(handles.mask_edit_mode,'Value')==2 %mask preview mode
 	alphamapmask(1,1)=0;
 	alphamapmask(end,end)=1;
 	image(x,y,cat(3, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.7, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1), 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',alphamapmask,'AlphaDataMapping','scaled');
-	hold off
+	hold(target_axis,'off');
 end
 
