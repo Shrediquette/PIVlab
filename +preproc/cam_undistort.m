@@ -6,7 +6,9 @@ function img_out = cam_undistort(img_in,method,view,cam_use_calibration,cam_use_
 if nargin < 8;  cam_use_tilted_model = false; end
 if nargin < 9;  cam_tilted_D = [];            end
 if nargin < 10; cam_K_opencv = [];            end
-
+if size(img_in,3) > 1
+    img_in = rgb2gray(img_in);
+end
 if cam_use_calibration
     if cam_use_tilted_model && ~isempty(cam_tilted_D) && ~isempty(cam_K_opencv)
         img_out = opencv.opencv_undistort(img_in, cam_K_opencv, cam_tilted_D, view);

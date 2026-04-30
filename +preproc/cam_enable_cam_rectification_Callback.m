@@ -99,7 +99,10 @@ if ~isempty(cam_selected_rectification_image)
 	%% Slower but more robust due to image preprocessing:
 	%%{
 	tmp_img=imread(cam_selected_rectification_image);
-	tmp_img=imadjust(tmp_img);
+    if size(tmp_img,3) > 1
+        tmp_img = rgb2gray(tmp_img);
+    end
+    tmp_img=imadjust(tmp_img);
 	tmp_img=imsharpen(tmp_img);
 	imagePoints1 = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'RefineCorners',true,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
 	%%}
