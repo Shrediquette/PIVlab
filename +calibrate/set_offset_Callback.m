@@ -7,7 +7,7 @@ if numel(caliimg)==0 && size(filepath,1) >1
 end
 if size(filepath,1) >1 || numel(caliimg)>0 || gui.retr('video_selection_done') == 1
 	handles=gui.gethand;
-	delete(findobj('tag', 'offsetroi'))
+	delete(findall(gui.retr('pivlab_axis'),'tag', 'offsetroi'))
 	gui.toolsavailable(0)
 
 	points_offsetx = gui.retr('points_offsetx');

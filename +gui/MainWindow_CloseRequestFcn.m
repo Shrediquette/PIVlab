@@ -81,6 +81,13 @@ if strcmp(button,yes)==1
     catch
     end
     try
+        second_monitor_fig = gui.retr('second_monitor_fig');
+        if ~isempty(second_monitor_fig) && isvalid(second_monitor_fig)
+            delete(second_monitor_fig);
+        end
+    catch
+    end
+    try
         delete(hObject);
     catch
         close(gcf,'force');

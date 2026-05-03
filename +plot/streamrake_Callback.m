@@ -1,5 +1,6 @@
 function streamrake_Callback(~, ~, ~)
 handles=gui.gethand;
+target_axis = gui.retr('pivlab_axis');
 toggler=gui.retr('toggler');
 selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
 resultslist=gui.retr('resultslist');
@@ -58,24 +59,25 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		gui.put('streamlinesY',[]);
 		xposition=[];
 		yposition=[];
-		delete(findobj('tag','streamline'));
+		delete(findobj(target_axis,'tag','streamline'));
 	end
+	figure(ancestor(target_axis,'figure')); % ensure ginput captures from the correct window
 	[rawx,rawy,~] = ginput(1);
-	hold on; scatter(rawx,rawy,'y*','tag','streammarker');hold off;
+	hold(target_axis,'on'); scatter(target_axis,rawx,rawy,'y*','tag','streammarker'); hold(target_axis,'off');
 	[rawx(2),rawy(2),~] = ginput(1);
-	delete(findobj('tag','streammarker'))
+	delete(findobj(target_axis,'tag','streammarker'))
 	rawx=linspace(rawx(1),rawx(2),str2num(get(handles.streamlamount,'string')));
 	rawy=linspace(rawy(1),rawy(2),str2num(get(handles.streamlamount,'string')));
 
 	xposition(i:i+str2num(get(handles.streamlamount,'string'))-1)=rawx;
 	yposition(i:i+str2num(get(handles.streamlamount,'string'))-1)=rawy;
-	h=streamline(plot.mmstream2(x,y,ustream,vstream,xposition(i),yposition(i),'on'));
+	h=streamline(target_axis,plot.mmstream2(x,y,ustream,vstream,xposition(i),yposition(i),'on'));
 	set (h,'tag','streamline');
 	i=i+1;
 end
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-	delete(findobj('tag','streamline'));
-	h=streamline(plot.mmstream2(x,y,ustream,vstream,xposition,yposition,'on'));
+	delete(findobj(target_axis,'tag','streamline'));
+	h=streamline(target_axis,plot.mmstream2(x,y,ustream,vstream,xposition,yposition,'on'));
 	contents = get(handles.streamlcolor,'String');
 	set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')});
 	set (h,'tag','streamline');

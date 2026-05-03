@@ -2,13 +2,13 @@ function dispinterrog
 handles=gui.gethand;
 selected=2*floor(get(handles.fileselector, 'value'))-1;
 filepath=gui.retr('filepath');
+target_axis=gui.retr('pivlab_axis');
 if numel(filepath)>1 && get(handles.algorithm_selection,'Value') ~= 4 %display only when files are loaded and not using wOFV
 	[image_dummy,~]=import.get_img(selected);
 	size_img(1)=size(image_dummy,2)/2;
 	size_img(2)=size(image_dummy,1)/2;
 	step=str2double(get(handles.step,'string'));
-	
-	target_axis=gui.retr('pivlab_axis');
+
 	delete(findobj(target_axis,'Type','hggroup')); %=vectors and scatter markers
 	delete(findobj(target_axis,'tag','intareadispl'));
 	centre(1)= size_img(2); %y
@@ -20,7 +20,7 @@ if numel(filepath)>1 && get(handles.algorithm_selection,'Value') ~= 4 %display o
 	hold(target_axis,'on')
 	plot(target_axis,x1,y1,'c-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
 	if get(handles.algorithm_selection ,'value')==1 || get(handles.algorithm_selection ,'value')==2
-		text(x1(1),y1(1), ['pass 1'],'color','c','fontsize',8,'tag','intareadispl','HorizontalAlignment','right','verticalalignment','bottom')
+		text(target_axis,x1(1),y1(1), ['pass 1'],'color','c','fontsize',8,'tag','intareadispl','HorizontalAlignment','right','verticalalignment','bottom')
 		if get(handles.checkbox26,'value')==1
 			intarea2=str2double(get(handles.edit50,'string'))/2;
 			x2=[centre(2)-intarea2 centre(2)+intarea2 centre(2)+intarea2 centre(2)-intarea2 centre(2)-intarea2];
@@ -86,5 +86,5 @@ if numel(filepath)>1 && get(handles.algorithm_selection,'Value') ~= 4 %display o
 		text (target_axis,centre(2),centre(1)*5/3,['Warning: Interrogation area of pass 1 is most likely too big.'],'color','r','tag','intareadispl','HorizontalAlignment','center','verticalalignment','top','Fontsize',10,'Backgroundcolor','k')
 	end
 else
-	delete (findobj('tag','intareadispl'))
+	delete(findobj(target_axis,'tag','intareadispl'))
 end

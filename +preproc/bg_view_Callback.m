@@ -33,8 +33,8 @@ if get(handles.bg_subtract,'Value')>1
 			elseif bg_toggle==1
 				image((bg_img_B), 'parent',pivlab_axis, 'cdatamapping', 'scaled');
 			end
-			colormap('gray');
-			axis image;
+			colormap(ancestor(pivlab_axis,'figure'),'gray');
+			axis(pivlab_axis,'image');
 			set(gui.retr('pivlab_axis'),'ytick',[])
 			set(gui.retr('pivlab_axis'),'xtick',[])
 		end

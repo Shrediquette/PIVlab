@@ -1,4 +1,5 @@
 function veclick(~,src)
+target_axis=gui.retr('pivlab_axis');
 if src.Button == 1
 	%only active if vectors are displayed.
 	handles=gui.gethand;
@@ -10,7 +11,6 @@ if src.Button == 1
 	y=resultslist{2,(currentframe+1)/2};
 
 	[x_cal,y_cal]=calibrate.xy (x,y);
-	target_axis=gui.retr('pivlab_axis');
 	pos=get(target_axis,'CurrentPoint');
 
 	xposition=round(pos(1,1));
@@ -48,7 +48,7 @@ if src.Button == 1
 	end
 
 	if typevector(info(1,1),info(1,2)) ~=0
-		delete(findobj('tag', 'infopoint'));
+		delete(findobj(target_axis,'tag', 'infopoint'));
 		%here, the calibration matters...
 		if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1%not calibrated
 			set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*gui.retr('calu')-gui.retr('subtr_u'))*100000)/100000) ' px/fr']);
@@ -121,7 +121,7 @@ if src.Button == 1
 			set(handles.scalar_cp, 'String','N/A');
 		end
 
-		hold on;
+		hold(target_axis,'on');
 
 		try
 			magnitude_px=((u(info(1,1),info(1,2))).^2+(v(info(1,1),info(1,2))).^2).^0.5;
@@ -130,17 +130,17 @@ if src.Button == 1
 			magnitude_m = sprintf('%0.2g',magnitude_m);
 			if ~handles.multip29.Visible
 				if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1%not calibrated
-					text(x(info(1,1),info(1,2)),y(info(1,1),info(1,2)),[' ' magnitude_px ' px/fr'], 'tag', 'infopoint','Color','w','HorizontalAlignment','left','VerticalAlignment','middle','Margin',0.01,'BackgroundColor','k','FontSize',10)
+					text(target_axis,x(info(1,1),info(1,2)),y(info(1,1),info(1,2)),[' ' magnitude_px ' px/fr'], 'tag', 'infopoint','Color','w','HorizontalAlignment','left','VerticalAlignment','middle','Margin',0.01,'BackgroundColor','k','FontSize',10)
 				else
-					text(x(info(1,1),info(1,2)),y(info(1,1),info(1,2)),[' ' magnitude_px ' px/fr\newline ' magnitude_m ' m/' time_unit], 'tag', 'infopoint','Color','w','HorizontalAlignment','left','VerticalAlignment','middle','Margin',0.01,'BackgroundColor','k')
+					text(target_axis,x(info(1,1),info(1,2)),y(info(1,1),info(1,2)),[' ' magnitude_px ' px/fr\newline ' magnitude_m ' m/' time_unit], 'tag', 'infopoint','Color','w','HorizontalAlignment','left','VerticalAlignment','middle','Margin',0.01,'BackgroundColor','k')
 				end
 			end
 		catch ME
 			disp('could not plot point info')
 			disp (ME.message)
 		end
-		plot(x(info(1,1),info(1,2)),y(info(1,1),info(1,2)), 'y.', 'tag', 'infopoint','linewidth', 1.5, 'markersize', 20);
-		hold off;
+		plot(target_axis,x(info(1,1),info(1,2)),y(info(1,1),info(1,2)), 'y.', 'tag', 'infopoint','linewidth', 1.5, 'markersize', 20);
+		hold(target_axis,'off');
 		%% plot correlation matrices if the corresponding panel is visible
 		if handles.multip29.Visible
 			correlation_matrices_data = gui.retr('correlation_matrices_data');
@@ -196,5 +196,5 @@ if src.Button == 1
 		end
 	end
 else %right or middle button
-	delete(findobj('tag', 'infopoint'));
+	delete(findobj(target_axis,'tag', 'infopoint'));
 end

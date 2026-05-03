@@ -19,7 +19,7 @@ if capturing==0
     else
         vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
     end
-    delete(findobj('tag', 'derivhint'));
+    delete(findobj(target_axis,'tag', 'derivhint'));
     if size(filepath,1)>0
         if get(handles.zoomon,'Value')==1
             set(handles.zoomon,'Value',0);

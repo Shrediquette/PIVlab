@@ -2,7 +2,7 @@ function streamlines(target_axis,u, v, typevector, x, y, handles)
 %streamlines:
 streamlinesX=gui.retr('streamlinesX');
 streamlinesY=gui.retr('streamlinesY');
-delete(findobj('tag','streamline'));
+delete(findobj(target_axis,'tag','streamline'));
 if numel(streamlinesX)>0
 	ustream=u-(gui.retr('subtr_u')/gui.retr('calu'));
 	vstream=v-(gui.retr('subtr_v')/gui.retr('calv'));

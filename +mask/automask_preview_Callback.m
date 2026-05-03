@@ -1,6 +1,7 @@
 function automask_preview_Callback(~,~,~)
 filepath=gui.retr('filepath');
 handles=gui.gethand;
+ax = gui.retr('pivlab_axis');
 if size(filepath,1) > 1 %did the user load images?
 	handles=gui.gethand;
 	selected=2*floor(get(handles.fileselector, 'value'))-1;
@@ -21,12 +22,12 @@ if size(filepath,1) > 1 %did the user load images?
 	if get(handles.enhance_images, 'Value')
 		piv_image=imadjust(piv_image);
 	end
-	image(cat(3, piv_image, piv_image, piv_image), 'parent',gui.retr('pivlab_axis'), 'cdatamapping', 'scaled');
-	hold on;
-	colormap('gray');
-	axis image
-	set(gui.retr('pivlab_axis'),'ytick',[])
-	set(gui.retr('pivlab_axis'),'xtick',[])
+	image(cat(3, piv_image, piv_image, piv_image), 'parent',ax, 'cdatamapping', 'scaled');
+	hold(ax,'on');
+	colormap(ancestor(ax,'figure'),'gray');
+	axis(ax,'image');
+	set(ax,'ytick',[])
+	set(ax,'xtick',[])
 
 	alphamap=pixel_mask*0.9;
 	alphamap(alphamap>1)=1;
@@ -34,7 +35,7 @@ if size(filepath,1) > 1 %did the user load images?
 	%temporary workaround for bug in R2025 causing slow performance when not using alphadatamapping=scaled
 	alphamap(1,1)=0;
 	alphamap(end,end)=1;
-	image(cat(3, pixel_mask*0.7, pixel_mask*0.1, pixel_mask*0.1), 'parent',gui.retr('pivlab_axis'), 'cdatamapping', 'direct','AlphaData',alphamap,'AlphaDataMapping','scaled');
-	hold off
+	image(cat(3, pixel_mask*0.7, pixel_mask*0.1, pixel_mask*0.1), 'parent',ax, 'cdatamapping', 'direct','AlphaData',alphamap,'AlphaDataMapping','scaled');
+	hold(ax,'off');
 end
 

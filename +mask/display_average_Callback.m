@@ -23,8 +23,8 @@ if ~isempty(bg_img_A)
 	bg_img_AB=bg_img_AB/max(bg_img_AB(:));
 	bg_img_AB = repmat(bg_img_AB,1,1,3);
 	image(bg_img_AB, 'parent',pivlab_axis, 'cdatamapping', 'scaled');
-	colormap('gray');
-	axis image;
+	colormap(ancestor(pivlab_axis,'figure'),'gray');
+	axis(pivlab_axis,'image');
 	set(gui.retr('pivlab_axis'),'ytick',[])
 	set(gui.retr('pivlab_axis'),'xtick',[])
 end

@@ -7,8 +7,8 @@ if numel(pointscali)>0
 	if numel(caliimg)>0
 		pivlab_axis=gui.retr('pivlab_axis');
 		image(caliimg, 'parent',pivlab_axis, 'cdatamapping', 'scaled');
-		colormap('gray');
-		axis image;
+		colormap(ancestor(pivlab_axis,'figure'),'gray');
+		axis(pivlab_axis,'image');
 		set(gui.retr('pivlab_axis'),'ytick',[])
 		set(gui.retr('pivlab_axis'),'xtick',[])
 	else

@@ -19,6 +19,12 @@ try
 catch
 	colorbarpos=1;
 end
+% When the second monitor is active the colorbar lives there, not on the
+% main window. Force no-colorbar margins so the main-window axis (which
+% just shows the logo) is never unnecessarily shrunk.
+if ~isempty(gui.retr('second_monitor_axis'))
+	colorbarpos = 1;
+end
 
 if colorbarpos==1
 	width_reduct=0;x_shift=0;
@@ -42,7 +48,14 @@ else
 		height_reduct=5;y_shift=6;
 	end
 end
-target_axis=gui.retr('pivlab_axis');
+% When second monitor is active, resize the main-window axis (original),
+% not the redirected second-monitor axis.
+original_axis = gui.retr('original_pivlab_axis');
+if ~isempty(original_axis) && isvalid(original_axis)
+	target_axis = original_axis;
+else
+	target_axis = gui.retr('pivlab_axis');
+end
 if (panelheighttools+panelheightpanels+margin*0.25+margin*0.25+quickheight*2 ) <= Figure_Size(4)
 	%panels + tools DO fit vertically
 	try

@@ -7,7 +7,7 @@ end
 if size(filepath,1) >1 || numel(caliimg)>0 || gui.retr('video_selection_done') == 1
 	handles=gui.gethand;
 	gui.toolsavailable(0)
-	delete(findobj('tag', 'caliline'))
+	delete(findall(gui.retr('pivlab_axis'),'tag', 'caliline'))
 	regionOfInterest = images.roi.Line;
 	%regionOfInterest.EdgeAlpha=0.75;
 	regionOfInterest.LabelVisible = 'on';

@@ -1,5 +1,6 @@
 function drawstreamlines_Callback(~, ~, ~)
 handles=gui.gethand;
+target_axis = gui.retr('pivlab_axis');
 toggler=gui.retr('toggler');
 selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
 resultslist=gui.retr('resultslist');
@@ -58,8 +59,9 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		gui.put('streamlinesY',[]);
 		xposition=[];
 		yposition=[];
-		delete(findobj('tag','streamline'));
+		delete(findobj(target_axis,'tag','streamline'));
 	end
+	figure(ancestor(target_axis,'figure')); % ensure ginput captures from the correct window
 	while button == 1
 		[rawx,rawy,button] = ginput(1);
 		if button~=1
@@ -68,13 +70,13 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		xposition(i)=rawx;
 		yposition(i)=rawy;
 
-		h=streamline(plot.mmstream2(x,y,ustream,vstream,xposition(i),yposition(i),'on'));
+		h=streamline(target_axis,plot.mmstream2(x,y,ustream,vstream,xposition(i),yposition(i),'on'));
 		set (h,'tag','streamline');
 		i=i+1;
 	end
-	delete(findobj('tag','streamline'));
+	delete(findobj(target_axis,'tag','streamline'));
 	if exist('xposition','var')==1
-		h=streamline(plot.mmstream2(x,y,ustream,vstream,xposition,yposition,'on'));
+		h=streamline(target_axis,plot.mmstream2(x,y,ustream,vstream,xposition,yposition,'on'));
 		set (h,'tag','streamline');
 		contents = get(handles.streamlcolor,'String');
 		set(h,'LineWidth',get(handles.streamlwidth,'value'),'Color', contents{get(handles.streamlcolor,'Value')})

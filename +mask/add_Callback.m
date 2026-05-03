@@ -45,7 +45,7 @@ if size(filepath,1) > 1 %did the user load images?
 	regionOfInterest.Tag = guid; %unique id for every ROImask object.
 	%addlistener(regionOfInterest,'MovingROI',@ROIevents);
 	gui.toolsavailable(0)
-
+	axes(gui.retr('pivlab_axis'));
 	draw(regionOfInterest);
 	addlistener(regionOfInterest,'ROIMoved',@mask.ROIevents);
 	addlistener(regionOfInterest,'DeletingROI',@mask.ROIevents);
