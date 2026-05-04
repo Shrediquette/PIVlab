@@ -1,4 +1,4 @@
-function [xtable, ytable, utable, vtable, typevector, correlation_map,correlation_matrices,all_xy_tables] = piv_FFTmulti (opts)
+function [xtable, ytable, utable, vtable, typevector, correlation_map, correlation_matrices, all_xy_tables, utable2, vtable2] = piv_FFTmulti(opts)
 arguments
 	opts.image1
 	opts.image2
@@ -116,6 +116,8 @@ repetition=0;
 %delta_diff_min=0.025;  %set in GUI: the quality increase from one pass to the other should at least be this good. This is sort of the slope of the "quality"
 delta_diff=1; %initialize with bad value
 all_xy_tables=cell(passes,2);
+utable2 = [];
+vtable2 = [];
 for multipass = 1:passes
 	%this while loop will run at least once. when repeat_last_pass is 0, then the while loop will break after the first execution.
 	while  delta_diff > delta_diff_min && repetition < max_repetitions
@@ -252,6 +254,10 @@ for multipass = 1:passes
 			ytable = zeros(numelementsy,numelementsx, 'single');
 			utable = zeros(numelementsy,numelementsx, 'single');
 			vtable = zeros(numelementsy,numelementsx, 'single');
+		end
+		if multipass == passes
+			utable2 = NaN(numelementsy, numelementsx, 'single');
+			vtable2 = NaN(numelementsy, numelementsx, 'single');
 		end
 		xtable_old = xtable(1,:);
 		ytable_old = ytable(:,1);
@@ -434,6 +440,9 @@ for multipass = 1:passes
 			%estimated displacement is correct. If we limit the maximum acceptable
 			%deviation from this initial guess in later passes, then the result is
 			%generally more likely to be correct.
+			if multipass == passes
+				result_conv_full = result_conv; % save before spatial restriction for 2nd peak search
+			end
 			if limit_peak_search_area == 1
 				if floor(size(result_conv,1)/3) >= 3 %if the interrogation area becomes too small, then further limiting of the search area doesnt make sense, because the peak may become as big as the search area
 					if mask_auto == 1 %more restricted when "disable autocorrelation" is enabled
@@ -484,6 +493,10 @@ for multipass = 1:passes
 		masked_ys = (miniy:step:maxiy) + round(interrogationarea/2);
 		typevector(mask(masked_ys, masked_xs)) = 0;
 		result_conv(:, :, mask(masked_ys, masked_xs)) = 0;
+		if multipass == passes && multipass > 1
+			result_conv_full = rescale_array(result_conv_full);
+			result_conv_full(:, :, mask(masked_ys, masked_xs)) = 0;
+		end
 		if multipass == passes
 			correlation_map(mask(masked_ys, masked_xs)) = 0;
 		end
@@ -504,14 +517,87 @@ for multipass = 1:passes
 		z1 = z(zi(i0));
 
 		if subpixfinder==1
-			[vector] = SUBPIXGAUSS(result_conv, interrogationarea_center, x1, y1, z1);
+			[vector, sigma1] = SUBPIXGAUSS(result_conv, interrogationarea_center, x1, y1, z1);
 		elseif subpixfinder==2
-			[vector] = SUBPIX2DGAUSS(result_conv, interrogationarea_center, x1, y1, z1);
+			[vector, sigma1] = SUBPIX2DGAUSS(result_conv, interrogationarea_center, x1, y1, z1);
 		end
 		vector = single(reshape(vector, [size(xtable) 2]));
 
 		utable = utable + vector(:,:,1);
 		vtable = vtable + vector(:,:,2);
+
+		if multipass == passes
+			ia_half = floor(double(interrogationarea)/2 - 1);
+			% Source plane for second peak: unrestricted for passes > 1 so that
+			% limit_peak_search_area does not also restrict the second peak search.
+			% rc_src is a reference (no copy) until SUBPIXGAUSS reads it.
+			if multipass > 1
+				rc_src = result_conv_full;
+			else
+				rc_src = result_conv;
+			end
+
+			ia_h = size(rc_src, 1);
+			ia_w = size(rc_src, 2);
+			N2   = size(rc_src, 3);
+
+			% Per-window Gaussian sigma for suppression of first peak.
+			s_vec = double(sigma1(z1));
+			s_vec(~isfinite(s_vec) | s_vec <= 0) = double(ia_half) / 3;
+
+			% Find second-peak integer position using Gaussian suppression of
+			% peak 1, processed in chunks to avoid a large [ia x ia x N_win]
+			% temporary. The suppressed plane is never stored in full; only the
+			% per-window max value and index are accumulated.
+			% SUBPIXGAUSS later uses the unsuppressed rc_src directly: peak 2
+			% is always >= 3*sigma from peak 1, so suppression there is < 0.1%
+			% and has no effect on the sub-pixel fit.
+			max_vals2 = zeros(N2, 1, 'single');
+			max_idx2  = ones(N2,  1, 'uint32');
+			[gx, gy]  = meshgrid(1:ia_w, 1:ia_h);   % shared pixel-coord grids
+
+			chunk_size = 5000;
+			for chunk_start = 1:chunk_size:numel(z1)
+				chunk_end = min(chunk_start + chunk_size - 1, numel(z1));
+				cidx = chunk_start:chunk_end;
+				nc   = numel(cidx);
+				wk   = z1(cidx);
+
+				sk     = reshape(s_vec(cidx),       1, 1, nc);
+				dy     = gy - reshape(double(y1(cidx)), 1, 1, nc);
+				dx     = gx - reshape(double(x1(cidx)), 1, 1, nc);
+				rc_c   = double(rc_src(:,:,wk)) .* (1 - exp(-(dy.^2 + dx.^2) ./ (2*sk.^2)));
+
+				% Exclude border pixels so the sub-pixel estimator always has
+				% neighbours. Pass 1 is already restricted via limit_peak_search_area.
+				if multipass > 1
+					rc_c([1 end], :, :) = 0;
+					rc_c(:, [1 end], :) = 0;
+				end
+
+				[mv, mi]         = max(reshape(rc_c, [], nc), [], 1);
+				max_vals2(wk)    = single(mv(:));
+				max_idx2(wk)     = uint32(mi(:));
+			end
+
+			[y2_all, x2_all] = ind2sub([ia_h, ia_w], double(max_idx2));
+			z2_all = (1:N2)';
+
+			valid2 = max_vals2 > 0;
+			x2 = x2_all(valid2);
+			y2 = y2_all(valid2);
+			z2 = z2_all(valid2);
+
+			if subpixfinder == 1
+				[vector2] = SUBPIXGAUSS(rc_src, interrogationarea_center, x2, y2, z2);
+			elseif subpixfinder == 2
+				[vector2] = SUBPIX2DGAUSS(rc_src, interrogationarea_center, x2, y2, z2);
+			end
+			vector2 = single(reshape(vector2, [size(xtable) 2]));
+
+			utable2 = (utable - vector(:,:,1)) + vector2(:,:,1);
+			vtable2 = (vtable - vector(:,:,2)) + vector2(:,:,2);
+		end
 
 		%compare result to previous pass, do extra passes when delta is not around zero.
 		if repetition > 1 %only then we'll have an utable with the same dimension
@@ -626,13 +712,14 @@ end
 
 
 %%{
-function [vector] = SUBPIXGAUSS(result_conv, interrogationarea_center, x, y, z)
+function [vector, sigma] = SUBPIXGAUSS(result_conv, interrogationarea_center, x, y, z)
 xi = find(~((x <= (size(result_conv,2)-1)) & (y <= (size(result_conv,1)-1)) & (x >= 2) & (y >= 2)));
 x(xi) = [];
 y(xi) = [];
 z(xi) = [];
 xmax = size(result_conv, 2);
 vector = NaN(size(result_conv,3), 2);
+sigma  = NaN(size(result_conv,3), 1);
 if(numel(x)~=0)
 	ip = sub2ind(size(result_conv), y, x, z);
 	%the following 8 lines are copyright (c) 1998, Uri Shavit, Roi Gurka, Alex Liberzon, Technion Ã¯Â¿Â½ Israel Institute of Technology
@@ -641,6 +728,7 @@ if(numel(x)~=0)
 	f1 = log(result_conv(ip-1));
 	f2 = log(result_conv(ip+1));
 	peaky = y + (f1-f2)./(2*f1-4*f0+2*f2);
+	sigma(z) = real(sqrt(-2 ./ (2*f1-4*f0+2*f2)));
 	f0 = log(result_conv(ip));
 	f1 = log(result_conv(ip-xmax));
 	f2 = log(result_conv(ip+xmax));
@@ -678,13 +766,14 @@ end
 end
 %}
 
-function [vector] = SUBPIX2DGAUSS(result_conv, interrogationarea_center, x, y, z)
+function [vector, sigma] = SUBPIX2DGAUSS(result_conv, interrogationarea_center, x, y, z)
 xi = find(~((x <= (size(result_conv,2)-1)) & (y <= (size(result_conv,1)-1)) & (x >= 2) & (y >= 2)));
 x(xi) = [];
 y(xi) = [];
 z(xi) = [];
 xmax = size(result_conv, 2);
 vector = NaN(size(result_conv,3), 2);
+sigma  = NaN(size(result_conv,3), 1);
 if(numel(x)~=0)
 	c10 = zeros(3,3, length(z));
 	c01 = c10;
@@ -727,6 +816,10 @@ if(numel(x)~=0)
 	vector(z, :) = [SubpixelX, SubpixelY];
 	max_displace=size(result_conv,1)/2;
 	vector(vector > max_displace)=nan;
+
+	sx = real(sqrt(-1 ./ (2*squeeze(c20))));
+	sy = real(sqrt(-1 ./ (2*squeeze(c02))));
+	sigma(z) = max(sx, sy);
 end
 end
 
