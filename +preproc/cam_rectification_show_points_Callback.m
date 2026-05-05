@@ -40,11 +40,12 @@ if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
         gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No ChArUco markers detected.','modal');
         return
     end
-    imshow(imread(cam_selected_rectification_image),'Parent',gui.retr('pivlab_axis'))
-    hold on
-    plot(imagePoints1(:,1),imagePoints1(:,2),'yo','MarkerFaceColor','y','Markersize',10)
-    plot(imagePoints1(:,1),imagePoints1(:,2),'rx','MarkerSize',20,'LineWidth',2)
-    hold off
+    ax = gui.retr('pivlab_axis');
+    imshow(imread(cam_selected_rectification_image),'Parent',ax)
+    hold(ax,'on')
+    plot(ax,imagePoints1(:,1),imagePoints1(:,2),'yo','MarkerFaceColor','y','Markersize',10)
+    plot(ax,imagePoints1(:,1),imagePoints1(:,2),'rx','MarkerSize',20,'LineWidth',2)
+    hold(ax,'off')
 else
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Camera calibration not activated or no images for camera rectification loaded.','modal');
 end

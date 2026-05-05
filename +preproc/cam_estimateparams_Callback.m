@@ -172,12 +172,13 @@ if ~isempty(cam_selected_target_images)
         gui.put('cam_tilted_D',   stats.D_full);
         gui.put('cam_K_opencv',   stats.K_opencv);
 
-        imshow(imread(imageFileNames{1}),'Parent',gui.retr('pivlab_axis'));
-        hold on;
-        plot(imagePoints(:,1,1), imagePoints(:,2,1),'go');
-        plot(stats.ReprojectedPoints(:,1,1),stats.ReprojectedPoints(:,2,1),'r+');
-        legend('Detected Points','ReprojectedPoints');
-        hold off;
+        ax = gui.retr('pivlab_axis');
+        imshow(imread(imageFileNames{1}),'Parent',ax);
+        hold(ax,'on');
+        plot(ax,imagePoints(:,1,1), imagePoints(:,2,1),'go');
+        plot(ax,stats.ReprojectedPoints(:,1,1),stats.ReprojectedPoints(:,2,1),'r+');
+        legend(ax,'Detected Points','ReprojectedPoints');
+        hold(ax,'off');
 
         possible_grid_points = (patternDims(1)-1) * (patternDims(2)-1) * sum(imagesUsed);
         detected_grid_points = sum(~isnan(imagePoints(:)))/2;
