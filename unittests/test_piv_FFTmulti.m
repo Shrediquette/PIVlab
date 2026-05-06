@@ -110,3 +110,46 @@ testCase.verifyError( ...
 	@() piv.piv_FFTmulti(interrogationarea=32), ...
 	'piv:piv_FFTmulti:MissingRequiredInputs');
 end
+
+% -------------------------------------------------------------------------
+% Second-peak outputs (utable2 / vtable2)
+% -------------------------------------------------------------------------
+
+function test_second_peak_nonnull_multipass(testCase)
+% On a multi-pass run the second peak must be computed and returned
+[~,~,u,~,~,~,~,~,u2,v2] = piv.piv_FFTmulti( ...
+	image1=testCase.TestData.A, image2=testCase.TestData.B, ...
+	interrogationarea=64, step=32, passes=2, int2=32, int3=0, int4=0);
+testCase.verifyNotEmpty(u2, 'utable2 is empty (multi-pass)');
+testCase.verifyNotEmpty(v2, 'vtable2 is empty (multi-pass)');
+testCase.verifyEqual(size(u2), size(u), 'utable2 must be the same size as utable');
+testCase.verifyEqual(size(v2), size(u), 'vtable2 must be the same size as utable');
+testCase.verifyTrue(any(~isnan(u2(:))), 'utable2 is entirely NaN (multi-pass)');
+testCase.verifyTrue(any(~isnan(v2(:))), 'vtable2 is entirely NaN (multi-pass)');
+end
+
+function test_second_peak_nonnull_singlepass(testCase)
+% Single-pass is the final (and only) pass, so second peaks must also be returned
+[~,~,u,~,~,~,~,~,u2,v2] = piv.piv_FFTmulti( ...
+	image1=testCase.TestData.A, image2=testCase.TestData.B, ...
+	interrogationarea=32, passes=1);
+testCase.verifyNotEmpty(u2, 'utable2 is empty (single-pass)');
+testCase.verifyNotEmpty(v2, 'vtable2 is empty (single-pass)');
+testCase.verifyEqual(size(u2), size(u), 'utable2 must be the same size as utable');
+testCase.verifyTrue(any(~isnan(u2(:))), 'utable2 is entirely NaN (single-pass)');
+end
+
+function test_second_peak_differs_from_first(testCase)
+% The second-peak displacement must differ from the first peak at most positions.
+% If they are identical everywhere the Gaussian suppression is broken.
+[~,~,u,v,~,~,~,~,u2,v2] = piv.piv_FFTmulti( ...
+	image1=testCase.TestData.A, image2=testCase.TestData.B, ...
+	interrogationarea=64, step=32, passes=2, int2=32, int3=0, int4=0);
+valid = ~isnan(u2) & ~isnan(v2);
+fraction_different_u = sum(u(valid) ~= u2(valid), 'all') / sum(valid(:));
+fraction_different_v = sum(v(valid) ~= v2(valid), 'all') / sum(valid(:));
+testCase.verifyGreaterThan(fraction_different_u, 0.5, ...
+	'utable2 should differ from utable at the majority of positions');
+testCase.verifyGreaterThan(fraction_different_v, 0.5, ...
+	'vtable2 should differ from vtable at the majority of positions');
+end

@@ -1,4 +1,4 @@
-function [u,v,typevector]=filtervectors_all_parallel(x,y,u,v,typevector_original,calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh,roi_freehand)
+function [u,v,typevector]=filtervectors_all_parallel(x,y,u,v,typevector_original,calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh,roi_freehand,u2,v2)
 typevector=typevector_original;
 %run postprocessing function
 if numel(velrect)>0
@@ -60,6 +60,24 @@ end
 
 typevector(isnan(u))=2;
 typevector(isnan(v))=2;
+% Second-peak substitution: try u2/v2 where primary validation rejected a vector
+if ~isempty(u2) && ~isempty(v2)
+	u2=single(u2); v2=single(v2);
+	candidates=(typevector==2) & ~isnan(u2) & ~isnan(v2) & (typevector_original~=0);
+	if any(candidates(:))
+		u_sub=u; v_sub=v;
+		u_sub(candidates)=u2(candidates);
+		v_sub(candidates)=v2(candidates);
+		[u_sub,v_sub]=postproc.PIVlab_postproc( ...
+			u=u_sub, v=v_sub, calu=calu, calv=calv, valid_vel=valid_vel, ...
+			do_stdev_check=do_stdev_check, stdthresh=stdthresh, ...
+			do_local_median=do_local_median, neigh_thresh=neigh_thresh);
+		accepted=candidates & ~isnan(u_sub) & ~isnan(v_sub);
+		u(accepted)=u2(accepted);
+		v(accepted)=v2(accepted);
+		typevector(accepted)=3;
+	end
+end
 typevector(typevector_original==0)=0; %restores typevector for mask
 %interpolation using inpaint_NaNs
 if interpol_missing==1

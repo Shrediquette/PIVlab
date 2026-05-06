@@ -114,6 +114,8 @@ if ok==1
 		vlist=cell(0);
 		typelist=cell(0);
 		corrlist=cell(0);
+		u2list=cell(0);
+		v2list=cell(0);
 		%correlation_matrices_list=cell(0);
 		for i=1:2:num_frames_to_process
 			k=(i+1)/2;
@@ -239,6 +241,8 @@ if ok==1
 				vlist{i}=v;
 				typelist{i}=typevector;
 				corrlist{i}=zeros(size(typevector)); %no correlation coefficient in DCC.
+				u2list{i}=[];
+				v2list{i}=[];
 				%correlation_matrices_list{i}=[];%no correlation matrix output for dcc
 				hbar.iterate(1);
 			end
@@ -357,7 +361,7 @@ if ok==1
 					wienerwurst=wienerwurst, wienerwurstsize=wienerwurstsize, ...
 					minintens=stretcher_B(1), maxintens=stretcher_B(2));
 
-				[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv.piv_FFTmulti( ...
+				[x, y, u, v, typevector,correlation_map,correlation_matrices,~,u2,v2] = piv.piv_FFTmulti( ...
 					image1=image1, image2=image2, interrogationarea=interrogationarea, step=step, ...
 					subpixfinder=subpixfinder, mask_inpt=converted_mask, roi_inpt=roirect, ...
 					passes=passes, int2=int2, int3=int3, int4=int4, imdeform=imdeform, ...
@@ -370,6 +374,8 @@ if ok==1
 				vlist{i}=v;
 				typelist{i}=typevector;
 				corrlist{i}=correlation_map;
+				u2list{i}=u2;
+				v2list{i}=v2;
 				%correlation_matrices_list{i}=correlation_matrices;
 				hbar.iterate(1);
 			end
@@ -391,6 +397,8 @@ if ok==1
 				resultslist{5,i}=typelist{i};
 				resultslist{6,i}=[];
 				resultslist{12,i}=corrlist{i};
+				resultslist{13,i}=u2list{i};
+				resultslist{14,i}=v2list{i};
 			end
 			gui.put('resultslist',resultslist);
 			gui.put('subtr_u', 0);
@@ -481,7 +489,7 @@ if ok==1
 				end
 
 				converted_mask=mask.convert_masks_to_binary(size(image1(:,:,1)),mask_positions);
-
+				u2=[]; v2=[];
 				if get(handles.algorithm_selection,'Value')==3 %dcc
 					[x, y, u, v, typevector] = piv.piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
 					%correlation_matrices=[];%not available for DCC
@@ -503,7 +511,7 @@ if ok==1
 					repeat_last_pass = get(handles.repeat_last,'Value');
 					delta_diff_min = str2double(get(handles.edit52x,'String'));
 					[imdeform, repeat, do_pad] = piv.CorrQuality;
-					[x, y, u, v, typevector,correlation_map,correlation_matrices] = piv.piv_FFTmulti( ...
+					[x, y, u, v, typevector,correlation_map,correlation_matrices,~,u2,v2] = piv.piv_FFTmulti( ...
 						image1=image1, image2=image2, interrogationarea=interrogationarea, step=step, ...
 						subpixfinder=subpixfinder, mask_inpt=converted_mask, roi_inpt=roirect, ...
 						passes=passes, int2=int2, int3=int3, int4=int4, imdeform=imdeform, ...
@@ -524,6 +532,8 @@ if ok==1
 				end
 				%correlation_matrices_list{(i+1)/2}=correlation_matrices;
 				resultslist{12,(i+1)/2}=correlation_map;
+				resultslist{13,(i+1)/2}=u2;
+				resultslist{14,(i+1)/2}=v2;
 				gui.put('resultslist',resultslist);
 				set(handles.fileselector, 'value', (i+1)/2);
 				%set(handles.progress, 'string' , ['Frame progress: 100%'])

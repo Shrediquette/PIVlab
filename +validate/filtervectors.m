@@ -88,6 +88,25 @@ if size(resultslist,2)>=frame
 
 		typevector(isnan(u))=2;
 		typevector(isnan(v))=2;
+		% Second-peak substitution: try u2/v2 where primary validation rejected a vector
+		if size(resultslist,1) >= 13 && ~isempty(resultslist{13,frame}) && ~isempty(resultslist{14,frame})
+			u2=single(resultslist{13,frame});
+			v2=single(resultslist{14,frame});
+			candidates=(typevector==2) & ~isnan(u2) & ~isnan(v2) & (typevector_original~=0);
+			if any(candidates(:))
+				u_sub=u; v_sub=v;
+				u_sub(candidates)=u2(candidates);
+				v_sub(candidates)=v2(candidates);
+				[u_sub,v_sub]=postproc.PIVlab_postproc( ...
+					u=u_sub, v=v_sub, calu=calu, calv=calv, valid_vel=valid_vel, ...
+					do_stdev_check=do_stdev_check, stdthresh=stdthresh, ...
+					do_local_median=do_local_median, neigh_thresh=neigh_thresh);
+				accepted=candidates & ~isnan(u_sub) & ~isnan(v_sub);
+				u(accepted)=u2(accepted);
+				v(accepted)=v2(accepted);
+				typevector(accepted)=3;
+			end
+		end
 		typevector(typevector_original==0)=0; %restores typevector for mask
 		%interpolation using inpaint_NaNs
 		if get(handles.interpol_missing, 'value')==1

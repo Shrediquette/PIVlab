@@ -55,6 +55,13 @@ if ~isempty(resultslist)
 		v=resultslist(4,:);
 		typevector=resultslist(5,:);
 		typevector_original=resultslist(5,:);
+		if size(resultslist,1) >= 13
+			u2_data=resultslist(13,:);
+			v2_data=resultslist(14,:);
+		else
+			u2_data=cell(1,size(u,2));
+			v2_data=cell(1,size(v,2));
+		end
 		manualdeletion=gui.retr('manualdeletion');
 
 		if numel(manualdeletion)>0
@@ -100,6 +107,8 @@ if ~isempty(resultslist)
 			y(num_frames_to_process-1)={[]};
 			typevector_original(num_frames_to_process-1)={[]};
 			resultslist(1,num_frames_to_process-1)={[]};
+			u2_data(num_frames_to_process-1)={[]};
+			v2_data(num_frames_to_process-1)={[]};
 		end
         parfor i=1:num_frames_to_process-1 %without parallel processing toolbox, this is just a normal for loop.
             if ~isempty(x(i))
@@ -136,7 +145,7 @@ if ~isempty(resultslist)
 					A=[];B=[];rawimageA=[];rawimageB=[];
 				end
 				corr2_value=resultslist{12,i};
-				[u_new{i},v_new{i},typevector_new{i}]=validate.filtervectors_all_parallel(x{i},y{i},u{i},v{i},typevector_original{i},calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh,roi_freehand);
+				[u_new{i},v_new{i},typevector_new{i}]=validate.filtervectors_all_parallel(x{i},y{i},u{i},v{i},typevector_original{i},calu,calv,velrect,do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter,contrast_filter_thresh,bright_filter_thresh,interpol_missing,A,B,rawimageA,rawimageB,do_corr2_filter,corr_filter_thresh,corr2_value,do_notch_filter,notch_L_thresh,notch_H_thresh,roi_freehand,u2_data{i},v2_data{i});
 				hbar.iterate(1); %#ok<*PFBNS>
 			end
 		end

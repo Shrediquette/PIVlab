@@ -97,7 +97,11 @@ if isempty(resultslist)==0
 						vmittel(:,:,count)=v; %#ok<AGROW>
 					end
 					if sizeerror==0
-						typevectormittel(:,:,count)=typevector;
+						% remap typevector==3 (2nd-peak valid) to 1 (valid) so the
+						% temporal mean threshold logic treats it as a good measurement
+						tv_stack = typevector;
+						tv_stack(tv_stack == 3) = 1;
+						typevectormittel(:,:,count)=tv_stack;
 					end
 				end
 
