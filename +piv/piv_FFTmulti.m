@@ -20,7 +20,7 @@ arguments
 	opts.delta_diff_min = 0.025
 	opts.limit_peak_search_area = 1
 end
-
+% Note to myself: I have experimented with windowing functions and other enhancements found e.g. in PIVsuite. But they all perform worse (higher rmse and bias and less yield) than this code. Symmetric deformation also performs worse,
 required_fields = {'image1', 'image2', 'interrogationarea'};
 if ~all(isfield(opts, required_fields))
 	error('piv:piv_FFTmulti:MissingRequiredInputs', ...
