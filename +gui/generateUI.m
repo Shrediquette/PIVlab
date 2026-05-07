@@ -802,13 +802,13 @@ item=[parentitem(3)/3*2 item(2) parentitem(3)/4*1 1];
 handles.text128 = uicontrol(handles.uipanel42,'Style','text', 'String','16','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text128');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
-handles.repeat_last= uicontrol(handles.uipanel42,'Style','checkbox', 'String','Repeat last pass until','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.repeat_last_Callback,'Tag','repeat_last','TooltipString','This will repeat the last pass of a multipass analysis until the average difference to the previous pass is less than "quality slope".');
+handles.repeat_last= uicontrol(handles.uipanel42,'Style','checkbox', 'String','Repeat last pass until','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.repeat_last_Callback,'Tag','repeat_last','TooltipString','This will repeat the last pass of a multipass analysis until the average difference to the previous pass is less than "quality slope".','visible','off');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1];
-handles.text128x = uicontrol(handles.uipanel42,'Style','text', 'String','quality slope <','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text128x');
+handles.text128x = uicontrol(handles.uipanel42,'Style','text', 'String','quality slope <','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text128x','visible','off');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/3.5 1];
-handles.edit52x = uicontrol(handles.uipanel42,'Style','edit', 'String','0.025','Units','characters','enable','off', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.repeated_thesh_Callback,'Tag','edit52x','TooltipString','This will repeat the last pass of a multipass analysis until the average difference to the previous pass is less than "quality slope".');
+handles.edit52x = uicontrol(handles.uipanel42,'Style','edit', 'String','0.025','Units','characters','enable','off', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.repeated_thesh_Callback,'Tag','edit52x','TooltipString','This will repeat the last pass of a multipass analysis until the average difference to the previous pass is less than "quality slope".','visible','off');
 
 parentitem=get(handles.multip04, 'Position');
 item=[0 0 0 0];
