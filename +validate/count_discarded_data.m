@@ -6,8 +6,11 @@ if ~isempty(resultslist)
 	if size(resultslist,2) >= ((currentframe+1)/2)
 		typevector=resultslist{9,(currentframe+1)/2};
 		nan_amount=numel(typevector(typevector==2));
-		total_amount=numel(typevector(typevector==1 | typevector==3)) + nan_amount;
+		total_valid_amount=numel(typevector(typevector==1 | typevector==3));
+		total_amount=total_valid_amount + nan_amount;
 		nan_percent=nan_amount/total_amount*100;
+		secondpeakamount = numel(typevector(typevector==3));
+		secondpeakpercent = round(secondpeakamount / total_valid_amount*100,2);
 	else
 		nan_percent=0;
 	end
@@ -65,4 +68,8 @@ if isfield(handles,'veccolor_valid_swatch') || isfield(handles,'veccolor_valid_s
 		set(handles.veccolor_valid_swatch2,  'BackgroundColor', validcolor);
 		set(handles.veccolor_interp_swatch2, 'BackgroundColor', interpcolor);
 	end
+	%calculate the percentage of 2ndpeak vectors
+	secondpeakstring=['2nd-peak substituted (' num2str(secondpeakpercent) ' %)'];
+	handles.secondpeaktxt1.String = secondpeakstring;
+	handles.secondpeaktxt2.String = secondpeakstring;
 end
