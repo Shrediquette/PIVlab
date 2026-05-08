@@ -137,6 +137,10 @@ calib_upscale=handles.calib_upscale.Value;
 %%stereoPIV
 stereomode=gui.retr('stereomode');
 
+valid_color_idx      = get(handles.valid_color,      'Value');
+secondpeak_color_idx = get(handles.secondpeak_color, 'Value');
+interp_color_idx     = get(handles.interp_color,     'Value');
+deriv_color_idx      = get(handles.deriv_color,      'Value');
 
 clear handles
 cameraParams         = gui.retr('cameraParams');

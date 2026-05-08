@@ -42,32 +42,28 @@ end
 
 % Update vector color legend swatches (both validation panels) to reflect
 % the currently active display settings from "Modify plot appearance".
-% The valid-vector color depends on whether a derived parameter (vorticity,
-% TKE, …) is currently displayed; the interpolated color is always the same.
 if isfield(handles,'veccolor_valid_swatch') || isfield(handles,'veccolor_valid_swatch2')
+	colors_cell = gui.vec_preset_colors();
 	displaywhat = gui.retr('displaywhat');
 	derived     = gui.retr('derived');
 	if ~isempty(derived) && ~isempty(displaywhat) && displaywhat > 1 && ...
 			size(derived,2) >= (currentframe+1)/2 && ...
 			numel(derived{displaywhat-1,(currentframe+1)/2}) > 0
-		validcolor = [str2double(get(handles.validdr,'string')) ...
-		              str2double(get(handles.validdg,'string')) ...
-		              str2double(get(handles.validdb,'string'))];
+		validcolor = colors_cell{get(handles.deriv_color,  'Value'), 2};
 	else
-		validcolor = [str2double(get(handles.validr,'string')) ...
-		              str2double(get(handles.validg,'string')) ...
-		              str2double(get(handles.validb,'string'))];
+		validcolor = colors_cell{get(handles.valid_color,  'Value'), 2};
 	end
-	interpcolor = [str2double(get(handles.interpr,'string')) ...
-	               str2double(get(handles.interpg,'string')) ...
-	               str2double(get(handles.interpb,'string'))];
+	interpcolor     = colors_cell{get(handles.interp_color,     'Value'), 2};
+	secondpeakcolor = colors_cell{get(handles.secondpeak_color, 'Value'), 2};
 	if isfield(handles,'veccolor_valid_swatch')
-		set(handles.veccolor_valid_swatch,  'BackgroundColor', validcolor);
-		set(handles.veccolor_interp_swatch, 'BackgroundColor', interpcolor);
+		set(handles.veccolor_valid_swatch,      'BackgroundColor', validcolor);
+		set(handles.veccolor_interp_swatch,     'BackgroundColor', interpcolor);
+		set(handles.veccolor_secondpeak_swatch, 'BackgroundColor', secondpeakcolor);
 	end
 	if isfield(handles,'veccolor_valid_swatch2')
-		set(handles.veccolor_valid_swatch2,  'BackgroundColor', validcolor);
-		set(handles.veccolor_interp_swatch2, 'BackgroundColor', interpcolor);
+		set(handles.veccolor_valid_swatch2,      'BackgroundColor', validcolor);
+		set(handles.veccolor_interp_swatch2,     'BackgroundColor', interpcolor);
+		set(handles.veccolor_secondpeak_swatch2, 'BackgroundColor', secondpeakcolor);
 	end
 	%calculate the percentage of 2ndpeak vectors
 	secondpeakstring=['Valid vectors (2nd peak): ' num2str(secondpeakamount)];

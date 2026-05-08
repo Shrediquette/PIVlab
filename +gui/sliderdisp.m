@@ -15,9 +15,11 @@ if capturing==0
     displaywhat=gui.retr('displaywhat');
     derived=gui.retr('derived');
     if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
-        vectorcolor=[str2double(get(handles.validdr,'string')) str2double(get(handles.validdg,'string')) str2double(get(handles.validdb,'string'))];
+        colors_cell = gui.vec_preset_colors();
+        vectorcolor = colors_cell{get(handles.deriv_color, 'Value'), 2};
     else
-        vectorcolor=[str2double(get(handles.validr,'string')) str2double(get(handles.validg,'string')) str2double(get(handles.validb,'string'))];
+        colors_cell = gui.vec_preset_colors();
+        vectorcolor = colors_cell{get(handles.valid_color, 'Value'), 2};
     end
     delete(findobj(target_axis,'tag', 'derivhint'));
     if size(filepath,1)>0

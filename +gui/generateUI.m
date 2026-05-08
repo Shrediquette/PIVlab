@@ -975,10 +975,10 @@ handles.validtxt1 = uicontrol(handles.multip06,'Style','text','String','Valid ve
     'Units','characters','Position',[label_x parentitem(4)-item(4)-margin-item(2) label_w item(4)],'tag','validtxt1');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.0];
-uicontrol(handles.multip06,'Style','text','String','','Units','characters', ...
+handles.veccolor_secondpeak_swatch = uicontrol(handles.multip06,'Style','text','String','','Units','characters', ...
     'Position',[swatch_x parentitem(4)-item(4)-margin-item(2) swatch_w item(4)], ...
-    'BackgroundColor',[0 0.8 1], ...
-    'TooltipString','2nd-peak substituted vector color (fixed cyan — not user-configurable)');
+    'Tag','veccolor_secondpeak_swatch','BackgroundColor',[0 0.8 1], ...
+    'TooltipString','2nd-peak vector color — configurable in ''Modify plot appearance''');
 handles.secondpeaktxt1 = uicontrol(handles.multip06,'Style','text','String','Valid vectors (2nd peak)','HorizontalAlignment','left', ...
     'Units','characters','Position',[label_x parentitem(4)-item(4)-margin-item(2) label_w item(4)],'tag','secondpeaktxt1');
 
@@ -1207,52 +1207,36 @@ handles.displ_image = uicontrol(handles.multip09,'Style','popupmenu', 'String',{
 
 
 
-item=[0 item(2)+item(4)+margin/8 parentitem(3) 8.5];
-handles.uipanel37 = uipanel(handles.multip09, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Vector colors', 'Tag','uipanel37','fontweight','bold');
+item=[0 item(2)+item(4)+margin/8 parentitem(3) 8.75];
+handles.uipanel37 = uipanel(handles.multip09,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Vector colors','Tag','uipanel37','fontweight','bold');
 
 parentitem=get(handles.uipanel37, 'Position');
 item=[0 0 0 0];
-item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
-handles.text138 = uicontrol(handles.uipanel37,'Style','text','String',' R           G           B         [0...1]','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text138');
+colors_cell = gui.vec_preset_colors();
+color_names = colors_cell(:,1)';
 
-item=[0 item(2)+item(4) parentitem(3)/5 1.5];
-handles.validr = uicontrol(handles.uipanel37,'Style','edit','String','0','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','validr');
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 1.5];
+uicontrol(handles.uipanel37,'Style','text','String','Valid (1st peak)','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
+handles.valid_color = uicontrol(handles.uipanel37,'Style','popupmenu','String',color_names,'Value',1,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','valid_color');
 
-item=[parentitem(3)/5*1 item(2) parentitem(3)/5 1.5];
-handles.validg = uicontrol(handles.uipanel37,'Style','edit','String','1','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','validg');
+item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 1.5];
+uicontrol(handles.uipanel37,'Style','text','String','Valid (2nd peak)','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
+handles.secondpeak_color = uicontrol(handles.uipanel37,'Style','popupmenu','String',color_names,'Value',2,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','secondpeak_color');
 
-item=[parentitem(3)/5*2 item(2) parentitem(3)/5 1.5];
-handles.validb = uicontrol(handles.uipanel37,'Style','edit','String','0','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','validb');
+item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 1.5];
+uicontrol(handles.uipanel37,'Style','text','String','Replaced / interp.','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
+handles.interp_color = uicontrol(handles.uipanel37,'Style','popupmenu','String',color_names,'Value',3,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interp_color');
 
-item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
-handles.text139 = uicontrol(handles.uipanel37,'Style','text','String','valid vectors','Units','characters','HorizontalAlignment','left','Position',[item(1)+margin/2 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text139', 'fontsize', 6);
-
-item=[0 item(2)+item(4)-0.4 parentitem(3)/5 1.5];
-handles.validdr = uicontrol(handles.uipanel37,'Style','edit','String','0','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','validdr');
-
-item=[parentitem(3)/5*1 item(2) parentitem(3)/5 1.5];
-handles.validdg = uicontrol(handles.uipanel37,'Style','edit','String','0','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','validdg');
-
-item=[parentitem(3)/5*2 item(2) parentitem(3)/5 1.5];
-handles.validdb = uicontrol(handles.uipanel37,'Style','edit','String','0','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','validdb');
-
-item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
-handles.text142 = uicontrol(handles.uipanel37,'Style','text','String','vectors on derivatives','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text142', 'fontsize', 6);
-
-item=[0 item(2)+item(4)-0.4 parentitem(3)/5 1.5];
-handles.interpr = uicontrol(handles.uipanel37,'Style','edit','String','1','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpr');
-
-item=[parentitem(3)/5*1 item(2) parentitem(3)/5 1.5];
-handles.interpg = uicontrol(handles.uipanel37,'Style','edit','String','0.5','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpg');
-
-item=[parentitem(3)/5*2 item(2) parentitem(3)/5 1.5];
-handles.interpb = uicontrol(handles.uipanel37,'Style','edit','String','0','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpb');
-
-item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 1,5];
-handles.text140 = uicontrol(handles.uipanel37,'Style','text','String','interpolated vectors','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text142', 'fontsize', 6);
+item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 1.5];
+uicontrol(handles.uipanel37,'Style','text','String','On derivatives','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
+handles.deriv_color = uicontrol(handles.uipanel37,'Style','popupmenu','String',color_names,'Value',4,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','deriv_color');
 
 parentitem=get(handles.multip09, 'Position');
-item=[0 12.5+6.5+1.5 parentitem(3) 9];
+item=[0 12.5+6.5+2 parentitem(3) 8.5];
 handles.uipanel27 = uipanel(handles.multip09, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Derived parameter appearance', 'Tag','uipanel27','fontweight','bold');
 
 parentitem=get(handles.uipanel27, 'Position');
@@ -1276,7 +1260,7 @@ handles.colormap_choice = uicontrol(handles.uipanel27,'Style','popupmenu', 'Stri
 item=[0+item(3) item(2) parentitem(3)/2 2];
 handles.colormap_steps = uicontrol(handles.uipanel27,'Style','popupmenu', 'String',{'256','128','64','32','16','8','4','2'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colormap_steps','TooltipString','Select the amount of colors in a colormap');
 
-item=[0 item(2)+item(4)+margin/3*2 parentitem(3)/5*3 1];
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/5*3 1];
 handles.text143b = uicontrol(handles.uipanel27,'Style','text','String','Image interpolation','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text143b');
 
 item=[0+item(3) item(2)-0.2 parentitem(3)/5*2 2];
@@ -2088,10 +2072,10 @@ handles.validtxt2 = uicontrol(handles.multip23,'Style','text','String','Valid ve
     'Units','characters','Position',[label_x parentitem(4)-item(4)-margin-item(2) label_w item(4)],'tag','validtxt2');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.0];
-uicontrol(handles.multip23,'Style','text','String','','Units','characters', ...
+handles.veccolor_secondpeak_swatch2 = uicontrol(handles.multip23,'Style','text','String','','Units','characters', ...
     'Position',[swatch_x parentitem(4)-item(4)-margin-item(2) swatch_w item(4)], ...
-    'BackgroundColor',[0 0.8 1], ...
-    'TooltipString','2nd-peak substituted vector color (fixed cyan — not user-configurable)');
+    'Tag','veccolor_secondpeak_swatch2','BackgroundColor',[0 0.8 1], ...
+    'TooltipString','2nd-peak vector color — configurable in ''Modify plot appearance''');
 handles.secondpeaktxt2=uicontrol(handles.multip23,'Style','text','String','Valid vectors (2nd peak)','HorizontalAlignment','left', ...
     'Units','characters','Position',[label_x parentitem(4)-item(4)-margin-item(2) label_w item(4)],'tag','secondpeaktxt2');
 

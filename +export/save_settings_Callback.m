@@ -50,15 +50,10 @@ realdist=get(handles.realdist, 'string');
 time_inp=get(handles.time_inp, 'string');
 
 nthvect=get(handles.nthvect, 'string');
-validr=get(handles.validr,'string');
-validg=get(handles.validg,'string');
-validb=get(handles.validb,'string');
-validdr=get(handles.validdr,'string');
-validdg=get(handles.validdg,'string');
-validdb=get(handles.validdb,'string');
-interpr=get(handles.interpr,'string');
-interpg=get(handles.interpg,'string');
-interpb=get(handles.interpb,'string');
+valid_color_idx      = get(handles.valid_color,      'Value');
+secondpeak_color_idx = get(handles.secondpeak_color, 'Value');
+interp_color_idx     = get(handles.interp_color,     'Value');
+deriv_color_idx      = get(handles.deriv_color,      'Value');
 
 calxy=gui.retr('calxy');
 calu=gui.retr('calu');calv=gui.retr('calv');

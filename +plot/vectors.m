@@ -1,7 +1,9 @@
 function [q, q2] = vectors(target_axis,handles, vecskip, x, typevector, y, u, vecscale, v, vectorcolor)
 
 hold(target_axis,'on');
-vectorcolorintp=[str2double(get(handles.interpr,'string')) str2double(get(handles.interpg,'string')) str2double(get(handles.interpb,'string'))];
+colors_cell = gui.vec_preset_colors();
+vectorcolorintp    = colors_cell{get(handles.interp_color,    'Value'), 2};
+vectorcolor2ndpeak = colors_cell{get(handles.secondpeak_color,'Value'), 2};
 
 %normalize vector lengths so we can better see flow directions of small velocities:
 if (get (handles.uniform_vector_scale,'Value'))==1
@@ -19,7 +21,6 @@ if (get (handles.power_vector_scale,'Value'))==1
     u=u*mean_old/mean_new;
     v=v*mean_old/mean_new;
 end
-vectorcolor2ndpeak=[0, 0.8, 1]; % cyan: second-peak substituted vectors
 if vecskip==1
     q=quiver(x(typevector==1),y(typevector==1),...
         (u(typevector==1)-(gui.retr('subtr_u')/gui.retr('calu')))*vecscale,...

@@ -75,15 +75,28 @@ try
     end
 
     set(handles.nthvect, 'string',nthvect);
-    set(handles.validr,'string',validr);
-    set(handles.validg,'string',validg);
-    set(handles.validb,'string',validb);
-    set(handles.validdr,'string',validdr);
-    set(handles.validdg,'string',validdg);
-    set(handles.validdb,'string',validdb);
-    set(handles.interpr,'string',interpr);
-    set(handles.interpg,'string',interpg);
-    set(handles.interpb,'string',interpb);
+    if exist('valid_color_idx','var')
+        set(handles.valid_color,      'Value', valid_color_idx);
+        set(handles.secondpeak_color, 'Value', secondpeak_color_idx);
+        set(handles.interp_color,     'Value', interp_color_idx);
+        set(handles.deriv_color,      'Value', deriv_color_idx);
+    elseif exist('validr','var')
+        % Backward compat: old settings files store RGB strings — map to nearest preset.
+        colors_cell = gui.vec_preset_colors();
+        rgb_presets = cell2mat(colors_cell(:,2));
+        old_valid  = [str2double(validr)  str2double(validg)  str2double(validb)];
+        old_deriv  = [str2double(validdr) str2double(validdg) str2double(validdb)];
+        old_interp = [str2double(interpr) str2double(interpg) str2double(interpb)];
+        set(handles.valid_color,      'Value', pivlab_nearest_color(old_valid,  rgb_presets));
+        set(handles.deriv_color,      'Value', pivlab_nearest_color(old_deriv,  rgb_presets));
+        set(handles.interp_color,     'Value', pivlab_nearest_color(old_interp, rgb_presets));
+        set(handles.secondpeak_color, 'Value', 2);
+    else
+        set(handles.valid_color,      'Value', 1);
+        set(handles.secondpeak_color, 'Value', 2);
+        set(handles.interp_color,     'Value', 3);
+        set(handles.deriv_color,      'Value', 4);
+    end
     if exist('offset_x_true','var') == 0
         offset_x_true=0;
     end
@@ -190,4 +203,12 @@ try
     handles.stereocheckbox.Value=stereomode;
 catch
     disp('couldnt set stereo GUI elements')
+end
+end % read_settings
+
+function idx = pivlab_nearest_color(rgb, presets)
+% Return the row index in presets (N×3) closest to rgb (1×3) by Euclidean distance.
+if any(isnan(rgb)); idx = 1; return; end
+dists = sum((presets - rgb).^2, 2);
+[~, idx] = min(dists);
 end
