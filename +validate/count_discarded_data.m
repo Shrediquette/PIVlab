@@ -6,11 +6,12 @@ if ~isempty(resultslist)
 	if size(resultslist,2) >= ((currentframe+1)/2)
 		typevector=resultslist{9,(currentframe+1)/2};
 		nan_amount=numel(typevector(typevector==2));
-		total_valid_amount=numel(typevector(typevector==1 | typevector==3));
+		firstpeak_valid_amount=numel(typevector(typevector==1));
+		secondpeakamount = numel(typevector(typevector==3));
+		total_valid_amount=firstpeak_valid_amount+secondpeakamount;
 		total_amount=total_valid_amount + nan_amount;
 		nan_percent=nan_amount/total_amount*100;
-		secondpeakamount = numel(typevector(typevector==3));
-		secondpeakpercent = round(secondpeakamount / total_valid_amount*100,2);
+		
 	else
 		nan_percent=0;
 	end
@@ -20,7 +21,7 @@ end
 if isnan(nan_percent)
 	nan_percent=0;
 end
-set (handles.amount_nans,'string',['VDP: ' num2str(round(100-nan_percent,1)) ' %'])
+set (handles.amount_nans,'string',['Valid detection probability (VDP): ' num2str(round(100-nan_percent,1)) ' %'])
 if gui.retr('darkmode')
 	r_bg=[0.5 0 0];
 	g_bg=[0 0.5 0];
@@ -69,7 +70,13 @@ if isfield(handles,'veccolor_valid_swatch') || isfield(handles,'veccolor_valid_s
 		set(handles.veccolor_interp_swatch2, 'BackgroundColor', interpcolor);
 	end
 	%calculate the percentage of 2ndpeak vectors
-	secondpeakstring=['2nd-peak substituted (' num2str(secondpeakpercent) ' %)'];
+	secondpeakstring=['Valid vectors (2nd peak): ' num2str(secondpeakamount)];
+	totalvalidstring=['Valid vectors (1st peak): ' num2str(firstpeak_valid_amount)];
+	rejectedstring=['Rejected / interpolated: ' num2str(nan_amount)];
 	handles.secondpeaktxt1.String = secondpeakstring;
 	handles.secondpeaktxt2.String = secondpeakstring;
+	handles.validtxt1.String = totalvalidstring;
+	handles.validtxt2.String = totalvalidstring;
+	handles.rejectedtxt1.String = rejectedstring;
+	handles.rejectedtxt2.String = rejectedstring;
 end
