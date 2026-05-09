@@ -1,8 +1,82 @@
-function [xtable, ytable, utable, vtable, typevector,correlation_map] = piv_FFTensemble (autolimit,filepath,framenum,framepart,video_frame_selection,bg_img_A,bg_img_B,clahe,highp,intenscap,clahesize,highpsize,wienerwurst,wienerwurstsize,roi_inpt,converted_mask,interrogationarea,step,subpixfinder,passes,int2,int3,int4,mask_auto,imdeform,repeat,do_pad)
-%this funtion performs the  PIV analysis. It is a modification of the
-%pivFFTmulti, and will do ensemble correlation. That is a suitable
-%algorithm for low seeding density as it happens in microPIV.
-warning off %#ok<*WNOFF> %MATLAB:log:logOfZero
+function [xtable, ytable, utable, vtable, typevector, correlation_map] = piv_FFTensemble(opts)
+%this function performs PIV ensemble correlation. Suitable for low seeding
+%density (e.g. microPIV). Modification of piv_FFTmulti.
+arguments
+    opts.filepath                        % required — cell array of paths OR video reader object
+    opts.interrogationarea               % required — interrogation window size in pixels
+    opts.autolimit          = 0
+    opts.framenum           = []         % default: ones(n,1), computed after knowing image count
+    opts.framepart          = []         % [] = no crop; otherwise Nx2 matrix [row_start row_end] per image
+    opts.video_frame_selection = []
+    opts.bg_img_A           = []
+    opts.bg_img_B           = []
+    opts.clahe              = 1          % GUI default: CLAHE enabled
+    opts.highp              = 0
+    opts.intenscap          = 0
+    opts.clahesize          = 64         % GUI default
+    opts.highpsize          = 15         % GUI default
+    opts.wienerwurst        = 0
+    opts.wienerwurstsize    = 15         % GUI default
+    opts.roi_inpt           = []
+    opts.converted_mask     = {}
+    opts.step               = []         % default: interrogationarea/2
+    opts.subpixfinder       = 1
+    opts.passes             = 1
+    opts.int2               = []         % default: interrogationarea/2
+    opts.int3               = []         % default: int2/2
+    opts.int4               = []         % default: int3/2
+    opts.mask_auto          = 0
+    opts.imdeform           = '*linear'
+    opts.repeat             = 0
+    opts.do_pad             = 0
+end
+required_fields = {'filepath', 'interrogationarea'};
+if ~all(isfield(opts, required_fields))
+    error('piv:piv_FFTensemble:MissingRequiredInputs', ...
+        'filepath and interrogationarea must be provided as name-value arguments.')
+end
+filepath              = opts.filepath;
+interrogationarea     = opts.interrogationarea;
+autolimit             = opts.autolimit; %#ok<NASGU>
+video_frame_selection = opts.video_frame_selection;
+bg_img_A              = opts.bg_img_A;
+bg_img_B              = opts.bg_img_B;
+clahe                 = opts.clahe;
+highp                 = opts.highp;
+intenscap             = opts.intenscap;
+clahesize             = opts.clahesize;
+highpsize             = opts.highpsize;
+wienerwurst           = opts.wienerwurst;
+wienerwurstsize       = opts.wienerwurstsize;
+roi_inpt              = opts.roi_inpt;
+converted_mask        = opts.converted_mask;
+subpixfinder          = opts.subpixfinder;
+passes                = opts.passes;
+mask_auto             = opts.mask_auto;
+imdeform              = opts.imdeform;
+repeat                = opts.repeat;
+do_pad                = opts.do_pad;
+if isempty(opts.step)
+    step = interrogationarea / 2;
+else
+    step = opts.step;
+end
+if isempty(opts.int2)
+    int2 = interrogationarea / 2;
+else
+    int2 = opts.int2;
+end
+if isempty(opts.int3)
+    int3 = int2 / 2;
+else
+    int3 = opts.int3;
+end
+if isempty(opts.int4)
+    int4 = int3 / 2;
+else
+    int4 = opts.int4;
+end
+warning off %#ok<*WNOFF>
 %% pre-processing is done in this function
 result_conv_ensemble = zeros(interrogationarea,interrogationarea); % prepare empty result_conv
 if isempty(video_frame_selection) %list with image files was passed
@@ -10,24 +84,39 @@ if isempty(video_frame_selection) %list with image files was passed
 else
     amount_input_imgs=numel(video_frame_selection);
 end
+if isempty(opts.framenum)
+    framenum = ones(amount_input_imgs, 1);
+else
+    framenum = opts.framenum;
+end
+framepart = opts.framepart; % [] means no crop; otherwise Nx2 row-range matrix
 total_analyses_amount=amount_input_imgs / 2 * passes;
 from_total = 0;
 tic
 skippy=0;
+cancel=0;
 
-handles=gui.gethand;
-view_raw=handles.calib_viewtype.Value;
-if view_raw==1
+try
+    handles=gui.gethand;
+    view_raw=handles.calib_viewtype.Value;
+    if view_raw==1
+        view='valid';
+    elseif view_raw==2
+        view='same';
+    elseif view_raw==3
+        view='full';
+    end
+    cam_use_calibration = gui.retr('cam_use_calibration');
+    cam_use_rectification = gui.retr('cam_use_rectification');
+    cameraParams=gui.retr('cameraParams');
+    rectification_tform = gui.retr('rectification_tform');
+catch
     view='valid';
-elseif view_raw==2
-    view='same';
-elseif view_raw==3
-    view='full';
+    cam_use_calibration=0;
+    cam_use_rectification=0;
+    cameraParams=[];
+    rectification_tform=[];
 end
-cam_use_calibration = gui.retr('cam_use_calibration');
-cam_use_rectification = gui.retr('cam_use_rectification');
-cameraParams=gui.retr('cameraParams');
-rectification_tform = gui.retr('rectification_tform');
 for ensemble_i1=1:2:amount_input_imgs
     if isempty(video_frame_selection) %list with image files was passed
         %detect if it is b16 or standard pixel image
@@ -38,8 +127,9 @@ for ensemble_i1=1:2:amount_input_imgs
             image1 = preproc.cam_undistort(image1,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
             image2 = preproc.cam_undistort(image2,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
         else
-            image1=import.imread_wrapper(filepath{ensemble_i1},framenum(ensemble_i1),framepart(ensemble_i1,:));
-            image2=import.imread_wrapper(filepath{ensemble_i1+1},framenum(ensemble_i1+1),framepart(ensemble_i1+1,:));
+            if isempty(framepart); fp1=[]; fp2=[]; else; fp1=framepart(ensemble_i1,:); fp2=framepart(ensemble_i1+1,:); end
+            image1=import.imread_wrapper(filepath{ensemble_i1},framenum(ensemble_i1),fp1);
+            image2=import.imread_wrapper(filepath{ensemble_i1+1},framenum(ensemble_i1+1),fp2);
             image1 = preproc.cam_undistort(image1,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
             image2 = preproc.cam_undistort(image2,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
         end
@@ -89,26 +179,36 @@ image2 = preproc.PIVlab_preproc( ...
     %% calculate the average mask that will be applied in the very end. It will remove all vectors where 100% of the input images have been masked.
     %prepare a matrix for calculating the average mask of all images
     if ensemble_i1==1
-        average_mask=zeros(size(converted_mask{1,1}));
-
-        try
-            for ii = 1: size(converted_mask,1)
-                average_mask= average_mask + converted_mask{ii,1};
+        if isempty(converted_mask)
+            average_mask = zeros(size(image1));
+        else
+            average_mask=zeros(size(converted_mask{1,1}));
+            try
+                for ii = 1: size(converted_mask,1)
+                    average_mask= average_mask + converted_mask{ii,1};
+                end
+            catch
+                cancel = 1;
+                try
+                    hgui=getappdata(0,'hgui');
+                    setappdata(hgui, 'cancel', cancel);
+                catch
+                end
+                disp('')
+                disp('Error: Image dimensions inconsistent!')
+                if ~isdeployed
+                    commandwindow
+                end
+                drawnow;
+                break
             end
-        catch
-            cancel = 1;
-            hgui=getappdata(0,'hgui');
-			setappdata(hgui, 'cancel', cancel);
-			disp('')
-			disp('Error: Image dimensions inconsistent!')
-			if ~isdeployed
-				commandwindow
-			end
-			drawnow;
-            break
         end
     end
-    mask_inpt = converted_mask{floor((ensemble_i1+1)/2),1};
+    if isempty(converted_mask) || numel(converted_mask) < floor((ensemble_i1+1)/2)
+        mask_inpt = zeros(size(image1));
+    else
+        mask_inpt = converted_mask{floor((ensemble_i1+1)/2),1};
+    end
     if numel(roi_inpt)>0
         xroi=roi_inpt(1);
         yroi=roi_inpt(2);
@@ -416,8 +516,9 @@ if cancel == 0
                     image1 = preproc.cam_undistort(image1,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
                     image2 = preproc.cam_undistort(image2,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
                 else
-                    image1=import.imread_wrapper(filepath{ensemble_i1},framenum(ensemble_i1),framepart(ensemble_i1,:));
-                    image2=import.imread_wrapper(filepath{ensemble_i1+1},framenum(ensemble_i1+1),framepart(ensemble_i1+1,:));
+                    if isempty(framepart); fp1=[]; fp2=[]; else; fp1=framepart(ensemble_i1,:); fp2=framepart(ensemble_i1+1,:); end
+                    image1=import.imread_wrapper(filepath{ensemble_i1},framenum(ensemble_i1),fp1);
+                    image2=import.imread_wrapper(filepath{ensemble_i1+1},framenum(ensemble_i1+1),fp2);
                     image1 = preproc.cam_undistort(image1,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
                     image2 = preproc.cam_undistort(image2,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
                 end
@@ -462,7 +563,11 @@ image2 = preproc.PIVlab_preproc( ...
     highp=highp, highpsize=highpsize, intenscap=intenscap, ...
     wienerwurst=wienerwurst, wienerwurstsize=wienerwurstsize, ...
     minintens=minintens2, maxintens=maxintens2);
-            mask_inpt = converted_mask{floor((ensemble_i1+1)/2),1};
+            if isempty(converted_mask) || numel(converted_mask) < floor((ensemble_i1+1)/2)
+                mask_inpt = zeros(size(image1));
+            else
+                mask_inpt = converted_mask{floor((ensemble_i1+1)/2),1};
+            end
             if numel(roi_inpt)>0
                 xroi=roi_inpt(1);
                 yroi=roi_inpt(2);
