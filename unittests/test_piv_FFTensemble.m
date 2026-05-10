@@ -25,7 +25,7 @@ testCase.TestData.u_true = -7;
 testCase.TestData.v_true =  3;
 
 % Write 6 identical pairs (12 images) as uint8 PNG files to a temp folder.
-tempDir = fullfile('C:\Users\trash\Documents\MATLAB\claude_code_temp', 'ensemble_test');
+tempDir = 'C:\Users\thiel\Documents\MATLAB\ClaudeCode\temp';
 if ~exist(tempDir, 'dir')
     mkdir(tempDir);
 end
