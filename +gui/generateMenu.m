@@ -40,11 +40,11 @@ uimenu(m6,'Label','PIV settings','Callback',@piv.sett_Callback,'Accelerator','S'
 m6a=uimenu(m6,'Label','Stereo PIV settings','Callback',[]);
 uimenu(m6a,'Label','Disparity correction','Callback',[]);
 uimenu(m6,'Label','ANALYZE!','Callback',@piv.do_analys_Callback,'Accelerator','A');
-m7 = uimenu(MainWindow,'Label','Spatial calibration (px → mm)');
-uimenu(m7,'Label','Calibrate using current or external image','Callback',@calibrate.cal_actual_Callback,'Accelerator','Z');
-m8 = uimenu(MainWindow,'Label','Validation');
-uimenu(m8,'Label','Velocity based validation','Callback',@validate.vector_val_Callback,'Accelerator','V');
-uimenu(m8,'Label','Image based validation','Callback',@validate.image_val_Callback);
+m7 = uimenu(MainWindow,'Label','Validation');
+uimenu(m7,'Label','Velocity based validation','Callback',@validate.vector_val_Callback,'Accelerator','V');
+uimenu(m7,'Label','Image based validation','Callback',@validate.image_val_Callback);
+m8 = uimenu(MainWindow,'Label','Spatial calibration (px → mm)');
+uimenu(m8,'Label','Calibrate using current or external image','Callback',@calibrate.cal_actual_Callback,'Accelerator','Z');
 m9 = uimenu(MainWindow,'Label','Plot');
 uimenu(m9,'Label','Spatial: Derive parameters / modify data','Callback',@plot.derivs_Callback,'Accelerator','D');
 uimenu(m9,'Label','Temporal: Derive parameters','Callback',@plot.temporal_derivs_Callback);

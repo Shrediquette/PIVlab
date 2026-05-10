@@ -1168,7 +1168,7 @@ item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text43 = uicontrol(handles.multip09,'Style','text','String','Vector scale','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4*1 1];
-handles.vectorscale = uicontrol(handles.multip09,'Style','edit','String','8','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.vectorscale_Callback,'Tag','vectorscale','TooltipString','Manually enter a vector scale factor here');
+handles.vectorscale = uicontrol(handles.multip09,'Style','edit','String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.vectorscale_Callback,'Tag','vectorscale','TooltipString','Manually enter a vector scale factor here');
 
 item=[0 item(2)+item(4)+margin/4*0 parentitem(3)/4*3 1];
 handles.text114 = uicontrol(handles.multip09,'Style','text','String','Vector line width','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
@@ -1336,8 +1336,11 @@ handles.multip11 = uipanel(MainWindow, 'Units','characters', 'Position', [0+marg
 parentitem=get(handles.multip11, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4)+margin parentitem(3) 6];
-handles.matlab_text = uicontrol(handles.multip11,'Style','text','String','The files will only include the derivatives that you calculated in the ''Plot -> Derive parameters'' panel. If you did not calculate any derivatives, then the corresponding fields will be empty.','Units','characters','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+item=[0 item(2)+item(4)+margin parentitem(3) 4];
+handles.matlab_text = uicontrol(handles.multip11,'Style','text','String','Exports x, y, velocities, calibration, and vector type. Check "Include derivatives" to also calculate and export vorticity, magnitude, divergence, Q criterion, shear, strain, vector angle, and correlation coefficient.','Units','characters','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+item=[0 item(2)+item(4)+margin parentitem(3) 1.5];
+handles.export_mat_derivatives = uicontrol(handles.multip11,'Style','checkbox','String','Include derivatives','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','export_mat_derivatives','TooltipString','Calculate and include all derivatives (vorticity, magnitude, divergence, Q criterion, shear, strain, vector angle, correlation coefficient)');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.save_mat_current = uicontrol(handles.multip11,'Style','pushbutton','String','Export current frame','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@export.save_mat_current_Callback,'TooltipString','Export data for current frame only');
