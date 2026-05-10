@@ -369,8 +369,11 @@ if isempty(fh)
     if isdeployed || exist('splash_ax','var')
         pause(1)
         close(splashscreen)
-    end
+	end
+	pause(0.5)
+	drawnow;
     gui.SetFullScreen
+	drawnow;
     gui.displogo(1);
     %% Apply fix for wrong UI scaling introduced between matlab 2025a prerelease5 and Matlab2025a
     try
