@@ -877,7 +877,7 @@ parentitem=get(handles.uipanel42x, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/3 2];
-handles.vel_limit = uicontrol(handles.uipanel42x,'Style','pushbutton','String','Rectangle','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.vel_limit_Callback,'TooltipString','Display a velocity scatter plot and draw a window around the allowed velocities');
+handles.vel_limit = uicontrol(handles.uipanel42x,'Style','pushbutton','String','Rectangle','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.vel_limit_Callback,'Tag','vel_limit','TooltipString','Display a velocity scatter plot and draw a window around the allowed velocities');
 
 item=[parentitem(3)/3*1 item(2) parentitem(3)/3 2];
 handles.vel_limit_freehand = uicontrol(handles.uipanel42x,'Style','pushbutton','String','Freehand','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.vel_limit_Callback,'Tag','vel_limit_freehand','TooltipString','Display a velocity scatter plot and freely draw around the allowed velocities');
@@ -1777,7 +1777,7 @@ else
     handles.resolution_setting = uicontrol(handles.multip16,'Style','edit','String','150','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','resolution_setting','TooltipString','Resolution of the output image');
 end
 item=[0 item(2)+item(4)+margin*2 parentitem(3) 2];
-handles.do_export_pixel_data_single = uicontrol(handles.multip16,'Style','pushbutton','String','Export single frame','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@export.do_export_pixel_data_Callback,'TooltipString','Save image for currently active frame');
+handles.do_export_pixel_data_single = uicontrol(handles.multip16,'Style','pushbutton','String','Export single frame','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@export.do_export_pixel_data_Callback,'Tag','do_export_pixel_data_single','TooltipString','Save image for currently active frame');
 
 item=[0 item(2)+item(4)+margin*2 parentitem(3)/2 1];
 handles.text87 = uicontrol(handles.multip16,'Style','text','String','First frame','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
