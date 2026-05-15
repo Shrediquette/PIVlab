@@ -16,7 +16,12 @@ else
     if size(out,3)>1
     	out(:,:,2:end)=[];
     end
-    out(:,:)=mean(in(:)); %Rand wird auf Mittelwert gesetzt
+    extrapolate_border=get(handles.extrapolate_border,'value');
+    if extrapolate_border
+        out(:,:)=NaN; %Rand wird inpainted
+    else
+        out(:,:)=mean(in(:)); %Rand wird auf Mittelwert gesetzt
+    end
     step=x(1,2)-x(1,1);
     minx=(min(min(x))-step/2);
     maxx=(max(max(x))+step/2);
@@ -45,5 +50,25 @@ else
     	dispvar = imresize(in,[target_rows target_cols],colormap_interpolation_list{colormap_interpolation_value}); %INTERPOLATION
     end
     out(miny_idx:maxy_idx,minx_idx:maxx_idx)=dispvar;
+    if extrapolate_border
+        interior_nan=false(size(out));
+        interior_nan(miny_idx:maxy_idx,minx_idx:maxx_idx)=isnan(dispvar);
+        % Limit fill to the ROI (pixels outside ROI are masked and never shown)
+        roirect=gui.retr('roirect');
+        if ~isempty(roirect) && numel(roirect)>=4
+            o_r1=max(1,          roirect(2));
+            o_r2=min(size(out,1),roirect(2)+roirect(4));
+            o_c1=max(1,          roirect(1));
+            o_c2=min(size(out,2),roirect(1)+roirect(3));
+        else
+            o_r1=1; o_r2=size(out,1); o_c1=1; o_c2=size(out,2);
+        end
+        sub=out(o_r1:o_r2, o_c1:o_c2);
+        sub=plot.inpaint_border_strips(sub, ...
+            miny_idx-o_r1+1, maxy_idx-o_r1+1, ...
+            minx_idx-o_c1+1, maxx_idx-o_c1+1);
+        out(o_r1:o_r2, o_c1:o_c2)=sub;
+        out(interior_nan)=NaN;
+    end
 end
 

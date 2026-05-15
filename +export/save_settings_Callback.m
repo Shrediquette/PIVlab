@@ -139,6 +139,8 @@ else
 	end
 end
 
+extrapolate_border=get(handles.extrapolate_border,'value');
+
 clear handles hObject eventdata
 if ~isequal(FileName,0)
 	save('-v6', fullfile(PathName,FileName))

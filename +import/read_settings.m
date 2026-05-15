@@ -204,6 +204,10 @@ try
 catch
     disp('couldnt set stereo GUI elements')
 end
+try
+    set(handles.extrapolate_border,'value',extrapolate_border);
+catch
+end
 end % read_settings
 
 function idx = pivlab_nearest_color(rgb, presets)
