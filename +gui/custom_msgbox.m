@@ -24,7 +24,6 @@ if verLessThan('matlab','25') || debug == 1 %Matlab < 2025
         case 'success'
             answer=msgbox(message,windowtitle,modal);
         case 'quest'
-			numel(options)
 			if numel (options) == 2
 				answer = questdlg(message, windowtitle, options{1},options{2},default);
 			elseif numel (options) == 1
