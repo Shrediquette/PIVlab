@@ -1,0 +1,324 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<bitflow_config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BFML-CXP.xsd">
+	<camera>
+		<features>
+			<standard>CoaXPress</standard>
+			<make>Optronis</make>
+			<model>Cyclone 25-150-M</model>
+			<scan_type>Area Scan</scan_type>
+			<xsize>5120</xsize>
+			<ysize>5120</ysize>
+			<format>Standard</format>
+			<bitdepth packed="yes">10</bitdepth>
+			<link_speed>12.50</link_speed>
+			<acquisition_timeout>60000</acquisition_timeout>
+			<cxp_timeout>4000</cxp_timeout>
+			<num_links>4</num_links>
+			<power_links>
+				<link_1>Default</link_1>
+				<link_2>Default</link_2>
+				<link_3>Default</link_3>
+				<link_4>Default</link_4>
+			</power_links>
+			<aq_off_when_closing>on</aq_off_when_closing>
+		</features>
+		<modes>
+			<mode name="Default">
+				<comments>Default - 10-bit Mono10</comments>
+				<io>
+					<trigger_src source="None"/>
+					<encoder_a_src source="None"/>
+				</io>
+				<device_commands>
+					<command interface="camera_gentl" invoke="before_setup">
+						<feature>AcquisitionStop</feature>
+						<value>1</value>
+						<comment>Stop</comment>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>PixelFormat</feature>
+						<value>Mono10</value>
+						<comment>Match board 16-bit config before starting acquisition</comment>
+					</command>
+					<!-- AcquisitionStart intentionally omitted from after_setup.
+					     Camera stays stopped after videoinput() returns.
+					     synced_start.m sends AcquisitionStart=1 explicitly
+					     right before trigger(), so the DMA ring never receives
+					     pre-trigger frames and cannot overflow. -->
+				</device_commands>
+			</mode>
+			<mode name="Auto">
+				<comments>Autoconfigure</comments>
+				<mode_roi>
+					<xsize>Default</xsize>
+					<ysize>Default</ysize>
+					<bitdepth>Default</bitdepth>
+				</mode_roi>
+				<io>
+					<trigger_src source="None"/>
+					<encoder_a_src source="None"/>
+				</io>
+				<device_commands>
+					<command interface="camera_gentl" invoke="before_setup">
+						<feature>AcquisitionStop</feature>
+						<value>1</value>
+						<comment>Stop</comment>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>AcquisitionStart</feature>
+						<value>1</value>
+						<comment>Start</comment>
+					</command>
+				</device_commands>
+			</mode>
+			<mode name="AutoSWTrig">
+				<comments>Autoconfigure, SW trigger</comments>
+				<mode_roi>
+					<xsize>Default</xsize>
+					<ysize>Default</ysize>
+					<bitdepth>Default</bitdepth>
+				</mode_roi>
+				<io>
+					<trigger_src source="SoftwareTrig"/>
+					<cc1_src source="TrigSel"/>
+					<acquisition_timeout>infinite</acquisition_timeout>
+				</io>
+				<device_commands>
+					<command interface="camera_gentl" invoke="before_setup">
+						<feature>AcquisitionStop</feature>
+						<value>1</value>
+						<comment>Stop</comment>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>AcquisitionStart</feature>
+						<value>1</value>
+						<comment>Start</comment>
+					</command>
+				</device_commands>
+			</mode>
+			<mode name="AutoTTLTrig">
+				<comments>Autoconfigure, TTL trigger</comments>
+				<mode_roi>
+					<xsize>Default</xsize>
+					<ysize>Default</ysize>
+					<bitdepth>Default</bitdepth>
+				</mode_roi>
+				<io>
+					<trigger_src source="TTL"/>
+					<cc1_src source="TrigSel"/>
+					<acquisition_timeout>infinite</acquisition_timeout>
+				</io>
+				<device_commands>
+					<command interface="camera_gentl" invoke="before_setup">
+						<feature>AcquisitionStop</feature>
+						<value>1</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>AcquisitionStart</feature>
+						<value>1</value>
+					</command>
+				</device_commands>
+				<cxp_regs_after>
+					<reg comment="Start">
+						<address>0x000200b0</address>
+						<data>0x00000001</data>
+					</reg>
+				</cxp_regs_after>
+			</mode>
+			<mode name="AutoTSTrig">
+				<comments>Autoconfigure, Timing Sequencer trigger 10 FPS</comments>
+				<mode_roi>
+					<xsize>Default</xsize>
+					<ysize>Default</ysize>
+					<bitdepth>Default</bitdepth>
+				</mode_roi>
+				<io>
+					<cc1_src source="CT0"/>
+					<acquisition_timeout>infinite</acquisition_timeout>
+				</io>
+				<device_commands>
+					<command interface="camera_gentl" invoke="before_setup">
+						<feature>AcquisitionStop</feature>
+						<value>1</value>
+						<comment>Stop</comment>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>AcquisitionStart</feature>
+						<value>1</value>
+						<comment>Start</comment>
+					</command>
+				</device_commands>
+				<timing_sequencer>
+					<ts_segment>
+						<ts_period>50</ts_period>
+						<ts_ct0_state>1</ts_ct0_state>
+					</ts_segment>
+					<ts_segment>
+						<ts_period>50</ts_period>
+						<ts_ct0_state>0</ts_ct0_state>
+					</ts_segment>
+				</timing_sequencer>
+			</mode>
+			<mode name="FreeRun">
+				<comments>Free-run, no triggering, full resolution</comments>
+				<mode_roi>
+					<xsize>5120</xsize>
+					<ysize>5120</ysize>
+					<bitdepth>16</bitdepth>
+				</mode_roi>
+				<io>
+					<trigger_src source="None"/>
+					<encoder_a_src source="None"/>
+				</io>
+				<device_commands>
+					<command interface="camera_gentl" invoke="before_setup">
+						<feature>AcquisitionStop</feature>
+						<value>1</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>PixelFormat</feature>
+						<value>Mono10</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>TriggerMode</feature>
+						<value>Off</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>ExposureMode</feature>
+						<value>Off</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>TriggerOption</feature>
+						<value>Off</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>Width</feature>
+						<value>5120</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>Height</feature>
+						<value>5120</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>AcquisitionStart</feature>
+						<value>1</value>
+					</command>
+				</device_commands>
+			</mode>
+			<mode name="SWTrigger">
+				<comments>Software trigger</comments>
+				<mode_roi>
+					<xsize>5120</xsize>
+					<ysize>5120</ysize>
+					<bitdepth>16</bitdepth>
+				</mode_roi>
+				<io>
+					<trigger_src source="SoftwareTrig"/>
+					<cc1_src source="TrigSel"/>
+					<acquisition_timeout>infinite</acquisition_timeout>
+				</io>
+				<bitflow_regs>
+					<reg>
+						<address>0x00000000</address>
+						<data>0x00000000</data>
+					</reg>
+				</bitflow_regs>
+				<device_commands>
+					<command interface="camera_gentl" invoke="before_setup">
+						<feature>AcquisitionStop</feature>
+						<value>1</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>PixelFormat</feature>
+						<value>Mono10</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>TriggerSource</feature>
+						<value>LinkTrigger0</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>TriggerSelector</feature>
+						<value>FrameStart</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>TriggerMode</feature>
+						<value>On</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>ExposureMode</feature>
+						<value>Timed</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>Width</feature>
+						<value>5120</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>Height</feature>
+						<value>5120</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>AcquisitionStart</feature>
+						<value>1</value>
+					</command>
+				</device_commands>
+			</mode>
+			<mode name="TTLTrigger">
+				<comments>TTL trigger</comments>
+				<mode_roi>
+					<xsize>5120</xsize>
+					<ysize>5120</ysize>
+					<bitdepth>16</bitdepth>
+				</mode_roi>
+				<io>
+					<trigger_src source="TTL"/>
+					<cc1_src source="TrigSel"/>
+					<acquisition_timeout>infinite</acquisition_timeout>
+				</io>
+				<bitflow_regs>
+					<reg>
+						<address>0x00000000</address>
+						<data>0x00000000</data>
+					</reg>
+				</bitflow_regs>
+				<device_commands>
+					<command interface="camera_gentl" invoke="before_setup">
+						<feature>AcquisitionStop</feature>
+						<value>1</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>PixelFormat</feature>
+						<value>Mono10</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>TriggerSource</feature>
+						<value>LinkTrigger0</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>TriggerSelector</feature>
+						<value>FrameStart</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>TriggerMode</feature>
+						<value>On</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>ExposureMode</feature>
+						<value>Timed</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>Width</feature>
+						<value>5120</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>Height</feature>
+						<value>5120</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>AcquisitionStart</feature>
+						<value>1</value>
+					</command>
+				</device_commands>
+			</mode>
+		</modes>
+	</camera>
+</bitflow_config>

@@ -115,6 +115,7 @@ if isempty(fh)
     end
     %% check write access
     disp(['-> User path is ' userpath]);
+    disp(['-> Executable directory is ' ctfroot])
     try
         temp=rand(3,3);
         save(fullfile(userpath,'temp.mat' ),'temp');
@@ -302,6 +303,24 @@ if isempty(fh)
             disp(['-> OpenCV ' v ' found.'])
         end
     catch
+    end
+    %% Register bitflow IMAQ adaptor
+    if isdeployed
+        try
+            bit_flow_DLL = fullfile(ctfroot,'PIVlab','PIVlab_capture_resources', 'bitflow_resources',matlabRelease.Release,'BitFlow.dll');
+            imaqregister(bit_flow_DLL);
+            imaqreset
+            info=imaqhwinfo;
+            disp('Installed IMAQ adaptors:')
+            disp('add the folder to the included files in app apckaging...')
+            for i=1:numel(info.InstalledAdaptors)
+                disp(info.InstalledAdaptors{i})
+            end
+        catch ME
+            disp('Error: Could not register the bitflow adaptor.')
+            disp (ME.message)
+            disp (bit_flow_DLL)
+        end
     end
 
 

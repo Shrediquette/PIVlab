@@ -59,7 +59,7 @@ if strcmp(camera_type,'OPTRONIS')
         camera_sub_type=''; %empty string
     end
     switch camera_sub_type
-        case 'Cyclone-2-2000-M'
+        case {'Cyclone-2-2000-M', 'Cyclone-2-2000-M-bitflow'}
             if isempty(bitrate)
                 bitrate=8;
             end
@@ -74,7 +74,7 @@ if strcmp(camera_type,'OPTRONIS')
         case 'Cyclone-1HS-3500-M'
             blind_time=20;
             cam_delay=3;
-        case 'Cyclone-25-150-M'
+        case {'Cyclone-25-150-M', 'Cyclone-25-150-M-bitflow'}
             blind_time=27;
             cam_delay=3;
         otherwise

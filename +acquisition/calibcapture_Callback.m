@@ -96,9 +96,14 @@ if ready==1
         elseif strcmp(camera_type,'OPTOcam')
             [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(inf,expos,ac_ROI_general);
         elseif strcmp(camera_type,'OPTRONIS')
-            acquisition.control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
-            [errorcode, caliimg]=PIVlab_capture_OPTRONIS_calibration_image(inf,expos,ac_ROI_general);
-			acquisition.control_simple_sync_serial(0,2);
+            camera_sub_type=gui.retr('camera_sub_type');
+            if endsWith(camera_sub_type, '-bitflow')
+                [errorcode, caliimg]=PIVlab_capture_OPTRONIS_bitflow_calibration_image(inf,expos,ac_ROI_general);
+            else
+                acquisition.control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
+                [errorcode, caliimg]=PIVlab_capture_OPTRONIS_calibration_image(inf,expos,ac_ROI_general);
+                acquisition.control_simple_sync_serial(0,2);
+            end
 		elseif strcmp(camera_type,'flir')
 			[errorcode, caliimg]=PIVlab_capture_flir_calibration_image(expos);
 		elseif strcmp(camera_type,'chronos')

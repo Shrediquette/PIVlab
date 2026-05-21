@@ -228,7 +228,6 @@ if strcmpi(EventType, 'error')
 	fprintf('%s\n', EventData.Message);
 end
 
-
 if strcmpi(event.Data.MessageID,'imaq:imaqmex:outofmemory')
 	gui.custom_msgbox('error',getappdata(0,'hgui'),'Memory full','Out of memory. RAM is full, most likely, you need to lower the amount of frames to capture to fix this error.','modal');
 else

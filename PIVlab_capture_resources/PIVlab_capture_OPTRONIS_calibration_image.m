@@ -177,6 +177,7 @@ preview(OPTRONIS_vid,image_handle_OPTRONIS)
 tmp=get(image_handle_OPTRONIS,'CData');
 tmp=size(tmp(:,:,1));
 set(image_handle_OPTRONIS,'CData',ones(tmp)*35);
+pause(0.1) %let the preview draw the camera image before reading it back.
 
 OPTRONIS_src.AcquisitionFrameRate = 20; % needs to be set again on the optronis after starting preview or acquisition
 OPTRONIS_src.ExposureTime =exposure_time;

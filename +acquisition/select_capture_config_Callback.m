@@ -166,7 +166,7 @@ if strcmpi(config_string,'PIVlab LD-PS + OPTRONIS Cyclone') % OPTRONIS
 	if isempty (camera_sub_type) %this means that hotplugging camera type will not be possible: Camera type will only be detected at first start of PIVlab.
 		try
 			gui.toolsavailable(0,'Detecting OPTRONIS camera type...')
-			[~,camera_sub_type] = PIVlab_capture_OPTRONIS_cam_detect();
+			[~,camera_sub_type] = PIVlab_capture_OPTRONIS_unified_cam_detect();
 			gui.put('camera_sub_type',camera_sub_type);
 			target_axis=gui.retr('pivlab_axis');
 			postix=get(target_axis,'XLim');postiy=get(target_axis,'YLim');text(postix(2)/2,postiy(2)/2,['Detected: ' camera_sub_type],'HorizontalAlignment','center','VerticalAlignment','middle','color','g','fontsize',16, 'BackgroundColor', [0.25 0.25 0.25],'tag','busyhint','margin',10,'Clipping','on');
@@ -208,8 +208,18 @@ if strcmpi(config_string,'PIVlab LD-PS + OPTRONIS Cyclone') % OPTRONIS
 			gui.put('max_cam_res',[5120,5120]);
 			gui.put('min_allowed_interframe',40);
 			gui.put('blind_time',25);
+		case 'Cyclone-2-2000-M-bitflow'
+			avail_freqs={'10000' '5000' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
+			gui.put('max_cam_res',[1920,1080]);
+			gui.put('min_allowed_interframe',20);
+			gui.put('blind_time',3);
+		case 'Cyclone-25-150-M-bitflow'
+			avail_freqs={'1000' '650' '300' '145' '100' '75' '50' '20'};
+			gui.put('max_cam_res',[5120,5120]);
+			gui.put('min_allowed_interframe',40);
+			gui.put('blind_time',25);
 		otherwise
-			gui.custom_msgbox('error',getappdata(0,'hgui'),'No camera found',{'No camera found. Is it connected and powered on?' 'Is the ''Image Acquisition Toolbox Support Package for GenICam Interface'' installed?.'},'modal');
+			gui.custom_msgbox('error',getappdata(0,'hgui'),'No camera found',{'No camera found. Is it connected and powered on?' 'Is the ''Image Acquisition Toolbox Support Package for GenICam Interface'' or the BitFlow MATLAB IMAQ Adaptor installed?'},'modal');
 			disp('Camera detection unsuccesful.')
 			avail_freqs={'2000' '1750' '1500' '1000' '500' '250' '100' '50'};
 			gui.put('max_cam_res',[1920,1080]);

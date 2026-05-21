@@ -285,8 +285,10 @@ if required_files_check
 				end
 
 				camera_sub_type=gui.retr('camera_sub_type');
+				is_bitflow = endsWith(camera_sub_type, '-bitflow');
+				base_sub_type = strrep(camera_sub_type, '-bitflow', '');
 				if OPTRONIS_bits==8
-					switch camera_sub_type
+					switch base_sub_type
 						case 'Cyclone-2-2000-M'
 							if ~verLessThan('matlab','25')
 								max_fps_with_current_settings = 10000;
@@ -310,7 +312,7 @@ if required_files_check
 					end
 
 				elseif OPTRONIS_bits==10
-					switch camera_sub_type
+					switch base_sub_type
 						case 'Cyclone-2-2000-M'
 							if ~verLessThan('matlab','25')
 								max_fps_with_current_settings = 10000;
@@ -342,7 +344,11 @@ if required_files_check
 					Error_Reason{end+1,1}='Please select a lower frame rate.';
 				end
 				if OPTRONIS_settings_check == 1
-					[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits); %prepare cam and start camera (waiting for trigger...)
+					if is_bitflow
+						[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_bitflow_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits);
+					else
+						[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits);
+					end %prepare cam and start camera (waiting for trigger...)
 					pause(0.1) %make sure OPTRONIS is ready to capture.
 					Error_Reason={};
 				end
@@ -356,7 +362,11 @@ if required_files_check
 				if OPTRONIS_settings_check == 1
 					gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK');
 					acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
-					[OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits); %capture n images, display livestream
+					if is_bitflow
+						[OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_bitflow_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits);
+					else
+						[OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits);
+					end %capture n images, display livestream
 				else
 					gui.custom_msgbox('error',getappdata(0,'hgui'),'',Error_Reason,'modal');
 					gui.put('cancel_capture',1);
@@ -402,7 +412,11 @@ if required_files_check
 			end
 			if strcmpi(config_string,'PIVlab LD-PS + OPTRONIS Cyclone') %OPTRONIS
 				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
-					[OutputError,actually_saved_images] = PIVlab_capture_OPTRONIS_save(OPTRONIS_vid,imageamount,projectpath,frame_nr_display,OPTRONIS_bits); %save the images from ram to disk.
+					if is_bitflow
+						[OutputError,actually_saved_images] = PIVlab_capture_OPTRONIS_bitflow_save(OPTRONIS_vid,imageamount,projectpath,frame_nr_display,OPTRONIS_bits);
+					else
+						[OutputError,actually_saved_images] = PIVlab_capture_OPTRONIS_save(OPTRONIS_vid,imageamount,projectpath,frame_nr_display,OPTRONIS_bits);
+					end %save the images from ram to disk.
 					imageamount=actually_saved_images;
 				end
 			end

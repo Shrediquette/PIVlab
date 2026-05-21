@@ -16,7 +16,8 @@ if strcmp(camera_type,'flir')
 end
 
 if strcmp(camera_type,'OPTRONIS')
-    if verLessThan('matlab','25')
+    camera_sub_type_ver = gui.retr('camera_sub_type');
+    if verLessThan('matlab','25') && ~endsWith(camera_sub_type_ver, '-bitflow')
         gui.custom_msgbox('error',getappdata(0,'hgui'),'Not available','ROI selection for the OPTRONIS can only be done with Matlab versions > R2025a.','modal');
         camera_type='NaN'; %prevent execution of ROI selection for versions < R2025a
     end
@@ -49,12 +50,16 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
         elseif strcmp(camera_type,'OPTOcam')
             [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(1,expos,[1,1,max_cam_res]);
         elseif strcmp(camera_type,'OPTRONIS')
-            disp('single image capture with synchronizer toggled on...')
-
             expos=round(str2num(get(handles.ac_expo,'String'))*1000);
-            acquisition.control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
-            [errorcode, caliimg]=PIVlab_capture_OPTRONIS_calibration_image(1,expos,[1,1,max_cam_res]);
-            acquisition.control_simple_sync_serial(0,2);
+            camera_sub_type=gui.retr('camera_sub_type');
+            if endsWith(camera_sub_type, '-bitflow')
+                [errorcode, caliimg]=PIVlab_capture_OPTRONIS_bitflow_calibration_image(1,expos,[1,1,max_cam_res]);
+            else
+                disp('single image capture with synchronizer toggled on...')
+                acquisition.control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
+                [errorcode, caliimg]=PIVlab_capture_OPTRONIS_calibration_image(1,expos,[1,1,max_cam_res]);
+                acquisition.control_simple_sync_serial(0,2);
+            end
 
             %acquisition.control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
             %[errorcode, caliimg]=PIVlab_capture_OPTRONIS_calibration_image(1,expos,[1,1,max_cam_res]);
@@ -73,13 +78,14 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
 
             bla=findobj(target_axis,'type','image');
             current_image_size=size(bla.CData);
-
             if isempty(ac_ROI_general)
                 ac_ROI_general=[0.5,0.5,current_image_size(2)/binning,current_image_size(1)/binning]; %1 Hz default ROI
             end
             gui.put('doing_roi',1)
-            stretched_image=adapthisteq(bla.CData);
+            stretched_image=adapthisteq(mat2gray(double(bla.CData)));
             bla.CData=stretched_image;
+            %clim([min(stretched_image(:)) max(stretched_image(:))]);
+            clim auto
             ac_ROI_general_handle = drawrectangle(target_axis,'Position',ac_ROI_general,'LabelVisible','hover','Deletable',0,'DrawingArea',[1 1 current_image_size(2) current_image_size(1)],'tag','new_ROImethod','StripeColor','y');
             addlistener(ac_ROI_general_handle,'MovingROI',@roi.ROIallevents);
             addlistener(ac_ROI_general_handle,'ROIMoved',@roi.ROIallevents);
@@ -125,26 +131,24 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
 
             if strcmp(camera_type,'OPTRONIS')
                 camera_sub_type=gui.retr('camera_sub_type');
-                switch camera_sub_type
+                switch strrep(camera_sub_type, '-bitflow', '')
                     case 'Cyclone-2-2000-M'
-                        %Hier: auswahl nur wenn r2025....
                         m0 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1920x1080 (max. 2000 fps)','Callback',@roi.setdefaultroi);
-                        if ~verLessThan('matlab','25')
+                        if ~verLessThan('matlab','25') || endsWith(camera_sub_type,'-bitflow')
                             m2 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1792x480 (max. 5000 fps)','Callback',@roi.setdefaultroi);
                             m3 = uimenu(c_menu,'Label','Cyclone-2-2000-M 1024x240 (max. 10000 fps)','Callback',@roi.setdefaultroi);
                         end
                         m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
                     case 'Cyclone-1HS-3500-M'
                         m0 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x860 (max. 3500 fps)','Callback',@roi.setdefaultroi);
-                        if ~verLessThan('matlab','25')
+                        if ~verLessThan('matlab','25') || endsWith(camera_sub_type,'-bitflow')
                             m2 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x320 (max. 9200 fps)','Callback',@roi.setdefaultroi);
                             m3 = uimenu(c_menu,'Label','Cyclone-1HS-3500-M 1280x240 (max. 12200 fps)','Callback',@roi.setdefaultroi);
                         end
                         m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
                     case 'Cyclone-25-150-M'
-                        %Hier: auswahl nur wenn r2025....
                         m0 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x5120 (max. 145 fps)','Callback',@roi.setdefaultroi);
-                        if ~verLessThan('matlab','25')
+                        if ~verLessThan('matlab','25') || endsWith(camera_sub_type,'-bitflow')
                             m1 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x2160 (max. 300 fps)','Callback',@roi.setdefaultroi);
                             m2 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x1080 (max. 650 fps)','Callback',@roi.setdefaultroi);
                             m3 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x720 (max. 1000 fps)','Callback',@roi.setdefaultroi);
@@ -167,16 +171,25 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             xmax=position(1)+position(3)-1;
             ymax=position(2)+position(4)-1;
 
-            % Round so it fits the requirements of the camera ROI
-            %xmin=floor(xmin/8)*8+1;
-            %ymin=floor(ymin/2)*2+1;
-            %xmax=floor(xmax/8)*8;
-            %ymax=floor(ymax/2)*2;
-
-            xmin=floor(xmin/32)*32+1;
-            ymin=floor(ymin/32)*32+1;
-            xmax=floor(xmax/32)*32;
-            ymax=floor(ymax/32)*32;
+            %% Round so it fits the requirements of the camera ROI
+            % different cameras have different requirements for the steps
+            % that the ROI can have.
+            if strcmp(camera_type,'pco_edge26')
+                xmin=floor(xmin/32)*32+1;
+                ymin=floor(ymin/32)*32+1;
+                xmax=floor(xmax/32)*32; %32 required by pco.edge 26 DS
+                ymax=floor(ymax/8)*8;
+            elseif strcmp(camera_type,'OPTRONIS')
+                xmin=floor(xmin/64)*64+1;
+                ymin=floor(ymin/8)*8+1;
+                xmax=floor(xmax/64)*64;
+                ymax=floor(ymax/8)*8;
+            else
+                xmin=floor(xmin/8)*8+1;
+                ymin=floor(ymin/2)*2+1;
+                xmax=floor(xmax/8)*8;
+                ymax=floor(ymax/2)*2;
+            end
 
             if xmin<1
                 xmin=1;
@@ -195,7 +208,6 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             position(3)=xmax-xmin+1;
             position(4)=ymax-ymin+1;
             ac_ROI_general=position;
-
 
             gui.put('ac_ROI_general',ac_ROI_general);
             save('PIVlab_settings_default.mat','ac_ROI_general','-append');
