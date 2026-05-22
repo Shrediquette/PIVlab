@@ -47,22 +47,40 @@ OPTRONIS_gain = gui.retr('OPTRONIS_gain');
 if isempty(OPTRONIS_gain)
     OPTRONIS_gain=1;
 end
-
+%% Create videoinput
+%% select bitmode
+if isempty(bitmode) || ~isnumeric(bitmode)
+    bitmode=8;
+end
+if bitmode==8
+    camfilemode='PIVMode8bit'; % funktioniert ohne Fehlermeldung, timing + dropped frames nicht kontrolliert.
+else
+    camfilemode='PIVMode10bit';
+end
+%% select cam subtype
 camera_sub_type = gui.retr('camera_sub_type');
 if contains(camera_sub_type, '25-150')
-    if bitmode==8
-        bfml_name = 'Optronis-Cyclone-25-150-M.bfml';
-    else
-        bfml_name = 'Optronis-Cyclone-25-150-M-10bit.bfml';
-    end
+    bfml_name = 'Optronis-Cyclone-25-150-M_OLT.bfml'; %does not exist yet
+    exposure_gap = 24;
+    minexpo = 12;
+elseif contains(camera_sub_type, '2-2000')
+    bfml_name = 'Optronis-Cyclone-2-2000-M_OLT.bfml';
+    exposure_gap = 3;
+    minexpo = 2;
+elseif contains(camera_sub_type, '1HS-3500')
+    bfml_name = 'Optronis-Cyclone-1HS-3500-M_OLT.bfml'; %does not exist yet
+    exposure_gap = 3;
+    minexpo = 2;
 else
-    if bitmode==8
-        bfml_name = 'Optronis-Cyclone-2-2000-M.bfml';
-    else
-        bfml_name = 'Optronis-Cyclone-2-2000-M-10bit.bfml';
-    end
+    disp('bfml file does not exist for this camera type')
+    return
 end
-bfml_path = fullfile(bfml_dir, bfml_name);
+if bitmode > 8
+    exposure_gap = exposure_gap + 1; %maximum exposure issmaller at 10 bit
+end
+
+bfml_dir  = fileparts(mfilename('fullpath'));
+bfml_path = fullfile(bfml_dir, [camfilemode '@' bfml_name]);
 OPTRONIS_vid = videoinput('bitflow', 1, [bfml_path ';BuffersToUse=4']);
 OPTRONIS_src = getselectedsource(OPTRONIS_vid);
 

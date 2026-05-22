@@ -37,7 +37,7 @@ end
 %% Create temporary videoinput to identify camera
 try
     bfml_dir  = fileparts(mfilename('fullpath'));
-    bfml_path = fullfile(bfml_dir, 'Optronis-Cyclone-2-2000-M.bfml');
+    bfml_path = fullfile(bfml_dir, 'Optronis-Cyclone-2-2000-M_OLT.bfml');
     OPTRONIS_vid = videoinput('bitflow', 1, [bfml_path ';BuffersToUse=4']);
     OPTRONIS_src = getselectedsource(OPTRONIS_vid);
 

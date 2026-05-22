@@ -1,6 +1,5 @@
 function [OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_bitflow_synced_capture(OPTRONIS_vid,nr_of_images,do_realtime,ROI_live,frame_nr_display,bitmode)
 fix_Optronis_skipped_frame=0;
-OPTRONIS_climits=2^bitmode;
 hgui=getappdata(0,'hgui');
 image_handle_OPTRONIS=getappdata(hgui,'image_handle_OPTRONIS');
 OutputError=0;
@@ -9,15 +8,14 @@ OPTRONIS_src = getselectedsource(OPTRONIS_vid);
 OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame;
 set(frame_nr_display,'backgroundcolor','k');
 %% capture data
-
 while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdata(hgui,'cancel_capture') ~=1
     %% Stop camera the instant enough frames are in — do this at the TOP of
     %% the loop body, before any slow display operations (drawnow, histogram,
     %% sharpness) that would otherwise let the camera fire hundreds of extra
     %% frames into the DMA ring during the final loop iteration.
     if ~isinf(OPTRONIS_frames_to_capture) && OPTRONIS_vid.FramesAcquired >= (OPTRONIS_frames_to_capture+2)
-        OPTRONIS_src.BFGTLNodeName     = 'AcquisitionStop';
-        OPTRONIS_src.BFGTLNodeValueStr = '1';
+        %OPTRONIS_src.BFGTLNodeName     = 'AcquisitionStop';
+        %OPTRONIS_src.BFGTLNodeValueStr = '1';
         break;
     end
     ima = image_handle_OPTRONIS.CData;
@@ -208,24 +206,14 @@ while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdat
         sharp_loop_cnt=[];
     end
 end
-
-% Safety-net AcquisitionStop for the Inf-preview path and the cancel path.
-% For finite captures the early-exit break above already sent AcquisitionStop;
-% sending it again is harmless.
-OPTRONIS_src.BFGTLNodeName     = 'AcquisitionStop';
-OPTRONIS_src.BFGTLNodeValueStr = '1';
-% 50 ms settle: give the CXP link time to deliver AcquisitionStop to the
-% camera before stoppreview/stop tear down the DMA ring.  Without this,
-% in-flight frames arrive after the ring closes and generate a stale
-% "no buffers available" error in BitFlow's driver stack that unspools as
-% a spurious warning at the start of the next capture session.
+%OPTRONIS_src.BFGTLNodeName     = 'AcquisitionStop';
+%OPTRONIS_src.BFGTLNodeValueStr = '1';
 pause(0.05);
-
 OPTRONIS_src.BFGTLNodeName     = 'EnableFan';
 OPTRONIS_src.BFGTLNodeValueStr = 'On';
-
-stoppreview(OPTRONIS_vid)
 stop(OPTRONIS_vid);
+stoppreview(OPTRONIS_vid)
+
 
 if ~isinf(OPTRONIS_frames_to_capture)
     set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTRONIS_vid.FramesAcquired/2))]);

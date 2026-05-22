@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bitflow_config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BFML-CXP.xsd">
+	<camera>
+		<features>
+			<standard>CoaXPress</standard>
+			<make>Optronis</make>
+			<model>Cyclone 2-2000</model>
+			<scan_type>Area Scan</scan_type>
+			<xsize>1920</xsize>
+			<ysize>1080</ysize>
+			<format>Standard</format>
+			<bitdepth>8</bitdepth>
+			<link_speed>12.50</link_speed>
+			<acquisition_timeout>1000</acquisition_timeout>
+			<cxp_timeout>4000</cxp_timeout>
+			<num_links>4</num_links>
+			<power_links>
+				<link_1>Default</link_1>
+				<link_2>Default</link_2>
+				<link_3>Default</link_3>
+				<link_4>Default</link_4>
+			</power_links>
+		</features>
+		<modes>
+			<mode name="Default">
+				<comments>Default</comments>
+				<io>
+					<trigger_src source="None"/>
+					<encoder_a_src source="None"/>
+				</io>
+				<device_commands>
+					<command interface="camera_gentl" invoke="before_setup">
+						<feature>AcquisitionStop</feature>
+						<value>1</value>
+						<comment>Stop</comment>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>AcquisitionStart</feature>
+						<value>1</value>
+						<comment>Start</comment>
+					</command>
+				</device_commands>
+			</mode>
+			<mode name="CalibrationMode10bit">
+				<comments>PIVlab calibration mode in 10 bits. Internal 25 Hz</comments>
+				<mode_roi>
+					<bitdepth packed="yes">10</bitdepth>
+				</mode_roi>
+				<io>
+					<trigger_src source="None"/>
+					<encoder_a_src source="None"/>
+				</io>
+				<device_commands>
+					<command interface="camera_gentl" invoke="before_setup">
+						<feature>AcquisitionStop</feature>
+						<value>1</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>PixelFormat</feature>
+						<value>Mono10</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>ExposureMode</feature>
+						<value>Timed</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>Width</feature>
+						<value>1920</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>Height</feature>
+						<value>1080</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>AcquisitionFrameRate</feature>
+						<value>25</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>AcquisitionMode</feature>
+						<value>Continuous</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>ExposureTime</feature>
+						<value>50</value>
+						<comment>Will be overwritten by PIVlab</comment>
+					</command>
+				</device_commands>
+			</mode>
+			<mode name="PIVMode8bit">
+				<comments>PIVlab external Sync mode in 8 bits</comments>
+				<io>
+					<trigger_src source="TTL"/>
+					<cc1_src source="TrigSel"/>
+					<acquisition_timeout>infinite</acquisition_timeout>
+				</io>
+				<bitflow_regs>
+					<reg>
+						<address>0x00000000</address>
+						<data>0x00000000</data>
+					</reg>
+				</bitflow_regs>
+				<device_commands>
+					<command interface="camera_gentl" invoke="before_setup">
+						<feature>AcquisitionStop</feature>
+						<value>1</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>PixelFormat</feature>
+						<value>Mono8</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>AcquisitionMode</feature>
+						<value>SingleFrame</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>ExposureMode</feature>
+						<value>Timed</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>Width</feature>
+						<value>1920</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>Height</feature>
+						<value>1080</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>AcquisitionFrameRate</feature>
+						<value>20</value>
+						<comment>Does not matter with external trigger</comment>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>ExposureTime</feature>
+						<value>50</value>
+						<comment>Will be overwritten by PIVlab</comment>
+					</command>
+				</device_commands>
+			</mode>
+			<mode name="PIVMode10bit">
+				<comments>PIVlab external Sync mode in 10 bits</comments>
+				<mode_roi>
+					<bitdepth packed="yes">10</bitdepth>
+				</mode_roi>
+				<io>
+					<trigger_src source="TTL"/>
+					<cc1_src source="TrigSel"/>
+					<acquisition_timeout>infinite</acquisition_timeout>
+				</io>
+				<bitflow_regs>
+					<reg>
+						<address>0x00000000</address>
+						<data>0x00000000</data>
+					</reg>
+				</bitflow_regs>
+				<device_commands>
+					<command interface="camera_gentl" invoke="before_setup">
+						<feature>AcquisitionStop</feature>
+						<value>1</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>PixelFormat</feature>
+						<value>Mono10</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>AcquisitionMode</feature>
+						<value>SingleFrame</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>ExposureMode</feature>
+						<value>Timed</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>Width</feature>
+						<value>1920</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>Height</feature>
+						<value>1080</value>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>AcquisitionFrameRate</feature>
+						<value>20</value>
+						<comment>Does not matter with external trigger</comment>
+					</command>
+					<command interface="camera_gentl" invoke="after_setup">
+						<feature>ExposureTime</feature>
+						<value>50</value>
+						<comment>Will be overwritten by PIVlab</comment>
+					</command>
+				</device_commands>
+			</mode>
+		</modes>
+	</camera>
+</bitflow_config>

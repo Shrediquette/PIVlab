@@ -26,19 +26,17 @@ end
 if do_save_frames > 0
     set(frame_nr_display,'String','Getting data from RAM...');
     drawnow;
-    'Available frames'
-    OPTRONIS_vid.FramesAvailable
     OPTRONIS_data = getdata(OPTRONIS_vid,do_save_frames+2);
-
+    %{
 %diff over the images, and check mean difference.
-
 oldhandle=gcf;
 figure;plot(squeeze(mean(diff(OPTRONIS_data(:,:,1,1:2:end),1,4),[1 2])))
+figure;imagesc(OPTRONIS_data(:,:,1,1));
+figure;imagesc(OPTRONIS_data(:,:,1,2));
 figure(oldhandle)
-
-
+    %}
     %% Detect if first frame is empty
-    
+
     bug_fix_skipped_frame=0;
     %{
     max_imgs=30;
@@ -80,17 +78,19 @@ figure(oldhandle)
             timestamp(cntr2)=extractOptronisMetadata(OPTRONIS_data(1,1:5,:,cntr2)*bitmultiplicator).MicrosecondCounter;
             cntr2=cntr2+1;
         end
-       disp('... done.')
+        disp('... done.')
         OPTRONIS_src.BFGTLNodeName = 'AcquisitionFrameRate';
         setpoint_delta_t=1/str2double(OPTRONIS_src.BFGTLNodeValueStr)*1000^2;
         diff_timestamps=diff(timestamp);
         outliers=find(abs(diff_timestamps)>100000);
         diff_timestamps(outliers)=nan;
         error_delta_t=abs(diff_timestamps-setpoint_delta_t);
+        %{
         old_figure=gcf;
         figure;plot(diff(timestamp(1:end-1)));ylim([setpoint_delta_t*0.9 setpoint_delta_t*1.1]);
         figure;plot(timestamp);
         figure(old_figure)
+        %}
         disp('Image timestamps in microseconds (exposure starts):')
         disp(['Mean delta t = ' num2str(mean(diff_timestamps,'omitnan'))])
         disp(['Max delta t = ' num2str(max(diff_timestamps,[],'omitnan'))])
@@ -98,8 +98,8 @@ figure(oldhandle)
         disp(['Nr of wrong delta t = ' num2str(numel(find(error_delta_t>=20)))])
         disp(['Nr of outliers (most likely bad counter encoding / decoding) = ' num2str(numel(outliers))])
         disp(['Duration of recording = ' num2str(round((timestamp(end) - timestamp(1))/1000^2,2)) ' s. (should be '       num2str(round(setpoint_delta_t / 1000^2* nr_of_images*2,2)) ' s)'])
-        
-  
+
+
         if numel(outliers) > 0
             disp('Outlier image nr = ')
             disp(num2str(outliers/2))
