@@ -107,7 +107,7 @@ parentitem=get(handles.multip01, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.stereocheckbox = uicontrol(handles.multip01,'Style','checkbox','Value',0,'String','Stereo-PIV mode (2D3C)','Units','characters', 'Fontunits','points','Fontsize',10,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.stereocheckbox_Callback,'Tag','stereocheckbox','TooltipString','Enable Stereo-PIV mode');
+handles.stereocheckbox = uicontrol(handles.multip01,'Style','checkbox','Value',0,'String','Stereo-PIV mode (2D3C)','Units','characters', 'Fontunits','points','Fontsize',10,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.stereocheckbox_Callback,'Tag','stereocheckbox','TooltipString','Enable Stereo-PIV mode','Enable','off');
 
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.loadimgsbutton = uicontrol(handles.multip01,'Style','pushbutton','String','Import images','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@import.loadimgsbutton_Callback,1,[]},'TooltipString','Load image data');

@@ -3,6 +3,7 @@ if ~isempty(gui.retr('doing_roi')) && gui.retr('doing_roi')==1
     ac_ROI_general_handle = findobj('tag','new_ROImethod');
     binning=gui.retr('binning');
     max_cam_res =gui.retr('max_cam_res');
+    camera_type=gui.retr('camera_type');
     if isempty(binning)
         binning=1;
     end
@@ -103,22 +104,61 @@ if ~isempty(gui.retr('doing_roi')) && gui.retr('doing_roi')==1
             des_y=720;
 
         case 'Enter ROI'
-            prompt = {'x','y','w','h'};
-            dlgtitle = 'ROI';
-            dims = [1 15];
-            current_pos=get(ac_ROI_general_handle,'Position');
-            definput = {num2str(current_pos(1)),num2str(current_pos(2)),num2str(current_pos(3)),num2str(current_pos(4))};
-            answer = inputdlg(prompt,dlgtitle,dims,definput);
-            if ~isempty(answer)
-                selection=2; %manual x and y coordinates
-                des_x=str2num(answer{3});
-                des_y=str2num(answer{4});
-                min_x=str2num(answer{1});
-                min_y=str2num(answer{2});
-                img_size=[des_x des_y];
+            c = roi.get_roi_constraints(camera_type, max_cam_res);
+            labels = {sprintf('x (step %d)', c.step_x), sprintf('y (step %d)', c.step_y), ...
+                      sprintf('w (step %d, min %d)', c.step_w, c.min_w), ...
+                      sprintf('h (step %d, min %d)', c.step_h, c.min_h)};
+            current_pos = round(get(ac_ROI_general_handle,'Position'));
+            try
+                hgui_local = getappdata(0,'hgui');
+                mainpos = get(hgui_local,'Position');
+            catch
+                mainpos = [0 2.8571 240 50.9524];
+            end
+            roi_fig = figure('numbertitle','off','MenuBar','none','DockControls','off', ...
+                'Toolbar','none','Name','Enter ROI','resize','off', ...
+                'Units','characters', ...
+                'Position',[mainpos(1)+mainpos(3)/2-18, mainpos(2)+mainpos(4)/2, 36, 12], ...
+                'WindowStyle','normal');
+            col_lbl = 1;  col_fld = 19;
+            w_lbl   = 17; w_fld   = 14;
+            row_h   = 1.5;
+            % Pass 1: create all edit fields (no callbacks yet)
+            edit_handles = zeros(1,4);
+            for k = 1:4
+                y_pos = 11 - k*2;
+                uicontrol(roi_fig,'Style','text','String',labels{k}, ...
+                    'Units','characters','FontUnits','points', ...
+                    'HorizontalAlignment','right', ...
+                    'Position',[col_lbl, y_pos, w_lbl, row_h]);
+                edit_handles(k) = uicontrol(roi_fig,'Style','edit', ...
+                    'String',num2str(current_pos(k)), ...
+                    'Units','characters','FontUnits','points', ...
+                    'Position',[col_fld, y_pos, w_fld, row_h]);
+            end
+            % Pass 2: assign callbacks now that edit_handles is fully populated
+            for k = 1:4
+                set(edit_handles(k),'Callback',@(~,~) roi.update_roi_field(edit_handles, ac_ROI_general_handle, c));
+            end
+            uicontrol(roi_fig,'Style','pushbutton','String','OK', ...
+                'Units','characters','FontUnits','points', ...
+                'Position',[col_lbl+1, 0.5, 14, 2], ...
+                'Callback',@(~,~) uiresume(roi_fig));
+            uicontrol(roi_fig,'Style','pushbutton','String','Cancel', ...
+                'Units','characters','FontUnits','points', ...
+                'Position',[col_lbl+17, 0.5, 14, 2], ...
+                'Callback',@(~,~) delete(roi_fig));
+            uiwait(roi_fig);
+            if ishandle(roi_fig)
+                vals = arrayfun(@(h) str2double(get(h,'String')), edit_handles);
+                delete(roi_fig);
+                selection = 2;
+                min_x = vals(1);  min_y = vals(2);
+                des_x = vals(3);  des_y = vals(4);
+                img_size = [des_x des_y];
             else
-                des_x=max_cam_res(1);
-                des_y=max_cam_res(2);
+                des_x = max_cam_res(1);
+                des_y = max_cam_res(2);
             end
     end
     if selection==1
@@ -129,6 +169,6 @@ if ~isempty(gui.retr('doing_roi')) && gui.retr('doing_roi')==1
     set(findobj('tag','new_ROImethod'), 'Position',[min_x,min_y,img_size(1),img_size(2)])
     evt.EventName='ROIMoved';
     evt.CurrentPosition=[min_x,min_y,img_size(1),img_size(2)];
-    roi.ROIallevents(ac_ROI_general_handle,evt)
+    roi.ROIallevents(ac_ROI_general_handle,evt,camera_type,max_cam_res)
 end
 

@@ -106,7 +106,8 @@ OPTRONIS_src.BFGTLNodeValueStr = num2str(OPTRONIS_gain);
 
 %% Set ROI
 ROI_OPTRONIS=[ROI_OPTRONIS(1)-1, ROI_OPTRONIS(2)-1, ROI_OPTRONIS(3), ROI_OPTRONIS(4)];
-ROI_OPTRONIS(3) = max(64, floor(ROI_OPTRONIS(3)/64)*64); % width must be multiple of 64 (4 CXP links × 16-pixel quantum)
+%'ist das so?'
+%ROI_OPTRONIS(3) = max(64, floor(ROI_OPTRONIS(3)/64)*64); % width must be multiple of 64 (4 CXP links × 16-pixel quantum)
 OPTRONIS_src.BFGTLNodeName     = 'OffsetX'; % zero offsets before changing size to avoid constraint violations
 OPTRONIS_src.BFGTLNodeValueStr = '0';
 OPTRONIS_src.BFGTLNodeName     = 'OffsetY';

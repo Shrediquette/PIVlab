@@ -1,18 +1,12 @@
-function ROIallevents(src,evt)
-%src.Position = round(evt.CurrentPosition ,-1);
-src.Position = floor(evt.CurrentPosition/8)*8;
+function ROIallevents(src, evt, camera_type, max_cam_res)
+if nargin < 3, camera_type = ''; end
+if nargin < 4, max_cam_res = [1920 1080]; end
 
-if src.Position(1)<0.5
-	src.Position(1) = 0.5;
-end
-if src.Position(2)<0.5
-	src.Position(2) = 0.5;
-end
-evname = evt.EventName;
-switch(evname)
-	case{'MovingROI'}
-		src.Label =([int2str(ceil(evt.PreviousPosition(1))) ' ' int2str(ceil(evt.PreviousPosition(2))) ' ' int2str(ceil(evt.PreviousPosition(3))) ' ' int2str(ceil(evt.PreviousPosition(4)))]);
-	case{'ROIMoved'}
-		src.Label =([int2str(ceil(evt.CurrentPosition(1))) ' ' int2str(ceil(evt.CurrentPosition(2))) ' ' int2str(ceil(evt.CurrentPosition(3))) ' ' int2str(ceil(evt.CurrentPosition(4)))]);
-end
+pos = evt.CurrentPosition;
+x = pos(1); y = pos(2); w = pos(3); h = pos(4);
 
+c = roi.get_roi_constraints(camera_type, max_cam_res);
+[x, y, w, h] = roi.snap_roi(x, y, w, h, c);
+
+src.Position = [x, y, w, h];
+src.Label = [int2str(x) ' ' int2str(y) ' ' int2str(w) ' ' int2str(h)];

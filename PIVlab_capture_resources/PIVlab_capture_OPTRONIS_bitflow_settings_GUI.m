@@ -55,10 +55,34 @@ if isempty(fh)
         warning off
         hwinf = imaqhwinfo; %#ok<NASGU>
         warning on
+        bitmode=retr('OPTRONIS_bits');
+        if isempty(bitmode) || ~isnumeric(bitmode)
+            bitmode=8;
+        end
+        if bitmode==8
+            camfilemode='PIVMode8bit'; % funktioniert ohne Fehlermeldung, timing + dropped frames nicht kontrolliert.
+        else
+            camfilemode='PIVMode10bit';
+        end
+
+        %% select cam subtype
+        camera_sub_type = gui.retr('camera_sub_type');
+        if contains(camera_sub_type, '25-150')
+            bfml_name = 'Optronis-Cyclone-25-150-M_OLT.bfml'; %does not exist yet
+        elseif contains(camera_sub_type, '2-2000')
+            bfml_name = 'Optronis-Cyclone-2-2000-M_OLT.bfml';
+        elseif contains(camera_sub_type, '1HS-3500')
+            bfml_name = 'Optronis-Cyclone-1HS-3500-M_OLT.bfml'; %does not exist yet
+        else
+            disp('bfml file does not exist for this camera type')
+            return
+        end
+
         bfml_dir  = fileparts(mfilename('fullpath'));
-        bfml_path = fullfile(bfml_dir, 'Optronis-Cyclone-2-2000-M.bfml');
-        OPTRONIS_vid = videoinput('bitflow', 1, [bfml_path ';BuffersToUse=4']);
-        OPTRONIS_src = getselectedsource(OPTRONIS_vid);
+        bfml_path = fullfile(bfml_dir, [camfilemode '@' bfml_name]);
+
+        OPTRONIS_vid = videoinput('bitflow', 1, [bfml_path ';BuffersToUse=' num2str(4)]);
+        OPTRONIS_src = OPTRONIS_vid.Source;
 
         OPTRONIS_src.BFGTLNodeName = 'AcquisitionStop';
         OPTRONIS_src.BFGTLNodeValueStr = '1';

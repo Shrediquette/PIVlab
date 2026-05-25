@@ -87,11 +87,11 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             %clim([min(stretched_image(:)) max(stretched_image(:))]);
             clim auto
             ac_ROI_general_handle = drawrectangle(target_axis,'Position',ac_ROI_general,'LabelVisible','hover','Deletable',0,'DrawingArea',[1 1 current_image_size(2) current_image_size(1)],'tag','new_ROImethod','StripeColor','y');
-            addlistener(ac_ROI_general_handle,'MovingROI',@roi.ROIallevents);
-            addlistener(ac_ROI_general_handle,'ROIMoved',@roi.ROIallevents);
+            addlistener(ac_ROI_general_handle,'MovingROI',@(src,evt)roi.ROIallevents(src,evt,camera_type,max_cam_res));
+            addlistener(ac_ROI_general_handle,'ROIMoved',@(src,evt)roi.ROIallevents(src,evt,camera_type,max_cam_res));
             evt.EventName='ROIMoved';
             evt.CurrentPosition=ac_ROI_general;
-            roi.ROIallevents(ac_ROI_general_handle,evt)
+            roi.ROIallevents(ac_ROI_general_handle,evt,camera_type,max_cam_res)
 
             text (1,1,{'Right click for presets.' 'After modifying ROI: Double click to apply.'},'HorizontalAlignment','left','VerticalAlignment','top','Color','y','Parent',gui.retr('pivlab_axis'));
 
@@ -165,49 +165,11 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
 
 
             position=round(position);
-
-            xmin=position(1);
-            ymin=position(2);
-            xmax=position(1)+position(3)-1;
-            ymax=position(2)+position(4)-1;
-
-            %% Round so it fits the requirements of the camera ROI
-            % different cameras have different requirements for the steps
-            % that the ROI can have.
-            if strcmp(camera_type,'pco_edge26')
-                xmin=floor(xmin/32)*32+1;
-                ymin=floor(ymin/32)*32+1;
-                xmax=floor(xmax/32)*32; %32 required by pco.edge 26 DS
-                ymax=floor(ymax/8)*8;
-            elseif strcmp(camera_type,'OPTRONIS')
-                xmin=floor(xmin/64)*64+1;
-                ymin=floor(ymin/8)*8+1;
-                xmax=floor(xmax/64)*64;
-                ymax=floor(ymax/8)*8;
-            else
-                xmin=floor(xmin/8)*8+1;
-                ymin=floor(ymin/2)*2+1;
-                xmax=floor(xmax/8)*8;
-                ymax=floor(ymax/2)*2;
-            end
-
-            if xmin<1
-                xmin=1;
-            end
-            if ymin<1
-                ymin=1;
-            end
-            if xmax>max_cam_res(1)
-                xmax=max_cam_res(1);
-            end
-            if ymax>max_cam_res(2)
-                ymax=max_cam_res(2);
-            end
-            position(1)=xmin;
-            position(2)=ymin;
-            position(3)=xmax-xmin+1;
-            position(4)=ymax-ymin+1;
-            ac_ROI_general=position;
+            c=roi.get_roi_constraints(camera_type,max_cam_res);
+            [position(1),position(2),position(3),position(4)] = ...
+                roi.snap_roi(position(1),position(2),position(3),position(4),c);
+           
+            ac_ROI_general=position
 
             gui.put('ac_ROI_general',ac_ROI_general);
             save('PIVlab_settings_default.mat','ac_ROI_general','-append');
