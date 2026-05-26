@@ -17,9 +17,9 @@
 
 clc; clear; close all;
 
-project_root = 'C:\Users\trash\Documents\MATLAB\PIVlab_from_github';
+project_root = 'C:\Users\thiel\Documents\MATLAB\PIVlab_source';
 addpath(project_root);
-outdir = 'C:\Users\trash\Documents\MATLAB\claude_code_temp';
+outdir = 'C:\Users\thiel\Documents\MATLAB\ClaudeCode\temp';
 if ~exist(outdir, 'dir'), mkdir(outdir); end
 
 n_passed = 0;

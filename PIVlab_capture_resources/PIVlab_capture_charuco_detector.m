@@ -226,13 +226,13 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
         lowpassed_mean_loc_y=mean_loc_y*0.1+mean_loc_y_old*0.9;
         gui.put('mean_loc_x',lowpassed_mean_loc_x);
         gui.put('mean_loc_y',lowpassed_mean_loc_y);
-        hold on
+        hold(figure_handle,'on');
         if calibration_demo_mode
     		scatter(locs_center_x,locs_center_y,1000,'green','tag','charucolabel','Parent',figure_handle,'LineWidth',5)
         else
             scatter(locs_center_x,locs_center_y,200,'green','tag','charucolabel','Parent',figure_handle,'LineWidth',2)
         end
-        hold off
+        hold(figure_handle,'off');
         rectangle('Position',[min(locs_center_x), min(locs_center_y),max(locs_center_x) - min(locs_center_x), max(locs_center_y) - min(locs_center_y) ],'tag','charucolabel','EdgeColor','r','LineWidth',2,'Parent',figure_handle,'Curvature',0.15)
 
         text(lowpassed_mean_loc_x,lowpassed_mean_loc_y,orientation_message,'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',18,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','top','Parent',figure_handle)

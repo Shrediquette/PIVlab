@@ -167,7 +167,8 @@ OPTRONIS_src.TriggerMode = 'Free Run';
 %% Prepare axis
 crosshair_enabled = getappdata(hgui,'crosshair_enabled');
 sharpness_enabled = getappdata(hgui,'sharpness_enabled');
-PIVlab_axis = findobj(hgui,'Type','Axes');
+%PIVlab_axis = findobj(hgui,'Type','Axes');
+PIVlab_axis = gui.retr('pivlab_axis');
 image_handle_OPTRONIS=imagesc(zeros(ROI_OPTRONIS(4),ROI_OPTRONIS(3)),'Parent',PIVlab_axis,[0 2^bitmode]);
 setappdata(hgui,'image_handle_OPTRONIS',image_handle_OPTRONIS);
 frame_nr_display=text(100,100,'Initializing...','Color',[1 1 0]);
