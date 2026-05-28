@@ -39,35 +39,43 @@ else
 	file_selection_ok=0;
 end
 if file_selection_ok
+	fullpath=fullfile(PathName,FileName);
 	write_error=0;
-	cnt=0;
-	for i=startfr:endfr
-		if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
-			[returned_data, returned_header]=extract.plot_data_area(i,refresh_data);
-			if i==startfr %generate file with header
-				if exist(fullfile(PathName,FileName),'file')==2 %file is already there
-					try
-						delete(fullfile(PathName,FileName));
-						writecell(returned_header,fullfile(PathName,FileName)); %initiate file
-					catch ME
-						gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No write access to file. Is it currently open somewhere else?','modal');
-						write_error=1;
-					end
-				end
-				if write_error==0
-					if get(handles.extractionArea_fileformat,'Value') ==1
-						writecell(returned_header,fullfile(PathName,FileName),'WriteMode','replacefile'); %initiate file
-					else
-						writecell(returned_header,fullfile(PathName,FileName),'WriteMode','overwrite'); %initiate file
-					end
-				end
+	% Pre-flight: check write access before starting the loop
+	if exist(fullpath,'file')==2
+		try
+			delete(fullpath);
+		catch ME
+			gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No write access to file. Is it currently open somewhere else?','modal');
+			write_error=1;
+		end
+	end
+	if write_error==0
+		num_frames=endfr-startfr+1;
+		data_rows=cell(num_frames,1);
+		valid_count=0;
+		returned_header={};
+		cnt=0;
+		update_interval=max(1,floor(num_frames/20));
+		for i=startfr:endfr
+			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+				[returned_data, returned_header]=extract.plot_data_area(i,refresh_data);
+				valid_count=valid_count+1;
+				data_rows{valid_count}=returned_data;
 			end
-			if write_error==0
-				writecell(returned_data,fullfile(PathName,FileName),'WriteMode','Append');
+			cnt=cnt+1;
+			if mod(cnt,update_interval)==0 || cnt==num_frames
+				gui.update_progress(round(cnt/num_frames*100))
 			end
 		end
-		cnt=cnt+1;
-		gui.update_progress(round(cnt/(endfr-startfr+1)*100))
+		if valid_count>0 && ~isempty(returned_header)
+			all_data=vertcat(data_rows{1:valid_count});
+			if get(handles.extractionArea_fileformat,'Value')==1
+				writecell([returned_header; all_data],fullpath,'WriteMode','replacefile');
+			else
+				writecell([returned_header; all_data],fullpath,'WriteMode','overwrite');
+			end
+		end
 	end
 end
 gui.update_progress(0)

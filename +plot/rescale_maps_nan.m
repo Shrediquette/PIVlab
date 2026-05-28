@@ -9,19 +9,23 @@ if isempty(desired_frame)
 else
     currentframe=desired_frame;
 end
-[currentimage,~]=import.get_img(2*currentframe-1);
-if size(currentimage,1) == size(in,1) && size(currentimage,2) == size(in,2)
+expected_image_size=gui.retr('expected_image_size');
+if ~isempty(expected_image_size)
+    img_h=expected_image_size(1);
+    img_w=expected_image_size(2);
+else
+    [currentimage,~]=import.get_img(2*currentframe-1);
+    img_h=size(currentimage,1);
+    img_w=size(currentimage,2);
+end
+if size(in,1)==img_h && size(in,2)==img_w
     out=in;
     %images have already the same size (as in wOFV)
 else
     resultslist=gui.retr('resultslist');
     x=resultslist{1,currentframe};
     y=resultslist{2,currentframe};
-    out=zeros(size(currentimage));
-    if size(out,3)>1
-    	out(:,:,2:end)=[];
-    end
-    out(:,:)=nan; %rand wird auf nan gesetzt
+    out=nan(img_h,img_w);
     step=x(1,2)-x(1,1);
     minx=(min(min(x))-step/2);
     maxx=(max(max(x))+step/2);
@@ -29,8 +33,8 @@ else
     maxy=(max(max(y))+step/2);
     miny_idx=max(1,floor(miny));
     minx_idx=max(1,floor(minx));
-    maxy_idx=min(size(out,1),floor(maxy-1));
-    maxx_idx=min(size(out,2),floor(maxx-1));
+    maxy_idx=min(img_h,floor(maxy-1));
+    maxx_idx=min(img_w,floor(maxx-1));
     target_rows=maxy_idx-miny_idx+1;
     target_cols=maxx_idx-minx_idx+1;
     if size(in,3)>1 %why would this actually happen...?
@@ -63,6 +67,5 @@ if numel(masks_in_frame)<current_mask_nr
 else
     mask_positions=masks_in_frame{current_mask_nr};
 end
-expected_image_size=gui.retr('expected_image_size');
-converted_mask=mask.convert_masks_to_binary(expected_image_size,mask_positions);
+converted_mask=mask.convert_masks_to_binary([img_h,img_w],mask_positions);
 out(converted_mask==1)=nan;
