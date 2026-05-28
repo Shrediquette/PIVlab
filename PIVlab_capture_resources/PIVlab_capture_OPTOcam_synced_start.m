@@ -30,6 +30,7 @@ if imaq_error==0
         if strcmp(info.AdaptorName,'gentl')
             disp(['gentl adaptor found with ID: ' num2str(adaptorID)])
             found_correct_adaptor=1;
+            imaq_error=0;
             break
         else
             imaq_error=2;

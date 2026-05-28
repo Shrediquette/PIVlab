@@ -43,7 +43,7 @@ if isempty(fh)
     handles = guihandles; %alle handles mit tag laden und ansprechbar machen
     guidata(MainWindow,handles)
     setappdata(0,'hgui',MainWindow);
-    version = '4.0';
+    version = '3.14';
     isbeta=1;
     gui.put('PIVver', version);
     gui.put('isbeta', isbeta);

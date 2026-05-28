@@ -163,13 +163,12 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             gui.put('ac_ROI_general_handle',ac_ROI_general_handle);
             gui.put('doing_roi',0)
 
-
             position=round(position);
             c=roi.get_roi_constraints(camera_type,max_cam_res);
             [position(1),position(2),position(3),position(4)] = ...
-                roi.snap_roi(position(1),position(2),position(3),position(4),c);
+            roi.snap_roi(position(1),position(2),position(3),position(4),c);
            
-            ac_ROI_general=position
+            ac_ROI_general=position;
 
             gui.put('ac_ROI_general',ac_ROI_general);
             save('PIVlab_settings_default.mat','ac_ROI_general','-append');

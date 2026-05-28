@@ -1,5 +1,5 @@
 function [OutputError,ima,frame_nr_display] = PIVlab_capture_OPTRONIS_bitflow_calibration_image(img_amount,exposure_time,ROI_OPTRONIS)
-disp(['ROI_OPTRONIS is ' num2str(ROI_OPTRONIS)])
+%disp(['ROI_OPTRONIS is ' num2str(ROI_OPTRONIS)])
 OutputError=0;
 hgui=getappdata(0,'hgui');
 

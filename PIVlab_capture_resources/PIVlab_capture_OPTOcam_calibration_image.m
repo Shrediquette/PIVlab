@@ -26,6 +26,7 @@ if imaq_error==0
         if strcmp(info.AdaptorName,'gentl')
             disp(['gentl adaptor found with ID: ' num2str(adaptorID)])
             found_correct_adaptor=1;
+            imaq_error=0;
             break
         else
             imaq_error=2;
@@ -118,7 +119,7 @@ displayed_img_amount=0;
 while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
     ima = image_handle_OPTOcam.CData;
     ima_out = bitshift(ima,4); %stretch 12 bit to 16 bit
-    
+
     %% live charuco
     do_charuco_detection = gui.retr('do_charuco_detection');
     if isempty(do_charuco_detection)
@@ -314,16 +315,11 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
         sharpness_focus_table=[];
         sharp_loop_cnt=[];
     end
-
-
-
     if img_amount == 1
-        if sum(ima(1:10,1,1)) ~=10 %check if the display was updated, if there is real camera data. I didnt find a more elegant way...
+        if sum(ima(1:10,1,1)) ~=10 && sum(ima(1:10,1,1)) ~=655350 %check if the display was updated, if there is real camera data. I didnt find a more elegant way...
             displayed_img_amount=displayed_img_amount+1;
         end
     end
-
-
 end
 stoppreview(OPTOcam_vid)
 executeCommand(OPTOcam_settings.Source,"BslSensorOff")

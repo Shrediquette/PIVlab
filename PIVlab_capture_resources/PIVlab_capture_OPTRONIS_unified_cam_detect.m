@@ -8,6 +8,7 @@ camera_sub_type = 'unknown';
 warning off
 hwinf = imaqhwinfo;
 warning on
+warning('off','imaq:gentl:noSupportedPixelFormat')
 
 has_gentl   = any(strcmp(hwinf.InstalledAdaptors, 'gentl'));
 has_bitflow = any(strcmp(hwinf.InstalledAdaptors, 'bitflow'));
