@@ -38,7 +38,7 @@ uimenu(m5,'Label','Define masks (exclude regions from analysis)','Callback',@mas
 m6 = uimenu(MainWindow,'Label','Analysis');
 uimenu(m6,'Label','PIV settings','Callback',@piv.sett_Callback,'Accelerator','S');
 m6a=uimenu(m6,'Label','Stereo PIV settings','Callback',[]);
-uimenu(m6a,'Label','Disparity correction','Callback',[]);
+uimenu(m6a,'Label','Disparity correction','Callback',[],'Enable','off');
 uimenu(m6,'Label','ANALYZE!','Callback',@piv.do_analys_Callback,'Accelerator','A');
 m7 = uimenu(MainWindow,'Label','Validation');
 uimenu(m7,'Label','Velocity based validation','Callback',@validate.vector_val_Callback,'Accelerator','V');
