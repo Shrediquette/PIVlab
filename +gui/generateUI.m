@@ -1134,7 +1134,7 @@ item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
 handles.highpass_strength = uicontrol(handles.multip08,'Style','slider','sliderstep',[0.1 0.1],'max',51,'min',1,'value',30,'Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','highpass_strength','TooltipString','Strength of the high-pass. The modified data is NOT saved');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1.1];
-handles.extrapolate_border = uicontrol(handles.multip08,'Style','checkbox','String','Extrapolate border','Value',1,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extrapolate_border','TooltipString','Extrapolate colour map into the border region using spring inpainting instead of filling with the mean value. Slower but produces a smoother display.');
+handles.extrapolate_border = uicontrol(handles.multip08,'Style','checkbox','String','Extrapolate border','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extrapolate_border','TooltipString','Extrapolate colour map into the border region using spring inpainting instead of filling with the mean value. Slower but produces a smoother display.');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.apply_deriv = uicontrol(handles.multip08,'Style','pushbutton','String','Apply to current frame','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.apply_deriv_Callback,'TooltipString','Apply settings to current frame');
