@@ -6,7 +6,8 @@ delete(findobj(target_axis,'Tag','ref_vector'))
 x_entries=sortrows(unique(x));
 y_entries=sortrows(unique(y));
 
-rect_width=reference_length/gui.retr('calu')*vecscale*1.5;
+abs_calu=abs(gui.retr('calu'));
+rect_width=reference_length/abs_calu*vecscale*1.5;
 rect_height=rect_width / 2;
 
 if strcmpi (ref_position,'top right')
@@ -43,7 +44,7 @@ elseif strcmpi (ref_position,'top left')
     x_rect=ref_x  -rect_width/6;
 end
 
-if gui.retr('calxy')==1 && (gui.retr('calu')==1 ||gui.retr('calu'==-1))
+if gui.retr('calxy')==1 && (gui.retr('calu')==1 || gui.retr('calu'==-1))
     units='px/frame';
 else % calibrated
     displacement_only=gui.retr('displacement_only');
@@ -57,4 +58,4 @@ end
 rectangle(target_axis,'position',[x_rect ,ref_y-rect_height/2, rect_width,rect_height],'Tag','ref_vector','FaceColor','k','LineStyle','none')
 text(target_axis,ref_x,ref_y+txt_y_offset,[num2str(reference_length) ' ' units],'BackgroundColor','k','Color','y','HorizontalAlignment',txt_align_hor,'VerticalAlignment',txt_align_vert,'Tag','ref_vector','Margin',12)
 %vector
-quiver(ref_x,ref_y,reference_length/gui.retr('calu')*vecscale,0,'autoscale','off','parent',target_axis,'Clipping','on','LineWidth',2,'Color','y','Tag','ref_vector','Alignment',ref_align,'MaxHeadSize',1);
+quiver(ref_x,ref_y,reference_length/abs_calu*vecscale,0,'autoscale','off','parent',target_axis,'Clipping','on','LineWidth',2,'Color','y','Tag','ref_vector','Alignment',ref_align,'MaxHeadSize',1);
