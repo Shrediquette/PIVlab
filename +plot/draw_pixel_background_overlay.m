@@ -180,17 +180,6 @@ if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  
 	hold(target_axis,'off');
 
 	%% colorbar
-	% Second-monitor housekeeping: when no colorbar is shown, make sure the
-	% axis fills the figure edge-to-edge (restores from a previous colorbar run).
-	% This check is intentionally outside the colorbar block so it also executes
-	% in the no-colorbar case without adding any rendering work.
-	sm_ax_ref = gui.retr('second_monitor_axis');
-	is_second_mon = ~isempty(sm_ax_ref) && isequal(target_axis, sm_ax_ref);
-	if is_second_mon && get(handles.colorbarpos,'value') == 1
-		set(target_axis, 'Units', 'normalized', 'OuterPosition', [0 0 1 1]);
-		set(target_axis, 'LooseInset', [0 0 0 0]);
-	end
-
 	if get(handles.colorbarpos,'value')~=1
 		name=get(handles.derivchoice,'string');
 		if strcmp(name,'N/A') %user hasn't visited the derived panel before
