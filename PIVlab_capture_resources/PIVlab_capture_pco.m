@@ -17,19 +17,19 @@ end
 OutputError=0;
 image_stack=[];
 framerate_max=1;
-PIVlab_axis = findobj(hgui,'Type','Axes');
+PIVlab_axis = gui.retr('pivlab_axis');
 image_handle_pco=imagesc(zeros(100,100),'Parent',PIVlab_axis,[0 2^16]);
 setappdata(hgui,'image_handle_pco',image_handle_pco);
 
-frame_nr_display=text(10,10,'Detecting camera...','Color',[1 1 0],'HorizontalAlignment','left','VerticalAlignment','top','FontSize',12);
-colormap default %reset colormap steps
-new_map=colormap('gray');
+frame_nr_display=text(PIVlab_axis,10,10,'Detecting camera...','Color',[1 1 0],'HorizontalAlignment','left','VerticalAlignment','top','FontSize',12);
+colormap(ancestor(PIVlab_axis,'figure'),'default') %reset colormap steps
+new_map=colormap(ancestor(PIVlab_axis,'figure'),'gray');
 new_map(1:3,:)=[0 0.2 0;0 0.2 0;0 0.2 0];
 new_map(end-2:end,:)=[1 0.7 0.7;1 0.7 0.7;1 0.7 0.7];
-colormap(new_map);axis image;
-set(gui.retr('pivlab_axis'),'ytick',[])
-set(gui.retr('pivlab_axis'),'xtick',[])
-colorbar
+colormap(ancestor(PIVlab_axis,'figure'),new_map);axis(PIVlab_axis,'image');
+set(PIVlab_axis,'ytick',[])
+set(PIVlab_axis,'xtick',[])
+colorbar(PIVlab_axis)
 
 %% delete data in image directory, manage rcordfiles
 filePattern = fullfile(ImagePath, 'PIVlab_pco*.tif');
@@ -851,14 +851,13 @@ setappdata(hgui,'hist_enabled',0);
 try
     delete(hObject);
 catch
-    delete(gcf);
 end
 
 function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');
 if running == 1
     hgui=getappdata(0,'hgui');
-    PIVlab_axis = findobj(hgui,'Type','Axes');
+    PIVlab_axis = gui.retr('pivlab_axis');
     %image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam');
     postix=get(PIVlab_axis,'XLim');
     postiy=get(PIVlab_axis,'YLim');
@@ -873,8 +872,7 @@ if running == 1
         set(auto_focus_active_hint,'BackgroundColor',bg_col);
     else
         bg_col= [0.25 0.25 0.25];
-        axes(PIVlab_axis);
-        text(postix(2)/2,postiy(2)/2,'Autofocus running, please wait...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',24, 'BackgroundColor', bg_col,'tag','auto_focus_active','margin',10,'Clipping','on');
+        text(PIVlab_axis,postix(2)/2,postiy(2)/2,'Autofocus running, please wait...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',24, 'BackgroundColor', bg_col,'tag','auto_focus_active','margin',10,'Clipping','on');
     end
 else
     delete(auto_focus_active_hint);

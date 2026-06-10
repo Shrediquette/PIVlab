@@ -10,7 +10,7 @@ sharpness=sharpness/mean_brightess*10000;
 delete(findobj('tag','sharpness_display_text'));
 if showinfo
 	hgui=getappdata(0,'hgui');
-	PIVlab_axis = findobj(hgui,'Type','Axes');
+	PIVlab_axis = gui.retr('pivlab_axis');
 	text(textx,texty,{['Sharpness: ' int2str(sharpness)] ['Mean brightness: ' int2str(mean_brightess)]},'Color',[1 1 0] ,'tag','sharpness_display_text','Verticalalignment','bottom','Horizontalalignment','right','Parent',PIVlab_axis,'FontSize',32,'fontweight','bold');
 end
 

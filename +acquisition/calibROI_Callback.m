@@ -194,8 +194,8 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
                 ymin=ac_ROI_general(2);
                 xmax=ac_ROI_general(1)+ac_ROI_general(3)-1;
                 ymax=ac_ROI_general(2)+ac_ROI_general(4)-1;
-                image(adapthisteq(roi_image(ymin:ymax,xmin:xmax)), 'parent',target_axis, 'cdatamapping', 'scaled');colormap('gray');axis image
-                text(50,50,['Max framerate: ' num2str(round(framerate_max,2)) ' Hz'],'tag','roitxt','Color','yellow','FontSize',14,'FontWeight','bold')
+                image(adapthisteq(roi_image(ymin:ymax,xmin:xmax)), 'parent',target_axis, 'cdatamapping', 'scaled');colormap(ancestor(target_axis,'figure'),'gray');axis(target_axis,'image')
+                text(target_axis,50,50,['Max framerate: ' num2str(round(framerate_max,2)) ' Hz'],'tag','roitxt','Color','yellow','FontSize',14,'FontWeight','bold')
             end
             set(handles.ac_realtime,'Value',0);%reset realtime roi
             gui.put('do_realtime',0);

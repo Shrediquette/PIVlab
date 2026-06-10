@@ -171,15 +171,15 @@ sharpness_enabled = getappdata(hgui,'sharpness_enabled');
 PIVlab_axis = gui.retr('pivlab_axis');
 image_handle_OPTRONIS=imagesc(zeros(ROI_OPTRONIS(4),ROI_OPTRONIS(3)),'Parent',PIVlab_axis,[0 2^bitmode]);
 setappdata(hgui,'image_handle_OPTRONIS',image_handle_OPTRONIS);
-frame_nr_display=text(100,100,'Initializing...','Color',[1 1 0]);
-colormap default
-new_map=colormap('gray');
+frame_nr_display=text(PIVlab_axis,100,100,'Initializing...','Color',[1 1 0]);
+colormap(ancestor(PIVlab_axis,'figure'),'default')
+new_map=colormap(ancestor(PIVlab_axis,'figure'),'gray');
 new_map(1:3,:)=[0 0.2 0;0 0.2 0;0 0.2 0];
 new_map(end-2:end,:)=[1 0.7 0.7;1 0.7 0.7;1 0.7 0.7];
-colormap(new_map);axis image;
-set(gui.retr('pivlab_axis'),'ytick',[])
-set(gui.retr('pivlab_axis'),'xtick',[])
-colorbar
+colormap(ancestor(PIVlab_axis,'figure'),new_map);axis(PIVlab_axis,'image');
+set(PIVlab_axis,'ytick',[])
+set(PIVlab_axis,'xtick',[])
+colorbar(PIVlab_axis)
 
 %% Restart camera acquisition and start preview
 pause(0.05)
@@ -386,7 +386,7 @@ function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');
 if running == 1
     hgui=getappdata(0,'hgui');
-    PIVlab_axis=findobj(hgui,'Type','Axes');
+    PIVlab_axis=gui.retr('pivlab_axis');
     postix=get(PIVlab_axis,'XLim');
     postiy=get(PIVlab_axis,'YLim');
     bg_col=get(auto_focus_active_hint,'BackgroundColor');
@@ -399,8 +399,7 @@ if running == 1
         set(auto_focus_active_hint,'BackgroundColor',bg_col);
     else
         bg_col=[0.25 0.25 0.25];
-        axes(PIVlab_axis);
-        text(postix(2)/2,postiy(2)/2,'Autofocus running, please wait...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',24,'BackgroundColor',bg_col,'tag','auto_focus_active','margin',10,'Clipping','on');
+        text(PIVlab_axis,postix(2)/2,postiy(2)/2,'Autofocus running, please wait...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',24,'BackgroundColor',bg_col,'tag','auto_focus_active','margin',10,'Clipping','on');
     end
 else
     delete(auto_focus_active_hint);
@@ -412,7 +411,6 @@ setappdata(hgui,'hist_enabled',0);
 try
     delete(hObject);
 catch
-    delete(gcf);
 end
 
 function bf_set(src, name, value)

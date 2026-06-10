@@ -9,27 +9,27 @@ web_cam=webcam;
 A=web_cam.snapshot;
 crosshair_enabled = getappdata(hgui,'crosshair_enabled');
 sharpness_enabled = getappdata(hgui,'sharpness_enabled');
-PIVlab_axis = findobj(hgui,'Type','Axes');
+PIVlab_axis = gui.retr('pivlab_axis');
 
 image_handle_webcam=imagesc(zeros(size(A,1),size(A,2)),'Parent',PIVlab_axis,[0 2^8]);
 
 setappdata(hgui,'image_handle_webcam',image_handle_webcam);
 
-frame_nr_display=text(100,100,'Initializing...','Color',[1 1 0]);
-colormap default %reset colormap steps
-new_map=colormap('gray');
+frame_nr_display=text(PIVlab_axis,100,100,'Initializing...','Color',[1 1 0]);
+colormap(ancestor(PIVlab_axis,'figure'),'default') %reset colormap steps
+new_map=colormap(ancestor(PIVlab_axis,'figure'),'gray');
 new_map(1:3,:)=[0 0.2 0;0 0.2 0;0 0.2 0];
 new_map(end-2:end,:)=[1 0.7 0.7;1 0.7 0.7;1 0.7 0.7];
-colormap(new_map);axis image;
-set(gui.retr('pivlab_axis'),'ytick',[])
-set(gui.retr('pivlab_axis'),'xtick',[])
-colorbar
+colormap(ancestor(PIVlab_axis,'figure'),new_map);axis(PIVlab_axis,'image');
+set(PIVlab_axis,'ytick',[])
+set(PIVlab_axis,'xtick',[])
+colorbar(PIVlab_axis)
 
 
 %% get images
 set(frame_nr_display,'String','');
 preview(web_cam,image_handle_webcam)
-caxis([0 2^8]); %seems to be a workaround to force preview to show full data range...
+caxis(PIVlab_axis,[0 2^8]); %seems to be a workaround to force preview to show full data range...
 displayed_img_amount=0;
 while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
     ima = image_handle_webcam.CData;

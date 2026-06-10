@@ -49,21 +49,21 @@ flir_settings.Source.ExposureTime =exposure_time;
 hgui=getappdata(0,'hgui');
 crosshair_enabled = getappdata(hgui,'crosshair_enabled');
 sharpness_enabled = getappdata(hgui,'sharpness_enabled');
-PIVlab_axis = findobj(hgui,'Type','Axes');
+PIVlab_axis = gui.retr('pivlab_axis');
 
 image_handle_flir=imagesc(zeros(flir_settings.VideoResolution(2),flir_settings.VideoResolution(1)),'Parent',PIVlab_axis,[0 2^8]);
 
 setappdata(hgui,'image_handle_flir',image_handle_flir);
 
-frame_nr_display=text(100,100,'Initializing...','Color',[1 1 0]);
-colormap default %reset colormap steps
-new_map=colormap('gray');
+frame_nr_display=text(PIVlab_axis,100,100,'Initializing...','Color',[1 1 0]);
+colormap(ancestor(PIVlab_axis,'figure'),'default') %reset colormap steps
+new_map=colormap(ancestor(PIVlab_axis,'figure'),'gray');
 new_map(1:3,:)=[0 0.2 0;0 0.2 0;0 0.2 0];
 new_map(end-2:end,:)=[1 0.7 0.7;1 0.7 0.7;1 0.7 0.7];
-colormap(new_map);axis image;
-set(gui.retr('pivlab_axis'),'ytick',[])
-set(gui.retr('pivlab_axis'),'xtick',[])
-colorbar
+colormap(ancestor(PIVlab_axis,'figure'),new_map);axis(PIVlab_axis,'image');
+set(PIVlab_axis,'ytick',[])
+set(PIVlab_axis,'xtick',[])
+colorbar(PIVlab_axis)
 
 
 %% get images
@@ -139,5 +139,4 @@ setappdata(hgui,'hist_enabled',0);
 try
 	delete(hObject);
 catch
-	delete(gcf);
 end

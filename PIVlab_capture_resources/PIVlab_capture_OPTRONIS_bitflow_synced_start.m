@@ -129,13 +129,13 @@ OPTRONIS_climits=2^bitmode;
 
 image_handle_OPTRONIS=imagesc(zeros(ROI_OPTRONIS(4),ROI_OPTRONIS(3)),'Parent',PIVlab_axis,[0 OPTRONIS_climits]);
 setappdata(hgui,'image_handle_OPTRONIS',image_handle_OPTRONIS);
-frame_nr_display=text(100,100,'Initializing...','Color',[1 1 0]);
+frame_nr_display=text(PIVlab_axis,100,100,'Initializing...','Color',[1 1 0]);
 
-colormap default
-new_map=colormap('gray');
-colormap(new_map);axis image;
-set(gui.retr('pivlab_axis'),'ytick',[])
-set(gui.retr('pivlab_axis'),'xtick',[])
+colormap(ancestor(PIVlab_axis,'figure'),'default')
+new_map=colormap(ancestor(PIVlab_axis,'figure'),'gray');
+colormap(ancestor(PIVlab_axis,'figure'),new_map);axis(PIVlab_axis,'image');
+set(PIVlab_axis,'ytick',[])
+set(PIVlab_axis,'xtick',[])
 
 
 %% Set frame rate (check if too high)

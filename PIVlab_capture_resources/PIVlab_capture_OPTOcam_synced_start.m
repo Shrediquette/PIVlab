@@ -97,20 +97,20 @@ OPTOcam_settings.PreviewFullBitDepth='On';
 OPTOcam_vid.PreviewFullBitDepth='On';
 
 %% prepare axes
-PIVlab_axis = findobj(hgui,'Type','Axes');
+PIVlab_axis = gui.retr('pivlab_axis');
 OPTOcam_climits=2^bitmode;
 image_handle_OPTOcam=imagesc(zeros(ROI_OPTOcam(4),ROI_OPTOcam(3)),'Parent',PIVlab_axis,[0 OPTOcam_climits]);
 setappdata(hgui,'image_handle_OPTOcam',image_handle_OPTOcam);
 
-frame_nr_display=text(100,100,'Initializing...','Color',[1 1 0]);
-colormap default %reset colormap steps
-new_map=colormap('gray');
+frame_nr_display=text(PIVlab_axis,100,100,'Initializing...','Color',[1 1 0]);
+colormap(ancestor(PIVlab_axis,'figure'),'default') %reset colormap steps
+new_map=colormap(ancestor(PIVlab_axis,'figure'),'gray');
 new_map(1:3,:)=[0 0.2 0;0 0.2 0;0 0.2 0];
 new_map(end-2:end,:)=[1 0.7 0.7;1 0.7 0.7;1 0.7 0.7];
-colormap(new_map);axis image;
-set(gui.retr('pivlab_axis'),'ytick',[])
-set(gui.retr('pivlab_axis'),'xtick',[])
-colorbar
+colormap(ancestor(PIVlab_axis,'figure'),new_map);axis(PIVlab_axis,'image');
+set(PIVlab_axis,'ytick',[])
+set(PIVlab_axis,'xtick',[])
+colorbar(PIVlab_axis)
 
 
 %% set camera parameters for triggered acquisition
@@ -166,10 +166,10 @@ end
 preview(OPTOcam_vid,image_handle_OPTOcam);
 % open in 8 bit
 if bitmode ==8
-    caxis([0 2^8]); %seems to be a workaround to force preview to show full data range...
+    caxis(PIVlab_axis,[0 2^8]); %seems to be a workaround to force preview to show full data range...
     % open in 12 bit
 elseif bitmode==12
-    caxis([0 2^12]); %seems to be a workaround to force preview to show full data range...
+    caxis(PIVlab_axis,[0 2^12]); %seems to be a workaround to force preview to show full data range...
 end
 pause(0.1); %make sure OPTOcam is ready...
 if ~isinf(nr_of_images)

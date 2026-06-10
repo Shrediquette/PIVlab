@@ -33,19 +33,19 @@ basler_settings.Source.DeviceLinkThroughputLimitMode = 'off';
 
 
 %% prepare axes
-PIVlab_axis = findobj(hgui,'Type','Axes');
+PIVlab_axis = gui.retr('pivlab_axis');
 image_handle_basler=imagesc(zeros(ROI_basler(4),ROI_basler(3)),'Parent',PIVlab_axis,[0 2^8]);
 setappdata(hgui,'image_handle_basler',image_handle_basler);
 
-frame_nr_display=text(100,100,'Initializing...','Color',[1 1 0]);
-colormap default %reset colormap steps
-new_map=colormap('gray');
+frame_nr_display=text(PIVlab_axis,100,100,'Initializing...','Color',[1 1 0]);
+colormap(ancestor(PIVlab_axis,'figure'),'default') %reset colormap steps
+new_map=colormap(ancestor(PIVlab_axis,'figure'),'gray');
 new_map(1:3,:)=[0 0.2 0;0 0.2 0;0 0.2 0];
 new_map(end-2:end,:)=[1 0.7 0.7;1 0.7 0.7;1 0.7 0.7];
-colormap(new_map);axis image;
-set(gui.retr('pivlab_axis'),'ytick',[])
-set(gui.retr('pivlab_axis'),'xtick',[])
-colorbar
+colormap(ancestor(PIVlab_axis,'figure'),new_map);axis(PIVlab_axis,'image');
+set(PIVlab_axis,'ytick',[])
+set(PIVlab_axis,'xtick',[])
+colorbar(PIVlab_axis)
 
 
 %% set camera parameters for free run or triggered acquisition
