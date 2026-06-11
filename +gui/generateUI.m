@@ -801,8 +801,8 @@ handles.edit52 = uicontrol(handles.uipanel42,'Style','edit', 'String','32','Unit
 item=[parentitem(3)/3*2 item(2) parentitem(3)/4*1 1];
 handles.text128 = uicontrol(handles.uipanel42,'Style','text', 'String','16','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text128');
 
-item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.1];
-handles.checkbox_uncertainty = uicontrol(handles.uipanel42,'Style','checkbox', 'String','Estimate uncertainty','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','checkbox_uncertainty','Visible','off','TooltipString','Estimate velocity measurement uncertainty (Sciacchitano 2013). Adds ~20-40% to analysis time.');
+item=[0 item(2)+item(4)+margin/1.5 parentitem(3) 1.1];
+handles.checkbox_uncertainty = uicontrol(handles.uipanel42,'Style','checkbox', 'String','Estimate uncertainty (slow)','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','checkbox_uncertainty','Visible','off','TooltipString','Estimate velocity measurement uncertainty (Sciacchitano 2013). Doubles the analysis time!');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
 handles.repeat_last= uicontrol(handles.uipanel42,'Style','checkbox', 'String','Repeat last pass until','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.repeat_last_Callback,'Tag','repeat_last','TooltipString','This will repeat the last pass of a multipass analysis until the average difference to the previous pass is less than "quality slope".','visible','off');

@@ -17,6 +17,17 @@ if extractwhat==9 || extractwhat==10 || extractwhat==11
 else
 	maptoget=derived{extractwhat,currentframe};
 end
+
+if extractwhat==11 && isempty(maptoget) %uncertainty has not been calculated
+	gui.custom_msgbox('msg',getappdata(0,'hgui'),'No uncertainty data',...
+		['No uncertainty map found for this frame. ' ...
+		'Re-analyze with ''Compute uncertainty'' enabled.'],...
+		'modal',{'OK'},'OK');
+	returned_data=[];
+	returned_header=[];
+	return
+end
+
 xposition=gui.retr('xposition');
 yposition=gui.retr('yposition');
 extract_type = gui.retr('extract_type');

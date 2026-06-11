@@ -61,6 +61,13 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 				% option 11 = uncertainty  → deriv 13 (extractwhat+2), derived{12}
 				plot.derivative_calc(currentframe,extractwhat+2,0);
 				derived=gui.retr('derived');
+				if extractwhat==11 && isempty(derived{extractwhat+1,currentframe}) %uncertainty has not been calculated
+					gui.custom_msgbox('msg',getappdata(0,'hgui'),'No uncertainty data',...
+						['No uncertainty map found for this frame. ' ...
+						'Re-analyze with ''Compute uncertainty'' enabled.'],...
+						'modal',{'OK'},'OK');
+					return
+				end
 				maptoget=derived{extractwhat+1,currentframe};
 				maptoget=plot.rescale_maps_nan(maptoget,0,currentframe);
 				[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
