@@ -51,13 +51,15 @@ glvar=struct('do_libunload',0,'do_close',0,'camera_open',0,'out_ptr',[]);
 pco_camera_load_defines();
 subfunc=pco_camera_subfunction();
 [errorCode,glvar]=pco_camera_open_close(glvar);
-figure(hgui)
+figure(ancestor(PIVlab_axis,'figure'));
+%figure(hgui)
 pco_errdisp('pco_camera_setup',errorCode);
 if(errorCode~=PCO_NOERROR)
     glvar.do_close=1;
     glvar.do_libunload=1;
     pco_camera_open_close(glvar);
-    figure(hgui)
+    figure(ancestor(PIVlab_axis,'figure'));
+    %figure(hgui)
     set(frame_nr_display,'String',['Camera not found. Is the suitable pco interface driver installed? Is it connected?' newline 'If problem persists, you might' newline 'need to restart Matlab.']);
     %% RESET camera and recorder when camera crashed.
     try
@@ -215,7 +217,8 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')
             glvar.do_close=1;
             glvar.do_libunload=1;
             pco_camera_open_close(glvar);
-            figure(hgui)
+            figure(ancestor(PIVlab_axis,'figure'));
+            %figure(hgui)
         end
         return;
     end
@@ -802,7 +805,7 @@ catch ME
         pco_errdisp('PCO_RecorderDelete',erri);
     end
 
-    clearvars -except ME glvar errorCode txt framerate_max hgui;
+    clearvars -except ME glvar errorCode txt framerate_max hgui PIVlab_axis;
 
     if(libisloaded('PCO_CAM_RECORDER'))
         unloadlibrary('PCO_CAM_RECORDER');
@@ -812,7 +815,8 @@ catch ME
         glvar.do_close=1;
         glvar.do_libunload=1;
         pco_camera_open_close(glvar);
-        figure(hgui)
+        figure(ancestor(PIVlab_axis,'figure'));
+        %figure(hgui)
     end
 
     if strfind(ME.identifier,'PCO_ERROR:')
@@ -824,22 +828,23 @@ catch ME
             disp(['from file ',ME.stack(k).file,' at line ',num2str(ME.stack(k).line)]);
         end
         close();
-        clearvars -except errorCode hgui;
+        clearvars -except errorCode hgui PIVlab_axis;
         return;
     else
         close();
-        clearvars -except ME hgui;
+        clearvars -except ME hgui PIVlab_axis;
         rethrow(ME)
     end
 end
 
-clearvars -except glvar errorCode image_stack OutputError hgui framerate_max hgui;
+clearvars -except glvar errorCode image_stack OutputError hgui framerate_max hgui PIVlab_axis;
 
 if(glvar.camera_open==1)
     glvar.do_close=1;
     glvar.do_libunload=1;
     pco_camera_open_close(glvar);
-    figure(hgui)
+    figure(ancestor(PIVlab_axis,'figure'));
+    %figure(hgui)
 end
 %clear glvar;
 unloadlibrary('PCO_CAM_RECORDER')
