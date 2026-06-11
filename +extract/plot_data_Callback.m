@@ -14,7 +14,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	yposition=gui.retr('yposition');
 	extract_type=gui.retr('extract_type');
 	if get(handles.draw_what,'value')==3 %circle series
-		set(handles.extraction_choice,'Value',11); %set to tangent
+		set(handles.extraction_choice,'Value',12); %set to tangent
 	end
 	extractwhat=get(handles.extraction_choice,'Value');
 	if ~isempty(xposition)
@@ -55,17 +55,17 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 				maptoget=plot.rescale_maps_nan(maptoget,0,currentframe);
 				[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
 				distance=linspace(0,length,size(c,1))';
-			case {9,10}
-				% auf stelle 9 steht vector angle. Bei derivatives ist der aber auf platz 11. daher zwei dazu
-				%auf stelle 10 steht correlation coeff, bei derivatives auf
-				%12, daher zwei dazu
+			case {9,10,11}
+				% option 9 = vector angle  → deriv 11 (extractwhat+2), derived{10}
+				% option 10 = correlation  → deriv 12 (extractwhat+2), derived{11}
+				% option 11 = uncertainty  → deriv 13 (extractwhat+2), derived{12}
 				plot.derivative_calc(currentframe,extractwhat+2,0);
 				derived=gui.retr('derived');
 				maptoget=derived{extractwhat+1,currentframe};
 				maptoget=plot.rescale_maps_nan(maptoget,0,currentframe);
 				[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
 				distance=linspace(0,length,size(c,1))';
-			case 11 %tangent
+			case 12 %tangent
 				if ~strcmp(extract_type,'extract_circle_series')
 					if size(resultslist,1)>6 %filtered exists
 						if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists

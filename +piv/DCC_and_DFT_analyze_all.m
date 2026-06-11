@@ -116,6 +116,7 @@ if ok==1
 		corrlist=cell(0);
 		u2list=cell(0);
 		v2list=cell(0);
+		umaplist=cell(0);
 		%correlation_matrices_list=cell(0);
 		for i=1:2:num_frames_to_process
 			k=(i+1)/2;
@@ -259,6 +260,7 @@ if ok==1
 			end
 			repeat_last_pass = get(handles.repeat_last,'Value');
 			delta_diff_min = str2double(get(handles.edit52x,'String'));
+			compute_uncertainty = get(handles.checkbox_uncertainty,'Value');
 			if get(handles.bg_subtract,'Value')>1
 				bg_img_A = gui.retr('bg_img_A');
 				bg_img_B = gui.retr('bg_img_B');
@@ -361,13 +363,14 @@ if ok==1
 					wienerwurst=wienerwurst, wienerwurstsize=wienerwurstsize, ...
 					minintens=stretcher_B(1), maxintens=stretcher_B(2));
 
-				[x, y, u, v, typevector,correlation_map,correlation_matrices,~,u2,v2] = piv.piv_FFTmulti( ...
+				[x, y, u, v, typevector,correlation_map,correlation_matrices,~,u2,v2,umap] = piv.piv_FFTmulti( ...
 					image1=image1, image2=image2, interrogationarea=interrogationarea, step=step, ...
 					subpixfinder=subpixfinder, mask_inpt=converted_mask, roi_inpt=roirect, ...
 					passes=passes, int2=int2, int3=int3, int4=int4, imdeform=imdeform, ...
 					repeat=repeat, mask_auto=mask_auto, do_linear_correlation=do_pad, ...
 					do_correlation_matrices=do_correlation_matrices, ...
-					repeat_last_pass=repeat_last_pass, delta_diff_min=delta_diff_min); %#ok<PFTUSW>
+					repeat_last_pass=repeat_last_pass, delta_diff_min=delta_diff_min, ...
+					compute_uncertainty=compute_uncertainty); %#ok<PFTUSW>
 				xlist{i}=x;
 				ylist{i}=y;
 				ulist{i}=u;
@@ -376,6 +379,7 @@ if ok==1
 				corrlist{i}=correlation_map;
 				u2list{i}=u2;
 				v2list{i}=v2;
+				umaplist{i}=umap;
 				%correlation_matrices_list{i}=correlation_matrices;
 				hbar.iterate(1);
 			end
@@ -399,6 +403,7 @@ if ok==1
 				resultslist{12,i}=corrlist{i};
 				resultslist{13,i}=u2list{i};
 				resultslist{14,i}=v2list{i};
+				resultslist{15,i}=umaplist{i};
 			end
 			gui.put('resultslist',resultslist);
 			gui.put('subtr_u', 0);
@@ -510,14 +515,16 @@ if ok==1
 					mask_auto = get(handles.mask_auto_box,'value');
 					repeat_last_pass = get(handles.repeat_last,'Value');
 					delta_diff_min = str2double(get(handles.edit52x,'String'));
+					compute_uncertainty = get(handles.checkbox_uncertainty,'Value');
 					[imdeform, repeat, do_pad] = piv.CorrQuality;
-					[x, y, u, v, typevector,correlation_map,correlation_matrices,~,u2,v2] = piv.piv_FFTmulti( ...
+					[x, y, u, v, typevector,correlation_map,correlation_matrices,~,u2,v2,umap] = piv.piv_FFTmulti( ...
 						image1=image1, image2=image2, interrogationarea=interrogationarea, step=step, ...
 						subpixfinder=subpixfinder, mask_inpt=converted_mask, roi_inpt=roirect, ...
 						passes=passes, int2=int2, int3=int3, int4=int4, imdeform=imdeform, ...
 						repeat=repeat, mask_auto=mask_auto, do_linear_correlation=do_pad, ...
 						do_correlation_matrices=do_correlation_matrices, ...
-						repeat_last_pass=repeat_last_pass, delta_diff_min=delta_diff_min);
+						repeat_last_pass=repeat_last_pass, delta_diff_min=delta_diff_min, ...
+						compute_uncertainty=compute_uncertainty);
 					%u=real(u)
 					%v=real(v)
 				end
@@ -534,6 +541,7 @@ if ok==1
 				resultslist{12,(i+1)/2}=correlation_map;
 				resultslist{13,(i+1)/2}=u2;
 				resultslist{14,(i+1)/2}=v2;
+				resultslist{15,(i+1)/2}=umap;
 				gui.put('resultslist',resultslist);
 				set(handles.fileselector, 'value', (i+1)/2);
 				%set(handles.progress, 'string' , ['Frame progress: 100%'])

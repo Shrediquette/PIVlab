@@ -1,4 +1,4 @@
-function [xtable, ytable, utable, vtable, typevector, correlation_map, correlation_matrices, all_xy_tables, utable2, vtable2] = piv_FFTmulti(opts)
+function [xtable, ytable, utable, vtable, typevector, correlation_map, correlation_matrices, all_xy_tables, utable2, vtable2, uncertainty_map] = piv_FFTmulti(opts)
 arguments
 	opts.image1
 	opts.image2
@@ -19,6 +19,7 @@ arguments
 	opts.repeat_last_pass = 0
 	opts.delta_diff_min = 0.025
 	opts.limit_peak_search_area = 1
+	opts.compute_uncertainty = 0
 end
 % Note to myself: I have experimented with windowing functions and other enhancements found e.g. in PIVsuite. But they all perform worse (higher rmse and bias and less yield) than this code. Symmetric deformation also performs worse,
 required_fields = {'image1', 'image2', 'interrogationarea'};
@@ -315,7 +316,6 @@ for multipass = 1:passes
 		N = numelementsx * numelementsy;
 		result_conv = zeros([interrogationarea, interrogationarea, N], convert_image_class_type);
 		correlation_map = zeros([numelementsy, numelementsx], convert_image_class_type);
-
 		BATCHSIZE = 200;
 		image1_cut = zeros([interrogationarea interrogationarea BATCHSIZE], convert_image_class_type);
 		image2_cut = zeros([interrogationarea interrogationarea BATCHSIZE], convert_image_class_type);
@@ -353,7 +353,6 @@ for multipass = 1:passes
 				all_sub_images_2(:,:,batch_offset+(1:batch_len))= image2_cut;%if desired: keep all matrices in memory
 			end
 		end
-
 		%% repeated correlation
 		if repeat == 1 && multipass==passes
 			ms = round(double(step)/4); %multishift parameter so groÃ wie viertel int window
@@ -631,88 +630,54 @@ for multipass = 1:passes
 		correlation_matrices=[];
 	end
 end
-%{
-%mal alle daten die ich brauche speichern. Als Beispielsatz. Dann damit experimentieren wie in echt...
-%% Hier uncertainty...?
-%Die Werte sind viel zu hoch, im Prinzip folgen sie aber den Erwartungen.
-Das Problem wird meine Partikelpäarchenfinder sein. Evtl. doch aus dem Beispiel klauen...
-%lowpass filter
-image1_cut = imfilter(all_sub_images_1,fspecial('gaussian',[3 3]));
-image2_cut = imfilter(all_sub_images_2,fspecial('gaussian',[3 3]));
 
-multiplied_images = image1_cut(:,:,:) .* image1_cut(:,:,:);
-max_val=max(multiplied_images,[],[1 2]); %maximum for each slice
-multiplied_images_binary=imbinarize(multiplied_images./max_val,0.75);
-multiplied_images_binary = bwareaopen(multiplied_images_binary, 2); %remove everything with less than n pixels
-for islice=1:size(multiplied_images_binary,3)
-	multiplied_images_binary(:,:,islice) = bwmorph(multiplied_images_binary(:,:,islice), 'shrink', inf);
-end
-%remove pixels at borders (otherwise subpixfinder will fail)
-multiplied_images_binary(:,1,:)=0;multiplied_images_binary(:,end,:)=0;
-multiplied_images_binary(1,:,:)=0;multiplied_images_binary(end,:,:)=0;
-amount_of_particles_pairs_per_IA = squeeze(sum(multiplied_images_binary,[1 2]));
+%% Uncertainty from fully-deformed sub-images (Sciacchitano et al. 2013)
+% Deform using the complete utable/vtable so the residual is near zero
+% for uniform flow, regardless of how many passes were run.
+compute_uncertainty = opts.compute_uncertainty;
+if compute_uncertainty
+	fprintf('Computing uncertainty map: ')
+	tic_unc = tic;
+	X_u  = interp1(1:size(xtable,2), xtable(1,:), 0:size(xtable,2)+1, 'linear', 'extrap');
+	Y_u  = interp1(1:size(ytable,1), ytable(:,1), 0:size(ytable,1)+1, 'linear', 'extrap')';
+	% Replace NaN vectors (failed correlations) with zero before spline deformation;
+	% NaN propagates through spline and renders the whole deformed image invalid.
+	utable_u = utable; utable_u(isnan(utable_u)) = 0;
+	vtable_u = vtable; vtable_u(isnan(vtable_u)) = 0;
+	U_u  = padarray(utable_u, [1,1], 'replicate');
+	V_u  = padarray(vtable_u, [1,1], 'replicate');
+	X1_u = (X_u(1):1:X_u(end)-1);
+	Y1_u = (Y_u(1):1:Y_u(end)-1)';
+	if symmetric_deformation
+		X2_u   = interp2(X_u,Y_u,U_u* 0.5,X1_u,Y1_u,'*spline') + repmat(X1_u,size(Y1_u,1),1);
+		Y2_u   = interp2(X_u,Y_u,V_u* 0.5,X1_u,Y1_u,'*spline') + repmat(Y1_u,1,size(X1_u,2));
+		X2_2_u = interp2(X_u,Y_u,U_u*-0.5,X1_u,Y1_u,'*spline') + repmat(X1_u,size(Y1_u,1),1);
+		Y2_2_u = interp2(X_u,Y_u,V_u*-0.5,X1_u,Y1_u,'*spline') + repmat(Y1_u,1,size(X1_u,2));
+		im1_unc = interp2(image_roi_xs,image_roi_ys,image1_roi,X2_2_u,Y2_2_u,imdeform);
+	else
+		X2_u = interp2(X_u,Y_u,U_u,X1_u,Y1_u,'*spline') + repmat(X1_u,size(Y1_u,1),1);
+		Y2_u = interp2(X_u,Y_u,V_u,X1_u,Y1_u,'*spline') + repmat(Y1_u,1,size(X1_u,2));
+		[X1_u_grid, Y1_u_grid] = meshgrid(X1_u, Y1_u);
+		im1_unc = interp2(image_roi_xs,image_roi_ys,double(image1_roi),X1_u_grid,Y1_u_grid,imdeform,0);
+	end
+	im2_unc = interp2(image_roi_xs,image_roi_ys,image2_roi,X2_u,Y2_u,imdeform);
 
-%meine koordinaten zeigen nicht zwingend partikel päarchen. wenn es keine partikel päarchen sind, dann wird disparity groß sein
+	% Full-image disparity computation (Wieneke / Sciacchitano 2013)
+	[xd, yd, ~, peaks_unc] = uncertainty.disparity(double(im1_unc), double(im2_unc), 1, 'sqrt');
 
-%find all coordinates of particle pairs
-[y_img, x_img, z_img] = ind2sub(size(multiplied_images_binary), find(multiplied_images_binary==1));
-
-[peakx_A, peaky_A] = multispot_SUBPIXGAUSS(image1_cut, x_img, y_img, z_img);
-[peakx_B, peaky_B] = multispot_SUBPIXGAUSS(image2_cut, x_img, y_img, z_img);
-
-%PRoblem: ich finde peaks an stellen wo particel evtl weit auseinander sind
-
-%{
-Each point (i, j) where ? is non-null indicates a particle
-image pair; the peak of the corresponding particle images is
-detected in I1 and I2 in a ___neighborhood of search radius r___
-(typically 1 or 2 pixels), centered in (i, j).
-%}
-
-xdisparity=peakx_A-peakx_B;
-ydisparity=peaky_A-peaky_B;
-
-%mismatch is limited to 1.5 pixel:
-%{
-Each point (i, j) where ? is non-null indicates a particle
-image pair; the peak of the corresponding particle images is
-detected in I1 and I2 in a ___neighborhood of search radius r___
-(typically 1 or 2 pixels), centered in (i, j).
-%}
-xdisparity (xdisparity>1.5 | xdisparity<-1.5)=nan;
-ydisparity (ydisparity>1.5 | ydisparity<-1.5)=nan;
-
-total_disparity=(xdisparity.^2+ydisparity.^2).^0.5;
-
-per_slice_stdev=zeros(size(multiplied_images,3),1);
-per_slice_mean=zeros(size(multiplied_images,3),1);
-for slice_no=1:size(multiplied_images,3)
-	%for every slice...
-	idx=find(z_img==slice_no);
-	per_slice_stdev(slice_no,1)=std(total_disparity(idx),'omitnan');
-	per_slice_mean(slice_no,1)=mean(total_disparity(idx),'omitnan');
+	% Per-window aggregation with Gaussian weighting
+	% ws must be odd; use interrogationarea if already odd, otherwise add 1
+	ws_odd   = double(interrogationarea) + mod(double(interrogationarea)+1, 2);
+	grdx_unc = double(xtable(1,:));
+	grdy_unc = double(ytable(:,1));
+	[extot, ~, ~, ~, ~] = uncertainty.error_window(xd, peaks_unc, grdx_unc, grdy_unc, ws_odd, 1, 'gauss', []);
+	[eytot, ~, ~, ~, ~] = uncertainty.error_window(yd, peaks_unc, grdx_unc, grdy_unc, ws_odd, 1, 'gauss', []);
+	uncertainty_map = single(sqrt(extot.^2 + eytot.^2));
+	fprintf([num2str(toc(tic_unc), '%4.2f') ' s.\n'])
+else
+	uncertainty_map = [];
 end
 
-disp_error = sqrt(per_slice_mean.^2  + sqrt(per_slice_stdev ./ sqrt(amount_of_particles_pairs_per_IA)));
-
-%aus vektor mit infos wieder eine matrize machen:
-disp_error = permute(reshape(disp_error, [size(xtable')]), [2 1 3]);
-
-
-figure;imagesc(disp_error);pause(0.1)
-figure(getappdata(0,'hgui'))
-%sqrt(mean^2+ sqrt(stdev/sqrt(amount_particles))
-
-%there are still some major mismatches in the position... why?
-%if the mismatch is larger than 3 pixels: It can't be an uncertainty of particle position...
-%because: we identify particles that are visible at the same position in image A and B (ideally, after image deformation all particles should be in identical positions.
-%If the disparity is larger than the particle radius, then this can't be real, because then these particles did not have an overlap and something must have gone wrong.
-
-
-%multiplied_images_binary(y(id),x(id),z(id))
-
-%gg=100;figure;imagesc(multiplied_images(:,:,gg));figure;imagesc(image1_cut(:,:,gg));figure;imagesc(image2_cut(:,:,gg));figure;imagesc(multiplied_images_binary(:,:,gg))
-%}
 
 end
 

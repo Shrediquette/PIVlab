@@ -44,6 +44,7 @@ if isempty(resultslist)==0
 		strain_rate=vorticity;
 		vectorangle=vorticity;
 		correlation_map=vorticity;
+		uncertainty_map=vorticity;
 	end
 
 	if type==1
@@ -68,7 +69,7 @@ if isempty(resultslist)==0
 		v_smoothed{i,1}=resultslist{11,currentframe}*calv;
 
 		if include_deriv
-			for deriv_idx=[2:9, 11:12] % skip 10 (LIC)
+			for deriv_idx=[2:9, 11:13] % skip 10 (LIC)
 				plot.derivative_calc(currentframe,deriv_idx,1);
 			end
 			derived=gui.retr('derived');
@@ -82,6 +83,7 @@ if isempty(resultslist)==0
 			strain_rate{i,1}=derived{8,currentframe};
 			vectorangle{i,1}=derived{10,currentframe};
 			correlation_map{i,1}=derived{11,currentframe};
+			uncertainty_map{i,1}=derived{12,currentframe};
 		end
 	end
 
@@ -108,13 +110,14 @@ if isempty(resultslist)==0
 			strain_rate=strain_rate{i,1};
 			vectorangle=vectorangle{i,1};
 			correlation_map=correlation_map{i,1};
+			uncertainty_map=uncertainty_map{i,1};
 		end
 	end
 end
 
 information={'The first dimension of the variables is the frame number.';'The variables contain all data that was calculated in the PIVlab GUI.';'If some data was not calculated, the corresponding cell is empty.';'Typevector is 0 for masked vector, 1 for regular vector, 2 for filtered vector';'u_original and v_original are the unmodified velocities from the cross-correlation.';'u_filtered and v_filtered is the above incl. your data validation selection.';'u_smoothed and v_smoothed is the above incl. your smoothing selection.'};
 if include_deriv
-	save(fullfile(PathName,FileName), 'x','y','u_original','v_original','typevector_original','u_filtered','v_filtered','typevector_filtered','u_smoothed','v_smoothed','vorticity','velocity_magnitude','u_component','v_component','divergence','q_criterion','shear_rate','strain_rate','calxy','calu', 'calv','units','information','vectorangle','correlation_map');
+	save(fullfile(PathName,FileName), 'x','y','u_original','v_original','typevector_original','u_filtered','v_filtered','typevector_filtered','u_smoothed','v_smoothed','vorticity','velocity_magnitude','u_component','v_component','divergence','q_criterion','shear_rate','strain_rate','calxy','calu', 'calv','units','information','vectorangle','correlation_map','uncertainty_map');
 else
 	save(fullfile(PathName,FileName), 'x','y','u_original','v_original','typevector_original','u_filtered','v_filtered','typevector_filtered','u_smoothed','v_smoothed','calxy','calu','calv','units','information');
 end

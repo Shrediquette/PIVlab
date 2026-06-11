@@ -192,6 +192,19 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 		derived{11,frame}=resultslist{12,frame}; % correlation map
 		%disp('corrmap')
 	end
+	if deriv==13
+		if size(resultslist,1)>=15 && ~isempty(resultslist{15,frame})
+			derived{12,frame}=resultslist{15,frame} * abs(calu);
+		else
+			derived{12,frame}=[];
+			if update==1
+				gui.custom_msgbox('msg',getappdata(0,'hgui'),'No uncertainty data',...
+					['No uncertainty map found for this frame. ' ...
+					 'Re-analyze with ''Compute uncertainty'' enabled.'],...
+					'modal',{'OK'},'OK');
+			end
+		end
+	end
 
 	gui.put('subtr_u', subtr_u);
 	gui.put('subtr_v', subtr_v);

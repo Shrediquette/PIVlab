@@ -3,13 +3,16 @@ function [returned_data, returned_header]=plot_data_area(currentframe,refreshdis
 handles=gui.gethand;
 resultslist=gui.retr('resultslist');
 extractwhat=get(handles.extraction_choice_area,'Value');
-if extractwhat==9 || extractwhat==10
+if extractwhat==9 || extractwhat==10 || extractwhat==11
+	% option 9 = vector angle  → deriv 11 (extractwhat+2), derived{10}
+	% option 10 = correlation  → deriv 12 (extractwhat+2), derived{11}
+	% option 11 = uncertainty  → deriv 13 (extractwhat+2), derived{12}
 	plot.derivative_calc(currentframe,extractwhat+2,0);
 else
 	plot.derivative_calc(currentframe,extractwhat+1,0);
 end
 derived=gui.retr('derived');
-if extractwhat==9 || extractwhat==10
+if extractwhat==9 || extractwhat==10 || extractwhat==11
 	maptoget=derived{extractwhat+1,currentframe};
 else
 	maptoget=derived{extractwhat,currentframe};

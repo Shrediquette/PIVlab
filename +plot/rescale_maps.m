@@ -45,9 +45,15 @@ else
     	%reconvert to phase
     	dispvar = angle(complex(X_interp,Y_interp))*180/pi;
     else
-    	colormap_interpolation_list=get(handles.colormap_interpolation,'String');
-    	colormap_interpolation_value = get(handles.colormap_interpolation,'Value');
-    	dispvar = imresize(in,[target_rows target_cols],colormap_interpolation_list{colormap_interpolation_value}); %INTERPOLATION
+    	displaywhat=gui.retr('displaywhat');
+    	if displaywhat==12 || displaywhat==13  % correlation or uncertainty: discrete per-window values, nearest-neighbor only
+    		interp_method='nearest';
+    	else
+    		colormap_interpolation_list=get(handles.colormap_interpolation,'String');
+    		colormap_interpolation_value = get(handles.colormap_interpolation,'Value');
+    		interp_method=colormap_interpolation_list{colormap_interpolation_value};
+    	end
+    	dispvar = imresize(in,[target_rows target_cols],interp_method);
     end
     out(miny_idx:maxy_idx,minx_idx:maxx_idx)=dispvar;
     if extrapolate_border

@@ -61,7 +61,7 @@ if type==1 %ascii file
 	if get(handles.add_header, 'value')==1
 		if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 			if get(handles.export_vort, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
-				header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'Vector type [-]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
+				header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'Vector type [-]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]' delimiter 'uncertainty [px/frame]'];
 			else
 				header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'Vector type [-]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
 			end
@@ -69,13 +69,13 @@ if type==1 %ascii file
 			displacement_only=gui.retr('displacement_only');
 			if ~isempty(displacement_only) && displacement_only == 1
 				if get(handles.export_vort, 'Value') == 1  %alle derivatives exportieren, kalibriert
-					header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/frame]' delimiter 'v [m/frame]' delimiter 'Vector type [-]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [m/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
+					header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/frame]' delimiter 'v [m/frame]' delimiter 'Vector type [-]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [m/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]' delimiter 'uncertainty [m/frame]'];
 				else
 					header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
 				end
 			else
 				if get(handles.export_vort, 'Value') == 1  %alle derivatives exportieren, kalibriert
-					header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'Q criterion [1/s^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
+					header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'Q criterion [1/s^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]' delimiter 'uncertainty [m/s]'];
 				else
 					header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
 				end
@@ -109,6 +109,7 @@ if type==1 %ascii file
 		plot.derivative_calc(currentframe,9,1); %strain
 		plot.derivative_calc(currentframe,11,1); %vectorangle
 		plot.derivative_calc(currentframe,12,1); %correlation coefficient
+		plot.derivative_calc(currentframe,13,1); %uncertainty
 		derived=gui.retr('derived');
 		vort=derived{2-1,currentframe};
 		magn=derived{3-1,currentframe};
@@ -119,8 +120,10 @@ if type==1 %ascii file
 		vectorangle=derived{11-1,currentframe};
 		corr_map=derived{11,currentframe};
 		if isempty(corr_map); corr_map=NaN(size(u)); end
+		unc_map=derived{12,currentframe};
+		if isempty(unc_map); unc_map=NaN(size(u)); end
 		%wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
-		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(q_criterion,size(q_criterion,1)*size(q_criterion,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1) reshape(corr_map,size(corr_map,1)*size(corr_map,2),1)];
+		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(q_criterion,size(q_criterion,1)*size(q_criterion,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1) reshape(corr_map,size(corr_map,1)*size(corr_map,2),1) reshape(unc_map,size(unc_map,1)*size(unc_map,2),1)];
 	else %no derivatives.
 		%wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
 		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
@@ -177,6 +180,16 @@ if type==3 %paraview vtk PARAVIEW DATEN OHNE die ganzen derivatives.... Berechne
 		fprintf(fid,'LOOKUP_TABLE default\n');
 		fwrite(fid,reshape(corr_map_raw,1,nr_of_elements),'float','b');
 	end
+	if size(resultslist,1) >= 15
+		unc_map_raw=resultslist{15,currentframe};
+	else
+		unc_map_raw=[];
+	end
+	if ~isempty(unc_map_raw)
+		fprintf(fid,'\nSCALARS uncertainty_map float 1\n');
+		fprintf(fid,'LOOKUP_TABLE default\n');
+		fwrite(fid,reshape(single(unc_map_raw)*abs(single(calu)),1,nr_of_elements),'float','b');
+	end
 
 	fclose(fid);
 
@@ -188,8 +201,8 @@ if type==4 %tecplot file
 	header2=['# FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(calu)];
 	if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
 		if get(handles.export_vort_tec, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
-			header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
-			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "shear_rate", "simple_strain", "vector_direction", "correlation_map"';
+			header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]' delimiter 'uncertainty [px/frame]'];
+			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "shear_rate", "simple_strain", "vector_direction", "correlation_map", "uncertainty_map"';
 		else
 			header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
 			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
@@ -198,16 +211,16 @@ if type==4 %tecplot file
 		displacement_only=gui.retr('displacement_only');
 		if ~isempty(displacement_only) && displacement_only == 1
 			if get(handles.export_vort_tec, 'Value') == 1  %alle derivatives exportieren, kalibriert
-				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'Q criterion [1/s^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
-				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "shear_rate", "simple_strain", "vector_direction", "correlation_map"';
+				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'Q criterion [1/s^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]' delimiter 'uncertainty [m/s]'];
+				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "shear_rate", "simple_strain", "vector_direction", "correlation_map", "uncertainty_map"';
 			else
 				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
 				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
 			end
 		else
 			if get(handles.export_vort_tec, 'Value') == 1  %alle derivatives exportieren, kalibriert
-				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/frame]' delimiter 'v [m/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [m/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]'];
-				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "shear_rate", "simple_strain", "vector_direction", "correlation_map"';
+				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/frame]' delimiter 'v [m/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [m/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]' delimiter 'uncertainty [m/frame]'];
+				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "shear_rate", "simple_strain", "vector_direction", "correlation_map", "uncertainty_map"';
 			else
 				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/frame]' delimiter 'v [m/frame]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
 				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
@@ -231,6 +244,7 @@ if type==4 %tecplot file
 		plot.derivative_calc(currentframe,9,1); %strain
 		plot.derivative_calc(currentframe,11,1); %vectorangle
 		plot.derivative_calc(currentframe,12,1); %correlation coefficient
+		plot.derivative_calc(currentframe,13,1); %uncertainty
 		derived=gui.retr('derived');
 		vort=derived{2-1,currentframe};
 		magn=derived{3-1,currentframe};
@@ -241,6 +255,8 @@ if type==4 %tecplot file
 		vectorangle=derived{11-1,currentframe};
 		corr_map=derived{11,currentframe};
 		if isempty(corr_map); corr_map=zeros(size(u)); end
+		unc_map=derived{12,currentframe};
+		if isempty(unc_map); unc_map=zeros(size(u)); end
 		nanmarker=zeros(size(x));
 		nanmarker(isnan(u))=1;
 		%Nans mit nullen füllen
@@ -254,7 +270,8 @@ if type==4 %tecplot file
 		strain(isnan(strain))=0;
 		vectorangle(isnan(vectorangle))=0;
 		corr_map(isnan(corr_map))=0;
-		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(q_criterion,size(q_criterion,1)*size(q_criterion,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1) reshape(corr_map,size(corr_map,1)*size(corr_map,2),1)];
+		unc_map(isnan(unc_map))=0;
+		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(q_criterion,size(q_criterion,1)*size(q_criterion,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1) reshape(corr_map,size(corr_map,1)*size(corr_map,2),1) reshape(unc_map,size(unc_map,1)*size(unc_map,2),1)];
 	else
 		nanmarker=zeros(size(x));
 		nanmarker(isnan(u))=1;

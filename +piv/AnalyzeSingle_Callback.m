@@ -88,7 +88,7 @@ if ok==1
 		step=str2double(get(handles.step, 'string'));
 		subpixfinder=get(handles.subpix,'value');
 		do_correlation_matrices=0;
-		u2=[]; v2=[];
+		u2=[]; v2=[]; umap=[];
 		if get(handles.algorithm_selection,'Value')==3 %DCC
 			[x, y, u, v, typevector] = piv.piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
 			correlation_map=zeros(size(u)); %nor correlation map available with DCC
@@ -113,13 +113,15 @@ if ok==1
 			delta_diff_min = str2double(get(handles.edit52x,'String'));
 			if get(handles.algorithm_selection,'Value')==1 %fft multi
 				try
-					[x, y, u, v, typevector,correlation_map,correlation_matrices,~,u2,v2] = piv.piv_FFTmulti( ...
+					compute_uncertainty = get(handles.checkbox_uncertainty,'Value');
+					[x, y, u, v, typevector,correlation_map,correlation_matrices,~,u2,v2,umap] = piv.piv_FFTmulti( ...
 						image1=image1, image2=image2, interrogationarea=interrogationarea, step=step, ...
 						subpixfinder=subpixfinder, mask_inpt=converted_mask, roi_inpt=roirect, ...
 						passes=passes, int2=int2, int3=int3, int4=int4, imdeform=imdeform, ...
 						repeat=repeat, mask_auto=mask_auto, do_linear_correlation=do_pad, ...
 						do_correlation_matrices=do_correlation_matrices, ...
-						repeat_last_pass=repeat_last_pass, delta_diff_min=delta_diff_min);
+						repeat_last_pass=repeat_last_pass, delta_diff_min=delta_diff_min, ...
+						compute_uncertainty=compute_uncertainty);
 				catch ME
 					disp(getReport(ME))
 					gui.toolsavailable(1);
@@ -172,6 +174,7 @@ if ok==1
 		resultslist{12,(selected+1)/2}=correlation_map;
 		resultslist{13,(selected+1)/2}=u2;
 		resultslist{14,(selected+1)/2}=v2;
+		resultslist{15,(selected+1)/2}=umap;
 		gui.put('derived', [])
 		gui.put('resultslist',resultslist);
 		set(handles.progress, 'string' , ['Frame progress: 100%'])

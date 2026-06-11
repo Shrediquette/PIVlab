@@ -50,6 +50,7 @@ if isempty(resultslist)==0
 	LIC=vorticity;
 	vectorangle=vorticity;
 	correlation_map=vorticity;
+	uncertainty_map=cell(nrframes,1);
 
 	for i=1:nrframes
 		[x_cal,y_cal]=calibrate.xy (resultslist{1,i},resultslist{2,i});
@@ -75,6 +76,9 @@ if isempty(resultslist)==0
 		LIC{i,1}=derived{9,i};
 		vectorangle{i,1}=derived{10,i};
 		correlation_map{i,1}=derived{11,i};
+		if size(resultslist,1)>=15
+			uncertainty_map{i,1}=resultslist{15,i}*abs(calu);
+		end
 	end
 
 	assignin('base','x',x);
@@ -100,6 +104,7 @@ if isempty(resultslist)==0
 	assignin('base','LIC',LIC);
 	assignin('base','vectorangle',vectorangle);
 	assignin('base','correlation_map',correlation_map);
+	assignin('base','uncertainty_map',uncertainty_map);
 
 	assignin('base','calxy',calxy);
 	assignin('base','calu',calu);
