@@ -677,8 +677,11 @@ if compute_uncertainty
 	% Per-window aggregation with Gaussian weighting
 	% ws must be odd; use interrogationarea if already odd, otherwise add 1
 	ws_odd   = double(interrogationarea) + mod(double(interrogationarea)+1, 2);
-	grdx_unc = double(xtable(1,:));
-	grdy_unc = double(ytable(:,1));
+	% Convert PIV grid from full-image coordinates to 1-based pixel indices
+	% into im1_unc/im2_unc. X1_u(1)/Y1_u(1) is the full-image coordinate of
+	% pixel (1,1) in those images. Without ROI X1_u(1)~1 so this is a no-op.
+	grdx_unc = double(xtable(1,:)) - X1_u(1) + 1;
+	grdy_unc = double(ytable(:,1)) - Y1_u(1) + 1;
 	[extot, ~, ~, ~, ~] = uncertainty.error_window(xd, peaks_unc, grdx_unc, grdy_unc, ws_odd, 1, 'gauss', []);
 	[eytot, ~, ~, ~, ~] = uncertainty.error_window(yd, peaks_unc, grdx_unc, grdy_unc, ws_odd, 1, 'gauss', []);
 	uncertainty_map = single(sqrt(extot.^2 + eytot.^2));
