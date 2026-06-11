@@ -51,25 +51,65 @@ if isempty(fh)
     handles.counter = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'Off','On'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','counter');
 
 
-    try
-    	delete(imaqfind); %clears all previous videoinputs
-    	warning off
-    	hwinf = imaqhwinfo;
-    	warning on
-    	%imaqreset
-    catch
 
+
+
+
+
+%% Prepare camera
+delete(imaqfind); %clears all previous videoinputs
+try
+	hwinf = imaqhwinfo;
+	%imaqreset
+catch
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','modal');
+	disp('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.')
+end
+
+found_correct_adaptor=0;
+for adaptorID=1:numel(hwinf.InstalledAdaptors)
+    info = imaqhwinfo(hwinf.InstalledAdaptors{adaptorID});
+    if strcmp(info.AdaptorName,'gentl')
+        disp(['gentl adaptor found with ID: ' num2str(adaptorID)])
+        found_correct_adaptor=1;
+        break
     end
-    info = imaqhwinfo(hwinf.InstalledAdaptors{1});
+end
 
-    try
-    	OPTRONIS_name = info.DeviceInfo.DeviceName;
-    catch
+if found_correct_adaptor~=1
+	disp('ERROR: gentl adaptor not found. Please install the GenICam / GenTL support package from here:')
+	disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error, support package missing',{'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'modal');
+end
 
+try
+    %Getting camera device ID when multiple cameras are connected
+    for CamID = 1: size(info.DeviceInfo,2)
+        camName=info.DeviceInfo(CamID).DeviceName;
+        if contains(camName,'Cyclone')
+            break
+        end
     end
+    OPTRONIS_name = info.DeviceInfo(CamID).DeviceName;
+catch
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Camera not found! Is it connected?','modal');
+end
 
 
-    OPTRONIS_vid = videoinput(info.AdaptorName,info.DeviceInfo.DeviceID,'Mono8');
+
+
+
+
+
+
+
+
+
+
+
+
+    OPTRONIS_vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,'Mono8');
+
     OPTRONIS_settings = get(OPTRONIS_vid);
 
 
