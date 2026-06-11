@@ -632,8 +632,17 @@ for multipass = 1:passes
 end
 
 %% Uncertainty from fully-deformed sub-images (Sciacchitano et al. 2013)
-% Deform using the complete utable/vtable so the residual is near zero
-% for uniform flow, regardless of how many passes were run.
+% Computes the particle-image disparity map: the RMS spread of individual
+% particle displacements around the per-window mean, in pixels.
+% The output is a combined indicator with two distinct physical meanings:
+%   - In regions with few particles, noise or out-of-plane loss: genuine
+%     measurement uncertainty (the vector may be wrong).
+%   - Near shear layers, gradients or vortex cores: sub-window velocity
+%     non-uniformity (the vector is correct but represents a spatial average
+%     over a region where the flow varies). High values there are a spatial
+%     resolution warning, not a measurement error.
+% Both cases are useful diagnostically. The method and formula follow
+% Sciacchitano, Wieneke & Scarano (2013) Meas. Sci. Technol. 24 035401.
 compute_uncertainty = opts.compute_uncertainty;
 if compute_uncertainty
 	fprintf('Computing uncertainty map: ')
