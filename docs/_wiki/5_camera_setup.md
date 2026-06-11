@@ -32,7 +32,34 @@ title: Camera Setup
 8. Run pco_camera_info.m in the pco.matlab\scripts folder to see information about your pco camera. This should run without errors.
    Done. You can now use your pco camera in the PIVlab_GUI.
 
-# Setting up OPTRONIS cameras
+# Setting up OPTRONIS cameras with bitflow Coaxlink Framegrabber
+* The following OPTRONIS cameras are supported:
+   * [Cyclone-25-150-M](https://optronis.com/produkte/cyclone-25-150/)
+   * [Cyclone-1HS-3500-M](https://optronis.com/produkte/cyclone-1hs-3500/)
+   * [Cyclone-2-2000-M](https://optronis.com/produkte/cyclone-2-2000/)
+* Currently, these cameras work in 8 bit mode.
+* Keep in mind that these high-speed cameras transfer enormous amounts of data. In PIVlab, image data is captured into RAM before it is saved to disk (otherwise most hard disks, even SSD's, can't keep up with the data rate). With a Cyclone-2-2000-M camera, you can capture approximately the following amount of 8-bit double images:
+   * 16 GB RAM: 1300 double images
+   * 32 GB RAM: 3400 double images
+   * 64 GB RAM: 7500 double images
+* PIVlab throws a warning before capturing when you selected too many images, and the corresponding edit field in the GUI becomes orange.
+* Also keep in mind that you need a fast SSD to write data from RAM in a reasonable time. And the SSD should also be large enough!
+* The camera needs to be connected via the bitflow PCIe frame grabber to a PC. The PC must have a PCIe 3.0 (Gen 3) x8 slot.
+
+### PIVlab toolbox version only:
+* The cameras require the [image acquisition toolbox from Mathworks](https://de.mathworks.com/products/image-acquisition.html). This is included in many Matlab licenses from universities.
+* Then, you need to install the [Image Acquisition Toolbox Support Package for GenICam Interface](https://de.mathworks.com/matlabcentral/fileexchange/45180-image-acquisition-toolbox-support-package-for-genicam-interface?s_tid=srchtitle).
+* [Download and install the bitflow Matlab IMAQ adaptor](https://www.bitflow.com/downloads/BFMATLABDrivers.zip)
+
+### Both Toolbox and Standalone version of PIVlab:
+* [Download and install the bitflow sdk](https://www.bitflow.com/downloads/bfsdk68.zip)
+* Connect the camera to the frame grabber using the four coaxial cables. You need to connect them in the right order: 1-A, 2-B, 3-C, 4-D. Don't forget to connect the trigger cable (Aux. port on the OPTRONIS, “Sync in”) to the laser or synchronizer.
+* Power your camera with the supplied power supply (or directly via Coaxpress).
+* All four lights on the back of the OPTRONIS need to be solid green.
+* When this is finished, start PIVlab and select the suitable configuration ("PIVlab LD-PS + OPTRONIS) in the image acquisition menu. The exact camera model will be detected automatically.
+* Connect to the laser / synchronizer in PIVlab.
+
+# Setting up OPTRONIS cameras with Euresys Coaxlink Framegrabber
 * The following OPTRONIS cameras are supported:
    * [Cyclone-25-150-M](https://optronis.com/produkte/cyclone-25-150/)
    * [Cyclone-1HS-3500-M](https://optronis.com/produkte/cyclone-1hs-3500/)
