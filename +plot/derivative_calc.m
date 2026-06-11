@@ -197,11 +197,12 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 			derived{12,frame}=resultslist{15,frame} * abs(calu);
 		else
 			derived{12,frame}=[];
-			if update==1 && handles.multip10.Visible == "off" && handles.multip11.Visible == "off" && handles.multip20.Visible == "off"  % not currently in export panel
+			if update==1 && handles.multip10.Visible == "off" && handles.multip11.Visible == "off" && handles.multip20.Visible == "off" && gui.retr('alreadydisplayed_warning_uncertainty')==0 % not currently in export panel
 				gui.custom_msgbox('msg',getappdata(0,'hgui'),'No uncertainty data',...
 					['No uncertainty map found for this frame. ' ...
-					 'Re-analyze with ''Compute uncertainty'' enabled.'],...
+					'Re-analyze with ''Compute uncertainty'' enabled.'],...
 					'modal',{'OK'},'OK');
+				gui.put('alreadydisplayed_warning_uncertainty',1);
 			end
 		end
 	end

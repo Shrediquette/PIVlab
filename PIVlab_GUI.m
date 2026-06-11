@@ -95,6 +95,7 @@ if isempty(fh)
     gui.put('quickheight',3.5);
     gui.put('quickvisible',1);
     gui.put('alreadydisplayed',0);
+	gui.put('alreadydisplayed_warning_uncertainty',0);
     gui.put('video_selection_done',0);
     if ~verLessThan('Matlab','25') %#ok<*VERLESSMATLAB>
         if ispref('PIVlab_ad','dark_mode_theme')
