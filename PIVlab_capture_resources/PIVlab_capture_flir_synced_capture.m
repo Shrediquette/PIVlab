@@ -81,5 +81,4 @@ setappdata(hgui,'hist_enabled',0);
 try
 	delete(hObject);
 catch
-	delete(gcf);
 end

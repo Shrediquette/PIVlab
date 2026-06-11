@@ -226,7 +226,7 @@ function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');
 if running == 1
     hgui=getappdata(0,'hgui');
-    PIVlab_axis = findobj(hgui,'Type','Axes');
+    PIVlab_axis = gui.retr('pivlab_axis');
     postix=get(PIVlab_axis,'XLim');
     postiy=get(PIVlab_axis,'YLim');
     bg_col=get(auto_focus_active_hint,'BackgroundColor');
@@ -240,8 +240,7 @@ if running == 1
         set(auto_focus_active_hint,'BackgroundColor',bg_col);
     else
         bg_col= [0.25 0.25 0.25];
-        axes(PIVlab_axis);
-        text(postix(2)/2,postiy(2)/2,'Autofocus running, please wait...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',24, 'BackgroundColor', bg_col,'tag','auto_focus_active','margin',10,'Clipping','on');
+        text(PIVlab_axis,postix(2)/2,postiy(2)/2,'Autofocus running, please wait...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',24, 'BackgroundColor', bg_col,'tag','auto_focus_active','margin',10,'Clipping','on');
     end
 else
     delete(auto_focus_active_hint);
@@ -256,5 +255,4 @@ end
 try
     delete(hObject);
 catch
-    delete(gcf);
 end

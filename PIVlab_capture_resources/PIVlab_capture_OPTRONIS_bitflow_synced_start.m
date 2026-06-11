@@ -121,7 +121,6 @@ OPTRONIS_src.BFGTLNodeValueStr = num2str(ROI_OPTRONIS(1));
 OPTRONIS_src.BFGTLNodeName     = 'OffsetY';
 OPTRONIS_src.BFGTLNodeValueStr = num2str(ROI_OPTRONIS(2));
 % VideoResolution stays at the BFML default (1920×1080); clip to the actual frame size
-disp('does this really need to be set?')
 OPTRONIS_vid.ROIPosition = [0 0 ROI_OPTRONIS(3) ROI_OPTRONIS(4)];
 
 %% prepare axes
@@ -130,13 +129,13 @@ OPTRONIS_climits=2^bitmode;
 
 image_handle_OPTRONIS=imagesc(zeros(ROI_OPTRONIS(4),ROI_OPTRONIS(3)),'Parent',PIVlab_axis,[0 OPTRONIS_climits]);
 setappdata(hgui,'image_handle_OPTRONIS',image_handle_OPTRONIS);
-frame_nr_display=text(100,100,'Initializing...','Color',[1 1 0]);
+frame_nr_display=text(PIVlab_axis,100,100,'Initializing...','Color',[1 1 0]);
 
-colormap default
-new_map=colormap('gray');
-colormap(new_map);axis image;
-set(gui.retr('pivlab_axis'),'ytick',[])
-set(gui.retr('pivlab_axis'),'xtick',[])
+colormap(ancestor(PIVlab_axis,'figure'),'default')
+new_map=colormap(ancestor(PIVlab_axis,'figure'),'gray');
+colormap(ancestor(PIVlab_axis,'figure'),new_map);axis(PIVlab_axis,'image');
+set(PIVlab_axis,'ytick',[])
+set(PIVlab_axis,'xtick',[])
 
 
 %% Set frame rate (check if too high)
@@ -170,6 +169,7 @@ if fps_too_high==0
         % before the real triggered acquisition, preventing the first-frame skip.
         OPTRONIS_src.BFGTLNodeName     = 'AcquisitionStop';   % put camera in Idle (makes AcquisitionMode writable)
         OPTRONIS_src.BFGTLNodeValueStr = '1';                 % '1' executes a GenICam command node
+        pause(0.01)
         OPTRONIS_src.BFGTLNodeName     = 'AcquisitionMode';
         OPTRONIS_src.BFGTLNodeValueStr = 'Continuous';
         OPTRONIS_vid.FramesPerTrigger  = 2;
@@ -178,7 +178,7 @@ if fps_too_high==0
         wait(OPTRONIS_vid, 5);             % 2 frames @ 100 fps = 20 ms; 5 s is a safe ceiling
         stop(OPTRONIS_vid);                % sends AcquisitionStop -> camera back to Idle
         flushdata(OPTRONIS_vid);           % discard warm-up frames
-
+        pause(0.01)
         % Restore SingleFrame + external trigger for the real acquisition
         OPTRONIS_src.BFGTLNodeName     = 'AcquisitionMode';
         OPTRONIS_src.BFGTLNodeValueStr = 'SingleFrame';

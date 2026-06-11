@@ -6,18 +6,16 @@ function toggle_second_monitor_Callback(src, ~)
 second_monitor_fig = gui.retr('second_monitor_fig');
 
 if ~isempty(second_monitor_fig) && isvalid(second_monitor_fig)
-	% --- Already active: turn off ---
-	gui.second_monitor_disable;
+    % --- Already active: turn off ---
+    gui.second_monitor_disable;
 else
-	% --- Not yet active: turn on ---
-	monitors = get(0, 'MonitorPositions');
-	if size(monitors, 1) < 2
-		gui.custom_msgbox('warn', getappdata(0,'hgui'), 'Single monitor detected', ...
-			'No second monitor detected. Connect a second display first.', 'modal');
-		return;
-	end
-
-	mon2 = monitors(2, :);
+    % --- Not yet active: turn on ---
+    monitors = get(0, 'MonitorPositions');
+    if size(monitors, 1) < 2
+        mon2 = monitors(1, :);
+    else
+        mon2 = monitors(2, :);
+    end
 
 	% Default (restore) size: 80% of the monitor, centered.
 	% This is what the user sees when clicking "restore" from maximized state.
@@ -47,7 +45,7 @@ else
 	second_ax = axes( ...
 		'Parent',        second_monitor_fig, ...
 		'Units',         'normalized', ...
-		'OuterPosition', [0 0 1 1], ...
+		'OuterPosition', [0.025 0.025 0.95 0.95], ...
 		'Color',         'k', ...
 		'XColor',        'none', ...
 		'YColor',        'none');

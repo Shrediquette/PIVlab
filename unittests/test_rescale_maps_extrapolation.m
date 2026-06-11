@@ -17,9 +17,9 @@
 
 clc; clear; close all;
 
-project_root = 'C:\Users\trash\Documents\MATLAB\PIVlab_from_github';
+project_root = 'C:\Users\thiel\Documents\MATLAB\PIVlab_source';
 addpath(project_root);
-outdir = 'C:\Users\trash\Documents\MATLAB\claude_code_temp';
+outdir = 'C:\Users\thiel\Documents\MATLAB\ClaudeCode\temp';
 if ~exist(outdir, 'dir'), mkdir(outdir); end
 
 n_passed = 0;
@@ -27,7 +27,7 @@ n_failed = 0;
 
 fprintf('=== test_rescale_maps_extrapolation ===\n\n');
 
-%% ── Helper: compute boundary indices (mirrors rescale_maps logic) ─────────
+% ── Helper: compute boundary indices (mirrors rescale_maps logic) ─────────
 function [miny_idx, minx_idx, maxy_idx, maxx_idx] = get_indices(x, y, img_size)
 step = x(1,2) - x(1,1);
 miny_idx = max(1, floor(min(y(:)) - step/2));
@@ -36,7 +36,7 @@ maxy_idx = min(img_size(1), floor(max(y(:)) + step/2 - 1));
 maxx_idx = min(img_size(2), floor(max(x(:)) + step/2 - 1));
 end
 
-%% ── Helper: rescale WITHOUT extrapolation (current behaviour) ─────────────
+% ── Helper: rescale WITHOUT extrapolation (current behaviour) ─────────────
 function out = rescale_no_extrap(in, x, y, img_size)
 [miny_idx, minx_idx, maxy_idx, maxx_idx] = get_indices(x, y, img_size);
 target_rows = maxy_idx - miny_idx + 1;
@@ -47,7 +47,7 @@ dispvar = imresize(in, [target_rows target_cols], 'bilinear');
 out(miny_idx:maxy_idx, minx_idx:maxx_idx) = dispvar; % fill interior
 end
 
-%% ── Helper: rescale WITH extrapolation (new behaviour) ────────────────────
+% ── Helper: rescale WITH extrapolation (new behaviour) ────────────────────
 function out = rescale_extrap(in, x, y, img_size)
 [miny_idx, minx_idx, maxy_idx, maxx_idx] = get_indices(x, y, img_size);
 target_rows = maxy_idx - miny_idx + 1;
@@ -65,7 +65,7 @@ out = misc.inpaint_nans(out, 4);
 out(interior_nan) = NaN;
 end
 
-%% ── Build synthetic PIV grid ──────────────────────────────────────────────
+% ── Build synthetic PIV grid ──────────────────────────────────────────────
 img_size = [60 80];
 step = 10;
 xs = step : step : img_size(2) - step;   % column centres: 10,20,...,70
@@ -81,7 +81,7 @@ fprintf('Interior region: rows %d:%d  cols %d:%d\n\n', mi, mai, mni, mxi);
 out_no = rescale_no_extrap(in, xg, yg, img_size);
 out_ex = rescale_extrap(in, xg, yg, img_size);
 
-%% Build border mask (pixels OUTSIDE the interior region)
+% Build border mask (pixels OUTSIDE the interior region)
 border_mask = true(img_size);
 border_mask(mi:mai, mni:mxi) = false;
 
@@ -89,7 +89,7 @@ interior_valid_mask = false(img_size);
 interior_valid_mask(mi:mai, mni:mxi) = true;
 interior_valid_mask = interior_valid_mask & ~isnan(out_no);
 
-%% ── Test 1: Interior pixels unchanged ─────────────────────────────────────
+% ── Test 1: Interior pixels unchanged ─────────────────────────────────────
 interior_no = out_no(interior_valid_mask);
 interior_ex = out_ex(interior_valid_mask);
 max_diff = max(abs(interior_ex - interior_no));
@@ -101,7 +101,7 @@ else
     n_failed = n_failed + 1;
 end
 
-%% ── Test 2: Border = mean without extrapolation ────────────────────────────
+% ── Test 2: Border = mean without extrapolation ────────────────────────────
 border_no = out_no(border_mask);
 expected_mean = mean(in(:));
 max_border_diff = max(abs(border_no - expected_mean));
@@ -113,7 +113,7 @@ else
     n_failed = n_failed + 1;
 end
 
-%% ── Test 3: Border is NOT flat with extrapolation ─────────────────────────
+% ── Test 3: Border is NOT flat with extrapolation ─────────────────────────
 border_ex = out_ex(border_mask);
 border_std = std(border_ex);
 if border_std > 1e-6
@@ -124,7 +124,7 @@ else
     n_failed = n_failed + 1;
 end
 
-%% ── Test 4: No NaN in border after extrapolation ─────────────────────────
+% ── Test 4: No NaN in border after extrapolation ─────────────────────────
 border_has_nan = any(isnan(border_ex));
 if ~border_has_nan
     fprintf('[PASS] Test 4: No NaN in border after extrapolation\n');
@@ -134,7 +134,7 @@ else
     n_failed = n_failed + 1;
 end
 
-%% ── Test 5: Interior NaN values (masked vectors) preserved ────────────────
+% ── Test 5: Interior NaN values (masked vectors) preserved ────────────────
 in_with_nan = in;
 in_with_nan(2, 3) = NaN;  % simulate a masked/filtered vector
 in_with_nan(3, 2) = NaN;
@@ -161,7 +161,7 @@ else
     n_failed = n_failed + 1;
 end
 
-%% ── Test 6: Interior NaN does not bleed into border (border is still filled) ──
+% ── Test 6: Interior NaN does not bleed into border (border is still filled) ──
 border_ex_nan = out_ex_nan(border_mask);
 border_nan_count = sum(isnan(border_ex_nan));
 if border_nan_count == 0
@@ -172,13 +172,13 @@ else
     n_failed = n_failed + 1;
 end
 
-%% ── Summary ────────────────────────────────────────────────────────────────
+% ── Summary ────────────────────────────────────────────────────────────────
 fprintf('\n--- Summary: %d passed, %d failed ---\n', n_passed, n_failed);
 if n_failed > 0
     error('test_rescale_maps_extrapolation: %d test(s) FAILED', n_failed);
 end
 
-%% ── Visual output ──────────────────────────────────────────────────────────
+% ── Visual output ──────────────────────────────────────────────────────────
 cmap = colormap('jet');
 close all;
 
@@ -204,7 +204,7 @@ saveas(fig, fname);
 close(fig);
 fprintf('Visual comparison saved to: %s\n', fname);
 
-%% ── Real PIV data visual check ─────────────────────────────────────────────
+% ── Real PIV data visual check ─────────────────────────────────────────────
 fprintf('\n--- Real PIV data visual check ---\n');
 img_A = imread(fullfile(project_root, 'Example_data', 'Jet_0001A.jpg'));
 img_B = imread(fullfile(project_root, 'Example_data', 'Jet_0001B.jpg'));

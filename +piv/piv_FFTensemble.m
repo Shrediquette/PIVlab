@@ -197,6 +197,7 @@ image2 = preproc.PIVlab_preproc( ...
                 disp('')
                 disp('Error: Image dimensions inconsistent!')
                 if ~isdeployed
+                    %#exclude commandwindow
                     commandwindow
                 end
                 drawnow;

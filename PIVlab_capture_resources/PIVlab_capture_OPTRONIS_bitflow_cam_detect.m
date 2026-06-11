@@ -9,6 +9,7 @@ try
     hwinf = imaqhwinfo;
     warning on
     warning('off','MATLAB:JavaEDTAutoDelegation');
+    warning('off','imaq:gentl:noSupportedPixelFormat')
     imaqreset
 catch
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','modal');

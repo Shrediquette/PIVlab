@@ -43,7 +43,7 @@ if isempty(fh)
     handles = guihandles; %alle handles mit tag laden und ansprechbar machen
     guidata(MainWindow,handles)
     setappdata(0,'hgui',MainWindow);
-    version = '3.13';
+    version = '3.14';
     isbeta=1;
     gui.put('PIVver', version);
     gui.put('isbeta', isbeta);
@@ -311,10 +311,9 @@ if isempty(fh)
             imaqregister(bit_flow_DLL);
             imaqreset
             info=imaqhwinfo;
-            disp('Installed IMAQ adaptors:')
-            disp('add the folder to the included files in app apckaging...')
+            disp('-> Installed IMAQ adaptors:')
             for i=1:numel(info.InstalledAdaptors)
-                disp(info.InstalledAdaptors{i})
+                disp(['- ' info.InstalledAdaptors{i}])
             end
         catch ME
             disp('Error: Could not register the bitflow adaptor.')

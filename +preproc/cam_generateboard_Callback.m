@@ -87,6 +87,7 @@ oltsize1=[max_height olt_width1];
 olt_height1= floor(size(olt_logo,1)/size(olt_logo,2) * max_width);
 oltsize2=[olt_height1 max_width];
 
+oltsize=oltsize1;
 if olt_width1 > max_width
 	oltsize=oltsize2;
 end

@@ -14,7 +14,7 @@ if ~isempty(h1)
     size_img=size(img);
     if ~isempty(img)
         try
-            snaptxt=text(size_img(2)/2,size_img(1)/2,'SNAPSHOT','BackgroundColor','k','Color','y','tag','captureinfo','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',24,'FontWeight','bold');
+            snaptxt=text(current_axis,size_img(2)/2,size_img(1)/2,'SNAPSHOT','BackgroundColor','k','Color','y','tag','captureinfo','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',24,'FontWeight','bold');
             drawnow;
             pause(0.05)
             if exist('snaptxt','var')

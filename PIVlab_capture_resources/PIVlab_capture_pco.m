@@ -17,19 +17,19 @@ end
 OutputError=0;
 image_stack=[];
 framerate_max=1;
-PIVlab_axis = findobj(hgui,'Type','Axes');
+PIVlab_axis = gui.retr('pivlab_axis');
 image_handle_pco=imagesc(zeros(100,100),'Parent',PIVlab_axis,[0 2^16]);
 setappdata(hgui,'image_handle_pco',image_handle_pco);
 
-frame_nr_display=text(10,10,'Detecting camera...','Color',[1 1 0],'HorizontalAlignment','left','VerticalAlignment','top','FontSize',12);
-colormap default %reset colormap steps
-new_map=colormap('gray');
+frame_nr_display=text(PIVlab_axis,10,10,'Detecting camera...','Color',[1 1 0],'HorizontalAlignment','left','VerticalAlignment','top','FontSize',12);
+colormap(ancestor(PIVlab_axis,'figure'),'default') %reset colormap steps
+new_map=colormap(ancestor(PIVlab_axis,'figure'),'gray');
 new_map(1:3,:)=[0 0.2 0;0 0.2 0;0 0.2 0];
 new_map(end-2:end,:)=[1 0.7 0.7;1 0.7 0.7;1 0.7 0.7];
-colormap(new_map);axis image;
-set(gui.retr('pivlab_axis'),'ytick',[])
-set(gui.retr('pivlab_axis'),'xtick',[])
-colorbar
+colormap(ancestor(PIVlab_axis,'figure'),new_map);axis(PIVlab_axis,'image');
+set(PIVlab_axis,'ytick',[])
+set(PIVlab_axis,'xtick',[])
+colorbar(PIVlab_axis)
 
 %% delete data in image directory, manage rcordfiles
 filePattern = fullfile(ImagePath, 'PIVlab_pco*.tif');
@@ -51,13 +51,15 @@ glvar=struct('do_libunload',0,'do_close',0,'camera_open',0,'out_ptr',[]);
 pco_camera_load_defines();
 subfunc=pco_camera_subfunction();
 [errorCode,glvar]=pco_camera_open_close(glvar);
-figure(hgui)
+figure(ancestor(PIVlab_axis,'figure'));
+%figure(hgui)
 pco_errdisp('pco_camera_setup',errorCode);
 if(errorCode~=PCO_NOERROR)
     glvar.do_close=1;
     glvar.do_libunload=1;
     pco_camera_open_close(glvar);
-    figure(hgui)
+    figure(ancestor(PIVlab_axis,'figure'));
+    %figure(hgui)
     set(frame_nr_display,'String',['Camera not found. Is the suitable pco interface driver installed? Is it connected?' newline 'If problem persists, you might' newline 'need to restart Matlab.']);
     %% RESET camera and recorder when camera crashed.
     try
@@ -215,7 +217,8 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')
             glvar.do_close=1;
             glvar.do_libunload=1;
             pco_camera_open_close(glvar);
-            figure(hgui)
+            figure(ancestor(PIVlab_axis,'figure'));
+            %figure(hgui)
         end
         return;
     end
@@ -802,7 +805,7 @@ catch ME
         pco_errdisp('PCO_RecorderDelete',erri);
     end
 
-    clearvars -except ME glvar errorCode txt framerate_max hgui;
+    clearvars -except ME glvar errorCode txt framerate_max hgui PIVlab_axis;
 
     if(libisloaded('PCO_CAM_RECORDER'))
         unloadlibrary('PCO_CAM_RECORDER');
@@ -812,7 +815,8 @@ catch ME
         glvar.do_close=1;
         glvar.do_libunload=1;
         pco_camera_open_close(glvar);
-        figure(hgui)
+        figure(ancestor(PIVlab_axis,'figure'));
+        %figure(hgui)
     end
 
     if strfind(ME.identifier,'PCO_ERROR:')
@@ -824,22 +828,23 @@ catch ME
             disp(['from file ',ME.stack(k).file,' at line ',num2str(ME.stack(k).line)]);
         end
         close();
-        clearvars -except errorCode hgui;
+        clearvars -except errorCode hgui PIVlab_axis;
         return;
     else
         close();
-        clearvars -except ME hgui;
+        clearvars -except ME hgui PIVlab_axis;
         rethrow(ME)
     end
 end
 
-clearvars -except glvar errorCode image_stack OutputError hgui framerate_max hgui;
+clearvars -except glvar errorCode image_stack OutputError hgui framerate_max hgui PIVlab_axis;
 
 if(glvar.camera_open==1)
     glvar.do_close=1;
     glvar.do_libunload=1;
     pco_camera_open_close(glvar);
-    figure(hgui)
+    figure(ancestor(PIVlab_axis,'figure'));
+    %figure(hgui)
 end
 %clear glvar;
 unloadlibrary('PCO_CAM_RECORDER')
@@ -851,14 +856,13 @@ setappdata(hgui,'hist_enabled',0);
 try
     delete(hObject);
 catch
-    delete(gcf);
 end
 
 function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');
 if running == 1
     hgui=getappdata(0,'hgui');
-    PIVlab_axis = findobj(hgui,'Type','Axes');
+    PIVlab_axis = gui.retr('pivlab_axis');
     %image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam');
     postix=get(PIVlab_axis,'XLim');
     postiy=get(PIVlab_axis,'YLim');
@@ -873,8 +877,7 @@ if running == 1
         set(auto_focus_active_hint,'BackgroundColor',bg_col);
     else
         bg_col= [0.25 0.25 0.25];
-        axes(PIVlab_axis);
-        text(postix(2)/2,postiy(2)/2,'Autofocus running, please wait...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',24, 'BackgroundColor', bg_col,'tag','auto_focus_active','margin',10,'Clipping','on');
+        text(PIVlab_axis,postix(2)/2,postiy(2)/2,'Autofocus running, please wait...','HorizontalAlignment','center','VerticalAlignment','middle','color','y','fontsize',24, 'BackgroundColor', bg_col,'tag','auto_focus_active','margin',10,'Clipping','on');
     end
 else
     delete(auto_focus_active_hint);

@@ -10,6 +10,7 @@ try
     warning on
     warning('off','imaq:gentl:hardwareTriggerTriggerModeOff'); %trigger property of OPTRONIS cannot be set in Matlab.
     warning('off','MATLAB:JavaEDTAutoDelegation'); %strange warning
+    warning('off','imaq:gentl:noSupportedPixelFormat')
     imaqreset
 catch
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','modal');

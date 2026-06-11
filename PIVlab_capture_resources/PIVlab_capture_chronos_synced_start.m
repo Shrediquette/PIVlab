@@ -12,7 +12,7 @@ ima_nr=0;
 hgui=getappdata(0,'hgui');
 
 OutputError=0;
-PIVlab_axis = findobj(hgui,'Type','Axes');
+PIVlab_axis = gui.retr('pivlab_axis');
 
 resx=getappdata(hgui,'Chronos_resx');
 resy=getappdata(hgui,'Chronos_resy');
@@ -21,15 +21,15 @@ bitdepth=getappdata(hgui,'Chronos_bits');
 
 image_handle_chronos=imagesc(zeros(resy,resx),'Parent',PIVlab_axis,[0 2^16]);
 setappdata(hgui,'image_handle_chronos',image_handle_chronos);
-frame_nr_display=text(100,100,'Initializing...','Color',[1 1 0],'Interpreter','none');
-colormap default %reset colormap steps
-new_map=colormap('gray');
+frame_nr_display=text(PIVlab_axis,100,100,'Initializing...','Color',[1 1 0],'Interpreter','none');
+colormap(ancestor(PIVlab_axis,'figure'),'default') %reset colormap steps
+new_map=colormap(ancestor(PIVlab_axis,'figure'),'gray');
 new_map(1:3,:)=[0 0.2 0;0 0.2 0;0 0.2 0];
 new_map(end-2:end,:)=[1 0.7 0.7;1 0.7 0.7;1 0.7 0.7];
-colormap(new_map);axis image;
-set(gui.retr('pivlab_axis'),'ytick',[])
-set(gui.retr('pivlab_axis'),'xtick',[])
-colorbar
+colormap(ancestor(PIVlab_axis,'figure'),new_map);axis(PIVlab_axis,'image');
+set(PIVlab_axis,'ytick',[])
+set(PIVlab_axis,'xtick',[])
+colorbar(PIVlab_axis)
 drawnow;
 
 %% prepare camera
