@@ -144,7 +144,7 @@ if src.Button == 1
 		%% plot correlation matrices if the corresponding panel is visible
 		if handles.multip29.Visible
 			correlation_matrices_data = gui.retr('correlation_matrices_data');
-			if currentframe == correlation_matrices_data.frame && size(x,1) == correlation_matrices_data.size(1) && size(x,2) == correlation_matrices_data.size(2) %% data was calculated for the currently visible frame
+			if ~isempty(correlation_matrices_data) && currentframe == correlation_matrices_data.frame && size(x,1) == correlation_matrices_data.size(1) && size(x,2) == correlation_matrices_data.size(2) %% data was calculated for the currently visible frame
 				fig=findobj('Tag','correlation_matrices_plot_matrix');
 				if isempty(fig)
 					fig=figure;
