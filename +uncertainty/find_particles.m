@@ -1,6 +1,6 @@
 function [iPeak, jPeak] = find_particles(im, index, rsearch)
 % Brightest 4-connected local maximum within rsearch of index in im.
-% Adapted from Wieneke (2013) disparity_uncertainty package.
+% Adapted from the MATLAB package by Dr. A. Sciacchitano (TU Delft, July 2016).
 [J, I] = size(im);
 [jp, ip] = ind2sub(size(im), index);
 r = 0; iPeak = 0; jPeak = 0; imax = 0;

@@ -1,6 +1,6 @@
 function peaks = get_max(im, weight)
 % Local maxima of im weighted by sqrt(abs(im)) when weight='sqrt'.
-% Adapted from Wieneke (2013) disparity_uncertainty package.
+% Adapted from the MATLAB package by Dr. A. Sciacchitano (TU Delft, July 2016).
 [J, I] = size(im);
 imC  = im(2:J-1, 2:I-1);
 imW  = im(2:J-1, 1:I-2); imE  = im(2:J-1, 3:I);

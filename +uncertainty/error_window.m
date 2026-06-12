@@ -6,8 +6,11 @@ function [etot, ebias, erms, Npart, C] = error_window(displ, peaks, grdx, grdy, 
 % nRmsLength:   smoothing passes (1 = no smoothing, kept for API compatibility).
 % position_weight: 'gauss' (recommended) or 'tophat'.
 % ROI:          [xmin xmax ymin ymax] in pixels, or [] for full image.
-% Adapted from Wieneke (2013) disparity_uncertainty package.
-% See: Sciacchitano, Wieneke & Scarano (2013) Meas. Sci. Technol. 24 035401.
+% Adapted from the MATLAB package by Dr. A. Sciacchitano (TU Delft, July 2016):
+%   http://piv.de/uncertainty/?page_id=221
+% Reference: Sciacchitano A, Wieneke B and Scarano F (2013),
+%   PIV uncertainty quantification by image matching,
+%   Meas. Sci. Technol. 24 045302. DOI: 10.1088/0957-0233/24/4/045302
 
 lenx = length(grdx); leny = length(grdy);
 [J, I] = size(peaks);

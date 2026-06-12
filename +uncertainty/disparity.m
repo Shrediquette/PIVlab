@@ -1,7 +1,10 @@
 function [Xdisparity, Ydisparity, immult, peaks] = disparity(im1, im2, rsearch, weight)
 % Full-image particle-disparity computation for PIV uncertainty.
-% Adapted from Wieneke (2013) disparity_uncertainty package.
-% See: Sciacchitano, Wieneke & Scarano (2013) Meas. Sci. Technol. 24 035401.
+% Adapted from the MATLAB package by Dr. A. Sciacchitano (TU Delft, July 2016):
+%   http://piv.de/uncertainty/?page_id=221
+% Reference: Sciacchitano A, Wieneke B and Scarano F (2013),
+%   PIV uncertainty quantification by image matching,
+%   Meas. Sci. Technol. 24 045302. DOI: 10.1088/0957-0233/24/4/045302
 if nargin < 4, weight = 'peaks'; end
 
 immult = im1 .* im2;

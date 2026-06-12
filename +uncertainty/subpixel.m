@@ -1,6 +1,6 @@
 function [xsub, ysub] = subpixel(im)
 % 3-point log-Gaussian subpixel position for every pixel in im.
-% Adapted from Wieneke (2013) disparity_uncertainty package.
+% Adapted from the MATLAB package by Dr. A. Sciacchitano (TU Delft, July 2016).
 if min(im(:)) < 0
     im = im + abs(min(im(:))) + eps;
 end
