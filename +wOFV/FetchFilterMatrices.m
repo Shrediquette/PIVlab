@@ -83,6 +83,7 @@ try
 		gui.toolsavailable(0,'Unzipping filter matrices...');drawnow
 		disp('Filter Matrices downloaded, unzipping...')
 		[filepath,~,~]=  fileparts(which('PIVlab_GUI.m'));
+		pause(1)
 		unzip(FileName,fullfile(filepath,'+wOFV','Filter matrices'))
 		disp('Filter Matrices stored.')
 		delete(FileName)
