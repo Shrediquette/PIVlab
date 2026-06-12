@@ -677,7 +677,7 @@ handles.textSuggest = uicontrol(handles.multip04,'Style','text','units','charact
 item=[parentitem(3)/4 item(2)+margin/2 parentitem(3)/1.85 1.5];
 handles.SuggestSettings = uicontrol(handles.multip04,'Style','pushbutton','String','Suggest settings','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @piv.SuggestPIVsettings,'Tag','SuggestSettings','TooltipString','Suggest PIV settings based on image data in current frame');
 
-item=[0 item(2)+item(4) parentitem(3) 4];
+item=[0 item(2)+item(4)+margin/3 parentitem(3) 4];
 handles.uipanel35 = uipanel(handles.multip04, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','PIV algorithm','fontweight','bold');
 
 parentitem=get(handles.uipanel35, 'Position');
@@ -763,7 +763,7 @@ handles.steppercentage = uicontrol(handles.uipanel41,'Style','text', 'String','N
 parentitem=get(handles.multip04, 'Position');
 item=[0 0 0 0];
 
-item=[0 13 parentitem(3) 10];
+item=[0 13.5 parentitem(3) 7.5];
 handles.uipanel42 = uipanel(handles.multip04, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Pass 2...4', 'Tag','uipanel42','fontweight','bold');
 
 parentitem=get(handles.uipanel42, 'Position');
@@ -801,8 +801,6 @@ handles.edit52 = uicontrol(handles.uipanel42,'Style','edit', 'String','32','Unit
 item=[parentitem(3)/3*2 item(2) parentitem(3)/4*1 1];
 handles.text128 = uicontrol(handles.uipanel42,'Style','text', 'String','16','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text128');
 
-item=[0 item(2)+item(4)+margin/1.5 parentitem(3) 1.1];
-handles.checkbox_uncertainty = uicontrol(handles.uipanel42,'Style','checkbox', 'String','Estimate uncertainty (slow)','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','checkbox_uncertainty','Visible','off','TooltipString','Estimate velocity measurement uncertainty (Sciacchitano 2013). Doubles the analysis time!');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
 handles.repeat_last= uicontrol(handles.uipanel42,'Style','checkbox', 'String','Repeat last pass until','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.repeat_last_Callback,'Tag','repeat_last','TooltipString','This will repeat the last pass of a multipass analysis until the average difference to the previous pass is less than "quality slope".','visible','off');
@@ -816,7 +814,7 @@ handles.edit52x = uicontrol(handles.uipanel42,'Style','edit', 'String','0.025','
 parentitem=get(handles.multip04, 'Position');
 item=[0 0 0 0];
 
-item=[0 5+5+11.5+1.5+margin/3 parentitem(3) 1];
+item=[0 5+5+11.5+margin/3 parentitem(3) 1];
 handles.text14 = uicontrol(handles.multip04,'Style','text', 'String','Sub-pixel estimator','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text14');
 
 item=[0 item(2)+item(4) parentitem(3) 2];
@@ -834,7 +832,11 @@ handles.text914 = uicontrol(handles.multip04,'Style','text', 'String','Correlati
 item=[0 item(2)+item(4)+margin/6 parentitem(3) 2];
 handles.CorrQuality = uicontrol(handles.multip04,'Style','popupmenu', 'String',{'Standard (recommended)','High','Extreme'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','CorrQuality','TooltipString','Correlation quality. Better = slower...');
 
-item=[0 item(2)+item(4)+margin/1.5 parentitem(3) 1.5];
+item=[0 item(2)+item(4)+margin/6 parentitem(3) 1.5];
+handles.checkbox_uncertainty = uicontrol(handles.multip04,'Style','checkbox', 'String','Estimate uncertainty (slow)','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','checkbox_uncertainty','Visible','on','TooltipString','Estimate velocity measurement uncertainty (Sciacchitano 2013). Doubles the analysis time!');
+
+
+item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 2];
 handles.Settings_Apply_current = uicontrol(handles.multip04,'Style','pushbutton','String','Analyze current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @piv.AnalyzeSingle_Callback,'Tag','Settings_Apply_current','TooltipString','Apply PIV settings to current frame');
 
 %% Multip05
