@@ -49,10 +49,10 @@ title: Camera Setup
 ### PIVlab toolbox version only:
 * The cameras require the [image acquisition toolbox from Mathworks](https://de.mathworks.com/products/image-acquisition.html). This is included in many Matlab licenses from universities.
 * Then, you need to install the [Image Acquisition Toolbox Support Package for GenICam Interface](https://de.mathworks.com/matlabcentral/fileexchange/45180-image-acquisition-toolbox-support-package-for-genicam-interface?s_tid=srchtitle).
-* [Download and install the bitflow Matlab IMAQ adaptor](https://www.bitflow.com/downloads/BFMATLABDrivers.zip)
 
 ### Both Toolbox and Standalone version of PIVlab:
 * [Download and install the bitflow sdk](https://www.bitflow.com/downloads/bfsdk68.zip)
+* [Download and install the bitflow Matlab IMAQ adaptor](https://www.bitflow.com/downloads/BFMATLABDrivers.zip)
 * Connect the camera to the frame grabber using the four coaxial cables. You need to connect them in the right order: 1-A, 2-B, 3-C, 4-D. Don't forget to connect the trigger cable (Aux. port on the OPTRONIS, “Sync in”) to the laser or synchronizer.
 * Power your camera with the supplied power supply (or directly via Coaxpress).
 * All four lights on the back of the OPTRONIS need to be solid green.
