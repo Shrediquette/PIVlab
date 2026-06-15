@@ -53,10 +53,10 @@ try
 	if strcmp(version,web_version) == 1
 		update_msg = 'You have the latest PIVlab version.';
 		gui.put('update_msg_color',[0 0.75 0]);
-	elseif str2num (strrep(version,'.','')) < str2num(strrep(web_version,'.',''))
+	elseif isVersionNewer(web_version, version)
 		update_msg = ['PIVlab is outdated. Please update to version ' web_version sprintf('\n') starred_feature_text];
 		gui.put('update_msg_color',[0.85 0 0]);
-	elseif str2num (strrep(version,'.','')) > str2num(strrep(web_version,'.',''))
+	elseif isVersionNewer(version, web_version)
 		update_msg = ['Your PIVlab version is newer than the latest official release.'];
 		gui.put('update_msg_color',[0.5 0.5 0]);
 	end
@@ -68,7 +68,20 @@ end
 clear filename_update current_url fileID_update outfilename web_version trash_upd
 disp (['-> ' update_msg])
 gui.put('update_msg',update_msg);
+end
 
+function tf = isVersionNewer(a, b)
+% Returns true if version string a is strictly newer than version string b.
+% Compares major and minor parts as integers to avoid the dot-removal trick
+% failing across version boundaries (e.g. "4.0" vs "3.04").
+ap = sscanf(a, '%d.%d');
+bp = sscanf(b, '%d.%d');
+n = max(numel(ap), numel(bp));
+ap(end+1:n) = 0;
+bp(end+1:n) = 0;
+idx = find(ap ~= bp, 1);
+tf = ~isempty(idx) && ap(idx) > bp(idx);
+end
 
 %{
 better implementation would be:
