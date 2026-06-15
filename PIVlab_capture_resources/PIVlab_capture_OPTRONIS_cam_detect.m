@@ -44,7 +44,8 @@ try
     end
     OPTRONIS_name = info.DeviceInfo(CamID).DeviceName;
 catch
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Camera not found! Is it connected?','modal');
+    disp('Euresys grabber has no powered camera attached.')
+    %gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Camera not found! Is it connected?','modal');
 end
 
 if contains(OPTRONIS_name,'Cyclone-2-2000-M')

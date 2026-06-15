@@ -51,7 +51,8 @@ try
 
     delete(OPTRONIS_vid);
 catch
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Camera not found! Is it connected?','modal');
+    disp('Bitflow grabber has no powered camera attached.')
+    %gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Camera not found! Is it connected?','modal');
     camera_sub_type='unknown';
     return
 end
