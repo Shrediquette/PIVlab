@@ -12,6 +12,7 @@ gui.put('framemanualdeletion',[]);
 gui.put('manualdeletion',[]);
 gui.put('streamlinesX',[]);
 gui.put('streamlinesY',[]);
+gui.put('streamslice_active',false);
 set(handles.fileselector, 'value',1);
 
 set(handles.minintens, 'string', 0);

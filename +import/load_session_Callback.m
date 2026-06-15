@@ -140,6 +140,7 @@ elseif valid_session_file == 1
     set(handles.text128, 'string',vars.step4);
     set(handles.holdstream, 'value',vars.holdstream);
     set(handles.streamlamount, 'string',vars.streamlamount);
+    try; set(handles.streamslicedensity,'string',vars.streamslicedensity); catch; end
     set(handles.streamlcolor, 'value',vars.streamlcolor);
     set(handles.streamlwidth, 'value',vars.streamlcolor);
 

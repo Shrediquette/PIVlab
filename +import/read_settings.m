@@ -63,6 +63,7 @@ try
     set(handles.text128, 'string',step4);
     set(handles.holdstream, 'value',holdstream);
     set(handles.streamlamount, 'string',streamlamount);
+    try; set(handles.streamslicedensity,'string',streamslicedensity); catch; end
     set(handles.streamlcolor, 'value',streamlcolor);
     set(handles.streamlwidth, 'value',streamlcolor);
 

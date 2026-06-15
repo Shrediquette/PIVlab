@@ -1877,6 +1877,15 @@ handles.text118 = uicontrol(handles.multip18,'Style','text','String','Amount of 
 item=[parentitem(3)/3*2 item(2)+0.5 parentitem(3)/3 1];
 handles.streamlamount = uicontrol(handles.multip18,'Style','edit','String','10','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','streamlamount','TooltipString','Amount of streamlines on the rake');
 
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
+handles.streamslice = uicontrol(handles.multip18,'Style','pushbutton','String','Draw streamslice','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.streamslice_Callback,'TooltipString','Automatically draw streamlines covering the entire velocity field using MATLAB''s streamslice function');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/3*2 2];
+handles.text_streamslicedensity = uicontrol(handles.multip18,'Style','text','String','Streamslice density','Units','characters','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+item=[parentitem(3)/3*2 item(2)+0.5 parentitem(3)/3 1];
+handles.streamslicedensity = uicontrol(handles.multip18,'Style','edit','String','1','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','streamslicedensity','TooltipString','Density of streamslice streamlines (default: 1, higher values = more streamlines)');
+
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.deletestreamlines = uicontrol(handles.multip18,'Style','pushbutton','String','Delete all stream lines','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.deletestreamlines_Callback,'TooltipString','Remove all streamlines');
 

@@ -70,6 +70,7 @@ step3=get(handles.text127, 'string');
 step4=get(handles.text128, 'string');
 holdstream=get(handles.holdstream, 'value');
 streamlamount=get(handles.streamlamount, 'string');
+streamslicedensity=get(handles.streamslicedensity, 'string');
 streamlcolor=get(handles.streamlcolor, 'value');
 
 try
