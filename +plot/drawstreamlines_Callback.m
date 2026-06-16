@@ -65,7 +65,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	figure(ancestor(target_axis,'figure')); % ensure ginput captures from the correct window
 	while button == 1
 		[rawx,rawy,button] = ginput(1);
-		if button~=1
+		if isempty(button) || button~=1
 			break
 		end
 		xposition(i)=rawx;
