@@ -23,6 +23,11 @@ if capturing==0
     end
     delete(findobj(target_axis,'tag', 'derivhint'));
     if size(filepath,1)>0
+        % The welcome-screen Basic/Advanced buttons sit over the logo; once
+        % real data is displayed on the axis they must not float over it.
+        % (Mid-session mode switching remains available via the View menu.)
+        delete(findobj(getappdata(0,'hgui'),'Tag','mode_btn_basic'));
+        delete(findobj(getappdata(0,'hgui'),'Tag','mode_btn_advanced'));
         if get(handles.zoomon,'Value')==1
             set(handles.zoomon,'Value',0);
             gui.zoomon_Callback(handles.zoomon)

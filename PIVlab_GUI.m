@@ -182,6 +182,9 @@ if isempty(fh)
     %%
     gui.generateUI
     gui.generateMenu
+    %% Snapshot factory-default visibility of every tagged element (single
+    %% source of truth for restoring elements when switching to Advanced mode)
+    gui.put('ui_default_visibility', gui.capture_default_visibility);
     %% Prepare axes
     gui.switchui('multip01');
     pivlab_axis=axes('units','characters','parent',MainWindow);
@@ -353,17 +356,22 @@ if isempty(fh)
             end
         catch %if something goes wrong -> use current dir
             homedir=pwd;
-            pathname=pwd;
-            disp(['-> Start up path: ' pwd])
-        end
-    else
-        if exist(pathname ,'dir') ~= 7 %stored path doesnt exist -> replace with default
-            homedir=pwd;
-            pathname=pwd;
-        end
-        disp(['-> Start up path: ' pathname])
-    end
-    gui.put('homedir',homedir);
+			pathname=pwd;
+			disp(['-> Start up path: ' pwd])
+		end
+	else
+		try
+			if exist(pathname ,'dir') ~= 7 %stored path doesnt exist -> replace with default
+				homedir=pwd;
+				pathname=pwd;
+			end
+		catch
+			homedir=pwd;
+			pathname=pwd;
+		end
+		disp(['-> Start up path: ' pathname])
+	end
+	gui.put('homedir',homedir);
     gui.put('pathname',pathname);
     save('PIVlab_settings_default.mat','homedir','pathname','-append');
     %% Read and apply default settings
@@ -394,6 +402,22 @@ if isempty(fh)
     gui.SetFullScreen
 	drawnow;
     gui.displogo(1);
+    %% Apply remembered Basic/Advanced mode before window becomes visible
+    ui_mode='advanced';   %default when no preference has been stored yet
+    try
+        if ismember('ui_mode',who('-file','PIVlab_settings_default.mat'))
+            loaded=load('PIVlab_settings_default.mat','ui_mode');
+            ui_mode=loaded.ui_mode;
+        end
+    catch
+    end
+    %Force Advanced mode for GUI batch processing (see below), so every control
+    %the automated workflow relies on is available. This only overrides the
+    %in-memory mode; the user's stored preference is left untouched.
+    if exist('batch_session_file','var') && exist(batch_session_file,'file')
+        ui_mode='advanced';
+    end
+    gui.apply_ui_mode(ui_mode);
     %% Apply fix for wrong UI scaling introduced between matlab 2025a prerelease5 and Matlab2025a
     try
         if ~isMATLABReleaseOlderThan("R2025a") && isMATLABReleaseOlderThan("R2025b")
@@ -485,6 +509,7 @@ if isempty(fh)
     gui.MainWindow_ResizeFcn(gcf)
     %disp('vis')
     pause(0.5);	set(MainWindow, 'Visible','on');	pause(0.25);	drawnow;
+    gui.show_mode_overlay();
     disp('-> GUI initialization finished.')
     %% Batch session  processing in GUI
     if ~exist('batch_session_file','var') %no input argument --> no GUI batch processing

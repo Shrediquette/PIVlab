@@ -1,0 +1,94 @@
+# PIVlab hidden elements — Basic mode
+# One tag per line. Lines starting with # are comments.
+# In Basic mode, all elements listed here are hidden.
+# In Advanced mode, all elements are visible.
+# Edit this file to customise which elements are shown in Basic mode.
+
+# ── Entire panels (hiding a panel hides all its children) ──
+multip15
+multip23
+multip26
+multip27
+multip28
+multip29
+
+# ── Menu items for hidden panels ────────────────────────────
+menu_partgen
+menu_imgvalidation
+menu_camcalib
+menu_corrmatrices
+menu_stereopiv
+
+# ── multip01  Load images ───────────────────────────────────
+stereocheckbox
+
+# ── multip25  Mask generation ───────────────────────────────
+mask_basic_expert
+mask_import
+mask_bright_or_dark
+uipanel25_2
+mask_display_brighter
+mask_display_darker
+mask_shrink
+mask_grow
+mask_simplify
+mask_subdivide
+mask_optimize
+
+# ── multip03  Pre-processing ────────────────────────────────
+enable_intenscap
+wienerwurst
+text159
+wienerwurstsize
+Autolimit
+text162
+minintens
+text163
+maxintens
+
+# ── multip04  PIV settings ──────────────────────────────────
+repeat_last
+text128x
+edit52x
+text14
+subpix
+mask_auto_box
+text914
+CorrQuality
+
+# ── multip05  Analyze ───────────────────────────────────────
+update_display_checkbox
+
+# ── multip07  Calibration ───────────────────────────────────
+uipanel_offsets
+
+# ── multip06  Vector validation ─────────────────────────────
+vel_limit_freehand
+vel_limit_auto
+meanofall
+notch_filter
+textnotchL
+notch_L_thresh
+textnotchH
+notch_H_thresh
+
+# ── multip08  Derive parameters ─────────────────────────────
+text35
+subtr_u
+mean_u
+text36
+subtr_v
+mean_v
+highp_vectors
+text83
+highpass_strength
+extrapolate_border
+
+# ── multip09  Modify plot appearance ────────────────────────
+uniform_vector_scale
+power_vector_scale
+power_vector_scale_factor
+text143a
+colormap_steps
+text143b
+colormap_interpolation

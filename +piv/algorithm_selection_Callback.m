@@ -94,10 +94,17 @@ if selection ==4 %wOFV
 		end
 	end
 else
-	if ~strcmp(current_vector_setting,'1') && ~batchModeActive		
+	if ~strcmp(current_vector_setting,'1') && ~batchModeActive
 		ans_w = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Vector display density',['You are currently not plotting every calculated vector.' newline newline 'Should I apply the standard vector display setting for you?' newline newline 'You can manually change this by going to Plot -> Modify plot appearance -> plot every nth vector'],'modal',{'Yes','No'},'Yes');
 		if strcmp(ans_w,'Yes')
 			set(handles.nthvect,'String',1)
 		end
 	end
+end
+
+%In Basic interface mode, re-assert the hidden-element list. Otherwise
+%changing the algorithm here would re-show controls that Basic mode hides
+%(text14, subpix, mask_auto_box, text914, CorrQuality, ...).
+if strcmp(gui.retr('ui_mode'),'basic')
+	gui.apply_ui_mode('basic');
 end
