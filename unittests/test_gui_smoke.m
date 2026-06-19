@@ -61,7 +61,7 @@ drawnow;
 
 resultslist = gui.retr('resultslist');
 testCase.verifyNotEmpty(resultslist, 'Analysis did not create a results list.');
-testCase.verifySize(resultslist, [14 1], 'Unexpected results list dimensions after analysis.');
+testCase.verifySize(resultslist, [15 1], 'Unexpected results list dimensions after analysis.');
 testCase.verifyNotEmpty(resultslist{1,1}, 'X coordinates missing after analysis.');
 testCase.verifyNotEmpty(resultslist{2,1}, 'Y coordinates missing after analysis.');
 testCase.verifyNotEmpty(resultslist{3,1}, 'U field missing after analysis.');

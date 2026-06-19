@@ -494,7 +494,7 @@ if ok==1
 				end
 
 				converted_mask=mask.convert_masks_to_binary(size(image1(:,:,1)),mask_positions);
-				u2=[]; v2=[];
+				u2=[]; v2=[]; umap=[];
 				if get(handles.algorithm_selection,'Value')==3 %dcc
 					[x, y, u, v, typevector] = piv.piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
 					%correlation_matrices=[];%not available for DCC
