@@ -289,8 +289,9 @@ end
 function calculateDerivedAndMeanVelocity(testCase)
 handles = gui.gethand();
 gui.switchui('multip08');
-set(handles.smooth, 'Value', 1);
-set(handles.smoothstr, 'Value', 3);
+set(handles.smooth_mode, 'Value', 2);      % 2D
+set(handles.smooth_param, 'String', '0.3');
+plot.smooth_mode_Callback(handles.smooth_mode);
 plot.derivative_calc(1, 3, 0);
 
 derived = gui.retr('derived');
@@ -298,6 +299,19 @@ resultslist = gui.retr('resultslist');
 testCase.verifyNotEmpty(derived{2, 1}, 'Velocity magnitude was not calculated.');
 testCase.verifyNotEmpty(resultslist{10, 1}, 'Smoothed U field was not stored.');
 testCase.verifyNotEmpty(resultslist{11, 1}, 'Smoothed V field was not stored.');
+
+% exercise the temporal (2D + time) moving-average smoothing path
+set(handles.smooth_mode, 'Value', 4);      % 2D + time
+set(handles.temporal_window, 'String', '3');
+plot.smooth_mode_Callback(handles.smooth_mode);
+plot.derivative_calc(2, 3, 0);
+resultslist = gui.retr('resultslist');
+testCase.verifyNotEmpty(resultslist{10, 2}, 'Temporally smoothed U field was not stored.');
+testCase.verifyNotEmpty(resultslist{11, 2}, 'Temporally smoothed V field was not stored.');
+
+% restore default smoothing for the rest of the regression run
+set(handles.smooth_mode, 'Value', 2);
+plot.smooth_mode_Callback(handles.smooth_mode);
 
 gui.put('displaywhat', 2);
 gui.sliderdisp(gui.retr('pivlab_axis'));

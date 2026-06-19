@@ -209,6 +209,21 @@ try
     set(handles.extrapolate_border,'value',extrapolate_border);
 catch
 end
+%data smoothing (popupmenu mode + parameters); exist-guarded for old files that lack them
+try
+    if exist('smooth_mode_val','var')
+        set(handles.smooth_mode,'value',smooth_mode_val);
+    end
+    if exist('smooth_param_str','var')
+        set(handles.smooth_param,'string',smooth_param_str);
+    end
+    if exist('temporal_window_str','var')
+        set(handles.temporal_window,'string',temporal_window_str);
+    end
+    plot.temporal_window_Callback(handles.temporal_window); %normalize to the value actually used (odd)
+    plot.smooth_mode_Callback(handles.smooth_mode); %sync temporal-window row visibility
+catch
+end
 end % read_settings
 
 function idx = pivlab_nearest_color(rgb, presets)

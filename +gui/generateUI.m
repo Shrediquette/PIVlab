@@ -1081,14 +1081,23 @@ handles.licres = uicontrol(handles.multip08,'Style','slider','sliderstep',[0.25 
 item=[parentitem(3)/2+parentitem(3)/3 item(2) parentitem(3)/6 1];
 handles.LIChint2 = uicontrol(handles.multip08,'Style','text','String','0.7','Units','characters', 'visible','off','HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','LIChint2');
 
-item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
-handles.smooth = uicontrol(handles.multip08,'Style','checkbox','String','Smooth data','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','smooth','TooltipString','Enable smoothing of noisy data. Uses "smoothn" by Damien Garcia');
+item=[0 item(2)+item(4)+margin/2 parentitem(3)/2 1.6];
+handles.text32 = uicontrol(handles.multip08,'Style','text','String','Data smoothing','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
-item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 1];
-handles.text32 = uicontrol(handles.multip08,'Style','text','String','Strength:','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1.6];
+handles.smooth_mode = uicontrol(handles.multip08,'Style','popupmenu','String',{'None';'2D';'time (moving average)';'2D + time'},'Value',1,'Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','smooth_mode','Callback',@plot.smooth_mode_Callback,'TooltipString','Data smoothing. "2D" = spatial smoothing of each frame (uses "smoothn" by Damien Garcia). "time" = moving average over the frames (time). "2D + time" applies both (2D first, then temporal).');
 
-item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
-handles.smoothstr = uicontrol(handles.multip08,'Style','slider','sliderstep',[0.2 0.2],'max',11,'min',1,'value',1,'Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','smoothstr','TooltipString','Strength of smoothing. More information is displayed in Matlabs command window when you clicked "Apply"');
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/3*2 1.5];
+handles.text_smooth_param = uicontrol(handles.multip08,'Style','text','String','Smoothing parameter','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text_smooth_param');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
+handles.smooth_param = uicontrol(handles.multip08,'Style','edit','String','0.2','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','smooth_param','TooltipString','Smoothing parameter S passed to "smoothn" for 2D smoothing. Larger = smoother (typical 0.1 ... 1).');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/3*2 1.5];
+handles.text_temporal_window = uicontrol(handles.multip08,'Style','text','String','Temporal window (±frames)','Units','characters', 'HorizontalAlignment','Left','Visible','off','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text_temporal_window');
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
+handles.temporal_window = uicontrol(handles.multip08,'Style','edit','String','2','Units','characters', 'Visible','off','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','temporal_window','Callback',@plot.temporal_window_Callback,'TooltipString','Number of neighbouring frames used on each side of the current frame. The frames are combined with a triangular (Bartlett) window, so closer frames count more.');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.text34 = uicontrol(handles.multip08,'Style','text','String','Subtract flow','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);

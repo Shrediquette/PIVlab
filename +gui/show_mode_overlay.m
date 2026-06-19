@@ -6,6 +6,9 @@ function show_mode_overlay()
 hgui = getappdata(0,'hgui');
 ax   = gui.retr('pivlab_axis');
 
+delete(findobj('tag','mode_btn_basic'));
+delete(findobj('tag','mode_btn_advanced'));
+
 remembered = gui.retr('ui_mode');   % already applied at startup
 if isempty(remembered)
     remembered = 'advanced';

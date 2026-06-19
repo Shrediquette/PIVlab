@@ -186,7 +186,7 @@ if isempty(fh)
     %% source of truth for restoring elements when switching to Advanced mode)
     gui.put('ui_default_visibility', gui.capture_default_visibility);
     %% Prepare axes
-    gui.switchui('multip01');
+    
     pivlab_axis=axes('units','characters','parent',MainWindow);
     axis image;
     set(pivlab_axis,'ActivePositionProperty','outerposition');%,'Box','off','DataAspectRatioMode','auto','Layer','bottom','Units','normalized');
@@ -509,7 +509,7 @@ if isempty(fh)
     gui.MainWindow_ResizeFcn(gcf)
     %disp('vis')
     pause(0.5);	set(MainWindow, 'Visible','on');	pause(0.25);	drawnow;
-    gui.show_mode_overlay();
+    gui.switchui('multip01');
     disp('-> GUI initialization finished.')
     %% Batch session  processing in GUI
     if ~exist('batch_session_file','var') %no input argument --> no GUI batch processing
@@ -536,7 +536,7 @@ if isempty(fh)
             disp(['NOT FOUND: ' batch_session_file])
             gui.put('batchModeActive',0)
         end
-    end
+	end
 else %Figure handle does already exist --> bring PIVlab to foreground.
     disp('Only one instance of PIVlab is allowed to run.')
     figure(fh)

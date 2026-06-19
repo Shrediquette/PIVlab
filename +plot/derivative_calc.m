@@ -1,4 +1,12 @@
-function derivative_calc (frame,deriv,update)
+function derivative_calc (frame,deriv,update,use_smoothed)
+% use_smoothed (optional): when true, the velocity is taken directly from the already
+% finished smoothed field resultslist{10/11,frame} and the spatial/temporal smoothing is
+% skipped. Used by the efficient batch path in apply_deriv_all_Callback so the temporal
+% moving average is computed only once (see plot.temporal_smooth_all) instead of being
+% recomputed for every frame.
+if nargin<4 || isempty(use_smoothed)
+	use_smoothed=false;
+end
 handles=gui.gethand;
 resultslist=gui.retr('resultslist');
 if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
@@ -17,6 +25,10 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 	if isnan(subtr_v)
 		subtr_v=0;set(handles.subtr_v, 'string', '0');
 	end
+	if use_smoothed && size(resultslist,1)>=11 && ~isempty(resultslist{10,frame}) %batch temporal path: use the finished smoothed field, skip re-smoothing
+		u=resultslist{10,frame};
+		v=resultslist{11,frame};
+	else
 	if size(resultslist,1)>6 && numel(resultslist{7,frame})>0 %filtered exists
 		u=resultslist{7,frame};
 		v=resultslist{8,frame};
@@ -58,41 +70,30 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 			gui.put('alreadydisplayed',1);
 		end
 	end
-	if get(handles.smooth, 'Value') == 1
-		smoothfactor=floor(get(handles.smoothstr, 'Value'));
-		try
-            u_old=u;
-            v_old=v;
-            if get(handles.algorithm_selection,'Value')~=4 %not optical flow
-                u = misc.smoothn(u,smoothfactor/10);
-                v = misc.smoothn(v,smoothfactor/10);
-            else %optical flow
-                u = misc.smoothn(u,smoothfactor/10*20);
-                v = misc.smoothn(v,smoothfactor/10*20);
-            end
-            if get(handles.interpol_missing,'value')==0 %user does not want to interpolate missing data, but wants to smooth anyway
-                u(isnan(u_old))=nan;
-                v(isnan(v_old))=nan;
-            end
-            %clc
-			%disp ('Using smoothn.m from Damien Garcia for data smoothing.')
-			%disp (['Input smoothing parameter S for smoothn is: ' num2str(smoothfactor/10)])
-			%disp ('see the documentation here: https://de.mathworks.com/matlabcentral/fileexchange/25634-smoothn')
-
-		catch
-			h=fspecial('gaussian',smoothfactor+2,(smoothfactor+2)/7);
-			u=imfilter(u,h,'replicate');
-			v=imfilter(v,h,'replicate');
-			%clc
-			%disp ('Using Gaussian kernel for data smoothing (your Matlab version is pretty old btw...).')
-		end
-		resultslist{10,frame}=u; %smoothed u
-		resultslist{11,frame}=v; %smoothed v
-	else
+	%Data smoothing: 1=None, 2=2D, 3=time (moving average), 4=2D + time.
+	%Spatial (2D) smoothing is applied first, then the temporal moving average over the
+	%frames. The resulting field is used for the derived quantities below and stored into
+	%resultslist{10/11,frame} (the same entries as before, no extra row is created).
+	smooth_mode=get(handles.smooth_mode, 'Value');
+	S=str2double(get(handles.smooth_param, 'String'));
+	if isnan(S) || S<=0
+		S=0.2; set(handles.smooth_param, 'String', '0.2');
+	end
+	if smooth_mode==1 %None
 		%careful if more things are added, [] replaced by {[]}
 		resultslist{10,frame}=[]; %remove smoothed u
 		resultslist{11,frame}=[]; %remove smoothed v
+	else
+		if smooth_mode==2 || smooth_mode==4 %2D or 2D + time --> spatial smoothing first
+			[u,v]=plot.smooth_spatial(u,v,S,get(handles.interpol_missing,'value'));
+		end
+		if smooth_mode==3 || smooth_mode==4 %time or 2D + time --> temporal moving average over frames
+			[u,v]=plot.temporal_smooth(resultslist,frame,u,v);
+		end
+		resultslist{10,frame}=u; %smoothed u (spatial and/or temporal)
+		resultslist{11,frame}=v; %smoothed v
 	end
+	end %use_smoothed branch
 
 	%The direction of the coordinate system influences derivatives with gradients.
 	x_axis_direction=get(handles.x_axis_direction,'value'); %1= increase to right, 2= increase to left

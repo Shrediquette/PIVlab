@@ -144,6 +144,11 @@ interp_color_idx     = get(handles.interp_color,     'Value');
 deriv_color_idx      = get(handles.deriv_color,      'Value');
 extrapolate_border   = get(handles.extrapolate_border,'value'); %#ok<NASGU>
 
+%data smoothing (popupmenu mode + parameters)
+smooth_mode_val    = get(handles.smooth_mode,     'value'); %#ok<NASGU>
+smooth_param_str   = get(handles.smooth_param,    'string'); %#ok<NASGU>
+temporal_window_str= get(handles.temporal_window, 'string'); %#ok<NASGU>
+
 clear handles
 cameraParams         = gui.retr('cameraParams');
 cam_use_tilted_model = gui.retr('cam_use_tilted_model');
