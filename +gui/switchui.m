@@ -15,7 +15,19 @@ set(turnon, 'visible', 'on');
 if strcmp(who,'multip25') %mask panel is active --> enable mask editing
 	set(handles.mask_edit_mode,'Value',1)
 	gui.sliderdisp(gui.retr('pivlab_axis'));
+
 else
 	set(handles.mask_edit_mode,'Value',2)
+end
+%% Display / Hide mode buttons when Input Data panel is active
+if ~strcmp(who,'multip01')
+	delete(findobj(getappdata(0,'hgui'),'Tag','mode_btn_basic'));
+	delete(findobj(getappdata(0,'hgui'),'Tag','mode_btn_advanced'));
+elseif strcmp(who,'multip01')
+	resultslist=gui.retr('resultslist');
+	currentframe=floor(get(handles.fileselector, 'value'));
+	if isempty(resultslist)
+		gui.show_mode_overlay
+	end
 end
 drawnow;
