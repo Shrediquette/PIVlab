@@ -320,9 +320,10 @@ if isempty(fh)
                 disp(['- ' info.InstalledAdaptors{i}])
             end
         catch ME
-            disp('Error: Could not register the bitflow adaptor.')
+            disp('Warning: Could not register the bitflow adaptor.')
             disp (ME.message)
             disp (bit_flow_DLL)
+			disp('This warning can be ignored if you are not using a bitflow frame grabber.')
         end
     end
 
