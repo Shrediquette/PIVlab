@@ -4,11 +4,12 @@ caliimg=gui.retr('caliimg');
 if numel(caliimg)==0 && size(filepath,1) >1
 	gui.sliderdisp(gui.retr('pivlab_axis'))
 end
+pivlab_axis = gui.retr('pivlab_axis');
 if size(filepath,1) >1 || numel(caliimg)>0 || gui.retr('video_selection_done') == 1
 	handles=gui.gethand;
 	gui.toolsavailable(0)
 	delete(findall(gui.retr('pivlab_axis'),'tag', 'caliline'))
-	regionOfInterest = images.roi.Line;
+	regionOfInterest = images.roi.Line(pivlab_axis);
 	%regionOfInterest.EdgeAlpha=0.75;
 	regionOfInterest.LabelVisible = 'on';
 	regionOfInterest.Tag = 'caliline';

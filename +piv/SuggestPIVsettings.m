@@ -3,9 +3,10 @@ handles=gui.gethand;
 selected=2*floor(get(handles.fileselector, 'value'))-1;
 filepath=gui.retr('filepath');
 ok=gui.checksettings;
+pivlab_axis = gui.retr('pivlab_axis');
 if ok==1
 	gui.custom_msgbox('msg',getappdata(0,'hgui'),'Suggestion for PIV settings',{'Please select a rectangle';'that encloses the area that';'you want to analyze.'},'modal',{'OK'},'OK');
-	regionOfInterest = images.roi.Rectangle;
+	regionOfInterest = images.roi.Rectangle(pivlab_axis);
 	%regionOfInterest.EdgeAlpha=0.75;
 	regionOfInterest.LabelVisible = 'on';
 	regionOfInterest.Tag = 'suggestRect';

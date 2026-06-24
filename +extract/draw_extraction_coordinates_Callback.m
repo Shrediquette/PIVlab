@@ -1,5 +1,6 @@
 function draw_extraction_coordinates_Callback(caller, ~, ~)
 gui.sliderdisp(gui.retr('pivlab_axis'));
+pivlab_axis = gui.retr('pivlab_axis');
 handles=gui.gethand;
 currentframe=floor(get(handles.fileselector, 'value'));
 resultslist=gui.retr('resultslist');
@@ -8,25 +9,26 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	gui.toolsavailable(0);
 	xposition=[];
 	yposition=[];
-	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_poly')); %delete pre-existing
-	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_circle')); %delete pre-existing
-	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_circle_series')); %delete pre-existing
-	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_poly_area')); %delete pre-existing
-	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_circle_area')); %delete pre-existing
-	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_circle_series_area')); %delete pre-existing
-	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_rectangle_area')); %delete pre-existing
-	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_circle_series_displayed_smaller_radii')) %delete pre-existing
-	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_circle_series_area_displayed_smaller_radii')) %delete pre-existing
-	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_circle_series_max_circulation')) %delete pre-existing
-	delete(findobj(gui.retr('pivlab_axis'),'Tag','extract_circle_series_area_max_circulation')) %delete pre-existing
+	delete(findobj(pivlab_axis, ...
+    '-or', 'Tag', 'extract_poly', ...
+    '-or', 'Tag', 'extract_circle', ...
+    '-or', 'Tag', 'extract_circle_series', ...
+    '-or', 'Tag', 'extract_poly_area', ...
+    '-or', 'Tag', 'extract_circle_area', ...
+    '-or', 'Tag', 'extract_circle_series_area', ...
+    '-or', 'Tag', 'extract_rectangle_area', ...
+    '-or', 'Tag', 'extract_circle_series_displayed_smaller_radii', ...
+    '-or', 'Tag', 'extract_circle_series_area_displayed_smaller_radii', ...
+    '-or', 'Tag', 'extract_circle_series_max_circulation', ...
+    '-or', 'Tag', 'extract_circle_series_area_max_circulation')); %delete pre-existing
 
 	if (strcmp(caller.Tag,'draw_stuff') && strcmp(handles.draw_what.String{handles.draw_what.Value},'polyline')) || (strcmp(caller.Tag,'draw_stuff_area') && strcmp(handles.draw_what_area.String{handles.draw_what_area.Value},'polygon'))%polyline
 		if strcmp(caller.Tag,'draw_stuff') %extract from polyline
 			extract_type='extract_poly';
-			extract_poly = images.roi.Polyline;
+			extract_poly = images.roi.Polyline(pivlab_axis);
 		elseif strcmp(caller.Tag,'draw_stuff_area')%extract from area
 			extract_type='extract_poly_area';
-			extract_poly = images.roi.Polygon;
+			extract_poly = images.roi.Polygon(pivlab_axis);
 		end
 		extract_poly.Tag=extract_type;
 		extract_poly.LabelVisible = 'on';
@@ -60,7 +62,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		elseif strcmp(caller.Tag,'draw_stuff_area') %extract from area
 			extract_type='extract_circle_area';
 		end
-		extract_poly = images.roi.Circle;
+		extract_poly = images.roi.Circle(pivlab_axis);
 		extract_poly.LabelVisible = 'off';
 		extract_poly.Tag=extract_type;
 		draw(extract_poly);
@@ -78,7 +80,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		elseif strcmp(caller.Tag,'draw_stuff_area') %extract from area
 			extract_type='extract_circle_series_area';
 		end
-		extract_poly = images.roi.Circle;
+		extract_poly = images.roi.Circle(pivlab_axis);
 		extract_poly.LabelVisible = 'off';
 		extract_poly.Tag=extract_type;
 		draw(extract_poly);
@@ -105,7 +107,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		text(x_center+radius+8,y_center,'\rightarrow','FontSize',7, 'BackgroundColor',[1 1 1], 'Rotation', 90,'tag',[extract_type '_displayed_smaller_radii'])
 	elseif strcmp(caller.Tag,'draw_stuff_area') && strcmp(handles.draw_what_area.String{handles.draw_what_area.Value},'rectangle') %rectangle
 		extract_type='extract_rectangle_area';
-		extract_poly = images.roi.Rectangle;
+		extract_poly = images.roi.Rectangle(pivlab_axis);
 		extract_poly.LabelVisible = 'off';
 		extract_poly.Tag=extract_type;
 		draw(extract_poly);

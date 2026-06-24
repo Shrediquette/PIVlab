@@ -1,6 +1,7 @@
 function select_Callback(~, ~, ~)
 filepath=gui.retr('filepath');
 handles=gui.gethand;
+pivlab_axis = gui.retr('pivlab_axis');
 if size(filepath,1) > 1 || gui.retr('video_selection_done') == 1
 	delete(findobj('tag','warning'));
 	gui.toolsavailable(0);
@@ -8,7 +9,7 @@ if size(filepath,1) > 1 || gui.retr('video_selection_done') == 1
 	selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
 	filepath=gui.retr('filepath');
 	delete(findobj('tag', 'RegionOfInterest'));
-	regionOfInterest = images.roi.Rectangle;
+	regionOfInterest = images.roi.Rectangle(pivlab_axis);
 	%roi.EdgeAlpha=0.75;
 	regionOfInterest.FaceAlpha=0.05;
 	regionOfInterest.LabelVisible = 'on';

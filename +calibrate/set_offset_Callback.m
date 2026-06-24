@@ -5,6 +5,7 @@ caliimg=gui.retr('caliimg');
 if numel(caliimg)==0 && size(filepath,1) >1
 	gui.sliderdisp(gui.retr('pivlab_axis'))
 end
+pivlab_axis = gui.retr('pivlab_axis');
 if size(filepath,1) >1 || numel(caliimg)>0 || gui.retr('video_selection_done') == 1
 	handles=gui.gethand;
 	delete(findall(gui.retr('pivlab_axis'),'tag', 'offsetroi'))
@@ -14,7 +15,7 @@ if size(filepath,1) >1 || numel(caliimg)>0 || gui.retr('video_selection_done') =
 	points_offsety = gui.retr('points_offsety');
 
 
-	regionOfInterest = images.roi.Crosshair;
+	regionOfInterest = images.roi.Crosshair(pivlab_axis);
 	%regionOfInterest.EdgeAlpha=0.75;
 	regionOfInterest.LabelVisible = 'on';
 	regionOfInterest.Tag = 'offsetroi';

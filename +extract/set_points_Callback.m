@@ -1,6 +1,7 @@
 function set_points_Callback(~, ~, ~)
 delete(findobj('tag', 'RegionOfInterest'));
-regionOfInterest = images.roi.Line;
+pivlab_axis = gui.retr('pivlab_axis');
+regionOfInterest = images.roi.Line(pivlab_axis);
 regionOfInterest.LabelVisible = 'off';
 regionOfInterest.Tag = 'RegionOfInterest';
 regionOfInterest.Color = 'b';

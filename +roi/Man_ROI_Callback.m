@@ -31,4 +31,3 @@ if size(filepath,1) >1 || gui.retr('video_selection_done') == 1
 		roi.select_Callback
 	end
 end
-

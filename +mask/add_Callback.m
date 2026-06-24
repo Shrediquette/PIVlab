@@ -3,6 +3,7 @@ function add_Callback(~,~,type)
 handles=gui.gethand;
 %variable masks_in_frame ist cell mit inhalt mask_positions für jeden frame (nicht doppelt machen...)
 filepath=gui.retr('filepath');
+pivlab_axis = gui.retr('pivlab_axis');
 if size(filepath,1) > 1 %did the user load images?
 	set(handles.mask_edit_mode,'Value',1) %switch to edit mask mode when drawing a new mask.
 	%gui.sliderdisp(gui.retr('pivlab_axis'));
@@ -23,17 +24,17 @@ if size(filepath,1) > 1 %did the user load images?
 	end
 	masknums=size(mask_positions,1);
 	if strcmp(type,'freehand')
-		regionOfInterest = images.roi.Freehand;
+		regionOfInterest = images.roi.Freehand(pivlab_axis);
 		regionOfInterest.Multiclick=0;
 	elseif strcmp(type,'assisted')
-		regionOfInterest = images.roi.AssistedFreehand;
+		regionOfInterest = images.roi.AssistedFreehand(pivlab_axis);
 		type='freehand';
 	elseif strcmp(type,'rectangle')
-		regionOfInterest = images.roi.Rectangle;
+		regionOfInterest = images.roi.Rectangle(pivlab_axis);
 	elseif strcmp(type,'polygon')
-		regionOfInterest = images.roi.Polygon;
+		regionOfInterest = images.roi.Polygon(pivlab_axis);
 	elseif strcmp(type,'circle')
-		regionOfInterest = images.roi.Circle;
+		regionOfInterest = images.roi.Circle(pivlab_axis);
 	end
 	recommended_colors=parula(7);
 	regionOfInterest.Color=recommended_colors(mod(size(mask_positions,1),6)+1,:);%rand(1,3);
