@@ -100,6 +100,28 @@ else
 		end
 	end
 
+	% ---- Validate the solution before it propagates further
+	% An ill-conditioned image set (e.g. boards tilted about a single axis) makes
+	% OpenCV return a physically invalid result: the principal point lands outside
+	% the image and/or the focal length runs away. The first (no-guess) pass does
+	% not flag this, and the refinement pass then feeds it back into OpenCV with
+	% CALIB_USE_INTRINSIC_GUESS, where it throws a cryptic
+	% "Principal point must be within the image" assertion. Catch it here instead and
+	% raise a clear, identifiable error so the caller can show actionable guidance.
+	imgHeight = imageSize(1);
+	imgWidth  = imageSize(2);
+	cx = K2(1,3); cy = K2(2,3);
+	fx = K2(1,1); fy = K2(2,2);
+	focalLimit = 50 * max(imgWidth, imgHeight);   % generous; never rejects a real lens
+	if cx < 0 || cx >= imgWidth || cy < 0 || cy >= imgHeight || ...
+			fx <= 0 || fy <= 0 || fx > focalLimit || fy > focalLimit
+		error('PIVlab:calibration:degenerate', ...
+			['Camera calibration did not converge to a physically valid solution ' ...
+			'(principal point [%.0f %.0f] outside image [%d %d], or focal length ' ...
+			'[%.0f %.0f] implausible). The calibration images do not constrain the ' ...
+			'camera enough.'], cx, cy, imgWidth, imgHeight, fx, fy);
+	end
+
 	% ---- Convert K to MATLAB format
 	Kmat = [ K2(1,1)  0         0;
 		0        K2(2,2)   0;

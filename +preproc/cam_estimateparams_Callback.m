@@ -187,9 +187,22 @@ if ~isempty(cam_selected_target_images)
         err = stats.ReprojectionErrors;
         errNorm = sqrt(err(:,1,:).^2 + err(:,2,:).^2);
         meanReprojError = mean(errNorm(:), 'omitnan');
-        gui.custom_msgbox('msg',getappdata(0,'hgui'),'Success',{'Success.' ;  ['Detected ' num2str(percentage_detected) '% of checkers.' ] ; ['Mean reprojection error: ' num2str(round(meanReprojError,2)) ' px']},'modal',{'OK'},'OK');
+        if meanReprojError > 2 %valid solution, but poor fit -> warn and explain likely cause
+            diag = preproc.cam_diagnose_calibration_geometry(imagePoints, worldPoints, [mrows, ncols]);
+            gui.custom_msgbox('warn',getappdata(0,'hgui'),'Calibration may be unreliable',...
+                [{['Calibration finished but the mean reprojection error is high (' num2str(round(meanReprojError,2)) ' px).']; ''}; diag.message(:)],...
+                'modal',{'OK'},'OK');
+        else
+            gui.custom_msgbox('msg',getappdata(0,'hgui'),'Success',{'Success.' ;  ['Detected ' num2str(percentage_detected) '% of checkers.' ] ; ['Mean reprojection error: ' num2str(round(meanReprojError,2)) ' px']},'modal',{'OK'},'OK');
+        end
     catch ME
-        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',{'Problem with camera calibration: ' ;' '; ME.message},'modal');
+        if strcmp(ME.identifier,'PIVlab:calibration:degenerate') || contains(ME.message,'Principal point must be within the image')
+            %ill-conditioned image set: explain the specific cause instead of the cryptic OpenCV message
+            diag = preproc.cam_diagnose_calibration_geometry(imagePoints, worldPoints, [mrows, ncols]);
+            gui.custom_msgbox('error',getappdata(0,'hgui'),'Calibration failed',diag.message,'modal',{'OK'},'OK');
+        else
+            gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',{'Problem with camera calibration: ' ;' '; ME.message},'modal');
+        end
     end
     gui.toolsavailable(1)
 else
