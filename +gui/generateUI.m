@@ -2256,10 +2256,10 @@ handles.ac_displ_grid = uicontrol(handles.uipanelac_camsettings,'Style','checkbo
 handles.ac_displ_hist = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Histogram','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','ac_displ_hist','TooltipString','Display histogram','Callback', @acquisition.display_cam_overlay_Callback,'Visible','off');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
-handles.calib_dolivedetect = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Calibration','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','calib_dolivedetect','TooltipString','Do realtime marker detection and image storage.');
+handles.calib_dolivedetect = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Calibration','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','calib_dolivedetect','TooltipString','Do realtime marker detection and image storage.','Callback',@preproc.cam_live_detect_Callback);
 
 item=[parentitem(3)/2*1 item(2) parentitem(3)/2 1.5];
-handles.ac_realtime_PIV = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Displacement','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Callback', @preproc.cam_live_detect_Callback,'Tag','ac_realtime_PIV','TooltipString','Do realtime displacement estimation');
+handles.ac_realtime_PIV = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Displacement','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','ac_realtime_PIV','TooltipString','Do realtime displacement estimation');
 
 
 % Calib capture
