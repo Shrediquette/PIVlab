@@ -39,20 +39,39 @@ if isempty(resultslist)==0
 			gui.put('ismean',[]);
 			gui.sliderrange(1)
 		end
-		str = strrep(get(handles.selectedFramesMean,'string'),'-',':');
+		str = get(handles.selectedFramesMean,'string');
+		str = strrep(str,'-',':');
 		endinside=strfind(str, 'end');
 		if isempty(endinside)==0 %#ok<*STREMP>
-			str = strrep(get(handles.selectedFramesMean,'string'),'end',num2str(max(find(ismean==0)))); %#ok<MXFND>
+			str = strrep(str,'end',num2str(max(find(ismean==0)))); %#ok<MXFND>
 		end
-		selectionok=1;
 
-		strnum=str2num(str);
-		if isempty(strnum)==1 || isempty(strfind(str,'.'))==0 || isempty(strfind(str,';'))==0
-			gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',['Error in frame selection syntax. Please use the following syntax (examples):' sprintf('\n') '1:3' sprintf('\n') '1,3,7,9' sprintf('\n') '1:3,7,8,9,11:13' ],'modal');
-			selectionok=0;
+		% Split the (optionally bracketed) input into rows separated by ';'.
+		% Each row is an independent frame selection that produces one averaged
+		% result frame. A single row reproduces the original single-average
+		% behaviour exactly. Multiple rows enable e.g. time-resolved phase
+		% averages such as "[1:10:end;2:10:end;3:10:end]".
+		str_clean = strrep(strrep(str,'[',''),']','');
+		str_rows = strtrim(strsplit(str_clean, ';'));
+		str_rows = str_rows(~cellfun(@isempty, str_rows));
+		multi_row = numel(str_rows) > 1;
+
+		selectionok=1;
+		% validate each row's syntax (decimals are not allowed)
+		for r=1:numel(str_rows)
+			strnum_row=str2num(str_rows{r}); %#ok<ST2NM>
+			if isempty(strnum_row)==1 || isempty(strfind(str_rows{r},'.'))==0
+				gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',['Error in frame selection syntax. Please use the following syntax (examples):' sprintf('\n') '1:3' sprintf('\n') '1,3,7,9' sprintf('\n') '1:3,7,8,9,11:13' sprintf('\n') 'For multiple averages (e.g. phase average) use rows: [1:10:end;2:10:end]'],'modal');
+				selectionok=0;
+				break
+			end
 		end
 		if selectionok==1
-			mincount=(min(strnum));
+			% global minimum frame across all rows (start of the stack)
+			mincount=inf;
+			for r=1:numel(str_rows)
+				mincount=min(mincount,min(str2num(str_rows{r}))); %#ok<ST2NM>
+			end
 			for count=mincount:size(resultslist,2)
 				if size(resultslist,2)>=count && numel(resultslist{1,count})>0
 					x=resultslist{1,count};
@@ -107,52 +126,61 @@ if isempty(resultslist)==0
 
 			end
 			if sizeerror==0
-				for i=1:size(strnum,2)
-					if size(resultslist,2)>=strnum(i) %dann ok
-						x_tmp=resultslist{1,strnum(i)};
-						if isempty(x_tmp)==1 %dann nicht ok
+				% Loop over the selected rows. Each row appends one averaged
+				% result frame; the write indices (based on the current
+				% resultslist/filepath size) advance automatically because the
+				% appends happen inside this loop.
+				for r=1:numel(str_rows)
+					this_str=str_rows{r};
+					strnum=str2num(this_str); %#ok<ST2NM>
+					for i=1:size(strnum,2)
+						if size(resultslist,2)>=strnum(i) %dann ok
+							x_tmp=resultslist{1,strnum(i)};
+							if isempty(x_tmp)==1 %dann nicht ok
+								gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Your selected range includes non-analyzed frames.','modal');
+								selectionok=0;
+								break
+							end
+						else
 							gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Your selected range includes non-analyzed frames.','modal');
 							selectionok=0;
 							break
 						end
-					else
-						gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Your selected range includes non-analyzed frames.','modal');
-                        selectionok=0;
-                        break
-                    end
-                    if size(ismean,1)>=strnum(i)
-                        if ismean(strnum(i))==1
-                            gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','You must not include frames in your selection that already consist of mean vectors.','modal');
-    						selectionok=0;
-                            break
-                        end
-                    else
-						gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Your selected range exceeds the amount of analyzed frames.','modal');
-						selectionok=0;
+						if size(ismean,1)>=strnum(i)
+							if ismean(strnum(i))==1
+								gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','You must not include frames in your selection that already consist of mean vectors.','modal');
+								selectionok=0;
+								break
+							end
+						else
+							gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Your selected range exceeds the amount of analyzed frames.','modal');
+							selectionok=0;
+							break
+						end
+					end
+
+					if selectionok==0
 						break
 					end
-				end
-
-				if selectionok==1
 
 					%% calculate mean mask from all the masks that have been applied
 					masks_in_frame=gui.retr('masks_in_frame');
 					if ~isempty(masks_in_frame)
 						expected_image_size=gui.retr('expected_image_size');
-                        converted_mask=zeros(expected_image_size,'uint16');
-                        amount_nonmean_images = numel(ismean(ismean==0));
-                        frames_to_process= eval(['[' str ']']);
-                        for i=frames_to_process
-                            if numel (masks_in_frame) >= i%if size (masks_in_frame,2) >= i
-                                mask_positions=masks_in_frame{i};
-                                converted_mask=converted_mask + uint16(mask.convert_masks_to_binary(expected_image_size,mask_positions)); %only when all frames are masked --> apply mask also in the average.
-                            end
-                        end
-                        converted_mask(converted_mask<numel(frames_to_process))=0;
-                        converted_mask(converted_mask==numel(frames_to_process))=1;
-                        converted_mask=uint8(converted_mask);
-                        blocations = bwboundaries(converted_mask,'holes');
-                        frame_where_to_put_the_average=size(resultslist,2)+1;
+						converted_mask=zeros(expected_image_size,'uint16');
+						amount_nonmean_images = numel(ismean(ismean==0)); %#ok<NASGU>
+						frames_to_process= eval(['[' this_str ']']);
+						for i=frames_to_process
+							if numel (masks_in_frame) >= i%if size (masks_in_frame,2) >= i
+								mask_positions=masks_in_frame{i};
+								converted_mask=converted_mask + uint16(mask.convert_masks_to_binary(expected_image_size,mask_positions)); %only when all frames are masked --> apply mask also in the average.
+							end
+						end
+						converted_mask(converted_mask<numel(frames_to_process))=0;
+						converted_mask(converted_mask==numel(frames_to_process))=1;
+						converted_mask=uint8(converted_mask);
+						blocations = bwboundaries(converted_mask,'holes');
+						frame_where_to_put_the_average=size(resultslist,2)+1;
 						masks_in_frame(frame_where_to_put_the_average:end)=[];%remove any pre-existing mask in the curretn frame
 						masks_in_frame=mask.px_to_rois(blocations,frame_where_to_put_the_average,masks_in_frame,'on');
 						gui.put('masks_in_frame',masks_in_frame);
@@ -164,7 +192,7 @@ if isempty(resultslist)==0
 					%typevectormean ist der mittelwert aller types
 					%typevectormittel ist der stapel aus allen typevectors
 
-					eval(['typevectormittelselected=typevectormittel(:,:,[' str ']);']);
+					eval(['typevectormittelselected=typevectormittel(:,:,[' this_str ']);']);
 
 					typevectormean=mean(typevectormittelselected,3);  %#ok<USENS>
 					%for i=1:size(typevectormittelselected,3)
@@ -185,17 +213,17 @@ if isempty(resultslist)==0
 					resultslist{2,size(filepath,1)/2+1}=y;
 
 					%hier neue matrix mit ausgewÃ¤hlten frames!
-					eval(['umittelselected=umittel(:,:,[' str ']);']);
-					eval(['vmittelselected=vmittel(:,:,[' str ']);']);
+					eval(['umittelselected=umittel(:,:,[' this_str ']);']);
+					eval(['vmittelselected=vmittel(:,:,[' this_str ']);']);
 					if type==3
 						%Turbulent kinetic energy TKE, based on discussion
-                        %with H.E. TOUHAMI, improved by Stefano M.
+						%with H.E. TOUHAMI, improved by Stefano M.
 
-                        TKE_x=0.5*var(umittelselected,0,3,'omitnan');
-                        TKE_y=0.5*var(vmittelselected,0,3,'omitnan');
+						TKE_x=0.5*var(umittelselected,0,3,'omitnan');
+						TKE_y=0.5*var(vmittelselected,0,3,'omitnan');
 
-                        % Calculate the total TKE
-                        %TKE = TKE_x + TKE_y; % currently not used. --> calculated in plot.derivative_calc.m
+						% Calculate the total TKE
+						%TKE = TKE_x + TKE_y; % currently not used. --> calculated in plot.derivative_calc.m
 
 						%remove non-valid measurements
 						TKE_x(typevectormean>=1.75)=nan; %discard everything that has less than 25% valid measurements
@@ -235,7 +263,7 @@ if isempty(resultslist)==0
 						end
 					end
 					filepathselected=filepath(1:2:end);
-					eval(['filepathselected=filepathselected([' str '],:);']);
+					eval(['filepathselected=filepathselected([' this_str '],:);']);
 					filepath{size(filepath,1)+1,1}=filepathselected{1,1};
 					filepath{size(filepath,1)+1,1}=filepathselected{1,1};
 					if gui.retr('video_selection_done') == 0
@@ -250,21 +278,26 @@ if isempty(resultslist)==0
 						gui.put('video_frame_selection',video_frame_selection);
 					end
 					filename=gui.retr('filename');
+					if multi_row
+						row_suffix=[' #' num2str(r)];
+					else
+						row_suffix='';
+					end
 					if type == 3
-						filename{size(filename,1)+1,1}=['TKE of frames ' str];
-						filename{size(filename,1)+1,1}=['TKE of frames ' str];
+						filename{size(filename,1)+1,1}=['TKE of frames ' this_str row_suffix];
+						filename{size(filename,1)+1,1}=['TKE of frames ' this_str row_suffix];
 					end
 					if type == 2
-						filename{size(filename,1)+1,1}=['STDEV of frames ' str];
-						filename{size(filename,1)+1,1}=['STDEV of frames ' str];
+						filename{size(filename,1)+1,1}=['STDEV of frames ' this_str row_suffix];
+						filename{size(filename,1)+1,1}=['STDEV of frames ' this_str row_suffix];
 					end
 					if type == 1
-						filename{size(filename,1)+1,1}=['MEAN of frames ' str];
-						filename{size(filename,1)+1,1}=['MEAN of frames ' str];
+						filename{size(filename,1)+1,1}=['MEAN of frames ' this_str row_suffix];
+						filename{size(filename,1)+1,1}=['MEAN of frames ' this_str row_suffix];
 					end
 					if type == 0
-						filename{size(filename,1)+1,1}=['SUM of frames ' str];
-						filename{size(filename,1)+1,1}=['SUM of frames ' str];
+						filename{size(filename,1)+1,1}=['SUM of frames ' this_str row_suffix];
+						filename{size(filename,1)+1,1}=['SUM of frames ' this_str row_suffix];
 					end
 					ismean(size(resultslist,2),1)=1;
 					gui.put('ismean',ismean);
@@ -275,6 +308,8 @@ if isempty(resultslist)==0
 					gui.put ('framepart', framepart);
 					gui.put ('typevector', typevector);
 					gui.sliderrange(1)
+				end
+				if selectionok==1
 					try
 						set (handles.fileselector,'value',get (handles.fileselector,'max'));
 					catch

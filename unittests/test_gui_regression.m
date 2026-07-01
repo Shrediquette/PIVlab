@@ -326,6 +326,30 @@ resultslist = gui.retr('resultslist');
 testCase.verifyGreaterThanOrEqual(size(resultslist, 2), 4, 'Temporal mean velocity was not appended.');
 testCase.verifyNotEmpty(resultslist{3, 4}, 'Mean U field is empty.');
 
+% multi-row (phase-average) selection: each ';'-separated row must append its
+% own averaged frame. Uses unequal-length rows to cover that path, and
+% 'replace' mode so the previously appended single mean is cleared first.
+ismeanBefore = gui.retr('ismean');
+nBaseFrames = nnz(ismeanBefore == 0);   % analyzed (non-mean) frames
+set(handles.selectedFramesMean, 'String', '[1;2:3]');
+set(handles.append_replace, 'Value', 2);   % replace: clears prior means first
+plot.temporal_operation_Callback([], [], 1);
+drawnow;
+
+resultslist = gui.retr('resultslist');
+ismean = gui.retr('ismean');
+filename = gui.retr('filename');
+testCase.verifyEqual(nnz(ismean == 1), 2, 'Two-row selection should append exactly two mean frames.');
+testCase.verifyEqual(size(resultslist, 2), nBaseFrames + 2, 'Multi-row averaging must append one frame per row.');
+testCase.verifyNotEmpty(resultslist{3, nBaseFrames + 1}, 'First phase-average U field is empty.');
+testCase.verifyNotEmpty(resultslist{3, nBaseFrames + 2}, 'Second phase-average U field is empty.');
+testCase.verifyFalse(isequal(resultslist{3, nBaseFrames + 1}, resultslist{3, nBaseFrames + 2}), ...
+    'Phase averages over different frames should not be identical.');
+testCase.verifyTrue(contains(filename{end, 1}, '#2'), 'Multi-row mean frames should carry a per-row label suffix.');
+
+% restore single-frame append behaviour for the remainder of the run
+set(handles.append_replace, 'Value', 1);
+
 plot.statistics_Callback([], [], []);
 testCase.verifyTrue(isOnState(get(handles.multip14, 'Visible')), 'Statistics panel did not become visible.');
 end
