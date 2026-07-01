@@ -32,7 +32,7 @@ if isempty(fh)
     handles.bitdepth_txt = uicontrol(handles.mainpanel,'Style','text','String','Bit depth:','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
     item=[parentitem(3)/2*1 item(2) parentitem(3)/2 2];
-    handles.bitdepth = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'8','10'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','bitdepth');
+    handles.bitdepth = uicontrol(handles.mainpanel,'Style','popupmenu','String',{'8','10'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','bitdepth','Enable','off');
 
     item=[parentitem(3)/2*0 item(2)+item(4)+margin/4 parentitem(3)/2 2];
     handles.gain_txt = uicontrol(handles.mainpanel,'Style','text','String','Gain:','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
