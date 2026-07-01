@@ -244,6 +244,7 @@ if ok==1
 				corrlist{i}=zeros(size(typevector)); %no correlation coefficient in DCC.
 				u2list{i}=[];
 				v2list{i}=[];
+				umaplist{i}=[]; %no uncertainty map for DCC
 				%correlation_matrices_list{i}=[];%no correlation matrix output for dcc
 				hbar.iterate(1);
 			end
