@@ -19,7 +19,7 @@ clc; clear; close all;
 
 project_root = fileparts(fileparts(mfilename('fullpath')));
 addpath(project_root);
-outdir = 'C:\Users\trash\Documents\MATLAB\claude_code_temp';
+outdir = fullfile(tempdir, 'claude_code_temp');
 if ~exist(outdir, 'dir'), mkdir(outdir); end
 
 n_passed = 0;

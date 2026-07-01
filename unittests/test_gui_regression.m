@@ -49,10 +49,20 @@ runGuiRegressionForMode(testCase, 0);
 
 closePIVlabIfOpen();
 closeAllNonPIVlabFigures();
+% Only skip (filter) the parallel regression when parallel processing is
+% genuinely unavailable on this machine. A failure while parallel IS active
+% is a real regression and must fail the test rather than be silently masked.
+if ~parallelProcessingAvailable()
+    testCase.assumeFail('Parallel Computing Toolbox not available; skipping parallel GUI regression.');
+end
 try
     runGuiRegressionForMode(testCase, 2);
 catch err
-    testCase.assumeTrue(false, ['Parallel GUI regression could not be exercised: ' err.message]);
+    if isParallelInfrastructureError(err)
+        testCase.assumeFail(['Parallel pool could not be started; skipping parallel GUI regression: ' err.message]);
+    else
+        rethrow(err);
+    end
 end
 end
 
@@ -495,4 +505,18 @@ if isa(value, 'matlab.lang.OnOffSwitchState')
 else
     tf = isequal(value, 'on');
 end
+end
+
+function tf = parallelProcessingAvailable()
+% Side-effect-free check for parallel processing support (no pool is started).
+tf = license('test', 'Distrib_Computing_Toolbox') == 1 && ~isempty(ver('parallel'));
+end
+
+function tf = isParallelInfrastructureError(err)
+% True only for errors indicating the parallel infrastructure (toolbox / pool)
+% is unavailable - NOT for genuine analysis or GUI regressions, which must fail.
+tf = contains(err.identifier, 'parallel', 'IgnoreCase', true) || ...
+    contains(err.identifier, 'parpool', 'IgnoreCase', true) || ...
+    contains(err.message, 'parallel pool', 'IgnoreCase', true) || ...
+    contains(err.message, 'Parallel Computing Toolbox', 'IgnoreCase', true);
 end
