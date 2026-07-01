@@ -84,6 +84,12 @@ if all(file_existing)
     s = struct('name',pathfilelist,'folder',pathlist,'isdir',0);
     gui.put('sequencer',1);
     gui.put('capturing',0);
+    % disable undistortions / rectifications, they are most likely not valid for a new recording and must be applied during analysis, not during capture.
+    gui.put('cam_use_calibration',0);
+    gui.put('cam_use_rectification',0);
+    handles.calib_userectification.Value = 0;
+    handles.calib_usecalibration.Value = 0;
+   
     import.loadimgsbutton_Callback([],[],0,s);
     found_the_data=1;
 else
