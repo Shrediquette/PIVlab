@@ -95,6 +95,8 @@ if ready==1
             [errorcode, caliimg]=PIVlab_capture_basler_calibration_image(inf,expos,ac_ROI_general);
         elseif strcmp(camera_type,'OPTOcam')
             [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(inf,expos,ac_ROI_general);
+        elseif strcmp(camera_type,'OPTOcam_20_9')
+            [errorcode, caliimg]=PIVlab_capture_OPTOcam_20_9_calibration_image(inf,expos,ac_ROI_general);
         elseif strcmp(camera_type,'OPTRONIS')
             camera_sub_type=gui.retr('camera_sub_type');
             if endsWith(camera_sub_type, '-bitflow')

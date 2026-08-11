@@ -202,7 +202,7 @@ if required_files_check
 				%                gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK')
 				%                acquisition.control_simple_sync_serial(1,0);
 				%                gui.put('laser_running',1);
-			elseif strcmpi(config_string,'PIVlab LD-PS + Chronos') || strcmpi(config_string,'PIVlab LD-PS + Basler acA2000-165um') || strcmpi(config_string,'PIVlab LD-PS + FLIR FFY-U3-16S2M') || strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2/80') || strcmpi(config_string,'PIVlab LD-PS + OPTRONIS Cyclone') || strcmpi(config_string,'Webcam demo (no synchronizer)')%chronos and basler and flir and OPTOcam and OPTRONIS: Camera needs to be started first, afterwards the laser is enabled.
+			elseif strcmpi(config_string,'PIVlab LD-PS + Chronos') || strcmpi(config_string,'PIVlab LD-PS + Basler acA2000-165um') || strcmpi(config_string,'PIVlab LD-PS + FLIR FFY-U3-16S2M') || strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2/80') || strcmpi(config_string,'PIVlab LD-PS + OPTOcam 20/9') || strcmpi(config_string,'PIVlab LD-PS + OPTRONIS Cyclone') || strcmpi(config_string,'Webcam demo (no synchronizer)')%chronos and basler and flir and OPTOcam and OPTRONIS: Camera needs to be started first, afterwards the laser is enabled.
 				close(f)
 			end
 			camera_type=gui.retr('camera_type');
@@ -273,6 +273,41 @@ if required_files_check
 					gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK');
 					acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
 					[OutputError,OPTOcam_vid] = PIVlab_capture_OPTOcam_synced_capture(OPTOcam_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTOcam_bits); %capture n images, display livestream
+				else
+					gui.custom_msgbox('error',getappdata(0,'hgui'),'',Error_Reason,'modal');
+					gui.put('cancel_capture',1);
+					imageamount=inf; %will prevent saving of images
+				end
+			elseif strcmpi(config_string,'PIVlab LD-PS + OPTOcam 20/9')  %OPTOcam 20/9 (double-frame mvPivShutter)
+				OPTOcam_bits =gui.retr('OPTOcam_20_9_bits');
+				if isempty (OPTOcam_bits)
+					OPTOcam_bits=12;
+				end
+				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
+				exposure1 = pulse_sep; %frame A exposure must span the pulse separation (clamped to the mvPivShutter range inside synced_start)
+				[OutputError,OPTOcam_vid,frame_nr_display] = PIVlab_capture_OPTOcam_20_9_synced_start(imageamount,ac_ROI_general,cam_fps,OPTOcam_bits,exposure1); %prepare cam and start camera (waiting for external triggers on Line4)
+				Error_Reason={};
+				OPTOcam_settings_check = 1;
+				try
+					max_pair_rate = get(OPTOcam_vid.Source,'mvResultingFrameRate')/2; %2 frames per image pair
+				catch
+					max_pair_rate = inf;
+				end
+				if cam_fps > max_pair_rate
+					OPTOcam_settings_check = 0;
+					Error_Reason{end+1,1}='Image-pair rate too high for the selected ROI and/or bit depth.';
+					Error_Reason{end+1,1}=['With the current settings, the maximum is ' num2str(round(max_pair_rate,1)) ' pairs/s.'];
+					Error_Reason{end+1,1}='Please make the ROI smaller, lower the frame rate, or use 8 bit.';
+				end
+				if pulse_sep > 2630
+					OPTOcam_settings_check = 0;
+					Error_Reason{end+1,1}='Pulse distance too large for the double-frame (mvPivShutter) mode.';
+					Error_Reason{end+1,1}='The first exposure spans at most ~2630 us. Please reduce the pulse distance.';
+				end
+				if OPTOcam_settings_check == 1
+					gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK');
+					acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
+					[OutputError,OPTOcam_vid] = PIVlab_capture_OPTOcam_20_9_synced_capture(OPTOcam_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTOcam_bits); %capture n images, display livestream
 				else
 					gui.custom_msgbox('error',getappdata(0,'hgui'),'',Error_Reason,'modal');
 					gui.put('cancel_capture',1);
@@ -407,6 +442,12 @@ if required_files_check
 			if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2/80') %OPTOcam
 				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
 					[OutputError,actually_saved_images] = PIVlab_capture_OPTOcam_save(OPTOcam_vid,imageamount,projectpath,frame_nr_display,OPTOcam_bits); %save the images from ram to disk.
+					imageamount=actually_saved_images;
+				end
+			end
+			if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 20/9') %OPTOcam 20/9
+				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
+					[OutputError,actually_saved_images] = PIVlab_capture_OPTOcam_20_9_save(OPTOcam_vid,imageamount,projectpath,frame_nr_display,OPTOcam_bits); %save the images from ram to disk.
 					imageamount=actually_saved_images;
 				end
 			end

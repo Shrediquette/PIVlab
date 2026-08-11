@@ -5,8 +5,8 @@ function [timing_table, pin_string, cam_delay, frame_time] = PIVlab_calc_oltsync
 %f1exp_cam is calculated as      floor(pulse_sep*las_percent/100)+1; %+1 because in the snychronizer, the cam expo is started 1 us before the ld pulse
 %it has therefore the length of the laser pulse
 
-if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')
-	camera_principle='double_shutter';
+if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp(camera_type,'OPTOcam_20_9')
+	camera_principle='double_shutter'; %OPTOcam 20/9 uses a sensor-native double frame (like the pco cameras)
 else
 	camera_principle='normal_shutter';
 end
@@ -25,6 +25,12 @@ if strcmp(camera_type,'OPTOcam')
 end
 
 if strcmp(camera_type,'pco_pixelfly')
+	blind_time=2;
+	cam_delay=3;
+end
+
+if strcmp(camera_type,'OPTOcam_20_9')
+	%PLACEHOLDER values — must be measured on Line0 (ExposureActive) vs Line4 (trigger) once capture works.
 	blind_time=2;
 	cam_delay=3;
 end

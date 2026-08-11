@@ -4,6 +4,8 @@ if strcmp(camera_type,'chronos')
     PIVlab_capture_chronos_settings_GUI
 elseif strcmp(camera_type,'OPTOcam')
     PIVlab_capture_OPTOcam_settings_GUI
+elseif strcmp(camera_type,'OPTOcam_20_9')
+    PIVlab_capture_OPTOcam_20_9_settings_GUI
 elseif strcmp(camera_type,'OPTRONIS')
     camera_sub_type=gui.retr('camera_sub_type');
     if endsWith(camera_sub_type, '-bitflow')

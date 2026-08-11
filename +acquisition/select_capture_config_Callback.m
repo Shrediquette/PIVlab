@@ -160,6 +160,28 @@ if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2/80') % OPTOcam
 	end
 	%end
 end
+if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 20/9') % OPTOcam 20/9 (double-frame PIV camera)
+	gui.put('camera_type','OPTOcam_20_9');
+	gui.put('f1exp',352) % Exposure start -> Q1 delay (placeholder; refine with Line0/Line4 measurement)
+	gui.put('f1exp_cam',350); %exposure time setting first frame (placeholder)
+	gui.put('master_freq',15);
+	%double-image (image-pair) rates. These match the ROI presets (see calibROI_Callback / setdefaultroi):
+	%608²:68/57  1024²:43/36  1504²:30/25  2256²:21/17  4512²:9/5 (8bit/12bit), plus slower rates.
+	avail_freqs={'68' '57' '43' '36' '30' '25' '21' '17' '9' '5' '3' '1'};
+	gui.put('max_cam_res',[4512,4512]);
+	OPTOcam_20_9_bits =gui.retr('OPTOcam_20_9_bits');
+	if isempty (OPTOcam_20_9_bits)
+		OPTOcam_20_9_bits=12;
+		gui.put('OPTOcam_20_9_bits',12); %12bit
+	end
+	%double-frame interframe minimum ~2 us; these are placeholders until measured on Line0/Line4
+	gui.put('min_allowed_interframe',2);
+	gui.put('blind_time',1);
+	set(handles.ac_fps,'string',avail_freqs);
+	if ~strcmpi(config_string,old_setting)
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
+end
 if strcmpi(config_string,'PIVlab LD-PS + OPTRONIS Cyclone') % OPTRONIS
 	gui.put('camera_type','OPTRONIS');
 	camera_sub_type=gui.retr('camera_sub_type');
@@ -272,7 +294,7 @@ if strcmpi(config_string,'Webcam demo (no synchronizer)')
             disp('https://www.mathworks.com/matlabcentral/fileexchange/45182-matlab-support-package-for-usb-webcams')
             gui.custom_msgbox('error',getappdata(0,'hgui'),'No webcam','Could not access webcam. This function requires the free MATLAB Support Package for USB Webcams add-on (the link is now displayed in the command window).','modal');
         end
-        set(handles.ac_config,'value',2);
+        set(handles.ac_config,'value',2); %webcam unavailable: fall back to the first real camera (index 2, OPTOcam 20/9), off the failed webcam entry (index 1)
 		acquisition.select_capture_config_Callback
         return
     end
