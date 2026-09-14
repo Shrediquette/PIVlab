@@ -174,9 +174,13 @@ if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 20/9') % OPTOcam 20/9 (double-f
 		OPTOcam_20_9_bits=12;
 		gui.put('OPTOcam_20_9_bits',12); %12bit
 	end
-	%double-frame interframe minimum ~2 us; these are placeholders until measured on Line0/Line4
-	gui.put('min_allowed_interframe',2);
-	gui.put('blind_time',1);
+	%Timing limits from the shared double-frame model (constants measured on Line0/Line4).
+	%The absolute floor is the trigger delay jitter + the frame gap; the real minimum also
+	%depends on the laser pulse length and is checked again in piv_capture_Callback.
+	T209 = PIVlab_capture_OPTOcam_20_9_timing(OPTOcam_20_9_bits,1000,0);
+	gui.put('blind_time',T209.gap);
+	gui.put('min_allowed_interframe',ceil(T209.min_off_time));
+	gui.put('max_allowed_interframe',floor(T209.max_interframe));
 	set(handles.ac_fps,'string',avail_freqs);
 	if ~strcmpi(config_string,old_setting)
 		set(handles.ac_fps,'value',numel(avail_freqs))

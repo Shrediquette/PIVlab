@@ -284,7 +284,11 @@ if required_files_check
 					OPTOcam_bits=12;
 				end
 				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
-				exposure1 = pulse_sep; %frame A exposure must span the pulse separation (clamped to the mvPivShutter range inside synced_start)
+				las_percent=str2double(get(handles.ac_power,'String'));
+				%shared double-frame timing model: delivers the ExposureTime that has to be programmed
+				%into the camera and the pulse distances that are actually possible.
+				T209 = PIVlab_capture_OPTOcam_20_9_timing(OPTOcam_bits,pulse_sep,las_percent);
+				exposure1 = T209.exposure_set; %frame-1 exposure setting (quantised by the camera)
 				[OutputError,OPTOcam_vid,frame_nr_display] = PIVlab_capture_OPTOcam_20_9_synced_start(imageamount,ac_ROI_general,cam_fps,OPTOcam_bits,exposure1); %prepare cam and start camera (waiting for external triggers on Line4)
 				Error_Reason={};
 				OPTOcam_settings_check = 1;
@@ -299,10 +303,23 @@ if required_files_check
 					Error_Reason{end+1,1}=['With the current settings, the maximum is ' num2str(round(max_pair_rate,1)) ' pairs/s.'];
 					Error_Reason{end+1,1}='Please make the ROI smaller, lower the frame rate, or use 8 bit.';
 				end
-				if pulse_sep > 2630
+				if pulse_sep > T209.max_interframe
 					OPTOcam_settings_check = 0;
-					Error_Reason{end+1,1}='Pulse distance too large for the double-frame (mvPivShutter) mode.';
-					Error_Reason{end+1,1}='The first exposure spans at most ~2630 us. Please reduce the pulse distance.';
+					Error_Reason{end+1,1}='Pulse distance too large for the double-frame mode.';
+					Error_Reason{end+1,1}=['The length of the second frame exposure limits the pulse distance to about ' num2str(round(T209.max_interframe)) ' us.'];
+					Error_Reason{end+1,1}='Please reduce the pulse distance.';
+				end
+				if pulse_sep <= T209.min_off_time
+					%no laser pulse can fit: both pulses must sit in their own frame, and the
+					%trigger delay jitter plus the frame gap already use up the whole distance.
+					OPTOcam_settings_check = 0;
+					Error_Reason{end+1,1}='Pulse distance too small for the double-frame mode.';
+					Error_Reason{end+1,1}=['Trigger delay jitter plus the ' num2str(T209.gap) ' us frame gap require a pulse distance of more than ' num2str(round(T209.min_off_time,1)) ' us.'];
+					Error_Reason{end+1,1}='Please increase the pulse distance.';
+				elseif T209.pulse_was_limited
+					%not fatal, but the user gets less laser energy than requested
+					disp(['OPTOcam 20/9: laser pulse shortened from ' num2str(round(T209.laser_period_requested,1)) ' to ' num2str(round(T209.laser_period,1)) ' us, so that both pulses still fit into their frames.'])
+					disp('Increase the pulse distance if you need more laser energy.')
 				end
 				if OPTOcam_settings_check == 1
 					gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK');

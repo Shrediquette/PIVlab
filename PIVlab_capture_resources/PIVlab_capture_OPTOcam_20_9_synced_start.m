@@ -83,7 +83,7 @@ disp(['Found camera: ' OPTOcam_name])
 if bitmode==8
     OPTOcam_vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,'Mono8');
 elseif bitmode==12
-    OPTOcam_vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,'Mono12');
+    OPTOcam_vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,'Mono12p'); %packed 12 bit -> higher frame rate than Mono12
 end
 
 OPTOcam_settings = get(OPTOcam_vid);
@@ -126,13 +126,14 @@ OPTOcam_settings.Source.LineSelector = 'Line0';
 OPTOcam_settings.Source.LineSource   = 'ExposureActive';
 OPTOcam_settings.Source.LineInverter = 'False';
 
-%% first-frame (A) exposure. mvPivShutter allows ~82..2630 us (8..255 sensor lines).
-%exposure1 must be long enough to contain the 1st laser pulse and the pulse separation.
-%FLAG: exact value to be confirmed/tuned on the rig with the synchronizer.
+%% first-frame (A) exposure.
+%The value is produced by the shared timing model (PIVlab_capture_OPTOcam_20_9_timing.m): it is
+%chosen so that laser pulse 1 fits into frame 1 AND so that the camera's exposure quantisation
+%stays predictable (the setting sits in the middle of a quantisation plateau).
 if nargin < 5 || isempty(exposure1)
-    exposure1 = 250; %us, safe default within the mvPivShutter range
+    exposure1 = 60; %us, lands in the minimum (123.5 us) frame-1 exposure plateau
 end
-exposure1 = max(82, min(2630, exposure1));
+exposure1 = max(7, min(2522, exposure1)); %settable ExposureTime range (measured on the rig)
 OPTOcam_settings.Source.ExposureTime = exposure1;
 
 %% ROI (0-based offset for the camera, like the pco/OPTOcam convention)

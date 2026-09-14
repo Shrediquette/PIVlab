@@ -80,7 +80,7 @@ end
 
 disp(['Found camera: ' OPTOcam_name])
 
-OPTOcam_vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,'Mono12'); %calibration image in 12 bit always.
+OPTOcam_vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,'Mono12p'); %calibration image in 12 bit always (packed = higher frame rate).
 
 OPTOcam_settings = get(OPTOcam_vid);
 %Sensor power management (standby/active) intentionally NOT used for now:
