@@ -32,6 +32,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
     projectpath=get(handles.ac_project,'String');
     capture_ok=acquisition.check_project_path(projectpath,'calibration');
     if capture_ok==1
+        gui.toolsavailable(0,'Please wait...');drawnow
         gui.put('cancel_capture',0);
         gui.put('capturing',1);
         max_cam_res=gui.retr('max_cam_res');
@@ -68,6 +69,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             %acquisition.control_simple_sync_serial(0,2);
         end
         gui.put('capturing',0);
+        gui.toolsavailable(1);
 
         if capture_ok==1
 			target_axis=gui.retr('pivlab_axis');
