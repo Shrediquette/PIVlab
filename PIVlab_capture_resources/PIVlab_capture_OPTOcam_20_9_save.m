@@ -2,7 +2,7 @@ function [OutputError, actually_saved_images] = PIVlab_capture_OPTOcam_20_9_save
 % Save the acquired OPTOcam 20/9 double-frame data to disk as _A/_B image pairs.
 % Frames arrive as a stream A,B,A,B,... (one image pair per external trigger, produced
 % by the sensor's mvPivShutter double frame). Odd frames -> _A (1st exposure), even
-% frames -> _B (2nd exposure).  [FLAG: confirm the A/B order on the rig.]
+% frames -> _B (2nd exposure) (A/B order confirmed on the rig).
 warning('off','imaq:gentl:noSupportedPixelFormat')
 if bitmode==8
     bitmultiplicator=1;

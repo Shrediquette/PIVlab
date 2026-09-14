@@ -2,9 +2,9 @@ function PIVlab_capture_OPTOcam_20_9_settings_GUI
 % Settings window for the OPTOcam 20/9. Exposes bit depth (8/12) and gain
 % (0-48 dB numeric), plus a temperature / serial / firmware readout.
 %  - gain is a numeric edit field (0-48 dB)
-%  - Apply only stores OPTOcam_20_9_bits / OPTOcam_20_9_gain locally; it does NOT
-%    send SET_CAM_BITS to the synchronizer (20/9 double-frame timing is handled
-%    later, once blind time has been measured on Line0/Line4)
+%  - Apply stores OPTOcam_20_9_bits / OPTOcam_20_9_gain locally and refreshes the
+%    bit-depth dependent pulse distance limits; it does NOT send SET_CAM_BITS to the
+%    synchronizer (the 20/9 timing is calculated on the PC side)
 %  - own window tag / appdata handle so it never clashes with the 2/80 window
 fh = findobj('tag', 'OPTOcam_20_9_control_window');
 
@@ -104,7 +104,14 @@ fh = findobj('tag', 'OPTOcam_20_9_control_window');
 handles=gethand;
 
 bitchoices=get(handles.bitdepth,'String');
-put('OPTOcam_20_9_bits',str2double(bitchoices{get(handles.bitdepth,'value')}));
+OPTOcam_bits=str2double(bitchoices{get(handles.bitdepth,'value')});
+put('OPTOcam_20_9_bits',OPTOcam_bits);
+
+%% pulse distance limits depend on the bit depth (same values as in select_capture_config_Callback)
+T209 = PIVlab_capture_OPTOcam_20_9_timing(OPTOcam_bits,1000,0);
+put('blind_time',T209.gap);
+put('min_allowed_interframe',max(T209.min_interframe_gui,ceil(T209.min_off_time)));
+put('max_allowed_interframe',floor(T209.max_interframe));
 
 %% gain: numeric field, clamped to the camera's 0-48 dB range
 gainval=str2double(get(handles.gain,'String'));
@@ -115,9 +122,13 @@ gainval=max(0,min(48,gainval));
 set(handles.gain,'String',num2str(gainval)); %reflect any clamping back to the field
 put('OPTOcam_20_9_gain',gainval);
 
-%NOTE: unlike the 2/80, we intentionally do NOT send SET_CAM_BITS to the synchronizer here,
-%and do not set min_allowed_interframe / blind_time from the bit depth. The 20/9 uses
-%double-frame (double_shutter) timing, which will be wired up once measured on Line0/Line4.
+%NOTE: unlike the 2/80, we intentionally do NOT send SET_CAM_BITS to the synchronizer here:
+%the 20/9 timing is calculated completely on the PC side (PIVlab_capture_OPTOcam_20_9_timing.m).
+
+%% the bit depth changes the RAM needed per image pair: refresh the red/white image amount box
+if ~isequal(retr('capturing'),1) %image_amount_Callback calls imaqreset, which would kill a running preview
+	acquisition.image_amount_Callback
+end
 
 close (fh)
 

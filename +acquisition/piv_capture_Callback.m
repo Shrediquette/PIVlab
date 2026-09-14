@@ -281,7 +281,7 @@ if required_files_check
 			elseif strcmpi(config_string,'PIVlab LD-PS + OPTOcam 20/9')  %OPTOcam 20/9 (double-frame mvPivShutter)
 				OPTOcam_bits =gui.retr('OPTOcam_20_9_bits');
 				if isempty (OPTOcam_bits)
-					OPTOcam_bits=12;
+					OPTOcam_bits=8;
 				end
 				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
 				las_percent=str2double(get(handles.ac_power,'String'));
@@ -289,14 +289,11 @@ if required_files_check
 				%into the camera and the pulse distances that are actually possible.
 				T209 = PIVlab_capture_OPTOcam_20_9_timing(OPTOcam_bits,pulse_sep,las_percent);
 				exposure1 = T209.exposure_set; %frame-1 exposure setting (quantised by the camera)
-				[OutputError,OPTOcam_vid,frame_nr_display] = PIVlab_capture_OPTOcam_20_9_synced_start(imageamount,ac_ROI_general,cam_fps,OPTOcam_bits,exposure1); %prepare cam and start camera (waiting for external triggers on Line4)
+				%max_pair_rate is delivered by synced_start: the camera's mvResultingFrameRate freezes once the
+				%double-frame mode is active, so it must be read inside synced_start before that mode is enabled.
+				[OutputError,OPTOcam_vid,frame_nr_display,max_pair_rate] = PIVlab_capture_OPTOcam_20_9_synced_start(imageamount,ac_ROI_general,cam_fps,OPTOcam_bits,exposure1); %prepare cam and start camera (waiting for external triggers on Line4)
 				Error_Reason={};
 				OPTOcam_settings_check = 1;
-				try
-					max_pair_rate = get(OPTOcam_vid.Source,'mvResultingFrameRate')/2; %2 frames per image pair
-				catch
-					max_pair_rate = inf;
-				end
 				if cam_fps > max_pair_rate
 					OPTOcam_settings_check = 0;
 					Error_Reason{end+1,1}='Image-pair rate too high for the selected ROI and/or bit depth.';
@@ -309,18 +306,17 @@ if required_files_check
 					Error_Reason{end+1,1}=['The length of the second frame exposure limits the pulse distance to about ' num2str(round(T209.max_interframe)) ' us.'];
 					Error_Reason{end+1,1}='Please reduce the pulse distance.';
 				end
-				if pulse_sep <= T209.min_off_time
-					%no laser pulse can fit: both pulses must sit in their own frame, and the
-					%trigger delay jitter plus the frame gap already use up the whole distance.
+				if T209.laser_period < 1
+					%no laser pulse can fit: both pulses must sit in their own frame, and the camera's
+					%timing jitter (trigger delay, exposure, frame gap) already uses up the whole distance.
 					OPTOcam_settings_check = 0;
 					Error_Reason{end+1,1}='Pulse distance too small for the double-frame mode.';
-					Error_Reason{end+1,1}=['Trigger delay jitter plus the ' num2str(T209.gap) ' us frame gap require a pulse distance of more than ' num2str(round(T209.min_off_time,1)) ' us.'];
+					Error_Reason{end+1,1}=['The camera timing jitter requires a pulse distance of at least ' num2str(T209.min_interframe_gui) ' us.'];
 					Error_Reason{end+1,1}='Please increase the pulse distance.';
-				elseif T209.pulse_was_limited
-					%not fatal, but the user gets less laser energy than requested
-					disp(['OPTOcam 20/9: laser pulse shortened from ' num2str(round(T209.laser_period_requested,1)) ' to ' num2str(round(T209.laser_period,1)) ' us, so that both pulses still fit into their frames.'])
-					disp('Increase the pulse distance if you need more laser energy.')
 				end
+				%No warning when the pulse length is capped: "Laser energy in %" means a fraction of the
+				%maximum pulse length that is POSSIBLE for the current pulse distance and camera. The
+				%resulting pulse length is shown next to "Pulse length:" in the GUI anyway.
 				if OPTOcam_settings_check == 1
 					gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK');
 					acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser

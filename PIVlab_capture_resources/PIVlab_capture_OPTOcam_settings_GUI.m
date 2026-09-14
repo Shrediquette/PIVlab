@@ -161,6 +161,10 @@ try
     end
 catch
 end
+%% the bit depth changes the RAM needed per image pair: refresh the red/white image amount box
+if ~isequal(retr('capturing'),1) %image_amount_Callback calls imaqreset, which would kill a running preview
+	acquisition.image_amount_Callback
+end
 close (fh)
 
 

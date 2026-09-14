@@ -190,6 +190,11 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             gui.put('cameraParams',[]);
             gui.put('cam_selected_target_images',[]);
 
+            % the ROI changes the RAM needed per image pair: refresh the red/white image amount box
+            if ~isequal(gui.retr('capturing'),1) %image_amount_Callback calls imaqreset, which would kill a running preview
+                acquisition.image_amount_Callback
+            end
+
             if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')
                 %% jetzt nochmal mit finalen einstellungen bild capturen zum messen der framerate...
                 %Camera fps

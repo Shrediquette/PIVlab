@@ -1,4 +1,4 @@
-function [OutputError,OPTOcam_vid,frame_nr_display] = PIVlab_capture_OPTOcam_20_9_synced_start(nr_of_images,ROI_OPTOcam,frame_rate,bitmode,exposure1)
+function [OutputError,OPTOcam_vid,frame_nr_display,max_pair_rate] = PIVlab_capture_OPTOcam_20_9_synced_start(nr_of_images,ROI_OPTOcam,frame_rate,bitmode,exposure1)
 % Prepare the OPTOcam 20/9 for synced double-frame PIV capture using the sensor's
 % native double-frame (mvPivShutter) mode. ONE external trigger on Line4 makes the
 % sensor expose frame A (short, = exposure1) then frame B (long, automatic), i.e. one
@@ -7,14 +7,14 @@ function [OutputError,OPTOcam_vid,frame_nr_display] = PIVlab_capture_OPTOcam_20_
 % nr_of_images*2 frames (A,B,A,B,...), saved later as _A/_B pairs.
 %
 % frame_rate here is the image-PAIR rate (pairs/s), consistent with the fps popup.
-%
-% NOTE (to verify/tune on the real rig via Line0=ExposureActive vs Line4=trigger):
-%   - that one Line4 trigger yields exactly 2 frames, and that frame order is A(1st),B(2nd)
-%   - the exact value of exposure1 / pulse-timing for the desired pulse separation
+% max_pair_rate is the highest achievable pair rate for the current ROI / bit depth (pairs/s),
+% read from the camera BEFORE the double-frame mode is enabled (see below); the caller
+% must use this value and not query mvResultingFrameRate itself.
 hgui=getappdata(0,'hgui');
 crosshair_enabled = getappdata(hgui,'crosshair_enabled'); %#ok<NASGU>
 sharpness_enabled = getappdata(hgui,'sharpness_enabled'); %#ok<NASGU>
 OutputError=0;
+max_pair_rate=inf;
 
 %% Prepare camera
 imaq_error=0;
@@ -74,7 +74,7 @@ elseif imaq_error==3
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Camera not found! Is it connected?','modal');
 end
 if imaq_error~=0
-    OutputError=1; OPTOcam_vid=[]; frame_nr_display=[];
+    OutputError=1; OPTOcam_vid=[]; frame_nr_display=[]; max_pair_rate=inf;
     return
 end
 disp(['Found camera: ' OPTOcam_name])
@@ -112,30 +112,6 @@ set(PIVlab_axis,'ytick',[])
 set(PIVlab_axis,'xtick',[])
 colorbar(PIVlab_axis)
 
-%% double-frame (mvPivShutter) + hardware trigger on Line4
-triggerconfig(OPTOcam_vid, 'hardware');
-OPTOcam_settings.Source.mvShutterMode  = 'mvPivShutter'; %sensor-native double frame (one trigger -> pair)
-OPTOcam_settings.Source.ExposureMode   = 'Timed';
-OPTOcam_settings.Source.TriggerSelector= 'FrameStart';
-OPTOcam_settings.Source.TriggerSource  = 'Line4';       %external trigger input from the synchronizer
-OPTOcam_settings.Source.TriggerActivation = 'RisingEdge';
-OPTOcam_settings.Source.TriggerMode    = 'On';
-
-%% Line0 = ExposureActive output (used to measure timings/delays on the rig)
-OPTOcam_settings.Source.LineSelector = 'Line0';
-OPTOcam_settings.Source.LineSource   = 'ExposureActive';
-OPTOcam_settings.Source.LineInverter = 'False';
-
-%% first-frame (A) exposure.
-%The value is produced by the shared timing model (PIVlab_capture_OPTOcam_20_9_timing.m): it is
-%chosen so that laser pulse 1 fits into frame 1 AND so that the camera's exposure quantisation
-%stays predictable (the setting sits in the middle of a quantisation plateau).
-if nargin < 5 || isempty(exposure1)
-    exposure1 = 60; %us, lands in the minimum (123.5 us) frame-1 exposure plateau
-end
-exposure1 = max(7, min(2522, exposure1)); %settable ExposureTime range (measured on the rig)
-OPTOcam_settings.Source.ExposureTime = exposure1;
-
 %% ROI (0-based offset for the camera, like the pco/OPTOcam convention)
 ROI_OPTOcam=[ROI_OPTOcam(1)-1,ROI_OPTOcam(2)-1,ROI_OPTOcam(3),ROI_OPTOcam(4)];
 OPTOcam_vid.ROIPosition=ROI_OPTOcam;
@@ -150,14 +126,47 @@ if isempty (OPTOcam_gain)
 end
 OPTOcam_settings.Source.Gain = OPTOcam_gain;
 
-%% display timing information (max achievable pair rate for the current ROI/bit depth)
+%% first-frame (A) exposure.
+%The value is produced by the shared timing model (PIVlab_capture_OPTOcam_20_9_timing.m): it is
+%chosen so that laser pulse 1 fits into frame 1 AND so that the camera's exposure quantisation
+%stays predictable (the setting sits in the middle of a quantisation plateau).
+if nargin < 5 || isempty(exposure1)
+    exposure1 = 60; %us, lands in the minimum (123.5 us) frame-1 exposure plateau
+end
+exposure1 = max(7, min(2522, exposure1)); %settable ExposureTime range (measured on the rig)
+OPTOcam_settings.Source.mvShutterMode = 'mvGlobalShutter'; %single-frame mode for the frame-rate query below
+OPTOcam_settings.Source.ExposureMode  = 'Timed';
+OPTOcam_settings.Source.TriggerMode   = 'Off';
+OPTOcam_settings.Source.ExposureTime  = exposure1;
+
+%% maximum achievable pair rate for the current ROI / bit depth
+%mvResultingFrameRate is only re-evaluated by the camera in single-frame (mvGlobalShutter) mode.
+%Once mvPivShutter is active the node FREEZES at its last value (measured: exposure changes are
+%ignored, so it would still report the rate of the long live-image exposure). It is therefore
+%read here, with ROI/bit depth/exposure already applied but BEFORE the double-frame mode is
+%switched on. The value is the readout-limited single-frame rate; in double-frame mode the camera
+%delivers exactly that many single frames per second (measured), i.e. half as many image pairs.
 try
-    single_frame_fps = get(OPTOcam_vid.Source,'mvResultingFrameRate');
-    max_pair_rate = single_frame_fps/2; %2 frames per pair
+    max_pair_rate = get(OPTOcam_vid.Source,'mvResultingFrameRate')/2; %2 frames per image pair
     disp(['Maximum image-pair rate with current settings: ' num2str(round(max_pair_rate,1)) ' pairs/s.'])
 catch
+    max_pair_rate = inf;
 end
 disp(['Requested image-pair rate: ' num2str(frame_rate) ' pairs/s.']);
+
+%% double-frame (mvPivShutter) + hardware trigger on Line4
+triggerconfig(OPTOcam_vid, 'hardware');
+OPTOcam_settings.Source.mvShutterMode  = 'mvPivShutter'; %sensor-native double frame (one trigger -> pair)
+OPTOcam_settings.Source.TriggerSelector= 'FrameStart';
+OPTOcam_settings.Source.TriggerSource  = 'Line4';       %external trigger input from the synchronizer
+OPTOcam_settings.Source.TriggerActivation = 'RisingEdge';
+OPTOcam_settings.Source.TriggerMode    = 'On';
+OPTOcam_settings.Source.ExposureTime   = exposure1;     %re-apply: the mode switch clamps ExposureTime to its double-frame range
+
+%% Line0 = ExposureActive output (used to measure timings/delays on the rig)
+OPTOcam_settings.Source.LineSelector = 'Line0';
+OPTOcam_settings.Source.LineSource   = 'ExposureActive';
+OPTOcam_settings.Source.LineInverter = 'False';
 
 %% start acquisition (waiting for external triggers)
 OPTOcam_frames_to_capture = nr_of_images*2; %2 frames (A,B) per pair
@@ -168,6 +177,11 @@ if ~isinf(nr_of_images) %only start capturing if save box is ticked.
     start(OPTOcam_vid);
 end
 
+%Frames arrive as A,B,A,B... and frame B (long fixed exposure) is much brighter with ambient
+%light, so a plain preview would flicker. The callback shows frame A only (B via the A/B toggle),
+%see PIVlab_capture_OPTOcam_20_9_preview_update.m
+setappdata(image_handle_OPTOcam,'OPTOcam_20_9_ab_state',[]);
+setappdata(image_handle_OPTOcam,'UpdatePreviewWindowFcn',@PIVlab_capture_OPTOcam_20_9_preview_update);
 preview(OPTOcam_vid,image_handle_OPTOcam);
 if bitmode ==8
     caxis(PIVlab_axis,[0 2^8]); %workaround to force preview to show full data range
