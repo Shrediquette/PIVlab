@@ -112,8 +112,8 @@ handles.stereocheckbox = uicontrol(handles.multip01,'Style','checkbox','Value',0
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.loadimgsbutton = uicontrol(handles.multip01,'Style','pushbutton','String','Import images','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@import.loadimgsbutton_Callback,1,[]},'TooltipString','Load image data');
 
-%item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
-%handles.loadvideobutton = uicontrol(handles.multip01,'Style','pushbutton','String','Import video','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.loadvideobutton_Callback,'TooltipString','Load video file');
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
+handles.loadvideobutton = uicontrol(handles.multip01,'Style','pushbutton','String','Convert + import video','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.convertvideobutton_Callback,'TooltipString','Convert a video to lossless image files, then load them (time-resolved)');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 handles.loadsessionbutton = uicontrol(handles.multip01,'Style','pushbutton','String','Load session','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.load_session_Callback,'TooltipString','Load previously saved session file');
@@ -2213,8 +2213,17 @@ handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String','10
 item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
 handles.ac_pulselengthtxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pulse length: 0 µs','tag','ac_pulselengthtxt');
 
-item=[0 item(2)+item(4)+margin*0.2 parentitem(3) 1.1];
+item=[0 item(2)+item(4)+margin*0.2 parentitem(3)/2 1.1];
 handles.ac_enable_straddling_figure = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Timing graph','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_straddling_figure','TooltipString','Show a graph with the timing of camera and laser pulses','Callback', @acquisition.sync_settings_Callback);
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1.1];
+handles.ac_low_energy_mode = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Low energy mode','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_low_energy_mode','Value',0,'TooltipString',sprintf(['Pulse the laser at 100 Hz with the shortest pulse (1 µs) for alignment.\n' ...
+	'Synchronized PIV capture is disabled while active.\n\n' ...
+	'Average power at this duty cycle (peak -> average):\n' ...
+	'      5 W  ->  0.5 mW\n' ...
+	'    20 W  ->  2 mW\n' ...
+	'    40 W  ->  4 mW\n' ...
+	'  400 W  ->  40 mW']),'Callback', @acquisition.low_energy_mode_Callback);
 
 item=[0 item(2)+item(4)+margin*0.2 parentitem(3)/4*2 2];
 handles.ac_laserstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','N/A','tag','ac_laserstatus','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold','TooltipString','Status of the laser');
@@ -2454,25 +2463,25 @@ item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
 handles.calib_origincolor = uicontrol(handles.calib_markersetup,'Style','popupmenu','String',{'Black' 'White'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_origincolor','TooltipString','Color of the top left checker');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
-uicontrol(handles.calib_markersetup,'Style','text','String','Rows:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+uicontrol(handles.calib_markersetup,'Style','text','String','Nr. of rows:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_rows = uicontrol(handles.calib_markersetup,'Style','edit','String','23','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_rows','TooltipString','Amount of rows of the checkerboard');
+handles.calib_rows = uicontrol(handles.calib_markersetup,'Style','edit','String','14','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_rows','TooltipString','Amount of rows of the checkerboard');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
-uicontrol(handles.calib_markersetup,'Style','text','String','Columns:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+uicontrol(handles.calib_markersetup,'Style','text','String','Nr. of columns:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_columns = uicontrol(handles.calib_markersetup,'Style','edit','String','24','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_columns','TooltipString','Amount of columns of the checkerboard');
+handles.calib_columns = uicontrol(handles.calib_markersetup,'Style','edit','String','23','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_columns','TooltipString','Amount of columns of the checkerboard');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
-uicontrol(handles.calib_markersetup,'Style','text','String','Checker size:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+uicontrol(handles.calib_markersetup,'Style','text','String','Checker size (mm):','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
 handles.calib_checkersize = uicontrol(handles.calib_markersetup,'Style','edit','String','10','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_checkersize','TooltipString','Size of the checkers');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
-uicontrol(handles.calib_markersetup,'Style','text','String','Marker size:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+uicontrol(handles.calib_markersetup,'Style','text','String','Marker size (mm):','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
 handles.calib_markersize = uicontrol(handles.calib_markersetup,'Style','edit','String','8','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_markersize','TooltipString','Size of the markers');
@@ -2493,12 +2502,15 @@ handles.calib_dolivedetect = uicontrol(handles.calib_livedetection,'Style','chec
 %}
 item=[0 0 0 0];
 parentitem=get(handles.multip28, 'Position');
-item=[0 item(2)+item(4)+20+margin*2 parentitem(3) 5];
+item=[0 item(2)+item(4)+20+margin*2 parentitem(3) 7];
 handles.calib_generate = uipanel(handles.multip28, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Marker board generation','fontweight','bold');
 parentitem=get(handles.calib_generate, 'Position');
 item=[0 0 0 0];
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
+uicontrol(handles.calib_generate,'Style','text','String','Using the above settings','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
-item=[0 item(2)+margin / 4 parentitem(3) 1.5];
+
+item=[0 item(2)+item(4)+margin / 4 parentitem(3) 1.5];
 handles.calib_generateboard = uicontrol(handles.calib_generate,'Style','pushbutton','String','Generate Charuco board','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_generateboard_Callback,'TooltipString','Generate a suitable Charuco board');
 
 %% Marker board setup

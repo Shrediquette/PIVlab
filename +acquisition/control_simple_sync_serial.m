@@ -72,25 +72,46 @@ if alreadyconnected
             end
             writeline(serpo,send_string);
         elseif strcmpi(gui.retr('sync_type'),'oltSync')
-            camera_sub_type=gui.retr('camera_sub_type');
-            bitmode =gui.retr('OPTOcam_bits');
-            framerate=str2double(ac_fps_str(ac_fps_value));
-            f1exp_cam=gui.retr('f1exp_cam');
-            [~, pin_string,~,frame_time] = PIVlab_calc_oltsync_timings(camera_type,camera_sub_type,bitmode,framerate,f1exp_cam,pulse_sep,las_percent);
-            triggermode=gui.retr('oltSync_triggermode');
-            if isempty(triggermode)
-                triggermode='internal';
-                gui.put('oltSync_triggermode',triggermode)
+            low_energy_mode=gui.retr('low_energy_mode');
+            if isempty(low_energy_mode)
+                low_energy_mode=0;
+            end
+            if low_energy_mode==1
+                % laser decoupled from camera: send a fixed laser-only string
+                [frame_time, pin_string] = acquisition.low_energy_sequence();
+                triggerconfig=':0,0:'; %force internal trigger for alignment
+            else
+                camera_sub_type=gui.retr('camera_sub_type');
+                bitmode =gui.retr('OPTOcam_bits');
+                framerate=str2double(ac_fps_str(ac_fps_value));
+                f1exp_cam=gui.retr('f1exp_cam');
+                [~, pin_string,~,frame_time] = PIVlab_calc_oltsync_timings(camera_type,camera_sub_type,bitmode,framerate,f1exp_cam,pulse_sep,las_percent);
+                triggermode=gui.retr('oltSync_triggermode');
+                if isempty(triggermode)
+                    triggermode='internal';
+                    gui.put('oltSync_triggermode',triggermode)
+                end
+
+                if strcmpi(triggermode,'internal')
+                    triggerconfig=':0,0:';
+                elseif strcmpi(triggermode,'activehigh')
+                    triggerconfig=':2,0:';
+                elseif strcmpi(triggermode,'singlerising')
+                    triggerconfig=':1,0:';
+                elseif strcmpi(triggermode,'startrising')
+                    triggerconfig=':3,0:';
+                end
             end
 
-            if strcmpi(triggermode,'internal')
-                triggerconfig=':0,0:';
-            elseif strcmpi(triggermode,'activehigh')
-                triggerconfig=':2,0:';
-            elseif strcmpi(triggermode,'singlerising')
-                triggerconfig=':1,0:';
-            elseif strcmpi(triggermode,'startrising')
-                triggerconfig=':3,0:';
+            % validate the sequence locally before sending (mirrors firmware)
+            [seq_ok, seq_msg, seq_detail] = acquisition.validate_oltsync_sequence(frame_time, pin_string);
+            if ~seq_ok
+                set(handles.ac_laserstatus,'BackgroundColor',[1 1 0]); %yellow=warning
+                set(handles.ac_laserstatus,'String','!Sequence!');drawnow;
+                disp(['Invalid oltSync sequence: ' seq_detail]); %technical reason for debugging
+                gui.custom_msgbox('error',getappdata(0,'hgui'),'Laser timing problem',seq_msg,'modal');
+                serial_answer='Sequence:Error';
+                return
             end
             send_string=['TALKINGTO:' laser_device_id ':sequence:' int2str(frame_time) triggerconfig pin_string];
 

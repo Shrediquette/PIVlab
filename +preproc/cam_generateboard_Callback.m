@@ -108,7 +108,11 @@ I=I.*QR_background;
 
 textx=round(imageSize(2)/2);
 texty=round(marginsize/2);
-I = insertText(I,[textx,texty],[originCheckerColor '; ' markerFamily '; ' num2str(patternDims(1)) 'x' num2str(patternDims(2)) '; ' num2str(checkerSize) 'mm/' num2str(markerSize) 'mm'],'FontSize',round(checkerSize*patternDims(2)/2.5),'FontColor','black','TextBoxColor','white','BoxOpacity',0,'Font','Arial Black','AnchorPoint','Center');
+fntsz=round(checkerSize*patternDims(2)/2.5);
+if fntsz > 200
+    fntsz=200;
+end
+I = insertText(I,[textx,texty],[originCheckerColor '; ' markerFamily '; ' num2str(patternDims(1)) 'x' num2str(patternDims(2)) '; ' num2str(checkerSize) 'mm/' num2str(markerSize) 'mm'],'FontSize',fntsz,'FontColor','black','TextBoxColor','white','BoxOpacity',0,'Font','Arial Black','AnchorPoint','Center');
 gui.toolsavailable(1)
 figure;imshow(I)
 [file, location] = uiputfile('*.tif','Save charuco board as...',[originCheckerColor '_' markerFamily '_' num2str(patternDims(1)) 'x' num2str(patternDims(2)) '_' num2str(checkerSize) 'mm_' num2str(markerSize) 'mm_' num2str(dpi) 'dpi.tif']);

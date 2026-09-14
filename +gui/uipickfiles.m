@@ -841,10 +841,16 @@ setpref('uipickfiles','figure_position',fig_pos)
                 end
                 i_filesize=round(info(1).FileSize/1024/1014,1);
                 i_width=info(1).Width;
-                i_height=info(1).Height;
-                delete(findobj('Tag','fileinfo'));
-                text('String',{[num2str(i_width) '*' num2str(i_height) ' - ' num2str(i_bits)  ' bit - ' num2str(i_filesize) ' MB' ],[i_compression ' - ' num2str(i_frames) ' ' framestring, ', ' dbl_img]},'Position',[1 1],'parent',ah1,'HorizontalAlignment','left','VerticalAlignment','top','BackgroundColor','k','Color','w','Margin',0.1,'Clipping','on','LineStyle','none','Interpreter','none','FontSize',8,'Tag','fileinfo')
-            end
+				i_height=info(1).Height;
+				delete(findobj('Tag','fileinfo'));
+				text('String',{[num2str(i_width) '*' num2str(i_height) ' - ' num2str(i_bits)  ' bit - ' num2str(i_filesize) ' MB' ],[i_compression ' - ' num2str(i_frames) ' ' framestring, ', ' dbl_img]},'Position',[1 1],'parent',ah1,'HorizontalAlignment','left','VerticalAlignment','top','BackgroundColor','k','Color','w','Margin',0.1,'Clipping','on','LineStyle','none','Interpreter','none','FontSize',8,'Tag','fileinfo')
+				if (isempty (i_compression) || ~strcmpi(i_compression,'Uncompressed')) && ~strcmpi(i_compression,'packbits')
+					temp_img_size=size(temp_img(:,:,1));
+					text('String','Warning: Compressed data','Position',[temp_img_size(2) temp_img_size(1)],'parent',ah1,'HorizontalAlignment','right','VerticalAlignment','bottom','BackgroundColor','r','Color','k','Margin',0.1,'Clipping','on','LineStyle','none','Interpreter','none','FontSize',12,'Tag','fileinfo2','FontWeight','bold')
+				else
+					delete(findobj('Tag','fileinfo2'));
+				end
+			end
             ylabel('enhanced image display')
         catch
             %keyboard

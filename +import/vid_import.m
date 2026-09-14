@@ -1,7 +1,14 @@
 % Video file selection, startframe, endframe and skipping of frames for PIVlab
-function vid_import(pathname)
+% convert_mode = 0 (default): legacy on-the-fly video reading (deprecated).
+% convert_mode = 1: extract the selected frames to lossless grayscale image
+%                   files on disk, so they can be loaded like a normal image
+%                   sequence (recommended, keeps parallel processing etc.).
+function vid_import(pathname,convert_mode)
 if nargin < 1
 	pathname=pwd;
+end
+if nargin < 2 || isempty(convert_mode)
+	convert_mode=0;
 end
 
 big_scroll = 30;
@@ -14,7 +21,14 @@ frame_selection=[];
 filename=[];
 video_pathname=[];
 video_loaded = 0;
+is_scrolling = false;      %re-entrancy guard: discard new scroll events while one is in progress
+cancel_conversion = false; %set by the cancel button during frame conversion
 %% Make figure
+%NOTE: do NOT set 'BusyAction','cancel' on this figure. It would also discard
+%the WindowButtonUpFcn (button_up) event when it arrives during a slow frame
+%read, leaving 'click' stuck at 1 so the slider stays glued to the pointer
+%after release. Stale scrollbar events are instead dropped by the
+%'is_scrolling' re-entrancy guard in on_click (see below).
 fig_handle = figure('MenuBar','none', 'Toolbar','none', 'Units','characters', 'WindowButtonDownFcn',@button_down, 'WindowButtonUpFcn',@button_up,  'WindowButtonMotionFcn', @on_click,'KeyPressFcn', @key_press,'Name','Video preview','numbertitle','off','Visible','off','Windowstyle','modal','resize','off','dockcontrol','off');
 fig_handle.Position(3)=100;
 fig_handle.Position(4)=30;
@@ -49,7 +63,14 @@ item=[0 item(2)+item(4)+margin parentitem(3)/3*2 1];
 handles.text4 = uicontrol(fig_handle,'Style','text','units', 'characters','Horizontalalignment', 'right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Preview frame nr.: ');
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
-handles.importvideo = uicontrol(fig_handle,'Style','pushbutton','String','Import video frames','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import_Callback,'Tag','importvideo','TooltipString','Import video frames','enable','off');
+if convert_mode==1
+	importbutton_label='Convert & import frames';
+	importbutton_tooltip='Convert the selected frames to lossless grayscale image files, then load them';
+else
+	importbutton_label='Import video frames';
+	importbutton_tooltip='Import video frames';
+end
+handles.importvideo = uicontrol(fig_handle,'Style','pushbutton','String',importbutton_label,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import_Callback,'Tag','importvideo','TooltipString',importbutton_tooltip,'enable','off');
 item=[0 item(2)+item(4)+margin parentitem(3) 13];
 axes_handle=axes('Parent',fig_handle,'units','characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 axis image;
@@ -87,15 +108,6 @@ play_timer = timer('TimerFcn',@play_timer_callback, 'ExecutionMode','fixedRate',
 scroll_bar_handles = [scroll_axes_handle; scroll_handle];
 scroll_func = @scroll;
 video_loaded=0;
-
-batchModeActive=gui.retr('batchModeActive');
-if isempty (batchModeActive) || batchModeActive == 0
-	if ~ispref('PIVlab_ad','video_warn') || getpref('PIVlab_ad','video_warn') == 0
-		pause(0.1);drawnow
-		gui.custom_msgbox('msg',getappdata(0,'hgui'),'PIVlab is better with image files','Hint: If possible you should always prefer image files over video files, e.g. by converting them to a lossless format before importing in PIVlab.','modal',{'OK'},'OK');
-		setpref('PIVlab_ad','video_warn',1)
-	end
-end
 
 
 	function startframe_change (~,~,~)
@@ -162,6 +174,12 @@ end
 		[filename,video_pathname] = uigetfile({'*.mp4;*.avi;*.mpg;*.mpeg;*.wmv;*.mov','Video Files (*.mp4,*.avi,*.mpg,*.mpeg,*.wmv,*.mov)';'*.*','All Files'},'Video File Selector',pathname);
 		if ~isequal(filename,0)
 			video_loaded = 1;
+			%Opening the video (VideoReader + counting frames + first decode) can
+			%take several seconds. Show the user that something is happening.
+			set(fig_handle,'Pointer','watch');
+			set(handles.selectvideo,'String','Opening video...','Enable','off');
+			set(frametext,'String',['Opening "' filename '", please wait...']);
+			drawnow
 			% videofile='xylophone.mpg';
 			success=0;
 			try
@@ -192,10 +210,13 @@ end
 					set(handles.skipframe,'enable','on')
 				end
 			else
-                gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',{'Matlab could not import this video file. Most likely, the video codec cannot be used by Matlab. This is not a PIVlab-related issue. The exact error message is: ' sprintf('\n') ME.identifier sprintf('\n') ME.message},'modal');
+                modal_safe_msgbox('error',getappdata(0,'hgui'),'Error',{'Matlab could not import this video file. Most likely, the video codec cannot be used by Matlab. This is not a PIVlab-related issue. The exact error message is: ' sprintf('\n') ME.identifier sprintf('\n') ME.message},'modal');
 			end
+			%restore the "Select video file" button and normal cursor
+			set(fig_handle,'Pointer','arrow');
+			set(handles.selectvideo,'String','Select video file','Enable','on');
 		end
-		
+
 	end
 
 
@@ -257,27 +278,26 @@ end
 	function on_click(src, event)  %#ok, unused arguments
 		if video_loaded
 			if click == 0, return; end
-			
+			if is_scrolling, return; end %already busy reading a frame -> discard this event instead of queueing it
+			is_scrolling = true;
+
 			%get x-coordinate of click
 			%set(fig_handle, 'Units', 'normalized');
 			click_point = get(fig_handle, 'CurrentPoint')/fig_size(3);
 			%set(fig_handle, 'Units', 'pixels');
 			x = click_point(1);
-			
+
 			%get corresponding frame number
 			new_f = floor(1 + x * num_frames);
-			
-			if new_f < 1 || new_f > num_frames, return; end  %outside valid range
-			
-			if new_f ~= f  %don't redraw if the frame is the same (to prevent delays)
-				if new_f<num_frames
-					try
-						scroll(new_f);
-					catch
-					end
+
+			if new_f >= 1 && new_f <= num_frames && new_f ~= f && new_f < num_frames
+				%don't redraw if the frame is the same (to prevent delays)
+				try
+					scroll(new_f);
+				catch
 				end
-				
 			end
+			is_scrolling = false;
 		end
 	end
 
@@ -339,6 +359,10 @@ end
 	function import_Callback(~,~,~)
 		fig_handle=getappdata(0,'fig_handle');
 		hgui=getappdata(0,'hgui');
+		if convert_mode==1
+			convert_to_disk_Callback();
+			return
+		end
 		%Video must haven even nr. of frames, so frames can be arranged in pairs
 		frame_selection_out=frame_selection(1);
 		for i= 2:numel(frame_selection)
@@ -366,5 +390,125 @@ end
 		setappdata(hgui,'video_frame_selection',frame_selection_out);
 		setappdata(hgui,'video_selection_done',1);
 		close(fig_handle)
+	end
+
+	function convert_to_disk_Callback()
+		fig_handle=getappdata(0,'fig_handle');
+		hgui=getappdata(0,'hgui');
+		[~,videoname,~]=fileparts(filename);
+		outdir=fullfile(video_pathname,[videoname '_frames']);
+
+		%Warn if the output folder already contains extracted frames.
+		if exist(outdir,'dir')
+			existing=dir(fullfile(outdir,'*.tif'));
+			if ~isempty(existing)
+				answer=modal_safe_msgbox('quest',hgui,'Folder exists',['The folder' newline outdir newline 'already contains ' num2str(numel(existing)) ' tif file(s).' newline newline 'Overwrite / add frames there?'],'modal',{'Yes','Cancel'},'Cancel');
+				if ~strcmp(answer,'Yes')
+					return
+				end
+			end
+		else
+			[mkok,mkmsg]=mkdir(outdir);
+			if ~mkok
+				modal_safe_msgbox('error',hgui,'Error',['Could not create output folder:' newline outdir newline mkmsg],'modal');
+				return
+			end
+		end
+
+		nframes=numel(frame_selection);
+		filelist=cell(nframes,1);
+		cancel_conversion=false;
+		%Turn the (now unused) "Select video file" button into a Cancel button
+		%so the user can abort the slow conversion. Video decoding is inherently
+		%slow (MATLAB VideoReader), so aborting must always be possible.
+		set(handles.selectvideo,'String','Cancel conversion','Enable','on','Callback',@cancel_Callback);
+		set(handles.importvideo,'enable','off','String','Converting...');
+		set([handles.startframe handles.endframe handles.skipframe],'Enable','off');
+		for i=1:nframes
+			if cancel_conversion, break; end
+			try
+				fr=read(v,frame_selection(i));
+			catch
+				continue
+			end
+			if size(fr,3)>1 %color (or multi-channel) frame -> grayscale
+				fr=rgb2gray(fr(:,:,1:3));
+			end
+			outfile=fullfile(outdir,sprintf('%s_%06d.tif',videoname,frame_selection(i)));
+			imwrite(fr,outfile,'tif','Compression','none');
+			filelist{i}=outfile;
+			set(frametext,'String',['Converting frame ' int2str(i) ' / ' int2str(nframes) ' (' int2str(100*i/nframes) '%)']);
+			drawnow %full drawnow so the Cancel button click is processed promptly
+		end
+
+		%Restore the "Select video file" button.
+		set(handles.selectvideo,'String','Select video file','Enable','on','Callback',{@select_Callback,pathname});
+
+		if cancel_conversion
+			%Aborted: return to the preview so the user can adjust and retry.
+			%Partially written frames are left in the folder (the overwrite
+			%prompt will handle them on the next attempt).
+			set(frametext,'String','Conversion cancelled.');
+			set(handles.importvideo,'enable','on','String',importbutton_label);
+			set([handles.startframe handles.endframe handles.skipframe],'Enable','on');
+			return
+		end
+
+		filelist=filelist(~cellfun(@isempty,filelist));
+		if isempty(filelist)
+			modal_safe_msgbox('error',hgui,'Error','No frames could be read from this video file.','modal');
+			return
+		end
+
+		setappdata(hgui,'converted_frames_dir',outdir);
+		setappdata(hgui,'converted_frames_list',filelist);
+		setappdata(hgui,'video_selection_done',0); %not using on-the-fly video reading
+		setappdata(hgui,'video_convert_done',1);
+		close(fig_handle)
+	end
+
+	function cancel_Callback(~,~,~)
+		cancel_conversion=true;
+	end
+
+	function answer=modal_safe_msgbox(type,~,windowtitle,message,~,options,default)
+		%gui.custom_msgbox parents its dialog to the main PIVlab window, which
+		%then hides BEHIND this (modal) video preview window. Instead we use
+		%MATLAB's stand-alone classic dialogs (questdlg / errordlg): they create
+		%their own top-level modal window that appears ON TOP of the preview.
+		%Signature is kept compatible with gui.custom_msgbox (target/modal args
+		%are ignored here).
+		answer=[];
+		%Honour PIVlab's headless/test mode (same behaviour as gui.custom_msgbox).
+		if isappdata(0,'PIVlabTestMode') && isequal(getappdata(0,'PIVlabTestMode'),true)
+			if nargin>=7 && ~isempty(default)
+				answer=default;
+			elseif nargin>=6 && ~isempty(options)
+				answer=options{1};
+			end
+			return
+		end
+		%Drop the preview out of modal state so the dialog can grab focus.
+		ws='modal';
+		if isvalid(fig_handle)
+			ws=get(fig_handle,'WindowStyle');
+			set(fig_handle,'WindowStyle','normal');
+		end
+		switch type
+			case 'quest'
+				if nargin<7 || isempty(default), default=options{1}; end
+				if numel(options)==2
+					answer=questdlg(message,windowtitle,options{1},options{2},default);
+				elseif numel(options)==1
+					answer=questdlg(message,windowtitle,options{1},default);
+				else
+					answer=questdlg(message,windowtitle,options{1},options{2},options{3},default);
+				end
+			otherwise %'error','warn','msg','success'
+				uiwait(errordlg(message,windowtitle,'modal'));
+		end
+		if isvalid(fig_handle)
+			set(fig_handle,'WindowStyle',ws);
+		end
 	end
 end

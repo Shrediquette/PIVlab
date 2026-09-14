@@ -307,6 +307,7 @@ if strcmpi(config_string,'Webcam demo (no synchronizer)')
     handles.ac_interpuls.Enable = 'off';
 	handles.ac_power.Enable = 'off';
 	handles.ac_enable_straddling_figure.Enable = 'off';
+	handles.ac_low_energy_mode.Enable = 'off';
 	handles.ac_lasertoggle.Enable = 'off';
 	handles.ac_enable_ext_trigger.Enable = 'off';
 	handles.ac_calibBinning.Enable = 'off';
@@ -324,6 +325,7 @@ else % not the webcam --> enable all controls
 	handles.ac_interpuls.Enable = 'on';
 	handles.ac_power.Enable = 'on';
 	handles.ac_enable_straddling_figure.Enable = 'on';
+	handles.ac_low_energy_mode.Enable = 'on';
 	handles.ac_lasertoggle.Enable = 'on';
 	handles.ac_enable_ext_trigger.Enable = 'on';
 	handles.ac_calibBinning.Enable = 'on';

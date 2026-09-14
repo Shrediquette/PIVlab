@@ -42,23 +42,32 @@ if ~isempty(C)
 		if strcmpi(sync_setting,'Laser:enable')
 			set(handles.ac_laserstatus,'BackgroundColor',[0 1 0]); %green = on
 			set(handles.ac_laserstatus,'String','Laser ON');
-			%calculate pulse timing
-			pulse_sep=str2double(get(handles.ac_interpuls,'String'));
-			camera_sub_type=gui.retr('camera_sub_type');
-			camera_type=gui.retr('camera_type');
-			bitmode =gui.retr('OPTOcam_bits');
-			ac_fps_value=get(handles.ac_fps,'Value');
-			ac_fps_str=get(handles.ac_fps,'String');
-			framerate=str2double(ac_fps_str(ac_fps_value));
-			f1exp_cam=gui.retr('f1exp_cam');
-			las_percent=str2double(get(handles.ac_power,'String'));
-			[timing_table, ~,~,~] = PIVlab_calc_oltsync_timings(camera_type,camera_sub_type,bitmode,framerate,f1exp_cam,pulse_sep,las_percent);
-			pulse_length=timing_table{2,2}-timing_table{2,1};
+			low_energy_mode=gui.retr('low_energy_mode');
+			if isempty(low_energy_mode)
+				low_energy_mode=0;
+			end
+			if low_energy_mode==1
+				%low energy mode uses a fixed 1 us laser-only pulse, no camera timing
+				pl_msg='Pulse length: 1 µs (low energy)';
+			else
+				%calculate pulse timing
+				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
+				camera_sub_type=gui.retr('camera_sub_type');
+				camera_type=gui.retr('camera_type');
+				bitmode =gui.retr('OPTOcam_bits');
+				ac_fps_value=get(handles.ac_fps,'Value');
+				ac_fps_str=get(handles.ac_fps,'String');
+				framerate=str2double(ac_fps_str(ac_fps_value));
+				f1exp_cam=gui.retr('f1exp_cam');
+				las_percent=str2double(get(handles.ac_power,'String'));
+				[timing_table, ~,~,~] = PIVlab_calc_oltsync_timings(camera_type,camera_sub_type,bitmode,framerate,f1exp_cam,pulse_sep,las_percent);
+				pulse_length=timing_table{2,2}-timing_table{2,1};
 
-			pl_msg=['Pulse length: ' int2str(pulse_length) ' µs'];
+				pl_msg=['Pulse length: ' int2str(pulse_length) ' µs'];
 
-			if round(pulse_length) < 1 %Rounding for this test, because string sent to Sync is int2str
-				pl_msg='ERROR pulse length! Increase energy.';
+				if round(pulse_length) < 1 %Rounding for this test, because string sent to Sync is int2str
+					pl_msg='ERROR pulse length! Increase energy.';
+				end
 			end
 			set (handles.ac_pulselengthtxt,'String', pl_msg);
 			disp (pl_msg)

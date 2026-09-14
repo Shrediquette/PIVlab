@@ -57,11 +57,15 @@ else
 	idx_in=strfind(unitpar,'in '); if ~isempty(idx_in); unitpar=unitpar(idx_in(end)+3:end); end
 
 	if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0 %if there is data in the current frame
-		maptoget=plot.rescale_maps_nan(maptoget,0,currentframe);
+		%vector direction is a circular quantity: it must be interpolated via
+		%cos/sin, otherwise bilinear interpolation ramps straight through the
+		%+-180 deg branch cut and invents angles that exist nowhere in the data.
+		is_it_vector_direction = double(extractwhat==9);
+		maptoget=plot.rescale_maps_nan(maptoget,is_it_vector_direction,currentframe);
 		if strcmp(extract_type,'extract_poly_area') || strcmp(extract_type,'extract_rectangle_area') || strcmp(extract_type,'extract_circle_area')
 			BW=extract.convert_roi_to_binary(xposition,yposition,extract_type,size(maptoget));
 			area=extract.get_area_of_selection(BW,maptoget,1);
-			mean_value=extract.get_mean_of_selection(BW,maptoget);
+			mean_value=extract.get_mean_of_selection(BW,maptoget,is_it_vector_direction);
 			area_integral=extract.get_integral_of_selection(BW,maptoget);
 			returned_header = {strjoin({'Area (' distunit ')'},''),strjoin({'Mean (' unitpar ')'},'') , strjoin({'Integral (' unitpar '*' distunit ')'},'')};
 			returned_data = {area, mean_value, area_integral};
@@ -86,7 +90,7 @@ else
 			for i=1:size(extraction_coordinates_x,2)
 				BW = poly2mask(extraction_coordinates_x(:,i),extraction_coordinates_y(:,i),size(maptoget,1),size(maptoget,2));
 				area=extract.get_area_of_selection(BW,maptoget,1);
-				mean_value=extract.get_mean_of_selection(BW,maptoget);
+				mean_value=extract.get_mean_of_selection(BW,maptoget,is_it_vector_direction);
 				area_integral=extract.get_integral_of_selection(BW,maptoget);
 				old_string=get (handles.area_results,'String');
 				returned_header = {strjoin({'Circle Nr.'},''),strjoin({'Area (' distunit ')'},''),strjoin({'Mean (' unitpar ')'},'') , strjoin({'Integral (' unitpar '*' distunit ')'},'')};

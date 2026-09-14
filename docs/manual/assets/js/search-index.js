@@ -327,10 +327,34 @@ window.MANUAL_SEARCH = [
     text: "derive parameters vorticity magnitude divergence q criterion shear rate strain rate line integral convolution lic vector direction correlation coefficient uncertainty display parameter"
   },
   {
+    title: "How each parameter is computed (equations)",
+    href: "pages/derive-spatial.html", hash: "equations",
+    section: "Plot & post-processing",
+    text: "equation equations formula formulas definition how computed calculated math derivative partial derivative gradient calibrated grid units"
+  },
+  {
+    title: "Equations: magnitude, u, v and vector direction",
+    href: "pages/derive-spatial.html", hash: "eq-velocity",
+    section: "Plot & post-processing",
+    text: "magnitude equation speed vector length u component v component vector direction angle atan2 atan2d degrees clockwise counter-clockwise orientation zero degrees points right axis direction"
+  },
+  {
+    title: "Equations: vorticity, divergence, shear, strain, Q criterion",
+    href: "pages/derive-spatial.html", hash: "eq-gradient",
+    section: "Plot & post-processing",
+    text: "vorticity equation curl sign convention divergence equation shear rate rate-of-strain tensor magnitude simple strain rate q criterion vortex identification rotation strain gradient matlab"
+  },
+  {
+    title: "Equations: correlation coefficient, uncertainty and LIC",
+    href: "pages/derive-spatial.html", hash: "eq-analysis",
+    section: "Plot & post-processing",
+    text: "correlation coefficient pearson deformed interrogation window last pass uncertainty particle image disparity sciacchitano wieneke scarano image matching line integral convolution lic cabral leedom reference citation"
+  },
+  {
     title: "Data smoothing (2D, temporal)",
     href: "pages/derive-spatial.html", hash: "smoothing",
     section: "Plot & post-processing",
-    text: "data smoothing 2d time moving average smoothn damien garcia temporal window bartlett"
+    text: "data smoothing 2d time moving average smoothn damien garcia temporal window bartlett smoothing before derivatives noise amplification"
   },
   {
     title: "Subtracting a background flow",

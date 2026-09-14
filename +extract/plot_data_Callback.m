@@ -69,8 +69,19 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 					return
 				end
 				maptoget=derived{extractwhat+1,currentframe};
-				maptoget=plot.rescale_maps_nan(maptoget,0,currentframe);
-				[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
+				if extractwhat==9 %vector direction is a circular quantity
+					%both the upsampling and the sampling along the polyline
+					%have to happen in cos/sin space, otherwise the
+					%interpolation ramps straight through the +-180 deg branch
+					%cut and invents angles that exist nowhere in the data.
+					maptoget=plot.rescale_maps_nan(maptoget,1,currentframe);
+					[cx, cy, c_cos] = improfile(cosd(maptoget),extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
+					c_sin = improfile(sind(maptoget),extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
+					c = atan2d(c_sin,c_cos);
+				else
+					maptoget=plot.rescale_maps_nan(maptoget,0,currentframe);
+					[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
+				end
 				distance=linspace(0,length,size(c,1))';
 			case {12,13} %tangent, normal
 				if ~strcmp(extract_type,'extract_circle_series')

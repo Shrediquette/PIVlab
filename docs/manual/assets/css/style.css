@@ -225,6 +225,19 @@ figcaption { font-size: 13px; color: var(--text-soft); margin-top: .6em; }
 .warn { border-left-color: #d9902a; }
 .note strong, .tip strong, .warn strong { display: block; margin-bottom: 2px; }
 
+/* Display equations. Long formulas scroll inside their own box so the page
+   body never scrolls horizontally. */
+.eq {
+  font-family: var(--mono); font-size: .95em; line-height: 1.7;
+  background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 16px; margin: 1.2em 0; overflow-x: auto; white-space: nowrap;
+}
+.eq em { font-style: italic; }
+.eq-where {
+  font-size: .88em; color: var(--text-soft); margin: -.7em 0 1.4em; padding-left: 2px;
+}
+.eq-where em { font-family: var(--mono); font-style: italic; }
+
 /* Two-column: text beside a panel screenshot */
 .split { display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: start; }
 .split figure { margin: .3em 0; }

@@ -19,6 +19,13 @@ if strcmp(who,'multip25') %mask panel is active --> enable mask editing
 else
 	set(handles.mask_edit_mode,'Value',2)
 end
+%% Force low energy mode OFF whenever the Image Acquisition panel is shown
+if strcmp(who,'multip24')
+	if isfield(handles,'ac_low_energy_mode') && get(handles.ac_low_energy_mode,'Value')==1
+		set(handles.ac_low_energy_mode,'Value',0);
+		acquisition.low_energy_mode_Callback(handles.ac_low_energy_mode);
+	end
+end
 %% Display / Hide mode buttons when Input Data panel is active
 if ~strcmp(who,'multip01')
 	delete(findobj(getappdata(0,'hgui'),'Tag','mode_btn_basic'));

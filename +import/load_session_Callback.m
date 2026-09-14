@@ -291,7 +291,10 @@ elseif valid_session_file == 1
         disp('couldnt set cam undistortion GUI elements for load_session')
     end
     %stereo settings
+    try
     handles.stereocheckbox.Value=vars.stereomode;
+    catch
+    end
     %data smoothing (popupmenu mode + parameters); guarded for older sessions
     try
         if isfield(vars,'smooth_mode_val')
