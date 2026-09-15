@@ -82,7 +82,11 @@ if alreadyconnected
                 triggerconfig=':0,0:'; %force internal trigger for alignment
             else
                 camera_sub_type=gui.retr('camera_sub_type');
-                bitmode =gui.retr('OPTOcam_bits');
+                if strcmp(camera_type,'OPTOcam_20_9')
+                    bitmode =gui.retr('OPTOcam_20_9_bits'); %the 20/9 has its own bit depth setting (its timing depends on it!)
+                else
+                    bitmode =gui.retr('OPTOcam_bits');
+                end
                 framerate=str2double(ac_fps_str(ac_fps_value));
                 f1exp_cam=gui.retr('f1exp_cam');
                 [~, pin_string,~,frame_time] = PIVlab_calc_oltsync_timings(camera_type,camera_sub_type,bitmode,framerate,f1exp_cam,pulse_sep,las_percent);

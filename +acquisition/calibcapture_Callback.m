@@ -71,6 +71,7 @@ if ready==1
     if capture_ok==1 && capturing == 0
         gui.put('capturing',1);
         gui.toolsavailable(0,'Starting camera...')
+        drawnow;
         %set(handles.ac_calibsave,'enable','on')
         set(handles.ac_calibcapture,'enable','on')
         set(handles.ac_serialstatus,'enable','on')
@@ -95,6 +96,8 @@ if ready==1
             [errorcode, caliimg]=PIVlab_capture_basler_calibration_image(inf,expos,ac_ROI_general);
         elseif strcmp(camera_type,'OPTOcam')
             [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(inf,expos,ac_ROI_general);
+        elseif strcmp(camera_type,'OPTOcam_20_9')
+            [errorcode, caliimg]=PIVlab_capture_OPTOcam_20_9_calibration_image(inf,expos,ac_ROI_general);
         elseif strcmp(camera_type,'OPTRONIS')
             camera_sub_type=gui.retr('camera_sub_type');
             if endsWith(camera_sub_type, '-bitflow')

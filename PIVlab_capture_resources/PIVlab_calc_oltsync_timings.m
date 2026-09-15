@@ -5,8 +5,8 @@ function [timing_table, pin_string, cam_delay, frame_time] = PIVlab_calc_oltsync
 %f1exp_cam is calculated as      floor(pulse_sep*las_percent/100)+1; %+1 because in the snychronizer, the cam expo is started 1 us before the ld pulse
 %it has therefore the length of the laser pulse
 
-if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')
-	camera_principle='double_shutter';
+if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp(camera_type,'OPTOcam_20_9')
+	camera_principle='double_shutter'; %OPTOcam 20/9 uses a sensor-native double frame (like the pco cameras)
 else
 	camera_principle='normal_shutter';
 end
@@ -27,6 +27,15 @@ end
 if strcmp(camera_type,'pco_pixelfly')
 	blind_time=2;
 	cam_delay=3;
+end
+
+if strcmp(camera_type,'OPTOcam_20_9')
+	%All OPTOcam 20/9 double-frame timing constants (measured on Line0 = ExposureActive vs
+	%Line4 = trigger) and the pulse placement live in ONE place, so that the synchronizer
+	%timing and the camera exposure setting can never drift apart:
+	T209 = PIVlab_capture_OPTOcam_20_9_timing(bitrate,interframe,laser_energy);
+	blind_time = T209.gap;      %gap between frame 1 and frame 2 [us] (measured, constant)
+	cam_delay  = T209.D_min;    %minimum (best case) trigger delay [us] (measured)
 end
 
 if strcmp(camera_type,'pco_panda')
@@ -104,18 +113,29 @@ if strcmp(camera_principle,'normal_shutter')
 
 elseif strcmp(camera_principle,'double_shutter')
 	frame_time = 1/framerate*1000^2; %the frame_time is the camera period, because every frame, the whole cycle repeats itself.
-	cam_period=exposure_time+cam_delay; %exposure of the first frame;
-	laser_period=interframe*laser_energy/100; % laser on time of laser pulse
+	if strcmp(camera_type,'OPTOcam_20_9')
+		%% OPTOcam 20/9: ONE trigger makes the sensor expose the whole image pair.
+		% Pulse placement (and the matching camera exposure) comes from the shared timing model,
+		% see PIVlab_capture_OPTOcam_20_9_timing.m for the measured constants and the geometry.
+		laserpulse1_on  = T209.pulse1_on;
+		laserpulse1_off = T209.pulse1_off;
+		laserpulse2_on  = T209.pulse2_on;
+		laserpulse2_off = T209.pulse2_off;
+		cam_period      = 10; %camera trigger high time; only the rising edge starts the pair
+	else
+		cam_period=exposure_time+cam_delay; %exposure of the first frame;
+		laser_period=interframe*laser_energy/100; % laser on time of laser pulse
 
-	max_laser_period = 0.5*(frame_time/2); % laser duty cycle limited to 50%
-	if laser_period > max_laser_period
-		laser_period = max_laser_period;
+		max_laser_period = 0.5*(frame_time/2); % laser duty cycle limited to 50%
+		if laser_period > max_laser_period
+			laser_period = max_laser_period;
+		end
+
+		laserpulse1_on =  cam_delay + blind_time/2; %+(interframe - laser_period)/2;
+		laserpulse1_off = cam_delay + laser_period - blind_time/2; %+(interframe - laser_period)/2;
+		laserpulse2_on =  cam_delay + interframe + blind_time/2;%+(interframe - laser_period)/2;
+		laserpulse2_off = cam_delay + interframe + laser_period - blind_time/2;%+(interframe - laser_period)/2;
 	end
-
-	laserpulse1_on =  cam_delay + blind_time/2; %+(interframe - laser_period)/2;
-	laserpulse1_off = cam_delay + laser_period - blind_time/2; %+(interframe - laser_period)/2;
-	laserpulse2_on =  cam_delay + interframe + blind_time/2;%+(interframe - laser_period)/2;
-	laserpulse2_off = cam_delay + interframe + laser_period - blind_time/2;%+(interframe - laser_period)/2;
 
 	pin1_times=[      0             cam_period                   ]; %double shutter camera: only first frame is triggered, second frame is triggered by the camera automatically
 	pin2_times=[laserpulse1_on    laserpulse1_off    laserpulse2_on           laserpulse2_off     ]; %laser

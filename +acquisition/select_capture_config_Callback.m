@@ -160,6 +160,34 @@ if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2/80') % OPTOcam
 	end
 	%end
 end
+if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 20/9') % OPTOcam 20/9 (double-frame PIV camera)
+	gui.put('camera_type','OPTOcam_20_9');
+	gui.put('f1exp',352) % Exposure start -> Q1 delay (placeholder; refine with Line0/Line4 measurement)
+	gui.put('f1exp_cam',350); %exposure time setting first frame (placeholder)
+	gui.put('master_freq',15);
+	%double-image (image-pair) rates. These match the ROI presets (see calibROI_Callback / setdefaultroi):
+	%608²:68/57  1024²:43/36  1504²:30/25  2256²:21/17  4512²:9/5 (8bit/12bit), plus slower rates.
+	avail_freqs={'68' '57' '43' '36' '30' '25' '21' '17' '9' '5' '3' '1'};
+	gui.put('max_cam_res',[4512,4512]);
+	OPTOcam_20_9_bits =gui.retr('OPTOcam_20_9_bits');
+	if isempty (OPTOcam_20_9_bits)
+		OPTOcam_20_9_bits=8;
+		gui.put('OPTOcam_20_9_bits',8); %8 bit by default (highest pair rate)
+	end
+	%Timing limits from the shared double-frame model (constants measured on Line0/Line4).
+	%The absolute floor is the trigger delay jitter + the frame gap; the real minimum also
+	%depends on the laser pulse length and is checked again in piv_capture_Callback.
+	T209 = PIVlab_capture_OPTOcam_20_9_timing(OPTOcam_20_9_bits,1000,0);
+	gui.put('blind_time',T209.gap);
+	%GUI limit: a "clean" number (15 us in 8 bit, 20 us in 12 bit) above the physical floor; the timing model is unchanged.
+	%The same three values are refreshed by PIVlab_capture_OPTOcam_20_9_settings_GUI when the bit depth changes.
+	gui.put('min_allowed_interframe',max(T209.min_interframe_gui,ceil(T209.min_off_time)));
+	gui.put('max_allowed_interframe',floor(T209.max_interframe));
+	set(handles.ac_fps,'string',avail_freqs);
+	if ~strcmpi(config_string,old_setting)
+		set(handles.ac_fps,'value',numel(avail_freqs))
+	end
+end
 if strcmpi(config_string,'PIVlab LD-PS + OPTRONIS Cyclone') % OPTRONIS
 	gui.put('camera_type','OPTRONIS');
 	camera_sub_type=gui.retr('camera_sub_type');
@@ -272,7 +300,7 @@ if strcmpi(config_string,'Webcam demo (no synchronizer)')
             disp('https://www.mathworks.com/matlabcentral/fileexchange/45182-matlab-support-package-for-usb-webcams')
             gui.custom_msgbox('error',getappdata(0,'hgui'),'No webcam','Could not access webcam. This function requires the free MATLAB Support Package for USB Webcams add-on (the link is now displayed in the command window).','modal');
         end
-        set(handles.ac_config,'value',2);
+        set(handles.ac_config,'value',2); %webcam unavailable: fall back to the first real camera (index 2, OPTOcam 20/9), off the failed webcam entry (index 1)
 		acquisition.select_capture_config_Callback
         return
     end

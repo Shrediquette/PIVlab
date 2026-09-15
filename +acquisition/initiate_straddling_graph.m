@@ -10,7 +10,7 @@ if get(handles.ac_enable_straddling_figure, 'Value')==1
 	end
 	camera_type=gui.retr('camera_type');
 
-	if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_edge26')
+	if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_edge26') || strcmp(camera_type,'OPTOcam_20_9')
 		is_dbl_shutter = 1;
 	else
 		is_dbl_shutter = 0;
@@ -25,13 +25,17 @@ if get(handles.ac_enable_straddling_figure, 'Value')==1
 		pulse_sep=str2double(get(handles.ac_interpuls,'String'));
 		camera_sub_type=gui.retr('camera_sub_type');
 		camera_type=gui.retr('camera_type');
-			bitmode =gui.retr('OPTOcam_bits');
+			if strcmp(camera_type,'OPTOcam_20_9')
+				bitmode =gui.retr('OPTOcam_20_9_bits'); %the 20/9 has its own bit depth setting
+			else
+				bitmode =gui.retr('OPTOcam_bits');
+			end
 			ac_fps_value=get(handles.ac_fps,'Value');
 			ac_fps_str=get(handles.ac_fps,'String');
 			framerate=str2double(ac_fps_str(ac_fps_value));
 			f1exp_cam=gui.retr('f1exp_cam');
 			las_percent=str2double(get(handles.ac_power,'String'));
-			if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')
+			if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp(camera_type,'OPTOcam_20_9')
 				camera_principle='double_shutter';
 			else
 				camera_principle='normal_shutter';
