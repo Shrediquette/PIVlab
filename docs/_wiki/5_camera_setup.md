@@ -2,7 +2,21 @@
 layout: default
 title: Camera Setup
 ---
-# Setting up the OPTOcam camera
+# Setting up the OPTOcam 20/9 camera
+### Standalone application of PIVlab
+* You need to install the "balluff Impact Acquire" software, which is available here ([link to the Balluff software](https://assets.balluff.com/documents/DRF_957084_AA_000/ImpactAcquire-x86_64-3.7.2.exe)).
+* You can uncheck all options except "Common Runtime" and "GenICam GenTL Support"
+* When this is finished, start PIVlab with the camera plugged into a USB3.0 port **(do NOT use a USB hub! The camera needs the full bandwith of the USB port)**, select the suitable configurations (e.g. "PIVlab LD-PS + OPTOcam 20/9), and start your PIV analyses! Please make sure that the computer you are using is connected to a power supply. Otherwise it may limit the bandwidth of the USB port for energy saving reasons.
+  
+### Matlab toolbox version
+* The OPTOcam requires the [image acquisition toolbox from Mathworks](https://de.mathworks.com/products/image-acquisition.html). This is included in many Matlab licenses from universities.
+* You need to install the "balluff Impact Acquire" software, which is available here ([link to the Balluff software](https://assets.balluff.com/documents/DRF_957084_AA_000/ImpactAcquire-x86_64-3.7.2.exe)).
+* You can uncheck all options except "Common Runtime" and "GenICam GenTL Support"
+* Then, you need to install the [Image Acquisition Toolbox Support Package for GenICam Interface](https://de.mathworks.com/matlabcentral/fileexchange/45180-image-acquisition-toolbox-support-package-for-genicam-interface?s_tid=srchtitle).
+* When this is finished, start PIVlab with the camera plugged into a USB3.0 port **(do NOT use a USB hub! The camera needs the full bandwith of the USB port)**, select the suitable configurations (e.g. "PIVlab LD-PS + OPTOcam 20/9), and start your PIV analyses! Please make sure that the computer you are using is connected to a power supply. Otherwise it may limit the bandwidth of the USB port for energy saving reasons.
+
+
+# Setting up the OPTOcam 2/80 camera
 ### Standalone application of PIVlab
 * You need to install the "pylon camera software suite", which is available here ([link to the basler software website](https://www2.baslerweb.com/de/downloads/downloads-software/#type=pylonsoftware;language=all;version=all;series=baslerdart;model=all)).
 * When this is finished, start PIVlab with the camera plugged into a USB3.0 port **(do NOT use a USB hub! The camera needs the full bandwith of the USB port)**, select the suitable configurations (e.g. "PIVlab LD-PS + OPTOcam 2/80), and start your PIV analyses! Please make sure that the computer you are using is connected to a power supply. Otherwise it may limit the bandwidth of the USB port for energy saving reasons.
