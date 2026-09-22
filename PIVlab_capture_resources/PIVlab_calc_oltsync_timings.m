@@ -121,7 +121,7 @@ elseif strcmp(camera_principle,'double_shutter')
 		laserpulse1_off = T209.pulse1_off;
 		laserpulse2_on  = T209.pulse2_on;
 		laserpulse2_off = T209.pulse2_off;
-		cam_period      = 10; %camera trigger high time; only the rising edge starts the pair
+		cam_period      = ceil(frame_time / 4); %camera trigger high time; only the rising edge starts the pair. --> 25 % duty cycle only necessary to have the LED on the camera be bright enough.
 	else
 		cam_period=exposure_time+cam_delay; %exposure of the first frame;
 		laser_period=interframe*laser_energy/100; % laser on time of laser pulse
