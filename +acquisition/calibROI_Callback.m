@@ -47,10 +47,11 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             end
         elseif strcmp(camera_type,'basler')
             [errorcode, caliimg]=PIVlab_capture_basler_calibration_image(1,expos,[1,1,max_cam_res]);
-
         elseif strcmp(camera_type,'OPTOcam')
             [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(1,expos,[1,1,max_cam_res]);
         elseif strcmp(camera_type,'OPTOcam_20_9')
+            % sometimes first image that is returned is white. In the optocam, the first image is 60941 for whatever reason when no frame is returned
+            % this is checked in line 345 in PIVlab_capture_OPTOcam_20_9_calibration_image
             [errorcode, caliimg]=PIVlab_capture_OPTOcam_20_9_calibration_image(1,expos,[1,1,max_cam_res]);
         elseif strcmp(camera_type,'OPTRONIS')
             expos=round(str2num(get(handles.ac_expo,'String'))*1000);
@@ -134,10 +135,10 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             end
             if strcmp(camera_type,'OPTOcam_20_9')
                 m0 = uimenu(c_menu,'Label','OPTOcam 20/9 4512x4512 (8bit: 9 fps, 12bit: 5 fps)','Callback',@roi.setdefaultroi);
-                m1 = uimenu(c_menu,'Label','OPTOcam 20/9 2256x2256 (8bit: 21 fps, 12bit: 17 fps)','Callback',@roi.setdefaultroi);
+                m1 = uimenu(c_menu,'Label','OPTOcam 20/9 2184x2184 (8bit: 21 fps, 12bit: 17 fps)','Callback',@roi.setdefaultroi);
                 m2 = uimenu(c_menu,'Label','OPTOcam 20/9 1504x1504 (8bit: 30 fps, 12bit: 25 fps)','Callback',@roi.setdefaultroi);
-                m3 = uimenu(c_menu,'Label','OPTOcam 20/9 1024x1024 (8bit: 43 fps, 12bit: 36 fps)','Callback',@roi.setdefaultroi);
-                m4 = uimenu(c_menu,'Label','OPTOcam 20/9 608x608 (8bit: 68 fps, 12bit: 57 fps)','Callback',@roi.setdefaultroi);
+                m3 = uimenu(c_menu,'Label','OPTOcam 20/9 1000x1000 (8bit: 43 fps, 12bit: 36 fps)','Callback',@roi.setdefaultroi);
+                m4 = uimenu(c_menu,'Label','OPTOcam 20/9 608x584 (8bit: 68 fps, 12bit: 57 fps)','Callback',@roi.setdefaultroi);
                 m5 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
             end
 

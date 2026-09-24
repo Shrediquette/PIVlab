@@ -73,18 +73,18 @@ if ~isempty(gui.retr('doing_roi')) && gui.retr('doing_roi')==1
         case 'OPTOcam 20/9 4512x4512 (8bit: 9 fps, 12bit: 5 fps)'
             des_x=4512;
             des_y=4512;
-        case 'OPTOcam 20/9 2256x2256 (8bit: 21 fps, 12bit: 17 fps)'
-            des_x=2256;
-            des_y=2256;
+        case 'OPTOcam 20/9 2184x2184 (8bit: 21 fps, 12bit: 17 fps)'
+            des_x=2184;
+            des_y=2184;
         case 'OPTOcam 20/9 1504x1504 (8bit: 30 fps, 12bit: 25 fps)'
             des_x=1504;
             des_y=1504;
-        case 'OPTOcam 20/9 1024x1024 (8bit: 43 fps, 12bit: 36 fps)'
-            des_x=1024;
-            des_y=1024;
-        case 'OPTOcam 20/9 608x608 (8bit: 68 fps, 12bit: 57 fps)'
+        case 'OPTOcam 20/9 1000x1000 (8bit: 43 fps, 12bit: 36 fps)'
+            des_x=1000;
+            des_y=1000;
+        case 'OPTOcam 20/9 608x584 (8bit: 68 fps, 12bit: 57 fps)'
             des_x=608;
-            des_y=608;
+            des_y=584;
 
         case 'Cyclone-2-2000-M 1920x1080 (max. 2000 fps)'
             des_x=1920;
