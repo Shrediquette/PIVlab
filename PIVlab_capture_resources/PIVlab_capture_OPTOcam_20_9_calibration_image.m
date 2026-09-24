@@ -99,6 +99,17 @@ try
     OPTOcam_settings.Source.mvShutterMode = 'mvGlobalShutter'; %calibration uses a normal single (non-double) frame
 catch
 end
+
+%% Line0 = ExposureActive output (used to measure timings/delays on the rig)
+OPTOcam_settings.Source.LineSelector = 'Line0';
+OPTOcam_settings.Source.LineSource   = 'ExposureActive';
+OPTOcam_settings.Source.LineInverter = 'False';
+
+%% Line1 = AcquisitionActive output (used to signal activity on the camera LED and to turn off the fan)
+OPTOcam_settings.Source.LineSelector = 'Line1';
+OPTOcam_settings.Source.LineSource   = 'AcquisitionActive';
+OPTOcam_settings.Source.LineInverter = 'False';
+
 OPTOcam_settings.Source.TriggerMode ='Off';
 OPTOcam_settings.Source.ExposureMode ='Timed';
 OPTOcam_settings.Source.ExposureTime =exposure_time;

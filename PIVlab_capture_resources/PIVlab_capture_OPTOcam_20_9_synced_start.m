@@ -168,6 +168,11 @@ OPTOcam_settings.Source.LineSelector = 'Line0';
 OPTOcam_settings.Source.LineSource   = 'ExposureActive';
 OPTOcam_settings.Source.LineInverter = 'False';
 
+%% Line1 = AcquisitionActive output (used to signal activity on the camera LED and to turn off the fan)
+OPTOcam_settings.Source.LineSelector = 'Line1';
+OPTOcam_settings.Source.LineSource   = 'AcquisitionActive';
+OPTOcam_settings.Source.LineInverter = 'False';
+
 %% start acquisition (waiting for external triggers)
 OPTOcam_frames_to_capture = nr_of_images*2; %2 frames (A,B) per pair
 OPTOcam_vid.FramesPerTrigger = OPTOcam_frames_to_capture;
