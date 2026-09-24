@@ -2466,25 +2466,25 @@ item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 uicontrol(handles.calib_markersetup,'Style','text','String','Nr. of rows:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_rows = uicontrol(handles.calib_markersetup,'Style','edit','String','14','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_rows','TooltipString','Amount of rows of the checkerboard');
+handles.calib_rows = uicontrol(handles.calib_markersetup,'Style','edit','String','10','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_rows','TooltipString','Amount of rows of the checkerboard');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 uicontrol(handles.calib_markersetup,'Style','text','String','Nr. of columns:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_columns = uicontrol(handles.calib_markersetup,'Style','edit','String','23','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_columns','TooltipString','Amount of columns of the checkerboard');
+handles.calib_columns = uicontrol(handles.calib_markersetup,'Style','edit','String','18','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_columns','TooltipString','Amount of columns of the checkerboard');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 uicontrol(handles.calib_markersetup,'Style','text','String','Checker size (mm):','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_checkersize = uicontrol(handles.calib_markersetup,'Style','edit','String','10','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_checkersize','TooltipString','Size of the checkers');
+handles.calib_checkersize = uicontrol(handles.calib_markersetup,'Style','edit','String','12','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_checkersize','TooltipString','Size of the checkers');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 uicontrol(handles.calib_markersetup,'Style','text','String','Marker size (mm):','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_markersize = uicontrol(handles.calib_markersetup,'Style','edit','String','8','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_markersize','TooltipString','Size of the markers');
+handles.calib_markersize = uicontrol(handles.calib_markersetup,'Style','edit','String','9','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_markersize','TooltipString','Size of the markers');
 
 item=[0 item(2)+item(4)+margin parentitem(3)/1.5 1.5];
 handles.calib_find_params = uicontrol(handles.calib_markersetup,'Style','pushbutton','String','Guess parameters','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'TooltipString','Automatically guess charuco parameters','Callback', @preproc.cam_find_charuco_parameters_Callback);
