@@ -89,7 +89,7 @@ set(frame_nr_display,'String','');
 %preview() first shows a placeholder image until the first camera frame arrives (~1.5 s at full frame).
 %The callback only receives real frames, so it counts them: needed for the single-image grab (ROI selection).
 setappdata(image_handle_OPTOcam,'frames_shown',0);
-setappdata(image_handle_OPTOcam,'UpdatePreviewWindowFcn',@show_preview_frame);
+setappdata(image_handle_OPTOcam,'UpdatePreviewWindowFcn',@PIVlab_capture_count_preview_frames);
 preview(OPTOcam_vid,image_handle_OPTOcam)
 caxis([0 2^bitmode]); %seems to be a workaround to force preview to show full data range...
 displayed_img_amount=0;
@@ -295,10 +295,6 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
     displayed_img_amount = frames_shown; %real camera frames (placeholder not counted)
 end
 stoppreview(OPTOcam_vid)
-
-function show_preview_frame(~,event,himage)
-set(himage,'CData',event.Data);
-setappdata(himage,'frames_shown',getappdata(himage,'frames_shown')+1);
 
 function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');
