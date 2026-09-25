@@ -31,6 +31,13 @@ if ~isequal(filename,0)
         end
         handles.calib_checkersize.String = num2str(checkerSize);
         handles.calib_markersize.String = num2str(markerSize);
+        qr_params.markerFamily=markerFamily;
+        qr_params.originCheckerColor=originCheckerColor;
+        qr_params.patternDims=patternDims;
+        qr_params.checkerSize=checkerSize;
+        qr_params.markerSize=markerSize;
+        qr_params.time=datetime('now');
+        gui.put('charuco_qr_params',qr_params); %board parameters now come from a QR code
         gui.custom_msgbox('msg',getappdata(0,'hgui'),'Results from QR code',['Origin checker color: ' originCheckerColor newline 'Marker family: ' markerFamily newline 'Rows: ' int2str(patternDims(1)) newline 'Columns: ' int2str(patternDims(2)) newline 'Checker Size: ' int2str(checkerSize) newline 'Marker Size: ' int2str(markerSize)],'modal','OK','OK');
         return
 	else
@@ -117,4 +124,5 @@ if ~isequal(filename,0)
     end
     handles.calib_rows.String=int2str(boardSize(1));
     handles.calib_columns.String=int2str(boardSize(2));
+    gui.put('charuco_qr_params',[]); %board parameters are guessed, not from a QR code
 end

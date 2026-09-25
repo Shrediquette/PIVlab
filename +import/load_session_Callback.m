@@ -281,6 +281,7 @@ elseif valid_session_file == 1
         handles.calib_columns.String=vars.calib_columns;
         handles.calib_checkersize.String=vars.calib_checkersize;
         handles.calib_markersize.String=vars.calib_markersize;
+        gui.put('charuco_qr_params',[]); %board parameters loaded from file, not from a QR code
         handles.calib_dolivedetect.Value=vars.calib_dolivedetect;
         handles.calib_viewtype.Value=vars.calib_viewtype;
         handles.calib_usecalibration.Value=vars.calib_usecalibration;

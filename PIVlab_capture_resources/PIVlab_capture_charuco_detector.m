@@ -29,6 +29,7 @@ if large_img
 end
 ids=ids';
 delete(findobj('tag','charucolabel'));
+draw_qr_status(figure_handle,calibration_demo_mode);
 
 if ~isempty(locs) && size(locs,3) == size(ids,1)
     id_thresh = mean(ids,'omitnan')+2*std(ids,'omitnan');
@@ -76,6 +77,16 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 		if large_img
 			loc=loc*2;
 		end
+		%remember that the board parameters came from a QR code (persistent status display)
+		qr_params.markerFamily=qr_markerFamily;
+		qr_params.originCheckerColor=qr_originCheckerColor;
+		qr_params.patternDims=qr_patternDims;
+		qr_params.checkerSize=qr_checkerSize;
+		qr_params.markerSize=qr_markerSize;
+		qr_params.time=datetime('now');
+		gui.put('charuco_qr_params',qr_params);
+		delete(findobj('tag','charucolabel')); %only the status text exists at this point, redraw it with the new values
+		draw_qr_status(figure_handle,calibration_demo_mode);
 	else
 		patternDims = [str2double(handles.calib_rows.String),str2double(handles.calib_columns.String)];
 		if contains(handles.calib_boardtype.String{handles.calib_boardtype.Value}, 'DICT_4X4_1000')
@@ -246,3 +257,20 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 		end
 	end
 end
+
+function draw_qr_status(figure_handle,calibration_demo_mode)
+%Persistent info in the top left corner: were the board parameters read from a QR code?
+qr_params=gui.retr('charuco_qr_params');
+if calibration_demo_mode
+	fontsize=24;
+else
+	fontsize=14;
+end
+if ~isempty(qr_params)
+	statustxt=['QR code: ' num2str(qr_params.patternDims(1)) ' x ' num2str(qr_params.patternDims(2)) ' | checker ' num2str(qr_params.checkerSize) ' mm | marker ' num2str(qr_params.markerSize) ' mm | origin ' qr_params.originCheckerColor];
+	bgcolor='b';
+else
+	statustxt='No QR code detected: using manual board parameters';
+	bgcolor=[0.85 0.4 0];
+end
+text(figure_handle,0.01,0.99,statustxt,'Units','normalized','tag','charucolabel','Color','w','Backgroundcolor',bgcolor,'FontSize',fontsize,'FontWeight','bold','HorizontalAlignment','left','VerticalAlignment','top','Interpreter','none');

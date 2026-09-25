@@ -190,6 +190,7 @@ try
     handles.calib_columns.String=calib_columns;
     handles.calib_checkersize.String=calib_checkersize;
     handles.calib_markersize.String=calib_markersize;
+    gui.put('charuco_qr_params',[]); %board parameters loaded from file, not from a QR code
     handles.calib_dolivedetect.Value=calib_dolivedetect;
     handles.calib_viewtype.Value=calib_viewtype;
     handles.calib_usecalibration.Value=calib_usecalibration;
