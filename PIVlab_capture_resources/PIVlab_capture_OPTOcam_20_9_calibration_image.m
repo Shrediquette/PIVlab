@@ -1,87 +1,22 @@
 function [OutputError,ima_out,frame_nr_display] = PIVlab_capture_OPTOcam_20_9_calibration_image(img_amount,exposure_time,ROI_OPTOcam)
-% Calibration image capture for the OPTOcam 20/9. Single 12-bit frames, manual
-% trigger, continuous preview. The camera is identified via its DeviceUserID
-% (set to 'OPTOcam 20/9'). The GenTL adaptor is accepted as 'gentl' (normal
-% MATLAB) or 'mwgentlimaq' (imaqregister-by-path). Calibration always runs a
-% normal single (non-double) frame at full bit depth.
+% Calibration / live image for the OPTOcam 20/9: single frames, manual trigger, continuous preview,
+% normal single (non-double) frame. The bit depth follows the OPTOcam 20/9 settings (same pixel format
+% as the PIV capture, so the opened camera can be reused, see PIVlab_capture_OPTOcam_20_9_open).
+% ima_out is always stretched to the full uint16 range.
 OutputError=0;
 hgui=getappdata(0,'hgui');
+bitmode = getappdata(hgui,'OPTOcam_20_9_bits');
+if isempty(bitmode)
+    bitmode = 8;
+end
 %% Prepare camera
-imaq_error=0;
-try
-    delete(imaqfind); %clears all previous videoinputs
-    warning off
-    hwinf = imaqhwinfo;
-    %warning on
-    %imaqreset
-catch
-    imaq_error=1;
-end
-warning('off','imaq:gentl:noSupportedPixelFormat')
-if imaq_error==0
-    if isempty(hwinf.InstalledAdaptors)
-        imaq_error=2;
-    end
-end
-if imaq_error==0
-    info = imaqhwinfo(hwinf.InstalledAdaptors{1});
-    found_correct_adaptor=0;
-    for adaptorID=1:numel(hwinf.InstalledAdaptors)
-        info = imaqhwinfo(hwinf.InstalledAdaptors{adaptorID});
-        if strcmp(info.AdaptorName,'gentl') || strcmp(info.AdaptorName,'mwgentlimaq')
-            disp(['GenTL adaptor found with ID: ' num2str(adaptorID) ' (' info.AdaptorName ')'])
-            found_correct_adaptor=1;
-            imaq_error=0;
-            break
-        else
-            imaq_error=2;
-        end
-    end
-end
-if imaq_error==0 && found_correct_adaptor ==1
-    try
-        %Identify the camera by the OEM USB Vendor ID embedded in its enumerated device name, so no camera
-        %has to be opened just to detect it (fast). The Vendor ID is fixed in the hardware and is therefore
-        %identical on every unit of this camera; it also differs from the 2/80's manufacturer.
-        found_cam=0;
-        for CamID = 1: size(info.DeviceInfo,2)
-            camName=info.DeviceInfo(CamID).DeviceName;
-            if contains(camName,'VID164C','IgnoreCase',true)
-                found_cam=1;
-                break
-            end
-        end
-        if found_cam
-            OPTOcam_name = 'OPTOcam 20/9';
-        else
-            imaq_error=3;
-        end
-    catch
-        imaq_error=3;
-    end
-end
-if imaq_error==1
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','modal');
-    disp('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.')
-elseif imaq_error==2
-    disp('ERROR: gentl adaptor not found. Please install the GenICam / GenTL support package from here:')
-    disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error, support package missing',{'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'modal');
-elseif imaq_error==3
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Camera not found! Is it connected?','modal');
-end
-
+[OPTOcam_vid,imaq_error] = PIVlab_capture_OPTOcam_20_9_open(bitmode);
 if imaq_error~=0
     OutputError=1;
     ima_out=[];
     frame_nr_display=[];
     return
 end
-
-disp(['Found camera: ' OPTOcam_name])
-
-OPTOcam_vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,'Mono12p'); %calibration image in 12 bit always (packed = higher frame rate).
-
 OPTOcam_settings = get(OPTOcam_vid);
 %Sensor power management (standby/active) intentionally NOT used for now:
 %putting the sensor to standby increases its reaction time to software triggers. The sensor is
@@ -133,7 +68,7 @@ PIVlab_axis = gui.retr('pivlab_axis');
 
 %image_handle_OPTOcam=imagesc(zeros(OPTOcam_settings.VideoResolution(2),OPTOcam_settings.VideoResolution(1)),'Parent',PIVlab_axis,[0 2^8]);
 
-image_handle_OPTOcam=imagesc(zeros(ROI_OPTOcam(4),ROI_OPTOcam(3)),'Parent',PIVlab_axis,[0 2^12]);
+image_handle_OPTOcam=imagesc(zeros(ROI_OPTOcam(4),ROI_OPTOcam(3)),'Parent',PIVlab_axis,[0 2^bitmode]);
 
 setappdata(hgui,'image_handle_OPTOcam_20_9',image_handle_OPTOcam);
 
@@ -151,12 +86,17 @@ colorbar(PIVlab_axis)
 %% get images
 OPTOcam_vid.FramesPerTrigger = 1;
 set(frame_nr_display,'String','');
+%preview() first shows a placeholder image until the first camera frame arrives (~1.5 s at full frame).
+%The callback only receives real frames, so it counts them: needed for the single-image grab (ROI selection).
+setappdata(image_handle_OPTOcam,'frames_shown',0);
+setappdata(image_handle_OPTOcam,'UpdatePreviewWindowFcn',@show_preview_frame);
 preview(OPTOcam_vid,image_handle_OPTOcam)
-caxis([0 2^12]); %seems to be a workaround to force preview to show full data range...
+caxis([0 2^bitmode]); %seems to be a workaround to force preview to show full data range...
 displayed_img_amount=0;
 while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
+    frames_shown = getappdata(image_handle_OPTOcam,'frames_shown'); %read BEFORE CData: ima is then a real frame if frames_shown >= 1
     ima = image_handle_OPTOcam.CData;
-    ima_out = bitshift(ima,4); %stretch 12 bit to 16 bit
+    ima_out = bitshift(uint16(ima),16-bitmode); %stretch 8 or 12 bit to the full 16 bit range
     %% live charuco
     do_charuco_detection = gui.retr('do_charuco_detection');
     if isempty(do_charuco_detection)
@@ -178,7 +118,7 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
         %% cross-hair
         locations=[0.15 0.5 0.85];
         half_thickness=1;
-        brightness_incr=101;
+        brightness_incr=round(101/2^(12-bitmode)); %101 at 12 bit
         ima_ed=ima;
         old_max=max(ima(:));
         for loca=locations
@@ -204,7 +144,7 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
                     old_hist_y_limits=get(hist_obj.Parent,'YLim');
                 end
             end
-            hist_obj=histogram(ima(1:2:end,1:2:end),'Parent',hist_fig,'binlimits',[0 2^12]);
+            hist_obj=histogram(ima(1:2:end,1:2:end),'Parent',hist_fig,'binlimits',[0 2^bitmode]);
         end
         %lowpass hist y limits for better visibility
         if ~exist ('new_hist_y_limits','var')
@@ -352,13 +292,13 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
         sharpness_focus_table=[];
         sharp_loop_cnt=[];
     end
-    if img_amount == 1
-        if sum(ima(1:10,1,1)) ~=10 && sum(ima(1:10,1,1)) ~=655350 && sum(ima(1:10,1,1)) ~= 609406 %check if the display was updated, if there is real camera data. I didnt find a more elegant way...
-            displayed_img_amount=displayed_img_amount+1;
-        end
-    end
+    displayed_img_amount = frames_shown; %real camera frames (placeholder not counted)
 end
 stoppreview(OPTOcam_vid)
+
+function show_preview_frame(~,event,himage)
+set(himage,'CData',event.Data);
+setappdata(himage,'frames_shown',getappdata(himage,'frames_shown')+1);
 
 function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');

@@ -16,74 +16,11 @@ sharpness_enabled = getappdata(hgui,'sharpness_enabled'); %#ok<NASGU>
 OutputError=0;
 max_pair_rate=inf;
 
-%% Prepare camera
-imaq_error=0;
-try
-    delete(imaqfind); %clears all previous videoinputs
-    warning off
-    hwinf = imaqhwinfo;
-catch
-    imaq_error=1;
-end
-warning('off','imaq:gentl:noSupportedPixelFormat')
-if imaq_error==0
-    if isempty(hwinf.InstalledAdaptors)
-        imaq_error=2;
-    end
-end
-if imaq_error==0
-    found_correct_adaptor=0;
-    for adaptorID=1:numel(hwinf.InstalledAdaptors)
-        info = imaqhwinfo(hwinf.InstalledAdaptors{adaptorID});
-        if strcmp(info.AdaptorName,'gentl') || strcmp(info.AdaptorName,'mwgentlimaq')
-            found_correct_adaptor=1;
-            imaq_error=0;
-            break
-        else
-            imaq_error=2;
-        end
-    end
-end
-if imaq_error==0 && found_correct_adaptor ==1
-    try
-        %Identify the camera by the OEM USB Vendor ID in its enumerated device name (fast, no camera opened).
-        found_cam=0;
-        for CamID = 1: size(info.DeviceInfo,2)
-            if contains(info.DeviceInfo(CamID).DeviceName,'VID164C','IgnoreCase',true)
-                found_cam=1;
-                break
-            end
-        end
-        if found_cam
-            OPTOcam_name = 'OPTOcam 20/9';
-        else
-            imaq_error=3;
-        end
-    catch
-        imaq_error=3;
-    end
-end
-if imaq_error==1
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','modal');
-    disp('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.')
-elseif imaq_error==2
-    disp('ERROR: gentl adaptor not found. Please install the GenICam / GenTL support package from here:')
-    disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error, support package missing',{'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'modal');
-elseif imaq_error==3
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Camera not found! Is it connected?','modal');
-end
+%% Prepare camera (opened in the requested bit depth, or reused if already open)
+[OPTOcam_vid,imaq_error] = PIVlab_capture_OPTOcam_20_9_open(bitmode);
 if imaq_error~=0
     OutputError=1; OPTOcam_vid=[]; frame_nr_display=[]; max_pair_rate=inf;
     return
-end
-disp(['Found camera: ' OPTOcam_name])
-
-%% open in requested bit depth
-if bitmode==8
-    OPTOcam_vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,'Mono8');
-elseif bitmode==12
-    OPTOcam_vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,'Mono12p'); %packed 12 bit -> higher frame rate than Mono12
 end
 
 OPTOcam_settings = get(OPTOcam_vid);

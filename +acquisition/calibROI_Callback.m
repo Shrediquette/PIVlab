@@ -50,8 +50,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
         elseif strcmp(camera_type,'OPTOcam')
             [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(1,expos,[1,1,max_cam_res]);
         elseif strcmp(camera_type,'OPTOcam_20_9')
-            % sometimes first image that is returned is white. In the optocam, the first image is 60941 for whatever reason when no frame is returned
-            % this is checked in line 345 in PIVlab_capture_OPTOcam_20_9_calibration_image
+            % returns after the first REAL camera frame (the preview placeholder image is skipped)
             [errorcode, caliimg]=PIVlab_capture_OPTOcam_20_9_calibration_image(1,expos,[1,1,max_cam_res]);
         elseif strcmp(camera_type,'OPTRONIS')
             expos=round(str2num(get(handles.ac_expo,'String'))*1000);

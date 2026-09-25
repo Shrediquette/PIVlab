@@ -5,6 +5,12 @@ config_string = handles.ac_config.String(value);
 
 old_setting=gui.retr('old_setting');
 gui.put ('old_setting',config_string)
+if ~strcmpi(config_string,old_setting) %different camera/laser combination selected
+	try
+		delete(imaqfind); imaqreset %release the previous camera (some drivers keep it open between starts), re-enumerate
+	catch %no Image Acquisition Toolbox
+	end
+end
 
 gui.put('do_realtime',0);
 set(handles.ac_realtime,'Value',0)

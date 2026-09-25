@@ -70,7 +70,7 @@ if ready==1
     if isempty(capturing);capturing=0;end
     if capture_ok==1 && capturing == 0
         gui.put('capturing',1);
-        gui.toolsavailable(0,'Starting camera...')
+        gui.toolsavailable(0,'Initializing camera...')
         drawnow;
         %set(handles.ac_calibsave,'enable','on')
         set(handles.ac_calibcapture,'enable','on')

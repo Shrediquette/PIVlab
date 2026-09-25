@@ -8,7 +8,19 @@ else
 	% acquisition toolbox (pco doesn't use the toolbox and writes directly
 	% to disk
 	warning('off','MATLAB:JavaEDTAutoDelegation');
-	imaqreset %resetting to get a good estimate of the free RAM
+	%free the RAM of previously captured frames to get a good estimate of the free RAM. No imaqreset:
+	%that would also close opened cameras and make the next camera start slow.
+	vids = imaqfind;
+	for k = 1:numel(vids)
+		try
+			v = vids(k);
+			if iscell(v) %imaqfind may return a cell array
+				v = v{1};
+			end
+			flushdata(v);
+		catch
+		end
+	end
 
 	imageamount=str2double(get(handles.ac_imgamount,'String'));
 	ac_ROI_general=gui.retr('ac_ROI_general');
