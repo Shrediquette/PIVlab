@@ -191,10 +191,13 @@ if bitmode > 8
     set(OPTRONIS_vid, 'PreviewFullBitDepth', 'on');
 end
 set(frame_nr_display,'String','');
+setappdata(image_handle_OPTRONIS,'frames_shown',0); %counts real camera frames (skips the preview placeholder)
+setappdata(image_handle_OPTRONIS,'UpdatePreviewWindowFcn',@PIVlab_capture_count_preview_frames);
 preview(OPTRONIS_vid, image_handle_OPTRONIS)
 tmp=get(image_handle_OPTRONIS,'CData');
 tmp=size(tmp(:,:,1));
 set(image_handle_OPTRONIS,'CData',ones(tmp)*35);
+setappdata(image_handle_OPTRONIS,'frames_shown',0); %a frame shown before the line above was overwritten
 pause(0.1) %let the preview draw the camera image before reading it back.
 
 %% Re-apply frame rate and exposure after preview start
@@ -206,6 +209,7 @@ caxis([0 2^bitmode]);
 displayed_img_amount=0;
 
 while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
+    frames_shown = getappdata(image_handle_OPTRONIS,'frames_shown'); %read BEFORE CData: ima is then a real frame if frames_shown >= 1
     ima = image_handle_OPTRONIS.CData;
 
     %% live charuco
@@ -370,11 +374,7 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
         sharp_loop_cnt=[];
     end
 
-    if img_amount == 1
-        if sum(ima(1:10,1,1)) ~=10
-            displayed_img_amount=displayed_img_amount+1;
-        end
-    end
+    displayed_img_amount = frames_shown; %real camera frames (placeholder not counted)
 end
 try
     stoppreview(OPTRONIS_vid)

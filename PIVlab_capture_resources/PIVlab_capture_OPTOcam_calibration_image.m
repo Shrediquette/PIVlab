@@ -113,10 +113,13 @@ colorbar(PIVlab_axis)
 %% get images
 OPTOcam_vid.FramesPerTrigger = 1;
 set(frame_nr_display,'String','');
+setappdata(image_handle_OPTOcam,'frames_shown',0); %counts real camera frames (skips the preview placeholder)
+setappdata(image_handle_OPTOcam,'UpdatePreviewWindowFcn',@PIVlab_capture_count_preview_frames);
 preview(OPTOcam_vid,image_handle_OPTOcam)
 caxis([0 2^12]); %seems to be a workaround to force preview to show full data range...
 displayed_img_amount=0;
 while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
+    frames_shown = getappdata(image_handle_OPTOcam,'frames_shown'); %read BEFORE CData: ima is then a real frame if frames_shown >= 1
     ima = image_handle_OPTOcam.CData;
     ima_out = bitshift(ima,4); %stretch 12 bit to 16 bit
 
@@ -315,11 +318,7 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
         sharpness_focus_table=[];
         sharp_loop_cnt=[];
     end
-    if img_amount == 1
-        if sum(ima(1:10,1,1)) ~=10 && sum(ima(1:10,1,1)) ~=655350 %check if the display was updated, if there is real camera data. I didnt find a more elegant way...
-            displayed_img_amount=displayed_img_amount+1;
-        end
-    end
+    displayed_img_amount = frames_shown; %real camera frames (placeholder not counted)
 end
 stoppreview(OPTOcam_vid)
 executeCommand(OPTOcam_settings.Source,"BslSensorOff")

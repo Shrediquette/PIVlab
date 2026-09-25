@@ -173,10 +173,13 @@ OPTRONIS_vid.FramesPerTrigger = 1;
 set(frame_nr_display,'String','');
 warning('off','imaq:gentl:hardwareTriggerTriggerModeOff'); %trigger property of OPTRONIS cannot be set in Matlab.
 warning('off','MATLAB:JavaEDTAutoDelegation'); %strange warning
+setappdata(image_handle_OPTRONIS,'frames_shown',0); %counts real camera frames (skips the preview placeholder)
+setappdata(image_handle_OPTRONIS,'UpdatePreviewWindowFcn',@PIVlab_capture_count_preview_frames);
 preview(OPTRONIS_vid,image_handle_OPTRONIS)
 tmp=get(image_handle_OPTRONIS,'CData');
 tmp=size(tmp(:,:,1));
 set(image_handle_OPTRONIS,'CData',ones(tmp)*35);
+setappdata(image_handle_OPTRONIS,'frames_shown',0); %a frame shown before the line above was overwritten
 pause(0.1) %let the preview draw the camera image before reading it back.
 
 OPTRONIS_src.AcquisitionFrameRate = 20; % needs to be set again on the optronis after starting preview or acquisition
@@ -185,6 +188,7 @@ OPTRONIS_src.ExposureTime =exposure_time;
 caxis([0 2^bitmode]); %seems to be a workaround to force preview to show full data range...
 displayed_img_amount=0;
 while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
+	frames_shown = getappdata(image_handle_OPTRONIS,'frames_shown'); %read BEFORE CData: ima is then a real frame if frames_shown >= 1
 	ima = image_handle_OPTRONIS.CData;%*16; %stretch 12 bit to 16 bit
 	
     %% live charuco
@@ -394,11 +398,7 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
 
 
 
-	if img_amount == 1
-		if sum(ima(1:10,1,1)) ~=10 %check if the display was updated, if there is real camera data. I didnt find a more elegant way...
-			displayed_img_amount=displayed_img_amount+1;
-		end
-	end
+	displayed_img_amount = frames_shown; %real camera frames (placeholder not counted)
 
 
 end
