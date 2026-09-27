@@ -34,9 +34,8 @@ function [out, multitiff] = uipickfiles(varargin)
 % structure array or character array.  If the Cancel button or the escape
 % key is pressed then zero is returned.
 %
-% The figure can be moved and resized in the usual way and this position is
-% saved and used for subsequent calls to uipickfiles.  The default position
-% can be restored by double-clicking in a vacant region of the figure.
+% The figure opens centered on the PIVlab main window (and on the same
+% monitor), or centered on the primary screen if the main window is absent.
 %
 % The following optional property/value pairs can be specified as arguments
 % to control the indicated behavior:
@@ -311,7 +310,6 @@ fig = figure('Position',fig_pos,...
     'Name',prop.prompt,...
     'IntegerHandle','off',...
     'CloseRequestFcn',@cancel,...
-    'CreateFcn',{@movegui,'center'},...
     'KeyPressFcn',@keypressmisc,...
     'Visible','off','interruptible','off','BusyAction','cancel');
 
@@ -657,11 +655,20 @@ end
 
 
 %resize()
+% Center on the PIVlab main window (i.e. on the monitor the user put it on).
+center_on_main_window(fig)
 % Make figure visible and hide handle.
 set(fig,'Visible','on')
 
 % Wait until figure is closed.
 uiwait(fig)
+
+% Give focus back to the PIVlab main window (otherwise Windows activates
+% the MATLAB command window after the modal figure is deleted).
+hgui = getappdata(0,'hgui');
+if ~isempty(hgui) && isgraphics(hgui)
+    figure(hgui)
+end
 
 % Compute desired output.
 
@@ -2437,4 +2444,38 @@ if fid > 0
 	imwrite(im,cmap,icon_path,'Transparency',[1 1 1 1 1 1 1 1 0 1])
 end
 success = isfile(icon_path);
+end
+
+% -----------------------------------------------------------------------------
+function center_on_main_window(fig)
+% Center fig on the PIVlab main window and keep it on that window's monitor.
+% Falls back to centering on the primary screen if the main window is missing.
+hgui = getappdata(0,'hgui');
+if isempty(hgui) || ~isgraphics(hgui)
+	movegui(fig,'center')
+	return
+end
+fig_units = get(fig,'Units');
+set(fig,'Units','pixels')
+fig_pos = get(fig,'Position');
+main_pos = getpixelposition(hgui);
+main_center = main_pos(1:2) + main_pos(3:4)/2;
+% Find the monitor that contains the main window's center.
+monitors = get(0,'MonitorPositions');
+mon = monitors(1,:);
+for i = 1:size(monitors,1)
+	m = monitors(i,:);
+	if main_center(1) >= m(1) && main_center(1) < m(1)+m(3) && ...
+			main_center(2) >= m(2) && main_center(2) < m(2)+m(4)
+		mon = m;
+		break
+	end
+end
+pos = round(main_center - fig_pos(3:4)/2);
+% Clamp to the monitor (leave some room for the title bar at the top).
+title_bar = 30;
+pos(1) = min(max(pos(1),mon(1)),mon(1)+mon(3)-fig_pos(3));
+pos(2) = min(max(pos(2),mon(2)),mon(2)+mon(4)-fig_pos(4)-title_bar);
+set(fig,'Position',[pos fig_pos(3:4)])
+set(fig,'Units',fig_units)
 end
