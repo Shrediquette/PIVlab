@@ -1,11 +1,13 @@
-function qr = cam_qr_matrix_v1(bytes)
+function [qr, mask_order] = cam_qr_matrix_v1(bytes, mask)
 % Pure MATLAB QR code encoder, replaces the zxing Java library (MATLAB
 % Runtime R2026b and newer ships without Java).
 % Encodes up to 17 bytes as a version 1 QR code (21 x 21 modules), byte
 % mode, error correction level L. Mask selection uses the same penalty
-% rules as zxing, so the result equals
+% rules as zxing, so without the mask input the result equals
 % zxing QRCodeWriter.encode(data, BarcodeFormat.QR_CODE, 29, 29).
+% mask (optional): use this mask pattern (0..7) instead of the best one.
 % Output: 29 x 29 logical, true = dark module, 4 module quiet zone.
+% mask_order: all masks from lowest to highest penalty.
 
 bytes = double(uint8(bytes(:)'));
 n_data = 19; % data codewords of version 1-L
@@ -58,19 +60,21 @@ for i = 8:12                         % timing patterns
 end
 base(14,9) = 1;                      % dark module
 
-%% Try all 8 masks, keep the first one with the lowest penalty (as zxing does)
-best_penalty = inf;
-for mask = 0:7
-	M = build_matrix(base, data_bits, mask);
-	penalty = mask_penalty(M);
-	if penalty < best_penalty
-		best_penalty = penalty;
-		best = M;
-	end
+%% Try all 8 masks, rank them by penalty (ties: lower mask first, as zxing does)
+symbols = cell(1,8);
+penalties = zeros(1,8);
+for m = 0:7
+	symbols{m+1} = build_matrix(base, data_bits, m);
+	penalties(m+1) = mask_penalty(symbols{m+1});
+end
+[~, order] = sort(penalties); % sort is stable
+mask_order = order - 1;
+if nargin < 2
+	mask = mask_order(1);
 end
 
 qr = false(sz + 8);
-qr(5:end-4,5:end-4) = best == 1;
+qr(5:end-4,5:end-4) = symbols{mask+1} == 1;
 end
 
 function bits = bytes2bits(bytes)
