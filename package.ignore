@@ -1,0 +1,32 @@
+% Files excluded from toolbox packaging. R2026b and newer read this file;
+% older releases read toolbox.ignore instead.
+% Paths are relative to the toolbox folder, one pattern per line.
+%
+**/resources/project/**/*
+resources
+**/*.prj
+**/*.prj.bak
+**/.git/**/*
+**/.svn/**/*
+**/.buildtool/**/*
+**/*.asv
+**/.git/*
+**/_Github*
+**/PIVlab_stats.*
+**/A_PUBLISH.*
+**/clean_before_releasing.*
+**/clean_and_package_PIVlab.*
+**/Toolbox/**/*
+**/Standalone/**/*
+**/PIVlab_capture_resources/_play_with_webcam.*
+**/ftp_info.*
+**/.github/**/*
+.gitignore
+**/resources/*
+**/*.afdesign
+**/*.afphoto
+**/docs/**/*
+**/logo_design/**/*
+**/.claude/**/*
+toolbox.ignore
+package.ignore
