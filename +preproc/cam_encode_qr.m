@@ -3,30 +3,13 @@ function qr = cam_encode_qr (data,sz)
 %convert to save characters and use larger pixels in the QR code:
 try
 	data = preproc.cam_encode_qr_v1_binary(data);
-	data = native2unicode(data, 'ISO-8859-1');
 catch
 	disp('could not encode')
 	qr=[];
 	return
 end
-% Java imports
-if ~any(contains(javaclasspath, 'QR_gen.jar'))
-	javaaddpath(fullfile('+preproc','QR_gen.jar'))
-end
-import com.google.zxing.*;
-import com.google.zxing.common.*;
-import com.google.zxing.qrcode.*;
-writer = QRCodeWriter();
-%encoder runs way faster when using the minimum size of v1 QR code (29 x 29 pixels). Then scale up to desired size.
-bitMatrix = writer.encode(data, BarcodeFormat.QR_CODE, 29, 29);
-w = bitMatrix.getWidth();
-h = bitMatrix.getHeight();
-qr = false(h,w);
-for y = 1:h
-	for x = 1:w
-		qr(y,x) = bitMatrix.get(x-1,y-1);
-	end
-end
+%v1 QR code incl. quiet zone (29 x 29 pixels, true = dark). Then scale up to desired size.
+qr = preproc.cam_qr_matrix_v1(uint8(char(data)));
 %reduce border slightly...
 qr(:,29)=[];
 qr(29,:)=[];
