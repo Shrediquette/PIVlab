@@ -334,6 +334,7 @@ if required_files_check
 
 				camera_sub_type=gui.retr('camera_sub_type');
 				is_bitflow = endsWith(camera_sub_type, '-bitflow');
+				is_plus = startsWith(camera_sub_type, 'CyclonePlus'); %CyclonePlus cameras have their own driver files
 				base_sub_type = strrep(camera_sub_type, '-bitflow', '');
 				if OPTRONIS_bits==8
 					switch base_sub_type
@@ -355,6 +356,8 @@ if required_files_check
 							else
 								max_fps_with_current_settings = 145;
 							end
+						case 'CyclonePlus-25-M'
+							max_fps_with_current_settings = 1000; %exact ROI dependent limit is checked in PIVlab_capture_OPTRONIS_plus_synced_start
 						otherwise
 							max_fps_with_current_settings=1111;
 					end
@@ -379,6 +382,8 @@ if required_files_check
 							else
 								max_fps_with_current_settings = 149;
 							end
+						case 'CyclonePlus-25-M'
+							max_fps_with_current_settings = 1000; %exact ROI dependent limit is checked in PIVlab_capture_OPTRONIS_plus_synced_start
 						otherwise
 							max_fps_with_current_settings=1111;
 					end
@@ -394,6 +399,8 @@ if required_files_check
 				if OPTRONIS_settings_check == 1
 					if is_bitflow
 						[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_bitflow_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits);
+					elseif is_plus
+						[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_plus_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits);
 					else
 						[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits);
 					end %prepare cam and start camera (waiting for trigger...)
@@ -412,6 +419,8 @@ if required_files_check
 					acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
 					if is_bitflow
 						[OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_bitflow_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits);
+					elseif is_plus
+						[OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_plus_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits);
 					else
 						[OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits);
 					end %capture n images, display livestream
@@ -468,6 +477,8 @@ if required_files_check
 				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
 					if is_bitflow
 						[OutputError,actually_saved_images] = PIVlab_capture_OPTRONIS_bitflow_save(OPTRONIS_vid,imageamount,projectpath,frame_nr_display,OPTRONIS_bits);
+					elseif is_plus
+						[OutputError,actually_saved_images] = PIVlab_capture_OPTRONIS_plus_save(OPTRONIS_vid,imageamount,projectpath,frame_nr_display,OPTRONIS_bits);
 					else
 						[OutputError,actually_saved_images] = PIVlab_capture_OPTRONIS_save(OPTRONIS_vid,imageamount,projectpath,frame_nr_display,OPTRONIS_bits);
 					end %save the images from ram to disk.

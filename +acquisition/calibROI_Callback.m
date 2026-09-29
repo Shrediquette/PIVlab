@@ -57,6 +57,8 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             camera_sub_type=gui.retr('camera_sub_type');
             if endsWith(camera_sub_type, '-bitflow')
                 [errorcode, caliimg]=PIVlab_capture_OPTRONIS_bitflow_calibration_image(1,expos,[1,1,max_cam_res]);
+            elseif startsWith(camera_sub_type,'CyclonePlus')
+                [errorcode, caliimg]=PIVlab_capture_OPTRONIS_plus_calibration_image(1,expos,[1,1,max_cam_res]); %CyclonePlus free runs in live mode, no synchronizer signal needed
             else
                 disp('single image capture with synchronizer toggled on...')
                 acquisition.control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
@@ -165,6 +167,12 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
                             m2 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x1080 (max. 650 fps)','Callback',@roi.setdefaultroi);
                             m3 = uimenu(c_menu,'Label','Cyclone-25-150-M 5120x720 (max. 1000 fps)','Callback',@roi.setdefaultroi);
                         end
+                        m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
+                    case 'CyclonePlus-25-M'
+                        m0 = uimenu(c_menu,'Label','CyclonePlus-25-M 5120x5120 (max. 149 fps)','Callback',@roi.setdefaultroi);
+                        m1 = uimenu(c_menu,'Label','CyclonePlus-25-M 5120x2160 (max. 353 fps)','Callback',@roi.setdefaultroi);
+                        m2 = uimenu(c_menu,'Label','CyclonePlus-25-M 5120x1080 (max. 696 fps)','Callback',@roi.setdefaultroi);
+                        m3 = uimenu(c_menu,'Label','CyclonePlus-25-M 5120x720 (max. 1029 fps)','Callback',@roi.setdefaultroi);
                         m4 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
                     otherwise
                 end

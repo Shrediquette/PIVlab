@@ -77,7 +77,7 @@ if alreadyconnected
             Kinder=get(target_axis,'Children');
             for k=1:size(Kinder,1)
                 if isprop(Kinder(k),'CData')
-                    img_size=size(Kinder(k).CData,1);
+                    img_size=max(Kinder(k).YData(:)); %not size(CData): the OPTRONIS live image can be downsampled (XData/YData = camera pixels)
                     break
                 end
             end

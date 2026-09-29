@@ -102,6 +102,8 @@ if ready==1
             camera_sub_type=gui.retr('camera_sub_type');
             if endsWith(camera_sub_type, '-bitflow')
                 [errorcode, caliimg]=PIVlab_capture_OPTRONIS_bitflow_calibration_image(inf,expos,ac_ROI_general);
+            elseif startsWith(camera_sub_type,'CyclonePlus')
+                [errorcode, caliimg]=PIVlab_capture_OPTRONIS_plus_calibration_image(inf,expos,ac_ROI_general); %CyclonePlus free runs in live mode, no synchronizer signal needed
             else
                 acquisition.control_simple_sync_serial(0,1); %OPTRONIS requires synchronizer signal because free run mode cannot be set from matlab.
                 [errorcode, caliimg]=PIVlab_capture_OPTRONIS_calibration_image(inf,expos,ac_ROI_general);

@@ -119,6 +119,19 @@ if ~isempty(gui.retr('doing_roi')) && gui.retr('doing_roi')==1
             des_x=5120;
             des_y=720;
 
+        case 'CyclonePlus-25-M 5120x5120 (max. 149 fps)'
+            des_x=5120;
+            des_y=5120;
+        case 'CyclonePlus-25-M 5120x2160 (max. 353 fps)'
+            des_x=5120;
+            des_y=2160;
+        case 'CyclonePlus-25-M 5120x1080 (max. 696 fps)'
+            des_x=5120;
+            des_y=1080;
+        case 'CyclonePlus-25-M 5120x720 (max. 1029 fps)'
+            des_x=5120;
+            des_y=720;
+
         case 'Enter ROI'
             c = roi.get_roi_constraints(camera_type, max_cam_res);
             labels = {sprintf('x (step %d)', c.step_x), sprintf('y (step %d)', c.step_y), ...

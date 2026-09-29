@@ -167,6 +167,9 @@ if alreadyconnected
                         case 'Cyclone-25-150-M'
                             %toggle the camera with approx 5 Hz
                             send_string=['TALKINGTO:' laser_device_id ':sequence:200000:0,0:100,1100'];
+                        case 'CyclonePlus-25-M'
+                            %CyclonePlus free runs in live mode and ignores this signal. Toggle with approx 5 Hz like the Cyclone-25-150-M.
+                            send_string=['TALKINGTO:' laser_device_id ':sequence:200000:0,0:100,1100'];
                         otherwise
                             disp('unknown camera sub type')
                     end

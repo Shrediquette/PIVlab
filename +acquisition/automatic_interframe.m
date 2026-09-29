@@ -41,7 +41,11 @@ if strmatch(button,'OK')==1
 
         while displ < 5 && getappdata(hgui,'cancel_capture') ~=1
             pulse_sep = pulse_sep + 100
-            [OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits); %prepare cam and start camera (waiting for trigger...)
+            if startsWith(camera_sub_type,'CyclonePlus') %CyclonePlus cameras have their own driver files
+                [OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_plus_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits); %prepare cam and start camera (waiting for trigger...)
+            else
+                [OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits); %prepare cam and start camera (waiting for trigger...)
+            end
             pause(0.1) %make sure OPTRONIS is ready to capture.
             %reihe von min dings bis 1/fps... abbrechen wenn displacement um die 5
             %px
@@ -49,7 +53,11 @@ if strmatch(button,'OK')==1
             set(handles.ac_power,'String',num2str(laserpower));
 
             acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
-            [OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits); %capture n images, display livestream
+            if startsWith(camera_sub_type,'CyclonePlus')
+                [OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_plus_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits); %capture n images, display livestream
+            else
+                [OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits); %capture n images, display livestream
+            end
             while OPTRONIS_vid.FramesAcquired < imageamount
                 disp ('waiting for data acquisition')
                 pause(0.1)

@@ -242,6 +242,11 @@ if strcmpi(config_string,'PIVlab LD-PS + OPTRONIS Cyclone') % OPTRONIS
 			gui.put('max_cam_res',[5120,5120]);
 			gui.put('min_allowed_interframe',40);
 			gui.put('blind_time',25);
+		case 'CyclonePlus-25-M'
+			avail_freqs={'1000' '650' '300' '145' '100' '75' '50' '20'};
+			gui.put('max_cam_res',[5120,5120]);
+			gui.put('min_allowed_interframe',40);
+			gui.put('blind_time',25);
 		case 'Cyclone-2-2000-M-bitflow'
 			avail_freqs={'10000' '5000' '2000' '1750' '1500' '1000' '500' '250' '100' '50'};
 			gui.put('max_cam_res',[1920,1080]);

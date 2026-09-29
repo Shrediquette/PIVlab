@@ -118,7 +118,11 @@ end
 
         DeviceTemperature=num2str(round(OPTRONIS_settings.Source.Temperature));
     catch
-        DeviceTemperature = 'N/A';
+        try
+            DeviceTemperature=num2str(round(OPTRONIS_settings.Source.DeviceTemperature)); %CyclonePlus
+        catch
+            DeviceTemperature = 'N/A';
+        end
     end
     if isempty(DeviceTemperature)
         DeviceTemperature='N/A';

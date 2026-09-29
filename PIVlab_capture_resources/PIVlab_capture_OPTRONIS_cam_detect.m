@@ -54,6 +54,8 @@ elseif contains (OPTRONIS_name,'Cyclone-1HS-3500-M')
     camera_sub_type='Cyclone-1HS-3500-M';
 elseif contains (OPTRONIS_name,'Cyclone-25-150-M')
     camera_sub_type='Cyclone-25-150-M';
+elseif contains (OPTRONIS_name,'CyclonePlus-25-M')
+    camera_sub_type='CyclonePlus-25-M';
 else
     disp (OPTRONIS_name)
     disp('--> No cam detected on Euresys grabber')
@@ -69,7 +71,7 @@ for k=1:size(Kinder,1)
         break
     end
 end
-if contains(OPTRONIS_name,'Cyclone-2-2000-M') || contains (OPTRONIS_name,'Cyclone-1HS-3500-M') || contains (OPTRONIS_name,'Cyclone-25-150-M')
+if contains(OPTRONIS_name,'Cyclone-2-2000-M') || contains (OPTRONIS_name,'Cyclone-1HS-3500-M') || contains (OPTRONIS_name,'Cyclone-25-150-M') || contains (OPTRONIS_name,'CyclonePlus-25-M')
     text(img_size2*0.75,img_size1*0.95,['Connected to: '  camera_sub_type ' via Euresys grabber.'],'tag','cam_info_box','Color','black','BackgroundColor','green','VerticalAlignment','bottom','interpreter','none');
     drawnow;
 end
