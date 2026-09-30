@@ -86,8 +86,11 @@ if required_files_check
 			set(handles.ac_serialstatus,'enable','on')
 			set(handles.ac_laserstatus,'enable','on')
 			set(handles.ac_lasertoggle,'enable','on')
-			set(handles.ac_displ_sharp,'enable','on');
-			set(handles.ac_displ_grid,'enable','on');
+			if isinf(imageamount) %zoom, sharpness, grid, calibration, displacement
+				acquisition.set_capture_overlay_controls('piv_preview');
+			else
+				acquisition.set_capture_overlay_controls('piv_record');
+			end
 			set(handles.ac_displ_hist,'enable','on');
 
 

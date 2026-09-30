@@ -80,10 +80,7 @@ if ready==1
         set(handles.ac_lensctrl,'enable','on')
         set(handles.ac_power,'enable','on')
         set(handles.panon,'enable','on');
-        set(handles.zoomon,'enable','on');
-        set(handles.ac_displ_sharp,'enable','on');
-        set(handles.ac_displ_grid,'enable','on');
-        set(handles.calib_dolivedetect,'enable','on');
+        acquisition.set_capture_overlay_controls('live'); %zoom, sharpness, grid, calibration, displacement
         set(handles.ac_displ_hist,'enable','on');
         set(handles.ac_calibsnapshot,'enable','on')
         gui.put('old_charuco_img',[]);
