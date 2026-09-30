@@ -41,7 +41,11 @@ if strmatch(button,'OK')==1
 
         while displ < 5 && getappdata(hgui,'cancel_capture') ~=1
             pulse_sep = pulse_sep + 100
-            if startsWith(camera_sub_type,'CyclonePlus') %CyclonePlus cameras have their own driver files
+            if endsWith(camera_sub_type,'-bitflow') && startsWith(camera_sub_type,'CyclonePlus')
+                [OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_plus_bitflow_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits); %prepare cam and start camera (waiting for trigger...)
+            elseif endsWith(camera_sub_type,'-bitflow')
+                [OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_bitflow_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits); %prepare cam and start camera (waiting for trigger...)
+            elseif startsWith(camera_sub_type,'CyclonePlus') %CyclonePlus cameras have their own driver files
                 [OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_plus_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits); %prepare cam and start camera (waiting for trigger...)
             else
                 [OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits); %prepare cam and start camera (waiting for trigger...)
@@ -53,7 +57,11 @@ if strmatch(button,'OK')==1
             set(handles.ac_power,'String',num2str(laserpower));
 
             acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
-            if startsWith(camera_sub_type,'CyclonePlus')
+            if endsWith(camera_sub_type,'-bitflow') && startsWith(camera_sub_type,'CyclonePlus')
+                [OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_plus_bitflow_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits); %capture n images, display livestream
+            elseif endsWith(camera_sub_type,'-bitflow')
+                [OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_bitflow_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits); %capture n images, display livestream
+            elseif startsWith(camera_sub_type,'CyclonePlus')
                 [OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_plus_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits); %capture n images, display livestream
             else
                 [OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits); %capture n images, display livestream

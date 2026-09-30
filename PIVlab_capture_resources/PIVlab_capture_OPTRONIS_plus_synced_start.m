@@ -14,6 +14,10 @@ function [OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_p
 % - +acquisition/piv_capture_Callback.m (max. frame rate)
 % - PIVlab_calc_oltsync_timings.m (blind time, camera delay)
 % - +acquisition/calibROI_Callback.m and +roi/setdefaultroi.m (ROI presets)
+%For the BitFlow grabber additionally ('-bitflow' sub type, e.g. 'CyclonePlus-25-M-bitflow'):
+% - the camera model section of PIVlab_capture_OPTRONIS_plus_bitflow_synced_start.m and PIVlab_capture_OPTRONIS_plus_bitflow_calibration_image.m (bfml file)
+% - PIVlab_capture_OPTRONIS_bitflow_cam_detect.m (camera_sub_type), PIVlab_capture_OPTRONIS_bitflow_settings_GUI.m (bfml file)
+% - +acquisition/select_capture_config_Callback.m and PIVlab_calc_oltsync_timings.m ('-bitflow' case)
 fix_Optronis_skipped_frame=0;
 hgui=getappdata(0,'hgui');
 OutputError=0;

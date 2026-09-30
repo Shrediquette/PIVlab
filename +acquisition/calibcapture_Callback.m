@@ -97,7 +97,9 @@ if ready==1
             [errorcode, caliimg]=PIVlab_capture_OPTOcam_20_9_calibration_image(inf,expos,ac_ROI_general);
         elseif strcmp(camera_type,'OPTRONIS')
             camera_sub_type=gui.retr('camera_sub_type');
-            if endsWith(camera_sub_type, '-bitflow')
+            if endsWith(camera_sub_type, '-bitflow') && startsWith(camera_sub_type,'CyclonePlus')
+                [errorcode, caliimg]=PIVlab_capture_OPTRONIS_plus_bitflow_calibration_image(inf,expos,ac_ROI_general); %CyclonePlus free runs in live mode, no synchronizer signal needed
+            elseif endsWith(camera_sub_type, '-bitflow')
                 [errorcode, caliimg]=PIVlab_capture_OPTRONIS_bitflow_calibration_image(inf,expos,ac_ROI_general);
             elseif startsWith(camera_sub_type,'CyclonePlus')
                 [errorcode, caliimg]=PIVlab_capture_OPTRONIS_plus_calibration_image(inf,expos,ac_ROI_general); %CyclonePlus free runs in live mode, no synchronizer signal needed

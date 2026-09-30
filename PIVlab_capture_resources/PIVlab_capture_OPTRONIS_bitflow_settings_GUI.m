@@ -69,6 +69,8 @@ if isempty(fh)
         camera_sub_type = gui.retr('camera_sub_type');
         if contains(camera_sub_type, '25-150')
             bfml_name = 'Optronis-Cyclone-25-150-M_OLT.bfml';
+        elseif contains(camera_sub_type, 'CyclonePlus-25')
+            bfml_name = 'Optronis-Cyclone-25-150-M_OLT.bfml'; %same sensor size and CoaXPress interface
         elseif contains(camera_sub_type, '2-2000')
             bfml_name = 'Optronis-Cyclone-2-2000-M_OLT.bfml';
         elseif contains(camera_sub_type, '1HS-3500')
@@ -91,6 +93,13 @@ if isempty(fh)
             OPTRONIS_src.BFGTLNodeName = 'Temperature';
             DeviceTemperature = num2str(round(str2double(OPTRONIS_src.BFGTLNodeValueStr)));
         catch
+        end
+        if strcmp(DeviceTemperature,'N/A') || strcmpi(DeviceTemperature,'NaN') %CyclonePlus: DeviceTemperature
+            try
+                OPTRONIS_src.BFGTLNodeName = 'DeviceTemperature';
+                DeviceTemperature = num2str(round(str2double(OPTRONIS_src.BFGTLNodeValueStr)));
+            catch
+            end
         end
 
         try

@@ -400,7 +400,9 @@ if required_files_check
 					Error_Reason{end+1,1}='Please select a lower frame rate.';
 				end
 				if OPTRONIS_settings_check == 1
-					if is_bitflow
+					if is_bitflow && is_plus
+						[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_plus_bitflow_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits);
+					elseif is_bitflow
 						[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_bitflow_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits);
 					elseif is_plus
 						[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_plus_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits);
@@ -420,7 +422,9 @@ if required_files_check
 				if OPTRONIS_settings_check == 1
 					gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK');
 					acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
-					if is_bitflow
+					if is_bitflow && is_plus
+						[OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_plus_bitflow_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits);
+					elseif is_bitflow
 						[OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_bitflow_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits);
 					elseif is_plus
 						[OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_plus_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits);
@@ -478,7 +482,9 @@ if required_files_check
 			end
 			if strcmpi(config_string,'PIVlab LD-PS + OPTRONIS Cyclone') %OPTRONIS
 				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
-					if is_bitflow
+					if is_bitflow && is_plus
+						[OutputError,actually_saved_images] = PIVlab_capture_OPTRONIS_plus_bitflow_save(OPTRONIS_vid,imageamount,projectpath,frame_nr_display,OPTRONIS_bits);
+					elseif is_bitflow
 						[OutputError,actually_saved_images] = PIVlab_capture_OPTRONIS_bitflow_save(OPTRONIS_vid,imageamount,projectpath,frame_nr_display,OPTRONIS_bits);
 					elseif is_plus
 						[OutputError,actually_saved_images] = PIVlab_capture_OPTRONIS_plus_save(OPTRONIS_vid,imageamount,projectpath,frame_nr_display,OPTRONIS_bits);

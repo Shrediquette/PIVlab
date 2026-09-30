@@ -55,7 +55,9 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
         elseif strcmp(camera_type,'OPTRONIS')
             expos=round(str2num(get(handles.ac_expo,'String'))*1000);
             camera_sub_type=gui.retr('camera_sub_type');
-            if endsWith(camera_sub_type, '-bitflow')
+            if endsWith(camera_sub_type, '-bitflow') && startsWith(camera_sub_type,'CyclonePlus')
+                [errorcode, caliimg]=PIVlab_capture_OPTRONIS_plus_bitflow_calibration_image(1,expos,[1,1,max_cam_res]); %CyclonePlus free runs in live mode, no synchronizer signal needed
+            elseif endsWith(camera_sub_type, '-bitflow')
                 [errorcode, caliimg]=PIVlab_capture_OPTRONIS_bitflow_calibration_image(1,expos,[1,1,max_cam_res]);
             elseif startsWith(camera_sub_type,'CyclonePlus')
                 [errorcode, caliimg]=PIVlab_capture_OPTRONIS_plus_calibration_image(1,expos,[1,1,max_cam_res]); %CyclonePlus free runs in live mode, no synchronizer signal needed

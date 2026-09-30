@@ -61,6 +61,8 @@ if contains(OPTRONIS_name,'Cyclone-2-2000') || contains(OPTRONIS_name,'Cyclone2-
     camera_sub_type='Cyclone-2-2000-M';
 elseif contains(OPTRONIS_name,'Cyclone-25-150') || contains(OPTRONIS_name,'Cyclone25-150')
     camera_sub_type='Cyclone-25-150-M';
+elseif contains(OPTRONIS_name,'CyclonePlus-25')
+    camera_sub_type='CyclonePlus-25-M'; %own driver files: PIVlab_capture_OPTRONIS_plus_bitflow_*
 else
     disp(OPTRONIS_name)
     disp('--> No cam detected on bitflow grabber')

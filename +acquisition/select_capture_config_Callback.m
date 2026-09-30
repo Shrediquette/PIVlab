@@ -257,6 +257,11 @@ if strcmpi(config_string,'PIVlab LD-PS + OPTRONIS Cyclone') % OPTRONIS
 			gui.put('max_cam_res',[5120,5120]);
 			gui.put('min_allowed_interframe',40);
 			gui.put('blind_time',25);
+		case 'CyclonePlus-25-M-bitflow'
+			avail_freqs={'1000' '650' '300' '145' '100' '75' '50' '20'};
+			gui.put('max_cam_res',[5120,5120]);
+			gui.put('min_allowed_interframe',40);
+			gui.put('blind_time',25);
 		otherwise
 			gui.custom_msgbox('error',getappdata(0,'hgui'),'No camera found',{'No camera found. Is it connected and powered on?' 'Is the ''Image Acquisition Toolbox Support Package for GenICam Interface'' or the BitFlow MATLAB IMAQ Adaptor installed?'},'modal');
 			disp('Camera detection unsuccesful.')
