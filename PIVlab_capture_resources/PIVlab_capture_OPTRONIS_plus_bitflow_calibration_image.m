@@ -65,7 +65,7 @@ end
 camera_sub_type = gui.retr('camera_sub_type');
 if contains(camera_sub_type, 'CyclonePlus-25')
     disp('Found camera: CyclonePlus-25-M')
-    bfml_name = 'Optronis-Cyclone-25-150-M_OLT.bfml'; %same sensor size and CoaXPress interface as the Cyclone-25-150-M
+    bfml_name = 'Optronis-CyclonePlus-25-M_OLT.bfml'; %like the Cyclone-25-150-M bfml, but without AcquisitionFrameRate (read-only while TriggerMode is On)
     exposure_gap = 24; %same as in free run: max. exposure = 1/fps - 24 us
 else
     disp('bfml file does not exist for this camera type')
@@ -80,6 +80,7 @@ OPTRONIS_src = getselectedsource(OPTRONIS_vid);
 %% Stop acquisition before changing parameters
 bf_set(OPTRONIS_src, 'AcquisitionStop', '1');
 pause(0.05)
+bf_set(OPTRONIS_src, 'TriggerSelector', 'ExposureStart'); %TriggerMode applies to the selected trigger
 bf_set(OPTRONIS_src, 'TriggerMode', 'Off'); %CyclonePlus free runs in live mode. AcquisitionFrameRate is only writable with TriggerMode Off.
 
 %% Pixel format
@@ -378,10 +379,26 @@ catch
 end
 
 function bf_set(src, name, value)
+%writes a camera node and reports (with the node name) if the value was not accepted
 lastwarn('');
-src.BFGTLNodeName     = name;
-src.BFGTLNodeValueStr = value;
+try
+    src.BFGTLNodeName     = name;
+    src.BFGTLNodeValueStr = value;
+catch ME
+    fprintf('*** BFGTLNode error: %-22s = %-14s  %s\n', name, value, ME.message);
+    return
+end
 [w, wid] = lastwarn;
 if ~isempty(w)
-    fprintf('*** BFGTLNode warning: %-30s = %-20s  [%s]\n', name, value, wid);
+    fprintf('*** BFGTLNode warning: %-22s = %-14s  [%s]\n', name, value, wid);
+end
+if ~any(strcmp(name, {'AcquisitionStop','AcquisitionStart'})) %command nodes can not be read back
+    try
+        readback = src.BFGTLNodeValueStr;
+    catch
+        readback = '(not readable)';
+    end
+    if ~strcmpi(strtrim(readback), value) && ~(~isnan(str2double(value)) && abs(str2double(readback)-str2double(value)) < 0.5)
+        fprintf('*** BFGTLNode not accepted: %-22s wrote %-14s reads %s\n', name, value, readback);
+    end
 end

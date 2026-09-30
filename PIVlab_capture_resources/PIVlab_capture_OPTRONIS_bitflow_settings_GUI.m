@@ -70,7 +70,7 @@ if isempty(fh)
         if contains(camera_sub_type, '25-150')
             bfml_name = 'Optronis-Cyclone-25-150-M_OLT.bfml';
         elseif contains(camera_sub_type, 'CyclonePlus-25')
-            bfml_name = 'Optronis-Cyclone-25-150-M_OLT.bfml'; %same sensor size and CoaXPress interface
+            bfml_name = 'Optronis-CyclonePlus-25-M_OLT.bfml'; %without AcquisitionFrameRate (read-only while TriggerMode is On)
         elseif contains(camera_sub_type, '2-2000')
             bfml_name = 'Optronis-Cyclone-2-2000-M_OLT.bfml';
         elseif contains(camera_sub_type, '1HS-3500')
