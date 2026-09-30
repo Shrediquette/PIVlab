@@ -45,7 +45,7 @@ end
 %% select cam subtype
 camera_sub_type = gui.retr('camera_sub_type');
 if contains(camera_sub_type, '25-150')
-    bfml_name = 'Optronis-Cyclone-25-150-M_OLT.bfml'; %does not exist yet
+    bfml_name = 'Optronis-Cyclone-25-150-M_OLT.bfml';
     exposure_gap = 24;
     minexpo = 12;
 elseif contains(camera_sub_type, '2-2000')
@@ -120,7 +120,7 @@ OPTRONIS_src.BFGTLNodeName     = 'OffsetX';
 OPTRONIS_src.BFGTLNodeValueStr = num2str(ROI_OPTRONIS(1));
 OPTRONIS_src.BFGTLNodeName     = 'OffsetY';
 OPTRONIS_src.BFGTLNodeValueStr = num2str(ROI_OPTRONIS(2));
-% VideoResolution stays at the BFML default (1920×1080); clip to the actual frame size
+% VideoResolution stays at the BFML default (sensor size); clip to the actual frame size
 OPTRONIS_vid.ROIPosition = [0 0 ROI_OPTRONIS(3) ROI_OPTRONIS(4)];
 
 %% prepare axes

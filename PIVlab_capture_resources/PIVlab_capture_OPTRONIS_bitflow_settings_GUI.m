@@ -68,7 +68,7 @@ if isempty(fh)
         %% select cam subtype
         camera_sub_type = gui.retr('camera_sub_type');
         if contains(camera_sub_type, '25-150')
-            bfml_name = 'Optronis-Cyclone-25-150-M_OLT.bfml'; %does not exist yet
+            bfml_name = 'Optronis-Cyclone-25-150-M_OLT.bfml';
         elseif contains(camera_sub_type, '2-2000')
             bfml_name = 'Optronis-Cyclone-2-2000-M_OLT.bfml';
         elseif contains(camera_sub_type, '1HS-3500')
