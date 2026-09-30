@@ -157,19 +157,16 @@ if fps_too_high==0
     triggerconfig(OPTRONIS_vid, 'manual');
 
     %OPTRONIS_vid.TriggerType = 'manual'; %requires trigger(OPTRONIS_vid) to start
-    if ~isinf(nr_of_images) %only start capturing if save box is ticked.
-    	flushdata(OPTRONIS_vid);
-        % disp('pause added to avoid flushing of recorded frames...')
-        pause(0.01)
-    	OPTRONIS_vid.ErrorFcn = @CustomIMAQErrorFcn;
-    	warning('off','imaq:gentl:hardwareTriggerTriggerModeOff'); %trigger property of OPTRONIS cannot be set in Matlab.
-    	warning('off','MATLAB:JavaEDTAutoDelegation'); %strange warning
-        start(OPTRONIS_vid);
-    end
+    %Recording and PIV preview both log frames. synced_capture shows downsampled frames via peekdata
+    %(no preview(): displaying the full frames at a high rate causes skipped frames and a high CPU load).
+    %In PIV preview (nr_of_images = Inf, FramesPerTrigger = Inf), synced_capture discards the frames continuously.
+    flushdata(OPTRONIS_vid);
+    % disp('pause added to avoid flushing of recorded frames...')
+    pause(0.01)
+    OPTRONIS_vid.ErrorFcn = @CustomIMAQErrorFcn;
     warning('off','imaq:gentl:hardwareTriggerTriggerModeOff'); %trigger property of OPTRONIS cannot be set in Matlab.
     warning('off','MATLAB:JavaEDTAutoDelegation'); %strange warning
-    preview(OPTRONIS_vid,image_handle_OPTRONIS);
-    %der befehl oben führt wohl zu einem reset, denn acquisition mode wird auf defaults zurückgesetzt
+    start(OPTRONIS_vid);
     tmp=get(image_handle_OPTRONIS,'CData');
     tmp=size(tmp(:,:,1));
     set(image_handle_OPTRONIS,'CData',ones(tmp)*35);
@@ -180,10 +177,11 @@ if fps_too_high==0
     pause(0.01)
     if ~isinf(nr_of_images)
         OPTRONIS_settings.Source.EnableFan='Off';
-        %aufnahmes tartet erst nachdem letztes mal die settings geändert
-        %wurden.
-        trigger(OPTRONIS_vid)
     end
+    %aufnahmes tartet erst nachdem letztes mal die settings geändert
+    %wurden.
+    trigger(OPTRONIS_vid) %also in PIV preview: frames must be logged for peekdata
+
     caxis([0 2^bitmode]); %seems to be a workaround to force preview to show full data range...
     drawnow;
 end

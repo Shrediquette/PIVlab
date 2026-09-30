@@ -187,13 +187,9 @@ if fps_too_high==0
         disp('prewarm stop')
     end
     OPTRONIS_vid.ErrorFcn = @CustomIMAQErrorFcn;
-    if bitmode > 8
-        set(OPTRONIS_vid, 'PreviewFullBitDepth', 'on');
-    end
-
-    %% Start PREVIEW
-    preview(OPTRONIS_vid, image_handle_OPTRONIS);
-
+    %No preview(): synced_capture shows downsampled frames via peekdata (displaying the full frames at a
+    %high rate causes skipped frames and a high CPU load). In PIV preview (nr_of_images = Inf,
+    %FramesPerTrigger = Inf), synced_capture discards the frames continuously.
 
     tmp=get(image_handle_OPTRONIS,'CData');
     tmp=size(tmp(:,:,1));
@@ -220,14 +216,12 @@ if fps_too_high==0
     triggerconfig(OPTRONIS_vid, 'manual'); %so recording starts only when (trigger(OPTR... is called
     start(OPTRONIS_vid);
     pause(0.1)
-    if ~isinf(nr_of_images)
-        %flushdata(OPTRONIS_vid)
-        pause(0.1)
-        trigger(OPTRONIS_vid)
-        pause(0.1)
-        drawnow;
-    end
-    %Here: preview / capture is running, waiting for external trigger input.
+    %flushdata(OPTRONIS_vid)
+    pause(0.1)
+    trigger(OPTRONIS_vid) %also in PIV preview: frames must be logged for peekdata
+    pause(0.1)
+    drawnow;
+    %Here: capture is running, waiting for external trigger input.
 end
 
 function CustomIMAQErrorFcn(obj, event, varargin)

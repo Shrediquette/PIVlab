@@ -8,26 +8,55 @@ OPTRONIS_src = getselectedsource(OPTRONIS_vid);
 OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame;
 set(frame_nr_display,'backgroundcolor','k');
 %% capture data
+%preview() is not used (see synced_start). The latest frame is shown with peekdata, downsampled to approx.
+%1280 pixels. Displaying the full frames in the PIVlab window causes skipped frames and a high CPU load.
+is_preview = isinf(OPTRONIS_frames_to_capture); %PIV preview: endless acquisition, frames are discarded with flushdata
+if ~is_preview
+    update_interval = 1/5;
+else
+    update_interval = 1/10;
+end
+t0 = tic;
+next_update = 0;
+ima = image_handle_OPTRONIS.CData;
+ds = 1; %downsampling factor of the displayed image
 while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdata(hgui,'cancel_capture') ~=1
     %% Stop camera the instant enough frames are in — do this at the TOP of
     %% the loop body, before any slow display operations (drawnow, histogram,
     %% sharpness) that would otherwise let the camera fire hundreds of extra
     %% frames into the DMA ring during the final loop iteration.
-    if ~isinf(OPTRONIS_frames_to_capture) && OPTRONIS_vid.FramesAcquired >= (OPTRONIS_frames_to_capture+2)
+    if ~is_preview && OPTRONIS_vid.FramesAcquired >= (OPTRONIS_frames_to_capture+2)
         %OPTRONIS_src.BFGTLNodeName     = 'AcquisitionStop';
         %OPTRONIS_src.BFGTLNodeValueStr = '1';
         break;
     end
-    ima = image_handle_OPTRONIS.CData;
-
-	if ~isinf(OPTRONIS_frames_to_capture)
-		if OPTRONIS_vid.FramesAcquired == 0
+    if toc(t0) < next_update
+        if is_preview && OPTRONIS_vid.FramesAvailable > 50
+            flushdata(OPTRONIS_vid); %keep RAM usage low when the loop was blocked for a while
+        end
+        pause(0.01); %sleep and process GUI callbacks instead of spinning
+        continue
+    end
+    next_update = toc(t0) + update_interval;
+	if OPTRONIS_vid.FramesAcquired == 0
+        if ~is_preview
 			set(frame_nr_display,'String','Waiting for trigger...')
-		else
-			set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTRONIS_vid.FramesAcquired/2))]);
-		end
+        else
+            set(frame_nr_display,'String','PIV preview');
+        end
 	else
-		set(frame_nr_display,'String','PIV preview');
+        ima = peekdata(OPTRONIS_vid,1); %full resolution for sharpness indicator, histogram and autofocus
+        if is_preview
+            flushdata(OPTRONIS_vid); %frames are not saved in PIV preview
+        end
+        ds = max(1,ceil(max(size(ima,[1 2]))/1280));
+        %XData and YData keep the axes in camera pixel coordinates
+        set(image_handle_OPTRONIS,'CData',ima(1:ds:end,1:ds:end),'XData',[1 size(ima,2)],'YData',[1 size(ima,1)]);
+        if ~is_preview
+			set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTRONIS_vid.FramesAcquired/2))]);
+        else
+            set(frame_nr_display,'String','PIV preview');
+        end
 	end
 
 	%% sharpness indicator
@@ -41,13 +70,13 @@ while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdat
     if crosshair_enabled == 1
         %% cross-hair
         locations=[0.15 0.5 0.85];
-        half_thickness=1;
+        half_thickness=floor(1/ds); %3 px wide lines at full resolution, 1 px in the downsampled image
         brightness_incr=101;
-        ima_ed=ima;
-        old_max=max(ima(:));
+        ima_ed=ima(1:ds:end,1:ds:end); %drawn into the displayed (downsampled) image
+        old_max=max(ima_ed(:));
         for loca=locations
-            ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)=ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)+brightness_incr;
-            ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)=ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)+brightness_incr;
+            ima_ed(:,round(size(ima_ed,2)*loca)-half_thickness:round(size(ima_ed,2)*loca)+half_thickness)=ima_ed(:,round(size(ima_ed,2)*loca)-half_thickness:round(size(ima_ed,2)*loca)+half_thickness)+brightness_incr;
+            ima_ed(round(size(ima_ed,1)*loca)-half_thickness:round(size(ima_ed,1)*loca)+half_thickness,:)=ima_ed(round(size(ima_ed,1)*loca)-half_thickness:round(size(ima_ed,1)*loca)+half_thickness,:)+brightness_incr;
         end
         ima_ed(ima_ed>old_max)=old_max;
         set(image_handle_OPTRONIS,'CData',ima_ed);
@@ -212,7 +241,9 @@ pause(0.05);
 OPTRONIS_src.BFGTLNodeName     = 'EnableFan';
 OPTRONIS_src.BFGTLNodeValueStr = 'On';
 stop(OPTRONIS_vid);
-stoppreview(OPTRONIS_vid)
+if is_preview
+    flushdata(OPTRONIS_vid); %free the RAM, nothing is saved in PIV preview
+end
 
 
 if ~isinf(OPTRONIS_frames_to_capture)
