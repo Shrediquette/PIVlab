@@ -144,19 +144,17 @@ if settings_ok==1
     %% start acqusition (waiting for trigger)
     OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame;
     OPTRONIS_vid.FramesPerTrigger = OPTRONIS_frames_to_capture+2;
-    if ~isinf(nr_of_images) %only start capturing if save box is ticked.
-        flushdata(OPTRONIS_vid);
-        pause(0.01)
-        OPTRONIS_vid.ErrorFcn = @CustomIMAQErrorFcn;
+    %Recording and PIV preview both log frames. synced_capture shows downsampled frames via peekdata
+    %(no preview(): displaying the full frames at a high rate causes skipped frames and a high CPU load).
+    %In PIV preview (nr_of_images = Inf, FramesPerTrigger = Inf), synced_capture discards the frames continuously.
+    flushdata(OPTRONIS_vid);
+    pause(0.01)
+    OPTRONIS_vid.ErrorFcn = @CustomIMAQErrorFcn;
+    if ~isinf(nr_of_images)
         OPTRONIS_src.OptrEnableFan = 'Off';
-        %hardware trigger: logging starts with the first synchronizer pulse
-        start(OPTRONIS_vid);
     end
-    if isinf(nr_of_images)
-        %PIV preview only. While recording, synced_capture shows downsampled frames via peekdata,
-        %because displaying the full frames at a high rate causes skipped frames.
-        preview(OPTRONIS_vid,image_handle_OPTRONIS);
-    end
+    %hardware trigger: logging starts with the first synchronizer pulse
+    start(OPTRONIS_vid);
     tmp=get(image_handle_OPTRONIS,'CData');
     tmp=size(tmp(:,:,1));
     set(image_handle_OPTRONIS,'CData',ones(tmp)*35);

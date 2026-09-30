@@ -8,12 +8,13 @@ OutputError=0;
 OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame;
 set(frame_nr_display,'backgroundcolor','k');
 %% capture data
-if ~isinf(OPTRONIS_frames_to_capture)
-    %Recording: preview() is not running (see synced_start). The latest frame is shown with peekdata at 5 Hz,
-    %downsampled to approx. 1280 pixels. Displaying the full frames (26 MPixel) in the PIVlab window causes skipped frames.
+%preview() is not used (see synced_start). The latest frame is shown with peekdata, downsampled to approx.
+%1280 pixels. Displaying the full frames (26 MPixel) in the PIVlab window causes skipped frames and a high CPU load.
+is_preview = isinf(OPTRONIS_frames_to_capture); %PIV preview: endless acquisition, frames are discarded with flushdata
+if ~is_preview
     update_interval = 1/5;
 else
-    update_interval = 1/20; %PIV preview: preview() updates the image, only limit the loop rate
+    update_interval = 1/10;
 end
 t0 = tic;
 next_update = 0;
@@ -21,23 +22,32 @@ ima = image_handle_OPTRONIS.CData;
 ds = 1; %downsampling factor of the displayed image
 while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdata(hgui,'cancel_capture') ~=1
     if toc(t0) < next_update
+        if is_preview && OPTRONIS_vid.FramesAvailable > 50
+            flushdata(OPTRONIS_vid); %keep RAM usage low when the loop was blocked for a while
+        end
         pause(0.01); %sleep and process GUI callbacks instead of spinning
         continue
     end
     next_update = toc(t0) + update_interval;
-	if ~isinf(OPTRONIS_frames_to_capture)
-		if OPTRONIS_vid.FramesAcquired == 0
+	if OPTRONIS_vid.FramesAcquired == 0
+        if ~is_preview
 			set(frame_nr_display,'String','Waiting for trigger...')
-		else
-            ima = peekdata(OPTRONIS_vid,1); %full resolution for sharpness indicator, histogram and autofocus
-            ds = max(1,ceil(max(size(ima,[1 2]))/1280));
-            %XData and YData keep the axes in camera pixel coordinates
-            set(image_handle_OPTRONIS,'CData',ima(1:ds:end,1:ds:end),'XData',[1 size(ima,2)],'YData',[1 size(ima,1)]);
-			set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTRONIS_vid.FramesAcquired/2))]);
-		end
+        else
+            set(frame_nr_display,'String','PIV preview');
+        end
 	else
-        ima = image_handle_OPTRONIS.CData;
-		set(frame_nr_display,'String','PIV preview');
+        ima = peekdata(OPTRONIS_vid,1); %full resolution for sharpness indicator, histogram and autofocus
+        if is_preview
+            flushdata(OPTRONIS_vid); %frames are not saved in PIV preview
+        end
+        ds = max(1,ceil(max(size(ima,[1 2]))/1280));
+        %XData and YData keep the axes in camera pixel coordinates
+        set(image_handle_OPTRONIS,'CData',ima(1:ds:end,1:ds:end),'XData',[1 size(ima,2)],'YData',[1 size(ima,1)]);
+        if ~is_preview
+			set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTRONIS_vid.FramesAcquired/2))]);
+        else
+            set(frame_nr_display,'String','PIV preview');
+        end
 	end
 	%% sharpness indicator
 	sharpness_enabled = getappdata(hgui,'sharpness_enabled');
@@ -237,8 +247,10 @@ end
 OPTRONIS_settings=get(OPTRONIS_vid);
 OPTRONIS_settings.Source.OptrEnableFan = 'On';
 
-stoppreview(OPTRONIS_vid)
 stop(OPTRONIS_vid);
+if is_preview
+    flushdata(OPTRONIS_vid); %free the RAM, nothing is saved in PIV preview
+end
 
 if ~isinf(OPTRONIS_frames_to_capture)
     set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTRONIS_vid.FramesAcquired/2))]);
