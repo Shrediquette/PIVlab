@@ -16,10 +16,13 @@ addpath(project_root)
 imgs = pivlab.readImages(fullfile(project_root,'Example_data','Jet_*.jpg'), "pairwise");
 fprintf('%d image pairs found.\n', imgs.pairs);
 
-%% 2) Pre-processing
+%% 2) Pre-processing and mask
 % Default: CLAHE (contrast enhancement) and automatic intensity stretching.
 % The filters are applied to every image pair during the analysis, so nothing is stored here.
-imgs = pivlab.preprocess(imgs);
+% Mask (true = no vectors): the nozzle, from x = 1250 to the right image border, y = 450 to 890.
+mask = false(imgs.imageSize);
+mask(450:890, 1250:end) = true;     % rows = y, columns = x
+imgs = pivlab.preprocess(imgs, Mask=mask);
 % more options, e.g.:
 % imgs = pivlab.preprocess(imgs, Highpass=true, Background="min", Roi=[50 50 1200 900]);
 figure; imshow(pivlab.getImage(imgs, 1)); title('Pre-processed image A of pair 1')
