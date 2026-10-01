@@ -23,58 +23,9 @@ if ok==1
 		tic;
 		[image1,~]=import.get_img(selected);
 		[image2,~]=import.get_img(selected+1);
-		%if size(image1,3)>1
-		%image1=uint8(mean(image1,3));
-		%image2=uint8(mean(image2,3));
-		%disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
-		%end
-		clahe=get(handles.clahe_enable,'value');
-		highp=get(handles.enable_highpass,'value');
-		%clip=get(handles.enable_clip,'value');
-		intenscap=get(handles.enable_intenscap, 'value');
-		clahesize=str2double(get(handles.clahe_size, 'string'));
-		highpsize=str2double(get(handles.highp_size, 'string'));
-		wienerwurst=get(handles.wienerwurst, 'value');
-		wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-		preproc.Autolimit_Callback
-		minintens=str2double(get(handles.minintens, 'string'));
-		maxintens=str2double(get(handles.maxintens, 'string'));
-		%clipthresh=str2double(get(handles.clip_thresh, 'string'));
-		roirect=gui.retr('roirect');
-		if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-			if size(image1,3)>1
-				stretcher = stretchlim(rgb2gray(image1));
-			else
-				stretcher = stretchlim(image1);
-			end
-			minintens = stretcher(1);
-			maxintens = stretcher(2);
-		end
-		image1 = preproc.PIVlab_preproc( ...
-			in=image1, roirect=roirect, clahe=clahe, clahesize=clahesize, ...
-			highp=highp, highpsize=highpsize, intenscap=intenscap, ...
-			wienerwurst=wienerwurst, wienerwurstsize=wienerwurstsize, ...
-			minintens=minintens, maxintens=maxintens);
-		if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
-			if size(image2,3)>1
-				stretcher = stretchlim(rgb2gray(image2));
-			else
-				stretcher = stretchlim(image2);
-			end
-			minintens = stretcher(1);
-			maxintens = stretcher(2);
-		end
-
-		image2 = preproc.PIVlab_preproc( ...
-			in=image2, roirect=roirect, clahe=clahe, clahesize=clahesize, ...
-			highp=highp, highpsize=highpsize, intenscap=intenscap, ...
-			wienerwurst=wienerwurst, wienerwurstsize=wienerwurstsize, ...
-			minintens=minintens, maxintens=maxintens);
-
 		current_mask_nr=floor(get(handles.fileselector, 'value'));
 		masks_in_frame=gui.retr('masks_in_frame');
 		if isempty(masks_in_frame)
-			%masks_in_frame=cell(current_mask_nr,1);
 			masks_in_frame=cell(1,current_mask_nr);
 		end
 		if numel(masks_in_frame)<current_mask_nr
@@ -82,52 +33,66 @@ if ok==1
 		else
 			mask_positions=masks_in_frame{current_mask_nr};
 		end
-		converted_mask=mask.convert_masks_to_binary(size(image1(:,:,1)),mask_positions);
-
-		interrogationarea=str2double(get(handles.intarea, 'string'));
-		step=str2double(get(handles.step, 'string'));
-		subpixfinder=get(handles.subpix,'value');
-		do_correlation_matrices=0;
 		u2=[]; v2=[]; umap=[];
-		if get(handles.algorithm_selection,'Value')==3 %DCC
-			[x, y, u, v, typevector] = piv.piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
-			correlation_map=zeros(size(u)); %nor correlation map available with DCC
-			%correlation_matrices=[];
-		elseif get(handles.algorithm_selection,'Value')==1 || get(handles.algorithm_selection,'Value')==2 %fft and ensemble
-			passes=1;
-			if get(handles.checkbox26,'value')==1
-				passes=2;
+		if get(handles.algorithm_selection,'Value')~=4 %FFT, DCC and ensemble (one pair = FFT): shared with the command-line API (pivlab.analyze)
+			preproc.Autolimit_Callback %updates the displayed intensity limits
+			s = piv.settings_from_gui(handles);
+			if strcmp(s.algorithm,'ensemble')
+				s.algorithm='fft';
 			end
-			if get(handles.checkbox27,'value')==1
-				passes=3;
+			try
+				r = piv.analyze_pair(image1, image2, mask_positions, s);
+				x=r.x; y=r.y; u=r.u; v=r.v; typevector=r.typevector;
+				correlation_map=r.correlation_map; u2=r.u2; v2=r.v2; umap=r.umap;
+			catch ME
+				disp(getReport(ME))
+				gui.toolsavailable(1);
 			end
-			if get(handles.checkbox28,'value')==1
-				passes=4;
-			end
-			int2=str2num(get(handles.edit50,'string'));
-			int3=str2num(get(handles.edit51,'string'));
-			int4=str2num(get(handles.edit52,'string'));
-			[imdeform, repeat, do_pad] = piv.CorrQuality;
-			mask_auto = get(handles.mask_auto_box,'value');
-			repeat_last_pass = get(handles.repeat_last,'Value');
-			delta_diff_min = str2double(get(handles.edit52x,'String'));
-			if get(handles.algorithm_selection,'Value')==1 %fft multi
-				try
-					compute_uncertainty = get(handles.checkbox_uncertainty,'Value');
-					[x, y, u, v, typevector,correlation_map,correlation_matrices,~,u2,v2,umap] = piv.piv_FFTmulti( ...
-						image1=image1, image2=image2, interrogationarea=interrogationarea, step=step, ...
-						subpixfinder=subpixfinder, mask_inpt=converted_mask, roi_inpt=roirect, ...
-						passes=passes, int2=int2, int3=int3, int4=int4, imdeform=imdeform, ...
-						repeat=repeat, mask_auto=mask_auto, do_linear_correlation=do_pad, ...
-						do_correlation_matrices=do_correlation_matrices, ...
-						repeat_last_pass=repeat_last_pass, delta_diff_min=delta_diff_min, ...
-						compute_uncertainty=compute_uncertainty);
-				catch ME
-					disp(getReport(ME))
-					gui.toolsavailable(1);
+		else %optical flow
+			clahe=get(handles.clahe_enable,'value');
+			highp=get(handles.enable_highpass,'value');
+			%clip=get(handles.enable_clip,'value');
+			intenscap=get(handles.enable_intenscap, 'value');
+			clahesize=str2double(get(handles.clahe_size, 'string'));
+			highpsize=str2double(get(handles.highp_size, 'string'));
+			wienerwurst=get(handles.wienerwurst, 'value');
+			wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
+			preproc.Autolimit_Callback
+			minintens=str2double(get(handles.minintens, 'string'));
+			maxintens=str2double(get(handles.maxintens, 'string'));
+			%clipthresh=str2double(get(handles.clip_thresh, 'string'));
+			roirect=gui.retr('roirect');
+			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+				if size(image1,3)>1
+					stretcher = stretchlim(rgb2gray(image1));
+				else
+					stretcher = stretchlim(image1);
 				end
+				minintens = stretcher(1);
+				maxintens = stretcher(2);
 			end
-		elseif get(handles.algorithm_selection,'Value')==4 %optical flow
+			image1 = preproc.PIVlab_preproc( ...
+				in=image1, roirect=roirect, clahe=clahe, clahesize=clahesize, ...
+				highp=highp, highpsize=highpsize, intenscap=intenscap, ...
+				wienerwurst=wienerwurst, wienerwurstsize=wienerwurstsize, ...
+				minintens=minintens, maxintens=maxintens);
+			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+				if size(image2,3)>1
+					stretcher = stretchlim(rgb2gray(image2));
+				else
+					stretcher = stretchlim(image2);
+				end
+				minintens = stretcher(1);
+				maxintens = stretcher(2);
+			end
+	
+			image2 = preproc.PIVlab_preproc( ...
+				in=image2, roirect=roirect, clahe=clahe, clahesize=clahesize, ...
+				highp=highp, highpsize=highpsize, intenscap=intenscap, ...
+				wienerwurst=wienerwurst, wienerwurstsize=wienerwurstsize, ...
+				minintens=minintens, maxintens=maxintens);
+	
+			converted_mask=mask.convert_masks_to_binary(size(image1(:,:,1)),mask_positions);
             addpath(genpath('OptimizationSolvers')); %add the optimizer to filepath
 			%gui.toolsavailable(1); %re-enabling the ui elements already here, so debugging is easier when things crash. Should be removed when ofv is working.
 
@@ -156,7 +121,6 @@ if ok==1
             end     
 
 			correlation_map=zeros(size(x)); %no correlation map available with OFV (?) Nope!
-			%correlation_matrices=[];
 		end
 		gui.toolsavailable(1);
 		resultslist{1,(selected+1)/2}=x;

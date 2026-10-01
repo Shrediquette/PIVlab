@@ -57,33 +57,6 @@ if ok==1
 
 	gui.sliderrange(1)
 
-	clahe=get(handles.clahe_enable,'value');
-	highp=get(handles.enable_highpass,'value');
-	%clip=get(handles.enable_clip,'value');
-	intenscap=get(handles.enable_intenscap, 'value');
-	clahesize=str2double(get(handles.clahe_size, 'string'));
-	highpsize=str2double(get(handles.highp_size, 'string'));
-	wienerwurst=get(handles.wienerwurst, 'value');
-	wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-
-	%Autolimit_Callback
-	autolimit=get(handles.Autolimit, 'value');
-	minintens=str2double(get(handles.minintens, 'string'));
-	maxintens=str2double(get(handles.maxintens, 'string'));
-	%clipthresh=str2double(get(handles.clip_thresh, 'string'));
-	roirect=gui.retr('roirect');
-
-	interrogationarea=str2double(get(handles.intarea, 'string'));
-	step=str2double(get(handles.step, 'string'));
-	subpixfinder=get(handles.subpix,'value');
-
-	int2=str2num(get(handles.edit50,'string'));
-	int3=str2num(get(handles.edit51,'string'));
-	int4=str2num(get(handles.edit52,'string'));
-	mask_auto = get(handles.mask_auto_box,'value');
-	[imdeform, repeat, do_pad] = piv.CorrQuality;
-
-
 	if gui.retr('video_selection_done')==0
 		num_frames_to_process = size(filepath,1);
 	else
@@ -101,13 +74,7 @@ if ok==1
 		set(handles.overall, 'string' , ['Total progress: 0%']);
 		drawnow; %#ok<*NBRAK>
 
-		do_correlation_matrices=0;
 		slicedfilepath1=cell(0);
-		slicedfilepath2=cell(0);
-		slicedframenum1=[];
-		slicedframenum2=[];
-		slicedframepart1=[];
-		slicedframepart2=[];
 		xlist=cell(0);
 		ylist=cell(0);
 		ulist=cell(0);
@@ -121,11 +88,6 @@ if ok==1
 		for i=1:2:num_frames_to_process
 			k=(i+1)/2;
 			slicedfilepath1{k}=filepath{i};
-			slicedfilepath2{k}=filepath{i+1};
-			slicedframenum1(k)=framenum(i);
-			slicedframenum2(k)=framenum(i+1);
-			slicedframepart1(k,:)=framepart(i,:);
-			slicedframepart2(k,:)=framepart(i+1,:);
 		end
 		%set(handles.totaltime, 'String','Time elapsed: N/A');
 		%xpos=size(image1,2)/2-40;
@@ -134,256 +96,43 @@ if ok==1
 		calc_time_start=tic;
 		hbar = gui.pivprogress(size(slicedfilepath1,2),handles.overall);
 		set(handles.totaltime,'String','');
-		if get(handles.algorithm_selection,'Value')==3 %dcc
-			if get(handles.bg_subtract,'Value')>1
-				bg_img_A = gui.retr('bg_img_A');
-				bg_img_B = gui.retr('bg_img_B');
-				bg_sub=1;
+		% the per-pair work (reading, pre-processing, PIV) is shared with the command-line API (pivlab.analyze)
+		s = piv.settings_from_gui(handles);
+		if get(handles.bg_subtract,'Value')>1
+			bg = struct('A',gui.retr('bg_img_A'),'B',gui.retr('bg_img_B'));
+		else
+			bg = [];
+		end
+		masks_in_frame=gui.retr('masks_in_frame');
+		if isempty(masks_in_frame)
+			masks_in_frame=cell(1,size(slicedfilepath1,2));
+		end
+		cam = import.cam_settings(FromGUI=true);
+		cam.tilted_model_in_call = false; % the parallel loop undistorts without the tilted camera model
+		src = struct('filepath',{filepath},'framenum',framenum,'framepart',framepart);
+		parfor i=1:size(slicedfilepath1,2)
+			if exist(fullfile(userpath,'cancel_piv'),'file')
+				close(hbar);
+				continue
+			end
+			image1 = import.read_frame(src, 2*i-1, cam, bg);
+			image2 = import.read_frame(src, 2*i, cam, bg);
+			if numel(masks_in_frame)< i
+				mask_positions=cell(0);
 			else
-				bg_img_A=[];
-                bg_img_B=[];
-                bg_sub=0;
-            end
-
-            masks_in_frame=gui.retr('masks_in_frame');
-            if isempty(masks_in_frame)
-                %masks_in_frame=cell(size(slicedfilepath1,2),1);
-                masks_in_frame=cell(1,size(slicedfilepath1,2));
-            end
-            view_raw=handles.calib_viewtype.Value;
-            if view_raw==1
-                view='valid';
-            elseif view_raw==2
-                view='same';
-            elseif view_raw==3
-                view='full';
-            end
-            cam_use_calibration = gui.retr('cam_use_calibration');
-            cam_use_rectification = gui.retr('cam_use_rectification');
-            cameraParams=gui.retr('cameraParams');
-            rectification_tform = gui.retr('rectification_tform');
-
-            parfor i=1:size(slicedfilepath1,2)
-                if exist(fullfile(userpath,'cancel_piv'),'file')
-                    close(hbar);
-                    continue
-                end
-
-                [~,~,ext] = fileparts(slicedfilepath1{i});
-                if strcmp(ext,'.b16')
-                    currentimage1=import.f_readB16(slicedfilepath1{i});
-                    currentimage2=import.f_readB16(slicedfilepath2{i});
-                    currentimage1 = preproc.cam_undistort(currentimage1,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
-                    currentimage2 = preproc.cam_undistort(currentimage2,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
-                else
-                    currentimage1=import.imread_wrapper(slicedfilepath1{i},slicedframenum1(i),slicedframepart1(i,:))
-                    currentimage2=import.imread_wrapper(slicedfilepath2{i},slicedframenum2(i),slicedframepart2(i,:))
-                    currentimage1 = preproc.cam_undistort(currentimage1,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
-                    currentimage2 = preproc.cam_undistort(currentimage2,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
-                end
-                if bg_sub==1
-                    if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
-                        currentimage1 = rgb2gray(currentimage1)-bg_img_A;
-                        currentimage2 = rgb2gray(currentimage2)-bg_img_B;
-                    else
-                        currentimage1 = currentimage1-bg_img_A;
-						currentimage2 = currentimage2-bg_img_B;
-					end
-				end
-
-				%get and save the image size (assuming that every image of a session has the same size)
-
-				currentimage1(currentimage1<0)=0; %bg subtraction may yield negative
-				currentimage2(currentimage2<0)=0; %bg subtraction may yield negative
-				image1=currentimage1;
-				image2=currentimage2;
-
-				stretcher_A=[]; %initialize for parfor loop
-				stretcher_B=[];
-				if autolimit == 1
-					if size(image1,3)>1
-						stretcher_A = stretchlim(rgb2gray(image1));
-						stretcher_B = stretchlim(rgb2gray(image2));
-					else
-						stretcher_A = stretchlim(image1);
-						stretcher_B = stretchlim(image2);
-					end
-				else
-					stretcher_A(1)=minintens;
-					stretcher_B(1)=minintens;
-					stretcher_A(2)=maxintens;
-					stretcher_B(2)=maxintens;
-				end
-
-				image1 = preproc.PIVlab_preproc( ...
-					in=image1, roirect=roirect, clahe=clahe, clahesize=clahesize, ...
-					highp=highp, highpsize=highpsize, intenscap=intenscap, ...
-					wienerwurst=wienerwurst, wienerwurstsize=wienerwurstsize, ...
-					minintens=stretcher_A(1), maxintens=stretcher_A(2));
-				image2 = preproc.PIVlab_preproc( ...
-					in=image2, roirect=roirect, clahe=clahe, clahesize=clahesize, ...
-					highp=highp, highpsize=highpsize, intenscap=intenscap, ...
-					wienerwurst=wienerwurst, wienerwurstsize=wienerwurstsize, ...
-					minintens=stretcher_B(1), maxintens=stretcher_B(2));
-
-
-				if numel(masks_in_frame)< i
-					mask_positions=cell(0);
-				else
-					mask_positions=masks_in_frame{i};
-				end
-
-				converted_mask=mask.convert_masks_to_binary(size(currentimage1(:,:,1)),mask_positions);
-
-				[x, y, u, v, typevector] = piv.piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect); %#ok<PFTUSW>
-				xlist{i}=x;
-				ylist{i}=y;
-				ulist{i}=u;
-				vlist{i}=v;
-				typelist{i}=typevector;
-				corrlist{i}=zeros(size(typevector)); %no correlation coefficient in DCC.
-				u2list{i}=[];
-				v2list{i}=[];
-				umaplist{i}=[]; %no uncertainty map for DCC
-				%correlation_matrices_list{i}=[];%no correlation matrix output for dcc
-				hbar.iterate(1);
+				mask_positions=masks_in_frame{i};
 			end
-		elseif get(handles.algorithm_selection,'Value')==1
-			passes=1;
-			if get(handles.checkbox26,'value')==1
-				passes=2;
-			end
-			if get(handles.checkbox27,'value')==1
-				passes=3;
-			end
-			if get(handles.checkbox28,'value')==1
-				passes=4;
-			end
-			repeat_last_pass = get(handles.repeat_last,'Value');
-			delta_diff_min = str2double(get(handles.edit52x,'String'));
-			compute_uncertainty = get(handles.checkbox_uncertainty,'Value');
-			if get(handles.bg_subtract,'Value')>1
-				bg_img_A = gui.retr('bg_img_A');
-				bg_img_B = gui.retr('bg_img_B');
-				bg_sub=1;
-			else
-				bg_img_A=[];
-				bg_img_B=[];
-				bg_sub=0;
-			end
-			masks_in_frame=gui.retr('masks_in_frame');
-			if isempty(masks_in_frame)
-				%masks_in_frame=cell(size(slicedfilepath1,2),1);
-				masks_in_frame=cell(1,size(slicedfilepath1,2));
-            end
-            view_raw=handles.calib_viewtype.Value;
-            if view_raw==1
-                view='valid';
-            elseif view_raw==2
-                view='same';
-            elseif view_raw==3
-                view='full';
-            end
-            cam_use_calibration = gui.retr('cam_use_calibration');
-            cam_use_rectification = gui.retr('cam_use_rectification');
-            cameraParams=gui.retr('cameraParams');
-            rectification_tform = gui.retr('rectification_tform');
-
-            parfor i=1:size(slicedfilepath1,2)
-                %------------------------
-                if exist(fullfile(userpath,'cancel_piv'),'file')
-                    close(hbar);
-                    continue
-                end
-
-                [~,~,ext] = fileparts(slicedfilepath1{i});
-                if strcmp(ext,'.b16')
-                    currentimage1=import.f_readB16(slicedfilepath1{i});
-                    currentimage2=import.f_readB16(slicedfilepath2{i});
-                    currentimage1 = preproc.cam_undistort(currentimage1,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
-                    currentimage2 = preproc.cam_undistort(currentimage2,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
-                else
-                    currentimage1=import.imread_wrapper(slicedfilepath1{i},slicedframenum1(i),slicedframepart1(i,:));
-                    currentimage2=import.imread_wrapper(slicedfilepath2{i},slicedframenum2(i),slicedframepart2(i,:));
-                    if size(currentimage1,3)>3
-                        currentimage1=currentimage1(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
-                        currentimage2=currentimage2(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
-                    end
-                    currentimage1 = preproc.cam_undistort(currentimage1,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
-                    currentimage2 = preproc.cam_undistort(currentimage2,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
-                end
-
-                if numel(masks_in_frame)< i
-                    mask_positions=cell(0);
-                else
-                    mask_positions=masks_in_frame{i};
-                end
-                converted_mask=mask.convert_masks_to_binary(size(currentimage1(:,:,1)),mask_positions);
-
-                if bg_sub==1
-                    if size(currentimage1,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
-                        currentimage1 = rgb2gray(currentimage1)-bg_img_A;
-                        currentimage2 = rgb2gray(currentimage2)-bg_img_B;
-                    else
-                        currentimage1 = currentimage1-bg_img_A;
-                        currentimage2 = currentimage2-bg_img_B;
-                    end
-                end
-
-                %get and save the image size (assuming that every image of a session has the same size)
-                currentimage1(currentimage1<0)=0; %bg subtraction may yield negative
-                currentimage2(currentimage2<0)=0; %bg subtraction may yield negative
-                image1=currentimage1;
-                image2=currentimage2;
-
-                stretcher_A=[]; %initialize for parfor loop
-				stretcher_B=[];
-				if autolimit == 1
-					if size(image1,3)>1
-						stretcher_A = stretchlim(rgb2gray(image1));
-						stretcher_B = stretchlim(rgb2gray(image2));
-					else
-						stretcher_A = stretchlim(image1);
-						stretcher_B = stretchlim(image2);
-					end
-				else
-					stretcher_A(1)=minintens;
-					stretcher_B(1)=minintens;
-					stretcher_A(2)=maxintens;
-					stretcher_B(2)=maxintens;
-				end
-
-				image1 = preproc.PIVlab_preproc( ...
-					in=image1, roirect=roirect, clahe=clahe, clahesize=clahesize, ...
-					highp=highp, highpsize=highpsize, intenscap=intenscap, ...
-					wienerwurst=wienerwurst, wienerwurstsize=wienerwurstsize, ...
-					minintens=stretcher_A(1), maxintens=stretcher_A(2));
-				image2 = preproc.PIVlab_preproc( ...
-					in=image2, roirect=roirect, clahe=clahe, clahesize=clahesize, ...
-					highp=highp, highpsize=highpsize, intenscap=intenscap, ...
-					wienerwurst=wienerwurst, wienerwurstsize=wienerwurstsize, ...
-					minintens=stretcher_B(1), maxintens=stretcher_B(2));
-
-				[x, y, u, v, typevector,correlation_map,correlation_matrices,~,u2,v2,umap] = piv.piv_FFTmulti( ...
-					image1=image1, image2=image2, interrogationarea=interrogationarea, step=step, ...
-					subpixfinder=subpixfinder, mask_inpt=converted_mask, roi_inpt=roirect, ...
-					passes=passes, int2=int2, int3=int3, int4=int4, imdeform=imdeform, ...
-					repeat=repeat, mask_auto=mask_auto, do_linear_correlation=do_pad, ...
-					do_correlation_matrices=do_correlation_matrices, ...
-					repeat_last_pass=repeat_last_pass, delta_diff_min=delta_diff_min, ...
-					compute_uncertainty=compute_uncertainty); %#ok<PFTUSW>
-				xlist{i}=x;
-				ylist{i}=y;
-				ulist{i}=u;
-				vlist{i}=v;
-				typelist{i}=typevector;
-				corrlist{i}=correlation_map;
-				u2list{i}=u2;
-				v2list{i}=v2;
-				umaplist{i}=umap;
-				%correlation_matrices_list{i}=correlation_matrices;
-				hbar.iterate(1);
-			end
+			r = piv.analyze_pair(image1, image2, mask_positions, s);
+			xlist{i}=r.x;
+			ylist{i}=r.y;
+			ulist{i}=r.u;
+			vlist{i}=r.v;
+			typelist{i}=r.typevector;
+			corrlist{i}=r.correlation_map;
+			u2list{i}=r.u2;
+			v2list{i}=r.v2;
+			umaplist{i}=r.umap;
+			hbar.iterate(1);
 		end
 		close(hbar);
 		zeit=toc(calc_time_start);
@@ -433,102 +182,19 @@ if ok==1
 			if isempty(cancel)==1 || cancel ~=1
 				image1 = import.get_img(i);
 				image2 = import.get_img(i+1);
-				%if size(image1,3)>1
-				%	image1=uint8(mean(image1,3));
-				%	image2=uint8(mean(image2,3));
-				%disp('Warning: To optimize speed, your images should be grayscale, 8 bit!')
-				%end
 				set(handles.progress, 'string' , ['Frame progress: 0%']);drawnow; %#ok<*NBRAK>
-				clahe=get(handles.clahe_enable,'value');
-				highp=get(handles.enable_highpass,'value');
-				%clip=get(handles.enable_clip,'value');
-				intenscap=get(handles.enable_intenscap, 'value');
-				clahesize=str2double(get(handles.clahe_size, 'string'));
-				highpsize=str2double(get(handles.highp_size, 'string'));
-				wienerwurst=get(handles.wienerwurst, 'value');
-				wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
-				do_correlation_matrices=0;
-				preproc.Autolimit_Callback
-				minintens=str2double(get(handles.minintens, 'string'));
-				maxintens=str2double(get(handles.maxintens, 'string'));
-				%clipthresh=str2double(get(handles.clip_thresh, 'string'));
-				roirect=gui.retr('roirect');
-
-				stretcher_A=[]; %initialize for parfor loop
-				stretcher_B=[];
-				if autolimit == 1
-					if size(image1,3)>1
-						stretcher_A = stretchlim(rgb2gray(image1));
-						stretcher_B = stretchlim(rgb2gray(image2));
-					else
-						stretcher_A = stretchlim(image1);
-						stretcher_B = stretchlim(image2);
-					end
-				else
-					stretcher_A(1)=minintens;
-					stretcher_B(1)=minintens;
-					stretcher_A(2)=maxintens;
-					stretcher_B(2)=maxintens;
-				end
-
-				image1 = preproc.PIVlab_preproc( ...
-					in=image1, roirect=roirect, clahe=clahe, clahesize=clahesize, ...
-					highp=highp, highpsize=highpsize, intenscap=intenscap, ...
-					wienerwurst=wienerwurst, wienerwurstsize=wienerwurstsize, ...
-					minintens=stretcher_A(1), maxintens=stretcher_A(2));
-				image2 = preproc.PIVlab_preproc( ...
-					in=image2, roirect=roirect, clahe=clahe, clahesize=clahesize, ...
-					highp=highp, highpsize=highpsize, intenscap=intenscap, ...
-					wienerwurst=wienerwurst, wienerwurstsize=wienerwurstsize, ...
-					minintens=stretcher_B(1), maxintens=stretcher_B(2));
-							
-				interrogationarea=str2double(get(handles.intarea, 'string'));
-				step=str2double(get(handles.step, 'string'));
-				subpixfinder=get(handles.subpix,'value');
-
+				preproc.Autolimit_Callback %updates the displayed intensity limits
+				% pre-processing and PIV are shared with the command-line API (pivlab.analyze)
+				s = piv.settings_from_gui(handles);
 				currentmask=floor((i+1)/2);
-
 				if numel(masks_in_frame)< currentmask
 					mask_positions=cell(0);
 				else
 					mask_positions=masks_in_frame{currentmask};
 				end
-
-				converted_mask=mask.convert_masks_to_binary(size(image1(:,:,1)),mask_positions);
-				u2=[]; v2=[]; umap=[];
-				if get(handles.algorithm_selection,'Value')==3 %dcc
-					[x, y, u, v, typevector] = piv.piv_DCC (image1,image2,interrogationarea, step, subpixfinder, converted_mask, roirect);
-					%correlation_matrices=[];%not available for DCC
-				elseif get(handles.algorithm_selection,'Value')==1
-					passes=1;
-					if get(handles.checkbox26,'value')==1
-						passes=2;
-					end
-					if get(handles.checkbox27,'value')==1
-						passes=3;
-					end
-					if get(handles.checkbox28,'value')==1
-						passes=4;
-					end
-					int2=str2num(get(handles.edit50,'string'));
-					int3=str2num(get(handles.edit51,'string'));
-					int4=str2num(get(handles.edit52,'string'));
-					mask_auto = get(handles.mask_auto_box,'value');
-					repeat_last_pass = get(handles.repeat_last,'Value');
-					delta_diff_min = str2double(get(handles.edit52x,'String'));
-					compute_uncertainty = get(handles.checkbox_uncertainty,'Value');
-					[imdeform, repeat, do_pad] = piv.CorrQuality;
-					[x, y, u, v, typevector,correlation_map,correlation_matrices,~,u2,v2,umap] = piv.piv_FFTmulti( ...
-						image1=image1, image2=image2, interrogationarea=interrogationarea, step=step, ...
-						subpixfinder=subpixfinder, mask_inpt=converted_mask, roi_inpt=roirect, ...
-						passes=passes, int2=int2, int3=int3, int4=int4, imdeform=imdeform, ...
-						repeat=repeat, mask_auto=mask_auto, do_linear_correlation=do_pad, ...
-						do_correlation_matrices=do_correlation_matrices, ...
-						repeat_last_pass=repeat_last_pass, delta_diff_min=delta_diff_min, ...
-						compute_uncertainty=compute_uncertainty);
-					%u=real(u)
-					%v=real(v)
-				end
+				r = piv.analyze_pair(image1, image2, mask_positions, s);
+				x=r.x; y=r.y; u=r.u; v=r.v; typevector=r.typevector;
+				correlation_map=r.correlation_map; u2=r.u2; v2=r.v2; umap=r.umap;
 				resultslist{1,(i+1)/2}=x;
 				resultslist{2,(i+1)/2}=y;
 				resultslist{3,(i+1)/2}=u;

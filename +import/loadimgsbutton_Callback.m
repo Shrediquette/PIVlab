@@ -115,233 +115,23 @@ if ~isequal(path,0)
         end
     end
 
-    pcopanda_dbl_image=0;
-    %if multitiff 	 %check if frames captured by pco panda as double image array.
-    [~,~,ext] = fileparts(path(1).name);
-    if ~strcmpi(ext,'.b16')
-        temp_info=imfinfo(path(1).name);
-        if isfield(temp_info,'Software')
-            if strncmp (temp_info(1).Software,'PCO_Recorder',10)
-                pcopanda_dbl_image=1;
-            end
-        end
-    else
-        pcopanda_dbl_image=0;
-    end
-
+    % build the frame list (shared with the command-line API, pivlab.readImages)
+    [filepath, framenum, framepart, filename, used_sequencer, pcopanda_dbl_image] = import.build_file_list({path.name}, sequencer, multitiff);
     if pcopanda_dbl_image==1 && sequencer ~=1
         if ~batchModeActive
             gui.custom_msgbox('success',getappdata(0,'hgui'),'Double image multi-tiff file',['Detected a pco.panda generated double image multi-tiff file.' newline newline 'Sequencing style was changed to "pairwise" to account for the double images.'],'modal');
         end
-        sequencer=1;
+        sequencer=used_sequencer;
         gui.put('sequencer',sequencer);
         save('PIVlab_settings_default.mat','sequencer','-append');
     end
-    %end
     gui.put('pcopanda_dbl_image',pcopanda_dbl_image);
 
-    if multitiff
-        frames_per_image_file=zeros(size(path,1),1);
-        for jj=1:size(path,1)
-            frames_per_image_file(jj)=size(imfinfo(path(jj).name),1);
-        end
-        loopcntr=sum(frames_per_image_file);
-    else % single image files.
-        loopcntr=size(path,1);
-    end
-
-    if sequencer==1 % AB
-        if ~multitiff
-            for i=1:loopcntr
-                if exist('filepath','var')==0 %first loop
-                    filepath{1,1}=path(i).name;
-                    framenum(1,1)=1;
-                else
-                    filepath{size(filepath,1)+1,1}=path(i).name; %#ok<AGROW>
-                    framenum(size(framenum,1)+1,1)=1;
-                end
-            end
-            if pcopanda_dbl_image %dbl image, aber kein multitiff.
-                filepath=cell(0);
-                framenum=[];
-                framepart=[];
-                cntr=1;
-                img_height=size(imread(path(1).name,1),1); %read one file to detect image height to devide it by two later.
-                for i=1:size(path,1)
-                    filepath{cntr,1}=path(i).name;
-                    filepath{cntr+1,1}=path(i).name;
-                    framenum(cntr,1)=1;
-                    framenum(cntr+1,1)=1;
-                    framepart(cntr,1)=1;
-                    framepart(cntr,2)=img_height/2;
-                    framepart(cntr+1,1)=img_height/2+1;
-                    framepart(cntr+1,2)=img_height;
-                    cntr=cntr+2;
-                end
-            end
-        else % multitiff
-            if ~pcopanda_dbl_image
-                filepath=cell(0);
-                framenum=[];
-                cntr=1;
-                for i=1:size(path,1)
-                    for jj=1:frames_per_image_file(i)
-                        filepath{cntr,1}=path(i).name;
-                        framenum(cntr,1)=jj;
-                        cntr=cntr+1;
-                    end
-                end
-            else
-                filepath=cell(0);
-                framenum=[];
-                framepart=[];
-                cntr=1;
-                img_height=size(imread(path(1).name,1),1); %read one file to detect image height to devide it by two later.
-                for i=1:size(path,1)
-                    for jj=1:frames_per_image_file(i)
-                        filepath{cntr,1}=path(i).name;
-                        filepath{cntr+1,1}=path(i).name;
-                        framenum(cntr,1)=jj;
-                        framenum(cntr+1,1)=jj;
-                        framepart(cntr,1)=1;
-                        framepart(cntr,2)=img_height/2;
-                        framepart(cntr+1,1)=img_height/2+1;
-                        framepart(cntr+1,2)=img_height;
-                        cntr=cntr+2;
-                    end
-                end
-            end
-        end
-    elseif sequencer==0 %time-resolved
-        if ~multitiff
-            for i=1:loopcntr
-                if exist('filepath','var')==0 %first loop
-                    filepath{1,1}=path(i).name;
-                    framenum(1,1)=1;
-                else
-                    filepath{size(filepath,1)+1,1}=path(i).name; %#ok<AGROW>
-                    filepath{size(filepath,1)+1,1}=path(i).name; %#ok<AGROW>
-                    framenum(size(framenum,1)+1,1)=1;
-                    framenum(size(framenum,1)+1,1)=1;
-                end
-            end
-        else % multitiff
-            filepath=cell(0);
-            framenum=[];
-            cntr=1;
-            for i=1:size(path,1)
-                for jj=1:frames_per_image_file(i)
-                    if jj == 1 || jj== frames_per_image_file
-                        filepath{cntr,1}=path(i).name;
-                        framenum(cntr,1)=jj;
-                        cntr=cntr+1;
-                    else
-                        filepath{cntr,1}=path(i).name;
-                        filepath{cntr+1,1}=path(i).name;
-                        framenum(cntr,1)=jj;
-                        framenum(cntr+1,1)=jj;
-                        cntr=cntr+2;
-                    end
-                end
-            end
-        end
-    elseif sequencer == 2 % Reference image style
-        if ~multitiff
-            for i=1:loopcntr
-                if exist('filepath','var')==0 %first loop
-                    reference_image_i=i;
-                    filepath=[];
-                    framenum=[];
-                else
-                    filepath{size(filepath,1)+1,1}=path(reference_image_i).name; %#ok<AGROW>
-                    filepath{size(filepath,1)+1,1}=path(i).name; %#ok<AGROW>
-                    framenum(size(framenum,1)+1,1)=1;
-                    framenum(size(framenum,1)+1,1)=1;
-                end
-            end
-        else %multitiff
-            filepath=cell(0);
-            framenum=[];
-            cntr=1;
-            for i=1:size(path,1)
-                for jj=1:frames_per_image_file(i)
-                    filepath{cntr,1}=path(1).name;
-                    filepath{cntr+1,1}=path(i).name;
-                    framenum(cntr,1)=1;
-                    framenum(cntr+1,1)=jj;
-                    cntr=cntr+2;
-                end
-            end
-        end
-    end
-
-    if ~pcopanda_dbl_image %for non pco files, we also generate this list which tells us which pixels to load from the image file
-        [~,~,ext] = fileparts(path(1).name);
-        if strcmpi(ext,'.tif') || strcmpi(ext,'.tiff') %for a tiff file, imread accepts a layer index as additional argument, for other files not, WTF!!!
-            img_height=size(imread(path(1).name,1),1);
-        else
-            if ~strcmpi(ext,'.b16')
-                img_height=size(imread(path(1).name),1);
-            else
-                img_height=size(import.f_readB16(path(1).name),1);
-            end
-        end
-        framepart(1,1)=1;
-        framepart(1,2)=img_height;
-        framepart=repmat(framepart,[size(filepath,1),1]);
-    end
-
-    %% Make error reporting for sequencing easier.
-    if numel(framenum) ~= numel(filepath)
-        disp('Error during sequencing.')
-        disp('Please send this debug file to William:')
-        disp([pwd filesep 'sequencing_error_report.mat'])
-        comp_info = computer;
-        matlab_info=ver;
-        myVarList=who;
-        for indVar = 1:length(myVarList)
-            assignin('base',myVarList{indVar},eval(myVarList{indVar}))
-        end
-        save sequencing_error_report.mat;
-        if ~isdeployed
-            %#exclude commandwindow
-            commandwindow
-        end
-    end
-
-    if loopcntr >= 1
-        if size(filepath,1) >1 && mod(size(filepath,1),2)==1
-            cutoff=size(filepath,1);
-            filepath(cutoff)=[];
-            framenum(cutoff)=[];
-            framepart(cutoff,:)=[];
-        end
-        filename=cell(1);
-        for i=1:size(filepath,1)
-            if ispc==1
-                zeichen=strfind(filepath{i,1},'\');
-            else
-                zeichen=strfind(filepath{i,1},'/');
-            end
-            currentpath=filepath{i,1};
-            if ~multitiff
-                if mod(i,2) == 1
-                    filename{i,1}=['A: ' currentpath(zeichen(1,size(zeichen,2))+1:end)];
-                else
-                    filename{i,1}=['B: ' currentpath(zeichen(1,size(zeichen,2))+1:end)];
-                end
-            else
-                if mod(i,2) == 1
-                    filename{i,1}=['A: ' currentpath(zeichen(1,size(zeichen,2))+1:end) ', layer: ' num2str(framenum(i))];
-                else
-                    filename{i,1}=['B: ' currentpath(zeichen(1,size(zeichen,2))+1:end) ', layer: ' num2str(framenum(i))];
-                end
-            end
-        end
-
+    if size(path,1) >= 1
         if size(framepart,1)>=2 %check if enough images loaded
+            currentpath=filepath{end,1};
             %extract path:
-            pathname=currentpath(1:zeichen(1,size(zeichen,2))-1);
+            pathname=fileparts(currentpath);
             gui.put ('pathname',pathname); %last path
             gui.put ('filename',filename); %only for displaying
             gui.put ('filepath',filepath); %full path and filename for analyses

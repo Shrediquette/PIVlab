@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Command line (API) · PIVlab Manual</title>
+  <meta name="description" content="Run a complete PIV analysis from the MATLAB command line with the pivlab.* functions: images, pre-processing, PIV, validation, calibration, derived quantities, figures and sessions.">
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+  <article id="doc">
+    <h1 id="top">Using PIVlab from the command line</h1>
+    <p class="lead">Everything you do in the PIVlab window can also be done in a MATLAB script with
+    the functions of the <code>pivlab</code> package. They use exactly the same code as the GUI,
+    so a script and the GUI give identical results for identical settings. Every function works
+    with only its required inputs and then uses the PIVlab defaults.</p>
+
+    <h2 id="workflow">The workflow in ten lines</h2>
+<pre><code>imgs = pivlab.readImages("Example_data/Jet_*.jpg", "pairwise");   % select and pair images
+imgs = pivlab.preprocess(imgs);                                    % CLAHE + intensity stretch
+res  = pivlab.analyze(imgs);                                       % PIV analysis
+res  = pivlab.filter(res);                                         % remove outliers, interpolate
+res  = pivlab.toMetric(res, DeltaT=0.001, PxPerMeter=1234);        % m and m/s
+[res, vort] = pivlab.derive(res, "vorticity");                     % derived quantities
+m    = pivlab.temporal(res, "mean");                               % temporal mean
+pivlab.display(m, Overlay="magnitude");                            % figure like in the GUI
+pivlab.saveSession(res, "analysis.mat");                           % open it in the GUI later</code></pre>
+    <p>The PIVlab folder must be on the MATLAB path (<code>addpath</code> it, or start PIVlab once).
+    Type <code>help pivlab</code> for an overview and <code>help pivlab.analyze</code> (etc.) for all
+    options of a step. Complete examples are in <code>Example_scripts/PIVlab_api_*.m</code>.</p>
+
+    <h2 id="functions">The functions</h2>
+    <table class="ref">
+      <tr><th>Function</th><th>What it does</th><th>GUI equivalent</th></tr>
+      <tr><td><code>pivlab.readImages(source, sequencing)</code></td><td>File pattern, folder or file list; sequencing <code>"pairwise"</code>, <code>"timeresolved"</code> or <code>"reference"</code>. Multi-page TIFFs, .b16 and pco.panda double images work as in the GUI.</td><td>Import images</td></tr>
+      <tr><td><code>pivlab.preprocess(imgs, ...)</code></td><td>CLAHE, high-pass, intensity capping, Wiener filter, intensity limits, background removal (<code>Background="mean"</code> / <code>"min"</code>), region of interest (<code>Roi</code>) and mask (<code>Mask</code>).</td><td>Image settings</td></tr>
+      <tr><td><code>pivlab.getImage(imgs, k)</code></td><td>One image, pre-processed exactly as it goes into the analysis.</td><td>Apply and preview</td></tr>
+      <tr><td><code>pivlab.analyze(imgs, ...)</code></td><td>FFT window deformation (default), ensemble, DCC or optical flow; window sizes, passes, robustness, uncertainty, parallel processing.</td><td>PIV settings + Analyze</td></tr>
+      <tr><td><code>pivlab.filter(res, ...)</code></td><td>Standard deviation filter, normalized median test, velocity limits, correlation / notch / image-based filters, second-peak substitution, interpolation.</td><td>Vector validation</td></tr>
+      <tr><td><code>pivlab.toMetric(res, ...)</code></td><td>Calibration with <code>DeltaT</code> and <code>PxPerMeter</code> (or <code>ReferenceDistance</code>), origin and axis directions.</td><td>Calibration</td></tr>
+      <tr><td><code>pivlab.derive(res, quantity)</code></td><td>Vorticity, magnitude, u, v, divergence, Q criterion, shear, strain, direction, LIC, correlation, uncertainty; optional spatial / temporal smoothing.</td><td>Derive parameters</td></tr>
+      <tr><td><code>pivlab.temporal(res, op)</code></td><td>Mean, standard deviation, sum, TKE (also phase averages with <code>Frames={...}</code>).</td><td>Temporal statistics</td></tr>
+      <tr><td><code>pivlab.display(res, ...)</code></td><td>Vectors on the particle image or on a transparent colour map with colour bar, all options of the plot settings.</td><td>Plot appearance</td></tr>
+      <tr><td><code>pivlab.defaults()</code>, <code>pivlab.loadSettings(file)</code></td><td>Default settings, or the settings of a settings file or session (detected automatically).</td><td>Load settings</td></tr>
+      <tr><td><code>pivlab.loadSession(file)</code>, <code>pivlab.saveSession(res, file)</code></td><td>Results of a session; save results as a session that opens in the GUI.</td><td>Load / save session</td></tr>
+    </table>
+
+    <h2 id="results">The result struct</h2>
+    <p><code>res</code> holds all image pairs; the third dimension of the arrays is the pair.</p>
+    <table class="ref">
+      <tr><th>Field</th><th>Content</th></tr>
+      <tr><td><code>res.x, res.y</code></td><td>vector positions (px, or m after <code>toMetric</code>)</td></tr>
+      <tr><td><code>res.u, res.v</code></td><td>velocities in <code>res.units</code> (filtered after <code>pivlab.filter</code>, smoothed after a smoothed <code>pivlab.derive</code>)</td></tr>
+      <tr><td><code>res.u_raw, res.v_raw</code></td><td>unfiltered PIV result</td></tr>
+      <tr><td><code>res.typevector</code></td><td>1 = valid, 2 = removed/interpolated, 3 = second correlation peak, 0 = masked</td></tr>
+      <tr><td><code>res.correlation_map</code></td><td>correlation coefficient of every vector</td></tr>
+      <tr><td><code>res.derived</code></td><td>maps computed by <code>pivlab.derive</code>, e.g. <code>res.derived.vorticity</code></td></tr>
+      <tr><td><code>res.px</code></td><td>the same data in pixel units, as PIVlab stores it internally</td></tr>
+    </table>
+
+    <h2 id="settings">Settings</h2>
+    <p>Name=value arguments change single settings. To reuse a complete configuration, pass a settings
+    struct: from <code>pivlab.defaults</code> (then edit it), or from a file saved in the GUI.</p>
+<pre><code>s = pivlab.loadSettings("my_session.mat");       % session or settings file
+imgs = pivlab.preprocess(pivlab.readImages("D:\run1\*.tif", "pairwise"), Settings=s);
+res  = pivlab.analyze(imgs, Settings=s, Parallel=true);
+res  = pivlab.filter(res, Settings=s);
+res  = pivlab.toMetric(res, Settings=s);         % calibration of the session</code></pre>
+
+    <h2 id="memory">Why pre-processing does not create new images</h2>
+    <p><code>pivlab.preprocess</code> only stores the settings (and computes the background image if
+    requested). The filters are applied to every pair inside <code>pivlab.analyze</code>, exactly
+    like the GUI does it, so long image series need no extra memory or disk space.
+    <code>pivlab.getImage</code> shows a pre-processed image.</p>
+
+    <div class="note">
+      <strong>Requirements</strong>
+      MATLAB R2021a or newer and the Image Processing Toolbox (as for the GUI). The
+      Parallel Computing Toolbox is optional (<code>Parallel=true</code>).
+    </div>
+  </article>
+
+  <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/search-index.js"></script>
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

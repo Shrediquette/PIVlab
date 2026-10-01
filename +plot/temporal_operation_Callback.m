@@ -170,83 +170,16 @@ if isempty(resultslist)==0
 						masks_in_frame=mask.px_to_rois(blocations,frame_where_to_put_the_average,masks_in_frame,'on');
 						gui.put('masks_in_frame',masks_in_frame);
 					end
-					typevectoralle=ones(size(typevector));
-
-					%Hier erst neue matrix erstellen mit ausgewÃ¤hlten frames
-					%typevectoralle ist ausgabe fÃ¼r gui
-					%typevectormean ist der mittelwert aller types
-					%typevectormittel ist der stapel aus allen typevectors
-
 					eval(['typevectormittelselected=typevectormittel(:,:,[' this_str ']);']);
-
-					typevectormean=mean(typevectormittelselected,3);  %#ok<USENS>
-					%for i=1:size(typevectormittelselected,3)
-					for i=1:size(typevectormittelselected,1)
-						for j=1:size(typevectormittelselected,2)
-							if mean(typevectormittelselected(i,j,:))==0 %#ok<*IDISVAR>
-								typevectoralle(i,j)=0;
-							end
-						end
-					end
-					%da wo ALLE null sidn auf null setzen.
-					%typevectoralle(typevectormittelselected(:,:,i)==0)=0; %maskierte vektoren sollen im Mean maskiert sein
-					% end
-
-					typevectoralle(typevectormean>1.5)=2; %if more than 50% of vectors are interpolated, then mark vector in mean as interpolated too.
+					eval(['umittelselected=umittel(:,:,[' this_str ']);']);
+					eval(['vmittelselected=vmittel(:,:,[' this_str ']);']);
+					% mean / stdev / sum / TKE (shared with the command-line API, pivlab.temporal)
+					[out_u, out_v, typevectoralle] = plot.temporal_stats(umittelselected, vmittelselected, typevectormittelselected, type); %#ok<USENS,NODEF>
 					resultslist{5,size(filepath,1)/2+1}=typevectoralle;
 					resultslist{1,size(filepath,1)/2+1}=x;
 					resultslist{2,size(filepath,1)/2+1}=y;
-
-					%hier neue matrix mit ausgewÃ¤hlten frames!
-					eval(['umittelselected=umittel(:,:,[' this_str ']);']);
-					eval(['vmittelselected=vmittel(:,:,[' this_str ']);']);
-					if type==3
-						%Turbulent kinetic energy TKE, based on discussion
-						%with H.E. TOUHAMI, improved by Stefano M.
-
-						TKE_x=0.5*var(umittelselected,0,3,'omitnan');
-						TKE_y=0.5*var(vmittelselected,0,3,'omitnan');
-
-						% Calculate the total TKE
-						%TKE = TKE_x + TKE_y; % currently not used. --> calculated in plot.derivative_calc.m
-
-						%remove non-valid measurements
-						TKE_x(typevectormean>=1.75)=nan; %discard everything that has less than 25% valid measurements
-						TKE_y(typevectormean>=1.75)=nan;
-
-						resultslist{3,size(filepath,1)/2+1}=TKE_x;
-						resultslist{4,size(filepath,1)/2+1}=TKE_y;
-					end
-					if type==2
-						%standard deviation
-						out_mean_u=std(umittelselected,0,3,'omitnan'); %#ok<*NANSTD,NODEF>
-						out_mean_v=std(vmittelselected,0,3,'omitnan'); %#ok<NODEF>
-						out_mean_u(typevectormean>=1.75)=nan; %discard everything that has less than 25% valid measurements
-						out_mean_v(typevectormean>=1.75)=nan;
-						resultslist{3,size(filepath,1)/2+1}=out_mean_u;
-						resultslist{4,size(filepath,1)/2+1}=out_mean_v;
-					end
-
-					if type==1
-						out_mean_u=mean(umittelselected,3,'omitnan');
-						out_mean_v=mean(vmittelselected,3,'omitnan');
-						out_mean_u(typevectormean>=1.75)=nan; %discard everything that has less than 25% valid measurements
-						out_mean_v(typevectormean>=1.75)=nan;
-						resultslist{3,size(filepath,1)/2+1}=out_mean_u;
-						resultslist{4,size(filepath,1)/2+1}=out_mean_v;
-					end
-
-					if type==0
-						try
-							resultslist{3,size(filepath,1)/2+1}=sum(umittelselected,3,'omitnan');
-							resultslist{4,size(filepath,1)/2+1}=sum(vmittelselected,3,'omitnan');
-						catch
-							umittelselected(isnan(umittelselected))=0;
-							vmittelselected(isnan(vmittelselected))=0;
-							resultslist{3,size(filepath,1)/2+1}=sum(umittelselected,3);
-							resultslist{4,size(filepath,1)/2+1}=sum(vmittelselected,3);
-						end
-					end
+					resultslist{3,size(filepath,1)/2+1}=out_u;
+					resultslist{4,size(filepath,1)/2+1}=out_v;
 					filepathselected=filepath(1:2:end);
 					eval(['filepathselected=filepathselected([' this_str '],:);']);
 					filepath{size(filepath,1)+1,1}=filepathselected{1,1};

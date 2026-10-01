@@ -32,6 +32,18 @@ https://youtu.be/8B5M31NWlJc
 **Installation:** [https://github.com/Shrediquette/PIVlab/wiki#installation-instructions](https://shrediquette.github.io/PIVlab/wiki/0-installation/)
 
 
+**Command line / scripting:** all GUI steps are available as MATLAB functions in the `pivlab` package (same code as the GUI, PIVlab defaults when options are omitted). Type `help pivlab`, see the [manual page](https://www.pivlab.de/manual/pages/command-line.html) and `Example_scripts/PIVlab_api_workflow.m`:
+```matlab
+imgs = pivlab.readImages("Example_data/Jet_*.jpg", "pairwise");
+imgs = pivlab.preprocess(imgs);
+res  = pivlab.analyze(imgs);
+res  = pivlab.filter(res);
+res  = pivlab.toMetric(res, DeltaT=0.001, PxPerMeter=1234);
+pivlab.display(pivlab.temporal(res, "mean"), Overlay="magnitude");
+pivlab.saveSession(res, "analysis.mat");   % open it in the PIVlab GUI
+```
+
+
 **Wiki with information, tutorials, manuals etc:** [https://github.com/Shrediquette/PIVlab/wiki](https://shrediquette.github.io/PIVlab/wiki)
 
 

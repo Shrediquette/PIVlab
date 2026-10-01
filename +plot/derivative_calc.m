@@ -95,116 +95,40 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 	end
 	end %use_smoothed branch
 
-	%The direction of the coordinate system influences derivatives with gradients.
-	x_axis_direction=get(handles.x_axis_direction,'value'); %1= increase to right, 2= increase to left
-	y_axis_direction=get(handles.y_axis_direction,'value'); %1= increase to bottom, 2= increase to top
-
-	if x_axis_direction==1
-		x_adjusted=x;
-	else
-		x_adjusted=fliplr(x);
-	end
-
-	if y_axis_direction==1
-		y_adjusted=y;
-	else
-		y_adjusted=flipud(y);
-	end
-
-
-	if deriv==1 %vectors only
-		%do nothing
-		%disp('vectors')
-	end
-	if deriv==2 %vorticity
-		[curlz,~]= curl(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
-		derived{1,frame}=-curlz;
-		%disp('vorticity')
-	end
-	if deriv==3 %magnitude
+	%The calculation of the derived quantities is shared with the command-line API (pivlab.derive)
+	cal.calu=calu; cal.calv=calv; cal.calxy=calxy;
+	cal.x_axis_direction=get(handles.x_axis_direction,'value'); %1= increase to right, 2= increase to left
+	cal.y_axis_direction=get(handles.y_axis_direction,'value'); %1= increase to bottom, 2= increase to top
+	copt.subtr_u=subtr_u;
+	copt.subtr_v=subtr_v;
+	copt.is_tke=false;
+	if deriv==3
 		ismean=gui.retr('ismean');
 		if ~isempty(ismean) && ismean(frame) ==1 % temporal derivative
-			%not so nice workaround would be to check if filestring contains TKE, and then change the way that this is calculated...
-			%because magnitude is like (x.^2+v.^2).^0.5   ,   but total TKE is x+y
+			%total TKE is a simple sum of the x and y components, not a vector sum
 			filename=gui.retr('filename');
-			if strncmpi(filename{frame*2-1},'TKE of frames',13) % total TKE is to be calculated, just a simple sum of x and y
-				derived{2,frame}=(u*calu)+(v*calv);
-			else %some other temporal quantity is calculated --> vector sum
-				derived{2,frame}=sqrt((u*calu-subtr_u).^2+(v*calv-subtr_v).^2);
-			end
-		else % a regular (non-average or std or tke) frame is used --> vector sum.
-			derived{2,frame}=sqrt((u*calu-subtr_u).^2+(v*calv-subtr_v).^2);
+			copt.is_tke=strncmpi(filename{frame*2-1},'TKE of frames',13);
 		end
-		%disp('magnitude')
-	end
-	if deriv==4
-		derived{3,frame}=u*calu-subtr_u;
-		%disp('u')
-	end
-	if deriv==5
-		derived{4,frame}=v*calv-subtr_v;
-		%disp('v')
-	end
-	if deriv==6
-		derived{5,frame}=divergence(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
-		%disp('divergence')
-	end
-	if deriv==7
-		%derived{6,frame}=plot.dcev(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
-		derived{6,frame}=plot.qcrit(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
-		%disp('dcev')
-	end
-	if deriv==8
-		derived{7,frame}=plot.shear(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
-		%disp('shear')
-	end
-	if deriv==9
-		derived{8,frame}=plot.strain(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
-		%disp('strain')
 	end
 	if deriv==10
-		%{
-        A=rescale_maps(LIC(v*caluv-subtr_v,u*caluv-subtr_u,frame),0);
-        [curlz,cav]= curl(x*calxy,y*calxy,u*caluv,v*caluv);
-        B= rescale_maps(curlz,0);
-        
-        C=B-min(min(B));
-        C=C/max(max(C));
-        RGB_B = ind2rgb(uint8(C*255),colormap('jet'));
-        RGB_A = ind2rgb(uint8(A*255),colormap('gray'));
-		%}
-		%EDITED for williams visualization
-		%Original:
-		derived{9,frame}=plot.LIC(v*calv-subtr_v,u*calu-subtr_u,frame);
-		%disp('LIC')
-	end
-	if deriv==11
-		try
-			derived{10,frame}=atan2d(v*calv-subtr_v,u*calu-subtr_u);
-		catch
-			derived{10,frame}=v*0;
-			beep;
-			disp('This operation is not supported in your Matlab version. Sorry...');
-		end
-		%disp('angle')
-
+		copt.lic=@(vx,vy) plot.LIC(vx,vy,frame);
 	end
 	if deriv==12
-		derived{11,frame}=resultslist{12,frame}; % correlation map
-		%disp('corrmap')
+		copt.correlation_map=resultslist{12,frame};
 	end
-	if deriv==13
-		if size(resultslist,1)>=15 && ~isempty(resultslist{15,frame})
-			derived{12,frame}=resultslist{15,frame} * abs(calu);
-		else
-			derived{12,frame}=[];
-			if update==1 && handles.multip10.Visible == "off" && handles.multip11.Visible == "off" && handles.multip20.Visible == "off" && gui.retr('alreadydisplayed_warning_uncertainty')==0 % not currently in export panel
-				gui.custom_msgbox('msg',getappdata(0,'hgui'),'No uncertainty data',...
-					['No uncertainty map found for this frame. ' ...
-					'Re-analyze with ''Compute uncertainty'' enabled.'],...
-					'modal',{'OK'},'OK');
-				gui.put('alreadydisplayed_warning_uncertainty',1);
-			end
+	if deriv==13 && size(resultslist,1)>=15
+		copt.uncertainty=resultslist{15,frame};
+	end
+	if deriv>1
+		derived{deriv-1,frame}=plot.compute_derived(x,y,u,v,deriv,cal,copt);
+	end
+	if deriv==13 && isempty(derived{12,frame})
+		if update==1 && handles.multip10.Visible == "off" && handles.multip11.Visible == "off" && handles.multip20.Visible == "off" && gui.retr('alreadydisplayed_warning_uncertainty')==0 % not currently in export panel
+			gui.custom_msgbox('msg',getappdata(0,'hgui'),'No uncertainty data',...
+				['No uncertainty map found for this frame. ' ...
+				'Re-analyze with ''Compute uncertainty'' enabled.'],...
+				'modal',{'OK'},'OK');
+			gui.put('alreadydisplayed_warning_uncertainty',1);
 		end
 	end
 

@@ -46,3 +46,4 @@ resources
 **/*.afphoto
 **/docs/*
 **/logo_design/*
+**/unittests/parity/**/*

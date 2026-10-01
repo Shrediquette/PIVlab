@@ -553,5 +553,23 @@ window.MANUAL_SEARCH = [
     href: "pages/masking.html", hash: "saveload",
     section: "Image settings",
     text: "save all masks load masks import pixel mask binary image reuse mat file"
+  },
+  {
+    title: "Command line (API)",
+    href: "pages/command-line.html",
+    section: "Data",
+    text: "command line api script batch pivlab package readImages preprocess analyze filter toMetric derive temporal display saveSession loadSession loadSettings defaults automation without gui"
+  },
+  {
+    title: "Command line — settings from sessions",
+    href: "pages/command-line.html", hash: "settings",
+    section: "Data",
+    text: "loadSettings settings file session reuse batch processing settings struct defaults name value arguments"
+  },
+  {
+    title: "Command line — result struct",
+    href: "pages/command-line.html", hash: "results",
+    section: "Data",
+    text: "result struct x y u v typevector correlation map derived pixel units metric units"
   }
 ];

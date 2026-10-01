@@ -13,7 +13,7 @@ set(pivlab_axis,'Units','Pixels');
 axessize=get(pivlab_axis,'position');
 set(pivlab_axis,'Units',old_units);
 axessize=axessize(3:4);
-%was ist grÃ¶ÃŸer, x oder y. dann entsprechend die x oder y grÃ¶ÃŸe der axes nehemn
+%was ist größer, x oder y. dann entsprechend die x oder y größe der axes nehemn
 xextend=size(vx,2);
 yextend=size(vx,1);
 if yextend<xextend
@@ -22,38 +22,9 @@ else
 	scalefactor=axessize(2)/yextend;
 end
 
-vx=misc.inpaint_nans(vx); %otherwise LIC will make Matlab crash
-vy=misc.inpaint_nans(vy);
-vx=imresize(vx,scalefactor*LICreso,'bicubic');
-vy=imresize(vy,scalefactor*LICreso,'bicubic');
-
-%{
-this function is from:
-Matlab VFV Toolbox 1.0
-by courtesy of:
-Nima Bigdely Shamlo (email: bigdelys-vfv@yahoo.com)
-Computational Science Research Center
-San Diego State University
-%}
-
-[width,height] = size(vx);
-LIClength = round(max([width,height]) / 30);
-
-kernel = ones(2 * LIClength);
-LICImage = zeros(width, height);
-intensity = ones(width, height); %#ok<*PREALL> % array containing vector intensity
-
-% Making white noise
-noiseImage=rand(width,height);
-
-% Making LIC Image
+% Making LIC Image (shared with the command-line API, plot.LIC_core)
 try
-	for m = 1:iterations
-		[LICImage, intensity,normvx,normvy] = plot.fastLICFunction(double(vx),double(vy),noiseImage,kernel); % External Fast LIC implemennted in C language
-		LICImage = imadjust(LICImage); % Adjust the value range
-		noiseImage = LICImage;
-	end
-	out=LICImage;
+	out=plot.LIC_core(vx,vy,scalefactor*LICreso,iterations);
 	delete(findobj('tag', 'waitplease'));
 catch
 gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',['Could not run the LIC tool.' sprintf('\n') 'Probably the tool is not compiled correctly.' sprintf('\n')  'Please execute the following command in Matlab:' sprintf('\n') sprintf('\n') '     mex +plot\fastLICFunction.c     ' sprintf('\n') sprintf('\n') 'Then try again.'],'modal');

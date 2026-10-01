@@ -119,7 +119,9 @@ window.MANUAL_NAV = {
       title: "Data",
       items: [
         { label: "Exporting results",                   href: "pages/export.html",                status: "live",
-          blurb: "Six ways to get your results out — images, text, MAT, Tecplot, VTK, or straight to the workspace." }
+          blurb: "Six ways to get your results out — images, text, MAT, Tecplot, VTK, or straight to the workspace." },
+        { label: "Command line (API)",                  href: "pages/command-line.html",          status: "live",
+          blurb: "Run the whole analysis from a MATLAB script with the pivlab.* functions — same code as the GUI." }
       ]
     },
     {

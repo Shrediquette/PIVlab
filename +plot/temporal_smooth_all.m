@@ -5,6 +5,7 @@ function temporal_smooth_all()
 % avoids the per-frame neighbour recomputation that the single-frame plot.temporal_smooth
 % performs, so the (expensive) 2D smoothing runs only once per frame instead of once per
 % frame-and-window-neighbour. The result is identical to the single-frame path.
+% The calculation (plot.temporal_smooth_core) is shared with the command-line API (pivlab.derive).
 %
 % Only runs for the temporal smoothing modes: 3 = time, 4 = 2D + time.
 
@@ -32,9 +33,10 @@ end
 interp_missing=get(handles.interpol_missing,'value');
 ismean=gui.retr('ismean');
 
-% Phase 1: spatial field per frame (computed once). Empty where a frame is absent/averaged.
-spatial_u=cell(1,nframes);
-spatial_v=cell(1,nframes);
+% base field per frame (filtered or raw, never the possibly-stale {10/11}); averaged frames do not participate
+U=cell(1,nframes);
+V=cell(1,nframes);
+use=false(1,nframes);
 for f=1:nframes
 	if numel(resultslist{1,f})==0
 		continue
@@ -42,44 +44,16 @@ for f=1:nframes
 	if ~isempty(ismean) && numel(ismean)>=f && ismean(f)==1
 		continue %averaged/STDEV/TKE frames do not participate
 	end
-	[uf,vf]=base_field(resultslist,f);
-	if isempty(uf)
-		continue
-	end
-	if do_2d
-		[uf,vf]=plot.smooth_spatial(uf,vf,S,interp_missing);
-	end
-	spatial_u{f}=uf;
-	spatial_v{f}=vf;
+	[U{f},V{f}]=base_field(resultslist,f);
+	use(f)=~isempty(U{f});
 end
-
-% Phase 2: triangular-weighted, NaN-aware temporal average; write back to {10/11}.
+[Us,Vs]=plot.temporal_smooth_core(U,V,use,h,S,do_2d,interp_missing);
 for f=1:nframes
-	if isempty(spatial_u{f})
+	if isempty(Us{f})
 		continue
 	end
-	refsize=size(spatial_u{f});
-	num_u=zeros(refsize); den_u=zeros(refsize);
-	num_v=zeros(refsize); den_v=zeros(refsize);
-	for d=-h:h
-		g=f+d;
-		if g<1 || g>nframes || isempty(spatial_u{g}) || ~isequal(size(spatial_u{g}),refsize)
-			continue %outside the dataset, missing, or a different grid size
-		end
-		w=(h+1)-abs(d); %triangular (Bartlett) weight, centred on the current frame
-		ug=spatial_u{g}; vu=~isnan(ug); ug(~vu)=0;
-		vg=spatial_v{g}; vv=~isnan(vg); vg(~vv)=0;
-		num_u=num_u+w*ug; den_u=den_u+w*vu;
-		num_v=num_v+w*vg; den_v=den_v+w*vv;
-	end
-	ubar=num_u./den_u; %0/0 -> NaN where no finite frame in the window
-	vbar=num_v./den_v;
-	if interp_missing==0
-		ubar(isnan(spatial_u{f}))=NaN; %restore this frame's original NaNs (matches 2D smoothing)
-		vbar(isnan(spatial_v{f}))=NaN;
-	end
-	resultslist{10,f}=ubar;
-	resultslist{11,f}=vbar;
+	resultslist{10,f}=Us{f};
+	resultslist{11,f}=Vs{f};
 end
 gui.put('resultslist',resultslist);
 

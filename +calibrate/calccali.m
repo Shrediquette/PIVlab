@@ -11,62 +11,26 @@ if isempty(pointscali)
 	end
 end
 if numel(pointscali)>0
-	xposition=pointscali(:,1);
-	yposition=pointscali(:,2);
-	dist=sqrt((xposition(1)-xposition(2))^2 + (yposition(1)-yposition(2))^2);
 	realdist=str2double(get(handles.realdist, 'String'));
 	time=str2double(get(handles.time_inp, 'String'));
-
-
-	calxy=(realdist/1000)/dist; %m/px %realdist=realdistance in m; dist=distance in px
 	x_axis_direction=get(handles.x_axis_direction,'value'); %1= increase to right, 2= increase to left
 	y_axis_direction=get(handles.y_axis_direction,'value'); %1= increase to bottom, 2= increase to top
-
-
-	if time == 0 %user entered zero as time step --> PIVlab will measure displacements instead of velocities
-		gui.put('displacement_only',1)
-		if x_axis_direction==1
-			calu=calxy;
-		else
-			calu=-1*calxy;
-		end
-		if y_axis_direction==1
-			calv=calxy;
-		else
-			calv=-1*calxy;
-		end
-	else
-		gui.put('displacement_only',0)
-		if x_axis_direction==1
-			calu=calxy/(time/1000);
-		else
-			calu=-1*(calxy/(time/1000));
-		end
-		if y_axis_direction==1
-			calv=calxy/(time/1000);
-		else
-			calv=-1*(calxy/(time/1000));
-		end
-	end
-
-	gui.put('calu',calu);
-	gui.put('calv',calv);
-	gui.put('calxy',calxy);
-	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','on')
 	points_offsetx=gui.retr('points_offsetx');
-	if numel(points_offsetx)>0
-		offsetx = calibrate.calculate_offset_axis('x',points_offsetx(1),points_offsetx(3));
-		gui.put('offset_x_true',offsetx);
-	else %no offsets applied
-		gui.put('offset_x_true',0);
-	end
 	points_offsety=gui.retr('points_offsety');
-	if numel(points_offsety)>0
-		offsety = calibrate.calculate_offset_axis('y',points_offsety(2),points_offsety(3));
-		gui.put('offset_y_true',offsety);
-	else %no offsets applied
-		gui.put('offset_y_true',0);
+	size_of_the_image=gui.retr('size_of_the_image');
+	if isempty(size_of_the_image) && (numel(points_offsetx)>0 || numel(points_offsety)>0) %user applies calibration before loading images
+		size_of_the_image=size(gui.retr('caliimg'));
+		gui.put('size_of_the_image',size_of_the_image);
 	end
+	% calibration factors (shared with the command-line API, pivlab.toMetric)
+	cal = calibrate.compute_calibration(pointscali, realdist, time, x_axis_direction, y_axis_direction, points_offsetx, points_offsety, size_of_the_image);
+	gui.put('displacement_only',cal.displacement_only)
+	gui.put('calu',cal.calu);
+	gui.put('calv',cal.calv);
+	gui.put('calxy',cal.calxy);
+	set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','on')
+	gui.put('offset_x_true',cal.offset_x_true);
+	gui.put('offset_y_true',cal.offset_y_true);
 
 	calxy=gui.retr('calxy');
 	calu=gui.retr('calu');calv=gui.retr('calv');

@@ -30,3 +30,4 @@ resources
 **/.claude/**/*
 toolbox.ignore
 package.ignore
+**/unittests/parity/**/*

@@ -29,6 +29,8 @@ arguments
     opts.imdeform           = '*linear'
     opts.repeat             = 0
     opts.do_pad             = 0
+    opts.use_gui            = []         % [] = use the PIVlab GUI if it is open, false = never touch the GUI
+    opts.cam                = []         % camera undistortion (import.cam_settings); [] = from the GUI / none
 end
 required_fields = {'filepath', 'interrogationarea'};
 if ~all(isfield(opts, required_fields))
@@ -96,21 +98,36 @@ tic
 skippy=0;
 cancel=0;
 
-try
-    handles=gui.gethand;
-    view_raw=handles.calib_viewtype.Value;
-    if view_raw==1
+use_gui = opts.use_gui;
+if ~isempty(opts.cam)
+    view = opts.cam.view;
+    cam_use_calibration = opts.cam.use_calibration;
+    cam_use_rectification = opts.cam.use_rectification;
+    cameraParams = opts.cam.cameraParams;
+    rectification_tform = opts.cam.rectification_tform;
+elseif isempty(use_gui) || use_gui
+    try
+        handles=gui.gethand;
+        view_raw=handles.calib_viewtype.Value;
+        if view_raw==1
+            view='valid';
+        elseif view_raw==2
+            view='same';
+        elseif view_raw==3
+            view='full';
+        end
+        cam_use_calibration = gui.retr('cam_use_calibration');
+        cam_use_rectification = gui.retr('cam_use_rectification');
+        cameraParams=gui.retr('cameraParams');
+        rectification_tform = gui.retr('rectification_tform');
+    catch
         view='valid';
-    elseif view_raw==2
-        view='same';
-    elseif view_raw==3
-        view='full';
+        cam_use_calibration=0;
+        cam_use_rectification=0;
+        cameraParams=[];
+        rectification_tform=[];
     end
-    cam_use_calibration = gui.retr('cam_use_calibration');
-    cam_use_rectification = gui.retr('cam_use_rectification');
-    cameraParams=gui.retr('cameraParams');
-    rectification_tform = gui.retr('rectification_tform');
-catch
+else
     view='valid';
     cam_use_calibration=0;
     cam_use_rectification=0;
@@ -189,10 +206,12 @@ image2 = preproc.PIVlab_preproc( ...
                 end
             catch
                 cancel = 1;
-                try
-                    hgui=getappdata(0,'hgui');
-                    setappdata(hgui, 'cancel', cancel);
-                catch
+                if isempty(use_gui) || use_gui
+                    try
+                        hgui=getappdata(0,'hgui');
+                        setappdata(hgui, 'cancel', cancel);
+                    catch
+                    end
                 end
                 disp('')
                 disp('Error: Image dimensions inconsistent!')
@@ -273,19 +292,23 @@ image2 = preproc.PIVlab_preproc( ...
     typevector=ones(numelementsy,numelementsx);
 
     %% MAINLOOP
-    try %check if used from GUI
-        handles=guihandles(getappdata(0,'hgui'));
-        GUI_avail=1;
-        hgui=getappdata(0,'hgui');
-        cancel=getappdata(hgui, 'cancel');
-        if cancel == 1
-            break
-            %disp('user cancelled');
-        end
-
-    catch %#ok<CTCH>
+    if ~isempty(use_gui) && ~use_gui %called from the command-line API: never touch an open GUI
         GUI_avail=0;
-        disp('no GUI')
+    else
+        try %check if used from GUI
+            handles=guihandles(getappdata(0,'hgui'));
+            GUI_avail=1;
+            hgui=getappdata(0,'hgui');
+            cancel=getappdata(hgui, 'cancel');
+            if cancel == 1
+                break
+                %disp('user cancelled');
+            end
+
+        catch %#ok<CTCH>
+            GUI_avail=0;
+            disp('no GUI')
+        end
     end
     % divide images by small pictures
     % new index for image1_roi and image2_roi

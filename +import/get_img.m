@@ -1,63 +1,30 @@
 function [currentimage,rawimage] = get_img(selected)
 handles=gui.gethand;
-filepath = gui.retr('filepath');
-framenum = gui.retr ('framenum');
-framepart = gui.retr ('framepart');
-view_raw=handles.calib_viewtype.Value;
-if view_raw==1
-    view='valid';
-elseif view_raw==2
-    view='same';
-elseif view_raw==3
-    view='full';
-end
-cam_use_calibration = gui.retr('cam_use_calibration');
-cam_use_rectification = gui.retr('cam_use_rectification');
-cameraParams=gui.retr('cameraParams');
-rectification_tform = gui.retr('rectification_tform');
-cam_use_tilted_model = gui.retr('cam_use_tilted_model');
-cam_tilted_D   = gui.retr('cam_tilted_D');
-cam_K_opencv   = gui.retr('cam_K_opencv');
-if isempty(cam_use_tilted_model); cam_use_tilted_model = false; end
-
+src.filepath = gui.retr('filepath');
+src.framenum = gui.retr ('framenum');
+src.framepart = gui.retr ('framepart');
 if gui.retr('video_selection_done') == 0
-    [~,~,ext] = fileparts(filepath{selected});
-    if strcmp(ext,'.b16')
-        currentimage=import.f_readB16(filepath{selected});
-        currentimage = preproc.cam_undistort(currentimage,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform,cam_use_tilted_model,cam_tilted_D,cam_K_opencv);
-        rawimage=currentimage;
-    else
-        currentimage=import.imread_wrapper(filepath{selected},framenum(selected),framepart(selected,:));
-        if size(currentimage,3)>3
-            currentimage=currentimage(:,:,1:3); %Chronos prototype has 4channels (all identical...?)
-        end
-        currentimage = preproc.cam_undistort(currentimage,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform,cam_use_tilted_model,cam_tilted_D,cam_K_opencv);
-        rawimage=currentimage;
-    end
+    src.video_reader_object = [];
 else
-    video_reader_object = gui.retr('video_reader_object');
-    video_frame_selection=gui.retr('video_frame_selection');
-    currentimage = read(video_reader_object,video_frame_selection(selected));
-    currentimage = preproc.cam_undistort(currentimage,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform,cam_use_tilted_model,cam_tilted_D,cam_K_opencv);
-    rawimage=currentimage;
+    src.video_reader_object = gui.retr('video_reader_object');
+    src.video_frame_selection = gui.retr('video_frame_selection');
 end
+cam = import.cam_settings(FromGUI=true);
+bg = [];
 if get(handles.bg_subtract,'Value')>1
     if mod(selected,2)==1 %uneven image nr.
         bg_img = gui.retr('bg_img_A');
     else
         bg_img = gui.retr('bg_img_B');
     end
-
     if isempty(bg_img) %checkbox is enabled, but no bg is present
         set(handles.bg_subtract,'Value',1);
     else
-        if size(currentimage,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
-            currentimage = rgb2gray(currentimage)-bg_img;
-        else
-            currentimage = currentimage-bg_img;
-        end
+        bg = struct('A',gui.retr('bg_img_A'),'B',gui.retr('bg_img_B'));
     end
 end
+% reading, undistortion and background subtraction are shared with the command-line API
+[currentimage,rawimage] = import.read_frame(src, selected, cam, bg);
 
 
 %get and save the image size (assuming that every image of a session has the same size)

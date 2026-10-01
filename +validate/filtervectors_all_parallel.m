@@ -104,6 +104,14 @@ end
 typevector(typevector_original==0)=0; %restores typevector for mask
 %interpolation using inpaint_NaNs
 if interpol_missing==1
-	u=misc.inpaint_nans(u,4);
-	v=misc.inpaint_nans(v,4);
+	try
+		u=misc.inpaint_nans(u,4);
+	catch
+		disp('too many missing vectors, can not interpolate.')
+	end
+	try
+		v=misc.inpaint_nans(v,4);
+	catch
+		disp('too many missing vectors, can not interpolate.')
+	end
 end
