@@ -81,7 +81,11 @@ figure(oldhandle)
         disp('... done.')
         OPTRONIS_src.BFGTLNodeName = 'AcquisitionFrameRate';
         setpoint_delta_t=1/str2double(OPTRONIS_src.BFGTLNodeValueStr)*1000^2;
+        %the microsecond counter in the image header has 24 bits and wraps around every 2^24 us = 16.78 s: unwrap it
         diff_timestamps=diff(timestamp);
+        wrapped=diff_timestamps < -2^23;
+        diff_timestamps(wrapped)=diff_timestamps(wrapped) + 2^24;
+        timestamp=timestamp(1) + [0; cumsum(diff_timestamps)];
         outliers=find(abs(diff_timestamps)>100000);
         diff_timestamps(outliers)=nan;
         error_delta_t=abs(diff_timestamps-setpoint_delta_t);

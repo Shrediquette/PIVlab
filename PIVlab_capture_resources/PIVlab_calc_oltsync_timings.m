@@ -87,7 +87,7 @@ if strcmp(camera_type,'OPTRONIS')
             blind_time=27;
             cam_delay=3;
         case {'CyclonePlus-25-M', 'CyclonePlus-25-M-bitflow'}
-            blind_time=27; %same values as the Cyclone-25-150-M, not yet verified with the synchronizer
+            blind_time=27; %same values as the Cyclone-25-150-M
             cam_delay=3;
         otherwise
             gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','This camera sub type is not known.','modal');

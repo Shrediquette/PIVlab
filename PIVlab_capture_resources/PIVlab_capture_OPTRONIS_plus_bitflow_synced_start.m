@@ -184,6 +184,12 @@ if fps_too_high==0
     bf_set(OPTRONIS_src, 'TriggerActivation', 'RisingEdge');
     bf_set(OPTRONIS_src, 'ExposureMode',      'Timed');
     bf_set(OPTRONIS_src, 'ExposureTime',      num2str(exposure_time));
+    
+    %% Line2 = ExposureActive output (PIV capture only), e.g. to measure the exposure timing on the rig
+    bf_set(OPTRONIS_src, 'LineSelector', 'Line2');
+    bf_set(OPTRONIS_src, 'LineMode',     'Output');
+    bf_set(OPTRONIS_src, 'LineSource',   'ExposureActive');
+    bf_set(OPTRONIS_src, 'LineSelector', 'Line1'); %back to the trigger input line
     if ~isinf(nr_of_images)
         bf_set(OPTRONIS_src, 'OptrEnableFan', 'Off');
     end
