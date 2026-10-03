@@ -150,8 +150,9 @@ if isempty(fh)
     addpath(tempfilepath);
     addpath(fullfile(tempfilepath, 'images'));
     addpath(fullfile(tempfilepath, 'help'));
-    addpath(fullfile(tempfilepath, 'PIVlab_capture_resources'));
-    addpath(fullfile(tempfilepath, 'PIVlab_capture_resources','pco_resources'));
+    % PIVlab_capture_resources with all subfolders (one per camera type, pco_resources, ...), but without *_tests folders
+    capture_paths = strsplit(genpath(fullfile(tempfilepath, 'PIVlab_capture_resources')), pathsep);
+    addpath(capture_paths{~endsWith(capture_paths,'_tests') & ~cellfun(@isempty,capture_paths)});
     try
         ctr=0;
         pivFiles = {'+acquisition' '+calibrate' '+export' '+extract' '+gui' '+import' '+mask' '+misc' '+piv' '+plot' '+postproc' '+preproc' '+roi' '+simulate' '+validate' '+wOFV' '+opencv' 'OptimizationSolvers' 'PIVlab_capture_resources'};
