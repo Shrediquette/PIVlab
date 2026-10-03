@@ -45,6 +45,25 @@ OPTOcam_settings.Source.LineSelector = 'Line1';
 OPTOcam_settings.Source.LineSource   = 'AcquisitionActive';
 OPTOcam_settings.Source.LineInverter = 'False';
 
+%% Binning (set with the "Binning" button). Must be set BEFORE the ROI: the ROI is in binned pixels.
+binning = getappdata(hgui,'binning');
+if isempty(binning)
+    binning = 1;
+end
+if OPTOcam_settings.Source.BinningHorizontal ~= binning || OPTOcam_settings.Source.BinningVertical ~= binning
+    try
+        OPTOcam_vid.ROIPosition = [0 0 OPTOcam_vid.VideoResolution]; %full frame first, so the (reused) camera accepts the new binning
+    catch
+    end
+    OPTOcam_settings.Source.BinningHorizontalMode = 'Average'; %no changes to bitmode, max and min stays the same
+    OPTOcam_settings.Source.BinningVerticalMode = 'Average';
+    OPTOcam_settings.Source.BinningHorizontal = binning; %1, 2 or 4
+    OPTOcam_settings.Source.BinningVertical = binning;
+    %MATLAB updates VideoResolution only when an acquisition starts (measured). Without this, a larger
+    %ROI is rejected after reducing the binning ("VideoResolution width exceeded").
+    start(OPTOcam_vid); stop(OPTOcam_vid);
+end
+
 OPTOcam_settings.Source.TriggerMode ='Off';
 OPTOcam_settings.Source.ExposureMode ='Timed';
 OPTOcam_settings.Source.ExposureTime =exposure_time;

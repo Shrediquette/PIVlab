@@ -192,6 +192,7 @@ if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 20/9') % OPTOcam 20/9 (double-f
 	set(handles.ac_fps,'string',avail_freqs);
 	if ~strcmpi(config_string,old_setting)
 		set(handles.ac_fps,'value',numel(avail_freqs))
+		gui.put('binning',1); %do not inherit a binning that was set for another camera
 	end
 end
 if strcmpi(config_string,'PIVlab LD-PS + OPTRONIS Cyclone') % OPTRONIS

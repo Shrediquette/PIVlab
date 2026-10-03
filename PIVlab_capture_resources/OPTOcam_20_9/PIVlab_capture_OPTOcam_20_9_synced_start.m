@@ -49,6 +49,26 @@ set(PIVlab_axis,'ytick',[])
 set(PIVlab_axis,'xtick',[])
 colorbar(PIVlab_axis)
 
+%% Binning (set with the "Binning" button). Must be set BEFORE the ROI: the ROI is in binned pixels.
+binning = getappdata(hgui,'binning');
+if isempty(binning)
+    binning = 1;
+end
+OPTOcam_settings.Source.mvShutterMode = 'mvGlobalShutter'; %(a reused camera may still be in double-frame mode)
+if OPTOcam_settings.Source.BinningHorizontal ~= binning || OPTOcam_settings.Source.BinningVertical ~= binning
+    try
+        OPTOcam_vid.ROIPosition = [0 0 OPTOcam_vid.VideoResolution]; %full frame first, so the (reused) camera accepts the new binning
+    catch
+    end
+    OPTOcam_settings.Source.BinningHorizontalMode = 'Average'; %no changes to bitmode, max and min stays the same
+    OPTOcam_settings.Source.BinningVerticalMode = 'Average';
+    OPTOcam_settings.Source.BinningHorizontal = binning; %1, 2 or 4
+    OPTOcam_settings.Source.BinningVertical = binning;
+    %MATLAB updates VideoResolution only when an acquisition starts (measured). Without this, a larger
+    %ROI is rejected after reducing the binning ("VideoResolution width exceeded").
+    start(OPTOcam_vid); stop(OPTOcam_vid);
+end
+
 %% ROI (0-based offset for the camera, like the pco/OPTOcam convention)
 ROI_OPTOcam=[ROI_OPTOcam(1)-1,ROI_OPTOcam(2)-1,ROI_OPTOcam(3),ROI_OPTOcam(4)];
 OPTOcam_vid.ROIPosition=ROI_OPTOcam;
