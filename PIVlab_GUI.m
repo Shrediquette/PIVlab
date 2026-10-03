@@ -151,8 +151,10 @@ if isempty(fh)
     addpath(fullfile(tempfilepath, 'images'));
     addpath(fullfile(tempfilepath, 'help'));
     % PIVlab_capture_resources with all subfolders (one per camera type, pco_resources, ...), but without *_tests folders
-    capture_paths = strsplit(genpath(fullfile(tempfilepath, 'PIVlab_capture_resources')), pathsep);
-    addpath(capture_paths{~endsWith(capture_paths,'_tests') & ~cellfun(@isempty,capture_paths)});
+    if ~isdeployed % path of the compiled app is fixed at build time (clean_and_package_PIVlab.m adds these folders)
+        capture_paths = strsplit(genpath(fullfile(tempfilepath, 'PIVlab_capture_resources')), pathsep);
+        addpath(capture_paths{~endsWith(capture_paths,'_tests') & ~cellfun(@isempty,capture_paths)});
+    end
     try
         ctr=0;
         pivFiles = {'+acquisition' '+calibrate' '+export' '+extract' '+gui' '+import' '+mask' '+misc' '+piv' '+plot' '+postproc' '+preproc' '+roi' '+simulate' '+validate' '+wOFV' '+opencv' 'OptimizationSolvers' 'PIVlab_capture_resources'};
