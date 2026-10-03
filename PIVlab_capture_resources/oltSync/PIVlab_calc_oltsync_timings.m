@@ -81,7 +81,7 @@ if strcmp(camera_type,'OPTRONIS')
                 cam_delay=3;
             end
         case 'Cyclone-1HS-3500-M'
-            blind_time=20;
+            blind_time=3;
             cam_delay=3;
         case {'Cyclone-25-150-M', 'Cyclone-25-150-M-bitflow'}
             blind_time=27;
