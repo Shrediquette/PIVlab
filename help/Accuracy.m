@@ -8,12 +8,12 @@ img_size=600;
 partAm=120000;
 Z=0.333; %sheet thickness
 disp(['Generating random artificial PIV images with ' num2str(partAm) ' particles...'])
+flow.type='rotation';
 flow.imageSize=[img_size img_size];
 flow.rotation=5; %maximum displacement of the rotation
-[A,B] = simulate.gui_images(flow.imageSize, @(x,y,z) simulate.flow_field('rotation', x, y, flow), ...
-    Particles=partAm, SheetThickness=Z, Diameter=3, DiameterVariation=0);
 [x_real,y_real]=meshgrid(1:img_size);
-[u_real,v_real]=simulate.flow_field('rotation', x_real, y_real, flow);
+[u_real,v_real]=simulate.flow_field(flow, x_real, y_real);
+[A,B] = simulate.gui_images(x_real, y_real, u_real, v_real, Particles=partAm, SheetThickness=Z, Diameter=3, DiameterVariation=0);
 
 clearvars -except A B u_real v_real x_real y_real
 fprintf('\n\n');

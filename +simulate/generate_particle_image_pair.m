@@ -16,7 +16,11 @@ arguments
     opts.dt         (1,1) double = 4      % mean particle diameter [px]
     opts.ddt        (1,1) double = 0.25   % particle diameter std deviation
 end
-[A, B] = simulate.gui_images([opts.img_size opts.img_size], @(x,y,z) deal(0*x, 0*x + displacement_v), ...
+% uniform displacement: a grid with the image corners is enough
+[x, y] = meshgrid([1 opts.img_size], [1 opts.img_size]);
+u = zeros(2, 2);
+v = zeros(2, 2) + displacement_v;
+[A, B] = simulate.gui_images(x, y, u, v, ImageSize=[opts.img_size opts.img_size], ...
     Particles=opts.partAm, SheetThickness=opts.Z, Diameter=opts.dt, DiameterVariation=opts.ddt, Noise=noise);
 A = mat2gray(A);
 B = mat2gray(B);
