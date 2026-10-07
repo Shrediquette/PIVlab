@@ -145,6 +145,31 @@ else
     ok = check('settings from session -> same analysis', res.px.u_raw(:,:,1), rl{3,1}) && ok;
 end
 
+%% camera undistortion and rectification (camera_undistortion)
+B = load(fullfile(basedir,'camera_undistortion.mat'));
+files = cell(8,1);
+for i = 1:4
+    files{2*i-1} = fullfile(root,'Example_data','worst_case_distortion',sprintf('PIVlab_%04d_A.jpg',i-1));
+    files{2*i}   = fullfile(root,'Example_data','worst_case_distortion',sprintf('PIVlab_%04d_B.jpg',i-1));
+end
+imgs = pivlab.readImages(files, "pairwise");
+sz = imgs.imageSize;
+f = 0.9*sz(2);
+cp = cameraParameters('K', [f 0 sz(2)/2; 0 f sz(1)/2; 0 0 1], 'RadialDistortion', [-0.25 0.06], 'ImageSize', sz);
+imgs = pivlab.preprocess(imgs, Camera=cp, CameraView="same", Verbose=false);
+res = pivlab.analyze(imgs, Passes=2, PassSizes=[32 32 32], Verbose=false);
+ok = cmp_rl('camera undistorted raw', res, B.serial.undistorted, 'raw') && ok;
+bg = pivlab.preprocess(imgs, Background="mean", Verbose=false);
+ok = check('camera background A', bg.background.A, B.bg_A) && ok;
+ok = check('camera background B', bg.background.B, B.bg_B) && ok;
+res = pivlab.analyze(bg, Passes=2, PassSizes=[32 32 32], Verbose=false);
+ok = cmp_rl('camera undistorted + background raw', res, B.serial.undistorted_bg, 'raw') && ok;
+a = 3*pi/180;
+rect = affine2d([cos(a) sin(a) 0; -sin(a) cos(a) 0; 0 0 1]);
+imgs = pivlab.preprocess(imgs, Camera=cp, CameraView="same", Rectification=rect, Verbose=false);
+res = pivlab.analyze(imgs, Passes=2, PassSizes=[32 32 32], Verbose=false);
+ok = cmp_rl('camera rectified raw', res, B.serial.rectified, 'raw') && ok;
+
 if ok
     fprintf('API_VS_GUI_MORE: ALL IDENTICAL\n');
 else
@@ -210,6 +235,8 @@ function p = to_this_root(p, basedir, root)
 % file paths of a reference run made in another PIVlab folder (e.g. a git worktree)
 f = fullfile(basedir,'root.txt');
 if isfile(f)
-    p = strrep(p, strtrim(fileread(f)), root);
+    other = strtrim(fileread(f));
+    p = strrep(p, other, root);
+    p = strrep(p, strrep(other, '/', '\'), root);   % root.txt may use / and the paths \
 end
 end

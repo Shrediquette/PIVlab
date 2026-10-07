@@ -33,7 +33,7 @@ pivlab.saveSession(res, "analysis.mat");                           % open it in 
     <table class="ref">
       <tr><th>Function</th><th>What it does</th><th>GUI equivalent</th></tr>
       <tr><td><code>pivlab.readImages(source, sequencing)</code></td><td>File pattern, folder or file list; sequencing <code>"pairwise"</code>, <code>"timeresolved"</code> or <code>"reference"</code>. Multi-page TIFFs, .b16 and pco.panda double images work as in the GUI.</td><td>Import images</td></tr>
-      <tr><td><code>pivlab.preprocess(imgs, ...)</code></td><td>CLAHE, high-pass, intensity capping, Wiener filter, intensity limits, background removal (<code>Background="mean"</code> / <code>"min"</code>), region of interest (<code>Roi</code>) and mask (<code>Mask</code>).</td><td>Image settings</td></tr>
+      <tr><td><code>pivlab.preprocess(imgs, ...)</code></td><td>CLAHE, high-pass, intensity capping, Wiener filter, intensity limits, background removal (<code>Background="mean"</code> / <code>"min"</code>), region of interest (<code>Roi</code>), mask (<code>Mask</code>) and camera calibration (<code>Camera</code>, see <a href="#camera">below</a>).</td><td>Image settings</td></tr>
       <tr><td><code>pivlab.getImage(imgs, k)</code></td><td>One image, pre-processed exactly as it goes into the analysis.</td><td>Apply and preview</td></tr>
       <tr><td><code>pivlab.analyze(imgs, ...)</code></td><td>FFT window deformation (default), ensemble, DCC or optical flow; window sizes, passes, robustness, uncertainty, parallel processing.</td><td>PIV settings + Analyze</td></tr>
       <tr><td><code>pivlab.filter(res, ...)</code></td><td>Standard deviation filter, normalized median test, velocity limits, correlation / notch / image-based filters, second-peak substitution, interpolation.</td><td>Vector validation</td></tr>
@@ -88,6 +88,34 @@ imgs = pivlab.preprocess(pivlab.readImages("D:\run1\*.tif", "pairwise"), Setting
 res  = pivlab.analyze(imgs, Settings=s, Parallel=true);
 res  = pivlab.filter(res, Settings=s);
 res  = pivlab.toMetric(res, Settings=s);         % calibration of the session</code></pre>
+
+    <h2 id="camera">Camera calibration (lens undistortion, rectification)</h2>
+    <p>Make the camera calibration in the PIVlab window
+    (<a href="camera-calibration.html">Camera calibration &amp; rectification</a>): there you see
+    the detected markers and the corrected images. A script then uses the result with the
+    <code>Camera</code> option of <code>pivlab.preprocess</code>:</p>
+<pre><code>imgs = pivlab.readImages("D:\run1\*.tif", "pairwise");
+% undistortion and rectification exactly as in a session
+imgs = pivlab.preprocess(imgs, Camera="my_session.mat");
+% or: undistortion from a file saved with "Save camera parameters"
+imgs = pivlab.preprocess(imgs, Camera="camera_calibration.mat");</code></pre>
+    <table class="ref">
+      <tr><th>Option</th><th>Values</th></tr>
+      <tr><td><code>Camera</code></td><td>A PIVlab session: lens undistortion and rectification exactly as they were
+      used in the session. A camera calibration file saved with <span class="ui">Save camera parameters</span>:
+      lens undistortion only. A <code>cameraParameters</code> object (Computer Vision Toolbox).
+      <code>"none"</code> switches the undistortion off.</td></tr>
+      <tr><td><code>CameraView</code></td><td><code>"valid"</code> (cut away black borders), <code>"same"</code>
+      (same size as the input image) or <code>"full"</code> (include black borders). Default: as in the
+      session, else <code>"valid"</code>.</td></tr>
+      <tr><td><code>Rectification</code></td><td><code>false</code> switches the rectification of a session off;
+      a 2-D transformation (e.g. <code>projtform2d</code>) rectifies the undistorted images with it.
+      Default: as in the session.</td></tr>
+    </table>
+    <p>All following steps use the corrected images: <code>Roi</code> and <code>Mask</code> refer to them,
+    <code>imgs.imageSize</code> is their size, and <code>pivlab.getImage</code> shows them.
+    <code>pivlab.loadSession</code> restores the camera calibration of a session, and
+    <code>pivlab.saveSession</code> saves it, so the GUI opens the session with the same corrected images.</p>
 
     <h2 id="memory">Why pre-processing does not create new images</h2>
     <p><code>pivlab.preprocess</code> only stores the settings (and computes the background image if

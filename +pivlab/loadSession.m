@@ -5,6 +5,8 @@ function [res, s] = loadSession(file)
 %        the validated and (if present) smoothed data and the temporal statistics frames
 %        (res.isMean). Use it with pivlab.derive, pivlab.temporal, pivlab.display, ...
 %   s    the settings stored in the session (as pivlab.loadSettings returns them)
+%   The camera calibration of the session (lens undistortion, rectification) is restored too
+%   (res.images.cam), so images shown or read later are corrected like in the GUI.
 %
 %   Example
 %       res = pivlab.loadSession("PIVlab_session.mat");
@@ -100,7 +102,12 @@ imgs.pairs = numel(L.filepath)/2;
 imsize = getf(L,'expected_image_size',[]);
 if isempty(imsize), imsize = getf(L,'size_of_the_image',[]); end
 imgs.imageSize = imsize(1:min(2,end));
+% camera calibration (lens undistortion, rectification) exactly as used in the session
 imgs.cam = import.cam_settings();
+if isfield(L,'cam_use_calibration') && isequal(double(L.cam_use_calibration), 1) ...
+        && isfield(L,'cameraParams') && ~isempty(L.cameraParams)
+    imgs.cam = camera_from_source(file, [], []);
+end
 imgs.preprocess = s.preprocess;
 imgs.background = [];
 if ~isempty(getf(L,'bg_img_A',[]))

@@ -17,7 +17,7 @@
 %
 % Images and pre-processing
 %   readImages   - Select the images and the sequencing ("pairwise", "timeresolved", "reference")
-%   preprocess   - Contrast enhancement, background removal, region of interest, mask
+%   preprocess   - Contrast enhancement, background removal, region of interest, mask, camera calibration
 %   getImage     - Read one (pre-processed) image
 %
 % Analysis and post-processing

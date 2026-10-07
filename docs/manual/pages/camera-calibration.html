@@ -135,6 +135,14 @@
       enabled at the same time: undistortion first removes lens artifacts, then rectification
       aligns the corrected image with your coordinate system.
     </div>
+
+    <div class="note">
+      <strong>Using the calibration in a script</strong>
+      Save a session (or the camera parameters) after the calibration. A MATLAB script then applies
+      the same undistortion and rectification with
+      <code>pivlab.preprocess(imgs, Camera="my_session.mat")</code> — see
+      <a href="command-line.html#camera">Command line (API)</a>.
+    </div>
   </article>
 
   <script src="../assets/js/nav.js"></script>

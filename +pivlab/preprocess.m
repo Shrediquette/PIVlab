@@ -25,12 +25,29 @@ function imgs = preprocess(imgs, opts)
 %   Mask               logical image (true = masked, same mask for every pair), a cell array
 %                      with one logical image per pair, or PIVlab mask objects (masks_in_frame),
 %                      "none" = no mask
+%   Camera             camera calibration (lens undistortion, optional rectification), like the
+%                      camera calibration panels of the PIVlab GUI:
+%                      - a camera calibration file saved in PIVlab ("Save camera parameters")
+%                      - a PIVlab session: its camera calibration and rectification, as they were
+%                        used in the session
+%                      - a cameraParameters / cameraIntrinsics object (Computer Vision Toolbox)
+%                      - "none": no undistortion
+%                      Default: keep the camera calibration of imgs (none after readImages).
+%                      The camera calibration itself is made in the PIVlab GUI (visual feedback).
+%   CameraView         "valid" (cut away black borders, default), "same" (same size as the input
+%                      image) or "full" (include black borders); default from the session
+%   Rectification      true / false, or a 2-D transformation (e.g. projtform2d) from the undistorted
+%                      to the rectified image. Default: as in the session, else none.
 %   Verbose            true (default) / false: print progress messages
 %   Settings           settings struct from pivlab.defaults or pivlab.loadSettings
+%
+%   With a camera calibration, all following steps (Roi, Mask, analysis, display) use the corrected
+%   images; imgs.imageSize is the size of the corrected image.
 %
 %   Example
 %       imgs = pivlab.readImages("Example_data/Jet_*.jpg", "pairwise");
 %       imgs = pivlab.preprocess(imgs, Highpass=true, Background="min");
+%       imgs = pivlab.preprocess(imgs, Camera="my_session.mat");   % undistortion + rectification
 %
 %   See also pivlab.readImages, pivlab.analyze, pivlab.getImage
 arguments
@@ -48,11 +65,36 @@ arguments
     opts.Background = []
     opts.Roi = []
     opts.Mask = []
+    opts.Camera = []
+    opts.CameraView = []
+    opts.Rectification = []
     opts.Verbose (1,1) logical = true
     opts.Settings struct = struct()
 end
 verbose = opts.Verbose;
-opts = rmfield(opts, 'Verbose');
+camera = opts.Camera;
+camera_view = opts.CameraView;
+rectification = opts.Rectification;
+opts = rmfield(opts, {'Verbose', 'Camera', 'CameraView', 'Rectification'});
+
+% camera calibration first: region of interest and mask refer to the corrected image
+if isempty(camera) && (~isempty(camera_view) || ~isempty(rectification))
+    error('pivlab:preprocess:camera', 'CameraView and Rectification need the Camera option.');
+end
+if ~isempty(camera)
+    imgs.cam = camera_from_source(camera, camera_view, rectification);
+    first = import.read_frame(imgs, 1, imgs.cam, []);
+    imgs.imageSize = [size(first,1) size(first,2)];
+    if verbose && imgs.cam.use_calibration
+        what = 'lens undistortion';
+        if imgs.cam.use_rectification
+            what = [what ' and rectification'];
+        end
+        fprintf('Camera calibration: %s (view "%s"), corrected image size %d x %d pixels.\n', ...
+            what, imgs.cam.view, imgs.imageSize(2), imgs.imageSize(1));
+    end
+end
+
 p = resolve_options('preprocess', opts);
 % "none" switches a region of interest or a mask off (also one that came in through Settings)
 if is_none(p.Roi)

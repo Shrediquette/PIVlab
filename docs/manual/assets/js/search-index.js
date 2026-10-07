@@ -577,5 +577,11 @@ window.MANUAL_SEARCH = [
     href: "pages/command-line.html", hash: "options",
     section: "Data",
     text: "verbose quiet progress messages none roi mask velocity limits units warning options without effect"
+  },
+  {
+    title: "Command line — camera calibration",
+    href: "pages/command-line.html", hash: "camera",
+    section: "Data",
+    text: "camera calibration lens undistortion distortion rectification script api preprocess Camera CameraView Rectification cameraParameters session camera parameters file valid same full"
   }
 ];

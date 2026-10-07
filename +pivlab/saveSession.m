@@ -4,6 +4,8 @@ function saveSession(res, file, opts)
 %   settings, the calibration, the raw, validated and smoothed vector fields, the masks and the
 %   region of interest of res into a PIVlab session file ("File -> Load session" in PIVlab).
 %   The image files must still exist when the session is opened in the GUI.
+%   The camera calibration (pivlab.preprocess, Camera option) is saved too, so the GUI shows and
+%   analyses the corrected images.
 %   Values you changed by hand in res.u / res.v are saved as the validated data.
 %
 %   Name=value options
@@ -110,6 +112,21 @@ V.ismean = double(res.isMean(:));
 V.video_selection_done = 0;
 V.expected_image_size = imgs.imageSize;
 V.size_of_the_image = imgs.imageSize;
+
+%% camera calibration (lens undistortion, rectification), as the GUI stores it
+cam = imgs.cam;
+V.cam_use_calibration = double(cam.use_calibration);
+V.cam_use_rectification = double(cam.use_rectification);
+V.cameraParams = cam.cameraParams;
+V.rectification_tform = cam.rectification_tform;
+V.cam_use_tilted_model = logical(cam.use_tilted_model);
+V.cam_tilted_D = cam.tilted_D;
+V.cam_K_opencv = cam.K_opencv;
+G.calibration.calib_usecalibration = double(cam.use_calibration);
+G.calibration.calib_userectification = double(cam.use_rectification);
+G.calibration.calib_use_tilted_model = double(cam.use_tilted_model);
+view_names = {'valid', 'same', 'full'};
+G.calibration.calib_viewtype = find(strcmp(view_names, cam.view));
 
 %% pre-processing, masks, region of interest
 V.roirect = [];

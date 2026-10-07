@@ -200,7 +200,91 @@ pivlab.filter(res, VelocityLimits=[-0.01 0.01 -0.01 0.01], Verbose=false);
 testCase.verifyEqual(id, 'pivlab:filter:manyRemoved');
 end
 
+function test_camera_sources(testCase)
+imgs = pivlab.readImages(distortionFiles(testCase.TestData.ProjectRoot, 2), "pairwise");
+raw_size = imgs.imageSize;
+cp = cameraModel(raw_size);
+% cameraParameters object, view "valid" (default): black borders cut away, so smaller than "full"
+p = pivlab.preprocess(imgs, Camera=cp, Verbose=false);
+testCase.verifyEqual(p.cam.view, 'valid');
+testCase.verifyEqual(p.cam.use_calibration, 1);
+testCase.verifyNotEqual(p.imageSize, raw_size);
+testCase.verifyEqual(size(pivlab.getImage(p, 1)), p.imageSize);
+full = pivlab.preprocess(imgs, Camera=cp, CameraView="full", Verbose=false);
+testCase.verifyTrue(all(p.imageSize < full.imageSize));
+% view "same": size of the input image
+p = pivlab.preprocess(imgs, Camera=cp, CameraView="same", Verbose=false);
+testCase.verifyEqual(p.imageSize, raw_size);
+% camera calibration file saved in the GUI ("Save camera parameters")
+cameraParams = cp;
+cam_selected_target_images = {};
+cam_use_tilted_model = false;
+cam_tilted_D = [];
+cam_K_opencv = [];
+f = fullfile(testCase.TestData.Dir, 'camera_calibration.mat');
+save(f, "cameraParams", "cam_selected_target_images", "cam_use_tilted_model", "cam_tilted_D", "cam_K_opencv");
+q = pivlab.preprocess(imgs, Camera=f, CameraView="same", Verbose=false);
+verifySameCamera(testCase, q.cam, p.cam);
+testCase.verifyEqual(pivlab.getImage(q, 1), pivlab.getImage(p, 1));
+% pre-processing without the Camera option keeps the camera calibration
+k = pivlab.preprocess(q, Highpass=true, Verbose=false);
+testCase.verifyEqual(k.cam, q.cam);
+% "none" switches the undistortion off again
+n = pivlab.preprocess(q, Camera="none", Verbose=false);
+testCase.verifyEqual(n.cam.use_calibration, 0);
+testCase.verifyEqual(n.imageSize, raw_size);
+% wrong use
+testCase.verifyEqual(preprocessError(imgs, 'CameraView', "same"), 'pivlab:preprocess:camera');
+testCase.verifyEqual(preprocessError(imgs, 'Camera', cp, 'CameraView', "big"), 'pivlab:preprocess:cameraView');
+testCase.verifyEqual(preprocessError(imgs, 'Camera', cp, 'Rectification', true), 'pivlab:preprocess:rectification');
+testCase.verifyEqual(preprocessError(imgs, 'Camera', testCase.TestData.Files{1}), 'pivlab:preprocess:cameraFile');
+% a session without camera calibration
+jet = pivlab.preprocess(pivlab.readImages(testCase.TestData.Files(1:2), "pairwise"), Verbose=false);
+s = fullfile(testCase.TestData.Dir, 'no_camera.mat');
+pivlab.saveSession(pivlab.analyze(jet, Verbose=false), s, Verbose=false);
+testCase.verifyEqual(preprocessError(imgs, 'Camera', s), 'pivlab:preprocess:noCameraCalibration');
+r = pivlab.loadSession(s);
+testCase.verifyEqual(r.images.cam.use_calibration, 0);
+end
+
 %% ------------------------------------------------------------------ API vs. GUI
+function test_camera_session_roundtrip_and_gui(testCase)
+% undistortion + rectification: saved in a session, loaded by the API and by the GUI
+files = distortionFiles(testCase.TestData.ProjectRoot, 2);
+raw = pivlab.readImages(files, "pairwise");
+a = 3*pi/180;
+rect = affine2d([cos(a) sin(a) 0; -sin(a) cos(a) 0; 0 0 1]);
+imgs = pivlab.preprocess(raw, Camera=cameraModel(raw.imageSize), CameraView="same", Rectification=rect, Verbose=false);
+res = pivlab.analyze(imgs, Verbose=false);
+f = fullfile(testCase.TestData.Dir, 'camera_session.mat');
+pivlab.saveSession(res, f, Verbose=false);
+% API: loadSession and the session as Camera source give the same camera calibration
+r = pivlab.loadSession(f);
+verifySameCamera(testCase, r.images.cam, imgs.cam);
+p = pivlab.preprocess(raw, Camera=f, Verbose=false);
+verifySameCamera(testCase, p.cam, imgs.cam);
+testCase.verifyEqual(p.imageSize, imgs.imageSize);
+p = pivlab.preprocess(raw, Camera=f, Rectification=false, Verbose=false);
+testCase.verifyEqual(p.cam.use_rectification, 0);
+testCase.verifyEqual(p.cam.view, 'same');
+% GUI: undistortion and rectification are switched on, and the analysis gives the same result
+startPIVlab();
+import.load_session_Callback(1, f); drawnow;
+h = gui.gethand;
+testCase.verifyEqual(gui.retr('cam_use_calibration'), 1);
+testCase.verifyEqual(gui.retr('cam_use_rectification'), 1);
+testCase.verifyEqual(h.calib_viewtype.Value, 2);
+verifySameCamera(testCase, import.cam_settings(FromGUI=true), imgs.cam);
+set(h.update_display_checkbox,'Value',0);
+piv.AnalyzeAll_Callback([],[],[]);
+rl = gui.retr('resultslist');
+for k = 1:2
+    testCase.verifyEqual(rl{3,k}, res.px.u_raw(:,:,k), sprintf('raw u, pair %d', k));
+    testCase.verifyEqual(rl{4,k}, res.px.v_raw(:,:,k), sprintf('raw v, pair %d', k));
+end
+closePIVlab();
+end
+
 function test_api_results_equal_gui_results(testCase)
 files = testCase.TestData.Files;
 % GUI
@@ -262,6 +346,42 @@ f = cell(2*n,1);
 for i = 1:n
     f{2*i-1} = fullfile(root,'Example_data',sprintf('Jet_%04dA.jpg',i));
     f{2*i}   = fullfile(root,'Example_data',sprintf('Jet_%04dB.jpg',i));
+end
+end
+
+function f = distortionFiles(root, n)
+% fisheye example images (strong barrel distortion)
+f = cell(2*n,1);
+for i = 1:n
+    f{2*i-1} = fullfile(root,'Example_data','worst_case_distortion',sprintf('PIVlab_%04d_A.jpg',i-1));
+    f{2*i}   = fullfile(root,'Example_data','worst_case_distortion',sprintf('PIVlab_%04d_B.jpg',i-1));
+end
+end
+
+function cp = cameraModel(sz)
+% strong barrel distortion, similar to the fisheye lens of the worst_case_distortion images
+f = 0.9*sz(2);
+K = [f 0 sz(2)/2; 0 f sz(1)/2; 0 0 1];
+cp = cameraParameters('K', K, 'RadialDistortion', [-0.25 0.06], 'ImageSize', sz);
+end
+
+function verifySameCamera(testCase, a, b)
+% camera settings: equal, the camera model compared by its lens parameters (a cameraParameters
+% object read from a file differs in empty, unused properties)
+testCase.verifyEqual(rmfield(a, 'cameraParams'), rmfield(b, 'cameraParams'));
+names = {'K', 'RadialDistortion', 'TangentialDistortion', 'ImageSize'};
+for k = 1:numel(names)
+    testCase.verifyEqual(a.cameraParams.(names{k}), b.cameraParams.(names{k}), names{k});
+end
+end
+
+function id = preprocessError(imgs, varargin)
+% identifier of the error of pivlab.preprocess(imgs, varargin{:}), '' if there is none
+id = '';
+try
+    pivlab.preprocess(imgs, varargin{:}, 'Verbose', false);
+catch err
+    id = err.identifier;
 end
 end
 
