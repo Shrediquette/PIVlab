@@ -12,7 +12,7 @@
 % f_readB16 by Carl Hall
 % natsort, natsortfiles by Stephen23
 %% TODO:
-function PIVlab_GUI(desired_num_cores,batch_session_file)
+function PIVlab_GUI(desired_num_cores)
 %% display splash screen in deployed version
 %isdeployed=1 %debug splash screen
 if isdeployed
@@ -380,12 +380,6 @@ if isempty(fh)
     gui.displogo(1);
     %% Apply remembered Basic/Advanced mode before window becomes visible
     ui_mode=gui.get_preference('ui_mode','advanced');   %default when no preference has been stored yet
-    %Force Advanced mode for GUI batch processing (see below), so every control
-    %the automated workflow relies on is available. This only overrides the
-    %in-memory mode; the user's stored preference is left untouched.
-    if exist('batch_session_file','var') && exist(batch_session_file,'file')
-        ui_mode='advanced';
-    end
     gui.apply_ui_mode(ui_mode);
     %% Apply fix for wrong UI scaling introduced between matlab 2025a prerelease5 and Matlab2025a
     try
@@ -480,32 +474,9 @@ if isempty(fh)
     pause(0.5);	set(MainWindow, 'Visible','on');	pause(0.25);	drawnow;
     gui.switchui('multip01');
     disp('-> GUI initialization finished.')
-    %% Batch session  processing in GUI
-    if ~exist('batch_session_file','var') %no input argument --> no GUI batch processing
-        gui.put('batchModeActive',0)
-    else
-        if exist (batch_session_file,'file')
-            gui.put('batchModeActive',1)
-            [filepath,name,ext] = fileparts(batch_session_file);
-            import.load_session_Callback (1,batch_session_file)
-            disp('')
-            disp(['Batch mode, analyzing ' batch_session_file])
-            batch_session_file_output=fullfile(filepath,[name '_BATCH' ext]);
-            disp(['Output will be saved as:  ' batch_session_file_output ])
-            disp('...running PIV analysis...')
-            piv.do_analys_Callback
-            piv.AnalyzeAll_Callback
-            disp('...running post processing...')
-            validate.apply_filter_all_Callback
-            disp('...saving output...')
-            export.save_session_Callback(1,batch_session_file_output)
-            disp('done, exiting...')
-            gui.MainWindow_CloseRequestFcn
-        else
-            disp(['NOT FOUND: ' batch_session_file])
-            gui.put('batchModeActive',0)
-        end
-	end
+    % scripts that drive the GUI (tests, parity check, rig skill) set this to 1: then PIVlab asks no
+    % questions (quit, image sequencing, vector display density)
+    gui.put('batchModeActive',0)
 else %Figure handle does already exist --> bring PIVlab to foreground.
     disp('Only one instance of PIVlab is allowed to run.')
     figure(fh)
