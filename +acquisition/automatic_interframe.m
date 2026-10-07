@@ -31,7 +31,7 @@ if strmatch(button,'OK')==1
     ac_ROI_realtime=gui.retr('ac_ROI_realtime');
 
     if strcmpi(camera_type,'OPTRONIS')
-        OPTRONIS_bits=gui.retr('OPTRONIS_bits');
+        OPTRONIS_bits=gui.camera_setting('OPTRONIS_bits');
         if isempty(OPTRONIS_bits)
             OPTRONIS_bits=8;
         end

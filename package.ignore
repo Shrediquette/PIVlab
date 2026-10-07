@@ -31,3 +31,4 @@ resources
 toolbox.ignore
 package.ignore
 **/unittests/parity/**/*
+**/dev_notes/**/*

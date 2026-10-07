@@ -14,9 +14,9 @@ hgui=getappdata(0,'hgui');
 OutputError=0;
 PIVlab_axis = gui.retr('pivlab_axis');
 
-resx=getappdata(hgui,'Chronos_resx');
-resy=getappdata(hgui,'Chronos_resy');
-bitdepth=getappdata(hgui,'Chronos_bits');
+resx=gui.camera_setting('Chronos_resx');
+resy=gui.camera_setting('Chronos_resy');
+bitdepth=gui.camera_setting('Chronos_bits');
 
 
 image_handle_chronos=imagesc(zeros(resy,resx),'Parent',PIVlab_axis,[0 2^16]);

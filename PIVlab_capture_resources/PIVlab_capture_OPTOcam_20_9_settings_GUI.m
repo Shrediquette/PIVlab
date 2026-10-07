@@ -80,7 +80,7 @@ if isempty(fh)
 	item=[parentitem(3)/2 item(2)+item(4)+margin/2 parentitem(3)/2 2];
 	handles.apply_btn = uicontrol(handles.mainpanel,'Style','pushbutton','String','Apply','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@Apply_settings,'tag','apply_btn');
 
-	OPTOcam_bits=retr('OPTOcam_20_9_bits');
+	OPTOcam_bits=gui.camera_setting('OPTOcam_20_9_bits');
 	if ~isempty(OPTOcam_bits)
 		if OPTOcam_bits == 8
 			set(handles.bitdepth,'Value',1);
@@ -89,7 +89,7 @@ if isempty(fh)
 		end
 	end
 
-	OPTOcam_gain=retr('OPTOcam_20_9_gain');
+	OPTOcam_gain=gui.camera_setting('OPTOcam_20_9_gain');
 	if ~isempty(OPTOcam_gain)
 		set(handles.gain,'String',num2str(OPTOcam_gain));
 	end
@@ -105,7 +105,7 @@ handles=gethand;
 
 bitchoices=get(handles.bitdepth,'String');
 OPTOcam_bits=str2double(bitchoices{get(handles.bitdepth,'value')});
-put('OPTOcam_20_9_bits',OPTOcam_bits);
+gui.set_camera_setting('OPTOcam_20_9_bits',OPTOcam_bits);
 
 %% pulse distance limits depend on the bit depth (same values as in select_capture_config_Callback)
 T209 = PIVlab_capture_OPTOcam_20_9_timing(OPTOcam_bits,1000,0);
@@ -120,7 +120,7 @@ if isnan(gainval)
 end
 gainval=max(0,min(48,gainval));
 set(handles.gain,'String',num2str(gainval)); %reflect any clamping back to the field
-put('OPTOcam_20_9_gain',gainval);
+gui.set_camera_setting('OPTOcam_20_9_gain',gainval);
 
 %NOTE: unlike the 2/80, we intentionally do NOT send SET_CAM_BITS to the synchronizer here:
 %the 20/9 timing is calculated completely on the PC side (PIVlab_capture_OPTOcam_20_9_timing.m).

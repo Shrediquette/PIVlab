@@ -79,10 +79,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
 			target_axis=gui.retr('pivlab_axis');
             displaysize_x=floor(get(target_axis,'XLim'));
             displaysize_y=floor(get(target_axis,'YLim'));
-            ac_ROI_general=[];
-            %warning off
-            load('PIVlab_settings_default.mat','ac_ROI_general');
-            %warning on
+            ac_ROI_general=gui.get_preference('ac_ROI_general',[]); %camera ROI used last time
 
             bla=findobj(target_axis,'type','image');
             current_image_size=size(bla.CData);
@@ -193,7 +190,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             ac_ROI_general=position;
 
             gui.put('ac_ROI_general',ac_ROI_general);
-            save('PIVlab_settings_default.mat','ac_ROI_general','-append');
+            gui.set_preference('ac_ROI_general',ac_ROI_general);
             delete(ac_ROI_general_handle)
             rectangle('Position',position,'EdgeColor','y','linewidth',2)
 

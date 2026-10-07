@@ -9,11 +9,12 @@ theme=selections{selected};
 %s.matlab.appearance.MATLABTheme.PersonalValue = theme;
 if strcmpi(theme,'dark')
     gui.put('darkmode',1)
-    setpref('PIVlab_ad','dark_mode_theme',1);
+    gui.set_preference('dark_mode_theme',1);
 else
     gui.put('darkmode',0)
-    setpref('PIVlab_ad','dark_mode_theme',0);
+    gui.set_preference('dark_mode_theme',0);
 end
+settings = gui.collect_settings; % the window is rebuilt below: keep the settings
 
 %% Apply fix for wrong UI scaling introduced between matlab 2025a prerelease5 and Matlab2025a
 try
@@ -25,6 +26,8 @@ end
 
 gui.destroyUI
 gui.generateUI
+gui.put('num_handle_calls',0); % fresh handles of the new controls
+gui.apply_settings(settings, fieldnames(gui.default_settings), true);
 
 %% Apply fix for wrong UI scaling introduced between matlab 2025a prerelease5 and Matlab2025a
 try

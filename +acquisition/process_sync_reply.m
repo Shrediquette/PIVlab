@@ -55,9 +55,9 @@ if ~isempty(C)
 				camera_sub_type=gui.retr('camera_sub_type');
 				camera_type=gui.retr('camera_type');
 				if strcmp(camera_type,'OPTOcam_20_9')
-					bitmode =gui.retr('OPTOcam_20_9_bits'); %the 20/9 has its own bit depth setting
+					bitmode =gui.camera_setting('OPTOcam_20_9_bits'); %the 20/9 has its own bit depth setting
 				else
-					bitmode =gui.retr('OPTOcam_bits');
+					bitmode =gui.camera_setting('OPTOcam_bits');
 				end
 				ac_fps_value=get(handles.ac_fps,'Value');
 				ac_fps_str=get(handles.ac_fps,'String');

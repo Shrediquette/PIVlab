@@ -5,84 +5,14 @@ batchModeActive=gui.retr('batchModeActive');
 if isempty (batchModeActive)
 	batchModeActive = 0;
 end
-if selection ==1 % piv fft multi
-	set(handles.uipanel42,'visible','on')
-	set(handles.uipanel41,'visible','on')
-	set(handles.CorrQuality,'visible','on')
-	set(handles.text914,'visible','on')
-	set(handles.mask_auto_box,'visible','on')
-	%set(handles.AnalyzeAll,'visible','on')
-	set(handles.AnalyzeSingle,'visible','on')
-	set(handles.Settings_Apply_current,'visible','on')
-	set(handles.text14,'visible','on')
-	set(handles.subpix,'visible','on')
-	set(handles.uipanel_ofv1,'visible','off')
-    set(handles.uipanel_ofv2,'visible','off')
-	set(handles.textSuggest,'visible','on')
-	set(handles.SuggestSettings,'visible','on')
-	set(handles.checkbox_uncertainty,'visible','on')
-	if get(handles.checkbox26,'value') ~=0
-		set(handles.repeat_last,'Enable','on')
-		set(handles.edit52x,'Enable','on')
-	end
-	piv.dispinterrog
+if selection ==2 % ensemble: no repeated last pass
+	set(handles.repeat_last_enable,'Value',0)
 end
-if selection ==2 % ensemble
-	set(handles.uipanel42,'visible','on')
-	set(handles.uipanel41,'visible','on')
-	set(handles.CorrQuality,'visible','on')
-	set(handles.text914,'visible','on')
-	set(handles.mask_auto_box,'visible','on')
-	set(handles.repeat_last,'Value',0)
-	set(handles.repeat_last,'Enable','off')
-	set(handles.edit52x,'Enable','off')
-	%set(handles.AnalyzeAll,'visible','off')
-	set(handles.AnalyzeSingle,'visible','off')
-	set(handles.Settings_Apply_current,'visible','off')
-	set(handles.text14,'visible','on')
-	set(handles.subpix,'visible','on')
-	set(handles.uipanel_ofv1,'visible','off')
-    set(handles.uipanel_ofv2,'visible','off')
-	set(handles.textSuggest,'visible','on')
-	set(handles.SuggestSettings,'visible','on')
-	set(handles.checkbox_uncertainty,'visible','off')
-	piv.dispinterrog
-end
-if selection==3 % DCC
-	set(handles.uipanel42,'visible','off')
-	set(handles.uipanel41,'visible','on')
-	set(handles.CorrQuality,'visible','off')
-	set(handles.text914,'visible','off')
-	set(handles.mask_auto_box,'visible','off')
-	%set(handles.AnalyzeAll,'visible','on')
-	set(handles.AnalyzeSingle,'visible','on')
-	set(handles.Settings_Apply_current,'visible','on')
-	set(handles.text14,'visible','on')
-	set(handles.subpix,'visible','on')
-	set(handles.uipanel_ofv1,'visible','off')
-    set(handles.uipanel_ofv2,'visible','off')
-	set(handles.textSuggest,'visible','on')
-	set(handles.SuggestSettings,'visible','on')
-	set(handles.checkbox_uncertainty,'visible','off')
-	piv.dispinterrog
-end
+gui.update_dependent_controls(handles)
 if selection ==4 %wOFV
-	set(handles.uipanel_ofv1,'visible','on')
-    set(handles.uipanel_ofv2,'visible','on')
-	set(handles.uipanel42,'visible','off')
-	set(handles.uipanel41,'visible','off')
-	set(handles.CorrQuality,'visible','off')
-	set(handles.text914,'visible','off')
-	set(handles.mask_auto_box,'visible','off')
-	%set(handles.AnalyzeAll,'visible','on')
-	set(handles.AnalyzeSingle,'visible','on')
-	set(handles.Settings_Apply_current,'visible','on')
-	set(handles.text14,'visible','off')
-	set(handles.subpix,'visible','off')
-	set(handles.textSuggest,'visible','off')
-	set(handles.SuggestSettings,'visible','on')
-	set(handles.checkbox_uncertainty,'visible','off')
 	delete (findobj('tag','intareadispl'))%do not display visuals about interrogation area
+else
+	piv.dispinterrog
 end
 %suggestion to reduce vector display density
 current_vector_setting=get(handles.nthvect,'String');
@@ -100,11 +30,4 @@ else
 			set(handles.nthvect,'String',1)
 		end
 	end
-end
-
-%In Basic interface mode, re-assert the hidden-element list. Otherwise
-%changing the algorithm here would re-show controls that Basic mode hides
-%(text14, subpix, mask_auto_box, text914, CorrQuality, ...).
-if strcmp(gui.retr('ui_mode'),'basic')
-	gui.apply_ui_mode('basic');
 end

@@ -20,9 +20,13 @@ function res = analyze(imgs, opts)
 %   RepeatLastPassThreshold stop criterion for RepeatLastPass (default 0.025)
 %   Uncertainty             true/false, compute the uncertainty map (fft only)
 %   OFVSmoothness, OFVPyramidLevels, OFVMedianFilter   optical flow parameters
-%   Parallel                true/false, use a parallel pool (Parallel Computing Toolbox)
+%   Parallel                true/false, use a parallel pool (Parallel Computing Toolbox, fft and dcc)
 %   Pairs                   indices of the image pairs to analyze (default: all)
+%   Verbose                 true (default) / false: print progress messages
 %   Settings                settings struct from pivlab.defaults or pivlab.loadSettings
+%
+%   Not every option is used by every algorithm (e.g. Passes is not used by "dcc", Parallel not
+%   by "ensemble"). A warning tells you when an option you set has no effect.
 %
 %   res is a struct with the results of all pairs (third dimension = pair):
 %     res.x, res.y              vector positions in pixels (2-D, the same for all pairs)
@@ -56,13 +60,15 @@ arguments
     opts.OFVMedianFilter = []
     opts.Parallel = []
     opts.Pairs = []
+    opts.Verbose (1,1) logical = true
     opts.Settings struct = struct()
 end
 pairs = opts.Pairs;
-opts = rmfield(opts,'Pairs');
+verbose = opts.Verbose;
+opts = rmfield(opts, {'Pairs','Verbose'});
 [ana, s] = resolve_options('analysis', opts);
 if isempty(imgs.preprocess)
-    imgs = pivlab.preprocess(imgs, Settings=s);
+    imgs = pivlab.preprocess(imgs, Settings=s, Verbose=verbose);
 end
 s.preprocess = imgs.preprocess;
 s.preprocess.Mask = [];
@@ -70,6 +76,7 @@ ana.Algorithm = lower(string(ana.Algorithm));
 if ~ismember(ana.Algorithm, ["fft","ensemble","dcc","ofv"])
     error('pivlab:analyze:algorithm','Algorithm must be "fft", "ensemble", "dcc" or "ofv".');
 end
+warn_options_without_effect(opts, ana.Algorithm);
 ana.PassSizes = [ana.PassSizes(:)' repmat(ana.PassSizes(end), 1, 3-numel(ana.PassSizes))];
 k = kernel_settings(imgs.preprocess, ana);
 if isempty(pairs)
@@ -83,13 +90,15 @@ end
 t0 = tic;
 switch ana.Algorithm
     case {"fft","dcc"}
-        R = run_pairs(imgs, pairs, k, logical(ana.Parallel));
+        R = run_pairs(imgs, pairs, k, logical(ana.Parallel), verbose);
     case "ensemble"
-        R = run_ensemble(imgs, pairs, k);
+        R = run_ensemble(imgs, pairs, k, verbose);
     case "ofv"
-        R = run_ofv(imgs, pairs, k, ana);
+        R = run_ofv(imgs, pairs, k, ana, verbose);
 end
-fprintf('PIV analysis (%s) of %d image pair(s) finished in %.1f s.\n', ana.Algorithm, numel(pairs), toc(t0));
+if verbose
+    fprintf('PIV analysis (%s) of %d image pair(s) finished in %.1f s.\n', ana.Algorithm, numel(pairs), toc(t0));
+end
 
 res = new_result(R, imgs, s);
 if ana.Algorithm == "ensemble"
@@ -101,7 +110,47 @@ res.pairs = pairs;
 end
 
 %% ------------------------------------------------------------------
-function R = run_pairs(imgs, pairs, k, parallel)
+function warn_options_without_effect(opts, algorithm)
+% Warn when the user sets an option that the chosen algorithm does not use.
+% Column 2: the algorithms that use the option. Column 3: a value that does nothing anyway
+% (no warning for it, e.g. Parallel=false).
+rules = {
+    'InterrogationArea',       ["fft","ensemble","dcc"], []
+    'Step',                    ["fft","ensemble","dcc"], []
+    'Passes',                  ["fft","ensemble"],       1
+    'PassSizes',               ["fft","ensemble"],       []
+    'SubpixelFinder',          ["fft","ensemble","dcc"], []
+    'DisableAutocorrelation',  ["fft","ensemble"],       false
+    'Robustness',              ["fft","ensemble"],       "standard"
+    'RepeatLastPass',          "fft",                    false
+    'RepeatLastPassThreshold', "fft",                    []
+    'Uncertainty',             "fft",                    false
+    'OFVSmoothness',           "ofv",                    []
+    'OFVPyramidLevels',        "ofv",                    []
+    'OFVMedianFilter',         "ofv",                    []
+    'Parallel',                ["fft","dcc"],            false
+    };
+for k = 1:size(rules,1)
+    name = rules{k,1};
+    value = opts.(name);
+    if isempty(value) || ismember(algorithm, rules{k,2})
+        continue
+    end
+    harmless = rules{k,3};
+    if isstring(harmless)
+        if strcmpi(string(value), harmless)
+            continue
+        end
+    elseif ~isempty(harmless) && (isnumeric(value) || islogical(value))
+        if isequal(double(value), double(harmless))
+            continue
+        end
+    end
+    warning('pivlab:analyze:noEffect', '%s has no effect with Algorithm="%s".', name, algorithm);
+end
+end
+
+function R = run_pairs(imgs, pairs, k, parallel, verbose)
 n = numel(pairs);
 R = cell(1,n);
 cam = imgs.cam;
@@ -112,7 +161,9 @@ for i = 1:n
 end
 if parallel
     misc.pivparpool('open');
-    fprintf('Analyzing %d image pairs in parallel...\n', n);
+    if verbose
+        fprintf('Analyzing %d image pairs in parallel...\n', n);
+    end
     src = struct('filepath',{imgs.filepath},'framenum',imgs.framenum,'framepart',imgs.framepart);
     parfor i = 1:n
         p = pairs(i);
@@ -127,14 +178,14 @@ else
         image1 = import.read_frame(imgs, 2*p-1, cam, bg);
         image2 = import.read_frame(imgs, 2*p, cam, bg);
         R{i} = piv.analyze_pair(image1, image2, masks{i}, k);
-        if ismember(i, report)
+        if verbose && ismember(i, report)
             fprintf('  pair %d of %d done\n', i, n);
         end
     end
 end
 end
 
-function R = run_ensemble(imgs, pairs, k)
+function R = run_ensemble(imgs, pairs, k, verbose)
 sel = reshape([2*pairs-1; 2*pairs], [], 1);
 converted_mask = cell(numel(pairs),1);
 for i = 1:numel(pairs)
@@ -159,12 +210,15 @@ end
     step=k.step, subpixfinder=k.subpixfinder, passes=k.passes, ...
     int2=k.int2, int3=k.int3, int4=k.int4, mask_auto=k.mask_auto, ...
     imdeform=k.imdeform, repeat=k.repeat, do_pad=k.do_pad, ...
-    use_gui=false, cam=imgs.cam);
+    use_gui=false, cam=imgs.cam, verbose=verbose);
+if verbose
+    fprintf('\n'); % piv_FFTensemble prints one dot per image pair
+end
 R = {struct('x',x,'y',y,'u',u,'v',v,'typevector',typevector,'correlation_map',correlation_map, ...
     'u2',[],'v2',[],'umap',[])};
 end
 
-function R = run_ofv(imgs, pairs, k, ana)
+function R = run_ofv(imgs, pairs, k, ana, verbose)
 addpath(genpath(fullfile(fileparts(fileparts(mfilename('fullpath'))),'OptimizationSolvers')));
 eta = 10^(ana.OFVSmoothness*0.1 - 5);
 PydLev = ana.OFVPyramidLevels;
@@ -197,7 +251,9 @@ for i = 1:n
     [x,y,u,v,typevector] = wOFV.RunMain_DatasetProc(image1,image2,m,roirect,eta,vartheta,MedFiltFlag,MedFiltSize,PydLev,Fmats,PatchSize);
     R{i} = struct('x',x,'y',y,'u',u,'v',v,'typevector',typevector,'correlation_map',zeros(size(x)), ...
         'u2',[],'v2',[],'umap',[]);
-    fprintf('  pair %d of %d done\n', i, n);
+    if verbose
+        fprintf('  pair %d of %d done\n', i, n);
+    end
 end
 end
 

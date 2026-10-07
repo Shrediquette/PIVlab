@@ -23,15 +23,8 @@ if isempty(fh)
 	handles.settingspanel = uipanel(lens_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight*3-1.5-9 parentitem(3)-2 5],'title','Settings','fontweight','bold','tag','settingspanel');
 
 	%% Load last selected setting & setup Configurations
-	warning off
-	load ('PIVlab_capture_resources\PIVlab_capture_lensconfig.mat','lens_configurations','selected_lens_config_nr');
-	%warning on
-	if ~exist('selected_lens_config_nr','var')
-		selected_lens_config_nr = 2; %set default to zeiss Dimension
-	end
+	[lens_configurations, selected_lens_config_nr] = load_lens_configurations;
 	put('selected_lens_config',selected_lens_config_nr)
-	[tempfilepath,~,~] = fileparts(mfilename('fullpath'));
-	save (fullfile (tempfilepath,'PIVlab_capture_lensconfig.mat'),'lens_configurations','selected_lens_config_nr');
 	% New lens configurations can be added to the table by modifying the variable 'lens_configurations' in the file 'PIVlab_capture_lensconfig.mat :
 	% Example: lens_configurations=addvars(lens_configurations,[500;2500;500;2500],'NewVariableNames','Generic lens')
 	handles.configu = uicontrol(lens_control_window,'Style','popupmenu', 'String',lens_configurations.Properties.VariableNames,'Value',retr('selected_lens_config'),'Units','characters', 'Fontunits','points','Position',[1 parentitem(4)-1.5 parentitem(3)/3*2 1.5],'Tag','configu','TooltipString','Lens configuration. Sets the limits for the servo motors.','Callback',@configu_Callback);
@@ -217,7 +210,7 @@ if alreadyconnected==1
 end
 
 function configu_Callback (inpt,~)
-load ('PIVlab_capture_lensconfig.mat','lens_configurations');
+lens_configurations = load_lens_configurations;
 focus_servo_lower_limit = lens_configurations{1,inpt.Value};
 focus_servo_upper_limit = lens_configurations{2,inpt.Value};
 aperture_servo_lower_limit = lens_configurations{3,inpt.Value};
@@ -234,9 +227,7 @@ put('Roll_Offset',Roll_Offset)
 
 put('selected_lens_config',inpt.Value)
 selected_lens_config_nr=inpt.Value;
-
-[tempfilepath,~,~] = fileparts(mfilename('fullpath'));
-save (fullfile (tempfilepath,'PIVlab_capture_lensconfig.mat'),'lens_configurations','selected_lens_config_nr');
+save_lens_configurations(lens_configurations, selected_lens_config_nr);
 
 handles=gethand;
 focus=retr('focus');
@@ -494,19 +485,25 @@ if do_calib==1
 		else
 			set(handles.calibrate,'Background',[0 1 0.1]);
 			set(handles.calibrate,'String','Calibration ok!');drawnow;pause(0.5)
-			warning off
-			load ('PIVlab_capture_resources\PIVlab_capture_lensconfig.mat','lens_configurations','selected_lens_config_nr');
-			%warning on
-			if ~exist('selected_lens_config_nr','var')
-				selected_lens_config_nr = 2; %set default to zeiss Dimension
-			end
+			[lens_configurations, selected_lens_config_nr] = load_lens_configurations;
 			lens_configurations("Pitch_Offset",selected_lens_config_nr) = {-meanPitch};
 			lens_configurations("Roll_Offset",selected_lens_config_nr) = {-meanRoll};
-			[tempfilepath,~,~] = fileparts(mfilename('fullpath'));
-			save (fullfile (tempfilepath,'PIVlab_capture_lensconfig.mat'),'lens_configurations','selected_lens_config_nr');
+			save_lens_configurations(lens_configurations, selected_lens_config_nr);
 			configu_Callback(handles.configu,[])
 		end
 		set(handles.calibrate,'String','Calibrate level')
 		set(handles.calibrate,'Background',std_bg);
 	end
 end
+
+function [lens_configurations, selected_lens_config_nr] = load_lens_configurations
+% the lens configurations of this user (preference), or the ones shipped with PIVlab
+% (PIVlab_capture_lensconfig.mat, not changed at runtime)
+[tempfilepath,~,~] = fileparts(mfilename('fullpath'));
+shipped = load (fullfile (tempfilepath,'PIVlab_capture_lensconfig.mat'),'lens_configurations','selected_lens_config_nr');
+lens_configurations = gui.get_preference('lens_configurations', shipped.lens_configurations);
+selected_lens_config_nr = gui.get_preference('selected_lens_config_nr', shipped.selected_lens_config_nr);
+
+function save_lens_configurations(lens_configurations, selected_lens_config_nr)
+gui.set_preference('lens_configurations', lens_configurations);
+gui.set_preference('selected_lens_config_nr', selected_lens_config_nr);

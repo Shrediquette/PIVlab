@@ -2,11 +2,11 @@ function PIVlab_capture_chronos_save (cameraIP,nr_of_images,ImagePath,frame_nr_d
 hgui=getappdata(0,'hgui');
 cameraURL = ['http://' cameraIP];
 options = weboptions('MediaType','application/json','HeaderFields',{'Content-Type' 'application/json'});
-resx=getappdata(hgui,'Chronos_resx');
-resy=getappdata(hgui,'Chronos_resy');
-bitdepth=getappdata(hgui,'Chronos_bits');
-save_location=getappdata(hgui,'save_location');
-save_type=getappdata(hgui,'save_type');
+resx=gui.camera_setting('Chronos_resx');
+resy=gui.camera_setting('Chronos_resy');
+bitdepth=gui.camera_setting('Chronos_bits');
+save_location=gui.camera_setting('save_location');
+save_type=gui.camera_setting('save_type');
 
 if matches(save_type,'TIFF')
 	save_type_command='tiff';

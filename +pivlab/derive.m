@@ -39,6 +39,7 @@ arguments
     opts.LICSize (1,1) double = 1000
     opts.Settings struct = struct()
 end
+res = take_user_edits(res);   % values changed by hand in res.u / res.v are used
 names = ["vorticity","magnitude","u","v","divergence","qcriterion","shear","strain","lic","direction","correlation","uncertainty"];
 q = lower(quantity);
 d = find(names == q, 1) + 1;   % PIVlab's "Display parameter" index (2...13)

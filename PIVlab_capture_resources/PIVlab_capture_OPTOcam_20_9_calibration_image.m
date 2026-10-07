@@ -5,7 +5,7 @@ function [OutputError,ima_out,frame_nr_display] = PIVlab_capture_OPTOcam_20_9_ca
 % ima_out is always stretched to the full uint16 range.
 OutputError=0;
 hgui=getappdata(0,'hgui');
-bitmode = getappdata(hgui,'OPTOcam_20_9_bits');
+bitmode = gui.camera_setting('OPTOcam_20_9_bits');
 if isempty(bitmode)
     bitmode = 8;
 end
@@ -54,7 +54,7 @@ OPTOcam_vid.ROIPosition=ROI_OPTOcam;
 
 OPTOcam_settings.Source.ReverseX = 'False'; %orientation of the OPTOcam 20/9; change to 'True' if image is mirrored
 OPTOcam_settings.Source.ReverseY = 'False';
-OPTOcam_gain = getappdata(hgui,'OPTOcam_20_9_gain');
+OPTOcam_gain = gui.camera_setting('OPTOcam_20_9_gain');
 if isempty (OPTOcam_gain)
     OPTOcam_gain=0;
 end

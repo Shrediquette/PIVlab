@@ -37,5 +37,6 @@ if ~isempty(MPEG4)
 	avail_file_formats = [avail_file_formats {'MPEG-4'}];
 end
 set(handles.export_still_or_animation,'String',avail_file_formats)
+gui.apply_pending_popup(handles.export_still_or_animation) %item wanted by a loaded session
 export.still_or_animation_Callback()
 

@@ -81,7 +81,7 @@ OPTOcam_vid.ROIPosition=ROI_OPTOcam;
 
 OPTOcam_settings.Source.ReverseX = 'True';
 OPTOcam_settings.Source.ReverseY = 'True';
-OPTOcam_gain = getappdata(hgui,'OPTOcam_gain');
+OPTOcam_gain = gui.camera_setting('OPTOcam_gain');
 if isempty (OPTOcam_gain)
     OPTOcam_gain=0;
 end

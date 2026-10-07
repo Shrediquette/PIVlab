@@ -83,6 +83,8 @@ else % 'advanced'
             set(h, 'Visible', 'on');           % fallback: show it
         end
     end
+    % elements that depend on settings (e.g. the PIV algorithm) get their visibility from them
+    gui.update_dependent_controls;
 end
 end
 

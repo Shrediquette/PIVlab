@@ -71,8 +71,8 @@ switch flow_sim
 
 		u=u/max(max(u));
 		v=-v/max(max(v));
-		u=u*str2double(get(handles.rotationdislacement,'string'));
-		v=v*str2double(get(handles.rotationdislacement,'string'));
+		u=u*str2double(get(handles.rotation_displacement,'string'));
+		v=v*str2double(get(handles.rotation_displacement,'string'));
 		[x,y]=meshgrid(1:1:str2double(get(handles.img_sizex,'string'))+1);
 	case 5 %membrane
 		[x,y]=meshgrid(linspace(-3,3,str2double(get(handles.img_sizex,'string'))),linspace(-3,3,str2double(get(handles.img_sizey,'string'))));

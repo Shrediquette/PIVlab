@@ -8,12 +8,7 @@ catch
     alreadyconnected=0;
 end
 if alreadyconnected
-    if exist('laser_device_id.mat','file') == 2
-        old_laser_device_id = load('laser_device_id.mat','id');
-        old_laser_device_id = old_laser_device_id.id;
-    else
-        old_laser_device_id='%';
-    end
+    old_laser_device_id = gui.get_preference('laser_device_id','%'); %ID entered at the last connection
     string1='WhoAreYou?';
     string2='WhichFirmWare?';
     string3='WarningSignEnable!';
@@ -119,13 +114,10 @@ disp('---------')
         end
         get_laser_id = inputdlg(['Please enter the ID of your laser / synchronizer.' sprintf('\n') 'It can be found on the sticker on the device.' sprintf('\n') 'Firmware: ' convertStringsToChars(firmware_version)],'First time connection',1,{serial_answer_cleaned});
         if ~isempty(get_laser_id)
-            id=get_laser_id{1};
-            filepath = fileparts(which('PIVlab_GUI.m'));
-            save (fullfile(filepath, 'PIVlab_capture_resources', 'laser_device_id.mat'),'id')
+            gui.set_preference('laser_device_id',get_laser_id{1});
         end
     end
-    laser_device_id = load('laser_device_id.mat','id');
-    laser_device_id = laser_device_id.id;
+    laser_device_id = gui.get_preference('laser_device_id','');
 else
     acquisition.no_dongle_msgbox
 end

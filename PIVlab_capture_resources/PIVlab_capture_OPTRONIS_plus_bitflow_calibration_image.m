@@ -40,14 +40,14 @@ end
 %% Create videoinput
 bfml_dir  = fileparts(mfilename('fullpath'));
 
-OPTRONIS_bits = gui.retr('OPTRONIS_bits');
+OPTRONIS_bits = gui.camera_setting('OPTRONIS_bits');
 if isempty(OPTRONIS_bits) || ~isnumeric(OPTRONIS_bits)
     OPTRONIS_bits=8;
-    gui.put('OPTRONIS_bits', OPTRONIS_bits);
+    gui.set_camera_setting('OPTRONIS_bits', OPTRONIS_bits);
 end
 bitmode = OPTRONIS_bits;
 
-OPTRONIS_gain = gui.retr('OPTRONIS_gain');
+OPTRONIS_gain = gui.camera_setting('OPTRONIS_gain');
 if isempty(OPTRONIS_gain)
     OPTRONIS_gain=1;
 end

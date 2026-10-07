@@ -16,16 +16,13 @@ arguments
     file {mustBeTextScalar}
 end
 file = char(file);
-[s, filetype] = pivlab.loadSettings(file);
-if ~strcmp(filetype,'session')
-    error('pivlab:loadSession:notSession','%s is not a PIVlab session file.', file);
+[session, message] = import.read_session_file(file);
+if isempty(session)
+    error('pivlab:loadSession:notSession','%s: %s', file, message);
 end
-want = {'resultslist','filepath','filename','framenum','framepart','sequencer','ismean', ...
-    'masks_in_frame','roirect','bg_img_A','bg_img_B','size_of_the_image','expected_image_size', ...
-    'calu','calv','calxy','offset_x_true','offset_y_true','displacement_only','multitiff', ...
-    'video_selection_done','subtr_u','subtr_v'};
-vars = who('-file', file);
-L = load(file, want{ismember(want, vars)});
+s = gui_settings_to_api(session.settings, pivlab.defaults());
+s = session_extras(s, session.data);
+L = session.data;
 rl = L.resultslist;
 if isempty(rl)
     error('pivlab:loadSession:empty','The session contains no analysis results.');

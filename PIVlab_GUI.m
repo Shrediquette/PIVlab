@@ -43,23 +43,13 @@ if isempty(fh)
     handles = guihandles; %alle handles mit tag laden und ansprechbar machen
     guidata(MainWindow,handles)
     setappdata(0,'hgui',MainWindow);
-    version = '3.14';
+    version = gui.pivlab_version;
     isbeta=1;
     gui.put('PIVver', version);
     gui.put('isbeta', isbeta);
-    try
-        warning off
-        load('PIVlab_settings_default.mat','build_date');
-        %warning on
-    catch
-        build_date=' ';
-    end
-    if ~exist ('build_date','var')
-        build_date=' ';
-    end
+    build_date=gui.pivlab_build_date; %written by clean_and_package_PIVlab
     if isempty(build_date)
         build_date=' ';
-    else
     end
     v=ver('MATLAB'); %#ok<*VERMATLAB>
     if ~exist('desired_num_cores','var')
@@ -98,9 +88,10 @@ if isempty(fh)
 	gui.put('alreadydisplayed_warning_uncertainty',0);
     gui.put('video_selection_done',0);
     if ~verLessThan('Matlab','25') %#ok<*VERLESSMATLAB>
-        if ispref('PIVlab_ad','dark_mode_theme')
-            gui.put('darkmode',getpref('PIVlab_ad','dark_mode_theme'));
-            if getpref('PIVlab_ad','dark_mode_theme') == 1
+        dark_mode_theme=gui.get_preference('dark_mode_theme',[]);
+        if ~isempty(dark_mode_theme)
+            gui.put('darkmode',dark_mode_theme);
+            if dark_mode_theme == 1
                 MainWindow.Theme = 'dark';
             else
                 MainWindow.Theme = 'light';
@@ -133,18 +124,10 @@ if isempty(fh)
     catch
         disp(['-> No write access in ' pwd '. PIVlab won''t work like this.'])
     end
-    %% Load defaults
-    try
-        psdfile=which('PIVlab_settings_default.mat');
-        dindex=strfind(psdfile,filesep); %filesep ist '\'
-        import.read_panel_width('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
-    catch
-        try
-            disp(['Could not load default settings in this path: ' psdfile(1:(dindex(end)-1))])
-        catch
-        end
-        disp('Could not load default settings. But this doesn''t really matter.')
-    end
+    %% Width of the panels (preference)
+    panelwidth=gui.get_preference('panelwidth',panelwidth);
+    gui.put('panelwidth',panelwidth);
+    gui.put('quickwidth',panelwidth);
     %% check required package folders
     tempfilepath = fileparts(which('PIVlab_GUI.m'));
     addpath(tempfilepath);
@@ -182,6 +165,8 @@ if isempty(fh)
     %%
     gui.generateUI
     gui.generateMenu
+    gui.apply_last_acquisition_settings %image acquisition panel as it was when PIVlab was closed
+    gui.update_dependent_controls %Enable / Visible of the controls that depend on settings
     %% Snapshot factory-default visibility of every tagged element (single
     %% source of truth for restoring elements when switching to Advanced mode)
     gui.put('ui_default_visibility', gui.capture_default_visibility);
@@ -338,14 +323,12 @@ if isempty(fh)
     gui.put('subtr_u', 0);
     gui.put('subtr_v', 0);
     gui.put('displaywhat',1);%vectors
-    %% read current and last directory.....:
-    warning('off','all') %if the variables don't exist, an ugly warning is displayed
-    load('PIVlab_settings_default.mat','homedir');
-    load('PIVlab_settings_default.mat','pathname');
-    %warning('on','all')
+    %% read current and last directory (preferences)
+    homedir=gui.get_preference('homedir',[]);
+    pathname=gui.get_preference('pathname',[]);
     warning('off','all')
     warning('off','serialport:serialport:ReadlineWarning')
-    if ~exist('pathname','var') || ~exist('homedir','var')
+    if isempty(pathname) || isempty(homedir)
         try
             if exist(fullfile(fileparts(which('PIVlab_GUI.m')), 'Example_data'),'dir') == 7 %if no previous path -> check if example dir exists
                 homedir =fullfile(fileparts(which('PIVlab_GUI.m')), 'Example_data'); %... and use it as default
@@ -375,25 +358,13 @@ if isempty(fh)
 	end
 	gui.put('homedir',homedir);
     gui.put('pathname',pathname);
-    save('PIVlab_settings_default.mat','homedir','pathname','-append');
-    %% Read and apply default settings
-    try
-        %XP Wu modification:
-        psdfile=which('PIVlab_settings_default.mat');
-        dindex=strfind(psdfile,filesep); %filesep ist '\'
-        %erstes argument datei, zweites pfad bis zum letzten fileseperator.
-        import.read_settings('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
-        if ~exist('splash_ax','var')
-            disp(['-> Got default settings from: ' psdfile])
-        else
-            text_content=get(handle_splash_text,'String');
-            text_content{end+1}='-> Got default settings from:';
-            text_content{end+1}=psdfile;
-            set (handle_splash_text, 'String',text_content);drawnow
-        end
-    catch
-        disp('Could not load default settings. But this doesn''t really matter.')
-    end
+    %% Default settings: the controls start with gui.default_settings (gui.generateUI).
+    gui.put('displacement_only',0);
+    gui.put('points_offsetx',[]);
+    gui.put('points_offsety',[]);
+    gui.put('size_of_the_image',[]);
+    gui.put('expected_image_size',[]);
+    gui.put('charuco_qr_params',[]);
     misc.CheckUpdates
     if isdeployed || exist('splash_ax','var')
         pause(1)
@@ -405,14 +376,7 @@ if isempty(fh)
 	drawnow;
     gui.displogo(1);
     %% Apply remembered Basic/Advanced mode before window becomes visible
-    ui_mode='advanced';   %default when no preference has been stored yet
-    try
-        if ismember('ui_mode',who('-file','PIVlab_settings_default.mat'))
-            loaded=load('PIVlab_settings_default.mat','ui_mode');
-            ui_mode=loaded.ui_mode;
-        end
-    catch
-    end
+    ui_mode=gui.get_preference('ui_mode','advanced');   %default when no preference has been stored yet
     %Force Advanced mode for GUI batch processing (see below), so every control
     %the automated workflow relies on is available. This only overrides the
     %in-memory mode; the user's stored preference is left untouched.

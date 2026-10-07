@@ -5,10 +5,11 @@ panelwidth=gui.retr('panelwidth');
 set(handles.panelslider,'Value',panelwidth);
 gui.switchui('multip21')
 if ~verLessThan('Matlab','25')
-	if ispref('PIVlab_ad','dark_mode_theme')
-		gui.put('darkmode',getpref('PIVlab_ad','dark_mode_theme'));
+	dark_mode_theme=gui.get_preference('dark_mode_theme',[]);
+	if ~isempty(dark_mode_theme)
+		gui.put('darkmode',dark_mode_theme);
 		MainWindow=getappdata(0,'hgui');
-		if getpref('PIVlab_ad','dark_mode_theme') == 1
+		if dark_mode_theme == 1
 			MainWindow.Theme = 'dark';
 		else
 			MainWindow.Theme = 'light';

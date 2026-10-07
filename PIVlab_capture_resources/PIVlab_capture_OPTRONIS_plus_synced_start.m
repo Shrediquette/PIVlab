@@ -86,13 +86,13 @@ OPTRONIS_vid.PreviewFullBitDepth='On';
 OPTRONIS_vid.UserData=struct('frame_rate',frame_rate); %needed in PIVlab_capture_OPTRONIS_plus_save (AcquisitionFrameRate can not be read in trigger mode)
 OPTRONIS_src=getselectedsource(OPTRONIS_vid);
 
-OPTRONIS_gain = gui.retr('OPTRONIS_gain');
+OPTRONIS_gain = gui.camera_setting('OPTRONIS_gain');
 if isempty(OPTRONIS_gain)
     OPTRONIS_gain=1;
 end
 OPTRONIS_src.Gain = 20*log10(OPTRONIS_gain); %gain in dB, GUI gain is a factor (1, 2, 4)
 
-OPTRONIS_counter = gui.retr('OPTRONIS_counter');
+OPTRONIS_counter = gui.camera_setting('OPTRONIS_counter');
 if isempty(OPTRONIS_counter)
     OPTRONIS_counter=1;
 end

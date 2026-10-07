@@ -146,10 +146,10 @@ if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2/80') % OPTOcam
 	avail_freqs={'400' '320' '160' '100' '80' '60' '50' '25' '5'}; %low fps removed, camera might skip frames.
 	gui.put('max_cam_res',[1936,1216]);
 	%default min_interframe is for 8 bits.
-	OPTOcam_bits =gui.retr('OPTOcam_bits');
+	OPTOcam_bits =gui.camera_setting('OPTOcam_bits');
 	if isempty (OPTOcam_bits)
 		OPTOcam_bits=8;
-		gui.put('OPTOcam_bits',8); %8bit
+		gui.set_camera_setting('OPTOcam_bits',8); %8bit
 	end
 
 	if OPTOcam_bits==8
@@ -175,10 +175,10 @@ if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 20/9') % OPTOcam 20/9 (double-f
 	%608²:68/57  1024²:43/36  1504²:30/25  2256²:21/17  4512²:9/5 (8bit/12bit), plus slower rates.
 	avail_freqs={'68' '57' '43' '36' '30' '25' '21' '17' '9' '5' '3' '1'};
 	gui.put('max_cam_res',[4512,4512]);
-	OPTOcam_20_9_bits =gui.retr('OPTOcam_20_9_bits');
+	OPTOcam_20_9_bits =gui.camera_setting('OPTOcam_20_9_bits');
 	if isempty (OPTOcam_20_9_bits)
 		OPTOcam_20_9_bits=8;
-		gui.put('OPTOcam_20_9_bits',8); %8 bit by default (highest pair rate)
+		gui.set_camera_setting('OPTOcam_20_9_bits',8); %8 bit by default (highest pair rate)
 	end
 	%Timing limits from the shared double-frame model (constants measured on Line0/Line4).
 	%The absolute floor is the trigger delay jitter + the frame gap; the real minimum also
@@ -355,6 +355,7 @@ else % not the webcam --> enable all controls
 	handles.ac_connect.Enable = 'on';
 	handles.ac_comport.Enable = 'on';
 end
+gui.apply_pending_popup(handles.ac_fps) %frame rate of the last session / loaded settings, if this camera has it
 acquisition.exposure_Callback
 straddling_figure=findobj('tag','straddling_figure');
 acquisition.initiate_straddling_graph

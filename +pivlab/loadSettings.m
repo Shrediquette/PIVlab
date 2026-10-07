@@ -1,7 +1,7 @@
 function [s, filetype] = loadSettings(file)
 %LOADSETTINGS Read analysis settings from a PIVlab settings file or a PIVlab session.
 %   s = pivlab.loadSettings(file) detects automatically whether file is a settings file
-%   ("File -> Save settings" in PIVlab, or PIVlab_settings_default.mat) or a session file
+%   ("File -> Save settings" in PIVlab) or a session file
 %   ("File -> Save session") and returns the settings in the format of pivlab.defaults.
 %   Settings that the file does not contain keep their default values.
 %
@@ -22,13 +22,28 @@ arguments
     file {mustBeTextScalar}
 end
 file = char(file);
-[V, filetype] = import.settings_from_file(file);
-if strcmp(filetype,'results')
-    error('pivlab:loadSettings:noSettings', ...
-        ['%s is a MAT file exported from PIVlab. It contains results, but no settings.' newline ...
-        'Use a PIVlab session or settings file instead.'], file);
+if ~isfile(file)
+    error('pivlab:loadSettings:notFound','File not found: %s', file);
 end
 s = pivlab.defaults();
-s = gui_vars_to_settings(V, s);
+[session, message] = import.read_session_file(file);
+if ~isempty(session)
+    filetype = 'session';
+    s = gui_settings_to_api(session.settings, s);
+    s = session_extras(s, session.data);
+else
+    [G, message] = import.read_settings_file(file);
+    if isempty(G)
+        vars = who('-file', file);
+        if any(ismember({'u_original','u_filtered','typevector_original'}, vars))
+            error('pivlab:loadSettings:noSettings', ...
+                ['%s is a MAT file exported from PIVlab. It contains results, but no settings.' newline ...
+                'Use a PIVlab session or settings file instead.'], file);
+        end
+        error('pivlab:loadSettings:unknownFile', '%s: %s', file, message);
+    end
+    filetype = 'settings';
+    s = gui_settings_to_api(G, s);
+end
 s.source = string(file);
 end

@@ -57,10 +57,10 @@ warning('off','MATLAB:JavaEDTAutoDelegation'); %strange warning
 
 OPTRONIS_supported_formats = info.DeviceInfo(CamID).SupportedFormats;
 
-OPTRONIS_bits = gui.retr('OPTRONIS_bits');
+OPTRONIS_bits = gui.camera_setting('OPTRONIS_bits');
 if isempty(OPTRONIS_bits) || ~isnumeric(OPTRONIS_bits)
     OPTRONIS_bits=8;
-    gui.put('OPTRONIS_bits', OPTRONIS_bits);
+    gui.set_camera_setting('OPTRONIS_bits', OPTRONIS_bits);
 end
 bitmode = 8;
 if verLessThan('matlab','25') %allow only 8 bits in older matlab versions.
@@ -69,7 +69,7 @@ else
     bitmode=OPTRONIS_bits;
 end
 
-OPTRONIS_gain = gui.retr('OPTRONIS_gain');
+OPTRONIS_gain = gui.camera_setting('OPTRONIS_gain');
 if isempty(OPTRONIS_gain)
     OPTRONIS_gain=1;
 end

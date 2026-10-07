@@ -20,9 +20,12 @@ function imgs = preprocess(imgs, opts)
 %   AutoLimit          true/false  stretch the intensity of every image automatically
 %   MinIntensity, MaxIntensity     fixed intensity limits (0...1), used when AutoLimit is false
 %   Background         "none" | "mean" | "min"  subtract the mean or minimum intensity image
-%   Roi                region of interest [x y width height] in pixels
+%   Roi                region of interest [x y width height] in pixels,
+%                      "none" = whole image (also when Settings contain a region of interest)
 %   Mask               logical image (true = masked, same mask for every pair), a cell array
-%                      with one logical image per pair, or PIVlab mask objects (masks_in_frame)
+%                      with one logical image per pair, or PIVlab mask objects (masks_in_frame),
+%                      "none" = no mask
+%   Verbose            true (default) / false: print progress messages
 %   Settings           settings struct from pivlab.defaults or pivlab.loadSettings
 %
 %   Example
@@ -45,9 +48,19 @@ arguments
     opts.Background = []
     opts.Roi = []
     opts.Mask = []
+    opts.Verbose (1,1) logical = true
     opts.Settings struct = struct()
 end
+verbose = opts.Verbose;
+opts = rmfield(opts, 'Verbose');
 p = resolve_options('preprocess', opts);
+% "none" switches a region of interest or a mask off (also one that came in through Settings)
+if is_none(p.Roi)
+    p.Roi = [];
+end
+if is_none(p.Mask)
+    p.Mask = [];
+end
 p.Background = lower(string(p.Background));
 if ~ismember(p.Background, ["none","mean","min"])
     error('pivlab:preprocess:background','Background must be "none", "mean" or "min".');
@@ -74,13 +87,19 @@ if p.Background ~= "none"
     if p.Background == "min"
         operation = 3;
     end
-    fprintf('Computing %s intensity background image from %d images...\n', p.Background, numel(imgs.filepath));
+    if verbose
+        fprintf('Computing %s intensity background image from %d images...\n', p.Background, numel(imgs.filepath));
+    end
     [A, B, msg] = preproc.compute_background(imgs, imgs.sequencer, operation, imgs.cam);
     if ~isempty(msg)
         error('pivlab:preprocess:background', '%s', msg);
     end
     imgs.background = struct('A', A, 'B', B, 'mode', p.Background);
 end
+end
+
+function tf = is_none(value)
+tf = (ischar(value) || isstring(value)) && strcmpi(value, "none");
 end
 
 function m = check_mask(m, imgs)

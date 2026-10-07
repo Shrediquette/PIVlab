@@ -16,7 +16,7 @@ end
 % this might skip frames. User should always capture to RAM; then save to disk
 if strcmp(camera_type,'pco_edge26')
 	if get(handles.ac_pivcapture_save,'Value')==1
-		panda_filetype=getappdata(hgui,'panda_filetype');
+		panda_filetype=gui.camera_setting('panda_filetype');
 		if isempty (panda_filetype)
 			panda_filetype='Single TIFF';
 		end
@@ -25,7 +25,7 @@ if strcmp(camera_type,'pco_edge26')
 			if strmatch(ramsave,'Cancel')==1
 				return
 			elseif strmatch(ramsave,'Enable RAM capture')==1
-				setappdata(hgui,'panda_filetype','Computer RAM -> single TIFF files');
+				gui.set_camera_setting('panda_filetype','Computer RAM -> single TIFF files');
 				% capture can continue normally
 			elseif strmatch(ramsave,'Stream to disk')==1
 				%dont change anything
@@ -100,7 +100,7 @@ if required_files_check
 				las_percent=str2double(get(handles.ac_power,'String'));
 				pulse_sep=str2double(get(handles.ac_interpuls,'String'));
 				binning=gui.retr('binning');
-				OPTOcam_bits =gui.retr('OPTOcam_bits');
+				OPTOcam_bits =gui.camera_setting('OPTOcam_bits');
 				if isempty (OPTOcam_bits)
 					OPTOcam_bits=8;
 				end
@@ -250,7 +250,7 @@ if required_files_check
 				acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
 				[OutputError,flir_vid] = PIVlab_capture_flir_synced_capture(flir_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display); %capture n images, display livestream
 			elseif strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2/80')  %OPTOcam
-				OPTOcam_bits =gui.retr('OPTOcam_bits');
+				OPTOcam_bits =gui.camera_setting('OPTOcam_bits');
 				if isempty (OPTOcam_bits)
 					OPTOcam_bits=8;
 				end
@@ -282,7 +282,7 @@ if required_files_check
 					imageamount=inf; %will prevent saving of images
 				end
 			elseif strcmpi(config_string,'PIVlab LD-PS + OPTOcam 20/9')  %OPTOcam 20/9 (double-frame mvPivShutter)
-				OPTOcam_bits =gui.retr('OPTOcam_20_9_bits');
+				OPTOcam_bits =gui.camera_setting('OPTOcam_20_9_bits');
 				if isempty (OPTOcam_bits)
 					OPTOcam_bits=8;
 				end
@@ -330,7 +330,7 @@ if required_files_check
 					imageamount=inf; %will prevent saving of images
 				end
 			elseif strcmpi(config_string,'PIVlab LD-PS + OPTRONIS Cyclone')  %OPTRONIS
-				OPTRONIS_bits =gui.retr('OPTRONIS_bits');
+				OPTRONIS_bits =gui.camera_setting('OPTRONIS_bits');
 				if isempty (OPTRONIS_bits)
 					OPTRONIS_bits=8;
 				end

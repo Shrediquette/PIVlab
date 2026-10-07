@@ -1,7 +1,7 @@
 function s = defaults()
 %DEFAULTS Default settings of the PIVlab command-line API.
-%   s = pivlab.defaults() returns the settings the PIVlab GUI starts with (they are read from
-%   PIVlab_settings_default.mat). The struct has one field per processing step:
+%   s = pivlab.defaults() returns the settings the PIVlab GUI starts with (gui.default_settings).
+%   The struct has one field per processing step:
 %
 %     s.preprocess   used by pivlab.preprocess   (CLAHE, Highpass, Background, Roi, Mask, ...)
 %     s.analysis     used by pivlab.analyze      (Algorithm, InterrogationArea, Passes, ...)
@@ -18,14 +18,6 @@ function s = defaults()
 %
 %   See also pivlab.loadSettings
 s = base_settings();
-f = which('PIVlab_settings_default.mat');
-if ~isempty(f)
-    try
-        V = import.settings_from_file(f);
-        s = gui_vars_to_settings(V, s);
-    catch
-        % unreadable defaults file: keep the built-in values
-    end
-end
+s = gui_settings_to_api(gui.default_settings, s);
 s.filter.LimitUnits = "result";
 end

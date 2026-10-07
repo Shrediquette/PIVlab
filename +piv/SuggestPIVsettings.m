@@ -166,27 +166,27 @@ if ok==1
 				%[recommended1 recommended2 recommended3]
 				gui.custom_msgbox('msg',getappdata(0,'hgui'),'Suggestion for PIV settings',{'These are the recommendations for the size of the final interrogation area:';[''];['Based on the displacements: ' num2str(recommended1) ' pixels'];['Based on the particle count: ' num2str(recommended2) ' pixels'];['Based on practical experience: ' num2str(recommended3) ' pixels'];[''];'The settings are automatically updated with the median of the recommendation.'},'modal',{'OK'},'OK');
 				set(handles.algorithm_selection,'Value', 1)
-				set (handles.intarea, 'String', recommendation*2); %two times the minimum recommendation
-				set (handles.step, 'String', recommendation);
-				set(handles.checkbox26,'Value',1); %pass2
-				set(handles.edit50,'String',recommendation); %pass2 size
-				set(handles.checkbox27, 'Value',0); %pass3
-				set(handles.edit51,'String',recommendation); %pass3 size
-				set(handles.checkbox28, 'Value',0); %pass4
-				set(handles.edit52,'String',recommendation); %pass4 size
+				set (handles.pass1_size, 'String', recommendation*2); %two times the minimum recommendation
+				set (handles.pass1_step, 'String', recommendation);
+				set(handles.pass2_enable,'Value',1); %pass2
+				set(handles.pass2_size,'String',recommendation); %pass2 size
+				set(handles.pass3_enable, 'Value',0); %pass3
+				set(handles.pass3_size,'String',recommendation); %pass3 size
+				set(handles.pass4_enable, 'Value',0); %pass4
+				set(handles.pass4_size,'String',recommendation); %pass4 size
 				%set(handles.popupmenu16,'Value',1);
-				set(handles.subpix,'value',1);
+				set(handles.subpixel_estimator,'value',1);
 				%set(handles.Repeated_box,'value',0);
-				set(handles.CorrQuality,'value',1)
-				set(handles.mask_auto_box,'value',0);
-				piv.pass2_checkbox_Callback(handles.checkbox26)
-				piv.pass3_checkbox_Callback(handles.checkbox27)
-				piv.pass4_checkbox_Callback(handles.checkbox28)
-				piv.pass2_size_Callback(handles.edit50)
-				piv.pass3_size_Callback(handles.edit51)
-				piv.pass4_size_Callback(handles.edit52)
+				set(handles.correlation_robustness,'value',1)
+				set(handles.disable_autocorrelation,'value',0);
+				piv.pass2_checkbox_Callback(handles.pass2_enable)
+				piv.pass3_checkbox_Callback(handles.pass3_enable)
+				piv.pass4_checkbox_Callback(handles.pass4_enable)
+				piv.pass2_size_Callback(handles.pass2_size)
+				piv.pass3_size_Callback(handles.pass3_size)
+				piv.pass4_size_Callback(handles.pass4_size)
 				piv.algorithm_selection_Callback(handles.algorithm_selection)
-				piv.step_Callback(handles.step)
+				piv.step_Callback(handles.pass1_step)
 				piv.dispinterrog
 				delete(findobj('tag','hint'));
 			end

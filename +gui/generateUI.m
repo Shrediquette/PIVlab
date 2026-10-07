@@ -1,4 +1,5 @@
 function generateUI % All the GUI elements are created here
+default = gui.default_settings; % default values of all settings
 handles = guihandles; %alle handles mit tag laden und ansprechbar machen
 MainWindow=getappdata(0,'hgui');
 guidata(MainWindow,handles)
@@ -36,19 +37,19 @@ item=[0 item(2)+item(4) parentitem(3) 2];
 handles.filenameshow = uicontrol(handles.tools,'Style','text','units', 'characters','Horizontalalignment', 'center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','N/A','tag','filenameshow');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
-handles.fileselector = uicontrol(handles.tools,'Style','slider','units', 'characters','Horizontalalignment', 'center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'max',4,'min',1,'value',1,'sliderstep',[0.5 1],'Callback',@gui.fileselector_Callback,'tag','fileselector','TooltipString','Step through your frames here','interruptible','off','BusyAction','cancel');%,'Interruptible','off','busyaction','cancel');
+handles.fileselector = uicontrol(handles.tools,'Style','slider','units', 'characters','Horizontalalignment', 'center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'max',4,'min',1,'value',1,'sliderstep',[0.5 1],'Callback',@gui.fileselector_Callback,'tag','fileselector','TooltipString','Step through your frames here','interruptible','off','BusyAction','cancel','UserData','not_a_setting');%,'Interruptible','off','busyaction','cancel');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.togglepair = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)], 'string','Toggle','Callback',@gui.togglepair_Callback,'tag','togglepair','TooltipString','Toggle images within a frame','interruptible','off','BusyAction','cancel');%,'Interruptible','off','busyaction','cancel');
+handles.togglepair = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)], 'string','Toggle','Callback',@gui.togglepair_Callback,'tag','togglepair','TooltipString','Toggle images within a frame','interruptible','off','BusyAction','cancel','UserData','not_a_setting');%,'Interruptible','off','busyaction','cancel');
 
 item=[0  item(2)+item(4)+margin*0.2 parentitem(3)/2/2 parentitem(3)/2/2/4];
-handles.toggle_parallel = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@misc.toggle_parallel_Callback,'tag','toggle_parallel');
+handles.toggle_parallel = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@misc.toggle_parallel_Callback,'tag','toggle_parallel','UserData','not_a_setting');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2/2 parentitem(3)/2/2/4];
-handles.zoomon = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@gui.zoomon_Callback,'tag','zoomon','TooltipString','Zoom');
+handles.zoomon = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@gui.zoomon_Callback,'tag','zoomon','TooltipString','Zoom','UserData','not_a_setting');
 
 item=[parentitem(3)/2+parentitem(3)/2/2 item(2) parentitem(3)/2/2 parentitem(3)/2/2/4];
-handles.panon = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@gui.panon_Callback,'tag','panon','TooltipString','Pan');
+handles.panon = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@gui.panon_Callback,'tag','panon','TooltipString','Pan','UserData','not_a_setting');
 
 load (fullfile('images','icons.mat'))
 if gui.retr('darkmode')
@@ -68,12 +69,12 @@ quickwidth = gui.retr('quickwidth')-iconwidth-0.5-0.25;
 quickheight = gui.retr('quickheight');
 
 handles.quick = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin*0.5 0+margin*0.5+panelheighttools+quickheight quickwidth quickheight],'title','Main tasks quick access', 'Tag','quick','fontweight','bold','Visible','on');
-handles.quick1 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[1*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.quick1_Callback,'tag','quick1','TooltipString','Load images');
-handles.quick2 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[2*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.quick2_Callback,'tag','quick2','TooltipString','Mask generation');
-handles.quick3 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[3*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.quick3_Callback,'tag','quick3','TooltipString','Pre-processing');
-handles.quick4 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[4*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.quick4_Callback,'tag','quick4','TooltipString','PIV settings');
-handles.quick5 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[5*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.quick5_Callback,'tag','quick5','TooltipString','Analyze');
-handles.quick6 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[6*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.quick6_Callback,'tag','quick6','TooltipString','Calibrate');
+handles.quick1 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[1*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.quick1_Callback,'tag','quick1','TooltipString','Load images','UserData','not_a_setting');
+handles.quick2 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[2*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.quick2_Callback,'tag','quick2','TooltipString','Mask generation','UserData','not_a_setting');
+handles.quick3 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[3*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.quick3_Callback,'tag','quick3','TooltipString','Pre-processing','UserData','not_a_setting');
+handles.quick4 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[4*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.quick4_Callback,'tag','quick4','TooltipString','PIV settings','UserData','not_a_setting');
+handles.quick5 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[5*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.quick5_Callback,'tag','quick5','TooltipString','Analyze','UserData','not_a_setting');
+handles.quick6 = uicontrol(handles.quick,'Style','togglebutton','units', 'characters','position',[6*(quickwidth/(iconamount-1))-(quickwidth/(iconamount-1)) 0.1 iconwidth iconheight],'Callback',@gui.quick6_Callback,'tag','quick6','TooltipString','Calibrate','UserData','not_a_setting');
 
 load (fullfile('images','icons_quick.mat'))
 if gui.retr('darkmode')
@@ -107,7 +108,7 @@ parentitem=get(handles.multip01, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.stereocheckbox = uicontrol(handles.multip01,'Style','checkbox','Value',0,'String','Stereo-PIV mode (2D3C)','Units','characters', 'Fontunits','points','Fontsize',10,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.stereocheckbox_Callback,'Tag','stereocheckbox','TooltipString','Enable Stereo-PIV mode','Enable','off');
+handles.stereocheckbox = uicontrol(handles.multip01,'Style','checkbox','Value',default.analysis.stereocheckbox,'String','Stereo-PIV mode (2D3C)','Units','characters', 'Fontunits','points','Fontsize',10,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.stereocheckbox_Callback,'Tag','stereocheckbox','TooltipString','Enable Stereo-PIV mode','Enable','off','UserData','session_only');
 
 item=[0 item(2)+item(4) parentitem(3) 2];
 handles.loadimgsbutton = uicontrol(handles.multip01,'Style','pushbutton','String','Import images','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@import.loadimgsbutton_Callback,1,[]},'TooltipString','Load image data');
@@ -129,7 +130,7 @@ handles.text2 = uicontrol(handles.multip01,'Style','text','units', 'characters',
 
 PIVver=gui.retr('PIVver');
 item=[0 item(2)+item(4) parentitem(3) 12];
-handles.filenamebox = uicontrol(handles.multip01,'Style','ListBox','max',3,'min',1,'units','characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String',{['Welcome to PIVlab ' PIVver '.'] 'Add images by clicking the' '"Import images" button above.'},'Callback',@gui.filenamebox_Callback,'tag','filenamebox','TooltipString','This list displays the frames that you currently loaded');
+handles.filenamebox = uicontrol(handles.multip01,'Style','ListBox','max',3,'min',1,'units','characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String',{['Welcome to PIVlab ' PIVver '.'] 'Add images by clicking the' '"Import images" button above.'},'Callback',@gui.filenamebox_Callback,'tag','filenamebox','TooltipString','This list displays the frames that you currently loaded','UserData','not_a_setting');
 gui.put('standard_bg_color',get(handles.filenamebox,'Backgroundcolor'));
 
 item=[0 item(2)+item(4)+margin/8 parentitem(3)/3*2 2];
@@ -173,16 +174,16 @@ item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1.5];
 handles.text158 = uicontrol(handles.uipanel5,'Style','text','units','characters','Horizontalalignment', 'left','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','height:');
 
 item=[parentitem(3)/4*0+margin item(2)+item(4) parentitem(3)/4 1.5];
-handles.ROI_Man_x = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_x','Callback',@roi.Man_ROI_Callback);
+handles.ROI_Man_x = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_x','Callback',@roi.Man_ROI_Callback,'UserData','not_a_setting');
 
 item=[parentitem(3)/4*1+margin item(2) parentitem(3)/4 1.5];
-handles.ROI_Man_y = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_y','Callback',@roi.Man_ROI_Callback);
+handles.ROI_Man_y = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_y','Callback',@roi.Man_ROI_Callback,'UserData','not_a_setting');
 
 item=[parentitem(3)/4*2+margin item(2) parentitem(3)/4 1.5];
-handles.ROI_Man_w = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_w','Callback',@roi.Man_ROI_Callback);
+handles.ROI_Man_w = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_w','Callback',@roi.Man_ROI_Callback,'UserData','not_a_setting');
 
 item=[parentitem(3)/4*3+margin item(2) parentitem(3)/4 1.5];
-handles.ROI_Man_h = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_h','Callback',@roi.Man_ROI_Callback);
+handles.ROI_Man_h = uicontrol(handles.uipanel5,'Style','edit','units','characters','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ROI_Man_h','Callback',@roi.Man_ROI_Callback,'UserData','not_a_setting');
 
 
 %% Multip25 (new mask)
@@ -196,7 +197,7 @@ item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 1.5];
 handles.text252 = uicontrol(handles.multip25,'Style','text','String','Mode:','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.mask_edit_mode = uicontrol(handles.multip25,'Style','popupmenu','String',{'Edit mask','Preview mask'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_edit_mode','Callback',@mask.edit_mode_Callback, 'TooltipString','Switch between mask edit mode and mask preview mode');
+handles.mask_edit_mode = uicontrol(handles.multip25,'Style','popupmenu','String',{'Edit mask','Preview mask'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_edit_mode','Callback',@mask.edit_mode_Callback, 'TooltipString','Switch between mask edit mode and mask preview mode','UserData','not_a_setting');
 
 
 %basic or expert mask capabilities
@@ -204,7 +205,7 @@ item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 1.5];
 handles.text251 = uicontrol(handles.multip25,'Style','text','String','Capabilities:','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.mask_basic_expert = uicontrol(handles.multip25,'Style','popupmenu','String',{'Basic','Expert'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_basic_expert','Callback',@mask.basic_expert_Callback, 'TooltipString','Switch betwenn basic mask generation and advanced mask generation modes');
+handles.mask_basic_expert = uicontrol(handles.multip25,'Style','popupmenu','String',{'Basic','Expert'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_basic_expert','Callback',@mask.basic_expert_Callback, 'TooltipString','Switch betwenn basic mask generation and advanced mask generation modes','Value',default.masks.mask_basic_expert);
 
 %panel Polygon mask items
 item=[0 item(2)+item(4)+margin/8 parentitem(3) 8];
@@ -242,7 +243,7 @@ parentitem=get(handles.uipanel25_2, 'Position');
 
 
 item=[0 0 parentitem(3) 1.5];
-handles.mask_bright_or_dark = uicontrol(handles.uipanel25_2,'Style','popupmenu','String',{'Bright area mask generator','Dark area mask generator','Low contrast area mask generator', 'Custom script (coming soon)'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_bright_or_dark','Callback',@mask.bright_or_dark_Callback, 'TooltipString','Select different automatic mask generators here');
+handles.mask_bright_or_dark = uicontrol(handles.uipanel25_2,'Style','popupmenu','String',{'Bright area mask generator','Dark area mask generator','Low contrast area mask generator', 'Custom script (coming soon)'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_bright_or_dark','Callback',@mask.bright_or_dark_Callback, 'TooltipString','Select different automatic mask generators here','Value',default.masks.mask_bright_or_dark);
 
 
 %% bright area mask generator
@@ -258,7 +259,7 @@ size_width=parentitem(3)/10*1.5;
 
 %binarize
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.1];
-handles.binarize_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@mask.binarize_enable_Callback,'Tag','binarize_enable','TooltipString','Enable this mask generator');
+handles.binarize_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',default.masks.binarize_enable, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@mask.binarize_enable_Callback,'Tag','binarize_enable','TooltipString','Enable this mask generator');
 
 item=[checkbox_width item(2) filter_text_width 1];
 handles.binarize_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Enable','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
@@ -267,12 +268,12 @@ item=[checkbox_width+filter_text_width item(2) size_text_width 1];
 handles.binarize_threshold_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Threshold:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.binarize_threshold = uicontrol(handles.uipanel25_3,'Style','edit', 'String','0.8','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold','TooltipString','Image binarization threshold');
+handles.binarize_threshold = uicontrol(handles.uipanel25_3,'Style','edit', 'String',gui.setting_text(default.masks.binarize_threshold),'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold','TooltipString','Image binarization threshold');
 
 
 %medfilt
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.1];
-handles.mask_medfilt_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_medfilt_enable','TooltipString','Use a median filter to smooth the input to the binarization');
+handles.mask_medfilt_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',default.masks.mask_medfilt_enable, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_medfilt_enable','TooltipString','Use a median filter to smooth the input to the binarization');
 
 item=[checkbox_width item(2) filter_text_width 1];
 handles.median_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Median filter','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
@@ -281,45 +282,45 @@ item=[checkbox_width+filter_text_width item(2) size_text_width 1];
 handles.median_size_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.median_size = uicontrol(handles.uipanel25_3,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size','TooltipString','Size of the median kernel');
+handles.median_size = uicontrol(handles.uipanel25_3,'Style','edit', 'String',gui.setting_text(default.masks.median_size),'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size','TooltipString','Size of the median kernel');
 
 
 
 %Imopen/imclose
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.5];
-handles.mask_imopen_imclose_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imopen_imclose_enable','TooltipString','Enable morphological opening or closing of image');
+handles.mask_imopen_imclose_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',default.masks.mask_imopen_imclose_enable, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imopen_imclose_enable','TooltipString','Enable morphological opening or closing of image');
 
 item=[checkbox_width item(2) filter_text_width 1.5];
 %handles.imopen_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','imopen','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
-handles.imopen_imclose_selection = uicontrol(handles.uipanel25_3,'Style','popupmenu', 'String',{'Morphologically open image','Morphologically close image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_selection','TooltipString','Select morphological open or close');
+handles.imopen_imclose_selection = uicontrol(handles.uipanel25_3,'Style','popupmenu', 'String',{'Morphologically open image','Morphologically close image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_selection','TooltipString','Select morphological open or close','Value',default.masks.imopen_imclose_selection);
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
 handles.imopen_imclose_size_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.imopen_imclose_size = uicontrol(handles.uipanel25_3,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_size','TooltipString','Size of the structuring element');
+handles.imopen_imclose_size = uicontrol(handles.uipanel25_3,'Style','edit', 'String',gui.setting_text(default.masks.imopen_imclose_size),'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_size','TooltipString','Size of the structuring element');
 
 
 
 %imdilate/imerode
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.5];
-handles.mask_imdilate_imerode_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imdilate_imerode_enable','TooltipString','Enable image dilation or image erosion');
+handles.mask_imdilate_imerode_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',default.masks.mask_imdilate_imerode_enable, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imdilate_imerode_enable','TooltipString','Enable image dilation or image erosion');
 
 item=[checkbox_width item(2) filter_text_width 1.5];
 %handles.imclose_text = uicontrol(handles.uipanel25_2,'Style','text', 'String','imclose','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
-handles.imdilate_imerode_selection = uicontrol(handles.uipanel25_3,'Style','popupmenu', 'String',{'Dilate image','Erode image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_selection','TooltipString','Choose between erosion or dilation');
+handles.imdilate_imerode_selection = uicontrol(handles.uipanel25_3,'Style','popupmenu', 'String',{'Dilate image','Erode image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_selection','TooltipString','Choose between erosion or dilation','Value',default.masks.imdilate_imerode_selection);
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
 handles.imdilate_imerode_size_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.imdilate_imerode_size = uicontrol(handles.uipanel25_3,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_size','TooltipString','Size of the structuring element');
+handles.imdilate_imerode_size = uicontrol(handles.uipanel25_3,'Style','edit', 'String',gui.setting_text(default.masks.imdilate_imerode_size),'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_size','TooltipString','Size of the structuring element');
 
 
 
 %remove small
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.1];
-handles.mask_remove_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_remove_enable','TooltipString','Enable the removal of small blobs');
+handles.mask_remove_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',default.masks.mask_remove_enable, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_remove_enable','TooltipString','Enable the removal of small blobs');
 
 item=[checkbox_width item(2) filter_text_width 1];
 handles.remove_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Remove blots','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
@@ -328,16 +329,15 @@ item=[checkbox_width+filter_text_width item(2) size_text_width 1];
 handles.remove_size_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.remove_size = uicontrol(handles.uipanel25_3,'Style','edit', 'String','1000','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size','TooltipString','Maximum area (in px) of the blobs to be removed');
+handles.remove_size = uicontrol(handles.uipanel25_3,'Style','edit', 'String',gui.setting_text(default.masks.remove_size),'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size','TooltipString','Maximum area (in px) of the blobs to be removed');
 
 %fillholes
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.1];
-handles.mask_fill_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_fill_enable','TooltipString','Enable hole filling');
+handles.mask_fill_enable = uicontrol(handles.uipanel25_3,'Style','checkbox', 'value',default.masks.mask_fill_enable, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_fill_enable','TooltipString','Enable hole filling');
 
 item=[checkbox_width item(2) filter_text_width 1];
 handles.fill_text = uicontrol(handles.uipanel25_3,'Style','text', 'String','Fill holes','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
 
-mask.binarize_enable_Callback
 
 %% dark area mask generator
 parentitem=get(handles.uipanel25_2, 'Position');
@@ -349,7 +349,7 @@ parentitem=get(handles.uipanel25_5, 'Position');
 
 %binarize
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.1];
-handles.binarize_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@mask.binarize_enable_2_Callback,'Tag','binarize_enable_2','TooltipString','Enable this mask generator');
+handles.binarize_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',default.masks.binarize_enable_2, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@mask.binarize_enable_2_Callback,'Tag','binarize_enable_2','TooltipString','Enable this mask generator');
 
 item=[checkbox_width item(2) filter_text_width 1];
 handles.binarize_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Enable','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
@@ -358,11 +358,11 @@ item=[checkbox_width+filter_text_width item(2) size_text_width 1];
 handles.binarize_threshold_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Threshold:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.binarize_threshold_2 = uicontrol(handles.uipanel25_5,'Style','edit', 'String','0.01','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold_2','TooltipString','Image binarization threshold');
+handles.binarize_threshold_2 = uicontrol(handles.uipanel25_5,'Style','edit', 'String',gui.setting_text(default.masks.binarize_threshold_2),'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','binarize_threshold_2','TooltipString','Image binarization threshold');
 
 %medfilt
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.1];
-handles.mask_medfilt_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_medfilt_enable_2','TooltipString','Use a median filter to smooth the input to the binarization');
+handles.mask_medfilt_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',default.masks.mask_medfilt_enable_2, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_medfilt_enable_2','TooltipString','Use a median filter to smooth the input to the binarization');
 
 item=[checkbox_width item(2) filter_text_width 1];
 handles.median_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Median filter','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
@@ -371,40 +371,40 @@ item=[checkbox_width+filter_text_width item(2) size_text_width 1];
 handles.median_size_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.median_size_2 = uicontrol(handles.uipanel25_5,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size_2','TooltipString','Size of the median kernel');
+handles.median_size_2 = uicontrol(handles.uipanel25_5,'Style','edit', 'String',gui.setting_text(default.masks.median_size_2),'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size_2','TooltipString','Size of the median kernel');
 
 
 %Imopen/imclose
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.5];
-handles.mask_imopen_imclose_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imopen_imclose_enable_2','TooltipString','Enable morphological opening or closing of image');
+handles.mask_imopen_imclose_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',default.masks.mask_imopen_imclose_enable_2, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imopen_imclose_enable_2','TooltipString','Enable morphological opening or closing of image');
 
 item=[checkbox_width item(2) filter_text_width 1.5];
 %handles.imopen_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','imopen','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
-handles.imopen_imclose_selection_2 = uicontrol(handles.uipanel25_5,'Style','popupmenu', 'String',{'Morphologically open image','Morphologically close image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_selection_2','TooltipString','Select morphological open or close');
+handles.imopen_imclose_selection_2 = uicontrol(handles.uipanel25_5,'Style','popupmenu', 'String',{'Morphologically open image','Morphologically close image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_selection_2','TooltipString','Select morphological open or close','Value',default.masks.imopen_imclose_selection_2);
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
 handles.imopen_imclose_size_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.imopen_imclose_size_2 = uicontrol(handles.uipanel25_5,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_size_2','TooltipString','Size of the structuring element');
+handles.imopen_imclose_size_2 = uicontrol(handles.uipanel25_5,'Style','edit', 'String',gui.setting_text(default.masks.imopen_imclose_size_2),'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_size_2','TooltipString','Size of the structuring element');
 
 %imdilate/imerode
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.5];
-handles.mask_imdilate_imerode_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imdilate_imerode_enable_2','TooltipString','Enable image dilation or image erosion');
+handles.mask_imdilate_imerode_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',default.masks.mask_imdilate_imerode_enable_2, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imdilate_imerode_enable_2','TooltipString','Enable image dilation or image erosion');
 
 item=[checkbox_width item(2) filter_text_width 1.5];
 %handles.imclose_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','imclose','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
-handles.imdilate_imerode_selection_2 = uicontrol(handles.uipanel25_5,'Style','popupmenu', 'String',{'Dilate image','Erode image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_selection_2','TooltipString','Choose between erosion or dilation');
+handles.imdilate_imerode_selection_2 = uicontrol(handles.uipanel25_5,'Style','popupmenu', 'String',{'Dilate image','Erode image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_selection_2','TooltipString','Choose between erosion or dilation','Value',default.masks.imdilate_imerode_selection_2);
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
 handles.imdilate_imerode_size_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.imdilate_imerode_size_2 = uicontrol(handles.uipanel25_5,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_size_2','TooltipString','Size of the structuring element');
+handles.imdilate_imerode_size_2 = uicontrol(handles.uipanel25_5,'Style','edit', 'String',gui.setting_text(default.masks.imdilate_imerode_size_2),'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_size_2','TooltipString','Size of the structuring element');
 
 %remove small
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.1];
-handles.mask_remove_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_remove_enable_2','TooltipString','Enable the removal of small blobs');
+handles.mask_remove_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',default.masks.mask_remove_enable_2, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_remove_enable_2','TooltipString','Enable the removal of small blobs');
 
 item=[checkbox_width item(2) filter_text_width 1];
 handles.remove_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Remove blots','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
@@ -413,11 +413,11 @@ item=[checkbox_width+filter_text_width item(2) size_text_width 1];
 handles.remove_size_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.remove_size_2 = uicontrol(handles.uipanel25_5,'Style','edit', 'String','1000','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size_2','TooltipString','Maximum area (in px) of the blobs to be removed');
+handles.remove_size_2 = uicontrol(handles.uipanel25_5,'Style','edit', 'String',gui.setting_text(default.masks.remove_size_2),'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size_2','TooltipString','Maximum area (in px) of the blobs to be removed');
 
 %fillholes
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.1];
-handles.mask_fill_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_fill_enable_2','TooltipString','Enable hole filling');
+handles.mask_fill_enable_2 = uicontrol(handles.uipanel25_5,'Style','checkbox', 'value',default.masks.mask_fill_enable_2, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_fill_enable_2','TooltipString','Enable hole filling');
 
 item=[checkbox_width item(2) filter_text_width 1];
 handles.fill_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','Fill holes','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
@@ -434,7 +434,7 @@ parentitem=get(handles.uipanel25_7, 'Position');
 
 %low contrast
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.1];
-handles.low_contrast_mask_enable = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@mask.low_contrast_mask_enable_Callback,'Tag','low_contrast_mask_enable','TooltipString','Enable this mask generator');
+handles.low_contrast_mask_enable = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',default.masks.low_contrast_mask_enable, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Callback',@mask.low_contrast_mask_enable_Callback,'Tag','low_contrast_mask_enable','TooltipString','Enable this mask generator');
 
 item=[checkbox_width item(2) filter_text_width-3 1];
 handles.low_contrast_mask_text = uicontrol(handles.uipanel25_7,'Style','text', 'String','Enable','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
@@ -443,7 +443,7 @@ item=[checkbox_width+filter_text_width-3 item(2) size_text_width 1];
 handles.low_contrast_mask_text_2 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Threshold:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
 
 item=[checkbox_width+filter_text_width-3+size_text_width item(2) size_width+3 1];
-handles.low_contrast_mask_threshold = uicontrol(handles.uipanel25_7,'Style','edit', 'String','0.01','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','low_contrast_mask_threshold','TooltipString','Image binarization threshold');
+handles.low_contrast_mask_threshold = uicontrol(handles.uipanel25_7,'Style','edit', 'String',gui.setting_text(default.masks.low_contrast_mask_threshold),'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','low_contrast_mask_threshold','TooltipString','Image binarization threshold');
 
 item=[parentitem(3)/3  item(2)+item(4)+margin/8 parentitem(3)/3*2 1.5];
 handles.low_contrast_mask_threshold_suggest = uicontrol(handles.uipanel25_7,'Style','pushbutton','String','Suggest threshold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask.low_contrast_threshold_suggest_Callback,'Tag','low_contrast_mask_threshold_suggest','TooltipString','Suggest a suitable starting point for the threshold');
@@ -451,7 +451,7 @@ handles.low_contrast_mask_threshold_suggest = uicontrol(handles.uipanel25_7,'Sty
 
 %medfilt
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.1];
-handles.mask_medfilt_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_medfilt_enable_3','TooltipString','Use a median filter to smooth the input to the binarization');
+handles.mask_medfilt_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',default.masks.mask_medfilt_enable_3, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_medfilt_enable_3','TooltipString','Use a median filter to smooth the input to the binarization');
 
 item=[checkbox_width item(2) filter_text_width 1];
 handles.median_text_3 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Median filter','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
@@ -460,40 +460,40 @@ item=[checkbox_width+filter_text_width item(2) size_text_width 1];
 handles.median_size_text_3 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.median_size_3 = uicontrol(handles.uipanel25_7,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size_3','TooltipString','Size of the median kernel');
+handles.median_size_3 = uicontrol(handles.uipanel25_7,'Style','edit', 'String',gui.setting_text(default.masks.median_size_3),'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','median_size_3','TooltipString','Size of the median kernel');
 
 
 %Imopen/imclose
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.5];
-handles.mask_imopen_imclose_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imopen_imclose_enable_3','TooltipString','Enable morphological opening or closing of image');
+handles.mask_imopen_imclose_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',default.masks.mask_imopen_imclose_enable_3, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imopen_imclose_enable_3','TooltipString','Enable morphological opening or closing of image');
 
 item=[checkbox_width item(2) filter_text_width 1.5];
 %handles.imopen_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','imopen','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
-handles.imopen_imclose_selection_3 = uicontrol(handles.uipanel25_7,'Style','popupmenu', 'String',{'Morphologically open image','Morphologically close image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_selection_3','TooltipString','Select morphological open or close');
+handles.imopen_imclose_selection_3 = uicontrol(handles.uipanel25_7,'Style','popupmenu', 'String',{'Morphologically open image','Morphologically close image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_selection_3','TooltipString','Select morphological open or close','Value',default.masks.imopen_imclose_selection_3);
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
 handles.imopen_imclose_size_text_3 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.imopen_imclose_size_3 = uicontrol(handles.uipanel25_7,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_size_3','TooltipString','Size of the structuring element');
+handles.imopen_imclose_size_3 = uicontrol(handles.uipanel25_7,'Style','edit', 'String',gui.setting_text(default.masks.imopen_imclose_size_3),'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imopen_imclose_size_3','TooltipString','Size of the structuring element');
 
 %imdilate/imerode
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.5];
-handles.mask_imdilate_imerode_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imdilate_imerode_enable_3','TooltipString','Enable image dilation or image erosion');
+handles.mask_imdilate_imerode_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',default.masks.mask_imdilate_imerode_enable_3, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_imdilate_imerode_enable_3','TooltipString','Enable image dilation or image erosion');
 
 item=[checkbox_width item(2) filter_text_width 1.5];
 %handles.imclose_text_2 = uicontrol(handles.uipanel25_5,'Style','text', 'String','imclose','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
-handles.imdilate_imerode_selection_3 = uicontrol(handles.uipanel25_7,'Style','popupmenu', 'String',{'Dilate image','Erode image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_selection_3','TooltipString','Choose between erosion or dilation');
+handles.imdilate_imerode_selection_3 = uicontrol(handles.uipanel25_7,'Style','popupmenu', 'String',{'Dilate image','Erode image'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_selection_3','TooltipString','Choose between erosion or dilation','Value',default.masks.imdilate_imerode_selection_3);
 
 item=[checkbox_width+filter_text_width item(2) size_text_width 1];
 handles.imdilate_imerode_size_text_3 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.imdilate_imerode_size_3 = uicontrol(handles.uipanel25_7,'Style','edit', 'String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_size_3','TooltipString','Size of the structuring element');
+handles.imdilate_imerode_size_3 = uicontrol(handles.uipanel25_7,'Style','edit', 'String',gui.setting_text(default.masks.imdilate_imerode_size_3),'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','imdilate_imerode_size_3','TooltipString','Size of the structuring element');
 
 %remove small
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.1];
-handles.mask_remove_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_remove_enable_3','TooltipString','Enable the removal of small blobs');
+handles.mask_remove_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',default.masks.mask_remove_enable_3, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_remove_enable_3','TooltipString','Enable the removal of small blobs');
 
 item=[checkbox_width item(2) filter_text_width 1];
 handles.remove_text_3 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Remove blots','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
@@ -502,11 +502,11 @@ item=[checkbox_width+filter_text_width item(2) size_text_width 1];
 handles.remove_size_text_3 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Size:','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
 
 item=[checkbox_width+filter_text_width+size_text_width item(2) size_width 1];
-handles.remove_size_3 = uicontrol(handles.uipanel25_7,'Style','edit', 'String','1000','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size_3','TooltipString','Maximum area (in px) of the blobs to be removed');
+handles.remove_size_3 = uicontrol(handles.uipanel25_7,'Style','edit', 'String',gui.setting_text(default.masks.remove_size_3),'Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','remove_size_3','TooltipString','Maximum area (in px) of the blobs to be removed');
 
 %fillholes
 item=[margin/4 item(2)+item(4)+margin/2 checkbox_width 1.1];
-handles.mask_fill_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',0, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_fill_enable_3','TooltipString','Enable hole filling');
+handles.mask_fill_enable_3 = uicontrol(handles.uipanel25_7,'Style','checkbox', 'value',default.masks.mask_fill_enable_3, 'String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)],'Tag','mask_fill_enable_3','TooltipString','Enable hole filling');
 
 item=[checkbox_width item(2) filter_text_width 1];
 handles.fill_text_3 = uicontrol(handles.uipanel25_7,'Style','text', 'String','Fill holes','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin/4 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2/4 item(4)]);
@@ -584,13 +584,13 @@ item=[0 item(2)+item(4) parentitem(3)*0.6 1.5];
 handles.mask_apply_to_current = uicontrol(handles.uipanel25_6,'Style','pushbutton','String','Copy mask to frames','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask.copy_to_all_Callback,'TooltipString','Copy masks from the current frame to the selected frames');
 
 item=[parentitem(3)*0.6 item(2) parentitem(3)*0.4 1.5];
-handles.mask_copy_frames = uicontrol(handles.uipanel25_6,'Style','edit','String','1:end','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_copy_frames','TooltipString','Select which frames this operation applies to. E.g. "1:end", "1,4,7" or "10:15". "end" = last frame.');
+handles.mask_copy_frames = uicontrol(handles.uipanel25_6,'Style','edit','String',gui.setting_text(default.masks.mask_copy_frames),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_copy_frames','TooltipString','Select which frames this operation applies to. E.g. "1:end", "1,4,7" or "10:15". "end" = last frame.');
 
 item=[0 item(2)+item(4)+0.5 parentitem(3)*0.6 1.5];
 handles.mask_delete_all = uicontrol(handles.uipanel25_6,'Style','pushbutton','String','Clear masks in frames','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask.delete_all_Callback,'TooltipString','Delete masks in the selected frames');
 
 item=[parentitem(3)*0.6 item(2) parentitem(3)*0.4 1.5];
-handles.mask_clear_frames = uicontrol(handles.uipanel25_6,'Style','edit','String','1:end','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_clear_frames','TooltipString','Select which frames this operation applies to. E.g. "1:end", "1,4,7" or "10:15". "end" = last frame.');
+handles.mask_clear_frames = uicontrol(handles.uipanel25_6,'Style','edit','String',gui.setting_text(default.masks.mask_clear_frames),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_clear_frames','TooltipString','Select which frames this operation applies to. E.g. "1:end", "1,4,7" or "10:15". "end" = last frame.');
 
 item=[0 item(2)+item(4)+0.5 parentitem(3)/2 1.5];
 handles.mask_save = uicontrol(handles.uipanel25_6,'Style','pushbutton','String','Save all masks','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask.save_Callback,'TooltipString','Save all masks to Matlab file for reuse');
@@ -605,37 +605,37 @@ parentitem=get(handles.multip03, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
-handles.clahe_enable = uicontrol(handles.multip03,'Style','checkbox', 'value',1, 'String','Enable CLAHE','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','clahe_enable','TooltipString','Contrast limited adaptive histogram equalization: Enhances contrast, should be enabled');
+handles.clahe_enable = uicontrol(handles.multip03,'Style','checkbox', 'value',default.analysis.clahe_enable, 'String','Enable CLAHE','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','clahe_enable','TooltipString','Contrast limited adaptive histogram equalization: Enhances contrast, should be enabled');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text8 = uicontrol(handles.multip03,'Style','text', 'String','Window size [px]','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.clahe_size = uicontrol(handles.multip03,'Style','edit', 'String','64','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','clahe_size','TooltipString','Size of the tiles for CLAHE. Default setting is fine in most cases');
+handles.clahe_size = uicontrol(handles.multip03,'Style','edit', 'String',gui.setting_text(default.analysis.clahe_size),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','clahe_size','TooltipString','Size of the tiles for CLAHE. Default setting is fine in most cases');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1.1];
-handles.enable_highpass = uicontrol(handles.multip03,'Style','checkbox', 'value',0, 'String','Enable highpass','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','enable_highpass','TooltipString','Highpass the image data. Only needed for some special cases');
+handles.highpass_enable = uicontrol(handles.multip03,'Style','checkbox', 'value',default.analysis.highpass_enable, 'String','Enable highpass','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','highpass_enable','TooltipString','Highpass the image data. Only needed for some special cases');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text9 = uicontrol(handles.multip03,'Style','text', 'String','Kernel size [px]','Units','characters','HorizontalAlignment','right', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.highp_size = uicontrol(handles.multip03,'Style','edit', 'String','15','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','highp_size','TooltipString','Kernel size of the lowpass filtered image that is subtracted from the original image');
+handles.highpass_size = uicontrol(handles.multip03,'Style','edit', 'String',gui.setting_text(default.analysis.highpass_size),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','highpass_size','TooltipString','Kernel size of the lowpass filtered image that is subtracted from the original image');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1.1];
-handles.enable_intenscap = uicontrol(handles.multip03,'Style','checkbox', 'value',0, 'String','Enable intensity capping','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','enable_intenscap','TooltipString','Intensity capping. Only needed for some special cases');
+handles.intenscap_enable = uicontrol(handles.multip03,'Style','checkbox', 'value',default.analysis.intenscap_enable, 'String','Enable intensity capping','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','intenscap_enable','TooltipString','Intensity capping. Only needed for some special cases');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1.1];
-handles.wienerwurst = uicontrol(handles.multip03,'Style','checkbox', 'value',0, 'String','Wiener2 denoise and low pass','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','wienerwurst','TooltipString','Wiener denoise filter and Gaussian low pass. Only needed for some special cases');
+handles.wiener_enable = uicontrol(handles.multip03,'Style','checkbox', 'value',default.analysis.wiener_enable, 'String','Wiener2 denoise and low pass','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','wiener_enable','TooltipString','Wiener denoise filter and Gaussian low pass. Only needed for some special cases');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text159 = uicontrol(handles.multip03,'Style','text', 'String','Window size [px]','HorizontalAlignment','right','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text159');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.wienerwurstsize = uicontrol(handles.multip03,'Style','edit', 'String','15','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','wienerwurstsize','TooltipString','Window size of the Wiener denoise filter');
+handles.wiener_size = uicontrol(handles.multip03,'Style','edit', 'String',gui.setting_text(default.analysis.wiener_size),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','wiener_size','TooltipString','Window size of the Wiener denoise filter');
 
 item=[0 item(2)+item(4)+margin*2 parentitem(3) 1.1];
-handles.Autolimit = uicontrol(handles.multip03,'Style','checkbox', 'value',1, 'String','Auto contrast stretch','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','Autolimit','TooltipString','Automatic stretching of the image intensity histogram. Important for 16-bit images.');
+handles.autolimit_enable = uicontrol(handles.multip03,'Style','checkbox', 'value',default.analysis.autolimit_enable, 'String','Auto contrast stretch','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','autolimit_enable','TooltipString','Automatic stretching of the image intensity histogram. Important for 16-bit images.');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 1];
 handles.text162 = uicontrol(handles.multip03,'Style','text', 'String','minimum:','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text162');
@@ -644,10 +644,10 @@ item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
 handles.text163 = uicontrol(handles.multip03,'Style','text', 'String','maximum:','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text163');
 
 item=[0 item(2)+item(4) parentitem(3)/3*1 1];
-handles.minintens = uicontrol(handles.multip03,'Style','edit', 'String','0','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','minintens','Callback',@preproc.maxintens_Callback,'TooltipString','Lower bound of the histogram [0...1]');
+handles.minintens = uicontrol(handles.multip03,'Style','edit', 'String',gui.setting_text(default.analysis.minintens),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','minintens','Callback',@preproc.minintens_Callback,'TooltipString','Lower bound of the histogram [0...1]');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/3*1 1];
-handles.maxintens = uicontrol(handles.multip03,'Style','edit', 'String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','maxintens','Callback',@preproc.minintens_Callback,'TooltipString','Upper bound of the histogram [0...1]');
+handles.maxintens = uicontrol(handles.multip03,'Style','edit', 'String',gui.setting_text(default.analysis.maxintens),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','maxintens','Callback',@preproc.maxintens_Callback,'TooltipString','Upper bound of the histogram [0...1]');
 
 item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 7];
 handles.uipanel351 = uipanel(handles.multip03, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Background Subtraction','fontweight','bold');
@@ -655,7 +655,7 @@ handles.uipanel351 = uipanel(handles.multip03, 'Units','characters', 'Position',
 parentitem=get(handles.uipanel351, 'Position');
 item=[0 0 0 0];
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/3 1.5];
-handles.bg_subtract = uicontrol(handles.uipanel351,'Style','popupmenu', 'String',{'off','subtract average intensity','subtract minimum intensity'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bg_subtract','Callback',@preproc.remove_bg_img, 'TooltipString','Calculates an average or minimum image out of all images, then subtracts that from every image.');
+handles.bg_subtract = uicontrol(handles.uipanel351,'Style','popupmenu', 'String',{'off','subtract average intensity','subtract minimum intensity'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bg_subtract','Callback',@preproc.remove_bg_img, 'TooltipString','Calculates an average or minimum image out of all images, then subtracts that from every image.','Value',default.analysis.bg_subtract);
 
 item=[parentitem(3)/3 item(2) parentitem(3)/3*2 1.5];
 handles.bg_view = uicontrol(handles.uipanel351,'Style','pushbutton','String','View background image','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.bg_view_Callback,'TooltipString','Display the generated background image. Click again to toggle between background A and B.');
@@ -692,7 +692,7 @@ handles.uipanel35 = uipanel(handles.multip04, 'Units','characters', 'Position', 
 parentitem=get(handles.uipanel35, 'Position');
 item=[0 0 0 0];
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
-handles.algorithm_selection = uicontrol(handles.uipanel35,'Style','popupmenu', 'String',{'Multipass FFT window deformation','Ensemble multipass FFT window deformation','Single pass direct cross-correlation (DCC)', 'Optical flow (wavelet-based)'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','algorithm_selection','TooltipString',sprintf('* Multipass FFT window deformation is the standard algorithm, suitable for most cases.\n* Ensemble correlation is for sparsely seeded flows (e.g. micro-piv). \n* DCC is the first algorithm that was implemented in PIVlab. \n* Optical flow can yield higher resolution with appropriate image data (but is slower), implemented by Schmidt et al. from case.edu'),'Callback',@piv.algorithm_selection_Callback);
+handles.algorithm_selection = uicontrol(handles.uipanel35,'Style','popupmenu', 'String',{'Multipass FFT window deformation','Ensemble multipass FFT window deformation','Single pass direct cross-correlation (DCC)', 'Optical flow (wavelet-based)'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','algorithm_selection','TooltipString',sprintf('* Multipass FFT window deformation is the standard algorithm, suitable for most cases.\n* Ensemble correlation is for sparsely seeded flows (e.g. micro-piv). \n* DCC is the first algorithm that was implemented in PIVlab. \n* Optical flow can yield higher resolution with appropriate image data (but is slower), implemented by Schmidt et al. from case.edu'),'Callback',@piv.algorithm_selection_Callback,'Value',default.analysis.algorithm_selection);
 
 parentitem=get(handles.multip04, 'Position');
 item=[0 0 0 0];
@@ -708,27 +708,25 @@ item=[0 item(2)+item(4) parentitem(3) 3];
 handles.text_parallelpatches = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Parallel process patches:','Tag','text_parallelpatches');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
-handles.ofv_parallelpatches = uicontrol(handles.uipanel_ofv1,'Style','popupmenu', 'String',{'Off' '128' '256' '512' '1024' 'Default'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_parallelpatches','TooltipString','Parallel processing of patches');
-set (handles.ofv_parallelpatches,'Value',6);
+handles.ofv_parallelpatches = uicontrol(handles.uipanel_ofv1,'Style','popupmenu', 'String',{'Off' '128' '256' '512' '1024' 'Default'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_parallelpatches','TooltipString','Parallel processing of patches','Value',default.analysis.ofv_parallelpatches);
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
 handles.text_ofv_median = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Inter-pass median filter:');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
-handles.ofv_median = uicontrol(handles.uipanel_ofv1,'Style','popupmenu', 'String',{'Off' '3x3' '5x5' '9x9'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_median','TooltipString','Median filtering in between the pyramid levels');
+handles.ofv_median = uicontrol(handles.uipanel_ofv1,'Style','popupmenu', 'String',{'Off' '3x3' '5x5' '9x9'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_median','TooltipString','Median filtering in between the pyramid levels','Value',default.analysis.ofv_median);
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
 handles.text_ofv_pyramid_levels = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pyramid levels:');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
-handles.ofv_pyramid_levels = uicontrol(handles.uipanel_ofv1,'Style','popupmenu', 'String',{'5' '4' '3' '2' '1'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_pyramid_levels','TooltipString','Amount of coarse-to-fine steps, larger numbers required for larger displacements');
-handles.ofv_pyramid_levels.Value = 3; %set default
+handles.ofv_pyramid_levels = uicontrol(handles.uipanel_ofv1,'Style','popupmenu', 'String',{'5' '4' '3' '2' '1'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_pyramid_levels','TooltipString','Amount of coarse-to-fine steps, larger numbers required for larger displacements','Value',default.analysis.ofv_pyramid_levels);
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
 handles.text_ofv_eta = uicontrol(handles.uipanel_ofv1,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Smoothness (eta):');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
-handles.ofv_eta = uicontrol(handles.uipanel_ofv1,'Style','edit', 'String','40','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_eta','TooltipString','smoothness determined by the regularization parameter');
+handles.ofv_eta = uicontrol(handles.uipanel_ofv1,'Style','edit', 'String',gui.setting_text(default.analysis.ofv_eta),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ofv_eta','TooltipString','smoothness determined by the regularization parameter');
 
 
 parentitem=get(handles.multip04, 'Position');
@@ -761,10 +759,10 @@ item=[parentitem(3)/3*2 item(2)+margin/2 parentitem(3)/3 1];
 handles.text12 = uicontrol(handles.uipanel41,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Step [px]');
 
 item=[0 item(2)+item(4) parentitem(3)/3*1 1];
-handles.intarea = uicontrol(handles.uipanel41,'Style','edit', 'String','64','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.intarea_Callback,'Tag','intarea','TooltipString','Interrogation window edge length of the first pass. Should be < 0.25 times your maximum displacement');
+handles.pass1_size = uicontrol(handles.uipanel41,'Style','edit', 'String',gui.setting_text(default.analysis.pass1_size),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.intarea_Callback,'Tag','pass1_size','TooltipString','Interrogation window edge length of the first pass. Should be < 0.25 times your maximum displacement');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.step = uicontrol(handles.uipanel41,'Style','edit', 'String','32','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.step_Callback,'Tag','step','TooltipString','Horizontal and vertical offset or step of the interrogation windows. Usually this is 50 % of the interrogation window edge length (interrogation area)');
+handles.pass1_step = uicontrol(handles.uipanel41,'Style','edit', 'String',gui.setting_text(default.analysis.pass1_step),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.step_Callback,'Tag','pass1_step','TooltipString','Horizontal and vertical offset or step of the interrogation windows. Usually this is 50 % of the interrogation window edge length (interrogation area)');
 
 item=[parentitem(3)/3*2 item(2)+item(4) parentitem(3)/3*1 1];
 handles.steppercentage = uicontrol(handles.uipanel41,'Style','text', 'String','N/A','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','steppercentage');
@@ -784,41 +782,41 @@ item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
 handles.text130 = uicontrol(handles.uipanel42,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Step [px]');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/2.5 1.1];
-handles.checkbox26 = uicontrol(handles.uipanel42,'Style','checkbox', 'String','Pass 2','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','checkbox26','Callback',@piv.pass2_checkbox_Callback);
+handles.pass2_enable = uicontrol(handles.uipanel42,'Style','checkbox', 'String','Pass 2','Value',default.analysis.pass2_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','pass2_enable','Callback',@piv.pass2_checkbox_Callback);
 
 item=[parentitem(3)/2.5 item(2) parentitem(3)/4*1 1];
-handles.edit50 = uicontrol(handles.uipanel42,'Style','edit', 'String','32','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.pass2_size_Callback,'Tag','edit50','TooltipString','Second pass interrogation window edge length (interrogation area). Must be <= the previous pass');
+handles.pass2_size = uicontrol(handles.uipanel42,'Style','edit', 'String',gui.setting_text(default.analysis.pass2_size),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.pass2_size_Callback,'Tag','pass2_size','TooltipString','Second pass interrogation window edge length (interrogation area). Must be <= the previous pass');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/4*1 1];
-handles.text126 = uicontrol(handles.uipanel42,'Style','text', 'String','16','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text126');
+handles.pass2_step = uicontrol(handles.uipanel42,'Style','text', 'String','16','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','pass2_step');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/2.5 1.1];
-handles.checkbox27= uicontrol(handles.uipanel42,'Style','checkbox', 'String','Pass 3','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','checkbox27','Callback',@piv.pass3_checkbox_Callback);
+handles.pass3_enable= uicontrol(handles.uipanel42,'Style','checkbox', 'String','Pass 3','Value',default.analysis.pass3_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','pass3_enable','Callback',@piv.pass3_checkbox_Callback);
 
 item=[parentitem(3)/2.5 item(2) parentitem(3)/4*1 1];
-handles.edit51 = uicontrol(handles.uipanel42,'Style','edit', 'String','32','Units','characters','enable','off', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.pass3_size_Callback,'Tag','edit51','TooltipString','Third pass interrogation window edge length (interrogation area). Must be <= the previous pass');
+handles.pass3_size = uicontrol(handles.uipanel42,'Style','edit', 'String',gui.setting_text(default.analysis.pass3_size),'Units','characters','enable','off', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.pass3_size_Callback,'Tag','pass3_size','TooltipString','Third pass interrogation window edge length (interrogation area). Must be <= the previous pass');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/4*1 1];
-handles.text127 = uicontrol(handles.uipanel42,'Style','text', 'String','16','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text127');
+handles.pass3_step = uicontrol(handles.uipanel42,'Style','text', 'String','16','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','pass3_step');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/2.5 1.1];
-handles.checkbox28= uicontrol(handles.uipanel42,'Style','checkbox', 'String','Pass 4','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','checkbox28','Callback',@piv.pass4_checkbox_Callback);
+handles.pass4_enable= uicontrol(handles.uipanel42,'Style','checkbox', 'String','Pass 4','Value',default.analysis.pass4_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','pass4_enable','Callback',@piv.pass4_checkbox_Callback);
 
 item=[parentitem(3)/2.5 item(2) parentitem(3)/4*1 1];
-handles.edit52 = uicontrol(handles.uipanel42,'Style','edit', 'String','32','Units','characters','enable','off', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.pass4_size_Callback,'Tag','edit52','TooltipString','Fourth pass interrogation window edge length (interrogation area). Must be <= the previous pass');
+handles.pass4_size = uicontrol(handles.uipanel42,'Style','edit', 'String',gui.setting_text(default.analysis.pass4_size),'Units','characters','enable','off', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.pass4_size_Callback,'Tag','pass4_size','TooltipString','Fourth pass interrogation window edge length (interrogation area). Must be <= the previous pass');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/4*1 1];
-handles.text128 = uicontrol(handles.uipanel42,'Style','text', 'String','16','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text128');
+handles.pass4_step = uicontrol(handles.uipanel42,'Style','text', 'String','16','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','pass4_step');
 
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
-handles.repeat_last= uicontrol(handles.uipanel42,'Style','checkbox', 'String','Repeat last pass until','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.repeat_last_Callback,'Tag','repeat_last','TooltipString','This will repeat the last pass of a multipass analysis until the average difference to the previous pass is less than "quality slope".','visible','off');
+handles.repeat_last_enable= uicontrol(handles.uipanel42,'Style','checkbox', 'String','Repeat last pass until','Value',default.analysis.repeat_last_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.repeat_last_Callback,'Tag','repeat_last_enable','TooltipString','This will repeat the last pass of a multipass analysis until the average difference to the previous pass is less than "quality slope".','visible','off');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1];
 handles.text128x = uicontrol(handles.uipanel42,'Style','text', 'String','quality slope <','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'visible','off','Tag','text128x');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/3.5 1];
-handles.edit52x = uicontrol(handles.uipanel42,'Style','edit', 'String','0.025','Units','characters','enable','off', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.repeated_thesh_Callback,'Tag','edit52x','TooltipString','This will repeat the last pass of a multipass analysis until the average difference to the previous pass is less than "quality slope".','visible','off');
+handles.repeat_last_threshold = uicontrol(handles.uipanel42,'Style','edit', 'String',gui.setting_text(default.analysis.repeat_last_threshold),'Units','characters','enable','off', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@piv.repeated_thesh_Callback,'Tag','repeat_last_threshold','TooltipString','This will repeat the last pass of a multipass analysis until the average difference to the previous pass is less than "quality slope".','visible','off');
 
 parentitem=get(handles.multip04, 'Position');
 item=[0 0 0 0];
@@ -827,22 +825,22 @@ item=[0 5+5+11.5+margin/3 parentitem(3) 1];
 handles.text14 = uicontrol(handles.multip04,'Style','text', 'String','Sub-pixel estimator','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text14');
 
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.subpix = uicontrol(handles.multip04,'Style','popupmenu', 'String',{'Gauss 2x3-point','2D Gauss'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','subpix','TooltipString','Subpixel estimation technique. 2D Gauss is supposed to be more accurate for image data that contains motion blur, but there is hardly a difference');
+handles.subpixel_estimator = uicontrol(handles.multip04,'Style','popupmenu', 'String',{'Gauss 2x3-point','2D Gauss'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','subpixel_estimator','TooltipString','Subpixel estimation technique. 2D Gauss is supposed to be more accurate for image data that contains motion blur, but there is hardly a difference','Value',default.analysis.subpixel_estimator);
 
 %item=[0 item(2)+item(4)+margin parentitem(3) 1];
 %handles.Repeated_box = uicontrol(handles.multip04,'Style','checkbox', 'String','5 x repeated correlation','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','Repeated_box','TooltipString','With very bad image data, enabling the repeated correlation will enhance data yield. But it''s pretty slow');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
-handles.mask_auto_box = uicontrol(handles.multip04,'Style','checkbox', 'String','Disable auto-correlation','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_auto_box','TooltipString','This will disallow displacements close to zero. It helps when there is a very strong background signal');
+handles.disable_autocorrelation = uicontrol(handles.multip04,'Style','checkbox', 'String','Disable auto-correlation','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','disable_autocorrelation','TooltipString','This will disallow displacements close to zero. It helps when there is a very strong background signal','Value',default.analysis.disable_autocorrelation);
 
 item=[0 item(2)+item(4)+margin/1.5 parentitem(3) 1];
 handles.text914 = uicontrol(handles.multip04,'Style','text', 'String','Correlation robustness','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text914');
 
 item=[0 item(2)+item(4)+margin/6 parentitem(3) 2];
-handles.CorrQuality = uicontrol(handles.multip04,'Style','popupmenu', 'String',{'Standard (recommended)','High','Extreme'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','CorrQuality','TooltipString','Correlation quality. Better = slower...');
+handles.correlation_robustness = uicontrol(handles.multip04,'Style','popupmenu', 'String',{'Standard (recommended)','High','Extreme'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','correlation_robustness','TooltipString','Correlation quality. Better = slower...','Value',default.analysis.correlation_robustness);
 
 item=[0 item(2)+item(4)+margin/6 parentitem(3) 1.5];
-handles.checkbox_uncertainty = uicontrol(handles.multip04,'Style','checkbox', 'String','Estimate uncertainty (slow)','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','checkbox_uncertainty','Visible','on','TooltipString','Estimate velocity measurement uncertainty (Sciacchitano 2013). Doubles the analysis time!');
+handles.uncertainty_enable = uicontrol(handles.multip04,'Style','checkbox', 'String','Estimate uncertainty (slow)','Value',default.analysis.uncertainty_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','uncertainty_enable','Visible','on','TooltipString','Estimate velocity measurement uncertainty (Sciacchitano 2013). Doubles the analysis time!');
 
 
 item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 2];
@@ -860,7 +858,7 @@ item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.AnalyzeAll = uicontrol(handles.multip05,'Style','pushbutton','String','Analyze all frames','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @piv.AnalyzeAll_Callback,'Tag','AnalyzeAll','TooltipString','Perform PIV analyses for all frames');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3)/4*2.5 2.5];
-handles.update_display_checkbox = uicontrol(handles.multip05,'Style','checkbox', 'value',0, 'String','Refresh display','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','update_display_checkbox','TooltipString','Refresh the display during the analysis. Disabling it will increase processing speed.');
+handles.update_display_checkbox = uicontrol(handles.multip05,'Style','checkbox', 'value',default.display.update_display_checkbox, 'String','Refresh display','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','update_display_checkbox','TooltipString','Refresh the display during the analysis. Disabling it will increase processing speed.');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 2.5];
 handles.cancelbutt = uicontrol(handles.multip05,'Style','pushbutton','String','Cancel','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @piv.cancelbutt_Callback,'Tag','cancelbutt','TooltipString','Cancel analysis');
@@ -900,7 +898,7 @@ item=[parentitem(3)/3*2 item(2) parentitem(3)/3 2];
 handles.vel_limit_auto = uicontrol(handles.uipanel42x,'Style','pushbutton','String','Auto','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.vel_limit_Callback,'Tag','vel_limit_auto','TooltipString','Display a velocity scatter plot and automatically draw a shape around them');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.1];
-handles.meanofall = uicontrol(handles.uipanel42x,'Style','checkbox','Value',1,'String','display all frames in scatterplot','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','meanofall','TooltipString','Use velocity data of all frames in the velocity scatter plot');
+handles.scatter_all_frames = uicontrol(handles.uipanel42x,'Style','checkbox','Value',default.display.scatter_all_frames,'String','display all frames in scatterplot','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','scatter_all_frames','TooltipString','Use velocity data of all frames in the velocity scatter plot');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
 handles.vel_limit_active = uicontrol(handles.uipanel42x,'Style','text','String','Limit inactive','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','vel_limit_active');
@@ -916,37 +914,37 @@ parentitem=get(handles.multip06, 'Position');
 item=[0 0 0 0];
 
 item=[0 13+margin/2 parentitem(3) 1.1];
-handles.stdev_check = uicontrol(handles.multip06,'Style','checkbox','String','Standard deviation filter','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','stdev_check','TooltipString','Filter velocities by removing velocities that are outside the mean velocity +- n times the standard deviation');
+handles.stdev_enable = uicontrol(handles.multip06,'Style','checkbox','String','Standard deviation filter','Value',default.analysis.stdev_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','stdev_enable','TooltipString','Filter velocities by removing velocities that are outside the mean velocity +- n times the standard deviation');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text18 = uicontrol(handles.multip06,'Style','text','String','Threshold [n*stdev]','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.stdev_thresh = uicontrol(handles.multip06,'Style','edit','String','4.7','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.stdev_thresh_Callback,'Tag','stdev_thresh','TooltipString','Threshold for the standard deviation filter. Velocities that are outside the mean velocity +- n times the standard deviation will be removed');
+handles.stdev_thresh = uicontrol(handles.multip06,'Style','edit','String',gui.setting_text(default.analysis.stdev_thresh),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.stdev_thresh_Callback,'Tag','stdev_thresh','TooltipString','Threshold for the standard deviation filter. Velocities that are outside the mean velocity +- n times the standard deviation will be removed');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
-handles.loc_median = uicontrol(handles.multip06,'Style','checkbox','String','Local median filter','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','loc_median','TooltipString','Normalized local median test from Westerweel and Scarano (2005)');
+handles.loc_median_enable = uicontrol(handles.multip06,'Style','checkbox','String','Local median filter','Value',default.analysis.loc_median_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','loc_median_enable','TooltipString','Normalized local median test from Westerweel and Scarano (2005)');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text19 = uicontrol(handles.multip06,'Style','text','String','Threshold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.loc_med_thresh = uicontrol(handles.multip06,'Style','edit','String','3','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.loc_med_thresh_Callback,'Tag','loc_med_thresh');
+handles.loc_med_thresh = uicontrol(handles.multip06,'Style','edit','String',gui.setting_text(default.analysis.loc_med_thresh),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.loc_med_thresh_Callback,'Tag','loc_med_thresh');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
-handles.notch_filter = uicontrol(handles.multip06,'Style','checkbox','String','Magnitude notch filter','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','notch_filter','TooltipString','Notch filter: Discards velocities in the specified range from vL to vH');
+handles.notch_enable = uicontrol(handles.multip06,'Style','checkbox','String','Magnitude notch filter','Value',default.analysis.notch_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','notch_enable','TooltipString','Notch filter: Discards velocities in the specified range from vL to vH');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.textnotchL = uicontrol(handles.multip06,'Style','text','String','vL','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','textnotchL');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.notch_L_thresh = uicontrol(handles.multip06,'Style','edit','String','-1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.notch_L_thresh_Callback,'Tag','notch_L_thresh');
+handles.notch_L_thresh = uicontrol(handles.multip06,'Style','edit','String',gui.setting_text(default.analysis.notch_L_thresh),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.notch_L_thresh_Callback,'Tag','notch_L_thresh');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.textnotchH = uicontrol(handles.multip06,'Style','text','String','vH','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','textnotchH');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.notch_H_thresh = uicontrol(handles.multip06,'Style','edit','String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.notch_H_thresh_Callback,'Tag','notch_H_thresh');
+handles.notch_H_thresh = uicontrol(handles.multip06,'Style','edit','String',gui.setting_text(default.analysis.notch_H_thresh),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.notch_H_thresh_Callback,'Tag','notch_H_thresh');
 
 %item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 %handles.text20 = uicontrol(handles.multip06,'Style','text','String','Epsilon','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
@@ -958,7 +956,7 @@ item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
 handles.rejectsingle = uicontrol(handles.multip06,'Style','pushbutton','String','Manually reject vector','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.rejectsingle_Callback,'TooltipString','Manually remove vectors. Click on the base of the vectors that you want to discard');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1.1];
-handles.interpol_missing = uicontrol(handles.multip06,'Style','checkbox','String','Interpolate missing data','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpol_missing','TooltipString','Interpolate missing velocity data. Interpolated data appears as ORANGE vectors','Callback',@validate.set_other_interpol_checkbox);
+handles.interpol_missing = uicontrol(handles.multip06,'Style','checkbox','String','Interpolate missing data','Value',default.analysis.interpol_missing,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpol_missing','TooltipString','Interpolate missing velocity data. Interpolated data appears as ORANGE vectors','Callback',@validate.set_other_interpol_checkbox);
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
 handles.apply_filter_current = uicontrol(handles.multip06,'Style','pushbutton','String','Apply to current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.apply_filter_current_Callback,'TooltipString','Apply the filters to the current frame');
@@ -1013,7 +1011,7 @@ item=[0 item(2)+item(4) parentitem(3) 2];
 handles.load_ext_img = uicontrol(handles.multip07,'Style','pushbutton','String','Load calibration image (optional)','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @calibrate.load_ext_img_Callback,'TooltipString','Load a reference image for calibration (if you recorded one)');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.1];
-handles.optimize_calib_img = uicontrol(handles.multip07,'Style','checkbox','Value',1,'String','Enhance image contrast','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','optimize_calib_img','Callback',@calibrate.optimize_calib_img_Callback, 'TooltipString','Enhance the display of the calibration image');
+handles.optimize_calib_img = uicontrol(handles.multip07,'Style','checkbox','Value',default.calibration.optimize_calib_img,'String','Enhance image contrast','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','optimize_calib_img','Callback',@calibrate.optimize_calib_img_Callback, 'TooltipString','Enhance the display of the calibration image');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
 uicontrol(handles.multip07,'Style','text','String','Setup Scaling','FontWeight','bold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
@@ -1025,19 +1023,19 @@ item=[0 item(2)+item(4)+margin/2 parentitem(3)/3*2 1.5];
 handles.text26b = uicontrol(handles.multip07,'Style','text','String','Reference length in px','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
-handles.pixeldist = uicontrol(handles.multip07,'Style','edit','String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','pixeldist','Callback',@calibrate.pixeldist_changed_Callback,'TooltipString','Reference lenght in pixels. Enter directly here or click ''Select reference distance'' button');
+handles.pixeldist = uicontrol(handles.multip07,'Style','edit','String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','pixeldist','Callback',@calibrate.pixeldist_changed_Callback,'TooltipString','Reference lenght in pixels. Enter directly here or click ''Select reference distance'' button','UserData','not_a_setting');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/3*2 1.5];
 handles.text26 = uicontrol(handles.multip07,'Style','text','String','Real distance in mm','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
-handles.realdist = uicontrol(handles.multip07,'Style','edit','String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@calibrate.realdist_Callback,'Tag','realdist','TooltipString','Enter the real world length of the line here (in millimeters)');
+handles.realdist = uicontrol(handles.multip07,'Style','edit','String',gui.setting_text(default.calibration.realdist),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@calibrate.realdist_Callback,'Tag','realdist','TooltipString','Enter the real world length of the line here (in millimeters)');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/3*2 1.5];
 handles.text27 = uicontrol(handles.multip07,'Style','text','String','time step in ms','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
-handles.time_inp = uicontrol(handles.multip07,'Style','edit','String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@calibrate.time_inp_Callback,'Tag','time_inp','TooltipString','Enter the delta t between two images here. Enter 0 if you want to measure displacements instead of velocities.');
+handles.time_inp = uicontrol(handles.multip07,'Style','edit','String',gui.setting_text(default.calibration.time_inp),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@calibrate.time_inp_Callback,'Tag','time_inp','TooltipString','Enter the delta t between two images here. Enter 0 if you want to measure displacements instead of velocities.');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 8];
 handles.uipanel_offsets = uipanel(handles.multip07, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Setup Offsets', 'Tag','uipanel_offsets','fontweight','bold');
@@ -1048,13 +1046,13 @@ item=[0 item(2)+item(4)+margin/4 parentitem(3)/4*3 1];
 handles.text27a = uicontrol(handles.uipanel_offsets,'Style','text','String','x increases towards the','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
-handles.x_axis_direction = uicontrol(handles.uipanel_offsets,'Style','popupmenu','String',{'right','left'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','x_axis_direction','TooltipString','Direction of the x axis');
+handles.x_axis_direction = uicontrol(handles.uipanel_offsets,'Style','popupmenu','String',{'right','left'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','x_axis_direction','TooltipString','Direction of the x axis','Value',default.calibration.x_axis_direction);
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/4*3 1];
 handles.text27b = uicontrol(handles.uipanel_offsets,'Style','text','String','y increases towards the','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1.5];
-handles.y_axis_direction = uicontrol(handles.uipanel_offsets,'Style','popupmenu','String',{'bottom','top'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','y_axis_direction','TooltipString','Direction of the y axis');
+handles.y_axis_direction = uicontrol(handles.uipanel_offsets,'Style','popupmenu','String',{'bottom','top'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','y_axis_direction','TooltipString','Direction of the y axis','Value',default.calibration.y_axis_direction);
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/1.5 2];
 handles.set_x_offset = uicontrol(handles.uipanel_offsets,'Style','pushbutton','String','Set x & y offsets','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @calibrate.set_offset_Callback,'TooltipString','Click into your calibration image and tell PIVlab what physical x and y coordinates this point represents.');
@@ -1079,13 +1077,13 @@ item=[0 item(2)+item(4) parentitem(3) 1];
 handles.text33 = uicontrol(handles.multip08,'Style','text','String','Display Parameter','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.derivchoice = uicontrol(handles.multip08,'Style','popupmenu','String','N/A','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.derivchoice_Callback,'Tag','derivchoice','TooltipString','Select the parameter that you want to display as colour-coded overlay');
+handles.derivchoice = uicontrol(handles.multip08,'Style','popupmenu','String','N/A','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.derivchoice_Callback,'Tag','derivchoice','TooltipString','Select the parameter that you want to display as colour-coded overlay','Value',default.display.derivchoice);
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3)/2 1];
 handles.LIChint1 = uicontrol(handles.multip08,'Style','text','String','LIC resolution','Units','characters','visible','off', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','LIChint1');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/3 1];
-handles.licres = uicontrol(handles.multip08,'Style','slider','sliderstep',[0.25 0.25],'max',2,'min',0.1,'value',0.7,'String','Display Parameter','visible','off','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','licres','TooltipString','Resolution of the LIC image. Higher values take longer to calculate','Callback',@plot.licres_Callback);
+handles.licres = uicontrol(handles.multip08,'Style','slider','sliderstep',[0.25 0.25],'max',2,'min',0.1,'value',default.display.licres,'String','Display Parameter','visible','off','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','licres','TooltipString','Resolution of the LIC image. Higher values take longer to calculate','Callback',@plot.licres_Callback);
 
 item=[parentitem(3)/2+parentitem(3)/3 item(2) parentitem(3)/6 1];
 handles.LIChint2 = uicontrol(handles.multip08,'Style','text','String','0.7','Units','characters', 'visible','off','HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','LIChint2');
@@ -1094,19 +1092,19 @@ item=[0 item(2)+item(4)+margin/2 parentitem(3)/2 1.6];
 handles.text32 = uicontrol(handles.multip08,'Style','text','String','Data smoothing','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.6];
-handles.smooth_mode = uicontrol(handles.multip08,'Style','popupmenu','String',{'None';'2D';'time (moving average)';'2D + time'},'Value',1,'Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','smooth_mode','Callback',@plot.smooth_mode_Callback,'TooltipString','Data smoothing. "2D" = spatial smoothing of each frame (uses "smoothn" by Damien Garcia). "time" = moving average over the frames (time). "2D + time" applies both (2D first, then temporal).');
+handles.smooth_mode = uicontrol(handles.multip08,'Style','popupmenu','String',{'None';'2D';'time (moving average)';'2D + time'},'Value',default.analysis.smooth_mode,'Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','smooth_mode','Callback',@plot.smooth_mode_Callback,'TooltipString','Data smoothing. "2D" = spatial smoothing of each frame (uses "smoothn" by Damien Garcia). "time" = moving average over the frames (time). "2D + time" applies both (2D first, then temporal).');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/3*2 1.5];
 handles.text_smooth_param = uicontrol(handles.multip08,'Style','text','String','Smoothing parameter','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text_smooth_param');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
-handles.smooth_param = uicontrol(handles.multip08,'Style','edit','String','0.2','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','smooth_param','TooltipString','Smoothing parameter S passed to "smoothn" for 2D smoothing. Larger = smoother (typical 0.1 ... 1).');
+handles.smooth_param = uicontrol(handles.multip08,'Style','edit','String',gui.setting_text(default.analysis.smooth_param),'Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','smooth_param','TooltipString','Smoothing parameter S passed to "smoothn" for 2D smoothing. Larger = smoother (typical 0.1 ... 1).');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/3*2 1.5];
 handles.text_temporal_window = uicontrol(handles.multip08,'Style','text','String','Temporal window (±frames)','Units','characters', 'HorizontalAlignment','Left','Visible','off','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text_temporal_window');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
-handles.temporal_window = uicontrol(handles.multip08,'Style','edit','String','2','Units','characters', 'Visible','off','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','temporal_window','Callback',@plot.temporal_window_Callback,'TooltipString','Number of neighbouring frames used on each side of the current frame. The frames are combined with a triangular (Bartlett) window, so closer frames count more.');
+handles.temporal_window = uicontrol(handles.multip08,'Style','edit','String',gui.setting_text(default.analysis.temporal_window),'Units','characters', 'Visible','off','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','temporal_window','Callback',@plot.temporal_window_Callback,'TooltipString','Number of neighbouring frames used on each side of the current frame. The frames are combined with a triangular (Bartlett) window, so closer frames count more.');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.text34 = uicontrol(handles.multip08,'Style','text','String','Subtract flow','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
@@ -1115,7 +1113,7 @@ item=[0 item(2)+item(4)+margin/4 parentitem(3)/3 1.5];
 handles.text35 = uicontrol(handles.multip08,'Style','text','String','u:','Units','characters', 'HorizontalAlignment','right','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text35');
 
 item=[parentitem(3)/3 item(2) parentitem(3)/3 1.5];
-handles.subtr_u = uicontrol(handles.multip08,'Style','edit','String','0','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.subtr_u_Callback,'Tag','subtr_u','TooltipString','Subtract a constant u velocity (horizontal) from the results');
+handles.subtr_u = uicontrol(handles.multip08,'Style','edit','String',gui.setting_text(default.display.subtr_u),'Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.subtr_u_Callback,'Tag','subtr_u','TooltipString','Subtract a constant u velocity (horizontal) from the results');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
 handles.mean_u = uicontrol(handles.multip08,'Style','pushbutton','String','mean u','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.mean_u_Callback,'TooltipString','Subtract the mean u velocity from the results','Tag','mean_u');
@@ -1124,7 +1122,7 @@ item=[0 item(2)+item(4) parentitem(3)/3 1.5];
 handles.text36 = uicontrol(handles.multip08,'Style','text','String','v:','Units','characters', 'HorizontalAlignment','right','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text36');
 
 item=[parentitem(3)/3 item(2) parentitem(3)/3 1.5];
-handles.subtr_v = uicontrol(handles.multip08,'Style','edit','String','0','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.subtr_v_Callback,'Tag','subtr_v','TooltipString','Subtract a constant v velocity (vertical) from the results');
+handles.subtr_v = uicontrol(handles.multip08,'Style','edit','String',gui.setting_text(default.display.subtr_v),'Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.subtr_v_Callback,'Tag','subtr_v','TooltipString','Subtract a constant v velocity (vertical) from the results');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
 handles.mean_v = uicontrol(handles.multip08,'Style','pushbutton','String','mean v','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.mean_v_Callback,'TooltipString','Subtract the mean v velocity from the results','Tag','mean_v');
@@ -1133,7 +1131,7 @@ item=[0 item(2)+item(4)+margin parentitem(3)/2 1];
 handles.text41 = uicontrol(handles.multip08,'Style','text','String','Colormap limits','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.1];
-handles.autoscaler = uicontrol(handles.multip08,'Style','checkbox','String','autoscale','Value',1,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.autoscaler_Callback,'Tag','autoscaler','TooltipString','Autoscale the color map, so that it is stretched to the min and max of each frame. Should be DISABLED when rendering videos etc.');
+handles.autoscaler = uicontrol(handles.multip08,'Style','checkbox','String','autoscale','Value',default.display.autoscaler,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.autoscaler_Callback,'Tag','autoscaler','TooltipString','Autoscale the color map, so that it is stretched to the min and max of each frame. Should be DISABLED when rendering videos etc.');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1];
 handles.text39 = uicontrol(handles.multip08,'Style','text','String','min:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text39');
@@ -1142,22 +1140,22 @@ item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
 handles.text40 = uicontrol(handles.multip08,'Style','text','String','max:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text40');
 
 item=[0 item(2)+item(4) parentitem(3)/4 1];
-handles.mapscale_min = uicontrol(handles.multip08,'Style','edit','String','-1','Enable','off','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.mapscale_min_Callback,'Tag','mapscale_min','TooltipString','Minimum of the color map');
+handles.mapscale_min = uicontrol(handles.multip08,'Style','edit','String',gui.setting_text(default.display.mapscale_min),'Enable','off','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.mapscale_min_Callback,'Tag','mapscale_min','TooltipString','Minimum of the color map');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/4 1];
-handles.mapscale_max = uicontrol(handles.multip08,'Style','edit','String','1','Enable','off','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.mapscale_max_Callback,'Tag','mapscale_max','TooltipString','Maximum of the color map');
+handles.mapscale_max = uicontrol(handles.multip08,'Style','edit','String',gui.setting_text(default.display.mapscale_max),'Enable','off','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.mapscale_max_Callback,'Tag','mapscale_max','TooltipString','Maximum of the color map');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1.1];
-handles.highp_vectors = uicontrol(handles.multip08,'Style','checkbox','String','Highpass vector field','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','highp_vectors','TooltipString','High-pass the vector field. Useful when you want to subtract a non-uniform background flow. The modified data is NOT saved');
+handles.highp_vectors = uicontrol(handles.multip08,'Style','checkbox','String','Highpass vector field','Value',default.display.highp_vectors,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','highp_vectors','TooltipString','High-pass the vector field. Useful when you want to subtract a non-uniform background flow. The modified data is NOT saved');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 1];
 handles.text83 = uicontrol(handles.multip08,'Style','text','String','Strength:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text83');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
-handles.highpass_strength = uicontrol(handles.multip08,'Style','slider','sliderstep',[0.1 0.1],'max',51,'min',1,'value',30,'Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','highpass_strength','TooltipString','Strength of the high-pass. The modified data is NOT saved');
+handles.highpass_strength = uicontrol(handles.multip08,'Style','slider','sliderstep',[0.1 0.1],'max',51,'min',1,'value',default.display.highpass_strength,'Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','highpass_strength','TooltipString','Strength of the high-pass. The modified data is NOT saved');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1.1];
-handles.extrapolate_border = uicontrol(handles.multip08,'Style','checkbox','String','Extrapolate border','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extrapolate_border','TooltipString','Extrapolate colour map into the border region using spring inpainting instead of filling with the mean value. Slower but produces a smoother display.');
+handles.extrapolate_border = uicontrol(handles.multip08,'Style','checkbox','String','Extrapolate border','Value',default.analysis.extrapolate_border,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extrapolate_border','TooltipString','Extrapolate colour map into the border region using spring inpainting instead of filling with the mean value. Slower but produces a smoother display.');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.apply_deriv = uicontrol(handles.multip08,'Style','pushbutton','String','Apply to current frame','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.apply_deriv_Callback,'TooltipString','Apply settings to current frame');
@@ -1171,48 +1169,48 @@ parentitem=get(handles.multip09, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.1];
-handles.autoscale_vec = uicontrol(handles.multip09,'Style','checkbox','String','autoscale vectors','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.autoscale_vec_Callback,'Tag','autoscale_vec','TooltipString','Enable automatic scaling of the vector display');
+handles.autoscale_vec = uicontrol(handles.multip09,'Style','checkbox','String','autoscale vectors','Value',default.display.autoscale_vec,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.autoscale_vec_Callback,'Tag','autoscale_vec','TooltipString','Enable automatic scaling of the vector display');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text43 = uicontrol(handles.multip09,'Style','text','String','Vector scale','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4*1 1];
-handles.vectorscale = uicontrol(handles.multip09,'Style','edit','String','5','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.vectorscale_Callback,'Tag','vectorscale','TooltipString','Manually enter a vector scale factor here');
+handles.vectorscale = uicontrol(handles.multip09,'Style','edit','String',gui.setting_text(default.display.vectorscale),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.vectorscale_Callback,'Tag','vectorscale','TooltipString','Manually enter a vector scale factor here');
 
 item=[0 item(2)+item(4)+margin/4*0 parentitem(3)/4*3 1];
 handles.text114 = uicontrol(handles.multip09,'Style','text','String','Vector line width','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1];
-handles.vecwidth = uicontrol(handles.multip09,'Style','edit','String','0.5','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.vecwidth_Callback,'Tag','vecwidth','TooltipString','Line width of the vectors');
+handles.vecwidth = uicontrol(handles.multip09,'Style','edit','String',gui.setting_text(default.display.vecwidth),'Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.vecwidth_Callback,'Tag','vecwidth','TooltipString','Line width of the vectors');
 
 item=[0 item(2)+item(4)+margin/4*0 parentitem(3)/4*3 1];
 handles.text132 = uicontrol(handles.multip09,'Style','text','String','plot every nth vector, n =','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','tex132');
 
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1];
-handles.nthvect = uicontrol(handles.multip09,'Style','edit','String','1','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','nthvect','TooltipString','If you are confused by the amount of arrows shown on the screen, then you can reduce the amount here.');
+handles.nthvect = uicontrol(handles.multip09,'Style','edit','String',gui.setting_text(default.display.nthvect),'Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','nthvect','TooltipString','If you are confused by the amount of arrows shown on the screen, then you can reduce the amount here.');
 
 item=[0 item(2)+item(4) parentitem(3) 1.1];
-handles.suppress_vec = uicontrol(handles.multip09,'Style','checkbox','String','hide vectors','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.suppress_vec_Callback,'TooltipString','Hide vectors in display');
+handles.suppress_vec = uicontrol(handles.multip09,'Style','checkbox','String','hide vectors','Value',default.display.suppress_vec,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.suppress_vec_Callback,'Tag','suppress_vec','TooltipString','Hide vectors in display');
 
 item=[0 item(2)+item(4)+margin/4*0 parentitem(3)/4*3 1];
 handles.text200 = uicontrol(handles.multip09,'Style','text','String','Mask transparency [%]','Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1];
-handles.masktransp = uicontrol(handles.multip09,'Style','edit','String','50','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','masktransp','Callback',@mask.transp_Callback,'TooltipString','Transparency of the masking area display (red)');
+handles.masktransp = uicontrol(handles.multip09,'Style','edit','String',gui.setting_text(default.display.masktransp),'Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','masktransp','Callback',@mask.transp_Callback,'TooltipString','Transparency of the masking area display (red)');
 
 item=[0 item(2)+item(4) parentitem(3) 1.1];
-handles.uniform_vector_scale = uicontrol(handles.multip09,'Style','checkbox','String','uniform vector scale','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','uniform_vector_scale','TooltipString','Draw all vectors with the same size, independent of velocity','Callback',@plot.vector_scale_Callback);
+handles.uniform_vector_scale = uicontrol(handles.multip09,'Style','checkbox','String','uniform vector scale','Value',default.display.uniform_vector_scale,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','uniform_vector_scale','TooltipString','Draw all vectors with the same size, independent of velocity','Callback',@plot.vector_scale_Callback);
 
 item=[0 item(2)+item(4) parentitem(3)/4*3 1.1];
-handles.power_vector_scale = uicontrol(handles.multip09,'Style','checkbox','String','power law vector scale','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','power_vector_scale','TooltipString','Draw vector scale with a sublinear power function: Large vector lengths are more and more attenuated the smaller the exponent is.','Callback',@plot.vector_scale_Callback);
+handles.power_vector_scale = uicontrol(handles.multip09,'Style','checkbox','String','power law vector scale','Value',default.display.power_vector_scale,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','power_vector_scale','TooltipString','Draw vector scale with a sublinear power function: Large vector lengths are more and more attenuated the smaller the exponent is.','Callback',@plot.vector_scale_Callback);
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4*1 1.1];
-handles.power_vector_scale_factor = uicontrol(handles.multip09,'Style','edit','String','0.3','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','power_vector_scale_factor','TooltipString','Draw vector scale with a sublinear power function: Large vector lengths are more and more attenuated the smaller the exponent is.','Callback',@plot.vector_scale_Callback);
+handles.power_vector_scale_factor = uicontrol(handles.multip09,'Style','edit','String',gui.setting_text(default.display.power_vector_scale_factor),'Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','power_vector_scale_factor','TooltipString','Draw vector scale with a sublinear power function: Large vector lengths are more and more attenuated the smaller the exponent is.','Callback',@plot.vector_scale_Callback);
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3)/2 1];
 handles.displ_image_txt = uicontrol(handles.multip09,'Style','text','String','Background:', 'HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
-handles.displ_image = uicontrol(handles.multip09,'Style','popupmenu', 'String',{'Display PIV image' 'Solid black','Solid white'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','displ_image','TooltipString','Display the PIV image in the background');
+handles.displ_image = uicontrol(handles.multip09,'Style','popupmenu', 'String',{'Display PIV image' 'Solid black','Solid white'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','displ_image','TooltipString','Display the PIV image in the background','Value',default.display.displ_image);
 
 
 
@@ -1232,22 +1230,22 @@ item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
 % magnitude-colored vectors can never appear on top of a scalar background,
 % where they would fight the overlay for the colormap and the colorbar.
 valid_color_names = [color_names {'Magnitude'}];
-handles.valid_color = uicontrol(handles.uipanel37,'Style','popupmenu','String',valid_color_names,'Value',1,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','valid_color');
+handles.valid_color = uicontrol(handles.uipanel37,'Style','popupmenu','String',valid_color_names,'Value',default.display.valid_color,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','valid_color');
 
 item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 1.5];
 uicontrol(handles.uipanel37,'Style','text','String','Valid (2nd peak)','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.secondpeak_color = uicontrol(handles.uipanel37,'Style','popupmenu','String',color_names,'Value',2,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','secondpeak_color');
+handles.secondpeak_color = uicontrol(handles.uipanel37,'Style','popupmenu','String',color_names,'Value',default.display.secondpeak_color,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','secondpeak_color');
 
 item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 1.5];
 uicontrol(handles.uipanel37,'Style','text','String','Replaced / interp.','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.interp_color = uicontrol(handles.uipanel37,'Style','popupmenu','String',color_names,'Value',3,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interp_color');
+handles.interp_color = uicontrol(handles.uipanel37,'Style','popupmenu','String',color_names,'Value',default.display.interp_color,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interp_color');
 
 item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 1.5];
 uicontrol(handles.uipanel37,'Style','text','String','On derivatives','HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.deriv_color = uicontrol(handles.uipanel37,'Style','popupmenu','String',color_names,'Value',4,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','deriv_color');
+handles.deriv_color = uicontrol(handles.uipanel37,'Style','popupmenu','String',color_names,'Value',default.display.deriv_color,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','deriv_color');
 
 parentitem=get(handles.multip09, 'Position');
 item=[0 12.5+6.5+2 parentitem(3) 8.5];
@@ -1260,7 +1258,7 @@ item=[0 item(2)+item(4)+margin/4 parentitem(3)/3*2 1];
 handles.text43c = uicontrol(handles.uipanel27,'Style','text','String','Colormap opacity [%]','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4*1 1];
-handles.colormapopacity = uicontrol(handles.uipanel27,'Style','edit','String','75','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colormapopacity','TooltipString','Opacity of the colormap (0...1)');
+handles.colormapopacity = uicontrol(handles.uipanel27,'Style','edit','String',gui.setting_text(default.display.colormapopacity),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colormapopacity','TooltipString','Opacity of the colormap (0...1)');
 
 item=[0 item(2)+item(4)+margin/3 parentitem(3)/2 1];
 handles.text143 = uicontrol(handles.uipanel27,'Style','text','String','Color map','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
@@ -1269,19 +1267,19 @@ item=[0+item(3) item(2) parentitem(3)/2 1];
 handles.text143a = uicontrol(handles.uipanel27,'Style','text','String','Steps','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text143a');
 
 item=[0 item(2)+item(4) parentitem(3)/2 2];
-handles.colormap_choice = uicontrol(handles.uipanel27,'Style','popupmenu', 'String',{'Parula','HSV','Jet','HSB','Hot','Cool','Spring','Summer','Autumn','Winter','Gray','Bone','Copper','Pink','Lines','Plasma'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colormap_choice','TooltipString','Select the color map for displaying derived parameters here');
+handles.colormap_choice = uicontrol(handles.uipanel27,'Style','popupmenu', 'String',{'Parula','HSV','Jet','HSB','Hot','Cool','Spring','Summer','Autumn','Winter','Gray','Bone','Copper','Pink','Lines','Plasma'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colormap_choice','TooltipString','Select the color map for displaying derived parameters here','Value',default.display.colormap_choice);
 
 item=[0+item(3) item(2) parentitem(3)/2 2];
-handles.colormap_steps = uicontrol(handles.uipanel27,'Style','popupmenu', 'String',{'256','128','64','32','16','8','4','2'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colormap_steps','TooltipString','Select the amount of colors in a colormap');
+handles.colormap_steps = uicontrol(handles.uipanel27,'Style','popupmenu', 'String',{'256','128','64','32','16','8','4','2'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colormap_steps','TooltipString','Select the amount of colors in a colormap','Value',default.display.colormap_steps);
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/5*3 1];
 handles.text143b = uicontrol(handles.uipanel27,'Style','text','String','Image interpolation','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text143b');
 
 item=[0+item(3) item(2)-0.2 parentitem(3)/5*2 2];
-handles.colormap_interpolation = uicontrol(handles.uipanel27,'Style','popupmenu', 'String',{'bilinear','bicubic','nearest'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colormap_interpolation','TooltipString','Image interpolation method for displaying the derived parameters. Default is bilinear');
+handles.colormap_interpolation = uicontrol(handles.uipanel27,'Style','popupmenu', 'String',{'bilinear','bicubic','nearest'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colormap_interpolation','TooltipString','Image interpolation method for displaying the derived parameters. Default is bilinear','Value',default.display.colormap_interpolation);
 
 %item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
-handles.img_not_mask = uicontrol(handles.uipanel27,'Style','checkbox','String','Do not display mask','Units','characters','Visible','off','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','img_not_mask');
+handles.img_not_mask = uicontrol(handles.uipanel27,'Style','checkbox','String','Do not display mask','Units','characters','Visible','off','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','img_not_mask','Value',default.display.img_not_mask);
 
 parentitem=get(handles.multip09, 'Position');
 item=[0 12.5+6.5+1.5+9.4 parentitem(3) 5.7];
@@ -1294,26 +1292,26 @@ item=[0 item(2)+item(4) parentitem(3)/5*3 1];
 handles.displ_colorbar = uicontrol(handles.uipanel27b,'Style','text','String','Show colorbar:', 'HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'TooltipString','Display a colour bar for the derived parameters');
 
 item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
-handles.colorbarpos = uicontrol(handles.uipanel27b,'Style','popupmenu', 'String',{'None' 'SouthOutside','NorthOutside','EastOutside','WestOutside'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colorbarpos','TooltipString','Position of the colour bar');
+handles.colorbarpos = uicontrol(handles.uipanel27b,'Style','popupmenu', 'String',{'None' 'SouthOutside','NorthOutside','EastOutside','WestOutside'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colorbarpos','TooltipString','Position of the colour bar','Value',default.display.colorbarpos);
 
 item=[0 item(2)+item(4) parentitem(3)/5*3 1];
 handles.colorbarnumberformattxt = uicontrol(handles.uipanel27b,'Style','text','String','Colorbar numeric format:', 'HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/5*3 item(2) parentitem(3)/5*2 2];
-handles.colorbarnumberformat = uicontrol(handles.uipanel27b,'Style','popupmenu', 'String',{'compact notation' 'scientific notation' 'fixed-decimals'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colorbarnumberformat','TooltipString','Number format of the colorbar');
+handles.colorbarnumberformat = uicontrol(handles.uipanel27b,'Style','popupmenu', 'String',{'compact notation' 'scientific notation' 'fixed-decimals'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','colorbarnumberformat','TooltipString','Number format of the colorbar','Value',default.display.colorbarnumberformat);
 
 parentitem=get(handles.multip09, 'Position');
 item=[0 17.5+4+14.2+margin/4 parentitem(3)/2 2];
 handles.ref_vect_txt = uicontrol(handles.multip09,'Style','text','String','Reference vector scale:', 'HorizontalAlignment','left','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'TooltipString','Display a reference vector');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/6 1.5];
-handles.ref_vect_scl = uicontrol(handles.multip09,'Style','edit','String','1','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ref_vect_scl','TooltipString','Scaling of the reference vector. Same units as vector units.');
+handles.ref_vect_scl = uicontrol(handles.multip09,'Style','edit','String',gui.setting_text(default.display.ref_vect_scl),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ref_vect_scl','TooltipString','Scaling of the reference vector. Same units as vector units.');
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 2];
-handles.ref_vect_pos = uicontrol(handles.multip09,'Style','popupmenu', 'String',{'Off' 'Top left','Top right','Bottom right','Bottom left'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ref_vect_pos','TooltipString','Position of the reference vector');
+handles.ref_vect_pos = uicontrol(handles.multip09,'Style','popupmenu', 'String',{'Off' 'Top left','Top right','Bottom right','Bottom left'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ref_vect_pos','TooltipString','Position of the reference vector','Value',default.display.ref_vect_pos);
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.1];
-handles.enhance_images = uicontrol(handles.multip09,'Style','checkbox','String','Enhance PIV image display','Value',1,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','enhance_images','TooltipString','Improve contrast of PIV images for display');
+handles.enhance_images = uicontrol(handles.multip09,'Style','checkbox','String','Enhance PIV image display','Value',default.display.enhance_images,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','enhance_images','TooltipString','Improve contrast of PIV images for display');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
 handles.dummy = uicontrol(handles.multip09,'Style','pushbutton','String','Apply','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.dummy_Callback,'TooltipString','Apply the settings');
@@ -1324,19 +1322,19 @@ parentitem=get(handles.multip10, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.addfileinfo = uicontrol(handles.multip10,'Style','checkbox','String','Add file information','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','addfileinfo','TooltipString','Add information like image file names etc. to the output file');
+handles.addfileinfo = uicontrol(handles.multip10,'Style','checkbox','String','Add file information','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','addfileinfo','TooltipString','Add information like image file names etc. to the output file','Value',default.export.addfileinfo);
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1.5];
-handles.add_header = uicontrol(handles.multip10,'Style','checkbox','String','Add column headers','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','add_header','TooltipString','Add a header for each column');
+handles.add_header = uicontrol(handles.multip10,'Style','checkbox','String','Add column headers','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','add_header','TooltipString','Add a header for each column','Value',default.export.add_header);
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1.5];
-handles.export_vort = uicontrol(handles.multip10,'Style','checkbox','String','Include derivatives','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','export_vort','TooltipString','Calculate and export derivatives');
+handles.export_vort = uicontrol(handles.multip10,'Style','checkbox','String','Include derivatives','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','export_vort','TooltipString','Calculate and export derivatives','Value',default.export.export_vort);
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.delimitertext = uicontrol(handles.multip10,'Style','text','String','Delimiter:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4)+margin/6 parentitem(3) 1.5];
-handles.delimiter = uicontrol(handles.multip10,'Style','popupmenu','String',{'comma','tab','space'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','delimiter','TooltipString','Select the delimiter here');
+handles.delimiter = uicontrol(handles.multip10,'Style','popupmenu','String',{'comma','tab','space'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','delimiter','TooltipString','Select the delimiter here','Value',default.export.delimiter);
 
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.ascii_current = uicontrol(handles.multip10,'Style','pushbutton','String','Export current frame','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@export.ascii_current_Callback,'TooltipString','Export data for current frame only');
@@ -1354,7 +1352,7 @@ item=[0 item(2)+item(4)+margin parentitem(3) 4];
 handles.matlab_text = uicontrol(handles.multip11,'Style','text','String','Exports x, y, velocities, calibration, and vector type. Check "Include derivatives" to also calculate and export vorticity, magnitude, divergence, Q criterion, shear, strain, vector angle, and correlation coefficient.','Units','characters','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1.5];
-handles.export_mat_derivatives = uicontrol(handles.multip11,'Style','checkbox','String','Include derivatives','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','export_mat_derivatives','TooltipString','Calculate and include all derivatives (vorticity, magnitude, divergence, Q criterion, shear, strain, vector angle, correlation coefficient)');
+handles.export_mat_derivatives = uicontrol(handles.multip11,'Style','checkbox','String','Include derivatives','Value',default.export.export_mat_derivatives,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','export_mat_derivatives','TooltipString','Calculate and include all derivatives (vorticity, magnitude, divergence, Q criterion, shear, strain, vector angle, correlation coefficient)');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.save_mat_current = uicontrol(handles.multip11,'Style','pushbutton','String','Export current frame','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@export.save_mat_current_Callback,'TooltipString','Export data for current frame only');
@@ -1377,7 +1375,7 @@ item=[0 item(2)+item(4)+margin/4 parentitem(3) 1];
 handles.text57 = uicontrol(handles.multip12,'Style','text','String','Type:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.draw_what = uicontrol(handles.multip12,'Style','popupmenu','String',{'polyline','circle','circle series (tangent vel. only)'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract.draw_what_Callback,'Tag','draw_what','TooltipString','Select the type of object that you want to draw and extract data from');
+handles.draw_what = uicontrol(handles.multip12,'Style','popupmenu','String',{'polyline','circle','circle series (tangent vel. only)'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract.draw_what_Callback,'Tag','draw_what','TooltipString','Select the type of object that you want to draw and extract data from','Value',default.export.draw_what);
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
 handles.draw_stuff = uicontrol(handles.multip12,'Style','pushbutton','String','Draw!','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract.draw_extraction_coordinates_Callback,'Tag','draw_stuff','TooltipString','Draw the object that you selected above');
@@ -1393,7 +1391,7 @@ item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.text56 = uicontrol(handles.multip12,'Style','text','String','Data to extract:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.extraction_choice = uicontrol(handles.multip12,'Style','popupmenu','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract.extraction_choice_Callback,'Tag','extraction_choice','TooltipString','What parameter do you want to extract along the line / circle?');
+handles.extraction_choice = uicontrol(handles.multip12,'Style','popupmenu','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract.extraction_choice_Callback,'Tag','extraction_choice','TooltipString','What parameter do you want to extract along the line / circle?','Value',default.export.extraction_choice);
 
 item=[0 item(2)+item(4)+margin parentitem(3)/2 2];
 handles.plot_data = uicontrol(handles.multip12,'Style','pushbutton','String','Extract data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract.plot_data_Callback,'Tag','plot_data','TooltipString','When you finished drawing a line / circle, you can plot data along the line / circle by pushing this button');
@@ -1405,10 +1403,10 @@ item=[0 item(2)+item(4)+margin*2 parentitem(3) 1];
 handles.iLoveLenaMaliaAndLine = uicontrol(handles.multip12,'Style','text','String','Save extraction(s)','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4) parentitem(3) 1.1];
-handles.extractLineAll = uicontrol(handles.multip12,'Style','checkbox','String','extract and save for all frames','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extractLineAll','TooltipString','Extract data for all frames of the current session');
+handles.extractLineAll = uicontrol(handles.multip12,'Style','checkbox','String','extract and save for all frames','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extractLineAll','TooltipString','Extract data for all frames of the current session','Value',default.export.extractLineAll);
 
 item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 2];
-handles.extractionLine_fileformat = uicontrol(handles.multip12,'Style','popupmenu','String',{'Excel file' 'Text file'},'Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extractionLine_fileformat','TooltipString','The format that the data is saved in');
+handles.extractionLine_fileformat = uicontrol(handles.multip12,'Style','popupmenu','String',{'Excel file' 'Text file'},'Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extractionLine_fileformat','TooltipString','The format that the data is saved in','Value',default.export.extractionLine_fileformat);
 
 item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 2];
 handles.save_data = uicontrol(handles.multip12,'Style','pushbutton','String','Export data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract.save_data_Callback,'TooltipString','Extract data and save results to a text file');
@@ -1475,10 +1473,10 @@ item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
 handles.delmarkers = uicontrol(handles.uipanel39,'Style','pushbutton','String','Clear markers','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.delmarkers_Callback,'TooltipString','Clear all markers');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
-handles.holdmarkers = uicontrol(handles.uipanel39,'Style','checkbox','String','Hold markers','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','holdmarkers','TooltipString','Memorize markers even when a new session is started. Will be cleared only when you restart PIVlab');
+handles.holdmarkers = uicontrol(handles.uipanel39,'Style','checkbox','String','Hold markers','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','holdmarkers','TooltipString','Memorize markers even when a new session is started. Will be cleared only when you restart PIVlab','Value',default.display.holdmarkers);
 
 item=[0 item(2)+item(4) parentitem(3) 1.1];
-handles.displmarker = uicontrol(handles.uipanel39,'Style','checkbox','String','Display markers','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.displmarker_Callback,'Tag','displmarker','TooltipString','Show or hide the markers');
+handles.displmarker = uicontrol(handles.uipanel39,'Style','checkbox','String','Display markers','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.displmarker_Callback,'Tag','displmarker','TooltipString','Show or hide the markers','Value',default.display.displmarker);
 
 parentitem=get(handles.multip13, 'Position');
 item=[0 22+margin/2 parentitem(3) 2];
@@ -1529,13 +1527,13 @@ item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.text67 = uicontrol(handles.multip14,'Style','text','String','Histogram plot','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 2];
-handles.hist_select = uicontrol(handles.multip14,'Style','popupmenu','String',{'u velocity','v velocity','velocity magnitude','sub-pixels'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','hist_select','TooltipString','What data to display in a histogram plot');
+handles.hist_select = uicontrol(handles.multip14,'Style','popupmenu','String',{'u velocity','v velocity','velocity magnitude','sub-pixels'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','hist_select','TooltipString','What data to display in a histogram plot','Value',default.display.hist_select);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/4 2];
 handles.text66 = uicontrol(handles.multip14,'Style','text','String','bins:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4 2];
-handles.nrofbins = uicontrol(handles.multip14,'Style','edit','String','100','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','nrofbins','TooltipString','Nr. of bins in the histogram plot');
+handles.nrofbins = uicontrol(handles.multip14,'Style','edit','String',gui.setting_text(default.display.nrofbins),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','nrofbins','TooltipString','Nr. of bins in the histogram plot');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.histdraw = uicontrol(handles.multip14,'Style','pushbutton','String','Histogram','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.histdraw_Callback,'TooltipString','Draw a histogram');
@@ -1552,19 +1550,19 @@ item=[0 item(2)+item(4) parentitem(3) 1];
 handles.text68 = uicontrol(handles.multip15,'Style','text','String','Flow simulation:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.flow_sim = uicontrol(handles.multip15,'Style','popupmenu','String',{'Rankine vortex','Hamel-Oseen vortex','Linear shift','Rotation','Membrane'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.flow_sim_Callback,'Tag','flow_sim','TooltipString','Select the velocity field for the simulation here');
+handles.flow_sim = uicontrol(handles.multip15,'Style','popupmenu','String',{'Rankine vortex','Hamel-Oseen vortex','Linear shift','Rotation','Membrane'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.flow_sim_Callback,'Tag','flow_sim','TooltipString','Select the velocity field for the simulation here','Value',default.tools.flow_sim);
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3)/2 1];
 handles.text77 = uicontrol(handles.multip15,'Style','text','String','Image size x [px]','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1];
-handles.img_sizex = uicontrol(handles.multip15,'Style','edit','String','800','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','img_sizex','TooltipString','Image width in pixels');
+handles.img_sizex = uicontrol(handles.multip15,'Style','edit','String',gui.setting_text(default.tools.img_sizex),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','img_sizex','TooltipString','Image width in pixels');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1];
 handles.text96 = uicontrol(handles.multip15,'Style','text','String','Image size y [px]','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1];
-handles.img_sizey = uicontrol(handles.multip15,'Style','edit','String','600','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','img_sizey','TooltipString','Image height in pixels');
+handles.img_sizey = uicontrol(handles.multip15,'Style','edit','String',gui.setting_text(default.tools.img_sizey),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','img_sizey','TooltipString','Image height in pixels');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 8];
 handles.uipanel24 = uipanel(handles.multip15, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Particle simulation','fontweight','bold');
@@ -1576,37 +1574,37 @@ item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text70 = uicontrol(handles.uipanel24,'Style','text','String','Nr. of particles','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.part_am = uicontrol(handles.uipanel24,'Style','edit','String','200000','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.part_am_Callback,'Tag','part_am','TooltipString','Amount of particles used for the simulation');
+handles.part_am = uicontrol(handles.uipanel24,'Style','edit','String',gui.setting_text(default.tools.part_am),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.part_am_Callback,'Tag','part_am','TooltipString','Amount of particles used for the simulation');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text71 = uicontrol(handles.uipanel24,'Style','text','String','Particle diameter [px]','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.part_size = uicontrol(handles.uipanel24,'Style','edit','String','3','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.part_size_Callback,'Tag','part_size','TooltipString','Mean particle image diameter');
+handles.part_size = uicontrol(handles.uipanel24,'Style','edit','String',gui.setting_text(default.tools.part_size),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.part_size_Callback,'Tag','part_size','TooltipString','Mean particle image diameter');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text72 = uicontrol(handles.uipanel24,'Style','text','String','Random size [px]','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.part_var = uicontrol(handles.uipanel24,'Style','edit','String','1','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.part_var_Callback,'Tag','part_var','TooltipString','Particle image diameter variation');
+handles.part_var = uicontrol(handles.uipanel24,'Style','edit','String',gui.setting_text(default.tools.part_var),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.part_var_Callback,'Tag','part_var','TooltipString','Particle image diameter variation');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text98 = uicontrol(handles.uipanel24,'Style','text','String','Sheet thickness [0...1]','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.sheetthick = uicontrol(handles.uipanel24,'Style','edit','String','0.5','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.sheetthick_Callback,'Tag','sheetthick','TooltipString','Simulated laser sheet thickness. A thinner light sheet sheds more light on each particle');
+handles.sheetthick = uicontrol(handles.uipanel24,'Style','edit','String',gui.setting_text(default.tools.sheetthick),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.sheetthick_Callback,'Tag','sheetthick','TooltipString','Simulated laser sheet thickness. A thinner light sheet sheds more light on each particle');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text73 = uicontrol(handles.uipanel24,'Style','text','String','Noise','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.part_noise = uicontrol(handles.uipanel24,'Style','edit','String','0.001','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.part_noise_Callback,'Tag','part_noise','TooltipString','Simulated image sensor noise');
+handles.part_noise = uicontrol(handles.uipanel24,'Style','edit','String',gui.setting_text(default.tools.part_noise),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.part_noise_Callback,'Tag','part_noise','TooltipString','Simulated image sensor noise');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text115 = uicontrol(handles.uipanel24,'Style','text','String','Random z position [%]','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.part_z = uicontrol(handles.uipanel24,'Style','edit','String','10','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.part_z_Callback,'Tag','part_z','TooltipString','Movement of the particles perpendicular to the light sheet (out-of-plane motion)');
+handles.part_z = uicontrol(handles.uipanel24,'Style','edit','String',gui.setting_text(default.tools.part_z),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.part_z_Callback,'Tag','part_z','TooltipString','Movement of the particles perpendicular to the light sheet (out-of-plane motion)');
 
 %rankinepanel
 parentitem=get(handles.multip15, 'Position');
@@ -1618,19 +1616,19 @@ handles.rankinepanel = uipanel(handles.multip15, 'Units','characters', 'Position
 parentitem=get(handles.rankinepanel, 'Position');
 item=[0 0 0 0];
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.singledoublerankine = uicontrol(handles.rankinepanel,'Style','popupmenu','String',{'Single vortex','Vortex pair'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.singledoublerankine_Callback,'Tag','singledoublerankine','TooltipString','Simulate a single vortex or a vortex pair');
+handles.singledoublerankine = uicontrol(handles.rankinepanel,'Style','popupmenu','String',{'Single vortex','Vortex pair'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.singledoublerankine_Callback,'Tag','singledoublerankine','TooltipString','Simulate a single vortex or a vortex pair','Value',default.tools.singledoublerankine);
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3)/3*2 1];
 handles.text74 = uicontrol(handles.rankinepanel,'Style','text','String','Core radius [px]','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.rank_core = uicontrol(handles.rankinepanel,'Style','edit','String','100','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.rank_core_Callback,'Tag','rank_core','TooltipString','Radius of the solid body rotation core');
+handles.rank_core = uicontrol(handles.rankinepanel,'Style','edit','String',gui.setting_text(default.tools.rank_core),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.rank_core_Callback,'Tag','rank_core','TooltipString','Radius of the solid body rotation core');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text75 = uicontrol(handles.rankinepanel,'Style','text','String','Max displacement [px]','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.rank_displ = uicontrol(handles.rankinepanel,'Style','edit','String','8','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.rank_displ_Callback,'Tag','rank_displ','TooltipString','Maximum displacement of particles in the image');
+handles.rank_displ = uicontrol(handles.rankinepanel,'Style','edit','String',gui.setting_text(default.tools.rank_displ),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.rank_displ_Callback,'Tag','rank_displ','TooltipString','Maximum displacement of particles in the image');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3)/2 1];
 handles.text99 = uicontrol(handles.rankinepanel,'Style','text','String','Vortex1 centre','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
@@ -1642,25 +1640,25 @@ item=[0 item(2)+item(4) parentitem(3)/8 1];
 handles.text100 = uicontrol(handles.rankinepanel,'Style','text','String','x','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/8 item(2) parentitem(3)/4 1];
-handles.rankx1 = uicontrol(handles.rankinepanel,'Style','edit','String','200','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.rankx1_Callback,'Tag','rankx1','TooltipString','x-centre of the first vortex');
+handles.rankx1 = uicontrol(handles.rankinepanel,'Style','edit','String',gui.setting_text(default.tools.rankx1),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.rankx1_Callback,'Tag','rankx1','TooltipString','x-centre of the first vortex');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/8 1];
 handles.text103 = uicontrol(handles.rankinepanel,'Style','text','Visible','off','String','x','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text103');
 
 item=[parentitem(3)/2+parentitem(3)/8 item(2) parentitem(3)/4 1];
-handles.rankx2 = uicontrol(handles.rankinepanel,'Style','edit','Visible','off','String','600','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.rankx2_Callback,'Tag','rankx2','TooltipString','x-centre of the second vortex');
+handles.rankx2 = uicontrol(handles.rankinepanel,'Style','edit','Visible','off','String',gui.setting_text(default.tools.rankx2),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.rankx2_Callback,'Tag','rankx2','TooltipString','x-centre of the second vortex');
 
 item=[0 item(2)+item(4) parentitem(3)/8 1];
 handles.text101 = uicontrol(handles.rankinepanel,'Style','text','String','y','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/8 item(2) parentitem(3)/4 1];
-handles.ranky1 = uicontrol(handles.rankinepanel,'Style','edit','String','300','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.ranky1_Callback,'Tag','ranky1','TooltipString','y-centre of the first vortex');
+handles.ranky1 = uicontrol(handles.rankinepanel,'Style','edit','String',gui.setting_text(default.tools.ranky1),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.ranky1_Callback,'Tag','ranky1','TooltipString','y-centre of the first vortex');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/8 1];
 handles.text104 = uicontrol(handles.rankinepanel,'Style','text','Visible','off','String','y','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text104');
 
 item=[parentitem(3)/2+parentitem(3)/8 item(2) parentitem(3)/4 1];
-handles.ranky2 = uicontrol(handles.rankinepanel,'Style','edit','Visible','off','String','300','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.ranky2_Callback,'Tag','ranky2','TooltipString','y-centre of the second vortex');
+handles.ranky2 = uicontrol(handles.rankinepanel,'Style','edit','Visible','off','String',gui.setting_text(default.tools.ranky2),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.ranky2_Callback,'Tag','ranky2','TooltipString','y-centre of the second vortex');
 
 %------------oseen panel
 parentitem=get(handles.multip15, 'Position');
@@ -1672,19 +1670,19 @@ handles.oseenpanel = uipanel(handles.multip15, 'Units','characters','Visible','o
 parentitem=get(handles.oseenpanel, 'Position');
 item=[0 0 0 0];
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.singledoubleoseen = uicontrol(handles.oseenpanel,'Style','popupmenu','String',{'Single vortex','Vortex pair'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.singledoubleoseen_Callback,'Tag','singledoubleoseen','TooltipString','Simulate a single vortex or a vortex pair');
+handles.singledoubleoseen = uicontrol(handles.oseenpanel,'Style','popupmenu','String',{'Single vortex','Vortex pair'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.singledoubleoseen_Callback,'Tag','singledoubleoseen','TooltipString','Simulate a single vortex or a vortex pair','Value',default.tools.singledoubleoseen);
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3)/3*2 1];
 handles.text106 = uicontrol(handles.oseenpanel,'Style','text','String','Max displacement [px]','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.oseen_displ = uicontrol(handles.oseenpanel,'Style','edit','String','5','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.oseen_displ_Callback,'Tag','oseen_displ','TooltipString','Maximum displacement of the particles');
+handles.oseen_displ = uicontrol(handles.oseenpanel,'Style','edit','String',gui.setting_text(default.tools.oseen_displ),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.oseen_displ_Callback,'Tag','oseen_displ','TooltipString','Maximum displacement of the particles');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text113 = uicontrol(handles.oseenpanel,'Style','text','String','time [0...1]','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.oseen_time = uicontrol(handles.oseenpanel,'Style','edit','String','0.05','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.oseen_time_Callback,'Tag','oseen_time','TooltipString','Time component of the Hamel-Oseen simulation: The vortex decays with vorticity when time increases');
+handles.oseen_time = uicontrol(handles.oseenpanel,'Style','edit','String',gui.setting_text(default.tools.oseen_time),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.oseen_time_Callback,'Tag','oseen_time','TooltipString','Time component of the Hamel-Oseen simulation: The vortex decays with vorticity when time increases');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3)/2 1];
 handles.text107 = uicontrol(handles.oseenpanel,'Style','text','String','Vortex1 centre','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
@@ -1696,25 +1694,25 @@ item=[0 item(2)+item(4) parentitem(3)/8 1];
 handles.text108 = uicontrol(handles.oseenpanel,'Style','text','String','x','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/8 item(2) parentitem(3)/4 1];
-handles.oseenx1 = uicontrol(handles.oseenpanel,'Style','edit','String','200','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.oseenx1_Callback,'Tag','oseenx1','TooltipString','x-centre of the first vortex');
+handles.oseenx1 = uicontrol(handles.oseenpanel,'Style','edit','String',gui.setting_text(default.tools.oseenx1),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.oseenx1_Callback,'Tag','oseenx1','TooltipString','x-centre of the first vortex');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/8 1];
 handles.text111 = uicontrol(handles.oseenpanel,'Style','text','Visible','off','String','x','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text111');
 
 item=[parentitem(3)/2+parentitem(3)/8 item(2) parentitem(3)/4 1];
-handles.oseenx2 = uicontrol(handles.oseenpanel,'Style','edit','Visible','off','String','600','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.oseenx2_Callback,'Tag','oseenx2','TooltipString','x-centre of the second vortex');
+handles.oseenx2 = uicontrol(handles.oseenpanel,'Style','edit','Visible','off','String',gui.setting_text(default.tools.oseenx2),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.oseenx2_Callback,'Tag','oseenx2','TooltipString','x-centre of the second vortex');
 
 item=[0 item(2)+item(4) parentitem(3)/8 1];
 handles.text109 = uicontrol(handles.oseenpanel,'Style','text','String','y','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/8 item(2) parentitem(3)/4 1];
-handles.oseeny1 = uicontrol(handles.oseenpanel,'Style','edit','String','300','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.oseeny1_Callback,'Tag','oseeny1','TooltipString','y-centre of the first vortex');
+handles.oseeny1 = uicontrol(handles.oseenpanel,'Style','edit','String',gui.setting_text(default.tools.oseeny1),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.oseeny1_Callback,'Tag','oseeny1','TooltipString','y-centre of the first vortex');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/8 1];
 handles.text112 = uicontrol(handles.oseenpanel,'Style','text','Visible','off','String','y','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text112');
 
 item=[parentitem(3)/2+parentitem(3)/8 item(2) parentitem(3)/4 1];
-handles.oseeny2 = uicontrol(handles.oseenpanel,'Style','edit','Visible','off','String','300','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.oseeny2_Callback,'Tag','oseeny2','TooltipString','y-centre of the second vortex');
+handles.oseeny2 = uicontrol(handles.oseenpanel,'Style','edit','Visible','off','String',gui.setting_text(default.tools.oseeny2),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.oseeny2_Callback,'Tag','oseeny2','TooltipString','y-centre of the second vortex');
 
 %rotationpanel
 parentitem=get(handles.multip15, 'Position');
@@ -1729,7 +1727,7 @@ item=[0 item(2)+item(4) parentitem(3) 1];
 handles.text76 = uicontrol(handles.rotationpanel,'Style','text','String','Max displacement [px]','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.rotationdislacement = uicontrol(handles.rotationpanel,'Style','edit','String','5','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.rotationdisplacement_Callback,'Tag','rotationdislacement','TooltipString','Maximum displacement of the particles');
+handles.rotation_displacement = uicontrol(handles.rotationpanel,'Style','edit','String',gui.setting_text(default.tools.rotation_displacement),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.rotationdisplacement_Callback,'Tag','rotation_displacement','TooltipString','Maximum displacement of the particles');
 
 %linear shiftpanel
 parentitem=get(handles.multip15, 'Position');
@@ -1744,7 +1742,7 @@ item=[0 item(2)+item(4) parentitem(3) 1];
 handles.text97 = uicontrol(handles.shiftpanel,'Style','text','String','Max displacement [px]','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.shiftdisplacement = uicontrol(handles.shiftpanel,'Style','edit','String','5','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.shiftdisplacement_Callback,'Tag','shiftdisplacement','TooltipString','Maximum displacement of the particles');
+handles.shiftdisplacement = uicontrol(handles.shiftpanel,'Style','edit','String',gui.setting_text(default.tools.shiftdisplacement),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@simulate.shiftdisplacement_Callback,'Tag','shiftdisplacement','TooltipString','Maximum displacement of the particles');
 %--------------- rest unter panels
 parentitem=get(handles.multip15, 'Position');
 item=[0 0 0 0];
@@ -1764,19 +1762,19 @@ parentitem=get(handles.multip16, 'Position');
 item=[0 0 0 0];
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
 
-handles.export_still_or_animation = uicontrol(handles.multip16,'Style','popupmenu','String',{'Please wait...'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@export.still_or_animation_Callback,'Tag','export_still_or_animation','TooltipString','Select type of export.');
+handles.export_still_or_animation = uicontrol(handles.multip16,'Style','popupmenu','String',{'Please wait...'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@export.still_or_animation_Callback,'Tag','export_still_or_animation','TooltipString','Select type of export.','Value',default.export.export_still_or_animation);
 
 item=[0 item(2)+item(4)+margin parentitem(3)/3*2 1];
 handles.qualstring = uicontrol(handles.multip16,'Style','text','String','Quality (%)','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.quality_setting = uicontrol(handles.multip16,'Style','edit','String','100','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','quality_setting','TooltipString','Quality setting of exported file');
+handles.quality_setting = uicontrol(handles.multip16,'Style','edit','String',gui.setting_text(default.export.quality_setting),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','quality_setting','TooltipString','Quality setting of exported file');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.fpsstring = uicontrol(handles.multip16,'Style','text','String','Frames per second (Hz)','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
-handles.fps_setting = uicontrol(handles.multip16,'Style','edit','String','30','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','fps_setting','TooltipString','Frame rate of the video file');
+handles.fps_setting = uicontrol(handles.multip16,'Style','edit','String',gui.setting_text(default.export.fps_setting),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','fps_setting','TooltipString','Frame rate of the video file');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 if ~isMATLABReleaseOlderThan("R2025a")
@@ -1786,9 +1784,9 @@ else
 end
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1];
 if ~isMATLABReleaseOlderThan("R2025a")
-    handles.resolution_setting = uicontrol(handles.multip16,'Style','edit','String','100','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','resolution_setting','TooltipString','Scaling of the output file (relative to the raw input images)');
+    handles.resolution_setting = uicontrol(handles.multip16,'Style','edit','String',gui.setting_text(default.export.resolution_setting),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','resolution_setting','TooltipString','Scaling of the output file (relative to the raw input images)');
 else
-    handles.resolution_setting = uicontrol(handles.multip16,'Style','edit','String','150','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','resolution_setting','TooltipString','Resolution of the output image');
+    handles.resolution_setting = uicontrol(handles.multip16,'Style','edit','String',gui.setting_text(default.export.resolution_setting),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','resolution_setting','TooltipString','Resolution of the output image');
 end
 item=[0 item(2)+item(4)+margin*2 parentitem(3) 2];
 handles.do_export_pixel_data_single = uicontrol(handles.multip16,'Style','pushbutton','String','Export single frame','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@export.do_export_pixel_data_Callback,'Tag','do_export_pixel_data_single','TooltipString','Save image for currently active frame');
@@ -1800,10 +1798,10 @@ item=[ parentitem(3)/2 item(2) parentitem(3)/2 1];
 handles.text88 = uicontrol(handles.multip16,'Style','text','String','Last frame','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4) parentitem(3)/3 1];
-handles.firstframe = uicontrol(handles.multip16,'Style','edit','String','N/A','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','firstframe','TooltipString','First frame to export');
+handles.firstframe = uicontrol(handles.multip16,'Style','edit','String',gui.setting_text(default.export.firstframe),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','firstframe','TooltipString','First frame to export');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/3 1];
-handles.lastframe = uicontrol(handles.multip16,'Style','edit','String','N/A','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','lastframe','TooltipString','Last frame to export');
+handles.lastframe = uicontrol(handles.multip16,'Style','edit','String',gui.setting_text(default.export.lastframe),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','lastframe','TooltipString','Last frame to export');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 handles.do_export_pixel_data = uicontrol(handles.multip16,'Style','pushbutton','String','Export multiple frames','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@export.do_export_pixel_data_Callback,'Tag','do_export_pixel_data','TooltipString','Save image sequence for the selected frames');
@@ -1817,7 +1815,7 @@ item=[0 item(2)+item(4)+margin/4 parentitem(3) 1];
 handles.text57a = uicontrol(handles.multip17,'Style','text','String','Type:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.draw_what_area = uicontrol(handles.multip17,'Style','popupmenu','String',{'rectangle','polygon','circle','circle series'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','draw_what_area','TooltipString','Select the type of object that you want to draw and extract data from');
+handles.draw_what_area = uicontrol(handles.multip17,'Style','popupmenu','String',{'rectangle','polygon','circle','circle series'},'Units','characters', 'HorizontalAlignment','Left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','draw_what_area','TooltipString','Select the type of object that you want to draw and extract data from','Value',default.export.draw_what_area);
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
 handles.draw_stuff_area = uicontrol(handles.multip17,'Style','pushbutton','String','Draw!','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract.draw_extraction_coordinates_Callback,'Tag','draw_stuff_area','TooltipString','Draw the object that you selected above');
@@ -1832,7 +1830,7 @@ item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.text56a = uicontrol(handles.multip17,'Style','text','String','Calculate the average of:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.extraction_choice_area = uicontrol(handles.multip17,'Style','popupmenu','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extraction_choice_area','TooltipString','What parameter do you want to extract from the area?');
+handles.extraction_choice_area = uicontrol(handles.multip17,'Style','popupmenu','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extraction_choice_area','TooltipString','What parameter do you want to extract from the area?','Value',default.export.extraction_choice_area);
 
 item=[0 item(2)+item(4)+margin parentitem(3)/2 2];
 handles.plot_data_area = uicontrol(handles.multip17,'Style','pushbutton','String','Extract data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract.plot_data_area_Callback,'TooltipString','Extract the data from the area drawn');
@@ -1844,16 +1842,16 @@ item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.results_txts = uicontrol(handles.multip17,'Style','text','String','Results:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 4];
-handles.area_results = uicontrol(handles.multip17,'Style','edit','String',{''},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','area_results','TooltipString','Results of area extraction','Max',4,'Min',1,'Horizontalalignment','left');
+handles.area_results = uicontrol(handles.multip17,'Style','edit','String',{''},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','area_results','TooltipString','Results of area extraction','Max',4,'Min',1,'Horizontalalignment','left','UserData','not_a_setting');
 
 item=[0 item(2)+item(4)+margin*2 parentitem(3) 1];
 handles.save_plot_data_area = uicontrol(handles.multip17,'Style','text','String','Save extraction(s)','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4) parentitem(3) 1.1];
-handles.extractAreaAll = uicontrol(handles.multip17,'Style','checkbox','String','extract and save for all frames','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extractAreaAll','TooltipString','Extract data for all frames of the current session');
+handles.extractAreaAll = uicontrol(handles.multip17,'Style','checkbox','String','extract and save for all frames','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extractAreaAll','TooltipString','Extract data for all frames of the current session','Value',default.export.extractAreaAll);
 
 item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 2];
-handles.extractionArea_fileformat = uicontrol(handles.multip17,'Style','popupmenu','String',{'Excel file' 'Text file'},'Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extractionArea_fileformat','TooltipString','The format that the data is saved in');
+handles.extractionArea_fileformat = uicontrol(handles.multip17,'Style','popupmenu','String',{'Excel file' 'Text file'},'Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','extractionArea_fileformat','TooltipString','The format that the data is saved in','Value',default.export.extractionArea_fileformat);
 
 item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 2];
 handles.save_data_area = uicontrol(handles.multip17,'Style','pushbutton','String','Export data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract.save_data_area_Callback,'TooltipString','Extract data and save results to a text file');
@@ -1869,7 +1867,7 @@ item=[0 item(2)+item(4) parentitem(3) 3];
 handles.text117 = uicontrol(handles.multip18,'Style','text','String','Stream lines are global, that means that they apply to all frames of the current session.','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4) parentitem(3) 1.1];
-handles.holdstream = uicontrol(handles.multip18,'Style','checkbox','String','hold streamlines','Value',1,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','holdstream','TooltipString','If enabled, every streamline that you draw will be added to the list of streamlines, instead of overwriting the list of streamlines');
+handles.holdstream = uicontrol(handles.multip18,'Style','checkbox','String','hold streamlines','Value',default.display.holdstream,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','holdstream','TooltipString','If enabled, every streamline that you draw will be added to the list of streamlines, instead of overwriting the list of streamlines');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 handles.drawstreamlines = uicontrol(handles.multip18,'Style','pushbutton','String','Draw stream lines','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.drawstreamlines_Callback,'TooltipString','Every click adds a streamline. End with a right click');
@@ -1881,7 +1879,7 @@ item=[0 item(2)+item(4)+margin/4 parentitem(3)/3*2 2];
 handles.text118 = uicontrol(handles.multip18,'Style','text','String','Amount of stream lines on rake','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2)+0.5 parentitem(3)/3 1];
-handles.streamlamount = uicontrol(handles.multip18,'Style','edit','String','10','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','streamlamount','TooltipString','Amount of streamlines on the rake');
+handles.streamlamount = uicontrol(handles.multip18,'Style','edit','String',gui.setting_text(default.display.streamlamount),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','streamlamount','TooltipString','Amount of streamlines on the rake');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 handles.streamslice = uicontrol(handles.multip18,'Style','pushbutton','String','Draw streamslice','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.streamslice_Callback,'TooltipString','Automatically draw streamlines covering the entire velocity field using MATLAB''s streamslice function');
@@ -1890,7 +1888,7 @@ item=[0 item(2)+item(4)+margin/4 parentitem(3)/3*2 2];
 handles.text_streamslicedensity = uicontrol(handles.multip18,'Style','text','String','Streamslice density','Units','characters','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2)+0.5 parentitem(3)/3 1];
-handles.streamslicedensity = uicontrol(handles.multip18,'Style','edit','String','1','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','streamslicedensity','TooltipString','Density of streamslice streamlines (default: 1, higher values = more streamlines)');
+handles.streamslicedensity = uicontrol(handles.multip18,'Style','edit','String',gui.setting_text(default.display.streamslicedensity),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','streamslicedensity','TooltipString','Density of streamslice streamlines (default: 1, higher values = more streamlines)');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.deletestreamlines = uicontrol(handles.multip18,'Style','pushbutton','String','Delete all stream lines','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.deletestreamlines_Callback,'TooltipString','Remove all streamlines');
@@ -1899,13 +1897,13 @@ item=[0 item(2)+item(4)+margin*3 parentitem(3)/2 2];
 handles.text119 = uicontrol(handles.multip18,'Style','text','String','Color','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
-handles.streamlcolor = uicontrol(handles.multip18,'Style','popupmenu','String',{'y','r','b','k','w'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','streamlcolor','TooltipString','Colour of the streamlines');
+handles.streamlcolor = uicontrol(handles.multip18,'Style','popupmenu','String',{'y','r','b','k','w'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','streamlcolor','TooltipString','Colour of the streamlines','Value',default.display.streamlcolor);
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3)/2 2];
 handles.text120 = uicontrol(handles.multip18,'Style','text','String','Line width','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
-handles.streamlwidth = uicontrol(handles.multip18,'Style','popupmenu','String',{'1','2','3'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','streamlwidth','TooltipString','Line width of the streamlines');
+handles.streamlwidth = uicontrol(handles.multip18,'Style','popupmenu','String',{'1','2','3'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','streamlwidth','TooltipString','Line width of the streamlines','Value',default.display.streamlwidth);
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
 handles.applycolorwidth = uicontrol(handles.multip18,'Style','pushbutton','String','Apply color and width','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.applycolorwidth_Callback,'TooltipString','Apply the settings for colour and width');
@@ -1926,7 +1924,7 @@ parentitem=get(handles.multip20, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4) parentitem(3) 1.5];
-handles.export_vort_tec = uicontrol(handles.multip20,'Style','checkbox','String','Include derivatives','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','export_vort_tec','TooltipString','Include derivatives like vorticity etc. in the exported file');
+handles.export_vort_tec = uicontrol(handles.multip20,'Style','checkbox','String','Include derivatives','Value',default.export.export_vort_tec,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','export_vort_tec','TooltipString','Include derivatives like vorticity etc. in the exported file');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.tecplot_current = uicontrol(handles.multip20,'Style','pushbutton','String','Save current frame','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@export.tecplot_current_Callback,'TooltipString','Save current frame only as Tecplot file');
@@ -1944,7 +1942,7 @@ if ~verLessThan('Matlab','25')
     handles.matlab_theme_txt = uicontrol(handles.multip21,'Style','text','String','Color theme','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
     item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
-    handles.matlab_theme = uicontrol(handles.multip21,'Style','popupmenu','String',{'Dark','Light'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','matlab_theme','TooltipString','Change Matlab Theme','Callback',@gui.change_theme);
+    handles.matlab_theme = uicontrol(handles.multip21,'Style','popupmenu','String',{'Dark','Light'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','matlab_theme','TooltipString','Change Matlab Theme','Callback',@gui.change_theme,'UserData','not_a_setting');
 
 
     current_theme = MainWindow.Theme.BaseColorStyle;
@@ -1960,7 +1958,7 @@ item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.paneltext = uicontrol(handles.multip21,'Style','text','String','Width of the panels','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4) parentitem(3)/2 2];
-handles.panelslider = uicontrol(handles.multip21,'Style','slider','max',80,'min',30,'sliderstep',[0.05 0.05],'Value',50,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','panelslider','TooltipString','Width of the panel that you see on the left side');
+handles.panelslider = uicontrol(handles.multip21,'Style','slider','max',80,'min',30,'sliderstep',[0.05 0.05],'Value',50,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','panelslider','TooltipString','Width of the panel that you see on the left side','UserData','not_a_setting');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 2];
 handles.pref_apply = uicontrol(handles.multip21,'Style','pushbutton','String','Apply','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@gui.pref_apply_Callback,'Tag','prefapply','TooltipString','Apply the new width. All data from the UI will be cleared');
@@ -2008,10 +2006,10 @@ item=[0 item(2)+item(4) parentitem(3) 2];
 handles.text153 = uicontrol(handles.multip22,'Style','text','String','Frames to process:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.selectedFramesMean = uicontrol(handles.multip22,'Style','edit','String','1:end','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','selectedFramesMean','TooltipString','Select which frames to include for calculating the mean velocity. E.g. "1,3,4,8:10". For multiple averages (e.g. phase average) enter rows: "[1:10:end;2:10:end;3:10:end]" -> one averaged frame per row.');
+handles.selectedFramesMean = uicontrol(handles.multip22,'Style','edit','String',gui.setting_text(default.tools.selectedFramesMean),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','selectedFramesMean','TooltipString','Select which frames to include for calculating the mean velocity. E.g. "1,3,4,8:10". For multiple averages (e.g. phase average) enter rows: "[1:10:end;2:10:end;3:10:end]" -> one averaged frame per row.');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
-handles.append_replace = uicontrol(handles.multip22,'Style','popupmenu', 'Value', 1, 'String',{'append to dataset' 'replace all existing'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','append_replace','TooltipString','Append the newly calculated vector field to the current session, or replace previously calculated vector fields');
+handles.append_replace = uicontrol(handles.multip22,'Style','popupmenu', 'Value', default.tools.append_replace, 'String',{'append to dataset' 'replace all existing'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','append_replace','TooltipString','Append the newly calculated vector field to the current session, or replace previously calculated vector fields');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
 handles.meanmaker = uicontrol(handles.multip22,'Style','pushbutton','String','Calculate mean','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',{@plot.temporal_operation_Callback, 1},'TooltipString','Calculate mean velocities and append an extra frame with the results');
@@ -2035,7 +2033,7 @@ handles.text_osc = uicontrol(handles.multip22,'Style','text', ...
     'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text_osc');
 item=[0 item(2)+item(4) parentitem(3)/3 2];
 handles.frames_per_period = uicontrol(handles.multip22,'Style','edit', ...
-    'String','0','Units','characters', ...
+    'String',gui.setting_text(default.tools.frames_per_period),'Units','characters', ...
     'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)], ...
     'Tag','frames_per_period','TooltipString','Indicate the number of frames that equals one period');
 handles.phase_meanmaker = uicontrol(handles.multip22,'Style','pushbutton', ...
@@ -2051,40 +2049,40 @@ parentitem=get(handles.multip23, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
-handles.do_contrast_filter = uicontrol(handles.multip23,'Style','checkbox','String','Filter low contrast','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','do_contrast_filter','TooltipString','This filter removes vectors from regions where the input image contrast is low.');
+handles.contrast_filter_enable = uicontrol(handles.multip23,'Style','checkbox','String','Filter low contrast','Value',default.analysis.contrast_filter_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','contrast_filter_enable','TooltipString','This filter removes vectors from regions where the input image contrast is low.');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text19a = uicontrol(handles.multip23,'Style','text','String','Threshold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.contrast_filter_thresh = uicontrol(handles.multip23,'Style','edit','String','0.001','Units','characters', 'Fontunits','points','Callback',@validate.contrast_filter_thresh_Callback, 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','contrast_filter_thresh');
+handles.contrast_filter_thresh = uicontrol(handles.multip23,'Style','edit','String',gui.setting_text(default.analysis.contrast_filter_thresh),'Units','characters', 'Fontunits','points','Callback',@validate.contrast_filter_thresh_Callback, 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','contrast_filter_thresh');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
 handles.suggest_contrast_filter = uicontrol(handles.multip23,'Style','pushbutton','String','Suggest threshold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'TooltipString','Finds a threshold that discards vectors in the regions where image contrast is low. Use this as a starting point only.','Callback', @validate.suggest_contrast_filter_Callback);
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
-handles.do_bright_filter = uicontrol(handles.multip23,'Style','checkbox','String','Filter bright objects','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','do_bright_filter','TooltipString','This filter removes vectors from regions where the input image has connected bright objects.');
+handles.bright_filter_enable = uicontrol(handles.multip23,'Style','checkbox','String','Filter bright objects','Value',default.analysis.bright_filter_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bright_filter_enable','TooltipString','This filter removes vectors from regions where the input image has connected bright objects.');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text19b = uicontrol(handles.multip23,'Style','text','String','Threshold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.bright_filter_thresh = uicontrol(handles.multip23,'Style','edit','String','0.001','Units','characters', 'Fontunits','points','Callback',@validate.bright_filter_thresh_Callback,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bright_filter_thresh');
+handles.bright_filter_thresh = uicontrol(handles.multip23,'Style','edit','String',gui.setting_text(default.analysis.bright_filter_thresh),'Units','characters', 'Fontunits','points','Callback',@validate.bright_filter_thresh_Callback,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','bright_filter_thresh');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1.5];
 handles.suggest_bright_filter = uicontrol(handles.multip23,'Style','pushbutton','String','Suggest threshold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'TooltipString','Finds a threshold that discards vectors in the regions where bright objects are found. Use this as a starting point only.','Callback', @validate.suggest_bright_filter_Callback);
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
-handles.do_corr2_filter = uicontrol(handles.multip23,'Style','checkbox','String','Correlation coefficient filter','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','do_corr2_filter','TooltipString','This filter removes vectors from image areas that have a low correlation between image A and B. Especially useful after removing the background signal.');
+handles.corr_filter_enable = uicontrol(handles.multip23,'Style','checkbox','String','Correlation coefficient filter','Value',default.analysis.corr_filter_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','corr_filter_enable','TooltipString','This filter removes vectors from image areas that have a low correlation between image A and B. Especially useful after removing the background signal.');
 
 item=[0 item(2)+item(4) parentitem(3)/3*2 1];
 handles.text19corrfilter = uicontrol(handles.multip23,'Style','text','String','Threshold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
-handles.corr_filter_thresh = uicontrol(handles.multip23,'Style','edit','String','0.5','Units','characters', 'Fontunits','points','Callback',@validate.corr_filter_thresh_Callback,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','corr_filter_thresh');
+handles.corr_filter_thresh = uicontrol(handles.multip23,'Style','edit','String',gui.setting_text(default.analysis.corr_filter_thresh),'Units','characters', 'Fontunits','points','Callback',@validate.corr_filter_thresh_Callback,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','corr_filter_thresh');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1.1];
-handles.interpol_missing2 = uicontrol(handles.multip23,'Style','checkbox','String','Interpolate missing data','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpol_missing2','TooltipString','Interpolate missing velocity data. Interpolated data appears as ORANGE vectors','Callback',@validate.set_other_interpol_checkbox);
+handles.interpol_missing2 = uicontrol(handles.multip23,'Style','checkbox','String','Interpolate missing data','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpol_missing2','TooltipString','Interpolate missing velocity data. Interpolated data appears as ORANGE vectors','Callback',@validate.set_other_interpol_checkbox,'UserData','not_a_setting');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
 handles.apply_filter_current = uicontrol(handles.multip23,'Style','pushbutton','String','Apply to current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.apply_filter_current_Callback,'TooltipString','Apply the filters to the current frame');
@@ -2145,7 +2143,7 @@ item=[0 item(2)+item(4) parentitem(3) 1];
 handles.ac_projecttxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Project path:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4) parentitem(3)/1.5 1.5];
-handles.ac_project = uicontrol(handles.uipanelac_general,'Style','edit','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','','tag','ac_project');
+handles.ac_project = uicontrol(handles.uipanelac_general,'Style','edit','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String',gui.setting_text(default.acquisition.ac_project),'tag','ac_project');
 set(handles.ac_project,'Fontsize', get(handles.ac_project,'Fontsize')-1);
 
 item=[parentitem(3)/1.5 item(2) parentitem(3)/3 1.5];
@@ -2171,17 +2169,17 @@ available_PIV_configurations = { ...
     'PIVlab LD-PS + FLIR FFY-U3-16S2M' ...
     };
 
-handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', 1, 'String',available_PIV_configurations,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@acquisition.select_capture_config_Callback);
+handles.ac_config = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'Value', default.acquisition.ac_config, 'String',available_PIV_configurations,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_config','TooltipString','Lists the available configurations (synchronizer + cameras)','Callback',@acquisition.select_capture_config_Callback);
 
 item=[0 item(2)+item(4)+0.25 parentitem(3)/2 2];
-handles.ac_comport = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'COM1'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_comport');
+handles.ac_comport = uicontrol(handles.uipanelac_general,'Style','popupmenu', 'String',{'COM1'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_comport','Value',default.acquisition.ac_comport);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2*0.9 2];
 handles.ac_connect = uicontrol(handles.uipanelac_general,'Style','pushbutton','String','Connect','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.connect_Callback,'Tag','ac_connect','TooltipString','Connect to PIVlab-SimpleSync');
 
 IndicatorPos=get(handles.ac_connect,'Position');
 
-handles.ac_serialstatus = uicontrol(handles.uipanelac_general,'Style','edit','units','characters','HorizontalAlignment','center','position',[IndicatorPos(1)+IndicatorPos(3) IndicatorPos(2) 2 IndicatorPos(4)],'String','','tag','ac_serialstatus','BackgroundColor',[1 0 0],'Foregroundcolor',[1 1 1],'Enable','inactive','TooltipString','Status of the serial connection to PIVlab-SimpleSync');
+handles.ac_serialstatus = uicontrol(handles.uipanelac_general,'Style','edit','units','characters','HorizontalAlignment','center','position',[IndicatorPos(1)+IndicatorPos(3) IndicatorPos(2) 2 IndicatorPos(4)],'String','','tag','ac_serialstatus','BackgroundColor',[1 0 0],'Foregroundcolor',[1 1 1],'Enable','inactive','TooltipString','Status of the serial connection to PIVlab-SimpleSync','UserData','not_a_setting');
 
 
 % Sync control
@@ -2196,28 +2194,28 @@ item=[0 0 parentitem(3)/4*2.5 2];
 handles.ac_fpstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Frame rate in Hz:');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1.6];
-handles.ac_fps = uicontrol(handles.uipanelac_laser,'Style','popupmenu','String',{'5' '3' '1.5' '1'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.sync_settings_Callback,'Tag','ac_fps','TooltipString','Frame rate during PIV image capture','interruptible','off','busyaction','cancel');
+handles.ac_fps = uicontrol(handles.uipanelac_laser,'Style','popupmenu','String',{'5' '3' '1.5' '1'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.sync_settings_Callback,'Tag','ac_fps','TooltipString','Frame rate during PIV image capture','interruptible','off','busyaction','cancel','Value',default.acquisition.ac_fps);
 
 item=[0 item(2)+item(4)+margin*0.3 parentitem(3)/4*2.5 1];
 handles.ac_interpulstxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pulse distance in µs:');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
-handles.ac_interpuls = uicontrol(handles.uipanelac_laser,'Style','edit','String','250','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.sync_settings_Callback,'Tag','ac_interpuls','TooltipString','Pulse spacing of the laser','interruptible','off','busyaction','cancel');
+handles.ac_interpuls = uicontrol(handles.uipanelac_laser,'Style','edit','String',gui.setting_text(default.acquisition.ac_interpuls),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.sync_settings_Callback,'Tag','ac_interpuls','TooltipString','Pulse spacing of the laser','interruptible','off','busyaction','cancel');
 
 item=[0 item(2)+item(4)+margin*0.2 parentitem(3)/4*2.5 1];
 handles.ac_powertxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Laser energy in %:');
 
 item=[parentitem(3)/4*2.5 item(2) parentitem(3)/4*1.5 1];
-handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String','100','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.sync_settings_Callback,'Tag','ac_power','TooltipString','Laser energy','interruptible','off','busyaction','cancel');
+handles.ac_power = uicontrol(handles.uipanelac_laser,'Style','edit','String',gui.setting_text(default.acquisition.ac_power),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.sync_settings_Callback,'Tag','ac_power','TooltipString','Laser energy','interruptible','off','busyaction','cancel');
 
 item=[0 item(2)+item(4)+margin*0.1 parentitem(3) 1];
 handles.ac_pulselengthtxt = uicontrol(handles.uipanelac_laser,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Pulse length: 0 µs','tag','ac_pulselengthtxt');
 
 item=[0 item(2)+item(4)+margin*0.2 parentitem(3)/2 1.1];
-handles.ac_enable_straddling_figure = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Timing graph','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_straddling_figure','TooltipString','Show a graph with the timing of camera and laser pulses','Callback', @acquisition.sync_settings_Callback);
+handles.ac_enable_straddling_figure = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Timing graph','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_straddling_figure','TooltipString','Show a graph with the timing of camera and laser pulses','Callback', @acquisition.sync_settings_Callback,'Value',default.acquisition.ac_enable_straddling_figure);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.1];
-handles.ac_low_energy_mode = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Low energy mode','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_low_energy_mode','Value',0,'TooltipString',sprintf(['Pulse the laser at 100 Hz with the shortest pulse (1 µs) for alignment.\n' ...
+handles.ac_low_energy_mode = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Low energy mode','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_low_energy_mode','Value',default.acquisition.ac_low_energy_mode,'TooltipString',sprintf(['Pulse the laser at 100 Hz with the shortest pulse (1 µs) for alignment.\n' ...
 	'Synchronized PIV capture is disabled while active.\n\n' ...
 	'Average power at this duty cycle (peak -> average):\n' ...
 	'      5 W  ->  0.5 mW\n' ...
@@ -2226,13 +2224,13 @@ handles.ac_low_energy_mode = uicontrol(handles.uipanelac_laser,'Style','checkbox
 	'  400 W  ->  40 mW']),'Callback', @acquisition.low_energy_mode_Callback);
 
 item=[0 item(2)+item(4)+margin*0.2 parentitem(3)/4*2 2];
-handles.ac_laserstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','N/A','tag','ac_laserstatus','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold','TooltipString','Status of the laser');
+handles.ac_laserstatus = uicontrol(handles.uipanelac_laser,'Style','edit','units','characters','HorizontalAlignment','center','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','N/A','tag','ac_laserstatus','FontName','FixedWidth','BackgroundColor',[1 0 0],'Foregroundcolor',[0 0 0],'Enable','inactive','Fontweight','bold','TooltipString','Status of the laser','UserData','not_a_setting');
 
 item=[parentitem(3)/4*2 item(2) parentitem(3)/4*2 2];
 handles.ac_lasertoggle = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Toggle Laser','Fontweight','bold','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.lasertoggle_Callback,'Tag','ac_lasertoggle','TooltipString','Toggle laser on and off','interruptible','off','busyaction','cancel');
 
 item=[0 item(2)+item(4)+margin*0.1 parentitem(3)/2 1.5];
-handles.ac_enable_ext_trigger = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Ext. trigger','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_ext_trigger','TooltipString','Use external trigger input on PIVlab-SimpleSync','Callback', @acquisition.ext_trigger_xmsync_settings_Callback,'Visible','off');
+handles.ac_enable_ext_trigger = uicontrol(handles.uipanelac_laser,'Style','checkbox','String','Ext. trigger','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_ext_trigger','TooltipString','Use external trigger input on PIVlab-SimpleSync','Callback', @acquisition.ext_trigger_xmsync_settings_Callback,'Visible','off','Value',default.acquisition.ac_enable_ext_trigger);
 
 item=[0 item(2) parentitem(3)/2 1.5];
 handles.ac_enable_ext_trigger_oltsync = uicontrol(handles.uipanelac_laser,'Style','Pushbutton','String','Trigger mode','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_enable_ext_trigger_oltsync','TooltipString','Configure trigger input on PIVlab-SimpleSync','Callback', @acquisition.ext_trigger_oltsync_settings_Callback,'Visible','off');
@@ -2269,20 +2267,20 @@ handles.ac_camera_setup = uicontrol(handles.uipanelac_camsettings,'Style','pushb
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
 handles.ac_cam_helper_txt = uicontrol(handles.uipanelac_camsettings,'Style','text','units','characters','HorizontalAlignment','left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','Display (live overlay):');
 item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 1.5];
-handles.ac_displ_sharp = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Sharpness','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','ac_displ_sharp','TooltipString','Display sharpness','Callback', @acquisition.display_cam_overlay_Callback,'Visible','on');
+handles.ac_displ_sharp = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Sharpness','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','ac_displ_sharp','TooltipString','Display sharpness','Callback', @acquisition.display_cam_overlay_Callback,'Visible','on','Value',default.acquisition.ac_displ_sharp);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.ac_displ_grid = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Grid','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','ac_displ_grid','TooltipString','Display grid','Callback', @acquisition.display_cam_overlay_Callback,'Visible','on');
+handles.ac_displ_grid = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Grid','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','ac_displ_grid','TooltipString','Display grid','Callback', @acquisition.display_cam_overlay_Callback,'Visible','on','Value',default.acquisition.ac_displ_grid);
 
 %item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
 %not working at the moment...
-handles.ac_displ_hist = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Histogram','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','ac_displ_hist','TooltipString','Display histogram','Callback', @acquisition.display_cam_overlay_Callback,'Visible','off');
+handles.ac_displ_hist = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Histogram','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','ac_displ_hist','TooltipString','Display histogram','Callback', @acquisition.display_cam_overlay_Callback,'Visible','off','Value',default.acquisition.ac_displ_hist);
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
-handles.calib_dolivedetect = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Calibration','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','calib_dolivedetect','TooltipString','Do realtime marker detection and image storage.','Callback',@preproc.cam_live_detect_Callback);
+handles.calib_dolivedetect = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Calibration','Value',default.acquisition.calib_dolivedetect,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','calib_dolivedetect','TooltipString','Do realtime marker detection and image storage.','Callback',@preproc.cam_live_detect_Callback);
 
 item=[parentitem(3)/2*1 item(2) parentitem(3)/2 1.5];
-handles.ac_realtime_PIV = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Displacement','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','ac_realtime_PIV','TooltipString','NOT IMLEMENTED YET Do realtime displacement estimation');
+handles.ac_realtime_PIV = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Displacement','Value',default.acquisition.ac_realtime_PIV,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','ac_realtime_PIV','TooltipString','NOT IMLEMENTED YET Do realtime displacement estimation');
 
 
 % Calib capture
@@ -2299,7 +2297,7 @@ item=[0 item(2)+item(4) parentitem(3)/2 1];
 handles.ac_expotxt = uicontrol(handles.uipanelac_calib,'Style','text', 'String','Exposure in ms: ','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1];
-handles.ac_expo = uicontrol(handles.uipanelac_calib,'Style','edit','units','characters','HorizontalAlignment','right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','50','tag','ac_expo','TooltipString','Exposure of the camera during calibration image capture','Callback', @acquisition.exposure_Callback);
+handles.ac_expo = uicontrol(handles.uipanelac_calib,'Style','edit','units','characters','HorizontalAlignment','right','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String',gui.setting_text(default.acquisition.ac_expo),'tag','ac_expo','TooltipString','Exposure of the camera during calibration image capture','Callback', @acquisition.exposure_Callback);
 
 item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/4 1.5];
 handles.ac_calibcapture = uicontrol(handles.uipanelac_calib,'Style','pushbutton','String','Start','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.25 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.25 item(4)],'Callback', @acquisition.calibcapture_Callback,'Tag','ac_calibcapture','TooltipString','Start live view of the camera','interruptible','on','BusyAction','queue');
@@ -2322,17 +2320,17 @@ item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 1];
 handles.ac_imgamounttxt = uicontrol(handles.uipanelac_capture,'Style','text', 'String','Image amount: ','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/4 1];
-handles.ac_imgamount = uicontrol(handles.uipanelac_capture,'Style','edit','units','characters','HorizontalAlignment','right', 'enable','off','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','100','tag','ac_imgamount','TooltipString','Amount of double images to capture. If red: RAM most likely not sufficient.','Callback',@acquisition.image_amount_Callback);
+handles.ac_imgamount = uicontrol(handles.uipanelac_capture,'Style','edit','units','characters','HorizontalAlignment','right', 'enable','off','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String',gui.setting_text(default.acquisition.ac_imgamount),'tag','ac_imgamount','TooltipString','Amount of double images to capture. If red: RAM most likely not sufficient.','Callback',@acquisition.image_amount_Callback);
 
 %live PIV preview disabled
 item=[parentitem(3)/2+parentitem(3)/4 item(2) parentitem(3)/4 1];
-handles.ac_realtime = uicontrol(handles.uipanelac_capture,'Style','checkbox','units','characters','HorizontalAlignment','right','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3) item(4)],'Value',0,'String','Live','tag','ac_realtime','TooltipString','Enable real-time PIV','Callback',@acquisition.realtime_Callback,'Visible','off');
+handles.ac_realtime = uicontrol(handles.uipanelac_capture,'Style','checkbox','units','characters','HorizontalAlignment','right','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3) item(4)],'Value',default.acquisition.ac_realtime,'String','Live','tag','ac_realtime','TooltipString','Enable real-time PIV','Callback',@acquisition.realtime_Callback,'Visible','off');
 
 item=[0 item(2)+item(4)+margin*0.25 parentitem(3)/3 1.5];
 handles.ac_pivcapture = uicontrol(handles.uipanelac_capture,'Style','pushbutton','String','Start','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @acquisition.piv_capture_Callback,'TooltipString','Start PIV image capture and laser','interruptible','on','BusyAction','queue');
 
 item=[parentitem(3)/3*1 item(2) parentitem(3)/5 1.5];
-handles.ac_pivcapture_save = uicontrol(handles.uipanelac_capture,'Style','checkbox','units','characters','HorizontalAlignment','right','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3) item(4)],'Value',0,'String','Save','tag','ac_pivcapture_save','TooltipString','Save PIV double images','Callback',@acquisition.pivcapture_save_Callback);
+handles.ac_pivcapture_save = uicontrol(handles.uipanelac_capture,'Style','checkbox','units','characters','HorizontalAlignment','right','position',[item(1) parentitem(4)-item(4)-margin-item(2) item(3) item(4)],'Value',default.acquisition.ac_pivcapture_save,'String','Save','tag','ac_pivcapture_save','TooltipString','Save PIV double images','Callback',@acquisition.pivcapture_save_Callback);
 
 item=[parentitem(3)/3*1+parentitem(3)/5 item(2) parentitem(3)/5 1.5];
 handles.ac_auto_interframe = uicontrol(handles.uipanelac_capture,'Style','Pushbutton','String','Auto','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_auto_interframe','TooltipString','Automatically determine suitable interframe time','Callback', @acquisition.automatic_interframe,'Visible','off');
@@ -2343,7 +2341,7 @@ handles.ac_pivstop = uicontrol(handles.uipanelac_capture,'Style','pushbutton','S
 
 parentitem=get(handles.multip24, 'Position');
 item=[0 30.5 parentitem(3) 2];
-handles.ac_msgbox = uicontrol(handles.multip24,'Style','edit', 'Fontname','fixedwidth', 'enable','inactive','Max', 3, 'min', 1, 'String',{'Welcome to PIVlab' 'image acquisition!'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_msgbox','TooltipString','Messages','visible','off');
+handles.ac_msgbox = uicontrol(handles.multip24,'Style','edit', 'Fontname','fixedwidth', 'enable','inactive','Max', 3, 'min', 1, 'String',{'Welcome to PIVlab' 'image acquisition!'},'Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','ac_msgbox','TooltipString','Messages','visible','off','UserData','not_a_setting');
 set(handles.ac_msgbox,'BackgroundColor', get (handles.ac_msgbox,'BackgroundColor')*0.95); %dim msgbox color
 
 
@@ -2365,7 +2363,7 @@ item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.calib_load_imgs = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Load target images','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_calibration_loadimages_Callback,'TooltipString','Load images of the calibration target');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
-handles.calib_use_tilted_model = uicontrol(handles.calib_imagedata,'Style','checkbox','String','Scheimpflug adapter (tilted sensor model)','Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_use_tilted_model','Callback', @preproc.cam_togglescheimpflug_Callback,'TooltipString','Enable CALIB_TILTED_MODEL for cameras with a Scheimpflug adapter');
+handles.calib_use_tilted_model = uicontrol(handles.calib_imagedata,'Style','checkbox','String','Scheimpflug adapter (tilted sensor model)','Value',default.calibration.calib_use_tilted_model,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_use_tilted_model','Callback', @preproc.cam_togglescheimpflug_Callback,'TooltipString','Enable CALIB_TILTED_MODEL for cameras with a Scheimpflug adapter','UserData','session_only');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.calib_estimateparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Estimate cam parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_estimateparams_Callback,'TooltipString','Detect charuco markers and estimate camera parameters');
@@ -2398,10 +2396,10 @@ item=[0 item(2)+item(4)+margin/4 parentitem(3)/3*2 1.5];
 uicontrol(handles.calib_imagedata,'Style','text','String','Output image size:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
-handles.calib_viewtype = uicontrol(handles.calib_imagedata,'Style','popupmenu','String',{'Cut away black borders' 'Same size as input image' 'Include black borders'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_viewtype','TooltipString','Select how black borders should be treated','Callback',@preproc.cam_change_viewtype_Callback);
+handles.calib_viewtype = uicontrol(handles.calib_imagedata,'Style','popupmenu','String',{'Cut away black borders' 'Same size as input image' 'Include black borders'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_viewtype','TooltipString','Select how black borders should be treated','Callback',@preproc.cam_change_viewtype_Callback,'Value',default.calibration.calib_viewtype,'UserData','session_only');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
-handles.calib_usecalibration = uicontrol(handles.calib_imagedata,'Style','checkbox','String','Enable camera calibration', 'Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_usecalibration','TooltipString','Enable camera calibration / undistortion','Callback', @preproc.cam_enable_cam_calib_Callback);
+handles.calib_usecalibration = uicontrol(handles.calib_imagedata,'Style','checkbox','String','Enable camera calibration', 'Value',default.calibration.calib_usecalibration,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_usecalibration','TooltipString','Enable camera calibration / undistortion','Callback', @preproc.cam_enable_cam_calib_Callback,'UserData','session_only');
 
 %% camera rectification
 handles.multip27 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Image rectification', 'Tag','multip27','fontweight','bold');
@@ -2433,10 +2431,10 @@ item=[0 item(2)+item(4)+margin parentitem(3)/2 1.5];
 uicontrol(handles.rect_imagedata,'Style','text','String','Upscaling:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1.5];
-handles.calib_upscale = uicontrol(handles.rect_imagedata,'Style','popupmenu','String',{'1x' '2x'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_upscale','TooltipString','Upscaling factor reducing then effect of image interpolations, but making analyses slower','Callback', @preproc.cam_rectification_upscale_Callback);
+handles.calib_upscale = uicontrol(handles.rect_imagedata,'Style','popupmenu','String',{'1x' '2x'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_upscale','TooltipString','Upscaling factor reducing then effect of image interpolations, but making analyses slower','Callback', @preproc.cam_rectification_upscale_Callback,'Value',default.calibration.calib_upscale,'UserData','session_only');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
-handles.calib_userectification = uicontrol(handles.rect_imagedata,'Style','checkbox','String','Enable image rectification', 'Value',0,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_userectification','TooltipString','Use image rectification','Callback', @preproc.cam_enable_cam_rectification_Callback);
+handles.calib_userectification = uicontrol(handles.rect_imagedata,'Style','checkbox','String','Enable image rectification', 'Value',default.calibration.calib_userectification,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_userectification','TooltipString','Use image rectification','Callback', @preproc.cam_enable_cam_rectification_Callback,'UserData','session_only');
 
 
 %% Marker board setup
@@ -2454,37 +2452,37 @@ item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 1.5];
 uicontrol(handles.calib_markersetup,'Style','text','String','Board type:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_boardtype = uicontrol(handles.calib_markersetup,'Style','popupmenu','String',{'ChArUco DICT_4X4_1000'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_boardtype','Callback',@preproc.cam_board_param_edited_Callback,'TooltipString','Select the type of calibration marker board');
+handles.calib_boardtype = uicontrol(handles.calib_markersetup,'Style','popupmenu','String',{'ChArUco DICT_4X4_1000'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_boardtype','Callback',@preproc.cam_board_param_edited_Callback,'TooltipString','Select the type of calibration marker board','Value',default.calibration.calib_boardtype);
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 uicontrol(handles.calib_markersetup,'Style','text','String','Origin color:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_origincolor = uicontrol(handles.calib_markersetup,'Style','popupmenu','String',{'Black' 'White'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_origincolor','Callback',@preproc.cam_board_param_edited_Callback,'TooltipString','Color of the top left checker');
+handles.calib_origincolor = uicontrol(handles.calib_markersetup,'Style','popupmenu','String',{'Black' 'White'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_origincolor','Callback',@preproc.cam_board_param_edited_Callback,'TooltipString','Color of the top left checker','Value',default.calibration.calib_origincolor);
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 uicontrol(handles.calib_markersetup,'Style','text','String','Nr. of rows:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_rows = uicontrol(handles.calib_markersetup,'Style','edit','String','10','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_rows','Callback',@preproc.cam_board_param_edited_Callback,'TooltipString','Amount of rows of the checkerboard');
+handles.calib_rows = uicontrol(handles.calib_markersetup,'Style','edit','String',gui.setting_text(default.calibration.calib_rows),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_rows','Callback',@preproc.cam_board_param_edited_Callback,'TooltipString','Amount of rows of the checkerboard');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 uicontrol(handles.calib_markersetup,'Style','text','String','Nr. of columns:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_columns = uicontrol(handles.calib_markersetup,'Style','edit','String','18','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_columns','Callback',@preproc.cam_board_param_edited_Callback,'TooltipString','Amount of columns of the checkerboard');
+handles.calib_columns = uicontrol(handles.calib_markersetup,'Style','edit','String',gui.setting_text(default.calibration.calib_columns),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_columns','Callback',@preproc.cam_board_param_edited_Callback,'TooltipString','Amount of columns of the checkerboard');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 uicontrol(handles.calib_markersetup,'Style','text','String','Checker size (mm):','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_checkersize = uicontrol(handles.calib_markersetup,'Style','edit','String','12','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_checkersize','Callback',@preproc.cam_board_param_edited_Callback,'TooltipString','Size of the checkers');
+handles.calib_checkersize = uicontrol(handles.calib_markersetup,'Style','edit','String',gui.setting_text(default.calibration.calib_checkersize),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_checkersize','Callback',@preproc.cam_board_param_edited_Callback,'TooltipString','Size of the checkers');
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 uicontrol(handles.calib_markersetup,'Style','text','String','Marker size (mm):','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_markersize = uicontrol(handles.calib_markersetup,'Style','edit','String','9','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_markersize','Callback',@preproc.cam_board_param_edited_Callback,'TooltipString','Size of the markers');
+handles.calib_markersize = uicontrol(handles.calib_markersetup,'Style','edit','String',gui.setting_text(default.calibration.calib_markersize),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_markersize','Callback',@preproc.cam_board_param_edited_Callback,'TooltipString','Size of the markers');
 
 item=[0 item(2)+item(4)+margin parentitem(3)/1.5 1.5];
 handles.calib_find_params = uicontrol(handles.calib_markersetup,'Style','pushbutton','String','Guess parameters','Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'TooltipString','Automatically guess charuco parameters','Callback', @preproc.cam_find_charuco_parameters_Callback);
@@ -2521,38 +2519,6 @@ uicontrol(handles.plot_correlation_matrices,'Style','text','String','After retri
 
 
 
-%% Image acquisition: load last device and COM port
-try
-    warning off
-    load('PIVlab_settings_default.mat','last_selected_device','last_selected_fps','last_selected_pulsedist','last_selected_energy');
-    if exist('last_selected_device','var')
-        if ~isempty(last_selected_device)
-            set(handles.ac_config, 'value',last_selected_device);
-        else
-            set(handles.ac_config, 'value',1);
-        end
-    end
-    if exist('last_selected_fps','var')
-        if ~isempty(last_selected_fps)
-            pause(0.01)
-            set(handles.ac_fps, 'value',last_selected_fps);
-        else
-            set(handles.ac_fps, 'value',1);
-        end
-    end
-    if exist('last_selected_pulsedist','var')
-        set(handles.ac_interpuls, 'String',last_selected_pulsedist);
-    end
-    if exist('last_selected_energy','var')
-        set(handles.ac_power, 'String',last_selected_energy);
-    end
-    load('PIVlab_settings_default.mat','selected_com_port');
-    if exist('selected_com_port','var') && ~isempty(selected_com_port)
-        gui.put('selected_com_port',selected_com_port);
-    end
-    %warning on
-catch
-end
 gui.put('multitiff',0); %default for compatibility: Not a multitiff.
 gui.put('pcopanda_dbl_image',0); %default for compatibility: Not a multitiff.
 gui.put('stereomode',0); % default: Not stereo mode

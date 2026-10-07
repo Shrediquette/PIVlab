@@ -14,6 +14,7 @@ else %calibrated
             'Normal velocity in m/s'}); % <-- Kozlov N.});
 	end
 end
+gui.apply_pending_popup(handles.extraction_choice) %item wanted by a loaded session
 %draw extraction polygon when frame was changed.
 pivlab_axis=gui.retr('pivlab_axis');
 delete(findobj(gui.retr('pivlab_axis'),'tag', 'extractpoint'));

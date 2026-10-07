@@ -33,22 +33,22 @@ if exist('busy_msg','var') && ~isempty(busy_msg)
 end
 elementsOfCrime=findobj(hgui, 'type', 'uicontrol');
 elementsOfCrime2=findobj(hgui, 'type', 'uimenu');
-statuscell=get (elementsOfCrime, 'enable');
-wasdisabled=zeros(size(statuscell),'uint8');
-
 if inpt==0
-	set(elementsOfCrime, 'enable', 'off');
-	for i=1:size(statuscell,1)
-		if strncmp(statuscell{i,1}, 'off',3) ==1
-			wasdisabled(i)=1;
-		end
+	% remember which controls were disabled before (by handle: controls may be created or
+	% deleted while PIVlab is busy). Only kept in memory, never saved in a session.
+	was_disabled=false(numel(elementsOfCrime),1);
+	for i=1:numel(elementsOfCrime)
+		was_disabled(i)=strcmp(elementsOfCrime(i).Enable,'off');
 	end
-	gui.put('wasdisabled', wasdisabled);
+	gui.put('disabled_while_busy', elementsOfCrime(was_disabled));
+	set(elementsOfCrime, 'enable', 'off');
 	set(elementsOfCrime2, 'enable', 'off');
 else
-	wasdisabled=gui.retr('wasdisabled');
 	set(elementsOfCrime, 'enable', 'on');
-	set(elementsOfCrime(wasdisabled==1), 'enable', 'off');
+	disabled_while_busy=gui.retr('disabled_while_busy');
+	if ~isempty(disabled_while_busy)
+		set(disabled_while_busy(isvalid(disabled_while_busy)), 'enable', 'off');
+	end
 	set(elementsOfCrime2, 'enable', 'on');
 end
 set(handles.progress, 'enable', 'on');

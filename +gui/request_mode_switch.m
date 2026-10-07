@@ -34,13 +34,8 @@ end
 gui.reset_to_defaults();
 gui.apply_ui_mode(new_mode);
 
-% Remember the choice in the default settings file (consistent with the rest
-% of PIVlab's settings storage).
-ui_mode = new_mode;
-try
-    save('PIVlab_settings_default.mat','ui_mode','-append');
-catch
-end
+% Remember the choice for the next start (preference)
+gui.set_preference('ui_mode', new_mode);
 
 switched = true;
 end

@@ -3,21 +3,27 @@ function res = filter(res, opts)
 %   res = pivlab.filter(res) applies PIVlab's default validation: global standard deviation
 %   filter, local normalized median test, second-peak substitution and interpolation of the
 %   removed vectors. The filter always starts from the unfiltered PIV result (res.u_raw),
-%   so it can be repeated with different settings.
+%   so it can be repeated with different settings. Values you changed by hand in res.u_raw /
+%   res.v_raw are used; changes in res.u / res.v are replaced by the new filter result.
 %
 %   Name=value options (empty = value from Settings, or the PIVlab default)
 %   StdevCheck, StdevThreshold              global standard deviation filter (default on, 8)
 %   LocalMedian, LocalMedianThreshold       normalized median test (default on, 3)
-%   VelocityLimits                          [umin umax vmin vmax] in the units of res (res.units)
+%   VelocityLimits                          [umin umax vmin vmax] in the CURRENT units of res
+%                                           (res.units: px/frame before pivlab.toMetric, m/s
+%                                           after it), "none" = no velocity limits
 %   CorrelationFilter, CorrelationThreshold remove vectors with low correlation coefficient
 %   NotchFilter, NotchLimits                remove vectors with a magnitude between the limits
 %   ContrastFilter, ContrastThreshold       remove vectors in low-contrast image areas
 %   BrightnessFilter, BrightnessThreshold   remove vectors in bright image areas
 %   Interpolate                             fill removed vectors by interpolation (default true)
+%   Verbose                                 true (default) / false: print a summary
 %   Settings                                settings struct from pivlab.defaults / pivlab.loadSettings
 %
 %   res.typevector: 1 = valid, 2 = removed (interpolated if Interpolate is true),
 %   3 = replaced by the second correlation peak, 0 = masked.
+%   A warning appears when more than half of the vectors are removed (often limits in the
+%   wrong units, e.g. m/s limits for results that are still in px/frame).
 %
 %   Example
 %       res = pivlab.filter(res, StdevThreshold=5, VelocityLimits=[-2 10 -3 3]);
@@ -39,7 +45,16 @@ arguments
     opts.BrightnessFilter = []
     opts.BrightnessThreshold = []
     opts.Interpolate = []
+    opts.Verbose (1,1) logical = true
     opts.Settings struct = struct()
+end
+verbose = opts.Verbose;
+opts = rmfield(opts, 'Verbose');
+[res, edited] = take_user_edits(res);
+if edited.filtered
+    warning('pivlab:filter:editsReplaced', ['You changed res.u / res.v. pivlab.filter starts again from ' ...
+        'the unfiltered result (res.u_raw / res.v_raw), so these changes are replaced. ' ...
+        'Change res.u_raw / res.v_raw instead if the filter should use your values.']);
 end
 explicit_limits = ~isempty(opts.VelocityLimits) || ~isempty(opts.NotchLimits);
 [f, s] = resolve_options('filter', opts);
@@ -47,6 +62,11 @@ c = res.calibration;
 
 % velocity / notch limits: GUI semantics = calibrated units of the current calibration
 limits = f.VelocityLimits;
+if (ischar(limits) || isstring(limits)) && strcmpi(limits, "none")
+    limits = [];
+    f.VelocityLimits = [];
+    explicit_limits = true;
+end
 notch = f.NotchLimits;
 if ~explicit_limits && f.LimitUnits == "calibrated" && res.units == "px/frame"
     sc = s.calibration;
@@ -100,8 +120,20 @@ res.settings.filter = f;
 res = refresh_units(res);
 nrem = nnz(res.typevector == 2);
 nall = nnz(res.typevector > 0);
-fprintf('Vector validation: %d of %d vectors (%.1f %%) were removed%s.\n', nrem, nall, 100*nrem/max(nall,1), ...
-    string(ifelse(f.Interpolate, ' and interpolated', '')));
+share = 100*nrem/max(nall,1);
+if verbose
+    fprintf('Vector validation: %d of %d vectors (%.1f %%) were removed%s.\n', nrem, nall, share, ...
+        string(ifelse(f.Interpolate, ' and interpolated', '')));
+end
+if share > 50
+    if ~isempty(velrect) || f.NotchFilter
+        hint = sprintf(['Check VelocityLimits / NotchLimits: they are in the current units of the ' ...
+            'result (%s).'], res.units);
+    else
+        hint = 'Check the filter thresholds and the PIV settings.';
+    end
+    warning('pivlab:filter:manyRemoved', '%.0f %% of the vectors were removed. %s', share, hint);
+end
 end
 
 function l = to_px(l, calu, calv)

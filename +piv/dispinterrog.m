@@ -7,36 +7,36 @@ if numel(filepath)>1 && get(handles.algorithm_selection,'Value') ~= 4 %display o
 	[image_dummy,~]=import.get_img(selected);
 	size_img(1)=size(image_dummy,2)/2;
 	size_img(2)=size(image_dummy,1)/2;
-	step=str2double(get(handles.step,'string'));
+	step=str2double(get(handles.pass1_step,'string'));
 
 	delete(findobj(target_axis,'Type','hggroup')); %=vectors and scatter markers
 	delete(findobj(target_axis,'tag','intareadispl'));
 	centre(1)= size_img(2); %y
 	centre(2)= size_img(1); %x
 
-	intarea1=str2double(get(handles.intarea,'string'))/2;
+	intarea1=str2double(get(handles.pass1_size,'string'))/2;
 	x1=[centre(2)-intarea1 centre(2)+intarea1 centre(2)+intarea1 centre(2)-intarea1 centre(2)-intarea1];
 	y1=[centre(1)-intarea1 centre(1)-intarea1 centre(1)+intarea1 centre(1)+intarea1 centre(1)-intarea1];
 	hold(target_axis,'on')
 	plot(target_axis,x1,y1,'c-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
 	if get(handles.algorithm_selection ,'value')==1 || get(handles.algorithm_selection ,'value')==2
 		text(target_axis,x1(1),y1(1), ['pass 1'],'color','c','fontsize',8,'tag','intareadispl','HorizontalAlignment','right','verticalalignment','bottom')
-		if get(handles.checkbox26,'value')==1
-			intarea2=str2double(get(handles.edit50,'string'))/2;
+		if get(handles.pass2_enable,'value')==1
+			intarea2=str2double(get(handles.pass2_size,'string'))/2;
 			x2=[centre(2)-intarea2 centre(2)+intarea2 centre(2)+intarea2 centre(2)-intarea2 centre(2)-intarea2];
 			y2=[centre(1)-intarea2 centre(1)-intarea2 centre(1)+intarea2 centre(1)+intarea2 centre(1)-intarea2];
 			plot(target_axis,x2,y2,'y-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
 			text(target_axis,x2(2),y2(1), ['pass 2'],'color','y','fontsize',8,'tag','intareadispl','HorizontalAlignment','left','verticalalignment','bottom')
 		end
-		if get(handles.checkbox27,'value')==1
-			intarea3=str2double(get(handles.edit51,'string'))/2;
+		if get(handles.pass3_enable,'value')==1
+			intarea3=str2double(get(handles.pass3_size,'string'))/2;
 			x3=[centre(2)-intarea3 centre(2)+intarea3 centre(2)+intarea3 centre(2)-intarea3 centre(2)-intarea3];
 			y3=[centre(1)-intarea3 centre(1)-intarea3 centre(1)+intarea3 centre(1)+intarea3 centre(1)-intarea3];
 			plot(target_axis,x3,y3,'g-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');
 			text(target_axis,x3(2),y3(3), ['pass 3'],'color','g','fontsize',8,'tag','intareadispl','HorizontalAlignment','left','verticalalignment','top')
 		end
-		if get(handles.checkbox28,'value')==1
-			intarea4=str2double(get(handles.edit52,'string'))/2;
+		if get(handles.pass4_enable,'value')==1
+			intarea4=str2double(get(handles.pass4_size,'string'))/2;
 			x4=[centre(2)-intarea4 centre(2)+intarea4 centre(2)+intarea4 centre(2)-intarea4 centre(2)-intarea4];
 			y4=[centre(1)-intarea4 centre(1)-intarea4 centre(1)+intarea4 centre(1)+intarea4 centre(1)-intarea4];
 			plot(target_axis,x4,y4,'r-', 'linewidth', 1, 'linestyle', ':','tag','intareadispl');

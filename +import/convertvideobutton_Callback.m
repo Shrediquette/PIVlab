@@ -34,7 +34,7 @@ if getappdata(hgui,'video_convert_done')
 	sequencer=0;
 	gui.put('sequencer',sequencer);
 	try
-		save('PIVlab_settings_default.mat','sequencer','-append');
+		gui.set_preference('sequencer',sequencer);
 	catch
 	end
 

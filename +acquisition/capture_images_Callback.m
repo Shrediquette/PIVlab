@@ -69,7 +69,7 @@ if gui.retr('parallel')==1
 end
 try
 	if ~alreadyconnected
-		if exist('laser_device_id.mat','file') ~= 2 %after a frist connection to a synchronizer, this will not be shown anymore.
+		if isempty(gui.get_preference('laser_device_id',[])) %after a first connection to a synchronizer, this will not be shown anymore.
 			misc.hardware_Ad
 		else
 			gui.displogo

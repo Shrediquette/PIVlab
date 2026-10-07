@@ -80,6 +80,10 @@ arguments
     opts.Parent = []
     opts.Settings struct = struct()
 end
+[res, edited] = take_user_edits(res);   % values changed by hand in res.u / res.v are shown
+if edited.filtered
+    res.derived = struct();   % colour maps computed before the change are out of date
+end
 n = size(res.px.u,3);
 fr = opts.Frame;
 if fr > n

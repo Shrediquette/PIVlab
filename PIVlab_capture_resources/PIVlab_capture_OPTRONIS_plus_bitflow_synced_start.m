@@ -83,12 +83,12 @@ bf_set(OPTRONIS_src, 'TriggerSelector', 'ExposureStart'); %TriggerMode applies t
 bf_set(OPTRONIS_src, 'TriggerMode', 'Off');
 
 %% Counter and gain settings
-OPTRONIS_gain = gui.retr('OPTRONIS_gain');
+OPTRONIS_gain = gui.camera_setting('OPTRONIS_gain');
 if isempty(OPTRONIS_gain)
     OPTRONIS_gain=1;
 end
 
-OPTRONIS_counter = gui.retr('OPTRONIS_counter');
+OPTRONIS_counter = gui.camera_setting('OPTRONIS_counter');
 if isempty(OPTRONIS_counter)
     OPTRONIS_counter=1;
 end

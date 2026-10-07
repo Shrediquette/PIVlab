@@ -75,19 +75,19 @@ if ~isempty(resultslist)
 			end
 		end
 		velrect=gui.retr('velrect');
-		do_stdev_check = get(handles.stdev_check, 'value');
+		do_stdev_check = get(handles.stdev_enable, 'value');
 		stdthresh=str2double(get(handles.stdev_thresh, 'String'));
-		do_local_median = get(handles.loc_median, 'value');
+		do_local_median = get(handles.loc_median_enable, 'value');
 		neigh_thresh=str2double(get(handles.loc_med_thresh,'string'));
 		%image-based filtering
-		do_contrast_filter = get(handles.do_contrast_filter, 'value');
-		do_bright_filter = get(handles.do_bright_filter, 'value');
+		do_contrast_filter = get(handles.contrast_filter_enable, 'value');
+		do_bright_filter = get(handles.bright_filter_enable, 'value');
 		contrast_filter_thresh=str2double(get(handles.contrast_filter_thresh, 'String'));
 		bright_filter_thresh=str2double(get(handles.bright_filter_thresh, 'String'));
 		interpol_missing= get(handles.interpol_missing, 'value');
-		do_corr2_filter = get(handles.do_corr2_filter, 'value');
+		do_corr2_filter = get(handles.corr_filter_enable, 'value');
 		corr_filter_thresh=str2double(get(handles.corr_filter_thresh,'String'));
-		do_notch_filter = get(handles.notch_filter, 'value');
+		do_notch_filter = get(handles.notch_enable, 'value');
 		notch_L_thresh=str2double(get(handles.notch_L_thresh,'String'));
 		notch_H_thresh=str2double(get(handles.notch_H_thresh,'String'));
 

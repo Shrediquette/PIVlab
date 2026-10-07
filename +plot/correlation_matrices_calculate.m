@@ -25,17 +25,17 @@ if ok==1
 			[image1,~]=import.get_img(selected);
 			[image2,~]=import.get_img(selected+1);
 			clahe=get(handles.clahe_enable,'value');
-			highp=get(handles.enable_highpass,'value');
-			intenscap=get(handles.enable_intenscap, 'value');
+			highp=get(handles.highpass_enable,'value');
+			intenscap=get(handles.intenscap_enable, 'value');
 			clahesize=str2double(get(handles.clahe_size, 'string'));
-			highpsize=str2double(get(handles.highp_size, 'string'));
-			wienerwurst=get(handles.wienerwurst, 'value');
-			wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
+			highpsize=str2double(get(handles.highpass_size, 'string'));
+			wienerwurst=get(handles.wiener_enable, 'value');
+			wienerwurstsize=str2double(get(handles.wiener_size, 'string'));
 			preproc.Autolimit_Callback
 			minintens=str2double(get(handles.minintens, 'string'));
 			maxintens=str2double(get(handles.maxintens, 'string'));
 			roirect=gui.retr('roirect');
-			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+			if get(handles.autolimit_enable, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
 				if size(image1,3)>1
 					stretcher = stretchlim(rgb2gray(image1));
 				else
@@ -49,7 +49,7 @@ if ok==1
 				highp=highp, highpsize=highpsize, intenscap=intenscap, ...
 				wienerwurst=wienerwurst, wienerwurstsize=wienerwurstsize, ...
 				minintens=minintens, maxintens=maxintens);
-			if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+			if get(handles.autolimit_enable, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
 				if size(image2,3)>1
 					stretcher = stretchlim(rgb2gray(image2));
 				else
@@ -75,28 +75,28 @@ if ok==1
 				mask_positions=masks_in_frame{current_mask_nr};
 			end
 			converted_mask=mask.convert_masks_to_binary(size(image1(:,:,1)),mask_positions);
-			interrogationarea=str2double(get(handles.intarea, 'string'));
-			step=str2double(get(handles.step, 'string'));
-			subpixfinder=get(handles.subpix,'value');
+			interrogationarea=str2double(get(handles.pass1_size, 'string'));
+			step=str2double(get(handles.pass1_step, 'string'));
+			subpixfinder=get(handles.subpixel_estimator,'value');
 			do_correlation_matrices=1;
 			if get(handles.algorithm_selection,'Value')==1  %fft
 				passes=1;
-				if get(handles.checkbox26,'value')==1
+				if get(handles.pass2_enable,'value')==1
 					passes=2;
 				end
-				if get(handles.checkbox27,'value')==1
+				if get(handles.pass3_enable,'value')==1
 					passes=3;
 				end
-				if get(handles.checkbox28,'value')==1
+				if get(handles.pass4_enable,'value')==1
 					passes=4;
 				end
-				int2=str2num(get(handles.edit50,'string'));
-				int3=str2num(get(handles.edit51,'string'));
-				int4=str2num(get(handles.edit52,'string'));
+				int2=str2num(get(handles.pass2_size,'string'));
+				int3=str2num(get(handles.pass3_size,'string'));
+				int4=str2num(get(handles.pass4_size,'string'));
 				[imdeform, repeat, do_pad] = piv.CorrQuality;
-				mask_auto = get(handles.mask_auto_box,'value');
-				repeat_last_pass = get(handles.repeat_last,'Value');
-				delta_diff_min = str2double(get(handles.edit52x,'String'));
+				mask_auto = get(handles.disable_autocorrelation,'value');
+				repeat_last_pass = get(handles.repeat_last_enable,'Value');
+				delta_diff_min = str2double(get(handles.repeat_last_threshold,'String'));
 				if get(handles.algorithm_selection,'Value')==1 %fft multi
 					try
 						[x, ~, ~, ~, ~,~,correlation_matrices,all_xy_tables] = piv.piv_FFTmulti( ...

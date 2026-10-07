@@ -110,7 +110,7 @@ if ~isequal(path,0)
             if strcmp(ans_w,'Yes')
                 sequencer=1;
                 gui.put('sequencer',sequencer);
-                save('PIVlab_settings_default.mat','sequencer','-append');
+                gui.set_preference('sequencer',sequencer);
             end
         end
     end
@@ -123,7 +123,7 @@ if ~isequal(path,0)
         end
         sequencer=used_sequencer;
         gui.put('sequencer',sequencer);
-        save('PIVlab_settings_default.mat','sequencer','-append');
+        gui.set_preference('sequencer',sequencer);
     end
     gui.put('pcopanda_dbl_image',pcopanda_dbl_image);
 

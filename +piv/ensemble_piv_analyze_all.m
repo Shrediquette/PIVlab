@@ -36,13 +36,13 @@ if ok==1
 	gui.sliderrange(1)
 	%% get all parameters for preprocessing
 	clahe=get(handles.clahe_enable,'value');
-	highp=get(handles.enable_highpass,'value');
+	highp=get(handles.highpass_enable,'value');
 	%clip=get(handles.enable_clip,'value');
-	intenscap=get(handles.enable_intenscap, 'value');
+	intenscap=get(handles.intenscap_enable, 'value');
 	clahesize=str2double(get(handles.clahe_size, 'string'));
-	highpsize=str2double(get(handles.highp_size, 'string'));
-	wienerwurst=get(handles.wienerwurst, 'value');
-	wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
+	highpsize=str2double(get(handles.highpass_size, 'string'));
+	wienerwurst=get(handles.wiener_enable, 'value');
+	wienerwurstsize=str2double(get(handles.wiener_size, 'string'));
 
 	preproc.Autolimit_Callback
 	minintens1=str2double(get(handles.minintens, 'string'));
@@ -51,27 +51,27 @@ if ok==1
 	maxintens2=str2double(get(handles.maxintens, 'string'));
 	%clipthresh=str2double(get(handles.clip_thresh, 'string'));
 	roirect=gui.retr('roirect');
-	autolimit = get(handles.Autolimit, 'value');
+	autolimit = get(handles.autolimit_enable, 'value');
 
 
 
-	interrogationarea=str2double(get(handles.intarea, 'string'));
-	step=str2double(get(handles.step, 'string'));
-	subpixfinder=get(handles.subpix,'value');
+	interrogationarea=str2double(get(handles.pass1_size, 'string'));
+	step=str2double(get(handles.pass1_step, 'string'));
+	subpixfinder=get(handles.subpixel_estimator,'value');
 	passes=1;
-	if get(handles.checkbox26,'value')==1
+	if get(handles.pass2_enable,'value')==1
 		passes=2;
 	end
-	if get(handles.checkbox27,'value')==1
+	if get(handles.pass3_enable,'value')==1
 		passes=3;
 	end
-	if get(handles.checkbox28,'value')==1
+	if get(handles.pass4_enable,'value')==1
 		passes=4;
 	end
-	int2=str2num(get(handles.edit50,'string'));
-	int3=str2num(get(handles.edit51,'string'));
-	int4=str2num(get(handles.edit52,'string'));
-	mask_auto = get(handles.mask_auto_box,'value');
+	int2=str2num(get(handles.pass2_size,'string'));
+	int3=str2num(get(handles.pass3_size,'string'));
+	int4=str2num(get(handles.pass4_size,'string'));
+	mask_auto = get(handles.disable_autocorrelation,'value');
 	[imdeform, repeat, do_pad] = piv.CorrQuality;
 	bg_img_A = gui.retr('bg_img_A'); %contains bg image, or is empty array
 	bg_img_B = gui.retr('bg_img_B');

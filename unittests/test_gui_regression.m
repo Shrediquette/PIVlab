@@ -168,30 +168,30 @@ gui.quick4_Callback([], []);
 set(handles.algorithm_selection, 'Value', algorithmValue);
 piv.algorithm_selection_Callback(handles.algorithm_selection, [], []);
 
-set(handles.intarea, 'String', '64');
-piv.intarea_Callback(handles.intarea, [], []);
-set(handles.step, 'String', '32');
-piv.step_Callback(handles.step, [], []);
-set(handles.subpix, 'Value', 1);
+set(handles.pass1_size, 'String', '64');
+piv.intarea_Callback(handles.pass1_size, [], []);
+set(handles.pass1_step, 'String', '32');
+piv.step_Callback(handles.pass1_step, [], []);
+set(handles.subpixel_estimator, 'Value', 1);
 
 switch passMode
     case 'singlePass'
-        set(handles.checkbox26, 'Value', 0);
-        piv.pass2_checkbox_Callback(handles.checkbox26, [], []);
-        set(handles.checkbox27, 'Value', 0);
-        piv.pass3_checkbox_Callback(handles.checkbox27, [], []);
-        set(handles.checkbox28, 'Value', 0);
-        piv.pass4_checkbox_Callback(handles.checkbox28, [], []);
+        set(handles.pass2_enable, 'Value', 0);
+        piv.pass2_checkbox_Callback(handles.pass2_enable, [], []);
+        set(handles.pass3_enable, 'Value', 0);
+        piv.pass3_checkbox_Callback(handles.pass3_enable, [], []);
+        set(handles.pass4_enable, 'Value', 0);
+        piv.pass4_checkbox_Callback(handles.pass4_enable, [], []);
     case 'fourPass'
-        set(handles.checkbox26, 'Value', 1);
-        set(handles.edit50, 'String', '32');
-        piv.pass2_checkbox_Callback(handles.checkbox26, [], []);
-        set(handles.checkbox27, 'Value', 1);
-        set(handles.edit51, 'String', '16');
-        piv.pass3_checkbox_Callback(handles.checkbox27, [], []);
-        set(handles.checkbox28, 'Value', 1);
-        set(handles.edit52, 'String', '16');
-        piv.pass4_checkbox_Callback(handles.checkbox28, [], []);
+        set(handles.pass2_enable, 'Value', 1);
+        set(handles.pass2_size, 'String', '32');
+        piv.pass2_checkbox_Callback(handles.pass2_enable, [], []);
+        set(handles.pass3_enable, 'Value', 1);
+        set(handles.pass3_size, 'String', '16');
+        piv.pass3_checkbox_Callback(handles.pass3_enable, [], []);
+        set(handles.pass4_enable, 'Value', 1);
+        set(handles.pass4_size, 'String', '16');
+        piv.pass4_checkbox_Callback(handles.pass4_enable, [], []);
 end
 
 set(handles.update_display_checkbox, 'Value', 0);
@@ -280,9 +280,9 @@ end
 
 function applyValidation(testCase)
 handles = gui.gethand();
-set(handles.stdev_check, 'Value', 1);
+set(handles.stdev_enable, 'Value', 1);
 set(handles.stdev_thresh, 'String', '7');
-set(handles.loc_median, 'Value', 1);
+set(handles.loc_median_enable, 'Value', 1);
 set(handles.loc_med_thresh, 'String', '3');
 set(handles.interpol_missing, 'Value', 1);
 

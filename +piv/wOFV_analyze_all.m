@@ -72,13 +72,13 @@ if ok==1
 
     %% pre-processing settings
     clahe=get(handles.clahe_enable,'value');
-    highp=get(handles.enable_highpass,'value');
+    highp=get(handles.highpass_enable,'value');
     %clip=get(handles.enable_clip,'value');
-    intenscap=get(handles.enable_intenscap, 'value');
+    intenscap=get(handles.intenscap_enable, 'value');
     clahesize=str2double(get(handles.clahe_size, 'string'));
-    highpsize=str2double(get(handles.highp_size, 'string'));
-    wienerwurst=get(handles.wienerwurst, 'value');
-    wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
+    highpsize=str2double(get(handles.highpass_size, 'string'));
+    wienerwurst=get(handles.wiener_enable, 'value');
+    wienerwurstsize=str2double(get(handles.wiener_size, 'string'));
     do_correlation_matrices=0;
     preproc.Autolimit_Callback
     minintens=str2double(get(handles.minintens, 'string'));
@@ -156,7 +156,7 @@ if ok==1
 			highp=highp, highpsize=highpsize, intenscap=intenscap, ...
 			wienerwurst=wienerwurst, wienerwurstsize=wienerwurstsize, ...
 			minintens=minintens, maxintens=maxintens);
-            if get(handles.Autolimit, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
+            if get(handles.autolimit_enable, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately
                 if size(image2,3)>1
                     stretcher = stretchlim(rgb2gray(image2));
                 else

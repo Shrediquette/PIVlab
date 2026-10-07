@@ -75,7 +75,7 @@ else %Figure handle does already exist --> bring UI to foreground.
 	figure(fh)
 end
 
-save_location=retr('save_location');
+save_location=gui.camera_setting('save_location');
 if ~isempty(save_location)
 	if matches(save_location,'SSD')
 		set(handles.save_location,'Value',2);
@@ -86,7 +86,7 @@ if ~isempty(save_location)
 	end
 end
 
-save_type=retr('save_type');
+save_type=gui.camera_setting('save_type');
 if ~isempty(save_type)
 	if matches(save_type,'TIFF')
 		set(handles.save_type,'Value',2);
@@ -98,16 +98,7 @@ if ~isempty(save_type)
 end
 
 
-warning off
-old_IP=load('PIVlab_settings_default.mat','Chronos_IP');
-%warning on
-if isfield(old_IP,'Chronos_IP')
-	cameraIP=old_IP.Chronos_IP;
-	
-else
-cameraIP='192.168.0.0';
-
-end
+cameraIP=gui.get_preference('Chronos_IP','192.168.0.0'); %IP address used last time
 put('Chronos_IP',cameraIP);
 	set(handles.ip_input,'String',cameraIP);
 
@@ -123,18 +114,18 @@ handles=gethand;
 
 put('Chronos_IP',get(handles.ip_input,'String'));
 Chronos_IP=get(handles.ip_input,'String');
-save('PIVlab_settings_default.mat','Chronos_IP','-append');
+gui.set_preference('Chronos_IP',Chronos_IP);
 
 selected=get(handles.save_location, 'Value');
 values=get(handles.save_location,'String');
 
-put('save_location',values{selected});
+gui.set_camera_setting('save_location',values{selected});
 
 
 selected=get(handles.save_type, 'Value');
 values=get(handles.save_type,'String');
 
-put('save_type',values{selected});
+gui.set_camera_setting('save_type',values{selected});
 
 
 cameraIP=retr('Chronos_IP');
@@ -157,9 +148,9 @@ resx=str2double(get(handles.resx_input,'String'));
 resy=str2double(get(handles.resy_input,'String'));
 bitdepth=str2double(get(handles.bits_input,'String'));
 
-put('Chronos_resx',resx);
-put('Chronos_resy',resy);
-put('Chronos_bits',bitdepth);
+gui.set_camera_setting('Chronos_resx',resx);
+gui.set_camera_setting('Chronos_resy',resy);
+gui.set_camera_setting('Chronos_bits',bitdepth);
 
 dataInside = struct('hRes', resx, 'vRes', resy, 'bitDepth', bitdepth);
 dataOutside = struct('resolution', dataInside);

@@ -1,6 +1,6 @@
 function [imdeform, repeat, do_pad]=CorrQuality(~,~)
 handles=gui.gethand;
-quali = get(handles.CorrQuality,'Value');
+quali = get(handles.correlation_robustness,'Value');
 if quali==1 % normal quality
 	imdeform='*linear';
 	repeat = 0;

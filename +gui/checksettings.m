@@ -10,13 +10,13 @@ if get(handles.clahe_enable, 'value')==1
 		mess{size(mess,2)+1}='CLAHE window size contains NaN';
 	end
 end
-if get(handles.enable_highpass, 'value')==1
-	if isnan(str2double(get(handles.highp_size, 'string')))
+if get(handles.highpass_enable, 'value')==1
+	if isnan(str2double(get(handles.highpass_size, 'string')))
 		mess{size(mess,2)+1}='Highpass filter size contains NaN';
 	end
 end
-if get(handles.wienerwurst, 'value')==1
-	if isnan(str2double(get(handles.wienerwurstsize, 'string')))
+if get(handles.wiener_enable, 'value')==1
+	if isnan(str2double(get(handles.wiener_size, 'string')))
 		mess{size(mess,2)+1}='Wiener2 filter size contains NaN';
 	end
 end
@@ -25,10 +25,10 @@ end
 %        mess{size(mess,2)+1}='Clipping threshold contains NaN';
 %    end
 %end
-if isnan(str2double(get(handles.intarea, 'string')))
+if isnan(str2double(get(handles.pass1_size, 'string')))
 	mess{size(mess,2)+1}='Interrogation area size contains NaN';
 end
-if isnan(str2double(get(handles.step, 'string')))
+if isnan(str2double(get(handles.pass1_step, 'string')))
 	mess{size(mess,2)+1}='Step size contains NaN';
 end
 if size(mess,2)>0 %error somewhere

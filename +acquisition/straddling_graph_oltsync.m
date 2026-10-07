@@ -5,10 +5,10 @@ bot_las = 0.2;
 amp = 0.2;
 num_reps=2;
 
-triggermode=gui.retr('oltSync_triggermode');
+triggermode=gui.camera_setting('oltSync_triggermode');
 if isempty(triggermode)
     triggermode='internal'; %%internal activehigh %singlerising
-    gui.put('oltSync_triggermode',triggermode)
+    gui.set_camera_setting('oltSync_triggermode',triggermode)
 end
 
 straddling_figure=findobj('tag','straddling_figure');

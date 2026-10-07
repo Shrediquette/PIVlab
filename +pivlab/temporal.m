@@ -28,6 +28,7 @@ arguments
     operation (1,1) string {mustBeMember(operation,["mean","std","sum","tke"])}
     opts.Frames = []
 end
+res = take_user_edits(res);   % values changed by hand in res.u / res.v are used
 types = struct('mean',1,'sum',0,'std',2,'tke',3);
 type = types.(operation);
 labels = struct('mean',"MEAN",'sum',"SUM",'std',"STDEV",'tke',"TKE");

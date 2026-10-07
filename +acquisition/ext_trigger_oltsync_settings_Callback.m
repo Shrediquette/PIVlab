@@ -43,10 +43,10 @@ if isempty(fh)
 	item=[0 item(2)+item(4)+margin/2 parentitem(3)-margin/4 6];
 	handles.explain = uicontrol(handles.mainpanel,'Style','Text','String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin*0.1 parentitem(4)-item(4)-margin-item(2) item(3)-margin*2*0.1 item(4)],'tag','explain','fontsize',7);
 
-	triggermode=retr('oltSync_triggermode');
+	triggermode=gui.camera_setting('oltSync_triggermode');
 	if isempty(triggermode)
 		triggermode='internal';
-		put('oltSync_triggermode',triggermode)
+		gui.set_camera_setting('oltSync_triggermode',triggermode)
 	end
 	if strcmpi(triggermode,'internal')
 		set (handles.triggermode,'Value',1)
@@ -70,15 +70,15 @@ handles=gethand;
 value=get(handles.triggermode,'Value');
 set (handles.explain,'String', {'Uses the configured camera and pulse timings, and starts recording when ''Start'' button is clicked, stops when ''image amount'' is reached.'})
 if value==1
-	put('oltSync_triggermode','internal')
+	gui.set_camera_setting('oltSync_triggermode','internal')
 elseif value==2
-	put('oltSync_triggermode','startrising')
+	gui.set_camera_setting('oltSync_triggermode','startrising')
 	set (handles.explain,'String', {'Uses the configured camera and pulse timings, arms when ''Start'' button is clicked, starts record when the trigger input goes high, stops when ''image amount'' is reached.'})
 elseif value==3
-	put('oltSync_triggermode','activehigh')
+	gui.set_camera_setting('oltSync_triggermode','activehigh')
 	set (handles.explain,'String', {'Uses the configured camera and pulse timings, arms when ''Start'' button is clicked, records while the trigger input is high, stops when ''image amount'' is reached.'})
 elseif value==4
-	put('oltSync_triggermode','singlerising')
+	gui.set_camera_setting('oltSync_triggermode','singlerising')
 	set (handles.explain,'String', {'Uses the configured camera and pulse timings, arms when ''Start'' button is clicked, records one double image each time trigger goes high, stops when ''image amount'' is reached.'})
 end
 

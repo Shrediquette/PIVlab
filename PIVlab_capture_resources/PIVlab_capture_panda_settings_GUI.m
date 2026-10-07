@@ -51,7 +51,7 @@ else %Figure handle does already exist --> bring UI to foreground.
 	figure(fh)
 end
 handles=gethand;
-panda_timestamp=getappdata(hgui,'panda_timestamp');
+panda_timestamp=gui.camera_setting('panda_timestamp');
 if isempty (panda_timestamp)
 	panda_timestamp='none';
 end
@@ -63,7 +63,7 @@ elseif strcmp(panda_timestamp,'binary')
 	set(handles.timestamp,'value',3);
 end
 
-panda_filetype=getappdata(hgui,'panda_filetype');
+panda_filetype=gui.camera_setting('panda_filetype');
 if isempty (panda_filetype)
 	panda_filetype='Single TIFF';
 end
@@ -82,10 +82,10 @@ fh = findobj('tag', 'panda_control_window');
 handles=gethand;
 
 timestamp=get(handles.timestamp,'String');
-put('panda_timestamp',(timestamp{get(handles.timestamp,'value')}));
+gui.set_camera_setting('panda_timestamp',(timestamp{get(handles.timestamp,'value')}));
 
 filetype=get(handles.filetype,'String');
-put('panda_filetype',(filetype{get(handles.filetype,'value')}));
+gui.set_camera_setting('panda_filetype',(filetype{get(handles.filetype,'value')}));
 
 pause(0.01)
 

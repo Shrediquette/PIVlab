@@ -31,6 +31,7 @@ arguments
     opts.do_pad             = 0
     opts.use_gui            = []         % [] = use the PIVlab GUI if it is open, false = never touch the GUI
     opts.cam                = []         % camera undistortion (import.cam_settings); [] = from the GUI / none
+    opts.verbose            = true       % false: no progress dots in the command window (without GUI)
 end
 required_fields = {'filepath', 'interrogationarea'};
 if ~all(isfield(opts, required_fields))
@@ -99,6 +100,7 @@ skippy=0;
 cancel=0;
 
 use_gui = opts.use_gui;
+verbose = opts.verbose;
 if ~isempty(opts.cam)
     view = opts.cam.view;
     cam_use_calibration = opts.cam.use_calibration;
@@ -499,7 +501,7 @@ image2 = preproc.PIVlab_preproc( ...
             drawnow
         end
     else
-        fprintf('.');
+        if verbose, fprintf('.'); end
     end
     if passes==1 % only 1 pass selected, so correlation coefficient will be calculated in this (first & final) pass.
         if ensemble_i1==1 %first image pair
@@ -635,7 +637,7 @@ image2 = preproc.PIVlab_preproc( ...
                     drawnow
                 end
             else
-                fprintf('.');
+                if verbose, fprintf('.'); end
             end
             %multipass validation, smoothing
             utable_orig=utable;

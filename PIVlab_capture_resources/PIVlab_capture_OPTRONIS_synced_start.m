@@ -59,12 +59,12 @@ OPTRONIS_settings = get(OPTRONIS_vid);
 OPTRONIS_settings.PreviewFullBitDepth='On';
 OPTRONIS_vid.PreviewFullBitDepth='On';
 
-OPTRONIS_gain = gui.retr('OPTRONIS_gain');
+OPTRONIS_gain = gui.camera_setting('OPTRONIS_gain');
 if isempty(OPTRONIS_gain)
     OPTRONIS_gain=1;
 end
 
-OPTRONIS_counter = gui.retr('OPTRONIS_counter');
+OPTRONIS_counter = gui.camera_setting('OPTRONIS_counter');
 if isempty(OPTRONIS_counter)
     OPTRONIS_counter=1;
 end

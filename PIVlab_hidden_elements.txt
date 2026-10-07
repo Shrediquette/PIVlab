@@ -36,25 +36,25 @@ mask_subdivide
 mask_optimize
 
 # ── multip03  Pre-processing ────────────────────────────────
-enable_intenscap
-wienerwurst
+intenscap_enable
+wiener_enable
 text159
-wienerwurstsize
-Autolimit
+wiener_size
+autolimit_enable
 text162
 minintens
 text163
 maxintens
 
 # ── multip04  PIV settings ──────────────────────────────────
-repeat_last
+repeat_last_enable
 text128x
-edit52x
+repeat_last_threshold
 text14
-subpix
-mask_auto_box
+subpixel_estimator
+disable_autocorrelation
 text914
-CorrQuality
+correlation_robustness
 
 # ── multip05  Analyze ───────────────────────────────────────
 update_display_checkbox
@@ -65,8 +65,8 @@ uipanel_offsets
 # ── multip06  Vector validation ─────────────────────────────
 vel_limit_freehand
 vel_limit_auto
-meanofall
-notch_filter
+scatter_all_frames
+notch_enable
 textnotchL
 notch_L_thresh
 textnotchH

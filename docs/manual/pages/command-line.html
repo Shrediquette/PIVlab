@@ -57,6 +57,28 @@ pivlab.saveSession(res, "analysis.mat");                           % open it in 
       <tr><td><code>res.derived</code></td><td>maps computed by <code>pivlab.derive</code>, e.g. <code>res.derived.vorticity</code></td></tr>
       <tr><td><code>res.px</code></td><td>the same data in pixel units, as PIVlab stores it internally</td></tr>
     </table>
+    <p>You can change values in <code>res.u</code> / <code>res.v</code> by hand, e.g.
+    <code>res.u(res.u &gt; 10) = NaN;</code>. The next <code>pivlab.*</code> function takes the changed
+    values over (all other values stay exactly as computed). <code>pivlab.filter</code> always starts
+    again from the unfiltered data (<code>res.u_raw</code>), so change <code>res.u_raw</code> if the
+    filter should use your values. Adding or removing vectors or frames is not possible; use the
+    <code>Pairs</code> option of <code>pivlab.analyze</code> or <code>Frames</code> of
+    <code>pivlab.temporal</code>.</p>
+
+    <h2 id="options">Useful options</h2>
+    <ul>
+      <li><code>Verbose=false</code> switches the progress messages of <code>preprocess</code>,
+      <code>analyze</code>, <code>filter</code>, <code>toMetric</code> and <code>saveSession</code> off,
+      e.g. in batch scripts over many folders. Warnings are still shown.</li>
+      <li><code>Roi="none"</code>, <code>Mask="none"</code> (<code>pivlab.preprocess</code>) and
+      <code>VelocityLimits="none"</code> (<code>pivlab.filter</code>) switch off a value that came in
+      through <code>Settings</code>.</li>
+      <li>Filter limits (<code>VelocityLimits</code>, <code>NotchLimits</code>) are in the units the result
+      has at that moment: px/frame before <code>pivlab.toMetric</code>, m/s after it. A warning appears
+      when more than half of the vectors are removed.</li>
+      <li><code>pivlab.analyze</code> warns when you set an option that the chosen algorithm does not use
+      (e.g. <code>Passes</code> with <code>"dcc"</code>, <code>Parallel</code> with <code>"ensemble"</code>).</li>
+    </ul>
 
     <h2 id="settings">Settings</h2>
     <p>Name=value arguments change single settings. To reuse a complete configuration, pass a settings

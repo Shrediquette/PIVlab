@@ -1,8 +1,7 @@
 function s = base_settings()
 %BASE_SETTINGS Complete API settings struct with built-in values.
-%   pivlab.defaults overwrites these values with the ones in PIVlab_settings_default.mat,
-%   i.e. the defaults the PIVlab GUI uses. The values here are only a fallback for settings
-%   that file does not contain.
+%   pivlab.defaults overwrites these values with the defaults of the PIVlab GUI
+%   (gui.default_settings). The values here are only used for API settings without a GUI control.
 
 s.preprocess = struct( ...
     'CLAHE', true, 'CLAHESize', 64, ...

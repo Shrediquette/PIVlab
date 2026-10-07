@@ -31,8 +31,11 @@ if st ~= 0
     error('parity_check:git', 'Could not create a worktree of %s:\n%s', char(ref), out);
 end
 cleanup = onCleanup(@() system(sprintf('git -C "%s" worktree remove --force "%s"', root, worktree)));
-% both GUIs start with the same remembered settings (last folder etc.)
-copyfile(fullfile(root,'PIVlab_settings_default.mat'), fullfile(worktree,'PIVlab_settings_default.mat'), 'f');
+% both GUIs start with the same remembered settings (last folder etc.); PIVlab 4 uses preferences,
+% which parity_run clears for both runs
+if isfile(fullfile(root,'PIVlab_settings_default.mat'))
+    copyfile(fullfile(root,'PIVlab_settings_default.mat'), fullfile(worktree,'PIVlab_settings_default.mat'), 'f');
+end
 
 if iscell(opts.Scenarios)
     scen = ['{' strjoin(cellfun(@(s) ['''' s ''''], opts.Scenarios, 'UniformOutput', false), ',') '}'];

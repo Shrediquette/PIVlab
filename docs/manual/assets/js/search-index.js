@@ -570,6 +570,12 @@ window.MANUAL_SEARCH = [
     title: "Command line — result struct",
     href: "pages/command-line.html", hash: "results",
     section: "Data",
-    text: "result struct x y u v typevector correlation map derived pixel units metric units"
+    text: "result struct x y u v typevector correlation map derived pixel units metric units edit change values by hand"
+  },
+  {
+    title: "Command line — useful options",
+    href: "pages/command-line.html", hash: "options",
+    section: "Data",
+    text: "verbose quiet progress messages none roi mask velocity limits units warning options without effect"
   }
 ];

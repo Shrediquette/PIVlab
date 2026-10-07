@@ -122,8 +122,8 @@
       <tr>
         <td>Contains</td>
         <td>Everything: image references, masks, ROI, calibration, analysis results, and all settings.</td>
-        <td>Only the configuration — algorithm choice, filter thresholds, colours, calibration
-        setup, etc. No images and no results.</td>
+        <td>Only the configuration — all settings of all panels and the calibration (reference
+        distance, time step, axis directions). No images and no results.</td>
       </tr>
       <tr>
         <td>Use it to</td>
@@ -148,10 +148,14 @@
       data</span> panel, or <span class="ui">File → Load → Load PIVlab session</span>. This
       restores images, masks, results and settings exactly as they were.</li>
     </ol>
+    <p>A session brings PIVlab back to where you saved it: the same images, results, masks,
+    calibration and settings, and the same view (open panel, displayed frame, zoom). Camera
+    connections are not restored.</p>
     <div class="note">
-      <strong>Sessions saved with an older PIVlab version</strong>
-      PIVlab warns you if a session file was created by an older release, since the interface
-      may have changed since then and some display issues can result.
+      <strong>Sessions and settings of PIVlab 3.x and older</strong>
+      Session and settings files saved with PIVlab 3.x or older cannot be opened in this version.
+      PIVlab tells you so when you try. Open them in the old version and note the settings, or
+      redo the analysis.
     </div>
 
     <h2 id="settings-saveload">Saving and loading settings only</h2>
@@ -159,16 +163,20 @@
       <li>Save: <span class="ui">File → Save → Save current PIVlab settings</span>. Choose a
       location; the default name includes your username, e.g.
       <code>PIVlab_set_yourname.mat</code>.</li>
-      <li>Load: <span class="ui">File → Load → Import PIVlab settings</span>. This rebuilds the
-      interface to match the saved configuration, but does not touch your currently loaded
-      images or results.</li>
+      <li>Load: <span class="ui">File → Load → Import PIVlab settings</span>. This applies the
+      pre-processing, PIV, data smoothing and vector validation settings, the calibration and the
+      mask generator settings. Display, export and image acquisition settings stay as they are,
+      and so do camera calibration, image rectification and Stereo-PIV mode (they belong to
+      the data of a session). Your loaded images and results are not touched.</li>
+      <li>A settings file can also be a session: <span class="ui">Import PIVlab settings</span>
+      takes the settings out of a session file without loading its images or results.</li>
     </ol>
 
     <div class="tip">
       <strong>PIVlab already remembers a few defaults</strong>
-      PIVlab loads <code>PIVlab_settings_default.mat</code> automatically every time it starts,
-      and a handful of individual choices (e.g. Basic/Advanced mode, the last sequencing style
-      you used) are quietly remembered there as you work. That's not the same as saving your
+      PIVlab starts with its default settings every time, and a handful of individual choices
+      (e.g. Basic/Advanced mode, the last folder, the last sequencing style you used) are quietly
+      remembered as you work. That's not the same as saving your
       whole current configuration, though — use <span class="ui">Save/Load PIVlab
       settings</span> whenever you want a <em>complete, named, reusable</em> configuration you
       can switch between or share.

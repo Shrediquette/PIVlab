@@ -11,6 +11,7 @@ else %calibrated
 		set(handles.extraction_choice_area,'string', {'Vorticity in 1/s';'Magnitude in m/s';'u component in m/s';'v component in m/s';'Divergence in 1/s';'Q criterion in 1/s^2';'Shear rate in 1/s';'Strain rate in 1/s';'Vector direction in degrees';'Correlation coefficient';'Uncertainty in m/s'});
 	end
 end
+gui.apply_pending_popup(handles.extraction_choice_area) %item wanted by a loaded session
 %draw extraction polygon when frame was changed.
 pivlab_axis=gui.retr('pivlab_axis');
 delete(findobj(gui.retr('pivlab_axis'),'tag', 'extractpoint'));

@@ -12,13 +12,13 @@ if size(filepath,1) >1 || gui.retr('video_selection_done') == 1
 	end
 	[img,~]=import.get_img(selected);
 	clahe=get(handles.clahe_enable,'value');
-	highp=get(handles.enable_highpass,'value');
+	highp=get(handles.highpass_enable,'value');
 	%clip=get(handles.enable_clip,'value');
-	intenscap=get(handles.enable_intenscap, 'value');
+	intenscap=get(handles.intenscap_enable, 'value');
 	clahesize=str2double(get(handles.clahe_size, 'string'));
-	highpsize=str2double(get(handles.highp_size, 'string'));
-	wienerwurst=get(handles.wienerwurst, 'value');
-	wienerwurstsize=str2double(get(handles.wienerwurstsize, 'string'));
+	highpsize=str2double(get(handles.highpass_size, 'string'));
+	wienerwurst=get(handles.wiener_enable, 'value');
+	wienerwurstsize=str2double(get(handles.wiener_size, 'string'));
 
 	preproc.Autolimit_Callback
 	minintens=str2double(get(handles.minintens, 'string'));

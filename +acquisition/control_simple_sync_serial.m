@@ -29,8 +29,8 @@ if alreadyconnected
         extdly = -1; % external trigger input delay. -1 disables external trigger
         extskp = 0; %external trigger amount of signals to skip.
     else
-        extdly = gui.retr('selectedtriggerdelay'); % external trigger input delay. -1 disables external trigger
-        extskp = gui.retr('selectedtriggerskip'); %external trigger amount of signals to skip.
+        extdly = gui.camera_setting('selectedtriggerdelay'); % external trigger input delay. -1 disables external trigger
+        extskp = gui.camera_setting('selectedtriggerskip'); %external trigger amount of signals to skip.
     end
     %Camera fps
     ac_fps_value=get(handles.ac_fps,'Value');
@@ -83,17 +83,17 @@ if alreadyconnected
             else
                 camera_sub_type=gui.retr('camera_sub_type');
                 if strcmp(camera_type,'OPTOcam_20_9')
-                    bitmode =gui.retr('OPTOcam_20_9_bits'); %the 20/9 has its own bit depth setting (its timing depends on it!)
+                    bitmode =gui.camera_setting('OPTOcam_20_9_bits'); %the 20/9 has its own bit depth setting (its timing depends on it!)
                 else
-                    bitmode =gui.retr('OPTOcam_bits');
+                    bitmode =gui.camera_setting('OPTOcam_bits');
                 end
                 framerate=str2double(ac_fps_str(ac_fps_value));
                 f1exp_cam=gui.retr('f1exp_cam');
                 [~, pin_string,~,frame_time] = PIVlab_calc_oltsync_timings(camera_type,camera_sub_type,bitmode,framerate,f1exp_cam,pulse_sep,las_percent);
-                triggermode=gui.retr('oltSync_triggermode');
+                triggermode=gui.camera_setting('oltSync_triggermode');
                 if isempty(triggermode)
                     triggermode='internal';
-                    gui.put('oltSync_triggermode',triggermode)
+                    gui.set_camera_setting('oltSync_triggermode',triggermode)
                 end
 
                 if strcmpi(triggermode,'internal')

@@ -18,11 +18,11 @@ if ~isempty(serpo)
 			serial_answer=readline(serpo);
 			%warning on
 			set(handles.ac_enable_ext_trigger,'String',old_label,'Enable','on');
-			selectedtriggerdelay=gui.retr('selectedtriggerdelay');
+			selectedtriggerdelay=gui.camera_setting('selectedtriggerdelay');
 			if isempty(selectedtriggerdelay)
 				selectedtriggerdelay=100;
 			end
-			selectedtriggerskip=gui.retr('selectedtriggerskip');
+			selectedtriggerskip=gui.camera_setting('selectedtriggerskip');
 			if isempty(selectedtriggerskip)
 				selectedtriggerdelay=0;
 			end
@@ -32,8 +32,8 @@ if ~isempty(serpo)
 			definput = {num2str(selectedtriggerdelay),num2str(selectedtriggerskip)};
 			answer = inputdlg(prompt,dlgtitle,dims,definput);
 			if ~isempty(answer)
-				gui.put('selectedtriggerdelay',str2double(answer{1}));
-				gui.put('selectedtriggerskip',str2double(answer{2}));
+				gui.set_camera_setting('selectedtriggerdelay',str2double(answer{1}));
+				gui.set_camera_setting('selectedtriggerskip',str2double(answer{2}));
 			end
 		end
 	end

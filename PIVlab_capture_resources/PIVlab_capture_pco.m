@@ -9,7 +9,7 @@ elseif  strcmpi(TriggerModeString,'oneimage_calibration')
 elseif  strcmpi(TriggerModeString,'oneimage_piv')
     triggermode=0; %internal trigger, dual image (actually only for measuring max acquisition speed)
 end
-panda_filetype=getappdata(hgui,'panda_filetype');
+panda_filetype=gui.camera_setting('panda_filetype');
 if isempty (panda_filetype)
     panda_filetype='Single TIFF';
 end
@@ -232,7 +232,7 @@ subfunc.fh_set_transferparameter(hcam_ptr);
 subfunc.fh_set_pixelrate(hcam_ptr,2);
 
 %Enable or disable timestamps in image
-panda_timestamp=getappdata(hgui,'panda_timestamp');
+panda_timestamp=gui.camera_setting('panda_timestamp');
 if isempty (panda_timestamp)
     panda_timestamp='none';
 end

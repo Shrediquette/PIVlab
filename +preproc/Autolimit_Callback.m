@@ -1,6 +1,6 @@
 function Autolimit_Callback(~, ~, ~)
 handles=gui.gethand;
-if get(handles.Autolimit, 'value') == 1
+if get(handles.autolimit_enable, 'value') == 1
 	filepath=gui.retr('filepath');
 	if size(filepath,1) >1 || gui.retr('video_selection_done') == 1
 		toggler=gui.retr('toggler');

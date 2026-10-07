@@ -90,7 +90,7 @@ item=[0 item(2)+item(4) parentitem(3) 6];
 	item=[parentitem(3)/2 item(2)+item(4)+margin/2 parentitem(3)/2 2];
 	handles.apply_btn = uicontrol(handles.mainpanel,'Style','pushbutton','String','Apply','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@Apply_settings,'tag','apply_btn');
 
-	OPTOcam_bits=retr('OPTOcam_bits');
+	OPTOcam_bits=gui.camera_setting('OPTOcam_bits');
 	if ~isempty(OPTOcam_bits)
 		if OPTOcam_bits == 8
 			set(handles.bitdepth,'Value',1);
@@ -99,7 +99,7 @@ item=[0 item(2)+item(4) parentitem(3) 6];
 		end
 	end
 
-	OPTOcam_gain=retr('OPTOcam_gain');
+	OPTOcam_gain=gui.camera_setting('OPTOcam_gain');
 	if ~isempty(OPTOcam_gain)
 		if OPTOcam_gain == 0
 			set(handles.gain,'Value',1);
@@ -123,9 +123,9 @@ handles=gethand;
 
 bitchoices=get(handles.bitdepth,'String');
 
-put('OPTOcam_bits',str2double(bitchoices{get(handles.bitdepth,'value')}));
+gui.set_camera_setting('OPTOcam_bits',str2double(bitchoices{get(handles.bitdepth,'value')}));
 pause(0.01)
-OPTOcam_bits=retr('OPTOcam_bits');
+OPTOcam_bits=gui.camera_setting('OPTOcam_bits');
 if OPTOcam_bits==8
 	put('min_allowed_interframe',62); %8bit
 	put('blind_time',44);
@@ -137,7 +137,7 @@ end
 
 gainchoices=get(handles.gain,'String');
 
-put('OPTOcam_gain',str2double(gainchoices{get(handles.gain,'value')}));
+gui.set_camera_setting('OPTOcam_gain',str2double(gainchoices{get(handles.gain,'value')}));
 
 
 hgui = getappdata(0,'hgui');

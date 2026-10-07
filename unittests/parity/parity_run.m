@@ -12,21 +12,34 @@ if nargin < 3 || isempty(root)
 end
 if nargin < 2 || isempty(scenarios), scenarios = 'all'; end
 if ~exist(outdir,'dir'), mkdir(outdir); end
-% PIVlab writes into these files / folders while it runs: restore them afterwards
-settings_file = fullfile(root,'PIVlab_settings_default.mat');
-settings_backup = [tempname '.mat'];
-copyfile(settings_file, settings_backup);
+% PIVlab writes into these files / folders / preferences while it runs: restore them afterwards
+settings_file = fullfile(root,'PIVlab_settings_default.mat'); % PIVlab 3.x
+settings_backup = '';
+if isfile(settings_file)
+    settings_backup = [tempname '.mat'];
+    copyfile(settings_file, settings_backup);
+end
+prefs = struct(); % preferences of PIVlab 4 (gui.set_preference): start without them
+if ispref('PIVlab')
+    prefs = getpref('PIVlab');
+    rmpref('PIVlab');
+end
+% same colour theme for every version (PIVlab 3.x: group PIVlab_ad), so screenshots can be compared
+dark_3x = [];
+if ispref('PIVlab_ad','dark_mode_theme'), dark_3x = getpref('PIVlab_ad','dark_mode_theme'); end
+setpref('PIVlab','dark_mode_theme',1);
+setpref('PIVlab_ad','dark_mode_theme',1);
 lic_mex = fullfile(root,'+plot',['fastLICFunction.' mexext]);
 had_mex = isfile(lic_mex);
 fmats = fullfile(root,'+wOFV','Filter matrices');
 had_fmats = isfolder(fmats);
-cleanup = onCleanup(@() restore(settings_backup, settings_file, lic_mex, had_mex, fmats, had_fmats));
+cleanup = onCleanup(@() restore(settings_backup, settings_file, prefs, dark_3x, lic_mex, had_mex, fmats, had_fmats));
 cd(root); addpath(root); addpath(fullfile(here,'mocks'),'-begin');
 setappdata(0,'PIVlabTestMode',true);
 warning('off','all');
 all_sc = {'pair_fft_full','pair_fft_parallel','tr_fft_color','tr_bg_min','algo_dcc','algo_ensemble','algo_ofv', ...
     'fft_variants','preproc_variants','validation_variants','calibration_variants','display_variants', ...
-    'session_settings_roundtrip'};
+    'session_settings_roundtrip','video_import','camera_undistortion','multitiff'};
 if ischar(scenarios) && strcmp(scenarios,'all'), scenarios = all_sc; end
 logf = fopen(fullfile(outdir,'log.txt'),'a');
 fid = fopen(fullfile(outdir,'root.txt'),'w'); fprintf(fid,'%s',root); fclose(fid); % lets parity_compare ignore the folder
@@ -50,10 +63,20 @@ fclose(logf);
 rmpath(fullfile(here,'mocks'));
 end
 
-function restore(settings_backup, settings_file, lic_mex, had_mex, fmats, had_fmats)
+function restore(settings_backup, settings_file, prefs, dark_3x, lic_mex, had_mex, fmats, had_fmats)
 try, close_pivlab(); catch, end
-copyfile(settings_backup, settings_file);
-delete(settings_backup);
+if ~isempty(settings_backup)
+    copyfile(settings_backup, settings_file);
+    delete(settings_backup);
+end
+if ispref('PIVlab'), rmpref('PIVlab'); end
+f = fieldnames(prefs);
+for k = 1:numel(f), setpref('PIVlab', f{k}, prefs.(f{k})); end
+if isempty(dark_3x)
+    if ispref('PIVlab_ad','dark_mode_theme'), rmpref('PIVlab_ad','dark_mode_theme'); end
+else
+    setpref('PIVlab_ad','dark_mode_theme',dark_3x);
+end
 if ~had_mex && isfile(lic_mex)
     clear('mex');
     try, delete(lic_mex); catch, end
@@ -78,7 +101,7 @@ S.cal = cal_snapshot();
 validation(struct());
 S.validated = gui.retr('resultslist');
 % all derived parameters, no smoothing
-h = gui.gethand;
+h = hand();
 set(h.smooth_mode,'Value',1); plot.smooth_mode_Callback(h.smooth_mode);
 for d = 2:13
     rng(0);
@@ -213,18 +236,18 @@ end
 function S = sc_fft_variants(outdir, root)
 start_pivlab(1);
 load_images(jet_paths(root,1), 1);
-h = gui.gethand;
+h = hand();
 variants = {
-    'corrq2',      @() set_popup(h.CorrQuality,2,@piv.CorrQuality)
-    'corrq3',      @() set_popup(h.CorrQuality,3,@piv.CorrQuality)
-    'subpix2',     @() set(h.subpix,'Value',2)
-    'maskauto',    @() set(h.mask_auto_box,'Value',1)
+    'corrq2',      @() set_popup(h.correlation_robustness,2,@piv.CorrQuality)
+    'corrq3',      @() set_popup(h.correlation_robustness,3,@piv.CorrQuality)
+    'subpix2',     @() set(h.subpixel_estimator,'Value',2)
+    'maskauto',    @() set(h.disable_autocorrelation,'Value',1)
     'repeatlast',  @() set_repeat_last(h)
-    'uncertainty', @() set(h.checkbox_uncertainty,'Value',1)
+    'uncertainty', @() set(h.uncertainty_enable,'Value',1)
     };
 for k = 1:size(variants,1)
     configure_piv(1,'threePass');
-    set(h.CorrQuality,'Value',1);
+    set(h.correlation_robustness,'Value',1);
     variants{k,2}();
     S.(variants{k,1}).t = analyze();
     rl = gui.retr('resultslist');
@@ -236,21 +259,21 @@ end
 function S = sc_preproc_variants(outdir, root)
 start_pivlab(1);
 load_images(jet_paths(root,1), 1);
-h = gui.gethand;
+h = hand();
 variants = {'clahe_off','highpass','intenscap','wiener','autolimit_off','all_on'};
 for k = 1:numel(variants)
     set(h.clahe_enable,'Value',1); set(h.clahe_size,'String','64');
-    set(h.enable_highpass,'Value',0); set(h.highp_size,'String','15');
-    set(h.enable_intenscap,'Value',0);
-    set(h.wienerwurst,'Value',0); set(h.wienerwurstsize,'String','15');
-    set(h.Autolimit,'Value',1);
+    set(h.highpass_enable,'Value',0); set(h.highpass_size,'String','15');
+    set(h.intenscap_enable,'Value',0);
+    set(h.wiener_enable,'Value',0); set(h.wiener_size,'String','15');
+    set(h.autolimit_enable,'Value',1);
     switch variants{k}
         case 'clahe_off', set(h.clahe_enable,'Value',0);
-        case 'highpass', set(h.enable_highpass,'Value',1); set(h.highp_size,'String','20');
-        case 'intenscap', set(h.enable_intenscap,'Value',1);
-        case 'wiener', set(h.wienerwurst,'Value',1); set(h.wienerwurstsize,'String','5');
-        case 'autolimit_off', set(h.Autolimit,'Value',0); set(h.minintens,'String','0.05'); set(h.maxintens,'String','0.8');
-        case 'all_on', set(h.enable_highpass,'Value',1); set(h.enable_intenscap,'Value',1); set(h.wienerwurst,'Value',1);
+        case 'highpass', set(h.highpass_enable,'Value',1); set(h.highpass_size,'String','20');
+        case 'intenscap', set(h.intenscap_enable,'Value',1);
+        case 'wiener', set(h.wiener_enable,'Value',1); set(h.wiener_size,'String','5');
+        case 'autolimit_off', set(h.autolimit_enable,'Value',0); set(h.minintens,'String','0.05'); set(h.maxintens,'String','0.8');
+        case 'all_on', set(h.highpass_enable,'Value',1); set(h.intenscap_enable,'Value',1); set(h.wiener_enable,'Value',1);
     end
     configure_piv(1,'twoPass');
     S.(variants{k}).t = analyze();
@@ -276,14 +299,14 @@ S.raw = gui.retr('resultslist');
 calibration(10, 100, 1, 1);
 vars = {
     'default',   struct()
-    'nostdev',   struct('stdev_check',0)
-    'nomedian',  struct('loc_median',0)
+    'nostdev',   struct('stdev_enable',0)
+    'nomedian',  struct('loc_median_enable',0)
     'nointerp',  struct('interpol_missing',0)
     'velrect',   struct('velrect',[-0.002 -0.002 0.004 0.004])
-    'corrfilt',  struct('do_corr2_filter',1,'corr_filter_thresh','0.6')
-    'notch',     struct('notch_filter',1,'notch_L_thresh','-0.001','notch_H_thresh','0.001')
-    'contrast',  struct('do_contrast_filter',1,'contrast_filter_thresh','0.003')
-    'bright',    struct('do_bright_filter',1,'bright_filter_thresh','0.003')
+    'corrfilt',  struct('corr_filter_enable',1,'corr_filter_thresh','0.6')
+    'notch',     struct('notch_enable',1,'notch_L_thresh','-0.001','notch_H_thresh','0.001')
+    'contrast',  struct('contrast_filter_enable',1,'contrast_filter_thresh','0.003')
+    'bright',    struct('bright_filter_enable',1,'bright_filter_thresh','0.003')
     };
 for k = 1:size(vars,1)
     validation(vars{k,2});
@@ -299,7 +322,7 @@ load_images(jet_paths(root,1), 1);
 configure_piv(1,'twoPass');
 analyze();
 validation(struct());
-h = gui.gethand;
+h = hand();
 cases = {
     'normal',   10, 100, 1, 1
     'xflip',    10, 100, 2, 1
@@ -345,7 +368,7 @@ configure_piv(1,'twoPass');
 analyze();
 validation(struct());
 derive_all(2);
-h = gui.gethand;
+h = hand();
 base = control_snapshot();
 V = {
     'default',        {}
@@ -442,7 +465,144 @@ S.controls_settings = control_snapshot();
 S.appdata_settings = appdata_snapshot();
 end
 
+function S = sc_video_import(outdir, root)
+% video file read on the fly (time-resolved), incl. background image from the video
+here = fileparts(mfilename('fullpath'));
+start_pivlab(1);
+vfile = fullfile(root,'Example_data','example_video.mp4');
+setappdata(0,'parity_video_selection', video_selection(vfile, (1:6)'));
+addpath(fullfile(here,'mocks_video'),'-begin');
+try
+    import.loadvideobutton_Callback([],[],[]); drawnow;
+catch err
+    rmpath(fullfile(here,'mocks_video'));
+    rethrow(err);
+end
+rmpath(fullfile(here,'mocks_video'));
+rmappdata(0,'parity_video_selection');
+S.filepath = gui.retr('filepath'); S.filename = gui.retr('filename');
+S.video_frame_selection = gui.retr('video_frame_selection');
+S.expected_image_size = gui.retr('expected_image_size');
+configure_piv(1,'twoPass');
+S.t_analyze = analyze();
+S.raw = gui.retr('resultslist');
+validation(struct());
+S.validated = gui.retr('resultslist');
+derive_all(3);
+S.derived = gui.retr('derived');
+S.ax = axis_snapshot(); S.png = shot(outdir,'video_import');
+background(2);
+S.bg_A = gui.retr('bg_img_A'); S.bg_B = gui.retr('bg_img_B');
+S.t_analyze_bg = analyze();
+S.raw_bg = gui.retr('resultslist');
+end
+
+function S = sc_camera_undistortion(outdir, root)
+% lens undistortion (+ rectification) of the fisheye example images, serial and parallel
+files = cell(8,1);
+for i = 1:4
+    files{2*i-1} = fullfile(root,'Example_data','worst_case_distortion',sprintf('PIVlab_%04d_A.jpg',i-1));
+    files{2*i}   = fullfile(root,'Example_data','worst_case_distortion',sprintf('PIVlab_%04d_B.jpg',i-1));
+end
+for cores = [1 2]
+    if cores == 1, tag = 'serial'; else, tag = 'parallel'; end
+    start_pivlab(cores);
+    load_images(files, 1);
+    set_camera_model(2);   % view 'same'
+    configure_piv(1,'twoPass');
+    S.(tag).t_analyze = analyze();
+    S.(tag).undistorted = gui.retr('resultslist');
+    if cores == 1
+        S.ax_undistorted = axis_snapshot(); S.png_undistorted = shot(outdir,'camera_undistorted');
+        background(2);
+        S.bg_A = gui.retr('bg_img_A'); S.bg_B = gui.retr('bg_img_B');
+        S.(tag).t_analyze_bg = analyze();
+        S.(tag).undistorted_bg = gui.retr('resultslist');
+        h = hand(); set(h.bg_subtract,'Value',1); gui.put('bg_img_A',[]); gui.put('bg_img_B',[]);
+        % rectification: small rotation of the undistorted image
+        a = 3*pi/180;
+        gui.put('rectification_tform', affine2d([cos(a) sin(a) 0; -sin(a) cos(a) 0; 0 0 1]));
+        gui.put('cam_use_rectification',1);
+        S.(tag).t_analyze_rect = analyze();
+        S.(tag).rectified = gui.retr('resultslist');
+        S.ax_rectified = axis_snapshot(); S.png_rectified = shot(outdir,'camera_rectified');
+    end
+end
+end
+
+function S = sc_multitiff(outdir, root)
+% multi-page TIFF files: pairwise over two files, time resolved within one file
+jet = jet_paths(root, 3);
+stack1 = fullfile(outdir,'stack1.tif');
+stack2 = fullfile(outdir,'stack2.tif');
+for k = 1:4
+    if k == 1, mode = 'overwrite'; else, mode = 'append'; end
+    imwrite(imread(jet{k}), stack1, 'WriteMode', mode);
+end
+imwrite(imread(jet{5}), stack2, 'WriteMode', 'overwrite');
+imwrite(imread(jet{6}), stack2, 'WriteMode', 'append');
+start_pivlab(1);
+load_multitiff({stack1; stack2}, 1);
+S.pairwise_filepath = gui.retr('filepath'); S.pairwise_framenum = gui.retr('framenum');
+S.pairwise_filename = gui.retr('filename');
+configure_piv(1,'twoPass');
+S.t_analyze = analyze();
+S.pairwise_raw = gui.retr('resultslist');
+load_multitiff({stack1}, 0);
+S.tr_filepath = gui.retr('filepath'); S.tr_framenum = gui.retr('framenum');
+S.t_analyze_tr = analyze();
+S.tr_raw = gui.retr('resultslist');
+end
+
 %% ===================== GUI helpers =====================
+function sel = video_selection(vfile, frames)
+% what the "Import" button of the video import dialog (import.vid_import) stores for these frames
+[vpath, vname, vext] = fileparts(vfile);
+video_pathname = [vpath filesep];
+filename = [vname vext];
+out = frames(1);
+for i = 2:numel(frames)
+    out(end+1,1) = frames(i); %#ok<AGROW>
+    out(end+1,1) = frames(i); %#ok<AGROW>
+end
+out(end) = [];
+if mod(numel(out),2) == 1
+    out(end) = [];
+end
+sel.filename = cell(numel(out),1);
+sel.filepath = cell(numel(out),1);
+for j = 1:numel(out)
+    if mod(j,2) == 1
+        sel.filename{j} = ['A:[' int2str(out(j)) ']' filename];
+    else
+        sel.filename{j} = ['B:[' int2str(out(j)) ']' filename];
+    end
+    sel.filepath{j} = fullfile(video_pathname, filename);
+end
+sel.pathname = video_pathname;
+sel.video_frame_selection = out;
+end
+
+function set_camera_model(viewtype)
+% strong barrel distortion, similar to the fisheye lens of the worst_case_distortion images
+sz = gui.retr('expected_image_size');
+f = 0.9*sz(2);
+K = [f 0 sz(2)/2; 0 f sz(1)/2; 0 0 1];
+cp = cameraParameters('K', K, 'RadialDistortion', [-0.25 0.06], 'ImageSize', sz);
+h = hand();
+h.calib_viewtype.Value = viewtype;
+gui.put('cameraParams', cp);
+gui.put('cam_use_calibration', 1);
+gui.put('cam_use_rectification', 0);
+gui.put('cam_use_tilted_model', false);
+end
+
+function load_multitiff(paths, sequencer)
+gui.put('sequencer',sequencer); gui.put('multitiff',1); gui.put('video_selection_done',0);
+ps = struct('name',paths(:),'isdir',num2cell(false(numel(paths),1)));
+import.loadimgsbutton_Callback([],[],0,ps); drawnow;
+end
+
 function start_pivlab(cores)
 close_pivlab();
 PIVlab_GUI(cores); drawnow;
@@ -495,22 +655,22 @@ gui.put('masks_in_frame',m);
 end
 
 function background(mode)
-h = gui.gethand;
+h = hand();
 gui.quick3_Callback([],[]);
 set(h.bg_subtract,'Value',mode);
 preproc.generate_BG_img(); drawnow;
 end
 
 function configure_piv(algo, passMode)
-h = gui.gethand;
+h = hand();
 gui.quick4_Callback([],[]);
 set(h.algorithm_selection,'Value',algo);
 piv.algorithm_selection_Callback(h.algorithm_selection,[],[]);
-set(h.intarea,'String','64'); piv.intarea_Callback(h.intarea,[],[]);
-set(h.step,'String','32'); piv.step_Callback(h.step,[],[]);
-set(h.subpix,'Value',1);
+set(h.pass1_size,'String','64'); piv.intarea_Callback(h.pass1_size,[],[]);
+set(h.pass1_step,'String','32'); piv.step_Callback(h.pass1_step,[],[]);
+set(h.subpixel_estimator,'Value',1);
 n = find(strcmp(passMode,{'singlePass','twoPass','threePass','fourPass'}));
-cb = {h.checkbox26,h.checkbox27,h.checkbox28}; ed = {h.edit50,h.edit51,h.edit52};
+cb = {h.pass2_enable,h.pass3_enable,h.pass4_enable}; ed = {h.pass2_size,h.pass3_size,h.pass4_size};
 fn = {@piv.pass2_checkbox_Callback,@piv.pass3_checkbox_Callback,@piv.pass4_checkbox_Callback};
 vals = {'32','16','16'};
 for k = 1:3
@@ -521,14 +681,14 @@ drawnow;
 end
 
 function t = analyze()
-h = gui.gethand;
+h = hand();
 gui.quick5_Callback([],[]); drawnow;
 set(h.update_display_checkbox,'Value',0);
 t0 = tic; piv.AnalyzeAll_Callback([],[],[]); drawnow; t = toc(t0);
 end
 
 function calibration(realdist, time, xdir, ydir)
-h = gui.gethand;
+h = hand();
 gui.quick6_Callback([],[]);
 gui.put('pointscali',[10 10; 110 10]);
 set(h.realdist,'String',num2str(realdist));
@@ -538,9 +698,9 @@ calibrate.apply_cali_Callback([],[],[]); drawnow;
 end
 
 function validation(opts)
-h = gui.gethand;
-d = struct('stdev_check',1,'stdev_thresh','7','loc_median',1,'loc_med_thresh','3','interpol_missing',1, ...
-    'do_corr2_filter',0,'notch_filter',0,'do_contrast_filter',0,'do_bright_filter',0);
+h = hand();
+d = struct('stdev_enable',1,'stdev_thresh','7','loc_median_enable',1,'loc_med_thresh','3','interpol_missing',1, ...
+    'corr_filter_enable',0,'notch_enable',0,'contrast_filter_enable',0,'bright_filter_enable',0);
 f = fieldnames(opts);
 for k = 1:numel(f), d.(f{k}) = opts.(f{k}); end
 gui.put('velrect',[]);
@@ -553,7 +713,7 @@ validate.apply_filter_all_Callback([],[],[]); drawnow;
 end
 
 function derive_all(d)
-h = gui.gethand;
+h = hand();
 plot.derivs_Callback([],[],[]);
 set(h.derivchoice,'Value',d); plot.derivchoice_Callback(h.derivchoice);
 plot.apply_deriv_all_Callback([],[],[]); drawnow;
@@ -561,10 +721,39 @@ select_frame(1);
 end
 
 function select_frame(fr)
-h = gui.gethand;
+h = hand();
 set(h.fileselector,'Value',fr);
 gui.fileselector_Callback(h.fileselector,[],[]);
 gui.sliderdisp(gui.retr('pivlab_axis')); drawnow;
+end
+
+function h = hand()
+% handles of the PIVlab window. Older PIVlab versions (before the Tag renaming) get the
+% current names as additional fields, so the same scenarios run on both versions.
+h = gui.gethand;
+R = tag_renames();
+for k = 1:numel(R.old)
+    if ~isfield(h, R.new{k}) && isfield(h, R.old{k})
+        h.(R.new{k}) = h.(R.old{k});
+    end
+end
+end
+
+function R = tag_renames()
+% old and new Tags of the renamed controls (tag_renames.csv)
+persistent T
+if isempty(T)
+    here = fileparts(mfilename('fullpath'));
+    lines = readlines(fullfile(here, 'tag_renames.csv'));
+    T.old = {}; T.new = {};
+    for k = 2:numel(lines)
+        p = split(strtrim(lines(k)), ',');
+        if numel(p) == 2
+            T.old{end+1} = char(p(1)); T.new{end+1} = char(p(2));
+        end
+    end
+end
+R = T;
 end
 
 function set_popup(hc, val, cb)
@@ -573,12 +762,12 @@ try, cb(hc,[],[]); catch, end
 end
 
 function set_repeat_last(h)
-set(h.repeat_last,'Value',1); set(h.edit52x,'String','0.025');
+set(h.repeat_last_enable,'Value',1); set(h.repeat_last_threshold,'String','0.025');
 end
 
 function reset_variant(h)
-set(h.CorrQuality,'Value',1); set(h.subpix,'Value',1); set(h.mask_auto_box,'Value',0);
-set(h.repeat_last,'Value',0); set(h.checkbox_uncertainty,'Value',0);
+set(h.correlation_robustness,'Value',1); set(h.subpixel_estimator,'Value',1); set(h.disable_autocorrelation,'Value',0);
+set(h.repeat_last_enable,'Value',0); set(h.uncertainty_enable,'Value',0);
 end
 
 function set_control(hc, val)
@@ -590,7 +779,7 @@ end
 end
 
 function s = get_string_safe(tag)
-h = gui.gethand;
+h = hand();
 if isfield(h,tag), s = get(h.(tag),'String'); else, s = ''; end
 end
 
@@ -626,10 +815,13 @@ end
 function C = control_snapshot()
 hgui = getappdata(0,'hgui');
 c = findall(hgui,'Type','uicontrol');
+R = tag_renames();
 C = struct();
 for k = 1:numel(c)
     t = get(c(k),'Tag');
     if isempty(t) || ~isvarname(t), continue; end
+    idx = find(strcmp(R.old, t), 1);
+    if ~isempty(idx), t = R.new{idx}; end % older PIVlab: store under the current Tag
     C.(t) = struct('String',{get(c(k),'String')},'Value',get(c(k),'Value'),'Visible',char(string(get(c(k),'Visible'))), ...
         'Enable',char(string(get(c(k),'Enable'))));
 end
@@ -637,7 +829,7 @@ end
 
 function restore_controls(C)
 hgui = getappdata(0,'hgui');
-h = gui.gethand;
+h = hand();
 f = fieldnames(C);
 for k = 1:numel(f)
     if ~isfield(h,f{k}), continue; end

@@ -20,6 +20,6 @@ else
         %reset roi too
         ac_ROI_general=[];
         gui.put('ac_ROI_general',ac_ROI_general);
-        save('PIVlab_settings_default.mat','ac_ROI_general','-append');
+        gui.set_preference('ac_ROI_general',ac_ROI_general);
     end
 end

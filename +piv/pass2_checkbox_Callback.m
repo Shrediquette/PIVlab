@@ -1,18 +1,9 @@
 function pass2_checkbox_Callback(hObject, ~, ~)
 handles=gui.gethand;
-if get(hObject,'Value') == 0
-	set(handles.edit50,'enable','off')
-	set(handles.edit51,'enable','off')
-	set(handles.edit52,'enable','off')
-	set(handles.checkbox27,'value',0)
-	set(handles.checkbox28,'value',0)
-	set(handles.repeat_last,'Value',0)
-	set(handles.repeat_last,'Enable','off')
-	set(handles.edit52x,'Enable','off')
-else
-	set(handles.edit50,'enable','on')
-	set(handles.repeat_last,'Enable','on')
-	set(handles.edit52x,'Enable','on')
+if get(hObject,'Value') == 0 %without pass 2 there is no pass 3 and 4
+	set(handles.pass3_enable,'value',0)
+	set(handles.pass4_enable,'value',0)
+	set(handles.repeat_last_enable,'Value',0)
 end
+gui.update_dependent_controls(handles)
 piv.dispinterrog
-

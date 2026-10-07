@@ -8,9 +8,9 @@ options = weboptions('MediaType','application/json','HeaderFields',{'Content-Typ
 ima_nr=0;
 
 hgui=getappdata(0,'hgui');
-resx=getappdata(hgui,'Chronos_resx');
-resy=getappdata(hgui,'Chronos_resy');
-bitdepth=getappdata(hgui,'Chronos_bits');
+resx=gui.camera_setting('Chronos_resx');
+resy=gui.camera_setting('Chronos_resy');
+bitdepth=gui.camera_setting('Chronos_bits');
 
 %% Get data from main GUI
 hgui=getappdata(0,'hgui');

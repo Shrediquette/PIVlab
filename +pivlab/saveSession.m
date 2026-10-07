@@ -1,9 +1,13 @@
-function saveSession(res, file)
+function saveSession(res, file, opts)
 %SAVESESSION Save results as a PIVlab session that can be opened (and changed) in the PIVlab GUI.
 %   pivlab.saveSession(res, file) writes the image list, the pre-processing / analysis / filter
 %   settings, the calibration, the raw, validated and smoothed vector fields, the masks and the
 %   region of interest of res into a PIVlab session file ("File -> Load session" in PIVlab).
 %   The image files must still exist when the session is opened in the GUI.
+%   Values you changed by hand in res.u / res.v are saved as the validated data.
+%
+%   Name=value options
+%   Verbose   true (default) / false: print the file name
 %
 %   Example
 %       res = pivlab.filter(pivlab.analyze(imgs));
@@ -14,6 +18,11 @@ function saveSession(res, file)
 arguments
     res (1,1) struct
     file {mustBeTextScalar}
+    opts.Verbose (1,1) logical = true
+end
+[res, edited] = take_user_edits(res);
+if edited.filtered
+    res.filtered = true;   % hand-edited values are stored as validated data (resultslist rows 7-9)
 end
 file = char(file);
 [folder, name, ext] = fileparts(file);
@@ -21,14 +30,19 @@ if isempty(ext), ext = '.mat'; end
 if isempty(folder), folder = pwd; end
 file = fullfile(folder, [name ext]);
 
-V = settings_to_gui_vars(res.settings);
-V.calxy = res.calibration.calxy; V.calu = res.calibration.calu; V.calv = res.calibration.calv;
-V.offset_x_true = res.calibration.offset_x_true; V.offset_y_true = res.calibration.offset_y_true;
-V.x_axis_direction = res.calibration.x_axis_direction; V.y_axis_direction = res.calibration.y_axis_direction;
-V.realdist_string = num2str(res.calibration.realdist);
-V.time_inp_string = num2str(res.calibration.time_inp);
-V.pointscali = res.calibration.pointscali;
-V.displacement_only = double(res.calibration.displacement_only);
+% settings (in the types of the GUI settings) and session data, see export.write_session_file
+G = api_to_gui_settings(res.settings);
+cal = res.calibration;
+G.calibration.x_axis_direction = cal.x_axis_direction;
+G.calibration.y_axis_direction = cal.y_axis_direction;
+G.calibration.realdist = cal.realdist;
+G.calibration.time_inp = cal.time_inp;
+G.calibration_data.pointscali = cal.pointscali;
+V = struct();
+V.calxy = cal.calxy; V.calu = cal.calu; V.calv = cal.calv;
+V.offset_x_true = cal.offset_x_true; V.offset_y_true = cal.offset_y_true;
+V.pointscali = cal.pointscali;
+V.displacement_only = double(cal.displacement_only);
 
 imgs = res.images;
 p = res.px;
@@ -96,19 +110,17 @@ V.ismean = double(res.isMean(:));
 V.video_selection_done = 0;
 V.expected_image_size = imgs.imageSize;
 V.size_of_the_image = imgs.imageSize;
-[V.pathname, ~] = fileparts(filepath{1});
-V.sessionpath = [folder filesep];
 
 %% pre-processing, masks, region of interest
 V.roirect = [];
 if ~isempty(imgs.preprocess) && isfield(imgs.preprocess,'Roi')
     V.roirect = imgs.preprocess.Roi;
 end
-V.bg_img_A = []; V.bg_img_B = []; V.bg_mode = 1;
+V.bg_img_A = []; V.bg_img_B = []; G.analysis.bg_subtract = 1;
 if ~isempty(imgs.background)
     V.bg_img_A = imgs.background.A;
     V.bg_img_B = imgs.background.B;
-    V.bg_mode = 2 + double(imgs.background.mode == "min");
+    G.analysis.bg_subtract = 2 + double(imgs.background.mode == "min");
 end
 V.masks_in_frame = session_masks(res, n);
 V.velrect = [];
@@ -121,13 +133,12 @@ end
 V.derived = [];
 V.displaywhat = 1;
 V.subtr_u = 0; V.subtr_v = 0;
-V.toggler = 0;
 V.manualdeletion = [];
-V.wasdisabled = zeros(0,1,'uint8');   % no saved enable state: PIVlab keeps its current one
-V.PathName = [folder filesep];
-V.FileName = [name ext];
-save(file, '-struct', 'V', '-v7.3');
-fprintf('Session saved: %s\n', file);
+view = struct('panel', '', 'frame', 1, 'toggler', 0, 'xzoomlimit', [], 'yzoomlimit', [], 'ui_mode', '');
+export.write_session_file(file, G, V, view);
+if opts.Verbose
+    fprintf('Session saved: %s\n', file);
+end
 end
 
 function M = session_masks(res, n)

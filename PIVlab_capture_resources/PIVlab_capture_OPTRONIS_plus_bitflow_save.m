@@ -67,7 +67,7 @@ figure(oldhandle)
 
     timestamp=nan(nr_of_images*2,1);
 
-    OPTRONIS_counter = gui.retr('OPTRONIS_counter');
+    OPTRONIS_counter = gui.camera_setting('OPTRONIS_counter');
     if isempty(OPTRONIS_counter)
         OPTRONIS_counter=0;
     end

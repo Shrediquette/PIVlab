@@ -4,7 +4,7 @@ resultslist=gui.retr('resultslist');
 frame=floor(get(handles.fileselector, 'value'));
 if size(resultslist,2)>=frame
 	%image-based filtering
-	set(handles.do_contrast_filter, 'value',1);
+	set(handles.contrast_filter_enable, 'value',1);
 	%do_contrast_filter=1
 	selected=2*floor(get(handles.fileselector, 'value'))-1;
 	x=resultslist{1,frame};

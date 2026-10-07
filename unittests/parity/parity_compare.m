@@ -82,10 +82,10 @@ end
 function x = normalize(x, d, r)
 % replace run-folder paths and random tempname ids, so they do not count as differences
 if ischar(x) && size(x,1) <= 1
-    x = strrep(strrep(x, d, '<RUN>'), r, '<ROOT>');
+    x = replace_folders(x, d, r);
     x = regexprep(x, '^tp[0-9a-f]{8}_[0-9a-f_]+$', '<TEMPNAME>');
 elseif isstring(x)
-    x = strrep(strrep(x, d, '<RUN>'), r, '<ROOT>');
+    x = replace_folders(x, d, r);
 elseif iscell(x)
     for i = 1:numel(x), x{i} = normalize(x{i}, d, r); end
 elseif isstruct(x)
@@ -120,4 +120,10 @@ function r = run_root(d)
 r = '<no root.txt in this run folder>';
 f = fullfile(d,'root.txt');
 if isfile(f), r = strtrim(fileread(f)); end
+end
+
+function x = replace_folders(x, d, r)
+% the run folder and the PIVlab folder, written with / or \ (file lists use \ on Windows)
+x = strrep(x, d, '<RUN>'); x = strrep(x, strrep(d,'/','\'), '<RUN>'); x = strrep(x, strrep(d,'\','/'), '<RUN>');
+x = strrep(x, r, '<ROOT>'); x = strrep(x, strrep(r,'/','\'), '<ROOT>'); x = strrep(x, strrep(r,'\','/'), '<ROOT>');
 end

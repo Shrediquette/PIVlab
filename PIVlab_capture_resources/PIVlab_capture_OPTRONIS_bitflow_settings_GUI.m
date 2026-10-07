@@ -55,7 +55,7 @@ if isempty(fh)
         warning off
         hwinf = imaqhwinfo; %#ok<NASGU>
         %warning on
-        bitmode=retr('OPTRONIS_bits');
+        bitmode=gui.camera_setting('OPTRONIS_bits');
         if isempty(bitmode) || ~isnumeric(bitmode)
             bitmode=8;
         end
@@ -133,7 +133,7 @@ if isempty(fh)
     item=[parentitem(3)/2 item(2)+item(4)+margin/4 parentitem(3)/2 2];
     handles.apply_btn = uicontrol(handles.mainpanel,'Style','pushbutton','String','Apply','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@Apply_settings,'tag','apply_btn');
 
-    OPTRONIS_bits=retr('OPTRONIS_bits');
+    OPTRONIS_bits=gui.camera_setting('OPTRONIS_bits');
     if ~isempty(OPTRONIS_bits)
         if OPTRONIS_bits == 8
             set(handles.bitdepth,'Value',1);
@@ -142,12 +142,12 @@ if isempty(fh)
         end
     end
 
-    OPTRONIS_gain=retr('OPTRONIS_gain');
+    OPTRONIS_gain=gui.camera_setting('OPTRONIS_gain');
     if isempty(OPTRONIS_gain)
         OPTRONIS_gain=1;
     end
 
-    OPTRONIS_counter=retr('OPTRONIS_counter');
+    OPTRONIS_counter=gui.camera_setting('OPTRONIS_counter');
     if isempty(OPTRONIS_counter)
         OPTRONIS_counter=1;
     end
@@ -159,7 +159,7 @@ if isempty(fh)
             set(handles.counter,'Value',2);
         end
     end
-    put('OPTRONIS_counter',OPTRONIS_counter);
+    gui.set_camera_setting('OPTRONIS_counter',OPTRONIS_counter);
 
     if ~isempty(OPTRONIS_gain)
         if OPTRONIS_gain == 1
@@ -170,7 +170,7 @@ if isempty(fh)
             set(handles.gain,'Value',3);
         end
     end
-    put('OPTRONIS_gain',OPTRONIS_gain);
+    gui.set_camera_setting('OPTRONIS_gain',OPTRONIS_gain);
 
 else
     figure(fh)
@@ -181,16 +181,16 @@ fh = findobj('tag', 'OPTRONIS_control_window');
 handles=gethand;
 
 bitchoices=get(handles.bitdepth,'String');
-put('OPTRONIS_bits',str2double(bitchoices{get(handles.bitdepth,'value')}));
+gui.set_camera_setting('OPTRONIS_bits',str2double(bitchoices{get(handles.bitdepth,'value')}));
 pause(0.01)
 gainchoices=get(handles.gain,'String');
-put('OPTRONIS_gain',str2double(gainchoices{get(handles.gain,'value')}));
+gui.set_camera_setting('OPTRONIS_gain',str2double(gainchoices{get(handles.gain,'value')}));
 
 counterchoices=get(handles.counter,'String');
 if strcmpi(counterchoices{get(handles.counter,'value')},'off')
-    put('OPTRONIS_counter',0)
+    gui.set_camera_setting('OPTRONIS_counter',0)
 elseif strcmpi(counterchoices{get(handles.counter,'value')},'on')
-    put('OPTRONIS_counter',1)
+    gui.set_camera_setting('OPTRONIS_counter',1)
 end
 close(fh)
 

@@ -16,9 +16,12 @@ function res = toMetric(res, opts)
 %   Origin          pixel position [x y] of the coordinate origin (default: top left image corner)
 %   XAxis           "right" (default) or "left": direction in which x increases
 %   YAxis           "down" (default, image convention) or "up": direction in which y increases
+%   Verbose         true (default) / false: print the calibration factor
 %   Settings        settings struct from pivlab.loadSettings (uses its calibration)
 %
 %   The conversion can be repeated: it always starts from the pixel data in res.px.
+%   Values you changed by hand in res.u / res.v before are kept (converted to the new units).
+%   Filter limits (pivlab.filter, VelocityLimits) are always in the units res has at that time.
 %
 %   Example
 %       res = pivlab.toMetric(res, DeltaT=0.001, PxPerMeter=1234, YAxis="up");
@@ -32,8 +35,10 @@ arguments
     opts.Origin = []
     opts.XAxis {mustBeTextScalar} = "right"
     opts.YAxis {mustBeTextScalar} = "down"
+    opts.Verbose (1,1) logical = true
     opts.Settings struct = struct()
 end
+res = take_user_edits(res);
 has_scale = ~isempty(opts.PxPerMeter) || ~isempty(opts.ReferenceDistance);
 if ~has_scale && isempty(opts.DeltaT)
     % calibration from Settings
@@ -76,7 +81,9 @@ cal.displacement_only = logical(cal.displacement_only);
 res.calibration = orderfields_like(cal, res.calibration);
 res.derived = struct();
 res = refresh_units(res);
-fprintf('Calibration: %.6g m/px, units are now %s.\n', cal.calxy, res.units);
+if opts.Verbose
+    fprintf('Calibration: %.6g m/px, units are now %s.\n', cal.calxy, res.units);
+end
 end
 
 function c = orderfields_like(c, ref)

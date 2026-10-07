@@ -1,17 +1,18 @@
 # GUI parity check
 
 Checks that a code change does not alter what the PIVlab GUI computes or shows.
-The GUI is driven through 13 scripted scenarios (pairwise and time-resolved images, FFT / DCC /
+The GUI is driven through 16 scripted scenarios (pairwise and time-resolved images, FFT / DCC /
 ensemble / optical flow, serial and parallel, ROI, masks, background subtraction, validation
 filters, calibration with flipped axes, all derived quantities, smoothing, temporal statistics,
-about 30 display settings, session and settings save / load). Every number is stored, and a
+about 30 display settings, session and settings save / load, video import, camera lens
+undistortion and rectification, multi-page TIFF files). Every number is stored, and a
 screenshot of the PIVlab window is taken at the interesting points.
 
 ## Usage (in MATLAB, from the PIVlab folder)
 
 ```matlab
 addpath unittests/parity
-parity_check            % working copy vs. HEAD (about 20 minutes)
+parity_check            % working copy vs. HEAD (about 30 minutes)
 parity_check("v3.13")   % working copy vs. another revision
 ```
 
@@ -38,9 +39,14 @@ parity_compare(dirA, dirB)            % compare two runs
 Notes
 
 * Run the scenarios in a fresh MATLAB without an open PIVlab window.
-* PIVlab writes into `PIVlab_settings_default.mat` and creates the LIC MEX file and the wOFV
-  filter matrices while the scenarios run; `parity_run` restores / removes them afterwards.
-* `mocks/` contains `uigetfile` / `uiputfile` replacements for the file dialogs. The folder is
-  only on the path while `parity_run` runs.
+* PIVlab stores preferences (MATLAB preferences of the group `PIVlab`; PIVlab 3.x: the file
+  `PIVlab_settings_default.mat`) and creates the LIC MEX file and the wOFV filter matrices while
+  the scenarios run. `parity_run` starts without the preferences and restores / removes all of it
+  afterwards.
+* Session and settings files of PIVlab 3.x cannot be read by PIVlab 4: comparing with a 3.x
+  reference, `api_vs_gui_more` skips the part that reads the files saved by the reference GUI.
+* `mocks/` contains `uigetfile` / `uiputfile` replacements for the file dialogs, `mocks_video/`
+  a `uiwait` replacement that fills in the video import dialog. These folders are only on the path
+  while `parity_run` (resp. its video scenario) runs.
 * Optical flow is not part of the API comparison: `pivlab.analyze(Algorithm="ofv")` uses the correct
   per-image intensity stretch, the GUI's wOFV loop does not (known GUI bug).
