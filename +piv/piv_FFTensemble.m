@@ -278,6 +278,7 @@ image2 = preproc.PIVlab_preproc( ...
             handles=guihandles(getappdata(0,'hgui'));
             GUI_avail=1;
             hgui=getappdata(0,'hgui');
+            pivlab_axis=getappdata(hgui, 'pivlab_axis'); %display axis (may be on the second monitor)
             cancel=getappdata(hgui, 'cancel');
             if cancel == 1
                 break
@@ -450,21 +451,20 @@ image2 = preproc.PIVlab_preproc( ...
         if skippy ==0
             [xtable,ytable,utable, vtable] = peakfinding (result_conv_ensemble, mask, interrogationarea,minix,step,maxix,miniy,maxiy,SubPixOffset,ss1,subpixfinder);
             if verLessThan('matlab','8.4')
-                delete (findobj(getappdata(0,'hgui'),'type', 'hggroup'))
+                delete (findobj(pivlab_axis,'type', 'hggroup'))
             else
-                delete (findobj(getappdata(0,'hgui'),'type', 'quiver'))
+                delete (findobj(pivlab_axis,'type', 'quiver'))
             end
             %magnitude-colored vectors are line objects, not quivers
-            delete (findobj(getappdata(0,'hgui'),'Tag', 'pivlab_vector'))
-            hold on;
+            delete (findobj(pivlab_axis,'Tag', 'pivlab_vector'))
+            hold(pivlab_axis,'on');
             vecscale=str2double(get(handles.vectorscale,'string'));
-            %Problem: wenn colorbar an, zï¿½hlt das auch als aexes...
-            colorbar('off')
+            colorbar(pivlab_axis,'off')
 
             %u_table original gibts nicjt, braichts auch nicht...
-            quiver ((findobj(getappdata(0,'hgui'),'type', 'axes')),xtable(isnan(utable)==0)+xroi-interrogationarea/2,ytable(isnan(utable)==0)+yroi-interrogationarea/2,utable(isnan(utable)==0)*vecscale,vtable(isnan(utable)==0)*vecscale,'Color', [1-(from_total / total_analyses_amount) (from_total / total_analyses_amount) 0.15],'autoscale','off')
+            quiver (pivlab_axis,xtable(isnan(utable)==0)+xroi-interrogationarea/2,ytable(isnan(utable)==0)+yroi-interrogationarea/2,utable(isnan(utable)==0)*vecscale,vtable(isnan(utable)==0)*vecscale,'Color', [1-(from_total / total_analyses_amount) (from_total / total_analyses_amount) 0.15],'autoscale','off')
             %quiver ((findobj(getappdata(0,'hgui'),'type', 'axes')),xtable(isnan(utable)==1)+xroi-interrogationarea/2,ytable(isnan(utable)==1)+yroi-interrogationarea/2,utable(isnan(utable)==1)*vecscale,vtable(isnan(utable)==1)*vecscale,'Color',[0.7 0.15 0.15], 'autoscale','off')
-            hold off
+            hold(pivlab_axis,'off')
             drawnow;
         end
         if skippy <10
@@ -630,22 +630,21 @@ image2 = preproc.PIVlab_preproc( ...
                 end
                 if skippy ==0
                     if verLessThan('matlab','8.4')
-                        delete (findobj(getappdata(0,'hgui'),'type', 'hggroup'))
+                        delete (findobj(pivlab_axis,'type', 'hggroup'))
                     else
-                        delete (findobj(getappdata(0,'hgui'),'type', 'quiver'))
+                        delete (findobj(pivlab_axis,'type', 'quiver'))
                     end
                     %magnitude-colored vectors are line objects, not quivers
-                    delete (findobj(getappdata(0,'hgui'),'Tag', 'pivlab_vector'))
-                    hold on;
+                    delete (findobj(pivlab_axis,'Tag', 'pivlab_vector'))
+                    hold(pivlab_axis,'on');
                     vecscale=str2double(get(handles.vectorscale,'string'));
-                    %Problem: wenn colorbar an, zï¿½hlt das auch als aexes...
-                    colorbar('off')
-                    quiver ((findobj(getappdata(0,'hgui'),'type', 'axes')),xtable(isnan(utable)==0)+xroi-interrogationarea/2,ytable(isnan(utable)==0)+yroi-interrogationarea/2,utable(isnan(utable)==0)*vecscale,vtable(isnan(utable)==0)*vecscale,'Color', [1-(from_total / total_analyses_amount) (from_total / total_analyses_amount) 0.15],'autoscale','off')
+                    colorbar(pivlab_axis,'off')
+                    quiver (pivlab_axis,xtable(isnan(utable)==0)+xroi-interrogationarea/2,ytable(isnan(utable)==0)+yroi-interrogationarea/2,utable(isnan(utable)==0)*vecscale,vtable(isnan(utable)==0)*vecscale,'Color', [1-(from_total / total_analyses_amount) (from_total / total_analyses_amount) 0.15],'autoscale','off')
 
                     %                    quiver ((findobj(getappdata(0,'hgui'),'type', 'axes')),xtable(isnan(utable)==0)+xroi-interrogationarea/2,ytable(isnan(utable)==0)+yroi-interrogationarea/2,utable_orig(isnan(utable)==0)*vecscale,vtable_orig(isnan(utable)==0)*vecscale,'Color', [0.15 0.7 0.15],'autoscale','off')
                     %quiver ((findobj(getappdata(0,'hgui'),'type', 'axes')),xtable(isnan(utable)==1)+xroi-interrogationarea/2,ytable(isnan(utable)==1)+yroi-interrogationarea/2,utable_orig(isnan(utable)==1)*vecscale,vtable_orig(isnan(utable)==1)*vecscale,'Color',[0.7 0.15 0.15], 'autoscale','off')
                     drawnow
-                    hold off
+                    hold(pivlab_axis,'off')
                 end
             end
             %replace nans

@@ -165,12 +165,12 @@ if ok==1
 		end
 	else %user pressed cancel, no results
 		if verLessThan('matlab','8.4')
-			delete (findobj(getappdata(0,'hgui'),'type', 'hggroup'))
+			delete (findobj(gui.retr('pivlab_axis'),'type', 'hggroup'))
 		else
-			delete (findobj(getappdata(0,'hgui'),'type', 'quiver'))
+			delete (findobj(gui.retr('pivlab_axis'),'type', 'quiver'))
 		end
 		%magnitude-colored vectors are line objects, not quivers
-		delete (findobj(getappdata(0,'hgui'),'Tag', 'pivlab_vector'))
+		delete (findobj(gui.retr('pivlab_axis'),'Tag', 'pivlab_vector'))
 		%delete(findobj('tag', 'annoyingthing'));
 		set(handles.overall, 'string' , ['Total progress: ' int2str(100) '%'])
 		set(handles.totaltime, 'String','Time left: N/A');
