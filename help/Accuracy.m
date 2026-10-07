@@ -4,114 +4,16 @@ close all;clear all; clc;drawnow
 addpath(fileparts(fileparts(mfilename('fullpath'))));
 
 %% Generate random artificial particle images
-size=600;
+img_size=600;
 partAm=120000;
-Z=0.333; %0.25 sheet thickness
-dt=3; %particle diameter
-ddt=0; %particle diameter variation
+Z=0.333; %sheet thickness
 disp(['Generating random artificial PIV images with ' num2str(partAm) ' particles...'])
-[v,u] = meshgrid(-size/2:1:size/2-1,-size/2:1:size/2-1);
-u=u/max(max(u));
-v=-v/max(max(v));
-u=u*5;
-v=v*5;
-[x,y]=meshgrid(1:1:size);
-i=[];
-j=[];
-sizey=size;
-sizex=size;
-A=zeros(sizey,sizex);
-B=A;
-z0_pre=randn(partAm,1); %normal distributed sheet intensity
-randn('state', sum(100*clock)); %#ok<*RAND>
-z1_pre=randn(partAm,1); %normal distributed sheet intensity
-
-z_move=0; %out-of-plane-movement
-
-z0=z0_pre*(z_move/200+0.5)+z1_pre*(1-((z_move/200+0.5)));
-z1=z1_pre*(z_move/200+0.5)+z0_pre*(1-((z_move/200+0.5)));
-
-I0=255*exp(-(Z^2./(0.125*z0.^2))); %particle intensity
-I0(I0>255)=255;
-I0(I0<0)=0;
-
-I1=255*exp(-(Z^2./(0.125*z1.^2))); %particle intensity
-I1(I1>255)=255;
-I1(I1<0)=0;
-
-randn('state', sum(100*clock));
-d=randn(partAm,1)/2; %particle diameter distribution
-d=dt+d*ddt;
-d(d<0)=0;
-rand('state', sum(100*clock));
-x0=rand(partAm,1)*sizex;
-y0=rand(partAm,1)*sizey;
-rd = -8.0 ./ d.^2;
-offsety=v;
-offsetx=u;
-
-xlimit1=floor(x0-d/2); %x min particle extent image1
-xlimit2=ceil(x0+d/2); %x max particle extent image1
-ylimit1=floor(y0-d/2); %y min particle extent image1
-ylimit2=ceil(y0+d/2); %y max particle extent image1
-xlimit2(xlimit2>sizex)=sizex;
-xlimit1(xlimit1<1)=1;
-ylimit2(ylimit2>sizey)=sizey;
-ylimit1(ylimit1<1)=1;
-
-%calculate particle extents for image2 (shifted image)
-x0integer=round(x0);
-x0integer(x0integer>sizex)=sizex;
-x0integer(x0integer<1)=1;
-y0integer=round(y0);
-y0integer(y0integer>sizey)=sizey;
-y0integer(y0integer<1)=1;
-
-xlimit3=zeros(partAm,1);
-xlimit4=xlimit3;
-ylimit3=xlimit3;
-ylimit4=xlimit3;
-for n=1:partAm
-    xlimit3(n,1)=floor(x0(n)-d(n)/2-offsetx((y0integer(n)),(x0integer(n)))); %x min particle extent image2
-    xlimit4(n,1)=ceil(x0(n)+d(n)/2-offsetx((y0integer(n)),(x0integer(n)))); %x max particle extent image2
-    ylimit3(n,1)=floor(y0(n)-d(n)/2-offsety((y0integer(n)),(x0integer(n)))); %y min particle extent image2
-    ylimit4(n,1)=ceil(y0(n)+d(n)/2-offsety((y0integer(n)),(x0integer(n)))); %y max particle extent image2
-end
-xlimit3(xlimit3<1)=1;
-xlimit4(xlimit4>sizex)=sizex;
-ylimit3(ylimit3<1)=1;
-ylimit4(ylimit4>sizey)=sizey;
-
-ctr=0;
-for n=1:partAm
-    ctr=ctr+1;
-    if ctr==10000
-        ctr=0;
-        fprintf('.')
-    end
-    r = rd(n);
-    for j=xlimit1(n):xlimit2(n)
-        rj = (j-x0(n))^2;
-        for i=ylimit1(n):ylimit2(n)
-            A(i,j)=A(i,j)+I0(n)*exp((rj+(i-y0(n))^2)*r);
-        end
-    end
-    for j=xlimit3(n):xlimit4(n)
-        for i=ylimit3(n):ylimit4(n)
-            B(i,j)=B(i,j)+I1(n)*exp((-(j-x0(n)+offsetx(i,j))^2-(i-y0(n)+offsety(i,j))^2)*-rd(n)); %place particle with gaussian intensity profile
-        end
-    end
-end
-
-A(A>255)=255;
-B(B>255)=255;
-A=uint8(A);
-B=uint8(B);
-
-x_real=x;
-y_real=y;
-u_real=u;
-v_real=v;
+flow.type='rotation';
+flow.imageSize=[img_size img_size];
+flow.rotation=5; %maximum displacement of the rotation
+[x_real,y_real]=meshgrid(1:img_size);
+[u_real,v_real]=simulate.flow_field(flow, x_real, y_real);
+[A,B] = simulate.gui_images(x_real, y_real, u_real, v_real, Particles=partAm, SheetThickness=Z, Diameter=3, DiameterVariation=0);
 
 clearvars -except A B u_real v_real x_real y_real
 fprintf('\n\n');
@@ -164,7 +66,7 @@ image2 = preproc.PIVlab_preproc( ...
     wienerwurstsize=p{8,2}, minintens=p{9,2}, maxintens=p{10,2});
 tic % start timer for PIV analysis only
 [x y u v typevector,~,~] = piv.piv_FFTmulti( ...
-	image1=image2, image2=image1, interrogationarea=s{1,2}, step=s{2,2}, ...
+	image1=image1, image2=image2, interrogationarea=s{1,2}, step=s{2,2}, ...
 	subpixfinder=s{3,2}, mask_inpt=s{4,2}, roi_inpt=s{5,2}, passes=s{6,2}, ...
 	int2=s{7,2}, int3=s{8,2}, int4=s{9,2}, imdeform=s{10,2}, ...
 	repeat=s{11,2}, mask_auto=s{12,2}, do_linear_correlation=s{13,2}, ...

@@ -51,7 +51,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(1,expos,[1,1,max_cam_res]);
         elseif strcmp(camera_type,'OPTOcam_20_9')
             % returns after the first REAL camera frame (the preview placeholder image is skipped)
-            [errorcode, caliimg]=PIVlab_capture_OPTOcam_20_9_calibration_image(1,expos,[1,1,max_cam_res]);
+            [errorcode, caliimg]=PIVlab_capture_OPTOcam_20_9_calibration_image(1,expos,[1,1,max_cam_res/binning]);
         elseif strcmp(camera_type,'OPTRONIS')
             expos=round(str2num(get(handles.ac_expo,'String'))*1000);
             camera_sub_type=gui.retr('camera_sub_type');
@@ -84,7 +84,11 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             bla=findobj(target_axis,'type','image');
             current_image_size=size(bla.CData);
             if isempty(ac_ROI_general)
-                ac_ROI_general=[0.5,0.5,current_image_size(2)/binning,current_image_size(1)/binning]; %1 Hz default ROI
+                if strcmp(camera_type,'OPTOcam_20_9')
+                    ac_ROI_general=[0.5,0.5,current_image_size(2),current_image_size(1)]; %default ROI = whole displayed image (it is already binned)
+                else
+                    ac_ROI_general=[0.5,0.5,current_image_size(2)/binning,current_image_size(1)/binning]; %1 Hz default ROI
+                end
             end
             gui.put('doing_roi',1)
             stretched_image=adapthisteq(mat2gray(double(bla.CData)));

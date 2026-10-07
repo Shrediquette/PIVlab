@@ -1,8 +1,8 @@
 function calibBinning_Callback (~,~,~)
 handles=gui.gethand;
 camera_type=gui.retr('camera_type');
-if ~strcmp(camera_type,'pco_panda') && ~strcmp(camera_type,'pco_edge26') %Binning available only for pco 
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Binning not available','Binning is (up to now) only available for the pco.panda and pco.edge 26 DS.','modal');
+if ~strcmp(camera_type,'pco_panda') && ~strcmp(camera_type,'pco_edge26') && ~strcmp(camera_type,'OPTOcam_20_9') %Binning available only for pco and OPTOcam 20/9
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Binning not available','Binning is (up to now) only available for the pco.panda, pco.edge 26 DS and OPTOcam 20/9.','modal');
 else
     binning=gui.retr('binning');
     if isempty(binning)

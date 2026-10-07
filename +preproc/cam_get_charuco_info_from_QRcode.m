@@ -7,6 +7,11 @@ qr_checkerSize=[];
 qr_markerSize=[];
 
 [msg,~,loc]=readBarcode(img(:,:,1),'QR-CODE'); % will only return the first detected Barcode
+if isempty(loc) && max(size(img,[1 2])) > 2000 %very large QR codes in high res images are often not detected. Retry in downscaled, binarized image
+	s = 1280 / max(size(img,[1 2]));
+	[msg,~,loc]=readBarcode(imbinarize(imresize(img(:,:,1),s),'adaptive'),'QR-CODE');
+	loc = (loc-0.5)/s + 0.5; % back to full res pixel coordinates
+end
 %{
 %second try for better success....
 if isempty(loc) %attempt a second time with quick blur

@@ -83,7 +83,7 @@ if ~isempty(cam_selected_target_images)
         tmp_img=tmp_img(:,:,1);
         tmp_img=imadjust(tmp_img);
         try
-            imagePoints_single = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
+            imagePoints_single = preproc.cam_detectCharucoBoardPoints_scaled(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
         catch ME
             gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',ME.message,'modal','OK');
             gui.toolsavailable(1)
