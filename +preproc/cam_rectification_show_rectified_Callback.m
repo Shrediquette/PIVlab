@@ -55,15 +55,11 @@ if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
     rectification_tform = fitgeotform2d(undistortedPoints,worldPoints,'projective'); % standard für schräge ansicht
     %rectification_tform = fitgeotform2d(undistortedPoints,worldPoints,'polynomial',4); % langsam, aber gar nicht so schlecht, könnte für Rohre gehen...
 
-    view_raw=handles.calib_viewtype.Value;
-    if view_raw==1
-        view='valid';
-    elseif view_raw==2
-        view='same';
-    elseif view_raw==3
-        view='full';
-    end
-    img_out = preproc.cam_undistort(imread(cam_selected_rectification_image),'cubic',view,1,1,cameraParams,rectification_tform);
+    cam = import.cam_settings(FromGUI=true);
+    cam.use_calibration = 1;
+    cam.use_rectification = 1;
+    cam.rectification_tform = rectification_tform;
+    img_out = preproc.cam_undistort_with(imread(cam_selected_rectification_image), cam);
     imshow(img_out,'Parent',gui.retr('pivlab_axis'))
 else
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Camera calibration not activated or no images for camera rectification loaded.','modal');

@@ -94,20 +94,8 @@ if handles.calib_usecalibration.Value ==1
 		gui.toolsavailable(1)
 		return
     end
-    view_raw=handles.calib_viewtype.Value;
-    if view_raw==1
-        view='valid';
-    elseif view_raw==2
-        view='same';
-    elseif view_raw==3
-        view='full';
-    end
-    cam_use_calibration = gui.retr('cam_use_calibration');
-    cam_use_rectification = gui.retr('cam_use_rectification');
-    cameraParams=gui.retr('cameraParams');
-    rectification_tform = gui.retr('rectification_tform');
-
-    expected_image_size_after_camera_calibration = size(preproc.cam_undistort(currentimage,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform));
+    cam = import.cam_settings(FromGUI=true);
+    expected_image_size_after_camera_calibration = size(preproc.cam_undistort_with(currentimage, cam));
     expected_image_size_after_camera_calibration=expected_image_size_after_camera_calibration(1:2);
     gui.put('expected_image_size',expected_image_size_after_camera_calibration);
 else

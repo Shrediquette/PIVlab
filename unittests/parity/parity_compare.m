@@ -76,7 +76,8 @@ end
 
 function tf = is_timing(names)
 tf = strcmp(names,'runtime') | startsWith(names,'t_') | strcmp(names,'t') | strcmp(names,'totaltime') | strcmp(names,'num_handle_calls') | ...
-    strcmp(names,'homedir') | strcmp(names,'pathname'); % remembered folders from PIVlab_settings_default.mat
+    strcmp(names,'homedir') | strcmp(names,'pathname') | ... % remembered folders from PIVlab_settings_default.mat
+    strcmp(names,'saved');   % time when a settings / session file was written
 end
 
 function x = normalize(x, d, r)

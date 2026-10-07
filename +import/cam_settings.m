@@ -12,7 +12,6 @@ arguments
     opts.use_tilted_model = false
     opts.tilted_D = []
     opts.K_opencv = []
-    opts.tilted_model_in_call = true    % false: undistort like the parallel GUI loops (no tilted model)
     opts.FromGUI (1,1) logical = false
 end
 if opts.FromGUI

@@ -108,7 +108,6 @@ if ok==1
 			masks_in_frame=cell(1,size(slicedfilepath1,2));
 		end
 		cam = import.cam_settings(FromGUI=true);
-		cam.tilted_model_in_call = false; % the parallel loop undistorts without the tilted camera model
 		src = struct('filepath',{filepath},'framenum',framenum,'framepart',framepart);
 		parfor i=1:size(slicedfilepath1,2)
 			if exist(fullfile(userpath,'cancel_piv'),'file')

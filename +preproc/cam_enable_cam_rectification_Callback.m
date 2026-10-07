@@ -163,15 +163,11 @@ end
 if handles.calib_userectification.Value == 1
 	%% Automatically update the spatial calibration when image was rectified.
 	%detect again in undistorted image
-	view_raw=handles.calib_viewtype.Value;
-	if view_raw==1
-		view='valid';
-	elseif view_raw==2
-		view='same';
-	elseif view_raw==3
-		view='full';
-	end
-	caliimg = preproc.cam_undistort(tmp_img,'cubic',view,1,1,cameraParams,rectification_tform);
+	cam = import.cam_settings(FromGUI=true);
+	cam.use_calibration = 1;
+	cam.use_rectification = 1;
+	cam.rectification_tform = rectification_tform;
+	caliimg = preproc.cam_undistort_with(tmp_img, cam);
 	imagePoints1 = detectCharucoBoardPoints(caliimg,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'RefineCorners',true,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
 	worldPoints = patternWorldPoints("charuco-board",patternDims,checkerSize);
 	worldPoints(isnan(imagePoints1))=NaN;

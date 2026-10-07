@@ -186,9 +186,9 @@ if strcmp(classimage,'uint16')==1
     end
 end
 
-image1_bg = preproc.cam_undistort(image1_bg,'cubic',cam.view,cam.use_calibration,cam.use_rectification,cam.cameraParams,cam.rectification_tform);
+image1_bg = preproc.cam_undistort_with(image1_bg, cam);
 if sequencer==1 %not time-resolved
-    image2_bg = preproc.cam_undistort(image2_bg,'cubic',cam.view,cam.use_calibration,cam.use_rectification,cam.cameraParams,cam.rectification_tform);
+    image2_bg = preproc.cam_undistort_with(image2_bg, cam);
 end
 bg_img_A = image1_bg;
 if sequencer==1 %not time-resolved

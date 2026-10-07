@@ -54,9 +54,5 @@ currentimage(currentimage<0)=0; %bg subtraction may yield negative
 end
 
 function img = undistort(img, cam)
-if cam.tilted_model_in_call
-    img = preproc.cam_undistort(img,'cubic',cam.view,cam.use_calibration,cam.use_rectification,cam.cameraParams,cam.rectification_tform,cam.use_tilted_model,cam.tilted_D,cam.K_opencv);
-else
-    img = preproc.cam_undistort(img,'cubic',cam.view,cam.use_calibration,cam.use_rectification,cam.cameraParams,cam.rectification_tform);
-end
+img = preproc.cam_undistort_with(img, cam);
 end

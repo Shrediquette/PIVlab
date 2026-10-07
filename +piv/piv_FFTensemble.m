@@ -101,40 +101,17 @@ cancel=0;
 
 use_gui = opts.use_gui;
 verbose = opts.verbose;
+% camera undistortion / rectification (see import.cam_settings)
 if ~isempty(opts.cam)
-    view = opts.cam.view;
-    cam_use_calibration = opts.cam.use_calibration;
-    cam_use_rectification = opts.cam.use_rectification;
-    cameraParams = opts.cam.cameraParams;
-    rectification_tform = opts.cam.rectification_tform;
+    cam = opts.cam;
 elseif isempty(use_gui) || use_gui
     try
-        handles=gui.gethand;
-        view_raw=handles.calib_viewtype.Value;
-        if view_raw==1
-            view='valid';
-        elseif view_raw==2
-            view='same';
-        elseif view_raw==3
-            view='full';
-        end
-        cam_use_calibration = gui.retr('cam_use_calibration');
-        cam_use_rectification = gui.retr('cam_use_rectification');
-        cameraParams=gui.retr('cameraParams');
-        rectification_tform = gui.retr('rectification_tform');
+        cam = import.cam_settings(FromGUI=true);
     catch
-        view='valid';
-        cam_use_calibration=0;
-        cam_use_rectification=0;
-        cameraParams=[];
-        rectification_tform=[];
+        cam = import.cam_settings();
     end
 else
-    view='valid';
-    cam_use_calibration=0;
-    cam_use_rectification=0;
-    cameraParams=[];
-    rectification_tform=[];
+    cam = import.cam_settings();
 end
 for ensemble_i1=1:2:amount_input_imgs
     if isempty(video_frame_selection) %list with image files was passed
@@ -143,14 +120,14 @@ for ensemble_i1=1:2:amount_input_imgs
         if strcmp(ext,'.b16')
             image1=import.f_readB16(filepath{ensemble_i1});
             image2=import.f_readB16(filepath{ensemble_i1+1});
-            image1 = preproc.cam_undistort(image1,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
-            image2 = preproc.cam_undistort(image2,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
+            image1 = preproc.cam_undistort_with(image1, cam);
+            image2 = preproc.cam_undistort_with(image2, cam);
         else
             if isempty(framepart); fp1=[]; fp2=[]; else; fp1=framepart(ensemble_i1,:); fp2=framepart(ensemble_i1+1,:); end
             image1=import.imread_wrapper(filepath{ensemble_i1},framenum(ensemble_i1),fp1);
             image2=import.imread_wrapper(filepath{ensemble_i1+1},framenum(ensemble_i1+1),fp2);
-            image1 = preproc.cam_undistort(image1,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
-            image2 = preproc.cam_undistort(image2,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
+            image1 = preproc.cam_undistort_with(image1, cam);
+            image2 = preproc.cam_undistort_with(image2, cam);
         end
     else % video file was passed
         image1 = read(filepath,video_frame_selection(ensemble_i1));
@@ -541,14 +518,14 @@ if cancel == 0
                 if strcmp(ext,'.b16')
                     image1=import.f_readB16(filepath{ensemble_i1});
                     image2=import.f_readB16(filepath{ensemble_i1+1});
-                    image1 = preproc.cam_undistort(image1,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
-                    image2 = preproc.cam_undistort(image2,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
+                    image1 = preproc.cam_undistort_with(image1, cam);
+                    image2 = preproc.cam_undistort_with(image2, cam);
                 else
                     if isempty(framepart); fp1=[]; fp2=[]; else; fp1=framepart(ensemble_i1,:); fp2=framepart(ensemble_i1+1,:); end
                     image1=import.imread_wrapper(filepath{ensemble_i1},framenum(ensemble_i1),fp1);
                     image2=import.imread_wrapper(filepath{ensemble_i1+1},framenum(ensemble_i1+1),fp2);
-                    image1 = preproc.cam_undistort(image1,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
-                    image2 = preproc.cam_undistort(image2,'cubic',view,cam_use_calibration,cam_use_rectification,cameraParams,rectification_tform);
+                    image1 = preproc.cam_undistort_with(image1, cam);
+                    image2 = preproc.cam_undistort_with(image2, cam);
                 end
             else % video file was passed
                 image1 = read(filepath,video_frame_selection(ensemble_i1));

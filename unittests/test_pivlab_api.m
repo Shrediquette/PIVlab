@@ -285,6 +285,73 @@ end
 closePIVlab();
 end
 
+function test_tilted_camera_model_in_every_analysis(testCase)
+% the tilted camera model (Scheimpflug) is used by every path: GUI parallel analysis, background
+% images, ensemble, image size after switching the calibration on. (Serial and parallel results differ
+% in the last digits anyway - worker processes calculate with one thread - so parallel is compared
+% with parallel.)
+files = distortionFiles(testCase.TestData.ProjectRoot, 2);
+raw = pivlab.readImages(files, "pairwise");
+cp = cameraModel(raw.imageSize);
+sz = raw.imageSize;
+f = 0.9*sz(2);
+cameraParams = cp;
+cam_selected_target_images = {'target.jpg'};
+cam_use_tilted_model = true;
+cam_tilted_D = [-0.25 0.06 0 0 0 0 0 0 0 0 0 0 0.03 0.02];   % k1 k2 ... tauX tauY
+cam_K_opencv = [f 0 sz(2)/2; 0 f sz(1)/2; 0 0 1];
+file = fullfile(testCase.TestData.Dir, 'tilted_calibration.mat');
+save(file, "cameraParams", "cam_selected_target_images", "cam_use_tilted_model", "cam_tilted_D", "cam_K_opencv");
+% API
+imgs = pivlab.preprocess(raw, Camera=file, Verbose=false);
+testCase.verifyTrue(imgs.cam.use_tilted_model);
+plain = pivlab.preprocess(raw, Camera=cp, Verbose=false);
+testCase.verifyNotEqual(pivlab.getImage(imgs, 1), pivlab.getImage(plain, 1));   % the tilt is applied
+res = pivlab.analyze(imgs, Passes=2, PassSizes=[32 32 32], Parallel=true, Verbose=false);
+ens = pivlab.analyze(imgs, Algorithm="ensemble", Passes=2, PassSizes=[32 32 32], Verbose=false);
+bg = pivlab.preprocess(imgs, Background="mean", Verbose=false);
+% GUI with parallel processing
+startPIVlab(2);
+loadImagesInGui(files, 1);
+h = gui.gethand;
+gui.put('cameraParams', cameraParams);
+gui.put('cam_selected_target_images', cam_selected_target_images);
+gui.put('cam_use_tilted_model', cam_use_tilted_model);
+gui.put('cam_tilted_D', cam_tilted_D);
+gui.put('cam_K_opencv', cam_K_opencv);
+h.calib_viewtype.Value = 1;
+h.calib_usecalibration.Value = 1;
+preproc.cam_enable_cam_calib_Callback('calib_viewtype', [], []); drawnow;
+testCase.verifyEqual(gui.retr('expected_image_size'), imgs.imageSize, 'image size after switching on');
+for algorithm = 1:2   % 1 = FFT window deformation (parallel loop), 2 = ensemble
+    gui.quick4_Callback([],[]);
+    set(h.algorithm_selection,'Value',algorithm); piv.algorithm_selection_Callback(h.algorithm_selection,[],[]);
+    set(h.pass1_size,'String','64'); piv.intarea_Callback(h.pass1_size,[],[]);
+    set(h.pass1_step,'String','32'); piv.step_Callback(h.pass1_step,[],[]);
+    set(h.pass2_enable,'Value',1); set(h.pass2_size,'String','32'); piv.pass2_checkbox_Callback(h.pass2_enable,[],[]);
+    set(h.pass3_enable,'Value',0); piv.pass3_checkbox_Callback(h.pass3_enable,[],[]);
+    set(h.update_display_checkbox,'Value',0);
+    gui.quick5_Callback([],[]);
+    piv.AnalyzeAll_Callback([],[],[]); drawnow;
+    rl = gui.retr('resultslist');
+    if algorithm == 1
+        for k = 1:2
+            testCase.verifyEqual(rl{3,k}, res.px.u_raw(:,:,k), sprintf('parallel GUI raw u, pair %d', k));
+            testCase.verifyEqual(rl{4,k}, res.px.v_raw(:,:,k), sprintf('parallel GUI raw v, pair %d', k));
+        end
+    else
+        testCase.verifyEqual(rl{3,1}, ens.px.u_raw, 'ensemble u');
+        testCase.verifyEqual(rl{4,1}, ens.px.v_raw, 'ensemble v');
+    end
+end
+gui.quick3_Callback([],[]);
+set(h.bg_subtract,'Value',2);
+preproc.generate_BG_img(); drawnow;
+testCase.verifyEqual(gui.retr('bg_img_A'), bg.background.A, 'background A');
+testCase.verifyEqual(gui.retr('bg_img_B'), bg.background.B, 'background B');
+closePIVlab();
+end
+
 function test_api_results_equal_gui_results(testCase)
 files = testCase.TestData.Files;
 % GUI
@@ -385,9 +452,13 @@ catch err
 end
 end
 
-function startPIVlab()
+function startPIVlab(cores)
+% cores > 1: the GUI analyses in parallel
+if nargin < 1
+    cores = 1;
+end
 closePIVlab();
-PIVlab_GUI(1); drawnow;
+PIVlab_GUI(cores); drawnow;
 gui.put('batchModeActive',1);
 end
 

@@ -160,7 +160,9 @@ for i = 1:n
     masks{i} = mask_of_pair(imgs, pairs(i));
 end
 if parallel
-    misc.pivparpool('open');
+    if misc.pivparpool('size') == 0
+        gcp();   % no pool running: open one with the default settings of the Parallel Computing Toolbox
+    end
     if verbose
         fprintf('Analyzing %d image pairs in parallel...\n', n);
     end
