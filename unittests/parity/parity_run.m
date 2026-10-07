@@ -24,16 +24,17 @@ if ispref('PIVlab')
     prefs = getpref('PIVlab');
     rmpref('PIVlab');
 end
-% same colour theme for every version (PIVlab 3.x: group PIVlab_ad), so screenshots can be compared
-dark_3x = [];
-if ispref('PIVlab_ad','dark_mode_theme'), dark_3x = getpref('PIVlab_ad','dark_mode_theme'); end
+% same colour theme for every version (PIVlab 3.x reads the group PIVlab_ad, PIVlab 4 the group
+% PIVlab), so screenshots can be compared
+prefs_3x = struct();
+if ispref('PIVlab_ad'), prefs_3x = getpref('PIVlab_ad'); end
 setpref('PIVlab','dark_mode_theme',1);
 setpref('PIVlab_ad','dark_mode_theme',1);
 lic_mex = fullfile(root,'+plot',['fastLICFunction.' mexext]);
 had_mex = isfile(lic_mex);
 fmats = fullfile(root,'+wOFV','Filter matrices');
 had_fmats = isfolder(fmats);
-cleanup = onCleanup(@() restore(settings_backup, settings_file, prefs, dark_3x, lic_mex, had_mex, fmats, had_fmats));
+cleanup = onCleanup(@() restore(settings_backup, settings_file, prefs, prefs_3x, lic_mex, had_mex, fmats, had_fmats));
 cd(root); addpath(root); addpath(fullfile(here,'mocks'),'-begin');
 setappdata(0,'PIVlabTestMode',true);
 warning('off','all');
@@ -63,7 +64,7 @@ fclose(logf);
 rmpath(fullfile(here,'mocks'));
 end
 
-function restore(settings_backup, settings_file, prefs, dark_3x, lic_mex, had_mex, fmats, had_fmats)
+function restore(settings_backup, settings_file, prefs, prefs_3x, lic_mex, had_mex, fmats, had_fmats)
 try, close_pivlab(); catch, end
 if ~isempty(settings_backup)
     copyfile(settings_backup, settings_file);
@@ -72,11 +73,9 @@ end
 if ispref('PIVlab'), rmpref('PIVlab'); end
 f = fieldnames(prefs);
 for k = 1:numel(f), setpref('PIVlab', f{k}, prefs.(f{k})); end
-if isempty(dark_3x)
-    if ispref('PIVlab_ad','dark_mode_theme'), rmpref('PIVlab_ad','dark_mode_theme'); end
-else
-    setpref('PIVlab_ad','dark_mode_theme',dark_3x);
-end
+if ispref('PIVlab_ad'), rmpref('PIVlab_ad'); end
+f = fieldnames(prefs_3x);
+for k = 1:numel(f), setpref('PIVlab_ad', f{k}, prefs_3x.(f{k})); end
 if ~had_mex && isfile(lic_mex)
     clear('mex');
     try, delete(lic_mex); catch, end
