@@ -38,11 +38,13 @@ if imaq_error==0 && found_correct_adaptor ==1
         %Getting camera device ID when multiple cameras are connected
         for CamID = 1: size(info.DeviceInfo,2)
             camName=info.DeviceInfo(CamID).DeviceName;
+            imaq_error=3;
             if contains(camName,'160um','IgnoreCase',true) || contains(camName,'OPTOcam','IgnoreCase',true)
+                OPTOcam_name = info.DeviceInfo(CamID).DeviceName;
+                imaq_error=0;
                 break
             end
         end
-        OPTOcam_name = info.DeviceInfo(CamID).DeviceName;
     catch
         imaq_error=3;
     end
