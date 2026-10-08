@@ -11,7 +11,7 @@ gui.destroyUI
 gui.generateUI
 gui.put('num_handle_calls',0); % fresh handles of the new controls
 gui.apply_settings(settings, fieldnames(gui.default_settings), true);
-gui.MainWindow_ResizeFcn(gcf)
+gui.MainWindow_ResizeFcn(getappdata(0,'hgui'))
 gui.preferences_Callback
 gui.clear_user_content
 gui.displogo(1)

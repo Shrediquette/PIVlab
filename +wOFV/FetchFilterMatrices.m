@@ -1,9 +1,15 @@
 function FetchFilterMatrices()
 %Jassal, G., & Schmidt, B. E. (2024, August 12). wOFV Filter Matrices. https://doi.org/10.17605/OSF.IO/Y48MK
-gui.update_progress(0)
-gui.custom_msgbox('success',getappdata(0,'hgui'),'No filter matrices found','Wavelet filter matrices do not exist. They are downloaded and stored for later use now.','modal');
-gui.toolsavailable(1)
-gui.toolsavailable(0,'Downloading filter matrices...');drawnow
+hgui = getappdata(0,'hgui');
+gui_open = ~isempty(hgui) && ishghandle(hgui); %false when called from the command-line API (pivlab.analyze)
+if gui_open
+	gui.update_progress(0)
+	gui.custom_msgbox('success',hgui,'No filter matrices found','Wavelet filter matrices do not exist. They are downloaded and stored for later use now.','modal');
+	gui.toolsavailable(1)
+	gui.toolsavailable(0,'Downloading filter matrices...');drawnow
+else
+	disp('Wavelet filter matrices do not exist. They are downloaded and stored for later use now.')
+end
 FileName = fullfile(userpath, 'Filter Matrices.zip');
 disp(['Downloading zip file to: ' FileName])
 
@@ -79,23 +85,33 @@ end
 pause(1)
 try
 	if exist(FileName,'file')
-		gui.toolsavailable(1)
-		gui.toolsavailable(0,'Unzipping filter matrices...');drawnow
+		if gui_open
+			gui.toolsavailable(1)
+			gui.toolsavailable(0,'Unzipping filter matrices...');drawnow
+		end
 		disp('Filter Matrices downloaded, unzipping...')
 		[filepath,~,~]=  fileparts(which('PIVlab_GUI.m'));
 		pause(1)
 		unzip(FileName,fullfile(filepath,'+wOFV','Filter matrices'))
 		disp('Filter Matrices stored.')
 		delete(FileName)
+		if gui_open
+			gui.toolsavailable(1)
+			gui.toolsavailable(0,'Busy, please wait...');drawnow
+		end
+	elseif gui_open
 		gui.toolsavailable(1)
-		gui.toolsavailable(0,'Busy, please wait...');drawnow
+		gui.custom_msgbox('warn',hgui,'No filter matrices found',{'Data could not be downloaded from repository:' 'https://files.osf.io/v1/resources/y48mk/providers/osfstorage/?zip='},'modal');
 	else
-		gui.toolsavailable(1)
-		gui.custom_msgbox('warn',getappdata(0,'hgui'),'No filter matrices found',{'Data could not be downloaded from repository:' 'https://files.osf.io/v1/resources/y48mk/providers/osfstorage/?zip='},'modal');
+		warning('wOFV:filterMatrices','The filter matrices could not be downloaded from https://files.osf.io/v1/resources/y48mk/providers/osfstorage/?zip=')
 	end
 catch ME
-	gui.toolsavailable(1)
-	gui.custom_msgbox('warn',getappdata(0,'hgui'),'No filter matrices found',ME.message,'modal');
+	if gui_open
+		gui.toolsavailable(1)
+		gui.custom_msgbox('warn',hgui,'No filter matrices found',ME.message,'modal');
+	else
+		warning('wOFV:filterMatrices','The filter matrices could not be stored: %s', ME.message)
+	end
 end
 
 function download_stuff (FileName)

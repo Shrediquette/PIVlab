@@ -28,6 +28,14 @@ kernel = ones(2 * LIClength);
 % Making white noise
 noiseImage=rand(width,height);
 % Making LIC Image
+if ~endsWith(which('plot.fastLICFunction'), mexext) % MEX file not compiled yet: compile it first
+    plot.fastLICFunction();
+    % MATLAB does not always notice the new MEX file (rehash is not enough when the PIVlab folder
+    % is not the current folder); reading the PIVlab folder into the search path again does
+    pivlab_folder = fileparts(fileparts(mfilename('fullpath')));
+    rmpath(pivlab_folder);
+    addpath(pivlab_folder);
+end
 for m = 1:iterations
     [LICImage, ~,~,~] = plot.fastLICFunction(double(vx),double(vy),noiseImage,kernel); % External Fast LIC implemennted in C language
     LICImage = imadjust(LICImage); % Adjust the value range

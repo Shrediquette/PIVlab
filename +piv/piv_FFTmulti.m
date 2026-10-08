@@ -121,6 +121,7 @@ utable2 = [];
 vtable2 = [];
 symmetric_deformation = 0; % 0 = asymmetric (deform B only), 1 = symmetric (deform A by -0.5*disp, B by +0.5*disp)
 for multipass = 1:passes
+    delta_diff=inf; %every pass runs at least once, also with a threshold (delta_diff_min) >= 1
     %this while loop will run at least once. when repeat_last_pass is 0, then the while loop will break after the first execution.
     while  delta_diff > delta_diff_min && repetition < max_repetitions
         if multipass == passes

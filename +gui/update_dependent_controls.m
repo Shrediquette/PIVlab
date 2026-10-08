@@ -29,6 +29,7 @@ show(handles.uipanel_ofv2, is_ofv);
 show(handles.textSuggest, ~is_ofv);
 show(handles.SuggestSettings, true);
 show(handles.uncertainty_enable, is_fft);
+show([handles.text_parallelpatches handles.ofv_parallelpatches], isequal(gui.retr('parallel'), 1)); % optical flow patches: parallel processing only
 
 pass2 = get(handles.pass2_enable, 'Value') == 1;
 enable(handles.pass2_size, pass2);

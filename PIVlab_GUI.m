@@ -469,7 +469,7 @@ if isempty(fh)
     %disp('fcs')
     set(MainWindow,'ResizeFcn', @gui.MainWindow_ResizeFcn,'CloseRequestFcn', @gui.MainWindow_CloseRequestFcn,'KeyPressFcn', @gui.key_press);
     pause(0.1)
-    gui.MainWindow_ResizeFcn(gcf)
+    gui.MainWindow_ResizeFcn(MainWindow)
     %disp('vis')
     pause(0.5);	set(MainWindow, 'Visible','on');	pause(0.25);	drawnow;
     gui.switchui('multip01');

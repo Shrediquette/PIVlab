@@ -45,5 +45,9 @@ for k = 1:numel(groups)
             s.(groups{k}).(f{j}) = d.(groups{k}).(f{j});
         end
     end
+    unknown = setdiff(fieldnames(s.(groups{k})), f);
+    for j = 1:numel(unknown)   % e.g. a misspelled name: it would be ignored without a word
+        warning('pivlab:settings:unknownField', 'Settings.%s.%s is not a PIVlab setting and is ignored.', groups{k}, unknown{j});
+    end
 end
 end

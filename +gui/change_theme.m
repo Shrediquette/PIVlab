@@ -38,7 +38,7 @@ try
 catch
 end
 
-gui.MainWindow_ResizeFcn(gcf)
+gui.MainWindow_ResizeFcn(getappdata(0,'hgui'))
 gui.preferences_Callback
 gui.clear_user_content
 gui.displogo(1)

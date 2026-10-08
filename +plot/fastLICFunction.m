@@ -1,6 +1,9 @@
 function [varargout] = fastLICFunction(varargin)
 
 % AUTOCOMPILE compile the missing mex file on the fly
+% plot.fastLICFunction() (no inputs) only compiles the MEX file (see plot.LIC_core).
+% The MEX file cannot be called from here: while this file runs, MATLAB keeps calling this
+% file instead of the new MEX file (endless recursion before 2026-10).
 
 % remember the original working directory
 pwdir = pwd;
@@ -21,19 +24,14 @@ success = true;
 
 catch
 % compilation failed
+cd(pwdir);
 disp(lasterr);
 error('could not locate MEX file for %s', mexname);
-disp(['Please try to compile the file ' mexsrc ' manually.']);
-disp('You might need to run "mex -setup" in Matlab before compilation');
-%cd(pwdir);
-success = false;
 end
 
 if success
-% execute the mex file that was just created
 disp('... compilation OK')
-funname = ['plot.' mfilename];
-funhandle = str2func(funname);
-[varargout{1:nargout}] = funhandle(varargin{:});
-
+if nargin > 0
+	error('The MEX file %s was compiled now. Please call plot.%s again.', mexname, mexname);
+end
 end
