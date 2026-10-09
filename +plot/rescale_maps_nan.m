@@ -55,7 +55,7 @@ else
     out(miny_idx:maxy_idx,minx_idx:maxx_idx)=dispvar;
 end
 %% remove data from masked areas
-current_mask_nr=floor(get(handles.fileselector, 'value'));
+current_mask_nr=currentframe; %mask of the frame of this map (not of the displayed frame)
 masks_in_frame=gui.retr('masks_in_frame');
 if isempty(masks_in_frame)
     %masks_in_frame=cell(current_mask_nr,1);

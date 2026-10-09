@@ -44,7 +44,7 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
                 drawnow;
                 if gui.retr('alreadydisplayed') == 1
                 else
-                    gui.custom_msgbox('msg',getappdata(0,'hgui'),'NaNs','Your dataset contains NaNs. A vector interpolation will be performed automatically to interpolate missing vectors.','modal',{'OK'},'OK');
+                    gui.custom_msgbox('msg',getappdata(0,'hgui'),'NaNs','Your dataset contains NaNs. Missing vectors are interpolated for the calculation of the derived parameters (the vector data itself is not changed).','modal',{'OK'},'OK');
                 end
                 gui.put('alreadydisplayed',1);
             end
@@ -53,11 +53,8 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
             v(isnan(u))=NaN;
             typevector(isnan(u))=2;
 			typevector(typevector_original==0)=0;
-			u=misc.inpaint_nans(u,4);
+			u=misc.inpaint_nans(u,4); %only for the derived parameters: the vector data (resultslist rows 7-9) is not changed
 			v=misc.inpaint_nans(v,4);
-			resultslist{7, frame} = u;
-			resultslist{8, frame} = v;
-			resultslist{9, frame} = typevector;
 
 		end
 	else

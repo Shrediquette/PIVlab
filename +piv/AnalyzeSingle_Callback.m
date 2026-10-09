@@ -93,7 +93,7 @@ if ok==1
 				minintens=minintens, maxintens=maxintens);
 	
 			converted_mask=mask.convert_masks_to_binary(size(image1(:,:,1)),mask_positions);
-            addpath(genpath('OptimizationSolvers')); %add the optimizer to filepath
+            addpath(genpath(fullfile(fileparts(which('PIVlab_GUI.m')),'OptimizationSolvers'))); %add the optimizer to filepath (absolute: the current folder may be another one)
 			%gui.toolsavailable(1); %re-enabling the ui elements already here, so debugging is easier when things crash. Should be removed when ofv is working.
 
 			etaUnScaled = str2double(get(handles.ofv_eta,'string'));

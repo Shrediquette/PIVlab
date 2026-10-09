@@ -104,7 +104,7 @@ if ok==1
     %% wOFV specific settings from GUI:
     etaUnScaled = str2double(get(handles.ofv_eta,'string'));
     PydLev = str2double(handles.ofv_pyramid_levels.String{handles.ofv_pyramid_levels.Value});
-    addpath(genpath('OptimizationSolvers')); %add the optimizer to filepath
+    addpath(genpath(fullfile(fileparts(which('PIVlab_GUI.m')),'OptimizationSolvers'))); %add the optimizer to filepath (absolute: the current folder may be another one)
     %scaling eta from [0,100] to [1e-5,1e5]
     eta = 10^(etaUnScaled*0.1 - 5);
 
@@ -151,6 +151,15 @@ if ok==1
             image1 = import.get_img(i);
             image2 = import.get_img(i+1);
             set(handles.progress, 'string' , ['Frame progress: 0%']);drawnow; %#ok<*NBRAK>
+            if get(handles.autolimit_enable, 'value') == 1 %if autolimit is desired: do autolimit for each image seperately (also for image 1)
+                if size(image1,3)>1
+                    stretcher = stretchlim(rgb2gray(image1));
+                else
+                    stretcher = stretchlim(image1);
+                end
+                minintens = stretcher(1);
+                maxintens = stretcher(2);
+            end
 		image1 = preproc.PIVlab_preproc( ...
 			in=image1, roirect=roirect, clahe=clahe, clahesize=clahesize, ...
 			highp=highp, highpsize=highpsize, intenscap=intenscap, ...

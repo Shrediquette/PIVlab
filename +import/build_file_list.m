@@ -126,7 +126,7 @@ elseif sequencer==0 %time-resolved
         cntr=1;
         for i=1:size(files,1)
             for jj=1:frames_per_image_file(i)
-                if jj == 1 || jj== frames_per_image_file
+                if jj == 1 || jj == frames_per_image_file(i)
                     filepath{cntr,1}=files{i};
                     framenum(cntr,1)=jj;
                     cntr=cntr+1;

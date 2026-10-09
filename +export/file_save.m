@@ -209,7 +209,7 @@ if type==4 %tecplot file
 		end
 	else %calibrated
 		displacement_only=gui.retr('displacement_only');
-		if ~isempty(displacement_only) && displacement_only == 1
+		if isempty(displacement_only) || displacement_only ~= 1 %velocities in m/s (displacements only: m/frame, below)
 			if get(handles.export_vort_tec, 'Value') == 1  %alle derivatives exportieren, kalibriert
 				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'Q criterion [1/s^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]' delimiter 'uncertainty [m/s]'];
 				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "shear_rate", "simple_strain", "vector_direction", "correlation_map", "uncertainty_map"';

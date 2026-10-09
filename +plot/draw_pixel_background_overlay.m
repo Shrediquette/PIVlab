@@ -2,8 +2,8 @@ function currentimage = draw_pixel_background_overlay(target_axis,displaywhat, s
 %Collects the display settings of the GUI and draws particle image, derived map and mask.
 %The drawing itself (plot.draw_background) is shared with the command-line API (pivlab.display).
 derivative_alpha=str2double(get(handles.colormapopacity ,'string'))/100;
-if isnan(derivative_alpha) || derivative_alpha>100 || derivative_alpha <0
-	derivative_alpha=75;
+if isnan(derivative_alpha) || derivative_alpha>1 || derivative_alpha <0 %opacity field in percent (0...100)
+	derivative_alpha=0.75;
 	set(handles.colormapopacity ,'string','75');
 end
 [currentimage,~]=import.get_img(selected);
@@ -57,22 +57,7 @@ if map_available
 	if ~strcmpi(o.colorbar_position,'None')
 		name=get(handles.derivchoice,'string');
 		if strcmp(name,'N/A') %user hasn't visited the derived panel before
-			if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
-				set(handles.derivchoice,'String',{'Vectors in px/frame';'Vorticity in 1/frame';'Magnitude in px/frame';'u component in px/frame';'v component in px/frame';'Divergence in 1/frame';'Q criterion in 1/frame^2';'Shear rate (magnitude of the rate-of-strain tensor) in 1/frame';'Simple strain rate in 1/frame';'Line integral convolution (LIC)' ; 'Vector direction in degrees'; 'Correlation coefficient'});
-				set(handles.text35,'String','u in px/frame:')
-				set(handles.text36,'String','v in px/frame:')
-			else %calibrated
-				displacement_only=gui.retr('displacement_only');
-				if ~isempty(displacement_only) && displacement_only == 1
-					set(handles.derivchoice,'String',{'Vectors in m/frame';'Vorticity in 1/frame';'Magnitude in m/frame';'u component in m/frame';'v component in m/frame';'Divergence in 1/frame';'Q criterion in 1/frame^2';'Shear rate (magnitude of the rate-of-strain tensor) in 1/frame';'Simple strain rate in 1/frame';'Line integral convolution (LIC)'; 'Vector direction in degrees'; 'Correlation coefficient'});
-					set(handles.text35,'String','u in m/frame:')
-					set(handles.text36,'String','v in m/frame:')
-				else
-					set(handles.derivchoice,'String',{'Vectors in m/s';'Vorticity in 1/s';'Magnitude in m/s';'u component in m/s';'v component in m/s';'Divergence in 1/s';'Q criterion in 1/s^2';'Shear rate (magnitude of the rate-of-strain tensor) in 1/s';'Simple strain rate in 1/s';'Line integral convolution (LIC)'; 'Vector direction in degrees'; 'Correlation coefficient'});
-					set(handles.text35,'String','u in m/s:')
-					set(handles.text36,'String','v in m/s:')
-				end
-			end
+			plot.update_derivchoice_list(handles)
 			name=get(handles.derivchoice,'String');
 		end
 		o.colorbar_label = name{gui.retr('displaywhat')};
