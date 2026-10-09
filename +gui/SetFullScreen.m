@@ -14,9 +14,10 @@ if verLessThan('matlab','9.4') %r2018a
 		set (MainWindow,'Units','Characters');
 	else
 		try
-			warning off
+			warning_state = warning('off','all');
 			frame_h = get(handle(gcf),'JavaFrame'); %#ok<*JAVFM>
 			set(frame_h,'Maximized',1);
+			warning(warning_state);
 		catch
 		end
 	end

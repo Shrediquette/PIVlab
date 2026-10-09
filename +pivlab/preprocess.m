@@ -32,7 +32,8 @@ function imgs = preprocess(imgs, opts)
 %                        used in the session
 %                      - a cameraParameters / cameraIntrinsics object (Computer Vision Toolbox)
 %                      - "none": no undistortion
-%                      Default: keep the camera calibration of imgs (none after readImages).
+%                      Default: "none" - also when imgs was corrected before, the Camera option has
+%                      to be given again (like all other options, see Settings).
 %                      The camera calibration itself is made in the PIVlab GUI (visual feedback).
 %   CameraView         "valid" (cut away black borders, default), "same" (same size as the input
 %                      image) or "full" (include black borders); default from the session
@@ -81,18 +82,19 @@ opts = rmfield(opts, {'Verbose', 'Camera', 'CameraView', 'Rectification'});
 if isempty(camera) && (~isempty(camera_view) || ~isempty(rectification))
     error('pivlab:preprocess:camera', 'CameraView and Rectification need the Camera option.');
 end
-if ~isempty(camera)
-    imgs.cam = camera_from_source(camera, camera_view, rectification);
-    first = import.read_frame(imgs, 1, imgs.cam, []);
-    imgs.imageSize = [size(first,1) size(first,2)];
-    if verbose && imgs.cam.use_calibration
-        what = 'lens undistortion';
-        if imgs.cam.use_rectification
-            what = [what ' and rectification'];
-        end
-        fprintf('Camera calibration: %s (view "%s"), corrected image size %d x %d pixels.\n', ...
-            what, imgs.cam.view, imgs.imageSize(2), imgs.imageSize(1));
+if isempty(camera)
+    camera = "none";   % options that are not given: defaults (no camera calibration)
+end
+imgs.cam = camera_from_source(camera, camera_view, rectification);
+first = import.read_frame(imgs, 1, imgs.cam, []);
+imgs.imageSize = [size(first,1) size(first,2)];
+if verbose && imgs.cam.use_calibration
+    what = 'lens undistortion';
+    if imgs.cam.use_rectification
+        what = [what ' and rectification'];
     end
+    fprintf('Camera calibration: %s (view "%s"), corrected image size %d x %d pixels.\n', ...
+        what, imgs.cam.view, imgs.imageSize(2), imgs.imageSize(1));
 end
 
 p = resolve_options('preprocess', opts);

@@ -2,11 +2,11 @@ function DCC_and_DFT_analyze_all
 ok=gui.checksettings;
 handles=gui.gethand;
 try
-	warning off
 	recycle('off');
-	delete(fullfile(userpath,'cancel_piv'));
+	if isfile(fullfile(userpath,'cancel_piv'))
+		delete(fullfile(userpath,'cancel_piv'));
+	end
 	gui.put('cancel',0);
-	%warning on
 catch ME
 	disp('There was an error deleting a temporary file.')
 	disp('Please check if this solves your problem:')
@@ -249,10 +249,10 @@ if ok==1
 	end
 	gui.put('cancel',0);
 	try
-		warning off
 		recycle('off');
-		delete(fullfile(userpath,'cancel_piv'))
-		%warning on
+		if isfile(fullfile(userpath,'cancel_piv'))
+			delete(fullfile(userpath,'cancel_piv'))
+		end
 	catch ME
 		disp('There was an error deleting a temporary file.')
 		disp('Please check if this solves your problem:')

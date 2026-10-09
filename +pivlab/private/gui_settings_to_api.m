@@ -58,6 +58,15 @@ end
 s.analysis.RepeatLastPass          = get_flag(A,'repeat_last_enable',s.analysis.RepeatLastPass);
 s.analysis.RepeatLastPassThreshold = get_num(A,'repeat_last_threshold',s.analysis.RepeatLastPassThreshold);
 s.analysis.Uncertainty             = get_flag(A,'uncertainty_enable',s.analysis.Uncertainty);
+% optical flow (popup menus: pyramid levels '5' '4' '3' '2' '1', median filter 'Off' '3x3' '5x5' '9x9')
+s.analysis.OFVSmoothness = get_num(A,'ofv_eta',s.analysis.OFVSmoothness);
+if isfield(A,'ofv_pyramid_levels') && ~isempty(A.ofv_pyramid_levels)
+    s.analysis.OFVPyramidLevels = 6 - A.ofv_pyramid_levels;
+end
+if isfield(A,'ofv_median') && ~isempty(A.ofv_median)
+    medians = ["off","3x3","5x5","9x9"];
+    s.analysis.OFVMedianFilter = medians(A.ofv_median);
+end
 
 %% vector validation
 s.filter.StdevCheck           = get_flag(A,'stdev_enable',s.filter.StdevCheck);
@@ -130,7 +139,7 @@ end
 
 function names = gui_only() %#ok<DEFNU> read by unittests/test_settings
 % settings of the groups analysis and calibration that the API does not use (yet)
-names = {'stereocheckbox', 'ofv_parallelpatches', 'ofv_median', 'ofv_pyramid_levels', 'ofv_eta', ...
+names = {'stereocheckbox', 'ofv_parallelpatches', ...
     'extrapolate_border', 'optimize_calib_img', 'calib_use_tilted_model', 'calib_viewtype', ...
     'calib_usecalibration', 'calib_upscale', 'calib_userectification', 'calib_boardtype', ...
     'calib_origincolor', 'calib_rows', 'calib_columns', 'calib_checkersize', 'calib_markersize'};

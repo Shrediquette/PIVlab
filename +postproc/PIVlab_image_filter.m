@@ -26,9 +26,9 @@ if do_contrast==1
 	[X,Y] = meshgrid(x_orig,y_orig);
 	gq = interp2(X,Y,gb,x,y,'nearest'); %scale down result to match size of u and v
 	
-	warning off
+	warning_state = warning('off','all');
 	lowhigh = stretchlim(gq,[0.1 1]); %finds limits for 10% of data and 100% of data
-	%warning on
+	warning(warning_state);
 	threshold_suggestion=lowhigh(1); %the 10% limit is returned as suggestion.
 	
 	u(gq<contrast_filter_thresh)=nan; %remove vectors where image texture is low.

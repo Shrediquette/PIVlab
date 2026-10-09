@@ -35,6 +35,9 @@ G.analysis.correlation_robustness = index_of(["standard","high","extreme"], a.Ro
 G.analysis.repeat_last_enable = double(a.RepeatLastPass);
 G.analysis.repeat_last_threshold = a.RepeatLastPassThreshold;
 G.analysis.uncertainty_enable = double(a.Uncertainty);
+G.analysis.ofv_eta = a.OFVSmoothness;
+G.analysis.ofv_pyramid_levels = min(max(6 - round(a.OFVPyramidLevels), 1), 5);
+G.analysis.ofv_median = index_of(["off","3x3","5x5","9x9"], lower(string(a.OFVMedianFilter)), 1);
 
 %% vector validation
 G.analysis.stdev_enable = double(f.StdevCheck);

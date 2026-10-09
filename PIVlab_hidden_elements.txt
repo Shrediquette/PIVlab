@@ -23,6 +23,7 @@ menu_stereopiv
 stereocheckbox
 
 # ── multip25  Mask generation ───────────────────────────────
+text251
 mask_basic_expert
 mask_import
 mask_bright_or_dark

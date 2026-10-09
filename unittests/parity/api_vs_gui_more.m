@@ -159,7 +159,7 @@ cp = cameraParameters('K', [f 0 sz(2)/2; 0 f sz(1)/2; 0 0 1], 'RadialDistortion'
 imgs = pivlab.preprocess(imgs, Camera=cp, CameraView="same", Verbose=false);
 res = pivlab.analyze(imgs, Passes=2, PassSizes=[32 32 32], Verbose=false);
 ok = cmp_rl('camera undistorted raw', res, B.serial.undistorted, 'raw') && ok;
-bg = pivlab.preprocess(imgs, Background="mean", Verbose=false);
+bg = pivlab.preprocess(imgs, Camera=cp, CameraView="same", Background="mean", Verbose=false);   % Camera has to be given again
 ok = check('camera background A', bg.background.A, B.bg_A) && ok;
 ok = check('camera background B', bg.background.B, B.bg_B) && ok;
 res = pivlab.analyze(bg, Passes=2, PassSizes=[32 32 32], Verbose=false);

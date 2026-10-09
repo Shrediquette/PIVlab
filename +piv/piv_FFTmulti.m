@@ -72,7 +72,7 @@ else %repeted correlation needs double as type
     convert_image_class_type = 'double';
 end
 
-warning off %#ok<*WNOFF> %MATLAB:log:logOfZero
+warning_state = warning('off','all'); %MATLAB:log:logOfZero; restored at the end
 if isempty(mask_inpt)
     mask_inpt=zeros(size(image1(:,:,1)),'logical');
 end
@@ -700,6 +700,7 @@ if compute_uncertainty
 else
     uncertainty_map = [];
 end
+warning(warning_state);
 
 
 end

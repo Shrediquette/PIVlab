@@ -328,6 +328,11 @@ testCase.verifyNotEqual(pivlab.getImage(r, 1), pivlab.getImage(p1, 1));
 n = pivlab.preprocess(r, Camera=r.cam.cameraParams, CameraView="same", Rectification=false, Verbose=false);
 testCase.verifyEqual(n.cam.use_rectification, 0);
 testCase.verifyEqual(pivlab.getImage(n, 1), pivlab.getImage(p1, 1));
+% without the Camera option: no camera calibration (default), also for corrected images
+d = pivlab.preprocess(r, Verbose=false);
+testCase.verifyEqual(d.cam.use_calibration, 0);
+testCase.verifyEqual(d.imageSize, sz);
+testCase.verifyEqual(pivlab.getImage(d, 1, Preprocessed=false), pivlab.getImage(raw, 1, Preprocessed=false));
 % ROI and mask refer to the corrected image, the analysis runs on it
 res = pivlab.analyze(pivlab.preprocess(r, Roi=[100 100 500 400], Verbose=false), Verbose=false);
 testCase.verifyLessThanOrEqual(max(res.px.x(:)), 600);
@@ -437,6 +442,12 @@ testCase.verifyEqual(errorId('pivlab.analyze', imgs, 'Algorithm', "piv", 'Verbos
 testCase.verifyEqual(errorId('pivlab.analyze', imgs, 'SubpixelFinder', "gauss9", 'Verbose', false), 'pivlab:analyze:subpixel');
 testCase.verifyEqual(errorId('pivlab.analyze', imgs, 'Robustness', "low", 'Verbose', false), 'pivlab:analyze:robustness');
 testCase.verifyEqual(errorId('pivlab.analyze', imgs, 'Speed', 3, 'Verbose', false), 'MATLAB:TooManyInputs');
+% the analysis leaves the warning state of MATLAB as it was (PIVlab switched all warnings off before)
+state = warning;
+pivlab.analyze(imgs, Pairs=1, Verbose=false);
+pivlab.analyze(imgs, Algorithm="ensemble", Pairs=1:2, Verbose=false);
+pivlab.analyze(imgs, Algorithm="dcc", Pairs=1, Verbose=false);
+testCase.verifyEqual(warning, state, 'warning state changed by pivlab.analyze');
 % Verbose
 out = evalc('pivlab.analyze(imgs, Pairs=1:2);');
 testCase.verifySubstring(out, 'finished');
@@ -816,6 +827,9 @@ res = pivlab.analyze(res, Pairs=1:2, Verbose=false);
 res = pivlab.filter(res, Verbose=false);
 res = pivlab.toMetric(res, DeltaT=0.001, PxPerMeter=5000, Verbose=false);
 fig = testCase.TestData.Figure;
+if ~isgraphics(fig)   % closed by an earlier test
+    fig = figure('Units','pixels','Position',[20 40 1200 900]);
+end
 outdir = fullfile(testCase.TestData.Dir, 'display');
 mkdir(outdir);
 Q = ["none","vorticity","magnitude","u","v","divergence","qcriterion","shear","strain","direction","lic","correlation"];
@@ -976,12 +990,19 @@ testCase.verifyTrue(all(ismember({'Algorithm','InterrogationArea','Step','Passes
     'OFVSmoothness','OFVPyramidLevels','OFVMedianFilter','Parallel'}, names)));
 % the defaults run as they are
 pivlab.analyze(testCase.TestData.Imgs, Settings=s, Pairs=1, Verbose=false);
+% optical flow defaults = the GUI defaults (3 pyramid levels, smoothness 40, no median filter)
+testCase.verifyEqual(s.analysis.OFVPyramidLevels, 3);
+testCase.verifyEqual(s.analysis.OFVSmoothness, 40);
+testCase.verifyEqual(s.analysis.OFVMedianFilter, "off");
 % settings file written by the GUI code
 G = gui.default_settings;
 G.analysis.pass1_size = 80;
 G.analysis.pass1_step = 40;
 G.analysis.algorithm_selection = 2;
 G.analysis.highpass_enable = 1;
+G.analysis.ofv_pyramid_levels = 1;   % popup '5' '4' '3' '2' '1': 5 levels
+G.analysis.ofv_median = 3;           % '5x5'
+G.analysis.ofv_eta = 55;
 f = fullfile(testCase.TestData.Dir, 'gui_settings.mat');
 export.write_settings_file(f, G);
 [s, t] = pivlab.loadSettings(f);
@@ -990,7 +1011,18 @@ testCase.verifyEqual(s.analysis.InterrogationArea, 80);
 testCase.verifyEqual(s.analysis.Step, 40);
 testCase.verifyEqual(s.analysis.Algorithm, "ensemble");
 testCase.verifyTrue(logical(s.preprocess.Highpass));
+testCase.verifyEqual(s.analysis.OFVPyramidLevels, 5);
+testCase.verifyEqual(s.analysis.OFVMedianFilter, "5x5");
+testCase.verifyEqual(s.analysis.OFVSmoothness, 55);
 testCase.verifyEqual(s.source, string(f));
+% and back: an API session carries the optical flow settings into the GUI settings
+s.analysis.Algorithm = "fft";
+r = pivlab.analyze(testCase.TestData.Imgs, Settings=s, Pairs=1, Verbose=false);
+sf = fullfile(testCase.TestData.Dir, 'ofv_settings_session.mat');
+pivlab.saveSession(r, sf, Verbose=false);
+session = import.read_session_file(sf);
+A = session.settings.analysis;
+testCase.verifyEqual([A.ofv_pyramid_levels A.ofv_median A.ofv_eta], [1 3 55]);
 % loadSettings accepts string and char
 testCase.verifyEqual(pivlab.loadSettings(string(f)).analysis.Step, 40);
 % files that are not settings
@@ -1022,7 +1054,7 @@ imgs = pivlab.preprocess(raw, Camera=cp, CameraView="same", Verbose=false);
 sz = imgs.imageSize;
 m1 = false(sz); m1(300:400, 300:450) = true;
 roi = [60 50 sz(2)-150 sz(1)-120];
-imgs = pivlab.preprocess(imgs, Roi=roi, Mask={m1, {}, {'ROI_object_rectangle', [200 200 100 80]}}, ...
+imgs = pivlab.preprocess(imgs, Camera=cp, CameraView="same", Roi=roi, Mask={m1, {}, {'ROI_object_rectangle', [200 200 100 80]}}, ...
     Background="mean", Highpass=true, Verbose=false);
 res = pivlab.analyze(imgs, Passes=3, PassSizes=[32 24 24], Verbose=false);
 res = pivlab.toMetric(res, DeltaT=0.0005, PxPerMeter=8000, Origin=[100 120], XAxis="left", YAxis="up", Verbose=false);
@@ -1053,7 +1085,7 @@ testCase.verifyEqual(s.derive.Smoothing, "spatial");
 % the mask of every pair is back (masked vectors stay masked)
 testCase.verifyEqual(r.typevector_raw == 0, res.typevector_raw == 0);
 % the loaded result is analysed again with its own settings: same raw result
-again = pivlab.analyze(pivlab.preprocess(r.images, Settings=s, Mask=r.images.mask, Verbose=false), Settings=s, Verbose=false);
+again = pivlab.analyze(pivlab.preprocess(r.images, Camera=f, Settings=s, Mask=r.images.mask, Verbose=false), Settings=s, Verbose=false);
 testCase.verifyEqual(again.px.u_raw, res.px.u_raw);
 % GUI: everything shown and used
 startPIVlab();
@@ -1268,10 +1300,18 @@ end
 end
 
 function prefs = clear_preferences()
+% the user's PIVlab preferences (gui.set_preference): saved, then removed, so the tests start
+% like a first start of PIVlab. Also saved in a file: if a test run is stopped before its end,
+% load(fullfile(tempdir,'PIVlab_preferences_backup.mat')) and restore_preferences(prefs) bring
+% them back.
 prefs = struct();
 if ispref('PIVlab')
     prefs = getpref('PIVlab');
     rmpref('PIVlab');
+end
+backup = fullfile(tempdir, 'PIVlab_preferences_backup.mat');
+if ~isfile(backup)   % a backup of a stopped run is not overwritten with the cleared preferences
+    save(backup, 'prefs');
 end
 end
 
@@ -1282,6 +1322,10 @@ end
 names = fieldnames(prefs);
 for k = 1:numel(names)
     setpref('PIVlab', names{k}, prefs.(names{k}));
+end
+backup = fullfile(tempdir, 'PIVlab_preferences_backup.mat');
+if isfile(backup)
+    delete(backup);
 end
 end
 

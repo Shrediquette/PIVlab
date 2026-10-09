@@ -468,7 +468,7 @@ testCase.verifyEqual(gui.retr('ui_mode'), 'advanced');
 testCase.verifyEqual(gui.retr('panelwidth'), default_panelwidth());
 % dark / light follows MATLAB (an old PIVlab_ad preference is not used)
 hgui = getappdata(0,'hgui');
-testCase.verifyEqual(gui.retr('darkmode') == 1, strcmpi(hgui.Theme.BaseColorStyle,'dark'));
+testCase.verifyEqual(isequal(gui.retr('darkmode'), 1), strcmpi(hgui.Theme.BaseColorStyle,'dark'));
 close_pivlab();
 testCase.verifyFalse(ispref('PIVlab','ui_mode'), 'nothing stored without a change');
 end
@@ -485,39 +485,66 @@ close_with_menu();
 start_pivlab();
 testCase.verifyEqual(gui.retr('pathname'), folder, 'last folder');
 h = gui.gethand;
-% Basic mode, panel width, theme (Apply / theme change remove the loaded images and the
-% remembered folder, see test_preferences_apply_and_theme_keep_the_settings)
+% Basic mode, panel width, theme
 gui.request_mode_switch('basic');
 set(h.panelslider,'Value',55); gui.pref_apply_Callback;
 h = gui.gethand;
-dark_now = gui.retr('darkmode');
+dark_now = double(isequal(gui.retr('darkmode'), 1));   % empty = light (MATLAB theme)
 set(h.matlab_theme,'Value', 1 + double(dark_now == 1));   % 1 = dark, 2 = light: the other one
 gui.change_theme();
 close_with_menu();
 start_pivlab();
 testCase.verifyEqual(gui.retr('ui_mode'), 'basic');
 testCase.verifyEqual(gui.retr('panelwidth'), 55);
-testCase.verifyEqual(gui.retr('darkmode'), 1 - dark_now, 'theme');
+testCase.verifyEqual(double(isequal(gui.retr('darkmode'), 1)), 1 - dark_now, 'theme');
 hgui = getappdata(0,'hgui');
 testCase.verifyEqual(strcmpi(hgui.Theme.BaseColorStyle,'dark'), dark_now == 0);
 end
 
 function test_preferences_apply_and_theme_keep_the_settings(testCase)
+% Preferences -> Apply (panel width) and the theme change rebuild all controls: settings, images,
+% results, calibration, ROI, frame and the remembered folder stay
 start_pivlab();
+load_images(jet(testCase.TestData.Root,3));
 h = gui.gethand;
-set(h.pass1_size,'String','96'); set(h.colormap_choice,'Value',3); set(h.stdev_thresh,'String','4');
+set(h.colormap_choice,'Value',3); set(h.stdev_thresh,'String','4');
 set(h.ac_interpuls,'String','999');
 gui.update_dependent_controls;
+gui.put('roirect',[50 50 800 600]);
+analyze();
+gui.put('pointscali',[10 10; 110 10]);
+set(h.realdist,'String','10'); set(h.time_inp,'String','100');
+calibrate.apply_cali_Callback([],[],[]);
+set(h.fileselector,'Value',2); gui.fileselector_Callback(h.fileselector,[],[]);
+gui.sliderdisp(gui.retr('pivlab_axis')); drawnow;
 before = gui.collect_settings;
+data = session_data();
+folder = gui.retr('pathname');
 states = enable_visible_states();
+box = strjoin(cellstr(get(h.calidisp,'String')), ' ');
 gui.preferences_Callback;
 h = gui.gethand;
-set(h.panelslider,'Value',50); gui.pref_apply_Callback;
-testCase.verifyEqual(gui.collect_settings, before, 'after Apply (panel width)');
+set(h.panelslider,'Value',55); gui.pref_apply_Callback;
+testCase.verifyEqual(without_derive_list(gui.collect_settings), without_derive_list(before), 'after Apply (panel width)');
+testCase.verifyEqual(session_data(), data, 'data after Apply');
+testCase.verifyEqual(gui.retr('pathname'), folder, 'last folder after Apply');
 h = gui.gethand;
-set(h.matlab_theme,'Value', 1 + double(gui.retr('darkmode') == 1));
+testCase.verifyEqual(get(h.fileselector,'Value'), 2, 'frame after Apply');
+testCase.verifyEqual(strjoin(cellstr(get(h.calidisp,'String')), ' '), box, 'calibration box after Apply');
+testCase.verifyEqual(get(h.filenamebox,'String'), gui.retr('filename'));
+set(h.matlab_theme,'Value', 1 + double(isequal(gui.retr('darkmode'), 1)));   % the other theme (1 dark, 2 light)
 gui.change_theme();
-testCase.verifyEqual(gui.collect_settings, before, 'after the theme change');
+testCase.verifyEqual(without_derive_list(gui.collect_settings), without_derive_list(before), 'after the theme change');
+testCase.verifyEqual(session_data(), data, 'data after the theme change');
+testCase.verifyEqual(gui.retr('pathname'), folder, 'last folder after the theme change');
+h = gui.gethand;
+testCase.verifyEqual(get(h.fileselector,'Value'), 2, 'frame after the theme change');
+testCase.verifyNotEmpty(findobj(gui.retr('pivlab_axis'),'Type','quiver'), 'vectors shown after the theme change');
+shot(fullfile(tempdir, 'pivlab_after_theme_change.png'));
+% the PIVlab window can still be used: analysis again
+analyze();
+rl = gui.retr('resultslist');
+testCase.verifyEqual(rl{3,2}, data.resultslist{3,2});
 s = enable_visible_states();
 f = fieldnames(states);
 diff = {};
@@ -531,6 +558,18 @@ for k = 1:numel(f)
     end
 end
 testCase.verifyEmpty(diff, strjoin(diff, newline));
+end
+
+function test_warnings_stay_switched_on(testCase)
+% PIVlab must not switch the MATLAB warnings off (start, analysis, display, mask tools)
+state = warning;
+start_pivlab();
+load_images(jet(testCase.TestData.Root,2));
+analyze();
+validate.apply_filter_all_Callback([],[],[]);
+gui.sliderdisp(gui.retr('pivlab_axis')); drawnow;
+close_pivlab();
+testCase.verifyEqual(warning, state, 'the PIVlab GUI changed the warning state of MATLAB');
 end
 
 function test_pivlab_folder_stays_unchanged(testCase)
@@ -557,6 +596,15 @@ testCase.verifyEmpty(new, ['new files: ' strjoin(new, ', ')]);
 end
 
 %% ------------------------------------------------------------------ helpers
+function S = without_derive_list(S)
+% the list of derived parameters is filled when the data is shown again after rebuilding the
+% controls (like after loading a session); before, it was still empty if the derive panel had
+% not been opened. Only the stored text of the selected item differs, not a setting.
+if isfield(S, 'popup_texts') && isfield(S.popup_texts, 'derivchoice')
+    S.popup_texts = rmfield(S.popup_texts, 'derivchoice');
+end
+end
+
 function close_with_menu()
 % closing like the user (File -> Exit / window close): stores the last folder etc.
 hgui = getappdata(0,'hgui');
@@ -712,10 +760,18 @@ try, close(findall(0,'Type','figure'),'force'); catch, end
 end
 
 function prefs = clear_preferences()
+% the user's PIVlab preferences (gui.set_preference): saved, then removed, so the tests start
+% like a first start of PIVlab. Also saved in a file: if a test run is stopped before its end,
+% load(fullfile(tempdir,'PIVlab_preferences_backup.mat')) and restore_preferences(prefs) bring
+% them back.
 prefs = struct();
 if ispref('PIVlab')
     prefs = getpref('PIVlab');
     rmpref('PIVlab');
+end
+backup = fullfile(tempdir, 'PIVlab_preferences_backup.mat');
+if ~isfile(backup)   % a backup of a stopped run is not overwritten with the cleared preferences
+    save(backup, 'prefs');
 end
 end
 
@@ -726,5 +782,9 @@ end
 names = fieldnames(prefs);
 for k = 1:numel(names)
     setpref('PIVlab', names{k}, prefs.(names{k}));
+end
+backup = fullfile(tempdir, 'PIVlab_preferences_backup.mat');
+if isfile(backup)
+    delete(backup);
 end
 end

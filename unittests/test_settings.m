@@ -441,11 +441,17 @@ end
 
 function prefs = clear_preferences()
 % the user's PIVlab preferences (gui.set_preference): saved, then removed, so the tests start
-% like a first start of PIVlab
+% like a first start of PIVlab. Also saved in a file: if a test run is stopped before its end,
+% load(fullfile(tempdir,'PIVlab_preferences_backup.mat')) and restore_preferences(prefs) bring
+% them back.
 prefs = struct();
 if ispref('PIVlab')
     prefs = getpref('PIVlab');
     rmpref('PIVlab');
+end
+backup = fullfile(tempdir, 'PIVlab_preferences_backup.mat');
+if ~isfile(backup)   % a backup of a stopped run is not overwritten with the cleared preferences
+    save(backup, 'prefs');
 end
 end
 
@@ -456,5 +462,9 @@ end
 names = fieldnames(prefs);
 for k = 1:numel(names)
     setpref('PIVlab', names{k}, prefs.(names{k}));
+end
+backup = fullfile(tempdir, 'PIVlab_preferences_backup.mat');
+if isfile(backup)
+    delete(backup);
 end
 end

@@ -54,22 +54,7 @@ end
 gui.put('pending_popup_texts',[]);
 gui.apply_settings(session.settings, fieldnames(gui.default_settings), true);
 %% displays of the data
-calxy=gui.retr('calxy'); calu=gui.retr('calu');
-if ~isempty(gui.retr('pointscali'))
-	calibrate.update_green_calibration_box(calxy, calu, gui.retr('offset_x_true'), gui.retr('offset_y_true'), handles)
-end
-calibrate.pixeldist_changed_Callback()
-roirect=gui.retr('roirect');
-if ~isempty(roirect)
-	roi.updateROIinfo
-end
-if ~isempty(gui.retr('velrect')) || ~isempty(gui.retr('velrect_freehand'))
-	try
-		validate.update_velocity_limits_information
-	catch
-	end
-end
-plot.update_derivchoice_list(handles)
+gui.refresh_data_displays(handles)
 %% view
 set(handles.panon,'Value',0);
 set(handles.zoomon,'Value',0);

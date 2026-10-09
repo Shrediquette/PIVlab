@@ -14,7 +14,8 @@ else
     gui.put('darkmode',0)
     gui.set_preference('dark_mode_theme',0);
 end
-settings = gui.collect_settings; % the window is rebuilt below: keep the settings
+settings = gui.collect_settings; % the window is rebuilt below: keep the settings, the data and the view
+view = gui.collect_view;
 
 %% Apply fix for wrong UI scaling introduced between matlab 2025a prerelease5 and Matlab2025a
 try
@@ -39,9 +40,8 @@ catch
 end
 
 gui.MainWindow_ResizeFcn(getappdata(0,'hgui'))
-gui.preferences_Callback
-gui.clear_user_content
-gui.displogo(1)
+gui.preferences_Callback % open the preferences panel first: only it is visible while the data is shown again
+gui.show_data_after_rebuild(view)
 load (fullfile('images','icons.mat'),'parallel_off','parallel_on');
 if gui.retr('darkmode')
     parallel_on=1-parallel_on+35/255;

@@ -141,13 +141,15 @@ for k = 1:2:numel(files)
     acc = acc + double(preproc.cam_undistort_with(imread(files{k}), cam));
 end
 mean_here = acc / (numel(files)/2);
-% The background is the mean of the raw images, undistorted once: the same as the mean of the
-% undistorted images, except next to the black fill area of the undistortion
+% The background is the mean of the raw images, undistorted once. That is the mean of the
+% undistorted images up to rounding / clipping of the 8 bit images at sharp, bright particles. Not
+% shifted: the deviation is much smaller than the one of a background shifted by 1 px.
 dev = abs(double(bgA) - mean_here);
-inner = imerode(mean_here > 0 & double(bgA) > 0, strel('square', 7));
-fprintf(['tilted model: background vs mean of the corrected images: max %.2f counts (next to the fill area), ' ...
-    'elsewhere max %.2f\n'], max(dev(:)), max(dev(inner)));
-testCase.verifyLessThanOrEqual(max(dev(inner)), 1, 'background is not the mean of the corrected images');
+dev_shifted = abs(double(circshift(bgA, [0 1])) - mean_here);
+fprintf(['tilted model: background vs mean of the corrected images: mean deviation %.3f counts ' ...
+    '(shifted by 1 px: %.3f), %.2f %% of the pixels > 1 count\n'], mean(dev(:)), mean(dev_shifted(:)), 100*mean(dev(:) > 1));
+testCase.verifyLessThan(mean(dev(:)), 0.2*mean(dev_shifted(:)), 'background is shifted against the corrected images');
+testCase.verifyLessThan(mean(dev(:) > 1), 0.01, 'background is not the mean of the corrected images');
 analyze();
 rl_serial = gui.retr('resultslist');
 export.save_session_function(D, 'tilted_bg.mat');
@@ -302,10 +304,18 @@ end
 end
 
 function prefs = clear_preferences()
+% the user's PIVlab preferences (gui.set_preference): saved, then removed, so the tests start
+% like a first start of PIVlab. Also saved in a file: if a test run is stopped before its end,
+% load(fullfile(tempdir,'PIVlab_preferences_backup.mat')) and restore_preferences(prefs) bring
+% them back.
 prefs = struct();
 if ispref('PIVlab')
     prefs = getpref('PIVlab');
     rmpref('PIVlab');
+end
+backup = fullfile(tempdir, 'PIVlab_preferences_backup.mat');
+if ~isfile(backup)   % a backup of a stopped run is not overwritten with the cleared preferences
+    save(backup, 'prefs');
 end
 end
 
@@ -316,5 +326,9 @@ end
 names = fieldnames(prefs);
 for k = 1:numel(names)
     setpref('PIVlab', names{k}, prefs.(names{k}));
+end
+backup = fullfile(tempdir, 'PIVlab_preferences_backup.mat');
+if isfile(backup)
+    delete(backup);
 end
 end

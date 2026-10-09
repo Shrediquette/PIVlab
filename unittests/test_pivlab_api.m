@@ -226,9 +226,11 @@ save(f, "cameraParams", "cam_selected_target_images", "cam_use_tilted_model", "c
 q = pivlab.preprocess(imgs, Camera=f, CameraView="same", Verbose=false);
 verifySameCamera(testCase, q.cam, p.cam);
 testCase.verifyEqual(pivlab.getImage(q, 1), pivlab.getImage(p, 1));
-% pre-processing without the Camera option keeps the camera calibration
+% pre-processing without the Camera option: no camera calibration (default, like every option
+% that is not given), also when the images were corrected before
 k = pivlab.preprocess(q, Highpass=true, Verbose=false);
-testCase.verifyEqual(k.cam, q.cam);
+testCase.verifyEqual(k.cam.use_calibration, 0);
+testCase.verifyEqual(k.imageSize, raw_size);
 % "none" switches the undistortion off again
 n = pivlab.preprocess(q, Camera="none", Verbose=false);
 testCase.verifyEqual(n.cam.use_calibration, 0);
@@ -309,7 +311,7 @@ plain = pivlab.preprocess(raw, Camera=cp, Verbose=false);
 testCase.verifyNotEqual(pivlab.getImage(imgs, 1), pivlab.getImage(plain, 1));   % the tilt is applied
 res = pivlab.analyze(imgs, Passes=2, PassSizes=[32 32 32], Parallel=true, Verbose=false);
 ens = pivlab.analyze(imgs, Algorithm="ensemble", Passes=2, PassSizes=[32 32 32], Verbose=false);
-bg = pivlab.preprocess(imgs, Background="mean", Verbose=false);
+bg = pivlab.preprocess(imgs, Camera=file, Background="mean", Verbose=false);   % (Camera has to be given again)
 % GUI with parallel processing
 startPIVlab(2);
 loadImagesInGui(files, 1);
@@ -479,11 +481,17 @@ end
 
 function prefs = clear_preferences()
 % the user's PIVlab preferences (gui.set_preference): saved, then removed, so the tests start
-% like a first start of PIVlab
+% like a first start of PIVlab. Also saved in a file: if a test run is stopped before its end,
+% load(fullfile(tempdir,'PIVlab_preferences_backup.mat')) and restore_preferences(prefs) bring
+% them back.
 prefs = struct();
 if ispref('PIVlab')
     prefs = getpref('PIVlab');
     rmpref('PIVlab');
+end
+backup = fullfile(tempdir, 'PIVlab_preferences_backup.mat');
+if ~isfile(backup)   % a backup of a stopped run is not overwritten with the cleared preferences
+    save(backup, 'prefs');
 end
 end
 
@@ -494,5 +502,9 @@ end
 names = fieldnames(prefs);
 for k = 1:numel(names)
     setpref('PIVlab', names{k}, prefs.(names{k}));
+end
+backup = fullfile(tempdir, 'PIVlab_preferences_backup.mat');
+if isfile(backup)
+    delete(backup);
 end
 end

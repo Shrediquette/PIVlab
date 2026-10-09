@@ -2,6 +2,9 @@ function count_discarded_data (~,~,~)
 handles=gui.gethand;
 resultslist=gui.retr('resultslist');
 currentframe=2*floor(get(handles.fileselector, 'value'))-1;
+nan_amount=0; %no results for this frame (yet)
+firstpeak_valid_amount=0;
+secondpeakamount=0;
 if ~isempty(resultslist)
 	if size(resultslist,2) >= ((currentframe+1)/2)
 		typevector=resultslist{9,(currentframe+1)/2};

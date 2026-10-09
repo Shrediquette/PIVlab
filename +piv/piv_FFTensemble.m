@@ -79,7 +79,7 @@ if isempty(opts.int4)
 else
     int4 = opts.int4;
 end
-warning off %#ok<*WNOFF>
+warning_state = warning('off','all'); % restored at the end
 %% pre-processing is done in this function
 result_conv_ensemble = zeros(interrogationarea,interrogationarea); % prepare empty result_conv
 if isempty(video_frame_selection) %list with image files was passed
@@ -1008,6 +1008,7 @@ end
     %clear Correlation map in masked area
     correlation_map(typevector==0) = 0;
 end
+warning(warning_state);
 
 
 

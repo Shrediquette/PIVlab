@@ -16,9 +16,9 @@ if found
 		buf=+5;
 	end
 	if strcmp(objects_in_axis(i).UserData,'ROI_object_freehand') || strcmp(objects_in_axis(i).UserData,'ROI_object_polygon') || strcmp(objects_in_axis(i).UserData,'ROI_object_external')
-		warning off
+		warning_state = warning('off','all');
 		poly_obj=polyshape(objects_in_axis(i).Position);
-		%warning on
+		warning(warning_state);
 
 		polyout1 = polybuffer(poly_obj,buf,'JointType','miter','MiterLimit',2);
 		try

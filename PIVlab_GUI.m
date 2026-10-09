@@ -274,9 +274,9 @@ if isempty(fh)
     end
     %% Check image acquisition toolbox
     try
-        warning off
+        warning_state = warning('off','all');
         imaqreset;
-        %warning on
+        warning(warning_state);
         if ~exist('splash_ax','var')
             disp('-> Image Acquisition Toolbox found.')
         else
@@ -329,7 +329,6 @@ if isempty(fh)
     %% read current and last directory (preferences)
     homedir=gui.get_preference('homedir',[]);
     pathname=gui.get_preference('pathname',[]);
-    warning('off','all')
     warning('off','serialport:serialport:ReadlineWarning')
     if isempty(pathname) || isempty(homedir)
         try
