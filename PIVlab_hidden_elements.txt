@@ -11,6 +11,7 @@ multip26
 multip27
 multip28
 multip29
+multip30
 
 # ── Menu items for hidden panels ────────────────────────────
 menu_partgen
@@ -20,7 +21,7 @@ menu_corrmatrices
 menu_stereopiv
 
 # ── multip01  Load images ───────────────────────────────────
-stereocheckbox
+stereo_import
 
 # ── multip25  Mask generation ───────────────────────────────
 text251

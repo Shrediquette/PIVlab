@@ -10,8 +10,6 @@ function default = default_settings
 % gui.generateUI creates the controls with these values; the command-line API uses them too.
 
 %% analysis (pre-processing, PIV settings, data smoothing, vector validation, image based validation)
-% Input data
-default.analysis.stereocheckbox = 0;
 % Image pre-processing
 default.analysis.clahe_enable = 1;
 default.analysis.clahe_size = 64;
@@ -65,6 +63,13 @@ default.analysis.bright_filter_enable = 0;
 default.analysis.bright_filter_thresh = 1;
 default.analysis.corr_filter_enable = 0;
 default.analysis.corr_filter_thresh = 0.5;
+% Stereo-PIV: disparity correction (also the defaults of stereo.defaults)
+default.analysis.stereo_disp_pairs = 10;   % image pairs used for the disparity
+default.analysis.stereo_disp_model = 1;    % 1 = 2nd-order polynomial, 2 = plane (1st order), 3 = projective
+default.analysis.stereo_disp_passes = 3;   % measurements (each one corrects the remaining disparity)
+default.analysis.stereo_disp_ia = 0;       % interrogation area of the first pass [px], 0 = automatic
+default.analysis.stereo_disp_stdev = 6;    % standard deviation filter of the disparity vectors
+default.analysis.stereo_disp_median = 3;   % local median filter of the disparity vectors
 
 %% calibration (calibration, camera calibration, rectification, marker board)
 % Calibration

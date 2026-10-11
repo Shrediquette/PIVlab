@@ -3,42 +3,239 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Stereo PIV settings · PIVlab Manual</title>
-  <meta name="description" content="Current status of stereo PIV support in PIVlab.">
+  <title>Stereo-PIV (2D3C) · PIVlab Manual</title>
+  <meta name="description" content="How to measure all three velocity components in a light sheet with two cameras (stereo-PIV, 2D3C) in PIVlab.">
   <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
   <article id="doc">
-    <h1 id="top">Stereo PIV settings</h1>
-    <p class="lead">Stereo PIV (two-camera, 3-component velocity measurement) is
-    <strong>not implemented yet</strong>. This page exists so the menu structure is documented
-    honestly rather than left silently unexplained.</p>
+    <h1 id="top">Stereo-PIV (2D3C)</h1>
+    <p class="lead">With two cameras that look at the light sheet from different angles, PIVlab
+    measures all <strong>three velocity components</strong> in the sheet: U and V in the sheet
+    plane and W through it. Most of the work is the same as in normal 2D PIV — you only learn two
+    new things: the <strong>camera switch</strong> and the <strong>Stereo-PIV panel</strong>.</p>
 
-    <div class="warn">
-      <strong>Not currently functional</strong>
-      <span class="ui">Analysis → Stereo PIV settings → Disparity correction</span> is present
-      in the menu but disabled, and the parent menu item currently does nothing when clicked.
-      There is no working stereo-PIV analysis path in this version.
+    <table class="ref">
+      <tr><th>Step</th><th>Where</th><th>Per camera?</th></tr>
+      <tr><td>1. Import the images of both cameras</td><td><span class="ui">Import stereo images</span> (Input data panel)</td><td>both at once</td></tr>
+      <tr><td>2. Lens calibration</td><td><span class="ui">Image settings → Camera calibration</span></td><td>yes</td></tr>
+      <tr><td>3. Board image in the light sheet</td><td><span class="ui">Image rectification → Load target image</span></td><td>yes</td></tr>
+      <tr><td>4. Stereo calibration</td><td><span class="ui">Analysis → Stereo-PIV</span></td><td>both at once</td></tr>
+      <tr><td>5. Disparity correction</td><td><span class="ui">Analysis → Stereo-PIV</span> (or automatic at ANALYZE)</td><td>both at once</td></tr>
+      <tr><td>6. Pre-processing, masks, PIV settings, ANALYZE, validation</td><td>the normal panels</td><td>only the masks</td></tr>
+    </table>
+
+    <h2 id="idea">How it works</h2>
+    <p>Each camera sees the particles in the light sheet in perspective. After the stereo
+    calibration, PIVlab <strong>maps the images of both cameras onto one common grid</strong> in
+    the light sheet, so a point of the sheet lies at the same pixel in both images. Each camera
+    is then analysed with normal 2D PIV. The two 2D results differ only because the cameras see
+    the out-of-plane motion from different angles, and from this difference PIVlab computes U, V
+    and W.</p>
+    <p>The board is never placed exactly in the light sheet, so the two images do not match
+    perfectly at first. The remaining shift between them, the <strong>disparity</strong>, is
+    measured by correlating the particle images of camera 1 with those of camera 2 at the same
+    time. PIVlab fits a smooth map to it, corrects both cameras with it, and from it also knows
+    where the light sheet really is.</p>
+
+    <h2 id="cameras">One session, two cameras</h2>
+    <p>In stereo mode PIVlab keeps two cameras in one session. All panels work on the
+    <strong>active camera</strong>; the switch <span class="ui">CAM 1 / CAM 2</span> in the
+    Tools panel (or <span class="ui">CTRL+K</span>, or <span class="ui">Image settings →
+    Stereo-PIV: switch camera 1 / 2</span>) changes between them. The camera that is shown is
+    written on the image in its colour: camera 1 blue, camera 2 orange.</p>
+    <figure class="inline-panel">
+      <img src="../assets/img/stereo-piv/camera-switch.png" alt="Tools panel of PIVlab with the blue CAM 1 button next to the frame slider">
+      <figcaption>The camera switch <strong>CAM 1 / CAM 2</strong> in the Tools panel.</figcaption>
+    </figure>
+    <table class="ref">
+      <tr><th>Separate for each camera</th><th>Shared by both cameras</th></tr>
+      <tr><td>images, lens calibration, board image in the light sheet, background images,
+      masks, the 2D result of the camera</td>
+      <td>all settings (pre-processing, background subtraction, image-based validation, PIV
+      settings, vector validation, smoothing), region of interest, spatial calibration,
+      results (U, V, W)</td></tr>
+    </table>
+    <p>Any setting you change while camera 1 is shown also applies to camera 2. Only the masks
+    have to be drawn for each camera.</p>
+
+    <h2 id="import">1. Importing the images</h2>
+    <ol class="steps">
+      <li>In the Input data panel click <span class="ui">Import stereo images</span> (below
+      <span class="ui">Import images</span>).</li>
+      <li>The normal image dialog opens twice: first select the images of
+      <strong>camera 1</strong>, then those of <strong>camera 2</strong>. Use the same
+      sequencing style for both (e.g. pco double images).</li>
+      <li>Both cameras must give the same number of images, recorded at the same time.</li>
+    </ol>
+    <h3 id="check">Checking the images first</h3>
+    <p>Right after the import you can check the particle images with a normal 2D PIV analysis:
+    <span class="ui">Analyze current frame</span> or <span class="ui">Analyze all frames</span>
+    analyse the camera that is shown, as in 2D PIV. Switch to the other camera to check it too;
+    each camera keeps its own check result. The check results are removed when you compute the
+    stereo calibration.</p>
+
+    <h3 id="next-recording">The next recording with the same setup</h3>
+    <p>Click <span class="ui">Import stereo images</span> again and select the new images of both
+    cameras. As with new images in 2D PIV, the results, background images, masks and velocity limits
+    are removed. If the new images have the same size as before, the lens calibrations, board
+    images, the stereo calibration, the disparity correction and the region of interest stay, so
+    you can analyse the new recording right away. If the light sheet or a camera has moved, measure
+    the disparity again.</p>
+
+    <p>The image list shows the files of the active camera. Importing normal images later
+    (<span class="ui">Import images</span>) returns PIVlab to 2D mode. Removing single images from the list is
+    not possible in stereo mode, because the two lists must stay paired.</p>
+
+    <h2 id="lens">2. and 3. Lens calibration and board image, for each camera</h2>
+    <p>Do this exactly as in <a href="camera-calibration.html">Camera calibration</a>, once with
+    camera 1 active and once with camera 2 active (the <span class="ui">Camera 1</span> and
+    <span class="ui">Camera 2</span> menu entries switch the camera for you). The board
+    definition is shared.</p>
+    <ol class="steps">
+      <li><strong>Lens calibration</strong> (<a href="camera-calibration.html#calibration">Camera
+      calibration (undistortion)</a>): <span class="ui">Estimate cam parameters</span> from
+      board images, or <span class="ui">Load parameters</span>. For cameras with a Scheimpflug
+      adapter, use the tilted sensor model. Stereo-PIV always undistorts the images, also when
+      <span class="ui">Enable camera calibration</span> is not ticked.</li>
+      <li><strong>Board image in the light sheet</strong>
+      (<a href="camera-calibration.html#rectification">Image rectification</a>): place the board
+      in the light sheet, record it with both cameras, and load each camera's image with
+      <span class="ui">Load target image</span>. The stereo calibration replaces the 2D
+      rectification: in stereo mode the panel shows a note instead of
+      <span class="ui">Enable image rectification</span> and <span class="ui">Upscaling</span>.
+      After the stereo calibration, <span class="ui">Show rectified board</span> shows the board
+      on the common grid of both cameras; its corners should lie at the same pixels in both
+      cameras.</li>
+    </ol>
+    <div class="tip">
+      <strong>Same board position for both cameras</strong>
+      Both board images must show the board in the same position. Ideally record them at the
+      same time. The board should cover as much of the measurement area as possible.
     </div>
 
-    <p>Some related, already-usable infrastructure exists elsewhere and is worth knowing about
-    if you're setting up a two-camera rig for future use:</p>
+    <h2 id="panel">The Stereo-PIV panel</h2>
+    <p>Open <span class="ui">Analysis → Stereo-PIV</span>. The panel has three parts:</p>
     <ul>
-      <li>The <span class="ui">Stereo-PIV mode (2D3C)</span> checkbox exists in the
-      <a href="sessions.html">Input data panel</a> but is currently disabled.</li>
-      <li><a href="camera-calibration.html">Camera calibration</a> already supports a
-      <span class="ui">Scheimpflug adapter (tilted sensor model)</span> option, relevant to
-      angled stereo camera setups, and its "Camera 2" menu entries exist (though disabled today)
-      for future dual-camera support.</li>
+      <li><strong>Steps</strong> — a checklist of what is done and what is still missing.</li>
+      <li><strong>Stereo calibration</strong> — the common view of both cameras.</li>
+      <li><strong>Disparity correction</strong> — the fine alignment of both cameras on the
+      particle images.</li>
     </ul>
+    <figure class="inline-panel">
+      <img src="../assets/img/stereo-piv/panel.png" alt="The Stereo-PIV panel with the checklist, the stereo calibration report and the disparity correction settings and report">
+      <figcaption>The <strong>Stereo-PIV</strong> panel after the stereo calibration and the
+      disparity correction (real data, two cameras at 45° and 47°).</figcaption>
+    </figure>
 
-    <p>If you need stereo PIV today, this isn't yet the tool for it — check the
-    <a href="https://shrediquette.github.io/PIVlab/" target="_blank" rel="noopener">PIVlab
-    website</a> for news on when this feature lands.</p>
+    <h2 id="calibration">4. Stereo calibration</h2>
+    <p>Click <span class="ui">Compute stereo calibration</span>. PIVlab detects the board
+    corners in the board images of both cameras (obviously wrong corners are rejected), computes
+    the position of each camera, and builds the common grid in the light sheet. Afterwards:</p>
+    <ul>
+      <li>Both cameras show their image on the common grid. Image points of the light sheet
+      should lie at nearly the same pixel in both cameras.</li>
+      <li>The report shows the viewing angle of each camera, the angle between them, the scale
+      (mm per pixel) and the overlap of the two views. A small angle between the cameras makes W
+      noisy (its error grows like 1 / tan of the half angle).</li>
+      <li>The <a href="spatial-calibration.html">spatial calibration</a> (px → mm) is filled in
+      from the grid. Only the <strong>time step</strong> is missing: enter it in the calibration
+      panel and apply it.</li>
+      <li>The region of interest is set to the overlap of both views.</li>
+    </ul>
+    <p><span class="ui">Show 3D setup</span> draws both cameras, the board, the overlap and (after
+    the disparity correction) the measured light sheet.</p>
+    <div class="note">
+      <strong>Calibrate first, then mask</strong>
+      Masks, region of interest and background images are made on the images that are shown.
+      The stereo calibration changes these images, so PIVlab asks before it removes masks and
+      results that were made before.
+    </div>
+
+    <h2 id="disparity">5. Disparity correction</h2>
+    <p>Click <span class="ui">Measure disparity</span>. PIVlab correlates frame A of camera 1
+    with frame A of camera 2 for several image pairs spread over the series, fits a smooth map,
+    and corrects both cameras with it. It repeats this on the corrected images to find what
+    remains. The progress bar and the remaining time are shown while it runs. If you click
+    <span class="ui">ANALYZE!</span> without measuring the disparity, PIVlab measures it first with
+    the current settings.</p>
+    <ul>
+      <li>The <strong>image pre-processing</strong> of the GUI is used for the disparity too.</li>
+      <li>A <strong>minimum-intensity background</strong> of each camera is always subtracted
+      for the disparity (independent of your background setting), so reflections and walls do
+      not produce wrong disparity. It needs at least 10 A images.</li>
+    </ul>
+    <table class="ref">
+      <tr><th>Setting</th><th>Meaning</th></tr>
+      <tr><td>Pairs</td><td>Number of image pairs used (default 10). More pairs give a smoother, more reliable map.</td></tr>
+      <tr><td>Passes</td><td>How often the disparity is measured (default 3): each further pass measures what remains on the corrected images and adds it. It stops early when less than 0.1 px remains.</td></tr>
+      <tr><td>Model</td><td>Smooth model of the disparity map: 2nd-order polynomial (default), plane, or projective.</td></tr>
+      <tr><td>Window size</td><td>Interrogation area of the first pass in px, 0 = automatic.</td></tr>
+      <tr><td>Stdev / Median</td><td>Validation of the disparity vectors (defaults 6 and 3).</td></tr>
+    </table>
+    <p>The report gives the number of rejected vectors, the disparity before the correction,
+    what remains after it, and the position and tilt of the light sheet relative to the board.
+    A warning appears when more than 1 px remains — then check the lens calibrations and the
+    board images.</p>
+    <p>With <span class="ui">Show</span> you can look at the result while the panel is open:</p>
+    <table class="ref">
+      <tr><th>Display</th><th>Shows</th></tr>
+      <tr><td>Camera image</td><td>The corrected image of the active camera.</td></tr>
+      <tr><td>Disparity: measured vectors</td><td>The measured shifts between the cameras; rejected vectors are marked.</td></tr>
+      <tr><td>Disparity: fitted map</td><td>The smooth map that is used for the correction.</td></tr>
+      <tr><td>Remaining disparity</td><td>Measured minus fitted — should be small and random.</td></tr>
+      <tr><td>Overlay cam 1 / cam 2</td><td>Camera 1 red, camera 2 cyan, with or without the correction. Large structures (walls, edges, particle clouds) should line up after the correction. Single particles only overlap (grey) in a thin light sheet: each camera sees particles at different depths of the sheet at slightly different places, and the correction removes only the mean shift.</td></tr>
+    </table>
+    <div class="note">
+      <strong>Masks after the disparity correction</strong>
+      The correction moves the images by up to a few pixels. Masks drawn before may have to be
+      adapted; PIVlab warns you.
+    </div>
+
+    <h2 id="analysis">6. Analysis, validation and the result</h2>
+    <p>From here on everything works as in 2D PIV:
+    <a href="preprocessing.html">pre-processing</a>, <a href="masking.html">masks</a> (for each
+    camera), <a href="piv-settings.html">PIV settings</a>, and
+    <a href="analyze.html">ANALYZE!</a>. After the stereo calibration, ANALYZE analyses <strong>camera 1 and
+    camera 2</strong> with the same settings and then computes U, V and W. The progress bar runs
+    once for each camera.</p>
+    <ul>
+      <li><a href="validation-velocity.html">Vector validation</a> is applied to the 2D results of
+      both cameras with the same settings; U, V and W are then computed again. Undo works the
+      same way.</li>
+      <li>U and V are shown as vectors, as in 2D. <strong>W is shown as a colour map under the
+      vectors</strong>: blue = toward the cameras, red = away from the cameras, white = 0. The
+      colour scale is the same for all image pairs and is written at the bottom left of the
+      image. With a spatial calibration, W is in the same units as U and V.</li>
+      <li>Derived parameters (vorticity, magnitude, …), plots and statistics work on U and V as
+      in 2D.</li>
+      <li>Saving and loading a <a href="sessions.html">session</a> keeps both cameras, the
+      calibrations, the disparity and the result.</li>
+    </ul>
+    <figure>
+      <img src="../assets/img/stereo-piv/result-w.jpg" alt="Stereo-PIV result of a water jet: the out-of-plane velocity W as a blue-white-red colour map over the particle image, the jet is a strong blue region">
+      <figcaption>Result of one image pair: W as a colour map under the U, V vectors. The jet
+      in the middle moves toward the cameras (blue); the water around it moves slowly away
+      (red) or toward the cameras.</figcaption>
+    </figure>
+    <figure>
+      <img src="../assets/img/stereo-piv/result-w-zoom.jpg" alt="Zoom on the jet: U, V vectors over the blue W colour map">
+      <figcaption>Zoom on the jet: U and V as vectors, W as the colour underneath.</figcaption>
+    </figure>
+
+    <div class="warn">
+      <strong>Not yet available in stereo mode</strong>
+      <ul>
+        <li>W is not part of the exports (ASCII, MAT, Tecplot, VTK) yet, and not part of the
+        statistics and derived parameters.</li>
+        <li>Mean frames (temporal mean of the result) have no W.</li>
+        <li>Manually deleted vectors are not removed from the 2D results of the cameras.</li>
+        <li>The <a href="command-line.html">command-line API</a> can not run stereo sessions yet
+        (<code>pivlab.loadSession</code> warns).</li>
+      </ul>
+    </div>
   </article>
 
   <script src="../assets/js/nav.js"></script>
-  <script src="../assets/js/search-index.js"></script>
-  <script src="../assets/js/app.js"></script>
 </body>
 </html>

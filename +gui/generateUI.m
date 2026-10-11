@@ -45,6 +45,9 @@ handles.togglepair = uicontrol(handles.tools,'Style','togglebutton','units', 'ch
 item=[0  item(2)+item(4)+margin*0.2 parentitem(3)/2/2 parentitem(3)/2/2/4];
 handles.toggle_parallel = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@misc.toggle_parallel_Callback,'tag','toggle_parallel','UserData','not_a_setting');
 
+item=[parentitem(3)/2/2 item(2) parentitem(3)/2/2 parentitem(3)/2/2/4];
+handles.stereo_camera_toggle = uicontrol(handles.tools,'Style','pushbutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','CAM 1','Fontweight','bold','Callback',@stereo.camera_toggle_Callback,'tag','stereo_camera_toggle','TooltipString','Stereo-PIV: switch between camera 1 and camera 2 (CTRL+K)','Visible','off','UserData','not_a_setting');
+
 item=[parentitem(3)/2 item(2) parentitem(3)/2/2 parentitem(3)/2/2/4];
 handles.zoomon = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@gui.zoomon_Callback,'tag','zoomon','TooltipString','Zoom','UserData','not_a_setting');
 
@@ -108,10 +111,10 @@ parentitem=get(handles.multip01, 'Position');
 item=[0 0 0 0];
 
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.stereocheckbox = uicontrol(handles.multip01,'Style','checkbox','Value',default.analysis.stereocheckbox,'String','Stereo-PIV mode (2D3C)','Units','characters', 'Fontunits','points','Fontsize',10,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.stereocheckbox_Callback,'Tag','stereocheckbox','TooltipString','Enable Stereo-PIV mode','Enable','off','UserData','session_only');
-
-item=[0 item(2)+item(4) parentitem(3) 2];
 handles.loadimgsbutton = uicontrol(handles.multip01,'Style','pushbutton','String','Import images','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@import.loadimgsbutton_Callback,1,[]},'TooltipString','Load image data');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
+handles.stereo_import = uicontrol(handles.multip01,'Style','pushbutton','String','Import stereo images','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.stereo_import_Callback,'Tag','stereo_import','TooltipString','Stereo-PIV (2D3C): import the images of camera 1 and camera 2');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 handles.loadvideobutton = uicontrol(handles.multip01,'Style','pushbutton','String','Convert + import video','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.convertvideobutton_Callback,'TooltipString','Convert a video to lossless image files, then load them (time-resolved)');
@@ -2428,13 +2431,18 @@ item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.rect_show_cam_position = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Show camera position','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_cam_position_Callback,'TooltipString','Show a 3D scene of camera and board position');
 
 item=[0 item(2)+item(4)+margin parentitem(3)/2 1.5];
-uicontrol(handles.rect_imagedata,'Style','text','String','Upscaling:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+handles.calib_upscale_label = uicontrol(handles.rect_imagedata,'Style','text','String','Upscaling:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_upscale_label');
+upscale_row = item(2);
 
 item=[parentitem(3)/4*3 item(2) parentitem(3)/4 1.5];
 handles.calib_upscale = uicontrol(handles.rect_imagedata,'Style','popupmenu','String',{'1x' '2x'},'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_upscale','TooltipString','Upscaling factor reducing then effect of image interpolations, but making analyses slower','Callback', @preproc.cam_rectification_upscale_Callback,'Value',default.calibration.calib_upscale,'UserData','session_only');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
 handles.calib_userectification = uicontrol(handles.rect_imagedata,'Style','checkbox','String','Enable image rectification', 'Value',default.calibration.calib_userectification,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_userectification','TooltipString','Use image rectification','Callback', @preproc.cam_enable_cam_rectification_Callback,'UserData','session_only');
+
+% stereo-PIV: instead of upscaling and "Enable image rectification" (gui.update_dependent_controls)
+item=[0 upscale_row parentitem(3) 5];
+handles.stereo_rect_note = uicontrol(handles.rect_imagedata,'Style','text','String','Stereo-PIV: this board image is used by the stereo calibration (Analysis -> Stereo-PIV).','Units','characters','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'FontWeight','bold','Visible','off','Tag','stereo_rect_note','UserData','not_a_setting');
 
 
 %% Marker board setup
@@ -2519,7 +2527,68 @@ uicontrol(handles.plot_correlation_matrices,'Style','text','String','After retri
 
 
 
+%% Multip30 Stereo-PIV
+handles.multip30 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Stereo-PIV (2D3C)', 'Tag','multip30','fontweight','bold');
+parentitem=get(handles.multip30, 'Position');
+item=[0 0 0 0];
+
+item=[0 item(2)+item(4) parentitem(3) 8.5];
+handles.stereo_steps_panel = uipanel(handles.multip30, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Steps','fontweight','bold','Tag','stereo_steps_panel');
+parentitem2=get(handles.stereo_steps_panel, 'Position');
+handles.stereo_steps = uicontrol(handles.stereo_steps_panel,'Style','text','String','Load stereo images first (Input data panel: "Import stereo images").','Units','characters','HorizontalAlignment','left','Position',[margin margin/4 parentitem2(3)-margin*2 parentitem2(4)-margin*1.25],'Tag','stereo_steps','UserData','not_a_setting');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 13];
+handles.stereo_calib_panel = uipanel(handles.multip30, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Stereo calibration','fontweight','bold','Tag','stereo_calib_panel');
+parentitem2=get(handles.stereo_calib_panel, 'Position');
+item2=[0 0 0 0];
+item2=[0 item2(2)+item2(4) parentitem2(3) 1.5];
+handles.stereo_calibrate = uicontrol(handles.stereo_calib_panel,'Style','pushbutton','String','Compute stereo calibration','Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Callback',@stereo.calibrate_Callback,'Tag','stereo_calibrate','TooltipString','Common view of both cameras from the board image in the light sheet of each camera (Image settings -> Camera calibration -> Image rectification -> Load target image)');
+item2=[0 item2(2)+item2(4)+margin/4 parentitem2(3) 7.5];
+handles.stereo_calib_report = uicontrol(handles.stereo_calib_panel,'Style','text','String','Not calibrated yet.','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Tag','stereo_calib_report','UserData','not_a_setting');
+item2=[0 item2(2)+item2(4)+margin/4 parentitem2(3) 1.5];
+handles.stereo_show_3d = uicontrol(handles.stereo_calib_panel,'Style','pushbutton','String','Show 3D setup','Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Callback',@stereo.show_3d_Callback,'Tag','stereo_show_3d','TooltipString','Both cameras, the board, the overlap of the views and the light sheet in 3D');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 21];
+handles.stereo_disp_panel = uipanel(handles.multip30, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Disparity correction','fontweight','bold','Tag','stereo_disp_panel');
+parentitem2=get(handles.stereo_disp_panel, 'Position');
+w=parentitem2(3);
+item2=[0 0 0 0];
+item2=[0 item2(2)+item2(4) w/4 1];
+uicontrol(handles.stereo_disp_panel,'Style','text','String','Pairs:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
+item2=[w/4 item2(2) w/4 1];
+handles.stereo_disp_pairs = uicontrol(handles.stereo_disp_panel,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_pairs),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)],'Tag','stereo_disp_pairs','TooltipString','Number of image pairs used for the disparity (spread over the series)');
+item2=[w/2 item2(2) w/4 1];
+uicontrol(handles.stereo_disp_panel,'Style','text','String','Passes:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
+item2=[w*3/4 item2(2) w/4 1];
+handles.stereo_disp_passes = uicontrol(handles.stereo_disp_panel,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_passes),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Tag','stereo_disp_passes','TooltipString','Measure again on the corrected images and add the remaining disparity');
+item2=[0 item2(2)+item2(4)+margin/4 w/4 1.5];
+uicontrol(handles.stereo_disp_panel,'Style','text','String','Model:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
+[~, model_labels] = stereo.disparity_models;
+item2=[w/4 item2(2) w*3/4 1.5];
+handles.stereo_disp_model = uicontrol(handles.stereo_disp_panel,'Style','popupmenu','String',model_labels,'Value',default.analysis.stereo_disp_model,'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Tag','stereo_disp_model','TooltipString','Smooth model of the disparity map');
+item2=[0 item2(2)+item2(4)+margin/4 w*3/4 1];
+uicontrol(handles.stereo_disp_panel,'Style','text','String','Window size [px] (0 = auto):','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
+item2=[w*3/4 item2(2) w/4 1];
+handles.stereo_disp_ia = uicontrol(handles.stereo_disp_panel,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_ia),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Tag','stereo_disp_ia','TooltipString','Interrogation area of the first pass, 0 = one fifth of the image');
+item2=[0 item2(2)+item2(4)+margin/4 w/4 1];
+uicontrol(handles.stereo_disp_panel,'Style','text','String','Stdev:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
+item2=[w/4 item2(2) w/4 1];
+handles.stereo_disp_stdev = uicontrol(handles.stereo_disp_panel,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_stdev),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)],'Tag','stereo_disp_stdev','TooltipString','Standard deviation filter of the disparity vectors');
+item2=[w/2 item2(2) w/4 1];
+uicontrol(handles.stereo_disp_panel,'Style','text','String','Median:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
+item2=[w*3/4 item2(2) w/4 1];
+handles.stereo_disp_median = uicontrol(handles.stereo_disp_panel,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_median),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Tag','stereo_disp_median','TooltipString','Local median filter of the disparity vectors');
+item2=[0 item2(2)+item2(4)+margin/2 w 1.5];
+handles.stereo_measure_disparity = uicontrol(handles.stereo_disp_panel,'Style','pushbutton','String','Measure disparity','Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Callback',@stereo.measure_disparity_Callback,'Tag','stereo_measure_disparity','TooltipString','Remaining misalignment of camera 1 and camera 2 (correlation of their A images); corrects both cameras');
+item2=[0 item2(2)+item2(4)+margin/4 w 8.5];
+handles.stereo_disp_report = uicontrol(handles.stereo_disp_panel,'Style','text','String','Not measured yet.','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Tag','stereo_disp_report','UserData','not_a_setting');
+item2=[0 item2(2)+item2(4)+margin/4 w/4 1.5];
+uicontrol(handles.stereo_disp_panel,'Style','text','String','Show:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
+item2=[w/4 item2(2) w*3/4 1.5];
+handles.stereo_disp_show = uicontrol(handles.stereo_disp_panel,'Style','popupmenu','String',{'Camera image','Disparity: measured vectors','Disparity: fitted map','Remaining disparity','Overlay cam 1 / cam 2 (corrected)','Overlay cam 1 / cam 2 (not corrected)'},'Value',1,'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Callback',@stereo.disparity_display_Callback,'Tag','stereo_disp_show','TooltipString','What the image shows while this panel is open (overlay: grey = both cameras agree, red / cyan = misaligned)','UserData','not_a_setting');
+
 gui.put('multitiff',0); %default for compatibility: Not a multitiff.
 gui.put('pcopanda_dbl_image',0); %default for compatibility: Not a multitiff.
 gui.put('stereomode',0); % default: Not stereo mode
+gui.put('stereo_active_camera',1); % stereo-PIV: camera shown and edited (stereo.switch_camera)
 disp('-> UI generated.')

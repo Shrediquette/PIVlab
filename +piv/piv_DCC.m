@@ -11,6 +11,9 @@ if numel(roi)>0
     image1_roi=double(image1(yroi:yroi+heightroi,xroi:xroi+widthroi));
     image2_roi=double(image2(yroi:yroi+heightroi,xroi:xroi+widthroi));
 	mask_inpt_roi = mask_inpt(yroi:yroi+heightroi,xroi:xroi+widthroi);
+    % pixel 1 of the cut-out is image pixel xroi / yroi: image position = position in the cut-out + xroi-1
+    xroi=xroi-1;
+    yroi=yroi-1;
 else
     xroi=0;
     yroi=0;

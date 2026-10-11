@@ -5,7 +5,7 @@ function s = gui_settings_to_api(G, s)
 %   optional G.calibration_data). Settings missing in G keep their value in s.
 %   This is the one translation table between the GUI (Tags) and the API (names).
 %   GUI settings of the groups analysis / calibration that the API does not use are listed in
-%   gui_only below (unittests/test_settings checks that every such setting is in one of the two).
+%   gui_only below (unittests/test_gui_settings checks that every such setting is in one of the two).
 
 A = group(G, 'analysis');
 C = group(G, 'calibration');
@@ -137,12 +137,14 @@ s.display.VectorSkip = get_num(D,'nthvect',s.display.VectorSkip);
 s.display.EnhanceImage = get_flag(D,'enhance_images',s.display.EnhanceImage);
 end
 
-function names = gui_only() %#ok<DEFNU> read by unittests/test_settings
+function names = gui_only() %#ok<DEFNU> read by unittests/test_gui_settings
 % settings of the groups analysis and calibration that the API does not use (yet)
-names = {'stereocheckbox', 'ofv_parallelpatches', ...
+names = {'ofv_parallelpatches', ...
     'extrapolate_border', 'optimize_calib_img', 'calib_use_tilted_model', 'calib_viewtype', ...
     'calib_usecalibration', 'calib_upscale', 'calib_userectification', 'calib_boardtype', ...
-    'calib_origincolor', 'calib_rows', 'calib_columns', 'calib_checkersize', 'calib_markersize'};
+    'calib_origincolor', 'calib_rows', 'calib_columns', 'calib_checkersize', 'calib_markersize', ...
+    'stereo_disp_pairs', 'stereo_disp_model', 'stereo_disp_passes', 'stereo_disp_ia', 'stereo_disp_stdev', ...
+    'stereo_disp_median'}; % stereo-PIV: command line via stereo.run / stereo.defaults
 end
 
 function S = group(G, name)

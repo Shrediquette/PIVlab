@@ -1,4 +1,7 @@
 function apply_filter_all_Callback(~, ~, ~)
+if stereo.redirect('filter_all') % stereo-PIV: both cameras, then U, V, W (stereo.per_camera)
+	return
+end
 resultslist=gui.retr('resultslist');
 
 if ~isempty(resultslist)

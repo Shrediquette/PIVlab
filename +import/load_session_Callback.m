@@ -41,6 +41,7 @@ if gui.retr('video_selection_done') == 1 % the video reader is not stored: open 
 		disp(['-> Could not open the video file ' filepath{1}])
 	end
 end
+stereo.update_maps % stereo-PIV: the image maps are not stored in sessions
 gui.put('existing_handles',[]);
 gui.put('num_handle_calls',0);
 gui.sliderrange(1)

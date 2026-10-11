@@ -186,9 +186,13 @@ if strcmp(classimage,'uint16')==1
     end
 end
 
-image1_bg = preproc.cam_undistort_with(image1_bg, cam);
-if sequencer==1 %not time-resolved
-    image2_bg = preproc.cam_undistort_with(image2_bg, cam);
+% stereo-PIV (cam.stereo_map): the background stays a raw camera image, it is subtracted before the
+% stereo transform (import.read_frame)
+if ~(isfield(cam,'stereo_map') && ~isempty(cam.stereo_map))
+    image1_bg = preproc.cam_undistort_with(image1_bg, cam);
+    if sequencer==1 %not time-resolved
+        image2_bg = preproc.cam_undistort_with(image2_bg, cam);
+    end
 end
 bg_img_A = image1_bg;
 if sequencer==1 %not time-resolved

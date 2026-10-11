@@ -11,5 +11,5 @@ keys = [keys, {'bg_img_A', 'bg_img_B'}]; % pre-processing
 keys = [keys, {'calu', 'calv', 'calxy', 'offset_x_true', 'offset_y_true', 'pointscali', 'points_offsetx', 'points_offsety', 'displacement_only', 'size_of_the_image', 'caliimg'}]; % calibration
 keys = [keys, {'cameraParams', 'cameraStats', 'cam_use_calibration', 'cam_use_rectification', 'cam_use_tilted_model', 'cam_tilted_D', 'cam_K_opencv', 'rectification_tform', 'cam_selected_target_images', 'cam_selected_rectification_image', 'charuco_qr_params'}]; % camera calibration and rectification
 keys = [keys, {'displaywhat', 'subtr_u', 'subtr_v', 'streamlinesX', 'streamlinesY', 'streamslice_active', 'manmarkersX', 'manmarkersY', 'xposition', 'yposition', 'extract_type'}]; % display and tools
-keys = [keys, {'stereomode'}]; % stereo-PIV
+keys = [keys, {'stereomode', 'stereo_active_camera', 'stereo_cam_state', 'stereo_calib', 'stereo_disparity', 'stereo_result', 'stereo_vel', 'stereo_check'}]; % stereo-PIV (stereo.camera_data_keys: per camera)
 end

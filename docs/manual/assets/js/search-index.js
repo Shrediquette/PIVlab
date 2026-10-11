@@ -429,10 +429,10 @@ window.MANUAL_SEARCH = [
     text: "histogram u velocity v velocity magnitude sub-pixels bins peak locking bias"
   },
   {
-    title: "Stereo PIV settings (not yet implemented)",
+    title: "Stereo-PIV (2D3C)",
     href: "pages/stereo-piv.html", hash: "top",
     section: "Analysis",
-    text: "stereo piv disparity correction 2d3c not implemented scheimpflug tilted sensor"
+    text: "stereo piv two cameras 2d3c three components w out-of-plane import stereo images camera switch stereo calibration disparity correction light sheet overlay scheimpflug tilted sensor check analysis next recording same setup keep calibration rectified board progress"
   },
   {
     title: "Phase averaging and frame selection for temporal derivation",

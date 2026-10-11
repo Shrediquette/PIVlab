@@ -1,4 +1,8 @@
 function cam_rectification_show_rectified_Callback (~,~,~)
+if isequal(gui.retr('stereomode'), 1) && ~isempty(gui.retr('stereo_calib'))
+	stereo.show_rectified_board % board on the common grid of both cameras
+	return
+end
 handles=gui.gethand;
 cameraParams=gui.retr('cameraParams');
 cam_selected_rectification_image = gui.retr('cam_selected_rectification_image');

@@ -1,4 +1,7 @@
 function restore_all_Callback(~, ~, ~)
+if stereo.redirect('restore_all') % stereo-PIV: both cameras, then U, V, W (stereo.per_camera)
+	return
+end
 %clears resultslist at 7,8,9
 resultslist=gui.retr('resultslist');
 

@@ -3,6 +3,7 @@ function save_session_function (PathName,FileName)
 % in the format of export.write_session_file.
 gui.toolsavailable(1)
 gui.toolsavailable(0,'Busy, saving session...');drawnow
+stereo.store_active_camera % stereo-PIV: the camera shown is saved with the other one
 settings = gui.collect_settings;
 settings.calibration_data = calibrate.calibration_data;
 keys = gui.session_data_keys;

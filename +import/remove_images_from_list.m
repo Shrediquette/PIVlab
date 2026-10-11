@@ -1,5 +1,9 @@
 function remove_images_from_list (~,~,~)
 handles=gui.gethand;
+if isequal(gui.retr('stereomode'), 1)
+	gui.custom_msgbox('error',getappdata(0,'hgui'),'Stereo-PIV','Images cannot be removed in stereo-PIV mode: both cameras must keep the same image pairs.','modal');
+	return
+end
 if gui.retr('video_selection_done') ~= 1
 	filepath=gui.retr ('filepath'); %full path and filename for analyses
 	framenum=gui.retr ('framenum'); %important layer information for multi tiffs.

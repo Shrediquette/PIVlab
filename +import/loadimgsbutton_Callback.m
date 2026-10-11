@@ -1,4 +1,13 @@
 function loadimgsbutton_Callback(~,~,useGUI,path)
+if isequal(gui.retr('stereomode'), 1) % new 2D images end the stereo-PIV session
+    if ~isequal(gui.retr('batchModeActive'), 1)
+        answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Leave stereo-PIV?',['PIVlab is in stereo-PIV mode. Importing images starts a normal 2D PIV session; the images, calibrations and results of both cameras are removed.' newline newline 'Continue?'],'modal',{'Yes','No'},'No');
+        if ~strcmp(answer,'Yes')
+            return
+        end
+    end
+    stereo.leave_stereo_mode
+end
 if useGUI ==1
     gui.toolsavailable(0);drawnow
 end

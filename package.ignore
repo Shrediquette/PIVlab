@@ -33,5 +33,5 @@ resources
 **/.claude/**/*
 toolbox.ignore
 package.ignore
-**/unittests/parity/**/*
+**/unittests/**/*
 **/dev_notes/**/*

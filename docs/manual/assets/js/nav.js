@@ -51,8 +51,8 @@ window.MANUAL_NAV = {
       items: [
         { label: "PIV settings",                        href: "pages/piv-settings.html",         status: "live",
           blurb: "Choose the algorithm, interrogation areas and passes." },
-        { label: "Stereo PIV settings",                 href: "pages/stereo-piv.html",            status: "live",
-          blurb: "Not implemented yet — current status and related infrastructure." },
+        { label: "Stereo-PIV (2D3C)",                   href: "pages/stereo-piv.html",            status: "live",
+          blurb: "Two cameras: stereo calibration, disparity correction, U, V and W." },
         { label: "Running the analysis (ANALYZE!)",     href: "pages/analyze.html",               status: "live",
           blurb: "Analyze one frame or the whole session, and track progress." }
       ]

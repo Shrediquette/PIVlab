@@ -25,7 +25,7 @@ for k = 1:numel(controls)
         end
     end
     if isempty(group)
-        continue % a control without default value (unittests/test_settings finds it)
+        continue % a control without default value (unittests/test_gui_settings finds it)
     end
     % numbers as numbers, text as text (the type of the default value)
     settings.(group).(tags{k}) = gui.setting_value(c, default.(group).(tags{k}));

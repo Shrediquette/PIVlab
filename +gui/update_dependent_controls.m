@@ -122,6 +122,31 @@ show([handles.rankx2 handles.ranky2 handles.text102 handles.text103 handles.text
 oseen_pair = get(handles.singledoubleoseen, 'Value') == 2;
 show([handles.oseenx2 handles.oseeny2 handles.text110 handles.text111 handles.text112], oseen_pair);
 
+%% Stereo-PIV: camera switch and the menus of camera 2 only in stereo mode
+stereo_mode = isequal(gui.retr('stereomode'), 1);
+show(handles.stereo_camera_toggle, stereo_mode);
+hgui = getappdata(0, 'hgui');
+stereo_menus = [findall(hgui, 'Tag', 'menu_camcalib_cam2'); findall(hgui, 'Tag', 'menu_rect_cam2'); findall(hgui, 'Tag', 'menu_stereo_switch')];
+enable(stereo_menus, stereo_mode);
+if stereo_mode
+    active = gui.retr('stereo_active_camera');
+    if isempty(active)
+        active = 1;
+    end
+    [cam_color, cam_text_color] = stereo.camera_colors(active);
+    set(handles.stereo_camera_toggle, 'String', ['CAM ' int2str(active)], 'BackgroundColor', cam_color, 'ForegroundColor', cam_text_color);
+    set([handles.calib_undist_cam_label handles.calib_rect_cam_label], 'String', ['Current camera: CAMERA ' int2str(active)], 'ForegroundColor', cam_color);
+    set(handles.stereo_rect_note, 'ForegroundColor', cam_color);
+end
+% stereo-PIV rectifies both cameras with the stereo calibration: no 2D rectification and upscaling
+show([handles.calib_userectification handles.calib_upscale handles.calib_upscale_label], ~stereo_mode);
+show(handles.stereo_rect_note, stereo_mode);
+enable([handles.stereo_calibrate handles.stereo_show_3d], stereo_mode);
+enable([handles.stereo_measure_disparity handles.stereo_disp_show], stereo_mode && ~isempty(gui.retr('stereo_calib')));
+if stereo_mode && strcmp(get(handles.multip30, 'Visible'), 'on')
+    stereo.update_panel(handles);
+end
+
 %% Basic mode hides some of the elements again
 if strcmp(gui.retr('ui_mode'), 'basic')
     gui.apply_ui_mode('basic');

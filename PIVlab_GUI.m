@@ -329,6 +329,9 @@ if isempty(fh)
     %% read current and last directory (preferences)
     homedir=gui.get_preference('homedir',[]);
     pathname=gui.get_preference('pathname',[]);
+    % serial port read timeouts of the synchronizer are handled by PIVlab: no warning while PIVlab
+    % is open. gui.MainWindow_DeleteFcn puts the previous setting back when the window is closed.
+    setappdata(MainWindow,'warnings_before_pivlab',warning);
     warning('off','serialport:serialport:ReadlineWarning')
     if isempty(pathname) || isempty(homedir)
         try
@@ -466,7 +469,7 @@ if isempty(fh)
         disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
     end
     %disp('fcs')
-    set(MainWindow,'ResizeFcn', @gui.MainWindow_ResizeFcn,'CloseRequestFcn', @gui.MainWindow_CloseRequestFcn,'KeyPressFcn', @gui.key_press);
+    set(MainWindow,'ResizeFcn', @gui.MainWindow_ResizeFcn,'CloseRequestFcn', @gui.MainWindow_CloseRequestFcn,'DeleteFcn', @gui.MainWindow_DeleteFcn,'KeyPressFcn', @gui.key_press);
     pause(0.1)
     gui.MainWindow_ResizeFcn(MainWindow)
     %disp('vis')

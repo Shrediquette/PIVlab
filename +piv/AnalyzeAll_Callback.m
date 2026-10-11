@@ -1,4 +1,7 @@
 function AnalyzeAll_Callback(~, ~, ~)
+if stereo.redirect('analyze_all') % stereo-PIV: both cameras, then U, V, W (stereo.per_camera)
+	return
+end
 handles=gui.gethand;
 if get(handles.algorithm_selection,'value')==1 || get(handles.algorithm_selection,'value')==3
 	piv.DCC_and_DFT_analyze_all

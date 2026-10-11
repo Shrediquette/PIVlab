@@ -25,6 +25,11 @@ end
 s = gui_settings_to_api(session.settings, pivlab.defaults());
 s = session_extras(s, session.data);
 L = session.data;
+if isfield(L, 'stereomode') && isequal(L.stereomode, 1)
+    warning('pivlab:loadSession:stereo', ['%s is a stereo-PIV session. pivlab.loadSession reads it like a 2D ' ...
+        'session (the images and camera calibration of the camera that was shown when it was saved). ' ...
+        'Stereo-PIV from the command line: stereo.run.'], file);
+end
 rl = L.resultslist;
 if isempty(rl)
     error('pivlab:loadSession:empty','The session contains no analysis results.');

@@ -8,6 +8,8 @@ function cam = camera_from_source(source, view, rectification)
 %                  PIVlab session file       the camera calibration and rectification of the session,
 %                                            exactly as they were used in the session
 %                  cameraParameters / cameraIntrinsics object (MATLAB Computer Vision Toolbox)
+%                  camera settings struct (import.cam_settings), e.g. a stereo-PIV camera from
+%                  stereo.rectified_images: used as it is
 %   view           "valid" | "same" | "full", or [] (from the session, else "valid")
 %   rectification  [] (from the session, else none), true / false, or a 2-D geometric
 %                  transformation (e.g. projtform2d) that maps the undistorted image to the
@@ -15,6 +17,13 @@ function cam = camera_from_source(source, view, rectification)
 views = ["valid", "same", "full"];
 if (ischar(source) || isstring(source)) && strcmpi(source, "none")
     cam = import.cam_settings();
+    return
+end
+if isstruct(source) && isfield(source, 'use_calibration') && isfield(source, 'cameraParams')
+    if ~isempty(view) || ~isempty(rectification)
+        error('pivlab:preprocess:camera', 'CameraView and Rectification cannot be used with a camera settings struct.');
+    end
+    cam = source;
     return
 end
 
@@ -73,7 +82,7 @@ elseif ischar(source) || isstring(source)
     end
 else
     error('pivlab:preprocess:camera', ...
-        'Camera must be "none", a file name, or a cameraParameters / cameraIntrinsics object.');
+        'Camera must be "none", a file name, a cameraParameters / cameraIntrinsics object or a camera settings struct.');
 end
 
 % view: given, else from the session, else "valid"

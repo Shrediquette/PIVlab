@@ -29,10 +29,11 @@ m5_1=uimenu(m5,'Label','Camera calibration (lens / distortion)','Tag','menu_camc
 uimenu(m5_1,'Label','Setup / define / generate marker board','Callback',@preproc.cam_marker_setup_Callback);
 m5_2=uimenu(m5_1,'Label','Camera calibration (undistortion)');
 uimenu(m5_2,'Label','Camera 1','Callback',@preproc.cam_calibration_Callback);
-uimenu(m5_2,'Label','Camera 2','Callback',@preproc.cam_calibration_Callback,'enable','off');
+uimenu(m5_2,'Label','Camera 2','Callback',@preproc.cam_calibration_Callback,'enable','off','Tag','menu_camcalib_cam2');
 m5_3=uimenu(m5_1,'Label','Image rectification / alignment');
 uimenu(m5_3,'Label','Camera 1','Callback',@preproc.cam_rectification_Callback);
-uimenu(m5_3,'Label','Camera 2','Callback',@preproc.cam_rectification_Callback,'enable','off');
+uimenu(m5_3,'Label','Camera 2','Callback',@preproc.cam_rectification_Callback,'enable','off','Tag','menu_rect_cam2');
+uimenu(m5,'Label','Stereo-PIV: switch camera 1 / 2','Callback',@stereo.camera_toggle_Callback,'Accelerator','K','enable','off','Tag','menu_stereo_switch');
 uimenu(m5,'Label','Image pre-processing / enhancement','Callback',@preproc.Uielement_Callback,'Accelerator','I');
 
 uimenu(m5,'Label','Define region of interest (ROI)','Callback',@roi.img_ROI_Callback,'Accelerator','E');
@@ -40,8 +41,7 @@ uimenu(m5,'Label','Define masks (exclude regions from analysis)','Callback',@mas
 
 m6 = uimenu(MainWindow,'Label','Analysis');
 uimenu(m6,'Label','PIV settings','Callback',@piv.sett_Callback,'Accelerator','S');
-m6a=uimenu(m6,'Label','Stereo PIV settings','Callback',[],'Tag','menu_stereopiv');
-uimenu(m6a,'Label','Disparity correction','Callback',[],'Enable','off');
+uimenu(m6,'Label','Stereo-PIV','Callback',@stereo.panel_Callback,'Tag','menu_stereopiv');
 uimenu(m6,'Label','ANALYZE!','Callback',@piv.do_analys_Callback,'Accelerator','A');
 m7 = uimenu(MainWindow,'Label','Validation');
 uimenu(m7,'Label','Velocity based validation','Callback',@validate.vector_val_Callback,'Accelerator','V');

@@ -261,9 +261,11 @@ if get(handles.bg_subtract,'Value')>1
                 cam = import.cam_settings(FromGUI=true);
 
                 %make results accessible to the rest of the GUI:
-                image1_bg = preproc.cam_undistort_with(image1_bg, cam);
-                if sequencer==1 %not time-resolved
-                    image2_bg = preproc.cam_undistort_with(image2_bg, cam);
+                if ~(isfield(cam,'stereo_map') && ~isempty(cam.stereo_map)) % stereo-PIV: background stays raw (import.read_frame)
+                    image1_bg = preproc.cam_undistort_with(image1_bg, cam);
+                    if sequencer==1 %not time-resolved
+                        image2_bg = preproc.cam_undistort_with(image2_bg, cam);
+                    end
                 end
 
                 gui.put('bg_img_A',image1_bg);

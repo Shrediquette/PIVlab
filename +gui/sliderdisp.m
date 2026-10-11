@@ -49,6 +49,10 @@ if capturing==0
         yzoomlimit=gui.retr('yzoomlimit');
         %profile on
         currentimage = plot.draw_pixel_background_overlay(target_axis,displaywhat, selected, handles, currentframe);
+        if isequal(gui.retr('stereomode'), 1) && displaywhat == 1 && target_axis==gui.retr('pivlab_axis') ...
+                && ~(strcmp(get(handles.multip30, 'Visible'), 'on') && get(handles.stereo_disp_show, 'Value') > 1)
+            stereo.draw_w(target_axis, (currentframe+1)/2) % stereo-PIV result: W in colour under the vectors
+        end
         %profile viewer
         axis (target_axis,'image');
         set(target_axis,'ytick',[])
@@ -112,6 +116,12 @@ if capturing==0
             plot.manually_discarded_vectors(target_axis,handles, x, y);
         end
         mask.redraw_masks
+        if isequal(gui.retr('stereomode'), 1) && target_axis==gui.retr('pivlab_axis')
+            if strcmp(get(handles.multip30, 'Visible'), 'on') % Stereo-PIV panel: disparity displays
+                stereo.draw_disparity(target_axis, get(handles.stereo_disp_show, 'Value'))
+            end
+            stereo.draw_camera_label(target_axis) % stereo-PIV: which camera is shown
+        end
         if isempty(xzoomlimit)==0
             set(target_axis,'xlim',xzoomlimit)
             set(target_axis,'ylim',yzoomlimit)

@@ -1,4 +1,7 @@
 function AnalyzeSingle_Callback(~, ~, ~)
+if stereo.redirect('analyze_current') % stereo-PIV: both cameras, then U, V, W (stereo.per_camera)
+	return
+end
 handles=gui.gethand;
 ok=gui.checksettings;
 if ok==1

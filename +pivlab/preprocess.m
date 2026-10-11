@@ -31,6 +31,8 @@ function imgs = preprocess(imgs, opts)
 %                      - a PIVlab session: its camera calibration and rectification, as they were
 %                        used in the session
 %                      - a cameraParameters / cameraIntrinsics object (Computer Vision Toolbox)
+%                      - a camera settings struct (import.cam_settings, e.g. imgs.cam of another image
+%                        set, or a stereo-PIV camera from stereo.rectified_images): used as it is
 %                      - "none": no undistortion
 %                      Default: "none" - also when imgs was corrected before, the Camera option has
 %                      to be given again (like all other options, see Settings).
@@ -88,7 +90,10 @@ end
 imgs.cam = camera_from_source(camera, camera_view, rectification);
 first = import.read_frame(imgs, 1, imgs.cam, []);
 imgs.imageSize = [size(first,1) size(first,2)];
-if verbose && imgs.cam.use_calibration
+if verbose && isfield(imgs.cam, 'stereo_map') && ~isempty(imgs.cam.stereo_map)
+    fprintf('Stereo-PIV camera: rectified onto the common grid of both cameras, image size %d x %d pixels.\n', ...
+        imgs.imageSize(2), imgs.imageSize(1));
+elseif verbose && imgs.cam.use_calibration
     what = 'lens undistortion';
     if imgs.cam.use_rectification
         what = [what ' and rectification'];

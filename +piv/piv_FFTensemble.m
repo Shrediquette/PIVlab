@@ -113,8 +113,26 @@ elseif isempty(use_gui) || use_gui
 else
     cam = import.cam_settings();
 end
+% stereo-PIV (cam.stereo_map): the images are read with import.read_frame, which subtracts the (raw)
+% background images before the stereo transform; the subtraction further down is then skipped.
+stereo_active = isfield(cam,'stereo_map') && ~isempty(cam.stereo_map);
+stereo_bg = [];
+if stereo_active
+    if ~isempty(bg_img_A) || ~isempty(bg_img_B)
+        stereo_bg = struct('A',bg_img_A,'B',bg_img_B);
+    end
+    bg_img_A = [];
+    bg_img_B = [];
+    stereo_src = struct('filepath',{filepath},'framenum',framenum,'framepart',framepart);
+    if isempty(framepart)
+        stereo_src.framepart = zeros(amount_input_imgs,0); % no rows given: whole image
+    end
+end
 for ensemble_i1=1:2:amount_input_imgs
-    if isempty(video_frame_selection) %list with image files was passed
+    if isempty(video_frame_selection) && stereo_active
+        image1 = import.read_frame(stereo_src, ensemble_i1, cam, stereo_bg);
+        image2 = import.read_frame(stereo_src, ensemble_i1+1, cam, stereo_bg);
+    elseif isempty(video_frame_selection) %list with image files was passed
         %detect if it is b16 or standard pixel image
         [~,~,ext] = fileparts(filepath{1});
         if strcmp(ext,'.b16')
@@ -217,6 +235,9 @@ image2 = preproc.PIVlab_preproc( ...
         image2_roi=double(image2(yroi:yroi+heightroi,xroi:xroi+widthroi));
         mask_inpt_roi = mask_inpt(yroi:yroi+heightroi,xroi:xroi+widthroi);
         average_mask_roi = average_mask(yroi:yroi+heightroi,xroi:xroi+widthroi);
+        % pixel 1 of the cut-out is image pixel xroi / yroi: image position = position in the cut-out + xroi-1
+        xroi=xroi-1;
+        yroi=yroi-1;
     else
         xroi=0;
         yroi=0;
@@ -497,6 +518,8 @@ if cancel == 0
     [xtable,ytable,utable, vtable] = peakfinding (result_conv_ensemble, mask, interrogationarea,minix,step,maxix,miniy,maxiy,SubPixOffset,ss1,subpixfinder);
     for multipass=1:passes-1
         % unfortunately, preprocessing has to be done again for every pass, otherwise i would have to save the modified data somehow.
+        % the positions in xtable / ytable are counted in the image padded by half the window of the previous pass:
+        pad_old=ceil(interrogationarea/2);
         if multipass==1
             interrogationarea=round(int2/2)*2;
         end
@@ -507,14 +530,126 @@ if cancel == 0
             interrogationarea=round(int4/2)*2;
         end
         result_conv_ensemble = zeros(interrogationarea,interrogationarea); % prepare empty result_conv
-        skippy=0;
-        for ensemble_i1=1:2:amount_input_imgs
-            if skippy <10
-                skippy=skippy+1;
+        step=interrogationarea/2;
+
+        %% predictor for the window deformation: prepared once per pass, the same for all image pairs
+        %multipass validation, smoothing
+        [utable,vtable] = postproc.PIVlab_postproc( ...
+            u=utable, v=vtable, valid_vel=[], do_stdev_check=1, stdthresh=8, ...
+            do_local_median=1, neigh_thresh=5); % same thresholds as piv_FFTmulti
+        %replace nans
+        utable=misc.inpaint_nans(utable,4);
+        vtable=misc.inpaint_nans(vtable,4);
+        %smooth predictor
+        try
+            if multipass<passes-1
+                utable = misc.smoothn(utable,0.6); %stronger smoothing for first passes
+                vtable = misc.smoothn(vtable,0.6);
             else
-                skippy=0;
+                utable = misc.smoothn(utable); %weaker smoothing for last pass
+                vtable = misc.smoothn(vtable);
             end
-            if isempty(video_frame_selection) %list with image files was passed
+        catch
+            %old matlab versions: gaussian kernel
+            h=fspecial('gaussian',5,1);
+            utable=imfilter(utable,h,'replicate');
+            vtable=imfilter(vtable,h,'replicate');
+        end
+
+        %bildkoordinaten neu errechnen (size of the cut-out without padding, the same in all image pairs):
+        miniy=1+(ceil(interrogationarea/2));
+        minix=1+(ceil(interrogationarea/2));
+        maxiy=step*(floor(size(gen_image1_roi,1)/step))-(interrogationarea-1)+(ceil(interrogationarea/2)); %statt size deltax von ROI nehmen
+        maxix=step*(floor(size(gen_image1_roi,2)/step))-(interrogationarea-1)+(ceil(interrogationarea/2));
+
+        numelementsy=floor((maxiy-miniy)/step+1);
+        numelementsx=floor((maxix-minix)/step+1);
+
+        LAy=miniy;
+        LAx=minix;
+        LUy=size(gen_image1_roi,1)-maxiy;
+        LUx=size(gen_image1_roi,2)-maxix;
+        shift4centery=round((LUy-LAy)/2);
+        shift4centerx=round((LUx-LAx)/2);
+        if shift4centery<0 %shift4center will be negative if in the unshifted case the left border is bigger than the right border. the vectormatrix is hence not centered on the image. the matrix cannot be shifted more towards the left border because then image2_crop would have a negative index. The only way to center the matrix would be to remove a column of vectors on the right side. but then we weould have less data....
+            shift4centery=0;
+        end
+        if shift4centerx<0 %shift4center will be negative if in the unshifted case the left border is bigger than the right border. the vectormatrix is hence not centered on the image. the matrix cannot be shifted more towards the left border because then image2_crop would have a negative index. The only way to center the matrix would be to remove a column of vectors on the right side. but then we weould have less data....
+            shift4centerx=0;
+        end
+        miniy=miniy+shift4centery;
+        minix=minix+shift4centerx;
+        maxix=maxix+shift4centerx;
+        maxiy=maxiy+shift4centery;
+
+        if (rem(interrogationarea,2) == 0) %for the subpixel displacement measurement
+            SubPixOffset=1;
+        else
+            SubPixOffset=0.5;
+        end
+
+        % positions of the previous pass, converted from the padding of the previous pass to the padding of this pass
+        xtable_old=xtable-pad_old+ceil(interrogationarea/2);
+        ytable_old=ytable-pad_old+ceil(interrogationarea/2);
+        typevector=ones(numelementsy,numelementsx);
+        xtable = repmat((minix:step:maxix), numelementsy, 1) + interrogationarea/2;
+        ytable = repmat((miniy:step:maxiy)', 1, numelementsx) + interrogationarea/2;
+
+        %xtable alt und neu geben koordinaten wo die vektoren herkommen.
+        %d.h. u und v auf die gewuenschte groesse bringen+interpolieren
+        utable=interp2(xtable_old,ytable_old,utable,xtable,ytable,'*spline');
+        vtable=interp2(xtable_old,ytable_old,vtable,xtable,ytable,'*spline');
+
+        utable_1= padarray(utable, [1,1], 'replicate');
+        vtable_1= padarray(vtable, [1,1], 'replicate');
+
+        %add 1 line around image for border regions... linear extrap
+
+        firstlinex=xtable(1,:);
+        firstlinex_intp=interp1(1:1:size(firstlinex,2),firstlinex,0:1:size(firstlinex,2)+1,'linear','extrap');
+        xtable_1=repmat(firstlinex_intp,size(xtable,1)+2,1);
+
+        firstliney=ytable(:,1);
+        firstliney_intp=interp1(1:1:size(firstliney,1),firstliney,0:1:size(firstliney,1)+1,'linear','extrap')';
+        ytable_1=repmat(firstliney_intp,1,size(ytable,2)+2);
+
+        X=xtable_1; %original locations of vectors in whole image
+        Y=ytable_1;
+        U=utable_1; %interesting portion of u
+        V=vtable_1; % "" of v
+
+        X1=X(1,1):1:X(1,end)-1;
+        Y1=(Y(1,1):1:Y(end,1)-1)';
+        X1=repmat(X1,size(Y1, 1),1);
+        Y1=repmat(Y1,1,size(X1, 2));
+
+        U1 = interp2(X,Y,U,X1,Y1,'*linear');
+        V1 = interp2(X,Y,V,X1,Y1,'*linear');
+
+        xb = find(X1(1,:) == xtable_1(1,1));
+        yb = find(Y1(:,1) == ytable_1(1,1));
+
+        if GUI_avail==1 % show the predictor of this pass
+            if verLessThan('matlab','8.4')
+                delete (findobj(pivlab_axis,'type', 'hggroup'))
+            else
+                delete (findobj(pivlab_axis,'type', 'quiver'))
+            end
+            %magnitude-colored vectors are line objects, not quivers
+            delete (findobj(pivlab_axis,'Tag', 'pivlab_vector'))
+            hold(pivlab_axis,'on');
+            vecscale=str2double(get(handles.vectorscale,'string'));
+            colorbar(pivlab_axis,'off')
+            quiver (pivlab_axis,xtable+xroi-ceil(interrogationarea/2),ytable+yroi-ceil(interrogationarea/2),utable*vecscale,vtable*vecscale,'Color', [1-(from_total / total_analyses_amount) (from_total / total_analyses_amount) 0.15],'autoscale','off')
+            drawnow
+            hold(pivlab_axis,'off')
+        end
+
+        for ensemble_i1=1:2:amount_input_imgs
+            if isempty(video_frame_selection) && stereo_active
+                image1 = import.read_frame(stereo_src, ensemble_i1, cam, stereo_bg);
+                image2 = import.read_frame(stereo_src, ensemble_i1+1, cam, stereo_bg);
+            elseif isempty(video_frame_selection) %list with image files was passed
                 if strcmp(ext,'.b16')
                     image1=import.f_readB16(filepath{ensemble_i1});
                     image2=import.f_readB16(filepath{ensemble_i1+1});
@@ -581,6 +716,9 @@ image2 = preproc.PIVlab_preproc( ...
                 image1_roi=double(image1(yroi:yroi+heightroi,xroi:xroi+widthroi));
                 image2_roi=double(image2(yroi:yroi+heightroi,xroi:xroi+widthroi));
                 mask_inpt_roi = mask_inpt(yroi:yroi+heightroi,xroi:xroi+widthroi);
+                % pixel 1 of the cut-out is image pixel xroi / yroi: image position = position in the cut-out + xroi-1
+                xroi=xroi-1;
+                yroi=yroi-1;
             else
                 xroi=0;
                 yroi=0;
@@ -616,149 +754,19 @@ image2 = preproc.PIVlab_preproc( ...
             else
                 if verbose, fprintf('.'); end
             end
-            %multipass validation, smoothing
-            utable_orig=utable;
-            vtable_orig=vtable;
-[utable,vtable] = postproc.PIVlab_postproc( ...
-    u=utable, v=vtable, valid_vel=[], do_stdev_check=1, stdthresh=4, ...
-    do_local_median=1, neigh_thresh=1.5);
             if GUI_avail==1
                 cancel=getappdata(hgui, 'cancel');
                 if cancel == 1
                     break
                     %disp('user cancelled');
                 end
-                if skippy ==0
-                    if verLessThan('matlab','8.4')
-                        delete (findobj(pivlab_axis,'type', 'hggroup'))
-                    else
-                        delete (findobj(pivlab_axis,'type', 'quiver'))
-                    end
-                    %magnitude-colored vectors are line objects, not quivers
-                    delete (findobj(pivlab_axis,'Tag', 'pivlab_vector'))
-                    hold(pivlab_axis,'on');
-                    vecscale=str2double(get(handles.vectorscale,'string'));
-                    colorbar(pivlab_axis,'off')
-                    quiver (pivlab_axis,xtable(isnan(utable)==0)+xroi-interrogationarea/2,ytable(isnan(utable)==0)+yroi-interrogationarea/2,utable(isnan(utable)==0)*vecscale,vtable(isnan(utable)==0)*vecscale,'Color', [1-(from_total / total_analyses_amount) (from_total / total_analyses_amount) 0.15],'autoscale','off')
-
-                    %                    quiver ((findobj(getappdata(0,'hgui'),'type', 'axes')),xtable(isnan(utable)==0)+xroi-interrogationarea/2,ytable(isnan(utable)==0)+yroi-interrogationarea/2,utable_orig(isnan(utable)==0)*vecscale,vtable_orig(isnan(utable)==0)*vecscale,'Color', [0.15 0.7 0.15],'autoscale','off')
-                    %quiver ((findobj(getappdata(0,'hgui'),'type', 'axes')),xtable(isnan(utable)==1)+xroi-interrogationarea/2,ytable(isnan(utable)==1)+yroi-interrogationarea/2,utable_orig(isnan(utable)==1)*vecscale,vtable_orig(isnan(utable)==1)*vecscale,'Color',[0.7 0.15 0.15], 'autoscale','off')
-                    drawnow
-                    hold(pivlab_axis,'off')
-                end
             end
-            %replace nans
-            utable=misc.inpaint_nans(utable,4);
-            vtable=misc.inpaint_nans(vtable,4);
-            %smooth predictor
-            try
-                if multipass<passes-1
-                    utable = misc.smoothn(utable,0.6); %stronger smoothing for first passes
-                    vtable = misc.smoothn(vtable,0.6);
-                else
-                    utable = misc.smoothn(utable); %weaker smoothing for last pass
-                    vtable = misc.smoothn(vtable);
-                end
-            catch
-                %old matlab versions: gaussian kernel
-                h=fspecial('gaussian',5,1);
-                utable=imfilter(utable,h,'replicate');
-                vtable=imfilter(vtable,h,'replicate');
-            end
-            if multipass==1
-                interrogationarea=round(int2/2)*2;
-            end
-            if multipass==2
-                interrogationarea=round(int3/2)*2;
-            end
-            if multipass==3
-                interrogationarea=round(int4/2)*2;
-            end
-            step=interrogationarea/2;
-
-            %bildkoordinaten neu errechnen:
-            image1_roi = gen_image1_roi;
-            image2_roi = gen_image2_roi;
-
-
-
-
-            miniy=1+(ceil(interrogationarea/2));
-            minix=1+(ceil(interrogationarea/2));
-            maxiy=step*(floor(size(image1_roi,1)/step))-(interrogationarea-1)+(ceil(interrogationarea/2)); %statt size deltax von ROI nehmen
-            maxix=step*(floor(size(image1_roi,2)/step))-(interrogationarea-1)+(ceil(interrogationarea/2));
-
-            numelementsy=floor((maxiy-miniy)/step+1);
-            numelementsx=floor((maxix-minix)/step+1);
-
-            LAy=miniy;
-            LAx=minix;
-            LUy=size(image1_roi,1)-maxiy;
-            LUx=size(image1_roi,2)-maxix;
-            shift4centery=round((LUy-LAy)/2);
-            shift4centerx=round((LUx-LAx)/2);
-            if shift4centery<0 %shift4center will be negative if in the unshifted case the left border is bigger than the right border. the vectormatrix is hence not centered on the image. the matrix cannot be shifted more towards the left border because then image2_crop would have a negative index. The only way to center the matrix would be to remove a column of vectors on the right side. but then we weould have less data....
-                shift4centery=0;
-            end
-            if shift4centerx<0 %shift4center will be negative if in the unshifted case the left border is bigger than the right border. the vectormatrix is hence not centered on the image. the matrix cannot be shifted more towards the left border because then image2_crop would have a negative index. The only way to center the matrix would be to remove a column of vectors on the right side. but then we weould have less data....
-                shift4centerx=0;
-            end
-            miniy=miniy+shift4centery;
-            minix=minix+shift4centerx;
-            maxix=maxix+shift4centerx;
-            maxiy=maxiy+shift4centery;
-
+            % padding with half the window of this pass (as the grid and the predictor prepared above)
             image1_roi=padarray(image1_roi,[ceil(interrogationarea/2) ceil(interrogationarea/2)], min(min(image1_roi)));
             image2_roi=padarray(image2_roi,[ceil(interrogationarea/2) ceil(interrogationarea/2)], min(min(image1_roi)));
             mask=padarray(mask,[ceil(interrogationarea/2) ceil(interrogationarea/2)],0);
-            if (rem(interrogationarea,2) == 0) %for the subpixel displacement measurement
-                SubPixOffset=1;
-            else
-                SubPixOffset=0.5;
-            end
-
-            xtable_old=xtable;
-            ytable_old=ytable;
-            typevector=ones(numelementsy,numelementsx);
-            xtable = repmat((minix:step:maxix), numelementsy, 1) + interrogationarea/2;
-            ytable = repmat((miniy:step:maxiy)', 1, numelementsx) + interrogationarea/2;
-
-            %xtable alt und neu geben koordinaten wo die vektoren herkommen.
-            %d.h. u und v auf die gewï¿½nschte grï¿½ï¿½e bringen+interpolieren
-
-            utable=interp2(xtable_old,ytable_old,utable,xtable,ytable,'*spline');
-            vtable=interp2(xtable_old,ytable_old,vtable,xtable,ytable,'*spline');
-
-            utable_1= padarray(utable, [1,1], 'replicate');
-            vtable_1= padarray(vtable, [1,1], 'replicate');
-
-            %add 1 line around image for border regions... linear extrap
-
-            firstlinex=xtable(1,:);
-            firstlinex_intp=interp1(1:1:size(firstlinex,2),firstlinex,0:1:size(firstlinex,2)+1,'linear','extrap');
-            xtable_1=repmat(firstlinex_intp,size(xtable,1)+2,1);
-
-            firstliney=ytable(:,1);
-            firstliney_intp=interp1(1:1:size(firstliney,1),firstliney,0:1:size(firstliney,1)+1,'linear','extrap')';
-            ytable_1=repmat(firstliney_intp,1,size(ytable,2)+2);
-
-            X=xtable_1; %original locations of vectors in whole image
-            Y=ytable_1;
-            U=utable_1; %interesting portion of u
-            V=vtable_1; % "" of v
-
-            X1=X(1,1):1:X(1,end)-1;
-            Y1=(Y(1,1):1:Y(end,1)-1)';
-            X1=repmat(X1,size(Y1, 1),1);
-            Y1=repmat(Y1,1,size(X1, 2));
-
-            U1 = interp2(X,Y,U,X1,Y1,'*linear');
-            V1 = interp2(X,Y,V,X1,Y1,'*linear');
 
             image2_crop_i1 = interp2(1:size(image2_roi,2),(1:size(image2_roi,1))',double(image2_roi),X1+U1,Y1+V1,imdeform); %linear is 3x faster and looks ok...
-
-            xb = find(X1(1,:) == xtable_1(1,1));
-            yb = find(Y1(:,1) == ytable_1(1,1));
 
             % divide images by small pictures
             % new index for image1_roi
