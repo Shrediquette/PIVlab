@@ -5,7 +5,8 @@ function update_result
 % go into stereo.reconstruct. The result list of the GUI then holds U, V (rows 1-9 like a validated 2D
 % result: a vector is valid if it is valid in both cameras, interpolated if one camera interpolated it,
 % masked if one camera masked it), so all PIVlab displays, derived parameters and exports of U, V work.
-% W, the consistency residual and the light sheet position are kept in gui.retr('stereo_vel').
+% W is row 16 of the result list (row 17: smoothed W, stereo.w_of_frame). The consistency residual and
+% the light sheet position are kept in gui.retr('stereo_vel').
 % Units: px per image pair of the common grid (square pixels; the spatial calibration applies as in 2D).
 calib = gui.retr('stereo_calib');
 R = cell(1, 2);
@@ -71,7 +72,7 @@ for k = 1:2
     end
 end
 vel = stereo.reconstruct(res{1}, res{2}, calib, stereo.full_disparity(calib, gui.retr('stereo_disparity')));
-resultslist = cell(9, max(frames));
+resultslist = cell(16, max(frames));
 for j = 1:numel(frames)
     i = frames(j);
     t1 = tv{1}(:, :, j);
@@ -92,22 +93,23 @@ for j = 1:numel(frames)
     resultslist{7, i} = U;
     resultslist{8, i} = V;
     resultslist{9, i} = typevector;
+    W = vel.W(:, :, j);
+    W(typevector == 0) = NaN;
+    resultslist{16, i} = W;
 end
 gui.put('resultslist', resultslist);
-W = NaN([sz max(frames)], 'single');
-residual = W;
+residual = NaN([sz max(frames)], 'single');
 for j = 1:numel(frames)
     i = frames(j);
-    w = single(vel.W(:, :, j));
     r = single(vel.residual(:, :, j));
-    masked = resultslist{9, i} == 0;
-    w(masked) = NaN;
-    r(masked) = NaN;
-    W(:, :, i) = w;
+    r(resultslist{9, i} == 0) = NaN;
     residual(:, :, i) = r;
 end
-stereo_vel.W = W;
-stereo_vel.W_limit = double(prctile(abs(W(:)), 99)); % colour scale of the W display (stereo.draw_w)
+all_w = NaN(numel(x), numel(frames));
+for j = 1:numel(frames)
+    all_w(:, j) = resultslist{16, frames(j)}(:);
+end
+stereo_vel.W_limit = double(prctile(abs(all_w(:)), 99)); % colour scale of the W display (stereo.draw_w)
 stereo_vel.residual = residual;
 stereo_vel.sheet_z_mm = vel.sheet_z_mm;
 stereo_vel.mm_per_px = vel.mm_per_px;

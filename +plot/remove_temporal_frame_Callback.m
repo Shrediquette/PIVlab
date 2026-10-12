@@ -27,6 +27,7 @@ if isempty(resultslist)==0
 			gui.put('filename',filename);
 			gui.put('resultslist',resultslist);
 			gui.put('ismean',ismean);
+			stereo.sync_mean_frames %stereo-PIV: remove it from the other camera too
 			gui.sliderrange(0)
 			if get(handles.fileselector,'value')>1
 				gui.fileselector_Callback

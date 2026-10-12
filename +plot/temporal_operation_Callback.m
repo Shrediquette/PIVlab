@@ -37,6 +37,7 @@ if isempty(resultslist)==0
 			gui.put('framepart',framepart);
 			gui.put('resultslist',resultslist);
 			gui.put('ismean',[]);
+			stereo.sync_mean_frames %stereo-PIV: remove them from the other camera too
 			gui.sliderrange(1)
 		end
 		% Parse the (optionally bracketed) input into rows separated by ';'.
@@ -53,6 +54,7 @@ if isempty(resultslist)==0
 		end
 		if selectionok==1
 			% global minimum frame across all rows (start of the stack)
+			stereo_mode=isequal(gui.retr('stereomode'),1); %stereo-PIV: the out-of-plane component w gets the same operation
 			mincount=inf;
 			for r=1:numel(frames_rows)
 				mincount=min(mincount,min(frames_rows{r}));
@@ -99,6 +101,9 @@ if isempty(resultslist)==0
 					if ismean(count,1)==0 && sizeerror==0
 						umittel(:,:,count)=u; %#ok<AGROW>
 						vmittel(:,:,count)=v; %#ok<AGROW>
+						if stereo_mode %w like u: smoothed if u is the smoothed field
+							wmittel(:,:,count)=stereo.w_of_frame(count, size(resultslist,1)>10 && numel(resultslist{10,count})>0, resultslist); %#ok<AGROW>
+						end
 					end
 					if sizeerror==0
 						% remap typevector==3 (2nd-peak valid) to 1 (valid) so the
@@ -174,7 +179,13 @@ if isempty(resultslist)==0
 					eval(['umittelselected=umittel(:,:,[' this_str ']);']);
 					eval(['vmittelselected=vmittel(:,:,[' this_str ']);']);
 					% mean / stdev / sum / TKE (shared with the command-line API, pivlab.temporal)
-					[out_u, out_v, typevectoralle] = plot.temporal_stats(umittelselected, vmittelselected, typevectormittelselected, type); %#ok<USENS,NODEF>
+					if stereo_mode
+						eval(['wmittelselected=wmittel(:,:,[' this_str ']);']);
+						[out_u, out_v, typevectoralle, out_w] = plot.temporal_stats(umittelselected, vmittelselected, typevectormittelselected, type, wmittelselected); %#ok<USENS,NODEF>
+						resultslist{16,size(filepath,1)/2+1}=out_w;
+					else
+						[out_u, out_v, typevectoralle] = plot.temporal_stats(umittelselected, vmittelselected, typevectormittelselected, type); %#ok<USENS,NODEF>
+					end
 					resultslist{5,size(filepath,1)/2+1}=typevectoralle;
 					resultslist{1,size(filepath,1)/2+1}=x;
 					resultslist{2,size(filepath,1)/2+1}=y;
@@ -225,6 +236,7 @@ if isempty(resultslist)==0
 					gui.put ('framenum', framenum);
 					gui.put ('framepart', framepart);
 					gui.put ('typevector', typevector);
+					stereo.sync_mean_frames %stereo-PIV: the other camera gets the same mean frames
 					gui.sliderrange(1)
 				end
 				if selectionok==1

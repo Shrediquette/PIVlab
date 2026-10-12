@@ -3,7 +3,8 @@ function calibrate_Callback(~, ~, ~)
 % Uses the lens calibration and the board image in the light sheet of each camera (camera calibration
 % panels of camera 1 and 2) and the board definition of the calibration panels. Afterwards both cameras
 % show their images on the common grid (stereo.update_maps), the region of interest is the overlap of
-% both views and the spatial calibration (px -> mm) is filled in; only the time step is missing.
+% both views and the spatial calibration (px -> mm) is filled in; only the time step is missing (checklist of
+% the panel). The report of the set-up is shown in "Show 3D setup".
 % Masks, background images and results are reset (they belong to the uncalibrated images).
 hgui = getappdata(0, 'hgui');
 batch = isequal(gui.retr('batchModeActive'), 1);
@@ -94,8 +95,4 @@ calibrate.pixeldist_changed_Callback()
 gui.toolsavailable(1)
 stereo.update_panel(handles)
 stereo.show_active_camera
-if ~batch
-    gui.custom_msgbox('success', hgui, 'Stereo calibration', strjoin([calib.report, {'', ['Both cameras now show the same ' ...
-        'view of the light sheet. Enter the time step in the calibration panel (CTRL+Z) and apply it.']}], newline), 'modal');
-end
 end

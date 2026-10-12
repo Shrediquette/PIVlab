@@ -106,6 +106,24 @@ if isempty(resultslist)==0
 	assignin('base','correlation_map',correlation_map);
 	assignin('base','uncertainty_map',uncertainty_map);
 
+	if isequal(gui.retr('stereomode'),1) %stereo-PIV: the out-of-plane component w (units like u)
+		w_original=cell(nrframes,1);
+		w_smoothed=w_original;
+		w_component=w_original;
+		for i=1:nrframes
+			w_original{i,1}=stereo.w_of_frame(i,false,resultslist)*abs(calu);
+			if size(resultslist,1)>=17
+				w_smoothed{i,1}=resultslist{17,i}*abs(calu);
+			end
+			if size(derived,1)>=13
+				w_component{i,1}=derived{13,i};
+			end
+		end
+		assignin('base','w_original',w_original);
+		assignin('base','w_filtered',w_original); %w is computed from the validated results of both cameras
+		assignin('base','w_smoothed',w_smoothed);
+		assignin('base','w_component',w_component);
+	end
 	assignin('base','calxy',calxy);
 	assignin('base','calu',calu);
 	assignin('base','calv',calv);
@@ -123,5 +141,8 @@ if isempty(resultslist)==0
 	disp('u_original and v_original are the unmodified velocities from the cross-correlation.')
 	disp('u_filtered and v_filtered is the above incl. your data validation selection.')
 	disp('u_smoothed and v_smoothed is the above incl. your smoothing selection.')
+	if isequal(gui.retr('stereomode'),1)
+		disp('Stereo-PIV: w_original, w_filtered, w_smoothed and w_component are the out-of-plane component (positive away from the cameras).')
+	end
 end
 

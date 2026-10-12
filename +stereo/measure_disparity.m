@@ -2,7 +2,9 @@ function disparity = measure_disparity(imgs, calib, opts, verbose, backgrounds, 
 %MEASURE_DISPARITY Misalignment between the rectified views of both cameras (disparity correction).
 %   disparity = stereo.measure_disparity(imgs, calib, opts)
 %   imgs   1x2 cell, pivlab image sets of camera 1 and 2 (pivlab.readImages; pivlab.preprocess sets
-%          the image pre-processing, which is used here too; region of interest and mask are not used)
+%          the image pre-processing, which is used here too). The region of interest of camera 1
+%          (imgs{1}.preprocess.Roi, rectified coordinates) is used for both cameras: image data outside it
+%          is not used. The masks of both cameras (imgs{k}.mask) are combined for each image pair.
 %   calib  stereo.calibrate
 %   opts   stereo.defaults() (groups disparity and Parallel)
 %
@@ -65,7 +67,14 @@ end
 
 function disparity = measure(imgs, calib, opts, verbose, backgrounds, pairs, hbar, pair_units)
 d = opts.disparity;
-% image sets that read the A images for the disparity: minimum background, no ROI
+% area of the measurement: inside the overlap of both views and inside the region of interest (the same for
+% both cameras); the masks of the cameras are added for each image pair in disparity_pair
+roi = [];
+if ~isempty(imgs{1}.preprocess) && isfield(imgs{1}.preprocess, 'Roi')
+    roi = imgs{1}.preprocess.Roi;
+end
+area = measurement_area(calib, roi);
+% image sets that read the A images for the disparity: minimum background, region of interest of camera 1
 for k = 1:2
     if numel(backgrounds) == 2
         bg = backgrounds{k};
@@ -78,14 +87,14 @@ for k = 1:2
     end
     imgs{k}.background = bg;
     if ~isempty(imgs{k}.preprocess)
-        imgs{k}.preprocess.Roi = [];
+        imgs{k}.preprocess.Roi = roi;
     end
 end
 disparity_background = {imgs{1}.background, imgs{2}.background};
 
 imgs = stereo.rectified_images(imgs, calib, []);
-raw = measure_once(imgs, calib, pairs, d, opts.Parallel, verbose, hbar, pair_units);
-[u_grid, v_grid, fit] = model_grid(calib, raw, d.Model);
+raw = measure_once(imgs, area, pairs, d, opts.Parallel, verbose, hbar, pair_units);
+[u_grid, v_grid, fit] = model_grid(area.calib, raw, d.Model);
 disparity = stereo.disparity_field(calib, raw.x, raw.y, u_grid, v_grid);
 disparity.u_mean = raw.u_mean;
 disparity.v_mean = raw.v_mean;
@@ -94,14 +103,15 @@ disparity.raw = raw;
 disparity.fit = fit;
 disparity.model = char(d.Model);
 disparity.pairs = pairs;
+disparity.roi = roi;
 
-inside = ~calib.mask(sub2ind(size(calib.mask), min(max(round(double(raw.y)), 1), size(calib.mask, 1)), ...
-    min(max(round(double(raw.x)), 1), size(calib.mask, 2))));
+inside = ~area.mask(sub2ind(size(area.mask), min(max(round(double(raw.y)), 1), size(area.mask, 1)), ...
+    min(max(round(double(raw.x)), 1), size(area.mask, 2))));
 disparity.residual_history = zeros(0, 2);
 for it = 2:d.Passes
     imgs = stereo.rectified_images(imgs, calib, disparity);
-    raw_r = measure_once(imgs, calib, pairs, d, opts.Parallel, verbose, hbar, pair_units);
-    [ru, rv] = model_grid(calib, raw_r, d.Model);
+    raw_r = measure_once(imgs, area, pairs, d, opts.Parallel, verbose, hbar, pair_units);
+    [ru, rv] = model_grid(area.calib, raw_r, d.Model);
     r = sqrt(ru(inside) .^ 2 + rv(inside) .^ 2);
     disparity.residual_history(end + 1, :) = [max(r), sqrt(mean(r .^ 2))];
     if verbose
@@ -137,16 +147,38 @@ if ~isempty(hbar)
 end
 end
 
-function raw = measure_once(imgs, calib, pairs, d, parallel, verbose, hbar, pair_units)
+function area = measurement_area(calib, roi)
+% area.mask: true outside the overlap of both views or outside the region of interest (PIVlab mask convention)
+% area.outside_roi: true outside the region of interest (these pixels are set to 0 in the images)
+% area.rows, area.cols: rows and columns of the region of interest
+% area.size: size of the area [height width] (for the automatic window size)
+% area.calib: calib with area.mask as mask (for the model fit)
+area.mask = calib.mask;
+area.outside_roi = [];
+area.rows = 1:size(calib.mask, 1);
+area.cols = 1:size(calib.mask, 2);
+if ~isempty(roi)
+    % rows and columns of the region of interest as in preproc.PIVlab_preproc
+    area.rows = max(roi(2), 1):min(roi(2) + roi(4), size(calib.mask, 1));
+    area.cols = max(roi(1), 1):min(roi(1) + roi(3), size(calib.mask, 2));
+    area.outside_roi = true(size(calib.mask));
+    area.outside_roi(area.rows, area.cols) = false;
+    area.mask = area.mask | area.outside_roi;
+end
+area.size = [numel(area.rows) numel(area.cols)];
+area.calib = calib;
+area.calib.mask = area.mask;
+end
+
+function raw = measure_once(imgs, area, pairs, d, parallel, verbose, hbar, pair_units)
 % one disparity measurement over the selected image pairs
 interrogationarea = d.InterrogationArea;
 if isempty(interrogationarea)
-    interrogationarea = floor(min(calib.Ravg.ImageSize) / 10) * 2;
+    interrogationarea = floor(min(area.size) / 10) * 2;
 end
 d.PassSize2 = min(d.PassSize2, round(interrogationarea / 4) * 2); % second pass at most half the first
 n = numel(pairs);
 out = cell(n, 1);
-mask = calib.mask;
 if parallel
     if misc.pivparpool('size') == 0
         gcp();
@@ -154,14 +186,14 @@ if parallel
     imgs1 = imgs{1};
     imgs2 = imgs{2};
     parfor i = 1:n
-        out{i} = disparity_pair(imgs1, imgs2, pairs(i), mask, interrogationarea, d);
+        out{i} = disparity_pair(imgs1, imgs2, pairs(i), area, interrogationarea, d);
         if ~isempty(hbar)
             hbar.iterate(pair_units);
         end
     end
 else
     for i = 1:n
-        out{i} = disparity_pair(imgs{1}, imgs{2}, pairs(i), mask, interrogationarea, d);
+        out{i} = disparity_pair(imgs{1}, imgs{2}, pairs(i), area, interrogationarea, d);
         if ~isempty(hbar)
             hbar.iterate(pair_units);
             drawnow % the progress timer updates the GUI
@@ -196,10 +228,12 @@ raw.u_frames = u_filt;
 raw.v_frames = v_filt;
 end
 
-function r = disparity_pair(imgs1, imgs2, pair, mask, interrogationarea, d)
-% camera 1 A image against camera 2 A image (rectified, background removed, pre-processed)
-image1 = pivlab.getImage(imgs1, pair);
-image2 = pivlab.getImage(imgs2, pair);
+function r = disparity_pair(imgs1, imgs2, pair, area, interrogationarea, d)
+% camera 1 A image against camera 2 A image (rectified, background removed, pre-processed), only inside the
+% measurement area and outside the masks of both cameras
+image1 = area_image(imgs1, pair, area);
+image2 = area_image(imgs2, pair, area);
+mask = area.mask | camera_mask(imgs1, pair) | camera_mask(imgs2, pair);
 [x, y, u, v] = piv.piv_FFTmulti(image1=image1, image2=image2, interrogationarea=interrogationarea, ...
     step=interrogationarea / 2, subpixfinder=1, mask_inpt=mask, roi_inpt=[], passes=2, int2=d.PassSize2, ...
     int3=[], int4=[], imdeform='*linear', repeat=0, mask_auto=0, do_linear_correlation=0, ...
@@ -212,6 +246,63 @@ r.u_filt = double(u_filt);
 r.v_filt = double(v_filt);
 r.u_filt_smooth = double(misc.smoothn(u_filt, d.SmoothFrame));
 r.v_filt_smooth = double(misc.smoothn(v_filt, d.SmoothFrame));
+end
+
+function img = area_image(imgs, pair, area)
+% A image of an image pair (rectified, background removed, pre-processed). With a region of interest, no image
+% data from outside it is used: the automatic intensity limits are taken inside the region of interest, and
+% the pixels outside it are set to 0.
+if isempty(area.outside_roi)
+    img = pivlab.getImage(imgs, pair);
+    return
+end
+pre = imgs.preprocess;
+plain = imgs;
+plain.preprocess = [];
+img = pivlab.getImage(plain, pair); % background removed, not pre-processed
+if ~isempty(pre)
+    if pre.AutoLimit
+        lim = stretchlim(img(area.rows, area.cols));
+        pre.AutoLimit = false;
+        pre.MinIntensity = lim(1);
+        pre.MaxIntensity = lim(2);
+    end
+    img = piv.prepare_image(img, preprocess_settings(pre));
+end
+img(area.outside_roi) = 0;
+end
+
+function s = preprocess_settings(pre)
+% imgs.preprocess (names of pivlab.preprocess) -> settings of piv.prepare_image
+s.clahe = double(pre.CLAHE);
+s.clahesize = pre.CLAHESize;
+s.highp = double(pre.Highpass);
+s.highpsize = pre.HighpassSize;
+s.intenscap = double(pre.IntensityCapping);
+s.wienerwurst = double(pre.Wiener);
+s.wienerwurstsize = pre.WienerSize;
+s.autolimit = double(pre.AutoLimit);
+s.minintens = pre.MinIntensity;
+s.maxintens = pre.MaxIntensity;
+s.roirect = pre.Roi;
+end
+
+function m = camera_mask(imgs, pair)
+% mask of one camera for an image pair (logical image, false = no mask), as in pivlab.analyze
+m = false(imgs.imageSize);
+if ~isfield(imgs, 'mask') || isempty(imgs.mask)
+    return
+end
+if islogical(imgs.mask) || isnumeric(imgs.mask)
+    m = logical(imgs.mask);
+elseif iscell(imgs.mask) && numel(imgs.mask) >= pair && ~isempty(imgs.mask{pair})
+    entry = imgs.mask{pair};
+    if islogical(entry) || isnumeric(entry)
+        m = logical(entry);
+    else % PIVlab mask objects (masks_in_frame)
+        m = mask.convert_masks_to_binary(imgs.imageSize, entry);
+    end
+end
 end
 
 function [u_grid, v_grid, fit] = model_grid(calib, raw, model)

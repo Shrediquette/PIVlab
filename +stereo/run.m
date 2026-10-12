@@ -13,7 +13,8 @@ function result = run(imgs, boards, board, opts)
 %   Settings  PIVlab settings (pivlab.defaults / pivlab.loadSettings): image pre-processing, PIV,
 %             vector validation and smoothing. The same settings are used for both cameras.
 %   Stereo    stereo settings (stereo.defaults); missing fields get the default value
-%   Roi       [x y width height] in the rectified images, [] = automatic (rectangle in the overlap)
+%   Roi       [x y width height] in the rectified images, [] = automatic (rectangle in the overlap).
+%             A given region of interest is used for the disparity measurement and the PIV.
 %   Verbose   true (default) / false
 %
 %   result.calib      stereo calibration (stereo.calibrate)
@@ -60,6 +61,7 @@ end
 imgs = stereo.rectified_images(imgs, calib, []);
 for k = 1:2
     imgs{k} = pivlab.preprocess(imgs{k}, Camera=imgs{k}.cam, Roi="none", Mask="none", Settings=S, Verbose=verbose);
+    imgs{k}.preprocess.Roi = opts.Roi; % a given region of interest also limits the disparity measurement
 end
 
 disparity = stereo.measure_disparity(imgs, calib, st, verbose);

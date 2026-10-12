@@ -7,20 +7,22 @@ function draw_w(target_axis, frame)
 delete(findobj(target_axis, 'Tag', 'stereo_w_display'));
 stereo_vel = gui.retr('stereo_vel');
 resultslist = gui.retr('resultslist');
-if isempty(stereo_vel) || frame > size(stereo_vel.W, 3) || isempty(resultslist) || frame > size(resultslist, 2) ...
-        || isempty(resultslist{1, frame})
+if isempty(stereo_vel) || isempty(resultslist) || frame > size(resultslist, 2) || isempty(resultslist{1, frame})
     return
 end
-W = double(stereo_vel.W(:, :, frame));
-if all(isnan(W(:)))
+W = double(stereo.w_of_frame(frame, true)); % smoothed like the vectors, if data smoothing is on
+if isempty(W) || all(isnan(W(:)))
     return
 end
 scale = 1;
 unit = 'px/frame';
 calu = gui.retr('calu');
-if ~isempty(calu) && calu ~= 1 && isequal(gui.retr('displacement_only'), 0)
-    scale = calu;
+if ~isempty(calu) && abs(calu) ~= 1
+    scale = abs(calu);
     unit = 'm/s';
+    if isequal(gui.retr('displacement_only'), 1)
+        unit = 'm/frame';
+    end
 end
 limit = stereo_vel.W_limit * scale;
 if ~(limit > 0)

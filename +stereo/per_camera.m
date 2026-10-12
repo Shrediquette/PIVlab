@@ -9,7 +9,7 @@ function per_camera(action)
 % The normal 2D routine runs for each camera on its own images (rectified, disparity-corrected), with its
 % own masks and background images and the settings of both cameras. The 2D result of each camera is
 % per-camera data ('stereo_result', stereo.camera_data_keys); afterwards stereo.update_result reconstructs
-% the three components: U, V in the result list of the GUI, W in gui.retr('stereo_vel').
+% the three components into the result list of the GUI (W in row 16, stereo.w_of_frame).
 hgui = getappdata(0, 'hgui');
 batch = isequal(gui.retr('batchModeActive'), 1);
 analyze = any(strcmp(action, {'analyze_all', 'analyze_current'}));
@@ -25,6 +25,8 @@ if analyze
         end
     end
 end
+% mean frames are made from the result; it is rebuilt here from the 2D results of both cameras
+stereo.remove_mean_frames;
 active = gui.retr('stereo_active_camera');
 gui.put('stereo_camera_loop', 1);
 cancelled = false;

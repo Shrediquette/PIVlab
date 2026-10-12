@@ -47,6 +47,16 @@ if isempty(resultslist)==0
 		uncertainty_map=vorticity;
 	end
 
+	stereo_mode=isequal(gui.retr('stereomode'),1); %stereo-PIV: the out-of-plane component w too
+	if stereo_mode
+		w_original=u_original;
+		w_filtered=u_original;
+		w_smoothed=u_original;
+		if include_deriv
+			w_component=u_original;
+		end
+	end
+
 	if type==1
 		nrframes=1;
 	end
@@ -67,9 +77,20 @@ if isempty(resultslist)==0
 		typevector_filtered{i,1}=resultslist{9,currentframe};
 		u_smoothed{i,1}=resultslist{10,currentframe}*calu;
 		v_smoothed{i,1}=resultslist{11,currentframe}*calv;
+		if stereo_mode %w is computed from the validated 2D results of both cameras: original = filtered
+			w_original{i,1}=stereo.w_of_frame(currentframe,false,resultslist)*abs(calu);
+			w_filtered{i,1}=w_original{i,1};
+			if size(resultslist,1)>=17
+				w_smoothed{i,1}=resultslist{17,currentframe}*abs(calu);
+			end
+		end
 
 		if include_deriv
-			for deriv_idx=[2:9, 11:13] % skip 10 (LIC)
+			deriv_list=[2:9, 11:13]; % skip 10 (LIC)
+			if stereo_mode
+				deriv_list=[deriv_list 14]; %w component
+			end
+			for deriv_idx=deriv_list
 				plot.derivative_calc(currentframe,deriv_idx,1);
 			end
 			derived=gui.retr('derived');
@@ -84,6 +105,9 @@ if isempty(resultslist)==0
 			vectorangle{i,1}=derived{10,currentframe};
 			correlation_map{i,1}=derived{11,currentframe};
 			uncertainty_map{i,1}=derived{12,currentframe};
+			if stereo_mode
+				w_component{i,1}=derived{13,currentframe};
+			end
 		end
 	end
 
@@ -112,6 +136,14 @@ if isempty(resultslist)==0
 			correlation_map=correlation_map{i,1};
 			uncertainty_map=uncertainty_map{i,1};
 		end
+		if stereo_mode
+			w_original=w_original{i,1};
+			w_filtered=w_filtered{i,1};
+			w_smoothed=w_smoothed{i,1};
+			if include_deriv
+				w_component=w_component{i,1};
+			end
+		end
 	end
 end
 
@@ -120,4 +152,22 @@ if include_deriv
 	save(fullfile(PathName,FileName), 'x','y','u_original','v_original','typevector_original','u_filtered','v_filtered','typevector_filtered','u_smoothed','v_smoothed','vorticity','velocity_magnitude','u_component','v_component','divergence','q_criterion','shear_rate','strain_rate','calxy','calu', 'calv','units','information','vectorangle','correlation_map','uncertainty_map');
 else
 	save(fullfile(PathName,FileName), 'x','y','u_original','v_original','typevector_original','u_filtered','v_filtered','typevector_filtered','u_smoothed','v_smoothed','calxy','calu','calv','units','information');
+end
+
+if exist('stereo_mode','var') && stereo_mode %stereo-PIV: w and the reconstruction
+	stereo_vel=gui.retr('stereo_vel');
+	stereo_info=struct(); %saved as the variable "stereo" (a variable of this name would hide the package stereo)
+	stereo_info.w_sign='w is positive away from the cameras';
+	stereo_info.reconstruction_residual_px=stereo_vel.residual; %agreement of the two camera results, per analysed image pair
+	stereo_info.light_sheet_z_mm=stereo_vel.sheet_z_mm; %measured light sheet position relative to the board
+	stereo_info.mm_per_px=stereo_vel.mm_per_px; %pixel size of the common grid of both cameras
+	if type==1 && size(stereo_info.reconstruction_residual_px,3)>=currentframe
+		stereo_info.reconstruction_residual_px=stereo_info.reconstruction_residual_px(:,:,currentframe);
+	end
+	information{end+1,1}='Stereo-PIV: w_original, w_filtered and w_smoothed are the out-of-plane component (positive away from the cameras, units like u). The struct stereo holds the reconstruction residual, the light sheet position and the pixel size of the common grid.';
+	extra=struct('w_original',{w_original},'w_filtered',{w_filtered},'w_smoothed',{w_smoothed},'stereo',stereo_info,'information',{information});
+	if include_deriv
+		extra.w_component=w_component;
+	end
+	save(fullfile(PathName,FileName),'-struct','extra','-append');
 end

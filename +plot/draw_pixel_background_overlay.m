@@ -56,7 +56,7 @@ map = [];
 if map_available
 	if ~strcmpi(o.colorbar_position,'None')
 		name=get(handles.derivchoice,'string');
-		if strcmp(name,'N/A') %user hasn't visited the derived panel before
+		if ~iscell(name) || numel(name)<displaywhat %user hasn't visited the derived panel before (or a stereo session added the w component)
 			plot.update_derivchoice_list(handles)
 			name=get(handles.derivchoice,'String');
 		end

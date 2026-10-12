@@ -1,11 +1,10 @@
 function update_panel(handles)
-%UPDATE_PANEL Checklist and calibration report of the Stereo-PIV panel.
+%UPDATE_PANEL Checklist and disparity report of the Stereo-PIV panel (the calibration report is in "Show 3D setup").
 if nargin < 1
     handles = gui.gethand;
 end
 if ~isequal(gui.retr('stereomode'), 1)
     set(handles.stereo_steps, 'String', 'Load the images of both cameras first (Input data panel: "Import stereo images").');
-    set(handles.stereo_calib_report, 'String', 'Not calibrated yet.');
     set(handles.stereo_disp_report, 'String', 'Not measured yet.');
     return
 end
@@ -30,18 +29,30 @@ steps{end + 1} = [mark(all(has_board)) ' Board image in the light sheet' cameras
 steps{end + 1} = [mark(~isempty(calib)) ' Stereo calibration'];
 steps{end + 1} = [mark(~isempty(gui.retr('stereo_disparity'))) ' Disparity correction'];
 steps{end + 1} = [mark(~isempty(gui.retr('roirect'))) ' Region of interest'];
+steps{end + 1} = [mark(time_step_applied(calib)) ' Time step (calibration panel, CTRL+Z)'];
 set(handles.stereo_steps, 'String', steps);
-if isempty(calib) || ~isfield(calib, 'report')
-    set(handles.stereo_calib_report, 'String', 'Not calibrated yet.');
-else
-    set(handles.stereo_calib_report, 'String', calib.report);
-end
 disparity = gui.retr('stereo_disparity');
 if isempty(disparity) || ~isfield(disparity, 'report')
     set(handles.stereo_disp_report, 'String', 'Not measured yet.');
 else
     set(handles.stereo_disp_report, 'String', disparity.report);
 end
+end
+
+function tf = time_step_applied(calib)
+% the spatial calibration of the stereo grid is applied with a time step (velocities, not displacements);
+% a calibration applied before the stereo calibration (other scale) does not count
+tf = false;
+if isempty(calib)
+    return
+end
+calxy = gui.retr('calxy'); % m per px
+displacement_only = gui.retr('displacement_only');
+if isempty(calxy) || isequal(calxy, 1) || isequal(displacement_only, 1)
+    return
+end
+mm_per_px = calib.Ravg.PixelExtentInWorldX;
+tf = abs(calxy * 1000 - mm_per_px) < 0.01 * mm_per_px;
 end
 
 function tf = has(camera, field)

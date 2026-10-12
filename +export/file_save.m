@@ -9,9 +9,10 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	x=resultslist{1,currentframe};
 	y=resultslist{2,currentframe};
 	[x_cal,y_cal]=calibrate.xy (x,y);
-
+	smoothed=false;
 	if size(resultslist,1)>6 %filtered exists
 		if size(resultslist,1)>10 && numel(resultslist{10,currentframe}) > 0 %smoothed exists
+			smoothed=true;
 			u=resultslist{10,currentframe};
 			v=resultslist{11,currentframe};
 			typevector=resultslist{9,currentframe};
@@ -39,6 +40,11 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 end
 u(typevector==0)=NaN;
 v(typevector==0)=NaN;
+w=stereo.w_of_frame(currentframe,smoothed); %stereo-PIV: out-of-plane component (else empty), exported right after v
+if ~isempty(w)
+	w(typevector==0)=NaN;
+	w_cal=w*abs(calu); %like u (an axis flip does not flip w)
+end
 subtract_u=gui.retr('subtr_u');
 subtract_v=gui.retr('subtr_v');
 
@@ -84,6 +90,9 @@ if type==1 %ascii file
 	else
 		header3=[];
 	end
+	if ~isempty(header3) && ~isempty(w)
+		header3=insert_w_header(header3,delimiter);
+	end
 	if isempty(header1)==0
 		fid = fopen(fullfile(PathName,FileName), 'w');
 		fprintf(fid, [header1 '\r\n']);
@@ -128,6 +137,9 @@ if type==1 %ascii file
 		%wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
 		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
 	end
+	if ~isempty(w)
+		wholeLOT=[wholeLOT(:,1:4) w_cal(:) wholeLOT(:,5:end)]; %x y u v w type ...
+	end
 	dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc'); %#ok<DLMWT>
 end %type==1
 
@@ -168,7 +180,12 @@ if type==3 %paraview vtk PARAVIEW DATEN OHNE die ganzen derivatives.... Berechne
 	fprintf(fid, 'VECTORS velocity_vectors float\n');
 
 	%append binary u,v,w data
-	fwrite(fid, [reshape(u,1,nr_of_elements);  reshape(v,1,nr_of_elements); reshape(v,1,nr_of_elements)*0],'float','b');
+	if isempty(w)
+		w_vtk=reshape(v,1,nr_of_elements)*0; %2D: zero (NaN where v is NaN, as always)
+	else
+		w_vtk=reshape(w_cal,1,nr_of_elements); %stereo-PIV: the out-of-plane component
+	end
+	fwrite(fid, [reshape(u,1,nr_of_elements);  reshape(v,1,nr_of_elements); w_vtk],'float','b');
 
 	if size(resultslist,1) >= 12
 		corr_map_raw=resultslist{12,currentframe};
@@ -227,6 +244,10 @@ if type==4 %tecplot file
 			end
 		end
 	end
+	if ~isempty(w) %stereo-PIV: w right after v
+		header3=insert_w_header(header3,delimiter);
+		header5=strrep(header5,'"v", ','"v", "w", ');
+	end
 	header4 = ['TITLE = "PIVlab frame: ' int2str(currentframe) '"'];
 	header6 = ['ZONE I=' int2str(size(x_cal,2)) ', J=' int2str(size(x_cal,1)) ', K=1, F=POINT, T="' int2str(currentframe) '"'];
 
@@ -279,8 +300,19 @@ if type==4 %tecplot file
 		v(isnan(v))=0;
 		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1)];
 	end
+	if ~isempty(w)
+		w_tec=w_cal;
+		w_tec(isnan(w_tec))=0;
+		wholeLOT=[wholeLOT(:,1:4) w_tec(:) wholeLOT(:,5:end)]; %x y u v w isNaN ...
+	end
 	wholeLOT=sortrows(wholeLOT,2);
 
 	dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc'); %#ok<DLMWT>
 end %fÃ¼r mehrere Zones: einfach header6 nochmal appenden, dann whileLOT fÃ¼r den nÃ¤chsten frame berechnen und appenden etc...
 
+function header=insert_w_header(header,delimiter)
+%stereo-PIV: a w column header after the v column, in the unit of v
+v_header=regexp(header,'v \[[^\]]*\]','match','once');
+position=strfind(header,v_header);
+position=position(1)+numel(v_header)-1;
+header=[header(1:position) delimiter strrep(v_header,'v [','w [') header(position+1:end)];

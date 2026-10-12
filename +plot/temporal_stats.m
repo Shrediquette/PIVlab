@@ -1,4 +1,4 @@
-function [u_out, v_out, typevector_out] = temporal_stats(U, V, TV, type)
+function [u_out, v_out, typevector_out, w_out] = temporal_stats(U, V, TV, type, W)
 %TEMPORAL_STATS Temporal mean / sum / standard deviation / TKE of a vector field series (no GUI).
 %   [u_out, v_out, typevector_out] = plot.temporal_stats(U, V, TV, type)
 %
@@ -10,6 +10,9 @@ function [u_out, v_out, typevector_out] = temporal_stats(U, V, TV, type)
 %   typevector_out  0 where the vector is masked in all frames, 2 where more than 50 % of the
 %                   vectors were interpolated, else 1. For mean, stdev and TKE, vectors with less
 %                   than 25 % valid measurements are set to NaN.
+%
+%   W (optional)  H x W x N out-of-plane component (stereo-PIV): w_out with the same rule as u
+%                 (TKE: 0.5*var(w)); [] without W.
 %
 %   Used by plot.temporal_operation_Callback (GUI) and pivlab.temporal.
 TV(TV == 3) = 1; % 2nd-peak valid counts as a good measurement
@@ -46,5 +49,9 @@ switch type
         end
     otherwise
         error('plot:temporal_stats:type','type must be 0 (sum), 1 (mean), 2 (stdev) or 3 (TKE).');
+end
+w_out = [];
+if nargin >= 5 && ~isempty(W)
+    w_out = plot.temporal_stats(W, W, TV, type);
 end
 end

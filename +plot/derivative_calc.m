@@ -25,10 +25,18 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 	if isnan(subtr_v)
 		subtr_v=0;set(handles.subtr_v, 'string', '0');
 	end
+	stereo_mode=isequal(gui.retr('stereomode'),1); %stereo-PIV: the out-of-plane component w is treated like u and v
+	w=[];
 	if use_smoothed && size(resultslist,1)>=11 && ~isempty(resultslist{10,frame}) %batch temporal path: use the finished smoothed field, skip re-smoothing
 		u=resultslist{10,frame};
 		v=resultslist{11,frame};
+		if stereo_mode
+			w=stereo.w_of_frame(frame,true,resultslist);
+		end
 	else
+	if stereo_mode
+		w=stereo.w_of_frame(frame,false,resultslist);
+	end
 	if size(resultslist,1)>6 && numel(resultslist{7,frame})>0 %filtered exists
 		u=resultslist{7,frame};
 		v=resultslist{8,frame};
@@ -51,6 +59,10 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
             typevector_original=typevector;
             u(isnan(v))=NaN;
             v(isnan(u))=NaN;
+            if ~isempty(w)
+                w(isnan(u))=NaN;
+                w=misc.inpaint_nans(w,4); %only for the derived parameters, like u and v
+            end
             typevector(isnan(u))=2;
 			typevector(typevector_original==0)=0;
 			u=misc.inpaint_nans(u,4); %only for the derived parameters: the vector data (resultslist rows 7-9) is not changed
@@ -80,15 +92,27 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 		%careful if more things are added, [] replaced by {[]}
 		resultslist{10,frame}=[]; %remove smoothed u
 		resultslist{11,frame}=[]; %remove smoothed v
+		if stereo_mode
+			resultslist{17,frame}=[]; %remove smoothed w
+		end
 	else
 		if smooth_mode==2 || smooth_mode==4 %2D or 2D + time --> spatial smoothing first
 			[u,v]=plot.smooth_spatial(u,v,S,get(handles.interpol_missing,'value'));
+			if ~isempty(w)
+				w=plot.smooth_spatial(w,w,S,get(handles.interpol_missing,'value'));
+			end
 		end
 		if smooth_mode==3 || smooth_mode==4 %time or 2D + time --> temporal moving average over frames
 			[u,v]=plot.temporal_smooth(resultslist,frame,u,v);
+			if ~isempty(w) %the same moving average, with w in place of u and v
+				w=plot.temporal_smooth(stereo.w_as_uv(resultslist),frame,w,w);
+			end
 		end
 		resultslist{10,frame}=u; %smoothed u (spatial and/or temporal)
 		resultslist{11,frame}=v; %smoothed v
+		if ~isempty(w)
+			resultslist{17,frame}=w; %smoothed w (stereo.w_of_frame)
+		end
 	end
 	end %use_smoothed branch
 
@@ -115,6 +139,9 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 	end
 	if deriv==13 && size(resultslist,1)>=15
 		copt.uncertainty=resultslist{15,frame};
+	end
+	if ~isempty(w)
+		copt.w=w; %magnitude in 3D, w component (deriv 14)
 	end
 	if deriv>1
 		derived{deriv-1,frame}=plot.compute_derived(x,y,u,v,deriv,cal,copt);

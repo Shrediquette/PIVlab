@@ -327,7 +327,13 @@ verifyEqual(testCase, str2double(get(handles.realdist, 'String')) / abs(diff(poi
     calib.Ravg.PixelExtentInWorldX, 'RelTol', 1e-4, 'mm per px of the spatial calibration');
 steps = get(handles.stereo_steps, 'String');
 verifyTrue(testCase, startsWith(steps{4}, char(10003)), 'checklist: stereo calibration not ticked');
-verifyNotEmpty(testCase, strfind(strjoin(get(handles.stereo_calib_report, 'String'), ' '), 'Angle between the cameras'));
+verifyTrue(testCase, startsWith(steps{7}, char(10007)), 'checklist: time step ticked before it was applied');
+% time step applied in the calibration panel: ticked in the checklist
+set(handles.time_inp, 'String', '2');
+calibrate.apply_cali_Callback;
+stereo.panel_Callback;
+steps = get(handles.stereo_steps, 'String');
+verifyTrue(testCase, startsWith(steps{7}, char(10003)), 'checklist: time step not ticked after applying it');
 % rectification panel: no 2D rectification and upscaling in stereo mode, a note instead
 verifyEqual(testCase, char(get(handles.calib_userectification, 'Visible')), 'off', '2D rectification must be hidden in stereo mode');
 verifyEqual(testCase, char(get(handles.calib_upscale, 'Visible')), 'off');
@@ -342,6 +348,9 @@ verifyEqual(testCase, size(board.CData, 1, 2), sz, 'board not shown on the commo
 stereo.show_3d_Callback;
 fig = findall(0, 'Type', 'figure', 'Name', 'Stereo-PIV setup in 3D');
 verifyNumElements(testCase, fig, 1);
+report = findall(fig, 'Tag', 'stereo_calib_report');
+verifyNumElements(testCase, report, 1, 'calibration report missing in the 3D view');
+verifyNotEmpty(testCase, strfind(strjoin(cellstr(report.String), ' '), 'Angle between the cameras'));
 close(fig);
 % session: the maps are made again after loading
 file = fullfile(testCase.TestData.folder, 'calib_session.mat');
@@ -427,9 +436,8 @@ set(handles.update_display_checkbox, 'Value', 0);
 piv.AnalyzeAll_Callback;
 verifyNotEmpty(testCase, gui.retr('stereo_disparity'), 'the disparity is measured before the analysis');
 resultslist = gui.retr('resultslist');
-stereo_vel = gui.retr('stereo_vel');
 verifyEqual(testCase, size(resultslist, 2), 4, 'one result per image pair');
-verifyEqual(testCase, size(stereo_vel.W, 3), 4);
+verifyGreaterThanOrEqual(testCase, size(resultslist, 1), 16, 'W (row 16) missing');
 state = gui.retr('stereo_cam_state');
 verifyNotEmpty(testCase, gui.retr('stereo_result'), '2D result of the active camera');
 verifyNotEmpty(testCase, state{3 - gui.retr('stereo_active_camera')}.stereo_result, '2D result of the other camera');
@@ -448,19 +456,143 @@ validate.restore_all_Callback;
 r = gui.retr('stereo_result');
 verifyTrue(testCase, size(r, 1) < 7 || isempty(r{7, 1}), 'validation not undone');
 % session round trip
-before = gui.retr('stereo_vel');
+before = gui.retr('resultslist');
 export.save_session_function(testCase.TestData.folder, 'analysis_session.mat');
 helper_close_pivlab();
 helper_start_pivlab();
 import.load_session_Callback(1, fullfile(testCase.TestData.folder, 'analysis_session.mat'));
-after = gui.retr('stereo_vel');
-verifyEqual(testCase, after.W, before.W, 'W after loading the session');
+after = gui.retr('resultslist');
+verifyEqual(testCase, after(16, :), before(16, :), 'W after loading the session');
+verifyNotEmpty(testCase, findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_w_display'));
+end
+
+function test_3d_result_out_of_pivlab(testCase)
+% W in the exports (ASCII, Tecplot, VTK, MAT, workspace), the derived parameters (w component, 3D
+% magnitude), the temporal operations (mean, TKE) and the data smoothing
+folder = testCase.TestData.folder;
+c = helper_stereo_synthetic_case(fullfile(folder, 'export_case'), 3, 0);
+helper_start_pivlab();
+h = gui.gethand;
+calibrate_in_gui(c);
+set(h.pass1_size, 'String', '64'); piv.intarea_Callback(h.pass1_size, [], []);
+set(h.pass1_step, 'String', '32'); piv.step_Callback(h.pass1_step, [], []);
+set(h.pass2_enable, 'Value', 1); set(h.pass2_size, 'String', '32'); piv.pass2_checkbox_Callback(h.pass2_enable, [], []);
+set(h.update_display_checkbox, 'Value', 0);
+piv.AnalyzeAll_Callback;
+set(h.time_inp, 'String', '2'); % spatial calibration of the stereo calibration + time step: m/s
+calibrate.apply_cali_Callback;
+calu = abs(gui.retr('calu'));
+verifyNotEqual(testCase, calu, 1, 'not calibrated');
+rl = gui.retr('resultslist');
+W = rl{16, 1};
+verifyTrue(testCase, any(isfinite(W(:))), 'no W in row 16');
+verifyEqual(testCase, stereo.w_of_frame(1), W);
+% ASCII: x y u v w type
+set(h.delimiter, 'Value', 1); set(h.add_header, 'Value', 1); set(h.addfileinfo, 'Value', 0); set(h.export_vort, 'Value', 0);
+export.file_save(1, 'w.txt', folder, 1);
+lines = readlines(fullfile(folder, 'w.txt'));
+verifyTrue(testCase, startsWith(lines(1), "x [m],y [m],u [m/s],v [m/s],w [m/s],Vector type"), char(lines(1)));
+data = readmatrix(fullfile(folder, 'w.txt'), 'NumHeaderLines', 1);
+verifyEqual(testCase, size(data, 2), 6);
+verifyEqual(testCase, data(:, 5), W(:) * calu, 'RelTol', 1e-6, 'ASCII: w column'); % single precision like u, v
+% Tecplot: VARIABLES "x", "y", "u", "v", "w", "isNaN"
+set(h.export_vort_tec, 'Value', 0);
+export.file_save(1, 'w.dat', folder, 4);
+lines = readlines(fullfile(folder, 'w.dat'));
+verifyTrue(testCase, any(startsWith(lines, 'VARIABLES = "x", "y", "u", "v", "w", "isNaN"')), 'Tecplot: variables');
+data = readmatrix(fullfile(folder, 'w.dat'), 'NumHeaderLines', 6, 'FileType', 'text', 'Delimiter', ' ');
+w_tec = W(:) * calu;
+w_tec(isnan(w_tec)) = 0;
+verifyEqual(testCase, sort(data(:, 5)), sort(w_tec), 'RelTol', 1e-6, 'Tecplot: w column');
+% VTK: the third component of the velocity is w
+export.file_save(1, 'w.vtk', folder, 3);
+vtk = read_vtk_vectors(fullfile(folder, 'w.vtk'), numel(W));
+verifyEqual(testCase, vtk(3, :), single(W(:)' * calu), 'VTK: w component');
+% MAT file of all frames, with derivatives
+set(h.export_mat_derivatives, 'Value', 1);
+export.mat_file_save(1, 'w.mat', folder, 2);
+m = load(fullfile(folder, 'w.mat'));
+verifyEqual(testCase, m.w_original{1}, W * calu, 'RelTol', 1e-12, 'MAT: w_original');
+verifyEqual(testCase, m.w_filtered{3}, rl{16, 3} * calu, 'RelTol', 1e-12, 'MAT: w_filtered');
+verifyTrue(testCase, isfield(m, 'w_component') && isfield(m, 'stereo') && isfield(m.stereo, 'reconstruction_residual_px'));
+verifyTrue(testCase, contains(strjoin(m.information, ' '), 'Stereo-PIV'));
+% export to the workspace
+export.write_workspace_Callback;
+w_ws = evalin('base', 'w_original');
+verifyEqual(testCase, w_ws{2}, rl{16, 2} * calu, 'RelTol', 1e-12, 'workspace: w_original');
+% derived parameters: the w component (only in stereo mode) and the 3D magnitude
+plot.update_derivchoice_list(h);
+items = get(h.derivchoice, 'String');
+verifyEqual(testCase, numel(items), 14);
+verifyTrue(testCase, startsWith(items{14}, 'w component'));
+set(h.interpol_missing, 'Value', 0);
+set(h.smooth_mode, 'Value', 1);
+plot.derivative_calc(1, 14, 0);
+plot.derivative_calc(1, 3, 0);
+derived = gui.retr('derived');
+verifyEqual(testCase, derived{13, 1}, W * calu, 'RelTol', 1e-12, 'w component');
+U = rl{7, 1} * gui.retr('calu');
+V = rl{8, 1} * gui.retr('calv');
+verifyEqual(testCase, derived{2, 1}, sqrt(U .^ 2 + V .^ 2 + (W * calu) .^ 2), 'RelTol', 1e-12, '3D magnitude');
+% temporal mean and TKE of W, mean frames for both cameras
+set(h.selectedFramesMean, 'String', '1:3');
+set(h.append_replace, 'Value', 1);
+plot.temporal_operation_Callback([], [], 1);
+plot.temporal_operation_Callback([], [], 3);
+rl = gui.retr('resultslist');
+verifyEqual(testCase, size(rl, 2), 5, 'mean and TKE frame not appended');
+stack = cat(3, rl{16, 1:3});
+mean_w = mean(stack, 3, 'omitnan');
+tke_w = 0.5 * var(stack, 0, 3, 'omitnan');
+ok = isfinite(rl{16, 4});
+verifyTrue(testCase, any(ok(:)));
+verifyEqual(testCase, rl{16, 4}(ok), mean_w(ok), 'AbsTol', 1e-12, 'mean of W');
+verifyEqual(testCase, rl{16, 5}(ok), tke_w(ok), 'AbsTol', 1e-12, 'TKE part of W');
+state = gui.retr('stereo_cam_state');
+other = 3 - gui.retr('stereo_active_camera');
+verifyEqual(testCase, numel(gui.retr('filepath')), 10);
+verifyEqual(testCase, numel(state{other}.filepath), 10, 'the other camera did not get the mean frames');
+verifyTrue(testCase, startsWith(state{other}.filename{7}, 'MEAN of frames'));
+stereo.switch_camera(other); % shows the mean frame on the image of the other camera
+set(h.fileselector, 'Value', 4); gui.fileselector_Callback(h.fileselector, [], []);
+gui.sliderdisp(gui.retr('pivlab_axis'));
+stereo.switch_camera(3 - other);
+% the validation rebuilds the result from both cameras: the mean frames go (from both cameras)
+validate.apply_filter_all_Callback;
+rl = gui.retr('resultslist');
+state = gui.retr('stereo_cam_state');
+verifyEqual(testCase, size(rl, 2), 3, 'mean frames not removed');
+verifyEqual(testCase, numel(gui.retr('filepath')), 6);
+verifyEqual(testCase, numel(state{other}.filepath), 6);
+verifyEmpty(testCase, gui.retr('ismean'));
+% data smoothing smooths W too (row 17), the W display follows it
+set(h.smooth_mode, 'Value', 2);
+set(h.smooth_param, 'String', '0.5');
+plot.derivative_calc(1, 4, 0);
+rl = gui.retr('resultslist');
+verifyNotEmpty(testCase, rl{17, 1}, 'smoothed W missing');
+verifyNotEqual(testCase, rl{17, 1}, rl{16, 1}, 'smoothing changed nothing');
+verifyEqual(testCase, stereo.w_of_frame(1, true), rl{17, 1});
+gui.put('displaywhat', 1); % vectors (the MAT export with derivatives showed the last derived parameter)
+set(h.fileselector, 'Value', 1); gui.fileselector_Callback(h.fileselector, [], []);
+gui.sliderdisp(gui.retr('pivlab_axis'));
 verifyNotEmpty(testCase, findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_w_display'));
 end
 
 % -------------------------------------------------------------------------
 % Helpers
 % -------------------------------------------------------------------------
+
+function v = read_vtk_vectors(file, n)
+% the 3 x n velocity vectors of a binary VTK file of PIVlab
+fid = fopen(file, 'r', 'b');
+content = fread(fid, inf, '*char')';
+marker = sprintf('VECTORS velocity_vectors float\n');
+start = strfind(content, marker);
+fseek(fid, start + numel(marker) - 1, 'bof');
+v = reshape(fread(fid, 3 * n, 'float=>single'), 3, n);
+fclose(fid);
+end
 
 function calibrate_in_gui(c, import_images)
 % stereo import, lens calibration + board image per camera, stereo calibration (no dialogs)
@@ -505,7 +637,7 @@ stereo_vel = gui.retr('stereo_vel');
 n = size(resultslist, 2);
 vel.U = cat(3, resultslist{7, 1:n});
 vel.V = cat(3, resultslist{8, 1:n});
-vel.W = double(stereo_vel.W);
+vel.W = cat(3, resultslist{16, 1:n});
 vel.x_mm = stereo_vel.x_mm;
 vel.y_mm = stereo_vel.y_mm;
 vel.mm_per_px = stereo_vel.mm_per_px;
