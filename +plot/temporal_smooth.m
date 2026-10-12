@@ -1,5 +1,8 @@
-function [u,v]=temporal_smooth(resultslist,frame,u,v)
+function [u,v,w]=temporal_smooth(resultslist,frame,u,v,w)
 %TEMPORAL_SMOOTH Temporal moving average of one frame over neighbouring frames.
+%   [u,v]=plot.temporal_smooth(resultslist,frame,u,v)
+%   [u,v,w]=plot.temporal_smooth(resultslist,frame,u,v,w)   w: out-of-plane component (stereo-PIV),
+%       averaged exactly like u and v; the neighbours' w comes from stereo.w_of_frame ([] = none)
 % Returns the temporally-averaged velocity (u,v) for `frame`, averaging over the
 % frames (2nd dimension of resultslist = time) within a centred window. The window
 % neighbours are read/computed in local memory only — their stored results are NOT
@@ -17,6 +20,10 @@ function [u,v]=temporal_smooth(resultslist,frame,u,v)
 % quantities stay defined up to the mask edge; only the current frame's original NaN
 % positions are restored when "interpolate missing data" is off.
 
+if nargin<5
+	w=[];
+end
+has_w=~isempty(w);
 handles=gui.gethand;
 smooth_mode=get(handles.smooth_mode,'Value'); % 3 = time, 4 = 2D + time
 do_2d=(smooth_mode==4); %neighbours get the 2D smoothing too in "2D + time" mode
@@ -45,11 +52,12 @@ wts=(h+1)-abs(offs);
 
 stack_u=nan([refsize numel(offs)]);
 stack_v=stack_u;
+stack_w=stack_u;
 idx=0;
 for f=frame-h:frame+h
 	idx=idx+1;
 	if f==frame
-		uf=u; vf=v; %current frame: use the spatially-processed field passed in
+		uf=u; vf=v; wf=w; %current frame: use the spatially-processed field passed in
 	else
 		if f<1 || f>nframes || numel(resultslist{1,f})==0
 			continue %outside the dataset or not analyzed
@@ -61,12 +69,19 @@ for f=frame-h:frame+h
 		if isempty(uf) || ~isequal(size(uf),refsize)
 			continue %missing or a different grid size --> skip
 		end
+		wf=[];
+		if has_w
+			wf=stereo.w_of_frame(f,false,resultslist); %w of the neighbour (row 16, never the smoothed row 17)
+		end
 		if do_2d
-			[uf,vf]=plot.smooth_spatial(uf,vf,S,interp_missing);
+			[uf,vf,wf]=plot.smooth_spatial(uf,vf,S,interp_missing,wf);
 		end
 	end
 	stack_u(:,:,idx)=uf;
 	stack_v(:,:,idx)=vf;
+	if has_w && isequal(size(wf),refsize)
+		stack_w(:,:,idx)=wf;
+	end
 end
 
 %NaN-aware weighted average over time: sum(w*x) / sum(w) over the finite frames only.
@@ -82,6 +97,14 @@ vbar=sum(sv.*W,3)./sum(W.*validv,3);
 %etc.) stay defined right up to the mask edge. Only original NaN positions are restored.
 if interp_missing==0
 	ubar(isnan(u))=NaN; vbar(isnan(v))=NaN; %restore the current frame's original NaNs
+end
+if has_w
+	validw=~isnan(stack_w); sw=stack_w; sw(~validw)=0;
+	wbar=sum(sw.*W,3)./sum(W.*validw,3);
+	if interp_missing==0
+		wbar(isnan(w))=NaN;
+	end
+	w=wbar;
 end
 u=ubar; v=vbar;
 

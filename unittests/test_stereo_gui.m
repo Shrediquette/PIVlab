@@ -573,6 +573,18 @@ rl = gui.retr('resultslist');
 verifyNotEmpty(testCase, rl{17, 1}, 'smoothed W missing');
 verifyNotEqual(testCase, rl{17, 1}, rl{16, 1}, 'smoothing changed nothing');
 verifyEqual(testCase, stereo.w_of_frame(1, true), rl{17, 1});
+% 2D + time: the single-frame path and "apply to all frames" give the same smoothed W (and u)
+set(h.smooth_mode, 'Value', 4);
+set(h.temporal_window, 'String', '1');
+plot.derivative_calc(2, 4, 0);
+rl = gui.retr('resultslist');
+single_w = rl{17, 2};
+single_u = rl{10, 2};
+verifyNotEqual(testCase, single_w, rl{16, 2}, 'temporal smoothing changed nothing');
+plot.temporal_smooth_all;
+rl = gui.retr('resultslist');
+verifyEqual(testCase, rl{17, 2}, single_w, 'AbsTol', 1e-12, 'batch and single-frame smoothing of W differ');
+verifyEqual(testCase, rl{10, 2}, single_u, 'AbsTol', 1e-12, 'batch and single-frame smoothing of u differ');
 gui.put('displaywhat', 1); % vectors (the MAT export with derivatives showed the last derived parameter)
 set(h.fileselector, 'Value', 1); gui.fileselector_Callback(h.fileselector, [], []);
 gui.sliderdisp(gui.retr('pivlab_axis'));

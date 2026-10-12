@@ -96,17 +96,11 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 			resultslist{17,frame}=[]; %remove smoothed w
 		end
 	else
-		if smooth_mode==2 || smooth_mode==4 %2D or 2D + time --> spatial smoothing first
-			[u,v]=plot.smooth_spatial(u,v,S,get(handles.interpol_missing,'value'));
-			if ~isempty(w)
-				w=plot.smooth_spatial(w,w,S,get(handles.interpol_missing,'value'));
-			end
+		if smooth_mode==2 || smooth_mode==4 %2D or 2D + time --> spatial smoothing first (w: stereo-PIV, else empty)
+			[u,v,w]=plot.smooth_spatial(u,v,S,get(handles.interpol_missing,'value'),w);
 		end
 		if smooth_mode==3 || smooth_mode==4 %time or 2D + time --> temporal moving average over frames
-			[u,v]=plot.temporal_smooth(resultslist,frame,u,v);
-			if ~isempty(w) %the same moving average, with w in place of u and v
-				w=plot.temporal_smooth(stereo.w_as_uv(resultslist),frame,w,w);
-			end
+			[u,v,w]=plot.temporal_smooth(resultslist,frame,u,v,w);
 		end
 		resultslist{10,frame}=u; %smoothed u (spatial and/or temporal)
 		resultslist{11,frame}=v; %smoothed v

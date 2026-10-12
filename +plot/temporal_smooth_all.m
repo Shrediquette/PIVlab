@@ -47,26 +47,22 @@ for f=1:nframes
 	[U{f},V{f}]=base_field(resultslist,f);
 	use(f)=~isempty(U{f});
 end
-[Us,Vs]=plot.temporal_smooth_core(U,V,use,h,S,do_2d,interp_missing);
+W={}; %stereo-PIV: w gets the same moving average (row 17, stereo.w_of_frame)
+if isequal(gui.retr('stereomode'),1)
+	W=cell(1,nframes);
+	for f=find(use)
+		W{f}=stereo.w_of_frame(f,false,resultslist);
+	end
+end
+[Us,Vs,Ws]=plot.temporal_smooth_core(U,V,use,h,S,do_2d,interp_missing,W);
 for f=1:nframes
 	if isempty(Us{f})
 		continue
 	end
 	resultslist{10,f}=Us{f};
 	resultslist{11,f}=Vs{f};
-end
-if isequal(gui.retr('stereomode'),1) %stereo-PIV: w gets the same moving average (row 17, stereo.w_of_frame)
-	W=cell(1,nframes);
-	use_w=false(1,nframes);
-	for f=find(use)
-		W{f}=stereo.w_of_frame(f,false,resultslist);
-		use_w(f)=~isempty(W{f});
-	end
-	Ws=plot.temporal_smooth_core(W,W,use_w,h,S,do_2d,interp_missing);
-	for f=1:nframes
-		if ~isempty(Ws{f})
-			resultslist{17,f}=Ws{f};
-		end
+	if ~isempty(Ws{f})
+		resultslist{17,f}=Ws{f};
 	end
 end
 gui.put('resultslist',resultslist);
