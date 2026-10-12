@@ -17,12 +17,12 @@
 
     <table class="ref">
       <tr><th>Step</th><th>Where</th><th>Per camera?</th></tr>
-      <tr><td>1. Import the images of both cameras</td><td><span class="ui">Import stereo images</span> (Input data panel)</td><td>both at once</td></tr>
+      <tr><td>1. Import</td><td><span class="ui">Import stereo images</span> (Input data panel): the images of both cameras</td><td>both at once</td></tr>
       <tr><td>2. Lens calibration</td><td><span class="ui">Image settings → Camera calibration</span></td><td>yes</td></tr>
-      <tr><td>3. Board image in the light sheet</td><td><span class="ui">Image rectification → Load target image</span></td><td>yes</td></tr>
+      <tr><td>3. Board image</td><td><span class="ui">Image rectification → Load target image</span>: the board in the light sheet</td><td>yes</td></tr>
       <tr><td>4. Stereo calibration</td><td><span class="ui">Analysis → Stereo-PIV</span></td><td>both at once</td></tr>
       <tr><td>5. Disparity correction</td><td><span class="ui">Analysis → Stereo-PIV</span> (or automatic at ANALYZE)</td><td>both at once</td></tr>
-      <tr><td>6. Pre-processing, masks, PIV settings, ANALYZE, validation</td><td>the normal panels</td><td>only the masks</td></tr>
+      <tr><td>6. Analysis</td><td>the normal panels: pre-processing, masks, PIV settings, ANALYZE, validation</td><td>only the masks</td></tr>
     </table>
 
     <h2 id="idea">How it works</h2>
@@ -49,12 +49,12 @@
       <figcaption>The camera switch <strong>CAM 1 / CAM 2</strong> in the Tools panel.</figcaption>
     </figure>
     <table class="ref">
-      <tr><th>Separate for each camera</th><th>Shared by both cameras</th></tr>
-      <tr><td>images, lens calibration, board image in the light sheet, background images,
-      masks, the 2D result of the camera</td>
-      <td>all settings (pre-processing, background subtraction, image-based validation, PIV
-      settings, vector validation, smoothing), region of interest, spatial calibration,
-      results (U, V, W)</td></tr>
+      <tr><th>Kept</th><th>What</th></tr>
+      <tr><td>Separate for each camera</td><td>images, lens calibration, board image in the light
+      sheet, background images, masks, the 2D result of the camera</td></tr>
+      <tr><td>Shared by both cameras</td><td>all settings (pre-processing, background
+      subtraction, image-based validation, PIV settings, vector validation, smoothing), region of
+      interest, spatial calibration, results (U, V, W)</td></tr>
     </table>
     <p>Any setting you change while camera 1 is shown also applies to camera 2. Only the masks
     have to be drawn for each camera.</p>
@@ -237,5 +237,7 @@
   </article>
 
   <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/search-index.js"></script>
+  <script src="../assets/js/app.js"></script>
 </body>
 </html>
