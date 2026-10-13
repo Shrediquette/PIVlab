@@ -157,14 +157,15 @@ end
 if exist('stereo_mode','var') && stereo_mode %stereo-PIV: w and the reconstruction
 	stereo_vel=gui.retr('stereo_vel');
 	stereo_info=struct(); %saved as the variable "stereo" (a variable of this name would hide the package stereo)
-	stereo_info.w_sign='w is positive away from the cameras';
+	w_away=stereo.w_direction(gui.retr('stereo_calib'));
+	stereo_info.w_sign=['w is positive ' w_away];
 	stereo_info.reconstruction_residual_px=stereo_vel.residual; %agreement of the two camera results, per analysed image pair
 	stereo_info.light_sheet_z_mm=stereo_vel.sheet_z_mm; %measured light sheet position relative to the board
 	stereo_info.mm_per_px=stereo_vel.mm_per_px; %pixel size of the common grid of both cameras
 	if type==1 && size(stereo_info.reconstruction_residual_px,3)>=currentframe
 		stereo_info.reconstruction_residual_px=stereo_info.reconstruction_residual_px(:,:,currentframe);
 	end
-	information{end+1,1}='Stereo-PIV: w_original, w_filtered and w_smoothed are the out-of-plane component (positive away from the cameras, units like u). The struct stereo holds the reconstruction residual, the light sheet position and the pixel size of the common grid.';
+	information{end+1,1}=['Stereo-PIV: w_original, w_filtered and w_smoothed are the out-of-plane component (positive ' w_away ', units like u). The struct stereo holds the reconstruction residual, the light sheet position and the pixel size of the common grid.'];
 	extra=struct('w_original',{w_original},'w_filtered',{w_filtered},'w_smoothed',{w_smoothed},'stereo',stereo_info,'information',{information});
 	if include_deriv
 		extra.w_component=w_component;

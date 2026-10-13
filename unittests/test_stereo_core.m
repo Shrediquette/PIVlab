@@ -75,9 +75,9 @@ function test_pervector_with_sheet_position(testCase)
 H = calib.Ravg.ImageSize(1);
 W = calib.Ravg.ImageSize(2);
 [xf, yf] = meshgrid(1:W, 1:H);
-[~, ~, ~, d_full] = sheet_points(calib, xf, yf, 2, 0, 0.005);
-disparity.u_full = d_full;
-disparity.v_full = zeros(size(d_full));
+[~, ~, ~, du_full, dv_full] = sheet_points(calib, xf, yf, 2, 0, 0.005);
+disparity.u_full = du_full;
+disparity.v_full = dv_full;
 [xs, ys, zs] = sheet_points(calib, x, y, 2, 0, 0.005);
 C = calib.centre;
 px = calib.Ravg.PixelExtentInWorldX;
@@ -129,9 +129,109 @@ verifyEqual(testCase, v_cor.V, v_ref.V, 'AbsTol', 1e-12);
 verifyEqual(testCase, v_cor.W, v_ref.W, 'AbsTol', 1e-12);
 end
 
-% -------------------------------------------------------------------------
-% Disparity models, output grid, corner filter, region of interest
-% -------------------------------------------------------------------------
+function test_camera_layouts_invert_linear_model(testCase)
+% cameras above each other, diagonal, and on opposite sides of the sheet: the reconstruction must not
+% assume cameras side by side
+for layout = {'vertical', 'diagonal', 'opposite'}
+    [calib, x, y] = geometry(layout{1});
+    [xw, yw] = intrinsicToWorld(calib.Ravg, x, y);
+    [U, V, Wz] = flow(xw, yw);
+    res = cell(1, 2);
+    for k = 1:2
+        C = calib.centre(k, :);
+        ta = (xw - C(1)) / (-C(3));
+        tb = (yw - C(2)) / (-C(3));
+        res{k} = result_struct(x, y, U - Wz .* ta, V - Wz .* tb);
+    end
+    vel = stereo.reconstruct(res{1}, res{2}, calib, []);
+    verifyEqual(testCase, vel.U, U, 'AbsTol', 1e-12, layout{1});
+    verifyEqual(testCase, vel.V, V, 'AbsTol', 1e-12, layout{1});
+    verifyEqual(testCase, vel.W, Wz, 'AbsTol', 1e-12, layout{1});
+    verifyEqual(testCase, vel.residual, zeros(size(x)), 'AbsTol', 1e-12, layout{1});
+end
+end
+
+function test_camera_layouts_exact_projection(testCase)
+% exact ray geometry for all camera arrangements (camera behind the board: negative distance)
+for layout = {'side', 'vertical', 'diagonal', 'opposite'}
+    [calib, x, y] = geometry(layout{1});
+    [xw, yw] = intrinsicToWorld(calib.Ravg, x, y);
+    [U, V, Wz] = flow(xw, yw);
+    px = calib.Ravg.PixelExtentInWorldX;
+    res = cell(1, 2);
+    p0 = project_both(calib.centre, xw, yw, zeros(size(xw)));
+    p1 = project_both(calib.centre, xw + U, yw + V, Wz);
+    for k = 1:2
+        res{k} = result_struct(x, y, (p1{k}(:,:,1) - p0{k}(:,:,1)) / px, (p1{k}(:,:,2) - p0{k}(:,:,2)) / px);
+    end
+    vel = stereo.reconstruct(res{1}, res{2}, calib, []);
+    tol = 2e-3 * max(abs(Wz(:)));
+    verifyEqual(testCase, vel.W * px, Wz, 'AbsTol', tol, layout{1});
+    verifyEqual(testCase, vel.U * px, U, 'AbsTol', tol, layout{1});
+    verifyEqual(testCase, vel.V * px, V, 'AbsTol', tol, layout{1});
+end
+end
+
+function test_camera_layouts_sheet_position(testCase)
+% tilted sheet 2 mm behind the board: position from both disparity components (stereo.reconstruct and
+% stereo.sheet_position), for all camera arrangements
+for layout = {'side', 'vertical', 'diagonal', 'opposite'}
+    [calib, x, y] = geometry(layout{1});
+    H = calib.Ravg.ImageSize(1);
+    W = calib.Ravg.ImageSize(2);
+    [xf, yf] = meshgrid(1:W, 1:H);
+    [~, ~, ~, du_full, dv_full] = sheet_points(calib, xf, yf, 2, 0.004, 0.005);
+    disparity.u_full = du_full;
+    disparity.v_full = dv_full;
+    [xs, ys, zs, du, dv] = sheet_points(calib, x, y, 2, 0.004, 0.005);
+    C = calib.centre;
+    px = calib.Ravg.PixelExtentInWorldX;
+    p0 = project_both(C, xs, ys, zs);
+    [U, V, Wz] = flow(xs, ys);
+    p1 = project_both(C, xs + U, ys + V, zs + Wz);
+    res = cell(1, 2);
+    for k = 1:2
+        res{k} = result_struct(x, y, (p1{k}(:,:,1) - p0{k}(:,:,1)) / px, (p1{k}(:,:,2) - p0{k}(:,:,2)) / px);
+    end
+    opts.SheetFromDisparity = true;
+    opts.DisparityGradient = false;
+    vel = stereo.reconstruct(res{1}, res{2}, calib, disparity, opts);
+    verifyEqual(testCase, vel.sheet_z_mm, zs, 'AbsTol', 0.01, [layout{1} ': sheet position from the disparity']);
+    err = max(abs([vel.U(:) * px - U(:); vel.V(:) * px - V(:); vel.W(:) * px - Wz(:)]));
+    verifyLessThan(testCase, err, 2e-3 * max(abs(Wz(:))), [layout{1} ': error with the sheet position']);
+    d.x = x; d.y = y; d.u_mean_smooth = du; d.v_mean_smooth = dv;
+    sheet = stereo.sheet_position(calib, d);
+    verifyEqual(testCase, sheet.z, zs, 'AbsTol', 0.01, [layout{1} ': stereo.sheet_position']);
+    verifyLessThan(testCase, sheet.unexplained_mm, 1e-3, [layout{1} ': a flat sheet explains the whole disparity']);
+end
+end
+
+function test_geometry_report_layouts(testCase)
+% symmetric +-45 deg: angle 90 deg, W error = U/V error, also with the cameras on opposite sides; cameras
+% that face each other along one line can not measure W
+[calib, ~, ~] = geometry('side');
+calib.grid_info.overlap = polyshape([0 200 200 0], [0 0 200 200]);
+calib.grid_info.views = {calib.grid_info.overlap, calib.grid_info.overlap};
+calib.n_rejected = [0 0];
+calib.image_points = {zeros(10, 2), zeros(10, 2)};
+cases = {[-400 100 -500; 600 100 -500], [-400 100 -500; -400 100 500], [-400 100 -500; 600 100 500]};
+angles = [90 90 0];
+opposite = [false true true];
+for n = 1:3
+    calib.centre = cases{n};
+    [lines, info] = stereo.geometry_report(calib);
+    verifyEqual(testCase, info.stereo_angle, angles(n), 'AbsTol', 1e-3, sprintf('case %d: angle', n)); % acosd near 1: round-off
+    verifyEqual(testCase, info.opposite_sides, opposite(n), sprintf('case %d: opposite sides', n));
+    verifyEqual(testCase, any(contains(lines, 'Warning: small angle')), angles(n) < 20, sprintf('case %d: warning', n));
+    if angles(n) > 0
+        verifyEqual(testCase, info.w_error_ratio, 1, 'AbsTol', 1e-9, sprintf('case %d: W error ratio', n));
+    end
+end
+calib.centre = cases{2};
+verifyEqual(testCase, stereo.w_direction(calib), 'away from camera 1');
+calib.centre = cases{1};
+verifyEqual(testCase, stereo.w_direction(calib), 'away from the cameras');
+end
 
 % -------------------------------------------------------------------------
 % Disparity models, output grid, corner filter, region of interest
@@ -341,18 +441,64 @@ verifyNotEmpty(testCase, result.disparity.background{1}, 'minimum background not
 verifyLessThan(testCase, result.disparity.residual_history(end, 1), 0.2, 'disparity correction did not converge');
 end
 
-% -------------------------------------------------------------------------
-% Helpers
-% -------------------------------------------------------------------------
+function test_synthetic_recording_vertical(testCase)
+% camera 1 above camera 2: W comes from the vertical displacements, the disparity is mainly vertical
+folder = fullfile(testCase.TestData.folder, 'case_vertical');
+c = helper_stereo_synthetic_case(folder, 4, 0, 'vertical');
+[result, err] = run_case(c);
+check_accuracy(testCase, err);
+verifyEqual(testCase, result.calib.board_from_behind, [false false]);
+verifyFalse(testCase, result.calib.opposite_sides);
+verifyLessThan(testCase, result.disparity.residual_history(end, 1), 0.3, 'disparity correction did not converge'); % max [px], 4 pairs
+end
+
+function test_synthetic_recording_opposite_sides(testCase)
+% camera 2 on the other side of the light sheet: it sees the (transparent) board mirrored. Run again with
+% the cameras swapped: camera 1 behind the board turns the board coordinates (x -> -x, W away from camera 1)
+folder = fullfile(testCase.TestData.folder, 'case_opposite');
+c = helper_stereo_synthetic_case(folder, 4, 0, 'opposite');
+[result, err] = run_case(c);
+check_accuracy(testCase, err);
+verifyEqual(testCase, result.calib.board_from_behind, [false true]);
+verifyTrue(testCase, result.calib.opposite_sides);
+verifyLessThan(testCase, result.calib.centre(1, 3), 0, 'camera 1 must be in front of the board');
+verifyGreaterThan(testCase, result.calib.centre(2, 3), 0, 'camera 2 must be behind the board');
+verifyLessThan(testCase, result.disparity.residual_history(end, 1), 0.3, 'disparity correction did not converge'); % max [px], 4 pairs
+swapped = c;
+swapped.files = c.files([2 1]);
+swapped.boards = c.boards([2 1]);
+swapped.lens = c.lens([2 1]);
+swapped.cams = c.cams([2 1]);
+[result2, err2] = run_case(swapped);
+check_accuracy(testCase, err2);
+verifyEqual(testCase, result2.calib.board_from_behind, [true false]);
+verifyLessThan(testCase, result2.calib.centre(1, 3), 0, 'camera 1 must be in front of the turned board');
+end
 
 % -------------------------------------------------------------------------
 % Helpers
 % -------------------------------------------------------------------------
 
-function [calib, x, y] = geometry()
-% cameras like the real setup (world = board coordinates in mm), square output pixels of 5 mm
+function [calib, x, y] = geometry(layout)
+% cameras like the real setup (world = board coordinates in mm), square output pixels of 5 mm.
+% layout: 'side' (default, real setup), 'vertical' (camera 1 above camera 2), 'diagonal',
+% 'opposite' (camera 2 behind the board, on the other side of the light sheet)
+if nargin < 1
+    layout = 'side';
+end
 calib.Ravg = imref2d([60 70], [-60 -60 + 70 * 5], [-8 -8 + 60 * 5]);
-calib.centre = [-307 140 -428; 567 138 -426];
+switch layout
+    case 'side'
+        calib.centre = [-307 140 -428; 567 138 -426];
+    case 'vertical'
+        calib.centre = [120 -330 -430; 110 560 -428];
+    case 'diagonal'
+        calib.centre = [-200 -150 -430; 450 400 -428];
+    case 'opposite'
+        calib.centre = [-307 140 -428; -250 138 426];
+end
+[xo, yo] = intrinsicToWorld(calib.Ravg, [0.5 70.5 70.5 0.5], [0.5 0.5 60.5 60.5]);
+calib.grid_info.overlap = polyshape(xo, yo);
 [x, y] = meshgrid(5:5:65, 5:5:55);
 end
 
@@ -419,7 +565,7 @@ st = stereo.defaults();
 st.disparity.InterrogationArea = 128;
 st.disparity.PassSize2 = 64;
 result = stereo.run(imgs, c.boards, c.board, Settings=S, Stereo=st, Verbose=false);
-err = helper_stereo_truth_error(result.vel, c);
+err = helper_stereo_truth_error(result.vel, c, result.calib);
 end
 
 function check_accuracy(testCase, err)

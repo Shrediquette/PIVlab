@@ -28,6 +28,15 @@
 %   min_background     - Minimum-intensity background of the A images (for the disparity)
 %   auto_roi           - Largest rectangle inside the overlap of both cameras
 %   robust_lsq         - Weighted least squares with Tukey bisquare weights
+%   sheet_position     - Position of the light sheet relative to the board, from the disparity
+%   geometry_report    - Viewing angles, angle between the cameras, expected error of W
+%   opposite_sides     - True if the cameras are on opposite sides of the light sheet
+%   w_direction        - Direction of positive W in words
 %
-% Coordinates like PIVlab: x to the right, y down (rectified image), W positive away from the cameras.
+% Camera arrangements: side by side, above each other or diagonal, on the same side of the light sheet or
+% on opposite sides (the camera behind the board sees it mirrored: transparent board, detected
+% automatically). Both cameras must look at the sheet from clearly different directions.
+%
+% Coordinates like PIVlab: x to the right, y down (rectified image, as seen from camera 1), W positive
+% away from camera 1 (= away from the cameras when both are on the same side).
 % World coordinates = board coordinates in mm.

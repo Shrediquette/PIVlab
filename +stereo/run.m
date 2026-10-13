@@ -6,7 +6,9 @@ function result = run(imgs, boards, board, opts)
 %   imgs    1x2 cell, image sets of camera 1 and 2 with their lens calibration, e.g.
 %             imgs{k} = pivlab.preprocess(pivlab.readImages(files_k, "pairwise"), Camera=calibration_file_k)
 %           Both cameras must have the same number of image pairs (recorded simultaneously).
-%   boards  1x2 cell, image (or image file) of the ChArUco board in the light sheet, camera 1 and 2
+%   boards  1x2 cell, image (or image file) of the ChArUco board in the light sheet, camera 1 and 2.
+%           A camera on the other side of the light sheet sees the board from behind (transparent
+%           board); this is detected automatically (stereo.defaults: calibration.BoardFromBehind).
 %   board   ChArUco board: PatternDims, CheckerSize [mm], MarkerSize [mm], MarkerFamily, OriginCheckerColor
 %
 %   Name=value options
@@ -22,7 +24,8 @@ function result = run(imgs, boards, board, opts)
 %   result.roi        region of interest of the PIV
 %   result.res        1x2 cell, PIV results of both cameras (pivlab result structs)
 %   result.vel        U, V, W [px per image pair] on the vector grid (stereo.reconstruct);
-%                     vel.mm_per_px converts to mm. x right, y down, W positive away from the cameras.
+%                     vel.mm_per_px converts to mm. x right, y down (as seen from camera 1), W positive
+%                     away from camera 1 (= away from the cameras if both are on the same side).
 %
 %   Example
 %       s = pivlab.defaults();
@@ -55,6 +58,8 @@ calib = stereo.calibrate({imgs{1}.cam, imgs{2}.cam}, boards, board, st.calibrati
 if verbose
     fprintf('Stereo calibration: output grid %d x %d px, %.4f mm per px, board corners rejected: %s\n', ...
         calib.Ravg.ImageSize(2), calib.Ravg.ImageSize(1), calib.Ravg.PixelExtentInWorldX, mat2str(calib.n_rejected));
+    report = stereo.geometry_report(calib);
+    fprintf('  %s\n', report{:});
 end
 
 % pre-processing (background in raw camera coordinates) for the rectified images

@@ -466,6 +466,42 @@ verifyEqual(testCase, after(16, :), before(16, :), 'W after loading the session'
 verifyNotEmpty(testCase, findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_w_display'));
 end
 
+function test_opposite_sides_in_gui(testCase)
+% camera 2 on the other side of the light sheet (sees the board mirrored): calibration, report, 3D view,
+% ANALYZE, accuracy, W display and MAT export say "camera 1"
+c = helper_stereo_synthetic_case(fullfile(testCase.TestData.folder, 'opposite_case'), 4, 0, 'opposite');
+helper_start_pivlab();
+handles = gui.gethand;
+calibrate_in_gui(c);
+calib = gui.retr('stereo_calib');
+verifyNotEmpty(testCase, calib, 'no stereo calibration');
+verifyEqual(testCase, calib.board_from_behind, [false true]);
+verifyTrue(testCase, calib.opposite_sides);
+report = strjoin(calib.report, ' ');
+verifyNotEmpty(testCase, strfind(report, 'Cameras on opposite sides of the light sheet'));
+verifyNotEmpty(testCase, strfind(report, 'Camera 2 sees the board from behind'));
+verifyNotEmpty(testCase, strfind(report, 'W is positive away from camera 1'));
+stereo.show_3d_Callback;
+fig = findall(0, 'Type', 'figure', 'Name', 'Stereo-PIV setup in 3D');
+verifyNumElements(testCase, fig, 1);
+close(fig);
+set(handles.pass1_size, 'String', '64'); piv.intarea_Callback(handles.pass1_size, [], []);
+set(handles.pass1_step, 'String', '32'); piv.step_Callback(handles.pass1_step, [], []);
+set(handles.pass2_enable, 'Value', 1); set(handles.pass2_size, 'String', '32'); piv.pass2_checkbox_Callback(handles.pass2_enable, [], []);
+set(handles.pass3_enable, 'Value', 1); set(handles.pass3_size, 'String', '16'); piv.pass3_checkbox_Callback(handles.pass3_enable, [], []);
+set(handles.update_display_checkbox, 'Value', 0);
+piv.AnalyzeAll_Callback;
+check_accuracy(testCase, result_error(c), [0.008 0.008 0.01]);
+gui.sliderdisp(gui.retr('pivlab_axis'));
+label = findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_w_display', 'Type', 'text');
+verifyNumElements(testCase, label, 1);
+verifyNotEmpty(testCase, strfind(label.String, 'blue = toward camera 1'));
+folder = testCase.TestData.folder;
+export.mat_file_save(1, 'w_opposite.mat', folder, 2);
+M = load(fullfile(folder, 'w_opposite.mat'));
+verifyEqual(testCase, M.stereo.w_sign, 'w is positive away from camera 1');
+end
+
 function test_3d_result_out_of_pivlab(testCase)
 % W in the exports (ASCII, Tecplot, VTK, MAT, workspace), the derived parameters (w component, 3D
 % magnitude), the temporal operations (mean, TKE) and the data smoothing

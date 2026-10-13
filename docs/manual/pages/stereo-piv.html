@@ -39,6 +39,34 @@
     time. PIVlab fits a smooth map to it, corrects both cameras with it, and from it also knows
     where the light sheet really is.</p>
 
+    <h3 id="arrangement">Where to put the cameras</h3>
+    <p>W is measured because the two cameras look at the sheet from <strong>different
+    directions</strong>. How they are placed does not matter otherwise:</p>
+    <table class="ref">
+      <tr><th>Arrangement</th><th>Notes</th></tr>
+      <tr><td>Side by side, above each other or diagonal, on the same side of the sheet</td>
+      <td>The usual set-up. Any direction between the cameras works: PIVlab takes W from the
+      direction in which the two views differ.</td></tr>
+      <tr><td>On opposite sides of the light sheet</td>
+      <td>The camera behind the board sees it <strong>from its back</strong>. Use a
+      <strong>transparent board</strong> (pattern printed on film or glass) or a thin board printed on
+      both sides, with the back side as the exact mirror image of the front. PIVlab finds the
+      mirrored board automatically. One camera then sees the particles in forward scatter (much
+      brighter) and the other in backward scatter: adapt aperture or exposure so that both
+      images are well exposed.</td></tr>
+    </table>
+    <p>The angle between the two lines of sight counts, not the side of the sheet: 30° to 90°
+    is good. Two cameras on opposite sides that look at each other along one line can not
+    measure W. Coordinates and the sign of W are defined as seen from <strong>camera 1</strong>
+    (x to the right, y down, W positive away from camera 1). With both cameras on the same side,
+    W is therefore positive away from the cameras.</p>
+    <div class="tip">
+      <strong>Board thickness</strong>
+      The camera behind a transparent board sees the pattern through the board material. A small
+      offset of the pattern plane is removed by the disparity correction, but keep the board thin
+      and flat.
+    </div>
+
     <h2 id="cameras">One session, two cameras</h2>
     <p>In stereo mode PIVlab keeps two cameras in one session. All panels work on the
     <strong>active camera</strong>; the switch <span class="ui">CAM 1 / CAM 2</span> in the
@@ -125,9 +153,11 @@
     </ul>
     <p><span class="ui">Show 3D setup</span> draws both cameras, the board, the overlap and (after
     the disparity correction) the measured light sheet. Its report gives the viewing angle of each
-    camera, the angle between them, the distance to the sheet, the scale (mm per pixel), the overlap
-    of the two views and the number of board corners. A small angle between the cameras makes W
-    noisy (its error grows like 1 / tan of the half angle).</p>
+    camera, the angle between them, whether the cameras are on opposite sides of the sheet and
+    which camera sees the board from behind, the distance to the sheet, the scale (mm per pixel),
+    the overlap of the two views, the number of board corners, the expected random error of W
+    compared with U and V, and the direction of positive W. A small angle between the cameras
+    makes W noisy (its error grows like 1 / tan of the half angle).</p>
     <div class="note">
       <strong>Calibrate first, then mask</strong>
       Masks, region of interest and background images are made on the images that are shown.
@@ -199,7 +229,8 @@
     </ul>
 
     <h2 id="w">7. Working with W and taking the 3D result out of PIVlab</h2>
-    <p>W is positive <strong>away from the cameras</strong> and has the same units as u and v (px/frame,
+    <p>W is positive <strong>away from the cameras</strong> (cameras on opposite sides of the light
+    sheet: <strong>away from camera 1</strong>) and has the same units as u and v (px/frame,
     or m/s after the <a href="spatial-calibration.html">spatial calibration</a>).</p>
     <ul>
       <li><a href="derive-spatial.html">Derive parameters</a>: in stereo mode the list has one more

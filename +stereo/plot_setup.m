@@ -5,8 +5,9 @@ function plot_setup(ax, calib, disparity)
 %   ax         axes to draw into
 %   calib      stereo.calibrate
 %   disparity  stereo.measure_disparity (optional): the light sheet position (stereo.sheet_position)
-% World coordinates = board coordinates in mm (x right, y down, z into the board). The view looks from
-% behind the cameras onto the board; rotate it with the mouse (cameratoolbar 'orbit').
+% World coordinates = board coordinates in mm (x right, y down, z into the board, away from camera 1).
+% The view looks from behind the cameras onto the board (cameras on opposite sides of the light sheet:
+% from the side, along the board); rotate it with the mouse (cameratoolbar 'orbit').
 hold(ax, 'on');
 wp = calib.world_points{1};
 plot3(ax, wp(:, 1), wp(:, 2), zeros(size(wp, 1), 1), '.', 'Color', [0.55 0.55 0.55], 'DisplayName', 'board corners');
@@ -36,11 +37,21 @@ xlabel(ax, 'X (mm)');
 ylabel(ax, 'Y (mm)');
 zlabel(ax, 'Z (mm)');
 legend(ax, 'Location', 'northeast');
-v1 = target - calib.centre(1, :);
-v2 = target - calib.centre(2, :);
-title(ax, sprintf('Angle between the cameras: %.0f%s', acosd(dot(v1, v2) / (norm(v1) * norm(v2))), char(176)));
-% look from behind and slightly above the cameras onto the centre of the overlap
-behind = mean(calib.centre, 1) - target;
+[~, info] = stereo.geometry_report(calib);
+title(ax, sprintf('Angle between the cameras: %.0f%s', info.stereo_angle, char(176)));
+if info.opposite_sides
+    % look from the side (perpendicular to the line between the cameras) and somewhat from camera 1's side
+    % of the board, so that the board and both cameras are visible
+    side = cross(calib.centre(2, :) - calib.centre(1, :), [0 -1 0]);
+    side(2) = 0;
+    if norm(side) < 1e-6 * distance
+        side = [1 0 0];
+    end
+    behind = distance * (0.8 * side / norm(side) + [0 0 -0.6]);
+else
+    % look from behind and slightly above the cameras onto the centre of the overlap
+    behind = mean(calib.centre, 1) - target;
+end
 camproj(ax, 'perspective');
 set(ax, 'CameraTarget', target, 'CameraPosition', target + 2.2 * behind + [0 -0.9 * distance 0], 'CameraUpVector', [0 -1 0]);
 end

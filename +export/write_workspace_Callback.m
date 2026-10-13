@@ -142,7 +142,7 @@ if isempty(resultslist)==0
 	disp('u_filtered and v_filtered is the above incl. your data validation selection.')
 	disp('u_smoothed and v_smoothed is the above incl. your smoothing selection.')
 	if isequal(gui.retr('stereomode'),1)
-		disp('Stereo-PIV: w_original, w_filtered, w_smoothed and w_component are the out-of-plane component (positive away from the cameras).')
+		disp(['Stereo-PIV: w_original, w_filtered, w_smoothed and w_component are the out-of-plane component (positive ' stereo.w_direction(gui.retr('stereo_calib')) ').'])
 	end
 end
 

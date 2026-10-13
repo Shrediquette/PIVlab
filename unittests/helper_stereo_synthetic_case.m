@@ -1,17 +1,33 @@
-function c = helper_stereo_synthetic_case(folder, n_pairs, static_pattern)
+function c = helper_stereo_synthetic_case(folder, n_pairs, static_pattern, layout)
 %HELPER_STEREO_SYNTHETIC_CASE Small synthetic stereo-PIV recording with known displacement (for the unit tests).
 %   c = helper_stereo_synthetic_case(folder, n_pairs, static_pattern)
+%   c = helper_stereo_synthetic_case(folder, n_pairs, static_pattern, layout)
 % Two pinhole cameras at about +-35 deg with lens distortion, 1024 x 1024 px, about 0.1 mm/px; a vortex
 % with an out-of-plane jet; light sheet 1 mm in front of the board and tilted by 1 deg. static_pattern = 1
-% adds bright static structures (reflections). Writes the images (cam1_0001_A.tif, ...) and the board
-% images (board_cam1.tif, board_cam2.tif) to folder.
+% adds bright static structures (reflections). layout: 'side' (default, cameras left and right),
+% 'vertical' (camera 1 above camera 2), 'opposite' (camera 2 behind the board, on the other side of the
+% light sheet: it sees the board mirrored, like a transparent board). Writes the images
+% (cam1_0001_A.tif, ...) and the board images (board_cam1.tif, board_cam2.tif) to folder.
 % c.files{k} image files of camera k, c.boards{k} board image, c.lens{k} cameraParameters (truth),
 % c.board board definition, c.cams, c.sheet_pose, c.X, c.Y, c.U, c.V, c.W ground truth (sheet coordinates, mm).
+if nargin < 4
+    layout = 'side';
+end
 if ~isfolder(folder)
     mkdir(folder);
 end
+rng(0, 'twister'); % reproducible board image noise
 sz = [1024 1024];
-pos = [-320 20 -440; 330 -10 -430];
+switch layout
+    case 'side'
+        pos = [-320 20 -440; 330 -10 -430];
+    case 'vertical'
+        pos = [60 -330 -440; 100 410 -430];
+    case 'opposite'
+        pos = [-320 20 -440; -290 -10 430];
+    otherwise
+        error('helper_stereo_synthetic_case: unknown layout %s', layout);
+end
 rad = [-0.06 0.02; -0.04 0.01];
 cams = cell(1, 2);
 for k = 1:2

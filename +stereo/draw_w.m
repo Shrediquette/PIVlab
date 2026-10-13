@@ -1,7 +1,8 @@
 function draw_w(target_axis, frame)
 %DRAW_W Out-of-plane component W of a stereo-PIV result as a colour map under the vectors.
 %   stereo.draw_w(target_axis, frame)   frame = image pair
-% Blue = toward the cameras, red = away from the cameras (white = 0). The colour scale is the same for
+% Blue = toward the cameras, red = away from the cameras (white = 0); with the cameras on opposite sides of
+% the light sheet: toward / away from camera 1 (stereo.w_direction). The colour scale is the same for
 % all image pairs (99th percentile of |W| of the whole series). With a spatial calibration, W is shown
 % in the units of U and V (calu: px per image pair -> m/s).
 delete(findobj(target_axis, 'Tag', 'stereo_w_display'));
@@ -41,7 +42,8 @@ image(target_axis, 'XData', [x(1, 1) x(1, end)], 'YData', [y(1, 1) y(end, 1)], '
     'Tag', 'stereo_w_display', 'HitTest', 'off', 'PickableParts', 'none');
 % low-level image (does not clear the axes); drawn right after the particle image, so it lies under the
 % vectors (gui.sliderdisp)
-text(target_axis, 0.01, 0.01, sprintf(' W: blue %.3g ... red %+.3g %s (blue = toward the cameras) ', -limit, limit, unit), ...
+[~, toward] = stereo.w_direction(gui.retr('stereo_calib'));
+text(target_axis, 0.01, 0.01, sprintf(' W: blue %.3g ... red %+.3g %s (blue = %s) ', -limit, limit, unit, toward), ...
     'Units', 'normalized', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'BackgroundColor', [0 0 0], ...
     'Color', [1 1 1], 'FontSize', 10, 'Margin', 2, 'Tag', 'stereo_w_display', 'HitTest', 'off', 'PickableParts', 'none');
 end

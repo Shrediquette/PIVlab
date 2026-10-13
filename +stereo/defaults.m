@@ -11,6 +11,8 @@ function s = defaults()
 % common output grid: square pixels, cropped to the overlap of both views
 s.calibration.PixelSize = [];               % [mm] per output pixel, [] = pixel size of the finer camera
 s.calibration.CornerFilter = true;          % reject wrongly identified board corners (RANSAC)
+s.calibration.BoardFromBehind = [];         % [] = automatic: a camera behind the board (opposite side of the
+                                            % light sheet) sees it mirrored; [false true] = fixed per camera
 
 % disparity: PIV between the A images of camera 1 and camera 2 (rectified). The values that the
 % Stereo-PIV panel shows come from gui.default_settings (one list of defaults for GUI and scripts).
@@ -35,7 +37,9 @@ s.disparity.MinBackground = true;           % subtract a minimum-intensity backg
 s.disparity.MinBackgroundFrames = 10;       % fewer A images: no background (the minimum would
                                             % remove the particles)
 
-% reconstruction (coordinates like PIVlab: x right, y down; W positive away from the cameras)
+% reconstruction (coordinates like PIVlab: x right, y down; W positive away from camera 1 = away from the
+% cameras if both are on the same side of the light sheet). Any camera arrangement: side by side, above
+% each other, on opposite sides of the light sheet.
 s.reconstruction.SheetFromDisparity = true; % light sheet position from the disparity (else: on the board)
 s.reconstruction.DisparityGradient = true;  % correct the displacements for the varying disparity shift
 

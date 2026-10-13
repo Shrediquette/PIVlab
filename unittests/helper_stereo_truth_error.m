@@ -1,12 +1,18 @@
-function err = helper_stereo_truth_error(vel, c)
+function err = helper_stereo_truth_error(vel, c, calib)
 %HELPER_STEREO_TRUTH_ERROR Errors of the mean U, V, W against the ground truth of stereo_synthetic_case (unit tests).
 %   err = helper_stereo_truth_error(vel, c)
+%   err = helper_stereo_truth_error(vel, c, calib)   calib (stereo.calibrate): if camera 1 saw the board from
+%         behind, the result is in board coordinates turned about the y axis (x -> -x, z -> -z)
 %   vel  stereo.reconstruct result (U, V, W [px per pair], x_mm, y_mm, mm_per_px)
 %   err  bias_U, rms_U, bias_V, rms_V, bias_W, rms_W [mm per pair], W_slope (estimated / true W)
 % Errors of the mean field against the ground truth. The vector at board position (xw, yw) shows the
 % sheet point whose projections into both cameras have (xw, yw) as midpoint (that is where the
 % disparity correction puts it); the true displacement there is rotated from sheet to board axes.
-target = [vel.x_mm(:), vel.y_mm(:)];
+flip = 1;
+if nargin >= 3 && isfield(calib, 'board_from_behind') && calib.board_from_behind(1)
+    flip = -1;
+end
+target = [flip * vel.x_mm(:), vel.y_mm(:)];
 C = zeros(2, 3);
 for k = 1:2
     C(k, :) = (-c.cams{k}.pose.R' * c.cams{k}.pose.Translation(:))';
@@ -28,9 +34,9 @@ Us = interp2(c.X, c.Y, c.U, sx, sy);
 Vs = interp2(c.X, c.Y, c.V, sx, sy);
 Ws = interp2(c.X, c.Y, c.W, sx, sy);
 R = c.sheet_pose.R;
-Ut = R(1, 1) * Us + R(1, 2) * Vs + R(1, 3) * Ws;
+Ut = flip * (R(1, 1) * Us + R(1, 2) * Vs + R(1, 3) * Ws);
 Vt = R(2, 1) * Us + R(2, 2) * Vs + R(2, 3) * Ws;
-Wt = R(3, 1) * Us + R(3, 2) * Vs + R(3, 3) * Ws;
+Wt = flip * (R(3, 1) * Us + R(3, 2) * Vs + R(3, 3) * Ws);
 Ue = mean(vel.U, 3) * vel.mm_per_px(1);
 Ve = mean(vel.V, 3) * vel.mm_per_px(2);
 We = mean(vel.W, 3) * vel.mm_per_px(1);
