@@ -141,6 +141,14 @@ end
 % stereo-PIV rectifies both cameras with the stereo calibration: no 2D rectification and upscaling
 show([handles.calib_userectification handles.calib_upscale handles.calib_upscale_label], ~stereo_mode);
 show(handles.stereo_rect_note, stereo_mode);
+% stereo-PIV always undistorts when lens parameters exist (stereo.camera_lens): the switch only changes the display
+if stereo_mode
+    set(handles.calib_usecalibration, 'String', 'Show undistorted image', 'TooltipString', ...
+        ['Display only. Stereo-PIV always undistorts both cameras when lens parameters exist ' ...
+        '("Estimate cam parameters" or "Load parameters"), also when this is not ticked.']);
+else
+    set(handles.calib_usecalibration, 'String', 'Enable camera calibration', 'TooltipString', 'Enable camera calibration / undistortion');
+end
 enable([handles.stereo_calibrate handles.stereo_show_3d], stereo_mode);
 enable([handles.stereo_measure_disparity handles.stereo_disp_show], stereo_mode && ~isempty(gui.retr('stereo_calib')));
 if stereo_mode && strcmp(get(handles.multip30, 'Visible'), 'on')

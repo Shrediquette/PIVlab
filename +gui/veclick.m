@@ -22,8 +22,10 @@ if src.Button == 1
 	info(1,1)=imagey(1,1);
 	info(1,2)=imagex(1,1);
 
+	use_smoothed=false;
 	if size(resultslist,1)>6 %filtered exists
 		if size(resultslist,1)>10 && numel(resultslist{10,(currentframe+1)/2}) > 0 %smoothed exists
+			use_smoothed=true;
 			u=resultslist{10,(currentframe+1)/2};
 			v=resultslist{11,(currentframe+1)/2};
 			typevector=resultslist{9,(currentframe+1)/2};
@@ -126,13 +128,21 @@ if src.Button == 1
 		try
 			magnitude_px=((u(info(1,1),info(1,2))).^2+(v(info(1,1),info(1,2))).^2).^0.5;
 			magnitude_m=((u(info(1,1),info(1,2))*gui.retr('calu')-gui.retr('subtr_u')).^2+(v(info(1,1),info(1,2))*gui.retr('calv')-gui.retr('subtr_v')).^2).^0.5;
+			magnitude_label=' ';
+			w=stereo.w_of_frame((currentframe+1)/2,use_smoothed); %stereo-PIV: 3D magnitude, like 'Magnitude' in the derived parameters
+			if ~isempty(w)
+				w_point=w(info(1,1),info(1,2));
+				magnitude_px=(magnitude_px.^2+w_point.^2).^0.5;
+				magnitude_m=(magnitude_m.^2+(w_point*abs(gui.retr('calu'))).^2).^0.5;
+				magnitude_label=' |V| 3D: ';
+			end
 			magnitude_px = sprintf('%0.2g',magnitude_px);
 			magnitude_m = sprintf('%0.2g',magnitude_m);
 			if ~handles.multip29.Visible
 				if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1%not calibrated
-					text(target_axis,x(info(1,1),info(1,2)),y(info(1,1),info(1,2)),[' ' magnitude_px ' px/fr'], 'tag', 'infopoint','Color','w','HorizontalAlignment','left','VerticalAlignment','middle','Margin',0.01,'BackgroundColor','k','FontSize',10)
+					text(target_axis,x(info(1,1),info(1,2)),y(info(1,1),info(1,2)),[magnitude_label magnitude_px ' px/fr'], 'tag', 'infopoint','Color','w','HorizontalAlignment','left','VerticalAlignment','middle','Margin',0.01,'BackgroundColor','k','FontSize',10)
 				else
-					text(target_axis,x(info(1,1),info(1,2)),y(info(1,1),info(1,2)),[' ' magnitude_px ' px/fr\newline ' magnitude_m ' m/' time_unit], 'tag', 'infopoint','Color','w','HorizontalAlignment','left','VerticalAlignment','middle','Margin',0.01,'BackgroundColor','k')
+					text(target_axis,x(info(1,1),info(1,2)),y(info(1,1),info(1,2)),[magnitude_label magnitude_px ' px/fr\newline' magnitude_label magnitude_m ' m/' time_unit], 'tag', 'infopoint','Color','w','HorizontalAlignment','left','VerticalAlignment','middle','Margin',0.01,'BackgroundColor','k')
 				end
 			end
 		catch ME

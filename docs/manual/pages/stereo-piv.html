@@ -121,8 +121,10 @@
       <li><strong>Lens calibration</strong> (<a href="camera-calibration.html#calibration">Camera
       calibration (undistortion)</a>): <span class="ui">Estimate cam parameters</span> from
       board images, or <span class="ui">Load parameters</span>. For cameras with a Scheimpflug
-      adapter, use the tilted sensor model. Stereo-PIV always undistorts the images, also when
-      <span class="ui">Enable camera calibration</span> is not ticked.</li>
+      adapter, use the tilted sensor model. Stereo-PIV always undistorts the images. In stereo
+      mode, the checkbox <span class="ui">Enable camera calibration</span> is called
+      <span class="ui">Show undistorted image</span>: it only switches the display of the current
+      camera between the raw and the undistorted image. You do not need to tick it.</li>
       <li><strong>Board image in the light sheet</strong>
       (<a href="camera-calibration.html#rectification">Image rectification</a>): place the board
       in the light sheet, record it with both cameras, and load each camera's image with
@@ -230,8 +232,9 @@
     <ul>
       <li><a href="validation-velocity.html">Vector validation</a> is applied to the 2D results of
       both cameras with the same settings; U, V and W are then computed again.</li>
-      <li>U and V are shown as vectors, as in 2D; W is shown as a colour map under the
-      vectors.</li>
+      <li>The result is shown as in 2D: U and V as vectors on the image. To see W, select
+      <span class="ui">w component</span> in <a href="derive-spatial.html">Derive parameters</a>
+      (see <a href="#w">section 7</a>).</li>
       <li>Saving and loading a <a href="sessions.html">session</a> keeps both cameras, the
       calibrations, the disparity and the result.</li>
     </ul>

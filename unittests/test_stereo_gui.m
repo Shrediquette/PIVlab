@@ -153,6 +153,7 @@ verifyEmpty(testCase, findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_camera_lab
 verifyEqual(testCase, char(get(handles.calib_userectification, 'Visible')), 'on');
 verifyEqual(testCase, char(get(handles.calib_upscale, 'Visible')), 'on');
 verifyEqual(testCase, char(get(handles.stereo_rect_note, 'Visible')), 'off');
+verifyEqual(testCase, char(get(handles.calib_usecalibration, 'String')), 'Enable camera calibration');
 end
 
 function test_remove_images_is_blocked_in_stereo_mode(testCase)
@@ -334,6 +335,24 @@ verifyEqual(testCase, char(get(handles.calib_userectification, 'Visible')), 'off
 verifyEqual(testCase, char(get(handles.calib_upscale, 'Visible')), 'off');
 verifyEqual(testCase, char(get(handles.calib_upscale_label, 'Visible')), 'off');
 verifyEqual(testCase, char(get(handles.stereo_rect_note, 'Visible')), 'on');
+% lens calibration switch: display only in stereo mode (stereo-PIV always undistorts)
+verifyEqual(testCase, char(get(handles.calib_usecalibration, 'String')), 'Show undistorted image');
+% ticking it resets nothing (no "Masks, ROI, ... will be reset") and keeps the common grid
+gui.put('cam_selected_target_images', {'lens calibration images'});
+gui.put('resultslist', cell(9, 1));
+roirect = gui.retr('roirect');
+set(handles.calib_usecalibration, 'Value', 1);
+preproc.cam_enable_cam_calib_Callback(handles.calib_usecalibration);
+verifyEqual(testCase, get(handles.calib_usecalibration, 'Value'), 1, 'switch unticked again in stereo mode');
+verifyEqual(testCase, gui.retr('cam_use_calibration'), 1);
+verifyNotEmpty(testCase, gui.retr('resultslist'), 'results reset by the display switch');
+verifyEqual(testCase, gui.retr('roirect'), roirect, 'ROI reset by the display switch');
+verifyEqual(testCase, gui.retr('expected_image_size'), sz);
+set(handles.calib_usecalibration, 'Value', 0);
+preproc.cam_enable_cam_calib_Callback(handles.calib_usecalibration);
+verifyEqual(testCase, gui.retr('cam_use_calibration'), 0);
+verifyNotEmpty(testCase, gui.retr('resultslist'));
+gui.put('resultslist', []);
 % "Show rectified board": the board of the camera that is shown on the common grid
 preproc.cam_rectification_show_rectified_Callback;
 board = findobj(gui.retr('pivlab_axis'), 'Type', 'image');
@@ -437,9 +456,9 @@ state = gui.retr('stereo_cam_state');
 verifyNotEmpty(testCase, gui.retr('stereo_result'), '2D result of the active camera');
 verifyNotEmpty(testCase, state{3 - gui.retr('stereo_active_camera')}.stereo_result, '2D result of the other camera');
 check_accuracy(testCase, result_error(c), [0.008 0.008 0.01]);
-% W display under the vectors
+% display as in 2D: vectors on the image, no W colour map under them (W: derived parameter "w component")
 gui.sliderdisp(gui.retr('pivlab_axis'));
-verifyNotEmpty(testCase, findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_w_display'), 'W not displayed');
+verifyNumElements(testCase, findobj(gui.retr('pivlab_axis'), 'Type', 'image'), 1, 'more than the particle image under the vectors');
 % validation of both cameras, then undo
 validate.apply_filter_all_Callback;
 state = gui.retr('stereo_cam_state');
@@ -458,12 +477,52 @@ helper_start_pivlab();
 import.load_session_Callback(1, fullfile(testCase.TestData.folder, 'analysis_session.mat'));
 after = gui.retr('resultslist');
 verifyEqual(testCase, after(16, :), before(16, :), 'W after loading the session');
-verifyNotEmpty(testCase, findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_w_display'));
+verifyNumElements(testCase, findobj(gui.retr('pivlab_axis'), 'Type', 'image'), 1);
+% click on a vector: the label next to it shows the 3D magnitude
+check_click_label(testCase, after, 3, 4);
+end
+
+function check_click_label(testCase, resultslist, row, col)
+% Clicks on vector (row, col) of the image pair shown (gui.veclick) and compares the label next to the
+% vector with sqrt(u^2 + v^2 + w^2) in px/frame (no smoothing, no spatial calibration).
+target_axis = gui.retr('pivlab_axis');
+handles = gui.gethand;
+frame = floor(get(handles.fileselector, 'Value'));
+x = resultslist{1, frame};
+y = resultslist{2, frame};
+% the axes CurrentPoint is read-only, it follows the figure CurrentPoint: find the figure point of the
+% vector from two probe points (the mapping is linear in x and y)
+fig = ancestor(target_axis, 'figure');
+probe = [100 100; 300 300];
+axes_point = zeros(2, 2);
+for k = 1:2
+    set(fig, 'CurrentPoint', probe(k, :));
+    p = get(target_axis, 'CurrentPoint');
+    axes_point(k, :) = p(1, 1:2);
+end
+scale = (probe(2, :) - probe(1, :)) ./ (axes_point(2, :) - axes_point(1, :));
+set(fig, 'CurrentPoint', probe(1, :) + ([x(row, col) y(row, col)] - axes_point(1, :)) .* scale);
+click.Button = 1;
+gui.veclick([], click);
+label = findobj(target_axis, 'Tag', 'infopoint', 'Type', 'text');
+verifyNumElements(testCase, label, 1, 'no label next to the clicked vector');
+marker = findobj(target_axis, 'Tag', 'infopoint', 'Type', 'line');
+verifyEqual(testCase, [marker.XData marker.YData], [x(row, col) y(row, col)], 'a different vector was clicked');
+if ~isempty(resultslist{7, frame}) % validated
+    u = resultslist{7, frame}(row, col);
+    v = resultslist{8, frame}(row, col);
+else
+    u = resultslist{3, frame}(row, col);
+    v = resultslist{4, frame}(row, col);
+end
+w = resultslist{16, frame}(row, col);
+expected = [' |V| 3D: ' sprintf('%0.2g', sqrt(u^2 + v^2 + w^2)) ' px/fr'];
+verifyEqual(testCase, label.String, expected, 'label of the clicked vector');
 end
 
 function test_opposite_sides_in_gui(testCase)
 % camera 2 on the other side of the light sheet (sees the board mirrored): calibration, report, 3D view,
-% ANALYZE, accuracy, W display and MAT export say "camera 1"
+% ANALYZE, accuracy, MAT export says "camera 1"
 c = helper_stereo_synthetic_case(fullfile(testCase.TestData.folder, 'opposite_case'), 4, 0, 'opposite');
 helper_start_pivlab();
 handles = gui.gethand;
@@ -487,10 +546,6 @@ set(handles.pass3_enable, 'Value', 1); set(handles.pass3_size, 'String', '16'); 
 set(handles.update_display_checkbox, 'Value', 0);
 piv.AnalyzeAll_Callback;
 check_accuracy(testCase, result_error(c), [0.008 0.008 0.01]);
-gui.sliderdisp(gui.retr('pivlab_axis'));
-label = findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_w_display', 'Type', 'text');
-verifyNumElements(testCase, label, 1);
-verifyNotEmpty(testCase, strfind(label.String, 'blue = toward camera 1'));
 folder = testCase.TestData.folder;
 export.mat_file_save(1, 'w_opposite.mat', folder, 2);
 M = load(fullfile(folder, 'w_opposite.mat'));
@@ -619,7 +674,7 @@ verifyEqual(testCase, rl{10, 2}, single_u, 'AbsTol', 1e-12, 'batch and single-fr
 gui.put('displaywhat', 1); % vectors (the MAT export with derivatives showed the last derived parameter)
 set(h.fileselector, 'Value', 1); gui.fileselector_Callback(h.fileselector, [], []);
 gui.sliderdisp(gui.retr('pivlab_axis'));
-verifyNotEmpty(testCase, findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_w_display'));
+verifyNumElements(testCase, findobj(gui.retr('pivlab_axis'), 'Type', 'image'), 1, 'W colour map under the vectors');
 end
 
 % -------------------------------------------------------------------------

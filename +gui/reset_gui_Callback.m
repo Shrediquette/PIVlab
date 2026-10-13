@@ -1,24 +1,25 @@
 function reset_gui_Callback(~, ~, store_preferences)
 %RESET_GUI_CALLBACK "Reset PIVlab GUI" (Input data panel): PIVlab as after a new start, without a new window.
 %   gui.reset_gui_Callback()            the button
-%   gui.reset_gui_Callback([], [], false)  without storing the preferences first (scripts, unit tests:
+%   gui.reset_gui_Callback([], [], false)  without storing the last folders first (scripts, unit tests:
 %                                       like closing the window with delete, the next state does not
 %                                       depend on what was done before)
-%   Does what closing and starting PIVlab does: the preferences that the next start reads are stored
-%   and the hardware is released (gui.end_of_session); the data of the window goes back to the state
-%   at the end of the start (PIVlab_GUI stores it as 'startup_appdata'), so data added later by any
-%   feature is removed; the controls, the axes and the menus are made again. Kept like at a new start:
-%   the preferences (folders, theme, panel width, Basic/Advanced mode, image acquisition panel) and the
-%   parallel pool. Scripts (batchModeActive = 1) are not asked and stay in batch mode.
+%   Does what closing and starting PIVlab does: the hardware is released (gui.end_of_session) and the
+%   last folders are stored; the data of the window goes back to the state at the end of the start
+%   (PIVlab_GUI stores it as 'startup_appdata'), so data added later by any feature is removed; the
+%   controls, the axes and the menus are made again. Unlike a new start, the image acquisition panel
+%   gets its default settings too (not the ones stored when PIVlab was closed). Kept: the preferences
+%   (folders, theme, panel width, Basic/Advanced mode) and the parallel pool. Scripts
+%   (batchModeActive = 1) are not asked and stay in batch mode.
 if nargin < 3
     store_preferences = true;
 end
 hgui = getappdata(0, 'hgui');
 batch = isequal(gui.retr('batchModeActive'), 1);
 if ~batch
-    answer = gui.custom_msgbox('quest', hgui, 'Reset PIVlab GUI', ['All images, results, masks, calibrations ' ...
-        'and settings are removed. PIVlab will look like after a new start; your preferences are kept.' ...
-        newline newline 'Unsaved work is lost. Continue?'], 'modal', {'Reset', 'Cancel'}, 'Cancel');
+    answer = gui.custom_msgbox('quest', hgui, 'Reset PIVlab GUI', ['All images, results, masks and calibrations ' ...
+        'are removed, and all settings (also those of the image acquisition panel) get their default values. ' ...
+        'Your preferences are kept.' newline newline 'Unsaved work is lost. Continue?'], 'modal', {'Reset', 'Cancel'}, 'Cancel');
     if ~strcmp(answer, 'Reset')
         return
     end
@@ -29,11 +30,15 @@ if isempty(startup)
     return
 end
 gui.toolsavailable(0, 'Resetting PIVlab...'); drawnow
-gui.end_of_session(store_preferences)
+gui.end_of_session(false) % hardware released; the settings of the image acquisition panel are not stored
+if store_preferences
+    gui.set_preference('homedir', gui.retr('homedir'));
+    gui.set_preference('pathname', gui.retr('pathname'));
+end
 
 %% data of the window: back to the start state
-% read at a new start from the preferences (stored by gui.end_of_session or when they were changed),
-% or not part of the session (parallel pool, batch mode of a script)
+% read at a new start from the preferences (stored above or when they were changed), or not part of
+% the session (parallel pool, batch mode of a script)
 keep = {'homedir', 'pathname', 'darkmode', 'panelwidth', 'quickwidth', 'parallel', 'batchModeActive'};
 kept = struct();
 for k = 1:numel(keep)
@@ -51,6 +56,14 @@ for k = 1:numel(names)
 end
 for k = 1:numel(keep)
     setappdata(hgui, keep{k}, kept.(keep{k}));
+end
+% image acquisition: the start applied the settings stored at the last close (gui.apply_last_acquisition_settings);
+% the reset gives the defaults (no camera window settings, no remembered serial port)
+acquisition_data = {'camera_settings', 'pending_popup_texts', 'selected_com_port'};
+for k = 1:numel(acquisition_data)
+    if isappdata(hgui, acquisition_data{k})
+        rmappdata(hgui, acquisition_data{k});
+    end
 end
 
 %% controls, axes and window: made again as at the start (see PIVlab_GUI)
@@ -74,8 +87,7 @@ set(hgui, 'WindowButtonDownFcn', '', 'WindowButtonMotionFcn', '', 'WindowButtonU
     'WindowScrollWheelFcn', '', 'WindowKeyPressFcn', '', 'WindowKeyReleaseFcn', '', 'KeyReleaseFcn', '', ...
     'Pointer', 'arrow', 'Name', ['PIVlab ' gui.retr('PIVver')]);
 gui.generateUI
-gui.put('num_handle_calls', 0); % fresh handles of the new controls
-gui.apply_last_acquisition_settings % image acquisition panel as it was stored
+gui.put('num_handle_calls', 0); % fresh handles of the new controls (the image acquisition panel with its defaults)
 gui.update_dependent_controls
 % 'ui_default_visibility' stays the one of the start: the menus are not made again, and Basic mode may have
 % hidden some of them (gui.apply_ui_mode restores them from it)

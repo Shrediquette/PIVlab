@@ -49,10 +49,6 @@ if capturing==0
         yzoomlimit=gui.retr('yzoomlimit');
         %profile on
         currentimage = plot.draw_pixel_background_overlay(target_axis,displaywhat, selected, handles, currentframe);
-        if isequal(gui.retr('stereomode'), 1) && displaywhat == 1 && target_axis==gui.retr('pivlab_axis') ...
-                && ~(strcmp(get(handles.multip30, 'Visible'), 'on') && get(handles.stereo_disp_show, 'Value') > 1)
-            stereo.draw_w(target_axis, (currentframe+1)/2) % stereo-PIV result: W in colour under the vectors
-        end
         %profile viewer
         axis (target_axis,'image');
         set(target_axis,'ytick',[])

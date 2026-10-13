@@ -14,8 +14,13 @@ if isempty (cameraParams)
     return
 end
 cam_selected_target_images = gui.retr('cam_selected_target_images');
+% stereo-PIV: the switch only changes the display ("Show undistorted image"), the analysis always
+% undistorts (stereo.camera_lens) -> no question and nothing is reset
+stereo_mode = isequal(gui.retr('stereomode'), 1);
 
-if ~strcmpi(caller,'calib_viewtype')
+if stereo_mode
+    res='OK';
+elseif ~strcmpi(caller,'calib_viewtype')
     res=gui.custom_msgbox('quest',getappdata(0,'hgui'),'Warning','Masks, ROI, background images, and results will be reset when changing this setting. Continue?','modal',{'OK','Cancel'},'OK');
 else
     res='OK';
@@ -32,7 +37,7 @@ end
 if handles.calib_usecalibration.Value == 1
     gui.toolsavailable(0,'Applying undistortion...');drawnow;
 end
-if ~isempty (cameraParams) && ~isempty(cam_selected_target_images)
+if ~stereo_mode && ~isempty (cameraParams) && ~isempty(cam_selected_target_images)
     %disp('muss bei jeder Änderung eigentlich masken löschen, ROI löschen, ergebnisse löschen...')
     gui.put ('resultslist', []); %clears old results
     gui.put ('derived',[]);
@@ -75,7 +80,10 @@ else
 end
 
 %% check what the image size will be after image undistortion
-if handles.calib_usecalibration.Value ==1
+if stereo_mode && ~isempty(gui.retr('stereo_calib'))
+    % with a stereo calibration, the image size is the common grid (stereo.update_maps) and
+    % import.get_img reads through the stereo map: no size check, no new expected image size
+elseif handles.calib_usecalibration.Value ==1
     
     handles.calib_userectification.Value =0; %new cam calib disables existing rectification.
     gui.put('cam_use_rectification',0);

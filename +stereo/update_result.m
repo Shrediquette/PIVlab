@@ -105,11 +105,6 @@ for j = 1:numel(frames)
     r(resultslist{9, i} == 0) = NaN;
     residual(:, :, i) = r;
 end
-all_w = NaN(numel(x), numel(frames));
-for j = 1:numel(frames)
-    all_w(:, j) = resultslist{16, frames(j)}(:);
-end
-stereo_vel.W_limit = double(prctile(abs(all_w(:)), 99)); % colour scale of the W display (stereo.draw_w)
 stereo_vel.residual = residual;
 stereo_vel.sheet_z_mm = vel.sheet_z_mm;
 stereo_vel.mm_per_px = vel.mm_per_px;
