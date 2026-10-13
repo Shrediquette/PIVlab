@@ -13,13 +13,8 @@ function teardownOnce(testCase)
 helper_teardown_once(testCase);
 end
 
-function setup(~)
-helper_close_pivlab();
-end
-
-function teardown(~)
-helper_close_pivlab();
-end
+% The PIVlab window stays open between the tests: helper_start_pivlab resets it ("Reset PIVlab GUI")
+% and checks that it is the same as after a new start; helper_teardown_once closes it.
 
 function test_multitiff_timeresolved_several_files(testCase)
 J = helper_files('jet', 3);

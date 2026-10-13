@@ -51,32 +51,7 @@ try
 catch
 end
 if strcmp(button,yes)==1
-    try
-        gui.set_preference('homedir',gui.retr('homedir'));
-        gui.set_preference('pathname',gui.retr('pathname'));
-        gui.store_last_acquisition_settings %image acquisition panel for the next start
-    catch
-    end
-    try
-        PIVlab_capture_lensctrl (1400,1400,0) %lens needs to be set to neutral otherwise re-enabling power might cause issues
-    catch
-    end
-    try
-        hgui = getappdata(0,'hgui');
-        serpo=getappdata(hgui,'serpo');
-        string3='WarningSignDisable!';
-        pause(1)
-        writeline(serpo,string3); %disable the lighting of the laser warning sign
-        pause(0.5)
-    catch
-    end
-    try
-        second_monitor_fig = gui.retr('second_monitor_fig');
-        if ~isempty(second_monitor_fig) && isvalid(second_monitor_fig)
-            delete(second_monitor_fig);
-        end
-    catch
-    end
+    gui.end_of_session %preferences for the next start, hardware released (also used by "Reset PIVlab GUI")
     try
         delete(hObject);
     catch

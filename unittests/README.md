@@ -16,6 +16,11 @@ preferences, example files, ...). `parity/` is the GUI parity check against anot
 (see `parity/README.md`), `benchmark_bias_rmse/` a benchmark of the bias and random error of the PIV
 algorithm (not a pass / fail test).
 
+The PIVlab window opens once per test file and stays open: `helper_start_pivlab` resets it with
+"Reset PIVlab GUI" between the tests and checks that it is the same as after a new start
+(`helper_gui_snapshot`, `helper_snapshot_differences`); a difference fails the test. Tests that need a
+real new start (preferences read at the start, session round trips) call `helper_close_pivlab` first.
+
 ## Running the tests
 
 ```matlab
@@ -65,5 +70,6 @@ Notes
 | `test_gui_sessions.m` | sessions bring everything back (settings, data, view, look), multi-page TIFF, capture sessions, large sessions |
 | `test_gui_preferences.m` | what PIVlab remembers for the next start, rebuilding the window, warnings and the PIVlab folder stay unchanged |
 | `test_gui_bugfixes.m` | old GUI bugs that were fixed (one test per bug) |
+| `test_gui_reset.m` | "Reset PIVlab GUI": the button, the question, and a reset window equals a new one (after 2D and stereo sessions, same PIV result) |
 | `test_apigui_results.m` | API and GUI: same results (FFT, validation, optical flow, tilted camera model, parallel, ensemble, background), sessions both ways |
 | `test_apigui_camera_calibration.m` | camera calibration made in the GUI (standard and tilted model, rectification) used by the API |

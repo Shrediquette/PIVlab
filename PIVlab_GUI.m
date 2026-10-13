@@ -479,6 +479,8 @@ if isempty(fh)
     % scripts that drive the GUI (tests, parity check, rig skill) set this to 1: then PIVlab asks no
     % questions (quit, image sequencing, vector display density)
     gui.put('batchModeActive',0)
+    % state of the window data after the start: "Reset PIVlab GUI" (gui.reset_gui_Callback) goes back to it
+    gui.put('startup_appdata',getappdata(MainWindow))
 else %Figure handle does already exist --> bring PIVlab to foreground.
     disp('Only one instance of PIVlab is allowed to run.')
     figure(fh)
