@@ -9,7 +9,7 @@ if ~isempty(resultslist)
 	filepath=gui.retr('filepath');
 	framenum=gui.retr('framenum');
 	framepart = gui.retr ('framepart');
-	gui.toolsavailable(0,'Busy, please wait...')
+	gui.toolsavailable(0,'Applying the vector validation to all frames...')
 	gui.put('derived', []); %clear derived parameters if user modifies source data
 	if gui.retr('video_selection_done') == 0
 		num_frames_to_process=floor(size(filepath,1)/2)+1;

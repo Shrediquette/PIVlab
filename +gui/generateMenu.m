@@ -33,7 +33,6 @@ uimenu(m5_2,'Label','Camera 2','Callback',@preproc.cam_calibration_Callback,'ena
 m5_3=uimenu(m5_1,'Label','Image rectification / alignment');
 uimenu(m5_3,'Label','Camera 1','Callback',@preproc.cam_rectification_Callback);
 uimenu(m5_3,'Label','Camera 2','Callback',@preproc.cam_rectification_Callback,'enable','off','Tag','menu_rect_cam2');
-uimenu(m5,'Label','Stereo-PIV: switch camera 1 / 2','Callback',@stereo.camera_toggle_Callback,'Accelerator','K','enable','off','Tag','menu_stereo_switch');
 uimenu(m5,'Label','Image pre-processing / enhancement','Callback',@preproc.Uielement_Callback,'Accelerator','I');
 
 uimenu(m5,'Label','Define region of interest (ROI)','Callback',@roi.img_ROI_Callback,'Accelerator','E');

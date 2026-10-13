@@ -19,8 +19,13 @@ catch
 end
 end
 
-% The PIVlab window stays open between the tests: helper_start_pivlab resets it ("Reset PIVlab GUI")
-% and checks that it is the same as after a new start; helper_teardown_once closes it.
+function setup(~)
+helper_close_pivlab();
+end
+
+function teardown(~)
+helper_close_pivlab();
+end
 
 %% ================================================================== import
 function test_import_grey_and_colour_images(testCase)

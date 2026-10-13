@@ -82,7 +82,7 @@ if gui.retr('video_selection_done') ~= 1
 		set(handles.filenamebox,'value',1);
 		if mod(size(filepath,1),2)==1
 			set(handles.filenamebox,'BackgroundColor','r')
-			gui.toolsavailable(0)
+			gui.toolsavailable(0,'Uneven number of images: please remove one more image from the list.',true)
 			set(handles.remove_imgs,'Enable','on');
 			set(handles.filenamebox,'Enable','on');
 			gui.custom_msgbox('warn',getappdata(0,'hgui'),'Warning: Uneven amount of images!',['One image could not be assigned to a pair. Number of images in the list must be even.' newline newline 'Please remove another image from the list to continue.'],'modal');

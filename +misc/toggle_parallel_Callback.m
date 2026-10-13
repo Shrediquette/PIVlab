@@ -12,7 +12,7 @@ try
 	parallel=gui.retr('parallel');
 	if parallel==0
 		gui.put ('parallel',1);
-		gui.toolsavailable(0,'Please wait, opening parallel pool...')
+		gui.toolsavailable(0,'Opening parallel pool...')
 		pause(0.1)
 		try
             c = parcluster("Processes");
@@ -26,7 +26,7 @@ try
 		set(handles.toggle_parallel, 'cdata',parallel_on,'TooltipString','Parallel processing on. Click to turn off.');
 	else
 		gui.put ('parallel',0);
-		gui.toolsavailable(0,'Please wait, closing parallel pool...')
+		gui.toolsavailable(0,'Closing parallel pool...')
 		misc.pivparpool('close')
 		set(handles.toggle_parallel, 'cdata',parallel_off,'TooltipString','Parallel processing off. Click to turn on.');
 	end

@@ -26,6 +26,8 @@
 resources
 **/*.prj
 **/*.prj.bak
+matlab.toml
+**/+wOFV/Filter matrices/**/*
 **/.git/**/*
 **/.svn/**/*
 **/.buildtool/**/*

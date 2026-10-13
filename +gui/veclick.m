@@ -134,7 +134,7 @@ if src.Button == 1
 				w_point=w(info(1,1),info(1,2));
 				magnitude_px=(magnitude_px.^2+w_point.^2).^0.5;
 				magnitude_m=(magnitude_m.^2+(w_point*abs(gui.retr('calu'))).^2).^0.5;
-				magnitude_label=' |V| 3D: ';
+				magnitude_label=' 3D: ';
 			end
 			magnitude_px = sprintf('%0.2g',magnitude_px);
 			magnitude_m = sprintf('%0.2g',magnitude_m);

@@ -1,5 +1,5 @@
 function serial_info(~,~,~)
-gui.toolsavailable(0,'Busy, please wait...')
+gui.toolsavailable(0,'Searching for serial ports...')
 try
     S = serialportfind;
     delete(S)

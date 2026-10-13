@@ -15,7 +15,7 @@ else
 	[PathName,FileName,ext] = fileparts(auto_load_session_filename);
 	FileName = [FileName ext];
 end
-gui.toolsavailable(0,'Busy, loading session...');drawnow
+gui.toolsavailable(0,'Loading session...');drawnow
 [session, message] = import.read_session_file(fullfile(PathName,FileName));
 if isempty(session)
 	gui.toolsavailable(1)

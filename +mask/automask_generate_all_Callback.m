@@ -20,7 +20,7 @@ if size(filepath,1) > 1 %did the user load images?
 		video_frame_selection=gui.retr('video_frame_selection');
 		num_frames_to_process = numel(video_frame_selection);
 	end
-	gui.toolsavailable(0,'Busy, please wait...')
+	gui.toolsavailable(0,'Generating masks for all frames...')
 	for i=1:2:num_frames_to_process
 		[~,piv_image_A]=import.get_img(i);
 		[~,piv_image_B]=import.get_img(i+1);

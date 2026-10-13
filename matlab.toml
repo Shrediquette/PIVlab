@@ -1,0 +1,275 @@
+name = "PIVlab_source"
+
+[folders]
+path = [
+    "+wOFV/OptimizationSolvers/minFunc",
+    "+wOFV/OptimizationSolvers/minFunc/autoDif",
+    "+wOFV/OptimizationSolvers/minFunc/logisticExample",
+    "+wOFV/OptimizationSolvers/minFunc/minFunc",
+    "Example_scripts",
+    "OptimizationSolvers/minFunc",
+    "OptimizationSolvers/minFunc/autoDif",
+    "OptimizationSolvers/minFunc/logisticExample",
+    "OptimizationSolvers/minFunc/minFunc",
+    "PIVlab_capture_resources",
+    "PIVlab_capture_resources/OPTOcam_20_9",
+    "PIVlab_capture_resources/OPTOcam_2_80",
+    "PIVlab_capture_resources/OPTRONIS",
+    "PIVlab_capture_resources/OPTRONIS/bitflow",
+    "PIVlab_capture_resources/OPTRONIS/euresys",
+    "PIVlab_capture_resources/basler",
+    "PIVlab_capture_resources/bitflow_resources",
+    "PIVlab_capture_resources/bitflow_resources/R2024b",
+    "PIVlab_capture_resources/bitflow_resources/R2025a",
+    "PIVlab_capture_resources/bitflow_resources/R2025b",
+    "PIVlab_capture_resources/bitflow_resources/R2026a",
+    "PIVlab_capture_resources/bitflow_resources/R2026b",
+    "PIVlab_capture_resources/chronos",
+    "PIVlab_capture_resources/flir",
+    "PIVlab_capture_resources/lens_control",
+    "PIVlab_capture_resources/oltSync",
+    "PIVlab_capture_resources/pco",
+    "PIVlab_capture_resources/pco_resources",
+    "PIVlab_capture_resources/webcam",
+    "doc",
+    "docs",
+    "docs/_docs",
+    "docs/_layouts",
+    "docs/_news",
+    "docs/_wiki",
+    "docs/assets",
+    "docs/assets/css",
+    "docs/assets/images",
+    "docs/manual",
+    "docs/manual/assets",
+    "docs/manual/assets/css",
+    "docs/manual/assets/img",
+    "docs/manual/assets/img/analyze",
+    "docs/manual/assets/img/camera-calibration",
+    "docs/manual/assets/img/capture",
+    "docs/manual/assets/img/correlation-matrices",
+    "docs/manual/assets/img/derive-spatial",
+    "docs/manual/assets/img/derive-temporal",
+    "docs/manual/assets/img/export",
+    "docs/manual/assets/img/extract-area",
+    "docs/manual/assets/img/extract-polyline",
+    "docs/manual/assets/img/interface",
+    "docs/manual/assets/img/markers",
+    "docs/manual/assets/img/masking",
+    "docs/manual/assets/img/piv-settings",
+    "docs/manual/assets/img/plot-appearance",
+    "docs/manual/assets/img/preprocessing",
+    "docs/manual/assets/img/roi",
+    "docs/manual/assets/img/sessions",
+    "docs/manual/assets/img/spatial-calibration",
+    "docs/manual/assets/img/statistics",
+    "docs/manual/assets/img/streamlines",
+    "docs/manual/assets/img/synthetic-images",
+    "docs/manual/assets/img/validation-image",
+    "docs/manual/assets/img/validation-velocity",
+    "docs/manual/assets/js",
+    "docs/manual/pages",
+    "docs/manual/tools",
+    "help",
+]
+
+[project.labels."Standalone Application - StandaloneDesktopApp1"]
+"Executable Splash Image File" = [
+]
+"Main Function" = [
+]
+"Help Text File" = [
+]
+"Installer Additional Files" = [
+]
+"Windows Apps & Features Icon File" = [
+]
+"Additional File" = [
+]
+"Installer Logo Image File" = [
+]
+"Installer Icon File" = [
+]
+"Executable Icon File" = [
+]
+"Installer Splash Image File" = [
+]
+
+[project.labels."Toolbox - Toolbox1"]
+"App Gallery File" = [
+    "PIVlab_GUI.m",
+]
+"Toolbox Image File" = [
+    "images/pivlab_logo1.png",
+]
+"Getting Started Guide" = [
+    "doc/GettingStarted.mlx",
+]
+
+[project.labels."Standalone Application - StandaloneDesktopApp2"]
+"Help Text File" = [
+]
+"Installer Splash Image File" = [
+    "images/pivlab_standalone_splashscreen_3.jpg",
+]
+"Installer Additional Files" = [
+]
+"Installer Logo Image File" = [
+    "images/pivlab_standalone_installerscreen.png",
+]
+"Executable Icon File" = [
+    "images/appicon.png",
+]
+"Installer Icon File" = [
+    "images/appicon.png",
+]
+"Additional File" = [
+    "+acquisition/",
+    "+calibrate/",
+    "+export/",
+    "+extract/",
+    "+gui/",
+    "+gui/corr_demo.mlapp",
+    "+import/",
+    "+mask/",
+    "+misc/",
+    "+opencv/",
+    "+piv/",
+    "+plot/",
+    "+postproc/",
+    "+preproc/",
+    "+roi/",
+    "+simulate/",
+    "+validate/",
+    "+wOFV/",
+    "+wOFV/FD matrices/",
+    "+wOFV/OptimizationSolvers/",
+    "Example_data/",
+    "OptimizationSolvers/",
+    "PIVlab_capture_resources/",
+    "PIVlab_capture_resources/pco_resources/",
+    "help/",
+    "images/",
+]
+"Windows Apps & Features Icon File" = [
+]
+"Executable Splash Image File" = [
+    "images/pivlab_standalone_splashscreen.png",
+]
+"Main Function" = [
+    "PIVlab_GUI.m",
+]
+
+[[package]]
+use-license-bsd = false
+name = ""
+version = "3.13"
+description = "PIVlab is a free and open-source particle image velocimetry (PIV) software and is currently the most frequently cited PIV tool on the market. It can be used to calculate the velocity distribution within imported (or captured) images. It can also control OPTOLUTION’s lasers, cameras and synchronizers, and derive, display and export multiple parameters of the flow pattern. The simple graphical user interface makes PIV data acquisition and data post-processing fast and efficient."
+id = "f7c33dd1-18cd-4708-a025-7ce388954b13"
+package-root = "./"
+provider.name = "William Thielicke"
+provider.email = "Thielicke@optolution.com"
+provider.organization = "OPTOLUTION Messtechnik GmbH"
+display-name = "PIVlab"
+summary = "Easy to use, GUI based tool to capture, analyze, validate, postprocess, visualize and simulate PIV data. http://PIVlab.de"
+output-file-name = "PIVlab.mltbx"
+output-folder = "Toolbox"
+release-compatibility = "19.2.* - 25.2.*"
+preview-image-file = "images/pivlab_logo1.png"
+getting-started-file = "doc/GettingStarted.mlx"
+supported-platforms = [
+    "windows",
+    "linux",
+    "macos",
+]
+
+# MATLAB path of the installed toolbox (without this table, MATLAB guesses the folders, e.g. JORS_paper, Example_data)
+[package.folders]
+path = [
+    ".",
+    "Example_scripts",
+    "OptimizationSolvers/minFunc",
+    "OptimizationSolvers/minFunc/autoDif",
+    "OptimizationSolvers/minFunc/logisticExample",
+    "OptimizationSolvers/minFunc/minFunc",
+    "PIVlab_capture_resources",
+    "PIVlab_capture_resources/OPTOcam_20_9",
+    "PIVlab_capture_resources/OPTOcam_2_80",
+    "PIVlab_capture_resources/OPTRONIS",
+    "PIVlab_capture_resources/OPTRONIS/bitflow",
+    "PIVlab_capture_resources/OPTRONIS/euresys",
+    "PIVlab_capture_resources/basler",
+    "PIVlab_capture_resources/bitflow_resources/R2024b",
+    "PIVlab_capture_resources/bitflow_resources/R2025a",
+    "PIVlab_capture_resources/bitflow_resources/R2025b",
+    "PIVlab_capture_resources/bitflow_resources/R2026a",
+    "PIVlab_capture_resources/bitflow_resources/R2026b",
+    "PIVlab_capture_resources/chronos",
+    "PIVlab_capture_resources/flir",
+    "PIVlab_capture_resources/lens_control",
+    "PIVlab_capture_resources/oltSync",
+    "PIVlab_capture_resources/pco",
+    "PIVlab_capture_resources/pco_resources",
+    "PIVlab_capture_resources/webcam",
+    "doc",
+    "help",
+]
+
+[[compiler.standalone]]
+name = "PIVlab Standalone"
+author-name = "William Thielicke"
+executable-version = "3.13"
+author-company = "OPTOLUTION Messtechnik GmbH"
+runtime-log-file = ""
+executable-name = "PIVlab"
+author-email = "thielicke@optolution.com"
+additional-files = [
+    "+acquisition",
+    "+calibrate",
+    "+export",
+    "+extract",
+    "+gui",
+    "+gui/corr_demo.mlapp",
+    "+import",
+    "+mask",
+    "+misc",
+    "+opencv",
+    "+piv",
+    "+plot",
+    "+postproc",
+    "+preproc",
+    "+roi",
+    "+simulate",
+    "+validate",
+    "+wOFV",
+    "+wOFV/FD matrices",
+    "+wOFV/OptimizationSolvers",
+    "Example_data",
+    "OptimizationSolvers",
+    "PIVlab_capture_resources",
+    "PIVlab_capture_resources/pco_resources",
+    "help",
+    "images",
+]
+summary = "Easy to use, GUI based tool to capture, analyze, validate, postprocess, visualize and simulate PIV data.\nhttp://PIVlab.de"
+description = "PIVlab is a free and open-source particle image velocimetry (PIV) software and is currently the most frequently cited PIV tool on the market. It can be used to calculate the velocity distribution within imported (or captured) images. It can also control OPTOLUTION’s lasers, cameras and synchronizers, and derive, display and export multiple parameters of the flow pattern. The simple graphical user interface makes PIV data acquisition and data post-processing fast and efficient."
+auto-detect-data-files = true
+obfuscate-archive = false
+verbose = true
+embed-archive = true
+build-output-folder = "Standalone/build"
+suppress-windows-cmd-prompt = true
+treat-inputs-as-numeric = false
+app-file = "PIVlab_GUI.m"
+executable-splash-screen-file = "images/pivlab_standalone_splashscreen.png"
+executable-icon-file = "images/appicon.png"
+default-installation-folder = "%ProgramFiles%/PIVlab"
+installer-output-folder = "Standalone/package"
+installer-name = "PIVlab_installer"
+installation-notes = "Have fun and good luck with your research!"
+installer-icon-file = "images/appicon.png"
+application-name = ""
+installer-version = "3.13"
+runtime-delivery = "web"
+installer-splash-file = "images/pivlab_standalone_splashscreen_3.jpg"
+installer-logo-file = "images/pivlab_standalone_installerscreen.png"

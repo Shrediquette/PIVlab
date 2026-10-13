@@ -203,8 +203,7 @@ if strcmpi(config_string,'PIVlab LD-PS + OPTRONIS Cyclone') % OPTRONIS
 			gui.toolsavailable(0,'Detecting OPTRONIS camera type...')
 			[~,camera_sub_type] = PIVlab_capture_OPTRONIS_unified_cam_detect();
 			gui.put('camera_sub_type',camera_sub_type);
-			target_axis=gui.retr('pivlab_axis');
-			postix=get(target_axis,'XLim');postiy=get(target_axis,'YLim');text(postix(2)/2,postiy(2)/2,['Detected: ' camera_sub_type],'HorizontalAlignment','center','VerticalAlignment','middle','color','g','fontsize',16, 'BackgroundColor', [0.25 0.25 0.25],'tag','busyhint','margin',10,'Clipping','on');
+			gui.busy_hint(['Detected: ' camera_sub_type]);drawnow
 		catch ME
 			gui.toolsavailable(1)
 			camera_sub_type=' ';

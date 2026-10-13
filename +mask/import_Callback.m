@@ -14,7 +14,7 @@ if size(filepath,1) > 1 %did the user load images?
 		end
 		pivlab_axis=gui.retr('pivlab_axis');
 		handles=gui.gethand;
-		gui.toolsavailable(0,'Converting masks, please wait...')
+		gui.toolsavailable(0,'Converting masks...')
 		for i= 1:AnzahlMasks
 			%set (handles.mask_import,'String', ['Progress: ' num2str(round(i/AnzahlMasks*100)) ' %']);
 			gui.update_progress(round(i/AnzahlMasks*100))

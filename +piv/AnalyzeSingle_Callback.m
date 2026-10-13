@@ -8,7 +8,7 @@ if ok==1
 	resultslist=gui.retr('resultslist');
 	set(handles.progress, 'string' , ['Frame progress: 0%']);
 	set(handles.Settings_Apply_current, 'string' , ['Please wait...']);
-	gui.toolsavailable(0,'Busy, please wait...');drawnow;
+	gui.toolsavailable(0,'Analyzing the current frame...');drawnow;
 	handles=gui.gethand;
 	filepath=gui.retr('filepath');
 	selected=2*floor(get(handles.fileselector, 'value'))-1;

@@ -8,12 +8,6 @@ end
 if isappdata(0, 'parity_mock_file')
     rmappdata(0, 'parity_mock_file');
 end
-if isappdata(0, 'pivlab_test_fresh_state') % start state of the window (helper_start_pivlab)
-    rmappdata(0, 'pivlab_test_fresh_state');
-end
-if isappdata(0, 'pivlab_test_cores')
-    rmappdata(0, 'pivlab_test_cores');
-end
 if isappdata(0, 'pivlab_test_warning_state')
     warning(getappdata(0, 'pivlab_test_warning_state'));
     rmappdata(0, 'pivlab_test_warning_state');

@@ -18,7 +18,7 @@ if ok==1
 	framepart=gui.retr('framepart');
 	filename=gui.retr('filename');
 	resultslist=cell(0); %clear old results
-	gui.toolsavailable(0,'Busy, please wait...');
+	gui.toolsavailable(0,'Ensemble analysis of all frames...');
 	set (handles.cancelbutt, 'enable', 'on');
 	ismean=gui.retr('ismean');
 

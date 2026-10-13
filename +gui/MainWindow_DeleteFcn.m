@@ -2,6 +2,12 @@ function MainWindow_DeleteFcn(hObject, ~)
 %MAINWINDOW_DELETEFCN Runs when the PIVlab window is deleted (closed by the user, by close / delete or
 %   when MATLAB quits): the serial port readline warning, switched off by PIVlab_GUI while PIVlab is
 %   open, gets back the setting it had before PIVlab started. Other warning settings are not touched.
+%   A running busy watchdog timer (gui.toolsavailable) is deleted.
+watchdog = timerfindall('Tag', 'PIVlab_busy_watchdog'); % see gui.toolsavailable
+if ~isempty(watchdog)
+    stop(watchdog);
+    delete(watchdog);
+end
 id = 'serialport:serialport:ReadlineWarning';
 before = getappdata(hObject, 'warnings_before_pivlab');
 if isempty(before)

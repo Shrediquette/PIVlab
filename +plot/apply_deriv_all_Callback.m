@@ -1,7 +1,7 @@
 function apply_deriv_all_Callback(~, ~, ~)
 handles=gui.gethand;
 filepath=gui.retr('filepath');
-gui.toolsavailable(0,'Busy, please wait...')
+gui.toolsavailable(0,'Calculating derived parameters for all frames...')
 nframes=floor(size(filepath,1)/2)+1;
 deriv=get(handles.derivchoice, 'value');
 smooth_mode=get(handles.smooth_mode, 'Value');

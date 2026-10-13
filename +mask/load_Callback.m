@@ -10,7 +10,7 @@ if size(filepath,1) > 1 %did the user load images?
 	pause(0.01)
 	if ~isequal(maskfile,0) && ~isequal(maskpath,0)
 		warning('off','MATLAB:load:variableNotFound');
-		gui.toolsavailable(0,'Busy, loading masks');drawnow nocallbacks
+		gui.toolsavailable(0,'Loading masks...');drawnow nocallbacks
 		load(fullfile(maskpath,maskfile),'masks_in_frame');
 		warning('on','MATLAB:load:variableNotFound');
 		if exist('masks_in_frame','var')

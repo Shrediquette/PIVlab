@@ -130,13 +130,19 @@ if isempty(fh)
     gui.put('quickwidth',panelwidth);
     %% check required package folders
     tempfilepath = fileparts(which('PIVlab_GUI.m'));
-    addpath(tempfilepath);
-    addpath(fullfile(tempfilepath, 'images'));
-    addpath(fullfile(tempfilepath, 'help'));
+    pivlab_folders = {tempfilepath, fullfile(tempfilepath, 'images'), fullfile(tempfilepath, 'help')};
     % PIVlab_capture_resources with all subfolders (one per camera type, pco_resources, ...), but without *_tests folders
     if ~isdeployed % path of the compiled app is fixed at build time (clean_and_package_PIVlab.m adds these folders)
         capture_paths = strsplit(genpath(fullfile(tempfilepath, 'PIVlab_capture_resources')), pathsep);
-        addpath(capture_paths{~endsWith(capture_paths,'_tests') & ~cellfun(@isempty,capture_paths)});
+        pivlab_folders = [pivlab_folders, capture_paths(~endsWith(capture_paths,'_tests') & ~cellfun(@isempty,capture_paths))];
+    end
+    % only folders that are not on the path yet: adding a folder again moves it to the top, and with the
+    % MATLAB project (matlab.toml) open, that breaks the order of the package folders (MATLAB warning)
+    folders_on_path = strsplit(path, pathsep);
+    for i = 1:numel(pivlab_folders)
+        if ~any(strcmpi(folders_on_path, pivlab_folders{i}))
+            addpath(pivlab_folders{i});
+        end
     end
     try
         ctr=0;

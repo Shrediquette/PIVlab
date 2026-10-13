@@ -97,7 +97,7 @@ try
 		delete(FileName)
 		if gui_open
 			gui.toolsavailable(1)
-			gui.toolsavailable(0,'Busy, please wait...');drawnow
+			gui.toolsavailable(0,'Filter matrices stored, continuing the analysis...');drawnow
 		end
 	elseif gui_open
 		gui.toolsavailable(1)

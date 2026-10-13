@@ -2,7 +2,7 @@ function save_session_function (PathName,FileName)
 % Saves the session: all settings, the session data (gui.session_data_keys) and the view,
 % in the format of export.write_session_file.
 gui.toolsavailable(1)
-gui.toolsavailable(0,'Busy, saving session...');drawnow
+gui.toolsavailable(0,'Saving session...');drawnow
 stereo.store_active_camera % stereo-PIV: the camera shown is saved with the other one
 settings = gui.collect_settings;
 settings.calibration_data = calibrate.calibration_data;

@@ -152,7 +152,16 @@ capture_root = testCase.TestData.CaptureRoot;
 full_names = testCase.TestData.FullNames;
 base_names = testCase.TestData.BaseNames;
 exts = testCase.TestData.Exts;
-opts = matlab.addons.toolbox.ToolboxOptions(fullfile(root, 'PIVlab_source.prj'));
+% [[package]] of the project; ToolboxOptions resolves the relative file names in matlab.toml (preview
+% image, getting started guide) against the current folder, not the project folder (R2026b)
+old_folder = cd(root);
+try
+    opts = matlab.addons.toolbox.ToolboxOptions(fullfile(root, 'matlab.toml'));
+catch err
+    cd(old_folder);
+    rethrow(err);
+end
+cd(old_folder);
 toolbox_files = string(opts.ToolboxFiles);
 is_scratch = startsWith(base_names, {'_', 'william_'});
 is_shipped_type = testCase.TestData.IsM | ismember(exts, {'.bfml', '.exe', '.mat'});

@@ -51,7 +51,7 @@ if getappdata(hgui,'video_convert_done')
 	%(useGUI==0) that would re-apply a stale "wasdisabled" snapshot and leave
 	%buttons (e.g. "Import images"/"Import video") disabled. Take a fresh
 	%snapshot of the current state so toolsavailable(1) restores it correctly.
-	gui.toolsavailable(0);
+	gui.toolsavailable(0,'Loading the converted images...');
 
 	%Load the freshly written images through the standard pipeline.
 	import.loadimgsbutton_Callback([],[],0,path);

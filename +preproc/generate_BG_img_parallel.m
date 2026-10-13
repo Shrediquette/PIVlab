@@ -89,7 +89,7 @@ if get(handles.bg_subtract,'Value')>1
                 %images
                 %if not: generate two background images. One from even frames,
                 %one from odd frames
-                gui.toolsavailable(0,'Busy, please wait...')
+                gui.toolsavailable(0,'Generating background images...')
                 updatecntr=0;
 
                 %das innere zu einer function machen und außen parfor...?

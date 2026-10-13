@@ -5,7 +5,7 @@ resultslist=gui.retr('resultslist');
 [FileName,PathName] = uiputfile('*.txt','Save vector data as...','PIVlab.txt'); %framenummer in dateiname
 if isequal(FileName,0) | isequal(PathName,0)
 else
-	gui.toolsavailable(0,'Busy, please wait...')
+	gui.toolsavailable(0,'Exporting all frames as ASCII files...')
 	for i=1:floor(size(filepath,1)/2)
 		%if analysis exists
 		if size(resultslist,2)>=i && numel(resultslist{1,i})>0

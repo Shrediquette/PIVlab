@@ -34,7 +34,7 @@ end
 
 if ~isequal(FileName,0) && ~isequal(PathName,0)
 	file_selection_ok=1;
-	gui.toolsavailable(0,'Busy, extracting data...');drawnow
+	gui.toolsavailable(0,'Extracting data...');drawnow
 else
 	file_selection_ok=0;
 end

@@ -110,7 +110,6 @@ image2_roi = padarray(image2_roi, [pady padx], min(min(image1_roi)));
 mask_inpt_roi = padarray(mask_inpt_roi, [pady padx], 0);
 image_roi_xs = (1:size(image2_roi,2))  - padx + xroi;
 image_roi_ys = (1:size(image2_roi,1))' - pady + yroi;
-
 mask = mask_inpt_roi;
 
 %% MAINLOOP

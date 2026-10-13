@@ -43,7 +43,7 @@ for i=startfr:endfr
 				[FileName,PathName] = uiputfile('*.txt','Save extracted data as...',fullfile(imgsavepath,['PIVlab_Extr_' currentED '.txt'])); %framenummer in dateiname
 			end
 			selected=1;
-			gui.toolsavailable(0,'Busy, extracting data...');drawnow
+			gui.toolsavailable(0,'Extracting data...');drawnow
 		end
 		if isequal(FileName,0) | isequal(PathName,0)
 			%exit for

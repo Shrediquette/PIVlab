@@ -30,7 +30,7 @@ if get(handles.bg_subtract,'Value')>1
                     src.video_frame_selection = gui.retr('video_frame_selection');
                 end
                 cam = import.cam_settings(FromGUI=true);
-                gui.toolsavailable(0,'Busy, please wait...')
+                gui.toolsavailable(0,'Generating background images...')
                 [image1_bg, image2_bg, msg] = preproc.compute_background(src, sequencer, bg_operation, cam, @(p) gui.update_progress(p));
                 if ~isempty(msg)
                     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',msg,'modal');

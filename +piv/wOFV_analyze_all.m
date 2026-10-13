@@ -30,7 +30,7 @@ if ok==1
     resultslist=cell(0); %clear old results
 
     gui.put('derived', [])
-    gui.toolsavailable(0,'Busy, please wait...');
+    gui.toolsavailable(0,'Analyzing all frames (wOFV)...');
     set (handles.cancelbutt, 'enable', 'on');
 
     ismean=gui.retr('ismean');

@@ -1,5 +1,5 @@
 function camera_info (~, ~, ~)
-gui.toolsavailable(0,'Busy, please wait...')
+gui.toolsavailable(0,'Searching for cameras...')
 imaqreset
 pause(0.5)
 % Create a device structure enumerating all devices available in the
