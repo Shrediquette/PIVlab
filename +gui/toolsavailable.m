@@ -26,6 +26,7 @@ for i=1:numel(busy_figs)
 	delete(findobj(busy_figs(i),'Tag','busyhint'));
 end
 delete(findobj(pivlab_axis,'tag','busyhint'));
+gui.put('busy_until_image',[]); % see gui.busy_hint_until_image
 watchdog=timerfindall('Tag','PIVlab_busy_watchdog');
 if ~isempty(watchdog)
 	stop(watchdog);

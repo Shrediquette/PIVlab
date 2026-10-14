@@ -5,14 +5,28 @@ function busy_watchdog(watchdog,~)
 %   When MATLAB stays idle for 3 s while the controls are locked, the task ended without
 %   gui.toolsavailable(1), usually because of an error. Then the status strip offers the button
 %   "Unlock controls". gui.toolsavailable(1) deletes this timer.
+%   While a camera runs (gui.busy_hint_until_image), the strip and the busy pointer are removed as
+%   soon as the camera image is shown.
 hgui=getappdata(0,'hgui');
 if isempty(hgui) || ~ishandle(hgui)
 	stop(watchdog);
 	delete(watchdog);
 	return
 end
-% elapsed time in the status strips (PIVlab window and second monitor display)
 busy_figs=gui.busy_figures;
+% camera running: no strip and no busy pointer as soon as its image is shown
+until_image=gui.retr('busy_until_image');
+if ~isempty(until_image) && isvalid(until_image.axis)
+	images_now=findobj(until_image.axis,'Type','image');
+	if any(~ismember(images_now,until_image.images_before))
+		gui.put('busy_until_image',[]);
+		for k=1:numel(busy_figs)
+			delete(findobj(busy_figs(k),'Tag','busyhint'));
+		end
+		set(busy_figs,'Pointer','arrow');
+	end
+end
+% elapsed time in the status strips (PIVlab window and second monitor display)
 busy_since=gui.retr('busy_since');
 if ~isempty(busy_since)
 	elapsed=findobj(busy_figs,'Tag','busy_elapsed');

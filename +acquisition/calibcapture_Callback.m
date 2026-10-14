@@ -71,6 +71,7 @@ if ready==1
     if capture_ok==1 && capturing == 0
         gui.put('capturing',1);
         gui.toolsavailable(0,'Initializing camera...')
+        gui.busy_hint_until_image % no strip / busy pointer anymore once the live image is shown
         drawnow;
         %set(handles.ac_calibsave,'enable','on')
         set(handles.ac_calibcapture,'enable','on')

@@ -81,6 +81,7 @@ if required_files_check
 			else
 				gui.toolsavailable(0,'Starting PIV capture...')
 			end
+			gui.busy_hint_until_image % no strip / busy pointer anymore once the camera image is shown
 			set(handles.ac_pivstop,'enable','on')
 			set(handles.togglepair,'enable','on')
 			set(handles.ac_serialstatus,'enable','on')
