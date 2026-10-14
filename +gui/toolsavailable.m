@@ -2,9 +2,10 @@ function toolsavailable(inpt,busy_msg,waits_for_user)
 %0: disable all tools
 %1: re-enable tools that were previously also enabled
 %busy_msg (optional, with 0): text in a status strip at the bottom of the image display (gui.busy_hint)
-%waits_for_user (optional, with 0): true when PIVlab stays locked on purpose while MATLAB is idle and
-%   waits for the user. Otherwise a watchdog offers to unlock the controls when the task ended without
-%   gui.toolsavailable(1), e.g. after an error (gui.busy_watchdog).
+%waits_for_user (optional, with 0): true when PIVlab waits for the user, e.g. in a file dialog or (idle)
+%   until the user removes an image: no elapsed time and no busy mouse pointer. Otherwise a watchdog
+%   offers to unlock the controls when the task ended without gui.toolsavailable(1), e.g. after an
+%   error (gui.busy_watchdog).
 hgui=getappdata(0,'hgui');
 handles=gui.gethand;
 pivlab_axis=gui.retr('pivlab_axis');

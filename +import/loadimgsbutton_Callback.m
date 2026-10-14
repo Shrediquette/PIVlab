@@ -9,7 +9,7 @@ if isequal(gui.retr('stereomode'), 1) % new 2D images end the stereo-PIV session
     stereo.leave_stereo_mode
 end
 if useGUI ==1
-    gui.toolsavailable(0,'Loading images...');drawnow
+    gui.toolsavailable(0,'Please select the images in the file dialog.',true);drawnow
 end
 hgui=getappdata(0,'hgui');
 if ispc==1
