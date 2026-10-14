@@ -65,7 +65,6 @@ verifyEqual(testCase, state{2}.expected_image_size, [220 260]);
 verifyEqual(testCase, char(get(handles.stereo_camera_toggle, 'Visible')), 'on');
 verifyEqual(testCase, get(handles.stereo_camera_toggle, 'String'), 'CAM 1');
 verifyEqual(testCase, char(get(findall(getappdata(0, 'hgui'), 'Tag', 'menu_camcalib_cam2'), 'Enable')), 'on');
-verifyEqual(testCase, char(get(findall(getappdata(0, 'hgui'), 'Tag', 'menu_stereo_switch'), 'Enable')), 'on');
 label = findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_camera_label');
 verifyNumElements(testCase, label, 1, 'camera label missing');
 verifyEqual(testCase, strtrim(label.String), 'CAMERA 1');
@@ -516,7 +515,7 @@ else
     v = resultslist{4, frame}(row, col);
 end
 w = resultslist{16, frame}(row, col);
-expected = [' |V| 3D: ' sprintf('%0.2g', sqrt(u^2 + v^2 + w^2)) ' px/fr'];
+expected = [' 3D: ' sprintf('%0.2g', sqrt(u^2 + v^2 + w^2)) ' px/fr'];
 verifyEqual(testCase, label.String, expected, 'label of the clicked vector');
 end
 

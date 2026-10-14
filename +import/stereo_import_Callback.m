@@ -3,7 +3,7 @@ function stereo_import_Callback(~, ~, paths)
 % The normal PIVlab image dialog opens twice, for camera 1 and for camera 2. Both cameras use the same
 % sequencing style and must give the same number of images (recorded simultaneously). Camera 2 is
 % loaded first and kept in the stereo camera state, then camera 1 is loaded and shown; the camera
-% switch (Tools panel, CTRL+K) changes between them (stereo.switch_camera).
+% switch (Tools panel) changes between them (stereo.switch_camera).
 % New images in stereo mode (e.g. the next recording with the same setup): like new images in 2D, the
 % results, background images, masks and velocity limits are removed; the lens calibrations, board images,
 % stereo calibration, disparity and region of interest stay when both cameras give images of the same
@@ -102,7 +102,7 @@ if ~batch && ~isempty(kept_message)
         ' image pairs each).' newline newline kept_message], 'modal');
 elseif ~batch
     gui.custom_msgbox('success', getappdata(0,'hgui'), 'Stereo-PIV', ['Images of both cameras loaded (' int2str(n_images(1) / 2) ' image pairs each).' ...
-        newline newline 'Camera 1 is shown. Use the "CAM 1 / CAM 2" button in the Tools panel (or CTRL+K) to switch between the cameras. ' ...
+        newline newline 'Camera 1 is shown. Use the "CAM 1 / CAM 2" button in the Tools panel to switch between the cameras. ' ...
         'Masks and the camera calibration belong to the camera that is shown; all other settings are used for both cameras.'], 'modal');
 end
 end
@@ -217,7 +217,7 @@ gui.put('roirect', kept.roirect);
 stereo.update_maps
 roi.updateROIinfo
 message = ['The calibrations of both cameras' stereo_text(kept) ' and the region of interest were kept (same setup). ' ...
-    'Use CAM 1 / CAM 2 (or CTRL+K) to switch between the cameras.'];
+    'Use CAM 1 / CAM 2 in the Tools panel to switch between the cameras.'];
 end
 
 function text = stereo_text(kept)

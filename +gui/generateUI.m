@@ -46,7 +46,7 @@ item=[0  item(2)+item(4)+margin*0.2 parentitem(3)/2/2 parentitem(3)/2/2/4];
 handles.toggle_parallel = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@misc.toggle_parallel_Callback,'tag','toggle_parallel','UserData','not_a_setting');
 
 item=[parentitem(3)/2/2 item(2) parentitem(3)/2/2 parentitem(3)/2/2/4];
-handles.stereo_camera_toggle = uicontrol(handles.tools,'Style','pushbutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','CAM 1','Fontweight','bold','Callback',@stereo.camera_toggle_Callback,'tag','stereo_camera_toggle','TooltipString','Stereo-PIV: switch between camera 1 and camera 2 (CTRL+K)','Visible','off','UserData','not_a_setting');
+handles.stereo_camera_toggle = uicontrol(handles.tools,'Style','pushbutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','CAM 1','Fontweight','bold','Callback',@stereo.camera_toggle_Callback,'tag','stereo_camera_toggle','TooltipString','Stereo-PIV: switch between camera 1 and camera 2','Visible','off','UserData','not_a_setting');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2/2 parentitem(3)/2/2/4];
 handles.zoomon = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@gui.zoomon_Callback,'tag','zoomon','TooltipString','Zoom','UserData','not_a_setting');

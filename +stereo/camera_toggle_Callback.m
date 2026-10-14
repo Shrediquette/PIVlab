@@ -1,5 +1,5 @@
 function camera_toggle_Callback(~, ~, ~)
-%CAMERA_TOGGLE_CALLBACK Camera switch of the Tools panel (and menu, CTRL+K): camera 1 <-> camera 2.
+%CAMERA_TOGGLE_CALLBACK Camera switch of the Tools panel: camera 1 <-> camera 2.
 if ~isequal(gui.retr('stereomode'), 1)
     return
 end
