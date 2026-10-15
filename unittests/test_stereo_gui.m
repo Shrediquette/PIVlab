@@ -812,6 +812,151 @@ verifyEqual(testCase, get(h.meanw, 'String'), 'N/A');
 verifyEqual(testCase, get(h.stdw, 'String'), 'N/A');
 end
 
+function test_velocity_limits_on_3d_result(testCase)
+% velocity limits (rectangle, freehand) and magnitude limits are drawn on and tested on the 3D result of the
+% raw camera data; the vectors outside are discarded in both cameras, the camera displacements are not tested
+[raw, velrect, outside, inside_but_camera_outside] = limits_case(testCase, 'limits_case', 1);
+h = gui.gethand;
+calu = gui.retr('calu');
+U = raw{3, 1} * calu;
+W = raw{16, 1} * abs(calu);
+umin = velrect(1);
+umax = velrect(1) + velrect(3);
+gui.put('velrect', velrect);
+validate.apply_filter_all_Callback;
+verify_discarded(testCase, 1, outside, inside_but_camera_outside, 'rectangle');
+verifyEmpty(testCase, gui.retr('stereo_limit_discard'), 'discard maps left over');
+% the limits window shows U, V of the raw 3D result, also after the validation (all frames: default)
+verifyEqual(testCase, get(h.scatter_all_frames, 'Value'), 1);
+caller.Tag = 'vel_limit';
+validate.vel_limit_Callback(caller);
+limit_figure = findobj('Tag', 'limit_figure');
+points = findobj(limit_figure, 'Type', 'scatter');
+U_all = cat(3, raw{3, :}) * calu;
+V_all = cat(3, raw{4, :}) * gui.retr('calv');
+ok = isfinite(U_all) & isfinite(V_all);
+verifyEqual(testCase, sortrows([points.XData(:) points.YData(:)]), sortrows(double([U_all(ok) V_all(ok)])), 'AbsTol', 1e-9, 'limits window: raw 3D result');
+verifyTrue(testCase, contains(get(get(findobj(limit_figure, 'Type', 'axes'), 'XLabel'), 'String'), '3D result'));
+delete(limit_figure);
+% freehand shape with the same bounds
+validate.restore_all_Callback;
+gui.put('velrect', []);
+gui.put('velrect_freehand', [umin -1000; umax -1000; umax 1000; umin 1000]);
+validate.apply_filter_all_Callback;
+verify_discarded(testCase, 1, outside, inside_but_camera_outside, 'freehand');
+% magnitude limits: the band is tested on the 3D magnitude
+validate.restore_all_Callback;
+gui.put('velrect_freehand', []);
+M = sqrt(U .^ 2 + (raw{4, 1} * gui.retr('calv')) .^ 2 + W .^ 2);
+low = prctile(M(:), 40);
+high = prctile(M(:), 60);
+set(h.notch_enable, 'Value', 1);
+set(h.notch_L_thresh, 'String', num2str(low, 10));
+set(h.notch_H_thresh, 'String', num2str(high, 10));
+in_band = isfinite(M) & M > low & M < high;
+validate.apply_filter_all_Callback;
+verify_discarded(testCase, 1, in_band, isfinite(M) & ~in_band, 'magnitude limits');
+set(h.notch_enable, 'Value', 0);
+% current frame only
+validate.restore_all_Callback;
+gui.put('velrect', velrect);
+set(h.fileselector, 'Value', 2); gui.fileselector_Callback(h.fileselector, [], []);
+validate.apply_filter_current_Callback;
+U2 = raw{3, 2} * calu;
+verify_discarded(testCase, 2, isfinite(U2) & (U2 < umin | U2 > umax), false(size(U2)), 'current frame');
+R = gui.retr('stereo_result');
+verifyTrue(testCase, size(R, 1) < 7 || isempty(R{7, 1}), 'frame 1 validated by "apply to current frame"');
+% undo
+validate.restore_all_Callback;
+R = gui.retr('stereo_result');
+verifyTrue(testCase, size(R, 1) < 7 || isempty(R{7, 2}), 'validation not undone');
+gui.put('velrect', []);
+end
+
+function test_velocity_limits_parallel(testCase)
+% the parallel path of "Apply to all frames" discards the same vectors as the serial one
+testCase.assumeTrue(license('test', 'Distrib_Computing_Toolbox') == 1 && ~isempty(ver('parallel')), ...
+    'no Parallel Computing Toolbox');
+[~, velrect, outside, inside_but_camera_outside] = limits_case(testCase, 'limits_parallel_case', 2);
+testCase.assumeEqual(gui.retr('parallel'), 1, 'PIVlab did not start a parallel pool');
+gui.put('velrect', velrect);
+validate.apply_filter_all_Callback;
+verify_discarded(testCase, 1, outside, inside_but_camera_outside, 'rectangle, parallel');
+verifyEmpty(testCase, gui.retr('stereo_limit_discard'), 'discard maps left over');
+gui.put('velrect', []);
+end
+
+function [raw, velrect, outside, inside_but_camera_outside] = limits_case(testCase, name, cores)
+% synthetic stereo case, analysed; all filters off except the limits. A rectangle around the middle 80 % of
+% the raw U of image pair 1 (v unlimited): the vectors outside it, and the vectors with U inside but the
+% displacement of a camera outside it (they were wrongly discarded when the limits acted on the cameras).
+c = helper_stereo_synthetic_case(fullfile(testCase.TestData.folder, name), 3, 0);
+if cores > 1
+    try
+        helper_start_pivlab(cores);
+    catch err
+        if contains(err.message, 'parallel pool', 'IgnoreCase', true)
+            testCase.assumeFail(['parallel pool could not be started: ' err.message]);
+        end
+        rethrow(err);
+    end
+else
+    helper_start_pivlab();
+end
+h = gui.gethand;
+calibrate_in_gui(c);
+set(h.pass1_size, 'String', '64'); piv.intarea_Callback(h.pass1_size, [], []);
+set(h.pass1_step, 'String', '32'); piv.step_Callback(h.pass1_step, [], []);
+set(h.pass2_enable, 'Value', 1); set(h.pass2_size, 'String', '32'); piv.pass2_checkbox_Callback(h.pass2_enable, [], []);
+set(h.update_display_checkbox, 'Value', 0);
+piv.AnalyzeAll_Callback;
+set([h.stdev_enable h.loc_median_enable h.notch_enable h.corr_filter_enable h.contrast_filter_enable h.bright_filter_enable], 'Value', 0);
+set(h.interpol_missing, 'Value', 1);
+calu = gui.retr('calu');
+raw = stereo.reconstruct_results(true);
+U = raw{3, 1} * calu;
+cam = camera_displacements_raw(1);
+umin = prctile(U(:), 10);
+umax = prctile(U(:), 90);
+velrect = [umin -1000 umax - umin 2000];
+outside = isfinite(U) & (U < umin | U > umax);
+inside_but_camera_outside = isfinite(U) & ~outside & ((cam{1} < umin | cam{1} > umax) | (cam{2} < umin | cam{2} > umax));
+verifyTrue(testCase, any(inside_but_camera_outside(:)), 'test case: no vector whose camera displacement is outside but U inside');
+end
+
+function verify_discarded(testCase, frame, discarded, kept, name)
+% in both cameras: the vectors of the map "discarded" are replaced (type 2), the vectors of "kept" are valid
+state = gui.retr('stereo_cam_state');
+active = gui.retr('stereo_active_camera');
+for k = 1:2
+    if k == active
+        R = gui.retr('stereo_result');
+    else
+        R = state{k}.stereo_result;
+    end
+    typevector = R{9, frame};
+    verifyTrue(testCase, all(typevector(discarded) == 2), sprintf('%s: a vector outside the limits is not discarded in camera %d', name, k));
+    verifyTrue(testCase, all(typevector(kept) == 1), sprintf('%s: a vector inside the limits is discarded in camera %d', name, k));
+end
+rl = gui.retr('resultslist');
+verifyTrue(testCase, all(rl{9, frame}(discarded) == 2), [name ': 3D result']);
+end
+
+function cam = camera_displacements_raw(frame)
+% raw 2D displacement u of both cameras (px/frame, times calu like the limits)
+state = gui.retr('stereo_cam_state');
+active = gui.retr('stereo_active_camera');
+cam = cell(1, 2);
+for k = 1:2
+    if k == active
+        R = gui.retr('stereo_result');
+    else
+        R = state{k}.stereo_result;
+    end
+    cam{k} = R{3, frame} * gui.retr('calu');
+end
+end
+
 function expect_stats(testCase, h, component, values)
 % the four Statistics panel values of one component (px/frame)
 values = values(:);

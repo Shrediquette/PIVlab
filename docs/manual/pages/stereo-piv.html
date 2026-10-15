@@ -231,6 +231,14 @@
     <ul>
       <li><a href="validation-velocity.html">Vector validation</a> is applied to the 2D results of
       both cameras with the same settings; U, V and W are then computed again.</li>
+      <li><a href="validation-velocity.html#limits">Velocity limits</a> and the velocity magnitude
+      limits are the exception: they work on the <strong>3D result</strong>. The scatter plot of the
+      limits shows U and V computed from the raw data of both cameras (also after a validation, like
+      the raw vectors in 2D), and the magnitude limits use the 3D magnitude sqrt(U² + V² + W²). A
+      vector outside the limits is removed in both cameras before the other filters run; then the
+      gaps are filled in each camera and U, V and W are computed again. The limits are not applied
+      to the 2D displacements of the cameras: a camera that looks at the light sheet at an angle
+      also sees part of W, so its displacement can lie outside limits that U and V are inside.</li>
       <li>The result is shown as in 2D: U and V as vectors on the image. To see W, select
       <span class="ui">w component</span> in <a href="derive-spatial.html">Derive parameters</a>
       (see <a href="#w">section 7</a>).</li>

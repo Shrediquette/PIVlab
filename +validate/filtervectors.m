@@ -68,6 +68,12 @@ if size(resultslist,2)>=frame
 			v2=resultslist{14,frame};
 		end
 
+		% stereo-PIV: the velocity / magnitude limits were tested on the 3D result (stereo.limit_discard)
+		[u,v,u2,v2,apply_limits]=stereo.camera_limits(frame,u,v,u2,v2);
+		if ~apply_limits
+			velrect=[]; roi_freehand=[]; do_notch_filter=0;
+		end
+
 		[u,v,typevector]=validate.filtervectors_all_parallel(x,y,u,v,typevector_original,calu,calv,velrect, ...
 			do_stdev_check,stdthresh,do_local_median,neigh_thresh,do_contrast_filter,do_bright_filter, ...
 			contrast_filter_thresh,bright_filter_thresh,get(handles.interpol_missing, 'value'),A,B,rawimageA,rawimageB, ...

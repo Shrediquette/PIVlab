@@ -28,6 +28,16 @@ end
 % mean frames are made from the result; it is rebuilt here from the 2D results of both cameras
 stereo.remove_mean_frames;
 active = gui.retr('stereo_active_camera');
+% vector validation: the velocity and magnitude limits are drawn on the 3D result, so they are tested on it;
+% the vectors outside them are discarded in both cameras (stereo.camera_limits)
+discard = [];
+if strcmp(action, 'filter_all')
+    discard = stereo.limit_discard;
+elseif strcmp(action, 'filter_current')
+    handles = gui.gethand;
+    discard = stereo.limit_discard(floor(get(handles.fileselector, 'Value')));
+end
+gui.put('stereo_limit_discard', discard);
 gui.put('stereo_camera_loop', 1);
 cancelled = false;
 try
@@ -54,9 +64,11 @@ try
     end
 catch err
     gui.put('stereo_camera_loop', 0);
+    gui.put('stereo_limit_discard', []);
     rethrow(err)
 end
 gui.put('stereo_camera_loop', 0);
+gui.put('stereo_limit_discard', []);
 stereo.switch_camera(active);
 if cancelled
     gui.put('resultslist', []);

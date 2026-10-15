@@ -102,6 +102,15 @@ if ~isempty(resultslist)
 			roi_freehand=[];
 		end
 
+		% stereo-PIV: the velocity / magnitude limits were tested on the 3D result (stereo.limit_discard)
+		apply_limits=true;
+		for i=1:size(u,2)
+			[u{i},v{i},u2_data{i},v2_data{i},apply_limits]=stereo.camera_limits(i,u{i},v{i},u2_data{i},v2_data{i});
+		end
+		if ~apply_limits
+			velrect=[]; roi_freehand=[]; do_notch_filter=0;
+		end
+
 		hbar = gui.pivprogress(size(slicedfilepath1,2),handles.apply_filter_all);
 		if size(u,2)<num_frames_to_process-1 %If not all frames have been analyzed. Parfor loop crashes otherwise.
 			u(num_frames_to_process-1)={[]};

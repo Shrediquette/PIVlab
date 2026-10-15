@@ -3,6 +3,27 @@ function vel_limit_Callback(caller, ~, ~)
 resultslist=gui.retr('resultslist');
 handles=gui.gethand;
 currentframe=2*floor(get(handles.fileselector, 'value'))-1;
+%stereo-PIV: the limits are drawn on U, V of the 3D result of the raw camera data (also after a
+%validation, like the raw vectors in 2D) and tested on it (stereo.limit_discard)
+stereo_3d=isequal(gui.retr('stereomode'),1) && ~isempty(gui.retr('stereo_calib'));
+if stereo_3d
+	if get(handles.scatter_all_frames,'value')==1
+		resultslist=stereo.reconstruct_results(true);
+	else
+		resultslist=stereo.reconstruct_results(true,(currentframe+1)/2);
+	end
+	u_name='u velocity (3D result)';
+	v_name='v velocity (3D result)';
+	if size(resultslist,2)<(currentframe+1)/2 || isempty(resultslist{1,(currentframe+1)/2})
+		gui.custom_msgbox('msg',getappdata(0,'hgui'),'Velocity limits',...
+			['The velocity limits are drawn on the 3D result of the camera data. ' ...
+			'This frame has no camera data (for example a mean frame).'],'modal',{'OK'},'OK');
+		return
+	end
+else
+	u_name='u velocity';
+	v_name='v velocity';
+end
 if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 	gui.toolsavailable(0)
 	x=resultslist{1,(currentframe+1)/2};
@@ -84,16 +105,16 @@ if size(resultslist,2)>=(currentframe+1)/2 %data for current frame exists
 		%end
 
 		if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
-			xlabel(limit_ax, 'u velocity [px/frame]', 'fontsize', 12)
-			ylabel(limit_ax, 'v velocity [px/frame]', 'fontsize', 12)
+			xlabel(limit_ax, [u_name ' [px/frame]'], 'fontsize', 12)
+			ylabel(limit_ax, [v_name ' [px/frame]'], 'fontsize', 12)
 		else %calibrated
 			displacement_only=gui.retr('displacement_only');
 			if ~isempty(displacement_only) && displacement_only == 1
-				xlabel(limit_ax, 'u velocity [m/frame]', 'fontsize', 12)
-				ylabel(limit_ax, 'v velocity [m/frame]', 'fontsize', 12)
+				xlabel(limit_ax, [u_name ' [m/frame]'], 'fontsize', 12)
+				ylabel(limit_ax, [v_name ' [m/frame]'], 'fontsize', 12)
 			else
-				xlabel(limit_ax, 'u velocity [m/s]', 'fontsize', 12)
-				ylabel(limit_ax, 'v velocity [m/s]', 'fontsize', 12)
+				xlabel(limit_ax, [u_name ' [m/s]'], 'fontsize', 12)
+				ylabel(limit_ax, [v_name ' [m/s]'], 'fontsize', 12)
 			end
 		end
 
