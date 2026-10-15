@@ -186,8 +186,6 @@ if isempty(fh)
     set(pivlab_axis,'ActivePositionProperty','outerposition');%,'Box','off','DataAspectRatioMode','auto','Layer','bottom','Units','normalized');
     set(MainWindow, 'Name',['PIVlab ' gui.retr('PIVver')])% ' by William Thielicke and Eize J. Stamhuis'])
     gui.put('pivlab_axis',pivlab_axis);
-    %%
-    misc.Lena
     %% Check Matlab version
     try
         if verLessThan('matlab', '9.7') == 0
@@ -481,6 +479,7 @@ if isempty(fh)
     %disp('vis')
     pause(0.5);	set(MainWindow, 'Visible','on');	pause(0.25);	drawnow;
     gui.switchui('multip01');
+    misc.Lena %after 'Visible','on': uiconfirm / uialert do not accept an invisible figure
     disp('-> GUI initialization finished.')
     % scripts that drive the GUI (tests, parity check, rig skill) set this to 1: then PIVlab asks no
     % questions (quit, image sequencing, vector display density)
