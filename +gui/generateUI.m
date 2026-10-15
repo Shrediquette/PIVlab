@@ -1493,41 +1493,23 @@ handles.multip14 = uipanel(MainWindow, 'Units','characters', 'Position', [0+marg
 parentitem=get(handles.multip14, 'Position');
 item=[0 0 0 0];
 
-item=[0 item(2)+item(4)+margin/4 parentitem(3)/3*1 1];
-handles.text59 = uicontrol(handles.multip14,'Style','text','String','mean u:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
-
-item=[parentitem(3)/3*1 item(2) parentitem(3)/3*2 1];
-handles.meanu = uicontrol(handles.multip14,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','meanu');
-
-item=[0 item(2)+item(4) parentitem(3)/3*1 1];
-handles.text60 = uicontrol(handles.multip14,'Style','text','String','mean v:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
-
-item=[parentitem(3)/3*1 item(2) parentitem(3)/3*2 1];
-handles.meanv = uicontrol(handles.multip14,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','meanv');
-
-item=[0 item(2)+item(4) parentitem(3)/3*1 1];
-handles.text59a = uicontrol(handles.multip14,'Style','text','String','max u:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
-
-item=[parentitem(3)/3*1 item(2) parentitem(3)/3*2 1];
-handles.maxu = uicontrol(handles.multip14,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','maxu');
-
-item=[0 item(2)+item(4) parentitem(3)/3*1 1];
-handles.text60a = uicontrol(handles.multip14,'Style','text','String','min u:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
-
-item=[parentitem(3)/3*1 item(2) parentitem(3)/3*2 1];
-handles.minu = uicontrol(handles.multip14,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','minu');
-
-item=[0 item(2)+item(4) parentitem(3)/3*1 1];
-handles.text59b = uicontrol(handles.multip14,'Style','text','String','max v:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
-
-item=[parentitem(3)/3*1 item(2) parentitem(3)/3*2 1];
-handles.maxv = uicontrol(handles.multip14,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','maxv');
-
-item=[0 item(2)+item(4) parentitem(3)/3*1 1];
-handles.text60b = uicontrol(handles.multip14,'Style','text','String','min v:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
-
-item=[parentitem(3)/3*1 item(2) parentitem(3)/3*2 1];
-handles.minv = uicontrol(handles.multip14,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','minv');
+%values of the current frame in groups of three: mean u, v, w / min u, v, w / max u, v, w / std u, v, w
+%(plot.update_Stats; the w lines are only filled in stereo-PIV mode)
+stat_names={'mean','min','max','std'};
+stat_components={'u','v','w'};
+for s_nr=1:numel(stat_names)
+	for c_nr=1:numel(stat_components)
+		stat_tag=[stat_names{s_nr} stat_components{c_nr}];
+		if c_nr==1
+			item=[0 item(2)+item(4)+margin/4 parentitem(3)/3*1 1]; %small gap before each group
+		else
+			item=[0 item(2)+item(4) parentitem(3)/3*1 1];
+		end
+		handles.([stat_tag '_label']) = uicontrol(handles.multip14,'Style','text','String',[stat_names{s_nr} ' ' stat_components{c_nr} ':'],'Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+		item=[parentitem(3)/3*1 item(2) parentitem(3)/3*2 1];
+		handles.(stat_tag) = uicontrol(handles.multip14,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag',stat_tag);
+	end
+end
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1];
 handles.text67 = uicontrol(handles.multip14,'Style','text','String','Histogram plot','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
@@ -1545,7 +1527,7 @@ item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.histdraw = uicontrol(handles.multip14,'Style','pushbutton','String','Histogram','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.histdraw_Callback,'TooltipString','Draw a histogram');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
-handles.scatterplotter = uicontrol(handles.multip14,'Style','pushbutton','String','Scatter plot u & v','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.scatterplotter_Callback,'TooltipString','Scatter plot u vs. v velocities');
+handles.scatterplotter = uicontrol(handles.multip14,'Style','pushbutton','String','Scatter plot u & v','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.scatterplotter_Callback,'TooltipString','Scatter plot u vs. v velocities','Tag','scatterplotter');
 
 %% Multip15
 handles.multip15 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Particle image generation (CTRL+G)', 'Tag','multip15','fontweight','bold');

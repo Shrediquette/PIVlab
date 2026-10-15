@@ -261,11 +261,22 @@
           light-sheet position and the pixel size of the common grid.</li>
         </ul>
       </li>
+      <li><a href="statistics.html">Statistics</a>: the panel shows mean, min, max and standard
+      deviation of w next to u and v. The histogram list has one more item,
+      <span class="ui">w velocity</span>; <span class="ui">velocity magnitude</span> is the 3D
+      magnitude. <span class="ui">sub-pixels</span> uses the 2D result of the camera that is shown
+      (switch with the <span class="ui">CAM 1/2</span> button): peak locking happens in the 2D
+      analysis of each camera. Mean frames have no 2D result of the cameras.
+      <span class="ui">Scatter plot u, v, w</span> draws a 3D scatter plot that you can rotate.</li>
+      <li>Clicking on a vector shows its w below u and v (when vectors are displayed).</li>
+      <li><a href="extract-polyline.html">Poly-line</a> and <a href="extract-area.html">area</a>
+      extraction: the lists have one more item, <span class="ui">w component</span>.
+      <span class="ui">Magnitude</span> is the 3D magnitude; tangent and normal velocity stay in the
+      plane of the light sheet (w is perpendicular to it).</li>
     </ul>
 
     <p><strong>Not yet available in stereo mode:</strong></p>
     <ul>
-      <li>W in the statistics panel and in the poly-line / area extraction.</li>
       <li>Manually deleted vectors are not removed from the 2D results of the cameras.</li>
       <li>The <a href="command-line.html">command-line API</a> can not run stereo sessions yet
       (<code>pivlab.loadSession</code> warns).</li>

@@ -489,20 +489,7 @@ handles = gui.gethand;
 frame = floor(get(handles.fileselector, 'Value'));
 x = resultslist{1, frame};
 y = resultslist{2, frame};
-% the axes CurrentPoint is read-only, it follows the figure CurrentPoint: find the figure point of the
-% vector from two probe points (the mapping is linear in x and y)
-fig = ancestor(target_axis, 'figure');
-probe = [100 100; 300 300];
-axes_point = zeros(2, 2);
-for k = 1:2
-    set(fig, 'CurrentPoint', probe(k, :));
-    p = get(target_axis, 'CurrentPoint');
-    axes_point(k, :) = p(1, 1:2);
-end
-scale = (probe(2, :) - probe(1, :)) ./ (axes_point(2, :) - axes_point(1, :));
-set(fig, 'CurrentPoint', probe(1, :) + ([x(row, col) y(row, col)] - axes_point(1, :)) .* scale);
-click.Button = 1;
-gui.veclick([], click);
+click_vector(x(row, col), y(row, col));
 label = findobj(target_axis, 'Tag', 'infopoint', 'Type', 'text');
 verifyNumElements(testCase, label, 1, 'no label next to the clicked vector');
 marker = findobj(target_axis, 'Tag', 'infopoint', 'Type', 'line');
@@ -676,9 +663,203 @@ gui.sliderdisp(gui.retr('pivlab_axis'));
 verifyNumElements(testCase, findobj(gui.retr('pivlab_axis'), 'Type', 'image'), 1, 'W colour map under the vectors');
 end
 
+function test_w_in_statistics_and_extraction(testCase)
+% W in the Statistics panel (values, histogram, 3D scatter plot), in the info when clicking a vector and
+% in the poly-line / area extraction; back to 2D: the lists and the panel as before
+folder = testCase.TestData.folder;
+c = helper_stereo_synthetic_case(fullfile(folder, 'statistics_case'), 3, 0);
+helper_start_pivlab();
+h = gui.gethand;
+calibrate_in_gui(c);
+set(h.pass1_size, 'String', '64'); piv.intarea_Callback(h.pass1_size, [], []);
+set(h.pass1_step, 'String', '32'); piv.step_Callback(h.pass1_step, [], []);
+set(h.pass2_enable, 'Value', 1); set(h.pass2_size, 'String', '32'); piv.pass2_checkbox_Callback(h.pass2_enable, [], []);
+set(h.update_display_checkbox, 'Value', 0);
+piv.AnalyzeAll_Callback;
+validate.apply_filter_all_Callback;
+set(h.fileselector, 'Value', 1); gui.fileselector_Callback(h.fileselector, [], []); % image pair 1
+rl = gui.retr('resultslist');
+calu = gui.retr('calu');
+calv = gui.retr('calv');
+verifyTrue(testCase, (calu == 1 || calu == -1) && gui.retr('calxy') == 1, 'expected px/frame');
+U = rl{7, 1} * calu;
+V = rl{8, 1} * calv;
+W = rl{16, 1} * abs(calu);
+verifyTrue(testCase, any(isfinite(W(:))), 'no W');
+
+% statistics values: mean, min, max, std of u, v, w
+plot.statistics_Callback;
+expect_stats(testCase, h, 'u', U);
+expect_stats(testCase, h, 'v', V);
+expect_stats(testCase, h, 'w', W);
+% smoothed data: the w values follow the smoothed W (row 17)
+set(h.smooth_mode, 'Value', 2);
+set(h.smooth_param, 'String', '0.5');
+plot.derivative_calc(1, 4, 0);
+plot.statistics_Callback;
+rl_smoothed = gui.retr('resultslist');
+expect_stats(testCase, h, 'w', rl_smoothed{17, 1} * abs(calu));
+set(h.smooth_mode, 'Value', 1);
+plot.derivative_calc(1, 4, 0);
+rl = gui.retr('resultslist');
+verifyTrue(testCase, size(rl, 1) < 17 || isempty(rl{17, 1}), 'smoothed W not removed');
+plot.statistics_Callback;
+expect_stats(testCase, h, 'w', W);
+
+% histogram list: w velocity as item 5; w, 3D magnitude
+verifyEqual(testCase, get(h.hist_select, 'String'), {'u velocity'; 'v velocity'; 'velocity magnitude'; 'sub-pixels'; 'w velocity'});
+nrofbins = str2double(get(h.nrofbins, 'String'));
+set(h.hist_select, 'Value', 5);
+counts = histogram_counts();
+verifyEqual(testCase, counts, hist(W(:), nrofbins), 'histogram of w'); %#ok<HIST>
+set(h.hist_select, 'Value', 3);
+[counts, label] = histogram_counts();
+verifyEqual(testCase, counts, hist(sqrt(U(:) .^ 2 + V(:) .^ 2 + W(:) .^ 2), nrofbins), 'histogram of the 3D magnitude'); %#ok<HIST>
+verifyTrue(testCase, contains(label, '(3D)'), label);
+% sub-pixels: the 2D result of the camera shown
+set(h.hist_select, 'Value', 4);
+for camera = [1 2]
+    stereo.switch_camera(camera);
+    R = gui.retr('stereo_result');
+    cu = R{7, 1}; cv = R{8, 1};
+    cu(R{9, 1} == 0) = NaN; cv(R{9, 1} == 0) = NaN;
+    [counts, label, name] = histogram_counts();
+    verifyEqual(testCase, counts, hist(mod(abs([cu(:); cv(:)]), 1), nrofbins), sprintf('sub-pixels of camera %d', camera)); %#ok<HIST>
+    verifyEqual(testCase, label, 'sub-pixel [px]');
+    verifyTrue(testCase, contains(name, sprintf('camera %d', camera)), name);
+end
+% a mean frame has no 2D result of the cameras: message, no histogram
+set(h.selectedFramesMean, 'String', '1:3');
+set(h.append_replace, 'Value', 1);
+plot.temporal_operation_Callback([], [], 1);
+set(h.fileselector, 'Value', 4); gui.fileselector_Callback(h.fileselector, [], []);
+close(findall(0, 'Type', 'figure', 'Tag', 'derivplotwindow'));
+plot.histdraw_Callback;
+verifyEmpty(testCase, findall(0, 'Type', 'figure', 'Tag', 'derivplotwindow'), 'sub-pixel histogram of a mean frame');
+remove_mean_frame();
+set(h.fileselector, 'Value', 1); gui.fileselector_Callback(h.fileselector, [], []);
+
+% 3D scatter plot of u, v, w
+verifyEqual(testCase, get(h.scatterplotter, 'String'), 'Scatter plot u, v, w');
+plot.scatterplotter_Callback;
+fig = findall(0, 'Type', 'figure', 'Tag', 'derivplotwindow');
+verifyNumElements(testCase, fig, 1);
+points = findobj(fig, 'Type', 'scatter');
+verifyEqual(testCase, [points.XData(:) points.YData(:) points.ZData(:)], [U(:) V(:) W(:)], 'AbsTol', 1e-12, '3D scatter plot');
+close(fig);
+
+% click on a vector (vectors shown): w in the info line
+gui.put('displaywhat', 1);
+gui.sliderdisp(gui.retr('pivlab_axis'));
+x = double(rl{1, 1}); % the coordinates of a drawn line / area are double
+y = double(rl{2, 1});
+click_vector(x(3, 4), y(3, 4));
+verifyEqual(testCase, get(h.scalar_cp, 'String'), ['w:' num2str(round(W(3, 4) * 100000) / 100000) ' px/fr']);
+
+% poly-line: w component as item 14
+extract.poly_extract_Callback([], [], []);
+items = get(h.extraction_choice, 'String');
+verifyEqual(testCase, numel(items), 14);
+verifyEqual(testCase, items{14}, 'w component in px/frame');
+xs = [x(2, 2); x(2, end - 1); x(end - 1, end - 1)];
+ys = [y(2, 2); y(2, end - 1); y(end - 1, end - 1)];
+gui.put('xposition', xs); gui.put('yposition', ys); gui.put('extract_type', 'extract_poly');
+set(h.extraction_choice, 'Value', 14);
+extract.plot_data_Callback(h.plot_data, [], []);
+fig = findall(0, 'Type', 'figure', 'Tag', 'derivplotwindow');
+ax = findobj(fig, 'Type', 'axes');
+label = ax.XLabel.String;
+verifyTrue(testCase, contains(label(end, :), 'Integral of w component = '), 'name of the quantity in the integral');
+close(fig);
+line_length = sqrt(diff(xs) .^ 2 + diff(ys) .^ 2);
+nrpoints = round(sum(line_length) / ceil(x(1, 2) - x(1, 1)) * 3);
+[~, ~, expected] = improfile(plot.rescale_maps_nan(W, 0, 1), xs, ys, nrpoints, 'bicubic');
+verifyEqual(testCase, gui.retr('c'), expected, 'AbsTol', 1e-12, 'w along the poly-line');
+% circle series: tangent velocity (item 12) is chosen and stays chosen
+set(h.draw_what, 'Value', 3); extract.draw_what_Callback(h.draw_what);
+verifyEqual(testCase, get(h.extraction_choice, 'Value'), 12);
+extract.extraction_choice_Callback(h.extraction_choice);
+verifyEqual(testCase, get(h.draw_what, 'Value'), 3, 'tangent velocity switched the circle series off');
+set(h.draw_what, 'Value', 1); extract.draw_what_Callback(h.draw_what);
+
+% area: w component as item 12
+extract.area_panel_activation_Callback([], [], []);
+items = get(h.extraction_choice_area, 'String');
+verifyEqual(testCase, numel(items), 12);
+verifyEqual(testCase, items{12}, 'w component in px/frame');
+xs = [x(2, 2); x(2, end - 2); x(end - 2, end - 2); x(end - 2, 2)];
+ys = [y(2, 2); y(2, end - 2); y(end - 2, end - 2); y(end - 2, 2)];
+gui.put('xposition', xs); gui.put('yposition', ys); gui.put('extract_type', 'extract_poly_area');
+set(h.extraction_choice_area, 'Value', 12);
+[data, header] = extract.plot_data_area(1, 0);
+map = plot.rescale_maps_nan(W, 0, 1);
+BW = extract.convert_roi_to_binary(xs, ys, 'extract_poly_area', size(map));
+verifyEqual(testCase, data{2}, extract.get_mean_of_selection(BW, map, 0), 'AbsTol', 1e-12, 'mean of w in the area');
+verifyEqual(testCase, header{2}, 'Mean (px/frame)');
+inside = W(inpolygon(x, y, xs, ys) & isfinite(W)); % the vectors in the area
+verifyLessThan(testCase, abs(data{2} - mean(inside)), 0.2 * max(abs(W(:))), 'mean of w far from the vectors in the area');
+
+% back to 2D (area panel shown): lists, histogram, scatter button and the w lines as in 2D
+stereo.leave_stereo_mode;
+verifyEqual(testCase, numel(get(h.extraction_choice_area, 'String')), 11);
+verifyEqual(testCase, get(h.extraction_choice_area, 'Value'), 1);
+verifyEqual(testCase, numel(get(h.extraction_choice, 'String')), 13);
+verifyEqual(testCase, get(h.hist_select, 'String'), {'u velocity'; 'v velocity'; 'velocity magnitude'; 'sub-pixels'});
+verifyEqual(testCase, get(h.scatterplotter, 'String'), 'Scatter plot u & v');
+plot.statistics_Callback;
+expect_stats(testCase, h, 'u', U);
+verifyEqual(testCase, get(h.meanw, 'String'), 'N/A');
+verifyEqual(testCase, get(h.stdw, 'String'), 'N/A');
+end
+
+function expect_stats(testCase, h, component, values)
+% the four Statistics panel values of one component (px/frame)
+values = values(:);
+verifyEqual(testCase, get(h.(['mean' component]), 'String'), [num2str(mean(values, 'omitnan')) ' px/frame'], ['mean ' component]);
+verifyEqual(testCase, get(h.(['min' component]), 'String'), [num2str(min(values, [], 'omitnan')) ' px/frame'], ['min ' component]);
+verifyEqual(testCase, get(h.(['max' component]), 'String'), [num2str(max(values, [], 'omitnan')) ' px/frame'], ['max ' component]);
+verifyEqual(testCase, get(h.(['std' component]), 'String'), [num2str(std(values, 'omitnan')) ' px/frame'], ['std ' component]);
+end
+
+function [counts, label, name] = histogram_counts()
+% draws the histogram of the Statistics panel, returns the bar heights, x label and window name, closes it
+close(findall(0, 'Type', 'figure', 'Tag', 'derivplotwindow'));
+plot.histdraw_Callback;
+fig = findall(0, 'Type', 'figure', 'Tag', 'derivplotwindow');
+bars = findobj(fig, 'Type', 'bar');
+counts = bars.YData;
+ax = findobj(fig, 'Type', 'axes');
+label = ax.XLabel.String;
+name = fig.Name;
+close(fig);
+end
+
+function remove_mean_frame()
+% removes the mean frame shown again (Plot -> temporal operations, "remove")
+plot.remove_temporal_frame_Callback;
+end
+
 % -------------------------------------------------------------------------
 % Helpers
 % -------------------------------------------------------------------------
+
+function click_vector(x, y)
+% clicks on the vector at (x, y) of the PIVlab axes (gui.veclick). The axes CurrentPoint is read-only, it
+% follows the figure CurrentPoint: the figure point is found from two probe points (linear in x and y).
+target_axis = gui.retr('pivlab_axis');
+fig = ancestor(target_axis, 'figure');
+probe = [100 100; 300 300];
+axes_point = zeros(2, 2);
+for k = 1:2
+    set(fig, 'CurrentPoint', probe(k, :));
+    p = get(target_axis, 'CurrentPoint');
+    axes_point(k, :) = p(1, 1:2);
+end
+scale = (probe(2, :) - probe(1, :)) ./ (axes_point(2, :) - axes_point(1, :));
+set(fig, 'CurrentPoint', probe(1, :) + ([x y] - axes_point(1, :)) .* scale);
+click.Button = 1;
+gui.veclick([], click);
+end
 
 function v = read_vtk_vectors(file, n)
 % the 3 x n velocity vectors of a binary VTK file of PIVlab

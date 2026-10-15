@@ -3,19 +3,32 @@ function [returned_data, returned_header]=plot_data_area(currentframe,refreshdis
 handles=gui.gethand;
 resultslist=gui.retr('resultslist');
 extractwhat=get(handles.extraction_choice_area,'Value');
-if extractwhat==9 || extractwhat==10 || extractwhat==11
+if extractwhat==9 || extractwhat==10 || extractwhat==11 || extractwhat==12
 	% option 9 = vector angle  → deriv 11 (extractwhat+2), derived{10}
 	% option 10 = correlation  → deriv 12 (extractwhat+2), derived{11}
 	% option 11 = uncertainty  → deriv 13 (extractwhat+2), derived{12}
+	% option 12 = w component (stereo-PIV) → deriv 14 (extractwhat+2), derived{13}
 	plot.derivative_calc(currentframe,extractwhat+2,0);
 else
 	plot.derivative_calc(currentframe,extractwhat+1,0);
 end
 derived=gui.retr('derived');
-if extractwhat==9 || extractwhat==10 || extractwhat==11
-	maptoget=derived{extractwhat+1,currentframe};
+maptoget=[];
+if extractwhat==9 || extractwhat==10 || extractwhat==11 || extractwhat==12
+	if size(derived,1)>=extractwhat+1 && size(derived,2)>=currentframe
+		maptoget=derived{extractwhat+1,currentframe};
+	end
 else
 	maptoget=derived{extractwhat,currentframe};
+end
+
+if extractwhat==12 && isempty(maptoget) %w component, not in stereo mode (any more)
+	gui.custom_msgbox('msg',getappdata(0,'hgui'),'No w component',...
+		'The w component exists only for stereo-PIV results.',...
+		'modal',{'OK'},'OK');
+	returned_data=[];
+	returned_header=[];
+	return
 end
 
 if extractwhat==11 && isempty(maptoget) %uncertainty has not been calculated

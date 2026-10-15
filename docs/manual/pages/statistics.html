@@ -16,14 +16,16 @@
 
     <figure class="inline-panel">
       <img src="../assets/img/statistics/panel.png" alt="PIVlab Statistics panel with real velocity readouts">
-      <figcaption>The <strong>Statistics</strong> panel, showing real mean/min/max readouts.</figcaption>
+      <figcaption>The <strong>Statistics</strong> panel with a stereo-PIV result (mean of 70
+      image pairs of a jet), so the w lines are filled too.</figcaption>
     </figure>
 
     <h2 id="summary">At-a-glance values</h2>
-    <p>The panel displays <span class="ui">mean u</span>, <span class="ui">mean v</span>,
-    <span class="ui">max u</span>, <span class="ui">min u</span>, <span class="ui">max
-    v</span> and <span class="ui">min v</span> for the current frame, updating automatically as
-    you move between frames.</p>
+    <p>The panel displays the <span class="ui">mean</span>, <span class="ui">min</span>,
+    <span class="ui">max</span> and <span class="ui">std</span> (standard deviation) of u, v and w
+    for the current frame, in groups of three, updating automatically as you move between frames.
+    The w lines are only filled for <a href="stereo-piv.html#w">stereo-PIV</a> results (2D PIV:
+    N/A).</p>
 
     <h2 id="histogram">Histogram</h2>
     <p>Choose what to plot from <span class="ui">Histogram plot</span>:
@@ -42,6 +44,13 @@
     <p>Click <span class="ui">Scatter plot u &amp; v</span> to plot every vector's u component
     against its v component — the same kind of plot used to set
     <a href="validation-velocity.html">velocity limits</a>, but here purely for inspection.</p>
+
+    <h2 id="stereo">Stereo-PIV</h2>
+    <p>With <a href="stereo-piv.html#w">stereo-PIV</a> results the histogram list has one more item,
+    <span class="ui">w velocity</span>, and <span class="ui">velocity magnitude</span> is the 3D
+    magnitude. <span class="ui">sub-pixels</span> uses the 2D result of the camera that is shown,
+    because peak locking happens in the 2D analysis of each camera. The scatter button becomes
+    <span class="ui">Scatter plot u, v, w</span> and draws a 3D scatter plot that you can rotate.</p>
   </article>
 
   <script src="../assets/js/nav.js"></script>

@@ -1,17 +1,7 @@
 function area_panel_activation_Callback(~, ~, ~)
 handles=gui.gethand;
 gui.switchui('multip17');
-if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
-	set(handles.extraction_choice_area,'string', {'Vorticity in 1/frame';'Magnitude in px/frame';'u component in px/frame';'v component in px/frame';'Divergence in 1/frame';'Q criterion in 1/frame^2';'Shear rate in 1/frame';'Strain rate in 1/frame';'Vector direction in degrees';'Correlation coefficient';'Uncertainty in px/frame'});
-else %calibrated
-	displacement_only=gui.retr('displacement_only');
-	if ~isempty(displacement_only) && displacement_only == 1
-		set(handles.extraction_choice_area,'string', {'Vorticity in 1/frame';'Magnitude in m/frame';'u component in m/frame';'v component in m/frame';'Divergence in 1/frame';'Q criterion in 1/frame^2';'Shear rate in 1/frame';'Strain rate in 1/frame';'Vector direction in degrees';'Correlation coefficient';'Uncertainty in m/frame'});
-	else
-		set(handles.extraction_choice_area,'string', {'Vorticity in 1/s';'Magnitude in m/s';'u component in m/s';'v component in m/s';'Divergence in 1/s';'Q criterion in 1/s^2';'Shear rate in 1/s';'Strain rate in 1/s';'Vector direction in degrees';'Correlation coefficient';'Uncertainty in m/s'});
-	end
-end
-gui.apply_pending_popup(handles.extraction_choice_area) %item wanted by a loaded session
+extract.update_choice_lists(handles) %units of the calibration; stereo-PIV: w component
 %draw extraction polygon when frame was changed.
 pivlab_axis=gui.retr('pivlab_axis');
 delete(findobj(gui.retr('pivlab_axis'),'tag', 'extractpoint'));

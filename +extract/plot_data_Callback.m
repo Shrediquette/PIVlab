@@ -83,6 +83,22 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 					[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
 				end
 				distance=linspace(0,length,size(c,1))';
+			case 14 %stereo-PIV: w component → deriv 14, derived{13}
+				plot.derivative_calc(currentframe,14,0);
+				derived=gui.retr('derived');
+				maptoget=[];
+				if size(derived,1)>=13 && size(derived,2)>=currentframe
+					maptoget=derived{13,currentframe};
+				end
+				if isempty(maptoget) %not in stereo mode (any more)
+					gui.custom_msgbox('msg',getappdata(0,'hgui'),'No w component',...
+						'The w component exists only for stereo-PIV results.',...
+						'modal',{'OK'},'OK');
+					return
+				end
+				maptoget=plot.rescale_maps_nan(maptoget,0,currentframe);
+				[cx, cy, c] = improfile(maptoget,extraction_coordinates_x,extraction_coordinates_y,round(nrpoints),'bicubic');
+				distance=linspace(0,length,size(c,1))';
 			case {12,13} %tangent, normal
 				if ~strcmp(extract_type,'extract_circle_series')
 					if size(resultslist,1)>6 %filtered exists
@@ -313,7 +329,12 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			distance2=distance(~isnan(c));
 			c2=c(~isnan(c));
 			integral=trapz(distance2*calxy,c2);
-			currentstripped=current(1:strfind(current,'[')-1);
+			name_end=strfind(current,' in '); %the item text is '<name> in <unit>'
+			if isempty(name_end)
+				currentstripped=current; %e.g. 'Correlation coefficient' (no unit)
+			else
+				currentstripped=current(1:name_end(end)-1);
+			end
 
 			unitpar=get(handles.extraction_choice,'string');
 			unitpar=unitpar{get(handles.extraction_choice,'value')};

@@ -1,34 +1,40 @@
-function update_Stats(x,y,u,v)
+function update_Stats(x,y,u,v,w)
+%UPDATE_STATS Mean, min, max and standard deviation of u, v (and w) of the current frame (Statistics panel).
+%   plot.update_Stats(x,y,u,v)     2D PIV: the w lines show N/A
+%   plot.update_Stats(x,y,u,v,w)   stereo-PIV: w = out-of-plane component [px/frame] (stereo.w_of_frame)
 handles=gui.gethand;
+if nargin<5
+	w=[];
+end
 calu=gui.retr('calu');calv=gui.retr('calv');
-calxy=gui.retr('calxy');
-x=reshape(x,size(x,1)*size(x,2),1);
-y=reshape(y,size(y,1)*size(y,2),1);
-u=reshape(u,size(u,1)*size(u,2),1);
-v=reshape(v,size(v,1)*size(v,2),1);
-if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
-	set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' px/frame'])
-	set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' px/frame'])
-	set (handles.maxu,'string', [num2str(max(u*calu,[],'omitnan')) ' px/frame'])
-	set (handles.minu,'string', [num2str(min(u*calu,[],'omitnan')) ' px/frame'])
-	set (handles.maxv,'string', [num2str(max(v*calv,[],'omitnan')) ' px/frame'])
-	set (handles.minv,'string', [num2str(min(v*calv,[],'omitnan')) ' px/frame'])
+if (calu==1 || calu==-1) && gui.retr('calxy')==1
+	unit=' px/frame';
 else %calibrated
 	displacement_only=gui.retr('displacement_only');
 	if ~isempty(displacement_only) && displacement_only == 1
-		set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' m/frame'])
-		set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' m/frame'])
-		set (handles.maxu,'string', [num2str(max(u*calu,[],'omitnan')) ' m/frame'])
-		set (handles.minu,'string', [num2str(min(u*calu,[],'omitnan')) ' m/frame'])
-		set (handles.maxv,'string', [num2str(max(v*calv,[],'omitnan')) ' m/frame'])
-		set (handles.minv,'string', [num2str(min(v*calv,[],'omitnan')) ' m/frame'])
+		unit=' m/frame';
 	else
-		set (handles.meanu,'string', [num2str(mean(u*calu,'omitnan')) ' ± ' num2str(std(u*calu,'omitnan')) ' m/s'])
-		set (handles.meanv,'string', [num2str(mean(v*calv,'omitnan')) ' ± ' num2str(std(v*calv,'omitnan')) ' m/s'])
-		set (handles.maxu,'string', [num2str(max(u*calu,[],'omitnan')) ' m/s'])
-		set (handles.minu,'string', [num2str(min(u*calu,[],'omitnan')) ' m/s'])
-		set (handles.maxv,'string', [num2str(max(v*calv,[],'omitnan')) ' m/s'])
-		set (handles.minv,'string', [num2str(min(v*calv,[],'omitnan')) ' m/s'])
+		unit=' m/s';
 	end
 end
+show_component(handles,'u',u*calu,unit);
+show_component(handles,'v',v*calv,unit);
+if isempty(w)
+	show_component(handles,'w',[],unit);
+else
+	show_component(handles,'w',w*abs(calu),unit); %|calu|: an axis flip of x or y does not flip w
+end
+end
 
+function show_component(handles,component,values,unit)
+%Writes mean, min, max and std of one velocity component into its four lines of the panel.
+if isempty(values)
+	set([handles.(['mean' component]) handles.(['min' component]) handles.(['max' component]) handles.(['std' component])],'String','N/A');
+	return
+end
+values=values(:);
+set(handles.(['mean' component]),'String',[num2str(mean(values,'omitnan')) unit]);
+set(handles.(['min' component]),'String',[num2str(min(values,[],'omitnan')) unit]);
+set(handles.(['max' component]),'String',[num2str(max(values,[],'omitnan')) unit]);
+set(handles.(['std' component]),'String',[num2str(std(values,'omitnan')) unit]);
+end

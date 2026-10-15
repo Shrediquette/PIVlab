@@ -76,7 +76,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	elseif (strcmp(caller.Tag,'draw_stuff') && strcmp(handles.draw_what.String{handles.draw_what.Value},'circle series (tangent vel. only)')) || (strcmp(caller.Tag,'draw_stuff_area') && strcmp(handles.draw_what_area.String{handles.draw_what_area.Value},'circle series'))%circle series
 		if strcmp(caller.Tag,'draw_stuff') %extract from polyline
 			extract_type='extract_circle_series';
-			set(handles.extraction_choice,'Value',11);
+			set(handles.extraction_choice,'Value',12); %tangent velocity
 		elseif strcmp(caller.Tag,'draw_stuff_area') %extract from area
 			extract_type='extract_circle_series_area';
 		end

@@ -120,7 +120,19 @@ if src.Button == 1
 				set(handles.scalar_cp, 'String','N/A');
 			end
 		else
-			set(handles.scalar_cp, 'String','N/A');
+			w=stereo.w_of_frame((currentframe+1)/2,use_smoothed); %stereo-PIV: w of the vector, [] in 2D
+			if isempty(w)
+				set(handles.scalar_cp, 'String','N/A');
+			elseif (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1 %not calibrated, like u and v
+				set(handles.scalar_cp, 'String', ['w:' num2str(round(w(info(1,1),info(1,2))*abs(gui.retr('calu'))*100000)/100000) ' px/fr']);
+			else
+				w_cp_string_velocity=w(info(1,1),info(1,2))*abs(gui.retr('calu')); %|calu|: an axis flip of x or y does not flip w
+				if  magnitude_of_current_point > 100 || magnitude_of_current_point < 0.01
+					set(handles.scalar_cp, 'String',  ['w:' sprintf('%0.4e',w_cp_string_velocity) ' m/' time_unit]);
+				else
+					set(handles.scalar_cp, 'String',  ['w:' sprintf('%0.4f',w_cp_string_velocity) ' m/' time_unit]);
+				end
+			end
 		end
 
 		hold(target_axis,'on');

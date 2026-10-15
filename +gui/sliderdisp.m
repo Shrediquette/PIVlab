@@ -79,7 +79,7 @@ if capturing==0
         resultslist=gui.retr('resultslist');
         plot.display_manual_markers(target_axis,handles);
         if size(resultslist,2)>=(currentframe+1)/2 && numel(resultslist{1,(currentframe+1)/2})>0
-            [x, y, u, v, typevector] = plot.get_desired_u_and_v(resultslist, currentframe);
+            [x, y, u, v, typevector, w] = plot.get_desired_u_and_v(resultslist, currentframe); %w: stereo-PIV, [] in 2D
             [u, v] = plot.get_highpassed_vectors(handles, u, v);
             [vecskip, vecscale] = plot.scale_vector_display(handles, x, y, u, v);
             [q, q2] = plot.vectors(target_axis,handles, vecskip, x, typevector, y, u, vecscale, v, vectorcolor);
@@ -92,7 +92,7 @@ if capturing==0
                 set(q2, 'ButtonDownFcn', @gui.veclick, 'PickableParts', 'visible');
             end
             if strncmp(get(handles.multip14, 'visible'), 'on',2) %statistics panel visible
-                plot.update_Stats (x,y,u,v);
+                plot.update_Stats (x,y,u,v,w);
             end
             if strncmp(get(handles.multip12, 'visible'), 'on',2) || strncmp(get(handles.multip17, 'visible'), 'on',2) %extract poly panel visible
                 %draw extraction polygon when frame was changed.

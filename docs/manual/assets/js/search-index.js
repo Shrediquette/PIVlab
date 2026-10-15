@@ -435,6 +435,18 @@ window.MANUAL_SEARCH = [
     text: "histogram u velocity v velocity magnitude sub-pixels bins peak locking bias"
   },
   {
+    title: "Statistics of stereo-PIV results (w, 3D scatter plot)",
+    href: "pages/statistics.html", hash: "stereo",
+    section: "Statistics",
+    text: "stereo w velocity mean min max std standard deviation 3D magnitude scatter plot u v w sub-pixels camera"
+  },
+  {
+    title: "Extracting w along a line or from an area (stereo-PIV)",
+    href: "pages/stereo-piv.html", hash: "w",
+    section: "Extractions",
+    text: "stereo w component poly-line area extraction 3D magnitude click vector info"
+  },
+  {
     title: "Stereo-PIV (2D3C)",
     href: "pages/stereo-piv.html", hash: "top",
     section: "Analysis",

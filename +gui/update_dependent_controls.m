@@ -141,6 +141,27 @@ end
 % stereo-PIV rectifies both cameras with the stereo calibration: no 2D rectification and upscaling
 show([handles.calib_userectification handles.calib_upscale handles.calib_upscale_label], ~stereo_mode);
 show(handles.stereo_rect_note, stereo_mode);
+% Statistics panel: w in the histogram list (item 5; items 1-4 as in 2D) and a 3D scatter plot
+hist_items = {'u velocity'; 'v velocity'; 'velocity magnitude'; 'sub-pixels'};
+if stereo_mode
+    hist_items{end + 1, 1} = 'w velocity';
+    set(handles.scatterplotter, 'String', 'Scatter plot u, v, w', 'TooltipString', '3D scatter plot of the u, v and w velocities');
+else
+    set(handles.scatterplotter, 'String', 'Scatter plot u & v', 'TooltipString', 'Scatter plot u vs. v velocities');
+end
+if ~isequal(get(handles.hist_select, 'String'), hist_items)
+    set(handles.hist_select, 'String', hist_items);
+    if get(handles.hist_select, 'Value') > numel(hist_items) % w velocity chosen, back in 2D mode
+        set(handles.hist_select, 'Value', 1);
+    end
+    gui.apply_pending_popup(handles.hist_select);
+end
+% Extraction panels: the w component in the lists only in stereo mode. The lists are filled when a panel
+% is opened (extract.update_choice_lists); here only a filled list that does not fit the mode is refreshed.
+line_items = get(handles.extraction_choice, 'String');
+if iscell(line_items) && startsWith(line_items{end}, 'w component') ~= stereo_mode
+    extract.update_choice_lists(handles);
+end
 % stereo-PIV always undistorts when lens parameters exist (stereo.camera_lens): the switch only changes the display
 if stereo_mode
     set(handles.calib_usecalibration, 'String', 'Show undistorted image', 'TooltipString', ...
