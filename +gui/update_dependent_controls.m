@@ -122,6 +122,22 @@ show([handles.rankx2 handles.ranky2 handles.text102 handles.text103 handles.text
 oseen_pair = get(handles.singledoubleoseen, 'Value') == 2;
 show([handles.oseenx2 handles.oseeny2 handles.text110 handles.text111 handles.text112], oseen_pair);
 
+%% 3D particle image generator: settings page, camera 2, parameters of the flow type
+page = get(handles.sim3d_page, 'Value');
+show(handles.sim3d_page1, page == 1);
+show(handles.sim3d_page2, page == 2);
+two_cameras = get(handles.sim3d_ncams, 'Value') == 2;
+camera2 = cellfun(@(f) handles.(['sim3d_c2' f]), {'x', 'y', 'z', 'ax', 'ay', 'k1', 'k2'});
+enable([camera2 handles.sim3d_cam2_title], two_cameras);
+flow3d = simulate.flow_types_3d;
+flow3d = flow3d{get(handles.sim3d_flow, 'Value')};
+enable(handles.sim3d_radius, any(strcmp(flow3d, {'vortex_jet', 'rankine'})));
+if strcmp(flow3d, 'vortex_jet')
+    set(handles.sim3d_w_text, 'String', 'Jet: max. out-of-plane [mm]:');
+else
+    set(handles.sim3d_w_text, 'String', 'Out-of-plane displacement [mm]:');
+end
+
 %% Stereo-PIV: camera switch and the menus of camera 2 only in stereo mode
 stereo_mode = isequal(gui.retr('stereomode'), 1);
 show(handles.stereo_camera_toggle, stereo_mode);

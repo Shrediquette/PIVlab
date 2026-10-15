@@ -1530,7 +1530,7 @@ item=[0 item(2)+item(4)+margin parentitem(3) 2];
 handles.scatterplotter = uicontrol(handles.multip14,'Style','pushbutton','String','Scatter plot u & v','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.scatterplotter_Callback,'TooltipString','Scatter plot u vs. v velocities','Tag','scatterplotter');
 
 %% Multip15
-handles.multip15 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Particle image generation (CTRL+G)', 'Tag','multip15','fontweight','bold');
+handles.multip15 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','2D particle image generator (CTRL+G)', 'Tag','multip15','fontweight','bold');
 parentitem=get(handles.multip15, 'Position');
 item=[0 0 0 0];
 
@@ -2569,6 +2569,9 @@ item2=[0 item2(2)+item2(4)+margin/4 w/4 1.5];
 uicontrol(handles.stereo_disp_panel,'Style','text','String','Show:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
 item2=[w/4 item2(2) w*3/4 1.5];
 handles.stereo_disp_show = uicontrol(handles.stereo_disp_panel,'Style','popupmenu','String',{'Camera image','Disparity: measured vectors','Disparity: fitted map','Remaining disparity','Overlay cam 1 / cam 2 (corrected)','Overlay cam 1 / cam 2 (not corrected)'},'Value',1,'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Callback',@stereo.disparity_display_Callback,'Tag','stereo_disp_show','TooltipString','What the image shows while this panel is open (overlay: grey = both cameras agree, red / cyan = misaligned)','UserData','not_a_setting');
+
+%% Multip31 3D particle image generator
+simulate.generate_ui_3d(MainWindow, default, margin, panelwidth, panelheightpanels, Figure_Size);
 
 gui.put('multitiff',0); %default for compatibility: Not a multitiff.
 gui.put('pcopanda_dbl_image',0); %default for compatibility: Not a multitiff.
