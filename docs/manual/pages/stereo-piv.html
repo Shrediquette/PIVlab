@@ -192,7 +192,9 @@
     </ul>
     <table class="ref">
       <tr><th>Setting</th><th>Meaning</th></tr>
-      <tr><td>Pairs</td><td>Number of image pairs used (default 10). More pairs give a smoother, more reliable map.</td></tr>
+      <tr><td>Pairs</td><td>Number of image pairs used. 0 (default) = automatic: PIVlab adds image pairs
+      until the map is accurate to about 0.5 px; the report shows the number used and the
+      estimated accuracy. Any other number uses exactly that many pairs.</td></tr>
       <tr><td>Passes</td><td>How often the disparity is measured (default 3): each further pass measures what remains on the corrected images and adds it. It stops early when less than 0.1 px remains.</td></tr>
       <tr><td>Model</td><td>Smooth model of the disparity map: 2nd-order polynomial (default), plane, or projective.</td></tr>
       <tr><td>Window size</td><td>Interrogation area of the first pass in px, 0 = automatic. Unlike regular PIV, the disparity map should be calculated with very large windows for good robustness.</td></tr>

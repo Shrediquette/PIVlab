@@ -2539,7 +2539,7 @@ item2=[0 0 0 0];
 item2=[0 item2(2)+item2(4) w/4 1];
 uicontrol(handles.stereo_disp_panel,'Style','text','String','Pairs:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
 item2=[w/4 item2(2) w/4 1];
-handles.stereo_disp_pairs = uicontrol(handles.stereo_disp_panel,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_pairs),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)],'Tag','stereo_disp_pairs','TooltipString','Number of image pairs used for the disparity (spread over the series)');
+handles.stereo_disp_pairs = uicontrol(handles.stereo_disp_panel,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_pairs),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)],'Tag','stereo_disp_pairs','TooltipString','Number of image pairs used for the disparity (spread over the series). 0 = automatic: pairs are added until the disparity map is accurate to about 0.5 px');
 item2=[w/2 item2(2) w/4 1];
 uicontrol(handles.stereo_disp_panel,'Style','text','String','Passes:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
 item2=[w*3/4 item2(2) w/4 1];

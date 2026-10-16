@@ -81,6 +81,11 @@ classdef pivprogress < handle
 			end
 		end
 
+		function set_total(this, N_new)
+			% Change the total number of iterations (e.g. when more work turns out to be needed).
+			this.N = N_new;
+		end
+
 		function iterate(this, Nitr)
 			% Update the progress bar by Nitr iterations (or 1 if not specified).
 			if nargin<2,  Nitr = 1;  end

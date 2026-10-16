@@ -18,7 +18,9 @@ s.calibration.BoardFromBehind = [];         % [] = automatic: a camera behind th
 % Stereo-PIV panel shows come from gui.default_settings (one list of defaults for GUI and scripts).
 g = gui.default_settings;
 models = stereo.disparity_models;
-s.disparity.Pairs = g.analysis.stereo_disp_pairs;   % image pairs used, spread over the series ([] = all)
+s.disparity.Pairs = g.analysis.stereo_disp_pairs;   % image pairs used, spread over the series ([] = all,
+                                            % 0 = automatic: until the map is accurate to AutoAccuracy)
+s.disparity.AutoAccuracy = 0.5;             % [px rms] estimated error of the map (stereo.disparity_uncertainty)
 s.disparity.Model = models(g.analysis.stereo_disp_model); % smooth model of the disparity map: "poly2"
                                             % (2nd-order polynomial), "poly1", "projective"
 s.disparity.Passes = g.analysis.stereo_disp_passes; % measure again on the corrected images, add the residual

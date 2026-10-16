@@ -472,6 +472,32 @@ import.load_session_Callback(1, fullfile(testCase.TestData.folder, 'disparity_se
 verifyEqual(testCase, gui.retr('stereo_maps'), maps, 'maps after loading the session differ');
 end
 
+function test_disparity_pairs_automatic(testCase)
+% "Pairs" 0 (default) = automatic: batches of five pairs until the map is accurate to 0.5 px (clean synthetic
+% data: after the first estimate, i.e. ten pairs); a fixed number uses linspace as before
+c = helper_stereo_synthetic_case(fullfile(testCase.TestData.folder, 'auto_pairs_case'), 12, 0);
+helper_start_pivlab();
+handles = gui.gethand;
+calibrate_in_gui(c);
+verifyEqual(testCase, get(handles.stereo_disp_pairs, 'String'), '0', 'default is not automatic');
+stereo.measure_disparity_Callback;
+d = gui.retr('stereo_disparity');
+verifyTrue(testCase, d.auto);
+verifyEqual(testCase, numel(d.pairs), 10, 'clean data: ten pairs');
+verifyLessThan(testCase, d.accuracy_estimate, 0.5);
+verifyEqual(testCase, d.pairs, sort(d.pairs), 'pairs not in the order of their numbers');
+verifyTrue(testCase, startsWith(d.report{1}, '10 pairs (automatic), map accurate to ~'), d.report{1});
+verifyEqual(testCase, size(d.raw.u_frames, 3), 10);
+% fixed number: the same choice as before (spread with linspace)
+set(handles.stereo_disp_pairs, 'String', '3');
+stereo.measure_disparity_Callback;
+d = gui.retr('stereo_disparity');
+verifyFalse(testCase, d.auto);
+verifyEqual(testCase, d.pairs, unique(round(linspace(1, 12, 3))));
+verifyTrue(testCase, startsWith(d.report{1}, '3 pairs'), d.report{1});
+set(handles.stereo_disp_pairs, 'String', '0');
+end
+
 function test_stereo_analysis_in_gui(testCase)
 % ANALYZE in stereo mode: both cameras, disparity measured automatically, U, V, W against the ground truth;
 % validation of both cameras, undo, W display, session round trip

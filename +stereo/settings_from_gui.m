@@ -5,7 +5,7 @@ if nargin < 1
 end
 st = stereo.defaults();
 models = stereo.disparity_models;
-st.disparity.Pairs = number(handles.stereo_disp_pairs, st.disparity.Pairs);
+st.disparity.Pairs = max(0, round(number(handles.stereo_disp_pairs, st.disparity.Pairs))); % 0 = automatic
 st.disparity.Model = models(get(handles.stereo_disp_model, 'Value'));
 st.disparity.Passes = max(1, round(number(handles.stereo_disp_passes, st.disparity.Passes)));
 ia = number(handles.stereo_disp_ia, 0);

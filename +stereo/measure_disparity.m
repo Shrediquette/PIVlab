@@ -10,7 +10,9 @@ function disparity = measure_disparity(imgs, calib, opts, verbose, backgrounds, 
 %
 % The A image of camera 1 is correlated with the A image of camera 2 (both rectified onto the common
 % grid, minimum-intensity background removed, pre-processed), for opts.disparity.Pairs image pairs
-% spread over the series. The validated maps are smoothed and averaged, then a smooth model is fitted
+% spread over the series (0 = automatic: batches of five pairs until the estimated error of the map,
+% stereo.disparity_uncertainty, is below opts.disparity.AutoAccuracy [px rms], or all pairs are used).
+% The validated maps are smoothed and averaged, then a smooth model is fitted
 % (opts.disparity.Model, stereo.fit_disparity). With opts.disparity.Passes > 1 the disparity is
 % measured again on the corrected images and the residual is added, until it is below
 % opts.disparity.StopThreshold [px].
@@ -45,19 +47,26 @@ if imgs{2}.pairs ~= n_all
     error('stereo:measure_disparity', 'Both cameras must have the same number of image pairs (%d and %d).', n_all, imgs{2}.pairs);
 end
 pairs = 1:n_all;
-if ~isempty(d.Pairs) && d.Pairs < n_all
+auto = isequal(d.Pairs, 0);
+if auto % automatic number of pairs: all pairs in a spread order, measured in batches until the map is accurate
+    pairs = stereo.disparity_pair_order(n_all);
+elseif ~isempty(d.Pairs) && d.Pairs < n_all
     pairs = unique(round(linspace(1, n_all, d.Pairs)));
 end
 hbar = [];
 if ~isempty(progress_target)
-    units = pair_units * numel(pairs) * max(d.Passes, 1);
+    expected_pairs = numel(pairs);
+    if auto
+        expected_pairs = min(20, n_all); % first estimate, grows when more pairs are needed
+    end
+    units = pair_units * expected_pairs * max(d.Passes, 1);
     if numel(backgrounds) ~= 2
         units = units + background_units(imgs{1}) + background_units(imgs{2});
     end
     hbar = gui.pivprogress(units, progress_target);
 end
 try
-    disparity = measure(imgs, calib, opts, verbose, backgrounds, pairs, hbar, pair_units);
+    disparity = measure(imgs, calib, opts, verbose, backgrounds, pairs, auto, hbar, pair_units);
 catch err
     close_progress(hbar)
     rethrow(err)
@@ -65,7 +74,7 @@ end
 close_progress(hbar)
 end
 
-function disparity = measure(imgs, calib, opts, verbose, backgrounds, pairs, hbar, pair_units)
+function disparity = measure(imgs, calib, opts, verbose, backgrounds, pairs, auto, hbar, pair_units)
 d = opts.disparity;
 % area of the measurement: inside the overlap of both views and inside the region of interest (the same for
 % both cameras); the masks of the cameras are added for each image pair in disparity_pair
@@ -93,7 +102,12 @@ end
 disparity_background = {imgs{1}.background, imgs{2}.background};
 
 imgs = stereo.rectified_images(imgs, calib, []);
-raw = measure_once(imgs, area, pairs, d, opts.Parallel, verbose, hbar, pair_units);
+if auto
+    [raw, pairs, accuracy] = measure_auto(imgs, area, pairs, d, opts.Parallel, verbose, hbar, pair_units);
+else
+    raw = measure_once(imgs, area, pairs, d, opts.Parallel, verbose, hbar, pair_units);
+    accuracy = stereo.disparity_uncertainty(area.calib, raw, d.Model);
+end
 [u_grid, v_grid, fit] = model_grid(area.calib, raw, d.Model);
 disparity = stereo.disparity_field(calib, raw.x, raw.y, u_grid, v_grid);
 disparity.u_mean = raw.u_mean;
@@ -103,6 +117,8 @@ disparity.raw = raw;
 disparity.fit = fit;
 disparity.model = char(d.Model);
 disparity.pairs = pairs;
+disparity.auto = auto;
+disparity.accuracy_estimate = accuracy;
 disparity.roi = roi;
 
 inside = ~area.mask(sub2ind(size(area.mask), min(max(round(double(raw.y)), 1), size(area.mask, 1)), ...
@@ -211,8 +227,56 @@ for i = 1:n
     u_smooth(:,:,i) = out{i}.u_filt_smooth;
     v_smooth(:,:,i) = out{i}.v_filt_smooth;
 end
-raw.x = out{1}.x;
-raw.y = out{1}.y;
+raw = raw_from_frames(out{1}.x, out{1}.y, u_filt, v_filt, u_smooth, v_smooth, d);
+end
+
+function [raw, measured, accuracy] = measure_auto(imgs, area, order, d, parallel, verbose, hbar, pair_units)
+% first disparity measurement with an automatic number of image pairs: batches of five pairs in the spread
+% order (stereo.disparity_pair_order) until the estimated error of the map (stereo.disparity_uncertainty) is
+% below d.AutoAccuracy or all pairs are used. At least ten pairs (five per half of the estimate).
+batch_size = 5;
+n_all = numel(order);
+allotted = min(20, n_all); % pairs counted in the progress total (stereo.measure_disparity)
+measured = [];
+accuracy = NaN;
+raw = [];
+for first = 1:batch_size:n_all
+    batch = order(first:min(first + batch_size - 1, n_all));
+    if ~isempty(hbar) && numel(measured) + numel(batch) > allotted % more pairs than the progress expected
+        hbar.set_total(hbar.N + pair_units * numel(batch) * max(d.Passes, 1));
+        allotted = allotted + numel(batch);
+    end
+    part = measure_once(imgs, area, batch, d, parallel, verbose, hbar, pair_units);
+    if isempty(raw)
+        raw = part;
+    else
+        raw = raw_from_frames(raw.x, raw.y, cat(3, raw.u_frames, part.u_frames), cat(3, raw.v_frames, part.v_frames), ...
+            cat(3, raw.u_smooth_frames, part.u_smooth_frames), cat(3, raw.v_smooth_frames, part.v_smooth_frames), d);
+    end
+    measured = [measured batch]; %#ok<AGROW>
+    if numel(measured) >= 2 * batch_size
+        accuracy = stereo.disparity_uncertainty(area.calib, raw, d.Model);
+        if verbose
+            fprintf('Disparity: %d image pairs, estimated accuracy %.2f px rms\n', numel(measured), accuracy);
+        end
+        if accuracy < d.AutoAccuracy
+            break
+        end
+    end
+end
+if isnan(accuracy)
+    accuracy = stereo.disparity_uncertainty(area.calib, raw, d.Model);
+end
+% the result in the order of the pair numbers (as a measurement of fixed pairs)
+[measured, k] = sort(measured);
+raw = raw_from_frames(raw.x, raw.y, raw.u_frames(:, :, k), raw.v_frames(:, :, k), ...
+    raw.u_smooth_frames(:, :, k), raw.v_smooth_frames(:, :, k), d);
+end
+
+function raw = raw_from_frames(x, y, u_filt, v_filt, u_smooth, v_smooth, d)
+% statistics of one disparity measurement from the validated (and smoothed) maps of its image pairs
+raw.x = x;
+raw.y = y;
 raw.u_mean = mean(u_smooth, 3, 'omitnan');
 raw.v_mean = mean(v_smooth, 3, 'omitnan');
 raw.u_mean_smooth = misc.smoothn(raw.u_mean, d.SmoothMean);
@@ -226,6 +290,8 @@ raw.v_std = std(v_filt, 0, 3, 'omitnan');
 raw.n_valid = sum(~isnan(u_filt) & ~isnan(v_filt), 3);
 raw.u_frames = u_filt;
 raw.v_frames = v_filt;
+raw.u_smooth_frames = u_smooth; % to add more image pairs later (automatic number of pairs)
+raw.v_smooth_frames = v_smooth;
 end
 
 function r = disparity_pair(imgs1, imgs2, pair, area, interrogationarea, d)

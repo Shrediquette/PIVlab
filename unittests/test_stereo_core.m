@@ -265,6 +265,64 @@ end
 verifyEqual(testCase, identifier, 'stereo:fit_disparity');
 end
 
+function test_disparity_pair_order(testCase)
+% automatic number of disparity pairs: every beginning of the order is spread over the series
+for n = [1 2 3 7 12 70 86]
+    order = stereo.disparity_pair_order(n);
+    verifyEqual(testCase, sort(order), 1:n, sprintf('n = %d: not all pairs once', n));
+end
+order = stereo.disparity_pair_order(70);
+verifyLessThanOrEqual(testCase, abs(sort(order(1:5)) - linspace(1, 70, 5)), ones(1, 5), 'first batch like linspace');
+for N = [5 10 20 40]
+    gaps = diff(sort(order(1:N)));
+    verifyLessThanOrEqual(testCase, max(gaps), 2 * 69 / (N - 1) + 1, sprintf('first %d pairs leave a large gap', N));
+end
+end
+
+function test_disparity_uncertainty_estimate(testCase)
+% the half-split estimate of stereo.disparity_uncertainty is close to the real error of the fitted map and
+% falls like 1/sqrt(N). One case is noisy (the estimate and the real error both come from a few fit
+% parameters), so the mean over 20 random cases is compared.
+rng(3, 'twister');
+calib.mask = false(1000, 1000);
+[x, y] = meshgrid(25:50:975, 25:50:975);
+xn = (x - 500) / 500;
+yn = (y - 500) / 500;
+u_true = 3 + 2 * xn - 1.5 * yn + 1.0 * xn .^ 2 + 0.5 * xn .* yn;
+v_true = -2 + 0.5 * xn + 1.0 * yn - 0.8 * yn .^ 2;
+sigma = 2; % px noise of one validated vector of one pair
+n = 40;
+counts = [10 40];
+repetitions = 20;
+estimate = zeros(repetitions, 2);
+real_error = zeros(repetitions, 2);
+for rep = 1:repetitions
+    raw.x = x;
+    raw.y = y;
+    raw.u_frames = u_true + sigma * randn([size(x) n]);
+    raw.v_frames = v_true + sigma * randn([size(x) n]);
+    for k = 1:2
+        part.x = x;
+        part.y = y;
+        part.u_frames = raw.u_frames(:, :, 1:counts(k));
+        part.v_frames = raw.v_frames(:, :, 1:counts(k));
+        estimate(rep, k) = stereo.disparity_uncertainty(calib, part, "poly2");
+        all.x = x; all.y = y;
+        all.u = mean(part.u_frames, 3); all.v = mean(part.v_frames, 3);
+        all.n_valid = counts(k) * ones(size(x));
+        fit = stereo.fit_disparity(calib, all, "poly2");
+        real_error(rep, k) = sqrt(mean((fit.u(:) - u_true(:)) .^ 2 + (fit.v(:) - v_true(:)) .^ 2));
+    end
+end
+ratio = mean(estimate) ./ mean(real_error);
+verifyGreaterThan(testCase, ratio, 0.8 * ones(1, 2), 'estimate too small');
+verifyLessThan(testCase, ratio, 1.25 * ones(1, 2), 'estimate too large');
+verifyGreaterThan(testCase, mean(estimate(:, 1)) / mean(estimate(:, 2)), 1.6, 'estimate does not fall like 1/sqrt(N)');
+verifyLessThan(testCase, mean(estimate(:, 1)) / mean(estimate(:, 2)), 2.5, 'estimate does not fall like 1/sqrt(N)');
+verifyTrue(testCase, isnan(stereo.disparity_uncertainty(calib, struct('x', x, 'y', y, 'u_frames', raw.u_frames(:, :, 1:3), ...
+    'v_frames', raw.v_frames(:, :, 1:3)), "poly2")), 'fewer than 4 pairs: no estimate');
+end
+
 function test_square_grid_covers_overlap(testCase)
 % two oblique views (projective, image -> world); camera 2 has the coarser pixels
 T1 = projtform2d([1.30 0.05 -100; 0.02 1.00 50; 1.5e-4 0 1]);

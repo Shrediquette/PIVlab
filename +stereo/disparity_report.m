@@ -1,11 +1,19 @@
 function lines = disparity_report(calib, disparity)
-%DISPARITY_REPORT Short description of a disparity measurement (for the Stereo-PIV panel, at most 6 lines).
+%DISPARITY_REPORT Short description of a disparity measurement (for the Stereo-PIV panel, at most 7 lines).
 %   lines = stereo.disparity_report(calib, disparity)
 [~, labels] = stereo.disparity_models;
 models = stereo.disparity_models;
 label = labels{find(models == string(disparity.model), 1)};
 lines = {};
-lines{end + 1} = sprintf('%d pairs, %s, outliers %.0f %%', numel(disparity.pairs), lower(label), 100 * disparity.fit.outlier_fraction);
+pairs_text = sprintf('%d pairs', numel(disparity.pairs));
+if isfield(disparity, 'auto') && disparity.auto
+    pairs_text = [pairs_text ' (automatic)'];
+end
+if isfield(disparity, 'accuracy_estimate') && ~isnan(disparity.accuracy_estimate)
+    pairs_text = sprintf('%s, map accurate to ~%.2f px', pairs_text, disparity.accuracy_estimate);
+end
+lines{end + 1} = pairs_text;
+lines{end + 1} = sprintf('%s, outliers %.0f %%', label, 100 * disparity.fit.outlier_fraction);
 measured = sqrt(disparity.raw.u .^ 2 + disparity.raw.v .^ 2);
 lines{end + 1} = sprintf('Before the correction: up to %.1f px', max(measured(disparity.fit.used)));
 if ~isempty(disparity.residual_history)
