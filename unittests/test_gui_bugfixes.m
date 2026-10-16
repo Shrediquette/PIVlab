@@ -90,6 +90,28 @@ rl3 = gui.retr('resultslist');
 testCase.verifyTrue(size(rl3,1) < 7 || isempty(rl3{7,1}), 'no validated data without validation');
 end
 
+function test_manually_deleted_vectors_stay_deleted(testCase)
+% the second-peak substitution of the validation must not bring back a vector that was deleted by hand
+helper_start_pivlab();
+helper_gui_load_images(helper_files('jet', 1));
+helper_gui_analyze();
+h = gui.gethand;
+rl = gui.retr('resultslist');
+testCase.assertGreaterThanOrEqual(size(rl, 1), 14, 'the test needs the second correlation peak');
+set([h.stdev_enable h.loc_median_enable h.notch_enable h.corr_filter_enable h.contrast_filter_enable h.bright_filter_enable], 'Value', 0);
+set(h.interpol_missing, 'Value', 1);
+gui.put('velrect', []); gui.put('velrect_freehand', []);
+positions = [3 4; 5 6; 7 8];
+manualdeletion = cell(1, 1);
+manualdeletion{1} = positions;
+idx = sub2ind(size(rl{1, 1}), positions(:, 1), positions(:, 2));
+testCase.assertTrue(all(isfinite(rl{13, 1}(idx))), 'the test needs a second peak at the deleted positions');
+gui.put('manualdeletion', manualdeletion);
+validate.apply_filter_current_Callback([], [], []);
+rl = gui.retr('resultslist');
+testCase.verifyEqual(double(rl{9, 1}(idx)), 2 * ones(size(idx)), 'deleted vectors replaced by the second peak instead of filled');
+end
+
 function test_tecplot_units(testCase)
 helper_start_pivlab();
 helper_gui_load_images(helper_files('jet', 1));

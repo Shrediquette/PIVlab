@@ -7,8 +7,8 @@ handles=gui.gethand;
 	'*.jpg','JPEG'; ...
 	'*.png','PNG'; ...
 	'*.*',  'All Files'}...
-	,"MultiSelect","on",'Select images of the calibration target',gui.retr('pathname'));
-if ~isempty(cam_selected_target_images)
+	,"MultiSelect","on",'Select images of the calibration target',[preproc.calibration_dialog_folder('lens') filesep]);
+if ~isequal(cam_selected_target_images,0) %0: cancelled
 	pathfiles=fullfile(location,cam_selected_target_images);
 	gui.put('cam_selected_target_images',pathfiles)
 	handles.calib_usecalibration.Value = 0;

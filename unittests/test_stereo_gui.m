@@ -129,6 +129,46 @@ verifyEqual(testCase, gui.retr('filepath'), testCase.TestData.cam1(:));
 verifyEmpty(testCase, gui.retr('masks_in_frame'));
 end
 
+function test_calibration_dialog_folders(testCase)
+% start folders of the calibration file dialogs (preproc.calibration_dialog_folder): last pick of this
+% dialog, then the other camera's pick, then (target image) the lens calibration images, then the PIV images
+helper_start_pivlab();
+import_stereo(testCase);
+base = fullfile(testCase.TestData.folder, 'dialog_folders');
+names = {'lens1', 'lens2', 'target1'};
+for k = 1:numel(names)
+    if ~isfolder(fullfile(base, names{k}))
+        mkdir(fullfile(base, names{k}));
+    end
+end
+image_folder = fileparts(testCase.TestData.cam1{1});
+% nothing picked yet: the folder of the PIV images
+verifyEqual(testCase, preproc.calibration_dialog_folder('lens'), image_folder);
+verifyEqual(testCase, preproc.calibration_dialog_folder('target'), image_folder);
+% camera 1 picks lens images and the target image
+gui.put('cam_selected_target_images', {fullfile(base, 'lens1', 'a.tif'); fullfile(base, 'lens1', 'b.tif')});
+verifyEqual(testCase, preproc.calibration_dialog_folder('lens'), fullfile(base, 'lens1'));
+verifyEqual(testCase, preproc.calibration_dialog_folder('target'), fullfile(base, 'lens1'), 'target image: lens images of the camera');
+gui.put('cam_selected_rectification_image', fullfile(base, 'target1', 'board.tif'));
+verifyEqual(testCase, preproc.calibration_dialog_folder('target'), fullfile(base, 'target1'));
+% camera 2: starts where camera 1's were
+stereo.switch_camera(2);
+verifyEqual(testCase, preproc.calibration_dialog_folder('lens'), fullfile(base, 'lens1'), 'camera 2: lens images of camera 1');
+verifyEqual(testCase, preproc.calibration_dialog_folder('target'), fullfile(base, 'target1'), 'camera 2: target image of camera 1');
+% camera 2 picks its own: its own folder from then on
+gui.put('cam_selected_target_images', fullfile(base, 'lens2', 'c.tif')); % one file: char
+verifyEqual(testCase, preproc.calibration_dialog_folder('lens'), fullfile(base, 'lens2'));
+stereo.switch_camera(1);
+verifyEqual(testCase, preproc.calibration_dialog_folder('lens'), fullfile(base, 'lens1'));
+% 2D: last pick, then lens images (target), then the PIV images
+stereo.leave_stereo_mode;
+verifyEqual(testCase, preproc.calibration_dialog_folder('target'), fullfile(base, 'target1'));
+gui.put('cam_selected_rectification_image', []);
+verifyEqual(testCase, preproc.calibration_dialog_folder('target'), fullfile(base, 'lens1'));
+gui.put('cam_selected_target_images', []);
+verifyEqual(testCase, preproc.calibration_dialog_folder('lens'), image_folder);
+end
+
 function test_different_number_of_images_is_refused(testCase)
 helper_start_pivlab();
 import.stereo_import_Callback([], [], {testCase.TestData.cam1, testCase.TestData.cam2_short});
@@ -871,6 +911,25 @@ validate.restore_all_Callback;
 R = gui.retr('stereo_result');
 verifyTrue(testCase, size(R, 1) < 7 || isempty(R{7, 2}), 'validation not undone');
 gui.put('velrect', []);
+end
+
+function test_manual_deletion(testCase)
+% vectors deleted by hand (positions on the common grid, validate.rejectsingle_Callback) are removed in both
+% cameras by the validation; U, V, W are rebuilt with the gaps filled
+[~, ~, ~, ~] = limits_case(testCase, 'manual_case', 1);
+positions = [3 4; 5 6; 7 8];
+manualdeletion = cell(1, 3);
+manualdeletion{1} = positions;
+gui.put('manualdeletion', manualdeletion);
+validate.apply_filter_all_Callback;
+rl = gui.retr('resultslist');
+deleted = false(size(rl{1, 1}));
+deleted(sub2ind(size(deleted), positions(:, 1), positions(:, 2))) = true;
+verify_discarded(testCase, 1, deleted, false(size(deleted)), 'manual deletion');
+verifyTrue(testCase, all(isfinite(rl{7, 1}(deleted))) && all(isfinite(rl{16, 1}(deleted))), 'gaps not filled in U, W');
+% the other frames keep these vectors
+verify_discarded(testCase, 2, false(size(deleted)), deleted, 'manual deletion, frame 2');
+gui.put('manualdeletion', []);
 end
 
 function test_velocity_limits_parallel(testCase)

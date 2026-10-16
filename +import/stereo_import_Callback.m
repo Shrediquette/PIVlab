@@ -34,7 +34,11 @@ selection = cell(1, 2);
 multitiff = [0 0];
 for k = 1:2
     if isempty(paths)
-        [names, multitiff(k)] = pick_images(k);
+        if k == 1
+            [names, multitiff(k)] = pick_images(k, '');
+        else % camera 2: the dialog starts in the folder of camera 1
+            [names, multitiff(k)] = pick_images(k, fileparts(selection{1}(1).name));
+        end
         if isempty(names)
             return % cancelled
         end
@@ -107,11 +111,15 @@ elseif ~batch
 end
 end
 
-function [names, multitiff] = pick_images(k)
-% the normal PIVlab image dialog, for camera k; the last folder of each camera is remembered
+function [names, multitiff] = pick_images(k, start_folder)
+% the normal PIVlab image dialog, for camera k. Camera 1 starts in its last folder, camera 2 in the folder
+% of the images just picked for camera 1 (start_folder).
 names = {};
 multitiff = 0;
-folder = gui.get_preference(['stereo_folder_cam' int2str(k)], '');
+folder = start_folder;
+if isempty(folder) || ~isfolder(folder)
+    folder = gui.get_preference(['stereo_folder_cam' int2str(k)], '');
+end
 if isempty(folder) || ~isfolder(folder)
     folder = gui.retr('pathname');
 end

@@ -72,7 +72,7 @@ if ~isempty(resultslist)
 				if size(manualdeletion,2)>=i
 					if isempty(manualdeletion{1,i}) ==0
 						framemanualdeletion=manualdeletion{i};
-						[u{i},v{i},typevector{i}]=validate.manual_point_deletion(u{i},v{i},typevector{i},framemanualdeletion);
+						[u{i},v{i},typevector{i},u2_data{i},v2_data{i}]=validate.manual_point_deletion(u{i},v{i},typevector{i},framemanualdeletion,u2_data{i},v2_data{i});
 					end
 				end
 			end

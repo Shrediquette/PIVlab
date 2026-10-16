@@ -6,8 +6,9 @@ function fig = preview_3d(setup, opts)
 % setup: see simulate.setup_3d. If the preview window is open already, it shows the new setup
 % (and keeps its view).
 % Mouse in the 3D view: drag a camera to move it (parallel to the screen; Shift + drag: closer or
-% farther), drag an aim point (diamond on the board) to move it on the board, drag elsewhere to
-% rotate the view, mouse wheel to zoom. After every drag, OnChange is called with the new setup.
+% farther), drag one of the arrows at a camera to move it along x, y or z of the board, drag an aim
+% point (diamond on the board) to move it on the board, drag elsewhere to rotate the view, drag with
+% the right mouse button to pan the view, mouse wheel to zoom. After every drag, OnChange is called with the new setup.
 arguments
     setup struct
     opts.OnChange = []
@@ -119,7 +120,9 @@ for k = 1:n
         'ButtonDownFcn', @(~, ~) start_drag(fig, 'camera', k), 'HandleVisibility', 'off');
     h{end + 1} = plot3(ax, T(1), T(2), T(3), 'd', 'MarkerSize', 11, 'MarkerFaceColor', [1 0.85 0.1], 'MarkerEdgeColor', col, 'LineWidth', 1.5, ...
         'ButtonDownFcn', @(~, ~) start_drag(fig, 'target', k), 'HandleVisibility', 'off');
+    h = [h, camera_arrows(fig, ax, C, k, arrow_length(setup.board))];
 end
+fade_arrows(ax);
 S.dynamic = h;
 axis(ax, 'equal');
 ax.Visible = 'off';
@@ -146,8 +149,8 @@ if ~g.ok
 end
 lines{end + 1} = sprintf('Light sheet: %+.2f mm from the board (towards camera 1), tilted %.2f%s about x and %.2f%s about y, %.2f mm thick', ...
     setup.sheet.Offset, setup.sheet.TiltX, char(176), setup.sheet.TiltY, char(176), setup.sheet.Thickness);
-lines{end + 1} = ['Mouse: drag a camera to move it (Shift + drag: closer / farther), drag a diamond to move the aim point, ' ...
-    'drag elsewhere to rotate the view, wheel to zoom.'];
+lines{end + 1} = ['Mouse: drag a camera to move it (Shift + drag: closer / farther), drag an arrow at a camera to move it along x, y or z, ' ...
+    'drag a diamond to move the aim point, drag elsewhere to rotate the view, right drag to pan, wheel to zoom.'];
 S.info.String = lines;
 
 %% what the cameras see
@@ -233,6 +236,47 @@ function col = camera_color(k)
 col = stereo.camera_colors(k);
 end
 
+function h = camera_arrows(fig, ax, C, k, len)
+% three arrows at camera k along the board axes (x, y, -z and colours as the axes on the board);
+% drag one to move the camera along it
+dirs = arrow_directions();
+cols = [1 0 0; 0 1 0; 0 0 1];
+h = cell(1, 6);
+for a = 1:3
+    E = C + len * dirs(a, :);
+    info.base = C;
+    info.dir = dirs(a, :);
+    info.color = cols(a, :);
+    h{2 * a - 1} = plot3(ax, [C(1) E(1)], [C(2) E(2)], [C(3) E(3)], '-', 'Color', cols(a, :), 'LineWidth', 3, ...
+        'ButtonDownFcn', @(~, ~) start_drag(fig, 'axis', k, a), 'Tag', 'sim3d_arrow', 'UserData', info, 'HandleVisibility', 'off');
+    h{2 * a} = plot3(ax, E(1), E(2), E(3), 'o', 'MarkerSize', 8, 'Color', cols(a, :), 'MarkerFaceColor', cols(a, :), 'MarkerEdgeColor', cols(a, :), ...
+        'ButtonDownFcn', @(~, ~) start_drag(fig, 'axis', k, a), 'Tag', 'sim3d_arrow', 'UserData', info, 'HandleVisibility', 'off');
+end
+end
+
+function dirs = arrow_directions()
+dirs = [1 0 0; 0 1 0; 0 0 -1];
+end
+
+function fade_arrows(ax)
+% arrows that point (almost) along the line of sight (within 15 degrees) cannot be dragged sensibly:
+% faded and not clickable
+bg = ax.Parent.BackgroundColor;
+arrows = findall(ax, 'Tag', 'sim3d_arrow');
+for i = 1:numel(arrows)
+    info = arrows(i).UserData;
+    sight = info.base - ax.CameraPosition;
+    if abs(dot(info.dir, sight)) > cosd(15) * norm(sight)
+        col = 0.2 * info.color + 0.8 * bg;
+        pickable = 'none';
+    else
+        col = info.color;
+        pickable = 'visible';
+    end
+    set(arrows(i), 'Color', col, 'MarkerFaceColor', col, 'MarkerEdgeColor', col, 'PickableParts', pickable);
+end
+end
+
 function reset_view(fig, g)
 % look from behind and above the cameras onto the board, everything in view
 S = getappdata(fig, 'sim3d');
@@ -274,6 +318,7 @@ along = q * direction';
 distance = max(along + max(abs(q * up') / tan_v, abs(q * right') / tan_h)) * 1.08; % 8 % margin
 camproj(ax, 'perspective');
 set(ax, 'CameraTarget', target, 'CameraPosition', target + distance * direction, 'CameraUpVector', up, 'CameraViewAngle', 30);
+fade_arrows(ax);
 end
 
 function [tan_h, tan_v] = view_tangents(ax, angle)
@@ -325,7 +370,12 @@ P = [P; transformPointsForward(g.sheet_pose, [r([1 2 2 1])', r([3 3 4 4])', zero
 s = camera_symbol_size(board);
 for k = 1:size(g.centre, 1)
     P = [P; g.centre(k, :) + s * [-1 -1 -1; 1 1 1]]; % the camera symbol around its centre
+    P = [P; g.centre(k, :) + arrow_length(board) * arrow_directions()]; % tips of its arrows
 end
+end
+
+function len = arrow_length(board)
+len = 2.5 * camera_symbol_size(board);
 end
 
 function s = camera_symbol_size(board)
@@ -335,7 +385,11 @@ end
 
 %% ---------------------------------------------------------------- mouse
 
-function start_drag(fig, kind, k)
+function start_drag(fig, kind, k, a)
+% a: number of the arrow (1 x, 2 y, 3 z) for kind 'axis'
+if strcmp(fig.SelectionType, 'alt') % right button: pans the view, also over a camera (mouse_down)
+    return
+end
 S = getappdata(fig, 'sim3d');
 ax = S.ax3;
 d.kind = kind;
@@ -349,6 +403,13 @@ switch kind
     case 'camera'
         C0 = S.setup.cameras(k).Position;
         d.offset = C0 - intersect_plane(ray, C0, d.view_dir);
+    case 'axis'
+        dirs = arrow_directions();
+        d.axis_dir = dirs(a, :);
+        d.offset = position_on_line(ray, S.setup.cameras(k).Position, d.axis_dir); % where the arrow was grabbed
+        if isnan(d.offset)
+            d.offset = 0;
+        end
     case 'target'
         d.offset = [S.setup.cameras(k).Target 0] - intersect_plane(ray, [0 0 0], [0 0 1]);
 end
@@ -364,6 +425,9 @@ if ~over_axes(fig, S.ax3)
     return
 end
 d.kind = 'orbit';
+if strcmp(fig.SelectionType, 'alt') % right button (or Ctrl + left)
+    d.kind = 'pan';
+end
 d.mouse0 = fig.CurrentPoint;
 S.drag = d;
 setappdata(fig, 'sim3d', S);
@@ -379,8 +443,33 @@ end
 ax = S.ax3;
 switch d.kind
     case 'orbit'
+        % like the orbit of cameratoolbar with SetCoordSys 'y' (the other 3D views of PIVlab):
+        % 1 degree per pixel, about the y axis of the board (y is down), which stays upright
         delta = fig.CurrentPoint - d.mouse0;
-        camorbit(ax, -0.4 * delta(1), 0.4 * delta(2), 'camera');
+        y_axis = [0 -1 0];
+        if any(cross(y_axis, ax.CameraPosition - ax.CameraTarget)) % not looking along y
+            ax.CameraUpVector = y_axis;
+        end
+        camorbit(ax, delta(1), -delta(2), 'data', y_axis);
+        fade_arrows(ax);
+        d.mouse0 = fig.CurrentPoint;
+        S.drag = d;
+        setappdata(fig, 'sim3d', S);
+        drawnow limitrate
+        return
+    case 'pan' % shifts camera and target of the view parallel to the screen: the scene follows the mouse
+        delta = fig.CurrentPoint - d.mouse0;
+        f = ax.CameraTarget - ax.CameraPosition;
+        distance = norm(f);
+        f = f / distance;
+        up = ax.CameraUpVector - dot(ax.CameraUpVector, f) * f;
+        up = up / norm(up);
+        right = cross(f, up);
+        pos = getpixelposition(ax);
+        [~, tan_v] = view_tangents(ax, ax.CameraViewAngle);
+        mm_per_px = 2 * distance * tan_v / pos(4); % in the depth of the target
+        shift = -mm_per_px * (delta(1) * right + delta(2) * up);
+        set(ax, 'CameraPosition', ax.CameraPosition + shift, 'CameraTarget', ax.CameraTarget + shift);
         d.mouse0 = fig.CurrentPoint;
         S.drag = d;
         setappdata(fig, 'sim3d', S);
@@ -397,6 +486,14 @@ switch d.kind
             C = intersect_plane(ax.CurrentPoint, C0, d.view_dir) + d.offset;
         end
         S.setup.cameras(k).Position = round(C * 10) / 10;
+    case 'axis' % along one axis of the board
+        k = d.k;
+        s = position_on_line(ax.CurrentPoint, d.setup0.cameras(k).Position, d.axis_dir);
+        if isnan(s)
+            return
+        end
+        C = d.setup0.cameras(k).Position + (s - d.offset) * d.axis_dir;
+        S.setup.cameras(k).Position = round(C * 10) / 10;
     case 'target'
         k = d.k;
         p = intersect_plane(ax.CurrentPoint, [0 0 0], [0 0 1]) + d.offset;
@@ -412,7 +509,11 @@ set(fig, 'WindowButtonMotionFcn', '');
 d = S.drag;
 S.drag = [];
 setappdata(fig, 'sim3d', S);
-if isempty(d) || strcmp(d.kind, 'orbit')
+if isempty(d)
+    return
+end
+if strcmp(d.kind, 'orbit') || strcmp(d.kind, 'pan')
+    remember_cameras_in_view(fig);
     return
 end
 draw(fig, true);
@@ -426,6 +527,20 @@ function mouse_wheel(fig, evt)
 % the mouse only moves, so it cannot tell where the mouse is)
 S = getappdata(fig, 'sim3d');
 camzoom(S.ax3, 1.1 ^ (-evt.VerticalScrollCount));
+remember_cameras_in_view(fig);
+end
+
+function remember_cameras_in_view(fig)
+% after the user changed the view: a camera that is outside the view now stays so (draw shows
+% everything again only if a camera leaves the view while it is dragged)
+S = getappdata(fig, 'sim3d');
+try
+    g = simulate.geometry_3d(S.setup);
+catch
+    return
+end
+S.cam_visible = cameras_in_view(S.ax3, g, S.setup.board);
+setappdata(fig, 'sim3d', S);
 end
 
 function inside = over_axes(fig, ax)
@@ -445,4 +560,19 @@ if abs(denom) < 1e-12
 end
 s = dot(P0 - a, n) / denom;
 p = a + s * (b - a);
+end
+
+function s = position_on_line(ray, P0, e)
+% parameter s of the point P0 + s * e (e: unit vector) of a line that is closest to the mouse ray
+% (axes CurrentPoint, 2x3); NaN if the ray is (almost) parallel to the line
+a = ray(1, :);
+u = ray(2, :) - a;
+u = u / norm(u);
+b = dot(e, u);
+if 1 - b ^ 2 < 1e-6
+    s = NaN;
+    return
+end
+w = P0 - a;
+s = (b * dot(u, w) - dot(e, w)) / (1 - b ^ 2);
 end

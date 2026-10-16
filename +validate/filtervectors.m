@@ -12,11 +12,17 @@ if size(resultslist,2)>=frame
 	v=resultslist{4,frame};
 	typevector_original=resultslist{5,frame};
 	typevector=typevector_original;
+	% Second-peak substitution: u2/v2 of the analysis (if available)
+	u2=[]; v2=[];
+	if size(resultslist,1) >= 13
+		u2=resultslist{13,frame};
+		v2=resultslist{14,frame};
+	end
 	manualdeletion=gui.retr('manualdeletion');
 	if size(manualdeletion,2)>=frame
 		if isempty(manualdeletion{1,frame}) ==0
 			framemanualdeletion=manualdeletion{frame};
-			[u,v,typevector]=validate.manual_point_deletion(u,v,typevector,framemanualdeletion); %#ok<ASGLU>
+			[u,v,typevector,u2,v2]=validate.manual_point_deletion(u,v,typevector,framemanualdeletion,u2,v2); %#ok<ASGLU>
 		end
 	end
 	if numel(u)>0
@@ -61,12 +67,6 @@ if size(resultslist,2)>=frame
 			roi_freehand=[];
 		end
 
-		% Second-peak substitution: u2/v2 of the analysis (if available)
-		u2=[]; v2=[];
-		if size(resultslist,1) >= 13
-			u2=resultslist{13,frame};
-			v2=resultslist{14,frame};
-		end
 
 		% stereo-PIV: the velocity / magnitude limits were tested on the 3D result (stereo.limit_discard)
 		[u,v,u2,v2,apply_limits]=stereo.camera_limits(frame,u,v,u2,v2);
