@@ -148,6 +148,12 @@ for it = 2:d.Passes
         break
     end
 end
+% what the correction leaves: the last measurement minus the model fitted to it (for the report and the display)
+if isfield(disparity, 'raw_residual')
+    disparity.remaining = stereo.disparity_remaining(disparity.raw_residual, disparity.residual_u, disparity.residual_v, fit.used);
+else
+    disparity.remaining = stereo.disparity_remaining(raw, u_grid, v_grid, fit.used);
+end
 disparity.background = disparity_background;
 end
 

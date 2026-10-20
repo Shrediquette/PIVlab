@@ -3,14 +3,20 @@ function draw_disparity(target_axis, mode)
 %   stereo.draw_disparity(target_axis, mode), mode = value of the popup "Show:"
 %   2 measured disparity vectors (first measurement; green = used by the fit, red = rejected)
 %   3 fitted disparity map (colour = magnitude, arrows)
-%   4 remaining disparity (measured on the corrected images)
+%   4 remaining disparity (measured, what the correction leaves: stereo.disparity_remaining)
 %   5 overlay camera 1 (red) / camera 2 (cyan) with the disparity correction
 %   6 overlay without the disparity correction
+%   7 reconstruction residual of the image pair shown (after ANALYZE): how well the 2D results of both cameras
+%     fit one 3D velocity; large where one camera measured something the other one does not confirm
 % Grey in the overlay: both cameras see the same particles at the same place.
 delete(findobj(target_axis, 'Tag', 'stereo_disparity_display'));
 calib = gui.retr('stereo_calib');
 disparity = gui.retr('stereo_disparity');
 if mode <= 1 || isempty(calib)
+    return
+end
+if mode == 7
+    draw_residual(target_axis);
     return
 end
 if mode >= 5
@@ -56,23 +62,44 @@ switch mode
         arrows(target_axis, x, y, u, v, s, [1 1 1]);
         note(target_axis, sprintf('Fitted: %.1f ... %.1f px, arrows x%.0f', min(magnitude(:)), max(magnitude(:)), s));
     case 4
-        if isfield(disparity, 'raw_residual')
-            u = disparity.raw_residual.u; v = disparity.raw_residual.v;
-            what = 'corrected images';
-        else
+        % measured disparity that the correction leaves (stereo.disparity_remaining), only at the points that
+        % the fit used (inside the overlap, valid often enough): e.g. vectors at a water surface would dominate
+        % the colour scale
+        if isfield(disparity, 'remaining')
+            u = disparity.remaining.u; v = disparity.remaining.v;
+        else % measured before 2026-10-19
             u = disparity.fit.residual_u; v = disparity.fit.residual_v;
-            what = 'fit residual';
+            u(~disparity.fit.used) = NaN;
+            v(~disparity.fit.used) = NaN;
         end
-        % only the points that the fit used (inside the overlap, valid often enough): e.g. vectors at a
-        % water surface would dominate the colour scale and the maximum
-        u(~disparity.fit.used) = NaN;
-        v(~disparity.fit.used) = NaN;
         magnitude = sqrt(u .^ 2 + v .^ 2);
         colour_map(target_axis, x, y, magnitude);
         s = arrow_scale(calib, u, v);
         arrows(target_axis, x, y, u, v, s, [1 1 1]);
-        note(target_axis, sprintf('Remaining (%s): up to %.2f px, x%.0f', what, max(magnitude(:)), s));
+        note(target_axis, sprintf('Remaining (measured): up to %.1f px, arrows x%.0f', prctile(magnitude(:), 95), s));
 end
+end
+
+function draw_residual(target_axis)
+% reconstruction residual of the image pair shown (gui.retr('stereo_vel').residual, px of the common grid per
+% image pair, NaN where masked)
+handles = gui.gethand;
+frame = floor(get(handles.fileselector, 'Value'));
+stereo_vel = gui.retr('stereo_vel');
+resultslist = gui.retr('resultslist');
+if isempty(stereo_vel) || ~isfield(stereo_vel, 'residual') || isempty(resultslist)
+    note(target_axis, 'Reconstruction residual: run ANALYZE first.');
+    return
+end
+if frame > size(stereo_vel.residual, 3) || frame > size(resultslist, 2) || isempty(resultslist{1, frame}) ...
+        || all(isnan(stereo_vel.residual(:, :, frame)), 'all')
+    note(target_axis, 'Reconstruction residual: none for this frame (e.g. a mean frame).');
+    return
+end
+residual = abs(double(stereo_vel.residual(:, :, frame))); % the sign has no meaning for the user
+colour_map(target_axis, double(resultslist{1, frame}), double(resultslist{2, frame}), residual);
+note(target_axis, sprintf('Reconstruction residual: rms %.2f px, max %.2f px', ...
+    sqrt(mean(residual(:) .^ 2, 'omitnan')), max(residual(:), [], 'omitnan')));
 end
 
 function s = arrow_scale(calib, u, v)

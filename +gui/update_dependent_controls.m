@@ -137,6 +137,20 @@ if strcmp(flow3d, 'vortex_jet')
 else
     set(handles.sim3d_w_text, 'String', 'Out-of-plane displacement [mm]:');
 end
+% sphere wake: the rows of the vortex radius and of w hold the sphere diameter and the time between the pairs
+sphere = strcmp(flow3d, 'sphere');
+show(handles.sim3d_radius, ~sphere);
+show(handles.sim3d_w, ~sphere);
+show(handles.sim3d_sphere_d, sphere);
+show(handles.sim3d_sphere_dt, sphere);
+if sphere
+    set(handles.sim3d_displ_text, 'String', 'Free stream displ. [mm]:');
+    set(handles.sim3d_radius_text, 'String', 'Sphere diameter [mm]:');
+    set(handles.sim3d_w_text, 'String', 'Time between pairs [D/U]:');
+else
+    set(handles.sim3d_displ_text, 'String', 'In-plane displacement [mm]:');
+    set(handles.sim3d_radius_text, 'String', 'Vortex core radius [mm]:');
+end
 
 %% Stereo-PIV: camera switch and the menus of camera 2 only in stereo mode
 stereo_mode = isequal(gui.retr('stereomode'), 1);

@@ -452,13 +452,19 @@ fprintf('agreement of camera 1 and camera 2 images: %.2f without, %.2f with the 
 steps = get(handles.stereo_steps, 'String');
 verifyTrue(testCase, startsWith(steps{5}, char(10003)), 'checklist: disparity not ticked');
 verifyNotEmpty(testCase, strfind(strjoin(get(handles.stereo_disp_report, 'String'), ' '), 'Light sheet'));
+% measured remaining disparity (what the correction leaves): small on synthetic data, in the report
+remaining = gui.retr('stereo_disparity').remaining;
+verifyLessThan(testCase, remaining.rms, 0.3, 'measured remaining disparity [px]');
+verifyNotEmpty(testCase, strfind(strjoin(get(handles.stereo_disp_report, 'String'), ' '), 'Remaining (measured)'));
 roirect = gui.retr('roirect');
 verifyEqual(testCase, roirect, gui.retr('stereo_calib').auto_roi, 'automatic ROI not adapted');
-for mode = 2:6
+for mode = 2:7 % 7: reconstruction residual, before ANALYZE only a note
     set(handles.stereo_disp_show, 'Value', mode);
     gui.sliderdisp(gui.retr('pivlab_axis'));
     verifyNotEmpty(testCase, findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_disparity_display'), sprintf('display %d', mode));
 end
+label = findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_disparity_display', 'Type', 'text');
+verifyTrue(testCase, contains(label.String, 'run ANALYZE first'), label.String);
 stereo.show_3d_Callback;
 fig = findall(0, 'Type', 'figure', 'Name', 'Stereo-PIV setup in 3D');
 verifyNotEmpty(testCase, findobj(fig, 'Type', 'surface'), 'light sheet missing in the 3D view');
@@ -524,6 +530,18 @@ check_accuracy(testCase, result_error(c), [0.008 0.008 0.01]);
 % display as in 2D: vectors on the image, no W colour map under them (W: derived parameter "w component")
 gui.sliderdisp(gui.retr('pivlab_axis'));
 verifyNumElements(testCase, findobj(gui.retr('pivlab_axis'), 'Type', 'image'), 1, 'more than the particle image under the vectors');
+% Stereo-PIV panel, Show "Reconstruction residual": map of |residual| of the image pair shown, rms and max
+gui.switchui('multip30');
+set(handles.fileselector, 'Value', 2); gui.fileselector_Callback(handles.fileselector, [], []);
+set(handles.stereo_disp_show, 'Value', 7);
+gui.sliderdisp(gui.retr('pivlab_axis'));
+residual = abs(double(gui.retr('stereo_vel').residual(:, :, 2)));
+label = findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_disparity_display', 'Type', 'text');
+verifyEqual(testCase, label.String, sprintf(' Reconstruction residual: rms %.2f px, max %.2f px ', ...
+    sqrt(mean(residual(:) .^ 2, 'omitnan')), max(residual(:), [], 'omitnan')));
+verifyNotEmpty(testCase, findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_disparity_display', 'Type', 'image'), 'residual map');
+set(handles.stereo_disp_show, 'Value', 1);
+set(handles.fileselector, 'Value', 1); gui.fileselector_Callback(handles.fileselector, [], []);
 % validation of both cameras, then undo
 validate.apply_filter_all_Callback;
 state = gui.retr('stereo_cam_state');

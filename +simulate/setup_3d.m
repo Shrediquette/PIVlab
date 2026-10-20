@@ -16,9 +16,13 @@ function setup = setup_3d(opts)
 %                     towards camera 1), TiltX, TiltY [deg] (rotation about the board x / y axis),
 %                     Thickness [mm] (e^-2 intensity)
 %   setup.flow        Type: 'vortex_jet' (Rankine vortex with an out-of-plane jet in its core),
-%                     'rankine', 'uniform' (u = InPlane, v = 0), 'rotation' (solid body), 'membrane';
-%                     InPlane [mm] (max in-plane displacement per image pair), Radius [mm] (vortex
-%                     core), OutOfPlane [mm] (peak w of the jet, or constant w of the other flows)
+%                     'rankine', 'uniform' (u = InPlane, v = 0), 'rotation' (solid body), 'membrane',
+%                     'sphere' (unsteady wake of a sphere, simulate.sphere_wake: every image pair is
+%                     a later moment of the flow); InPlane [mm] (max in-plane displacement per image
+%                     pair; sphere: free stream displacement), Radius [mm] (vortex core), OutOfPlane
+%                     [mm] (peak w of the jet, or constant w of the other flows), Diameter [mm]
+%                     (sphere), Spacing (sphere: time between image pairs in D/U, i.e. free stream
+%                     travel between the pairs in sphere diameters)
 %   setup.particles   Density [particles per pixel], Diameter, DiameterVariation [px], Noise (imnoise variance)
 %   setup.output      Pairs (image pairs per camera), CalibrationImages (per camera), Backgrounds (mat file
 %                     with the cell array backgrounds, or a folder with photos, e.g. of the experimenter:
@@ -46,7 +50,8 @@ end
 setup.sheet = struct('Offset', t.sim3d_sheet_offset, 'TiltX', t.sim3d_sheet_tiltx, 'TiltY', t.sim3d_sheet_tilty, ...
     'Thickness', t.sim3d_sheet_thick);
 types = simulate.flow_types_3d;
-setup.flow = struct('Type', types{t.sim3d_flow}, 'InPlane', t.sim3d_displ, 'Radius', t.sim3d_radius, 'OutOfPlane', t.sim3d_w);
+setup.flow = struct('Type', types{t.sim3d_flow}, 'InPlane', t.sim3d_displ, 'Radius', t.sim3d_radius, 'OutOfPlane', t.sim3d_w, ...
+    'Diameter', t.sim3d_sphere_d, 'Spacing', t.sim3d_sphere_dt);
 setup.particles = struct('Density', t.sim3d_ppp, 'Diameter', t.sim3d_psize, 'DiameterVariation', t.sim3d_pvar, 'Noise', t.sim3d_noise);
 setup.output = struct('Pairs', t.sim3d_pairs, 'CalibrationImages', t.sim3d_ncalib, ...
     'Backgrounds', fullfile(fileparts(fileparts(mfilename('fullpath'))), 'images', 'calibration_backgrounds.mat'));

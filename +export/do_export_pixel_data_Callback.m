@@ -102,6 +102,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
     export_figure=figure('Name','Exporting, please wait. Please don''t close or resize this window.','NumberTitle','off','visible','on','units','pixels','Toolbar','none','DockControls','off','WindowState','normal','Color','w');
 
     set(export_figure,'units','normalized','outerposition',[0 0 1 1]) %unfortunately, setting figure to fullscreen still reports a non-fullscreen position in matlab...
+    wait_for_window_size(export_figure)
 
     if verLessThan('matlab','9.8')  %2020a and up contains exportgraphics
         use_exportfig =1;
@@ -130,21 +131,6 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
                 end
             end
             gui.sliderdisp(export_axis);
-            if i==startframe
-                pause(0.1)
-                target_size = export_axis.Position(1); %get the target size
-            end
-            retries=0;
-            while gca().Position(1) ~= target_size %new Matlabs have issues rendering correctly when focus is stolen from window. gca gets the axis currently in focus and compares its size to the size of the desired export axis. If the focus was lost, then these will differ.
-                pause(0.01)
-                disp ('Getting focus back')
-                figure(export_figure); %get back the focus
-                retries=retries+1;
-                if retries>3
-                    disp('Could not export correctly.')
-                    break
-                end
-            end
 
             switch selected_format
                 case 'PNG'
@@ -238,4 +224,20 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
     end
     set(handles.fileselector, 'value',startframe)
     gui.sliderdisp(pivlab_axis)
+end
+end
+
+function wait_for_window_size(export_figure)
+%New Matlabs report the real window size (without title bar and borders) only about 0.4 s after
+%the window was opened. Before that, Position equals OuterPosition. If the first frame is drawn
+%too early, the layout changes after it, and the crop rectangle of the first frame (used for all
+%frames of a video) does not fit the other frames.
+drawnow;
+for k=1:40 %wait max. 2 s
+    if ~isequal(get(export_figure,'Position'), get(export_figure,'OuterPosition'))
+        break
+    end
+    pause(0.05);
+    drawnow;
+end
 end

@@ -75,14 +75,22 @@ p2(1:2) = 0;
 flow = uipanel(page2,'Units','characters','Position',pos(p2,-margin,0,w,7.5),'title','Flow','fontweight','bold');
 pf = get(flow,'Position');
 uicontrol(flow,'Style','popupmenu','String',flow_labels,'Value',t.sim3d_flow,'Units','characters','Position',pos(pf,0,0,pf(3),1.5), ...
-    'Tag','sim3d_flow','Callback',cb,'TooltipString','Flow in the light sheet, centred in the overlap of the camera views. The same flow is used for all image pairs.');
+    'Tag','sim3d_flow','Callback',cb,'TooltipString',['Flow in the light sheet, centred in the overlap of the camera views. ' ...
+    'The same flow is used for all image pairs, except for the sphere wake: a 3D flow simulation (takes about a minute), ' ...
+    'every image pair is a later moment of the flow.']);
 y = 1.5 + margin/4;
-row_edits(flow, pf, y, 'In-plane displacement [mm]:', {'sim3d_displ'}, t.sim3d_displ, {'Maximum in-plane displacement between image A and B'});
+row_edits(flow, pf, y, 'In-plane displacement [mm]:', {'sim3d_displ'}, t.sim3d_displ, ...
+    {'Maximum in-plane displacement between image A and B (sphere wake: displacement of the free stream)'}, 'sim3d_displ_text');
 y = y + 1;
-row_edits(flow, pf, y, 'Vortex core radius [mm]:', {'sim3d_radius'}, t.sim3d_radius, {'Radius of the vortex core (and of the jet)'});
+row_edits(flow, pf, y, 'Vortex core radius [mm]:', {'sim3d_radius'}, t.sim3d_radius, {'Radius of the vortex core (and of the jet)'}, 'sim3d_radius_text');
+overlay_edit(flow, pf, y, 'sim3d_sphere_d', t.sim3d_sphere_d, ['Diameter of the sphere. Its centre is in the light sheet, ' ...
+    'near the left edge of the camera views; the flow goes from left to right (+x).']);
 y = y + 1;
 row_edits(flow, pf, y, 'Out-of-plane displacement [mm]:', {'sim3d_w'}, t.sim3d_w, ...
     {'Displacement perpendicular to the light sheet: peak of the jet in the vortex core, or constant for the other flows'}, 'sim3d_w_text');
+overlay_edit(flow, pf, y, 'sim3d_sphere_dt', t.sim3d_sphere_dt, ['Time between two image pairs in D/U: the free stream ' ...
+    'travels this many sphere diameters. A vortex is shed about every 5 D/U: 0.25 gives a time-resolved series, ' ...
+    '5 or more nearly independent snapshots (longer computation).']);
 
 part = uipanel(page2,'Units','characters','Position',pos(p2,-margin,7.5+margin/4,w,6.5),'title','Particles','fontweight','bold');
 pq = get(part,'Position');
@@ -115,6 +123,16 @@ uicontrol(P,'Style','pushbutton','String','Generate images...','Units','characte
     'TooltipString','Select an output folder and generate all images and the ground truth');
 y = y + 1.5 + margin/4;
 uicontrol(P,'Style','text','String','','Units','characters','HorizontalAlignment','left','Position',pos(pp,0,y,w,6),'Tag','sim3d_status');
+end
+
+function overlay_edit(parent, pp, y, tag, value, tip)
+% an edit field at the place of the edit field of a row (only one of the two is visible,
+% depending on the flow type: gui.update_dependent_controls)
+w = pp(3);
+margin = gui.retr('margin');
+uicontrol(parent,'Style','edit','String',gui.setting_text(value),'Units','characters', ...
+    'Position',[w*2/3+margin pp(4)-1-margin-y w/3-margin*2 1],'Tag',tag,'Callback',@simulate.setting_3d_Callback, ...
+    'TooltipString',tip,'Visible','off');
 end
 
 function row_edits(parent, pp, y, label, tags, values, tips, label_tag)

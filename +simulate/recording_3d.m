@@ -6,7 +6,8 @@ function result = recording_3d(setup, folder, opts)
 % setup: see simulate.setup_3d (cameras, lens, board, light sheet, flow, particles, output)
 %
 % Written to folder (k = camera number):
-%   camera<k>/particle_images/cam<k>_0001_A.tif, cam<k>_0001_B.tif, ...   image pairs (same flow, new particles)
+%   camera<k>/particle_images/cam<k>_0001_A.tif, cam<k>_0001_B.tif, ...   image pairs (same flow, new particles;
+%                                                                         sphere wake: a time series of the flow)
 %   camera<k>/board_in_light_sheet_cam<k>.tif    the board where the light sheet is (stereo calibration)
 %   camera<k>/calibration_images/calib_cam<k>_01.tif, ...   the board in random positions (lens calibration)
 %   camera<k>/true_lens_cam<k>.mat     the true lens: file of "Load camera parameters" (for comparison)
@@ -87,14 +88,26 @@ end
 
 %% flow field on a grid in sheet coordinates, around all views
 box = g.region;
-extent = max(box(2) - box(1), box(4) - box(3));
-spacing = extent / 300;
-if any(strcmp(setup.flow.Type, {'vortex_jet', 'rankine'}))
-    spacing = min(spacing, setup.flow.Radius / 8);
+sphere = [];
+if strcmp(setup.flow.Type, 'sphere')
+    % time series: every image pair is a later moment of the flow (3D field in a slab around the sheet)
+    sphere = sphere_flow(setup, g, max(1, setup.output.Pairs), progress);
+    X = sphere.X;
+    Y = sphere.Y;
+    mid = sphere.mid; % the two grid planes next to the sheet centre: the ground truth is their mean
+    U = squeeze(mean(sphere.U(:, :, mid, :), 3));
+    V = squeeze(mean(sphere.V(:, :, mid, :), 3));
+    W = squeeze(mean(sphere.W(:, :, mid, :), 3));
+else
+    extent = max(box(2) - box(1), box(4) - box(3));
+    spacing = extent / 300;
+    if any(strcmp(setup.flow.Type, {'vortex_jet', 'rankine'}))
+        spacing = min(spacing, setup.flow.Radius / 8);
+    end
+    pad = 0.1 * extent;
+    [X, Y] = meshgrid(box(1) - pad:spacing:box(2) + pad + spacing, box(3) - pad:spacing:box(4) + pad + spacing);
+    [U, V, W] = flow_3d(setup.flow, X, Y, g);
 end
-pad = 0.1 * extent;
-[X, Y] = meshgrid(box(1) - pad:spacing:box(2) + pad + spacing, box(3) - pad:spacing:box(4) + pad + spacing);
-[U, V, W] = flow_3d(setup.flow, X, Y, g);
 
 %% particle images
 n_particles = round(setup.particles.Density * prod(sz) * (box(2) - box(1)) * (box(4) - box(3)) / mean(area(g.views)));
@@ -103,9 +116,16 @@ for k = 1:n_cams
 end
 for n = 1:setup.output.Pairs
     progress(sprintf('Particle images: pair %d of %d...', n, setup.output.Pairs));
-    out = simulate.particle_images(Cameras=g.cams, Region=box, X=X, Y=Y, U=U, V=V, W=W, Particles=n_particles, ...
-        SheetThickness=setup.sheet.Thickness, SheetPose=g.sheet_pose, PeakIntensity=200, Diameter=setup.particles.Diameter, ...
-        DiameterVariation=setup.particles.DiameterVariation, Noise=setup.particles.Noise, Seed=opts.Seed * 100000 + n);
+    if isempty(sphere)
+        out = simulate.particle_images(Cameras=g.cams, Region=box, X=X, Y=Y, U=U, V=V, W=W, Particles=n_particles, ...
+            SheetThickness=setup.sheet.Thickness, SheetPose=g.sheet_pose, PeakIntensity=200, Diameter=setup.particles.Diameter, ...
+            DiameterVariation=setup.particles.DiameterVariation, Noise=setup.particles.Noise, Seed=opts.Seed * 100000 + n);
+    else
+        out = simulate.particle_images(Cameras=g.cams, Region=box, X=X, Y=Y, Z=sphere.Z, U=sphere.U(:, :, :, n), ...
+            V=sphere.V(:, :, :, n), W=sphere.W(:, :, :, n), Obstacle=sphere.obstacle, Particles=n_particles, ...
+            SheetThickness=setup.sheet.Thickness, SheetPose=g.sheet_pose, PeakIntensity=200, Diameter=setup.particles.Diameter, ...
+            DiameterVariation=setup.particles.DiameterVariation, Noise=setup.particles.Noise, Seed=opts.Seed * 100000 + n);
+    end
     for k = 1:n_cams
         base = fullfile(folder, sprintf('camera%d', k), 'particle_images', sprintf('cam%d_%04d', k, n));
         imwrite(out.A{k}, [base '_A.tif']);
@@ -117,6 +137,13 @@ end
 %% ground truth
 progress('Ground truth...');
 truth = ground_truth(setup, g, X, Y, U, V, W);
+if ~isempty(sphere)
+    truth.sphere = struct('Centre', sphere.obstacle.Centre, 'Diameter', 2 * sphere.obstacle.Radius, 'Time', sphere.t, ...
+        'GridSpacing', sphere.h);
+    truth.description = [truth.description ' Sphere wake: U, V, W, Uw, Vw, Ww have one page per image pair ' ...
+        '(third dimension), simulate.truth_at_board(truth, x, y, Pair=n); sphere: centre (sheet coordinates), ' ...
+        'diameter, time of each pair in D/U.'];
+end
 result.truth_file = fullfile(folder, 'ground_truth.mat');
 save(result.truth_file, 'truth');
 save(fullfile(folder, 'generator_setup.mat'), 'setup');
@@ -292,6 +319,50 @@ end
 W = zeros(size(X)) + flow.OutOfPlane;
 end
 
+function s = sphere_flow(setup, g, pairs, progress)
+% unsteady flow around a sphere (simulate.sphere_wake) as displacement per image pair [mm] on a
+% grid in sheet coordinates: the sphere centre is in the sheet near the left edge of the overlap
+% of the views, the flow goes in +x. The grid covers all views; at most about 1 million cells.
+flow = setup.flow;
+Dm = flow.Diameter;
+if ~(Dm > 0) || ~(flow.Spacing > 0) || ~(flow.InPlane > 0)
+    error('simulate:recording_3d:sphere', ...
+        'Sphere wake: the sphere diameter, the free stream displacement and the time between the image pairs must be positive.');
+end
+c = simulate.sphere_centre_3d(g, Dm);
+xc = c(1);
+yc = c(2);
+box = g.region;
+pad = 0.1 * max(box(2) - box(1), box(4) - box(3));
+x_in = min(box(1) - pad, xc - 2 * Dm);
+x_out = max(box(2) + pad, xc + 4 * Dm);
+half_y = max(max(abs(box(3:4) - yc)) + pad, 2.5 * Dm);
+L = [(x_out - x_in) / Dm, 2 * half_y / Dm, 5]; % domain size in sphere diameters (z: 5, periodic)
+budget = 1e6; % grid cells
+cpd = min(12, (budget / prod(L)) ^ (1 / 3)); % grid cells per sphere diameter
+if cpd < 6
+    error('simulate:recording_3d:sphere', ...
+        'Sphere wake: the sphere is too small for the field of view of the cameras. Use a diameter of at least %.0f mm.', ...
+        ceil(Dm * sqrt(prod(L) * 6 ^ 3 / budget)));
+end
+cells = [ceil(L(1) * cpd), 2 * ceil(L(2) * cpd / 2), 2 * ceil(L(3) * cpd / 2)];
+h = Dm / cpd;
+% slab around the sheet: the seeded particles (sheet thickness + out-of-plane motion, |w| < free stream)
+slab = ceil((setup.sheet.Thickness + 1.2 * flow.InPlane) / h) + 1;
+progress(sprintf('Sphere flow: %d x %d x %d grid cells...', cells));
+out = simulate.sphere_wake(Cells=cells, Diameter=cpd, Inlet=(xc - x_in) / Dm, Count=pairs, Spacing=flow.Spacing, ...
+    SlabCells=slab, Progress=progress);
+[s.X, s.Y] = meshgrid(xc + out.x * Dm, yc + out.y * Dm);
+s.Z = out.z * Dm;
+s.U = double(out.U) * flow.InPlane;
+s.V = double(out.V) * flow.InPlane;
+s.W = double(out.W) * flow.InPlane;
+s.mid = find(abs(out.z) == min(abs(out.z)));
+s.obstacle = struct('Centre', [xc yc 0], 'Radius', Dm / 2);
+s.t = out.t;
+s.h = h;
+end
+
 function truth = ground_truth(setup, g, X, Y, U, V, W)
 truth.description = ['Ground truth of simulate.recording_3d. Displacement per image pair in mm. ' ...
     'X, Y, U, V, W: sheet coordinates (the light sheet is the plane z = 0, sheet_pose moves it to the world). ' ...
@@ -346,7 +417,14 @@ for k = 1:n
 end
 p('Light sheet: offset %g mm (towards camera 1), tilt %g deg about x, %g deg about y, thickness %g mm', ...
     setup.sheet.Offset, setup.sheet.TiltX, setup.sheet.TiltY, setup.sheet.Thickness);
-p('Flow: %s, in-plane %g mm, radius %g mm, out-of-plane %g mm', setup.flow.Type, setup.flow.InPlane, setup.flow.Radius, setup.flow.OutOfPlane);
+if isfield(truth, 'sphere')
+    p('Flow: sphere wake (3D flow simulation), free stream displacement %g mm per image pair (in +x), sphere diameter %g mm,', ...
+        setup.flow.InPlane, setup.flow.Diameter);
+    p('      sphere centre [%.1f %.1f] mm in sheet coordinates, %g D/U between the image pairs (time series)', ...
+        truth.sphere.Centre(1:2), setup.flow.Spacing);
+else
+    p('Flow: %s, in-plane %g mm, radius %g mm, out-of-plane %g mm', setup.flow.Type, setup.flow.InPlane, setup.flow.Radius, setup.flow.OutOfPlane);
+end
 p('Particles: %g per pixel, diameter %g px (+-%g), noise %g', setup.particles.Density, setup.particles.Diameter, ...
     setup.particles.DiameterVariation, setup.particles.Noise);
 p('');

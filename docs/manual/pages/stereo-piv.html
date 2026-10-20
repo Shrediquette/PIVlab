@@ -201,17 +201,20 @@
       <tr><td>Stdev / Median</td><td>Validation of the disparity vectors (defaults 6 and 3).</td></tr>
     </table>
     <p>The report gives the number of rejected vectors, the disparity before the correction,
-    what remains after it, and the position and tilt of the light sheet relative to the board.
-    A warning appears when more than 1 px remains — then check the lens calibrations and the
-    board images.</p>
+    what remains after it (measured), and the position and tilt of the light sheet relative to
+    the board. A warning appears when more than 1 px remains in parts of the image. Then look at
+    <span class="ui">Remaining disparity</span> (below): a pattern shows where the cameras still
+    disagree. Possible causes are the lens calibrations, the board images, or a light sheet that
+    is not flat (e.g. refracted by a wavy water surface).</p>
     <p>With <span class="ui">Show</span> you can look at the result while the panel is open:</p>
     <table class="ref">
       <tr><th>Display</th><th>Shows</th></tr>
       <tr><td>Camera image</td><td>The corrected image of the active camera.</td></tr>
       <tr><td>Disparity: measured vectors</td><td>The measured shifts between the cameras; rejected vectors are marked.</td></tr>
       <tr><td>Disparity: fitted map</td><td>The smooth map that is used for the correction.</td></tr>
-      <tr><td>Remaining disparity</td><td>Measured minus fitted — should be small and random.</td></tr>
+      <tr><td>Remaining disparity</td><td>What the correction leaves (measured minus fitted) — should be small and random.</td></tr>
       <tr><td>Overlay cam 1 / cam 2</td><td>Camera 1 red, camera 2 cyan, with or without the correction. Large structures (walls, edges, particle clouds) should line up after the correction. Single particles only overlap (grey) in a thin light sheet: each camera sees particles at different depths of the sheet at slightly different places, and the correction removes only the mean shift.</td></tr>
+      <tr><td>Reconstruction residual (after ANALYZE)</td><td>For the image pair shown: how well the 2D results of both cameras fit one 3D velocity. Large values mean that one camera's vector is probably wrong there, or that the cameras do not see the same place (see Remaining disparity).</td></tr>
     </table>
     <div class="note">
       <strong>Masks after the disparity correction</strong>

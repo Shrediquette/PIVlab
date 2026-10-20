@@ -29,6 +29,10 @@ function out = particle_images(opts)
 % Particle positions in image B are the positions in image A plus the
 % displacement at the image A positions.
 %
+% 3D field (varies across the light sheet): Z holds the sheet-normal
+% coordinates of the grid planes, U, V, W are [rows columns numel(Z)].
+% Obstacle (e.g. a sphere in the sheet): no particles inside it.
+%
 % Output struct:
 %   A, B       cell arrays (one per camera) of uint8 images
 %   particles  sheet coordinates of the particles in image A and B (N-by-3),
@@ -42,6 +46,8 @@ arguments
     opts.U double = []                      % displacement on the grid; default: no motion
     opts.V double = []
     opts.W double = []                      % out-of-plane displacement on the grid; default: 0
+    opts.Z double = []                      % sheet-normal coordinates of the grid planes (3D field)
+    opts.Obstacle = []                      % struct with Centre [x y z] and Radius (sheet coordinates): sphere without particles
     opts.Particles (1,1) double = 200000    % number of particles in Region inside +-SheetThickness
     opts.Region double = []                 % [xmin xmax ymin ymax] in sheet coordinates; default: field of view of the cameras
     opts.Diameter (1,1) double = 3          % mean particle image diameter [px] (e^-2 intensity)
@@ -84,10 +90,24 @@ n = round(opts.Particles * area_ratio * zlim / dz);
 
 %% Particles and their motion
 PA = [box(1) + rand(n, 1) * (box(2) - box(1)), box(3) + rand(n, 1) * (box(4) - box(3)), (2 * rand(n, 1) - 1) * zlim];
-u = displacement_at(opts.X, opts.Y, opts.U, PA(:, 1), PA(:, 2));
-v = displacement_at(opts.X, opts.Y, opts.V, PA(:, 1), PA(:, 2));
-w = displacement_at(opts.X, opts.Y, opts.W, PA(:, 1), PA(:, 2));
+if isempty(opts.Z)
+    u = displacement_at(opts.X, opts.Y, opts.U, PA(:, 1), PA(:, 2));
+    v = displacement_at(opts.X, opts.Y, opts.V, PA(:, 1), PA(:, 2));
+    w = displacement_at(opts.X, opts.Y, opts.W, PA(:, 1), PA(:, 2));
+else
+    u = displacement_at_3d(opts.X, opts.Y, opts.Z, opts.U, PA);
+    v = displacement_at_3d(opts.X, opts.Y, opts.Z, opts.V, PA);
+    w = displacement_at_3d(opts.X, opts.Y, opts.Z, opts.W, PA);
+end
 PB = PA + [u, v, w];
+if ~isempty(opts.Obstacle) % no particles inside the obstacle (in image A or B)
+    rA = vecnorm(PA - opts.Obstacle.Centre, 2, 2);
+    rB = vecnorm(PB - opts.Obstacle.Centre, 2, 2);
+    keep = rA > opts.Obstacle.Radius & rB > opts.Obstacle.Radius;
+    PA = PA(keep, :);
+    PB = PB(keep, :);
+    n = size(PA, 1);
+end
 d = max(opts.Diameter + randn(n, 1) / 2 * opts.DiameterVariation, 0.5);
 IA = opts.PeakIntensity * exp(-8 * PA(:, 3).^2 / dz^2);
 IB = opts.PeakIntensity * exp(-8 * PB(:, 3).^2 / dz^2);
@@ -125,6 +145,22 @@ if min(size(F)) >= 4
 else
     f = interp2(X, Y, F, xq, yq, 'linear'); % cubic needs at least 4 grid points in each direction
 end
+end
+
+function f = displacement_at_3d(X, Y, Z, F, P)
+% displacement F (given on the grid X, Y and the planes Z) at the points P;
+% beyond the grid, the values at the grid edge are continued
+if isempty(F)
+    f = zeros(size(P, 1), 1);
+    return
+end
+xq = min(max(P(:, 1), min(X(:))), max(X(:)));
+yq = min(max(P(:, 2), min(Y(:))), max(Y(:)));
+zq = min(max(P(:, 3), min(Z)), max(Z));
+X3 = repmat(X, 1, 1, numel(Z));
+Y3 = repmat(Y, 1, 1, numel(Z));
+Z3 = repmat(reshape(Z, 1, 1, []), size(X, 1), size(X, 2), 1);
+f = interp3(X3, Y3, Z3, double(F), xq, yq, zq, 'linear');
 end
 
 function img = render(xy, d, I, imageSize)

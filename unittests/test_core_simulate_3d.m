@@ -118,6 +118,9 @@ s = testCase.TestData.Setup;
 types = simulate.flow_types_3d;
 g = simulate.geometry_3d(s);
 for k = 1:numel(types)
+    if strcmp(types{k}, 'sphere') % flow simulation, faster than the free stream around the sphere: test_sphere_recording
+        continue
+    end
     s.flow.Type = types{k};
     s.output.Pairs = 0;
     s.output.CalibrationImages = 0;
@@ -131,6 +134,66 @@ for k = 1:numel(types)
     testCase.verifyLessThan(abs(max(inplane(inside)) - s.flow.InPlane), 0.2 * s.flow.InPlane, types{k});
     clear cleanup
 end
+end
+
+function test_sphere_wake_solver(testCase)
+% simulate.sphere_wake on a small grid: free stream upstream, no flow in the sphere, a velocity
+% deficit behind it, an unsteady wake after the spin-up, snapshots at the requested times
+o = simulate.sphere_wake(Cells=[64 32 32], Diameter=8, Inlet=2, Count=3, Spacing=0.5, SpinUp=20, SlabCells=2);
+testCase.verifySize(o.U, [32 64 4 3]);
+testCase.verifyEqual(o.t, 20 + [0 0.5 1], 'AbsTol', 1e-9);
+testCase.verifyFalse(any(isnan(o.U(:))));
+[~, iy] = min(abs(o.y));
+[~, ix_up] = min(abs(o.x + 1.5));
+[~, ix_c] = min(abs(o.x));
+[~, ix_wake] = min(abs(o.x - 1));
+U = mean(o.U(:, :, 2:3, :), 3); % the two planes next to the sphere centre
+testCase.verifyEqual(double(U(iy, ix_up, 1)), 1, 'AbsTol', 0.1, 'free stream upstream');
+testCase.verifyEqual(double(U(iy, ix_c, 1)), 0, 'AbsTol', 1e-12, 'inside the sphere');
+testCase.verifyLessThan(double(U(iy, ix_wake, 1)), 0.6, 'velocity deficit behind the sphere');
+change = abs(o.V(:, :, :, 3) - o.V(:, :, :, 1));
+testCase.verifyGreaterThan(max(change(:)), 0.02, 'the wake changes in time');
+end
+
+function test_sphere_recording(testCase)
+% flow 'sphere': a time series (one truth page per image pair), the sphere has no particles,
+% the free stream displacement and the truth at the board of a given pair
+s = testCase.TestData.Setup;
+s.flow.Type = 'sphere';
+s.flow.Spacing = 0.5;
+s.output.Pairs = 2;
+s.output.CalibrationImages = 0;
+D = tempname;
+r = simulate.recording_3d(s, D);
+t = r.truth;
+testCase.verifySize(t.U, [size(t.X) 2]);
+testCase.verifyEqual(t.sphere.Diameter, s.flow.Diameter);
+testCase.verifyEqual(diff(t.sphere.Time), 0.5, 'AbsTol', 1e-9);
+% free stream displacement upstream of the sphere, nothing inside
+c = t.sphere.Centre;
+up = interp2(t.X, t.Y, t.U(:, :, 1), c(1) - 1.2 * s.flow.Diameter, c(2));
+testCase.verifyEqual(up, s.flow.InPlane, 'RelTol', 0.1);
+testCase.verifyEqual(interp2(t.X, t.Y, t.U(:, :, 1), c(1), c(2)), 0, 'AbsTol', 1e-9);
+testCase.verifyGreaterThan(max(abs(t.V(:, :, 2) - t.V(:, :, 1)), [], 'all'), 0.005 * s.flow.InPlane, 'time series');
+% truth at the board of pair 2 (without sheet offset and tilt: the sheet position)
+t0 = t;
+t0.sheet_pose = rigidtform3d;
+[U2, V2] = simulate.truth_at_board(t0, c(1) + [40 60], c(2) + [5 -5], Pair=2);
+testCase.verifyEqual(U2, interp2(t.X, t.Y, t.U(:, :, 2), c(1) + [40 60], c(2) + [5 -5]), 'AbsTol', 1e-12);
+testCase.verifyEqual(V2, interp2(t.X, t.Y, t.V(:, :, 2), c(1) + [40 60], c(2) + [5 -5]), 'AbsTol', 1e-12);
+% no particles in the sphere: its image is dark in both cameras
+g = simulate.geometry_3d(s);
+for k = 1:2
+    I = double(imread(fullfile(D, sprintf('camera%d', k), 'particle_images', sprintf('cam%d_0001_A.tif', k))));
+    centre = simulate.project(g.cams{k}, transformPointsForward(g.sheet_pose, c));
+    [xx, yy] = meshgrid(1:size(I, 2), 1:size(I, 1));
+    radius_px = 0.3 * s.flow.Diameter / (g.region(2) - g.region(1)) * size(I, 2);
+    in_sphere = hypot(xx - centre(1), yy - centre(2)) < radius_px;
+    bright = I > 60; % particle images (sensor noise stays far below)
+    testCase.verifyLessThan(mean(bright(in_sphere)), 0.05 * mean(bright(~in_sphere)), sprintf('camera %d: particles in the sphere', k));
+end
+testCase.verifySubstring(fileread(fullfile(D, 'README.txt')), 'sphere wake');
+rmdir(D, 's');
 end
 
 function test_geometry_problems(testCase)

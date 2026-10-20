@@ -323,6 +323,30 @@ verifyTrue(testCase, isnan(stereo.disparity_uncertainty(calib, struct('x', x, 'y
     'v_frames', raw.v_frames(:, :, 1:3)), "poly2")), 'fewer than 4 pairs: no estimate');
 end
 
+function test_disparity_remaining(testCase)
+% stereo.disparity_remaining: a local structure the model does not follow (a stripe of 5 px) is reported with its
+% rms, without the noise of the measurement; the noise is estimated from two halves of the image pairs
+rng(5, 'twister');
+[x, ~] = meshgrid(1:40, 1:30);
+model_u = zeros(size(x));
+model_v = zeros(size(x));
+stripe = 5 * (x >= 20 & x <= 25); % horizontal disparity in a vertical stripe
+n = 20;
+sigma = 2;
+measured.u_frames = stripe + sigma * randn([size(x) n]);
+measured.v_frames = sigma * randn([size(x) n]);
+measured.u = mean(measured.u_frames, 3);
+measured.v = mean(measured.v_frames, 3);
+used = true(size(x));
+used(1, :) = false;
+remaining = stereo.disparity_remaining(measured, model_u, model_v, used);
+expected_rms = sqrt(mean(stripe(used) .^ 2));
+verifyEqual(testCase, remaining.rms, expected_rms, 'RelTol', 0.05, 'rms of the stripe');
+verifyEqual(testCase, remaining.noise, sigma * sqrt(2) / sqrt(n), 'RelTol', 0.1, 'noise of the mean');
+verifyGreaterThan(testCase, remaining.p95, 4.5, 'up to: the stripe');
+verifyTrue(testCase, all(isnan(remaining.u(1, :))), 'unused points are NaN');
+end
+
 function test_square_grid_covers_overlap(testCase)
 % two oblique views (projective, image -> world); camera 2 has the coarser pixels
 T1 = projtform2d([1.30 0.05 -100; 0.02 1.00 50; 1.5e-4 0 1]);

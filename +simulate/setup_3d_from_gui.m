@@ -18,7 +18,7 @@ setup.sheet = struct('Offset', v('sim3d_sheet_offset'), 'TiltX', v('sim3d_sheet_
     'Thickness', v('sim3d_sheet_thick'));
 types = simulate.flow_types_3d;
 setup.flow = struct('Type', types{get(handles.sim3d_flow, 'Value')}, 'InPlane', v('sim3d_displ'), 'Radius', v('sim3d_radius'), ...
-    'OutOfPlane', v('sim3d_w'));
+    'OutOfPlane', v('sim3d_w'), 'Diameter', v('sim3d_sphere_d'), 'Spacing', v('sim3d_sphere_dt'));
 setup.particles = struct('Density', v('sim3d_ppp'), 'Diameter', v('sim3d_psize'), 'DiameterVariation', v('sim3d_pvar'), ...
     'Noise', v('sim3d_noise'));
 setup.output.Pairs = round(v('sim3d_pairs')); % (Backgrounds: default folder of simulate.setup_3d)

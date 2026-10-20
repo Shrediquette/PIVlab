@@ -100,6 +100,14 @@ if n > 1 && ~isempty(ox)
     h{end + 1} = patch(ax, P(:, 1), P(:, 2), P(:, 3), [0.2 0.85 0.3], 'FaceAlpha', 0.45, 'EdgeColor', 'none', 'HitTest', 'off', ...
         'DisplayName', 'overlap of the views');
 end
+if strcmp(setup.flow.Type, 'sphere') && isfield(setup.flow, 'Diameter') && setup.flow.Diameter > 0 % the sphere of the sphere wake
+    c = simulate.sphere_centre_3d(g, setup.flow.Diameter);
+    [sx, sy, sz] = sphere(24);
+    radius = setup.flow.Diameter / 2;
+    P = transformPointsForward(pose, [c(1) + radius * sx(:), c(2) + radius * sy(:), radius * sz(:)]);
+    h{end + 1} = surf(ax, reshape(P(:, 1), size(sx)), reshape(P(:, 2), size(sx)), reshape(P(:, 3), size(sx)), ...
+        'FaceColor', [0.55 0.55 0.6], 'EdgeColor', [0.4 0.4 0.45], 'EdgeAlpha', 0.3, 'HitTest', 'off', 'DisplayName', 'sphere');
+end
 cam_size = camera_symbol_size(setup.board); % fixed relative to the board
 for k = 1:n
     col = camera_color(k);

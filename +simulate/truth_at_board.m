@@ -13,11 +13,13 @@ function [U, V, W, sx, sy] = truth_at_board(truth, x, y, opts)
 % vector at the mean of these positions of all cameras, so this is where the truth is taken.
 % BoardFromBehind = true: camera 1 saw the board from behind (stereo.calibrate turns the board
 % coordinates about the y axis: x -> -x, z -> -z); x, y and U, W are then in these coordinates.
+% Pair: image pair of a time series (flow 'sphere': one page of truth.U, V, W per image pair).
 arguments
     truth struct
     x double
     y double
     opts.BoardFromBehind (1,1) logical = false
+    opts.Pair (1,1) double = 1
 end
 flip = 1;
 if opts.BoardFromBehind
@@ -43,9 +45,9 @@ for iteration = 1:8 % fixed point: sheet point whose mean board position is the 
 end
 sx = reshape(ab(:, 1), size(x));
 sy = reshape(ab(:, 2), size(x));
-Us = interp2(truth.X, truth.Y, truth.U, sx, sy);
-Vs = interp2(truth.X, truth.Y, truth.V, sx, sy);
-Ws = interp2(truth.X, truth.Y, truth.W, sx, sy);
+Us = interp2(truth.X, truth.Y, truth.U(:, :, opts.Pair), sx, sy);
+Vs = interp2(truth.X, truth.Y, truth.V(:, :, opts.Pair), sx, sy);
+Ws = interp2(truth.X, truth.Y, truth.W(:, :, opts.Pair), sx, sy);
 R = pose.R;
 U = flip * (R(1, 1) * Us + R(1, 2) * Vs + R(1, 3) * Ws);
 V = R(2, 1) * Us + R(2, 2) * Vs + R(2, 3) * Ws;
