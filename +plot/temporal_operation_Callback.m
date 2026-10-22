@@ -1,4 +1,11 @@
 function temporal_operation_Callback(~, ~, type)
+%busy state: with long series (600 stereo pairs: 3.6 s) the window was not redrawn and not locked
+gui.toolsavailable(0,'Calculating temporal statistics...');drawnow
+temporal_operation(type)
+gui.toolsavailable(1)
+end
+
+function temporal_operation(type)
 handles=gui.gethand;
 filepath=gui.retr('filepath');
 filename=gui.retr('filename');
@@ -251,4 +258,5 @@ if isempty(resultslist)==0
 			end
 		end
 	end
+end
 end

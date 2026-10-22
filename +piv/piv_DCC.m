@@ -21,6 +21,11 @@ else
     image2_roi=double(image2);
 	mask_inpt_roi = mask_inpt;
 end
+% the image area must hold one interrogation area (otherwise the result is empty without a message)
+if size(image1_roi,1) < interrogationarea || size(image1_roi,2) < interrogationarea
+    error('PIVlab:areaTooSmall', ['The analysed image area (%d x %d px) is too small for an interrogation area of %d px. ' ...
+        'Use a smaller interrogation area or a larger ROI.'], size(image1_roi,2), size(image1_roi,1), interrogationarea);
+end
 
 mask = mask_inpt_roi;
 

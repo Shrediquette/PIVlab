@@ -90,7 +90,7 @@ if src.Button == 1
 		derived=gui.retr('derived');
 		displaywhat=gui.retr('displaywhat');
 		if displaywhat>1
-			if size (derived,2) >= (currentframe+1)/2
+			if size (derived,2) >= (currentframe+1)/2 && size(derived,1) >= displaywhat-1
 				if numel(derived{displaywhat-1,(currentframe+1)/2})>0
 					map=derived{displaywhat-1,(currentframe+1)/2};
 					name=get(handles.derivchoice,'string');

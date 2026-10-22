@@ -1,4 +1,7 @@
 function update_progress(progress_setpoint)
+if ~isfinite(progress_setpoint) %e.g. 0/0 when no images are loaded
+	progress_setpoint=0;
+end
 if progress_setpoint>100
 	progress_setpoint=100;
 end

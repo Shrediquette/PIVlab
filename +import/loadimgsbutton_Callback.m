@@ -24,24 +24,30 @@ if isempty (batchModeActive)
     batchModeActive = 0;
 end
 %remember imagesize of currently loaded images
+%to determine the raw image size, we call get_img with camera
+%undistortion und rectification DISABLED
+cam_use_calibration = gui.retr('cam_use_calibration');
+cam_use_rectification = gui.retr('cam_use_rectification');
+if isempty(cam_use_calibration) %first import: not set yet
+    cam_use_calibration=0;
+end
+if isempty(cam_use_rectification)
+    cam_use_rectification=0;
+end
 try
     pcopanda_dbl_image = gui.retr('pcopanda_dbl_image');
     if isempty(pcopanda_dbl_image)
         pcopanda_dbl_image=0;
     end
-    %to determine the raw image size, we call get_img with camera
-    %undistortion und rectification DISABLED
-
-    cam_use_calibration = gui.retr('cam_use_calibration');
-    cam_use_rectification = gui.retr('cam_use_rectification');
     gui.put('cam_use_calibration',0);
     gui.put('cam_use_rectification',0);
     old_img_size=size(import.get_img(1));
-    gui.put('cam_use_calibration',cam_use_calibration);
-    gui.put('cam_use_rectification',cam_use_rectification);
 catch
     old_img_size=0;
 end
+%switched on again also when the old images cannot be read (e.g. moved)
+gui.put('cam_use_calibration',cam_use_calibration);
+gui.put('cam_use_rectification',cam_use_rectification);
 
 if useGUI ==1
     if ~verLessThan('matlab','25')

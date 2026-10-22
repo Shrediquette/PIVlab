@@ -58,7 +58,7 @@ if file_selection_ok
 		cnt=0;
 		update_interval=max(1,floor(num_frames/20));
 		for i=startfr:endfr
-			if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
+			if size(resultslist,2)>=i && numel(resultslist{1,i})>0 %frame i has a result
 				[returned_data, returned_header]=extract.plot_data_area(i,refresh_data);
 				valid_count=valid_count+1;
 				data_rows{valid_count}=returned_data;

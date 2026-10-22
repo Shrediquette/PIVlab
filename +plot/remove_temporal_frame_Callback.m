@@ -16,7 +16,7 @@ if isempty(resultslist)==0
 		%probably shift the remaining ones....?
 		currentframe=floor(get(handles.fileselector, 'value'));
 
-		if ismean(currentframe,1)==1
+		if size(ismean,1)>=currentframe && ismean(currentframe,1)==1 %ismean can be shorter (frames without result)
 			filepath(currentframe*2,:)=[];
 			filename(currentframe*2,:)=[];
 			filepath(currentframe*2-1,:)=[];

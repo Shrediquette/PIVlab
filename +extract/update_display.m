@@ -37,10 +37,13 @@ if strcmp(extract_type,'extract_circle_series') || strcmp(extract_type,'extract_
 	currentframe=floor(get(handles.fileselector, 'value'));
 	resultslist=gui.retr('resultslist');
 	xposition=extract_poly.Center;
-	try
+	x=[];
+	if size(resultslist,2)>=currentframe
 		x=resultslist{1,currentframe};
-    catch
-        gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','You cannot load coordinates for non-analyzed frames.','modal');
+	end
+	if size(x,2)<2 %frame not analyzed: the smaller radii need the vector spacing of this frame
+		gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','You cannot load coordinates for non-analyzed frames.','modal');
+		return
 	end
 	stepsize=ceil((x(1,2)-x(1,1))/1);
 	radii=linspace(stepsize,extract_poly.Radius-stepsize,round(((extract_poly.Radius-stepsize)/stepsize)));

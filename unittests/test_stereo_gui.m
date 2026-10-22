@@ -976,6 +976,21 @@ verify_discarded(testCase, 2, false(size(deleted)), deleted, 'manual deletion, f
 gui.put('manualdeletion', []);
 end
 
+function test_current_frame_on_a_new_grid(testCase)
+% all frames analysed, then the ROI changed and only the current frame analysed: no common grid, so
+% no 3D result (before: error, and the result list kept the 2D result of camera 2) (2026-10-22)
+limits_case(testCase, 'grid_case', 1);
+h = gui.gethand;
+gui.put('roirect', [100 100 500 400]);
+evalc('piv.AnalyzeSingle_Callback');
+verifyEmpty(testCase, gui.retr('resultslist'), 'a result list from different grids');
+evalc('piv.AnalyzeAll_Callback');
+rl = gui.retr('resultslist');
+verifyNotEmpty(testCase, rl{16, 1}, 'W missing after analysing all frames again');
+verifyEqual(testCase, size(rl{16, 1}), size(rl{1, 1}));
+verifyEqual(testCase, get(h.AnalyzeAll, 'Enable'), 'on');
+end
+
 function test_velocity_limits_parallel(testCase)
 % the parallel path of "Apply to all frames" discards the same vectors as the serial one
 testCase.assumeTrue(license('test', 'Distrib_Computing_Toolbox') == 1 && ~isempty(ver('parallel')), ...

@@ -108,7 +108,12 @@ if ok==1
 							repeat_last_pass=repeat_last_pass, delta_diff_min=delta_diff_min,limit_peak_search_area=0); %calling this with disabled limit peak search area, because we want to see the full matrix, and not the masked one.
 					catch ME
 						disp(getReport(ME))
+						%no result: stop here (the code below needs x and the correlation matrices)
 						gui.toolsavailable(1);
+						set(handles.progress, 'string' , ['Frame progress: 0%']);
+						set(handles.Settings_Apply_current, 'string' , ['Analyze current frame']);
+						gui.custom_msgbox('error',getappdata(0,'hgui'),'Correlation matrices failed',{'The correlation matrices could not be calculated:' ME.message '' 'Details are shown in the Command Window.'},'modal');
+						return
 					end
 				end
 				gui.toolsavailable(1);
@@ -129,6 +134,12 @@ if ok==1
 				gui.custom_msgbox('error',getappdata(0,'hgui'),'Not available','Correlation matrices are only available for the ''Multipass FFT window deformation'' algorithm','modal');
 				gui.toolsavailable(1);
 			end
+		else
+			%result of a temporal operation (mean, sum, ...): no image pair
+			gui.toolsavailable(1);
+			set(handles.progress, 'string' , ['Frame progress: 0%']);
+			set(handles.Settings_Apply_current, 'string' , ['Analyze current frame']);
+			gui.custom_msgbox('error',getappdata(0,'hgui'),'Not possible','This frame contains the result of a temporal operation (e.g. a mean), not an image pair: there are no correlation matrices.','modal');
 		end
 	else
 		gui.custom_msgbox('error',getappdata(0,'hgui'),'No results yet','You need to analyze the current frame before retrieving correlation matrices.','modal');

@@ -14,7 +14,7 @@ if capturing==0
     %display derivatives if available and desired...
     displaywhat=gui.retr('displaywhat');
     derived=gui.retr('derived');
-    if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1  && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
+    if ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1 && size(derived,1)>=displaywhat-1 && numel(derived{displaywhat-1,(currentframe+1)/2})>0 %derived parameters requested and existant
         colors_cell = gui.vec_preset_colors();
         vectorcolor = colors_cell{get(handles.deriv_color, 'Value'), 2};
     else

@@ -13,7 +13,9 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	xposition=gui.retr('xposition');
 	yposition=gui.retr('yposition');
 	extract_type=gui.retr('extract_type');
-	if get(handles.draw_what,'value')==3 %circle series
+	%circle series (also when the drawn circle series is still shown and the type list was changed
+	%afterwards): only the tangential velocity is possible
+	if get(handles.draw_what,'value')==3 || strcmp(extract_type,'extract_circle_series')
 		set(handles.extraction_choice,'Value',12); %set to tangent
 	end
 	extractwhat=get(handles.extraction_choice,'Value');
@@ -339,7 +341,10 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			unitpar=get(handles.extraction_choice,'string');
 			unitpar=unitpar{get(handles.extraction_choice,'value')};
 			%unitpar=unitpar(strfind(unitpar,'[')+1:end-1);
-			unitpar=unitpar(strfind(unitpar,'in ')+3:end);
+			idx_in=strfind(unitpar,'in '); %last one: 'rate-of-strain ' and 'strain ' also contain 'in '
+			if ~isempty(idx_in)
+				unitpar=unitpar(idx_in(end)+3:end);
+			end
 			%plot only when called from button...
 			if strcmp (A.Tag,'plot_data') %function called from button press
 				h=figure;

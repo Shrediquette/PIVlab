@@ -9,7 +9,7 @@ end
 [currentimage,~]=import.get_img(selected);
 
 derived=gui.retr('derived');
-map_available = ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1 && numel(derived{displaywhat-1,(currentframe+1)/2})>0; %derived parameters requested and existant
+map_available = ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1 && size(derived,1)>=displaywhat-1 && numel(derived{displaywhat-1,(currentframe+1)/2})>0; %derived parameters requested and existant
 
 %% options from the GUI controls
 o.alpha = derivative_alpha;

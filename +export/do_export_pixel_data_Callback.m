@@ -213,7 +213,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
         end
         disp(ME.identifier)
         disp(ME.message)
-        if ~isdeployed
+        if ~isdeployed && desktop('-inuse') %no Command Window in matlab -batch / -nodesktop (usejava('desktop') is 0 in the R2026b desktop)
             %#exclude commandwindow
             commandwindow;
         end

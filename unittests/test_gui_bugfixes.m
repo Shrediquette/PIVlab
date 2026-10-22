@@ -171,7 +171,237 @@ for value = {'abc', '150'}
 end
 end
 
+function test_failed_single_analysis_stops_cleanly(testCase)
+% GitHub issue 166: after an error in the analysis, "Analyze current frame" went on with the
+% missing result ("Unrecognized function or variable 'x'"). A 6 px ROI makes piv_FFTmulti fail.
+helper_start_pivlab();
+helper_gui_load_images(helper_files('jet', 1));
+gui.put('roirect', [100 100 6 6]);
+h = gui.gethand;
+evalc('piv.AnalyzeSingle_Callback([], [], [])');   % the error report goes to the Command Window
+drawnow;
+rl = gui.retr('resultslist');
+testCase.verifyTrue(isempty(rl) || isempty(rl{1, 1}), 'a result was stored');
+testCase.verifyEqual(get(h.AnalyzeAll, 'Enable'), 'on', 'controls still locked');
+testCase.verifyEmpty(findobj(getappdata(0, 'hgui'), 'Tag', 'busyhint'), 'busy strip still shown');
+testCase.verifyEqual(get(h.Settings_Apply_current, 'String'), 'Analyze current frame');
+end
+
+function test_failed_correlation_matrices_stop_cleanly(testCase)
+% like test_failed_single_analysis_stops_cleanly, for "Retrieve correlation matrices" (2026-10-22)
+helper_start_pivlab();
+helper_gui_load_images(helper_files('jet', 1));
+helper_gui_analyze();
+gui.put('roirect', [100 100 6 6]);
+h = gui.gethand;
+evalc('plot.correlation_matrices_calculate([], [], [])');
+drawnow;
+testCase.verifyEqual(get(h.AnalyzeAll, 'Enable'), 'on', 'controls still locked');
+testCase.verifyEmpty(findobj(getappdata(0, 'hgui'), 'Tag', 'busyhint'), 'busy strip still shown');
+testCase.verifyEqual(get(h.Settings_Apply_current, 'String'), 'Analyze current frame');
+end
+
+function test_circle_series_area_on_frame_without_result(testCase)
+% area extraction "circle series" stored, the panel is opened on a frame that is not analysed:
+% message instead of "Unrecognized function or variable 'x'" (2026-10-22)
+helper_start_pivlab();
+helper_gui_load_images(helper_files('jet', 2));
+h = gui.gethand;
+piv.AnalyzeSingle_Callback([], [], []);   % frame 1 only
+gui.put('extract_type', 'extract_circle_series_area');
+gui.put('xposition', [700 500]);
+gui.put('yposition', 100);
+set(h.fileselector, 'Value', 2); gui.fileselector_Callback(h.fileselector, [], []);
+extract.area_panel_activation_Callback([], [], []);
+testCase.verifyNotEmpty(findobj(gui.retr('pivlab_axis'), 'Tag', 'extract_circle_series_area'), 'circle not drawn');
+end
+
+function test_lens_calibration_kept_when_old_images_are_gone(testCase)
+% importing new images when the old image files cannot be read any more (moved) switched the lens
+% calibration off without notice (2026-10-22)
+helper_start_pivlab();
+helper_gui_load_images(helper_files('jet', 1));
+gui.put('cameraParams', cameraParameters('K', [1500 0 696; 0 1500 520; 0 0 1], 'ImageSize', [1040 1392], 'RadialDistortion', [-0.05 0.01]));
+gui.put('cam_use_calibration', 1);
+fp = gui.retr('filepath');
+fp{1} = fullfile(testCase.TestData.Dir, 'moved_away.jpg');
+gui.put('filepath', fp);
+evalc('helper_gui_load_images(helper_files(''jet'', 2))');
+testCase.verifyEqual(gui.retr('cam_use_calibration'), 1);
+end
+
+% ---- found by the random click sequences (unittests/explore/explore_gui.m), 2026-10-22 ----
+
+function test_analyze_current_on_a_mean_frame_unlocks(testCase)
+% "Analyze current frame" on a temporal mean frame locked the controls for good
+helper_start_pivlab();
+helper_gui_load_images(helper_files('jet', 2));
+helper_gui_analyze();
+plot.temporal_operation_Callback([], [], 1);   % mean of all frames = frame 3
+h = gui.gethand;
+testCase.assertEqual(gui.retr('ismean'), [0; 0; 1]);
+set(h.fileselector, 'Value', 3); gui.fileselector_Callback(h.fileselector, [], []);
+piv.AnalyzeSingle_Callback(h.AnalyzeSingle, []);
+testCase.verifyEmpty(gui.retr('busy_since'), 'still busy');
+testCase.verifyEmpty(findobj(getappdata(0, 'hgui'), 'Tag', 'busyhint'), 'busy strip still shown');
+testCase.verifyEqual(get(h.AnalyzeAll, 'Enable'), 'on', 'controls still locked');
+end
+
+function test_circle_series_after_changing_the_type(testCase)
+% circle series drawn, type list changed to poly-line (no new drawing), other quantity, "Extract data"
+helper_start_pivlab();
+helper_gui_load_images(helper_files('jet', 1));
+helper_gui_analyze();
+h = gui.gethand;
+extract.poly_extract_Callback([], []);
+set(h.draw_what, 'Value', 3); extract.draw_what_Callback(h.draw_what, []);
+gui.put('extract_type', 'extract_circle_series'); gui.put('xposition', [700 500]); gui.put('yposition', 150);
+set(h.draw_what, 'Value', 1); extract.draw_what_Callback(h.draw_what, []);
+set(h.extraction_choice, 'Value', 2); extract.extraction_choice_Callback(h.extraction_choice, []);
+extract.plot_data_Callback(h.plot_data, []);   % was: Unrecognized ... 'extraction_coordinates_x'
+testCase.verifyEqual(get(h.extraction_choice, 'Value'), 12, 'a circle series gives the tangential velocity');
+close_other_figures();
+end
+
+function test_strain_rate_along_a_polyline(testCase)
+% the unit was cut from "Strain rate in 1/frame" with all positions of 'in ' ("strain" contains it)
+helper_start_pivlab();
+helper_gui_load_images(helper_files('jet', 1));
+helper_gui_analyze();
+h = gui.gethand;
+extract.poly_extract_Callback([], []);
+gui.put('extract_type', 'extract_poly'); gui.put('xposition', [100; 900]); gui.put('yposition', [100; 700]);
+names = cellstr(get(h.extraction_choice, 'String'));
+q = find(contains(names, 'train'), 1);
+testCase.assertNotEmpty(q);
+set(h.extraction_choice, 'Value', q);
+extract.plot_data_Callback(h.plot_data, []);   % was: Colon operands must be real scalars
+close_other_figures();
+end
+
+function test_area_extraction_on_a_frame_without_result(testCase)
+helper_start_pivlab();
+helper_gui_load_images(helper_files('jet', 2));
+h = gui.gethand;
+piv.AnalyzeSingle_Callback(h.AnalyzeSingle, []);   % frame 1 only
+extract.area_panel_activation_Callback([], []);
+gui.put('extract_type', 'extract_rectangle_area'); gui.put('xposition', [200 400]); gui.put('yposition', [200 300]);
+set(h.fileselector, 'Value', 2); gui.fileselector_Callback(h.fileselector, [], []);
+extract.plot_data_area_Callback([], []);   % was: Brace indexing is not supported for variables of type double
+set(h.fileselector, 'Value', 1); gui.fileselector_Callback(h.fileselector, [], []);
+extract.plot_data_area_Callback([], []);
+testCase.verifySubstring(strjoin(cellstr(get(h.area_results, 'String'))', ' '), 'Area');
+gui.put('extract_type', 'extract_poly');   % no area drawn
+extract.plot_data_area_Callback([], []);   % was: Output argument "returned_data" not assigned
+end
+
+function test_redraw_with_fewer_derived_parameters(testCase)
+% display parameter "magnitude" selected, results analysed again, a poly-line extraction computes
+% only the vorticity: the display redraw indexed a derived row that does not exist
+helper_start_pivlab();
+helper_gui_load_images(helper_files('jet', 1));
+helper_gui_analyze();
+h = gui.gethand;
+gui.put('displaywhat', 3);
+helper_gui_analyze();
+extract.poly_extract_Callback([], []);
+gui.put('extract_type', 'extract_poly'); gui.put('xposition', [100; 900]); gui.put('yposition', [100; 700]);
+set(h.extraction_choice, 'Value', 1);
+extract.plot_data_Callback(h.plot_data, []);
+close_other_figures();
+testCase.assertEqual(size(gui.retr('derived'), 1), 1);
+gui.sliderdisp(gui.retr('pivlab_axis'));
+end
+
+function test_remove_image_with_masks_on_the_first_frame_only(testCase)
+helper_start_pivlab();
+helper_gui_load_images(helper_files('jet', 3));
+h = gui.gethand;
+roiobj = images.roi.Rectangle(gui.retr('pivlab_axis'), 'Position', [100 100 200 150]);
+roiobj.UserData = 'ROI_object_rectangle'; roiobj.Tag = 'test';
+gui.put('masks_in_frame', mask.update_mask_memory(roiobj, 1, gui.retr('masks_in_frame')));
+delete(roiobj);
+set(h.filenamebox, 'Value', 6);
+import.remove_images_from_list([], []);   % was: Matrix index is out of range for deletion
+testCase.verifyEqual(size(gui.retr('filepath'), 1), 5);
+masks = gui.retr('masks_in_frame');
+testCase.verifyNotEmpty(masks{1}, 'the mask of frame 1 is kept');
+end
+
+function test_remove_temporal_frame_on_a_frame_without_result(testCase)
+% only frame 1 analysed, frame 3 shown: ismean was indexed beyond its end
+helper_start_pivlab();
+helper_gui_load_images(helper_files('jet', 3));
+h = gui.gethand;
+piv.AnalyzeSingle_Callback(h.AnalyzeSingle, []);
+set(h.fileselector, 'Value', 3); gui.fileselector_Callback(h.fileselector, [], []);
+plot.remove_temporal_frame_Callback([], []);   % was: Index in position 1 exceeds array bounds
+testCase.verifyEqual(size(gui.retr('filepath'), 1), 6, 'no frame removed');
+end
+
+function test_apply_derived_to_all_frames_without_images(testCase)
+% progress 0/0 = NaN: "Value must be numeric and finite" in gui.update_progress
+helper_start_pivlab();
+plot.derivs_Callback([], [], []);
+plot.apply_deriv_all_Callback([], [], []);
+testCase.verifyEmpty(gui.retr('busy_since'), 'still busy');
+end
+
+function test_particle_generator_invalid_inputs(testCase)
+% empty / negative fields crashed deep inside the generator (interp2 with NaN image size)
+helper_start_pivlab();
+h = gui.gethand;
+simulate.part_img_sett_Callback([], []);
+set(h.img_sizey, 'String', '');
+simulate.generate_it_Callback([], [], []);   % message instead of an error
+set(h.img_sizey, 'String', '300'); set(h.img_sizex, 'String', '400'); set(h.sheetthick, 'String', '-1');
+simulate.generate_it_Callback([], [], []);
+set(h.sheetthick, 'String', '1');
+simulate.generate_it_Callback([], [], []);
+testCase.verifyEqual(size(gui.retr('gen_image_1')), [300 400]);
+close_other_figures();
+end
+
+function test_roi_fields_with_nan(testCase)
+% "NaN" typed into a ROI field: drawrectangle error "Expected Position to be finite"
+helper_start_pivlab();
+helper_gui_load_images(helper_files('jet', 1));
+h = gui.gethand;
+roi.img_ROI_Callback([], []);
+set(h.ROI_Man_x, 'String', '10'); set(h.ROI_Man_y, 'String', '20');
+set(h.ROI_Man_w, 'String', '500'); set(h.ROI_Man_h, 'String', 'NaN');
+roi.Man_ROI_Callback(h.ROI_Man_h, []);
+testCase.verifyEmpty(gui.retr('roirect'), 'no ROI from invalid fields');
+set(h.ROI_Man_h, 'String', '400');
+roi.Man_ROI_Callback(h.ROI_Man_h, []);
+testCase.verifyEqual(gui.retr('roirect'), [10 20 500 400]);
+end
+
+function test_settings_check_window_larger_than_image(testCase)
+helper_start_pivlab();
+helper_gui_load_images(helper_files('jet', 1));
+h = gui.gethand;
+set(h.pass1_size, 'String', '2000');
+testCase.verifyEqual(gui.checksettings, 0);
+set(h.pass1_size, 'String', '64');
+testCase.verifyEqual(gui.checksettings, 1);
+gui.put('roirect', [100 100 79 300]);   % 80 px wide: one pass ok, two passes need 64 + 32
+set(h.pass2_enable, 'Value', 1);
+testCase.verifyEqual(gui.checksettings, 0);
+set(h.pass2_enable, 'Value', 0);
+testCase.verifyEqual(gui.checksettings, 1);
+end
+
 %% ------------------------------------------------------------------ helpers
+
+function close_other_figures()
+f = findall(groot, 'Type', 'figure');
+for i = 1:numel(f)
+    if ~isequal(f(i), getappdata(0, 'hgui'))
+        delete(f(i));
+    end
+end
+end
 
 function write_page(file, img, k)
 if k == 1

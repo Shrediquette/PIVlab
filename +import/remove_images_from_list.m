@@ -12,7 +12,8 @@ if gui.retr('video_selection_done') ~= 1
 	box_select=get(handles.filenamebox,'value')';
 	masks_in_frame=gui.retr('masks_in_frame');
 	if ~isempty(masks_in_frame)
-		masks_in_frame_doubled=cell(1,size(masks_in_frame,2)*2);
+		%as long as the image list: masks can exist for the first frames only
+		masks_in_frame_doubled=cell(1,max(size(masks_in_frame,2)*2,numel(filepath)));
 		for i = 1:2:size(masks_in_frame,2)*2
 			masks_in_frame_doubled(i)=masks_in_frame((i+1)/2);
 			masks_in_frame_doubled(i+1)=masks_in_frame((i+1)/2);

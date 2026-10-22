@@ -49,7 +49,12 @@ if ok==1
 				correlation_map=r.correlation_map; u2=r.u2; v2=r.v2; umap=r.umap;
 			catch ME
 				disp(getReport(ME))
+				%no result: stop here (the code below needs x, y, u, v)
 				gui.toolsavailable(1);
+				set(handles.progress, 'string' , ['Frame progress: 0%']);
+				set(handles.Settings_Apply_current, 'string' , ['Analyze current frame']);
+				gui.custom_msgbox('error',getappdata(0,'hgui'),'Analysis failed',{'The analysis of this frame failed:' ME.message '' 'Details are shown in the Command Window.'},'modal');
+				return
 			end
 		else %optical flow
 			clahe=get(handles.clahe_enable,'value');
@@ -154,6 +159,12 @@ if ok==1
 		gui.put('subtr_v', 0);
 		%assignin('base','correlation_matrices',correlation_matrices);
 		gui.sliderdisp(gui.retr('pivlab_axis'))
+	else
+		%result of a temporal operation (mean, sum, ...): no image pair to analyze
+		gui.toolsavailable(1);
+		set(handles.progress, 'string' , ['Frame progress: 0%']);
+		set(handles.Settings_Apply_current, 'string' , ['Analyze current frame']);
+		gui.custom_msgbox('error',getappdata(0,'hgui'),'Not possible','This frame contains the result of a temporal operation (e.g. a mean), not an image pair. Select an image pair to analyze.','modal');
 	end
 
 end

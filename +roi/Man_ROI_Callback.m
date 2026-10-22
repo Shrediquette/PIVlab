@@ -9,7 +9,8 @@ if size(filepath,1) >1 || gui.retr('video_selection_done') == 1
 		h=round(str2num(get(handles.ROI_Man_h,'String')));
 	catch
 	end
-	if isempty(x)== 0 && isempty(y)== 0 && isempty(w)== 0 && isempty(h)== 0 && isnumeric(x) && isnumeric(y) && isnumeric(w) && isnumeric(h)
+	if isempty(x)== 0 && isempty(y)== 0 && isempty(w)== 0 && isempty(h)== 0 && isnumeric(x) && isnumeric(y) && isnumeric(w) && isnumeric(h) ...
+			&& isscalar(x) && isscalar(y) && isscalar(w) && isscalar(h) && all(isfinite([x y w h])) && w>0 && h>0 %NaN, Inf or a vector crashed in drawrectangle
 		roirect(1)=x;
 		roirect(2)=y;
 		roirect(3)=w;

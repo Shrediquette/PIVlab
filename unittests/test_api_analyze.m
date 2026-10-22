@@ -286,7 +286,45 @@ r = pivlab.filter(r, Verbose=false);
 testCase.verifyEqual(size(v), size(r.u));
 end
 
+function test_image_smaller_than_interrogation_area(testCase)
+% a clear message instead of an index error (fft, ensemble) or an empty result (dcc) (2026-10-22)
+files = write_images(testCase.TestData.Dir, 'strip', rand(24, 300), 2);
+imgs = pivlab.readImages(files, "pairwise");
+testCase.verifyError(@() pivlab.analyze(imgs, Verbose=false), 'PIVlab:areaTooSmall');
+testCase.verifyError(@() pivlab.analyze(imgs, Algorithm="dcc", Verbose=false), 'PIVlab:areaTooSmall');
+testCase.verifyError(@() pivlab.analyze(imgs, Algorithm="ensemble", Verbose=false), 'PIVlab:areaTooSmall');
+% one pass with a window that fits works, the spatial derivatives of a single row of vectors are NaN
+files = write_images(testCase.TestData.Dir, 'strip16', rand(16, 300), 2);
+res = pivlab.analyze(pivlab.readImages(files, "pairwise"), InterrogationArea=16, Step=8, Passes=1, Verbose=false);
+testCase.assertEqual(size(res.u, 1), 1, 'the test needs a single row of vectors');
+[~, vort] = pivlab.derive(res, "vorticity");
+testCase.verifyEqual(size(vort), size(res.u));
+testCase.verifyTrue(all(isnan(vort(:))));
+end
+
+function test_ensemble_on_images_without_particles(testCase)
+% no correlation peak anywhere: all vectors NaN instead of an index error in peakfinding (2026-10-22)
+files = write_images(testCase.TestData.Dir, 'uniform', 0.5 * ones(256, 256), 2);
+imgs = pivlab.readImages(files, "pairwise");
+res = evalc_analyze(imgs);
+testCase.verifyTrue(all(isnan(res.u(:))));
+end
+
 %% ------------------------------------------------------------------ helpers
+
+function res = evalc_analyze(imgs)
+% ensemble analysis without the quality warnings in the test output
+[~, res] = evalc('pivlab.analyze(imgs, Algorithm="ensemble", Verbose=false)');
+end
+
+function files = write_images(folder, name, I, pairs)
+% the same image as A and B of every pair
+files = strings(1, 2 * pairs);
+for k = 1:2 * pairs
+    files(k) = fullfile(folder, sprintf('%s_%02d.tif', name, k));
+    imwrite(I, files(k));
+end
+end
 
 function d = spacing(res)
 d = double(res.px.x(1,2) - res.px.x(1,1));

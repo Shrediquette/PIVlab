@@ -1,7 +1,15 @@
 function [returned_data, returned_header]=plot_data_area(currentframe,refreshdisplay)
 %returned_data=cell(0);
+returned_data=[]; %also when nothing can be extracted (no area drawn, frame not analyzed)
+returned_header=[];
 handles=gui.gethand;
 resultslist=gui.retr('resultslist');
+if size(resultslist,2)<currentframe || numel(resultslist{1,currentframe})==0
+	if refreshdisplay
+		gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','This frame has not been analyzed yet.','modal');
+	end
+	return
+end
 extractwhat=get(handles.extraction_choice_area,'Value');
 if extractwhat==9 || extractwhat==10 || extractwhat==11 || extractwhat==12
 	% option 9 = vector angle  → deriv 11 (extractwhat+2), derived{10}

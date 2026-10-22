@@ -212,7 +212,7 @@ image2 = preproc.PIVlab_preproc( ...
                 end
                 disp('')
                 disp('Error: Image dimensions inconsistent!')
-                if ~isdeployed
+                if ~isdeployed && desktop('-inuse') %no Command Window in matlab -batch / -nodesktop (usejava('desktop') is 0 in the R2026b desktop)
                     %#exclude commandwindow
                     commandwindow
                 end
@@ -245,6 +245,17 @@ image2 = preproc.PIVlab_preproc( ...
         image2_roi=double(image2);
         mask_inpt_roi = mask_inpt;
         average_mask_roi = average_mask;
+    end
+    % the image area must hold one interrogation area, with several passes two vectors in each
+    % direction (interpolation between the passes); otherwise the analysis fails with an index error
+    min_size = interrogationarea;
+    if passes > 1
+        min_size = interrogationarea + step;
+    end
+    if size(image1_roi,1) < min_size || size(image1_roi,2) < min_size
+        error('PIVlab:areaTooSmall', ['The analysed image area (%d x %d px) is too small for an interrogation area of %d px ' ...
+            '(at least %d x %d px are needed). Use a smaller interrogation area or a larger ROI.'], ...
+            size(image1_roi,2), size(image1_roi,1), interrogationarea, min_size, min_size);
     end
     mask=mask_inpt_roi;
     gen_image1_roi = image1_roi;
@@ -1035,11 +1046,17 @@ end
 
 % we need only one peak from each couple pictures
 [z1, zi] = sort(z);
-dz1 = [z1(1); diff(z1)];
-i0 = find(dz1~=0);
-x1 = x(zi(i0));
-y1 = y(zi(i0));
-z1 = z(zi(i0));
+if isempty(z1) %no correlation peak in any window (e.g. images without particles): all vectors NaN
+    x1 = zeros(0,1);
+    y1 = x1;
+    z1 = x1;
+else
+    dz1 = [z1(1); diff(z1)];
+    i0 = find(dz1~=0);
+    x1 = x(zi(i0));
+    y1 = y(zi(i0));
+    z1 = z(zi(i0));
+end
 
 xtable = repmat((minix:step:maxix)+interrogationarea/2, length(miniy:step:maxiy), 1);
 ytable = repmat(((miniy:step:maxiy)+interrogationarea/2)', 1, length(minix:step:maxix));

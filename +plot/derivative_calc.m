@@ -119,7 +119,7 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 	copt.is_tke=false;
 	if deriv==3
 		ismean=gui.retr('ismean');
-		if ~isempty(ismean) && ismean(frame) ==1 % temporal derivative
+		if numel(ismean)>=frame && ismean(frame) ==1 % temporal derivative
 			%total TKE is a simple sum of the x and y components, not a vector sum
 			filename=gui.retr('filename');
 			copt.is_tke=strncmpi(filename{frame*2-1},'TKE of frames',13);

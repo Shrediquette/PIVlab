@@ -39,6 +39,11 @@ else
 end
 
 out = [];
+%spatial derivatives need at least 2 x 2 vectors (e.g. only one row of vectors in a thin image strip)
+if any(deriv==[2 6 7 8 9]) && (size(u,1)<2 || size(u,2)<2)
+    out=nan(size(u));
+    return
+end
 switch deriv
     case 2 %vorticity
         [curlz,~]= curl(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);

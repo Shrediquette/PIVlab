@@ -32,7 +32,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		v=resultslist{4,currentframe};
 	end
 	ismean=gui.retr('ismean');
-	if    numel(ismean)>0
+	if    numel(ismean)>=currentframe %ismean can be shorter than the frame list
 		if ismean(currentframe)==1 %if current frame is a mean frame, typevector is stored at pos 5
 			typevector=resultslist{5,currentframe};
 		end
