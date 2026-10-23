@@ -32,20 +32,20 @@ end
 %% images of both cameras
 selection = cell(1, 2);
 multitiff = [0 0];
-for k = 1:2
-    if isempty(paths)
-        if k == 1
-            [names, multitiff(k)] = pick_images(k, '');
-        else % camera 2: the dialog starts in the folder of camera 1
-            [names, multitiff(k)] = pick_images(k, fileparts(selection{1}(1).name));
-        end
-        if isempty(names)
-            return % cancelled
-        end
-    else
-        names = cellstr(paths{k});
-        multitiff(k) = is_multitiff(names{1});
+if isempty(paths) % the image import dialog with one list per camera (it also sets the sequencing style)
+    folder = gui.get_preference('stereo_folder_cam1', '');
+    if isempty(folder) || ~isfolder(folder)
+        folder = gui.retr('pathname');
     end
+    paths = gui.image_import_dialog('stereo', folder);
+    if isempty(paths)
+        return % cancelled
+    end
+    gui.set_preference('stereo_folder_cam1', fileparts(paths{1}{1}));
+end
+for k = 1:2
+    names = cellstr(paths{k});
+    multitiff(k) = is_multitiff(names{1});
     selection{k} = struct('name', names(:), 'isdir', num2cell(false(numel(names), 1)));
 end
 sequencer = gui.retr('sequencer');
@@ -108,44 +108,6 @@ elseif ~batch
     gui.custom_msgbox('success', getappdata(0,'hgui'), 'Stereo-PIV', ['Images of both cameras loaded (' int2str(n_images(1) / 2) ' image pairs each).' ...
         newline newline 'Camera 1 is shown. Use the "CAM 1 / CAM 2" button in the Tools panel to switch between the cameras. ' ...
         'Masks and the camera calibration belong to the camera that is shown; all other settings are used for both cameras.'], 'modal');
-end
-end
-
-function [names, multitiff] = pick_images(k, start_folder)
-% the normal PIVlab image dialog, for camera k. Camera 1 starts in its last folder, camera 2 in the folder
-% of the images just picked for camera 1 (start_folder).
-names = {};
-multitiff = 0;
-folder = start_folder;
-if isempty(folder) || ~isfolder(folder)
-    folder = gui.get_preference(['stereo_folder_cam' int2str(k)], '');
-end
-if isempty(folder) || ~isfolder(folder)
-    folder = gui.retr('pathname');
-end
-if isempty(folder) || ~isfolder(folder)
-    folder = pwd;
-end
-prompt = ['Stereo-PIV: select the images of CAMERA ' int2str(k)];
-filter = '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$';
-if ~verLessThan('matlab', '25')
-    [picked, mt] = gui.uipickfiles('FilterSpec', [folder filesep], 'REFilter', filter, 'numfiles', [1 inf], 'output', 'struct', 'prompt', prompt);
-else
-    [picked, mt] = gui.uipickfiles_pre_2025('FilterSpec', [folder filesep], 'REFilter', filter, 'numfiles', [1 inf], 'output', 'struct', 'prompt', prompt);
-end
-if isequal(picked, 0) || isempty(picked)
-    return
-end
-for i = 1:numel(picked)
-    if ~picked(i).isdir
-        names{end + 1, 1} = picked(i).name; %#ok<AGROW>
-    end
-end
-if ~isempty(mt)
-    multitiff = mt;
-end
-if ~isempty(names)
-    gui.set_preference(['stereo_folder_cam' int2str(k)], fileparts(names{1}));
 end
 end
 

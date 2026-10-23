@@ -50,34 +50,12 @@ gui.put('cam_use_calibration',cam_use_calibration);
 gui.put('cam_use_rectification',cam_use_rectification);
 
 if useGUI ==1
-    if ~verLessThan('matlab','25')
-        if ispc==1
-            try
-                [path, multitiff]=gui.uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
-            catch
-                [path, multitiff]=gui.uipickfiles ('FilterSpec', pwd, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
-            end
-        else
-            try
-                [path, multitiff]=gui.uipickfiles ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
-            catch
-                [path, multitiff]=gui.uipickfiles ('FilterSpec', pwd, 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
-            end
-        end
+    % the image import dialog (all MATLAB versions); it also sets the sequencing style (GUI data 'sequencer')
+    [picked, ~, multitiff] = gui.image_import_dialog('single', gui.retr('pathname'));
+    if isempty(picked)
+        path = 0; % cancelled
     else
-        if ispc==1
-            try
-                [path, multitiff]=gui.uipickfiles_pre_2025 ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
-            catch
-                [path, multitiff]=gui.uipickfiles_pre_2025 ('FilterSpec', pwd, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
-            end
-        else
-            try
-                [path, multitiff]=gui.uipickfiles_pre_2025 ('FilterSpec', pathname, 'REFilter', '\.bmp$|\.jpg$|\.png$|\.tif$|\.jpeg$|\.tiff$|\.b16$', 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
-            catch
-                [path, multitiff]=gui.uipickfiles_pre_2025 ('FilterSpec', pwd, 'numfiles', [1 inf], 'output', 'struct', 'prompt', 'Select images. Images from one set should have identical dimensions to avoid problems.');
-            end
-        end
+        path = struct('name', picked, 'isdir', num2cell(false(numel(picked), 1)));
     end
     gui.put('expected_image_size',[])
 end

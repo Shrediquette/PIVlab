@@ -129,6 +129,173 @@ verifyEqual(testCase, gui.retr('filepath'), testCase.TestData.cam1(:));
 verifyEmpty(testCase, gui.retr('masks_in_frame'));
 end
 
+function test_image_import_dialog(testCase)
+% the image import dialog (gui.image_import_dialog), driven by a timer while it waits: filter, Add all twice
+% (duplicates stay, order of adding), pairwise suggested for names ending with A / B, preview, Cancel; stereo:
+% one list per camera, warning for different numbers of files; the "Import images" and "Import stereo images"
+% buttons use it
+helper_start_pivlab();
+folder = fileparts(testCase.TestData.cam1{1});
+gui.set_preference('sequencer', 0); % time resolved: the dialog should suggest pairwise
+if isappdata(0, 'dialog_test_error')
+    rmappdata(0, 'dialog_test_error');
+end
+% 2D: cam1 images twice
+files = run_dialog('single', folder, @dialog_steps_single);
+info = getappdata(0, 'dialog_test');
+verifyEqual(testCase, info.shown, 6, 'filter "cam1": 6 images');
+verifyEqual(testCase, info.wildcard_star, 3, 'filter "cam1*a": the 3 A images');
+verifyEqual(testCase, info.wildcard_question, 3, 'filter "CAM1_000?B.tif": the 3 B images');
+verifyEqual(testCase, files, [testCase.TestData.cam1; testCase.TestData.cam1; testCase.TestData.cam1(1:2)], 'added twice + 2 selected, in the order of adding');
+verifyEqual(testCase, info.sequencing, 2, 'pairwise not suggested');
+verifyTrue(testCase, info.preview, 'no preview image');
+verifyEqual(testCase, gui.retr('sequencer'), 1);
+% Cancel
+files = run_dialog('single', folder, @dialog_steps_cancel);
+verifyEmpty(testCase, files, 'cancel');
+% stereo: one list per camera
+files = run_dialog('stereo', folder, @dialog_steps_stereo);
+info = getappdata(0, 'dialog_test');
+verifyTrue(testCase, contains(strjoin(info.count, ' '), 'same number'), 'no warning for different numbers of files');
+verifyEqual(testCase, files, {testCase.TestData.cam1, testCase.TestData.cam2});
+% the buttons of the Input data panel
+setappdata(0, 'dialog_test_folder', folder);
+start_dialog_timer(@dialog_steps_plain);
+import.loadimgsbutton_Callback([], [], 1);
+verifyEqual(testCase, gui.retr('filepath'), testCase.TestData.plain, '2D import');
+start_dialog_timer(@dialog_steps_stereo);
+import.stereo_import_Callback([], [], []);
+verifyEqual(testCase, gui.retr('stereomode'), 1, 'stereo import');
+state = gui.retr('stereo_cam_state');
+verifyEqual(testCase, numel(gui.retr('filepath')) + numel(state{2}.filepath), 12);
+rmappdata(0, 'dialog_test');
+rmappdata(0, 'dialog_test_folder');
+stop_dialog_timers();
+verifyFalse(testCase, isappdata(0, 'dialog_test_error'), 'error in a dialog step');
+end
+
+function files = run_dialog(mode, folder, steps)
+start_dialog_timer(steps);
+files = gui.image_import_dialog(mode, folder);
+end
+
+function start_dialog_timer(steps)
+stop_dialog_timers();
+t = timer('StartDelay', 1, 'TimerFcn', {@run_steps, steps}, 'Tag', 'image_import_dialog_test');
+start(t);
+end
+
+function stop_dialog_timers()
+t = timerfind('Tag', 'image_import_dialog_test');
+if ~isempty(t)
+    stop(t);
+    delete(t);
+end
+end
+
+function run_steps(~, ~, steps)
+% the steps in the open dialog; on an error the dialog is closed (the test would wait for ever otherwise)
+try
+    if isappdata(0, 'dialog_test_folder') % the buttons open the dialog in the last image folder
+        set(findall(0, 'Tag', 'import_folder'), 'String', getappdata(0, 'dialog_test_folder'));
+        press('import_folder');
+    end
+    feval(steps);
+    if ~isempty(findall(0, 'Tag', 'image_import_dialog')) % still open (e.g. Import refused): close it
+        setappdata(0, 'dialog_test_error', 'the dialog was still open after the steps');
+        press('import_cancel');
+    end
+catch err
+    setappdata(0, 'dialog_test_error', err.message);
+    dialog = findall(0, 'Tag', 'image_import_dialog');
+    if ~isempty(dialog)
+        press('import_cancel');
+    end
+end
+end
+
+function press(tag)
+% runs the callback of a control of the import dialog (lists from MATLAB 2025 on: tables, ClickedFcn)
+h = findall(0, 'Tag', tag);
+if isprop(h(1), 'ClickedFcn')
+    callback = get(h(1), 'ClickedFcn');
+else
+    callback = get(h(1), 'Callback');
+end
+if iscell(callback)
+    feval(callback{1}, h(1), [], callback{2:end});
+else
+    feval(callback, h(1), []);
+end
+end
+
+function n = list_count(tag)
+% number of entries of a list of the import dialog (table or list box)
+h = findall(0, 'Tag', tag);
+if isprop(h(1), 'Data')
+    n = numel(h(1).Data);
+else
+    n = numel(get(h(1), 'String'));
+end
+end
+
+function select_rows(tag, rows)
+h = findall(0, 'Tag', tag);
+if isprop(h(1), 'Selection')
+    h(1).Selection = [rows(:), ones(numel(rows), 1)]; % cell selection
+else
+    set(h(1), 'Value', rows);
+end
+end
+
+function set_filter(text)
+set(findall(0, 'Tag', 'import_filter'), 'String', text);
+press('import_filter');
+end
+
+function dialog_steps_single
+set_filter('cam1*a'); % placeholders: whole name, with or without the extension
+info.wildcard_star = list_count('import_files');
+set_filter('CAM1_000?B.tif');
+info.wildcard_question = list_count('import_files');
+set_filter('cam1');
+info.shown = list_count('import_files');
+press('import_addall1');
+press('import_addall1');
+select_rows('import_files', [1 2]); % like a click and drag over the first two files
+press('import_add1');
+select_rows('import_list1', 1);
+press('import_list1');
+fig = findall(0, 'Tag', 'image_import_dialog');
+info.preview = ~isempty(findobj(fig, 'Type', 'image'));
+info.sequencing = get(findall(0, 'Tag', 'import_sequencing'), 'Value');
+setappdata(0, 'dialog_test', info);
+press('import_ok');
+end
+
+function dialog_steps_cancel
+press('import_cancel');
+end
+
+function dialog_steps_stereo
+set_filter('cam1');
+press('import_addall1');
+set_filter('cam2');
+press('import_addall2');
+press('import_addall2'); % 12 files for camera 2: warning
+info.count = get(findall(0, 'Tag', 'import_count'), 'String');
+press('import_clear2');
+press('import_addall2');
+setappdata(0, 'dialog_test', info);
+press('import_ok');
+end
+
+function dialog_steps_plain
+set_filter('plain');
+press('import_addall1');
+press('import_ok');
+end
+
 function test_calibration_dialog_folders(testCase)
 % start folders of the calibration file dialogs (preproc.calibration_dialog_folder): last pick of this
 % dialog, then the other camera's pick, then (target image) the lens calibration images, then the PIV images
