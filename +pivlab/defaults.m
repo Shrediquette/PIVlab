@@ -9,6 +9,7 @@ function s = defaults()
 %     s.calibration  used by pivlab.toMetric     (PIVlab calibration variables)
 %     s.derive       used by pivlab.derive       (Smoothing, ...)
 %     s.display      used by pivlab.display      (Colormap, VectorScale, ...)
+%     s.stereo       used by pivlab.stereo       (disparity correction: Pairs (0 = automatic), Model, Passes, ...)
 %
 %   Change fields and pass the struct to the API functions with Settings=s, e.g.
 %       s = pivlab.defaults();

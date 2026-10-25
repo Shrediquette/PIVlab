@@ -1,192 +1,64 @@
-function [OutputError,ima_out,frame_nr_display] = PIVlab_capture_OPTOcam_calibration_image(img_amount,exposure_time,ROI_OPTOcam)
+function [OutputError,ima_out,frame_nr_display] = PIVlab_capture_OPTOcam_calibration_image(img_amount,exposure_time,ROI_OPTOcam,n_cameras)
+%Live image of one OPTOcam 2/80, or of two side by side (stereo acquisition, n_cameras = 2).
+%img_amount: number of camera frames to show (inf = until Stop, 1 = one image for the ROI selection).
+%ima_out: last image in 16 bit (12 bit data stretched); stereo: cell {camera 1, camera 2}.
+%CPU load: the frames are drawn at a limited rate (PIVlab_capture_rate_limited_preview, about 25 megapixels
+%per second in total) and the overlays are computed at that rate, not for every camera frame.
+if nargin < 4
+	n_cameras = 1;
+end
 OutputError=0;
+ima_out=[];
+frame_nr_display=[];
 hgui=getappdata(0,'hgui');
-%% Prepare camera
-imaq_error=0;
-try
-    delete(imaqfind); %clears all previous videoinputs
-    warning off
-    hwinf = imaqhwinfo;
-    %warning on
-    %imaqreset
-catch
-    imaq_error=1;
+%% Prepare cameras
+[OPTOcam_vids,imaq_error] = PIVlab_capture_OPTOcam_open(12,n_cameras); %live image in 12 bit always
+if imaq_error ~= 0
+	OutputError=1;
+	return
 end
-warning('off','imaq:gentl:noSupportedPixelFormat')
-if imaq_error==0
-    if isempty(hwinf.InstalledAdaptors)
-        imaq_error=2;
-    end
-end
-if imaq_error==0
-    info = imaqhwinfo(hwinf.InstalledAdaptors{1});
-    found_correct_adaptor=0;
-    for adaptorID=1:numel(hwinf.InstalledAdaptors)
-        info = imaqhwinfo(hwinf.InstalledAdaptors{adaptorID});
-        if strcmp(info.AdaptorName,'gentl')
-            disp(['gentl adaptor found with ID: ' num2str(adaptorID)])
-            found_correct_adaptor=1;
-            imaq_error=0;
-            break
-        else
-            imaq_error=2;
-        end
-    end
-end
-if imaq_error==0 && found_correct_adaptor ==1
-    try
-        %Getting camera device ID when multiple cameras are connected
-        for CamID = 1: size(info.DeviceInfo,2)
-            camName=info.DeviceInfo(CamID).DeviceName;
-            imaq_error=3;
-            if contains(camName,'160um','IgnoreCase',true) || contains(camName,'OPTOcam','IgnoreCase',true)
-                OPTOcam_name = info.DeviceInfo(CamID).DeviceName;
-                imaq_error=0;
-                break
-            end
-        end
-    catch
-        imaq_error=3;
-    end
-end
-if imaq_error==1
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','modal');
-    disp('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.')
-elseif imaq_error==2
-    disp('ERROR: gentl adaptor not found. Please install the GenICam / GenTL support package from here:')
-    disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error, support package missing',{'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'modal');
-elseif imaq_error==3
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Camera not found! Is it connected?','modal');
-end
-
-disp(['Found camera: ' OPTOcam_name])
-
-OPTOcam_supported_formats = info.DeviceInfo(CamID).SupportedFormats;
-OPTOcam_vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,'Mono12'); %calibration image in 12 bit always.
-
-OPTOcam_settings = get(OPTOcam_vid);
-executeCommand(OPTOcam_settings.Source,"BslSensorOn")
-disp('Waking up sensor from sleep mode.')
-OPTOcam_settings.Source.DeviceLinkThroughputLimitMode = 'off';
-OPTOcam_settings.PreviewFullBitDepth='On';
-OPTOcam_vid.PreviewFullBitDepth='On';
-
-triggerconfig(OPTOcam_vid, 'manual');
-OPTOcam_settings.TriggerMode ='manual';
-OPTOcam_settings.Source.TriggerMode ='Off';
-OPTOcam_settings.Source.ExposureMode ='Timed';
-OPTOcam_settings.Source.ExposureTime =exposure_time;
-
 ROI_OPTOcam=[ROI_OPTOcam(1)-1,ROI_OPTOcam(2)-1,ROI_OPTOcam(3),ROI_OPTOcam(4)]; %unfortunaletly different definitions of ROI in pco and OPTOcam.
-OPTOcam_vid.ROIPosition=ROI_OPTOcam;
-
-OPTOcam_settings.Source.ReverseX = 'True';
-OPTOcam_settings.Source.ReverseY = 'True';
-OPTOcam_gain = gui.camera_setting('OPTOcam_gain');
-if isempty (OPTOcam_gain)
-    OPTOcam_gain=0;
+for k=1:n_cameras
+	configure_live(OPTOcam_vids{k},exposure_time,ROI_OPTOcam);
 end
-OPTOcam_settings.Source.Gain = OPTOcam_gain;
 
-%% prapare axis
-
-crosshair_enabled = getappdata(hgui,'crosshair_enabled');
-sharpness_enabled = getappdata(hgui,'sharpness_enabled');
+%% prepare axis
 PIVlab_axis = gui.retr('pivlab_axis');
-
-%image_handle_OPTOcam=imagesc(zeros(OPTOcam_settings.VideoResolution(2),OPTOcam_settings.VideoResolution(1)),'Parent',PIVlab_axis,[0 2^8]);
-
-image_handle_OPTOcam=imagesc(zeros(ROI_OPTOcam(4),ROI_OPTOcam(3)),'Parent',PIVlab_axis,[0 2^12]);
-
-setappdata(hgui,'image_handle_OPTOcam',image_handle_OPTOcam);
-
-frame_nr_display=text(PIVlab_axis,100,100,'Initializing...','Color',[1 1 0]);
-colormap(ancestor(PIVlab_axis,'figure'),'default') %reset colormap steps
-new_map=colormap(ancestor(PIVlab_axis,'figure'),'gray');
-new_map(1:3,:)=[0 0.2 0;0 0.2 0;0 0.2 0];
-new_map(end-2:end,:)=[1 0.7 0.7;1 0.7 0.7;1 0.7 0.7];
-colormap(ancestor(PIVlab_axis,'figure'),new_map);axis(PIVlab_axis,'image');
-set(PIVlab_axis,'ytick',[])
-set(PIVlab_axis,'xtick',[])
-colorbar(PIVlab_axis)
-
+[image_handles,frame_nr_display] = acquisition.live_images(n_cameras,[ROI_OPTOcam(3) ROI_OPTOcam(4)],2^12);
+setappdata(hgui,'image_handles_OPTOcam',image_handles);
 
 %% get images
-OPTOcam_vid.FramesPerTrigger = 1;
+display_rate = min(10, 25e6/(n_cameras*ROI_OPTOcam(3)*ROI_OPTOcam(4))); %frames per second drawn per camera
+for k=1:n_cameras
+	OPTOcam_vids{k}.FramesPerTrigger = 1;
+	setappdata(image_handles{k},'frames_shown',0); %counts real camera frames (skips the preview placeholder)
+	setappdata(image_handles{k},'max_display_rate',display_rate);
+	setappdata(image_handles{k},'UpdatePreviewWindowFcn',@PIVlab_capture_rate_limited_preview);
+	preview(OPTOcam_vids{k},image_handles{k})
+end
 set(frame_nr_display,'String','');
-setappdata(image_handle_OPTOcam,'frames_shown',0); %counts real camera frames (skips the preview placeholder)
-setappdata(image_handle_OPTOcam,'UpdatePreviewWindowFcn',@PIVlab_capture_count_preview_frames);
-preview(OPTOcam_vid,image_handle_OPTOcam)
-caxis([0 2^12]); %seems to be a workaround to force preview to show full data range...
+caxis(PIVlab_axis,[0 2^12]); %#ok<CAXIS> seems to be a workaround to force preview to show full data range...
 displayed_img_amount=0;
+delaycounter=0; %autofocus state
+delaycounter2=0;
+delay_time_1=tic;
+sharpness_focus_table=[];
+sharp_loop_cnt=[];
+t0 = tic;
+next_update = 0;
 while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
-    frames_shown = getappdata(image_handle_OPTOcam,'frames_shown'); %read BEFORE CData: ima is then a real frame if frames_shown >= 1
-    ima = image_handle_OPTOcam.CData;
-    ima_out = bitshift(ima,4); %stretch 12 bit to 16 bit
-
-    %% live charuco
-    do_charuco_detection = gui.retr('do_charuco_detection');
-    if isempty(do_charuco_detection)
-        do_charuco_detection=0;
-    end
-    if do_charuco_detection
-        PIVlab_capture_charuco_detector(ima_out,PIVlab_axis,image_handle_OPTOcam);
-    end
-
-    %% sharpness indicator
-    sharpness_enabled = getappdata(hgui,'sharpness_enabled');
-    if sharpness_enabled == 1 % sharpness indicator
-        [~,~] = PIVlab_capture_sharpness_indicator (ima,1);
-    else
-        delete(findobj('tag','sharpness_display_text'));
-    end
-    crosshair_enabled = getappdata(hgui,'crosshair_enabled');
-    if crosshair_enabled == 1 %cross-hair
-        %% cross-hair
-        locations=[0.15 0.5 0.85];
-        half_thickness=1;
-        brightness_incr=101;
-        ima_ed=ima;
-        old_max=max(ima(:));
-        for loca=locations
-            %vertical
-            ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)=ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)+brightness_incr;
-            %horizontal
-            ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)=ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)+brightness_incr;
-        end
-        ima_ed(ima_ed>old_max)=old_max;
-        set(image_handle_OPTOcam,'CData',ima_ed);
-    end
-    %% HISTOGRAM
-    if getappdata(hgui,'hist_enabled')==1
-        if isvalid(image_handle_OPTOcam)
-            hist_fig=findobj('tag','hist_fig');
-            if isempty(hist_fig)
-                hist_fig=figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Live histogram','Toolbar','none','tag','hist_fig','CloseRequestFcn', @HistWindow_CloseRequestFcn);
-            end
-            if ~exist ('old_hist_y_limits','var')
-                old_hist_y_limits =[0 35000];
-            else
-                if isvalid(hist_obj)
-                    old_hist_y_limits=get(hist_obj.Parent,'YLim');
-                end
-            end
-            hist_obj=histogram(ima(1:2:end,1:2:end),'Parent',hist_fig,'binlimits',[0 2^12]);
-        end
-        %lowpass hist y limits for better visibility
-        if ~exist ('new_hist_y_limits','var')
-            new_hist_y_limits =[0 35000];
-        end
-        new_hist_y_limits=get(hist_obj.Parent,'YLim');
-        set(hist_obj.Parent,'YLim',(new_hist_y_limits*0.5 + old_hist_y_limits*0.5))
-    else
-        hist_fig=findobj('tag','hist_fig');
-        if ~isempty(hist_fig)
-            close(hist_fig)
-        end
-    end
-    drawnow limitrate;
+	if toc(t0) < next_update
+		pause(0.01); %sleep and process GUI callbacks instead of spinning
+		continue
+	end
+	next_update = toc(t0) + 1/display_rate;
+	frames_shown = inf; %real camera frames of the slowest camera, read BEFORE the frames: they are then real frames if frames_shown >= 1
+	for k=1:n_cameras
+		frames_shown = min(frames_shown,getappdata(image_handles{k},'frames_shown'));
+	end
+	acquisition.live_overlays(image_handles,'live'); %sharpness, grid, ChArUco detection
+	ima = getappdata(image_handles{1},'frame');
+	if n_cameras == 1 && ~isempty(ima) %autofocus: one camera (one lens controller)
     %% Autofocus
     %% Lens control
     %Sowieso machen: Nicht lineare schritte für die anzufahrenden fokuspositionen. Diese Liste vorher ausrechnen und dann nur index anspringen
@@ -320,11 +192,51 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
         sharpness_focus_table=[];
         sharp_loop_cnt=[];
     end
-    displayed_img_amount = frames_shown; %real camera frames (placeholder not counted)
+	end
+	drawnow limitrate;
+	displayed_img_amount = frames_shown; %real camera frames (placeholder not counted)
 end
-stoppreview(OPTOcam_vid)
-executeCommand(OPTOcam_settings.Source,"BslSensorOff")
+ima_out = cell(1,n_cameras);
+for k=1:n_cameras
+	stoppreview(OPTOcam_vids{k})
+	try
+		executeCommand(OPTOcam_vids{k}.Source,"BslSensorOff")
+	catch %not available with the 'mwgentlimaq' adaptor
+	end
+	ima_out{k} = bitshift(getappdata(image_handles{k},'frame'),4); %stretch 12 bit to 16 bit
+end
+if n_cameras == 1
+	ima_out = ima_out{1};
+end
 disp('Sending sensor to sleep mode.')
+
+function configure_live(OPTOcam_vid,exposure_time,ROI_OPTOcam)
+%free-running camera for the live image
+OPTOcam_src = OPTOcam_vid.Source;
+try
+	executeCommand(OPTOcam_src,"BslSensorOn")
+	disp('Waking up sensor from sleep mode.')
+catch %not available with the 'mwgentlimaq' adaptor
+end
+OPTOcam_src.DeviceLinkThroughputLimitMode = 'off';
+OPTOcam_vid.PreviewFullBitDepth='On';
+triggerconfig(OPTOcam_vid, 'manual');
+OPTOcam_src.TriggerMode ='Off';
+OPTOcam_src.ExposureMode ='Timed';
+OPTOcam_src.ExposureTime =exposure_time;
+try %at most 20 frames/s from the camera: a live image does not need more, and less data means less CPU load
+	OPTOcam_src.AcquisitionFrameRateEnable = 'True';
+	OPTOcam_src.AcquisitionFrameRate = 20;
+catch
+end
+OPTOcam_vid.ROIPosition=ROI_OPTOcam;
+OPTOcam_src.ReverseX = 'True';
+OPTOcam_src.ReverseY = 'True';
+OPTOcam_gain = gui.camera_setting('OPTOcam_gain');
+if isempty (OPTOcam_gain)
+    OPTOcam_gain=0;
+end
+OPTOcam_src.Gain = OPTOcam_gain;
 
 function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');
@@ -351,12 +263,4 @@ if running == 1
     end
 else
     delete(auto_focus_active_hint);
-end
-
-function HistWindow_CloseRequestFcn(hObject,~)
-hgui=getappdata(0,'hgui');
-setappdata(hgui,'hist_enabled',0);
-try
-    delete(hObject);
-catch
 end

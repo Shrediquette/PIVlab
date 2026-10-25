@@ -57,6 +57,40 @@
       rows × columns, checker/marker sizes) so PIVlab can detect it.</figcaption>
     </figure>
 
+    <h3 id="checker-size">Choosing the checker size</h3>
+    <p>Design the board for the camera image, not for the paper: the board should fill the
+    camera image, and one checker should cover about <strong>60–130 pixels</strong> in the
+    image. More and smaller checkers do not make the calibration more accurate — in tests with
+    synthetic images of a real camera, a board with about 120 corners calibrated as well as one
+    with 1700. Small checkers only make the marker detection fail.</p>
+    <div class="eq"><em>c</em> ≈ 60…130 × <em>W</em> / <em>N</em></div>
+    <p class="eq-where">where <em>c</em> is the checker size [mm], <em>W</em> the width of the field
+    of view [mm] and <em>N</em> the image width [px].</p>
+    <p>Example: a camera with 1936 px image width looking at a 520 mm wide field of view has
+    0.27 mm/px, so the checkers should be about 16–35 mm, i.e. a board with about 15–30 columns.</p>
+    <table class="ref">
+      <tr><th>Checker in the image</th><th>Detection</th></tr>
+      <tr><td>below about 20 px</td><td>Markers are not detected.</td></tr>
+      <tr><td>20–60 px</td><td>Works with sharp images. With blur or image noise the marker
+      detection becomes unreliable.</td></tr>
+      <tr><td>60–130 px</td><td><strong>Recommended.</strong> Reliable also with slightly blurred or
+      noisy images.</td></tr>
+      <tr><td>above about 200 px</td><td>Still accurate, but each image has only few corners. Keep at
+      least about 6 × 9 checkers on the board.</td></tr>
+    </table>
+
+    <div class="warn">
+      <strong>Limitations of the ChArUco detection</strong>
+      <ul>
+        <li>A board can have at most 2000 checkers (rows × columns); the generator refuses larger
+        boards. A board that fills the image therefore cannot have arbitrarily small checkers. On
+        cameras with more than about 30 megapixels this forces checkers larger than 130 px, which
+        is fine.</li>
+        <li>The board may extend beyond the image edges: each corner is identified by its
+        neighbouring markers, so partly visible boards are used.</li>
+      </ul>
+    </div>
+
     <h2 id="calibration">Camera calibration (lens undistortion)</h2>
     <p>Open via <span class="ui">Image settings → Camera calibration → Camera calibration
     (undistortion) → Camera 1</span>.</p>

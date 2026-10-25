@@ -1,79 +1,68 @@
-function [OutputError,OPTOcam_vid] = PIVlab_capture_OPTOcam_synced_capture(OPTOcam_vid,nr_of_images,do_realtime,ROI_live,frame_nr_display,bitmode)
+function [OutputError,OPTOcam_vid] = PIVlab_capture_OPTOcam_synced_capture(OPTOcam_vid,nr_of_images,do_realtime,ROI_live,frame_nr_display,bitmode) %#ok<INUSD>
+%Waits until one OPTOcam 2/80, or both cameras of a stereo setup, captured nr_of_images image pairs (Inf = PIV
+%preview until Stop) and shows the latest frames.
+%OPTOcam_vid: cell array with one videoinput per camera (PIVlab_capture_OPTOcam_synced_start).
+%preview() is not used: the latest frame of each camera is shown with peekdata, 5 times per second while
+%recording and 10 times per second in PIV preview, downsampled to about 1280 pixels width per camera. Drawing
+%every frame in the PIVlab window causes a high CPU load and skipped frames (same approach as the OPTRONIS driver).
+if ~iscell(OPTOcam_vid)
+	OPTOcam_vid = {OPTOcam_vid};
+end
+n_cameras = numel(OPTOcam_vid);
 warning('off','imaq:gentl:noSupportedPixelFormat')
-OPTOcam_climits=2^bitmode;
 hgui=getappdata(0,'hgui');
-image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam');
+image_handles=getappdata(hgui,'image_handles_OPTOcam');
 OutputError=0;
-OPTOcam_settings = get(OPTOcam_vid);
 OPTOcam_frames_to_capture = nr_of_images*2;
 set(frame_nr_display,'backgroundcolor','k');
+is_preview = isinf(OPTOcam_frames_to_capture); %PIV preview: endless acquisition, frames are discarded with flushdata
+if ~is_preview
+	update_interval = 1/5;
+else
+	update_interval = 1/10;
+end
+t0 = tic;
+next_update = 0;
+delaycounter=0; %autofocus state
+delaycounter2=0;
+delay_time_1=tic;
+sharpness_focus_table=[];
+sharp_loop_cnt=[];
 %% capture data
-while OPTOcam_vid.FramesAcquired < (OPTOcam_frames_to_capture) &&  getappdata(hgui,'cancel_capture') ~=1
-	ima = image_handle_OPTOcam.CData;
-	if ~isinf(OPTOcam_frames_to_capture)
-		if OPTOcam_vid.FramesAcquired == 0
-			set(frame_nr_display,'String','Waiting for trigger...')
-		else
-			set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTOcam_vid.FramesAcquired/2))]);
+while frames_acquired(OPTOcam_vid) < OPTOcam_frames_to_capture && getappdata(hgui,'cancel_capture') ~=1
+	if toc(t0) < next_update
+		if is_preview
+			for k=1:n_cameras
+				if OPTOcam_vid{k}.FramesAvailable > 50
+					flushdata(OPTOcam_vid{k}); %keep RAM usage low when the loop was blocked for a while
+				end
+			end
 		end
-	else
-		set(frame_nr_display,'String','PIV preview');
+		pause(0.01); %sleep and process GUI callbacks instead of spinning
+		continue
 	end
-
-    drawnow limitrate
-    %% sharpness indicator
-    sharpness_enabled = getappdata(hgui,'sharpness_enabled');
-    if sharpness_enabled == 1 % sharpness indicator
-        [~,~] = PIVlab_capture_sharpness_indicator (ima,1);
-    else
-        delete(findobj('tag','sharpness_display_text'));
-    end
-    crosshair_enabled = getappdata(hgui,'crosshair_enabled');
-    if crosshair_enabled == 1 %cross-hair
-        %% cross-hair
-        locations=[0.15 0.5 0.85];
-        half_thickness=1;
-        brightness_incr=101;
-        ima_ed=ima;
-        old_max=max(ima(:));
-        for loca=locations
-            %vertical
-            ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)=ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)+brightness_incr;
-            %horizontal
-            ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)=ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)+brightness_incr;
-        end
-        ima_ed(ima_ed>old_max)=old_max;
-        set(image_handle_OPTOcam,'CData',ima_ed);
-    end
-    %% HISTOGRAM
-    if getappdata(hgui,'hist_enabled')==1
-        if isvalid(image_handle_OPTOcam)
-            hist_fig=findobj('tag','hist_fig');
-            if isempty(hist_fig)
-                hist_fig=figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Live histogram','Toolbar','none','tag','hist_fig','CloseRequestFcn', @HistWindow_CloseRequestFcn);
-            end
-            if ~exist ('old_hist_y_limits','var')
-                old_hist_y_limits =[0 35000];
-            else
-                if isvalid(hist_obj)
-                    old_hist_y_limits=get(hist_obj.Parent,'YLim');
-                end
-            end
-            hist_obj=histogram(ima(1:2:end,1:2:end),'Parent',hist_fig,'binlimits',[0 OPTOcam_climits]);
-        end
-        %lowpass hist y limits for better visibility
-        if ~exist ('new_hist_y_limits','var')
-            new_hist_y_limits =[0 35000];
-        end
-        new_hist_y_limits=get(hist_obj.Parent,'YLim');
-        set(hist_obj.Parent,'YLim',(new_hist_y_limits*0.5 + old_hist_y_limits*0.5))
-    else
-        hist_fig=findobj('tag','hist_fig');
-        if ~isempty(hist_fig)
-            close(hist_fig)
-        end
-    end
-    drawnow limitrate;
+	next_update = toc(t0) + update_interval;
+	acquired = frames_acquired(OPTOcam_vid);
+	for k=1:n_cameras
+		if OPTOcam_vid{k}.FramesAvailable > 0
+			ima = peekdata(OPTOcam_vid{k},1); %full resolution for the overlays
+			if is_preview
+				flushdata(OPTOcam_vid{k}); %frames are not saved in PIV preview
+			end
+			ds = max(1,ceil(size(ima,2)/1280)); %downsampling factor of the displayed image
+			acquisition.show_frame(image_handles{k},ima,ds);
+		end
+	end
+	if is_preview
+		set(frame_nr_display,'String','PIV preview');
+	elseif acquired == 0
+		set(frame_nr_display,'String','Waiting for trigger...')
+	else
+		set(frame_nr_display,'String',['Image nr.: ' int2str(round(acquired/2))]);
+	end
+	acquisition.live_overlays(image_handles,'capture'); %sharpness, grid
+	ima = getappdata(image_handles{1},'frame');
+	if n_cameras == 1 && ~isempty(ima) %autofocus: one camera (one lens controller)
     %% Autofocus
     %% Lens control
     %Sowieso machen: Nicht lineare schritte für die anzufahrenden fokuspositionen. Diese Liste vorher ausrechnen und dann nur index anspringen
@@ -207,27 +196,38 @@ while OPTOcam_vid.FramesAcquired < (OPTOcam_frames_to_capture) &&  getappdata(hg
         sharpness_focus_table=[];
         sharp_loop_cnt=[];
     end
+	end
+	drawnow limitrate;
 end
 
-
-stoppreview(OPTOcam_vid)
-stop(OPTOcam_vid);
-executeCommand(OPTOcam_settings.Source,"BslSensorOff")
+for k=1:n_cameras
+	stop(OPTOcam_vid{k});
+	try
+		executeCommand(OPTOcam_vid{k}.Source,"BslSensorOff")
+	catch %not available with the 'mwgentlimaq' adaptor
+	end
+end
 disp('Sending sensor to sleep mode.')
 
-if ~isinf(OPTOcam_frames_to_capture)
-    set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTOcam_vid.FramesAcquired/2))]);
+if ~is_preview
+    set(frame_nr_display,'String',['Image nr.: ' int2str(round(frames_acquired(OPTOcam_vid)/2))]);
 else
     set(frame_nr_display,'String','PIV preview stopped.');
 end
 drawnow;
+
+function acquired = frames_acquired(OPTOcam_vid)
+%frames of the slower camera
+acquired = inf;
+for k=1:numel(OPTOcam_vid)
+	acquired = min(acquired,OPTOcam_vid{k}.FramesAcquired);
+end
 
 function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');
 if running == 1
     hgui=getappdata(0,'hgui');
     PIVlab_axis = gui.retr('pivlab_axis');
-    %image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam');
     postix=get(PIVlab_axis,'XLim');
     postiy=get(PIVlab_axis,'YLim');
     bg_col=get(auto_focus_active_hint,'BackgroundColor'); % Toggle background color while autofocus is active
@@ -246,12 +246,4 @@ if running == 1
     end
 else
     delete(auto_focus_active_hint);
-end
-
-function HistWindow_CloseRequestFcn(hObject,~)
-hgui=getappdata(0,'hgui');
-setappdata(hgui,'hist_enabled',0);
-try
-    delete(hObject);
-catch
 end

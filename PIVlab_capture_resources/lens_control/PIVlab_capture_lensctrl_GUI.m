@@ -271,7 +271,6 @@ end
 [focus,aperture,lighting]=get_lens_status;
 if strmatch(inpt,'auto')
 	put('sharpness_enabled',0);
-	put('hist_enabled',0);
 	if retr('capturing')==1 %camera is recording
 		if retr('autofocus_enabled') == 1 %user pressed button while autofocus is running: Stop autofocus.
 			put('autofocus_enabled',0); %toggles the autofocus_enabled variable. That is checked in PIVlab_capture_pco after each frame capture

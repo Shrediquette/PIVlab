@@ -2,7 +2,7 @@
 %
 % Formulas of the reconstruction, the disparity models, the output grid, the lens models, the
 % corner filter and the automatic region of interest without image data (seconds), plus small
-% synthetic stereo recordings with known ground truth that go through stereo.run (about a minute).
+% synthetic stereo recordings with known ground truth that go through pivlab.stereo + pivlab.filter (about a minute).
 %
 % Run with:
 %   runtests('unittests/test_stereo_core.m')
@@ -646,7 +646,13 @@ S.analysis.PassSizes = [32 16 16];
 st = stereo.defaults();
 st.disparity.InterrogationArea = 128;
 st.disparity.PassSize2 = 64;
-result = stereo.run(imgs, c.boards, c.board, Settings=S, Stereo=st, Verbose=false);
+res = pivlab.stereo(imgs, c.boards, c.board, Settings=S, Stereo=st, Verbose=false);
+res = pivlab.filter(res, Settings=S, Verbose=false);
+result.res = res;
+result.calib = res.stereo.calib;
+result.disparity = res.stereo.disparity;
+result.vel = struct('U', res.px.u, 'V', res.px.v, 'W', res.px.w, 'x_mm', res.stereo.x_mm, 'y_mm', res.stereo.y_mm, ...
+    'mm_per_px', res.stereo.mm_per_px);
 err = helper_stereo_truth_error(result.vel, c, result.calib);
 end
 

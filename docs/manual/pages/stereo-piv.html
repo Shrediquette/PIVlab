@@ -99,11 +99,14 @@
     <ol class="steps">
       <li>In the Input data panel click <span class="ui">Import stereo images</span> (below
       <span class="ui">Import images</span>).</li>
-      <li>The normal image dialog opens twice: first select the images of
-      <strong>camera 1</strong>, then those of <strong>camera 2</strong>. Use the same
-      sequencing style for both (e.g. pco double images).</li>
+      <li>The <a href="sessions.html#importing">image import dialog</a> has one list per camera:
+      go to the images of <strong>camera 1</strong> and click <span class="ui">Add to camera
+      1</span>, then the same for <strong>camera 2</strong>. The sequencing style applies to both
+      cameras (e.g. pco double images).</li>
       <li>Both cameras must give the same number of images, recorded at the same time.</li>
     </ol>
+    <p>Images recorded in PIVlab with two cameras (<a href="capture.html#stereo">Stereo
+    acquisition</a>) open in stereo mode directly, without this dialog.</p>
     <h3 id="check">Checking the images first</h3>
     <p>Right after the import you can check the particle images with a normal 2D PIV analysis:
     <span class="ui">Analyze current frame</span> or <span class="ui">Analyze all frames</span>
@@ -288,11 +291,8 @@
       plane of the light sheet (w is perpendicular to it).</li>
     </ul>
 
-    <p><strong>Not yet available in stereo mode:</strong></p>
-    <ul>
-      <li>The <a href="command-line.html">command-line API</a> can not run stereo sessions yet
-      (<code>pivlab.loadSession</code> warns).</li>
-    </ul>
+    <p>Stereo-PIV also runs from a MATLAB script, with the same results as the GUI:
+    see <a href="command-line.html#stereo">Command line: Stereo-PIV</a>.</p>
   </article>
 
   <script src="../assets/js/nav.js"></script>

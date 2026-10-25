@@ -1,5 +1,5 @@
 function s = defaults()
-%DEFAULTS Default settings of the stereo-PIV specific steps (stereo.run).
+%DEFAULTS Default settings of the stereo-PIV specific steps (pivlab.stereo).
 %   s = stereo.defaults() returns a struct with the groups
 %     s.calibration     stereo.calibrate       (common output grid, corner filter)
 %     s.disparity       stereo.measure_disparity (misalignment of the two rectified views)

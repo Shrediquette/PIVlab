@@ -1,0 +1,29 @@
+PIVlab synthetic single camera recording (3D particle image generator), 25-Oct-2026 17:00:07
+
+World coordinates = board coordinates in mm: origin at the first inner corner of the ChArUco board,
+x right (columns), y down (rows), z into the board. Displacements in mm per image pair.
+
+Board: 10 x 18 checkers, 12 mm checkers, 9 mm markers, DICT_4X4_1000, origin checker black
+Sensor: 1200 x 800 px, 8 um pixels, lens 25 mm
+Camera 1: position [-55.8 135.9 -671.2] mm, aim point [96 48] mm, radial distortion k1 = -2, k2 = -3
+Light sheet: offset 0.5 mm (towards camera 1), tilt 1 deg about x, 0 deg about y, thickness 1.5 mm
+Flow: sphere wake (3D flow simulation), free stream displacement 0.8 mm per image pair (in +x), sphere diameter 40 mm,
+      sphere centre [3.3 41.1] mm in sheet coordinates, 0.25 D/U between the image pairs (time series)
+Particles: 0.05 per pixel, diameter 3 px (+-0.5), noise 0.001
+
+Contents (k = camera number)
+  camera<k>/particle_images/       5 image pairs per camera (cam<k>_0001_A.tif, cam<k>_0001_B.tif, ...)
+  camera<k>/calibration_images/    10 images of the board in random positions (lens calibration)
+  camera<k>/board_in_light_sheet_cam<k>.tif   board where the light sheet is (stereo calibration / rectification)
+  camera<k>/true_lens_cam<k>.mat   the true lens ("Load camera parameters"), to compare with the calibration
+  ground_truth.mat                 variable truth: displacement field and geometry
+  generator_setup.mat              variable setup: input of simulate.recording_3d
+
+Workflow in PIVlab
+  1. Image settings -> Camera calibration -> Camera calibration (undistortion) -> Camera <k>:
+     load the calibration images of camera <k> and estimate the camera parameters.
+  2. Load the particle images, rectify with board_in_light_sheet_cam1.tif, analyze.
+
+Camera 1: in front of the board, 696 mm away, 15.0° to the sheet normal, 0.229 x 0.224 mm/px, view 337 x 229 mm, distortion 82.9 px, board corners 153 of 153
+
+Ground truth of simulate.recording_3d. Displacement per image pair in mm. X, Y, U, V, W: sheet coordinates (the light sheet is the plane z = 0, sheet_pose moves it to the world). Xw, Yw, Zw, Uw, Vw, Ww: the same points and displacements in world = board coordinates (origin first inner corner, x right, y down, z into the board). simulate.truth_at_board(truth, x, y) gives U, V, W at board positions as a stereo-PIV result shows them. Sphere wake: U, V, W, Uw, Vw, Ww have one page per image pair (third dimension), simulate.truth_at_board(truth, x, y, Pair=n); sphere: centre (sheet coordinates), diameter, time of each pair in D/U.

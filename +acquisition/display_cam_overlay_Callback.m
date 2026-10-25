@@ -5,7 +5,4 @@ end
 if strcmpi (A.Tag, 'ac_displ_grid')
 	gui.put('crosshair_enabled',A.Value);
 end
-if strcmpi (A.Tag, 'ac_displ_hist')
-	gui.put('hist_enabled',A.Value);
-end
 

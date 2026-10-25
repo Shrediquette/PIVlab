@@ -33,10 +33,11 @@ if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
     %figure;imshow(tmp_img)
     %figure(getappdata(0,'hgui'))
     imagePoints1 = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'RefineCorners',true,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
+    imagePoints1 = preproc.cam_filter_charuco_corners(imagePoints1, patternDims); % corners of wrongly decoded markers
     %%}
     %% faster but no preproc possible
     %[imagePoints1, ~] = detectPatternPoints(detector, cam_selected_rectification_image, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
-    if isempty(imagePoints1)
+    if isempty(imagePoints1) || all(isnan(imagePoints1(:)))
         gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No ChArUco markers detected.','modal');
         return
     end

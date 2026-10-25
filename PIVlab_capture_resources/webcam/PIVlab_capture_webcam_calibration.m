@@ -68,34 +68,6 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
         ima_ed(ima_ed>old_max)=old_max;
         set(image_handle_webcam,'CData',ima_ed);
     end
-    %% HISTOGRAM
-    if getappdata(hgui,'hist_enabled')==1
-        if isvalid(image_handle_webcam)
-            hist_fig=findobj('tag','hist_fig');
-            if isempty(hist_fig)
-                hist_fig=figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Live histogram','Toolbar','none','tag','hist_fig','CloseRequestFcn', @HistWindow_CloseRequestFcn);
-            end
-            if ~exist ('old_hist_y_limits','var')
-                old_hist_y_limits =[0 35000];
-            else
-                if isvalid(hist_obj)
-                    old_hist_y_limits=get(hist_obj.Parent,'YLim');
-                end
-            end
-            hist_obj=histogram(ima(1:2:end,1:2:end),'Parent',hist_fig,'binlimits',[0 2^12]);
-        end
-        %lowpass hist y limits for better visibility
-        if ~exist ('new_hist_y_limits','var')
-            new_hist_y_limits =[0 35000];
-        end
-        new_hist_y_limits=get(hist_obj.Parent,'YLim');
-        set(hist_obj.Parent,'YLim',(new_hist_y_limits*0.5 + old_hist_y_limits*0.5))
-    else
-        hist_fig=findobj('tag','hist_fig');
-        if ~isempty(hist_fig)
-            close(hist_fig)
-        end
-    end
     drawnow limitrate;
     if img_amount == 1
         if sum(ima(1:10,1,1)) ~=10 %check if the display was updated, if there is real camera data. I didnt find a more elegant way...

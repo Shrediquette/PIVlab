@@ -5,6 +5,9 @@ function res = toMetric(res, opts)
 %     scale  image scale in pixels per metre (from a calibration image)
 %   Afterwards res.x and res.y are in m, res.u and res.v in m/s, res.units is "m/s".
 %
+%   Stereo-PIV result (pivlab.stereo): res = pivlab.toMetric(res, DeltaT=dt) is enough, the image scale comes
+%   from the stereo calibration (as in the GUI). res.w is then in m/s too.
+%
 %   res = pivlab.toMetric(res, Settings=s) uses the calibration stored in a PIVlab session or
 %   settings file (s = pivlab.loadSettings(file)).
 %
@@ -40,6 +43,13 @@ arguments
 end
 res = take_user_edits(res);
 has_scale = ~isempty(opts.PxPerMeter) || ~isempty(opts.ReferenceDistance);
+if ~has_scale && ~isempty(opts.DeltaT) && isfield(res, 'stereo') && ~isempty(res.stereo)
+    % stereo-PIV: the scale of the common grid from the stereo calibration, set like the GUI does
+    % (stereo.calibrate_Callback: a reference distance of up to 1000 px along x)
+    n = min(1000, res.stereo.calib.Ravg.ImageSize(2) - 1);
+    opts.ReferenceDistance = [n, str2double(num2str(n * res.stereo.mm_per_px(1))) / 1000];
+    has_scale = true;
+end
 if ~has_scale && isempty(opts.DeltaT)
     % calibration from Settings
     if isempty(fieldnames(opts.Settings))

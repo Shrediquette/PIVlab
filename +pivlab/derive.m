@@ -11,7 +11,10 @@ function [res, map] = derive(res, quantity, opts)
 %               "direction"   (degrees)        "lic"        (line integral convolution)
 %               "correlation" (correlation coefficient)
 %               "uncertainty" (needs pivlab.analyze(..., Uncertainty=true))
+%               "w"           (stereo-PIV, pivlab.stereo: out-of-plane component)
 %   Units follow res.units (call pivlab.toMetric first for SI units).
+%   Stereo-PIV: "magnitude" is the 3D magnitude sqrt(u^2 + v^2 + w^2), and the smoothing smooths w too
+%   (res.px.w_smoothed), as in the GUI.
 %
 %   Name=value options
 %   Smoothing          "none" (default) | "spatial" | "temporal" | "spatiotemporal"
@@ -40,7 +43,7 @@ arguments
     opts.Settings struct = struct()
 end
 res = take_user_edits(res);   % values changed by hand in res.u / res.v are used
-names = ["vorticity","magnitude","u","v","divergence","qcriterion","shear","strain","lic","direction","correlation","uncertainty"];
+names = ["vorticity","magnitude","u","v","divergence","qcriterion","shear","strain","lic","direction","correlation","uncertainty","w"];
 q = lower(quantity);
 d = find(names == q, 1) + 1;   % PIVlab's "Display parameter" index (2...13)
 if isempty(d)
@@ -61,39 +64,73 @@ end
 interp = s.filter.Interpolate;
 p = res.px;
 n = size(p.u,3);
+has_w = isfield(p, 'w'); % stereo-PIV: w like u and v (plot.derivative_calc in the GUI)
+if q == "w" && ~has_w
+    error('pivlab:derive:notAvailable','w exists only for stereo-PIV results (pivlab.stereo).');
+end
 
 % velocity fields the quantities are computed from (pixel units)
-U = cell(1,n); V = cell(1,n);
+U = cell(1,n); V = cell(1,n); W = {};
+if has_w
+    W = cell(1,n);
+end
 for i = 1:n
     u = p.u(:,:,i); v = p.v(:,:,i);
+    w = [];
+    if has_w
+        w = p.w(:,:,i);
+    end
     if interp && (any(isnan(u(:))) || any(isnan(v(:))))
         u(isnan(v)) = NaN; v(isnan(u)) = NaN;
+        if has_w
+            w(isnan(u)) = NaN;
+            w = misc.inpaint_nans(w,4);
+        end
         u = misc.inpaint_nans(u,4);
         v = misc.inpaint_nans(v,4);
     end
     U{i} = u; V{i} = v;
+    if has_w
+        W{i} = w;
+    end
 end
 switch smoothing
     case "none"
         p.u_smoothed = []; p.v_smoothed = [];
+        if has_w
+            p.w_smoothed = [];
+        end
         res.smoothed = false;
     case "spatial"
         for i = 1:n
-            [U{i}, V{i}] = plot.smooth_spatial(U{i}, V{i}, S, interp);
+            if has_w
+                [U{i}, V{i}, W{i}] = plot.smooth_spatial(U{i}, V{i}, S, interp, W{i});
+            else
+                [U{i}, V{i}] = plot.smooth_spatial(U{i}, V{i}, S, interp);
+            end
         end
     otherwise
         h = round(g.TemporalWindow);
         if isnan(h) || h < 1
             h = 2;
         end
-        [U, V] = plot.temporal_smooth_core(U, V, ~res.isMean', h, S, smoothing == "spatiotemporal", interp);
+        [U, V, Ws] = plot.temporal_smooth_core(U, V, ~res.isMean', h, S, smoothing == "spatiotemporal", interp, W);
+        if has_w
+            W = Ws;
+        end
         for i = find(res.isMean')
             U{i} = p.u(:,:,i); V{i} = p.v(:,:,i);
+            if has_w
+                W{i} = p.w(:,:,i);
+            end
         end
 end
 if smoothing ~= "none"
     p.u_smoothed = cat(3, U{:});
     p.v_smoothed = cat(3, V{:});
+    if has_w
+        p.w_smoothed = cat(3, W{:});
+    end
     res.smoothed = true;
 end
 res.px = p;
@@ -107,6 +144,9 @@ for i = 1:n
     copt.correlation_map = res.correlation_map(:,:,i);
     if ~isempty(p.uncertainty)
         copt.uncertainty = p.uncertainty(:,:,i);
+    end
+    if has_w
+        copt.w = W{i}; % 3D magnitude, w component
     end
     if d == 10
         sf = lic_size / max(size(U{i}));

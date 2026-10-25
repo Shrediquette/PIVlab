@@ -72,7 +72,7 @@ window.MANUAL_SEARCH = [
     title: "Sessions — importing images",
     href: "pages/sessions.html", hash: "importing",
     section: "Getting started",
-    text: "import images sequencing style time resolved pairwise reference add import dialog file browser"
+    text: "import images sequencing style time resolved pairwise reference add import dialog file browser filter wildcard recent folders preview stereo camera 1 camera 2"
   },
   {
     title: "Sessions vs. settings",
@@ -259,6 +259,12 @@ window.MANUAL_SEARCH = [
     href: "pages/camera-calibration.html", hash: "markerboard",
     section: "Image settings",
     text: "charuco marker board rows columns checker size origin color guess parameters generate board"
+  },
+  {
+    title: "Choosing the checker size",
+    href: "pages/camera-calibration.html", hash: "checker-size",
+    section: "Image settings",
+    text: "charuco checker size marker pixels field of view board fills image corners detection limitations 2000 checkers maximum blur noise"
   },
   {
     title: "Camera calibration (lens undistortion)",
@@ -513,6 +519,12 @@ window.MANUAL_SEARCH = [
     text: "capture images camera synchronizer simplesync frame rate pulse distance laser energy connect com port start save checkbox image amount"
   },
   {
+    title: "Capturing images: stereo acquisition with two cameras",
+    href: "pages/capture.html", hash: "stereo",
+    section: "Image acquisition",
+    text: "stereo acquisition two cameras record stereo-piv capture y-cable camera 1 camera 2 swap cameras serial number side by side live image charuco board snapshot cam1 cam2 missed trigger"
+  },
+  {
     title: "Trying capture with just a webcam",
     href: "pages/capture.html", hash: "webcam",
     section: "Image acquisition",
@@ -594,7 +606,13 @@ window.MANUAL_SEARCH = [
     title: "Command line — useful options",
     href: "pages/command-line.html", hash: "options",
     section: "Data",
-    text: "verbose quiet progress messages none roi mask velocity limits units warning options without effect"
+    text: "verbose quiet progress messages none roi mask velocity limits freehand outline VelocityLimitsFreehand units warning options without effect"
+  },
+  {
+    title: "Command line — stereo-PIV",
+    href: "pages/command-line.html", hash: "stereo",
+    section: "Data",
+    text: "stereo piv script api pivlab.stereo two cameras w out-of-plane charuco board disparity residual stereo session 2d3c three components"
   },
   {
     title: "Command line — camera calibration",

@@ -38,14 +38,14 @@
 
     <h2 id="importing">Importing images</h2>
     <p>Click <span class="ui">Import images</span> to open the image-import dialog shown below.
-    Browse to your folder (a <span class="ui">Regular Expression Filter</span> field narrows
-    down large folders), select the files you want, and choose an <strong>image sequencing
-    style</strong> — this tells PIVlab how to pair up your files into frames:</p>
+    Browse to your folder, add the files you want to the list on the right, and choose an
+    <strong>image sequencing style</strong> — this tells PIVlab how to pair up your files into
+    frames:</p>
     <figure>
       <img src="../assets/img/sessions/image-import-dialog.jpg" alt="PIVlab image import dialog: sequencing style, folder browser, and the list of images selected for import">
-      <figcaption>The image import dialog. Pick a sequencing style (left), select files and click
-      <span class="ui">Add</span> to move them into the <span class="ui">Images selected for
-      import</span> list, then <span class="ui">Import</span>.</figcaption>
+      <figcaption>The image import dialog: the images of the folder (left, with a preview of the
+      clicked image), the selected images (right), the sequencing style and
+      <span class="ui">Import</span>.</figcaption>
     </figure>
     <table class="ref">
       <tr><th>Style</th><th>Pairing</th><th>Use it for</th></tr>
@@ -70,22 +70,27 @@
     </table>
 
     <ol class="steps">
-      <li>Select the sequencing style that matches how your images were captured.</li>
-      <li>Select the image files in the folder browser and click <span class="ui">Add</span> to
-      move them into the <span class="ui">Images selected for import</span> list on the right.
-      Use <span class="ui">Remove</span>, the move-up/move-down buttons, or
-      <span class="ui">Show full paths</span> / <span class="ui">Remove duplicates</span> to
-      clean up the list.</li>
+      <li>Go to your folder: type it, use <span class="ui">Up</span> /
+      <span class="ui">Browse...</span>, pick one of the <span class="ui">Recent folders</span>,
+      or double-click a sub-folder. The <span class="ui">Filter</span> shows only names that
+      contain a text (e.g. <code>_A</code>); with <code>*</code> (any characters) and
+      <code>?</code> (one character) the whole name must match, e.g. <code>cam1*_A</code>.</li>
+      <li>Select files (click and drag, Shift or Ctrl, <kbd>Ctrl+A</kbd> for all) and click
+      <span class="ui">Add</span>, or <span class="ui">Add all</span>. The files are imported in
+      the order in which you add them; the same files may be added more than once.
+      <span class="ui">Remove</span> and <span class="ui">Clear</span> edit the list.</li>
+      <li>Check the <span class="ui">Sequencing style</span>; the line below it shows how many
+      image pairs you get.</li>
       <li>Click <span class="ui">Import</span> to load them (or <span class="ui">Cancel</span>
       to back out). At least two images — one pair — are required.</li>
     </ol>
 
     <div class="tip">
       <strong>PIVlab will double-check your naming</strong>
-      If your filenames end in “A” and “B” but you left the style on <span class="ui">Time
-      resolved</span>, PIVlab detects the mismatch and offers to switch to
-      <span class="ui">Pairwise</span> for you — a common mix-up worth knowing about rather
-      than dismissing without reading.
+      If your filenames end in “A” and “B”, the dialog selects <span class="ui">Pairwise</span>
+      for you. If you switch back to <span class="ui">Time resolved</span>, PIVlab asks again
+      after the import — a common mix-up worth knowing about rather than dismissing without
+      reading.
     </div>
 
     <div class="note">

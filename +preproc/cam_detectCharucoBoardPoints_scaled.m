@@ -3,6 +3,7 @@ function P = cam_detectCharucoBoardPoints_scaled(img, varargin)
 %images) are not detected reliably, best results are achieved with markers of approx.
 %30...80 px. --> Downscale the image so that markers are approx. 60 px, detect, and map
 %the points back to full resolution coordinates.
+%Corners of wrongly decoded markers are removed (preproc.cam_filter_charuco_corners).
 s = 1;
 if max(size(img)) > 2000 % small images: unchanged behaviour
 	s_probe = 1280 / max(size(img)); % cheap probe, large markers are detectable here
@@ -18,3 +19,4 @@ else
 	P = detectCharucoBoardPoints(imresize(img,s), varargin{:});
 	P = (P-0.5)/s + 0.5; % back to full res pixel coordinates
 end
+P = preproc.cam_filter_charuco_corners(P, varargin{1});

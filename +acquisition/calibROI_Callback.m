@@ -1,7 +1,6 @@
 function calibROI_Callback (~,~,~)
 handles=gui.gethand;
 gui.put('capturing',0);
-gui.put('hist_enabled',0);
 camera_type=gui.retr('camera_type');
 binning=gui.retr('binning');
 if isempty(binning)

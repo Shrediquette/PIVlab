@@ -6,6 +6,7 @@ function out = temporal(res, operation, opts)
 %   operation  "mean" | "std" | "sum" | "tke"
 %              "tke": turbulent kinetic energy, m.u = 0.5*var(u), m.v = 0.5*var(v),
 %              pivlab.derive(m,"magnitude") gives the total TKE (sum of both).
+%   Stereo-PIV (pivlab.stereo): w is treated like u and v (TKE: m.w = 0.5*var(w), included in the total).
 %
 %   Name=value options
 %   Frames     frames to use, e.g. 1:100 (default: all frames). A cell array produces one
@@ -40,14 +41,27 @@ elseif ~iscell(frames)
     frames = {frames};
 end
 p = res.px;
+has_w = isfield(p, 'w'); % stereo-PIV: w like u and v (TKE: 0.5*var(w) as its w part), as in the GUI
+W = [];
 if res.smoothed && ~isempty(p.u_smoothed)
     U = p.u_smoothed; V = p.v_smoothed;
+    if has_w && ~isempty(p.w_smoothed)
+        W = p.w_smoothed;
+    elseif has_w
+        W = p.w;
+    end
 else
     U = p.u; V = p.v;
+    if has_w
+        W = p.w;
+    end
 end
 k = numel(frames);
 sz = size(p.x);
-uo = zeros([sz k], 'like', U); vo = uo; tvo = zeros([sz k]);
+uo = zeros([sz k], 'like', U); vo = uo; tvo = zeros([sz k]); wo = [];
+if has_w
+    wo = zeros([sz k], 'like', W);
+end
 labs = strings(k,1);
 for r = 1:k
     sel = frames{r}(:)';
@@ -57,7 +71,12 @@ for r = 1:k
     if any(res.isMean(sel))
         error('pivlab:temporal:frames','The selection must not contain frames that are temporal statistics themselves.');
     end
-    [a, b, t] = plot.temporal_stats(U(:,:,sel), V(:,:,sel), res.typevector(:,:,sel), type);
+    if has_w
+        [a, b, t, c] = plot.temporal_stats(U(:,:,sel), V(:,:,sel), res.typevector(:,:,sel), type, W(:,:,sel));
+        wo(:,:,r) = c;
+    else
+        [a, b, t] = plot.temporal_stats(U(:,:,sel), V(:,:,sel), res.typevector(:,:,sel), type);
+    end
     uo(:,:,r) = a; vo(:,:,r) = b; tvo(:,:,r) = t;
     labs(r) = labels.(operation) + " of frames " + frame_string(sel);
     if k > 1
@@ -70,6 +89,11 @@ out.px.u_raw = uo; out.px.v_raw = vo;
 out.px.u2 = []; out.px.v2 = [];
 out.px.u_smoothed = []; out.px.v_smoothed = [];
 out.px.uncertainty = [];
+if has_w
+    out.px.w = wo; out.px.w_raw = wo; out.px.w_smoothed = [];
+    out.stereo.residual = nan([sz k]); % no reconstruction residual for temporal statistics
+    out.stereo.residual_raw = nan([sz k]);
+end
 out.typevector = tvo;
 out.typevector_raw = tvo;
 out.correlation_map = nan([sz k]);

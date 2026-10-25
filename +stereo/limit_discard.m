@@ -30,30 +30,15 @@ roi_freehand = [];
 if ~isempty(velrect_freehand)
     roi_freehand = images.roi.Freehand('Position', velrect_freehand);
 end
-notch_L_thresh = str2double(get(handles.notch_L_thresh, 'String'));
-notch_H_thresh = str2double(get(handles.notch_H_thresh, 'String'));
+notch_limits = [];
+if do_notch_filter
+    notch_limits = [str2double(get(handles.notch_L_thresh, 'String')), str2double(get(handles.notch_H_thresh, 'String'))];
+end
 for i = 1:size(resultslist, 2)
     if isempty(resultslist{1, i})
         continue
     end
-    U = double(resultslist{3, i} * calu);
-    V = double(resultslist{4, i} * calv);
-    W = double(resultslist{16, i} * abs(calu)); % |calu|: an axis flip of x or y does not flip w
-    out = false(size(U));
-    if ~isempty(velrect) % rectangle: umin, vmin, width, height (as postproc.PIVlab_postproc)
-        out = out | U < velrect(1) | U > velrect(1) + velrect(3) | V < velrect(2) | V > velrect(2) + velrect(4);
-    end
-    if ~isempty(roi_freehand) % freehand shape (as in 2D, NaN vectors are not tested)
-        valid = isfinite(U) & isfinite(V);
-        inside = inROI(roi_freehand, U(valid), V(valid));
-        outside_map = false(size(U));
-        outside_map(valid) = ~inside;
-        out = out | outside_map;
-    end
-    if do_notch_filter % velocity magnitude limits: vectors with a 3D magnitude between the two values
-        magnitude = sqrt(U .^ 2 + V .^ 2 + W .^ 2);
-        out = out | (magnitude < notch_H_thresh & magnitude > notch_L_thresh);
-    end
-    discard{i} = out;
+    discard{i} = stereo.limit_test(resultslist{3, i} * calu, resultslist{4, i} * calv, ...
+        resultslist{16, i} * abs(calu), velrect, roi_freehand, notch_limits); % |calu|: an axis flip does not flip w
 end
 end

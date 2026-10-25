@@ -78,11 +78,12 @@ if ready==1
         set(handles.ac_serialstatus,'enable','on')
         set(handles.ac_laserstatus,'enable','on')
         set(handles.ac_lasertoggle,'enable','on')
-        set(handles.ac_lensctrl,'enable','on')
+        if acquisition.capture_cameras == 1 %one lens controller: not for stereo acquisition
+            set(handles.ac_lensctrl,'enable','on')
+        end
         set(handles.ac_power,'enable','on')
         set(handles.panon,'enable','on');
         acquisition.set_capture_overlay_controls('live'); %zoom, sharpness, grid, calibration, displacement
-        set(handles.ac_displ_hist,'enable','on');
         set(handles.ac_calibsnapshot,'enable','on')
         gui.put('old_charuco_img',[]);
 
@@ -93,7 +94,7 @@ if ready==1
         elseif strcmp(camera_type,'basler')
             [errorcode, caliimg]=PIVlab_capture_basler_calibration_image(inf,expos,ac_ROI_general);
         elseif strcmp(camera_type,'OPTOcam')
-            [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(inf,expos,ac_ROI_general);
+            [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(inf,expos,ac_ROI_general,acquisition.capture_cameras); %stereo: caliimg = {camera 1, camera 2}
         elseif strcmp(camera_type,'OPTOcam_20_9')
             [errorcode, caliimg]=PIVlab_capture_OPTOcam_20_9_calibration_image(inf,expos,ac_ROI_general);
         elseif strcmp(camera_type,'OPTRONIS')

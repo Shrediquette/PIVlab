@@ -43,6 +43,7 @@ pivlab.saveSession(res, "analysis.mat");                           % open it in 
       <tr><td><code>pivlab.display(res, ...)</code></td><td>Vectors on the particle image or on a transparent colour map with colour bar, all options of the plot settings.</td><td>Plot appearance</td></tr>
       <tr><td><code>pivlab.defaults()</code>, <code>pivlab.loadSettings(file)</code></td><td>Default settings, or the settings of a settings file or session (detected automatically).</td><td>Load settings</td></tr>
       <tr><td><code>pivlab.loadSession(file)</code>, <code>pivlab.saveSession(res, file)</code></td><td>Results of a session; save results as a session that opens in the GUI.</td><td>Load / save session</td></tr>
+      <tr><td><code>pivlab.stereo(imgs, boards, board, ...)</code></td><td>Stereo-PIV of two cameras: stereo calibration, disparity correction, PIV of both cameras, U, V and W (see <a href="#stereo">below</a>).</td><td>Stereo-PIV panel + Analyze</td></tr>
     </table>
 
     <h2 id="results">The result struct</h2>
@@ -75,7 +76,9 @@ pivlab.saveSession(res, "analysis.mat");                           % open it in 
       through <code>Settings</code>.</li>
       <li>Filter limits (<code>VelocityLimits</code>, <code>NotchLimits</code>) are in the units the result
       has at that moment: px/frame before <code>pivlab.toMetric</code>, m/s after it. A warning appears
-      when more than half of the vectors are removed.</li>
+      when more than half of the vectors are removed. <code>VelocityLimitsFreehand</code> takes an outline
+      <code>[u v]</code> (one row per point) like the freehand velocity limits of the GUI; sessions and
+      settings bring it along.</li>
       <li><code>pivlab.analyze</code> warns when you set an option that the chosen algorithm does not use
       (e.g. <code>Passes</code> with <code>"dcc"</code>, <code>Parallel</code> with <code>"ensemble"</code>).</li>
     </ul>
@@ -116,6 +119,37 @@ imgs = pivlab.preprocess(imgs, Camera="camera_calibration.mat");</code></pre>
     <code>imgs.imageSize</code> is their size, and <code>pivlab.getImage</code> shows them.
     <code>pivlab.loadSession</code> restores the camera calibration of a session, and
     <code>pivlab.saveSession</code> saves it, so the GUI opens the session with the same corrected images.</p>
+
+    <h2 id="stereo">Stereo-PIV</h2>
+    <p><code>pivlab.stereo</code> does what the <a href="stereo-piv.html">Stereo-PIV panel</a> and
+    <span class="ui">Analyze</span> do in the GUI. It needs the images and the lens calibration of both
+    cameras, one image of the ChArUco board in the light sheet per camera, and the board definition:</p>
+<pre><code>imgs{1} = pivlab.preprocess(pivlab.readImages("D:\run1\cam1\*.tif", "pairwise"), Camera="lens_cam1.mat");
+imgs{2} = pivlab.preprocess(pivlab.readImages("D:\run1\cam2\*.tif", "pairwise"), Camera="lens_cam2.mat");
+board = struct('PatternDims',[23 24], 'CheckerSize',10, 'MarkerSize',7, ...
+    'MarkerFamily',"DICT_4X4_1000", 'OriginCheckerColor',"black");    % sizes in mm
+res = pivlab.stereo(imgs, {"board_cam1.tif", "board_cam2.tif"}, board);
+res = pivlab.filter(res);                 % validates both cameras, then U, V, W again
+res = pivlab.toMetric(res, DeltaT=0.001); % the scale comes from the stereo calibration
+pivlab.display(res, Overlay="w");</code></pre>
+    <ul>
+      <li>The result is a normal result with the out-of-plane component in addition:
+      <code>res.w</code> (and <code>res.px.w</code>), positive away from camera 1.
+      <code>res.stereo</code> holds the stereo calibration, the disparity (with the report of the
+      Stereo-PIV panel in <code>res.stereo.disparity.report</code>), the 2D results of both cameras and
+      the reconstruction residual.</li>
+      <li>As <span class="ui">Analyze</span> in the GUI, <code>pivlab.stereo</code> does not validate: call
+      <code>pivlab.filter</code>. <code>VelocityLimits</code> act on U, V of the 3D result and
+      <code>NotchLimits</code> on the 3D magnitude; the removed vectors are removed in both cameras.</li>
+      <li><code>pivlab.derive(res, "w")</code> gives the w component, <code>"magnitude"</code> the 3D
+      magnitude. <code>pivlab.temporal</code> includes W. <code>pivlab.display</code> shows
+      <code>Overlay="w"</code> and <code>Overlay="residual"</code> (how well both cameras fit one
+      3D velocity, px).</li>
+      <li><code>Settings=pivlab.loadSettings("stereo_session.mat")</code> uses the pre-processing, PIV and
+      Stereo-PIV panel settings of a GUI session. <code>pivlab.loadSession</code> reads stereo sessions of
+      the GUI, <code>pivlab.saveSession</code> writes sessions that the GUI opens in stereo mode.</li>
+    </ul>
+    <p>A complete example: <code>Example_scripts/PIVlab_api_stereo.m</code>.</p>
 
     <h2 id="memory">Why pre-processing does not create new images</h2>
     <p><code>pivlab.preprocess</code> only stores the settings (and computes the background image if

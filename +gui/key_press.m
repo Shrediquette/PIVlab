@@ -38,11 +38,5 @@ if size(event.Modifier,2)==2 && strcmp(event.Modifier{1},'shift') && strcmp(even
 		else
 			set(target_axis,'ColorScale','log')
 		end
-	elseif strcmp(event.Key,'h') %
-		hist_enabled=gui.retr('hist_enabled');
-		if isempty(hist_enabled)
-			hist_enabled=0;
-		end
-		gui.put('hist_enabled',1-hist_enabled);
 	end
 end

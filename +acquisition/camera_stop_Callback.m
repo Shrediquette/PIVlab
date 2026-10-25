@@ -13,15 +13,33 @@ if strncmp(evt.Source.Tag,'ac_calibsave',20) %only when "save" button is pressed
 		gui.put('fresh_calib_image',0);
 		handles=gui.gethand;
 		projectpath=get(handles.ac_project,'String');
-		numbi = 0;
-		imgA_path = fullfile(projectpath, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']);
-		while exist(imgA_path, 'file')
-			numbi = numbi+1;
-			imgA_path = fullfile(projectpath, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']);
+		caliimg=gui.retr('caliimg');
+		if iscell(caliimg) %stereo acquisition: one image per camera, in cam1 and cam2 with the same number
+			folders=acquisition.capture_folders(projectpath,numel(caliimg));
+		else
+			folders={projectpath};
+			caliimg={caliimg};
 		end
-		imwrite(gui.retr('caliimg'),imgA_path);
+		numbi = 0;
+		while calibration_image_exists(folders,numbi)
+			numbi = numbi+1;
+		end
+		for k=1:numel(folders)
+			if ~exist(folders{k},'dir')
+				mkdir(folders{k});
+			end
+			imwrite(caliimg{k},fullfile(folders{k}, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']));
+		end
 		set(handles.ac_calibsave,'enable','off')
 	end
 	drawnow;
+end
+
+function exists = calibration_image_exists(folders,numbi)
+exists = false;
+for k=1:numel(folders)
+	if exist(fullfile(folders{k}, ['PIVlab_calibration' ,' (',num2str(numbi),')', '.tif']),'file')
+		exists = true;
+	end
 end
 

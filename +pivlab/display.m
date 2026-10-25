@@ -9,7 +9,9 @@ function [fig, ax] = display(res, opts)
 %   Frame              frame (image pair) to show, default 1
 %   Overlay            "none" or a quantity of pivlab.derive ("vorticity", "magnitude", "u", "v",
 %                      "divergence", "qcriterion", "shear", "strain", "direction", "lic",
-%                      "correlation", "uncertainty")
+%                      "correlation", "uncertainty"); stereo-PIV (pivlab.stereo): also "w" (out-of-plane
+%                      component) and "residual" (reconstruction residual in px: how well the 2D results of
+%                      both cameras fit one 3D velocity)
 %   Background         "image" (particle image, as in PIVlab), "preprocessed" (as used for the
 %                      analysis), "black" or "white"
 %   EnhanceImage       true/false, contrast stretch of the particle image
@@ -134,10 +136,17 @@ displ = struct('image',1,'preprocessed',1,'black',2,'white',3);
 q = lower(opts.Overlay);
 map = [];
 if q ~= "none"
-    if ~isfield(res.derived, q)
-        res = pivlab.derive(res, q, Settings=res.settings);
+    if q == "residual" % stereo-PIV: |reconstruction residual| in px (its sign has no meaning)
+        if ~isfield(res, 'stereo') || isempty(res.stereo)
+            error('pivlab:display:residual', 'Overlay "residual" needs a stereo-PIV result (pivlab.stereo).');
+        end
+        grid_map = abs(res.stereo.residual(:,:,fr));
+    else
+        if ~isfield(res.derived, q)
+            res = pivlab.derive(res, q, Settings=res.settings);
+        end
+        grid_map = res.derived.(q)(:,:,fr);
     end
-    grid_map = res.derived.(q)(:,:,fr);
     interp = char(d.MapInterpolation);
     if ismember(q, ["correlation","uncertainty"])
         interp = 'nearest';
@@ -335,6 +344,8 @@ switch q
     case "direction",   label = "Vector direction in degrees";
     case "correlation", label = "Correlation coefficient";
     case "uncertainty", label = "Uncertainty in " + v;
+    case "w",           label = "w component in " + v;
+    case "residual",    label = "Reconstruction residual in px";
     otherwise,          label = "";
 end
 if isfield(res,'statistic') && q ~= "none"

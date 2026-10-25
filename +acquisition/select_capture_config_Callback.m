@@ -355,6 +355,13 @@ else % not the webcam --> enable all controls
 	handles.ac_connect.Enable = 'on';
 	handles.ac_comport.Enable = 'on';
 end
+%"Stereo (2 cameras)" only for cameras that support stereo acquisition
+if acquisition.stereo_supported(gui.retr('camera_type'))
+	handles.ac_stereo.Enable = 'on';
+else
+	handles.ac_stereo.Value = 0;
+	handles.ac_stereo.Enable = 'off';
+end
 gui.apply_pending_popup(handles.ac_fps) %frame rate of the last session / loaded settings, if this camera has it
 acquisition.exposure_Callback
 straddling_figure=findobj('tag','straddling_figure');

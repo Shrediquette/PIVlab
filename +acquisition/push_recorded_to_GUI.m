@@ -1,6 +1,11 @@
 function found_the_data = push_recorded_to_GUI(camera_type,imageamount)
 handles=gui.gethand;
 projectpath=get(handles.ac_project,'String');
+n_cameras = acquisition.capture_cameras;
+if n_cameras > 1 %stereo acquisition: images in cam1 and cam2, opened in stereo mode
+	found_the_data = push_stereo(projectpath,imageamount,n_cameras);
+	return
+end
 %imageamount=str2double(get(handles.ac_imgamount,'String'));
 pathlist={};
 pathfilelist={};
@@ -95,6 +100,29 @@ if all(file_existing)
 else
     found_the_data=0;
 end
+
+function found_the_data = push_stereo(projectpath,imageamount,n_cameras)
+%The image pairs of both cameras (acquisition.capture_folders) -> stereo mode, like "Import stereo images".
+%A new recording with the same image size keeps the calibrations, disparity and ROI (import.stereo_import_Callback).
+folders = acquisition.capture_folders(projectpath,n_cameras);
+files = cell(1,n_cameras);
+found_the_data = 0;
+for k=1:n_cameras
+	files{k} = cell(imageamount*2,1);
+	for i=1:imageamount
+		files{k}{i*2-1} = fullfile(folders{k},['PIVlab_' sprintf('%4.4d',i-1) '_A.tif']);
+		files{k}{i*2} = fullfile(folders{k},['PIVlab_' sprintf('%4.4d',i-1) '_B.tif']);
+	end
+	for i=1:numel(files{k})
+		if ~isfile(files{k}{i})
+			return
+		end
+	end
+end
+gui.put('sequencer',1);
+gui.put('capturing',0);
+import.stereo_import_Callback([],[],files);
+found_the_data = 1;
 
 %{
 if pcopanda_dbl_image %dbl image, aber kein multitiff.

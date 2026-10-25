@@ -7,14 +7,16 @@
 % Typical workflow (camera k = 1, 2; recorded simultaneously)
 %   imgs{k} = pivlab.readImages(files{k}, "pairwise");
 %   imgs{k} = pivlab.preprocess(imgs{k}, Camera=lens_calibration_file{k});   % lens calibration of camera k
-%   result  = stereo.run(imgs, {board_image_1, board_image_2}, board);       % everything below in one call
+%   res     = pivlab.stereo(imgs, {board_image_1, board_image_2}, board);    % everything below in one call
+%   res     = pivlab.filter(res);                                             % validation (both cameras), U, V, W
 %
 % Steps
 %   calibrate          - Stereo calibration from a ChArUco board in the light sheet (common output grid)
 %   rectified_images   - Image sets that read rectified, disparity-corrected images (cam.stereo_map)
 %   measure_disparity  - Misalignment of the two rectified views, fitted with a smooth model
 %   reconstruct        - U, V, W from the PIV results of both cameras
-%   run                - All steps: calibration, disparity, PIV of both cameras, reconstruction
+%   combine_cameras    - U, V, W and the vector types from the 2D results of both cameras (GUI and API)
+%   limit_test         - Vectors of a 3D result outside the velocity limits (GUI and API)
 %   defaults           - Settings of the stereo steps
 %
 % Building blocks

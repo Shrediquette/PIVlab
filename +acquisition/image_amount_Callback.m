@@ -52,7 +52,7 @@ else
 		end
 	end
 
-    max_possible_dbl_images = PIVlab_capture_max_possible_images(ac_ROI_general,[],bitmode);
+    max_possible_dbl_images = floor(PIVlab_capture_max_possible_images(ac_ROI_general,[],bitmode) / acquisition.capture_cameras); %stereo: both cameras record into RAM
     if imageamount > max_possible_dbl_images
         if get(handles.ac_pivcapture_save,'Value')==1
             if gui.retr('darkmode')

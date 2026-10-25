@@ -50,6 +50,7 @@ Notes
 | `test_core_rescale_map.m` | `plot.rescale_map_core`: derived maps on the image grid, border (mean / extrapolated), masked vectors, ROI, angles |
 | `test_core_opencv_undistort.m` | `opencv.opencv_undistort`: image classes, no rescaling of the grey values, same result as MATLAB |
 | `test_core_simulate.m` | synthetic particle images (`+simulate`): all GUI flows, cameras, stereo projection, ChArUco boards; checked with PIVlab's PIV |
+| `test_core_charuco_filter.m` | `preproc.cam_filter_charuco_corners`: corners of wrongly decoded markers removed, correct corners kept (also with strong distortion), boards with 2000 checkers |
 | `test_api_workflow.m` | the whole API chain, `Verbose=false`, the example scripts, the help texts |
 | `test_api_images.m` | `pivlab.readImages`, `pivlab.preprocess`, `pivlab.getImage`: every option |
 | `test_api_analyze.m` | `pivlab.analyze`: FFT, ensemble, DCC, optical flow, parallel, every option |

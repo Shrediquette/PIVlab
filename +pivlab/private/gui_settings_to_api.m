@@ -135,6 +135,25 @@ if isfield(D,'autoscale_vec') && D.autoscale_vec == 0
 end
 s.display.VectorSkip = get_num(D,'nthvect',s.display.VectorSkip);
 s.display.EnhanceImage = get_flag(D,'enhance_images',s.display.EnhanceImage);
+
+%% Stereo-PIV panel: disparity correction (as stereo.settings_from_gui)
+if ~isfield(s, 'stereo')
+    s.stereo = struct();
+end
+s.stereo.Pairs = max(0, round(get_num(A,'stereo_disp_pairs',field_or_empty(s.stereo,'Pairs')))); % 0 = automatic
+if isfield(A,'stereo_disp_model')
+    models = stereo.disparity_models;
+    s.stereo.Model = models(A.stereo_disp_model);
+end
+s.stereo.Passes = max(1, round(get_num(A,'stereo_disp_passes',field_or_empty(s.stereo,'Passes'))));
+if isfield(A,'stereo_disp_ia')
+    s.stereo.InterrogationArea = [];
+    if A.stereo_disp_ia > 0
+        s.stereo.InterrogationArea = round(A.stereo_disp_ia / 2) * 2;
+    end
+end
+s.stereo.StdevThreshold = get_num(A,'stereo_disp_stdev',field_or_empty(s.stereo,'StdevThreshold'));
+s.stereo.LocalMedianThreshold = get_num(A,'stereo_disp_median',field_or_empty(s.stereo,'LocalMedianThreshold'));
 end
 
 function names = gui_only() %#ok<DEFNU> read by unittests/test_gui_settings
@@ -142,9 +161,7 @@ function names = gui_only() %#ok<DEFNU> read by unittests/test_gui_settings
 names = {'ofv_parallelpatches', ...
     'extrapolate_border', 'optimize_calib_img', 'calib_use_tilted_model', 'calib_viewtype', ...
     'calib_usecalibration', 'calib_upscale', 'calib_userectification', 'calib_boardtype', ...
-    'calib_origincolor', 'calib_rows', 'calib_columns', 'calib_checkersize', 'calib_markersize', ...
-    'stereo_disp_pairs', 'stereo_disp_model', 'stereo_disp_passes', 'stereo_disp_ia', 'stereo_disp_stdev', ...
-    'stereo_disp_median'}; % stereo-PIV: command line via stereo.run / stereo.defaults
+    'calib_origincolor', 'calib_rows', 'calib_columns', 'calib_checkersize', 'calib_markersize'};
 end
 
 function S = group(G, name)

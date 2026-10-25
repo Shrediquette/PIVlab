@@ -228,6 +228,7 @@ default.export.export_vort_tec = 0;
 % Image acquisition
 default.acquisition.ac_project = '';
 default.acquisition.ac_config = 1;
+default.acquisition.ac_stereo = 0;
 default.acquisition.ac_comport = 1;
 default.acquisition.ac_fps = 1;
 default.acquisition.ac_interpuls = 1000;
@@ -237,7 +238,6 @@ default.acquisition.ac_low_energy_mode = 0;
 default.acquisition.ac_enable_ext_trigger = 0;
 default.acquisition.ac_displ_sharp = 0;
 default.acquisition.ac_displ_grid = 0;
-default.acquisition.ac_displ_hist = 0;
 default.acquisition.calib_dolivedetect = 0;
 default.acquisition.ac_realtime_PIV = 0;
 default.acquisition.ac_expo = 50;

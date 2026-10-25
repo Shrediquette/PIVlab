@@ -203,42 +203,6 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
         ima_ed(ima_ed>old_max)=old_max;
         set(image_handle_OPTRONIS,'CData',ima_ed);
     end
-    %% HISTOGRAM
-    if getappdata(hgui,'hist_enabled')==1
-        if isvalid(image_handle_OPTRONIS)
-            hist_fig=findobj('tag','hist_fig');
-            if isempty(hist_fig)
-                hist_fig=figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Live histogram','Toolbar','none','tag','hist_fig','CloseRequestFcn', @HistWindow_CloseRequestFcn);
-                hist_obj=histogram(ima(1:2:end,1:2:end),'binlimits',[0 2^bitmode]);
-            end
-            if ~exist ('old_hist_y_limits','var')
-                old_hist_y_limits =[0 35000];
-            else
-                if isvalid(hist_obj)
-                    old_hist_y_limits=get(hist_obj.Parent,'YLim');
-                end
-            end
-            parent_ax= findall(hist_fig,'type','axes');
-            hist_obj=histogram(ima(1:2:end,1:2:end),'Parent',parent_ax,'binlimits',[0 2^bitmode]); %wird nicht neu gezeichnet...??
-        end
-        %lowpass hist y limits for better visibility
-        if ~exist ('new_hist_y_limits','var')
-            new_hist_y_limits =[0 35000];
-        end
-        new_hist_y_limits=get(hist_obj.Parent,'YLim');
-        if isempty (new_hist_y_limits)
-            new_hist_y_limits =[0 35000];
-        end
-        if isempty (old_hist_y_limits)
-            old_hist_y_limits =[0 35000];
-        end
-        set(hist_obj.Parent,'YLim',(new_hist_y_limits*0.5 + old_hist_y_limits*0.5))
-    else
-        hist_fig=findobj('tag','hist_fig');
-        if ~isempty(hist_fig)
-            close(hist_fig)
-        end
-    end
     %drawnow limitrate;
     drawnow limitrate
     %% Autofocus
@@ -407,12 +371,4 @@ if running == 1
 	end
 else
 	delete(auto_focus_active_hint);
-end
-
-function HistWindow_CloseRequestFcn(hObject,~)
-hgui=getappdata(0,'hgui');
-setappdata(hgui,'hist_enabled',0);
-try
-	delete(hObject);
-catch
 end

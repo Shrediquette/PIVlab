@@ -105,10 +105,11 @@ if ~isempty(cam_selected_rectification_image)
     tmp_img=imadjust(tmp_img);
 	tmp_img=imsharpen(tmp_img);
 	imagePoints1 = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'RefineCorners',true,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
+	imagePoints1 = preproc.cam_filter_charuco_corners(imagePoints1, patternDims); % corners of wrongly decoded markers
 	%%}
 	%% faster but no preproc possible
 	%[imagePoints1, ~] = detectPatternPoints(detector, cam_selected_rectification_image, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
-	if isempty(imagePoints1)
+	if isempty(imagePoints1) || all(isnan(imagePoints1(:)))
 		gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No ChArUco markers detected.','modal');
 		gui.toolsavailable(1)
 		return
@@ -169,6 +170,7 @@ if handles.calib_userectification.Value == 1
 	cam.rectification_tform = rectification_tform;
 	caliimg = preproc.cam_undistort_with(tmp_img, cam);
 	imagePoints1 = detectCharucoBoardPoints(caliimg,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'RefineCorners',true,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
+	imagePoints1 = preproc.cam_filter_charuco_corners(imagePoints1, patternDims); % corners of wrongly decoded markers
 	worldPoints = patternWorldPoints("charuco-board",patternDims,checkerSize);
 	worldPoints(isnan(imagePoints1))=NaN;
 	imagePoints1 = rmmissing(imagePoints1); %remove missing entries... does that work simply like this? --> yes. If matching world points are also removed.

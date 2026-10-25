@@ -602,35 +602,6 @@ try
                 set(image_handle_pco,'CData',ima_ed);
             end
 
-            %% HISTOGRAM
-            if getappdata(hgui,'hist_enabled')==1
-                if isvalid(image_handle_pco)
-                    hist_fig=findobj('tag','hist_fig');
-                    if isempty(hist_fig)
-                        hist_fig=figure('numbertitle','off','MenuBar','none','DockControls','off','Name','Live histogram','Toolbar','none','tag','hist_fig','CloseRequestFcn', @HistWindow_CloseRequestFcn);
-                    end
-                    if ~exist ('old_hist_y_limits','var')
-                        old_hist_y_limits =[0 35000];
-                    else
-                        if isvalid(hist_obj)
-                            old_hist_y_limits=get(hist_obj.Parent,'YLim');
-                        end
-                    end
-                    hist_obj=histogram(live_data(1:2:end,1:2:end),'Parent',hist_fig,'binlimits',[0 65535]);
-                end
-                %lowpass hist y limits for better visibility
-                if ~exist ('new_hist_y_limits','var')
-                    new_hist_y_limits =[0 35000];
-                end
-                new_hist_y_limits=get(hist_obj.Parent,'YLim');
-
-                set(hist_obj.Parent,'YLim',(new_hist_y_limits*0.5 + old_hist_y_limits*0.5))
-            else
-                hist_fig=findobj('tag','hist_fig');
-                if ~isempty(hist_fig)
-                    close(hist_fig)
-                end
-            end
 
 
             %% Autofocus
@@ -848,16 +819,6 @@ if(glvar.camera_open==1)
 end
 %clear glvar;
 unloadlibrary('PCO_CAM_RECORDER')
-
-
-function HistWindow_CloseRequestFcn(hObject,~)
-hgui=getappdata(0,'hgui');
-setappdata(hgui,'hist_enabled',0);
-try
-    delete(hObject);
-catch
-end
-
 function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');
 if running == 1

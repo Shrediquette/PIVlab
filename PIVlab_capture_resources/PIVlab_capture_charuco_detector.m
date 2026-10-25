@@ -1,4 +1,10 @@
-function PIVlab_capture_charuco_detector(img,figure_handle,~)
+function PIVlab_capture_charuco_detector(img,figure_handle,~,x_offset,camera)
+%x_offset, camera (optional): stereo acquisition, image of camera 1 or 2 side by side in the PIVlab axis
+%(camera 2 starts at x = x_offset+1). See stereo_detection below.
+if nargin >= 4
+	stereo_detection(img,figure_handle,x_offset,camera);
+	return
+end
 handles=gui.gethand;
 calibration_demo_mode = gui.retr('calibration_demo_mode');
 if isempty(calibration_demo_mode)
@@ -175,6 +181,7 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 		%% estimate alpha and beta
 		%multiplication with 255 is necessary, OMG...!
 		imagePoints1 = detectCharucoBoardPoints(img*255,patternDims,markerFamily,checkerSize,markerSize, 'OriginCheckerColor', originCheckerColor,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
+		imagePoints1 = preproc.cam_filter_charuco_corners(imagePoints1, patternDims); % corners of wrongly decoded markers
 		if ~isempty(imagePoints1)
 			cameraParams = gui.retr('cameraParams');
 			if ~isempty(cameraParams)
@@ -257,6 +264,40 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 		end
 	end
 end
+
+function stereo_detection(img,figure_handle,x_offset,camera)
+%Stereo acquisition: the markers of the board in the light sheet that one of the two cameras sees, so that the
+%board can be placed where both cameras see it. No automatic snapshots and no camera pose: these belong to the
+%lens calibration of a single camera.
+label_tag=sprintf('charucolabel_cam%d',camera);
+large_img = numel(img) > 20000000; %more than 20 megapixels: reduce the resolution for the detection
+if large_img
+	img=img(1:2:end,1:2:end,1);
+end
+img=histeq(mat2gray(img));
+[ids,locs] = readArucoMarker(img,'DICT_4X4_1000','WindowSizeRange',[3 23],'MarkerSizeRange',[0.005 1],'ResolutionPerBit',16,'SquarenessTolerance',0.03);
+if large_img
+	locs=locs*2;
+end
+delete(findobj('tag',label_tag));
+ids=ids(:);
+if isempty(locs) || size(locs,3) ~= numel(ids)
+	text(x_offset+size(img,2)/2*(1+large_img),size(img,1)/2*(1+large_img),'Markers: 0 %','tag',label_tag,'Color','r','Backgroundcolor','k','FontSize',14,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle);
+	return
+end
+id_thresh = mean(ids,'omitnan')+2*std(ids,'omitnan'); %wrongly decoded markers have far too high ids
+locs(:,:,ids>id_thresh)=[];
+ids(ids>id_thresh)=[];
+handles=gui.gethand;
+patternDims = [str2double(handles.calib_rows.String),str2double(handles.calib_columns.String)];
+percentage_detected=min(100,round(numel(ids)/(patternDims(1)*patternDims(2)/2)*100,0));
+locs_center_x=squeeze(mean(locs(:,1,:),'omitnan'))+x_offset;
+locs_center_y=squeeze(mean(locs(:,2,:),'omitnan'));
+hold(figure_handle,'on');
+scatter(locs_center_x,locs_center_y,40,'green','tag',label_tag,'Parent',figure_handle,'LineWidth',1.5) %smaller than in 2D: two images share the display
+hold(figure_handle,'off');
+rectangle('Position',[min(locs_center_x), min(locs_center_y),max(locs_center_x) - min(locs_center_x), max(locs_center_y) - min(locs_center_y) ],'tag',label_tag,'EdgeColor','r','LineWidth',2,'Parent',figure_handle,'Curvature',0.15)
+text(mean(locs_center_x),mean(locs_center_y),['Markers: ' num2str(percentage_detected) ' %'],'tag',label_tag,'Color','r','Backgroundcolor','k','FontSize',14,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
 
 function draw_qr_status(figure_handle,calibration_demo_mode)
 %Persistent info in the top left corner: were the board parameters read from a QR code?

@@ -56,6 +56,36 @@
     <p>A separate live-view <span class="ui">Start</span> button is available for camera
     calibration image capture, independent of the main PIV capture.</p>
 
+    <h2 id="stereo">Stereo acquisition (two cameras)</h2>
+    <p>For <a href="stereo-piv.html">stereo-PIV</a>, PIVlab records with two cameras of the same
+    type at the same time (at present the OPTOcam 2/80).</p>
+    <ol class="steps">
+      <li>Connect both cameras to the computer, and both to the camera output of the synchronizer
+      (Y-cable). Both cameras get the same trigger; frame rate, pulse distance, laser energy,
+      exposure, bit depth, gain and ROI apply to both.</li>
+      <li>Select the configuration and tick <span class="ui">Stereo</span>. PIVlab checks that two
+      cameras are connected.</li>
+      <li><span class="ui">Live image</span> shows both cameras side by side. Camera 1 is the camera
+      with the lower serial number; <span class="ui">Setup</span> shows both serial numbers, and
+      <span class="ui">Swap cameras</span> exchanges camera 1 and 2.</li>
+      <li>With <span class="ui">Calibration</span> ticked, the markers of a ChArUco board are shown in
+      both images. Place the board in the light sheet so that both cameras see it well;
+      <span class="ui">Snapshot</span> then saves one image per camera: the board images for the
+      <a href="stereo-piv.html#calibration">stereo calibration</a>.</li>
+      <li><span class="ui">Capture PIV images</span> saves the images of camera 1 in the subfolder
+      <code>cam1</code> and those of camera 2 in <code>cam2</code> of the project folder, and opens
+      them in stereo mode. The next recording with the same setup keeps the stereo calibration.</li>
+    </ol>
+    <figure>
+      <img src="../assets/img/capture/stereo-live.png" alt="Live image of two cameras side by side with the detected ChArUco markers">
+      <figcaption>Live image of both cameras with <span class="ui">Calibration</span> ticked: the
+      board is placed so that both cameras see most of it.</figcaption>
+    </figure>
+    <p>If one camera misses a trigger (e.g. at a frame rate that is too high for its USB
+    connection), its images no longer belong to those of the other camera. PIVlab compares the
+    frame times of both cameras after the recording and warns. Lens control and the
+    <span class="ui">Displacement</span> overlay work with one camera only.</p>
+
     <h2 id="webcam">Trying it with just a webcam</h2>
     <p>You don't need a PIV camera or a synchronizer to get a feel for image acquisition — the
     <span class="ui">Webcam demo (no synchronizer)</span> configuration runs the whole capture

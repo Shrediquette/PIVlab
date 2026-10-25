@@ -8,11 +8,6 @@ inpaint_nans by John D'Errico
 
 ---------------------------------------------------------------------------------
 
-uipickfiles: uigetfile on steroids by Douglas Schwarz
-25 Apr 2006 (Updated 24 Mar 2010) 
-
----------------------------------------------------------------------------------
-
 smoothn: SMOOTHN Robust spline smoothing for 1-D to N-D data.
 Damien Garcia -- 2009/03, revised 2010/06
 Garcia D: A fast all-in-one method for automated post-processing of PIV data.

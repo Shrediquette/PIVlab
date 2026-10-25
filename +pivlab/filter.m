@@ -12,6 +12,9 @@ function res = filter(res, opts)
 %   VelocityLimits                          [umin umax vmin vmax] in the CURRENT units of res
 %                                           (res.units: px/frame before pivlab.toMetric, m/s
 %                                           after it), "none" = no velocity limits
+%   VelocityLimitsFreehand                  outline [u v] (N x 2, same units as VelocityLimits):
+%                                           vectors outside it are removed (the freehand
+%                                           velocity limits of the PIVlab window), "none" = off
 %   CorrelationFilter, CorrelationThreshold remove vectors with low correlation coefficient
 %   NotchFilter, NotchLimits                remove vectors with a magnitude between the limits
 %   ContrastFilter, ContrastThreshold       remove vectors in low-contrast image areas
@@ -36,6 +39,7 @@ arguments
     opts.LocalMedian = []
     opts.LocalMedianThreshold = []
     opts.VelocityLimits = []
+    opts.VelocityLimitsFreehand = []
     opts.CorrelationFilter = []
     opts.CorrelationThreshold = []
     opts.NotchFilter = []
@@ -56,9 +60,8 @@ if edited.filtered
         'the unfiltered result (res.u_raw / res.v_raw), so these changes are replaced. ' ...
         'Change res.u_raw / res.v_raw instead if the filter should use your values.']);
 end
-explicit_limits = ~isempty(opts.VelocityLimits) || ~isempty(opts.NotchLimits);
+explicit_limits = ~isempty(opts.VelocityLimits) || ~isempty(opts.NotchLimits) || ~isempty(opts.VelocityLimitsFreehand);
 [f, s] = resolve_options('filter', opts);
-c = res.calibration;
 
 % velocity / notch limits: GUI semantics = calibrated units of the current calibration
 limits = f.VelocityLimits;
@@ -67,11 +70,27 @@ if (ischar(limits) || isstring(limits)) && strcmpi(limits, "none")
     f.VelocityLimits = [];
     explicit_limits = true;
 end
+outline = f.VelocityLimitsFreehand;
+if (ischar(outline) || isstring(outline)) && strcmpi(outline, "none")
+    outline = [];
+    f.VelocityLimitsFreehand = [];
+    explicit_limits = true;
+end
+if ~isempty(outline) && (size(outline, 2) ~= 2 || size(outline, 1) < 3)
+    error('pivlab:filter:limits', 'VelocityLimitsFreehand must be an outline [u v] with at least 3 points.');
+end
 notch = f.NotchLimits;
 if ~explicit_limits && f.LimitUnits == "calibrated" && res.units == "px/frame"
     sc = s.calibration;
     limits = to_px(limits, sc.calu, sc.calv);
     notch = notch / abs(sc.calu);
+    if ~isempty(outline)
+        outline = [outline(:, 1) / sc.calu, outline(:, 2) / sc.calv];
+    end
+end
+roi_freehand = [];
+if ~isempty(outline)
+    roi_freehand = images.roi.Freehand('Position', double(outline)); % as validate.filtervectors in the GUI
 end
 if isempty(limits)
     velrect = [];
@@ -82,6 +101,34 @@ else
     velrect = [limits(1) limits(3) limits(2)-limits(1) limits(4)-limits(3)];
 end
 
+if isfield(res, 'stereo') && ~isempty(res.stereo)
+    res = filter_stereo(res, f, velrect, roi_freehand, notch);
+else
+    res = filter_frames(res, f, velrect, roi_freehand, notch, {});
+end
+res.settings.filter = f;
+nrem = nnz(res.typevector == 2);
+nall = nnz(res.typevector > 0);
+share = 100*nrem/max(nall,1);
+if verbose
+    fprintf('Vector validation: %d of %d vectors (%.1f %%) were removed%s.\n', nrem, nall, share, ...
+        string(ifelse(f.Interpolate, ' and interpolated', '')));
+end
+if share > 50
+    if ~isempty(velrect) || ~isempty(roi_freehand) || f.NotchFilter
+        hint = sprintf(['Check VelocityLimits / NotchLimits: they are in the current units of the ' ...
+            'result (%s).'], res.units);
+    else
+        hint = 'Check the filter thresholds and the PIV settings.';
+    end
+    warning('pivlab:filter:manyRemoved', '%.0f %% of the vectors were removed. %s', share, hint);
+end
+end
+
+function res = filter_frames(res, f, velrect, roi_freehand, notch, discard)
+% the vector validation of every frame (validate.filtervectors_all_parallel, as in the GUI). discard (stereo-PIV,
+% filter_stereo): per frame a logical map of vectors that are removed first (also their second peak), [] = none.
+c = res.calibration;
 p = res.px;
 n = size(p.u,3);
 need_images = f.ContrastFilter || f.BrightnessFilter;
@@ -95,17 +142,27 @@ for i = 1:n
         [A, rawA] = import.read_frame(res.images, 2*pr-1, res.images.cam, res.images.background);
         [B, rawB] = import.read_frame(res.images, 2*pr, res.images.cam, res.images.background);
     end
+    u_raw = p.u_raw(:,:,i);
+    v_raw = p.v_raw(:,:,i);
     u2 = []; v2 = [];
     if ~isempty(p.u2)
         u2 = p.u2(:,:,i); v2 = p.v2(:,:,i);
     end
-    [u, v, tv] = validate.filtervectors_all_parallel(p.x, p.y, p.u_raw(:,:,i), p.v_raw(:,:,i), ...
+    if ~isempty(discard) && ~isempty(discard{i}) % as stereo.camera_limits in the GUI
+        u_raw(discard{i}) = NaN;
+        v_raw(discard{i}) = NaN;
+        if ~isempty(u2)
+            u2(discard{i}) = NaN;
+            v2(discard{i}) = NaN;
+        end
+    end
+    [u, v, tv] = validate.filtervectors_all_parallel(p.x, p.y, u_raw, v_raw, ...
         res.typevector_raw(:,:,i), c.calu, c.calv, velrect, ...
         double(f.StdevCheck), f.StdevThreshold, double(f.LocalMedian), f.LocalMedianThreshold, ...
         double(f.ContrastFilter), double(f.BrightnessFilter), f.ContrastThreshold, f.BrightnessThreshold, ...
         double(f.Interpolate), A, B, rawA, rawB, ...
         double(f.CorrelationFilter), f.CorrelationThreshold, res.correlation_map(:,:,i), ...
-        double(f.NotchFilter), notch(1), notch(2), [], u2, v2);
+        double(f.NotchFilter), notch(1), notch(2), roi_freehand, u2, v2);
     p.u(:,:,i) = u;
     p.v(:,:,i) = v;
     res.typevector(:,:,i) = tv;
@@ -115,25 +172,42 @@ res.px = p;
 res.smoothed = false;
 res.filtered = true;
 res.derived = struct();
-s.filter = f;
 res.settings.filter = f;
 res = refresh_units(res);
-nrem = nnz(res.typevector == 2);
-nall = nnz(res.typevector > 0);
-share = 100*nrem/max(nall,1);
-if verbose
-    fprintf('Vector validation: %d of %d vectors (%.1f %%) were removed%s.\n', nrem, nall, share, ...
-        string(ifelse(f.Interpolate, ' and interpolated', '')));
 end
-if share > 50
-    if ~isempty(velrect) || f.NotchFilter
-        hint = sprintf(['Check VelocityLimits / NotchLimits: they are in the current units of the ' ...
-            'result (%s).'], res.units);
-    else
-        hint = 'Check the filter thresholds and the PIV settings.';
+
+function res = filter_stereo(res, f, velrect, roi_freehand, notch)
+% stereo-PIV, as in the GUI (stereo.per_camera, stereo.limit_discard): the velocity limits (U, V) and the
+% magnitude limits (3D magnitude) are tested on the 3D result of the raw camera data; those vectors are
+% removed in both cameras; then each camera is validated with the other filters and U, V, W are made again.
+if any(res.isMean)
+    error('pivlab:filter:stereoTemporal', 'Temporal statistics of a stereo-PIV result can not be validated.');
+end
+c = res.calibration;
+p = res.px;
+notch_limits = [];
+if f.NotchFilter
+    notch_limits = notch;
+end
+n = size(p.u_raw, 3);
+discard = cell(1, n);
+if ~isempty(velrect) || ~isempty(roi_freehand) || ~isempty(notch_limits)
+    for i = 1:n
+        discard{i} = stereo.limit_test(p.u_raw(:,:,i)*c.calu, p.v_raw(:,:,i)*c.calv, p.w_raw(:,:,i)*abs(c.calu), ...
+            velrect, roi_freehand, notch_limits);
     end
-    warning('pivlab:filter:manyRemoved', '%.0f %% of the vectors were removed. %s', share, hint);
 end
+camera_filter = f;
+camera_filter.NotchFilter = false; % tested on the 3D result above
+cams = res.stereo.cameras;
+for k = 1:2
+    cams{k} = filter_frames(cams{k}, camera_filter, [], [], notch, discard);
+end
+info = struct('calib', res.stereo.calib, 'disparity', res.stereo.disparity, 'images', {res.stereo.images}, ...
+    'roi', res.stereo.roi, 'stereo_settings', res.stereo.settings, 'board', res.stereo.board, 'boards', {res.stereo.boards});
+settings = res.settings;
+res = stereo_result(cams, info, res.calibration, settings);
+res.filtered = true;
 end
 
 function l = to_px(l, calu, calv)

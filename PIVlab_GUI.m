@@ -5,7 +5,6 @@
 % Third party content, thank you for your contributions!
 % 3-point gaussian sub-pixel estimator by Uri Shavit, Roi Gurka, Alex Liberzon
 % inpaint_nans by John D'Errico
-% uipickfiles by Douglas Schwarz
 % smoothn, dctn, idctn by Damien Garcia
 % Exportfig by Ben Hinkle
 % mmstream2 by Duane Hanselman

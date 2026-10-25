@@ -2140,7 +2140,10 @@ handles.ac_browse = uicontrol(handles.uipanelac_general,'Style','pushbutton','St
 item=[0 item(2)+item(4)+margin*0.05 parentitem(3) 1];
 handles.ac_configtxt = uicontrol(handles.uipanelac_general,'Style','text', 'String','Select configuration:','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
-item=[0 item(2)+item(4) parentitem(3) 2];
+item=[parentitem(3)-11 item(2)+item(4)+0.45 11 1.1];
+handles.ac_stereo = uicontrol(handles.uipanelac_general,'Style','checkbox','String','Stereo','Value',default.acquisition.ac_stereo,'Units','characters', 'Fontunits','points','Position',[item(1)-margin+0.5 parentitem(4)-item(4)-margin-item(2) item(3)-0.5 item(4)],'Tag','ac_stereo','TooltipString','Stereo-PIV: record with two cameras of the selected type (both on the camera output of the synchronizer)','Callback',@acquisition.stereo_Callback);
+
+item=[0 item(2)-0.45 parentitem(3)-11 2];
 
 available_PIV_configurations = { ...
     %	'Nd:YAG (SimpleSync) + pco.pixelfly usb' ...
@@ -2259,10 +2262,6 @@ handles.ac_displ_sharp = uicontrol(handles.uipanelac_camsettings,'Style','checkb
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
 handles.ac_displ_grid = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Grid','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','ac_displ_grid','TooltipString','Display grid','Callback', @acquisition.display_cam_overlay_Callback,'Visible','on','Value',default.acquisition.ac_displ_grid);
-
-%item=[parentitem(3)/3*2 item(2) parentitem(3)/3 1.5];
-%not working at the moment...
-handles.ac_displ_hist = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Histogram','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','ac_displ_hist','TooltipString','Display histogram','Callback', @acquisition.display_cam_overlay_Callback,'Visible','off','Value',default.acquisition.ac_displ_hist);
 
 item=[0 item(2)+item(4) parentitem(3)/2 1.5];
 handles.calib_dolivedetect = uicontrol(handles.uipanelac_camsettings,'Style','checkbox','String','Calibration','Value',default.acquisition.calib_dolivedetect,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin/2-item(2) item(3)-margin*1 item(4)],'Tag','calib_dolivedetect','TooltipString','Do realtime marker detection and image storage.','Callback',@preproc.cam_live_detect_Callback);

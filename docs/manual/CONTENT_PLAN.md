@@ -87,7 +87,7 @@ git diff 24fe6ce..HEAD -- +gui/generateMenu.m | grep -i accelerator
 | `generateUI.m:2496-2511` | `correlation-matrices.html` |
 | `+preproc/PIVlab_preproc.m` | `roi.html` |
 | `+mask/`, masking panel | `masking.html` |
-| `+gui/uipickfiles.m`, `+import/` | `sessions.html` |
+| `+gui/image_import_dialog.m`, `+import/` | `sessions.html` |
 | `+gui/generateMenu.m` (Accelerators) | `shortcuts.html` |
 | `+gui/toggle_second_monitor_Callback.m` | `second-monitor.html` |
 | `+piv/piv_FFTmulti.m` (correlation, uncertainty) | `derive-spatial.html#eq-analysis`, `validation-image.html` |
@@ -192,6 +192,16 @@ Findings worth never re-deriving:
 
 Newest first. **Add an entry whenever you change the manual**, and bump the watermark.
 
+### 2026-10-24 — checker size section (branch `stereo`, not committed)
+New `<h3 id="checker-size">` "Choosing the checker size" with a `.warn` on the limits of the ChArUco
+detection in `camera-calibration.html` (`#markerboard`), plus one hand-written search record.
+Wrongly decoded markers are deliberately not mentioned (user's decision: fixed in the code instead,
+`+preproc/cam_filter_charuco_corners.m`). Board limit raised from 1000 to 2000 checkers
+(`+preproc/cam_generateboard_Callback.m`). Numbers
+from a Monte Carlo study with synthetic OPTOcam 2/80 board images (`D:\PIV Data\charuco_checker_size_study`,
+README there). The 2000-checker limit is the check in `+preproc/cam_generateboard_Callback.m`.
+Watermark **not** bumped: only this section was written, the rest of the manual was not re-verified.
+
 ### 2026-08-13 — equations for every derived parameter (`24fe6ce`)
 New `#equations` section on `derive-spatial.html` (three `<h3>`s: velocity-based / gradient-based /
 carried over from the analysis), new `.eq` + `.eq-where` CSS component, four hand-written search
@@ -235,6 +245,13 @@ symptom table) plus a `#tips` section on `piv-settings.html`; smaller additions 
 true dynamic masking", which is **wrong**: Automatic-mask Expert generators re-detect per frame,
 and masks can be moved/re-drawn frame to frame. **Do not reintroduce this claim.**
 
+### 2026-10-24 — stereo acquisition
+`capture.html#stereo` (two cameras, "Stereo" checkbox, Swap cameras, cam1/cam2, missed-trigger warning);
+`stereo-piv.html` import step links to it. `assets/img/capture/panel.png` renewed (new "Stereo" checkbox).
+`assets/img/capture/stereo-live.png` was made with simulated cameras (`unittests/mocks_imaq`) showing the
+user's real OPTOcam board images (`D:\PIV Data\stereotest_optocam2\aligned_board`) with live ChArUco
+detection — replace it with a screenshot from the real rig when available.
+
 ### 2026-07-08 — user-provided result images
 16 clean, properly-masked result/output screenshots supplied by the user, placed as full-width
 `<figure>`s (panel `.png` captures stay). Established the standing rule: **result visuals come from
@@ -266,7 +283,7 @@ All topics complete. Kept for the per-page verification detail, which feeds the 
   Technique: the `.annot` wrapper sizes to the image so `viewBox="0 0 1248 918"` maps 1:1 —
   reusable for future annotated shots.
 - **Sessions: new/load/save** — `sessions.html`. 3 image-sequencing styles
-  (`+gui/uipickfiles.m:492-509`), image list & Remove images (clears results, per
+  (`+gui/image_import_dialog.m`), image list & Remove images (clears results, per
   `+import/remove_images_from_list.m`), and the Session-vs-Settings distinction.
 
 ### Image settings

@@ -17,11 +17,12 @@ if ~is_live
 end
 set(handles.calib_dolivedetect,'enable',onoff(is_live));
 
-%Displacement: only in PIV capture with save unticked
-if ~is_preview
+%Displacement: only in PIV capture with save unticked, one camera
+with_displacement = is_preview && acquisition.capture_cameras == 1;
+if ~with_displacement
 	set(handles.ac_realtime_PIV,'Value',0);
 end
-set(handles.ac_realtime_PIV,'enable',onoff(is_preview));
+set(handles.ac_realtime_PIV,'enable',onoff(with_displacement));
 
 %Sharpness + grid: in the live image and in PIV capture with save unticked
 if ~(is_live || is_preview)

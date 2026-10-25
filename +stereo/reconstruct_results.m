@@ -43,73 +43,53 @@ end
 x = R{1}{1, frames(1)};
 y = R{1}{2, frames(1)};
 sz = size(x);
-res = cell(1, 2);
-tv = cell(1, 2);
-cm = cell(1, 2);
+cams = cell(1, 2);
 for k = 1:2
-    res{k}.px.x = x;
-    res{k}.px.y = y;
-    res{k}.px.u = NaN([sz numel(frames)]);
-    res{k}.px.v = NaN([sz numel(frames)]);
-    res{k}.px.u_smoothed = [];
-    res{k}.px.v_smoothed = [];
-    tv{k} = ones([sz numel(frames)]);
-    cm{k} = NaN([sz numel(frames)]);
+    cams{k}.x = x;
+    cams{k}.y = y;
+    cams{k}.u = NaN([sz numel(frames)]);
+    cams{k}.v = NaN([sz numel(frames)]);
+    cams{k}.typevector = ones([sz numel(frames)]);
+    cams{k}.correlation = NaN([sz numel(frames)]);
     for j = 1:numel(frames)
         rl = R{k}(:, frames(j));
         if ~isequal(size(rl{1}), sz)
             error('stereo:update_result', 'Both cameras must be analysed on the same grid (same region of interest and PIV settings).');
         end
         if ~raw && numel(rl) >= 8 && ~isempty(rl{7}) % validated
-            res{k}.px.u(:, :, j) = rl{7};
-            res{k}.px.v(:, :, j) = rl{8};
-            tv{k}(:, :, j) = rl{9};
+            cams{k}.u(:, :, j) = rl{7};
+            cams{k}.v(:, :, j) = rl{8};
+            cams{k}.typevector(:, :, j) = rl{9};
         else
-            res{k}.px.u(:, :, j) = rl{3};
-            res{k}.px.v(:, :, j) = rl{4};
-            tv{k}(:, :, j) = rl{5};
+            cams{k}.u(:, :, j) = rl{3};
+            cams{k}.v(:, :, j) = rl{4};
+            cams{k}.typevector(:, :, j) = rl{5};
         end
-        if numel(rl) >= 6 && ~isempty(rl{6})
-            cm{k}(:, :, j) = rl{6};
+        if numel(rl) >= 12 && ~isempty(rl{12}) % correlation map (row 12, as in 2D; row 6 is empty)
+            cams{k}.correlation(:, :, j) = rl{12};
         end
     end
 end
-vel = stereo.reconstruct(res{1}, res{2}, calib, stereo.full_disparity(calib, gui.retr('stereo_disparity')));
+C = stereo.combine_cameras(cams{1}, cams{2}, calib, gui.retr('stereo_disparity')); % shared with the API
 resultslist = cell(16, max(frames));
-for j = 1:numel(frames)
-    i = frames(j);
-    t1 = tv{1}(:, :, j);
-    t2 = tv{2}(:, :, j);
-    typevector = ones(sz);
-    typevector(t1 == 2 | t2 == 2) = 2;   % interpolated in one of the cameras
-    typevector(t1 == 0 | t2 == 0) = 0;   % masked in one of the cameras
-    U = vel.U(:, :, j);
-    V = vel.V(:, :, j);
-    U(typevector == 0) = NaN;
-    V(typevector == 0) = NaN;
-    resultslist{1, i} = x;
-    resultslist{2, i} = y;
-    resultslist{3, i} = U;
-    resultslist{4, i} = V;
-    resultslist{5, i} = double(typevector > 0);
-    resultslist{6, i} = min(cm{1}(:, :, j), cm{2}(:, :, j));
-    resultslist{7, i} = U;
-    resultslist{8, i} = V;
-    resultslist{9, i} = typevector;
-    W = vel.W(:, :, j);
-    W(typevector == 0) = NaN;
-    resultslist{16, i} = W;
-end
 residual = NaN([sz max(frames)], 'single');
 for j = 1:numel(frames)
     i = frames(j);
-    r = single(vel.residual(:, :, j));
-    r(resultslist{9, i} == 0) = NaN;
-    residual(:, :, i) = r;
+    resultslist{1, i} = x;
+    resultslist{2, i} = y;
+    resultslist{3, i} = C.U(:, :, j);
+    resultslist{4, i} = C.V(:, :, j);
+    resultslist{5, i} = double(C.typevector(:, :, j) > 0);
+    resultslist{12, i} = C.correlation(:, :, j); % the smaller correlation of both cameras
+    resultslist{7, i} = C.U(:, :, j);
+    resultslist{8, i} = C.V(:, :, j);
+    resultslist{9, i} = C.typevector(:, :, j);
+    resultslist{16, i} = C.W(:, :, j);
+    residual(:, :, i) = single(C.residual(:, :, j));
 end
 stereo_vel.residual = residual;
-stereo_vel.sheet_z_mm = vel.sheet_z_mm;
-stereo_vel.mm_per_px = vel.mm_per_px;
-stereo_vel.x_mm = vel.x_mm;
-stereo_vel.y_mm = vel.y_mm;
+stereo_vel.sheet_z_mm = C.sheet_z_mm;
+stereo_vel.mm_per_px = C.mm_per_px;
+stereo_vel.x_mm = C.x_mm;
+stereo_vel.y_mm = C.y_mm;
 end

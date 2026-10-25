@@ -8,6 +8,9 @@ if isfield(data,'velrect') && numel(data.velrect) == 4
     r = double(data.velrect); % [umin vmin width height] in calibrated units
     s.filter.VelocityLimits = [r(1) r(1)+r(3) r(2) r(2)+r(4)];
 end
+if isfield(data,'velrect_freehand') && size(data.velrect_freehand, 2) == 2 && size(data.velrect_freehand, 1) > 2
+    s.filter.VelocityLimitsFreehand = double(data.velrect_freehand); % [u v] outline in calibrated units
+end
 c = s.calibration;
 for n = {'calxy','calu','calv','offset_x_true','offset_y_true'}
     if isfield(data, n{1}) && ~isempty(data.(n{1}))

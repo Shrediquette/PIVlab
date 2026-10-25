@@ -28,6 +28,10 @@
 %   temporal     - Temporal mean, standard deviation, sum, turbulent kinetic energy
 %   display      - Show vectors and colour maps like the PIVlab GUI
 %
+% Stereo-PIV
+%   stereo       - Stereo calibration, disparity correction and PIV of two cameras: U, V and W
+%                  (the result works with filter, toMetric, derive, temporal, display, saveSession)
+%
 % Settings and sessions
 %   defaults     - Default settings (the settings the PIVlab GUI starts with)
 %   loadSettings - Settings from a PIVlab settings file or session (detected automatically)

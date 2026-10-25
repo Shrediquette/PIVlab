@@ -92,7 +92,6 @@ if required_files_check
 			else
 				acquisition.set_capture_overlay_controls('piv_record');
 			end
-			set(handles.ac_displ_hist,'enable','on');
 
 
 			%save capture configuration to mat file
@@ -149,7 +148,9 @@ if required_files_check
 			if strcmpi(config_string,'Nd:YAG (SimpleSync) + pco.pixelfly usb') || strcmpi(config_string,'Nd:YAG (SimpleSync) + pco.panda 26 DS') %setups without lD-PS
 				set(handles.ac_power,'enable','on') %here, laser power can be adjusted while it is running.
 			end
-			set(handles.ac_lensctrl,'enable','on')
+			if acquisition.capture_cameras == 1 %one lens controller: not for stereo acquisition
+				set(handles.ac_lensctrl,'enable','on')
+			end
 
 			f = waitbar(0,'Initializing...');
 			%if any external device is activated for automatic control, then...
@@ -255,11 +256,16 @@ if required_files_check
 				if isempty (OPTOcam_bits)
 					OPTOcam_bits=8;
 				end
-				[OutputError,OPTOcam_vid,frame_nr_display] = PIVlab_capture_OPTOcam_synced_start(imageamount,ac_ROI_general,cam_fps,OPTOcam_bits); %prepare cam and start camera (waiting for trigger...)
+				[OutputError,OPTOcam_vid,frame_nr_display] = PIVlab_capture_OPTOcam_synced_start(imageamount,ac_ROI_general,cam_fps,OPTOcam_bits,acquisition.capture_cameras); %prepare cam(s) and start (waiting for trigger...); OPTOcam_vid: one videoinput per camera
 				Error_Reason={};
 				OPTOcam_settings_check = 1;
-				max_fps_with_current_settings = 1/((get(OPTOcam_vid.Source,'SensorReadoutTime') + get(OPTOcam_vid.Source,'BslExposureStartDelay'))/1000/1000);
-				if cam_fps > max_fps_with_current_settings
+				max_fps_with_current_settings = inf;
+				for cam_nr=1:numel(OPTOcam_vid) %stereo: the slower camera
+					max_fps_with_current_settings = min(max_fps_with_current_settings, 1/((get(OPTOcam_vid{cam_nr}.Source,'SensorReadoutTime') + get(OPTOcam_vid{cam_nr}.Source,'BslExposureStartDelay'))/1000/1000));
+				end
+				if OutputError ~= 0 %camera(s) not found: the message was shown already
+					OPTOcam_settings_check = 0;
+				elseif cam_fps > max_fps_with_current_settings
 					OPTOcam_settings_check = 0;
 					Error_Reason{end+1,1}='Frame rate too high for selected ROI and/or bit rate.';
 					Error_Reason{end+1,1}=['With current settings, sensor max. fps is ' num2str(round(max_fps_with_current_settings,1)) ' fps'];
@@ -278,7 +284,9 @@ if required_files_check
 					acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
 					[OutputError,OPTOcam_vid] = PIVlab_capture_OPTOcam_synced_capture(OPTOcam_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTOcam_bits); %capture n images, display livestream
 				else
-					gui.custom_msgbox('error',getappdata(0,'hgui'),'',Error_Reason,'modal');
+					if ~isempty(Error_Reason)
+						gui.custom_msgbox('error',getappdata(0,'hgui'),'',Error_Reason,'modal');
+					end
 					gui.put('cancel_capture',1);
 					imageamount=inf; %will prevent saving of images
 				end

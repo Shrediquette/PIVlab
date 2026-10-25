@@ -12,6 +12,14 @@ res.u = u*c.calu;
 res.v = v*c.calv;
 res.u_raw = p.u_raw*c.calu;
 res.v_raw = p.v_raw*c.calv;
+if isfield(p, 'w') % stereo-PIV: out-of-plane component, |calu| (an axis flip of x or y does not flip w)
+    w = p.w;
+    if res.smoothed && ~isempty(p.w_smoothed)
+        w = p.w_smoothed;
+    end
+    res.w = w*abs(c.calu);
+    res.w_raw = p.w_raw*abs(c.calu);
+end
 if isempty(p.uncertainty)
     res.uncertainty = [];
 else

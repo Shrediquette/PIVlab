@@ -81,6 +81,20 @@ else
 end
 G.display.nthvect = g.VectorSkip;
 G.display.enhance_images = double(g.EnhanceImage);
+
+%% Stereo-PIV panel: disparity correction
+if isfield(s, 'stereo')
+    st = s.stereo;
+    G.analysis.stereo_disp_pairs = st.Pairs;
+    G.analysis.stereo_disp_model = index_of(stereo.disparity_models, st.Model, 1);
+    G.analysis.stereo_disp_passes = st.Passes;
+    G.analysis.stereo_disp_ia = 0;
+    if ~isempty(st.InterrogationArea)
+        G.analysis.stereo_disp_ia = st.InterrogationArea;
+    end
+    G.analysis.stereo_disp_stdev = st.StdevThreshold;
+    G.analysis.stereo_disp_median = st.LocalMedianThreshold;
+end
 end
 
 function k = index_of(names, value, default)

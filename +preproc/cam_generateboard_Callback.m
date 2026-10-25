@@ -20,8 +20,8 @@ if markerSize >= checkerSize
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Marker size must be smaller than checker size.','modal');
     return
 end
-if patternDims(1)*patternDims(2) > 1000
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',['Too many checkers (1000 checkers are the maximum). Reduce the amount of rows or columns, so that' newline 'Rows * Columns <= 1000.'],'modal');
+if patternDims(1)*patternDims(2) > 2000 % DICT_4X4_1000 has 1000 markers, one on every second checker
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error',['Too many checkers (2000 checkers are the maximum). Reduce the amount of rows or columns, so that' newline 'Rows * Columns <= 2000.'],'modal');
     return
 end
 if patternDims(1) == patternDims(2)
