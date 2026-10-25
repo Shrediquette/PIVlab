@@ -76,7 +76,7 @@ folder_label = uicontrol(fig, 'Style', 'text', 'String', '', 'Position', [210 53
 % lists: tables (click and drag selects several entries) from MATLAB 2025 on, else list boxes
 use_table = ~verLessThan('matlab', '25');
 file_list = make_list(fig, [10 258 360 267], 'import_files', use_table, @file_list_clicked, ...
-    @file_list_key, 'Double click opens a folder. Drag, Shift / Ctrl: select several files, Ctrl+A: all.');
+    @file_list_double_clicked, @file_list_key, 'Double click opens a folder. Drag, Shift / Ctrl: select several files, Ctrl+A: all.');
 
 % preview: the whole width of the left column
 preview_axes = axes(fig, 'Units', 'pixels', 'Position', [10 10 360 240], 'XTick', [], 'YTick', [], 'Box', 'on');
@@ -104,7 +104,7 @@ for k = 1:n_lists
     list_labels(k) = uicontrol(fig, 'Style', 'text', 'String', name, 'Position', [385 list_top(k) 505 18], ...
         'HorizontalAlignment', 'left', 'FontWeight', 'bold');
     lists(k) = make_list(fig, [385 list_top(k) - list_height - 3 505 list_height], sprintf('import_list%d', k), use_table, ...
-        {@pick_list_clicked, k}, {@pick_list_key, k}, 'Delete: remove the selected files');
+        {@pick_list_clicked, k}, [], {@pick_list_key, k}, 'Delete: remove the selected files');
     y = list_top(k) - list_height - 33;
     uicontrol(fig, 'Style', 'pushbutton', 'String', add_text, 'Position', [385 y 125 26], 'FontWeight', 'bold', ...
         'Callback', {@add_files, k, false}, 'Tag', sprintf('import_add%d', k), ...
@@ -234,8 +234,12 @@ end
         if isempty(selected)
             return
         end
-        if strcmp(get(fig, 'SelectionType'), 'open') % double click
-            file_list_double_clicked()
+        if strcmp(get(fig, 'SelectionType'), 'open') % second click of a double click
+            % tables: the DoubleClickedFcn handles it. A new folder listing here would come too early: the
+            % table still processes the double click with the row of the old listing (index error).
+            if ~use_table
+                file_list_double_clicked()
+            end
             return
         end
         last = selected(end);
@@ -479,13 +483,13 @@ end
     end
 end
 
-function h = make_list(fig, position, tag, use_table, clicked, key, tooltip)
-% a list with several selectable entries: a table (click and drag selects a range) or a list box; a double
-% click is recognised in the click callback (SelectionType 'open' of the figure)
+function h = make_list(fig, position, tag, use_table, clicked, double_clicked, key, tooltip)
+% a list with several selectable entries: a table (click and drag selects a range) or a list box. A double
+% click: tables call double_clicked ([] = none); list boxes call clicked with SelectionType 'open' of the figure
 if use_table
     h = uitable(fig, 'Position', position, 'Data', cell(0, 1), 'ColumnName', {}, 'RowName', {}, ...
         'ColumnWidth', {position(3) - 22}, 'ColumnEditable', false, 'SelectionType', 'cell', 'Multiselect', 'on', ...
-        'RowStriping', 'off', 'ClickedFcn', clicked, 'KeyPressFcn', key, 'Tag', tag, ...
+        'RowStriping', 'off', 'ClickedFcn', clicked, 'DoubleClickedFcn', double_clicked, 'KeyPressFcn', key, 'Tag', tag, ...
         'Tooltip', tooltip, 'Interruptible', 'off', 'BusyAction', 'cancel'); % cell selection: click and drag selects a range
 else
     h = uicontrol(fig, 'Style', 'listbox', 'Position', position, 'Max', 2, 'Min', 0, 'Callback', clicked, ...

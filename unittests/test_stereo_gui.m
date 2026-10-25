@@ -296,6 +296,145 @@ press('import_addall1');
 press('import_ok');
 end
 
+function test_image_import_dialog_double_click(testCase)
+% double clicks in the folder list of the import dialog, sent like mouse double clicks: a folder opens, also when
+% it has fewer entries than the number of the clicked row (the list was replaced on the second click, before the
+% table had processed the double click: "Index exceeds the number of array elements"); a file is added (2D)
+assumeFalse(testCase, verLessThan('matlab', '25'), 'the lists are list boxes before MATLAB 2025');
+root = [testCase.TestData.Dir '_double_click']; % not in the image folder of test_image_import_dialog
+mkdir(root);
+addTeardown(testCase, @rmdir, root, 's');
+for i = 1:25
+    mkdir(fullfile(root, sprintf('sub%02d', i)));
+end
+copyfile(testCase.TestData.plain{1}, fullfile(root, 'sub25'));
+copyfile(testCase.TestData.plain{2}, fullfile(root, 'sub25'));
+if isappdata(0, 'dialog_test_error')
+    rmappdata(0, 'dialog_test_error');
+end
+setappdata(0, 'dialog_test_root', root);
+setappdata(0, 'dialog_test', struct());
+state.step = 1;
+state.ticks = 0;
+state.all_ticks = 0;
+setappdata(0, 'dialog_test_step', state);
+% the steps in a timer, every 0.5 s: the callbacks of a double click run after the timer callback
+stop_dialog_timers();
+t = timer('StartDelay', 1, 'Period', 0.5, 'ExecutionMode', 'fixedSpacing', 'TasksToExecute', 200, ...
+    'TimerFcn', @double_click_step, 'Tag', 'image_import_dialog_test');
+start(t);
+files = [];
+output = evalc('files = gui.image_import_dialog(''single'', root);'); % the table prints its errors only
+stop_dialog_timers();
+rmappdata(0, 'dialog_test_root');
+assertFalse(testCase, isappdata(0, 'dialog_test_error'), 'error in a dialog step');
+verifyFalse(testCase, contains(output, 'Error'), output);
+info = getappdata(0, 'dialog_test');
+rmappdata(0, 'dialog_test');
+rmappdata(0, 'dialog_test_step');
+verifyEqual(testCase, info.folder, fullfile(root, 'sub25'), 'double click on the last of 25 folders');
+verifyEqual(testCase, info.entries, 2);
+verifyEqual(testCase, info.added, 1, 'double click on a file');
+verifyEqual(testCase, info.folder_again, fullfile(root, 'sub03'), 'second double click on a folder');
+verifyEqual(testCase, info.entries_again, 0);
+verifyEmpty(testCase, files, 'cancel');
+end
+
+function double_click_step(~, ~)
+% one step of test_image_import_dialog_double_click. A step is repeated at the next timer callback until it
+% is ready: a double click 1 s after the last step (the table shows the new rows), the result of a double click
+% when it is there (at most 20 s)
+state = getappdata(0, 'dialog_test_step');
+state.ticks = state.ticks + 1;
+state.all_ticks = state.all_ticks + 1;
+info = getappdata(0, 'dialog_test');
+root = getappdata(0, 'dialog_test_root');
+dialog_open = ~isempty(findall(0, 'Tag', 'image_import_dialog'));
+folder = '';
+if dialog_open
+    folder = get(findall(0, 'Tag', 'import_folder'), 'String');
+end
+waited = state.ticks >= 2;
+timed_out = state.ticks > 40;
+try
+    ready = false;
+    switch state.step
+        case 1
+            h = findall(0, 'Tag', 'import_files');
+            scroll(h(1), 'cell', [25 1]); % in view for the double click
+            ready = true;
+        case 2
+            ready = waited;
+            if ready
+                double_click('import_files', 25); % folder sub25 (2 files)
+            end
+        case 3
+            ready = strcmp(folder, fullfile(root, 'sub25')) || timed_out;
+            if ready
+                info.folder = folder;
+                info.entries = list_count('import_files');
+            end
+        case 4
+            ready = waited;
+            if ready
+                double_click('import_files', 2); % the second file
+            end
+        case 5
+            ready = list_count('import_list1') > 0 || timed_out;
+            if ready
+                info.added = list_count('import_list1');
+                set(findall(0, 'Tag', 'import_folder'), 'String', root);
+                press('import_folder');
+            end
+        case 6
+            ready = waited;
+            if ready
+                double_click('import_files', 3); % folder sub03 (empty)
+            end
+        case 7
+            ready = strcmp(folder, fullfile(root, 'sub03')) || timed_out;
+            if ready
+                info.folder_again = folder;
+                info.entries_again = list_count('import_files');
+                press('import_cancel');
+            end
+    end
+    if ready
+        state.step = state.step + 1;
+        state.ticks = 0;
+    end
+    setappdata(0, 'dialog_test_step', state);
+    setappdata(0, 'dialog_test', info);
+    if dialog_open && state.step <= 7 && state.all_ticks > 180 % the test would wait for ever
+        setappdata(0, 'dialog_test_error', sprintf('step %d not finished', state.step));
+        press('import_cancel');
+    end
+catch err
+    setappdata(0, 'dialog_test_error', err.message);
+    if ~isempty(findall(0, 'Tag', 'image_import_dialog'))
+        press('import_cancel');
+    end
+end
+end
+
+function double_click(tag, row)
+% a double click on a row of a list of the import dialog, like with the mouse: the gesture of
+% matlab.uitest.TestCase/doublePress (undocumented internals of R2026b), sent without waiting for it. doublePress
+% waits, and inside a timer callback the table then processes the double click before the ClickedFcn runs,
+% the other way round than with the mouse.
+h = findall(0, 'Tag', tag);
+fig = ancestor(h(1), 'figure');
+fig_id = matlab.uiautomation.internal.IDService.getId(fig);
+gesture.Channel = matlab.ui.internal.FigureServices.getUniqueChannelId(fig);
+gesture.figID = fig_id;
+gesture.Name = 'uidoublepress';
+gesture.PeerNodeID = matlab.uiautomation.internal.IDService.getId(h(1));
+gesture.Options = struct('ctrlKey', false, 'shiftKey', false, 'altKey', false, 'metaKey', false, 'button', uint8(0));
+gesture.Data = struct('row', row, 'col', 1);
+connector.ensureServiceOn;
+message.publish(['/uitest/' fig_id], gesture);
+end
+
 function test_calibration_dialog_folders(testCase)
 % start folders of the calibration file dialogs (preproc.calibration_dialog_folder): last pick of this
 % dialog, then the other camera's pick, then (target image) the lens calibration images, then the PIV images
