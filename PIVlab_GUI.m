@@ -43,13 +43,17 @@ if isempty(fh)
     handles = guihandles; %alle handles mit tag laden und ansprechbar machen
     guidata(MainWindow,handles)
     setappdata(0,'hgui',MainWindow);
-    version = '3.14';
+    version = '3.14.e1';
     isbeta=1;
     gui.put('PIVver', version);
     gui.put('isbeta', isbeta);
     try
         warning off
-        load('PIVlab_settings_default.mat','build_date');
+        if isfile(fullfile(userpath,'PIVlab_settings_default.mat'))
+            load(fullfile(userpath,'PIVlab_settings_default.mat'),'build_date');
+        else
+            load('PIVlab_settings_default.mat','build_date');
+        end
         %warning on
     catch
         build_date=' ';
@@ -378,7 +382,9 @@ if isempty(fh)
 	end
 	gui.put('homedir',homedir);
     gui.put('pathname',pathname);
-    save('PIVlab_settings_default.mat','homedir','pathname','-append');
+    % TOREMOVE: 1
+    % save('PIVlab_settings_default.mat','homedir','pathname','-append');
+    save(fullfile(userpath,'PIVlab_settings_default.mat'),'homedir','pathname','-append');
     %% Read and apply default settings
     try
         %XP Wu modification:
