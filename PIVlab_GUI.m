@@ -53,6 +53,9 @@ if isempty(fh)
             load(fullfile(userpath,'PIVlab_settings_default.mat'),'build_date');
         else
             load('PIVlab_settings_default.mat','build_date');
+            if ~isempty(userpath)
+                copyfile('PIVlab_settings_default.mat', userpath);
+            end
         end
         %warning on
     catch
@@ -387,11 +390,18 @@ if isempty(fh)
     save(fullfile(userpath,'PIVlab_settings_default.mat'),'homedir','pathname','-append');
     %% Read and apply default settings
     try
-        %XP Wu modification:
-        psdfile=which('PIVlab_settings_default.mat');
-        dindex=strfind(psdfile,filesep); %filesep ist '\'
-        %erstes argument datei, zweites pfad bis zum letzten fileseperator.
-        import.read_settings('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
+        if isfile(fullfile(userpath,'PIVlab_settings_default.mat'))
+            import.read_settings('PIVlab_settings_default.mat',userpath);
+            disp("YOHOHO!") % DEBUG
+        else
+            %XP Wu modification:
+            psdfile=which('PIVlab_settings_default.mat');
+            dindex=strfind(psdfile,filesep); %filesep ist '\'
+            %erstes argument datei, zweites pfad bis zum letzten fileseperator.
+            % import.read_settings('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
+            import.read_settings('PIVlab_settings_default.mat',psdfile(1:(dindex(end)-1)));
+        end
+        
         if ~exist('splash_ax','var')
             disp(['-> Got default settings from: ' psdfile])
         else
@@ -416,8 +426,10 @@ if isempty(fh)
     %% Apply remembered Basic/Advanced mode before window becomes visible
     ui_mode='advanced';   %default when no preference has been stored yet
     try
-        if ismember('ui_mode',who('-file','PIVlab_settings_default.mat'))
-            loaded=load('PIVlab_settings_default.mat','ui_mode');
+        % if ismember('ui_mode',who('-file','PIVlab_settings_default.mat'))
+        %     loaded=load('PIVlab_settings_default.mat','ui_mode');
+        if ismember('ui_mode',who('-file',fullfile(userpath,'PIVlab_settings_default.mat')))
+            loaded=load(fullfile(userpath,'PIVlab_settings_default.mat'),'ui_mode');
             ui_mode=loaded.ui_mode;
         end
     catch
