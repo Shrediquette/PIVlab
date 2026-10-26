@@ -12,7 +12,9 @@ All test files are in this folder. The first part of the name says what a file n
 | apigui | `test_apigui_*.m` | PIVlab window | API and GUI give the same numbers, sessions go from one to the other |
 
 `helper_*.m` are functions shared by the tests (start / close PIVlab, save / restore your
-preferences, example files, ...). `parity/` is the GUI parity check against another git revision
+preferences, example files, ...). The example images come from `Example_data`: the jet pairs, the
+fisheye example `sphere_wake_distorted`; colour images are made from the jet images in `tempdir`
+(`helper_files`). `parity/` is the GUI parity check against another git revision
 (see `parity/README.md`), `benchmark_bias_rmse/` a benchmark of the bias and random error of the PIV
 algorithm (not a pass / fail test).
 
@@ -50,8 +52,9 @@ Notes
 | `test_core_rescale_map.m` | `plot.rescale_map_core`: derived maps on the image grid, border (mean / extrapolated), masked vectors, ROI, angles |
 | `test_core_opencv_undistort.m` | `opencv.opencv_undistort`: image classes, no rescaling of the grey values, same result as MATLAB |
 | `test_core_simulate.m` | synthetic particle images (`+simulate`): all GUI flows, cameras, stereo projection, ChArUco boards; checked with PIVlab's PIV |
+| `test_core_simulate_3d.m` | particle image generator recordings (`simulate.recording_3d`): files, ground truth, boards, all flows, vortex pairs, simple setup, sphere wake and free jet simulations (about 3 min) |
 | `test_core_charuco_filter.m` | `preproc.cam_filter_charuco_corners`: corners of wrongly decoded markers removed, correct corners kept (also with strong distortion), boards with 2000 checkers |
-| `test_api_workflow.m` | the whole API chain, `Verbose=false`, the example scripts, the help texts |
+| `test_api_workflow.m` | the whole API chain, `Verbose=false`, the example scripts (not the ones with placeholder file names for your own recording, e.g. stereo), the help texts |
 | `test_api_images.m` | `pivlab.readImages`, `pivlab.preprocess`, `pivlab.getImage`: every option |
 | `test_api_analyze.m` | `pivlab.analyze`: FFT, ensemble, DCC, optical flow, parallel, every option |
 | `test_api_results.m` | `pivlab.filter`, `toMetric`, `derive`, `temporal`: every option; results edited by hand |

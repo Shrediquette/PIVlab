@@ -111,42 +111,53 @@ if iscell(formats) && numel(formats) >= get(handles.export_still_or_animation, '
     end
 end
 
-%% Particle image generation
-flow = get(handles.flow_sim, 'Value');
-show(handles.rankinepanel, flow == 1);
-show(handles.oseenpanel, flow == 2);
-show(handles.shiftpanel, flow == 3);
-show(handles.rotationpanel, flow == 4);
-rankine_pair = get(handles.singledoublerankine, 'Value') == 2;
-show([handles.rankx2 handles.ranky2 handles.text102 handles.text103 handles.text104], rankine_pair);
-oseen_pair = get(handles.singledoubleoseen, 'Value') == 2;
-show([handles.oseenx2 handles.oseeny2 handles.text110 handles.text111 handles.text112], oseen_pair);
-
-%% 3D particle image generator: settings page, camera 2, parameters of the flow type
+%% Particle image generator: setup, settings page, camera 2, parameters of the flow type
 page = get(handles.sim3d_page, 'Value');
 show(handles.sim3d_page1, page == 1);
 show(handles.sim3d_page2, page == 2);
-two_cameras = get(handles.sim3d_ncams, 'Value') == 2;
-camera2 = cellfun(@(f) handles.(['sim3d_c2' f]), {'x', 'y', 'z', 'ax', 'ay', 'k1', 'k2'});
-enable([camera2 handles.sim3d_cam2_title], two_cameras);
+setup3d = get(handles.sim3d_setup, 'Value'); % 1 simple, 2 one camera, 3 two cameras
+simple = setup3d == 1;
+show(handles.sim3d_simple, simple);
+show([handles.sim3d_cams handles.sim3d_boardinfo], ~simple);
+enable([handles.sim3d_sheet_offset handles.sim3d_sheet_tiltx handles.sim3d_sheet_tilty handles.sim3d_ncalib handles.sim3d_preview], ~simple);
+camera2 = [handles.sim3d_c2x handles.sim3d_c2y handles.sim3d_c2z handles.sim3d_c2ax handles.sim3d_c2ay ...
+    handles.sim3d_c2k1 handles.sim3d_c2k2 handles.sim3d_cam2_title];
+enable(camera2, setup3d == 3);
+if simple
+    set(handles.sim3d_sheetpanel, 'Title', 'Light sheet');
+    set(handles.sim3d_pairs_text, 'String', 'Image pairs:');
+    set(handles.sim3d_outputinfo, 'String', ['Particle image pairs (particle_images), ground_truth.mat (U, V, W in mm and ' ...
+        'in px) and README.txt. The images are loaded into PIVlab.']);
+else
+    set(handles.sim3d_sheetpanel, 'Title', 'Light sheet (relative to the board)');
+    set(handles.sim3d_pairs_text, 'String', 'Image pairs per camera:');
+    set(handles.sim3d_outputinfo, 'String', ['Per camera: particle image pairs, calibration images, the board in the ' ...
+        'light sheet and the true lens. Plus ground_truth.mat (U, V, W) and README.txt.']);
+end
 flow3d = simulate.flow_types_3d;
 flow3d = flow3d{get(handles.sim3d_flow, 'Value')};
-enable(handles.sim3d_radius, any(strcmp(flow3d, {'vortex_jet', 'rankine'})));
+enable(handles.sim3d_radius, any(strcmp(flow3d, {'vortex_jet', 'rankine', 'oseen'})));
+enable(handles.sim3d_vortex_distance, any(strcmp(flow3d, {'rankine', 'oseen'})));
 if strcmp(flow3d, 'vortex_jet')
     set(handles.sim3d_w_text, 'String', 'Jet: max. out-of-plane [mm]:');
 else
-    set(handles.sim3d_w_text, 'String', 'Out-of-plane displacement [mm]:');
+    set(handles.sim3d_w_text, 'String', 'Out-of-plane displ. [mm]:');
 end
-% sphere wake: the rows of the vortex radius and of w hold the sphere diameter and the time between the pairs
-sphere = strcmp(flow3d, 'sphere');
-show(handles.sim3d_radius, ~sphere);
-show(handles.sim3d_w, ~sphere);
-show(handles.sim3d_sphere_d, sphere);
-show(handles.sim3d_sphere_dt, sphere);
-if sphere
+% sphere wake, free jet: the rows of the vortex radius and of w hold the diameter and the time between the pairs
+simulation = any(strcmp(flow3d, {'sphere', 'jet'}));
+show(handles.sim3d_radius, ~simulation);
+show(handles.sim3d_w, ~simulation);
+show(handles.sim3d_diameter, simulation);
+show(handles.sim3d_pair_time, simulation);
+if simulation
+    set(handles.sim3d_w_text, 'String', 'Time between pairs [D/U]:');
+end
+if strcmp(flow3d, 'sphere')
     set(handles.sim3d_displ_text, 'String', 'Free stream displ. [mm]:');
     set(handles.sim3d_radius_text, 'String', 'Sphere diameter [mm]:');
-    set(handles.sim3d_w_text, 'String', 'Time between pairs [D/U]:');
+elseif strcmp(flow3d, 'jet')
+    set(handles.sim3d_displ_text, 'String', 'Jet displacement [mm]:');
+    set(handles.sim3d_radius_text, 'String', 'Jet diameter [mm]:');
 else
     set(handles.sim3d_displ_text, 'String', 'In-plane displacement [mm]:');
     set(handles.sim3d_radius_text, 'String', 'Vortex core radius [mm]:');

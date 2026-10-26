@@ -245,35 +245,10 @@ default.acquisition.ac_imgamount = 100;
 default.acquisition.ac_realtime = 0;
 default.acquisition.ac_pivcapture_save = 0;
 
-%% tools (synthetic image generator, temporal statistics)
-% Particle image generation
-default.tools.flow_sim = 1;
-default.tools.img_sizex = 800;
-default.tools.img_sizey = 600;
-default.tools.part_am = 200000;
-default.tools.part_size = 3;
-default.tools.part_var = 1;
-default.tools.sheetthick = 0.5;
-default.tools.part_noise = 0.001;
-default.tools.part_z = 10;
-default.tools.singledoublerankine = 1;
-default.tools.rank_core = 100;
-default.tools.rank_displ = 8;
-default.tools.rankx1 = 200;
-default.tools.rankx2 = 600;
-default.tools.ranky1 = 300;
-default.tools.ranky2 = 300;
-default.tools.singledoubleoseen = 1;
-default.tools.oseen_displ = 5;
-default.tools.oseen_time = 0.05;
-default.tools.oseenx1 = 200;
-default.tools.oseenx2 = 600;
-default.tools.oseeny1 = 300;
-default.tools.oseeny2 = 300;
-default.tools.rotation_displacement = 5;
-default.tools.shiftdisplacement = 5;
-% 3D particle image generator (simulate.setup_3d; positions in board coordinates [mm])
-default.tools.sim3d_ncams = 2;
+%% tools (particle image generator, temporal statistics)
+% Particle image generator (simulate.setup_3d; positions in board coordinates [mm])
+default.tools.sim3d_setup = 1;          % 1 simple (one camera straight on), 2 one camera, 3 two cameras (stereo)
+default.tools.sim3d_pixel = 0.1;        % simple setup: pixel size in the light sheet [mm]
 default.tools.sim3d_sizex = 2000;
 default.tools.sim3d_sizey = 2000;
 default.tools.sim3d_pitch = 5;
@@ -300,8 +275,9 @@ default.tools.sim3d_flow = 1;
 default.tools.sim3d_displ = 0.8;
 default.tools.sim3d_radius = 40;
 default.tools.sim3d_w = 0.5;
-default.tools.sim3d_sphere_d = 40;
-default.tools.sim3d_sphere_dt = 0.25;
+default.tools.sim3d_vortex_distance = 0;
+default.tools.sim3d_diameter = 40;
+default.tools.sim3d_pair_time = 0.25;
 default.tools.sim3d_ppp = 0.05;
 default.tools.sim3d_psize = 3;
 default.tools.sim3d_pvar = 0.5;

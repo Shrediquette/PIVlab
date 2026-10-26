@@ -1,0 +1,25 @@
+PIVlab synthetic stereo-PIV recording (particle image generator, two cameras), 25-Oct-2026
+A free round jet (3D flow simulation, nozzle diameter 40 mm, Re 3000) seen by two cameras at 30 degrees to
+the light sheet normal, on both sides of the jet (60 degrees between the cameras), lens distortion on both
+cameras. The light sheet is 0.5 mm in front of the ChArUco board and tilted by 1 degree, so the disparity
+correction has to find it. 5 image pairs per camera, 0.5 D/U apart (a time series of the jet);
+displacement at the nozzle exit 1.6 mm (about 7 px). The images are jpg compressed.
+
+Files per camera (k = 1, 2):
+* camera<k>/particle_images: the particle image pairs (cam<k>_0001_A.jpg, cam<k>_0001_B.jpg, ...)
+* camera<k>/calibration_images: the board in random positions, for the lens calibration
+* camera<k>/board_in_light_sheet_cam<k>.jpg: the ChArUco board where the light sheet is
+* camera<k>/lens_cam<k>.mat: the true lens of the camera ("Load camera parameters")
+
+ChArUco board: 10 x 18 squares, 12 mm squares, 9 mm markers, DICT_4X4_1000, black origin checker
+(Camera calibration -> Setup / define / generate marker board).
+
+Workflow in PIVlab:
+* Import stereo images: the particle images of camera 1 and of camera 2
+* Image settings -> Camera calibration -> Camera calibration (undistortion) -> camera 1 and camera 2:
+  load the calibration images and estimate the camera parameters (or load lens_cam<k>.mat)
+* Image settings -> Camera calibration -> Image rectification / alignment -> camera 1 and camera 2:
+  load board_in_light_sheet_cam<k>.jpg as target image
+* Analysis -> Stereo-PIV: compute the stereo calibration, measure the disparity, analyze
+
+Command line: Example_scripts/PIVlab_api_stereo.m uses this recording.

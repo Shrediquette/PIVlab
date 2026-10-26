@@ -5,7 +5,8 @@
 % The result works with pivlab.filter, toMetric, derive, temporal, display and saveSession like a 2D result.
 % Type "help pivlab.stereo" for all options.
 %
-% Replace the file names below with your own recording. You need per camera:
+% The example uses the synthetic recording of a free jet in Example_data/stereo_free_jet (see
+% Information.txt there). For your own recording, replace the file names below. You need per camera:
 % - the particle images (both cameras recorded at the same time, same number of images)
 % - a lens calibration ("Save camera parameters" in the camera calibration panel of PIVlab)
 % - an image of the ChArUco board in the light sheet
@@ -14,17 +15,18 @@ clc; clear; close all
 project_root = fileparts(fileparts(mfilename('fullpath')));
 addpath(project_root)
 
-%% Your files (placeholders)
-images_cam1 = 'D:\my_experiment\cam1\*.tif';
-images_cam2 = 'D:\my_experiment\cam2\*.tif';
-lens_cam1   = 'D:\my_experiment\lens_cam1.mat';
-lens_cam2   = 'D:\my_experiment\lens_cam2.mat';
-board_cam1  = 'D:\my_experiment\board_cam1.tif';
-board_cam2  = 'D:\my_experiment\board_cam2.tif';
+%% Files of the recording
+data = fullfile(project_root, 'Example_data', 'stereo_free_jet');
+images_cam1 = fullfile(data, 'camera1', 'particle_images', '*.jpg');
+images_cam2 = fullfile(data, 'camera2', 'particle_images', '*.jpg');
+lens_cam1   = fullfile(data, 'camera1', 'lens_cam1.mat');
+lens_cam2   = fullfile(data, 'camera2', 'lens_cam2.mat');
+board_cam1  = fullfile(data, 'camera1', 'board_in_light_sheet_cam1.jpg');
+board_cam2  = fullfile(data, 'camera2', 'board_in_light_sheet_cam2.jpg');
 delta_t     = 0.001;    % time between the two images of a pair in s
 
 % ChArUco board: number of squares, square and marker size in mm (as in the Stereo-PIV panel of PIVlab)
-board = struct('PatternDims', [23 24], 'CheckerSize', 10, 'MarkerSize', 7, ...
+board = struct('PatternDims', [10 18], 'CheckerSize', 12, 'MarkerSize', 9, ...
     'MarkerFamily', "DICT_4X4_1000", 'OriginCheckerColor', "black");
 
 %% 1) Images and lens calibration of both cameras
@@ -39,7 +41,7 @@ imgs{2} = pivlab.preprocess(imgs{2}, Camera=lens_cam2);
 % automatic region of interest (overlap of both views), automatic number of image pairs for the disparity.
 res = pivlab.stereo(imgs, {board_cam1, board_cam2}, board);
 % more options, e.g. the settings of a PIVlab session (pre-processing, PIV, Stereo-PIV panel):
-% s = pivlab.loadSettings('D:\my_experiment\my_stereo_session.mat');
+% s = pivlab.loadSettings('my_stereo_session.mat');
 % res = pivlab.stereo(imgs, {board_cam1, board_cam2}, board, Settings=s);
 fprintf('Disparity (as in the Stereo-PIV panel of PIVlab):\n');
 fprintf('  %s\n', res.stereo.disparity.report{:});
@@ -63,4 +65,4 @@ pivlab.display(res, Frame=1, Overlay="residual");   % how well both cameras fit 
 %% 6) Save a session that opens in the PIVlab GUI (both cameras, calibration, disparity)
 pivlab.saveSession(res, fullfile(tempdir, 'PIVlab_api_stereo_session.mat'));
 % A stereo session made in the GUI can be loaded the same way:
-% r = pivlab.loadSession('D:\my_experiment\my_stereo_session.mat');
+% r = pivlab.loadSession('my_stereo_session.mat');

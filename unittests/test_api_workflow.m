@@ -54,13 +54,18 @@ delete(fullfile(tempdir, 'pivlab_silent.mat'));
 end
 
 function test_example_scripts(testCase)
-% the example scripts run from start to end (figures are closed afterwards)
+% the example scripts run from start to end (figures are closed afterwards); scripts with placeholder
+% file names for your own recording ("%% Your files (placeholders)", e.g. stereo) cannot run here
 root = testCase.TestData.Root;
 L = dir(fullfile(root, 'Example_scripts', 'PIVlab_api_*.m'));
 testCase.verifyNotEmpty(L);
 here = pwd;
 cd(testCase.TestData.Dir);   % sessions written by the scripts land here
 for k = 1:numel(L)
+    if contains(fileread(fullfile(L(k).folder, L(k).name)), '(placeholders)')
+        testCase.log(1, sprintf('%s not run: it needs your own recording (placeholder file names)', L(k).name));
+        continue
+    end
     try
         run_script(fullfile(L(k).folder, L(k).name), root);
     catch err

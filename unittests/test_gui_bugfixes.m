@@ -348,17 +348,24 @@ testCase.verifyEmpty(gui.retr('busy_since'), 'still busy');
 end
 
 function test_particle_generator_invalid_inputs(testCase)
-% empty / negative fields crashed deep inside the generator (interp2 with NaN image size)
+% empty / negative fields crashed deep inside the generator (interp2 with NaN image size):
+% a message instead, nothing generated; with valid values the simple setup loads the images
 helper_start_pivlab();
 h = gui.gethand;
-simulate.part_img_sett_Callback([], []);
-set(h.img_sizey, 'String', '');
-simulate.generate_it_Callback([], [], []);   % message instead of an error
-set(h.img_sizey, 'String', '300'); set(h.img_sizex, 'String', '400'); set(h.sheetthick, 'String', '-1');
-simulate.generate_it_Callback([], [], []);
-set(h.sheetthick, 'String', '1');
-simulate.generate_it_Callback([], [], []);
-testCase.verifyEqual(size(gui.retr('gen_image_1')), [300 400]);
+simulate.part_img_3d_Callback([], []);
+folder = tempname;
+set(h.sim3d_sizey, 'String', '');
+simulate.generate_3d_Callback([], [], folder);   % message instead of an error
+testCase.verifyFalse(isfolder(fullfile(folder, 'particle_images')), 'generated with an empty image height');
+set(h.sim3d_sizey, 'String', '300'); set(h.sim3d_sizex, 'String', '400'); set(h.sim3d_sheet_thick, 'String', '-1');
+simulate.generate_3d_Callback([], [], folder);
+testCase.verifyFalse(isfolder(fullfile(folder, 'particle_images')), 'generated with a negative sheet thickness');
+set(h.sim3d_sheet_thick, 'String', '1.5'); set(h.sim3d_pairs, 'String', '1');
+simulate.generate_3d_Callback([], [], folder);
+I = imread(fullfile(folder, 'particle_images', 'img_0001_A.tif'));
+testCase.verifyEqual(size(I), [300 400]);
+testCase.verifyNumElements(gui.retr('filepath'), 2, 'the image pair is not loaded into PIVlab');
+rmdir(folder, 's');
 close_other_figures();
 end
 

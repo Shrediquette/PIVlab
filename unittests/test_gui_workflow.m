@@ -43,8 +43,8 @@ for k = 1:size(quick, 1)
     testCase.verifyEqual(char(get(h.(quick{k,2}), 'Visible')), 'on', [quick{k,1} ' did not open ' quick{k,2}]);
 end
 % 4 colour images, time resolved: 3 pairs
-helper_gui_load_images(helper_files('fuerteventura', 4), 0);
-verify_imported(testCase, 6, 'colour Fuerteventura images');
+helper_gui_load_images(helper_files('colour', 4), 0);
+verify_imported(testCase, 6, 'colour images');
 testCase.verifyEqual(size(gui.retr('expected_image_size')), [1 2], 'colour import did not record the image size');
 end
 
@@ -283,22 +283,32 @@ end
 
 %% ================================================================== synthetic images
 function test_synthetic_image_generator(testCase)
+% particle image generator, simple setup: uniform displacement of 2 px; the images are loaded into
+% PIVlab and differ by the displacement
 helper_start_pivlab();
 h = gui.gethand;
-gui.switchui('multip15');
-set(h.flow_sim, 'Value', 3);
-set(h.img_sizex, 'String', '96');
-set(h.img_sizey, 'String', '96');
-set(h.part_am, 'String', '250');
-set(h.part_noise, 'String', '0.001');
-set(h.shiftdisplacement, 'String', '2');
-simulate.generate_it_Callback([], [], []);
+simulate.part_img_3d_Callback([], []);
+set(h.sim3d_setup, 'Value', 1);
+set(h.sim3d_flow, 'Value', 4); % uniform displacement
+set(h.sim3d_sizex, 'String', '96');
+set(h.sim3d_sizey, 'String', '96');
+set(h.sim3d_pixel, 'String', '0.1');
+set(h.sim3d_displ, 'String', '0.2'); % 2 px
+set(h.sim3d_w, 'String', '0');
+set(h.sim3d_pairs, 'String', '2');
+simulate.setting_3d_Callback(h.sim3d_flow);
+folder = tempname;
+simulate.generate_3d_Callback([], [], folder);
 drawnow;
-A = gui.retr('gen_image_1');
-B = gui.retr('gen_image_2');
+files = gui.retr('filepath');
+testCase.verifyNumElements(files, 4, 'two image pairs loaded');
+A = imread(files{1});
+B = imread(files{2});
 testCase.verifyEqual(size(A), [96 96], 'first synthetic image');
-testCase.verifyEqual(size(B), [96 96], 'second synthetic image');
 testCase.verifyNotEqual(A, B, 'the two synthetic images are the same');
+load(fullfile(folder, 'ground_truth.mat'), 'truth');
+testCase.verifyEqual(truth.U_px(1), 2, 'AbsTol', 1e-9, 'displacement in px');
+rmdir(folder, 's');
 end
 
 %% ------------------------------------------------------------------ helpers

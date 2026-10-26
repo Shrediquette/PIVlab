@@ -25,7 +25,7 @@ files = testCase.TestData.Files;
 % pattern (char and string)
 a = pivlab.readImages(fullfile(root,'Example_data','Jet_0001*.jpg'), "pairwise");
 testCase.verifyEqual(a.pairs, 1);
-testCase.verifyEqual(pivlab.readImages(fullfile(root,'Example_data','Jet_000?A.jpg'), "pairwise").pairs, 4);   % 9 images
+testCase.verifyEqual(pivlab.readImages(fullfile(root,'Example_data','Jet_000?A.jpg'), "pairwise").pairs, 2);   % 5 images
 b = pivlab.readImages(string(fullfile(root,'Example_data','Jet_0001*.jpg')), "pairwise");
 testCase.verifyEqual(b.filepath, a.filepath);
 % a folder: all images in it, sorted by name
@@ -371,7 +371,7 @@ testCase.verifyEqual(pivlab.getImage(imgs, 2, Frame="B", Preprocessed=false), im
 raw = pivlab.readImages(files, "pairwise");
 testCase.verifyEqual(pivlab.getImage(raw, 1), imread(files{1}));
 % colour images are converted to grey values
-col = pivlab.readImages(helper_files('fuerteventura', 4), "timeresolved");
+col = pivlab.readImages(helper_files('colour', 4), "timeresolved");
 g = pivlab.getImage(col, 1, Preprocessed=false);
 testCase.verifyEqual(size(g), col.imageSize);
 % wrong input

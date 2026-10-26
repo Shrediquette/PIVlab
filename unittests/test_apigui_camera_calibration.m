@@ -121,20 +121,27 @@ cam = import.cam_settings(FromGUI=true);
 testCase.verifyTrue(logical(cam.use_tilted_model));
 % mean of the corrected A images, computed here
 acc = zeros(size(bgA));
+acc_double = zeros(size(bgA)); % without the rounding / clipping of every corrected image to 8 bit
 files = testCase.TestData.Files;
 for k = 1:2:numel(files)
     acc = acc + double(preproc.cam_undistort_with(imread(files{k}), cam));
+    acc_double = acc_double + preproc.cam_undistort_with(double(imread(files{k})), cam);
 end
 mean_here = acc / (numel(files)/2);
-% The background is the mean of the raw images, undistorted once. That is the mean of the
-% undistorted images up to rounding / clipping of the 8 bit images at sharp, bright particles. Not
-% shifted: the deviation is much smaller than the one of a background shifted by 1 px.
+mean_double = min(max(acc_double / (numel(files)/2), 0), 255); % clipped like the 8 bit background
+% The background is the mean of the raw images, undistorted once. The interpolation is linear, so that
+% is the mean of the undistorted images computed in double precision (clipped to 0...255 like the 8 bit
+% background). The 8 bit undistorted images differ more: each one is clipped where the interpolation
+% overshoots, e.g. below 0 next to sharp particles on the black background of the synthetic example.
+% Not shifted: the deviation is much smaller than the one of a background shifted by 1 px.
 dev = abs(double(bgA) - mean_here);
 dev_shifted = abs(double(circshift(bgA, [0 1])) - mean_here);
+dev_double = abs(double(bgA) - mean_double);
 fprintf(['tilted model: background vs mean of the corrected images: mean deviation %.3f counts ' ...
-    '(shifted by 1 px: %.3f), %.2f %% of the pixels > 1 count\n'], mean(dev(:)), mean(dev_shifted(:)), 100*mean(dev(:) > 1));
+    '(shifted by 1 px: %.3f); vs mean in double precision: %.2f %% of the pixels > 1 count\n'], mean(dev(:)), ...
+    mean(dev_shifted(:)), 100*mean(dev_double(:) > 1));
 testCase.verifyLessThan(mean(dev(:)), 0.2*mean(dev_shifted(:)), 'background is shifted against the corrected images');
-testCase.verifyLessThan(mean(dev(:) > 1), 0.01, 'background is not the mean of the corrected images');
+testCase.verifyLessThan(mean(dev_double(:) > 1), 0.01, 'background is not the mean of the corrected images');
 helper_gui_analyze();
 rl_serial = gui.retr('resultslist');
 export.save_session_function(D, 'tilted_bg.mat');

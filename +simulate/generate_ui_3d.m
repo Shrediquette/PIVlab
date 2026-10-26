@@ -1,38 +1,53 @@
 function generate_ui_3d(MainWindow, default, margin, panelwidth, panelheightpanels, Figure_Size)
-% Panel "3D particle image generator" (multip31) of the PIVlab window, called by gui.generateUI.
+% Panel "Particle image generator" (multip31) of the PIVlab window, called by gui.generateUI.
+% Setups: simple (one camera straight on the light sheet, the images are loaded into PIVlab), one
+% camera or two cameras (stereo-PIV) with lens and perspective, board and calibration images.
 % Every edit field and popup menu is a setting (group tools of gui.default_settings).
 t = default.tools;
 P = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels], ...
-    'title','3D particle image generator', 'Tag','multip31','fontweight','bold');
+    'title','Particle image generator (CTRL+G)', 'Tag','multip31','fontweight','bold');
 pp = get(P, 'Position');
 w = pp(3);
 pos = @(parent, x, y, width, height) [x+margin parent(4)-height-margin-y width-margin*2 height];
 cb = @simulate.setting_3d_Callback;
 
-uicontrol(P,'Style','text','String','Settings:','Units','characters','HorizontalAlignment','left','Position',pos(pp,0,0,w/3,1.5));
-uicontrol(P,'Style','popupmenu','String',{'Cameras, lens and light sheet','Flow, particles and output'},'Units','characters', ...
-    'Position',pos(pp,w/3,0,w*2/3,1.5),'Tag','sim3d_page','Callback',cb,'UserData','not_a_setting', ...
+uicontrol(P,'Style','text','String','Setup:','Units','characters','HorizontalAlignment','left','Position',pos(pp,0,0,w/3,1.5));
+uicontrol(P,'Style','popupmenu','String',{'Simple (no lens)','One camera with lens','Two cameras with lens (stereo)'}, ...
+    'Value',t.sim3d_setup,'Units','characters','Position',pos(pp,w/3,0,w*2/3,1.5),'Tag','sim3d_setup','Callback',cb, ...
+    'TooltipString',['Simple: one camera looks straight at the light sheet (no perspective, no lens distortion, no calibration ' ...
+    'needed); the images are loaded into PIVlab. One / two cameras: positions, lens distortion, ChArUco board and ' ...
+    'calibration images, to test the camera calibration, the rectification and stereo-PIV.']);
+uicontrol(P,'Style','text','String','Settings:','Units','characters','HorizontalAlignment','left','Position',pos(pp,0,1.5+margin/4,w/3,1.5));
+uicontrol(P,'Style','popupmenu','String',{'Camera and light sheet','Flow, particles and output'},'Units','characters', ...
+    'Position',pos(pp,w/3,1.5+margin/4,w*2/3,1.5),'Tag','sim3d_page','Callback',cb,'UserData','not_a_setting', ...
     'TooltipString','The settings are on two pages');
 
-%% page 1: cameras, lens, light sheet
-y_page = 1.5 + margin/2;
-h_page = 27;
-page1 = uipanel(P,'Units','characters','Position',pos(pp,0,y_page,w,h_page),'BorderType','none','Tag','sim3d_page1');
+%% page 1: image, cameras, lens, light sheet
+y_page = 3 + margin/2;
+h_page = 26.5;
+page1 = uipanel(P,'Units','characters','Position',pos(pp,-margin,y_page,w+2*margin,h_page),'BorderType','none','Tag','sim3d_page1');
 p1 = get(page1,'Position');
 p1(1:2) = 0;
+row_edits(page1, p1, 0, 'Image size [px]:', {'sim3d_sizex','sim3d_sizey'}, [t.sim3d_sizex t.sim3d_sizey], ...
+    {'Image width in pixels','Image height in pixels'});
+y_cams = 1 + margin/4;
+h_cams = 13.25;
 
-cams = uipanel(page1,'Units','characters','Position',pos(p1,-margin,0,w,16),'title','Cameras','fontweight','bold');
+simple = uipanel(page1,'Units','characters','Position',pos(p1,0,y_cams,w,7.5),'title','Simple camera','fontweight','bold', ...
+    'Tag','sim3d_simple','Visible','off');
+ps = get(simple,'Position');
+row_edits(simple, ps, 0, 'Pixel size in the sheet [mm]:', {'sim3d_pixel'}, t.sim3d_pixel, ...
+    {'Size of an image pixel in the light sheet: displacements in mm / pixel size = displacements in px'});
+uicontrol(simple,'Style','text','Units','characters','HorizontalAlignment','left','Position',pos(ps,0,1+margin/4,ps(3),4.5), ...
+    'String',['The camera looks straight at the light sheet: no perspective, no lens distortion, no calibration. ' ...
+    'The generated images are loaded into PIVlab.']);
+
+cams = uipanel(page1,'Units','characters','Position',pos(p1,0,y_cams,w,h_cams),'title','Cameras','fontweight','bold', ...
+    'Tag','sim3d_cams');
 pc = get(cams,'Position');
 wc = pc(3);
 y = 0;
-uicontrol(cams,'Style','text','String','Cameras:','Units','characters','HorizontalAlignment','left','Position',pos(pc,0,y,wc*0.4,1.5));
-uicontrol(cams,'Style','popupmenu','String',{'1 camera','2 cameras (stereo)'},'Value',t.sim3d_ncams,'Units','characters', ...
-    'Position',pos(pc,wc*0.4,y,wc*0.6,1.5),'Tag','sim3d_ncams','Callback',cb,'TooltipString','One camera (e.g. to test the rectification) or two cameras (stereo-PIV)');
-y = y + 1.5 + margin/4;
-row_edits(cams, pc, y, 'Sensor size [px]:', {'sim3d_sizex','sim3d_sizey'}, [t.sim3d_sizex t.sim3d_sizey], ...
-    {'Image width in pixels','Image height in pixels'});
-y = y + 1;
-row_edits(cams, pc, y, 'Pixel size [µm]:', {'sim3d_pitch'}, t.sim3d_pitch, {'Size of a sensor pixel (pixel pitch)'});
+row_edits(cams, pc, y, 'Sensor pixel size [µm]:', {'sim3d_pitch'}, t.sim3d_pitch, {'Size of a sensor pixel (pixel pitch)'});
 y = y + 1;
 row_edits(cams, pc, y, 'Lens focal length [mm]:', {'sim3d_focal'}, t.sim3d_focal, {'Focal length of the lens of both cameras'});
 y = y + 1 + margin/4;
@@ -51,7 +66,9 @@ for r = 1:numel(fields)
     y = y + 1;
 end
 
-sheet = uipanel(page1,'Units','characters','Position',pos(p1,-margin,16+margin/4,w,7),'title','Light sheet (relative to the board)','fontweight','bold');
+y_sheet = y_cams + h_cams + margin/4;
+sheet = uipanel(page1,'Units','characters','Position',pos(p1,0,y_sheet,w,7),'title','Light sheet (relative to the board)','fontweight','bold', ...
+    'Tag','sim3d_sheetpanel');
 ps = get(sheet,'Position');
 y = 0;
 row_edits(sheet, ps, y, 'Offset from the board [mm]:', {'sim3d_sheet_offset'}, t.sim3d_sheet_offset, ...
@@ -64,35 +81,40 @@ y = y + 1;
 row_edits(sheet, ps, y, 'Thickness [mm]:', {'sim3d_sheet_thick'}, t.sim3d_sheet_thick, {'Thickness of the light sheet (e^-2 intensity)'});
 
 uicontrol(page1,'Style','text','String','Board: N/A','Units','characters','HorizontalAlignment','left', ...
-    'Position',pos(p1,-margin,23+margin/2,w,3),'Tag','sim3d_boardinfo', ...
+    'Position',pos(p1,0,y_sheet+7+margin/4,w,3),'Tag','sim3d_boardinfo', ...
     'TooltipString','The ChArUco board of "Image settings -> Camera calibration -> Setup / define / generate marker board"');
 
 %% page 2: flow, particles, output
-page2 = uipanel(P,'Units','characters','Position',pos(pp,0,y_page,w,h_page),'BorderType','none','Tag','sim3d_page2','Visible','off');
+page2 = uipanel(P,'Units','characters','Position',pos(pp,-margin,y_page,w+2*margin,h_page),'BorderType','none','Tag','sim3d_page2','Visible','off');
 p2 = get(page2,'Position');
 p2(1:2) = 0;
 [~, flow_labels] = simulate.flow_types_3d;
-flow = uipanel(page2,'Units','characters','Position',pos(p2,-margin,0,w,7.5),'title','Flow','fontweight','bold');
+flow = uipanel(page2,'Units','characters','Position',pos(p2,0,0,w,8.5),'title','Flow','fontweight','bold');
 pf = get(flow,'Position');
 uicontrol(flow,'Style','popupmenu','String',flow_labels,'Value',t.sim3d_flow,'Units','characters','Position',pos(pf,0,0,pf(3),1.5), ...
     'Tag','sim3d_flow','Callback',cb,'TooltipString',['Flow in the light sheet, centred in the overlap of the camera views. ' ...
-    'The same flow is used for all image pairs, except for the sphere wake: a 3D flow simulation (takes about a minute), ' ...
-    'every image pair is a later moment of the flow.']);
+    'The same flow is used for all image pairs, except for the sphere wake and the free jet: 3D flow simulations ' ...
+    '(1 to 3 minutes), every image pair is a later moment of the flow.']);
 y = 1.5 + margin/4;
 row_edits(flow, pf, y, 'In-plane displacement [mm]:', {'sim3d_displ'}, t.sim3d_displ, ...
-    {'Maximum in-plane displacement between image A and B (sphere wake: displacement of the free stream)'}, 'sim3d_displ_text');
+    {'Maximum in-plane displacement between image A and B (sphere wake: of the free stream; free jet: at the nozzle exit)'}, ...
+    'sim3d_displ_text');
 y = y + 1;
 row_edits(flow, pf, y, 'Vortex core radius [mm]:', {'sim3d_radius'}, t.sim3d_radius, {'Radius of the vortex core (and of the jet)'}, 'sim3d_radius_text');
-overlay_edit(flow, pf, y, 'sim3d_sphere_d', t.sim3d_sphere_d, ['Diameter of the sphere. Its centre is in the light sheet, ' ...
-    'near the left edge of the camera views; the flow goes from left to right (+x).']);
+overlay_edit(flow, pf, y, 'sim3d_diameter', t.sim3d_diameter, ['Diameter of the sphere / of the jet nozzle. The sphere centre ' ...
+    'is in the light sheet near the left edge of the camera views; the jet nozzle is at the left edge of the views. ' ...
+    'The flow goes from left to right (+x). Free jet: the views must end within 10 diameters of the nozzle.']);
 y = y + 1;
-row_edits(flow, pf, y, 'Out-of-plane displacement [mm]:', {'sim3d_w'}, t.sim3d_w, ...
+row_edits(flow, pf, y, 'Out-of-plane displ. [mm]:', {'sim3d_w'}, t.sim3d_w, ...
     {'Displacement perpendicular to the light sheet: peak of the jet in the vortex core, or constant for the other flows'}, 'sim3d_w_text');
-overlay_edit(flow, pf, y, 'sim3d_sphere_dt', t.sim3d_sphere_dt, ['Time between two image pairs in D/U: the free stream ' ...
-    'travels this many sphere diameters. A vortex is shed about every 5 D/U: 0.25 gives a time-resolved series, ' ...
+overlay_edit(flow, pf, y, 'sim3d_pair_time', t.sim3d_pair_time, ['Time between two image pairs in D/U: the flow ' ...
+    'travels this many diameters. Sphere: a vortex is shed about every 5 D/U. 0.25 gives a time-resolved series, ' ...
     '5 or more nearly independent snapshots (longer computation).']);
+y = y + 1;
+row_edits(flow, pf, y, 'Vortex pair distance [mm]:', {'sim3d_vortex_distance'}, t.sim3d_vortex_distance, ...
+    {'Rankine and Hamel-Oseen vortex: 0 = one vortex; > 0 = a pair of counter-rotating vortices this far apart (side by side, centred in the view)'});
 
-part = uipanel(page2,'Units','characters','Position',pos(p2,-margin,7.5+margin/4,w,6.5),'title','Particles','fontweight','bold');
+part = uipanel(page2,'Units','characters','Position',pos(p2,0,8.5+margin/4,w,6.5),'title','Particles','fontweight','bold');
 pq = get(part,'Position');
 y = 0;
 row_edits(part, pq, y, 'Particles per pixel:', {'sim3d_ppp'}, t.sim3d_ppp, {'Particle image density (particles per pixel, ppp) in each camera image'});
@@ -103,14 +125,14 @@ row_edits(part, pq, y, 'Random size [px]:', {'sim3d_pvar'}, t.sim3d_pvar, {'Part
 y = y + 1;
 row_edits(part, pq, y, 'Noise:', {'sim3d_noise'}, t.sim3d_noise, {'Simulated image sensor noise (variance of Gaussian noise)'});
 
-out = uipanel(page2,'Units','characters','Position',pos(p2,-margin,14+margin/2,w,4.5),'title','Output','fontweight','bold');
+out = uipanel(page2,'Units','characters','Position',pos(p2,0,15+margin/2,w,4.5),'title','Output','fontweight','bold');
 po = get(out,'Position');
-row_edits(out, po, 0, 'Image pairs per camera:', {'sim3d_pairs'}, t.sim3d_pairs, {'Number of particle image pairs of each camera'});
+row_edits(out, po, 0, 'Image pairs per camera:', {'sim3d_pairs'}, t.sim3d_pairs, {'Number of particle image pairs of each camera'}, ...
+    'sim3d_pairs_text');
 row_edits(out, po, 1, 'Calibration images:', {'sim3d_ncalib'}, t.sim3d_ncalib, {'Images of the board in random positions per camera, for the lens calibration'});
 
-uicontrol(page2,'Style','text','Units','characters','HorizontalAlignment','left','Position',pos(p2,-margin,19+margin,w,7), ...
-    'String',['Per camera: particle image pairs, calibration images, the board in the light sheet and the true lens. ' ...
-    'Plus ground_truth.mat (U, V, W) and README.txt.']);
+uicontrol(page2,'Style','text','Units','characters','HorizontalAlignment','left','Position',pos(p2,0,19.5+margin,w,5), ...
+    'String','','Tag','sim3d_outputinfo');
 
 %% always visible
 y = y_page + h_page + margin/2;
@@ -120,7 +142,7 @@ uicontrol(P,'Style','pushbutton','String','Show 3D preview','Units','characters'
 y = y + 1.5 + margin/4;
 uicontrol(P,'Style','pushbutton','String','Generate images...','Units','characters','Position',pos(pp,0,y,w,1.5), ...
     'Callback',@simulate.generate_3d_Callback,'Tag','sim3d_generate', ...
-    'TooltipString','Select an output folder and generate all images and the ground truth');
+    'TooltipString','Select an output folder and generate all images and the ground truth (simple setup: then loaded into PIVlab)');
 y = y + 1.5 + margin/4;
 uicontrol(P,'Style','text','String','','Units','characters','HorizontalAlignment','left','Position',pos(pp,0,y,w,6),'Tag','sim3d_status');
 end

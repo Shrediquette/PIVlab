@@ -1,6 +1,6 @@
 function setting_3d_Callback(src, ~, ~)
-% A setting of the panel "3D particle image generator" changed: check the value, show the
-% dependent controls and update the 3D preview (if it is open).
+% A setting of the panel "Particle image generator" changed: check the value, show the dependent
+% controls and update the 3D preview (if it is open; closed in the simple setup).
 handles = gui.gethand;
 if nargin >= 1 && ~isempty(src) && isgraphics(src) && strcmp(get(src, 'Style'), 'edit')
     value = str2double(get(src, 'String'));
@@ -13,7 +13,9 @@ end
 gui.update_dependent_controls(handles);
 simulate.update_board_info_3d(handles);
 fig = findall(groot, 'Type', 'figure', 'Tag', 'PIVlab_sim3d_preview');
-if ~isempty(fig)
+if ~isempty(fig) && get(handles.sim3d_setup, 'Value') == 1
+    close(fig); % the simple setup has no 3D scene
+elseif ~isempty(fig)
     simulate.preview_3d(simulate.setup_3d_from_gui(handles), OnChange=@simulate.setup_3d_to_gui);
 end
 end

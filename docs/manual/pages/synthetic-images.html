@@ -4,72 +4,83 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Synthetic particle image generation · PIVlab Manual</title>
-  <meta name="description" content="How to generate synthetic PIV image pairs with a known ground-truth flow field in PIVlab, for testing and learning.">
+  <meta name="description" content="How to generate synthetic PIV and stereo-PIV recordings with a known ground-truth flow field in PIVlab, for testing and learning.">
   <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
   <article id="doc">
     <h1 id="top">Synthetic particle image generation</h1>
-    <p class="lead">Generates a pair of synthetic particle images from a known velocity field —
-    useful for testing PIV settings against a known "correct answer", or for learning how PIV
-    parameters affect results without needing real data.</p>
-    <p>Open via <span class="ui">Synthetic particle image generation → Settings</span>
+    <p class="lead">Generates synthetic particle image pairs from a known flow field, with the true
+    displacements in <code>ground_truth.mat</code> — for testing PIV settings against the correct
+    answer, or for learning how PIV parameters affect the result without real data.</p>
+    <p>Open via <span class="ui">Synthetic particle image generation → Particle image generator</span>
     (<kbd>Ctrl</kbd>+<kbd>G</kbd>).</p>
 
     <figure>
-      <img src="../assets/img/synthetic-images/panel.png" alt="PIVlab Particle image generation panel with Rankine vortex selected">
-      <figcaption>The <strong>Particle image generation</strong> panel (Rankine vortex selected).</figcaption>
+      <img src="../assets/img/synthetic-images/panel.png" alt="PIVlab Particle image generator panel">
+      <figcaption>The <strong>Particle image generator</strong> panel.</figcaption>
     </figure>
 
-    <h2 id="general">Image and particle settings</h2>
+    <h2 id="setup">Setup</h2>
     <table class="ref">
-      <tr><th>Field</th><th>Meaning</th></tr>
-      <tr><td>Image size x / y [px]</td><td>Output image dimensions (default 800×600).</td></tr>
-      <tr><td>Nr. of particles</td><td>Particle count in the simulation (default 200,000).</td></tr>
-      <tr><td>Particle diameter [px]</td><td>Mean particle image size (default 3).</td></tr>
-      <tr><td>Random size [px]</td><td>Variation added to particle diameter (default 1).</td></tr>
-      <tr><td>Sheet thickness [0…1]</td><td>Simulated laser sheet thickness — thinner sheets make particles brighter (default 0.5).</td></tr>
-      <tr><td>Noise</td><td>Simulated sensor noise (default 0.001).</td></tr>
-      <tr><td>Random z position [%]</td><td>Out-of-plane particle motion, perpendicular to the sheet (default 10).</td></tr>
+      <tr><th>Setup</th><th>What you get</th></tr>
+      <tr><td>Simple: one camera straight on</td><td>The camera looks straight at the light sheet: no
+      perspective, no lens distortion, nothing to calibrate. You set the image size and the
+      <span class="ui">pixel size in the sheet</span> (mm per pixel; displacements in mm divided by it
+      are displacements in px). The image pairs are loaded into PIVlab after generating.</td></tr>
+      <tr><td>One camera with lens</td><td>A camera with position, aim point, focal length and lens
+      distortion, plus images of the ChArUco board (light sheet position and calibration images) — to
+      test the camera calibration and the rectification.</td></tr>
+      <tr><td>Two cameras (stereo-PIV)</td><td>As above for two cameras; the light sheet can be offset
+      and tilted against the board, so the disparity correction has to find it. See
+      <a href="stereo-piv.html">Stereo-PIV</a>. <span class="ui">Show 3D preview</span> shows the
+      board, the sheet, the cameras and what they see; drag the cameras with the mouse.</td></tr>
+    </table>
+    <p>The settings are on two pages (<span class="ui">Settings</span>): camera and light sheet, and
+    flow, particles and output. The ChArUco board is the one of
+    <span class="ui">Camera calibration → Setup / define / generate marker board</span>.</p>
+
+    <h2 id="flowtype">Flow</h2>
+    <p>The flow is centred in the view (with two cameras: in the overlap of both views). The
+    displacements are given in mm per image pair.</p>
+    <table class="ref">
+      <tr><th>Flow</th><th>Parameters</th></tr>
+      <tr><td>Rankine vortex, Hamel-Oseen vortex</td><td>Maximum displacement, core radius,
+      <span class="ui">vortex pair distance</span> (0 = one vortex, &gt; 0 = two counter-rotating
+      vortices side by side), out-of-plane displacement.</td></tr>
+      <tr><td>Vortex with out-of-plane jet</td><td>A Rankine vortex with a jet through its core
+      (peak out-of-plane displacement) — a test case for stereo-PIV.</td></tr>
+      <tr><td>Uniform displacement, solid body rotation, membrane</td><td>Maximum displacement,
+      out-of-plane displacement.</td></tr>
+      <tr><td>Sphere wake, free jet (3D flow simulation)</td><td>An unsteady 3D flow is computed
+      (1 to 3 minutes): the wake of a sphere in the light sheet, or a round jet from a nozzle at the
+      left edge of the view (Re 3000; it behaves like a real round jet: potential core about 5
+      diameters, spreading about 0.09). Parameters: free stream / jet displacement, diameter of the
+      sphere / nozzle, and the <span class="ui">time between pairs</span> in D/U (the flow travels
+      this many diameters between two image pairs). Every image pair is a later moment of the flow:
+      a time series. The view must end within 10 jet diameters of the nozzle.</td></tr>
     </table>
 
-    <h2 id="flowtype">Choosing a flow field</h2>
-    <p>The <span class="ui">Flow simulation</span> dropdown selects the ground-truth velocity
-    field; each has its own parameters:</p>
+    <h2 id="general">Particles and output</h2>
     <table class="ref">
-      <tr><th>Type</th><th>Parameters</th></tr>
-      <tr>
-        <td>Rankine vortex</td>
-        <td>Single vortex or vortex pair; core radius (solid-body rotation core, default 100 px);
-        max displacement (default 8 px); x/y centre for each vortex.</td>
-      </tr>
-      <tr>
-        <td>Hamel-Oseen vortex</td>
-        <td>Single vortex or vortex pair; max displacement (default 5 px); a <span class="ui">time
-        [0…1]</span> parameter — the vortex decays in vorticity as time increases; x/y centre for
-        each vortex.</td>
-      </tr>
-      <tr>
-        <td>Linear shift</td>
-        <td>Max displacement (default 5 px) — uniform translation.</td>
-      </tr>
-      <tr>
-        <td>Rotation</td>
-        <td>Max displacement (default 5 px) — uniform rotation.</td>
-      </tr>
-      <tr>
-        <td>Membrane</td>
-        <td>Uses the general particle settings above with no type-specific parameters.</td>
-      </tr>
+      <tr><th>Field</th><th>Meaning</th></tr>
+      <tr><td>Particles per pixel</td><td>Particle image density in each image.</td></tr>
+      <tr><td>Particle diameter, random size [px]</td><td>Mean particle image diameter and its variation.</td></tr>
+      <tr><td>Noise</td><td>Simulated sensor noise (variance of Gaussian noise).</td></tr>
+      <tr><td>Light sheet thickness [mm]</td><td>Particles near the sheet edge are dimmer; with
+      out-of-plane motion some particles leave the sheet between image A and B.</td></tr>
+      <tr><td>Image pairs</td><td>Number of image pairs (per camera); calibration images: board
+      images in random positions for the lens calibration (camera setups).</td></tr>
     </table>
 
     <h2 id="generate">Generating and using the images</h2>
     <ol class="steps">
-      <li>Configure your settings, then click <span class="ui">Create images</span> to generate
-      the synthetic image pair.</li>
-      <li>Click <span class="ui">Save images</span> to write them to disk.</li>
-      <li>Load them into a new PIVlab session like any other images, run your analysis, and
-      compare the result against the known flow field you configured.</li>
+      <li>Click <span class="ui">Generate images...</span> and select an output folder.</li>
+      <li>Simple setup: the image pairs are loaded into PIVlab — analyze them and compare with
+      <code>ground_truth.mat</code>: <code>truth.X_px, Y_px, U_px, V_px</code> are the true positions and
+      displacements in px (sphere and jet: one page per image pair).</li>
+      <li>Camera setups: <code>README.txt</code> in the folder describes the files and the workflow
+      (lens calibration, rectification, stereo-PIV, comparison with the ground truth).</li>
     </ol>
   </article>
 

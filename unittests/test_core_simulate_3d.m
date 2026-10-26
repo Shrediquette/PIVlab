@@ -13,7 +13,7 @@ end
 
 function setupOnce(testCase)
 addpath(helper_root());
-s = simulate.setup_3d();
+s = simulate.setup_3d(Mode='cameras');
 s.sensor.PixelPitch = s.sensor.PixelPitch * s.sensor.ImageSize(2) / 640; % same field of view as the default camera
 s.sensor.ImageSize = [480 640];
 s.output.Pairs = 1;
@@ -118,7 +118,7 @@ s = testCase.TestData.Setup;
 types = simulate.flow_types_3d;
 g = simulate.geometry_3d(s);
 for k = 1:numel(types)
-    if strcmp(types{k}, 'sphere') % flow simulation, faster than the free stream around the sphere: test_sphere_recording
+    if any(strcmp(types{k}, {'sphere', 'jet'})) % flow simulations: test_sphere_recording, test_jet_recording
         continue
     end
     s.flow.Type = types{k};
@@ -137,9 +137,9 @@ end
 end
 
 function test_sphere_wake_solver(testCase)
-% simulate.sphere_wake on a small grid: free stream upstream, no flow in the sphere, a velocity
-% deficit behind it, an unsteady wake after the spin-up, snapshots at the requested times
-o = simulate.sphere_wake(Cells=[64 32 32], Diameter=8, Inlet=2, Count=3, Spacing=0.5, SpinUp=20, SlabCells=2);
+% simulate.flow_simulation_3d, sphere, small grid: free stream upstream, no flow in the sphere, a
+% velocity deficit behind it, an unsteady wake after the spin-up, snapshots at the requested times
+o = simulate.flow_simulation_3d(Type='sphere', Cells=[64 32 32], Diameter=8, Inlet=2, Count=3, Spacing=0.5, SpinUp=20, SlabCells=2);
 testCase.verifySize(o.U, [32 64 4 3]);
 testCase.verifyEqual(o.t, 20 + [0 0.5 1], 'AbsTol', 1e-9);
 testCase.verifyFalse(any(isnan(o.U(:))));
@@ -167,10 +167,10 @@ D = tempname;
 r = simulate.recording_3d(s, D);
 t = r.truth;
 testCase.verifySize(t.U, [size(t.X) 2]);
-testCase.verifyEqual(t.sphere.Diameter, s.flow.Diameter);
-testCase.verifyEqual(diff(t.sphere.Time), 0.5, 'AbsTol', 1e-9);
+testCase.verifyEqual(t.simulation.Diameter, s.flow.Diameter);
+testCase.verifyEqual(diff(t.simulation.Time), 0.5, 'AbsTol', 1e-9);
 % free stream displacement upstream of the sphere, nothing inside
-c = t.sphere.Centre;
+c = t.simulation.Centre;
 up = interp2(t.X, t.Y, t.U(:, :, 1), c(1) - 1.2 * s.flow.Diameter, c(2));
 testCase.verifyEqual(up, s.flow.InPlane, 'RelTol', 0.1);
 testCase.verifyEqual(interp2(t.X, t.Y, t.U(:, :, 1), c(1), c(2)), 0, 'AbsTol', 1e-9);
@@ -193,6 +193,107 @@ for k = 1:2
     testCase.verifyLessThan(mean(bright(in_sphere)), 0.05 * mean(bright(~in_sphere)), sprintf('camera %d: particles in the sphere', k));
 end
 testCase.verifySubstring(fileread(fullfile(D, 'README.txt')), 'sphere wake');
+rmdir(D, 's');
+end
+
+function test_jet_solver(testCase)
+% simulate.flow_simulation_3d, jet, small grid: nozzle exit velocity 1 on the axis, co-flow 5 %
+% beside the jet, the jet reaches downstream, the last result is reused
+o = simulate.flow_simulation_3d(Type='jet', Cells=[64 48 48], Diameter=8, Count=2, Spacing=0.5, SpinUp=8, SlabCells=1);
+testCase.verifySize(o.U, [48 64 2 2]);
+testCase.verifyFalse(any(isnan(o.U(:))));
+testCase.verifyEqual(o.x(1), 0.5 / 8, 'AbsTol', 1e-12, 'origin: nozzle exit');
+U = mean(o.U(:, :, :, 1), 3);
+[~, iy] = min(abs(o.y));
+[~, iy_out] = min(abs(o.y - 2.5));
+testCase.verifyEqual(double(U(iy, 1)), 1, 'AbsTol', 0.05, 'jet exit velocity');
+testCase.verifyEqual(double(U(iy_out, 1)), 0.05, 'AbsTol', 0.01, 'co-flow beside the nozzle');
+testCase.verifyGreaterThan(double(U(iy, find(o.x > 3, 1))), 0.5, 'the jet reaches 3 D');
+tic
+again = simulate.flow_simulation_3d(Type='jet', Cells=[64 48 48], Diameter=8, Count=2, Spacing=0.5, SpinUp=8, SlabCells=1);
+testCase.verifyLessThan(toc, 0.5, 'the same call again must reuse the result');
+testCase.verifyEqual(again.U, o.U);
+end
+
+function test_jet_recording(testCase)
+% flow 'jet' (one image pair, large nozzle: short domain): nozzle at the left edge of the views,
+% jet displacement on the axis near the nozzle, particles everywhere, README, too small a jet
+s = testCase.TestData.Setup;
+s.flow.Type = 'jet';
+s.flow.Diameter = 60;
+s.output.Pairs = 1;
+s.output.CalibrationImages = 0;
+D = tempname;
+r = simulate.recording_3d(s, D);
+t = r.truth;
+g = simulate.geometry_3d(s);
+testCase.verifyEqual(t.simulation.Type, 'jet');
+testCase.verifyEqual(t.simulation.Centre(1), g.region(1), 'AbsTol', 1e-9, 'nozzle at the left edge of the views');
+c = t.simulation.Centre;
+testCase.verifyEqual(interp2(t.X, t.Y, t.U, c(1) + 0.5 * s.flow.Diameter, c(2)), s.flow.InPlane, 'RelTol', 0.05, 'jet core');
+testCase.verifyLessThan(interp2(t.X, t.Y, t.U, c(1) + 0.5 * s.flow.Diameter, c(2) + 1.5 * s.flow.Diameter), 0.15 * s.flow.InPlane, ...
+    'beside the jet');
+I = imread(fullfile(D, 'camera1', 'particle_images', 'cam1_0001_A.tif'));
+testCase.verifyGreaterThan(nnz(imregionalmax(I) & I > 30) / numel(I), 0.3 * s.particles.Density, 'too few particles');
+testCase.verifySubstring(fileread(fullfile(D, 'README.txt')), 'free jet');
+rmdir(D, 's');
+s.flow.Diameter = 5; % the views reach far more than 10 diameters downstream
+testCase.verifyError(@() simulate.recording_3d(s, tempname), 'simulate:recording_3d:simulation');
+end
+
+function test_vortex_pair(testCase)
+% Rankine and Hamel-Oseen: Distance > 0 gives two counter-rotating vortices that far apart (side by
+% side): v changes sign between them and has the same sign at both centres' outer sides
+s = testCase.TestData.Setup;
+s.output.Pairs = 0;
+s.output.CalibrationImages = 0;
+s.flow.Distance = 80;
+s.flow.Radius = 15;
+s.flow.OutOfPlane = 0;
+g = simulate.geometry_3d(s);
+[cx, cy] = centroid(g.overlap);
+for type = {'rankine', 'oseen'}
+    s.flow.Type = type{1};
+    D = tempname;
+    r = simulate.recording_3d(s, D);
+    rmdir(D, 's');
+    t = r.truth;
+    v = interp2(t.X, t.Y, t.V, cx + [-40 - 15, -40 + 15, 40 - 15, 40 + 15], cy + [0 0 0 0]);
+    testCase.verifyEqual(sign(v), [-1 1 1 -1] * sign(v(2)), [type{1} ': not a counter-rotating pair 80 mm apart']);
+    testCase.verifyLessThan(max(abs(v)), 1.5 * s.flow.InPlane, type{1}); % between the vortices both add up
+end
+end
+
+function test_simple_setup(testCase)
+% simple setup: one orthographic camera, pixel = sheet position / pixel size; images only (no
+% board, no lens), ground truth also in px; uniform displacement of 8 px moves the particles by 8 px
+s = simulate.setup_3d(Mode='simple');
+s.sensor.ImageSize = [240 320];
+s.Simple.PixelSize = 0.1;
+s.flow.Type = 'uniform';
+s.flow.InPlane = 0.8;
+s.flow.OutOfPlane = 0;
+s.particles.Noise = 0;
+s.output.Pairs = 2;
+g = simulate.geometry_3d(s);
+testCase.verifyTrue(g.simple);
+testCase.verifyEqual(g.region, [0.05 32.05 0.05 24.05], 'AbsTol', 1e-9, 'view = image area x pixel size');
+D = tempname;
+r = simulate.recording_3d(s, D);
+testCase.verifyEqual(numel(dir(fullfile(D, 'particle_images', 'img_*.tif'))), 4);
+testCase.verifyFalse(isfolder(fullfile(D, 'camera1')), 'no camera folders in the simple setup');
+testCase.verifyEmpty(r.board_images{1});
+t = r.truth;
+testCase.verifyEqual(t.pixel_size, 0.1);
+testCase.verifyEqual(t.U_px, t.U / 0.1, 'AbsTol', 1e-12);
+testCase.verifyEqual(median(t.U_px(:)), 8, 'AbsTol', 1e-9);
+A = double(imread(r.particle_images{1}(1)));
+B = double(imread(r.particle_images{1}(2)));
+c = normxcorr2(A(60:180, 60:200), B);
+[~, k] = max(c(:));
+[row, col] = ind2sub(size(c), k);
+testCase.verifyEqual([col - 200, row - 180], [8 0], 'particles not moved by 8 px to the right');
+testCase.verifySubstring(fileread(fullfile(D, 'README.txt')), 'simple setup');
 rmdir(D, 's');
 end
 

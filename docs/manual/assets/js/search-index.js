@@ -501,16 +501,22 @@ window.MANUAL_SEARCH = [
     text: "second monitor display experimental full screen presentation dual display"
   },
   {
+    title: "Particle image generator: setup (simple, one camera, stereo)",
+    href: "pages/synthetic-images.html", hash: "setup",
+    section: "Synthetic images",
+    text: "particle image generator simple setup one camera straight on pixel size lens distortion stereo two cameras charuco board 3d preview synthetic recording"
+  },
+  {
     title: "Synthetic image particle settings",
     href: "pages/synthetic-images.html", hash: "general",
     section: "Synthetic images",
-    text: "particle image generation number of particles diameter sheet thickness noise random z position image size"
+    text: "particle image generation particles per pixel diameter sheet thickness noise out-of-plane image pairs calibration images"
   },
   {
-    title: "Flow field types (Rankine, Oseen, rotation, linear shift)",
+    title: "Flow field types (Rankine, Oseen, sphere wake, free jet)",
     href: "pages/synthetic-images.html", hash: "flowtype",
     section: "Synthetic images",
-    text: "rankine vortex hamel oseen vortex linear shift rotation membrane flow simulation ground truth ground-truth"
+    text: "rankine vortex hamel oseen vortex pair uniform displacement rotation membrane sphere wake free jet 3d flow simulation time series ground truth ground-truth"
   },
   {
     title: "Capturing images: camera and synchronizer workflow",

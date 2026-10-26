@@ -1,14 +1,35 @@
 function g = geometry_3d(setup)
-% Cameras, light sheet and views of the 3D particle image generator (see simulate.setup_3d).
+% Cameras, light sheet and views of the particle image generator (see simulate.setup_3d).
 %   g = simulate.geometry_3d(setup)
-%   g.cams        cell array of cameras (simulate.camera, pinhole with lens distortion)
-%   g.centre      camera centres (one row per camera) [mm]
+%   g.simple      true for setup.Mode 'simple': one orthographic camera that looks straight at
+%                 the light sheet (pixel = sheet position / PixelSize), no lens, sheet = board plane
+%   g.cams        cell array of cameras (simulate.camera, pinhole with lens distortion / orthographic)
+%   g.centre      camera centres (one row per camera) [mm] (simple: NaN)
 %   g.sheet_pose  rigidtform3d, sheet coordinates -> world (board) coordinates
 %   g.pivot       point of the sheet that Offset refers to (centre of the aim points, on the board)
 %   g.views       polyshape per camera: field of view on the sheet (sheet coordinates)
 %   g.overlap     polyshape: seen by all cameras (sheet coordinates)
 %   g.region      [xmin xmax ymin ymax] bounding box of all views (sheet coordinates)
 %   g.ok, g.message   false and a reason if a camera does not see the light sheet
+g.simple = strcmp(setup.Mode, 'simple');
+if g.simple
+    if ~(setup.Simple.PixelSize > 0)
+        error('simulate:geometry_3d:pixel', 'The pixel size in the light sheet must be positive.');
+    end
+    g.cams = {simulate.camera(ImageSize=setup.sensor.ImageSize, Scale=1 / setup.Simple.PixelSize)};
+    g.centre = [NaN NaN NaN];
+    g.ok = true;
+    g.message = '';
+    g.pivot = [0 0 0];
+    g.sheet_pose = rigidtform3d;
+    xy = simulate.footprint(g.cams{1}, g.sheet_pose);
+    warning('off', 'MATLAB:polyshape:repairedBySimplify');
+    g.views = polyshape(xy(:, 1), xy(:, 2));
+    warning('on', 'MATLAB:polyshape:repairedBySimplify');
+    g.overlap = g.views;
+    g.region = [min(xy(:, 1)) max(xy(:, 1)) min(xy(:, 2)) max(xy(:, 2))];
+    return
+end
 n = numel(setup.cameras);
 f_px = setup.sensor.FocalLength / (setup.sensor.PixelPitch / 1000);
 g.cams = cell(1, n);
