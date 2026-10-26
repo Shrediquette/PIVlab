@@ -6,10 +6,13 @@ config_string = handles.ac_config.String(value);
 old_setting=gui.retr('old_setting');
 gui.put ('old_setting',config_string)
 if ~strcmpi(config_string,old_setting) %different camera/laser combination selected
+	gui.toolsavailable(0,'Releasing the previous camera...') %the first imaq call can take seconds
+	drawnow
 	try
 		delete(imaqfind); imaqreset %release the previous camera (some drivers keep it open between starts), re-enumerate
 	catch %no Image Acquisition Toolbox
 	end
+	gui.toolsavailable(1)
 end
 
 gui.put('do_realtime',0);
@@ -143,7 +146,7 @@ if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2/80') % OPTOcam
 	gui.put('f1exp',352) % Exposure start -> Q1 delay
 	gui.put('f1exp_cam',350); %exposure time setting first frame
 	gui.put('master_freq',15);
-	avail_freqs={'400' '320' '160' '100' '80' '60' '50' '25' '5'}; %low fps removed, camera might skip frames.
+	avail_freqs={'160' '100' '80' '60' '50' '25' '5'}; %low fps removed, camera might skip frames. 320 and 400 fps removed: frames get lost at the start of the recording.
 	gui.put('max_cam_res',[1936,1216]);
 	%default min_interframe is for 8 bits.
 	OPTOcam_bits =gui.camera_setting('OPTOcam_bits');

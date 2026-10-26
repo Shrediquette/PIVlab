@@ -118,8 +118,9 @@ r.sharpness_texts = numel(findobj(ax, 'tag', 'sharpness_display_text'));
 r.grid_lines = numel(findobj(ax, 'tag', 'capture_grid'));
 r.charuco_cam1 = ~isempty(findobj(ax, 'tag', 'charucolabel_cam1'));
 r.charuco_cam2 = ~isempty(findobj(ax, 'tag', 'charucolabel_cam2'));
-vids = imaqfind('Tag', 'OPTOcam_cam1');
-r.frame_rate_limit = {vids(1).Source.AcquisitionFrameRateEnable, vids(1).Source.AcquisitionFrameRate};
+vids = imaqfind('Tag', 'OPTOcam_cam1'); % a cell array, as with the real toolbox
+src = vids{1}.Source;
+r.frame_rate_limit = {src.AcquisitionFrameRateEnable, src.AcquisitionFrameRate};
 h = gui.gethand;
 r.lens_control = get(h.ac_lensctrl, 'Enable');
 acquisition.camera_snapshot_Callback;
@@ -151,7 +152,7 @@ verifyTrue(testCase, contains(state{2}.filepath{1}, [filesep 'cam2' filesep]), '
 verifyTrue(testCase, isfile(fullfile(folder, 'PIVlab_Capture_Session.mat')), 'session saved');
 for k = 1:2
     vid = imaqfind('Tag', sprintf('OPTOcam_cam%d', k));
-    src = vid(1).Source;
+    src = vid{1}.Source;
     verifyEqual(testCase, {src.TriggerMode, src.TriggerSource, src.LineSelector, src.LineSource, src.LineMode, src.AcquisitionFrameRateEnable}, ...
         {'On', 'Line2', 'Line4', 'ExposureActive', 'Output', 'False'}, sprintf('camera %d: trigger and exposure output', k));
 end
@@ -207,8 +208,8 @@ for k = 1:numel(imgs)
     r.extent(k, :) = imgs(k).XData;
 end
 vid = imaqfind('Tag', 'OPTOcam_cam1');
-r.available = vid(1).FramesAvailable;
-r.acquired = vid(1).FramesAcquired;
+r.available = vid{1}.FramesAvailable;
+r.acquired = vid{1}.FramesAcquired;
 setappdata(0, 'stereo_capture_test', r);
 gui.put('cancel_capture', 1); % Abort
 end
@@ -244,7 +245,8 @@ verifyEqual(testCase, get(findobj(fh, 'tag', 'stereo_cam1_txt'), 'String'), 'Cam
 close(fh);
 [vids, err] = PIVlab_capture_OPTOcam_open(8, 2);
 verifyEqual(testCase, err, 0);
-verifyEqual(testCase, vids{1}.Source.DeviceSerialNumber, '40000002', 'camera 1 after the swap');
+src = vids{1}.Source;
+verifyEqual(testCase, src.DeviceSerialNumber, '40000002', 'camera 1 after the swap');
 end
 
 %% helpers

@@ -207,8 +207,8 @@ end
 function sz = raw_image_size(camera)
 % size of the first raw camera image (not rectified)
 sz = [];
-if ~isfield(camera, 'filepath') || isempty(camera.filepath)
-    return
+if ~isfield(camera, 'filepath') || isempty(camera.filepath) || ~isfile(camera.filepath{1})
+    return %no images, or they were moved / deleted since loading: the calibration is not kept
 end
 src.filepath = camera.filepath;
 src.framenum = camera.framenum;

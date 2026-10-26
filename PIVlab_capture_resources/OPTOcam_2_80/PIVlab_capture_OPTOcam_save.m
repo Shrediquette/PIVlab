@@ -71,7 +71,9 @@ function check_frame_times(t1,t2)
 period = median(diff(t1));
 offset = t2 - t1;
 reference = median(offset(1:min(5,numel(offset)))); %both cameras start with the same trigger
-bad = find(abs(offset - reference) > period/2, 1);
+%a single frame that arrives late (USB / Windows) is jitter; a missed trigger shifts all following frames
+deviation = movmedian(abs(offset - reference), 5);
+bad = find(deviation > period/2, 1);
 if ~isempty(bad)
 	pair = ceil(bad/2);
 	message = ['The two cameras are probably out of step from image pair ' int2str(pair) ' on (one camera missed a trigger). ' ...

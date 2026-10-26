@@ -63,12 +63,6 @@ if ~isempty(gui.retr('doing_roi')) && gui.retr('doing_roi')==1
         case 'OPTOcam 1936x1216 (8bit: 160 fps, 12bit: 80 fps)'
             des_x=1936;
             des_y=1216;
-        case 'OPTOcam 1600x600 (8bit: 320 fps)'
-            des_x=1600;
-            des_y=600;
-        case 'OPTOcam 1600x480 (8bit: 400 fps)'
-            des_x=1600;
-            des_y=480;
 
         case 'OPTOcam 20/9 4512x4512 (8bit: 9 fps, 12bit: 5 fps)'
             des_x=4512;

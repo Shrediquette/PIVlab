@@ -26,7 +26,8 @@ end
 warning('off','imaq:gentl:noSupportedPixelFormat')
 OPTOcam_vids = cell(1,n_cameras);
 
-%% fast path: reuse the opened cameras
+%% fast path: reuse the opened cameras (in the saved order: after "Swap cameras" they are opened again)
+saved_serials = gui.camera_setting('OPTOcam_stereo_serials');
 try
 	reuse_ok = true;
 	for k = 1:n_cameras
@@ -36,6 +37,9 @@ try
 		end
 		if isscalar(vid) && isvalid(vid) && strcmp(vid.VideoFormat,video_format)
 			OPTOcam_vids{k} = vid;
+			if iscell(saved_serials) && numel(saved_serials) >= k && ~strcmp(serial_number(vid),saved_serials{k})
+				reuse_ok = false; %camera k is now another camera
+			end
 		else
 			reuse_ok = false;
 		end
@@ -164,7 +168,8 @@ end
 
 function serial = serial_number(vid)
 try
-	serial = char(vid.Source.DeviceSerialNumber);
+	OPTOcam_src = vid.Source; %imaq: vid.Source.DeviceSerialNumber in one expression is not allowed
+	serial = char(OPTOcam_src.DeviceSerialNumber);
 catch
 	serial = '';
 end

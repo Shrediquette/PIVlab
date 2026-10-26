@@ -76,6 +76,15 @@ classdef videoinput < handle
                 e = struct('Type', 'Start');
             end
         end
+        function varargout = subsref(obj, s)
+            % like imaq: vid.Source.Property in one expression is an error (src = vid.Source; src.Property works)
+            for i = 1:numel(s) - 1
+                if strcmp(s(i).type, '.') && strcmp(s(i).subs, 'Source') && strcmp(s(i + 1).type, '.')
+                    error('mock:imaq:chainedSource', 'Inconsistently placed ''.'' in subscript expression (imaq does not allow vid.Source.%s).', s(i + 1).subs);
+                end
+            end
+            [varargout{1:nargout}] = builtin('subsref', obj, s);
+        end
         function s = get(obj, name)
             % get(vid) gives a struct of the properties (the Source in it is the real handle, as in imaq)
             if nargin > 1

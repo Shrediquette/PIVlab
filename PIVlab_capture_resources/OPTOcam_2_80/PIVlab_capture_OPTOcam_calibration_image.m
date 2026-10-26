@@ -38,6 +38,8 @@ for k=1:n_cameras
 end
 set(frame_nr_display,'String','');
 caxis(PIVlab_axis,[0 2^12]); %#ok<CAXIS> seems to be a workaround to force preview to show full data range...
+%preview() sets the axes limits to its own image: show all cameras (stereo: side by side)
+set(PIVlab_axis,'XLim',[0.5 getappdata(image_handles{end},'x_offset')+ROI_OPTOcam(3)+0.5],'YLim',[0.5 ROI_OPTOcam(4)+0.5]);
 displayed_img_amount=0;
 delaycounter=0; %autofocus state
 delaycounter2=0;

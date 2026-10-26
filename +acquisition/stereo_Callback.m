@@ -8,7 +8,10 @@ if get(handles.ac_stereo,'Value') == 1
 		set(handles.ac_stereo,'Value',0);
 		gui.custom_msgbox('error',getappdata(0,'hgui'),'Stereo acquisition','Stereo acquisition is not (yet) available for the selected camera.','modal');
 	else
+		gui.toolsavailable(0,'Looking for the cameras...') %listing the cameras can take more than 10 s
+		drawnow
 		n_found = connected_cameras(camera_type);
+		gui.toolsavailable(1)
 		if n_found < 2
 			set(handles.ac_stereo,'Value',0);
 			gui.custom_msgbox('error',getappdata(0,'hgui'),'Stereo acquisition',['Stereo acquisition needs two cameras of the selected type. Cameras found: ' ...

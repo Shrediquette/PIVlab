@@ -132,9 +132,7 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             end
             if strcmp(camera_type,'OPTOcam')
                 m0 = uimenu(c_menu,'Label','OPTOcam 1936x1216 (8bit: 160 fps, 12bit: 80 fps)','Callback',@roi.setdefaultroi);
-                m1 = uimenu(c_menu,'Label','OPTOcam 1600x600 (8bit: 320 fps)','Callback',@roi.setdefaultroi);
-                m2 = uimenu(c_menu,'Label','OPTOcam 1600x480 (8bit: 400 fps)','Callback',@roi.setdefaultroi);
-                m3 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
+                m1 = uimenu(c_menu,'Label','Enter ROI','Callback',@roi.setdefaultroi);
             end
             if strcmp(camera_type,'OPTOcam_20_9')
                 m0 = uimenu(c_menu,'Label','OPTOcam 20/9 4512x4512 (8bit: 9 fps, 12bit: 5 fps)','Callback',@roi.setdefaultroi);

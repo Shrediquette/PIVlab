@@ -204,10 +204,18 @@ if isequal(retr('capturing'),1)
 	return
 end
 gui.set_camera_setting('OPTOcam_stereo_serials',serials([2 1]));
-try
-	delete(imaqfind('Tag','OPTOcam_cam1'));
-	delete(imaqfind('Tag','OPTOcam_cam2'));
-catch
+tags = {'OPTOcam_cam1','OPTOcam_cam2'};
+for t = 1:2
+	vids = imaqfind('Tag',tags{t}); %a cell array with the real toolbox
+	if ~iscell(vids)
+		vids = num2cell(vids);
+	end
+	for k = 1:numel(vids)
+		try
+			delete(vids{k});
+		catch
+		end
+	end
 end
 show_stereo_serials(gethand);
 
