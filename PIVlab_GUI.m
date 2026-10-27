@@ -392,7 +392,6 @@ if isempty(fh)
     try
         if isfile(fullfile(userpath,'PIVlab_settings_default.mat'))
             import.read_settings('PIVlab_settings_default.mat',userpath);
-            disp("YOHOHO!") % DEBUG
         else
             %XP Wu modification:
             psdfile=which('PIVlab_settings_default.mat');

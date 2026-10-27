@@ -12,7 +12,6 @@ function reset_to_defaults()
 try
     if isfile(fullfile(userpath,'PIVlab_settings_default.mat'))
         import.read_settings('PIVlab_settings_default.mat',userpath);
-        disp("YUHUHOO!") % DEBUG
     else
         psdfile = which('PIVlab_settings_default.mat');
         dindex  = strfind(psdfile, filesep);
