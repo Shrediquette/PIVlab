@@ -508,7 +508,11 @@ PIVlab_select3 = uicontrol('Position',[10 450-28+15 250 15],...
 
 %load last sequencing style
 try
-    load ('PIVlab_settings_default.mat','sequencer');
+    if isfile(fullfile(userpath,'PIVlab_settings_default.mat'))
+        load(fullfile(userpath,'PIVlab_settings_default.mat'),'sequencer');
+    else
+        load ('PIVlab_settings_default.mat','sequencer');
+    end
     if sequencer==0
         set(PIVlab_select, 'Value', 1)
         set(PIVlab_select2, 'Value', 0)
@@ -1159,7 +1163,7 @@ setpref('uipickfiles','figure_position',fig_pos)
         set(PIVlab_select,'Value',1)
         sequencer=0;
         try
-            save('PIVlab_settings_default.mat','sequencer','-append')
+            save(fullfile(userpath,'PIVlab_settings_default.mat'),'sequencer','-append')
         catch
         end
         hgui=getappdata(0,'hgui');
@@ -1172,7 +1176,7 @@ setpref('uipickfiles','figure_position',fig_pos)
         set(PIVlab_select2,'Value',1)
         sequencer=1;
         try
-            save('PIVlab_settings_default.mat','sequencer','-append')
+            save(fullfile(userpath,'PIVlab_settings_default.mat'),'sequencer','-append')
         catch
         end
         hgui=getappdata(0,'hgui');
@@ -1185,7 +1189,7 @@ setpref('uipickfiles','figure_position',fig_pos)
         set(PIVlab_select3,'Value',1)
         sequencer=2;
         try
-            save('PIVlab_settings_default.mat','sequencer','-append')
+            save(fullfile(userpath,'PIVlab_settings_default.mat'),'sequencer','-append')
         catch
         end
         hgui=getappdata(0,'hgui');

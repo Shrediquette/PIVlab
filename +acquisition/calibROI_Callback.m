@@ -81,10 +81,12 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             displaysize_y=floor(get(target_axis,'YLim'));
             ac_ROI_general=[];
             %warning off
-            % TOREMOVE: 1
-            load('PIVlab_settings_default.mat','ac_ROI_general');
             % TODO: check
-            load(fullfile(userpath,'PIVlab_settings_default.mat'),'ac_ROI_general');
+            if isfile(fullfile(userpath,'PIVlab_settings_default.mat'))
+                load(fullfile(userpath,'PIVlab_settings_default.mat'),'ac_ROI_general');
+            else
+                load('PIVlab_settings_default.mat','ac_ROI_general');
+            end
             %warning on
 
             bla=findobj(target_axis,'type','image');
