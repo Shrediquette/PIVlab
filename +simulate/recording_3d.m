@@ -550,15 +550,19 @@ p('  ground_truth.mat                 variable truth: displacement field and geo
 p('  generator_setup.mat              variable setup: input of simulate.recording_3d');
 p('');
 p('Workflow in PIVlab');
-p('  1. Image settings -> Camera calibration -> Camera calibration (undistortion) -> Camera <k>:');
-p('     load the calibration images of camera <k> and estimate the camera parameters.');
 if n > 1
-    p('  2. Input data: "Import stereo images": the particle images of camera 1 and camera 2.');
-    p('  3. Image rectification -> Camera <k>: load board_in_light_sheet_cam<k>.tif as target image.');
-    p('  4. Analysis -> Stereo-PIV: compute the stereo calibration, measure the disparity, analyze.');
+    p('  1. Input data: "Import stereo images": the particle images of camera 1 and camera 2.');
+    p('  2. For camera <k> = 1 and 2 (switch with the CAM 1 / CAM 2 button at the bottom left):');
+    p('     Image settings -> Camera calibration -> Camera calibration (undistortion):');
+    p('     load the calibration images of camera <k> and estimate the camera parameters.');
+    p('     Image settings -> Camera calibration -> Image rectification / alignment:');
+    p('     load board_in_light_sheet_cam<k>.tif as target image.');
+    p('  3. Analysis -> Stereo-PIV: compute the stereo calibration, measure the disparity, analyze.');
     p('     The light sheet is offset by %g mm and tilted: the disparity correction has to find it.', setup.sheet.Offset);
-    p('  5. Compare with the ground truth: simulate.truth_at_board(truth, x_mm, y_mm).');
+    p('  4. Compare with the ground truth: simulate.truth_at_board(truth, x_mm, y_mm).');
 else
+    p('  1. Image settings -> Camera calibration -> Camera calibration (undistortion):');
+    p('     load the calibration images and estimate the camera parameters.');
     p('  2. Load the particle images, rectify with board_in_light_sheet_cam1.tif, analyze.');
 end
 p('');

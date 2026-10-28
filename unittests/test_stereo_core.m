@@ -492,6 +492,34 @@ imgs.filepath = repmat({'x.tif'}, 40, 1);
 verifyEmpty(testCase, stereo.min_background(imgs, d.disparity, false), 'switched off');
 end
 
+function test_min_background_spread_subset(testCase)
+% long recording: only MinBackgroundMaxFrames A images, spread from the first to the last
+folder = fullfile(testCase.TestData.folder, 'min_background');
+mkdir(folder);
+n_a = 150;
+d = stereo.defaults();
+d.disparity.MinBackgroundMaxFrames = 5; % A images 1, 38, 76, 113, 150
+imgs.filepath = cell(2 * n_a, 1);
+for j = 1:n_a
+    img = uint8(200 * ones(20, 30));
+    img(1, 1) = 200 - j; % darkest in the last A image
+    if j == 2
+        img(2, 2) = 50; % only in an A image that is not used
+    end
+    imgs.filepath{2 * j - 1} = fullfile(folder, sprintf('A_%03d.tif', j));
+    imgs.filepath{2 * j} = imgs.filepath{2 * j - 1};
+    imwrite(img, imgs.filepath{2 * j - 1});
+end
+imgs.framenum = ones(2 * n_a, 1);
+imgs.framepart = repmat([1 20], 2 * n_a, 1);
+imgs.sequencer = 1;
+imgs.background = [];
+imgs.cam = import.cam_settings();
+bg = stereo.min_background(imgs, d.disparity, false);
+verifyEqual(testCase, double(bg.A(1, 1)), 200 - n_a, 'the last A image is used');
+verifyEqual(testCase, double(bg.A(2, 2)), 200, 'A image 2 is not used');
+end
+
 % -------------------------------------------------------------------------
 % Complete stereo-PIV evaluation of synthetic recordings (ground truth)
 % -------------------------------------------------------------------------

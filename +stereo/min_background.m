@@ -2,7 +2,7 @@ function bg = min_background(imgs, opts, verbose)
 %MIN_BACKGROUND Minimum-intensity background of the A images of one camera (raw camera image).
 %   bg = stereo.min_background(imgs, opts)
 %   imgs  pivlab image set of one camera
-%   opts  stereo.defaults().disparity (MinBackground, MinBackgroundFrames)
+%   opts  stereo.defaults().disparity (MinBackground, MinBackgroundFrames, MinBackgroundMaxFrames)
 %   bg    struct with A (raw camera image) and B = [] for import.read_frame, or [] when there is
 %         no background (switched off, or fewer than opts.MinBackgroundFrames A images)
 % Used for the disparity measurement: static image content (reflections, walls, objects outside
@@ -31,6 +31,9 @@ if numel(sel) < opts.MinBackgroundFrames
             numel(sel), opts.MinBackgroundFrames);
     end
     return
+end
+if numel(sel) > opts.MinBackgroundMaxFrames % evenly spread over the whole recording
+    sel = sel(unique(round(linspace(1, numel(sel), opts.MinBackgroundMaxFrames))));
 end
 src.filepath = imgs.filepath(sel);
 src.framenum = imgs.framenum(sel);

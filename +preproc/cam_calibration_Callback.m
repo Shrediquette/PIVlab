@@ -1,12 +1,6 @@
-function cam_calibration_Callback(caller, ~, ~)
+function cam_calibration_Callback(~, ~, ~)
 handles=gui.gethand;
-if isequal(gui.retr('stereomode'), 1) % stereo-PIV: the menu entry selects the camera
-    if strcmpi(caller.Text, 'camera 2')
-        stereo.switch_camera(2);
-    else
-        stereo.switch_camera(1);
-    end
-else
+if ~isequal(gui.retr('stereomode'), 1) % stereo-PIV: the panel is for the active camera (label set in update_dependent_controls)
     handles.calib_undist_cam_label.String = 'Current camera: CAMERA 1';
 end
 gui.switchui('multip26')

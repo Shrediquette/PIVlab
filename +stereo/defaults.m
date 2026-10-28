@@ -34,10 +34,11 @@ s.disparity.StdevThreshold = g.analysis.stereo_disp_stdev; % validation of the d
 s.disparity.LocalMedianThreshold = g.analysis.stereo_disp_median;
 s.disparity.SmoothFrame = 2;                % smoothn of the map of every image pair
 s.disparity.SmoothMean = 5;                 % smoothn of the mean map
-s.disparity.MinBackground = true;           % subtract a minimum-intensity background (all A images of
+s.disparity.MinBackground = true;           % subtract a minimum-intensity background (A images of
                                             % each camera): static features would give wrong peaks
 s.disparity.MinBackgroundFrames = 10;       % fewer A images: no background (the minimum would
                                             % remove the particles)
+s.disparity.MinBackgroundMaxFrames = 100;   % more A images: this many, spread over the whole recording
 
 % reconstruction (coordinates like PIVlab: x right, y down; W positive away from camera 1 = away from the
 % cameras if both are on the same side of the light sheet). Any camera arrangement: side by side, above

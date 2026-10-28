@@ -16,9 +16,10 @@ ChArUco board: 10 x 18 squares, 12 mm squares, 9 mm markers, DICT_4X4_1000, blac
 
 Workflow in PIVlab:
 * Import stereo images: the particle images of camera 1 and of camera 2
-* Image settings -> Camera calibration -> Camera calibration (undistortion) -> camera 1 and camera 2:
+* For camera 1 and camera 2 (switch with the CAM 1 / CAM 2 button at the bottom left):
+* Image settings -> Camera calibration -> Camera calibration (undistortion):
   load the calibration images and estimate the camera parameters (or load lens_cam<k>.mat)
-* Image settings -> Camera calibration -> Image rectification / alignment -> camera 1 and camera 2:
+* Image settings -> Camera calibration -> Image rectification / alignment:
   load board_in_light_sheet_cam<k>.jpg as target image
 * Analysis -> Stereo-PIV: compute the stereo calibration, measure the disparity, analyze
 

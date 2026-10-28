@@ -29,6 +29,12 @@ if do_save_frames > 0
     OPTOcam_data = getdata(OPTOcam_vid,do_save_frames); %fetch all frames from RAM
     cntr=0;
     for image_save_number=1:2:do_save_frames
+        if getappdata(hgui,'cancel_capture') == 1 %Abort pressed while saving
+            message = ['Saving aborted: ' int2str(cntr) ' of ' int2str(do_save_frames/2) ' image pairs were saved.'];
+            disp(message)
+            set(frame_nr_display,'String',message);
+            break
+        end
         imgA_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',cntr) '_A.tif']);
         imgB_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',cntr) '_B.tif']);
         imwrite(OPTOcam_data(:,:,:,image_save_number)*bitmultiplicator,imgA_path,'compression','none'); %tif saving is the fastest method

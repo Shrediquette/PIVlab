@@ -16,7 +16,8 @@ function [OPTOcam_vids,imaq_error] = PIVlab_capture_OPTOcam_open(bitmode,n_camer
 %   Opening a camera takes ~2 s, so the videoinput objects are kept after a capture (tags 'OPTOcam_cam1',
 %   'OPTOcam_cam2') and reused while the pixel format matches. All camera settings are applied by the callers
 %   every time. Changing the configuration in the GUI releases the cameras
-%   (select_capture_config_Callback: delete(imaqfind) + imaqreset).
+%   (select_capture_config_Callback: delete(imaqfind) + imaqreset). A kept camera that was unplugged in the
+%   meantime is opened again after an imaqreset.
 
 if bitmode == 8
 	video_format = 'Mono8';
@@ -28,6 +29,7 @@ OPTOcam_vids = cell(1,n_cameras);
 
 %% fast path: reuse the opened cameras (in the saved order: after "Swap cameras" they are opened again)
 saved_serials = gui.camera_setting('OPTOcam_stereo_serials');
+disconnected = false; %a kept camera was unplugged: reset the toolbox before opening the cameras again
 try
 	reuse_ok = true;
 	for k = 1:n_cameras
@@ -35,7 +37,10 @@ try
 		if iscell(vid) %imaqfind returns a cell array here
 			vid = [vid{:}];
 		end
-		if isscalar(vid) && isvalid(vid) && strcmp(vid.VideoFormat,video_format)
+		if isscalar(vid) && isvalid(vid) && ~camera_connected(vid)
+			reuse_ok = false;
+			disconnected = true;
+		elseif isscalar(vid) && isvalid(vid) && strcmp(vid.VideoFormat,video_format)
 			OPTOcam_vids{k} = vid;
 			if iscell(saved_serials) && numel(saved_serials) >= k && ~strcmp(serial_number(vid),saved_serials{k})
 				reuse_ok = false; %camera k is now another camera
@@ -59,6 +64,7 @@ try
 	end
 catch
 	%camera unplugged, toolbox reset etc. -> open again below
+	disconnected = true;
 end
 
 %% slow path: find the cameras and open them
@@ -66,6 +72,9 @@ OPTOcam_vids = {};
 imaq_error = 0;
 try
 	delete(imaqfind); %clears all previous videoinputs
+	if disconnected
+		imaqreset %the toolbox finds the plugged-in camera again only after a reset
+	end
 	warning off
 	hwinf = imaqhwinfo;
 catch
@@ -163,6 +172,18 @@ for k = 1:n_cameras
 	OPTOcam_vids{k} = opened{use(k)};
 	OPTOcam_vids{k}.Tag = sprintf('OPTOcam_cam%d',k);
 	disp(['Found camera ' int2str(k) ': OPTOcam 2/80, serial number ' serials{use(k)}])
+end
+end
+
+function connected = camera_connected(vid)
+%After unplugging and plugging in the camera, the kept videoinput is still valid, but the camera does not
+%answer any more: its ExposureTime limits are then 0 (error "'ExposureTime' value must be less than or equal to 0").
+try
+	OPTOcam_src = vid.Source;
+	limits = propinfo(OPTOcam_src,'ExposureTime').ConstraintValue;
+	connected = limits(2) > 0;
+catch
+	connected = false;
 end
 end
 

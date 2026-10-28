@@ -64,8 +64,7 @@ verifyEqual(testCase, state{2}.filepath, testCase.TestData.cam2(:));
 verifyEqual(testCase, state{2}.expected_image_size, [220 260]);
 verifyEqual(testCase, char(get(handles.stereo_camera_toggle, 'Visible')), 'on');
 verifyEqual(testCase, get(handles.stereo_camera_toggle, 'String'), 'CAM 1');
-verifyEqual(testCase, char(get(findall(getappdata(0, 'hgui'), 'Tag', 'menu_camcalib_cam2'), 'Enable')), 'on');
-label = findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_camera_label');
+label =findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_camera_label');
 verifyNumElements(testCase, label, 1, 'camera label missing');
 verifyEqual(testCase, strtrim(label.String), 'CAMERA 1');
 end
@@ -97,12 +96,20 @@ stereo.switch_camera(2);
 verifyEqual(testCase, gui.retr('masks_in_frame'), masks);
 verifyEqual(testCase, gui.retr('bg_img_A'), zeros(220, 260, 'uint8') + 3);
 verifyEqual(testCase, get(handles.calib_usecalibration, 'Value'), 1);
-% the calibration menu entries select the camera
-menu = findall(getappdata(0, 'hgui'), 'Tag', 'menu_camcalib_cam2');
-parent_items = findall(get(menu, 'Parent'), 'Label', 'Camera 1');
-preproc.cam_calibration_Callback(parent_items(1));
-verifyEqual(testCase, gui.retr('stereo_active_camera'), 1);
+% the calibration menu entries keep the active camera (no camera sub menus)
+hgui = getappdata(0, 'hgui');
+verifyEmpty(testCase, findall(hgui, 'Type', 'uimenu', 'Text', 'Camera 1'), 'camera sub menu still there');
+menu = findall(hgui, 'Type', 'uimenu', 'Text', 'Camera calibration (undistortion)');
+verifyNumElements(testCase, menu, 1);
+feval(menu.MenuSelectedFcn, menu, []);
+verifyEqual(testCase, gui.retr('stereo_active_camera'), 2);
 verifyEqual(testCase, char(get(handles.multip26, 'Visible')), 'on');
+verifyEqual(testCase, get(handles.calib_undist_cam_label, 'String'), 'Current camera: CAMERA 2');
+menu = findall(hgui, 'Type', 'uimenu', 'Text', 'Image rectification / alignment');
+feval(menu.MenuSelectedFcn, menu, []);
+verifyEqual(testCase, gui.retr('stereo_active_camera'), 2);
+verifyEqual(testCase, char(get(handles.multip27, 'Visible')), 'on');
+verifyEqual(testCase, get(handles.calib_rect_cam_label, 'String'), 'Current camera: CAMERA 2');
 end
 
 function test_session_round_trip(testCase)
@@ -492,7 +499,6 @@ verifyEqual(testCase, gui.retr('stereomode'), 0);
 verifyEmpty(testCase, gui.retr('stereo_cam_state'));
 verifyEqual(testCase, gui.retr('filepath'), paths(:));
 verifyEqual(testCase, char(get(handles.stereo_camera_toggle, 'Visible')), 'off');
-verifyEqual(testCase, char(get(findall(getappdata(0, 'hgui'), 'Tag', 'menu_camcalib_cam2'), 'Enable')), 'off');
 verifyEmpty(testCase, findobj(gui.retr('pivlab_axis'), 'Tag', 'stereo_camera_label'));
 % rectification panel as in 2D again
 verifyEqual(testCase, char(get(handles.calib_userectification, 'Visible')), 'on');

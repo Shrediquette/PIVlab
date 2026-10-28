@@ -2,11 +2,11 @@ PIVlab synthetic single camera recording (3D particle image generator), 25-Oct-2
 This example data shows how to use the charuco calibration target to undistort a fisheye lens and correct the misalignment between camera and laser sheet.
 Workflow in PIVlab:
 * Import images from the particle_images folder
-* Image settings -> Camera calibration -> Camera calibration (undistortion) -> camera 1
+* Image settings -> Camera calibration -> Camera calibration (undistortion)
 * Load target images from the calibration_images folder
 * Estimate cam parameters
 * Enable camera calibration
-* Image settings -> Camera calibration -> Image rectification / alignment -> camera 1
+* Image settings -> Camera calibration -> Image rectification / alignment
 * Load target image (board_in_light_sheet_cam1.jpg). This is an image of the charuco target aligned with the laser sheet
 * Enable image rectification
 

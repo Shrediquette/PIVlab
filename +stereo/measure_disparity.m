@@ -61,7 +61,7 @@ if ~isempty(progress_target)
     end
     units = pair_units * expected_pairs * max(d.Passes, 1);
     if numel(backgrounds) ~= 2
-        units = units + background_units(imgs{1}) + background_units(imgs{2});
+        units = units + background_units(imgs{1}, d) + background_units(imgs{2}, d);
     end
     hbar = gui.pivprogress(units, progress_target);
 end
@@ -90,7 +90,7 @@ for k = 1:2
     else
         bg = stereo.min_background(imgs{k}, d, verbose);
         if ~isempty(hbar)
-            hbar.iterate(background_units(imgs{k}));
+            hbar.iterate(background_units(imgs{k}, d));
             drawnow
         end
     end
@@ -157,9 +157,9 @@ end
 disparity.background = disparity_background;
 end
 
-function n = background_units(img_set)
-% progress units of the minimum background of one camera: its A images
-n = max(1, floor(numel(img_set.filepath) / 2));
+function n = background_units(img_set, d)
+% progress units of the minimum background of one camera: its A images (at most d.MinBackgroundMaxFrames)
+n = max(1, min(floor(numel(img_set.filepath) / 2), d.MinBackgroundMaxFrames));
 end
 
 function close_progress(hbar)

@@ -10,7 +10,8 @@ function [OPTOcam_vid,imaq_error] = PIVlab_capture_OPTOcam_20_9_open(bitmode)
 %   capture (tagged 'OPTOcam_20_9') and reused by the next start if the pixel format still matches.
 %   All camera settings are applied by the callers every time, so a reused object behaves like a
 %   fresh one. Changing the configuration in the GUI releases the camera
-%   (select_capture_config_Callback: delete(imaqfind) + imaqreset).
+%   (select_capture_config_Callback: delete(imaqfind) + imaqreset). A kept camera that was unplugged in
+%   the meantime is opened again after an imaqreset.
 
 if bitmode == 8
 	video_format = 'Mono8';
@@ -20,12 +21,15 @@ end
 warning('off','imaq:gentl:noSupportedPixelFormat')
 
 %% fast path: reuse the opened camera
+disconnected = false; %the kept camera was unplugged: reset the toolbox before opening the camera again
 try
 	OPTOcam_vid = imaqfind('Tag','OPTOcam_20_9');
 	if iscell(OPTOcam_vid) %imaqfind returns a cell array here
 		OPTOcam_vid = [OPTOcam_vid{:}];
 	end
-	if isscalar(OPTOcam_vid) && isvalid(OPTOcam_vid) && strcmp(OPTOcam_vid.VideoFormat,video_format)
+	if isscalar(OPTOcam_vid) && isvalid(OPTOcam_vid) && ~camera_connected(OPTOcam_vid)
+		disconnected = true;
+	elseif isscalar(OPTOcam_vid) && isvalid(OPTOcam_vid) && strcmp(OPTOcam_vid.VideoFormat,video_format)
 		if isrunning(OPTOcam_vid)
 			stop(OPTOcam_vid);
 		end
@@ -38,6 +42,7 @@ try
 	end
 catch
 	%camera unplugged, toolbox reset etc. -> open it again below
+	disconnected = true;
 end
 
 %% slow path: find the camera and open it
@@ -45,6 +50,9 @@ OPTOcam_vid = [];
 imaq_error = 0;
 try
 	delete(imaqfind); %clears all previous videoinputs
+	if disconnected
+		imaqreset %the toolbox finds the plugged-in camera again only after a reset
+	end
 	warning off
 	hwinf = imaqhwinfo;
 catch
@@ -97,3 +105,14 @@ end
 OPTOcam_vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,video_format);
 OPTOcam_vid.Tag = 'OPTOcam_20_9';
 disp('Found camera: OPTOcam 20/9')
+
+function connected = camera_connected(OPTOcam_vid)
+%After unplugging and plugging in the camera, the kept videoinput is still valid, but the camera does not
+%answer any more: its ExposureTime limits are then 0 (error "'ExposureTime' value must be less than or equal to 0").
+try
+	OPTOcam_src = OPTOcam_vid.Source;
+	limits = propinfo(OPTOcam_src,'ExposureTime').ConstraintValue;
+	connected = limits(2) > 0;
+catch
+	connected = false;
+end

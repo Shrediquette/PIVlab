@@ -10,6 +10,12 @@ if getappdata(hgui,'cancel_capture') ~=1 %capture was not cancelled --> save ima
 	basler_data = getdata(basler_vid,basler_frames_to_capture); %ruft alle Frames in RAM ab. Frame 1,2,3 sind müll
 	cntr=0;
 	for image_save_number=1:2:size(basler_data,4)
+		if getappdata(hgui,'cancel_capture') == 1 %Abort pressed while saving
+			message = ['Saving aborted: ' int2str(cntr) ' of ' int2str(size(basler_data,4)/2) ' image pairs were saved.'];
+			disp(message)
+			set(frame_nr_display,'String',message);
+			break
+		end
 		imgA_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',cntr) '_A.tif']);
 		imgB_path=fullfile(ImagePath,['PIVlab_' sprintf('%4.4d',cntr) '_B.tif']);
 		imwrite(basler_data(:,:,:,image_save_number),imgA_path,'compression','none'); %tif file saving seems to be the fastest method for saving data...

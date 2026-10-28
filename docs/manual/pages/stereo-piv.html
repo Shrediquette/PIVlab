@@ -19,7 +19,7 @@
     <p><strong>Overview of the involved steps</strong></p>
     <ol>
       <li>Import the images of both cameras.</li>
-      <li>Perform a lens calibration for each camera.</li>
+      <li>Perform a lens calibration for each camera (or load a previously saved calibration).</li>
       <li>Record an image of the calibration target in the light sheet with both cameras.</li>
       <li>Perform the stereo calibration (calculates the positions of the cameras).</li>
       <li>Perform the disparity correction (accounts for the misalignment between the
@@ -116,9 +116,8 @@
 
     <h2 id="lens">2. and 3. Lens calibration and board image, for each camera</h2>
     <p>Do this exactly as in <a href="camera-calibration.html">Camera calibration</a>, once with
-    camera 1 active and once with camera 2 active (the <span class="ui">Camera 1</span> and
-    <span class="ui">Camera 2</span> menu entries switch the camera for you). The board
-    definition is shared.</p>
+    camera 1 active and once with camera 2 active (switch with the <span class="ui">CAM 1</span> /
+    <span class="ui">CAM 2</span> button at the bottom left). The board definition is shared.</p>
     <ol class="steps">
       <li><strong>Lens calibration</strong> (<a href="camera-calibration.html#calibration">Camera
       calibration (undistortion)</a>): <span class="ui">Estimate cam parameters</span> from
@@ -191,7 +190,8 @@
       <li>The <strong>image pre-processing</strong> of the GUI is used for the disparity too.</li>
       <li>A <strong>minimum-intensity background</strong> of each camera is always subtracted
       for the disparity (independent of your background setting), so reflections and walls do
-      not produce wrong disparity. It needs at least 10 A images.</li>
+      not produce wrong disparity. It needs at least 10 A images; long recordings use 100 A
+      images spread over the whole recording.</li>
     </ul>
     <table class="ref">
       <tr><th>Setting</th><th>Meaning</th></tr>

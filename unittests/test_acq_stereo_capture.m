@@ -169,9 +169,64 @@ setappdata(0, 'mock_imaq', reg);
 set(h.ac_pivcapture_save, 'Value', 1);
 set(h.ac_imgamount, 'String', '10');
 output = evalc('acquisition.piv_capture_Callback');
-verifyTrue(testCase, contains(output, 'out of step from image pair 4'), output);
+verifyTrue(testCase, contains(output, 'Camera 1: 1 frame is missing, the first one before image pair 4'), output);
+verifyFalse(testCase, contains(output, 'Camera 2:'), output);
+verifyEqual(testCase, gui.retr('capture_missing_frames'), [1 0], 'missing frames per camera');
 A = imread(fullfile(folder, 'cam1', 'PIVlab_0003_A.tif'));
 verifyEqual(testCase, trigger_of(A), 8, 'camera 1 skipped trigger 7');
+end
+
+function test_stereo_recording_incomplete_images(testCase)
+% one camera delivers incomplete images (old buffer content, slow USB): found by the check of the displayed
+% frames during the recording (5 per second), reported after saving
+folder = new_folder(testCase, 'incomplete');
+h = start_capture_gui(folder, 2, 2);
+reg = getappdata(0, 'mock_imaq');
+reg.stale{1} = 5:1000; % device 1 = camera 2
+setappdata(0, 'mock_imaq', reg);
+set(h.ac_pivcapture_save, 'Value', 1);
+set(h.ac_imgamount, 'String', '60'); % 1.5 s at 80 fps
+output = evalc('acquisition.piv_capture_Callback');
+verifyTrue(testCase, contains(output, 'Camera 2 delivers incomplete images'), output);
+verifyTrue(testCase, ~isempty(regexp(output, 'Camera 2: \d+ of \d+ checked images are incomplete', 'once')), output);
+verifyFalse(testCase, contains(output, 'Camera 1:'), output);
+counts = gui.retr('capture_incomplete_frames'); % [found; checked] per camera
+verifyEqual(testCase, counts(1, 1), 0, 'camera 1 complete');
+verifyGreaterThan(testCase, counts(1, 2), 0, 'camera 2 incomplete');
+verifyGreaterThan(testCase, counts(2, 1), 2, 'camera 1 checked during the recording');
+verifyEqual(testCase, gui.retr('capture_missing_frames'), [0 0], 'no missing frames');
+end
+
+function test_stereo_abort_while_saving(testCase)
+% Abort while the images are saved: saving stops, both cameras keep the same number of image pairs (whole
+% blocks of 50 pairs), nothing is loaded
+folder = new_folder(testCase, 'abort_saving');
+h = start_capture_gui(folder, 2, 2);
+set(h.ac_pivcapture_save, 'Value', 1);
+set(h.ac_imgamount, 'String', '160'); % 4 s at 80 fps
+setappdata(0, 'stereo_capture_test', fullfile(folder, 'cam1', 'PIVlab_0000_A.tif'));
+t = timer('ObjectVisibility', 'off', 'ExecutionMode', 'fixedSpacing', 'Period', 0.05, 'TimerFcn', @abort_when_saving, 'StopFcn', @delete_timer);
+start(t);
+output = evalc('acquisition.piv_capture_Callback');
+if isvalid(t)
+    stop(t);
+end
+n1 = numel(dir(fullfile(folder, 'cam1', 'PIVlab_*_A.tif')));
+n2 = numel(dir(fullfile(folder, 'cam2', 'PIVlab_*_A.tif')));
+verifyTrue(testCase, contains(output, sprintf('Saving aborted: %d of 160 image pairs were saved', n1)), output);
+verifyEqual(testCase, n2, n1, 'same number of pairs in both cameras');
+verifyLessThan(testCase, n1, 160, 'saving stopped');
+verifyEqual(testCase, mod(n1, 50), 0, 'whole blocks');
+verifyEqual(testCase, numel(dir(fullfile(folder, 'cam2', 'PIVlab_*_B.tif'))), n1, 'A and B files');
+verifyFalse(testCase, isfile(fullfile(folder, 'PIVlab_Capture_Session.mat')), 'nothing loaded, no session');
+end
+
+function abort_when_saving(t, ~)
+% presses Abort as soon as the first file is written
+if isfile(getappdata(0, 'stereo_capture_test'))
+    gui.put('cancel_capture', 1);
+    stop(t);
+end
 end
 
 function test_stereo_piv_preview(testCase)
@@ -226,6 +281,24 @@ verifyEqual(testCase, trigger_of(A), 9);
 verifyFalse(testCase, isfolder(fullfile(folder, 'cam1')), 'no camera folders in 2D');
 verifyNotEqual(testCase, gui.retr('stereomode'), 1, '2D');
 verifyEqual(testCase, numel(gui.retr('filepath')), 10);
+verifyEqual(testCase, numel(imaqfind), 1, 'one camera opened');
+end
+
+function test_camera_plugged_in_again(testCase)
+% recording, camera unplugged and plugged in again, next recording: the kept (stale) camera is opened again
+folder = new_folder(testCase, 'replug');
+h = start_capture_gui(folder, 1, 1);
+set(h.ac_pivcapture_save, 'Value', 1);
+set(h.ac_imgamount, 'String', '5');
+acquisition.piv_capture_Callback;
+old_vid = imaqfind('Tag', 'OPTOcam_cam1');
+old_vid = [old_vid{:}];
+src = old_vid.Source;
+src.connected = false; % unplugged and plugged in again
+delete(fullfile(folder, '*.tif'));
+acquisition.piv_capture_Callback;
+verifyTrue(testCase, isfile(fullfile(folder, 'PIVlab_0004_A.tif')), 'second recording saved');
+verifyFalse(testCase, isvalid(old_vid), 'stale camera released');
 verifyEqual(testCase, numel(imaqfind), 1, 'one camera opened');
 end
 

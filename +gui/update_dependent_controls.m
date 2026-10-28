@@ -163,12 +163,9 @@ else
     set(handles.sim3d_radius_text, 'String', 'Vortex core radius [mm]:');
 end
 
-%% Stereo-PIV: camera switch and the menus of camera 2 only in stereo mode
+%% Stereo-PIV: camera switch only in stereo mode
 stereo_mode = isequal(gui.retr('stereomode'), 1);
 show(handles.stereo_camera_toggle, stereo_mode);
-hgui = getappdata(0, 'hgui');
-stereo_menus = [findall(hgui, 'Tag', 'menu_camcalib_cam2'); findall(hgui, 'Tag', 'menu_rect_cam2')];
-enable(stereo_menus, stereo_mode);
 if stereo_mode
     active = gui.retr('stereo_active_camera');
     if isempty(active)

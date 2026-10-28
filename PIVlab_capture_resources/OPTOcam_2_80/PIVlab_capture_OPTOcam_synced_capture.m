@@ -28,6 +28,13 @@ delaycounter2=0;
 delay_time_1=tic;
 sharpness_focus_table=[];
 sharp_loop_cnt=[];
+%Incomplete images (USB too slow): with every display update, the newest frame of each camera is compared with
+%the 4 frames before it (acquisition.incomplete_frame). Only these sampled frames are checked (not every frame when
+%saving: that would take minutes for long recordings); PIVlab_capture_OPTOcam_save reports the result.
+incomplete_found = zeros(1,n_cameras);
+incomplete_checked = zeros(1,n_cameras);
+checked_at = -ones(1,n_cameras); %FramesAcquired at the last check: the same frame is not checked twice
+gui.put('capture_incomplete_frames',[]);
 %% capture data
 while frames_acquired(OPTOcam_vid) < OPTOcam_frames_to_capture && getappdata(hgui,'cancel_capture') ~=1
 	if toc(t0) < next_update
@@ -44,8 +51,21 @@ while frames_acquired(OPTOcam_vid) < OPTOcam_frames_to_capture && getappdata(hgu
 	next_update = toc(t0) + update_interval;
 	acquired = frames_acquired(OPTOcam_vid);
 	for k=1:n_cameras
-		if OPTOcam_vid{k}.FramesAvailable > 0
-			ima = peekdata(OPTOcam_vid{k},1); %full resolution for the overlays
+		available = OPTOcam_vid{k}.FramesAvailable;
+		if available > 0
+			n_recent = min(5,available);
+			recent = peekdata(OPTOcam_vid{k},n_recent); %newest frame last
+			ima = recent(:,:,:,n_recent); %full resolution for the overlays
+			if n_recent == 5 && OPTOcam_vid{k}.FramesAcquired ~= checked_at(k)
+				checked_at(k) = OPTOcam_vid{k}.FramesAcquired;
+				incomplete_checked(k) = incomplete_checked(k)+1;
+				if acquisition.incomplete_frame(recent,n_recent)
+					if incomplete_found(k) == 0
+						disp(['Camera ' int2str(k) ' delivers incomplete images: the USB connection is too slow for this frame rate.'])
+					end
+					incomplete_found(k) = incomplete_found(k)+1;
+				end
+			end
 			if is_preview
 				flushdata(OPTOcam_vid{k}); %frames are not saved in PIV preview
 			end
@@ -54,12 +74,17 @@ while frames_acquired(OPTOcam_vid) < OPTOcam_frames_to_capture && getappdata(hgu
 		end
 	end
 	if is_preview
-		set(frame_nr_display,'String','PIV preview');
+		status_text = 'PIV preview';
 	elseif acquired == 0
-		set(frame_nr_display,'String','Waiting for trigger...')
+		status_text = 'Waiting for trigger...';
 	else
-		set(frame_nr_display,'String',['Image nr.: ' int2str(round(acquired/2))]);
+		status_text = ['Image nr.: ' int2str(round(acquired/2))];
 	end
+	if any(incomplete_found)
+		status_text = [status_text ' - INCOMPLETE IMAGES, USB connection too slow!'];
+		set(frame_nr_display,'backgroundcolor',[0.6 0 0]);
+	end
+	set(frame_nr_display,'String',status_text);
 	acquisition.live_overlays(image_handles,'capture'); %sharpness, grid
 	ima = getappdata(image_handles{1},'frame');
 	if n_cameras == 1 && ~isempty(ima) %autofocus: one camera (one lens controller)
@@ -208,9 +233,12 @@ for k=1:n_cameras
 	end
 end
 disp('Sending sensor to sleep mode.')
+gui.put('capture_incomplete_frames',[incomplete_found; incomplete_checked]); %per camera: incomplete / checked frames
 
 if ~is_preview
     set(frame_nr_display,'String',['Image nr.: ' int2str(round(frames_acquired(OPTOcam_vid)/2))]);
+elseif any(incomplete_found)
+    set(frame_nr_display,'String','PIV preview stopped - INCOMPLETE IMAGES, USB connection too slow!');
 else
     set(frame_nr_display,'String','PIV preview stopped.');
 end

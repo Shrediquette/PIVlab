@@ -175,6 +175,9 @@ classdef videoinput < handle
                         continue % this camera misses the trigger
                     end
                     frame = make_frame(obj, obj.triggers_done);
+                    if isfield(reg, 'stale') && numel(reg.stale) >= obj.camera_index && any(reg.stale{obj.camera_index} == obj.triggers_done) && numel(obj.logged) >= 3
+                        frame(10:end, :) = obj.logged{end - 2}(10:end, :); % incomplete transfer: rest of the reused buffer (rig: 3 frames earlier)
+                    end
                     obj.acquired = obj.acquired + 1;
                     obj.logged{end + 1} = frame;
                     obj.logged_times(end + 1) = obj.triggers_done / reg.trigger_fps;
@@ -231,6 +234,7 @@ classdef videoinput < handle
             if mod(number, 2) == 0 && isfield(reg, 'pair_shift') && any(reg.pair_shift ~= 0)
                 frame = circshift(frame, reg.pair_shift); % B frame of a PIV pair: the particles moved
             end
+            frame(:, 1) = frame(:, 1) + mod(number, 40); % instead of sensor noise (cheap): rows of frames close in time are never equal (template <= 210 + 39: no saturation)
             frame(1, 1) = mod(number, 256);
             frame(1, 2) = floor(number / 256);
             frame(1, 3) = obj.camera_index;

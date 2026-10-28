@@ -25,6 +25,7 @@ classdef mock_imaq_source < matlab.mixin.SetGet
         DeviceTemperature = 40
         DeviceFirmwareVersion = 'mock/1.0'
         commands = {}                 % executeCommand calls (test statistics)
+        connected = true              % false: the camera was unplugged and plugged in again (the object is stale)
     end
     methods
         function obj = mock_imaq_source(serial)
@@ -32,6 +33,19 @@ classdef mock_imaq_source < matlab.mixin.SetGet
         end
         function executeCommand(obj, command)
             obj.commands{end + 1} = char(command);
+        end
+        function info = propinfo(obj, ~)
+            % ExposureTime limits in us; a stale camera reports 0 as maximum, like the real one
+            info.ConstraintValue = [20 10000000];
+            if ~obj.connected
+                info.ConstraintValue = [0 0];
+            end
+        end
+        function set.ExposureTime(obj, value)
+            if ~obj.connected %#ok<MCSUP>
+                error('mock:imaq:stale', '''ExposureTime'' value must be less than or equal to 0.');
+            end
+            obj.ExposureTime = value;
         end
     end
 end

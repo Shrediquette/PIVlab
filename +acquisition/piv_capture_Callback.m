@@ -479,7 +479,7 @@ if required_files_check
 			end
 			if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2/80') %OPTOcam
 				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
-					[OutputError,actually_saved_images] = PIVlab_capture_OPTOcam_save(OPTOcam_vid,imageamount,projectpath,frame_nr_display,OPTOcam_bits); %save the images from ram to disk.
+					[OutputError,actually_saved_images] = PIVlab_capture_OPTOcam_save(OPTOcam_vid,imageamount,projectpath,frame_nr_display,OPTOcam_bits,cam_fps); %save the images from ram to disk.
 					imageamount=actually_saved_images;
 				end
 			end

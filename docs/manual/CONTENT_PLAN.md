@@ -287,9 +287,8 @@ All topics complete. Kept for the per-page verification detail, which feeds the 
   `+import/remove_images_from_list.m`), and the Session-vs-Settings distinction.
 
 ### Image settings
-- **Camera calibration & rectification** — `camera-calibration.html`. multip26/27/28. Camera 2 is
-  disabled only at the *menu* level while the callbacks already handle it — documented as "mono
-  only for now" without overclaiming.
+- **Camera calibration & rectification** — `camera-calibration.html`. multip26/27/28. No camera sub
+  menus: the panels work on the active camera (CAM 1 / CAM 2 toggle in stereo mode).
 - **Image pre-processing** — `preprocessing.html`. CLAHE, highpass, intensity capping, Wiener2,
   auto contrast stretch, background subtraction. The preview button only re-renders a preview;
   filters actually apply to all frames at analysis time.
