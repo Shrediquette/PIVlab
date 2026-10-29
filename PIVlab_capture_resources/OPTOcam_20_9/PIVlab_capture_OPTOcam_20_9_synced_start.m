@@ -35,19 +35,9 @@ OPTOcam_vid.PreviewFullBitDepth='On';
 
 %% prepare axes
 PIVlab_axis = gui.retr('pivlab_axis');
-OPTOcam_climits=2^bitmode;
-image_handle_OPTOcam=imagesc(zeros(ROI_OPTOcam(4),ROI_OPTOcam(3)),'Parent',PIVlab_axis,[0 OPTOcam_climits]);
+[image_handles,frame_nr_display] = acquisition.live_images(1,[ROI_OPTOcam(3) ROI_OPTOcam(4)],2^bitmode);
+image_handle_OPTOcam = image_handles{1};
 setappdata(hgui,'image_handle_OPTOcam_20_9',image_handle_OPTOcam);
-
-frame_nr_display=text(PIVlab_axis,100,100,'Initializing...','Color',[1 1 0]);
-colormap(ancestor(PIVlab_axis,'figure'),'default') %reset colormap steps
-new_map=colormap(ancestor(PIVlab_axis,'figure'),'gray');
-new_map(1:3,:)=[0 0.2 0;0 0.2 0;0 0.2 0];
-new_map(end-2:end,:)=[1 0.7 0.7;1 0.7 0.7;1 0.7 0.7];
-colormap(ancestor(PIVlab_axis,'figure'),new_map);axis(PIVlab_axis,'image');
-set(PIVlab_axis,'ytick',[])
-set(PIVlab_axis,'xtick',[])
-colorbar(PIVlab_axis)
 
 %% Binning (set with the "Binning" button). Must be set BEFORE the ROI: the ROI is in binned pixels.
 binning = getappdata(hgui,'binning');
@@ -95,6 +85,10 @@ OPTOcam_settings.Source.mvShutterMode = 'mvGlobalShutter'; %single-frame mode fo
 OPTOcam_settings.Source.ExposureMode  = 'Timed';
 OPTOcam_settings.Source.TriggerMode   = 'Off';
 OPTOcam_settings.Source.ExposureTime  = exposure1;
+try %the live image limits the camera to 10 frames/s
+    OPTOcam_settings.Source.AcquisitionFrameRateEnable = 'False';
+catch
+end
 
 %% maximum achievable pair rate for the current ROI / bit depth
 %mvResultingFrameRate is only re-evaluated by the camera in single-frame (mvGlobalShutter) mode.
@@ -143,6 +137,7 @@ end
 %light, so a plain preview would flicker. The callback shows frame A only (B via the A/B toggle),
 %see PIVlab_capture_OPTOcam_20_9_preview_update.m
 setappdata(image_handle_OPTOcam,'OPTOcam_20_9_ab_state',[]);
+setappdata(image_handle_OPTOcam,'max_display_rate',min(10, 40e6/(ROI_OPTOcam(3)*ROI_OPTOcam(4)))); %frames per second drawn (CPU load)
 setappdata(image_handle_OPTOcam,'UpdatePreviewWindowFcn',@PIVlab_capture_OPTOcam_20_9_preview_update);
 preview(OPTOcam_vid,image_handle_OPTOcam);
 if bitmode ==8

@@ -11,6 +11,8 @@ function PIVlab_capture_OPTOcam_20_9_preview_update(~, event, himage)
 %   A and B are told apart by their mean brightness (the preview drops frames when the GUI is
 %   slow, so counting frames would not work). When both look alike (dark room, laser only)
 %   every frame is shown - there is nothing to flicker then.
+%   CPU load: a frame is only drawn when 1/max_display_rate seconds (appdata of himage, default 10)
+%   have passed since the last one (acquisition.show_frame, which also keeps it for the overlays).
 
 ab_ratio   = 1.5;   %A and B are told apart when mean(B) > ab_ratio * mean(A)
 sub        = 8;     %subsampling for the mean brightness (speed)
@@ -46,7 +48,14 @@ if isempty(toggler)
 	toggler = 0;
 end
 show_bright = toggler ~= 0;
-if ~ab_distinguishable || is_bright == show_bright
-	set(himage,'CData',frame);
+rate = getappdata(himage,'max_display_rate');
+if isempty(rate)
+	rate = 10;
+end
+last_display = getappdata(himage,'last_display');
+due = isempty(last_display) || toc(last_display) >= 1/rate;
+if due && (~ab_distinguishable || is_bright == show_bright)
+	acquisition.show_frame(himage, frame, 1);
+	setappdata(himage,'last_display',tic);
 end
 setappdata(himage,'OPTOcam_20_9_ab_state',state);

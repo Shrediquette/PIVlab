@@ -4,17 +4,32 @@ function [OutputError,OPTOcam_vid] = PIVlab_capture_OPTOcam_20_9_synced_capture(
 % This function shows the live preview / sharpness / histogram / autofocus while the
 % synchronizer drives the acquisition, then stops. Frames arrive as A,B,A,B... pairs;
 % saving into _A/_B is done by PIVlab_capture_OPTOcam_20_9_save.
+% CPU load: the frames are drawn at a limited rate (PIVlab_capture_OPTOcam_20_9_preview_update), and this
+% loop runs at that rate (overlays, status text) and sleeps in between.
 warning('off','imaq:gentl:noSupportedPixelFormat')
-OPTOcam_climits=2^bitmode;
 hgui=getappdata(0,'hgui');
 image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam_20_9');
 OutputError=0;
-OPTOcam_settings = get(OPTOcam_vid); %#ok<NASGU>
 OPTOcam_frames_to_capture = nr_of_images*2;
 set(frame_nr_display,'backgroundcolor','k');
+display_rate = getappdata(image_handle_OPTOcam,'max_display_rate');
+if isempty(display_rate)
+	display_rate = 10;
+end
+delaycounter=0; %autofocus state
+delaycounter2=0;
+delay_time_1=tic;
+sharpness_focus_table=[];
+sharp_loop_cnt=[];
+t0 = tic;
+next_update = 0;
 %% capture data
 while OPTOcam_vid.FramesAcquired < (OPTOcam_frames_to_capture) &&  getappdata(hgui,'cancel_capture') ~=1
-	ima = image_handle_OPTOcam.CData;
+	if toc(t0) < next_update
+		pause(0.01); %sleep and process GUI callbacks instead of spinning
+		continue
+	end
+	next_update = toc(t0) + 1/display_rate;
 	if ~isinf(OPTOcam_frames_to_capture)
 		if OPTOcam_vid.FramesAcquired == 0
 			set(frame_nr_display,'String','Waiting for trigger...')
@@ -24,33 +39,12 @@ while OPTOcam_vid.FramesAcquired < (OPTOcam_frames_to_capture) &&  getappdata(hg
 	else
 		set(frame_nr_display,'String','PIV preview');
 	end
-
-    drawnow limitrate
-    %% sharpness indicator
-    sharpness_enabled = getappdata(hgui,'sharpness_enabled');
-    if sharpness_enabled == 1 % sharpness indicator
-        [~,~] = PIVlab_capture_sharpness_indicator (ima,1);
-    else
-        delete(findobj('tag','sharpness_display_text'));
-    end
-    crosshair_enabled = getappdata(hgui,'crosshair_enabled');
-    if crosshair_enabled == 1 %cross-hair
-        %% cross-hair
-        locations=[0.15 0.5 0.85];
-        half_thickness=1;
-        brightness_incr=101;
-        ima_ed=ima;
-        old_max=max(ima(:));
-        for loca=locations
-            %vertical
-            ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)=ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)+brightness_incr;
-            %horizontal
-            ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)=ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)+brightness_incr;
-        end
-        ima_ed(ima_ed>old_max)=old_max;
-        set(image_handle_OPTOcam,'CData',ima_ed);
-    end
-    drawnow limitrate;
+	acquisition.live_overlays({image_handle_OPTOcam},'capture'); %sharpness, grid
+	ima = getappdata(image_handle_OPTOcam,'frame');
+	drawnow limitrate;
+	if isempty(ima) %no camera frame yet
+		continue
+	end
     %% Autofocus
     autofocus_enabled = getappdata(hgui,'autofocus_enabled');
 

@@ -1,6 +1,6 @@
 classdef mock_imaq_source < matlab.mixin.SetGet
-    %MOCK_IMAQ_SOURCE Camera properties of a simulated OPTOcam 2/80 (videoinput.Source in the capture tests).
-    %   Only the properties that the PIVlab driver uses; setting any other property is an error (like a
+    %MOCK_IMAQ_SOURCE Camera properties of a simulated OPTOcam 2/80 or 20/9 (videoinput.Source in the capture tests).
+    %   Only the properties that the PIVlab drivers use; setting any other property is an error (like a
     %   misspelled property of the real camera).
     properties
         DeviceSerialNumber = ''
@@ -24,6 +24,13 @@ classdef mock_imaq_source < matlab.mixin.SetGet
         BslExposureStartDelay = 100
         DeviceTemperature = 40
         DeviceFirmwareVersion = 'mock/1.0'
+        TriggerActivation = 'RisingEdge'
+        mvShutterMode = 'mvGlobalShutter' % OPTOcam 20/9: 'mvPivShutter' = double frame
+        mvResultingFrameRate = 40
+        BinningHorizontal = 1
+        BinningVertical = 1
+        BinningHorizontalMode = 'Sum'
+        BinningVerticalMode = 'Sum'
         commands = {}                 % executeCommand calls (test statistics)
         connected = true              % false: the camera was unplugged and plugged in again (the object is stale)
     end

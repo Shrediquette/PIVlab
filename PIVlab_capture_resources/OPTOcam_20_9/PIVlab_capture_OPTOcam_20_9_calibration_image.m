@@ -3,6 +3,9 @@ function [OutputError,ima_out,frame_nr_display] = PIVlab_capture_OPTOcam_20_9_ca
 % normal single (non-double) frame. The bit depth follows the OPTOcam 20/9 settings (same pixel format
 % as the PIV capture, so the opened camera can be reused, see PIVlab_capture_OPTOcam_20_9_open).
 % ima_out is always stretched to the full uint16 range.
+% CPU load: the camera sends at most 10 frames/s, the frames are drawn at a limited rate
+% (PIVlab_capture_rate_limited_preview, about 40 megapixels per second) and the overlays are computed at
+% that rate, not for every camera frame.
 OutputError=0;
 hgui=getappdata(0,'hgui');
 bitmode = gui.camera_setting('OPTOcam_20_9_bits');
@@ -67,6 +70,11 @@ end
 OPTOcam_settings.Source.TriggerMode ='Off';
 OPTOcam_settings.Source.ExposureMode ='Timed';
 OPTOcam_settings.Source.ExposureTime =exposure_time;
+try %at most 10 frames/s from the camera: a live image does not need more, and less data means less CPU load
+    OPTOcam_settings.Source.AcquisitionFrameRateEnable = 'True';
+    OPTOcam_settings.Source.AcquisitionFrameRate = min(10, 1e6/exposure_time);
+catch
+end
 
 ROI_OPTOcam=[ROI_OPTOcam(1)-1,ROI_OPTOcam(2)-1,ROI_OPTOcam(3),ROI_OPTOcam(4)]; %unfortunaletly different definitions of ROI in pco and OPTOcam.
 OPTOcam_vid.ROIPosition=ROI_OPTOcam;
@@ -79,75 +87,48 @@ if isempty (OPTOcam_gain)
 end
 OPTOcam_settings.Source.Gain = OPTOcam_gain;
 
-%% prapare axis
-
-crosshair_enabled = getappdata(hgui,'crosshair_enabled');
-sharpness_enabled = getappdata(hgui,'sharpness_enabled');
+%% prepare axis
 PIVlab_axis = gui.retr('pivlab_axis');
-
-%image_handle_OPTOcam=imagesc(zeros(OPTOcam_settings.VideoResolution(2),OPTOcam_settings.VideoResolution(1)),'Parent',PIVlab_axis,[0 2^8]);
-
-image_handle_OPTOcam=imagesc(zeros(ROI_OPTOcam(4),ROI_OPTOcam(3)),'Parent',PIVlab_axis,[0 2^bitmode]);
-
+[image_handles,frame_nr_display] = acquisition.live_images(1,[ROI_OPTOcam(3) ROI_OPTOcam(4)],2^bitmode);
+image_handle_OPTOcam = image_handles{1};
 setappdata(hgui,'image_handle_OPTOcam_20_9',image_handle_OPTOcam);
 
-frame_nr_display=text(PIVlab_axis,100,100,'Initializing...','Color',[1 1 0]);
-colormap(ancestor(PIVlab_axis,'figure'),'default') %reset colormap steps
-new_map=colormap(ancestor(PIVlab_axis,'figure'),'gray');
-new_map(1:3,:)=[0 0.2 0;0 0.2 0;0 0.2 0];
-new_map(end-2:end,:)=[1 0.7 0.7;1 0.7 0.7;1 0.7 0.7];
-colormap(ancestor(PIVlab_axis,'figure'),new_map);axis(PIVlab_axis,'image');
-set(PIVlab_axis,'ytick',[])
-set(PIVlab_axis,'xtick',[])
-colorbar(PIVlab_axis)
-
-
 %% get images
+display_rate = min(10, 40e6/(ROI_OPTOcam(3)*ROI_OPTOcam(4))); %frames per second drawn (full frame: 2/s)
 OPTOcam_vid.FramesPerTrigger = 1;
 set(frame_nr_display,'String','');
 %preview() first shows a placeholder image until the first camera frame arrives (~1.5 s at full frame).
 %The callback only receives real frames, so it counts them: needed for the single-image grab (ROI selection).
 setappdata(image_handle_OPTOcam,'frames_shown',0);
-setappdata(image_handle_OPTOcam,'UpdatePreviewWindowFcn',@PIVlab_capture_count_preview_frames);
+setappdata(image_handle_OPTOcam,'max_display_rate',display_rate);
+setappdata(image_handle_OPTOcam,'UpdatePreviewWindowFcn',@PIVlab_capture_rate_limited_preview);
 preview(OPTOcam_vid,image_handle_OPTOcam)
-caxis([0 2^bitmode]); %seems to be a workaround to force preview to show full data range...
+caxis(PIVlab_axis,[0 2^bitmode]); %#ok<CAXIS> seems to be a workaround to force preview to show full data range...
 displayed_img_amount=0;
+delaycounter=0; %autofocus state
+delaycounter2=0;
+delay_time_1=tic;
+sharpness_focus_table=[];
+sharp_loop_cnt=[];
+t0 = tic;
+next_update = 0;
 while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
-    frames_shown = getappdata(image_handle_OPTOcam,'frames_shown'); %read BEFORE CData: ima is then a real frame if frames_shown >= 1
-    ima = image_handle_OPTOcam.CData;
-    ima_out = bitshift(uint16(ima),16-bitmode); %stretch 8 or 12 bit to the full 16 bit range
-    %% live charuco
-    do_charuco_detection = gui.retr('do_charuco_detection');
-    if isempty(do_charuco_detection)
-        do_charuco_detection=0;
+    if toc(t0) < next_update
+        pause(0.01); %sleep and process GUI callbacks instead of spinning
+        continue
     end
-    if do_charuco_detection
-        PIVlab_capture_charuco_detector(ima_out,PIVlab_axis,image_handle_OPTOcam);
+    rate = display_rate;
+    if getappdata(hgui,'autofocus_enabled') == 1
+        rate = max(display_rate,5); %autofocus: a new frame is needed after each focus step (0.35 s)
     end
-
-    %% sharpness indicator
-    sharpness_enabled = getappdata(hgui,'sharpness_enabled');
-    if sharpness_enabled == 1 % sharpness indicator
-        [~,~] = PIVlab_capture_sharpness_indicator (ima,1);
-    else
-        delete(findobj('tag','sharpness_display_text'));
-    end
-    crosshair_enabled = getappdata(hgui,'crosshair_enabled');
-    if crosshair_enabled == 1 %cross-hair
-        %% cross-hair
-        locations=[0.15 0.5 0.85];
-        half_thickness=1;
-        brightness_incr=round(101/2^(12-bitmode)); %101 at 12 bit
-        ima_ed=ima;
-        old_max=max(ima(:));
-        for loca=locations
-            %vertical
-            ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)=ima_ed(:,round(size(ima,2)*loca)-half_thickness:round(size(ima,2)*loca)+half_thickness)+brightness_incr;
-            %horizontal
-            ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)=ima_ed(round(size(ima,1)*loca)-half_thickness:round(size(ima,1)*loca)+half_thickness,:)+brightness_incr;
-        end
-        ima_ed(ima_ed>old_max)=old_max;
-        set(image_handle_OPTOcam,'CData',ima_ed);
+    setappdata(image_handle_OPTOcam,'max_display_rate',rate);
+    next_update = toc(t0) + 1/rate;
+    frames_shown = getappdata(image_handle_OPTOcam,'frames_shown'); %read BEFORE the frame: it is then a real frame if frames_shown >= 1
+    acquisition.live_overlays(image_handles,'live'); %sharpness, grid, ChArUco detection
+    ima = getappdata(image_handle_OPTOcam,'frame');
+    if isempty(ima) %no camera frame yet
+        drawnow limitrate;
+        continue
     end
     drawnow limitrate;
     %% Autofocus
@@ -286,6 +267,7 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
     displayed_img_amount = frames_shown; %real camera frames (placeholder not counted)
 end
 stoppreview(OPTOcam_vid)
+ima_out = bitshift(uint16(getappdata(image_handle_OPTOcam,'frame')),16-bitmode); %stretch 8 or 12 bit to the full 16 bit range
 
 function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');
