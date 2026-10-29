@@ -9,6 +9,9 @@ function stereo_import_Callback(~, ~, paths)
 % stereo calibration, disparity and region of interest stay when both cameras give images of the same
 % size as before.
 % paths (optional, no dialogs): {files of camera 1, files of camera 2}, each a cell array of file names.
+if ~misc.require_toolbox('Computer Vision Toolbox','Stereo-PIV')
+    return
+end
 batch = isequal(gui.retr('batchModeActive'), 1);
 if nargin < 3
     paths = {};

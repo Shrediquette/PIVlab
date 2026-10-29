@@ -13,7 +13,8 @@ end
 FileName = fullfile(userpath, 'Filter Matrices.zip');
 disp(['Downloading zip file to: ' FileName])
 
-if ~verLessThan('matlab','9.11')
+use_background_pool = ~verLessThan('matlab','9.11') && misc.has_toolbox('Parallel Computing Toolbox'); %backgroundPool needs the Parallel Computing Toolbox
+if use_background_pool
     disp(['Downloading zip file from: ' 'https://files.osf.io/v1/resources/y48mk/providers/osfstorage/?zip='])
 	F = parfeval(backgroundPool,@download_stuff,0,FileName);
 	pause(1)
@@ -42,16 +43,19 @@ if ~verLessThan('matlab','9.11')
 	end
 	close(d)
 	close(fig)
-else %older matlab releases than 2021
+else %older matlab releases than 2021, or no Parallel Computing Toolbox (no progress bar)
 	FileUrl = 'https://files.osf.io/v1/resources/y48mk/providers/osfstorage/?zip=';
 	disp('Downloading Filter Matrices.')
 	disp('This might take a while...')
-	websave(FileName,FileUrl);
+	try
+		websave(FileName,FileUrl);
+	catch
+	end
 end
 
 %% try again when primary repo failed
 if ~exist(FileName,'file')
-	if ~verLessThan('matlab','9.11')
+	if use_background_pool
         disp(['Downloading zip file from: ' 'https://files.optolution.com/filter_matrices.zip'])
 		F = parfeval(backgroundPool,@download_stuff_alternate_location,0,FileName);
 		pause(1)
@@ -80,6 +84,12 @@ if ~exist(FileName,'file')
 		end
 		close(d)
 		close(fig)
+	else
+		disp(['Downloading zip file from: ' 'https://files.optolution.com/filter_matrices.zip'])
+		try
+			download_stuff_alternate_location(FileName);
+		catch
+		end
 	end
 end
 pause(1)

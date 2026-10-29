@@ -1,4 +1,7 @@
 function cam_rectification_Callback(~, ~, ~)
+if ~misc.require_toolbox('Computer Vision Toolbox','Image rectification')
+    return
+end
 handles=gui.gethand;
 filepath=gui.retr('filepath');
 if size(filepath,1) >1

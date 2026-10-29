@@ -470,6 +470,9 @@ if isempty(fh)
         else
             set(handles.toggle_parallel, 'cdata',parallel_off,'TooltipString','Parallel processing off. Click to turn on.');
         end
+        if ~misc.has_toolbox('Parallel Computing Toolbox')
+            set(handles.toggle_parallel,'enable','off','TooltipString','Parallel processing requires the Parallel Computing Toolbox.');
+        end
         gui.toolsavailable(1)
     catch
         disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')

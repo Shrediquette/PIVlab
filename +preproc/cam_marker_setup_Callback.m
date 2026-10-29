@@ -1,4 +1,7 @@
 function cam_marker_setup_Callback(~, ~, ~)
+if ~misc.require_toolbox('Computer Vision Toolbox','Marker board setup')
+    return
+end
 handles=gui.gethand;
 gui.switchui('multip28')
 do_charuco_detection = gui.retr('do_charuco_detection');

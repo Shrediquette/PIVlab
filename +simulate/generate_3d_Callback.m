@@ -4,6 +4,9 @@ function generate_3d_Callback(~, ~, folder)
 % then loaded into PIVlab.
 % folder (optional, no dialogs): output folder
 handles = gui.gethand;
+if get(handles.sim3d_setup, 'Value') > 1 && ~misc.require_toolbox('Computer Vision Toolbox','The camera setups of the particle image generator')
+    return
+end
 batch = isequal(gui.retr('batchModeActive'), 1);
 setup = simulate.setup_3d_from_gui(handles);
 mess = check_inputs(setup);
