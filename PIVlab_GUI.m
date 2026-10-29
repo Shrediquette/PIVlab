@@ -57,7 +57,7 @@ if isempty(fh)
         end
     end
     if ~exist('splash_ax','var')
-        disp(['-> PIVlab ' version ', built on: ' char(datetime(build_date)) ' ...'])
+        disp(['-> PIVlab ' version ', built on: ' build_date ' ...'])
         if isbeta==1
             disp('-> BETA VERSION')
         end
