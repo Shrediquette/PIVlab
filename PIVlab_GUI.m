@@ -105,8 +105,11 @@ if isempty(fh)
         gui.put('darkmode',0);
     end
     %% check write access
-    disp(['-> User path is ' userpath]);
-    disp(['-> Executable directory is ' ctfroot])
+    try
+        disp(['-> User path is ' userpath]);
+        disp(['-> Executable directory is ' ctfroot])
+    catch
+    end
     try
         temp=rand(3,3);
         save(fullfile(userpath,'temp.mat' ),'temp');
