@@ -99,7 +99,11 @@ end
 
 
 warning off
-old_IP=load('PIVlab_settings_default.mat','Chronos_IP');
+if isfile(fullfile(userpath,'PIVlab_settings_default.mat'))
+    old_IP=load(fullfile(userpath,'PIVlab_settings_default.mat'),'Chronos_IP');
+else
+    old_IP=load('PIVlab_settings_default.mat','Chronos_IP');
+end
 %warning on
 if isfield(old_IP,'Chronos_IP')
 	cameraIP=old_IP.Chronos_IP;
@@ -123,7 +127,7 @@ handles=gethand;
 
 put('Chronos_IP',get(handles.ip_input,'String'));
 Chronos_IP=get(handles.ip_input,'String');
-save('PIVlab_settings_default.mat','Chronos_IP','-append');
+save(fullfile(userpath,'PIVlab_settings_default.mat'),'Chronos_IP','-append');
 
 selected=get(handles.save_location, 'Value');
 values=get(handles.save_location,'String');

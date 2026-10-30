@@ -10,9 +10,13 @@ function reset_to_defaults()
 
 % Reload the default settings file (same path resolution as PIVlab_GUI startup)
 try
-    psdfile = which('PIVlab_settings_default.mat');
-    dindex  = strfind(psdfile, filesep);
-    import.read_settings('PIVlab_settings_default.mat', psdfile(1:(dindex(end)-1)));
+    if isfile(fullfile(userpath,'PIVlab_settings_default.mat'))
+        import.read_settings('PIVlab_settings_default.mat',userpath);
+    else
+        psdfile = which('PIVlab_settings_default.mat');
+        dindex  = strfind(psdfile, filesep);
+        import.read_settings('PIVlab_settings_default.mat', psdfile(1:(dindex(end)-1)));
+    end
 catch
     disp('reset_to_defaults: could not reload default settings')
 end

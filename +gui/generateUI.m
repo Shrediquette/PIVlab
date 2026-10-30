@@ -2524,7 +2524,11 @@ uicontrol(handles.plot_correlation_matrices,'Style','text','String','After retri
 %% Image acquisition: load last device and COM port
 try
     warning off
-    load('PIVlab_settings_default.mat','last_selected_device','last_selected_fps','last_selected_pulsedist','last_selected_energy');
+    if isfile(fullfile(userpath,'PIVlab_settings_default.mat'))
+        load(fullfile(userpath,'PIVlab_settings_default.mat'),'last_selected_device','last_selected_fps','last_selected_pulsedist','last_selected_energy');
+    else
+        load('PIVlab_settings_default.mat','last_selected_device','last_selected_fps','last_selected_pulsedist','last_selected_energy');
+    end
     if exist('last_selected_device','var')
         if ~isempty(last_selected_device)
             set(handles.ac_config, 'value',last_selected_device);
@@ -2546,7 +2550,11 @@ try
     if exist('last_selected_energy','var')
         set(handles.ac_power, 'String',last_selected_energy);
     end
-    load('PIVlab_settings_default.mat','selected_com_port');
+    if isfile(fullfile(userpath,'PIVlab_settings_default.mat'))
+        load(fullfile(userpath,'PIVlab_settings_default.mat'),'selected_com_port');
+    else
+        load('PIVlab_settings_default.mat','selected_com_port');
+    end
     if exist('selected_com_port','var') && ~isempty(selected_com_port)
         gui.put('selected_com_port',selected_com_port);
     end
