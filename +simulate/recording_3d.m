@@ -24,6 +24,10 @@ arguments
     folder {mustBeTextScalar}
     opts.Progress = @(text) []      % function handle, called with a status text
     opts.Seed (1,1) double = 1      % random number seed (particles, board poses, noise)
+    opts.Preview (1,1) logical = false % only one particle image pair, returned in result.preview (no board, no files; folder is not used)
+end
+if opts.Preview
+    setup.output.Pairs = 1;
 end
 folder = char(folder);
 progress = opts.Progress;
@@ -35,7 +39,7 @@ n_cams = numel(g.cams);
 sz = setup.sensor.ImageSize;
 previous_rng = rng(opts.Seed, 'twister');
 restore_rng = onCleanup(@() rng(previous_rng));
-if ~isfolder(folder)
+if ~opts.Preview && ~isfolder(folder)
     mkdir(folder);
 end
 
@@ -44,7 +48,9 @@ result.particle_images = cell(1, n_cams);
 result.board_images = cell(1, n_cams);
 result.calibration_images = cell(1, n_cams);
 result.lens_files = cell(1, n_cams);
-if g.simple % one camera straight on the light sheet: no board, no lens
+if opts.Preview
+    % nothing to prepare
+elseif g.simple % one camera straight on the light sheet: no board, no lens
     make_folder(fullfile(folder, 'particle_images'));
 else
     result = board_and_lens(result, setup, g, folder, progress);
@@ -89,6 +95,21 @@ for n = 1:setup.output.Pairs
             V=sim.V(:, :, :, n), W=sim.W(:, :, :, n), Obstacle=sim.obstacle, Particles=n_particles, ...
             SheetThickness=setup.sheet.Thickness, SheetPose=g.sheet_pose, PeakIntensity=200, Diameter=setup.particles.Diameter, ...
             DiameterVariation=setup.particles.DiameterVariation, Noise=setup.particles.Noise, Seed=opts.Seed * 100000 + n);
+    end
+    if opts.Preview
+        % images, and how far the particles move in each camera image [px]
+        result.preview.A = out.A;
+        result.preview.B = out.B;
+        result.preview.displacement = cell(1, n_cams);
+        for k = 1:n_cams
+            pa = simulate.project(g.cams{k}, transformPointsForward(g.sheet_pose, out.particles.A));
+            pb = simulate.project(g.cams{k}, transformPointsForward(g.sheet_pose, out.particles.B));
+            inside = pa(:, 1) >= 1 & pa(:, 1) <= sz(2) & pa(:, 2) >= 1 & pa(:, 2) <= sz(1);
+            result.preview.displacement{k} = sqrt(sum((pb(inside, :) - pa(inside, :)) .^ 2, 2));
+        end
+        result.preview.n_particles = n_particles;
+        progress('...done');
+        return
     end
     for k = 1:n_cams
         if g.simple

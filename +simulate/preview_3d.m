@@ -26,7 +26,7 @@ if ~isempty(opts.OnChange)
     S.onchange = opts.OnChange;
 end
 setappdata(fig, 'sim3d', S);
-draw(fig, true);
+draw(fig, 2);
 if strcmp(opts.Visible, 'on') && ~strcmp(fig.Visible, 'on')
     fig.Visible = 'on';
 end
@@ -52,9 +52,12 @@ S.info = uicontrol(fig, 'Style', 'edit', 'Max', 2, 'Enable', 'inactive', 'Units'
 uicontrol(fig, 'Style', 'pushbutton', 'String', 'Reset view', 'Units', 'normalized', 'Position', [0.86 0.11 0.13 0.06], ...
     'Callback', @(~, ~) reset_view(fig), 'Tag', 'sim3d_resetview', 'TooltipString', 'Look from behind the cameras onto the board');
 uicontrol(fig, 'Style', 'pushbutton', 'String', 'Update camera images', 'Units', 'normalized', 'Position', [0.86 0.03 0.13 0.06], ...
-    'Callback', @(~, ~) draw(fig, true), 'Tag', 'sim3d_updateviews', 'TooltipString', 'Render the views of the cameras again');
+    'Callback', @(~, ~) draw(fig, 2), 'Tag', 'sim3d_updateviews', 'TooltipString', 'Render the views of the cameras again');
 S.onchange = [];
 S.drag = [];
+S.clock = tic; % for limiting the rate of the camera images while dragging
+S.view_cost = 0;
+S.view_end = -inf;
 S.tex = [];
 S.board_key = '';
 S.board_surface = gobjects(0);
@@ -66,8 +69,13 @@ set(fig, 'WindowButtonDownFcn', @mouse_down, 'WindowButtonUpFcn', @mouse_up, 'Wi
 end
 
 function draw(fig, with_views)
-% everything; with_views: also render the camera images (slower)
+% everything; with_views: also render the camera images (slower): 0 none, 1 simplified
+% (small, while dragging), 2 full
 S = getappdata(fig, 'sim3d');
+view_px = 360;
+if with_views == 1
+    view_px = 75;
+end
 setup = S.setup;
 ax = S.ax3;
 try
@@ -173,6 +181,7 @@ S.info.String = lines;
 
 %% what the cameras see
 if with_views
+    t_views = toc(S.clock);
     for k = 1:2
         cla(S.axcam(k));
         if k > n
@@ -181,8 +190,10 @@ if with_views
             continue
         end
         S.axcam(k).Visible = 'on';
-        camera_view(S.axcam(k), g, k, S.tex);
+        camera_view(S.axcam(k), g, k, S.tex, view_px);
     end
+    S.view_cost = toc(S.clock) - t_views;
+    S.view_end = toc(S.clock);
 end
 setappdata(fig, 'sim3d', S);
 drawnow limitrate
@@ -215,12 +226,12 @@ text(S.ax3, 0, 0, -L, ' -z', 'Color', 'b', 'HitTest', 'off', 'Tag', 'sim3d_board
 S.board_key = key;
 end
 
-function camera_view(ax, g, k, tex)
-% low resolution image of the board in the light sheet, as camera k sees it, with its view of the
-% overlap and the board origin
+function camera_view(ax, g, k, tex, view_px)
+% low resolution image (view_px on the long side) of the board in the light sheet, as camera k
+% sees it, with its view of the overlap and the board origin
 cam = g.cams{k};
 sz = cam.imageSize;
-small = max(1, round(sz * min(1, 360 / max(sz))));
+small = max(1, round(sz * min(1, view_px / max(sz))));
 s = small([2 1]) ./ sz([2 1]); % [x y] scale
 if any(s < 1)
     intr = cam.intrinsics;
@@ -518,7 +529,13 @@ switch d.kind
         S.setup.cameras(k).Target = round(p(1:2) * 10) / 10;
 end
 setappdata(fig, 'sim3d', S);
-draw(fig, false);
+% camera images while dragging: small, and at most so often that rendering takes a third of the time
+% (the full images follow on mouse release)
+quality = 0;
+if toc(S.clock) - S.view_end > max(0.05, 2 * S.view_cost)
+    quality = 1;
+end
+draw(fig, quality);
 end
 
 function mouse_up(fig, ~)
@@ -534,7 +551,7 @@ if strcmp(d.kind, 'orbit') || strcmp(d.kind, 'pan')
     remember_cameras_in_view(fig);
     return
 end
-draw(fig, true);
+draw(fig, 2);
 if ~isempty(S.onchange)
     S.onchange(S.setup);
 end

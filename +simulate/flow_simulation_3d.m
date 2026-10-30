@@ -47,6 +47,20 @@ if isequal(key, last_key)
     out = last_out;
     return
 end
+if ~isempty(last_key) && ~opts.Full && ~isfield(last_out, 'full') && last_key.Count >= opts.Count
+    % the same flow with more snapshots was computed before (e.g. all image pairs, now only the
+    % first one for a preview): the first snapshots are the same
+    same = key;
+    same.Count = last_key.Count;
+    if isequal(same, last_key)
+        out = last_out;
+        out.U = out.U(:, :, :, 1:opts.Count);
+        out.V = out.V(:, :, :, 1:opts.Count);
+        out.W = out.W(:, :, :, 1:opts.Count);
+        out.t = out.t(1:opts.Count);
+        return
+    end
+end
 nx = opts.Cells(1);
 ny = opts.Cells(2);
 nz = opts.Cells(3);

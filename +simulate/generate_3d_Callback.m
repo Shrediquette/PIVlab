@@ -39,14 +39,21 @@ if nargin < 3 || isempty(folder)
 end
 status = @(text) set_status(handles, text);
 gui.toolsavailable(0, 'Generating synthetic images...');
+simulate.progress_control('open', handles.sim3d_generate);
 try
-    result = simulate.recording_3d(setup, folder, Progress=status);
+    result = simulate.recording_3d(setup, folder, Progress=@progress);
 catch err
+    simulate.progress_control('close');
     gui.toolsavailable(1);
+    if simulate.progress_control('isCancel', err)
+        status('Generation cancelled (the folder may contain incomplete files).');
+        return
+    end
     status(['Error: ' err.message]);
     gui.custom_msgbox('error', getappdata(0, 'hgui'), 'Particle image generator', err.message, 'modal');
     return
 end
+simulate.progress_control('close');
 gui.toolsavailable(1);
 gui.put('sim3d_result', result);
 if g.simple
@@ -105,6 +112,10 @@ names = cellstr(files);
 gui.put('sequencer', 1);
 gui.put('multitiff', 0);
 import.loadimgsbutton_Callback([], [], 0, struct('name', names(:), 'isdir', num2cell(false(numel(names), 1))));
+end
+
+function progress(text)
+simulate.progress_control('update', text);
 end
 
 function set_status(handles, text)
