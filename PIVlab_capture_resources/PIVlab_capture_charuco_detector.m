@@ -182,6 +182,9 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 		%multiplication with 255 is necessary, OMG...!
 		imagePoints1 = detectCharucoBoardPoints(img*255,patternDims,markerFamily,checkerSize,markerSize, 'OriginCheckerColor', originCheckerColor,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
 		imagePoints1 = preproc.cam_filter_charuco_corners(imagePoints1, patternDims); % corners of wrongly decoded markers
+		if large_img %corners were detected in the half resolution image, the camera calibration is for the full resolution
+			imagePoints1 = imagePoints1*2-1;
+		end
 		if ~isempty(imagePoints1)
 			cameraParams = gui.retr('cameraParams');
 			if ~isempty(cameraParams)
@@ -193,8 +196,8 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 					% flip y axis
 					worldPoints1(:,2) = -worldPoints1(:,2);
 				end
-				offs_x=max(worldPoints1(:,1))/2;
-				offs_y=max(worldPoints1(:,2))/2;
+				%board centre in board coordinates
+				board_centre=[(min(worldPoints1(:,1))+max(worldPoints1(:,1)))/2; (min(worldPoints1(:,2))+max(worldPoints1(:,2)))/2; 0];
 				worldPoints1(isnan(imagePoints1))=NaN;
 				imagePoints1 = rmmissing(imagePoints1); %remove missing entries... does that work simply like this? --> yes. If matching world points are also removed.
 				worldPoints1 = rmmissing(worldPoints1);
@@ -224,7 +227,18 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 					% Roll (Rotation um optische Achse)
 					roll = atan2(x_proj(2), x_proj(1));
 					roll_deg = rad2deg(roll);
-					orientation_message=['Yaw: ' num2str(round(alpha_deg)) ' ; Pitch: ' num2str(round(beta_deg)) ' ; Roll: ' num2str(round(roll_deg,1)) newline 'X: ' num2str(round((t1(1)+offs_x)/1000,2)) ' ; Y: ' num2str(round((t1(2)+offs_y)/1000,2)) ' ; Z: ' num2str(round(t1(3)/1000,2))];
+					% Camera position relative to the board centre, in board coordinates (mm).
+					% R1 and t1 map board to camera coordinates, so the camera centre in board coordinates is -R1'*t1.
+					% X and Y run along the board (right / down in the image, like PIV x / y), Z is the distance in front of the board.
+					cam_pos = -R_wc*t1(:) - board_centre;
+					% axis directions as set for the PIV data (calibration panel)
+					if handles.x_axis_direction.Value == 2
+						cam_pos(1) = -cam_pos(1);
+					end
+					if handles.y_axis_direction.Value == 2
+						cam_pos(2) = -cam_pos(2);
+					end
+					orientation_message=['Yaw: ' num2str(round(alpha_deg)) ' ; Pitch: ' num2str(round(beta_deg)) ' ; Roll: ' num2str(round(roll_deg,1)) newline 'Camera X: ' num2str(round(cam_pos(1))) ' ; Y: ' num2str(round(cam_pos(2))) ' ; Z: ' num2str(round(abs(cam_pos(3)))) ' mm'];
 				else
 					orientation_message='Perform camera calibration to display yaw / pitch / roll angle of camera';
 				end
