@@ -66,6 +66,7 @@ if ~isfolder('+plugins')
 elseif isfile('+plugins/fill_plugins.m')
     plugins.fill_plugins(m15);
 end
+uimenu(m15,'Label','Install plugins','Callback',@(~,~) gui.installplugins_Callback(m15));
 uimenu(m15,'Label','Description','Callback',@gui.pluginsdescription_Callback);
 % <--
 m13 = uimenu(MainWindow,'Label','Learn!');
