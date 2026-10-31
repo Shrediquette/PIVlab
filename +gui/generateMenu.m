@@ -60,7 +60,12 @@ m12 = uimenu(MainWindow,'Label','Synthetic particle image generation','Tag','men
 uimenu(m12,'Label','Particle image generator','Callback',@simulate.part_img_3d_Callback,'Accelerator','G','Tag','menu_partgen3d');
 % -->
 m15 = uimenu(MainWindow,'Label','Plugins');
-plugins.fill_plugins(m15);
+% TODO: check 
+if ~isfolder('+plugins')
+    mkdir('+plugins');
+elseif isfile('+plugins/fill_plugins.m')
+    plugins.fill_plugins(m15);
+end
 uimenu(m15,'Label','Description','Callback',@gui.pluginsdescription_Callback);
 % <--
 m13 = uimenu(MainWindow,'Label','Learn!');
