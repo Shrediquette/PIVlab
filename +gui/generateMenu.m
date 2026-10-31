@@ -60,7 +60,7 @@ m12 = uimenu(MainWindow,'Label','Synthetic particle image generation','Tag','men
 uimenu(m12,'Label','Particle image generator','Callback',@simulate.part_img_3d_Callback,'Accelerator','G','Tag','menu_partgen3d');
 % -->
 m15 = uimenu(MainWindow,'Label','Plugins');
-gui.fill_plugins;
+plugins.fill_plugins(m15);
 uimenu(m15,'Label','Description','Callback',@gui.pluginsdescription_Callback);
 % <--
 m13 = uimenu(MainWindow,'Label','Learn!');
