@@ -63,3 +63,4 @@
 /dev_notes/
 
 /unittests/parity/tag_renames.csv
++plugins/*
