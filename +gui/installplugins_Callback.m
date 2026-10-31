@@ -4,10 +4,15 @@ if pyenv().Version == ""
     if ispc
         % TODO
     elseif isunix
-        [~, cmdout] = system("which python3.11");
+        [~, cmdout] = system("which python3");
         % [https://www.mathworks.com/matlabcentral/answers/587288-system-function-cmdout-has-to-the-end]
         cmdout(cmdout==newline)='';
-        pyenv('Version',cmdout);
+        try
+            pyenv('Version',cmdout);
+        catch ME
+            disp("Error setting Python environment")
+            disp(ME.message)
+        end
     end
 end
 % <--

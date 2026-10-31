@@ -63,7 +63,9 @@ m15 = uimenu(MainWindow,'Label','Plugins');
 % TODO: check 
 if ~isfolder('+plugins')
     mkdir('+plugins');
-elseif isfile('+plugins/fill_plugins.m')
+elseif ~isfile('+plugins/fill_plugins.m')
+    system('touch +plugins/fill_plugins.m');
+else%if isfile('+plugins/fill_plugins.m')
     plugins.fill_plugins(m15);
 end
 uimenu(m15,'Label','Install plugins','Callback',@(~,~) gui.installplugins_Callback(m15));
