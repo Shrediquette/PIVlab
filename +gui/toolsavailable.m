@@ -34,7 +34,8 @@ if ~isempty(watchdog)
 end
 
 elementsOfCrime=findobj(hgui, 'type', 'uicontrol');
-elementsOfCrime2=findobj(hgui, 'type', 'uimenu');
+% menu bar with all its entries (hidden handles, see gui.generateMenu); not the context menus
+menu_items=findall(findall(hgui,'-depth',1,'Type','uimenu'),'Type','uimenu');
 if inpt==0
 	% remember which controls were disabled before (by handle: controls may be created or
 	% deleted while PIVlab is busy). Only kept in memory, never saved in a session.
@@ -44,7 +45,7 @@ if inpt==0
 	end
 	gui.put('disabled_while_busy', elementsOfCrime(was_disabled));
 	set(elementsOfCrime, 'enable', 'off');
-	set(elementsOfCrime2, 'enable', 'off');
+	disable_menus(menu_items);
 	if ~exist('waits_for_user','var')
 		waits_for_user=false;
 	end
@@ -77,9 +78,28 @@ else
 	if ~isempty(disabled_while_busy)
 		set(disabled_while_busy(isvalid(disabled_while_busy)), 'enable', 'off');
 	end
-	set(elementsOfCrime2, 'enable', 'on');
+	enable_menus(menu_items);
 end
 set(handles.progress, 'enable', 'on');
 set(handles.overall, 'enable', 'on');
 set(handles.totaltime, 'enable', 'on');
 set(handles.messagetext, 'enable', 'on');
+
+function disable_menus(menu_items)
+% only enabled entries are disabled and marked (on the menu itself: the reset of PIVlab replaces the
+% data of the window, not the menus). A second call while busy keeps the marks.
+for i=1:numel(menu_items)
+	if strcmp(menu_items(i).Enable,'on')
+		menu_items(i).Enable='off';
+		setappdata(menu_items(i),'disabled_while_busy',true);
+	end
+end
+
+function enable_menus(menu_items)
+% only the entries disabled by disable_menus are enabled again (Visible, e.g. Basic mode, is not touched)
+for i=1:numel(menu_items)
+	if isappdata(menu_items(i),'disabled_while_busy')
+		menu_items(i).Enable='on';
+		rmappdata(menu_items(i),'disabled_while_busy');
+	end
+end
