@@ -69,5 +69,6 @@ Notes
 | `test_gui_sessions.m` | sessions bring everything back (settings, data, view, look), multi-page TIFF, capture sessions, large sessions |
 | `test_gui_preferences.m` | what PIVlab remembers for the next start, rebuilding the window, warnings and the PIVlab folder stay unchanged |
 | `test_gui_bugfixes.m` | old GUI bugs that were fixed (one test per bug) |
+| `test_gui_busy_menus.m` | the menu bar is locked while PIVlab is busy and afterwards only the entries locked by it are enabled again (nested locks, Basic mode, context menus, reset) |
 | `test_apigui_results.m` | API and GUI: same results (FFT, validation, optical flow, tilted camera model, parallel, ensemble, background), sessions both ways |
 | `test_apigui_camera_calibration.m` | camera calibration made in the GUI (standard and tilted model, rectification) used by the API |
