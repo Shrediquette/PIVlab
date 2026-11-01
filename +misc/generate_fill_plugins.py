@@ -9,15 +9,17 @@ import os
 import sys
 import re
 
-workdir = "../+plugins/"
 file_format = [".m"]
 excludefiles = ["fill_plugins.m"]
 excludedirs = [".git"]
 
+if 'workdir' not in locals():
+    workdir = "../+plugins/"
 if len(sys.argv) > 1:
     workdir = sys.argv[1]
 
-filedict = {}
+# filedict = {}
+filelist = []
 
 with open(os.path.join(workdir, "fill_plugins.m"), 'w') as fw:
     fw.writelines(["function fill_plugins(item)\n", "% This function populates Plugins menu with programs\n", 
@@ -29,6 +31,7 @@ with open(os.path.join(workdir, "fill_plugins.m"), 'w') as fw:
             filenamebase = os.path.splitext(file)[0]
             if os.path.splitext(file)[-1] in file_format:
                 # TODO: arguments of function
-                string = f"uimenu(item,'Label','{filenamebase.replace('_', ' ')}','Callback',@(~,~) plugins.{filenamebase}(''));\n"
+                string = f"uimenu(item,'Label','{filenamebase.replace('_', ' ')}','Callback',@(~,~) plugins.{filenamebase}());\n"
                 fw.write(string)
+                filelist.append(file)
     fw.write("end")
