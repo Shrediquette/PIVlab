@@ -58,6 +58,19 @@ m11 = uimenu(MainWindow,'Label','Statistics');
 uimenu(m11,'Label','Statistics','Callback',@plot.statistics_Callback,'Accelerator','B');
 m12 = uimenu(MainWindow,'Label','Synthetic particle image generation','Tag','menu_partgen');
 uimenu(m12,'Label','Particle image generator','Callback',@simulate.part_img_3d_Callback,'Accelerator','G','Tag','menu_partgen3d');
+% -->
+m15 = uimenu(MainWindow,'Label','Plugins');
+% TODO: check 
+if ~isfolder('+plugins')
+    mkdir('+plugins');
+elseif ~isfile('+plugins/fill_plugins.m')
+    system('touch +plugins/fill_plugins.m');
+else%if isfile('+plugins/fill_plugins.m')
+    plugins.fill_plugins(m15);
+end
+uimenu(m15,'Label','Install plugins','Callback',@(~,~) gui.installplugins_Callback(m15));
+uimenu(m15,'Label','Description','Callback',@gui.pluginsdescription_Callback);
+% <--
 m13 = uimenu(MainWindow,'Label','Learn!');
 uimenu(m13,'Label','Tutorial videos','Callback',@gui.pivlabyoutube_Callback);
 uimenu(m13,'Label','Getting started manual','Callback',@gui.pivlabhelp_Callback,'Accelerator','H');
