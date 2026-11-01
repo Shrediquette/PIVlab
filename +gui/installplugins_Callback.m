@@ -16,9 +16,15 @@ if pyenv().Version == ""
     end
 end
 % <--
-pyrunfile('+misc/generate_fill_plugins.py +plugins');
+% pyrunfile('+misc/generate_fill_plugins.py +plugins');
+filelist = pyrunfile("+misc/generate_fill_plugins.py", "filelist", workdir="+plugins");
+filelist = string(filelist);
 try
+    % TODO: clean the menu before running fill_plugins to avoid duplicates
     plugins.fill_plugins(item);
+    answer = ["Plugins installation finished", "", "The following files found:", ...
+        filelist];
+    gui.custom_msgbox('msg',getappdata(0,'hgui'),'About',answer,'modal',{'OK'},'OK');
 catch ME
     disp("Error installing plugins")
     disp(ME.message)

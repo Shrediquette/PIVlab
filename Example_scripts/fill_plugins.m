@@ -5,6 +5,6 @@ function fill_plugins(item)
 disp('-> fill_plugins.m example: this function will populate the plugins menu with element "Images batch rotation"')
 
 % Add the element to the menu
-uimenu(item,'Label','Images batch rotation','Callback',@(~,~) plugins.imb_rotation(''));
+uimenu(item,'Label','Images batch rotation','Callback',@(~,~) plugins.imb_rotation());
 
 end
