@@ -128,6 +128,12 @@ Line numbers drift. Treat them as a starting hint, not gospel — grep for the p
 
 **Writing style**
 
+- **⛔ A toolbox requirement only applies to PIVlab running inside MATLAB.** The standalone
+  application has every toolbox **compiled in** — `+misc/has_toolbox.m` returns true
+  unconditionally when `isdeployed`, and its own comment says so. Never write "feature X needs
+  toolbox Y" without that qualifier (it happened on `capture.html` for the Image Acquisition
+  Toolbox, 2026-11-05). The exception is `command-line.html`: the `+pivlab` API only exists inside
+  MATLAB, so its requirements need no qualifier.
 - **⛔ Only write what a user needs in order to use a feature or understand a result.** This is
   the rule most often broken, so apply it as a test before every sentence: *would a reader act
   differently, or understand a result better, because of this sentence?* If not, it does not go
@@ -178,8 +184,10 @@ the corresponding page needs updating:
 - `img_not_mask` checkbox — `Visible off`.
 - `+plot/dcev.m` (Δ/complex-eigenvalue criterion) — orphaned; `derivative_calc.m:153` uses
   `plot.qcrit` instead. Only Q criterion exists; there is no λ₂, Δ or Γ.
-- `calib_dolivedetect` — commented out in `generateUI.m:2475-2485` but still referenced by
-  `cam_marker_setup_Callback.m:8` and session load/save. Latent bug, flagged separately.
+- `ac_realtime_PIV` (`Displacement` checkbox, Camera settings) — tooltip says "NOT IMLEMENTED
+  YET"; and `ac_realtime` (live PIV preview) is `Visible','off'`. Neither is documented.
+  ⚠️ **Not to be confused with `calib_dolivedetect`** (`Calibration` overlay,
+  `generateUI.m:2052`), which *is* live and *is* documented on `capture.html#camera`.
 - `+plot/draw_pixel_background_overlay.m:187-197` holds a **stale duplicate** of the derived-
   parameter label lists that stops at item 12 (no Uncertainty). If the parameter list changes,
   this copy needs changing too — it is used to re-label the colorbar.
@@ -248,6 +256,83 @@ Findings worth never re-deriving:
 ## 7. Changelog
 
 Newest first. **Add an entry whenever you change the manual**, and bump the watermark.
+
+### 2026-11-05 — capture.html rewritten as a panel walkthrough
+`capture.html` went from a workflow sketch (126 lines, one steps list) to a reference of the whole
+acquisition panel: `#setup` (connecting the equipment), `#panel` with one `<h3>` per sub-panel of
+`multip24` (General settings, Synchronizer control, Camera settings, Live image, Capture PIV
+images — 28 control rows), `#recording` (a recording start to finish), `#dt` (choosing the pulse
+distance), then the existing stereo and webcam sections. ~1400 words. Six new search records; the
+old `#workflow` anchor is gone, its record replaced.
+
+**Two sources, deliberately separated.** The control tables come from `+gui/generateUI.m:1905-2121`
+and the `+acquisition` callbacks, verified as usual. The *order of work* in `#recording`, the
+equipment chain in `#setup` and the practical advice in `#dt` come from the user's YouTube video
+*"PIVlab PIV system: Pulsed diodes, cameras, frame straddling, etc."*, whose transcript the user
+pasted — **user domain knowledge, not code-verified**, same category as `best-practices.html`.
+Deliberately left out of the manual from that transcript: laser colour (blue vs green), the
+Q-switch comparison, citation counts and the licensing remarks — background, not instructions.
+
+**Corrections from the user, same day — the camera has three modes, and the page had conflated
+them.** The whole `#live` / `#capture` / `#recording` story was rewritten around this; it is the
+single most important thing to get right on the page:
+
+| Mode | How | Synchronized | Overlays |
+|---|---|---|---|
+| **Live image** | `Live image` → `Start` | **no** — camera free-running | Zoom, Calibration (ChArUco), Sharpness, Grid |
+| **PIV preview** | `Capture PIV images` → `Start` with **`Save` unticked** | yes | Sharpness, Grid |
+| **Recording** | `Capture PIV images` → `Start` with **`Save` ticked** | yes | none |
+
+Source: `+acquisition/set_capture_overlay_controls.m` (names the three modes explicitly) and
+`+acquisition/piv_capture_Callback.m:51-55,79-91` — with `Save` off, `imageamount = inf`, the
+status says "Starting PIV preview...", and it runs until `Abort`. Laser energy stays adjustable
+while the preview runs (`:149`).
+
+- The live view is **not** synchronized, so **nothing about the particles can be judged there** —
+  not seeding, not exposure, not particle image quality. The page claimed "checking the seeding"
+  and then, after a first correction, still told the user to focus "on the particles in the light
+  sheet" there. Both were wrong. **Do not reintroduce any claim that image quality or particles
+  can be assessed from the live image.**
+- **Focusing belongs in the PIV preview** (user's wording), because that is the only mode showing
+  the images as they will be recorded. In the live view you can only focus on a **target** placed
+  in the plane of the light sheet.
+- The PIV preview was missing from the page entirely. `Save` had been described only as "writes
+  images to disk"; that it switches between preview and recording is the point.
+- **The `Calibration` overlay does three things, not one** (user, same day). Verified in
+  `PIVlab_capture_resources/PIVlab_capture_charuco_detector.m`: it marks the detected markers and
+  reports the percentage found (`:271`); it **reads the QR code** on the board
+  (`preproc.cam_get_charuco_info_from_QRcode`, `:63-92`) and fills rows, columns, origin colour,
+  marker family and the **checker and marker size in mm** — the board's scale — into the Marker
+  board setup panel; and once `cameraParams` exist it reports **yaw, pitch, roll and the camera
+  X/Y/Z in mm relative to the board** via `estimateExtrinsics` (`:181-246`), with X and Y along
+  the board and Z the distance in front of it. Without a calibration it says so instead.
+  `camera-calibration.html` gained a sentence about the QR code on generated boards
+  (`cam_generateboard_Callback.m:47-49` adds it): the QR was documented nowhere before.
+
+**Frame straddling expanded (user: "the standard way of doing PIV in PIVlab").** `#dt` became
+"Pulse distance and frame straddling" with a new `<h3 id="straddling">`: the two images are two
+consecutive frames, the two pulses sit on either side of the frame boundary, so Δt is set by the
+pulse spacing and not by the frame rate. Includes `v_max = (L/N)·s/Δt` and a Δt table
+(10 ms → 0.05 m/s … 10 µs → 50 m/s, for 100 mm / 2000 px / 10 px) from the user's transcript,
+re-derived and checked. Limits are from `+acquisition/sync_settings_Callback.m:5-42`: below the
+camera minimum or above one frame period the field turns red and is clamped; the double-shutter
+readout gap comes from `initiate_straddling_graph.m:39-41`.
+
+**Toolbox claim corrected the same day:** "Camera access needs the Image Acquisition Toolbox" was
+true only inside MATLAB — see the first writing-style rule in section 5.
+
+Corrections made while reading the source for this:
+- **`calib_dolivedetect` is live, not dead code.** The note that it was commented out (carried
+  since 2026-07-07) is wrong for this control: it is created at `generateUI.m:2052` as the
+  `Calibration` overlay checkbox and used by `+acquisition/set_capture_overlay_controls.m`. It is
+  documented. The dead-code note was about a *different* control in the camera-calibration panel.
+- **`Displacement` is not implemented** (`ac_realtime_PIV`, tooltip literally says so) and the
+  hidden `ac_realtime` checkbox is `Visible','off'`. The old page listed `Displacement` as an
+  available overlay — removed. ⚠️ Note `set_capture_overlay_controls.m:20-25` *enables*
+  `ac_realtime_PIV` in PIV preview, which looks like it works — but the control has **no
+  `Callback`** (`generateUI.m:2055`) and the `do_realtime` flag it would feed is set only by the
+  hidden `ac_realtime` (`+acquisition/realtime_Callback.m`). It is plumbing for a feature that
+  does not exist yet. Do not document it until it has a callback.
 
 ### 2026-11-05 — keyboard shortcuts reworked to Ctrl+Shift
 All shortcuts moved from Ctrl+key menu accelerators to **Ctrl+Shift+key**, because Ctrl+A/C/V/Z are
@@ -495,12 +580,10 @@ All topics complete. Kept for the per-page verification detail, which feeds the 
 - **Command line (API)** — `command-line.html`. The `+pivlab` package: ten-line workflow, function
   list, result struct, options, settings, camera calibration, stereo, and why pre-processing does
   not write new image files. Added Oct 2026 with the PIVlab 4 API.
-- **Capturing images** — `capture.html`. Still the **thinnest page in the manual** (126 lines, 3
-  sections: `#workflow`, `#stereo`, `#webcam`). Large and hardware-specific (~38 files in
-  `+acquisition`); deliberately kept at workflow-shape level and linked out to
-  `docs/_wiki/4_synchronizer_laser.md` and `5_camera_setup.md` rather than guessing hardware
-  behaviour. The *software* side (panel-by-panel) could be expanded without a rig — see the note
-  at the end of section 8.
+- **Capturing images** — `capture.html`. Full walkthrough of the acquisition panel since
+  2026-11-05 (see the changelog entry): equipment chain, one section per sub-panel of `multip24`,
+  a start-to-finish recording, pulse-distance guidance, stereo and the webcam demo. Hardware
+  wiring stays in `docs/_wiki/4_synchronizer_laser.md` and `5_camera_setup.md`.
 - **Keyboard shortcuts** — `shortcuts.html`. The 22 Ctrl+Shift shortcuts, grouped by workflow.
   Source of truth is the `switch` in `+gui/key_press.m` (see the shortcut rules in section 5).
 - **Best practices & troubleshooting** — `best-practices.html`. User domain knowledge, not code.
@@ -511,17 +594,13 @@ dedicated pages.
 
 ### Known gaps / candidates for future work
 
-- **`capture.html` is thin relative to the feature.** The acquisition GUI (multip24 + the
-  `+acquisition` package) has far more software surface than the page covers: camera selection and
-  settings, live image, autofocus/sharpness aids, the synchronizer and laser controls, capture
-  modes, file naming and storage. All of that is readable in the source and can be documented
-  **without hardware**; only the "does this physically behave as described" claims need the rig.
-  If this is picked up, follow the normal rule — verify every label against `generateUI.m` and the
-  `+acquisition` callbacks, keep hardware-specific wiring in the wiki pages, and mark anything
-  unverifiable without the rig rather than guessing.
+- **`capture.html` has no screenshots of its sub-panels.** The page has the whole-panel shot and
+  the stereo live image; a capture of the Timing graph would help `#dt` most.
 - **`capture/stereo-live.png` is a simulated-camera screenshot** — swap in a real-rig capture when
   one exists (see the 2026-10-24 entry).
-- The user has recorded **YouTube tutorials for image acquisition**. Claude cannot watch video; if
-  that material should feed the manual, it needs a transcript or the user's own notes as input —
-  and it would then be user-supplied domain knowledge, i.e. the same category as
-  `best-practices.html`, not code-verified content.
+- **Claude cannot watch video.** Verified 2026-11-05: titles and descriptions are fetchable (the
+  oEmbed endpoint), captions are **not** — the caption URL is session-signed and 404s. Material
+  from the user's YouTube tutorials has to arrive as a pasted transcript, and is then
+  user-supplied domain knowledge, like `best-practices.html`. One such transcript (the PIV-system
+  video) has been used for `capture.html`; further acquisition videos the user mentioned are not
+  linked from the wiki page and would need to be pointed out.

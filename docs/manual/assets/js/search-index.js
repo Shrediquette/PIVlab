@@ -519,10 +519,46 @@ window.MANUAL_SEARCH = [
     text: "rankine vortex hamel oseen vortex pair uniform displacement rotation membrane sphere wake free jet 3d flow simulation time series ground truth ground-truth"
   },
   {
-    title: "Capturing images: camera and synchronizer workflow",
-    href: "pages/capture.html", hash: "workflow",
+    title: "Capturing images: connecting the equipment",
+    href: "pages/capture.html", hash: "setup",
     section: "Image acquisition",
-    text: "capture images camera synchronizer simplesync frame rate pulse distance laser energy connect com port start save checkbox image amount"
+    text: "connect camera laser synchronizer cable usb safety interlock door switch power supply wireless link dongle tripod setup"
+  },
+  {
+    title: "Capturing images: synchronizer and laser settings",
+    href: "pages/capture.html", hash: "sync",
+    section: "Image acquisition",
+    text: "synchronizer control frame rate pulse distance laser energy pulse length timing graph low energy mode alignment toggle laser trigger mode external trigger devices seeding generator com port connect"
+  },
+  {
+    title: "Capturing images: camera settings and live image",
+    href: "pages/capture.html", hash: "camera",
+    section: "Image acquisition",
+    text: "camera settings binning roi lens autofocus setup bit depth gain sharpness overlay grid calibration charuco live image exposure start snapshot save focus"
+  },
+  {
+    title: "Capturing images: recording the image pairs",
+    href: "pages/capture.html", hash: "capture",
+    section: "Image acquisition",
+    text: "capture piv images save image amount ram red start abort discard recording loaded into session project folder"
+  },
+  {
+    title: "A recording from start to finish",
+    href: "pages/capture.html", hash: "recording",
+    section: "Image acquisition",
+    text: "recording workflow step by step project path configuration frame rate focus autofocus pulse distance laser energy save image amount start check data"
+  },
+  {
+    title: "Pulse distance and frame straddling",
+    href: "pages/capture.html", hash: "dt",
+    section: "Image acquisition",
+    text: "pulse distance interframe time delta t displacement interrogation area pulse length motion blur streak signal to noise timing graph plan without hardware"
+  },
+  {
+    title: "How frame straddling works",
+    href: "pages/capture.html", hash: "straddling",
+    section: "Image acquisition",
+    text: "frame straddling consecutive frames laser pulse end of exposure beginning of next frame boundary decoupled from frame rate maximum velocity double shutter readout minimum interframe limit red field timing graph"
   },
   {
     title: "Capturing images: stereo acquisition with two cameras",
