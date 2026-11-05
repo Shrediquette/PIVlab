@@ -46,7 +46,7 @@ item=[0  item(2)+item(4)+margin*0.2 parentitem(3)/2/2 parentitem(3)/2/2/4];
 handles.toggle_parallel = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@misc.toggle_parallel_Callback,'tag','toggle_parallel','UserData','not_a_setting');
 
 item=[parentitem(3)/2/2 item(2) parentitem(3)/2/2 parentitem(3)/2/2/4];
-handles.stereo_camera_toggle = uicontrol(handles.tools,'Style','pushbutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','CAM 1','Fontweight','bold','Callback',@stereo.camera_toggle_Callback,'tag','stereo_camera_toggle','TooltipString','Stereo-PIV: switch between camera 1 and camera 2','Visible','off','UserData','not_a_setting');
+handles.stereo_camera_toggle = uicontrol(handles.tools,'Style','pushbutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','CAM 1','Fontweight','bold','Callback',@stereo.camera_toggle_Callback,'tag','stereo_camera_toggle','TooltipString','Stereo-PIV: switch between camera 1 and camera 2 (Ctrl+Shift+1 / Ctrl+Shift+2)','Visible','off','UserData','not_a_setting');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2/2 parentitem(3)/2/2/4];
 handles.zoomon = uicontrol(handles.tools,'Style','togglebutton','units', 'characters','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@gui.zoomon_Callback,'tag','zoomon','TooltipString','Zoom','UserData','not_a_setting');
@@ -114,7 +114,7 @@ item=[0 item(2)+item(4) parentitem(3) 2];
 handles.loadimgsbutton = uicontrol(handles.multip01,'Style','pushbutton','String','Import images','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', {@import.loadimgsbutton_Callback,1,[]},'TooltipString','Load image data');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
-handles.stereo_import = uicontrol(handles.multip01,'Style','pushbutton','String','Import stereo images','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.stereo_import_Callback,'Tag','stereo_import','TooltipString','Stereo-PIV (2D3C): import the images of camera 1 and camera 2');
+handles.stereo_import = uicontrol(handles.multip01,'Style','pushbutton','String','Import stereo images','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.stereo_import_Callback,'Tag','stereo_import','TooltipString','Stereo-PIV (2D3C): import the images of camera 1 and camera 2 (Ctrl+Shift+O)');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 handles.loadvideobutton = uicontrol(handles.multip01,'Style','pushbutton','String','Convert + import video','Units','characters', 'Fontunits','points','Fontsize',12,'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @import.convertvideobutton_Callback,'TooltipString','Convert a video to lossless image files, then load them (time-resolved)');

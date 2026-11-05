@@ -252,7 +252,7 @@ window.MANUAL_SEARCH = [
     title: "Keyboard shortcuts",
     href: "pages/shortcuts.html", hash: "top",
     section: "Reference",
-    text: "keyboard shortcuts ctrl n e i s a v z d m t p q b g h accelerator hotkey"
+    text: "keyboard shortcuts ctrl shift n o i e k s w a v f z d r m t p q b g h 1 2 accelerator hotkey key combination masking camera switch stereo import"
   },
   {
     title: "Setting up a ChArUco marker board",

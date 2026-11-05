@@ -83,8 +83,10 @@ panes = findall(hgui, 'Type', 'annotationpane');
 for k = 1:numel(panes)
     delete(panes(k).Children);
 end
+% WindowKeyPressFcn is restored, not cleared: it carries the keyboard shortcuts (gui.key_press),
+% which must keep working after a reset. The other callbacks are leftovers of drawing tools.
 set(hgui, 'WindowButtonDownFcn', '', 'WindowButtonMotionFcn', '', 'WindowButtonUpFcn', '', ...
-    'WindowScrollWheelFcn', '', 'WindowKeyPressFcn', '', 'WindowKeyReleaseFcn', '', 'KeyReleaseFcn', '', ...
+    'WindowScrollWheelFcn', '', 'WindowKeyPressFcn', @gui.key_press, 'WindowKeyReleaseFcn', '', 'KeyReleaseFcn', '', ...
     'Pointer', 'arrow', 'Name', ['PIVlab ' gui.retr('PIVver')]);
 gui.generateUI
 gui.put('num_handle_calls', 0); % fresh handles of the new controls (the image acquisition panel with its defaults)

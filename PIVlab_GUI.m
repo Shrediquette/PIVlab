@@ -478,7 +478,9 @@ if isempty(fh)
         disp('Toolboxes could not be checked automatically. You need the Image Processing Toolbox.')
     end
     %disp('fcs')
-    set(MainWindow,'ResizeFcn', @gui.MainWindow_ResizeFcn,'CloseRequestFcn', @gui.MainWindow_CloseRequestFcn,'DeleteFcn', @gui.MainWindow_DeleteFcn,'KeyPressFcn', @gui.key_press);
+    % WindowKeyPressFcn (not KeyPressFcn): the Ctrl+Shift shortcuts of gui.key_press must also
+    % work while an edit field, a list or a button has the focus. gui.reset_gui_Callback sets it again.
+    set(MainWindow,'ResizeFcn', @gui.MainWindow_ResizeFcn,'CloseRequestFcn', @gui.MainWindow_CloseRequestFcn,'DeleteFcn', @gui.MainWindow_DeleteFcn,'WindowKeyPressFcn', @gui.key_press);
     pause(0.1)
     gui.MainWindow_ResizeFcn(MainWindow)
     %disp('vis')
