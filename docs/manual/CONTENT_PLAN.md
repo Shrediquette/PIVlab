@@ -318,6 +318,14 @@ re-derived and checked. Limits are from `+acquisition/sync_settings_Callback.m:5
 camera minimum or above one frame period the field turns red and is clamped; the double-shutter
 readout gap comes from `initiate_straddling_graph.m:39-41`.
 
+The section carries the user's own timing diagram,
+`assets/img/capture/frame-straddling.jpg`, from `https://optolution.com/media/ldps-pulse-diagram.jpg`
+— **copied into the repo, not hot-linked**, so the manual keeps working offline and the link
+cannot rot. It labels exactly the three panel fields (pulse distance, frame rate, pulse length =
+laser energy), which the caption ties together. Its Δt table first needed the long text moved out
+of the first column: `table.ref td:first-child` is `white-space: nowrap`, so a long first cell
+forces a horizontal scroll on mobile — **keep first-column cells short**.
+
 **Toolbox claim corrected the same day:** "Camera access needs the Image Acquisition Toolbox" was
 true only inside MATLAB — see the first writing-style rule in section 5.
 
