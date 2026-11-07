@@ -38,7 +38,7 @@ gui.apply_ui_mode(new_mode);
 % of PIVlab's settings storage).
 ui_mode = new_mode;
 try
-    save('PIVlab_settings_default.mat','ui_mode','-append');
+    save(fullfile(userpath,'PIVlab_settings_default.mat'),'ui_mode','-append');
 catch
 end
 
