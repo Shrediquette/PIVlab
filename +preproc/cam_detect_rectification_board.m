@@ -24,9 +24,9 @@ for t = 1:2
     else
         try_img = fliplr(img);
     end
-    p = detectCharucoBoardPoints(try_img, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', 0, ...
+    % downscales high resolution images (large markers), removes corners of wrongly decoded markers
+    p = preproc.cam_detectCharucoBoardPoints_scaled(try_img, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', 0, ...
         'OriginCheckerColor', originCheckerColor, 'RefineCorners', true, 'ResolutionPerBit', 16, 'MarkerSizeRange', [0.005 1]);
-    p = preproc.cam_filter_charuco_corners(p, patternDims); % corners of wrongly decoded markers
     if isempty(p)
         n = 0;
     else

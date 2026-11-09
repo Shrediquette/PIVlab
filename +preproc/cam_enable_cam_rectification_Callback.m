@@ -166,12 +166,11 @@ if handles.calib_userectification.Value == 1
 	cam.rectification_tform = rectification_tform;
 	caliimg = preproc.cam_undistort_with(tmp_img, cam);
 	if mirrored % the rectified image shows the board still mirrored
-		imagePoints1 = detectCharucoBoardPoints(fliplr(caliimg),patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'RefineCorners',true,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
+		imagePoints1 = preproc.cam_detectCharucoBoardPoints_scaled(fliplr(caliimg),patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'RefineCorners',true,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
 		imagePoints1(:,1) = size(caliimg,2) + 1 - imagePoints1(:,1);
 	else
-		imagePoints1 = detectCharucoBoardPoints(caliimg,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'RefineCorners',true,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
-	end
-	imagePoints1 = preproc.cam_filter_charuco_corners(imagePoints1, patternDims); % corners of wrongly decoded markers
+		imagePoints1 = preproc.cam_detectCharucoBoardPoints_scaled(caliimg,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'RefineCorners',true,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
+	end % scaled: downscales high resolution images, removes corners of wrongly decoded markers
 	worldPoints = patternWorldPoints("charuco-board",patternDims,checkerSize);
 	worldPoints(isnan(imagePoints1))=NaN;
 	imagePoints1 = rmmissing(imagePoints1); %remove missing entries... does that work simply like this? --> yes. If matching world points are also removed.

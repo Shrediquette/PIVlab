@@ -1,7 +1,8 @@
 function [avg_vert,avg_horiz] = cam_meanCharucoSize(tmp_img,markerFamily,checkerSize,markerSize)
 %Measures the size of the Aruco markers, then uses the ratio of markersize
 %and checkersize to calculate the size of the checkers.
-[~,locs] = readArucoMarker(tmp_img,markerFamily,'WindowSizeRange',[3 23],'MarkerSizeRange',[0.005 1],'ResolutionPerBit',4,'SquarenessTolerance',0.03); %schnellere detektierung wenn bekannt. Am besten: Erstmal so gucken welche Familie dominant. Dann zweiter durchgang mit nur dieser familie
+s = preproc.cam_charuco_scale(tmp_img); % large markers are not detected reliably --> downscale
+[~,locs] = readArucoMarker(imresize(tmp_img,s),markerFamily,'WindowSizeRange',[3 23],'MarkerSizeRange',[0.005 1],'ResolutionPerBit',4,'SquarenessTolerance',0.03); %schnellere detektierung wenn bekannt. Am besten: Erstmal so gucken welche Familie dominant. Dann zweiter durchgang mit nur dieser familie
 
 N = size(locs,3);
 width  = zeros(N,1);
@@ -27,7 +28,7 @@ sd_h = std(height);
 height(height > mu_h+sd_h) = nan;
 height(height < mu_h-sd_h) = nan;
 
-avg_vert=mean(height,'omitnan')*checkerSize/markerSize;
-avg_horiz=mean(width,'omitnan')*checkerSize/markerSize;
+avg_vert=mean(height,'omitnan')*checkerSize/markerSize / s; % back to full res px
+avg_horiz=mean(width,'omitnan')*checkerSize/markerSize / s;
 
 %das ist die Größe der ARUCO marker... nicht der Schachbrettkaros...
