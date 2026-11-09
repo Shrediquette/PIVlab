@@ -105,7 +105,7 @@ for k = 1:2
     calib.extrinsics{k} = extr;
 end
 calib.opposite_sides = stereo.opposite_sides(calib);
-[calib.Ravg, calib.grid_info] = stereo.square_grid(calib.tform, calib.image_size, opts.PixelSize);
+[calib.Ravg, calib.grid_info] = stereo.square_grid(calib.tform, calib.image_size, opts.PixelSize, calib.cams);
 % mask: output pixels that are outside the view of one camera
 H = calib.Ravg.ImageSize(1);
 W = calib.Ravg.ImageSize(2);

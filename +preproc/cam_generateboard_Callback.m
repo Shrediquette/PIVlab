@@ -50,7 +50,29 @@ gui.toolsavailable(0,'Generating QR code and decorations...');drawnow;
 I = preproc.cam_decorate_board(I, patternDims, markerFamily, checkerSize, markerSize, originCheckerColor, marginsize, dpi / 25.4);
 gui.toolsavailable(1)
 figure;imshow(I)
-[file, location] = uiputfile('*.tif','Save charuco board as...',[originCheckerColor '_' markerFamily '_' num2str(patternDims(1)) 'x' num2str(patternDims(2)) '_' num2str(checkerSize) 'mm_' num2str(markerSize) 'mm_' num2str(dpi) 'dpi.tif']);
+% default file name with the board size (width x height, with margins)
+board_mm = [(patternDims(2) + 6) * checkerSize, (patternDims(1) + 6) * checkerSize];
+default_name = [originCheckerColor '_' markerFamily '_' num2str(patternDims(1)) 'x' num2str(patternDims(2)) '_' num2str(checkerSize) 'mm_' num2str(markerSize) 'mm_' num2str(board_mm(1)) 'x' num2str(board_mm(2)) 'mm'];
+[file, location] = uiputfile({'*.tif','TIFF image (300 dpi)';'*.pdf','PDF vector, print-ready (exact size in mm, also for transparent material)'},'Save charuco board as...',default_name);
 if file ~=0
-    imwrite(I,fullfile(location,file),'tif','Resolution',dpi);
+    [~,name,ext] = fileparts(file);
+    if strcmpi(ext,'.pdf')
+        if strcmp(name, default_name) % default name: the PDF page has 5 mm bleed on every side (preproc.cam_board_pdf)
+            file = [name '_plus_5mm_bleed.pdf'];
+            if isfile(fullfile(location,file))
+                answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),'File exists',[file ' already exists. Overwrite it?'],'modal',{'Yes','Cancel'},'Cancel');
+                if ~strcmpi(answer,'Yes')
+                    return
+                end
+            end
+        end
+        gui.toolsavailable(0,'Writing PDF file...');drawnow;
+        preproc.cam_board_pdf(fullfile(location,file), patternDims, markerFamily, checkerSize, markerSize, originCheckerColor);
+        gui.toolsavailable(1)
+    else
+        if ~strcmpi(ext,'.tif')
+            file = [file '.tif'];
+        end
+        imwrite(I,fullfile(location,file),'tif','Resolution',dpi);
+    end
 end

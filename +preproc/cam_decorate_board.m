@@ -7,6 +7,7 @@ function I = cam_decorate_board(I, patternDims, markerFamily, checkerSize, marke
 % marginsize: width of the white margin [px]; the QR codes fill the margin
 % px_per_mm:  image resolution [px/mm] (e.g. 300 dpi / 25.4); the font size scales with it
 % grayscale:  true: the result is a grayscale image (logo in gray); default false: RGB (colour logo)
+% The logo is drawn from images/OLT_logo_vector.svg at the image resolution.
 if nargin < 9
     grayscale = false;
 end
@@ -36,35 +37,51 @@ I(top, right) = I(top, right) .* qr_0;
 I(bottom, left) = I(bottom, left) .* qr_180;
 I(bottom, right) = I(bottom, right) .* qr_180;
 
-%% logo at the bottom
-olt_logo = double(imread(fullfile(fileparts(mfilename('fullpath')), '..', 'images', 'OLT_logo.png'))) / 255;
-if grayscale && size(olt_logo, 3) == 3
-    olt_logo = rgb2gray(olt_logo);
+%% logo at the bottom, drawn from the vector logo (same size and position as in preproc.cam_board_pdf)
+logo_txt = fileread(fullfile(fileparts(mfilename('fullpath')), '..', 'images', 'OLT_logo_vector.svg'));
+logo_box = regexp(logo_txt, 'viewBox="([^"]*)"', 'tokens', 'once');
+logo_box = sscanf(logo_box{1}, '%f');
+logo_colours = regexp(logo_txt, '<path fill="#([0-9a-f]{6})"[^>]* d="([^"]*)"', 'tokens');
+logo_h = 0.8 * q; % [px]
+logo_scale = logo_h / logo_box(4); % [px per logo unit]
+max_width = 0.9 * patternDims(2) * checkerSize * px_per_mm;
+if logo_box(3) * logo_scale > max_width
+    logo_scale = max_width / logo_box(3);
+    logo_h = logo_box(4) * logo_scale;
 end
-olt_logo = padarray(olt_logo, [50 50], 1, 'both');
-max_width = floor(patternDims(2) * checkerSize * px_per_mm);
-max_height = q;
-
-olt_width1 = floor(size(olt_logo, 2) / size(olt_logo, 1) * max_height);
-oltsize1 = [max_height olt_width1];
-
-olt_height1 = floor(size(olt_logo, 1) / size(olt_logo, 2) * max_width);
-oltsize2 = [olt_height1 max_width];
-
-oltsize = oltsize1;
-if olt_width1 > max_width
-    oltsize = oltsize2;
-end
-if olt_height1 > max_height
-    oltsize = oltsize1;
-end
-olt_logo = imresize(olt_logo, [oltsize(1) oltsize(2)], 'bicubic');
-if size(olt_logo, 3) == 3
+logo_x = (imageSize(2) - logo_box(3) * logo_scale) / 2; % left edge [px], 0 = left image edge
+logo_y = imageSize(1) - q / 2 - logo_h / 2;
+if ~grayscale
     I = repmat(I, 1, 1, 3);
 end
-rows = imageSize(1) - oltsize(1) + 1:imageSize(1);
-cols = floor((imageSize(2) - oltsize(2)) / 2) + (1:oltsize(2));
-I(rows, cols, :) = I(rows, cols, :) .* olt_logo;
+% pixels of the logo box; the colour coverage of every pixel from 4 x 4 samples (smooth edges)
+ss = 4;
+c0 = max(0, floor(logo_x));
+c1 = min(imageSize(2), ceil(logo_x + logo_box(3) * logo_scale));
+r0 = max(0, floor(logo_y));
+r1 = min(imageSize(1), ceil(logo_y + logo_h));
+box = I(r0 + 1:r1, c0 + 1:c1, :);
+for k = 1:numel(logo_colours)
+    rgb = [hex2dec(logo_colours{k}{1}(1:2)) hex2dec(logo_colours{k}{1}(3:4)) hex2dec(logo_colours{k}{1}(5:6))] / 255;
+    if grayscale
+        rgb = 0.299 * rgb(1) + 0.587 * rgb(2) + 0.114 * rgb(3);
+    end
+    mask = false((r1 - r0) * ss, (c1 - c0) * ss);
+    subpaths = regexp(logo_colours{k}{2}, 'M[^M]*', 'match');
+    for p = 1:numel(subpaths)
+        v = sscanf(regexprep(subpaths{p}, '[MLZ]', ' '), '%f');
+        % poly2mask: sample centres at integer coordinates
+        x = (logo_x + logo_scale * v(1:2:end) - c0) * ss + 0.5;
+        y = (logo_y + logo_scale * v(2:2:end) - r0) * ss + 0.5;
+        mask = xor(mask, poly2mask(x, y, size(mask, 1), size(mask, 2))); % fill rule evenodd
+    end
+    coverage = reshape(sum(reshape(mask, ss, []), 1), size(mask, 1) / ss, []); % sum over sample rows
+    coverage = reshape(sum(reshape(coverage', ss, []), 1), size(coverage, 2) / ss, [])' / ss^2; % and columns
+    for ch = 1:size(box, 3)
+        box(:, :, ch) = box(:, :, ch) .* (1 - coverage) + rgb(ch) * coverage;
+    end
+end
+I(r0 + 1:r1, c0 + 1:c1, :) = box;
 
 %% text with the board parameters at the top
 textx = round(imageSize(2) / 2);
