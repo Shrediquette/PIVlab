@@ -12,5 +12,6 @@ if ~isequal(cam_selected_target_images,0) %0: cancelled
     pathfiles=fullfile(location,cam_selected_target_images);
     gui.put('cam_selected_rectification_image',pathfiles)
     handles.calib_userectification.Value = 0;
+    gui.update_calibration_buttons(handles);
     image(imread(pathfiles),'Parent',gui.retr('pivlab_axis'));axis image;
 end

@@ -6,4 +6,5 @@ handles=gui.gethand;
 if ~isequal(gui.retr('stereomode'), 1) % stereo-PIV: the panel is for the active camera (label set in update_dependent_controls)
     handles.calib_undist_cam_label.String = 'Current camera: CAMERA 1';
 end
+gui.update_calibration_buttons(handles);
 gui.switchui('multip26')

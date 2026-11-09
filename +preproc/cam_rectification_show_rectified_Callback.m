@@ -21,28 +21,21 @@ if ~isempty (cameraParams) && ~isempty(cam_selected_rectification_image)
         gui.toolsavailable(1)
         return
     end
-    minMarkerID = 0;
-
-    %% Slower but more robust due to image preprocessing:
-    %%{
-    tmp_img=imread(cam_selected_rectification_image);
-    if size(tmp_img,3) > 1
-        tmp_img = rgb2gray(tmp_img);
-    end
-    tmp_img=imadjust(tmp_img);
-    tmp_img=imsharpen(tmp_img);
-    imagePoints1 = detectCharucoBoardPoints(tmp_img,patternDims,markerFamily,checkerSize,markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor,'RefineCorners',true,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
-    imagePoints1 = preproc.cam_filter_charuco_corners(imagePoints1, patternDims); % corners of wrongly decoded markers
-    %%}
-    %% faster but no preproc possible
-    %[imagePoints1, ~] = detectPatternPoints(detector, cam_selected_rectification_image, patternDims, markerFamily, checkerSize, markerSize, 'MinMarkerID', minMarkerID, 'OriginCheckerColor', originCheckerColor);
+    % also detects a mirrored board (camera behind the light sheet)
+    [imagePoints1,mirrored,tmp_img] = preproc.cam_detect_rectification_board(imread(cam_selected_rectification_image),patternDims,markerFamily,checkerSize,markerSize,originCheckerColor);
     if isempty(imagePoints1) || all(isnan(imagePoints1(:)))
         gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','No ChArUco markers detected.','modal');
         return
     end
+    if mirrored
+        tmp_img = fliplr(tmp_img); % markers can only be read in the mirrored image
+    end
     [mean_checker_size_x,mean_checker_size_y]=preproc.cam_meanCharucoSize(tmp_img,markerFamily,checkerSize,markerSize);
     checker_size_px=(mean_checker_size_y+mean_checker_size_x)/2 * handles.calib_upscale.Value;
     worldPoints = patternWorldPoints("charuco-board",patternDims,checker_size_px);%checkerSize); %checkersize muss die Größe haben, die die quadrate im eingangsbild in pixeln haben.
+    if mirrored
+        worldPoints(:,1) = -worldPoints(:,1); % board seen from behind: rectified image not mirrored
+    end
 
     if patternDims(1) > patternDims(2) %Fixes the issue that high slender calibration bards result in rotated output
         % swap axes

@@ -79,6 +79,7 @@ else
 		set(disabled_while_busy(isvalid(disabled_while_busy)), 'enable', 'off');
 	end
 	enable_menus(menu_items);
+	gui.update_calibration_buttons(handles); % calibration data may have been made while busy
 end
 set(handles.progress, 'enable', 'on');
 set(handles.overall, 'enable', 'on');

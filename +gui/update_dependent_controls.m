@@ -214,6 +214,9 @@ if stereo_mode && strcmp(get(handles.multip30, 'Visible'), 'on')
     stereo.update_panel(handles);
 end
 
+%% Camera calibration and rectification: buttons in the order of the work flow
+gui.update_calibration_buttons(handles);
+
 %% Basic mode hides some of the elements again
 if strcmp(gui.retr('ui_mode'), 'basic')
     gui.apply_ui_mode('basic');

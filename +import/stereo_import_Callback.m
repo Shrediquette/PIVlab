@@ -83,7 +83,7 @@ if was_stereo
 end
 stereo.leave_stereo_mode
 clear_camera_calibration
-gui.put('roirect', []);
+roi.clear_roi_Callback % also the ROI fields and "ROI active"
 
 %% camera 2 first (kept in the stereo state), then camera 1 (shown)
 gui.put('multitiff', multitiff(2));

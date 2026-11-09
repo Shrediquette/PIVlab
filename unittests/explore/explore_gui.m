@@ -191,7 +191,7 @@ drawnow;
 end
 
 function m = menu_list()
-m = {'2D particle image generator', 'ANALYZE!', 'All results to Matlab workspace', ...
+m = {'Particle image generator', 'ANALYZE!', 'All results to Matlab workspace', ...
     'Calibrate using current or external image', 'Correlation matrices', ...
     'Define masks (exclude regions from analysis)', 'Define region of interest (ROI)', ...
     'Image based validation', 'Image pre-processing / enhancement', 'MAT file', ...
@@ -203,12 +203,24 @@ m = {'2D particle image generator', 'ANALYZE!', 'All results to Matlab workspace
     'Basic', 'Advanced', 'About'};
 end
 
+function m = find_menu(hgui, text)
+% menu entry by its label without the keyboard shortcut, e.g. 'Statistics' for 'Statistics   (Ctrl+Shift+B)'
+m = [];
+items = findall(hgui, 'Type', 'uimenu');
+for k = 1:numel(items)
+    label = strtrim(regexprep(char(items(k).Text), '\(Ctrl\+[^)]*\)$', ''));
+    if strcmp(label, text)
+        m = items(k);
+        return
+    end
+end
+end
+
 function call_menu(hgui, text)
-m = findall(hgui, 'Type', 'uimenu', 'Text', text);
+m = find_menu(hgui, text);
 if isempty(m)
     return
 end
-m = m(1);
 cb = m.MenuSelectedFcn;
 if isempty(cb)
     cb = m.Callback;

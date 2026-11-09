@@ -40,7 +40,7 @@ end
 
 function test_disabled_entry_stays_disabled(testCase)
 hgui = testCase.TestData.hgui;
-m = findall(hgui, 'Type', 'uimenu', 'Text', 'Statistics', '-not', 'Parent', hgui);
+m = findall(hgui, 'Type', 'uimenu', 'Tag', 'menu_statistics');
 verifyNumElements(testCase, m, 1);
 m.Enable = 'off';
 gui.toolsavailable(0);

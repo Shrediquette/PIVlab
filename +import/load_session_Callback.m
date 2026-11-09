@@ -25,6 +25,7 @@ end
 clear iptPointerManager
 gui.put('sessionpath',PathName);
 %% session data: exactly these entries, nothing left from the previous session
+roi.clear_roi_Callback % ROI fields and "ROI active" of the previous session (the session's ROI is shown below)
 keys = gui.session_data_keys;
 for i=1:numel(keys)
 	if isfield(session.data,keys{i})

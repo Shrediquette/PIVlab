@@ -12,4 +12,5 @@ if ~isequal(cam_selected_target_images,0) %0: cancelled
 	pathfiles=fullfile(location,cam_selected_target_images);
 	gui.put('cam_selected_target_images',pathfiles)
 	handles.calib_usecalibration.Value = 0;
+	gui.update_calibration_buttons(handles);
 end

@@ -17,5 +17,7 @@ if filen ~=0
         gui.put('cam_K_opencv',         []);
         handles.calib_use_tilted_model.Value = 0;
     end
+    gui.put('cameraStats', []); % reprojection errors of an earlier estimation do not belong to the loaded parameters
     handles.calib_usecalibration.Value = 0;
+    gui.update_calibration_buttons(handles);
 end

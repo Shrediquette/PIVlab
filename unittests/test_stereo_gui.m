@@ -98,14 +98,16 @@ verifyEqual(testCase, gui.retr('bg_img_A'), zeros(220, 260, 'uint8') + 3);
 verifyEqual(testCase, get(handles.calib_usecalibration, 'Value'), 1);
 % the calibration menu entries keep the active camera (no camera sub menus)
 hgui = getappdata(0, 'hgui');
-verifyEmpty(testCase, findall(hgui, 'Type', 'uimenu', 'Text', 'Camera 1'), 'camera sub menu still there');
-menu = findall(hgui, 'Type', 'uimenu', 'Text', 'Camera calibration (undistortion)');
+% (labels compared without a keyboard shortcut at the end, e.g. '   (Ctrl+Shift+B)')
+verifyEmpty(testCase, findall(hgui, 'Type', 'uimenu', '-regexp', 'Text', '^Camera \d'), 'camera sub menu still there');
+menu = findall(hgui, 'Type', 'uimenu', '-regexp', 'Text', '^Camera calibration \(undistortion\)');
 verifyNumElements(testCase, menu, 1);
 feval(menu.MenuSelectedFcn, menu, []);
 verifyEqual(testCase, gui.retr('stereo_active_camera'), 2);
 verifyEqual(testCase, char(get(handles.multip26, 'Visible')), 'on');
 verifyEqual(testCase, get(handles.calib_undist_cam_label, 'String'), 'Current camera: CAMERA 2');
-menu = findall(hgui, 'Type', 'uimenu', 'Text', 'Image rectification / alignment');
+menu = findall(hgui, 'Type', 'uimenu', '-regexp', 'Text', '^Image rectification / alignment');
+verifyNumElements(testCase, menu, 1);
 feval(menu.MenuSelectedFcn, menu, []);
 verifyEqual(testCase, gui.retr('stereo_active_camera'), 2);
 verifyEqual(testCase, char(get(handles.multip27, 'Visible')), 'on');

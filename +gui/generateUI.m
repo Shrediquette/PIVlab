@@ -2132,34 +2132,34 @@ item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.calib_undist_cam_label=uicontrol(handles.calib_imagedata,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'FontWeight','bold','Tag','calib_undist_cam_label');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
-handles.calib_load_imgs = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Load target images','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_calibration_loadimages_Callback,'TooltipString','Load images of the calibration target');
+handles.calib_load_imgs = uicontrol(handles.calib_imagedata,'Style','pushbutton','Tag','calib_load_imgs','String','Load target images','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_calibration_loadimages_Callback,'TooltipString','Load images of the calibration target');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
 handles.calib_use_tilted_model = uicontrol(handles.calib_imagedata,'Style','checkbox','String','Scheimpflug adapter (tilted sensor model)','Value',default.calibration.calib_use_tilted_model,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_use_tilted_model','Callback', @preproc.cam_togglescheimpflug_Callback,'TooltipString','Enable CALIB_TILTED_MODEL for cameras with a Scheimpflug adapter','UserData','session_only');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
-handles.calib_estimateparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Estimate cam parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_estimateparams_Callback,'TooltipString','Detect charuco markers and estimate camera parameters');
+handles.calib_estimateparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','Tag','calib_estimateparams','String','Estimate cam parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_estimateparams_Callback,'TooltipString','Detect charuco markers and estimate camera parameters');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3)/2 1.5];
-handles.calib_saveparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Save parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_saveparams_Callback,'TooltipString','Save the camera parameters to a file');
+handles.calib_saveparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','Tag','calib_saveparams','String','Save parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_saveparams_Callback,'TooltipString','Save the camera parameters to a file');
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
-handles.calib_loadparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Load parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_loadparams_Callback,'TooltipString','Load camera parameters from a file');
+handles.calib_loadparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','Tag','calib_loadparams','String','Load parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_loadparams_Callback,'TooltipString','Load camera parameters from a file');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 1.5];
-handles.calib_clearparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Clear parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_clearparams_Callback,'TooltipString','Clear camera parameters');
+handles.calib_clearparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','Tag','calib_clearparams','String','Clear parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_clearparams_Callback,'TooltipString','Clear camera parameters');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1.5];
 uicontrol(handles.calib_imagedata,'Style','text', 'String','Calibration checks','Fontweight','bold','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
-handles.calib_showreproject = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Show reprojection errors','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_showreproject_Callback,'TooltipString','Show reprojection errors (should be below 1 pixel for a valid undistortion)');
+handles.calib_showreproject = uicontrol(handles.calib_imagedata,'Style','pushbutton','Tag','calib_showreproject','String','Show reprojection errors','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_showreproject_Callback,'TooltipString','Show reprojection errors (should be below 1 pixel for a valid undistortion)');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
-handles.calib_showcams = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Show camera positions','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_show_cam_position_Callback,'TooltipString','Show positions of the cameras');
+handles.calib_showcams = uicontrol(handles.calib_imagedata,'Style','pushbutton','Tag','calib_showcams','String','Show camera positions','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_show_cam_position_Callback,'TooltipString','Show positions of the cameras');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
-handles.calib_showdistortion = uicontrol(handles.calib_imagedata,'Style','pushbutton','String','Show lens distortion','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_showdistortion_Callback,'TooltipString','Show camera lens distortion');
+handles.calib_showdistortion = uicontrol(handles.calib_imagedata,'Style','pushbutton','Tag','calib_showdistortion','String','Show lens distortion','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_showdistortion_Callback,'TooltipString','Show camera lens distortion');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 1.5];
 uicontrol(handles.calib_imagedata,'Style','text', 'String','Apply calibration','Units','characters','Fontweight','bold', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
@@ -2188,16 +2188,16 @@ item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.calib_rect_cam_label=uicontrol(handles.rect_imagedata,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'FontWeight','bold','Tag','calib_rect_cam_label');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
-handles.rect_load_imgs = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Load target image','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_loadimages_Callback,'TooltipString','Load an image of the calibration target aligned with your target coordinate system and inside the laser sheet.');
+handles.rect_load_imgs = uicontrol(handles.rect_imagedata,'Style','pushbutton','Tag','rect_load_imgs','String','Load target image','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_loadimages_Callback,'TooltipString','Load an image of the calibration target aligned with your target coordinate system and inside the laser sheet.');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
-handles.rect_show_points = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Show detected markers','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_points_Callback,'TooltipString','Show all points that can be detected');
+handles.rect_show_points = uicontrol(handles.rect_imagedata,'Style','pushbutton','Tag','rect_show_points','String','Show detected markers','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_points_Callback,'TooltipString','Show all points that can be detected');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
-handles.rect_show_rectified = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Show rectified board','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_rectified_Callback,'TooltipString','Show a preview of the undistorted calibration board');
+handles.rect_show_rectified = uicontrol(handles.rect_imagedata,'Style','pushbutton','Tag','rect_show_rectified','String','Show rectified board','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_rectified_Callback,'TooltipString','Show a preview of the undistorted calibration board');
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
-handles.rect_show_cam_position = uicontrol(handles.rect_imagedata,'Style','pushbutton','String','Show camera position','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_cam_position_Callback,'TooltipString','Show a 3D scene of camera and board position');
+handles.rect_show_cam_position = uicontrol(handles.rect_imagedata,'Style','pushbutton','Tag','rect_show_cam_position','String','Show camera position','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_rectification_show_cam_position_Callback,'TooltipString','Show a 3D scene of camera and board position');
 
 item=[0 item(2)+item(4)+margin parentitem(3)/2 1.5];
 handles.calib_upscale_label = uicontrol(handles.rect_imagedata,'Style','text','String','Upscaling:','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_upscale_label');

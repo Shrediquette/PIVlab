@@ -105,6 +105,109 @@ testCase.verifyEqual(img2(:,:,1), gui_img(:,:,1), 'image in the GUI after loadin
 helper_close_pivlab();
 end
 
+function test_mirrored_rectification_board(testCase)
+% board image seen from behind the light sheet (mirrored): the buttons of the "Rectification image
+% data" panel and "Enable image rectification" work, the rectified image is not mirrored against the
+% camera image (it is the mirror image of the rectified front view)
+D = testCase.TestData.Dir;
+mirrored_board = fullfile(D, 'board_rectification_mirrored.png');
+imwrite(fliplr(imread(testCase.TestData.RectBoard)), mirrored_board);
+helper_start_pivlab(1);
+helper_gui_load_images(testCase.TestData.Files);
+calibrate_in_gui(testCase.TestData.Boards, false);
+enable_undistortion(2);
+h = gui.gethand;
+ax = gui.retr('pivlab_axis');
+% detection: same corners as in the front view, mirrored back
+dims = [17 22];
+[p_front, m_front] = preproc.cam_detect_rectification_board(imread(testCase.TestData.RectBoard), dims, 'DICT_4X4_1000', 10, 7, 'Black');
+[p_back, m_back] = preproc.cam_detect_rectification_board(imread(mirrored_board), dims, 'DICT_4X4_1000', 10, 7, 'Black');
+testCase.verifyFalse(m_front);
+testCase.verifyTrue(m_back);
+both = all(~isnan(p_front), 2) & all(~isnan(p_back), 2);
+testCase.verifyGreaterThan(nnz(both), 0.8*size(p_front, 1), 'mirrored board: corners missing');
+w = size(imread(mirrored_board), 2);
+testCase.verifyEqual(p_back(both, 1), w + 1 - p_front(both, 1), 'AbsTol', 0.1);
+testCase.verifyEqual(p_back(both, 2), p_front(both, 2), 'AbsTol', 0.1);
+% the three preview buttons
+gui.put('cam_selected_rectification_image', mirrored_board);
+preproc.cam_rectification_show_points_Callback([],[],[]); drawnow;
+testCase.verifyNotEmpty(findobj(ax, 'Type', 'line'), 'no detected markers shown');
+preproc.cam_rectification_show_rectified_Callback([],[],[]); drawnow;
+preview_back = getimage(ax);
+before = findobj(0, 'Type', 'figure');
+preproc.cam_rectification_show_cam_position_Callback([],[],[]); drawnow;
+camfig = setdiff(findobj(0, 'Type', 'figure'), before);
+testCase.verifyNumElements(camfig, 1, 'no camera position figure');
+close(camfig);
+gui.put('cam_selected_rectification_image', testCase.TestData.RectBoard);
+preproc.cam_rectification_show_rectified_Callback([],[],[]); drawnow;
+preview_front = getimage(ax);
+% output size can differ by a pixel (rounding of the output extent): compare the common part
+testCase.verifyEqual(size(preview_back), size(preview_front), 'AbsTol', 2);
+n = min(size(preview_back, [1 2]), size(preview_front, [1 2]));
+c = corr2(double(preview_back(1:n(1), 1:n(2))), double(fliplr(preview_front(1:n(1), end-n(2)+1:end))));
+fprintf('mirrored board: rectified preview vs mirrored front preview: correlation %.3f\n', c);
+testCase.verifyGreaterThan(c, 0.9, 'rectified mirrored board is not the mirror image of the rectified front view');
+% rectification with the mirrored board: regular grid (detected in the mirrored rectified image)
+enable_rectification(mirrored_board);
+testCase.verifyEqual(gui.retr('cam_use_rectification'), 1);
+cam = import.cam_settings(FromGUI=true);
+[rms_px, scale_ratio, checker_px] = grid_fit(fliplr(preproc.cam_undistort_with(imread(mirrored_board), cam)));
+% spatial calibration [mm/px] (the reference corners differ: the board diagonal is the other one)
+scale_back = str2double(h.realdist.String) / str2double(h.pixeldist.String);
+% reference: the same rectification with the board image as recorded from the front
+enable_rectification(testCase.TestData.RectBoard);
+cam = import.cam_settings(FromGUI=true);
+[rms_ref, ~, checker_ref] = grid_fit(preproc.cam_undistort_with(imread(testCase.TestData.RectBoard), cam));
+fprintf('mirrored board: rectified grid residual %.3f checkers (front view: %.3f), x/y scale ratio %.4f\n', ...
+    rms_px/checker_px, rms_ref/checker_ref, scale_ratio);
+testCase.verifyLessThan(rms_px/checker_px, 1.2*rms_ref/checker_ref + 0.01, 'rectified mirrored board is worse than the front view');
+testCase.verifyEqual(scale_ratio, 1, 'AbsTol', 0.01);
+scale_front = str2double(h.realdist.String) / str2double(h.pixeldist.String);
+fprintf('mirrored board: spatial calibration %.5f mm/px (front view: %.5f)\n', scale_back, scale_front);
+testCase.verifyEqual(scale_back, scale_front, 'RelTol', 0.005, 'spatial calibration differs from the front view');
+helper_close_pivlab();
+end
+
+function test_calibration_buttons_in_workflow_order(testCase)
+% the buttons of "Camera calibration" and "Image rectification" are enabled only when the data
+% they need exists
+helper_start_pivlab(1);
+helper_gui_load_images(testCase.TestData.Files);
+h = gui.gethand;
+calib_needs_params = [h.calib_saveparams h.calib_showdistortion h.calib_viewtype h.calib_showcams ...
+    h.calib_showreproject h.calib_usecalibration h.rect_load_imgs];
+rect_needs_image = [h.rect_show_points h.rect_show_rectified h.rect_show_cam_position h.calib_upscale h.calib_userectification];
+preproc.cam_calibration_Callback([],[],[]); drawnow;
+verify_enable(testCase, h.calib_load_imgs, 'on', 'start');
+verify_enable(testCase, [h.calib_estimateparams h.calib_clearparams calib_needs_params rect_needs_image], 'off', 'start');
+% target images selected
+gui.put('cam_selected_target_images', testCase.TestData.Boards);
+gui.update_calibration_buttons(h);
+verify_enable(testCase, [h.calib_estimateparams h.calib_clearparams], 'on', 'target images');
+verify_enable(testCase, [calib_needs_params rect_needs_image], 'off', 'target images');
+% camera parameters estimated (the buttons are set after gui.toolsavailable(1))
+calibrate_in_gui(testCase.TestData.Boards, false);
+verify_enable(testCase, calib_needs_params, 'on', 'parameters estimated');
+verify_enable(testCase, rect_needs_image, 'off', 'parameters estimated');
+% rectification image selected
+preproc.cam_rectification_Callback([],[],[]); drawnow;
+gui.put('cam_selected_rectification_image', testCase.TestData.RectBoard);
+gui.update_calibration_buttons(h);
+verify_enable(testCase, rect_needs_image, 'on', 'rectification image');
+% "Clear parameters": back to the start
+preproc.cam_clearparams_Callback([],[],[]); drawnow;
+verify_enable(testCase, [h.calib_estimateparams h.calib_clearparams calib_needs_params rect_needs_image], 'off', 'cleared');
+helper_close_pivlab();
+end
+
+function verify_enable(testCase, controls, expected, step)
+for k = 1:numel(controls)
+    testCase.verifyEqual(controls(k).Enable, expected, sprintf('%s: "%s"', step, string(controls(k).String(1))));
+end
+end
+
 function test_tilted_model_background(testCase)
 % tilted model: the mean background is made from the corrected images (not shifted against them),
 % GUI = API (parallel analysis with the tilted model: test_apigui_results)
