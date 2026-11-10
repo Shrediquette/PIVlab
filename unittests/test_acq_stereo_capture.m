@@ -76,7 +76,10 @@ verifyEqual(testCase, r.x_offset, [0 320 + round(0.03 * 320)], 'camera 2 right o
 verifyEqual(testCase, r.cdata_size, [240 320; 240 320], 'live image: full resolution');
 verifyEqual(testCase, r.device_shown, [2 1], 'camera 1 = lower serial number (device 2)');
 verifyEqual(testCase, r.labels, 2, 'labels Camera 1 / Camera 2');
-verifyEqual(testCase, r.sharpness_texts, 2);
+verifyEqual(testCase, r.sharpness_texts, 2 * 4, 'per camera: sharpness text + 3 particle diameters (left / centre / right)');
+verifyEqual(testCase, r.region_diameters, 6, 'a diameter in every column');
+% mock particles: single pixels blurred with sigma 1 px -> 4 * sqrt(1 - 1/12) = 3.8 px
+verifyEqual(testCase, r.median_diameter, 4, 'AbsTol', 0.5); % about 3.8 px, shown in whole pixels
 verifyEqual(testCase, r.grid_lines, 12);
 verifyTrue(testCase, r.charuco_cam1 && r.charuco_cam2, 'ChArUco markers per camera');
 verifyLessThanOrEqual(testCase, r.display_rate, 10);
@@ -114,7 +117,32 @@ for k = 1:numel(imgs)
 end
 r.display_rate = getappdata(imgs(1), 'max_display_rate');
 r.labels = numel(findobj(ax, 'Tag', 'capture_camera_label'));
-r.sharpness_texts = numel(findobj(ax, 'tag', 'sharpness_display_text'));
+texts = findobj(ax, 'Type', 'text', 'tag', 'sharpness_display_text');
+tries = getappdata(0, 'stereo_capture_test_tries');
+if isempty(tries)
+    tries = 0;
+end
+if numel(texts) ~= 8 && tries < 10
+    % the timer fired while the overlay was redrawn (old texts deleted, new ones not all drawn yet): read again
+    setappdata(0, 'stereo_capture_test_tries', tries + 1);
+    run_with_check(@check_live, 0.3);
+    return
+end
+if isappdata(0, 'stereo_capture_test_tries')
+    rmappdata(0, 'stereo_capture_test_tries');
+end
+r.sharpness_texts = numel(texts);
+values = [];
+for i = 1:numel(texts)
+    if ischar(texts(i).String) % region labels; the summary is a cell (several lines)
+        value = str2double(strtok(texts(i).String));
+        if ~isnan(value)
+            values(end+1) = value; %#ok<AGROW>
+        end
+    end
+end
+r.region_diameters = numel(values);
+r.median_diameter = median(values);
 r.grid_lines = numel(findobj(ax, 'tag', 'capture_grid'));
 r.charuco_cam1 = ~isempty(findobj(ax, 'tag', 'charucolabel_cam1'));
 r.charuco_cam2 = ~isempty(findobj(ax, 'tag', 'charucolabel_cam2'));

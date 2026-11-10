@@ -534,7 +534,7 @@ window.MANUAL_SEARCH = [
     title: "Capturing images: camera settings and live image",
     href: "pages/capture.html", hash: "camera",
     section: "Image acquisition",
-    text: "camera settings binning roi lens autofocus setup bit depth gain sharpness overlay grid calibration charuco live image exposure start snapshot save focus"
+    text: "camera settings binning roi lens autofocus setup bit depth gain sharpness particle image diameter edge width blur scheimpflug overlay grid calibration charuco live image exposure start snapshot save focus"
   },
   {
     title: "Capturing images: recording the image pairs",
