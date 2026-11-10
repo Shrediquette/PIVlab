@@ -88,8 +88,9 @@ default.calibration.calib_userectification = 0;
 % Marker board setup
 default.calibration.calib_boardtype = 1;
 default.calibration.calib_origincolor = 1;
-default.calibration.calib_rows = 10;
-default.calibration.calib_columns = 18;
+% default board: 264 x 184 mm with margins (preproc.cam_board_layout), fits A4 landscape with 12.7 mm printer margins
+default.calibration.calib_rows = 14;
+default.calibration.calib_columns = 21;
 default.calibration.calib_checkersize = 12;
 default.calibration.calib_markersize = 9;
 
@@ -253,18 +254,19 @@ default.tools.sim3d_sizex = 2000;
 default.tools.sim3d_sizey = 2000;
 default.tools.sim3d_pitch = 5;
 default.tools.sim3d_focal = 25;
-default.tools.sim3d_c1x = -189;
-default.tools.sim3d_c1y = 48;
+% cameras aimed at the centre of the default board (corners 0..228 x 0..144 mm)
+default.tools.sim3d_c1x = -171;
+default.tools.sim3d_c1y = 72;
 default.tools.sim3d_c1z = -494;
-default.tools.sim3d_c1ax = 96;
-default.tools.sim3d_c1ay = 48;
+default.tools.sim3d_c1ax = 114;
+default.tools.sim3d_c1ay = 72;
 default.tools.sim3d_c1k1 = -0.45;
 default.tools.sim3d_c1k2 = 0.1;
-default.tools.sim3d_c2x = 381;
-default.tools.sim3d_c2y = 48;
+default.tools.sim3d_c2x = 399;
+default.tools.sim3d_c2y = 72;
 default.tools.sim3d_c2z = -494;
-default.tools.sim3d_c2ax = 96;
-default.tools.sim3d_c2ay = 48;
+default.tools.sim3d_c2ax = 114;
+default.tools.sim3d_c2ay = 72;
 default.tools.sim3d_c2k1 = -0.35;
 default.tools.sim3d_c2k2 = 0.05;
 default.tools.sim3d_sheet_offset = 0.5;

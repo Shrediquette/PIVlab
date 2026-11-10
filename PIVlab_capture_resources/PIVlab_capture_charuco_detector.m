@@ -52,15 +52,15 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 	min_y = min(locs(:,2));
 	max_y = max(locs(:,2));
 	newBox = [min_x max_x min_y max_y];
-	%mask charucos during QR detection
-	mask = ones(size(img));
-	if large_img
-		mask(floor(min(locs_center_y/2)):ceil(max(locs_center_y/2)), floor(min(locs_center_x/2)) : ceil(max(locs_center_x/2)) )=0;
-	else
-		mask(floor(min(locs_center_y)):ceil(max(locs_center_y)), floor(min(locs_center_x)) : ceil(max(locs_center_x)) )=0;
+	% the QR code is in the centre of the board (preproc.cam_board_layout); first in the camera image
+	% (the equalised image destroys small QR codes), then in the equalised image
+	[detectionOK, qr_markerFamily, qr_originCheckerColor,qr_patternDims,qr_checkerSize,qr_markerSize,loc] = preproc.cam_get_charuco_info_from_QRcode (uint8(mat2gray(img_original(:,:,1))*255));
+	if ~detectionOK
+		[detectionOK, qr_markerFamily, qr_originCheckerColor,qr_patternDims,qr_checkerSize,qr_markerSize,loc] = preproc.cam_get_charuco_info_from_QRcode (uint8(mat2gray(img)*255));
+		if large_img && ~isempty(loc)
+			loc = (loc - 0.5) * 2 + 0.5; % half resolution image: back to full resolution
+		end
 	end
-	img_masked=img.*mask;
-	[detectionOK, qr_markerFamily, qr_originCheckerColor,qr_patternDims,qr_checkerSize,qr_markerSize,loc] = preproc.cam_get_charuco_info_from_QRcode (uint8(mat2gray(img_masked)*255));
 	if detectionOK && ~isempty(qr_patternDims(1)) && ~isempty(qr_patternDims(2)) % if QR code detected: fill GUI with the detected values
 		handles.calib_rows.String = num2str(qr_patternDims(1));
 		handles.calib_columns.String = num2str(qr_patternDims(2));
@@ -80,9 +80,6 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 		originCheckerColor=qr_originCheckerColor;
 		checkerSize=qr_checkerSize;
 		markerSize=qr_markerSize;
-		if large_img
-			loc=loc*2;
-		end
 		%remember that the board parameters came from a QR code (persistent status display)
 		qr_params.markerFamily=qr_markerFamily;
 		qr_params.originCheckerColor=qr_originCheckerColor;

@@ -24,7 +24,7 @@ arguments
     opts.Background double = 5                  % intensity outside of the board [counts]: scalar, or an image of the camera size
     opts.Blur (1,1) double = 0                  % Gaussian blur sigma [px], e.g. to mimic limited depth of field
     opts.Noise (1,1) double = 0                 % Gaussian noise variance as in imnoise
-    opts.Decorated (1,1) logical = false        % board as PIVlab prints it: QR codes, logo and text in a margin of 3 checkers
+    opts.Decorated (1,1) logical = false        % board as PIVlab prints it: QR code in the centre, logo and text in a thin margin
     opts.Texture = []                           % texture from simulate.board_texture (reused, e.g. for many views of the same board)
 end
 boardPose = opts.BoardPose;
@@ -75,7 +75,7 @@ for r0 = 1:rows_per_block:h
         for oy = sub
             [xy, valid] = simulate.pixel_to_plane(cam, [X(:) + ox, Y(:) + oy], boardPose);
             col = m + 0.5 + c * (1 + xy(:, 1) / checker);
-            row = m + 0.5 + c * (1 + xy(:, 2) / checker);
+            row = tex.m_top + 0.5 + c * (1 + xy(:, 2) / checker);
             val = opts.Black + (opts.White - opts.Black) / 255 * double(texture(row, col));
             outside = isnan(val) | ~valid;
             if isscalar(background)

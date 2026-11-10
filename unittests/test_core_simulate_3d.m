@@ -83,13 +83,16 @@ function test_board_decoration(testCase)
 % the simulated board carries the QR code of the printed board
 b = testCase.TestData.Setup.board;
 tex = simulate.board_texture(b, 40, Decorated=true);
-qr = tex.image(1:tex.m, 1:tex.m);
-testCase.verifyGreaterThan(mean(qr(:) < 128), 0.2, 'QR code in the top left corner');
-testCase.verifyEqual(tex.m, 3 * tex.c, 'margin of three checkers');
-cam = simulate.camera(ImageSize=[900 1500], FocalLength=1400, Position=[96 48 -400], Target=[96 48 0]);
+L = preproc.cam_board_layout(b.PatternDims, char(b.MarkerFamily), b.CheckerSize, b.MarkerSize, char(b.OriginCheckerColor));
+testCase.verifyEqual(tex.m, round(L.margin / b.CheckerSize * tex.c), 'margin as the printed board');
+testCase.verifyEqual(tex.m_top, round(L.margin_top / b.CheckerSize * tex.c), 'top margin as the printed board');
+qr = tex.image(tex.m_top + (L.qr_rows(1) - 1) * tex.c + (1:2 * tex.c), tex.m + (L.qr_cols(1) - 1) * tex.c + (1:2 * tex.c));
+testCase.verifyGreaterThan(mean(qr(:) < 128), 0.2, 'QR code in the central 2 x 2 checkers');
+centre = (b.PatternDims([2 1]) - 2) * b.CheckerSize / 2; % centre of the corners [x y]
+cam = simulate.camera(ImageSize=[900 1500], FocalLength=1400, Position=[centre -400], Target=[centre 0]);
 I = simulate.charuco_image(cam, Texture=tex);
-info = preproc.cam_get_charuco_info_from_QRcode(I);
-testCase.verifyNotEmpty(info, 'QR code readable in a front view');
+testCase.verifyEqual(preproc.cam_get_charuco_info_from_QRcode(I), 1, 'QR code readable in a front view');
+testCase.verifyEqual(preproc.cam_get_charuco_info_from_QRcode(fliplr(I)), 1, 'QR code readable mirrored (board seen from behind)');
 end
 
 function test_ground_truth(testCase)

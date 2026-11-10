@@ -1,7 +1,8 @@
 function cam_board_pdf(filename, patternDims, markerFamily, checkerSize, markerSize, originCheckerColor)
 % Writes a ChArUco board as a print-ready vector PDF. Same layout as the TIFF from
-% Setup / define / generate marker board: margin of 3 checkers, QR codes in the corners,
-% text at the top, logo at the bottom. All edges are at their exact positions in mm.
+% Setup / define / generate marker board (preproc.cam_board_layout): thin margin, QR code in
+% place of the central 2 x 2 checkers, text top left, logo top right. All edges are at
+% their exact positions in mm.
 % patternDims: [rows columns]; checkerSize, markerSize in mm.
 % Also for printing on transparent material (readable from both sides): layer "Farbe" (black =
 % 100 % K, logo colours in CMYK) and top layer "weiss" (spot colour "weiss", overprint), no
@@ -15,9 +16,11 @@ rows = patternDims(1);
 cols = patternDims(2);
 S = checkerSize;
 M = markerSize;
-margin = 3 * S;
-W = cols * S + 2 * margin;
-H = rows * S + 2 * margin;
+layout = preproc.cam_board_layout(patternDims, markerFamily, S, M, originCheckerColor);
+margin = layout.margin;
+top = layout.margin_top; % top margin (text and logo)
+W = layout.width;
+H = layout.height;
 n_bits = sscanf(markerFamily, 'DICT_%d') + 2; % data bits + black border, e.g. 6 for DICT_4X4
 bit = M / n_bits; % bit size in mm
 origin_black = strcmpi(originCheckerColor, 'black');
@@ -53,56 +56,37 @@ for r = 1:rows
     end
 end
 
-%% QR code (27 x 27 modules, true = dark), upright at the top, turned by 180 degrees at the bottom
-if strcmp(markerFamily, 'DICT_4X4_1000')
-    qr_fam = 1;
-else
-    qr_fam = 0;
-end
-if origin_black
-    qr_orig = 'b';
-else
-    qr_orig = 'w';
-end
-data = ['F:' num2str(qr_fam) ',O:' qr_orig ',R:' num2str(rows) ',C:' num2str(cols) ',S:' num2str(S) ',M:' num2str(M)];
-qr_white = preproc.cam_encode_qr(data, 27);
+%% QR code (27 x 27 modules incl. quiet zone, true = dark) in place of the central 2 x 2 checkers
+qr_white = preproc.cam_encode_qr(layout.qr_data, 27);
 has_qr = ~isempty(qr_white);
 if has_qr
     qr_0 = ~qr_white;
-    qr_180 = rot90(qr_0, 2);
-    module = margin / size(qr_0, 1);
+    module = layout.qr_size / size(qr_0, 1);
 end
+in_qr = false(rows, cols); % checkers replaced by the QR code
+in_qr(layout.qr_rows, layout.qr_cols) = true;
 
 %% text with the board parameters at the top, as black outline
-fntsz_px = min(round(min(S * cols / 2.5, 200)), 200); % font size in pixels at 300 dpi, as in the TIFF
-font_mm = fntsz_px * 25.4 / 300;
-has_text = fntsz_px >= 4;
-txt = [char(originCheckerColor) '; ' char(markerFamily) '; ' num2str(rows) 'x' num2str(cols) '; ' num2str(S) 'mm/' num2str(M) 'mm'];
+font_mm = layout.font_size;
+has_text = font_mm * 300 / 25.4 >= 4; % as in the TIFF (300 dpi): a smaller text would be unreadable
+txt = layout.text;
 if has_text
     text_res = min(20, 200 / font_mm); % [px/mm]; insertText allows max. 200 px font size
-    strip = ones(ceil(margin * text_res), ceil(W * text_res), 3);
-    strip = insertText(strip, [W / 2 * text_res, margin / 2 * text_res], txt, ...
-        'FontSize', round(font_mm * text_res), 'FontColor', 'black', 'TextBoxColor', 'white', 'BoxOpacity', 0, 'Font', 'Arial Black', 'AnchorPoint', 'Center');
+    strip = ones(ceil(top * text_res), ceil(W * text_res), 3);
+    strip = insertText(strip, [layout.text_x * text_res, layout.text_y * text_res], txt, ...
+        'FontSize', round(font_mm * text_res), 'FontColor', 'black', 'TextBoxColor', 'white', 'BoxOpacity', 0, 'Font', 'Arial Black', 'AnchorPoint', 'LeftCenter');
     text_mask = rgb2gray(strip) < 0.5;
-    % only between the QR codes
-    text_x = (0:size(text_mask, 2) - 1) / text_res;
-    text_mask(:, text_x < margin | text_x + 1 / text_res > W - margin) = false;
 end
 
-%% logo at the bottom (polygons, one path per colour, and the outline of the whole logo)
+%% logo top right (polygons, one path per colour, and the outline of the whole logo)
 logo_txt = fileread(fullfile(fileparts(mfilename('fullpath')), '..', 'images', 'OLT_logo_vector.svg'));
 logo_box = regexp(logo_txt, 'viewBox="([^"]*)"', 'tokens', 'once');
 logo_box = sscanf(logo_box{1}, '%f');
 logo_colours = regexp(logo_txt, '<path fill="#([0-9a-f]{6})"[^>]* d="([^"]*)"', 'tokens');
 logo_outline = regexp(logo_txt, '<path id="outline"[^>]* d="([^"]*)"', 'tokens', 'once');
-logo_h = 0.8 * margin;
-logo_scale = logo_h / logo_box(4);
-if logo_box(3) * logo_scale > 0.9 * cols * S
-    logo_scale = 0.9 * cols * S / logo_box(3);
-    logo_h = logo_box(4) * logo_scale;
-end
-logo_x = (W - logo_box(3) * logo_scale) / 2;
-logo_y = H - margin / 2 - logo_h / 2;
+logo_scale = layout.logo_height / logo_box(4);
+logo_x = layout.logo_x;
+logo_y = layout.logo_y;
 
 %% file: header
 fid = fopen(filename, 'w');
@@ -118,22 +102,21 @@ offsets(4) = ftell(fid);
 fprintf(fid, '4 0 obj\n<< /Length 8 0 R >>\nstream\n');
 stream_start = ftell(fid);
 
-% layer "Farbe": black board, QR codes, text (100 % K), logo (CMYK)
+% layer "Farbe": black board, QR code, text (100 % K), logo (CMYK)
 fprintf(fid, '/OC /OCfarbe BDC\n0 0 0 1 k\n');
 for r = 1:rows
     for c = 1:cols
-        if is_black_checker(r, c, origin_black)
-            write_rect(fid, pg, margin + (c - 1) * S, margin + (r - 1) * S, S, S);
+        if in_qr(r, c)
+            continue
+        elseif is_black_checker(r, c, origin_black)
+            write_rect(fid, pg, margin + (c - 1) * S, top + (r - 1) * S, S, S);
         else
-            write_cells(fid, pg, marker_cells{r, c}, margin + (c - 1) * S + (S - M) / 2, margin + (r - 1) * S + (S - M) / 2, bit);
+            write_cells(fid, pg, marker_cells{r, c}, margin + (c - 1) * S + (S - M) / 2, top + (r - 1) * S + (S - M) / 2, bit);
         end
     end
 end
 if has_qr
-    write_cells(fid, pg, qr_0, 0, 0, module);
-    write_cells(fid, pg, qr_0, W - margin, 0, module);
-    write_cells(fid, pg, qr_180, 0, H - margin, module);
-    write_cells(fid, pg, qr_180, W - margin, H - margin, module);
+    write_cells(fid, pg, qr_0, layout.qr_x, layout.qr_y, module);
 end
 if has_text
     write_cells(fid, pg, text_mask, 0, 0, 1 / text_res);
@@ -148,25 +131,24 @@ end
 fprintf(fid, 'EMC\n');
 
 % top layer "weiss": spot colour with overprint, the complement of layer "Farbe"
-% (fill rule even-odd: white checkers minus marker cells, margin minus board, QR codes, text, logo)
+% (fill rule even-odd: white checkers minus marker cells, QR area minus dark modules, margin minus
+% board, text, logo)
 fprintf(fid, '/OC /OCweiss BDC\n/GSoverprint gs\n/CSweiss cs 1 scn\n');
 for r = 1:rows
     for c = 1:cols
-        if is_black_checker(r, c, origin_black)
+        if in_qr(r, c) || is_black_checker(r, c, origin_black)
             continue
         end
-        write_rect(fid, pg, margin + (c - 1) * S, margin + (r - 1) * S, S, S);
-        write_cells(fid, pg, marker_cells{r, c}, margin + (c - 1) * S + (S - M) / 2, margin + (r - 1) * S + (S - M) / 2, bit);
+        write_rect(fid, pg, margin + (c - 1) * S, top + (r - 1) * S, S, S);
+        write_cells(fid, pg, marker_cells{r, c}, margin + (c - 1) * S + (S - M) / 2, top + (r - 1) * S + (S - M) / 2, bit);
     end
 end
-write_rect(fid, pg, -pg.b, -pg.b, W + 2 * pg.b, H + 2 * pg.b); % the white margin reaches into the bleed
-write_rect(fid, pg, margin, margin, cols * S, rows * S);
+write_rect(fid, pg, layout.qr_x, layout.qr_y, layout.qr_size, layout.qr_size);
 if has_qr
-    write_cells(fid, pg, qr_0, 0, 0, module);
-    write_cells(fid, pg, qr_0, W - margin, 0, module);
-    write_cells(fid, pg, qr_180, 0, H - margin, module);
-    write_cells(fid, pg, qr_180, W - margin, H - margin, module);
+    write_cells(fid, pg, qr_0, layout.qr_x, layout.qr_y, module);
 end
+write_rect(fid, pg, -pg.b, -pg.b, W + 2 * pg.b, H + 2 * pg.b); % the white margin reaches into the bleed
+write_rect(fid, pg, margin, top, cols * S, rows * S);
 if has_text
     write_cells(fid, pg, text_mask, 0, 0, 1 / text_res);
 end
