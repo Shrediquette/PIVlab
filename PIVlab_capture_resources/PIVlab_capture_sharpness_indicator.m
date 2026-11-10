@@ -206,10 +206,11 @@ line(PIVlab_axis, label_x(has_value), label_y(has_value), 'Color', [1 1 0 0.8], 
 end
 
 function label = format_diameter(d, mode)
-%Particle diameter in whole pixels; the board edge width (mostly 1-5 px) keeps one decimal.
+%Particle diameter in whole pixels, below 3 px with one decimal (whole pixels hide the differences there); the board
+%edge width (mostly 1-5 px) keeps one decimal.
 if isnan(d)
 	label = '-';
-elseif strcmp(mode, 'particles')
+elseif strcmp(mode, 'particles') && d >= 3
 	label = int2str(d);
 else
 	label = sprintf('%.1f', d);
