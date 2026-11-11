@@ -134,7 +134,8 @@ function draw_sharpness_bars(PIVlab_axis, values, best, col_edges, x_offset, ima
 %One bar per third, in the lower part of the image: height = smallest value (current or best so far, any third) /
 %value of the third, so a full bar is the sharpest image seen. A white mark shows the best value of each third: turn
 %back when the bar drops below its mark. Equal bars at their marks: in focus everywhere. A faint frame shows the full
-%height, the value is written above it. Same tag as the texts: the capture code deletes the overlay by this tag.
+%height, the value is written inside the bar at its bottom. Same tag as the texts: the capture code deletes the
+%overlay by this tag.
 height = image_size(1);
 base = 0.95 * height;
 full = 0.4 * height; %the image y axis points down: the bars grow upwards from base
@@ -145,6 +146,7 @@ for c = 1:3
 	bar_x = centre + half_width * [-1 1 1 -1];
 	patch(PIVlab_axis, bar_x, base - full * [0 0 1 1], [1 1 0], 'FaceColor', 'none', 'EdgeColor', [1 1 0], 'EdgeAlpha', 0.35, ...
 		'LineWidth', 1.5, 'tag', 'sharpness_display_text', 'HitTest', 'off', 'PickableParts', 'none');
+	fraction = 0;
 	if ~isnan(values(c)) && ~isnan(reference) && reference > 0
 		fraction = min(reference / values(c), 1);
 		patch(PIVlab_axis, bar_x, base - full * fraction * [0 0 1 1], [1 1 0], 'FaceColor', [1 1 0], 'FaceAlpha', 0.35, ...
@@ -155,10 +157,29 @@ for c = 1:3
 				'tag', 'sharpness_display_text', 'HitTest', 'off', 'PickableParts', 'none');
 		end
 	end
-	text(centre, base - full - 0.02 * height, format_diameter(values(c), mode), 'Color', [1 1 0], 'tag', 'sharpness_display_text', ...
-		'Verticalalignment', 'bottom', 'Horizontalalignment', 'center', 'Parent', PIVlab_axis, 'FontSize', fontsize, ...
-		'fontweight', 'bold', 'BackgroundColor', [0 0 0 0.4], 'HitTest', 'off');
+	%value inside the bar at its bottom, black on the bar; in yellow if the bar is lower than the text or missing
+	[size_pt, px_per_unit] = label_font_size(PIVlab_axis, 2 * half_width, fontsize);
+	text_height = size_pt * 4 / 3 / px_per_unit; %[image px]
+	label_color = [0 0 0];
+	if full * fraction < text_height + 0.01 * height
+		label_color = [1 1 0];
+	end
+	text(centre, base - 0.01 * height, format_diameter(values(c), mode), 'Color', label_color, 'tag', 'sharpness_display_text', ...
+		'Verticalalignment', 'bottom', 'Horizontalalignment', 'center', 'Parent', PIVlab_axis, ...
+		'FontSize', size_pt, 'fontweight', 'bold', 'HitTest', 'off');
 end
+end
+
+function [size_pt, px_per_unit] = label_font_size(PIVlab_axis, bar_width, max_size)
+%font size [pt] so that a 4-character value ("10.4") fits into the bar width on screen; 1.5 x the corner text at most.
+%px_per_unit: screen pixels per image pixel
+axis_px = getpixelposition(PIVlab_axis);
+x_range = diff(xlim(PIVlab_axis));
+y_range = diff(ylim(PIVlab_axis));
+px_per_unit = min(axis_px(3) / x_range, axis_px(4) / y_range); %axis image: the smaller scale is the shown one
+bar_px = bar_width * px_per_unit;
+size_pt = bar_px / (4 * 0.62) * 0.75; %bold digits are about 0.62 em wide; 1 pt = 4/3 px
+size_pt = max(8, min(size_pt, 1.5 * max_size));
 end
 
 function [label_x, label_y] = tilt_positions(values, col_edges, x_offset, image_size)
