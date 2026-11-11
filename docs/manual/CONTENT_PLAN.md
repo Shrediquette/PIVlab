@@ -4,7 +4,7 @@
 durable source of truth — more reliable than session memory, which may be summarized or
 unavailable in a new session.
 
-The manual is **content-complete**: all 28 topics are written and live. The job now is
+The manual is **content-complete**: all 29 topics are written and live. The job now is
 **keeping it in step with the code**, so this file is organised around that.
 
 ---
@@ -13,12 +13,16 @@ The manual is **content-complete**: all 28 topics are written and live. The job 
 
 | | |
 |---|---|
-| Content state | **Complete** — 28/28 topics live, no `status: "soon"` entries remain in `nav.js` |
-| **Verified against source as of** | **commit `24fe6ce` (2026-08-13)** |
-| Last full review | 2026-08-14 |
+| Content state | **Complete** — 29/29 topics live, no `status: "soon"` entries remain in `nav.js` |
+| **Verified against source as of** | **commit `3505f82` (2026-11-05, branch `stereo`)** |
+| Last full review | 2026-11-05 |
 
 > **This watermark is the whole mechanism. When you update the manual to match new code,
 > bump the commit hash and date above.** Everything in section 2 depends on it being honest.
+>
+> ⚠️ It was *not* bumped during the Oct-2026 API/stereo work even though the manual was being
+> updated in the same commits — the 2026-11-05 review had to reconstruct two months of changes
+> from `git log`. Bump it in the **same commit** as the manual change, not later.
 
 ## 2. Routine check — has PIVlab moved ahead of the manual?
 
@@ -26,8 +30,12 @@ Run this at the **start of every manual session**. It lists source commits made 
 was last verified:
 
 ```bash
-git log --oneline 24fe6ce..HEAD -- +gui +piv +plot +preproc +validate +calibrate +export +import +extract +mask +postproc +roi +simulate +uncertainty +acquisition +wOFV PIVlab_GUI.m
+git log --oneline 3505f82..HEAD -- +gui +piv +plot +pivlab +stereo +preproc +validate +calibrate +export +import +extract +mask +misc +postproc +roi +simulate +uncertainty +acquisition +opencv +wOFV PIVlab_GUI.m
 ```
+
+**Keep that package list complete.** `+pivlab` and `+stereo` were added in Oct 2026 and the
+original command did not list them — a new package is invisible to this check until it is added
+here. `git diff --name-only <watermark>..HEAD | grep -oE '^\+[a-z]+/' | sort -u` shows the full set.
 
 - **No output** → the manual is current. Say so and stop; do not invent work.
 - **Output** → triage each commit with the map in section 3, update the affected pages, then
@@ -36,17 +44,18 @@ git log --oneline 24fe6ce..HEAD -- +gui +piv +plot +preproc +validate +calibrate
 To see what actually changed in the UI (the usual culprit — panel labels, new controls):
 
 ```bash
-git diff 24fe6ce..HEAD -- +gui/generateUI.m +gui/generateMenu.m
+git diff 3505f82..HEAD -- +gui/generateUI.m +gui/generateMenu.m
 ```
 
 Useful narrower probes:
 
 ```bash
 # Did the derived-parameter list or its units change?  -> derive-spatial.html
-git diff 24fe6ce..HEAD -- +plot/derivs_Callback.m +plot/derivative_calc.m
+git diff 3505f82..HEAD -- +plot/derivs_Callback.m +plot/derivative_calc.m
 
-# Did any keyboard shortcut change?  -> shortcuts.html
-git diff 24fe6ce..HEAD -- +gui/generateMenu.m | grep -i accelerator
+# Do the documented shortcuts still match the code?  -> shortcuts.html
+grep -oE "Accelerator','[A-Z]'" +gui/generateMenu.m | sort -u          # the real list
+grep -oE '<kbd>[A-Z]</kbd>' docs/manual/pages/shortcuts.html | sort -u # what we claim
 ```
 
 ### Changes that definitely require a manual edit
@@ -83,11 +92,14 @@ git diff 24fe6ce..HEAD -- +gui/generateMenu.m | grep -i accelerator
 | `generateUI.m:2008-2038` | `derive-temporal.html` |
 | `generateUI.m:2042-2123` | `validation-image.html` |
 | `generateUI.m:2125-2223+`, `+acquisition/` | `capture.html` |
+| **`+pivlab/`** (the whole API package) | **`command-line.html`** |
+| **`+stereo/`**, `generateUI.m:49` (CAM 1/2 toggle), `+import/stereo_import_Callback.m` | **`stereo-piv.html`**, plus the stereo `.note`s on derive-spatial / derive-temporal / export / extract-* / validation-velocity / statistics |
+| `+simulate/` (3D generator, `simulate.part_img_3d_Callback`) | `synthetic-images.html` |
 | `generateUI.m:2334-2496`, `cam_*_Callback.m` | `camera-calibration.html` |
 | `generateUI.m:2496-2511` | `correlation-matrices.html` |
 | `+preproc/PIVlab_preproc.m` | `roi.html` |
 | `+mask/`, masking panel | `masking.html` |
-| `+gui/uipickfiles.m`, `+import/` | `sessions.html` |
+| `+gui/image_import_dialog.m`, `+import/` | `sessions.html` |
 | `+gui/generateMenu.m` (Accelerators) | `shortcuts.html` |
 | `+gui/toggle_second_monitor_Callback.m` | `second-monitor.html` |
 | `+piv/piv_FFTmulti.m` (correlation, uncertainty) | `derive-spatial.html#eq-analysis`, `validation-image.html` |
@@ -116,6 +128,30 @@ Line numbers drift. Treat them as a starting hint, not gospel — grep for the p
 
 **Writing style**
 
+- **⛔ A toolbox requirement only applies to PIVlab running inside MATLAB.** The standalone
+  application has every toolbox **compiled in** — `+misc/has_toolbox.m` returns true
+  unconditionally when `isdeployed`, and its own comment says so. Never write "feature X needs
+  toolbox Y" without that qualifier (it happened on `capture.html` for the Image Acquisition
+  Toolbox, 2026-11-05). The exception is `command-line.html`: the `+pivlab` API only exists inside
+  MATLAB, so its requirements need no qualifier.
+- **⛔ Only write what a user needs in order to use a feature or understand a result.** This is
+  the rule most often broken, so apply it as a test before every sentence: *would a reader act
+  differently, or understand a result better, because of this sentence?* If not, it does not go
+  in the manual. The user is **shortening** the manual, not growing it. Specifically, leave out:
+  - **Rationale and background.** Why a design is the way it is, what the OS or MATLAB does, what
+    something used to be. Real example that had to be removed on 2026-11-05 from
+    `shortcuts.html`: *"That keeps them clear of Ctrl+A, Ctrl+C, Ctrl+V and Ctrl+Z, which the
+    operating system and MATLAB's own text fields use for select-all, copy, paste and undo. They
+    work wherever you are in the window, including while you are typing in a settings field."*
+  - **Self-explanatory behaviour and small conveniences** — e.g. which folder a file dialog
+    starts in, that a button does what its label says, that a shortcut is also shown in the menu.
+  - **Negative statements** — "X has no shortcut", "Y is a button, not a shortcut", "everything
+    not listed is reached through the menu only". State what exists; say nothing about what
+    doesn't. (All three were removed from `shortcuts.html` on 2026-11-05.)
+  - **Implementation detail** — that belongs in the dev log or in this file, not in the manual.
+
+  When something feels worth recording but fails the test, put it in the changelog here (or the
+  dev log) and mention it in the chat summary instead of writing it into a page.
 - Task-focused, not an exhaustive parameter reference — explain what a user does and why.
 - Prefer one real worked example (the Kármán-vortex rod mask) over abstract description.
 - Use the shared components: `.split` (text beside screenshot), `ol.steps`, `table.ref`,
@@ -148,15 +184,44 @@ the corresponding page needs updating:
 - `img_not_mask` checkbox — `Visible off`.
 - `+plot/dcev.m` (Δ/complex-eigenvalue criterion) — orphaned; `derivative_calc.m:153` uses
   `plot.qcrit` instead. Only Q criterion exists; there is no λ₂, Δ or Γ.
-- `calib_dolivedetect` — commented out in `generateUI.m:2475-2485` but still referenced by
-  `cam_marker_setup_Callback.m:8` and session load/save. Latent bug, flagged separately.
+- `ac_realtime_PIV` (`Displacement` checkbox, Camera settings) — tooltip says "NOT IMLEMENTED
+  YET"; and `ac_realtime` (live PIV preview) is `Visible','off'`. Neither is documented.
+  ⚠️ **Not to be confused with `calib_dolivedetect`** (`Calibration` overlay,
+  `generateUI.m:2052`), which *is* live and *is* documented on `capture.html#camera`.
 - `+plot/draw_pixel_background_overlay.m:187-197` holds a **stale duplicate** of the derived-
   parameter label lists that stops at item 12 (no Uncertainty). If the parameter list changes,
   this copy needs changing too — it is used to re-label the colorbar.
 
-**Known-stale external doc:** `help/PIVlab_shortcuts.pdf` lists Ctrl+E as covering both ROI and
-masking, but masking now has its own panel with no accelerator. `shortcuts.html` documents the
-discrepancy deliberately — don't "correct" the page to match the PDF.
+**Keyboard shortcuts live in `+gui/key_press.m`, not in menu accelerators.** Since 2026-11-05 all
+shortcuts are **Ctrl+Shift+key**. Matlab's `uimenu` `Accelerator` can only do Ctrl+key, so there
+are no `Accelerator` properties left — `gui.key_press` (the figure's `WindowKeyPressFcn`) maps each
+key to a **Tag** and `gui.run_shortcut` clicks that menu entry or control. Consequences to respect:
+
+- **The single source of truth is the `switch` in `+gui/key_press.m`.** To check the manual against
+  the code, compare that switch with the tables in `docs/manual/pages/shortcuts.html`.
+- **A shortcut must never do more than the mouse.** `gui.run_shortcut` refuses when the element is
+  missing, disabled (PIVlab busy, see `gui.toolsavailable`) or hidden (Basic mode, 2D mode). Keep
+  that guard if the file is rewritten — a raw callback call would bypass the busy lock.
+- **The shortcut text is part of the menu label** (`'ANALYZE!   (Ctrl+Shift+A)'`) because dropping
+  `Accelerator` also dropped Matlab's automatic hint. Label, Tag, `key_press` and the manual page
+  must be changed together.
+- `PIVlab_GUI.m` uses **`WindowKeyPressFcn`**, not `KeyPressFcn`, so shortcuts also work while an
+  edit field has the focus; `gui.reset_gui_Callback` **re-assigns** it instead of clearing it.
+- **Undocumented display helpers** share the same switch: `C` crosshair, `X` sharpness,
+  `-`/`0` autocontrast limits, `L` colour scale log/linear (`L` was `K` until `K` became
+  "define masks"). Leave these out of the manual unless the user asks.
+
+**⚠️ A tooltip is not a keyboard shortcut.** On 2026-11-05 a bogus `Ctrl+K` row ("switch between
+camera 1 and camera 2") was found in `shortcuts.html`, added during the stereo work in `424936a`:
+no such accelerator existed, and the `CAM 1`/`CAM 2` **pushbutton** tooltip had been copied into the
+shortcuts table. Never transcribe a tooltip into the shortcut list.
+
+**The printable shortcuts PDF is gone.** `help/PIVlab_shortcuts.pdf` and `+misc/shortcuts_Callback.m`
+were deleted on 2026-11-05 — the PDF went stale (it still claimed Ctrl+E covered masking) because it
+was a second place to maintain. `Learn! → List keyboard shortcuts` still exists, but now opens
+`https://www.pivlab.de/manual/pages/shortcuts.html` in the browser (`+gui/shortcuts_Callback.m`).
+So `shortcuts.html` plus the menu labels are the only shortcut documentation. **Do not reintroduce a
+separate printable list** — a second copy is what went stale last time.
 
 ## 6. Equations — verification standard
 
@@ -191,6 +256,198 @@ Findings worth never re-deriving:
 ## 7. Changelog
 
 Newest first. **Add an entry whenever you change the manual**, and bump the watermark.
+
+### 2026-11-05 — capture.html rewritten as a panel walkthrough
+`capture.html` went from a workflow sketch (126 lines, one steps list) to a reference of the whole
+acquisition panel: `#setup` (connecting the equipment), `#panel` with one `<h3>` per sub-panel of
+`multip24` (General settings, Synchronizer control, Camera settings, Live image, Capture PIV
+images — 28 control rows), `#recording` (a recording start to finish), `#dt` (choosing the pulse
+distance), then the existing stereo and webcam sections. ~1400 words. Six new search records; the
+old `#workflow` anchor is gone, its record replaced.
+
+**Two sources, deliberately separated.** The control tables come from `+gui/generateUI.m:1905-2121`
+and the `+acquisition` callbacks, verified as usual. The *order of work* in `#recording`, the
+equipment chain in `#setup` and the practical advice in `#dt` come from the user's YouTube video
+*"PIVlab PIV system: Pulsed diodes, cameras, frame straddling, etc."*, whose transcript the user
+pasted — **user domain knowledge, not code-verified**, same category as `best-practices.html`.
+Deliberately left out of the manual from that transcript: laser colour (blue vs green), the
+Q-switch comparison, citation counts and the licensing remarks — background, not instructions.
+
+**Corrections from the user, same day — the camera has three modes, and the page had conflated
+them.** The whole `#live` / `#capture` / `#recording` story was rewritten around this; it is the
+single most important thing to get right on the page:
+
+| Mode | How | Synchronized | Overlays |
+|---|---|---|---|
+| **Live image** | `Live image` → `Start` | **no** — camera free-running | Zoom, Calibration (ChArUco), Sharpness, Grid |
+| **PIV preview** | `Capture PIV images` → `Start` with **`Save` unticked** | yes | Sharpness, Grid |
+| **Recording** | `Capture PIV images` → `Start` with **`Save` ticked** | yes | none |
+
+Source: `+acquisition/set_capture_overlay_controls.m` (names the three modes explicitly) and
+`+acquisition/piv_capture_Callback.m:51-55,79-91` — with `Save` off, `imageamount = inf`, the
+status says "Starting PIV preview...", and it runs until `Abort`. Laser energy stays adjustable
+while the preview runs (`:149`).
+
+- The live view is **not** synchronized, so **nothing about the particles can be judged there** —
+  not seeding, not exposure, not particle image quality. The page claimed "checking the seeding"
+  and then, after a first correction, still told the user to focus "on the particles in the light
+  sheet" there. Both were wrong. **Do not reintroduce any claim that image quality or particles
+  can be assessed from the live image.**
+- **Focusing belongs in the PIV preview** (user's wording), because that is the only mode showing
+  the images as they will be recorded. In the live view you can only focus on a **target** placed
+  in the plane of the light sheet.
+- The PIV preview was missing from the page entirely. `Save` had been described only as "writes
+  images to disk"; that it switches between preview and recording is the point.
+- **The `Calibration` overlay does three things, not one** (user, same day). Verified in
+  `PIVlab_capture_resources/PIVlab_capture_charuco_detector.m`: it marks the detected markers and
+  reports the percentage found (`:271`); it **reads the QR code** on the board
+  (`preproc.cam_get_charuco_info_from_QRcode`, `:63-92`) and fills rows, columns, origin colour,
+  marker family and the **checker and marker size in mm** — the board's scale — into the Marker
+  board setup panel; and once `cameraParams` exist it reports **yaw, pitch, roll and the camera
+  X/Y/Z in mm relative to the board** via `estimateExtrinsics` (`:181-246`), with X and Y along
+  the board and Z the distance in front of it. Without a calibration it says so instead.
+  `camera-calibration.html` gained a sentence about the QR code on generated boards
+  (`cam_generateboard_Callback.m:47-49` adds it): the QR was documented nowhere before.
+
+**Frame straddling expanded (user: "the standard way of doing PIV in PIVlab").** `#dt` became
+"Pulse distance and frame straddling" with a new `<h3 id="straddling">`: the two images are two
+consecutive frames, the two pulses sit on either side of the frame boundary, so Δt is set by the
+pulse spacing and not by the frame rate. Includes `v_max = (L/N)·s/Δt` and a Δt table
+(10 ms → 0.05 m/s … 10 µs → 50 m/s, for 100 mm / 2000 px / 10 px) from the user's transcript,
+re-derived and checked. Limits are from `+acquisition/sync_settings_Callback.m:5-42`: below the
+camera minimum or above one frame period the field turns red and is clamped; the double-shutter
+readout gap comes from `initiate_straddling_graph.m:39-41`.
+
+The section carries the user's own timing diagram,
+`assets/img/capture/frame-straddling.jpg`, from `https://optolution.com/media/ldps-pulse-diagram.jpg`
+— **copied into the repo, not hot-linked**, so the manual keeps working offline and the link
+cannot rot. It labels exactly the three panel fields (pulse distance, frame rate, pulse length =
+laser energy), which the caption ties together. Its Δt table first needed the long text moved out
+of the first column: `table.ref td:first-child` is `white-space: nowrap`, so a long first cell
+forces a horizontal scroll on mobile — **keep first-column cells short**.
+
+**Toolbox claim corrected the same day:** "Camera access needs the Image Acquisition Toolbox" was
+true only inside MATLAB — see the first writing-style rule in section 5.
+
+Corrections made while reading the source for this:
+- **`calib_dolivedetect` is live, not dead code.** The note that it was commented out (carried
+  since 2026-07-07) is wrong for this control: it is created at `generateUI.m:2052` as the
+  `Calibration` overlay checkbox and used by `+acquisition/set_capture_overlay_controls.m`. It is
+  documented. The dead-code note was about a *different* control in the camera-calibration panel.
+- **`Displacement` is not implemented** (`ac_realtime_PIV`, tooltip literally says so) and the
+  hidden `ac_realtime` checkbox is `Visible','off'`. The old page listed `Displacement` as an
+  available overlay — removed. ⚠️ Note `set_capture_overlay_controls.m:20-25` *enables*
+  `ac_realtime_PIV` in PIV preview, which looks like it works — but the control has **no
+  `Callback`** (`generateUI.m:2055`) and the `do_realtime` flag it would feed is set only by the
+  hidden `ac_realtime` (`+acquisition/realtime_Callback.m`). It is plumbing for a feature that
+  does not exist yet. Do not document it until it has a callback.
+
+### 2026-11-05 — keyboard shortcuts reworked to Ctrl+Shift
+All shortcuts moved from Ctrl+key menu accelerators to **Ctrl+Shift+key**, because Ctrl+A/C/V/Z are
+taken by the OS and by Matlab's text fields, so the old accelerators were unreliable while an edit
+field had the focus. See the shortcut rules in section 5 for the mechanism and the constraints.
+
+Code: all `Accelerator` properties removed from `+gui/generateMenu.m` and replaced by `Tag`s plus
+the shortcut in the label; `+gui/key_press.m` rewritten as the single shortcut table; new
+`+gui/run_shortcut.m`; `PIVlab_GUI.m` switched to `WindowKeyPressFcn`; `gui.reset_gui_Callback`
+re-assigns it. `help/PIVlab_shortcuts.pdf` and `+misc/shortcuts_Callback.m` deleted;
+`Learn! → List keyboard shortcuts` kept, but now opens the manual page in the browser
+(new `+gui/shortcuts_Callback.m`).
+
+**Covered by `unittests/test_gui_shortcuts.m`** (11 tests, ~70 s, group `gui`). It checks each of
+the 18 panel keys against the menu entry whose *label* announces that key — taking the expected
+panel from the label, not from a list in the test, so a key wired to the wrong entry fails too —
+plus the camera keys in real stereo mode, the busy and modifier guards, that `generateMenu.m` has
+no `Accelerator` again, and that **`shortcuts.html` lists exactly the keys `key_press.m` handles**.
+That last one is the guard against the manual drifting away from the code.
+
+Two things the test must keep doing, both learned the hard way:
+- **Never send `Ctrl+Shift+O` or `Ctrl+Shift+H` as a key in a test.** `O` opens the file dialog,
+  which `PIVlabTestMode` does *not* answer — the run then hangs until someone clicks Cancel by
+  hand (it did, on 2026-11-05). `H` opens a web browser. Both are checked through their target.
+- **Assert the parsed lists are non-empty.** Comparing two regexp-parsed key lists passes happily
+  when both parsers return nothing.
+
+`Ctrl+Shift+O` is reachable in **2D mode on purpose** — that is how a stereo session is started,
+so it is not gated on stereo mode. Only the two camera keys are.
+
+Shortcuts **added** for features that had none: `K` define masks, `W` Stereo-PIV panel,
+`O` import stereo images, `1`/`2` show camera 1 / camera 2, `F` image-based validation (it was the
+only validation panel without one). All other letters kept their meaning, just with Shift. The
+hidden colour-scale toggle moved `K` → `L` to free `K` for masking.
+
+Manual: `shortcuts.html` rewritten as six grouped tables, with the three negative sentences the
+user objected to removed ("Masking has no shortcut", "… is a button, not a shortcut", "Everything
+not listed above … is reached through the menu only") — the page now just states what exists.
+A paragraph explaining *why* the shortcuts use Ctrl+Shift was then also removed at the user's
+request: rationale has no value for the reader. The page is down to two sentences of prose plus
+the tables. See the hardened writing rule at the top of section 5 — it has now been broken twice.
+Inline `(Ctrl+…)` references updated on 15 pages; `masking.html`, `validation-image.html` and
+`stereo-piv.html` gained their new shortcuts. **Left untouched on purpose:** `sessions.html:78`
+still says `Ctrl+A`, because that is the operating system's select-all in the file dialog, not a
+PIVlab shortcut.
+
+### 2026-11-05 — review of the whole `stereo` branch + shortcuts fix (`3505f82`)
+Reconstructed two months of manual changes that had been made alongside the code without changelog
+entries or a watermark bump (see the entries below, which were written during this review). Also:
+
+- **Found a factual error**: the `Ctrl+K` row in `shortcuts.html` named an accelerator that did not
+  exist (see the tooltip warning in section 5). Superseded the same day by the Ctrl+Shift rework
+  above, which gives the camera switch a real shortcut.
+- Verified the remaining 16 rows of `shortcuts.html` against `Accelerator','X'` in
+  `generateMenu.m` — all correct. `Ctrl+G` changed target (`part_img_sett_Callback` →
+  `part_img_3d_Callback`) but the page's wording "Synthetic particle image generation" still fits.
+- Added `+pivlab` and `+stereo` to the section 2 drift command; they had been invisible to it.
+- Updated the watermark to `3505f82` and the topic count to 29.
+
+### 2026-10-01 → 2026-10-28 — PIVlab 4: command-line API and Stereo-PIV
+The two largest manual additions since the initial build; written incrementally in the same commits
+as the code, which is why no separate changelog entries existed until the 2026-11-05 review.
+
+- **New page `command-line.html`** (nav section "Data", after Exporting results) documenting the
+  `+pivlab` API package: ten-line workflow, the function list, the result struct, options,
+  settings, camera calibration, stereo, and why pre-processing does not create new image files.
+  Commits `56e9446`, `a5662f5`, `c04f246`, `26ebf86`, `1c9e149`.
+- **`stereo-piv.html` rewritten from a 30-line "not implemented" stub into the full 300-line
+  guide** (`#idea`, `#arrangement`, `#cameras`, then the numbered workflow `#import`, `#lens`,
+  `#calibration`, `#disparity`, `#analysis`, `#w`). Nav label and blurb changed from
+  "Stereo PIV settings / Not implemented yet" to "Stereo-PIV (2D3C)". New screenshots
+  `stereo-piv/panel.png` and `stereo-piv/camera-switch.png`. ~14 commits, `424936a` → `05aa433`.
+- **Stereo `.note` cross-references added to the 2D pages** so each one states what changes in
+  stereo mode: `derive-spatial.html` (extra `w component`, 3D magnitude), `derive-temporal.html`
+  (operations include w; TKE frame holds `0.5·var(w)`; make mean frames *after* validation),
+  `export.html` (w in ASCII/Tecplot/VTK/MAT/workspace), `extract-area.html`,
+  `extract-polyline.html` (tangent/normal stay in the light-sheet plane), `validation-velocity.html`
+  (limits tested on the 3D result), `statistics.html`. All link to `stereo-piv.html#w`.
+- **`capture.html#stereo`** — two cameras, the "Stereo" checkbox, Swap cameras, cam1/cam2 naming,
+  missed-trigger warning. `capture/panel.png` renewed; `capture/stereo-live.png` was made with
+  **simulated** cameras (`unittests/mocks_imaq`) showing the user's real OPTOcam board images —
+  **replace it with a real-rig screenshot when one is available**.
+- **`camera-calibration.html`** — no camera sub-menus any more; the panels act on the active
+  camera. Plus the checker-size section (own entry below).
+- **`synthetic-images.html` largely rewritten** for the combined 2D/3D particle image generator
+  (`1c9e149`): one panel with simple / one camera / stereo modes, sphere wake and free jet via
+  `simulate.flow_simulation_3d`. The old 2D-only generator is gone, so the previous "5 flow types
+  / Membrane has no sub-panel" note no longer applies.
+- **`sessions.html`** updated for the new `+gui/image_import_dialog.m` (replaces `uipickfiles`).
+- New result images `plot-appearance/vector-magnitude.jpg` and `vector-magnitude-uniform.jpg`.
+
+### 2026-10-24 — checker size section (branch `stereo`, not committed)
+New `<h3 id="checker-size">` "Choosing the checker size" with a `.warn` on the limits of the ChArUco
+detection in `camera-calibration.html` (`#markerboard`), plus one hand-written search record.
+Wrongly decoded markers are deliberately not mentioned (user's decision: fixed in the code instead,
+`+preproc/cam_filter_charuco_corners.m`). Board limit raised from 1000 to 2000 checkers
+(`+preproc/cam_generateboard_Callback.m`). Numbers
+from a Monte Carlo study with synthetic OPTOcam 2/80 board images (`D:\PIV Data\charuco_checker_size_study`,
+README there). The 2000-checker limit is the check in `+preproc/cam_generateboard_Callback.m`.
+Watermark **not** bumped: only this section was written, the rest of the manual was not re-verified.
+
+### 2026-10-24 — stereo acquisition
+`capture.html#stereo` (two cameras, "Stereo" checkbox, Swap cameras, cam1/cam2, missed-trigger warning);
+`stereo-piv.html` import step links to it. `assets/img/capture/panel.png` renewed (new "Stereo" checkbox).
+`assets/img/capture/stereo-live.png` was made with simulated cameras (`unittests/mocks_imaq`) showing the
+user's real OPTOcam board images (`D:\PIV Data\stereotest_optocam2\aligned_board`) with live ChArUco
+detection — replace it with a screenshot from the real rig when available.
 
 ### 2026-08-13 — equations for every derived parameter (`24fe6ce`)
 New `#equations` section on `derive-spatial.html` (three `<h3>`s: velocity-based / gradient-based /
@@ -266,13 +523,12 @@ All topics complete. Kept for the per-page verification detail, which feeds the 
   Technique: the `.annot` wrapper sizes to the image so `viewBox="0 0 1248 918"` maps 1:1 —
   reusable for future annotated shots.
 - **Sessions: new/load/save** — `sessions.html`. 3 image-sequencing styles
-  (`+gui/uipickfiles.m:492-509`), image list & Remove images (clears results, per
+  (`+gui/image_import_dialog.m`), image list & Remove images (clears results, per
   `+import/remove_images_from_list.m`), and the Session-vs-Settings distinction.
 
 ### Image settings
-- **Camera calibration & rectification** — `camera-calibration.html`. multip26/27/28. Camera 2 is
-  disabled only at the *menu* level while the callbacks already handle it — documented as "mono
-  only for now" without overclaiming.
+- **Camera calibration & rectification** — `camera-calibration.html`. multip26/27/28. No camera sub
+  menus: the panels work on the active camera (CAM 1 / CAM 2 toggle in stereo mode).
 - **Image pre-processing** — `preprocessing.html`. CLAHE, highpass, intensity capping, Wiener2,
   auto contrast stretch, background subtraction. The preview button only re-renders a preview;
   filters actually apply to all frames at analysis time.
@@ -284,8 +540,10 @@ All topics complete. Kept for the per-page verification detail, which feeds the 
 ### Analysis
 - **PIV settings** — `piv-settings.html`. Per-algorithm control visibility differs by algorithm and
   is documented in a table. Plus the `#tips` advice section.
-- **Stereo PIV** — `stereo-piv.html`. Honest stub: callback is `[]`/disabled; mentions usable
-  related infra (Scheimpflug option, disabled Stereo-PIV checkbox).
+- **Stereo-PIV (2D3C)** — `stereo-piv.html`. **No longer a stub** (it was one until Oct 2026):
+  full 300-line guide — camera arrangement, one session/two cameras with the `CAM 1`/`CAM 2`
+  toggle, then the numbered workflow import → per-camera lens calibration → stereo calibration →
+  disparity correction → analysis → working with W. Source is the `+stereo` package.
 - **Running the analysis** — `analyze.html`. "Analyze all frames" relabels to "Start ensemble
   analysis" for the Ensemble algorithm; "Clear all results" clears only `resultslist`/`derived`,
   not masks/ROI/settings.
@@ -321,16 +579,36 @@ All topics complete. Kept for the per-page verification detail, which feeds the 
 - **Parameters from area** — `extract-area.html`. Computes a single *average* over the area, not a
   profile — the key difference from poly-line.
 - **Statistics** — `statistics.html`.
-- **Synthetic particle images** — `synthetic-images.html`. 5 flow types; "Membrane" has no
-  dedicated sub-panel in code and is documented as using only the general particle settings.
+- **Synthetic particle images** — `synthetic-images.html`. Rewritten Oct 2026 for the **combined
+  2D/3D generator** (`simulate.part_img_3d_Callback`, `simulate.flow_simulation_3d`): one panel
+  with simple / one camera / stereo modes, sphere wake and free jet. The old 2D-only generator
+  and its "5 flow types / Membrane" structure are gone.
 - **Exporting results** — `export.html`. All 6 panels. Workspace export fails *silently* with no
   results, unlike `pixel_data.m` which shows an error dialog — documented as a warning.
-- **Capturing images** — `capture.html`. Large and hardware-specific (~38 files in `+acquisition`);
-  deliberately kept at workflow-shape level and linked out to `docs/_wiki/4_synchronizer_laser.md`
-  and `5_camera_setup.md` rather than guessing hardware behaviour.
-- **Keyboard shortcuts** — `shortcuts.html`. All 15 `Accelerator` attributes from `generateMenu.m`.
+- **Command line (API)** — `command-line.html`. The `+pivlab` package: ten-line workflow, function
+  list, result struct, options, settings, camera calibration, stereo, and why pre-processing does
+  not write new image files. Added Oct 2026 with the PIVlab 4 API.
+- **Capturing images** — `capture.html`. Full walkthrough of the acquisition panel since
+  2026-11-05 (see the changelog entry): equipment chain, one section per sub-panel of `multip24`,
+  a start-to-finish recording, pulse-distance guidance, stereo and the webcam demo. Hardware
+  wiring stays in `docs/_wiki/4_synchronizer_laser.md` and `5_camera_setup.md`.
+- **Keyboard shortcuts** — `shortcuts.html`. The 22 Ctrl+Shift shortcuts, grouped by workflow.
+  Source of truth is the `switch` in `+gui/key_press.m` (see the shortcut rules in section 5).
 - **Best practices & troubleshooting** — `best-practices.html`. User domain knowledge, not code.
 
 ### Explicitly out of scope
 Learn! → Tutorial videos, Forum, Website, How to cite, About — footer/Introduction links, not
 dedicated pages.
+
+### Known gaps / candidates for future work
+
+- **`capture.html` has no screenshots of its sub-panels.** The page has the whole-panel shot and
+  the stereo live image; a capture of the Timing graph would help `#dt` most.
+- **`capture/stereo-live.png` is a simulated-camera screenshot** — swap in a real-rig capture when
+  one exists (see the 2026-10-24 entry).
+- **Claude cannot watch video.** Verified 2026-11-05: titles and descriptions are fetchable (the
+  oEmbed endpoint), captions are **not** — the caption URL is session-signed and 404s. Material
+  from the user's YouTube tutorials has to arrive as a pasted transcript, and is then
+  user-supplied domain knowledge, like `best-practices.html`. One such transcript (the PIV-system
+  video) has been used for `capture.html`; further acquisition videos the user mentioned are not
+  linked from the wiki page and would need to be pointed out.

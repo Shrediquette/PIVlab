@@ -63,10 +63,16 @@ window.MANUAL_SEARCH = [
     text: "left mouse button right mouse button coordinate system origin top left u v horizontal vertical"
   },
   {
+    title: "Sessions — new session and Reset PIVlab GUI",
+    href: "pages/sessions.html", hash: "new",
+    section: "Getting started",
+    text: "new session input data panel reset pivlab gui reset button start again defaults clear everything"
+  },
+  {
     title: "Sessions — importing images",
     href: "pages/sessions.html", hash: "importing",
     section: "Getting started",
-    text: "import images sequencing style time resolved pairwise reference add import dialog file browser"
+    text: "import images sequencing style time resolved pairwise reference add import dialog file browser filter wildcard recent folders preview stereo camera 1 camera 2"
   },
   {
     title: "Sessions vs. settings",
@@ -246,13 +252,19 @@ window.MANUAL_SEARCH = [
     title: "Keyboard shortcuts",
     href: "pages/shortcuts.html", hash: "top",
     section: "Reference",
-    text: "keyboard shortcuts ctrl n e i s a v z d m t p q b g h accelerator hotkey"
+    text: "keyboard shortcuts ctrl shift n o i e k s w a v f z d r m t p q b g h 1 2 accelerator hotkey key combination masking camera switch stereo import"
   },
   {
     title: "Setting up a ChArUco marker board",
     href: "pages/camera-calibration.html", hash: "markerboard",
     section: "Image settings",
     text: "charuco marker board rows columns checker size origin color guess parameters generate board"
+  },
+  {
+    title: "Choosing the checker size",
+    href: "pages/camera-calibration.html", hash: "checker-size",
+    section: "Image settings",
+    text: "charuco checker size marker pixels field of view board fills image corners detection limitations 2000 checkers maximum blur noise"
   },
   {
     title: "Camera calibration (lens undistortion)",
@@ -429,10 +441,22 @@ window.MANUAL_SEARCH = [
     text: "histogram u velocity v velocity magnitude sub-pixels bins peak locking bias"
   },
   {
-    title: "Stereo PIV settings (not yet implemented)",
+    title: "Statistics of stereo-PIV results (w, 3D scatter plot)",
+    href: "pages/statistics.html", hash: "stereo",
+    section: "Statistics",
+    text: "stereo w velocity mean min max std standard deviation 3D magnitude scatter plot u v w sub-pixels camera"
+  },
+  {
+    title: "Extracting w along a line or from an area (stereo-PIV)",
+    href: "pages/stereo-piv.html", hash: "w",
+    section: "Extractions",
+    text: "stereo w component poly-line area extraction 3D magnitude click vector info"
+  },
+  {
+    title: "Stereo-PIV (2D3C)",
     href: "pages/stereo-piv.html", hash: "top",
     section: "Analysis",
-    text: "stereo piv disparity correction 2d3c not implemented scheimpflug tilted sensor"
+    text: "stereo piv two cameras 2d3c three components w out-of-plane import stereo images camera switch stereo calibration disparity correction light sheet overlay scheimpflug tilted sensor check analysis rectified board stereo-piv panel checklist work in progress export w column vtk tecplot ascii mat w component 3d magnitude mean tke camera arrangement opposite sides forward scatter backward scatter mie particle brightness scattering angle water prism transparent board mirrored above each other"
   },
   {
     title: "Phase averaging and frame selection for temporal derivation",
@@ -477,22 +501,70 @@ window.MANUAL_SEARCH = [
     text: "second monitor display experimental full screen presentation dual display"
   },
   {
+    title: "Particle image generator: setup (simple, one camera, stereo)",
+    href: "pages/synthetic-images.html", hash: "setup",
+    section: "Synthetic images",
+    text: "particle image generator simple setup one camera straight on pixel size lens distortion stereo two cameras charuco board 3d preview synthetic recording"
+  },
+  {
     title: "Synthetic image particle settings",
     href: "pages/synthetic-images.html", hash: "general",
     section: "Synthetic images",
-    text: "particle image generation number of particles diameter sheet thickness noise random z position image size"
+    text: "particle image generation particles per pixel diameter sheet thickness noise out-of-plane image pairs calibration images"
   },
   {
-    title: "Flow field types (Rankine, Oseen, rotation, linear shift)",
+    title: "Flow field types (Rankine, Oseen, sphere wake, free jet)",
     href: "pages/synthetic-images.html", hash: "flowtype",
     section: "Synthetic images",
-    text: "rankine vortex hamel oseen vortex linear shift rotation membrane flow simulation ground truth ground-truth"
+    text: "rankine vortex hamel oseen vortex pair uniform displacement rotation membrane sphere wake free jet 3d flow simulation time series ground truth ground-truth"
   },
   {
-    title: "Capturing images: camera and synchronizer workflow",
-    href: "pages/capture.html", hash: "workflow",
+    title: "Capturing images: connecting the equipment",
+    href: "pages/capture.html", hash: "setup",
     section: "Image acquisition",
-    text: "capture images camera synchronizer simplesync frame rate pulse distance laser energy connect com port start save checkbox image amount"
+    text: "connect camera laser synchronizer cable usb safety interlock door switch power supply wireless link dongle tripod setup"
+  },
+  {
+    title: "Capturing images: synchronizer and laser settings",
+    href: "pages/capture.html", hash: "sync",
+    section: "Image acquisition",
+    text: "synchronizer control frame rate pulse distance laser energy pulse length timing graph low energy mode alignment toggle laser trigger mode external trigger devices seeding generator com port connect"
+  },
+  {
+    title: "Capturing images: camera settings and live image",
+    href: "pages/capture.html", hash: "camera",
+    section: "Image acquisition",
+    text: "camera settings binning roi lens autofocus setup bit depth gain sharpness particle image diameter edge width blur scheimpflug overlay grid calibration charuco live image exposure start snapshot save focus"
+  },
+  {
+    title: "Capturing images: recording the image pairs",
+    href: "pages/capture.html", hash: "capture",
+    section: "Image acquisition",
+    text: "capture piv images save image amount ram red start abort discard recording loaded into session project folder"
+  },
+  {
+    title: "A recording from start to finish",
+    href: "pages/capture.html", hash: "recording",
+    section: "Image acquisition",
+    text: "recording workflow step by step project path configuration frame rate focus autofocus pulse distance laser energy save image amount start check data"
+  },
+  {
+    title: "Pulse distance and frame straddling",
+    href: "pages/capture.html", hash: "dt",
+    section: "Image acquisition",
+    text: "pulse distance interframe time delta t displacement interrogation area pulse length motion blur streak signal to noise timing graph plan without hardware"
+  },
+  {
+    title: "How frame straddling works",
+    href: "pages/capture.html", hash: "straddling",
+    section: "Image acquisition",
+    text: "frame straddling consecutive frames laser pulse end of exposure beginning of next frame boundary decoupled from frame rate maximum velocity double shutter readout minimum interframe limit red field timing graph"
+  },
+  {
+    title: "Capturing images: stereo acquisition with two cameras",
+    href: "pages/capture.html", hash: "stereo",
+    section: "Image acquisition",
+    text: "stereo acquisition two cameras record stereo-piv capture y-cable camera 1 camera 2 swap cameras serial number side by side live image charuco board snapshot cam1 cam2 missed trigger"
   },
   {
     title: "Trying capture with just a webcam",
@@ -553,5 +625,41 @@ window.MANUAL_SEARCH = [
     href: "pages/masking.html", hash: "saveload",
     section: "Image settings",
     text: "save all masks load masks import pixel mask binary image reuse mat file"
+  },
+  {
+    title: "Command line (API)",
+    href: "pages/command-line.html",
+    section: "Data",
+    text: "command line api script batch pivlab package readImages preprocess analyze filter toMetric derive temporal display saveSession loadSession loadSettings defaults automation without gui"
+  },
+  {
+    title: "Command line — settings from sessions",
+    href: "pages/command-line.html", hash: "settings",
+    section: "Data",
+    text: "loadSettings settings file session reuse batch processing settings struct defaults name value arguments"
+  },
+  {
+    title: "Command line — result struct",
+    href: "pages/command-line.html", hash: "results",
+    section: "Data",
+    text: "result struct x y u v typevector correlation map derived pixel units metric units edit change values by hand"
+  },
+  {
+    title: "Command line — useful options",
+    href: "pages/command-line.html", hash: "options",
+    section: "Data",
+    text: "verbose quiet progress messages none roi mask velocity limits freehand outline VelocityLimitsFreehand units warning options without effect"
+  },
+  {
+    title: "Command line — stereo-PIV",
+    href: "pages/command-line.html", hash: "stereo",
+    section: "Data",
+    text: "stereo piv script api pivlab.stereo two cameras w out-of-plane charuco board disparity residual stereo session 2d3c three components"
+  },
+  {
+    title: "Command line — camera calibration",
+    href: "pages/command-line.html", hash: "camera",
+    section: "Data",
+    text: "camera calibration lens undistortion distortion rectification script api preprocess Camera CameraView Rectification cameraParameters session camera parameters file valid same full"
   }
 ];

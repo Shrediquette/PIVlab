@@ -18,29 +18,34 @@
     <div class="split">
       <div>
         <h2 id="new">Starting a new session</h2>
-        <p>Choose <span class="ui">File → New session</span> (<kbd>Ctrl+N</kbd>), or click the
+        <p>Choose <span class="ui">File → New session</span> (<kbd>Ctrl+Shift+N</kbd>), or click the
         first icon in <span class="ui">Main tasks quick access</span>. This opens the
-        <span class="ui">Input data</span> panel shown here, with three ways to get images in:
-        <span class="ui">Import images</span> (from disk), <span class="ui">Load session</span>
-        (resume earlier work — see below), and <span class="ui">Acquire images</span> (capture
-        directly from a connected camera).</p>
+        <span class="ui">Input data</span> panel shown here, with these ways to get images in:
+        <span class="ui">Import images</span> (from disk), <span class="ui">Import stereo images</span>
+        (two cameras, see <a href="stereo-piv.html">Stereo-PIV</a>), <span class="ui">Convert + import
+        video</span>, <span class="ui">Load session</span> (resume earlier work — see below), and
+        <span class="ui">Acquire images</span> (capture directly from a connected camera).</p>
+        <p><span class="ui">Reset PIVlab GUI</span> removes all images, results, masks and
+        calibrations and sets all settings to their defaults, also those of the image acquisition
+        panel. Your preferences (folders, theme, panel width, Basic/Advanced mode) are kept. PIVlab
+        asks before it resets; unsaved work is lost.</p>
       </div>
       <figure class="inline-panel">
         <img src="../assets/img/sessions/input-data-panel.png" alt="PIVlab Input data panel with a loaded image list">
-        <figcaption>The <strong>Input data</strong> panel, with four Kármán-vortex image pairs loaded.</figcaption>
+        <figcaption>The <strong>Input data</strong> panel, with four Kármán-vortex images loaded (time resolved).</figcaption>
       </figure>
     </div>
 
     <h2 id="importing">Importing images</h2>
     <p>Click <span class="ui">Import images</span> to open the image-import dialog shown below.
-    Browse to your folder (a <span class="ui">Regular Expression Filter</span> field narrows
-    down large folders), select the files you want, and choose an <strong>image sequencing
-    style</strong> — this tells PIVlab how to pair up your files into frames:</p>
+    Browse to your folder, add the files you want to the list on the right, and choose an
+    <strong>image sequencing style</strong> — this tells PIVlab how to pair up your files into
+    frames:</p>
     <figure>
       <img src="../assets/img/sessions/image-import-dialog.jpg" alt="PIVlab image import dialog: sequencing style, folder browser, and the list of images selected for import">
-      <figcaption>The image import dialog. Pick a sequencing style (left), select files and click
-      <span class="ui">Add</span> to move them into the <span class="ui">Images selected for
-      import</span> list, then <span class="ui">Import</span>.</figcaption>
+      <figcaption>The image import dialog: the images of the folder (left, with a preview of the
+      clicked image), the selected images (right), the sequencing style and
+      <span class="ui">Import</span>.</figcaption>
     </figure>
     <table class="ref">
       <tr><th>Style</th><th>Pairing</th><th>Use it for</th></tr>
@@ -65,22 +70,27 @@
     </table>
 
     <ol class="steps">
-      <li>Select the sequencing style that matches how your images were captured.</li>
-      <li>Select the image files in the folder browser and click <span class="ui">Add</span> to
-      move them into the <span class="ui">Images selected for import</span> list on the right.
-      Use <span class="ui">Remove</span>, the move-up/move-down buttons, or
-      <span class="ui">Show full paths</span> / <span class="ui">Remove duplicates</span> to
-      clean up the list.</li>
+      <li>Go to your folder: type it, use <span class="ui">Up</span> /
+      <span class="ui">Browse...</span>, pick one of the <span class="ui">Recent folders</span>,
+      or double-click a sub-folder. The <span class="ui">Filter</span> shows only names that
+      contain a text (e.g. <code>_A</code>); with <code>*</code> (any characters) and
+      <code>?</code> (one character) the whole name must match, e.g. <code>cam1*_A</code>.</li>
+      <li>Select files (click and drag, Shift or Ctrl, <kbd>Ctrl+A</kbd> for all) and click
+      <span class="ui">Add</span>, or <span class="ui">Add all</span>. The files are imported in
+      the order in which you add them; the same files may be added more than once.
+      <span class="ui">Remove</span> and <span class="ui">Clear</span> edit the list.</li>
+      <li>Check the <span class="ui">Sequencing style</span>; the line below it shows how many
+      image pairs you get.</li>
       <li>Click <span class="ui">Import</span> to load them (or <span class="ui">Cancel</span>
       to back out). At least two images — one pair — are required.</li>
     </ol>
 
     <div class="tip">
       <strong>PIVlab will double-check your naming</strong>
-      If your filenames end in “A” and “B” but you left the style on <span class="ui">Time
-      resolved</span>, PIVlab detects the mismatch and offers to switch to
-      <span class="ui">Pairwise</span> for you — a common mix-up worth knowing about rather
-      than dismissing without reading.
+      If your filenames end in “A” and “B”, the dialog selects <span class="ui">Pairwise</span>
+      for you. If you switch back to <span class="ui">Time resolved</span>, PIVlab asks again
+      after the import — a common mix-up worth knowing about rather than dismissing without
+      reading.
     </div>
 
     <div class="note">
@@ -122,8 +132,8 @@
       <tr>
         <td>Contains</td>
         <td>Everything: image references, masks, ROI, calibration, analysis results, and all settings.</td>
-        <td>Only the configuration — algorithm choice, filter thresholds, colours, calibration
-        setup, etc. No images and no results.</td>
+        <td>Only the configuration — all settings of all panels and the calibration (reference
+        distance, time step, axis directions). No images and no results.</td>
       </tr>
       <tr>
         <td>Use it to</td>
@@ -148,10 +158,14 @@
       data</span> panel, or <span class="ui">File → Load → Load PIVlab session</span>. This
       restores images, masks, results and settings exactly as they were.</li>
     </ol>
+    <p>A session brings PIVlab back to where you saved it: the same images, results, masks,
+    calibration and settings, and the same view (open panel, displayed frame, zoom). Camera
+    connections are not restored.</p>
     <div class="note">
-      <strong>Sessions saved with an older PIVlab version</strong>
-      PIVlab warns you if a session file was created by an older release, since the interface
-      may have changed since then and some display issues can result.
+      <strong>Sessions and settings of PIVlab 3.x and older</strong>
+      Session and settings files saved with PIVlab 3.x or older cannot be opened in this version.
+      PIVlab tells you so when you try. Open them in the old version and note the settings, or
+      redo the analysis.
     </div>
 
     <h2 id="settings-saveload">Saving and loading settings only</h2>
@@ -159,16 +173,20 @@
       <li>Save: <span class="ui">File → Save → Save current PIVlab settings</span>. Choose a
       location; the default name includes your username, e.g.
       <code>PIVlab_set_yourname.mat</code>.</li>
-      <li>Load: <span class="ui">File → Load → Import PIVlab settings</span>. This rebuilds the
-      interface to match the saved configuration, but does not touch your currently loaded
-      images or results.</li>
+      <li>Load: <span class="ui">File → Load → Import PIVlab settings</span>. This applies the
+      pre-processing, PIV, data smoothing and vector validation settings, the calibration and the
+      mask generator settings. Display, export and image acquisition settings stay as they are,
+      and so do camera calibration, image rectification and Stereo-PIV mode (they belong to
+      the data of a session). Your loaded images and results are not touched.</li>
+      <li>A settings file can also be a session: <span class="ui">Import PIVlab settings</span>
+      takes the settings out of a session file without loading its images or results.</li>
     </ol>
 
     <div class="tip">
       <strong>PIVlab already remembers a few defaults</strong>
-      PIVlab loads <code>PIVlab_settings_default.mat</code> automatically every time it starts,
-      and a handful of individual choices (e.g. Basic/Advanced mode, the last sequencing style
-      you used) are quietly remembered there as you work. That's not the same as saving your
+      PIVlab starts with its default settings every time, and a handful of individual choices
+      (e.g. Basic/Advanced mode, the last folder, the last sequencing style you used) are quietly
+      remembered as you work. That's not the same as saving your
       whole current configuration, though — use <span class="ui">Save/Load PIVlab
       settings</span> whenever you want a <em>complete, named, reusable</em> configuration you
       can switch between or share.
@@ -177,7 +195,8 @@
     <div class="note">
       <strong>Related, but covered elsewhere</strong>
       <span class="ui">Acquire images</span> (live camera capture) and
-      <span class="ui">Stereo-PIV mode</span> are more specialized topics with their own pages.
+      <a href="stereo-piv.html">Stereo-PIV</a> (<span class="ui">Import stereo images</span>,
+      two cameras in one session) are more specialized topics with their own pages.
     </div>
   </article>
 

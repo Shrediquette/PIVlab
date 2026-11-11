@@ -1,0 +1,1 @@
+Make sure the [Image Acquisition Toolbox](https://www.mathworks.com/products/image-acquisition.html) is installed. Many university MATLAB licences include it.

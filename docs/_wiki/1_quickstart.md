@@ -1,15 +1,17 @@
 ---
-layout: default
 title: Quickstart
+group: Get started
+summary: Analyse your first image series step by step, from import to vorticity plot.
+description: PIVlab quickstart tutorial - import images, mask, pre-processing, PIV settings, analysis, calibration, validation and derived parameters, step by step.
 ---
-# General remarks
+## General remarks
 A "frame" is defined as a pair of images including any derived parameters. Single analyses consist of one single frame (one image pair + results); a time-resolved analysis consists of multiple frames (several image pairs + results). A "session" is defined as a collection of single or multiple frames including any derived parameters and all the settings of the GUI. Sessions can be saved and reloaded in PIVlab.  
 The **coordinate system** is defined as follows: The standard coordinate system of image data has its origin at the top left. PIVlab uses this coodinate system too. Velocities in the horizontal direction (x) are called 'u' and velocities in the vertical direction (y) are called 'v'. Positive u is top-to-bottom, and positive v is left-to-right. **This coordinate system can be adjusted / modified after calibration** (see below).  
 When creating masks, manually rejecting vectors, selecting areas/ poly-lines etc., the left mouse button performs the desired task, whereas the right mouse button ends this task. The GUI is menu-based; selecting a menu item will change the panel that is displayed on the left hand side. When doing PIV analyses, the work flow should start at the left side of the menu, and continue to the right side.  
 PIVlab uses "tool tips" everywhere. When you would like to see more information on a setting or a parameter, simply hover your mouse over the feature. A tool tip will appear and give you more detailed information.
 
-# Tutorial - Analyzing a series of images
-This tutorial will show you how to process a series of image pairs. Some of the possibilities of PIVlab will be demonstrated. I recommend to read this tutorial while performing the steps in PIVlab. This will teach you to use the most important features of PIVlab. After this, feel free to [watch the video tutorials.](https://shrediquette.github.io/PIVlab/wiki/2-video-tutorials/)
+## Tutorial: analyzing a series of images
+This tutorial will show you how to process a series of image pairs. Some of the possibilities of PIVlab will be demonstrated. I recommend to read this tutorial while performing the steps in PIVlab. This will teach you to use the most important features of PIVlab. After this, feel free to [watch the video tutorials.](/wiki/2-video-tutorials/)
 
 ## Import images
 First, load some images by selecting _File_ -> _New session_. Click _Load images_ in the panel that appears on the left side of the screen.
@@ -131,4 +133,4 @@ Additionally, you can change the colors of the vectors. The checkbox _enhance PI
 
 ![](https://github.com/user-attachments/assets/2707d658-1fd2-4686-8135-6325c82de96f)
 
-Almost all steps mentioned above are also shown in three video tutorials. Furthermore these tutorials show how to work and analyze your results and how to export results in various formats. [Watch these videos here.](https://shrediquette.github.io/PIVlab/wiki/2-video-tutorials/)
+Almost all steps mentioned above are also shown in three video tutorials. Furthermore these tutorials show how to work and analyze your results and how to export results in various formats. [Watch these videos here.](/wiki/2-video-tutorials/)
