@@ -1,12 +1,14 @@
 ---
-layout: default
 title: Downloads
+description: Download PIVlab for free - standalone app for Windows, MATLAB toolbox for all operating systems, or MATLAB Online in the browser.
+keywords: download install installer exe mltbx toolbox matlab online release
 ---
-<h1>Download PIVlab...</h1>
-<ul>
-    <li><a href="https://github.com/Shrediquette/PIVlab/releases/latest/download/PIVlab_installer.exe" target="_blank">as a free stand-alone program for Windows computers</a> (all features, no requirements)</li>
-    <li><a href="https://github.com/Shrediquette/PIVlab/releases/latest/download/PIVlab.mltbx" target="_blank">as a free toolbox inside Matlab for every operating system</a> (all features, Matlab required)</li>
-    <li><a href="https://matlab.mathworks.com/open/fileexchange/v1?id=27659" target="_blank">as a free web browser-based app by using Matlab online</a> (no hardware interaction, free Mathworks account required)</li>
-</ul>
-<p>The stand-alone program is proudly <a href="https://www.optolution.com" target="_blank">presented by OPTOLUTION Messtechnik GmbH</a>.</p>
-<p><a href="https://github.com/Shrediquette/PIVlab" target="_blank">Link to the source code on github</a></p>
+<h1>Download PIVlab</h1>
+<div class="get">
+{%- for d in site.downloads %}{% if d.get %}
+  <a href="{{ d.url }}"><strong>{{ d.title }}</strong><span>{{ d.text }}</span></a>
+{%- endif %}{% endfor %}
+</div>
+<p>How to install each version: see the <a href="{{ '/wiki/0-installation/' | relative_url }}">installation guide</a>.</p>
+<p>The stand-alone program is proudly <a href="https://www.optolution.com">presented by OPTOLUTION Messtechnik GmbH</a>.</p>
+<p>The <a href="https://github.com/Shrediquette/PIVlab">source code is on GitHub</a>, together with all <a href="https://github.com/Shrediquette/PIVlab/releases">releases and release notes</a>. The latest development version is available as <a href="https://github.com/Shrediquette/PIVlab/archive/refs/heads/main.zip">nightly build</a>.</p>

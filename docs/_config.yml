@@ -1,28 +1,68 @@
 title: PIVlab
 description: Open Source Particle Image Velocimetry Software
-show_downloads: true
-google_analytics:
-theme: jekyll-theme-leap-day
 baseurl: ""
-collections: 
+url: "https://www.pivlab.de"
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+
+# Files that are only for editing the site, not for visitors
+exclude:
+  - README_website.md
+  - manual/README.md
+  - manual/CONTENT_PLAN.md
+  - manual/tools
+
+collections:
   wiki:
     output: true
     permalink: /wiki/:name/
+  cameras:
+    output: true
+    permalink: /wiki/cameras/:name/
   docs:
     output: true
     permalink: /:name/
   news:
     output: true
     permalink: /news/:name/
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+  - scope:
+      path: ""
+      type: wiki
+    values:
+      layout: wiki
+      crumbs:
+        - title: "Wiki"
+          url: "/wiki/"
+  - scope:
+      path: ""
+      type: cameras
+    values:
+      layout: camera
+      steps: true
+      crumbs:
+        - title: "Wiki"
+          url: "/wiki/"
+        - title: "Camera setup"
+          url: "/wiki/5-camera-setup/"
+
+# Top menu (website and manual). The manual reads it via assets/js/site-nav.js.
 navigation:
   - title: "Home"
     url: "/"
   - title: "Downloads"
     url: "/downloads"
   - title: "Manual"
-    url: "/manual"
+    url: "/manual/"
   - title: "Wiki"
-    url: "/wiki"
+    url: "/wiki/"
   - title: "Hardware"
     url: "/hardware"
   - title: "Screenshots"
@@ -31,4 +71,31 @@ navigation:
     url: "/references"
   - title: "Service and Support"
     url: "/support"
-    
+
+# All download links, in one place.
+#   button: label of the yellow button in the header (header: true)
+#   title / text: big download buttons on the home and downloads pages (get: true)
+downloads:
+  - button: "Standalone"
+    title: "Standalone app"
+    text: "Free program for Windows. All features, no requirements."
+    url: "https://github.com/Shrediquette/PIVlab/releases/latest/download/PIVlab_installer.exe"
+    header: true
+    get: true
+  - button: "MATLAB Toolbox"
+    title: "MATLAB toolbox"
+    text: "For every operating system. All features, MATLAB required."
+    url: "https://github.com/Shrediquette/PIVlab/releases/latest/download/PIVlab.mltbx"
+    header: true
+    get: true
+  - title: "MATLAB Online"
+    text: "Runs in the web browser. No hardware control, free MathWorks account needed."
+    url: "https://matlab.mathworks.com/open/fileexchange/v1?id=27659"
+    get: true
+  - button: "Nightly build"
+    title: "Nightly build"
+    text: "Latest source code from GitHub."
+    url: "https://github.com/Shrediquette/PIVlab/archive/refs/heads/main.zip"
+    header: true
+
+github_url: "https://github.com/Shrediquette/PIVlab"

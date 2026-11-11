@@ -155,35 +155,49 @@
   }
 
   // ------------------------------------------------------------------- Search
+  // Website pages (wiki, camera setup, ...) are searched too: their records come from
+  // ../assets/js/site-search.js (built by Jekyll on pivlab.de, loaded on first use;
+  // absent when the manual is opened from disk).
+  var SITE_ROOT = ROOT + "../";
+  var siteSearchLoaded = false;
+  function loadScript(src, done) {
+    var s = h("script", { src: src });
+    s.onload = done; s.onerror = done;
+    document.head.appendChild(s);
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function initSearch(input, panel) {
-    var data = window.MANUAL_SEARCH || [];
+    // records for the shared ranking (search-core.js): manual first, website pages added on first use
+    var data = (window.MANUAL_SEARCH || []).map(function (r) {
+      return { title: r.title, where: r.section || "", text: r.text || "",
+        url: resolve(r.href) + (r.hash && r.hash !== "top" ? "#" + r.hash : "") };
+    });
+    function addSiteRecords() {
+      (window.SITE_SEARCH || []).forEach(function (r) {
+        data.push({ title: r.title, url: r.url, where: r.section || "Website", text: r.text || "" });
+      });
+      if (input.value) render(input.value);
+    }
+    loadScript(ROOT + "assets/js/search-core.js", function () { if (input.value) render(input.value); });
+    function loadSiteRecords() {
+      if (siteSearchLoaded) return;
+      siteSearchLoaded = true;
+      loadScript(SITE_ROOT + "assets/js/site-search.js", addSiteRecords);
+    }
+    input.addEventListener("focus", loadSiteRecords);
+    input.addEventListener("input", loadSiteRecords);
     function render(q) {
       panel.innerHTML = "";
-      q = q.trim().toLowerCase();
+      q = q.trim();
       if (!q) { panel.classList.remove("open"); return; }
-      var terms = q.split(/\s+/);
-      var hits = data.map(function (rec) {
-        var hay = (rec.title + " " + (rec.section || "") + " " + (rec.text || "")).toLowerCase();
-        var score = 0;
-        terms.forEach(function (t) {
-          if (rec.title.toLowerCase().indexOf(t) !== -1) score += 3;
-          else if (hay.indexOf(t) !== -1) score += 1;
-        });
-        return { rec: rec, score: score };
-      }).filter(function (x) { return x.score > 0; })
-        .sort(function (a, b) { return b.score - a.score; })
-        .slice(0, 8);
-
+      var hits = window.PivlabSearch ? window.PivlabSearch.rank(data, q, 8) : [];
       if (!hits.length) {
-        panel.appendChild(h("div", { class: "search-empty" }, "No results for “" + q + "”"));
+        panel.appendChild(h("div", { class: "search-empty" }, "No results for “" + esc(q) + "”"));
       } else {
-        hits.forEach(function (x) {
-          var rec = x.rec;
-          var url = resolve(rec.href) + (rec.hash && rec.hash !== "top" ? "#" + rec.hash : "");
-          var a = h("a", { class: "search-hit", href: url },
-            '<span class="search-hit-title">' + rec.title + "</span>" +
-            '<span class="search-hit-section">' + (rec.section || "") + "</span>");
-          panel.appendChild(a);
+        hits.forEach(function (rec) {
+          panel.appendChild(h("a", { class: "search-hit", href: rec.url },
+            '<span class="search-hit-title">' + esc(rec.title) + "</span>" +
+            '<span class="search-hit-section">' + esc(rec.where) + "</span>"));
         });
       }
       panel.classList.add("open");
@@ -228,19 +242,51 @@
     // kept as separate top-level siblings of <body> (not nested in one wrapper) —
     // a sticky element only stays stuck while its own parent is on screen, so
     // nesting it inside a ~140px-tall wrapper would make it scroll away with it.
-    var hero = h("a", { class: "hero", href: resolve("index.html"), "aria-label": "PIVlab Manual home" },
-      '<span class="hero-title">User Manual</span>');
+    // The top menu and the download buttons are the same as on the website
+    // (window.SITE_NAV from ../assets/js/site-nav.js, filled in once it has loaded).
+    var hero = h("div", { class: "hero" });
+    hero.appendChild(h("a", { class: "hero-home", href: SITE_ROOT, "aria-label": "PIVlab website" }));
+    var heroSide = h("div", { class: "hero-side" });
+    heroSide.appendChild(h("a", { class: "hero-title", href: resolve("index.html") }, "User Manual"));
+    var downloads = h("div", { class: "downloads" });
+    heroSide.appendChild(downloads);
+    hero.appendChild(heroSide);
     var header = h("header", { class: "action-bar" });
-    var burger = h("button", { class: "burger", "aria-label": "Toggle navigation" }, "&#9776;");
+    var burger = h("button", { class: "burger", "aria-label": "Show manual chapters" }, "&#9776; Chapters");
+    var menuBtn = h("button", { class: "menu-btn", "aria-label": "Show website menu", "aria-expanded": "false" }, "Menu");
+    var siteMenu = h("ul", { class: "site-menu" },
+      '<li><a href="' + SITE_ROOT + '">PIVlab website</a></li>');
     var searchWrap = h("div", { class: "search" });
-    var searchInput = h("input", { type: "search", placeholder: "Search the manual…  ( / )", "aria-label": "Search" });
+    var searchInput = h("input", { type: "search", placeholder: "Search manual + website  ( / )", "aria-label": "Search the manual and the website" });
     var searchPanel = h("div", { class: "search-panel" });
     searchWrap.appendChild(searchInput); searchWrap.appendChild(searchPanel);
     var themeBtn = h("button", { class: "theme-toggle", "aria-label": "Toggle theme" }, "☾");
-    var ghLink = h("a", { class: "gh-link", href: "https://github.com/Shrediquette/PIVlab", target: "_blank", rel: "noopener" }, "View On GitHub");
     var siteMark = h("a", { class: "site-mark", href: "https://optolution.com", target: "_blank", rel: "noopener", title: "OPTOLUTION" }, "");
-    header.appendChild(burger); header.appendChild(ghLink); header.appendChild(searchWrap);
+    header.appendChild(burger); header.appendChild(menuBtn); header.appendChild(siteMenu); header.appendChild(searchWrap);
     header.appendChild(themeBtn); header.appendChild(siteMark);
+    menuBtn.addEventListener("click", function () {
+      var open = siteMenu.classList.toggle("open");
+      menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    document.addEventListener("click", function (e) {
+      if (siteMenu.classList.contains("open") && !siteMenu.contains(e.target) && e.target !== menuBtn) {
+        siteMenu.classList.remove("open"); menuBtn.setAttribute("aria-expanded", "false");
+      }
+    });
+    loadScript(SITE_ROOT + "assets/js/site-nav.js", function () {
+      var nav = window.SITE_NAV;
+      if (!nav) return; // manual opened from disk: keep the single "PIVlab website" link
+      siteMenu.innerHTML = "";
+      (nav.navigation || []).forEach(function (it) {
+        var isManual = it.url.replace(/\/$/, "") === "/manual";
+        siteMenu.appendChild(h("li", null, '<a href="' + it.url + '"' + (isManual ? ' class="active" aria-current="page"' : "") + ">" + it.title + "</a>"));
+      });
+      downloads.appendChild(h("span", { class: "downloads-label" }, "Download"));
+      (nav.downloads || []).forEach(function (d) {
+        if (d.header) downloads.appendChild(h("a", { class: "dl-btn", href: d.url, title: d.text }, d.button));
+      });
+      downloads.appendChild(h("a", { class: "dl-btn gh", href: nav.github }, "View on GitHub"));
+    });
 
     // Layout skeleton
     var layout = h("div", { class: "layout" });
@@ -255,7 +301,8 @@
     if (pager) main.appendChild(pager);
     main.appendChild(h("footer", { class: "site-footer" },
       'PIVlab manual · <a href="https://www.pivlab.de" target="_blank" rel="noopener">PIVlab.de</a> · ' +
-      'supported by <a href="https://optolution.com" target="_blank" rel="noopener">OPTOLUTION</a>'));
+      'supported by <a href="https://optolution.com" target="_blank" rel="noopener">OPTOLUTION</a> · ' +
+      '<a href="https://www.pivlab.de/imprint/">Legal notice</a> · <a href="https://www.pivlab.de/privacy/">Privacy policy</a>'));
 
     layout.appendChild(sidebar);
     layout.appendChild(main);
