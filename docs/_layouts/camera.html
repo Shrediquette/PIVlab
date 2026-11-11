@@ -1,0 +1,22 @@
+---
+layout: default
+---
+<h1>{{ page.title }}</h1>
+{%- if page.summary %}
+<p class="lead">{{ page.summary }}</p>
+{%- endif %}
+<dl class="facts">
+  {%- if page.models %}<dt>Models</dt><dd>{{ page.models | join: ", " }}</dd>{% endif %}
+  {%- if page.connection %}<dt>Connection</dt><dd>{{ page.connection }}</dd>{% endif %}
+  {%- if page.software %}<dt>Driver software</dt><dd>{{ page.software }}</dd>{% endif %}
+  {%- if page.config %}<dt>In PIVlab select</dt><dd>{{ page.config }}</dd>{% endif %}
+</dl>
+{{ content }}
+{%- assign docs = site.cameras | sort: "order" %}
+{%- for d in docs %}{% if d.url == page.url %}{% assign i = forloop.index0 %}{% endif %}{% endfor %}
+{%- if i > 0 %}{% assign prev_i = i | minus: 1 %}{% assign prev = docs[prev_i] %}{% else %}{% assign prev = nil %}{% endif %}
+{%- assign next_i = i | plus: 1 %}{% assign next = docs[next_i] %}
+<nav class="pager" aria-label="Other cameras">
+  {%- if prev %}<a href="{{ prev.url | relative_url }}"><span class="pager-dir">Previous camera</span><span class="pager-label">{{ prev.title }}</span></a>{% else %}<a href="{{ '/wiki/5-camera-setup/' | relative_url }}"><span class="pager-dir">Back to</span><span class="pager-label">All cameras</span></a>{% endif %}
+  {%- if next %}<a class="next" href="{{ next.url | relative_url }}"><span class="pager-dir">Next camera</span><span class="pager-label">{{ next.title }}</span></a>{% endif %}
+</nav>

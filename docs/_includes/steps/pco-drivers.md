@@ -1,0 +1,1 @@
+Install the [pco interface drivers](https://www.excelitas.com/product/pco-interface-drivers) for your camera: USB 3.0 for the panda, USB 2.0 for the pixelfly, CLHS KAYA for the edge.

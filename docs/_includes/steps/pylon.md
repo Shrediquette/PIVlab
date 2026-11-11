@@ -1,0 +1,1 @@
+Download and install the [Basler pylon Camera Software Suite](https://www2.baslerweb.com/de/downloads/downloads-software/#type=pylonsoftware;language=all;version=all;series=baslerdart;model=all).

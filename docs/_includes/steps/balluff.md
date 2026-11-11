@@ -1,0 +1,1 @@
+Download and install [Balluff Impact Acquire](https://assets.balluff.com/documents/DRF_957084_AA_000/ImpactAcquire-x86_64-3.7.2.exe).

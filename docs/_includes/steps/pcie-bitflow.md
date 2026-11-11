@@ -1,0 +1,1 @@
+Install the BitFlow CoaXPress frame grabber in a free **PCIe 3.0 (Gen 3) x8** slot of the computer.
