@@ -1,21 +1,22 @@
 ---
-layout: default
 title: PIVlab Wiki
+permalink: /wiki/
+description: PIVlab wiki - installation, quickstart tutorial, video tutorials, camera and synchronizer setup, support and contributing.
 ---
 <h1>PIVlab Wiki</h1>
-<p>Welcome to the PIVlab Wiki! </p>
-<p>When running PIVlab, you have three choices. Typically, you decide for one of them:</p>
-<ul>
-<li>You can run PIVlab as a separate App on your windows computer ("Stand-alone version")</li>
-<li>If you have Matlab, you can run PIVlab as a Toolbox for your Matlab installation ("Toolbox version")</li>
-<li>You can run PIVlab from your webbrowser with limited features ("Matlab online version")</li>
-</ul>
-The wiki has instructions for each of these choices.
-  <p>Browse the wiki pages below:</p>
-<ul>
-  {% for wiki in site.wiki %}
-    <li>
-        <a href="{{site.baseurl}}{{ wiki.url }}">{{ wiki.title }}</a>
-    </li>
-  {% endfor %}
-</ul>
+<p class="lead">Guides for installing PIVlab, first steps and setting up PIV hardware. The <a href="{{ '/manual/' | relative_url }}">user manual</a> explains every part of the program in detail.</p>
+
+<p>You can run PIVlab in three ways: as a <strong>standalone app</strong> on Windows (no MATLAB needed), as a <strong>MATLAB toolbox</strong>, or in the browser with <strong>MATLAB Online</strong> (limited features). The guides cover each of them.</p>
+
+{%- assign groups = "Get started|Hardware|Going further|Community" | split: "|" %}
+{%- for g in groups %}
+<h2 class="group-title">{{ g }}</h2>
+<div class="cards">
+  {%- for w in site.wiki %}{% if w.group == g %}
+  <a class="card" href="{{ w.url | relative_url }}">
+    <h3>{{ w.title }}</h3>
+    <p>{{ w.summary }}</p>
+  </a>
+  {%- endif %}{% endfor %}
+</div>
+{%- endfor %}

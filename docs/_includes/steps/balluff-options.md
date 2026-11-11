@@ -1,0 +1,1 @@
+In the installer, the options **Common Runtime** and **GenICam GenTL Support** are all you need. You can uncheck everything else.

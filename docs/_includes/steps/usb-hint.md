@@ -1,0 +1,1 @@
+> **For full USB speed:** connect the camera directly to the computer, not through a USB hub. Laptops should run on their power supply, because some save energy by limiting USB bandwidth on battery.

@@ -1,0 +1,13 @@
+---
+layout: default
+---
+<h1>{{ page.title }}</h1>
+{{ content }}
+{%- assign docs = site.wiki %}
+{%- for d in docs %}{% if d.url == page.url %}{% assign i = forloop.index0 %}{% endif %}{% endfor %}
+{%- if i > 0 %}{% assign prev_i = i | minus: 1 %}{% assign prev = docs[prev_i] %}{% else %}{% assign prev = nil %}{% endif %}
+{%- assign next_i = i | plus: 1 %}{% assign next = docs[next_i] %}
+<nav class="pager" aria-label="More wiki pages">
+  {%- if prev %}<a href="{{ prev.url | relative_url }}"><span class="pager-dir">Previous</span><span class="pager-label">{{ prev.title }}</span></a>{% else %}<span></span>{% endif %}
+  {%- if next %}<a class="next" href="{{ next.url | relative_url }}"><span class="pager-dir">Next</span><span class="pager-label">{{ next.title }}</span></a>{% endif %}
+</nav>

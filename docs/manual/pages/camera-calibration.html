@@ -22,10 +22,12 @@
     </table>
 
     <div class="note">
-      <strong>Mono setups only, for now</strong>
-      Both tools accept a "Camera 2" in their menu (<span class="ui">Image settings → Camera
-      calibration</span>), but that option is currently disabled — only a single camera is
-      supported today.
+      <strong>Two cameras: stereo-PIV</strong>
+      After <span class="ui">Import stereo images</span>, each camera gets its own lens
+      calibration and its own board image in the light sheet. The panels work on the camera
+      that is shown; switch it with the <span class="ui">CAM 1</span> / <span class="ui">CAM 2</span>
+      button at the bottom left. The stereo calibration then replaces the 2D rectification. See
+      <a href="stereo-piv.html">Stereo-PIV (2D3C)</a>.
     </div>
 
     <h2 id="markerboard">Setting up a marker board</h2>
@@ -37,27 +39,73 @@
       <tr><th>Field</th><th>Meaning</th></tr>
       <tr><td>Board type</td><td>Currently only ChArUco DICT_4X4_1000.</td></tr>
       <tr><td>Origin color</td><td>Color of the top-left checker (Black/White) — must match your printed board.</td></tr>
-      <tr><td>Rows / Columns</td><td>Checkerboard dimensions (default 23 × 24).</td></tr>
+      <tr><td>Rows / Columns</td><td>Checkerboard dimensions (default 14 × 21; with the default 12 mm checkers, the board fits A4 landscape).</td></tr>
       <tr><td>Checker size / Marker size</td><td>Physical size of the checkers and the ArUco markers printed on them.</td></tr>
     </table>
     <p>Click <span class="ui">Guess parameters</span> to have PIVlab estimate these from a
     photo, or <span class="ui">Generate Charuco board</span> to produce a printable board
-    matching your settings.</p>
+    matching your settings. Save it as TIFF (300 dpi) or as print-ready PDF. In the PDF, all
+    checkers and markers have their exact size in mm. Print either file at 100 % scaling.</p>
+    <p>The PDF also suits printing on transparent material, e.g. an acrylic plate that is seen
+    from both sides in <a href="stereo-piv.html">stereo PIV</a>. It is in CMYK (black = 100 % K)
+    with 5 mm bleed. White is the spot colour <em>weiss</em> (overprint) in the top layer
+    <em>weiss</em>; it does not overlap the other colours. The suggested file name contains
+    the board size, e.g. <em>…_300x290mm_plus_5mm_bleed.pdf</em>.</p>
+    <p>A generated board carries a <strong>QR code</strong> in place of the central 2 × 2 checkers
+    that holds all of these parameters. It is also read when the board is seen from behind.
+    With the <a href="capture.html#camera"><span class="ui">Calibration</span> overlay</a> of the
+    image acquisition, PIVlab reads that code from the live image and fills the fields above by
+    itself, so the board's dimensions and scale do not have to be entered by hand.</p>
 
     <figure class="inline-panel">
       <img src="../assets/img/camera-calibration/panel-markerboard.png" alt="PIVlab Marker board setup panel">
       <figcaption>The <strong>Marker board setup</strong> panel.</figcaption>
     </figure>
     <figure>
-      <img src="../assets/img/camera-calibration/charuco-board.jpg" alt="A generated printable ChArUco board: a checkerboard with ArUco markers in the black squares, labelled with its dictionary and dimensions">
-      <figcaption>A board produced by <span class="ui">Generate Charuco board</span> — print it
-      out and photograph it to calibrate. The header records its exact parameters (dictionary,
-      rows × columns, checker/marker sizes) so PIVlab can detect it.</figcaption>
+      <img src="../assets/img/camera-calibration/charuco-board.jpg" alt="A generated printable ChArUco board: a checkerboard with ArUco markers in the white squares, a QR code in the centre, labelled with its dictionary and dimensions">
+      <figcaption>A board produced by <span class="ui">Generate Charuco board</span> with the
+      default settings — print it out and photograph it to calibrate. The header and the QR code in
+      the centre record its exact parameters (dictionary, rows × columns, checker/marker sizes) so
+      PIVlab can detect it.</figcaption>
     </figure>
+
+    <h3 id="checker-size">Choosing the checker size</h3>
+    <p>Design the board for the camera image, not for the paper: the board should fill the
+    camera image, and one checker should cover about <strong>60–130 pixels</strong> in the
+    image. More and smaller checkers do not make the calibration more accurate — in tests with
+    synthetic images of a real camera, a board with about 120 corners calibrated as well as one
+    with 1700. Small checkers only make the marker detection fail.</p>
+    <div class="eq"><em>c</em> ≈ 60…130 × <em>W</em> / <em>N</em></div>
+    <p class="eq-where">where <em>c</em> is the checker size [mm], <em>W</em> the width of the field
+    of view [mm] and <em>N</em> the image width [px].</p>
+    <p>Example: a camera with 1936 px image width looking at a 520 mm wide field of view has
+    0.27 mm/px, so the checkers should be about 16–35 mm, i.e. a board with about 15–30 columns.</p>
+    <table class="ref">
+      <tr><th>Checker in the image</th><th>Detection</th></tr>
+      <tr><td>below about 20 px</td><td>Markers are not detected.</td></tr>
+      <tr><td>20–60 px</td><td>Works with sharp images. With blur or image noise the marker
+      detection becomes unreliable.</td></tr>
+      <tr><td>60–130 px</td><td><strong>Recommended.</strong> Reliable also with slightly blurred or
+      noisy images.</td></tr>
+      <tr><td>above about 200 px</td><td>Still accurate, but each image has only few corners. Keep at
+      least about 6 × 9 checkers on the board.</td></tr>
+    </table>
+
+    <div class="warn">
+      <strong>Limitations of the ChArUco detection</strong>
+      <ul>
+        <li>A board can have at most 2000 checkers (rows × columns); the generator refuses larger
+        boards. A board that fills the image therefore cannot have arbitrarily small checkers. On
+        cameras with more than about 30 megapixels this forces checkers larger than 130 px, which
+        is fine.</li>
+        <li>The board may extend beyond the image edges: each corner is identified by its
+        neighbouring markers, so partly visible boards are used.</li>
+      </ul>
+    </div>
 
     <h2 id="calibration">Camera calibration (lens undistortion)</h2>
     <p>Open via <span class="ui">Image settings → Camera calibration → Camera calibration
-    (undistortion) → Camera 1</span>.</p>
+    (undistortion)</span>.</p>
 
     <figure class="inline-panel">
       <img src="../assets/img/camera-calibration/panel-calibration.png" alt="PIVlab Camera calibration panel">
@@ -104,7 +152,7 @@
 
     <h2 id="rectification">Image rectification</h2>
     <p>Open via <span class="ui">Image settings → Camera calibration → Image rectification /
-    alignment → Camera 1</span> (you need images loaded first). Rectification aligns the image
+    alignment</span> (you need images loaded first). Rectification aligns the image
     with your target coordinate system by photographing the marker board <strong>positioned
     inside the laser sheet</strong>, aligned with the plane you actually want to measure.</p>
 
@@ -134,6 +182,14 @@
       Calibration (undistortion) and rectification address different problems and can be
       enabled at the same time: undistortion first removes lens artifacts, then rectification
       aligns the corrected image with your coordinate system.
+    </div>
+
+    <div class="note">
+      <strong>Using the calibration in a script</strong>
+      Save a session (or the camera parameters) after the calibration. A MATLAB script then applies
+      the same undistortion and rectification with
+      <code>pivlab.preprocess(imgs, Camera="my_session.mat")</code> — see
+      <a href="command-line.html#camera">Command line (API)</a>.
     </div>
   </article>
 

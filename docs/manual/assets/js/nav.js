@@ -51,8 +51,8 @@ window.MANUAL_NAV = {
       items: [
         { label: "PIV settings",                        href: "pages/piv-settings.html",         status: "live",
           blurb: "Choose the algorithm, interrogation areas and passes." },
-        { label: "Stereo PIV settings",                 href: "pages/stereo-piv.html",            status: "live",
-          blurb: "Not implemented yet — current status and related infrastructure." },
+        { label: "Stereo-PIV (2D3C)",                   href: "pages/stereo-piv.html",            status: "live",
+          blurb: "Two cameras: stereo calibration, disparity correction, U, V and W." },
         { label: "Running the analysis (ANALYZE!)",     href: "pages/analyze.html",               status: "live",
           blurb: "Analyze one frame or the whole session, and track progress." }
       ]
@@ -119,7 +119,9 @@ window.MANUAL_NAV = {
       title: "Data",
       items: [
         { label: "Exporting results",                   href: "pages/export.html",                status: "live",
-          blurb: "Six ways to get your results out — images, text, MAT, Tecplot, VTK, or straight to the workspace." }
+          blurb: "Six ways to get your results out — images, text, MAT, Tecplot, VTK, or straight to the workspace." },
+        { label: "Command line (API)",                  href: "pages/command-line.html",          status: "live",
+          blurb: "Run the whole analysis from a MATLAB script with the pivlab.* functions — same code as the GUI." }
       ]
     },
     {

@@ -1,10 +1,11 @@
 ---
-layout: default
 title: Installation
+group: Get started
+summary: Install PIVlab as standalone app, as MATLAB toolbox, or run it in MATLAB Online.
+description: How to install PIVlab - standalone Windows app (no MATLAB needed), MATLAB toolbox (R2019b or newer) or MATLAB Online in the browser.
 ---
-# Installation instructions
 ## Stand-alone application
-Download the .exe file from the [Downloads section](https://shrediquette.github.io/PIVlab/downloads) and run it. It will automatically download and install required files and (optionally) create a desktop icon.
+Download the .exe file from the [Downloads section](/downloads) and run it. It will automatically download and install required files and (optionally) create a desktop icon.
 ## Matlab toolbox
 If you have Matlab on your computer, you should install the toolbox. PIVlab needs Matlab and the image processing toolbox to run. The image acquisition toolbox and the parallel computing toolbox are optional. PIVlab is compatible with releases from Matlab R2019b and later. PIVlab checks for all requirements during startup and will warn you if something misses.
 

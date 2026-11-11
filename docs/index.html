@@ -1,46 +1,40 @@
 ---
-layout: default
 title: PIVlab - open source particle image velocimetry
+description: PIVlab is free, open-source particle image velocimetry (PIV) software - standalone Windows app or MATLAB toolbox. Cross-correlation and optical flow, stereo-PIV, validation, calibration and export; controls lasers, cameras and synchronizers.
+keywords: piv software free open source particle image velocimetry matlab flow measurement optical flow stereo
 ---
-<h2>What is PIVlab?</h2>
-<p>
-    PIVlab is a free and open-source particle image velocimetry (PIV) software and is currently
-    the most frequently cited PIV tool on the market. Available as stand-alone app or Matlab toolbox. It can be used to calculate the velocity distribution within imported (or captured) images. It can also control
-    <a href="https://optolution.com/en/products/particle-image-velocimetry-piv/" target="_blank">OPTOLUTION's lasers, cameras and synchronizers</a>, and derive, display and export multiple parameters of the flow pattern. The simple graphical user interface makes
-    PIV data acquisition and data post-processing fast and efficient.
-</p>
+<h1>PIVlab – free (stereo) particle image velocimetry software</h1>
+<p class="lead">PIVlab is free and open-source particle image velocimetry (PIV) software, and currently the most frequently cited PIV tool on the market.
+It calculates the velocity distribution in imported or captured particle images, derives, displays and exports many parameters of the flow, and can control
+<a href="https://optolution.com/en/products/particle-image-velocimetry-piv/">OPTOLUTION's lasers, cameras and synchronizers</a>.
+The graphical user interface makes PIV data acquisition and post-processing fast and efficient.</p>
+
+<h2>Get PIVlab</h2>
+<div class="get">
+{%- for d in site.downloads %}{% if d.get %}
+  <a href="{{ d.url }}"><strong>{{ d.title }}</strong><span>{{ d.text }}</span></a>
+{%- endif %}{% endfor %}
+</div>
+<p>New to PIVlab? Start with the <a href="{{ '/wiki/0-installation/' | relative_url }}">installation guide</a> and the <a href="{{ '/wiki/1-quickstart/' | relative_url }}">quickstart tutorial</a>, or browse the <a href="{{ '/manual/' | relative_url }}">user manual</a>.</p>
+
 <h2>Why use PIVlab?</h2>
 <h3>Simple</h3>
-<p>Due to the graphical interface, PIV analyses are very simple:</p>
-<iframe src="https://www.youtube.com/embed/bmeR8vdpZF8?si=ssEaTrzeRqci1q-r" style=" width: 100%; height: 360px" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-<hr style="height:2px;border-width:0;color:gray;background-color:gray">
-<h3>Quality</h3>    
-<p>PIVlab uses state of the art algorithms for cross-correlation and optical flow:</p>
-<iframe src="https://www.youtube.com/embed/jDBMIuQ9fsw?si=gOhLKxwk5xYpM4h2" style=" width: 100%; height: 360px" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-<hr style="height:2px;border-width:0;color:gray;background-color:gray">
-<h3>Trusted</h3>    
+<p>Thanks to the graphical interface, PIV analyses are very simple:</p>
+<div class="video" data-yt="bmeR8vdpZF8" data-title="PIVlab: only 9 clicks for a PIV analysis"><a href="https://www.youtube.com/watch?v=bmeR8vdpZF8">Watch on YouTube: PIVlab – only 9 clicks for a PIV analysis</a></div>
+
+<h3>Quality</h3>
+<p>PIVlab uses state-of-the-art algorithms for cross-correlation and optical flow:</p>
+<div class="video" data-yt="jDBMIuQ9fsw" data-title="PIV with a low-cost pulsed laser diode"><a href="https://www.youtube.com/watch?v=jDBMIuQ9fsw">Watch on YouTube: PIV with a low-cost pulsed laser diode</a></div>
+
+<h3>Expandable</h3>
+<p>Start with standard 2D PIV in minutes. When you need the velocity through the light sheet as well, add a second camera: PIVlab then measures all three velocity components (stereo-PIV), with the same workflow. You can even try it before buying anything, with the built-in stereo-PIV simulator. Available from PIVlab 4.0.</p>
+<a href="{{ '/wiki/7-stereo-piv/' | relative_url }}"><video class="anim" preload="none" muted loop playsinline poster="{{ '/assets/images/stereo/stereo-result-w.webp' | relative_url }}" aria-label="Stereo-PIV result: in-plane velocity vectors and the out-of-plane component w in colour"><source src="{{ '/assets/images/stereo/stereo-result-w.mp4' | relative_url }}" type="video/mp4"><img src="{{ '/assets/images/stereo/stereo-result-w.gif' | relative_url }}" alt="Stereo-PIV result: in-plane velocity vectors and the out-of-plane component w in colour"></video></a>
+<p><a href="{{ '/wiki/7-stereo-piv/' | relative_url }}">Learn more about stereo-PIV in PIVlab</a></p>
+
+<h3>Trusted</h3>
 <p>Thousands of researchers trust the results of PIVlab:</p>
-<img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/pivlab_citations.jpg" style="width:100%;">
-Based on a <a href="https://pivlab.blogspot.com/2022/06/pivlab-is-becoming-super-popular.html">customized Google scholar search</a>
-<br>Full PIV software usage statistics available here: <a href="https://shrediquette.github.io/PIV_Software_Usage_statistics/" target="_blank">PIV Software Usage Statistics</a>
-<hr style="height:2px;border-width:0;color:gray;background-color:gray">
-<h2>Get PIVlab</h2>
-<ul>
-    <li><a href="https://github.com/Shrediquette/PIVlab/releases/latest/download/PIVlab_installer.exe" target="_blank">as a free stand-alone program for Windows computers</a> (all features, no requirements)</li>
-    <li><a href="https://github.com/Shrediquette/PIVlab/releases/latest/download/PIVlab.mltbx" target="_blank">as a free toolbox inside Matlab for every operating system</a> (all features, Matlab required)</li>
-    <li><a href="https://matlab.mathworks.com/open/fileexchange/v1?id=27659" target="_blank">as a free web browser-based app by using Matlab online</a> (no hardware interaction, free Mathworks account required)</li>
-</ul>
+<img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/pivlab_citations.jpg" alt="Number of scientific publications citing PIVlab per year" loading="lazy">
+<p>Based on a <a href="https://pivlab.blogspot.com/2022/06/pivlab-is-becoming-super-popular.html">customized Google Scholar search</a>. See also the monthly updated <a href="https://shrediquette.github.io/PIV_Software_Usage_statistics/">PIV software usage statistics</a>.</p>
 
-
-<!--<h1>News</h1>-->
-<!-- <p>PIVlab News </p>-->
-<!-- <div class="newswrapper">-->
-<!--     {% for news in site.news %}-->
-<!--     <iframe src="{{site.baseurl}}{{ news.url }}" style=" width: 100%; height: auto"></iframe>-->
-<!--     {% endfor %}-->
-<!-- </div>-->
-<!--<ul>-->
-<!--    <li><a href="{{ site.baseurl }}/wiki">Wiki</a> - Browse the Wiki pages</li>-->
-<!--    <li><a href="{{ site.baseurl }}/about">About</a> - Learn more about this project</li>-->
-<!--    <li><a href="{{ site.baseurl }}/news">News</a> - Read the latest news</li>-->
-<!--</ul>-->
+<h2>How to cite PIVlab</h2>
+<p>Thielicke, W. and Sonntag, R. (2021) Particle Image Velocimetry for MATLAB: Accuracy and enhanced algorithms in PIVlab. <em>Journal of Open Research Software</em>, 9: 12. DOI: <a href="https://doi.org/10.5334/jors.334">10.5334/jors.334</a>. More publications are listed under <a href="{{ '/references' | relative_url }}">References</a>.</p>

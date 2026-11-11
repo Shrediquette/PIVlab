@@ -4,19 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Capturing images from a camera · PIVlab Manual</title>
-  <meta name="description" content="Overview of PIVlab's live camera and laser-synchronizer image acquisition.">
+  <meta name="description" content="Recording PIV images in PIVlab: the Image Acquisition panel, the synchronizer and laser settings, the live image, and a recording from start to finish.">
   <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
   <article id="doc">
     <h1 id="top">Capturing images from a camera</h1>
-    <p class="lead">PIVlab can acquire PIV image pairs directly from a connected camera, and —
-    with PIVlab's own <strong>SimpleSync</strong> synchronizer hardware — trigger and time a
-    pulsed laser to match. This is a hardware-dependent feature; this page covers the shape of
-    the workflow rather than settings for any specific camera or synchronizer model.</p>
+    <p class="lead">PIVlab records PIV image pairs directly from a connected camera and, with a
+    PIVlab synchronizer, triggers and times the pulsed laser to match. The recorded images go
+    straight into the session, so you can analyse them without importing anything.</p>
     <p>Open via <span class="ui">Image acquisition → Capture PIV images</span>, or the
     <span class="ui">Acquire images</span> button in the <a href="sessions.html">Input data
-    panel</a>. This requires MATLAB R2019b or newer.</p>
+    panel</a>. When you run PIVlab inside MATLAB, camera access needs the
+    <span class="ui">Image Acquisition Toolbox</span>; the standalone PIVlab has it compiled in.</p>
 
     <figure>
       <img src="../assets/img/capture/panel.png" alt="PIVlab Image Acquisition panel">
@@ -24,59 +24,260 @@
       control, camera settings, live image and PIV capture, all in one place.</figcaption>
     </figure>
 
-    <h2 id="workflow">The general workflow</h2>
+    <h2 id="setup">Connecting the equipment</h2>
     <ol class="steps">
-      <li><span class="ui">Select configuration</span> — choose the camera + synchronizer
-      combination you have (e.g. <span class="ui">PIVlab LD-PS + OPTOcam 2/80</span>). A demo
-      option (<span class="ui">Webcam demo (no synchronizer)</span>) lets you try the feature
-      without special hardware.</li>
-      <li>Set your <span class="ui">Project path</span> — where images and configuration get saved.</li>
-      <li>If using a SimpleSync synchronizer, select its COM port and click
-      <span class="ui">Connect</span>.</li>
-      <li>Configure synchronizer settings: <span class="ui">Frame rate</span>,
-      <span class="ui">Pulse distance</span> (laser pulse spacing in µs), and
-      <span class="ui">Laser energy</span>. A <span class="ui">Timing graph</span> option
-      visualizes camera/laser timing, and <span class="ui">Toggle Laser</span> fires it manually.</li>
-      <li>Under <span class="ui">Camera settings</span>, use <span class="ui">Binning</span>,
-      <span class="ui">ROI</span>, <span class="ui">Lens</span> and <span class="ui">Setup</span>
-      to configure the camera itself, and optionally overlay <span class="ui">Sharpness</span>,
-      <span class="ui">Grid</span>, <span class="ui">Calibration</span> or
-      <span class="ui">Displacement</span> guides on the live view.</li>
-      <li>Under <span class="ui">Live image</span>, set an <span class="ui">Exposure</span> and
-      click <span class="ui">Start</span> to preview, or <span class="ui">Snapshot</span> to
-      grab a single still.</li>
-      <li>Under <span class="ui">Capture PIV images</span>, tick <span class="ui">Save</span> to
-      actually write the captured images to disk — this also unlocks the
-      <span class="ui">Image amount</span> field, which stays disabled while
-      <span class="ui">Save</span> is off. Set the amount, then click <span class="ui">Start</span>
-      to begin capturing PIV image pairs (this also fires the laser via the synchronizer).
-      <span class="ui">Abort</span> stops an in-progress capture.</li>
+      <li>Mount camera and laser, and aim them at the measurement area.</li>
+      <li>Connect the synchronization cable from the synchronizer to the camera.</li>
+      <li>Connect the camera to the computer.</li>
+      <li>Connect the safety interlock (for example a door switch). Its contact has to be
+      <strong>closed</strong>, otherwise the laser stays locked.</li>
+      <li>Connect the power supply and switch the laser on.</li>
+      <li>Plug in the USB wireless link — this is how PIVlab talks to the synchronizer.</li>
+      <li>Start PIVlab and open the <span class="ui">Image acquisition</span> panel.</li>
     </ol>
 
-    <p>A separate live-view <span class="ui">Start</span> button is available for camera
-    calibration image capture, independent of the main PIV capture.</p>
+    <h2 id="panel">The panel, part by part</h2>
+
+    <h3 id="general">General settings</h3>
+    <table class="ref">
+      <tr><th>Control</th><th>What it does</th></tr>
+      <tr><td>Project path / Browse…</td><td>Folder for the recorded images and the configuration.</td></tr>
+      <tr><td>Select configuration</td><td>Your synchronizer + camera combination, e.g.
+      <span class="ui">PIVlab LD-PS + OPTOcam 2/80</span>. PIVlab then looks for that camera and
+      loads the matching firmware settings. <span class="ui">Webcam demo (no synchronizer)</span>
+      runs the panel without PIV hardware (see <a href="#webcam">below</a>).</td></tr>
+      <tr><td>Stereo</td><td>Record with two cameras of the selected type for
+      <a href="stereo-piv.html">stereo-PIV</a> (see <a href="#stereo">below</a>).</td></tr>
+      <tr><td>COM port / Connect</td><td>Serial port of the synchronizer. The indicator next to the
+      button is red while disconnected and green once the synchronizer answers.</td></tr>
+    </table>
+
+    <h3 id="sync">Synchronizer control</h3>
+    <table class="ref">
+      <tr><th>Control</th><th>What it does</th></tr>
+      <tr><td>Frame rate in Hz</td><td>Rate of the double images during capture. The available
+      values come from the selected camera.</td></tr>
+      <tr><td>Pulse distance in µs</td><td>Time between the two laser pulses — the Δt of the image
+      pair. See <a href="#dt">Choosing the pulse distance</a>.</td></tr>
+      <tr><td>Laser energy in %</td><td>Energy per pulse.</td></tr>
+      <tr><td>Pulse length</td><td>Read-out, not an input: the pulse length PIVlab derives from the
+      energy and the configuration.</td></tr>
+      <tr><td>Timing graph</td><td>Draws where the camera exposures and the laser pulses sit in
+      time, for the current settings.</td></tr>
+      <tr><td>Low energy mode</td><td>Pulses the laser at 100 Hz with the shortest pulse (1 µs) so
+      you can align the sheet at a fraction of the average power. Synchronized capture is switched
+      off while this is active.</td></tr>
+      <tr><td>Toggle Laser</td><td>Switches the laser on and off. The field to its left shows the
+      laser state.</td></tr>
+      <tr><td>Trigger mode</td><td>Configures the trigger input, so an external signal can start
+      the recording. Shown for synchronizers that support it.</td></tr>
+      <tr><td>Devices</td><td>Setup of further remote-controlled equipment on the wireless link,
+      such as a seeding generator.</td></tr>
+    </table>
+
+    <h3 id="camera">Camera settings</h3>
+    <table class="ref">
+      <tr><th>Control</th><th>What it does</th></tr>
+      <tr><td>Binning</td><td>Combines neighbouring pixels: brighter image, lower resolution.</td></tr>
+      <tr><td>ROI</td><td>Reads out only part of the sensor, which allows higher frame rates.</td></tr>
+      <tr><td>Lens</td><td>Lens control for cameras that support it, including autofocus.</td></tr>
+      <tr><td>Setup</td><td>Camera-specific settings such as bit depth and gain, and the serial
+      numbers of the connected cameras.</td></tr>
+      <tr><td>Sharpness</td><td>Overlays a focus measure and, for the left, centre and right third
+      of the image, the blur in pixels (smaller = sharper; median of the last 5 updates): the
+      particle image diameter for particle images, the edge width for a calibration board, “–”
+      for other content. The three values can be compared with each other: with a Scheimpflug
+      adapter, focus until the centre is smallest, then adjust the adapter until left and right are
+      equal. A bar under each value shows the sharpness (full = sharpest value seen), a white mark the
+      best value of that third: turn back when a bar drops below its mark. Equal bars at their marks:
+      in focus everywhere. Equal side bars below a full centre bar cannot be corrected with the adapter
+      (close the aperture). Works in the live image and in the <a href="#capture">PIV preview</a>.</td></tr>
+      <tr><td>Grid</td><td>Overlays a grid, for aligning the camera. Works in the live image and in
+      the PIV preview.</td></tr>
+      <tr><td>Calibration</td><td>Live detection of a
+      <a href="camera-calibration.html#markerboard">ChArUco board</a> — see below. Works in the
+      live image only.</td></tr>
+    </table>
+
+    <p>The <span class="ui">Calibration</span> overlay does three things at once, which makes it
+    the quickest way to check a board and a camera position:</p>
+    <ul>
+      <li>It marks the detected markers and reports what percentage of them it found.</li>
+      <li>It reads the <strong>QR code</strong> printed on the board and fills the board definition
+      from it: pattern dimensions, origin colour, marker family, and the checker and marker size in
+      mm — the scale of the board. You do not have to type those numbers in.</li>
+      <li>Once a <a href="camera-calibration.html">camera calibration</a> has been performed, it
+      also reports the <strong>camera position and orientation relative to the board</strong>: yaw,
+      pitch and roll, and the camera X, Y and Z in mm, where X and Y run along the board and Z is
+      the distance in front of it. Without a calibration it tells you to perform one first.</li>
+    </ul>
+
+    <h3 id="live">Live image</h3>
+    <p>Here the camera runs freely: it is <strong>not</strong> triggered by the synchronizer, so
+    the laser pulses and the camera exposures are not locked to each other. Brightness and particle
+    images in this view therefore say nothing about the images you will record. Use it to aim the
+    camera, to record the board image, and to focus on a <strong>target</strong> placed in the
+    plane of the light sheet. To focus on the particles themselves, use the
+    <a href="#capture">PIV preview</a>.</p>
+    <table class="ref">
+      <tr><th>Control</th><th>What it does</th></tr>
+      <tr><td>Exposure in ms</td><td>Camera exposure for the live view.</td></tr>
+      <tr><td>Start</td><td>Starts the live view. <span class="ui">Zoom</span> and the
+      <span class="ui">Calibration</span> overlay work only here.</td></tr>
+      <tr><td>Snapshot</td><td>Saves the image currently displayed into the project folder.</td></tr>
+      <tr><td>Save</td><td>Stops the live view and keeps the last image — this is how the board
+      image for the <a href="camera-calibration.html">camera calibration</a> is recorded.</td></tr>
+    </table>
+
+    <h3 id="capture">Capture PIV images</h3>
+    <p>Here the camera runs <strong>synchronized</strong> with the laser. The
+    <span class="ui">Save</span> tick decides what <span class="ui">Start</span> does: without it
+    you get a running preview, with it a recording.</p>
+    <table class="ref">
+      <tr><th>Control</th><th>What it does</th></tr>
+      <tr><td>Save</td><td>Off: <span class="ui">Start</span> runs a <strong>PIV preview</strong> —
+      synchronized double images, nothing written to disk, running until you stop it. On: the
+      images are written to the project folder and <span class="ui">Image amount</span> becomes
+      editable.</td></tr>
+      <tr><td>Image amount</td><td>Number of double images to record. The field turns
+      <strong>red</strong> when the amount will most likely not fit into your RAM.</td></tr>
+      <tr><td>Start</td><td>Starts the laser and the synchronized camera. PIVlab asks before the
+      laser starts, and — when saving — before existing files are overwritten.</td></tr>
+      <tr><td>Abort</td><td>Ends the preview, or stops a recording and discards its images.</td></tr>
+    </table>
+
+    <div class="tip">
+      <strong>The PIV preview is where you judge the images</strong>
+      It is the only mode that shows the images as they will be recorded: camera and laser
+      synchronized, with the pulse distance you set. Focus here, and check particle images,
+      seeding and exposure. <span class="ui">Sharpness</span> and <span class="ui">Grid</span> are
+      available, and the laser energy can be changed while the preview runs.
+    </div>
+
+    <p>When a recording ends, the images are loaded into the session automatically. Step through
+    the pairs with the frame slider and run a quick <a href="analyze.html">analysis</a> to see
+    whether the data is good before you record more.</p>
+
+    <h2 id="recording">A recording from start to finish</h2>
+    <ol class="steps">
+      <li>Set the <span class="ui">Project path</span>.</li>
+      <li>Choose the <span class="ui">Select configuration</span> entry for your hardware and
+      connect the synchronizer.</li>
+      <li>Set bit depth and gain under <span class="ui">Setup</span>, and the
+      <span class="ui">Frame rate</span>.</li>
+      <li>Aim the camera with the <span class="ui">Live image</span>, and place a target in the
+      plane of the light sheet if you want to focus roughly before the laser runs.</li>
+      <li>Set the <span class="ui">Pulse distance</span> (see <a href="#dt">below</a>) and the
+      <span class="ui">Laser energy</span>.</li>
+      <li>Leave <span class="ui">Save</span> unticked and click <span class="ui">Start</span> to
+      run the <a href="#capture">PIV preview</a>. Focus here — with <span class="ui">Lens</span> →
+      autofocus or by eye with the <span class="ui">Sharpness</span> overlay — and adjust seeding
+      and laser energy until the particle images look good. Then <span class="ui">Abort</span>.</li>
+      <li>Tick <span class="ui">Save</span>, set the <span class="ui">Image amount</span>, and
+      click <span class="ui">Start</span>.</li>
+      <li>Check the recording: step through the pairs and analyse a few frames.</li>
+    </ol>
+
+    <h2 id="dt">Pulse distance and frame straddling</h2>
+    <p>The pulse distance is the Δt of your image pair, and it decides how far particles travel
+    between the two images. Choose it so that the displacement fits the interrogation area you
+    plan to use — <a href="piv-settings.html#choosing-dt">Choosing Δt together with the
+    interrogation area</a> covers how to find a good value and how to read the displacement back
+    from a test analysis.</p>
+
+    <h3 id="straddling">How frame straddling works</h3>
+    <p>The two images of a pair are two <strong>consecutive camera frames</strong>. Instead of
+    lighting each frame in the middle, the synchronizer puts the <strong>first laser pulse at the
+    very end of the first frame's exposure and the second at the very beginning of the next
+    one</strong>. Both pulses sit close together around the frame boundary, one on each side. This
+    is frame straddling, and it is how PIVlab records PIV images.</p>
+
+    <figure>
+      <img src="../assets/img/capture/frame-straddling.jpg" alt="Timing diagram: the green camera exposure trace alternates between image A and image B, and the two blue laser pulses sit close together on either side of the boundary from image A to image B. Pulse distance is marked between the two pulses, pulse length within one pulse, and the frame rate between two image pairs.">
+      <figcaption>Frame straddling. The two laser pulses sit on either side of the boundary
+      between <strong>image A</strong> and <strong>image B</strong>, so
+      <span class="ui">Pulse distance</span> is much shorter than the time between two image pairs
+      set by the <span class="ui">Frame rate</span>. The width of a single pulse is the pulse
+      length, set by <span class="ui">Laser energy</span>.</figcaption>
+    </figure>
+    <p>The point is that Δt is then set by the <strong>distance between the two pulses</strong>,
+    not by the frame rate. With continuous light the two images are a full frame period apart, so
+    a 100 Hz camera gives Δt = 10 ms and nothing faster can be measured. With straddling the same
+    camera can use a Δt of a few microseconds.</p>
+    <p>How much that buys you follows from the displacement limit. With a field of view
+    <em>L</em>, a sensor of <em>N</em> pixels and a largest acceptable displacement
+    <em>s</em> in pixels:</p>
+    <div class="eq"><em>v</em><sub>max</sub> = (<em>L</em> / <em>N</em>) · <em>s</em> / Δ<em>t</em></div>
+    <p class="eq-where">For <em>L</em> = 100 mm, <em>N</em> = 2000 px and <em>s</em> = 10 px, the
+    particles may travel 0.5 mm between the two images.</p>
+    <table class="ref">
+      <tr><th>Δt</th><th>Highest measurable velocity</th></tr>
+      <tr><td>10 ms</td><td>0.05 m/s — what a 100 Hz camera with continuous light is limited to</td></tr>
+      <tr><td>1 ms</td><td>0.5 m/s</td></tr>
+      <tr><td>100 µs</td><td>5 m/s</td></tr>
+      <tr><td>10 µs</td><td>50 m/s</td></tr>
+    </table>
+    <p>Same camera, same laser — only the pulse distance changes.</p>
+    <p>Δt cannot be made arbitrarily small. The lower limit comes from the camera: the two pulses
+    have to fit on either side of the frame boundary, and with double-shutter cameras the gap
+    between the two exposures is fixed by the sensor readout. The upper limit is one frame period.
+    PIVlab enforces both — enter a value below the camera's minimum or above the frame period and
+    the field briefly turns <strong>red</strong> and is set to the limit.</p>
+    <p>Switch <span class="ui">Timing graph</span> on to see it: camera exposures and laser pulses
+    are drawn against time in µs over several frames, so you can check that the two pulses really
+    do sit on either side of the frame boundary.</p>
+
+    <div class="tip">
+      <strong>Pulse length: light against streaking</strong>
+      A longer pulse puts more light on the sensor but also smears each particle into a streak.
+      Keep the streaks short — but not at any price: too little light costs more accuracy than a
+      little streaking does, because it lowers the signal-to-noise ratio of the correlation.
+    </div>
+
+    <div class="tip">
+      <strong>You can plan the timing without the hardware</strong>
+      Pick any configuration and change frame rate, pulse distance and energy with the
+      <span class="ui">Timing graph</span> switched on. PIVlab draws the timing and the resulting
+      double-frame rate for that camera even when nothing is connected.
+    </div>
+
+    <h2 id="stereo">Stereo acquisition (two cameras)</h2>
+    <p>For <a href="stereo-piv.html">stereo-PIV</a>, PIVlab records with two cameras of the same
+    type at the same time (at present the OPTOcam 2/80).</p>
+    <ol class="steps">
+      <li>Connect both cameras to the computer, and both to the camera output of the synchronizer
+      (Y-cable). Both cameras get the same trigger; frame rate, pulse distance, laser energy,
+      exposure, bit depth, gain and ROI apply to both.</li>
+      <li>Select the configuration and tick <span class="ui">Stereo</span>. PIVlab checks that two
+      cameras are connected.</li>
+      <li><span class="ui">Live image</span> shows both cameras side by side. Camera 1 is the camera
+      with the lower serial number; <span class="ui">Setup</span> shows both serial numbers, and
+      <span class="ui">Swap cameras</span> exchanges camera 1 and 2.</li>
+      <li>With <span class="ui">Calibration</span> ticked, the markers of a ChArUco board are shown in
+      both images. Place the board in the light sheet so that both cameras see it well;
+      <span class="ui">Snapshot</span> then saves one image per camera: the board images for the
+      <a href="stereo-piv.html#calibration">stereo calibration</a>.</li>
+      <li><span class="ui">Capture PIV images</span> saves the images of camera 1 in the subfolder
+      <code>cam1</code> and those of camera 2 in <code>cam2</code> of the project folder, and opens
+      them in stereo mode. The next recording with the same setup keeps the stereo calibration.</li>
+    </ol>
+    <figure>
+      <img src="../assets/img/capture/stereo-live.png" alt="Live image of two cameras side by side with the detected ChArUco markers">
+      <figcaption>Live image of both cameras with <span class="ui">Calibration</span> ticked: the
+      board is placed so that both cameras see most of it.</figcaption>
+    </figure>
+    <p>If one camera misses a trigger (e.g. at a frame rate that is too high for its USB
+    connection), its images no longer belong to those of the other camera. PIVlab compares the
+    frame times of both cameras after the recording and warns. Lens control works with one camera
+    only.</p>
 
     <h2 id="webcam">Trying it with just a webcam</h2>
-    <p>You don't need a PIV camera or a synchronizer to get a feel for image acquisition — the
-    <span class="ui">Webcam demo (no synchronizer)</span> configuration runs the whole capture
-    workflow against an ordinary USB webcam:</p>
-    <ol class="steps">
-      <li>Select <span class="ui">Webcam demo (no synchronizer)</span> from
-      <span class="ui">Select configuration</span>. PIVlab looks for a connected webcam; if none
-      is found, or the required free <a href="https://www.mathworks.com/matlabcentral/fileexchange/45182-matlab-support-package-for-usb-webcams" target="_blank" rel="noopener">MATLAB Support Package for USB Webcams</a>
-      isn't installed, it tells you so.</li>
-      <li>Everything synchronizer- and laser-related (frame rate, pulse distance, laser energy,
-      timing graph, external trigger) and camera-specific (binning, ROI, lens control) is
-      automatically disabled — there's no hardware for those to control.</li>
-      <li>Under <span class="ui">Live image</span>, click <span class="ui">Start</span> to see
-      the webcam's live feed, or <span class="ui">Snapshot</span> to grab a single still.</li>
-      <li>Under <span class="ui">Capture PIV images</span>, tick <span class="ui">Save</span>,
-      set an <span class="ui">Image amount</span>, and click <span class="ui">Start</span> to
-      capture a demo PIV image sequence — no laser or synchronizer involved.</li>
-    </ol>
-    <p>It won't produce meaningful PIV data (a webcam isn't a PIV camera, and there's no pulsed
-    laser), but it's a quick, hardware-free way to see how the capture panel behaves before
-    setting up real equipment.</p>
+    <p>The <span class="ui">Webcam demo (no synchronizer)</span> configuration runs the capture
+    workflow against an ordinary USB webcam, so you can see how the panel behaves before setting up
+    real equipment. It needs the free
+    <a href="https://www.mathworks.com/matlabcentral/fileexchange/45182-matlab-support-package-for-usb-webcams" target="_blank" rel="noopener">MATLAB Support Package for USB Webcams</a>.
+    Everything that belongs to the synchronizer, the laser and a PIV camera is switched off, and
+    the images it produces are a demonstration, not PIV data.</p>
 
     <div class="note">
       <strong>Hardware-specific setup lives on the PIVlab wiki</strong>

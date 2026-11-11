@@ -1,0 +1,1 @@
+Install the [BitFlow MATLAB IMAQ adaptor](https://www.bitflow.com/current-downloads/).

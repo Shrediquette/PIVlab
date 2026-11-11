@@ -1,0 +1,1 @@
+Install **eGrabber for Coaxlink** from the [Euresys download area](https://www.euresys.com/de/Support/Download-area?Series=e1bb72b9-60d9-4d17-aa17-daef9c856322&lang=de-DE) (at the time of writing: egrabber-win10-x86_64-24.04.0.2.exe).

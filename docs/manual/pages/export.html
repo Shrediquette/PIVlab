@@ -24,6 +24,13 @@
       <tr><td>All results to Matlab workspace</td><td>Loads every result straight into variables in your current MATLAB session — no file at all.</td></tr>
     </table>
 
+    <div class="note">
+      <strong>Stereo-PIV</strong>
+      In stereo mode all exports contain the out-of-plane component w as well (ASCII and Tecplot:
+      a w column right after v; VTK: the real w; MAT file and workspace: <code>w_…</code> variables).
+      See <a href="stereo-piv.html#w">Stereo-PIV</a>.
+    </div>
+
     <h2 id="image">Still image or animation</h2>
     <p><span class="ui">File → Export → Still image or animation</span> opens a panel with a
     format dropdown. The choices depend on what your MATLAB installation supports:

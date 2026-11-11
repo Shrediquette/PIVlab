@@ -64,19 +64,41 @@ a:hover { text-decoration: underline; }
 /* Two-tier header, mirroring pivlab.de: a dark hero band carrying the logo
    artwork (non-sticky, scrolls away) above a sticky lime action bar. */
 .hero {
-  display: block; position: relative; height: 84px; overflow: hidden;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  position: relative; min-height: 84px; padding: 8px 20px;
   /* Logo artwork pinned left, no-repeat; flat fill picks up exactly where it
      ends and continues to the right edge of the bar. */
   background-color: #515151;
-  background-image: url(../img/header-hero.png);
+  background-image: url(../../../assets/images/header.jpg);
   background-repeat: no-repeat;
   background-position: left center;
   background-size: auto 100%;
 }
-.hero:hover { text-decoration: none; }
+.hero-home { display: block; align-self: stretch; width: 130px; flex: none; }
+.hero-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .hero-title {
-  position: absolute; right: 24px; bottom: 14px; font-size: 15px; font-weight: 600;
-  letter-spacing: .2px; color: rgba(255,255,255,.78); text-shadow: 0 1px 0 rgba(0,0,0,.4);
+  font-size: 15px; font-weight: 600;
+  letter-spacing: .2px; color: rgba(255,255,255,.85); text-shadow: 0 1px 0 rgba(0,0,0,.4);
+}
+.hero-title:hover { color: #fff; text-decoration: none; }
+/* Download buttons: same as on the website (assets/css/site.css) */
+.downloads { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; }
+.downloads-label { color: #e6ee7c; font-size: 12px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; margin-right: 4px; }
+.dl-btn {
+  border: 1px solid #E6E507; background: #FFE788; color: #333; padding: 5px 11px; border-radius: 4px;
+  font-size: 12.5px; font-weight: 700; line-height: 1.2;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 1px 1px rgba(0,0,0,.15);
+}
+.dl-btn:hover { background: #fff1b8; text-decoration: none; }
+.dl-btn.gh { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.35); color: #f3f3f3; }
+/* Website menu in the lime bar (same items as on the website) */
+.site-menu { display: flex; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; gap: 2px; }
+.site-menu a { display: block; padding: 6px 10px; border-radius: 5px; color: #1d2410; font-size: 14.5px; font-weight: 600; white-space: nowrap; }
+.site-menu a:hover { background: rgba(255,255,255,.35); text-decoration: none; }
+.site-menu a.active { background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+.menu-btn {
+  display: none; background: none; border: 1px solid rgba(0,0,0,.3); border-radius: 6px;
+  color: var(--brand-dark); font: 600 14px var(--sans); padding: 6px 10px; cursor: pointer;
 }
 .action-bar {
   position: sticky; top: 0; z-index: 40; height: var(--header-h);
@@ -85,8 +107,8 @@ a:hover { text-decoration: underline; }
   box-shadow: 0 1px 3px rgba(0,0,0,.15);
 }
 .burger {
-  display: none; background: none; border: none; color: var(--brand-dark);
-  font-size: 22px; cursor: pointer; padding: 4px 6px;
+  display: none; background: none; border: 1px solid rgba(0,0,0,.3); border-radius: 6px; color: var(--brand-dark);
+  font: 600 14px var(--sans); cursor: pointer; padding: 6px 10px; white-space: nowrap;
 }
 .gh-link {
   border: 1px solid #E6E507; background: #FFE788; padding: 7px 14px; border-radius: 4px;
@@ -106,7 +128,7 @@ a:hover { text-decoration: underline; }
 }
 
 /* ------------------------------------------------------------------- Search */
-.search { position: relative; margin-left: auto; width: min(360px, 40vw); }
+.search { position: relative; margin-left: auto; width: 260px; flex: none; }
 .search input {
   width: 100%; padding: 8px 12px; border: 1px solid rgba(0,0,0,.3); border-radius: 8px;
   background: rgba(255,255,255,.92); color: #1c2530; font-size: 14px; font-family: inherit;
@@ -305,6 +327,16 @@ table.ref td:first-child { white-space: nowrap; font-weight: 600; }
 .card.soon { opacity: .55; }
 
 /* ---------------------------------------------------------------- Responsive */
+@media (max-width: 1240px) {
+  .menu-btn { display: block; }
+  .site-menu {
+    display: none; position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; gap: 0;
+    background: var(--lime); border-bottom: 1px solid var(--lime-dark); padding: 6px 12px 12px;
+    box-shadow: 0 6px 12px rgba(0,0,0,.18); z-index: 46;
+  }
+  .site-menu.open { display: flex; }
+  .site-menu a { padding: 10px 12px; font-size: 15px; }
+}
 @media (max-width: 1100px) {
   .layout { grid-template-columns: var(--sidebar-w) minmax(0, 1fr); }
   .toc-rail { display: none; }
@@ -320,7 +352,13 @@ table.ref td:first-child { white-space: nowrap; font-weight: 600; }
   .sidebar.open { transform: translateX(0); }
   .main { padding: 26px 20px 50px; }
   .search { width: auto; flex: 1; }
-  .hero { height: 60px; }
-  .hero-title { display: none; }
   .site-mark { display: none; }
+}
+@media (max-width: 760px) {
+  .hero { flex-direction: column; align-items: stretch; padding: 8px 12px 10px; background-size: auto 70px; background-position: left top; }
+  .hero-home { height: 56px; width: 110px; }
+  .hero-side { align-items: stretch; }
+  .hero-title { position: absolute; right: 12px; top: 18px; }
+  .downloads { justify-content: flex-start; }
+  .action-bar { padding: 0 10px; gap: 8px; }
 }

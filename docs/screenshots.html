@@ -1,35 +1,26 @@
 ---
-layout: default
 title: Screenshots
+description: Screenshots of PIVlab - image import, masking, pre-processing, calibration, PIV settings, validation, derived parameters, plot appearance, extraction and export.
+keywords: screenshot gui images stereo-piv simulator synthetic particle image generator correlation demo
 ---
 <h1>Screenshots</h1>
-<p>Here are some screenshots to scroll through and see some of PIVlab's features:</p>
-<p align="center">
-  <a href="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/import_large.jpg" title="Import"><img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/import_large.jpg" alt="PIVlab screenshot" style="width:75%;"></a>
-<br/>
-  <a href="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/mask_large.jpg" title="Masking"><img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/mask_large.jpg" alt="PIVlab screenshot" style="width:75%;"></a>  
-<br/>
-  <a href="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/preproc_large.jpg" title="Pre-processing"><img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/preproc_large.jpg" alt="PIVlab screenshot" style="width:75%;"></a>
-<br/>
-  <a href="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/calibrate_large.jpg" title="Calibration"><img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/calibrate_large.jpg" alt="PIVlab screenshot" style="width:75%;"></a>
-<br/>
-  <a href="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/pivsettings_large.jpg" title="PIV settings"><img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/pivsettings_large.jpg" alt="PIVlab screenshot" style="width:75%;"></a>
-<br/>
-  <a href="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/validate_large.jpg" title="Validation"><img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/validate_large.jpg" alt="PIVlab screenshot" style="width:75%;"></a>
-  <br/>
-  <a href="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/imgvalidate_large.jpg" title="Validation, image-based"><img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/imgvalidate_large.jpg" alt="PIVlab screenshot" style="width:75%;"></a>
-<br/>
-  <a href="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/params_large.jpg" title="Derived parameters"><img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/params_large.jpg" alt="PIVlab screenshot" style="width:75%;"></a>
-  <br/>
-  <a href="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/plotappear_large.jpg" title="Plot appearance"><img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/plotappear_large.jpg" alt="PIVlab screenshot" style="width:75%;"></a>
-  <br/>
-  <a href="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/temporal_large.jpg" title="Temporal derivatives"><img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/temporal_large.jpg" alt="PIVlab screenshot" style="width:75%;"></a>
-<br/>
-  <a href="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/extract_large.jpg" title="Data extraction"><img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/extract_large.jpg" alt="PIVlab screenshot" style="width:75%;"></a>
-<br/>
-  <a href="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/export_large.jpg" title="Data export"><img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/export_large.jpg" alt="PIVlab screenshot" style="width:75%;"></a>  
-<br/>
-  <a href="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/corrdemo_large.jpg" title="Learning: Correlation demo"><img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/corrdemo_large.jpg" alt="PIVlab screenshot" style="width:75%;"></a>
-  <br/>
-  <a href="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/particlegen_large.jpg" title="Particle image generator"><img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/particlegen_large.jpg" alt="PIVlab screenshot" style="width:75%;"></a>
-</p>
+<p>Some of PIVlab's features. Click an image to see it in full size.</p>
+{%- assign shots = "import:Import|mask:Masking|preproc:Pre-processing|calibrate:Calibration|pivsettings:PIV settings|validate:Validation|imgvalidate:Validation, image-based|params:Derived parameters|plotappear:Plot appearance|temporal:Temporal derivatives|extract:Data extraction|export:Data export|corrdemo:Learning: correlation demo|particlegen:Particle image generator" | split: "|" %}
+<div class="shots">
+  <figure>
+    <a href="{{ '/assets/images/stereo/stereo-result-w.gif' | relative_url }}"><video class="anim" preload="none" muted loop playsinline poster="{{ '/assets/images/stereo/stereo-result-w.webp' | relative_url }}" aria-label="PIVlab screenshot: stereo-PIV result with the out-of-plane component w"><source src="{{ '/assets/images/stereo/stereo-result-w.mp4' | relative_url }}" type="video/mp4"></video></a>
+    <figcaption>Stereo-PIV: out-of-plane velocity w (from PIVlab 4.0)</figcaption>
+  </figure>
+  <figure>
+    <a href="{{ '/assets/images/stereo/stereo-simulator.jpg' | relative_url }}"><img src="{{ '/assets/images/stereo/stereo-simulator.jpg' | relative_url }}" alt="PIVlab screenshot: 3D flow and stereo-PIV simulator" loading="lazy"></a>
+    <figcaption>3D flow and stereo-PIV simulator (from PIVlab 4.0)</figcaption>
+  </figure>
+{%- for s in shots %}
+  {%- assign parts = s | split: ":" %}
+  {%- assign src = "https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/screenshots/" | append: parts[0] | append: "_large.jpg" %}
+  <figure>
+    <a href="{{ src }}"><img src="{{ src }}" alt="PIVlab screenshot: {{ parts[1] }}{% if parts[2] %}: {{ parts[2] }}{% endif %}" loading="lazy"></a>
+    <figcaption>{{ parts[1] }}{% if parts[2] %}: {{ parts[2] }}{% endif %}</figcaption>
+  </figure>
+{%- endfor %}
+</div>

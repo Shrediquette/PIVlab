@@ -1,0 +1,24 @@
+---
+layout: null
+search: false
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{%- for p in site.pages %}
+  {%- if p.title and p.search != false and p.layout != nil %}
+  <url><loc>{{ p.url | remove: "index.html" | remove: ".html" | absolute_url }}</loc></url>
+  {%- endif %}
+{%- endfor %}
+{%- for p in site.wiki %}
+  <url><loc>{{ p.url | absolute_url }}</loc></url>
+{%- endfor %}
+{%- for p in site.cameras %}
+  <url><loc>{{ p.url | absolute_url }}</loc></url>
+{%- endfor %}
+  <url><loc>{{ '/manual/' | absolute_url }}</loc></url>
+{%- for f in site.static_files %}
+  {%- if f.extname == ".html" and f.relative_path contains "manual/pages/" %}
+  <url><loc>{{ f.relative_path | absolute_url }}</loc></url>
+  {%- endif %}
+{%- endfor %}
+</urlset>
