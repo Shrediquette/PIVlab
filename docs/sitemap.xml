@@ -17,8 +17,8 @@ search: false
 {%- endfor %}
   <url><loc>{{ '/manual/' | absolute_url }}</loc></url>
 {%- for f in site.static_files %}
-  {%- if f.extname == ".html" and f.relative_path contains "manual/pages/" %}
-  <url><loc>{{ f.relative_path | absolute_url }}</loc></url>
+  {%- if f.extname == ".html" and f.path contains "manual/pages/" %}
+  <url><loc>{{ f.path | absolute_url }}</loc></url>
   {%- endif %}
 {%- endfor %}
 </urlset>
