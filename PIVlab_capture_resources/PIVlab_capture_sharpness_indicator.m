@@ -35,7 +35,9 @@ if showinfo
 	display_style = 'bars'; %'bars': sharpness bars with a mark at the best value; 'tilt_line': the values at heights set by their size, joined by a line
 	switch display_style
 		case 'bars'
-			draw_sharpness_bars(PIVlab_axis, column_values, best_values, focus.col_edges, x_offset, size(input_image), focus.mode, fontsize);
+			if ~strcmp(focus.mode, 'none') %no particles / board: no bars and numbers, only the corner text
+				draw_sharpness_bars(PIVlab_axis, column_values, best_values, focus.col_edges, x_offset, size(input_image), focus.mode, fontsize);
+			end
 			texty = size(input_image,1)/20; %top right: the bars fill the lower part of the image
 			info_alignment = 'top';
 		case 'tilt_line'
@@ -76,31 +78,27 @@ sharpness_map=imresize(sharpness_map,size(input_image),'nearest');
 end
 
 function focus = focus_per_column(input_image)
-%Focus measure of the left / centre / right third. Particle images: particle image diameter (median of the
-%particle tiles of the third); a board (black / white edges): edge width (median of the board regions of 3 x 3);
-%anything else: NaN (the diameter would only show the size of the image structures). The content found in more
-%thirds decides. A third without that content gets NaN.
-particles = PIVlab_capture_particle_diameter(input_image, 3, 1);
-focus.col_edges = particles.col_edges;
+%Focus measure of the left / centre / right third. A ChArUco board (ArUco markers found): edge width (median of
+%the 3 x 3 regions with markers); particle images: particle image diameter (median of the particle tiles of the
+%third); anything else: NaN (the diameter would only show the size of the image structures). A third without
+%that content gets NaN. The marker test comes first: it is fast and a board image needs no particle test.
+markers = PIVlab_capture_board_markers(input_image, 3, 3);
+focus.col_edges = markers.col_edges;
 focus.mode = 'none';
 focus.values = nan(1, 3);
-n_particles = nnz(particles.is_particles);
-if n_particles == 3 %clearly particles: the edge test is not needed (it takes longer)
-	n_board = 0;
-else
-	board = PIVlab_capture_edge_width(input_image, 3, 3, 768); %a large part of each region: the board often fills only a part
-	board_columns = any(board.is_board, 1);
-	n_board = nnz(board_columns);
+if markers.is_board
+	board = PIVlab_capture_edge_width(input_image, 3, 3, markers); %only edges near the markers
+	focus.values = median(board.width, 1, 'omitnan');
+	if any(~isnan(focus.values))
+		focus.mode = 'board';
+	end
+	return
 end
-if n_particles >= 1 && n_particles >= n_board
+particles = PIVlab_capture_particle_diameter(input_image, 3, 1);
+if any(particles.is_particles)
 	focus.mode = 'particles';
 	focus.values = particles.diameter;
 	focus.values(~particles.is_particles) = NaN;
-elseif n_board >= 1
-	focus.mode = 'board';
-	widths = board.width;
-	widths(~board.is_board) = NaN;
-	focus.values = median(widths, 1, 'omitnan');
 end
 end
 

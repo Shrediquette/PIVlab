@@ -31,6 +31,14 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
     projectpath=get(handles.ac_project,'String');
     capture_ok=acquisition.check_project_path(projectpath,'calibration');
     if capture_ok==1
+        %no overlays during the ROI selection; they stay unticked afterwards
+        set(handles.ac_displ_sharp,'Value',0);
+        set(handles.ac_displ_grid,'Value',0);
+        set(handles.calib_dolivedetect,'Value',0);
+        set(handles.ac_realtime_PIV,'Value',0);
+        acquisition.display_cam_overlay_Callback(handles.ac_displ_sharp);
+        acquisition.display_cam_overlay_Callback(handles.ac_displ_grid);
+        preproc.cam_live_detect_Callback(handles.calib_dolivedetect);
         gui.toolsavailable(0,'Capturing an image for the ROI selection...');drawnow
         gui.put('cancel_capture',0);
         gui.put('capturing',1);

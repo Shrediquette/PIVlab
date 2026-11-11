@@ -203,7 +203,7 @@ end
 
 function test_content_detection(testCase)
 % particle images are recognised; a board, a photo and noise are not taken for particles (their
-% "diameter" is only the size of the structures) and only the board counts as a board
+% "diameter" is only the size of the structures); a board is recognised by its ArUco markers
 settings = default_image_settings();
 for d = [2 5 12]
     settings.diameter_left = d;
@@ -211,7 +211,7 @@ for d = [2 5 12]
     settings.ppp = realistic_ppp(d);
     img = render_particles(testCase.TestData.size, settings);
     testCase.verifyTrue(all(PIVlab_capture_particle_diameter(img).is_particles, 'all'), sprintf('particles %g px', d));
-    testCase.verifyFalse(any(PIVlab_capture_edge_width(img).is_board, 'all'), sprintf('particles %g px: no board', d));
+    testCase.verifyFalse(PIVlab_capture_board_markers(img).is_board, sprintf('particles %g px: no board', d));
 end
 others = {board_image(1), imresize(imread('cameraman.tif'), 4), uint8(20 + 3 * randn(900))};
 names = {'board', 'photo', 'noise'};
@@ -219,9 +219,11 @@ for i = 1:numel(others)
     % thirds, as in the Sharpness overlay
     testCase.verifyFalse(any(PIVlab_capture_particle_diameter(others{i}, 3, 1).is_particles), [names{i} ': not particles']);
 end
-testCase.verifyTrue(all(PIVlab_capture_edge_width(others{1}).is_board, 'all'), 'board');
-testCase.verifyFalse(any(PIVlab_capture_edge_width(others{2}).is_board, 'all'), 'photo: no board');
-testCase.verifyFalse(any(PIVlab_capture_edge_width(others{3}).is_board, 'all'), 'noise: no board');
+markers = PIVlab_capture_board_markers(others{1});
+testCase.verifyTrue(markers.is_board, 'board');
+testCase.verifyTrue(all(markers.n_markers > 0, 'all'), 'markers in every region of the board image');
+testCase.verifyFalse(PIVlab_capture_board_markers(others{2}).is_board, 'photo: no board');
+testCase.verifyFalse(PIVlab_capture_board_markers(others{3}).is_board, 'noise: no board');
 end
 
 function test_edge_width(testCase)
@@ -231,7 +233,7 @@ widths = zeros(1, 6);
 blurs = [0.7 1 2 3 4 6];
 for i = 1:numel(blurs)
     r = PIVlab_capture_edge_width(board_image(blurs(i)));
-    testCase.verifyTrue(all(r.is_board, 'all'), sprintf('blur %g: board', blurs(i)));
+    testCase.verifyTrue(all(~isnan(r.width), 'all'), sprintf('blur %g: a width in every region', blurs(i)));
     widths(i) = median(r.width(:));
     % the same blur everywhere: the same value in all regions
     testCase.verifyEqual(r.width, widths(i) * ones(3), 'RelTol', 0.05, sprintf('blur %g: equal regions', blurs(i)));
@@ -294,6 +296,52 @@ testCase.verifyTrue(all(r.is_particles), 'all thirds still have particle tiles')
 centres = (r.col_edges(1:end-1) + r.col_edges(2:end)) / 2;
 expected = 3 + 3 * centres / 1350;
 testCase.verifyEqual(r.diameter, expected, 'RelTol', 0.15);
+end
+
+function test_board_with_textured_black(testCase)
+% low contrast board with grainy black checkers (seen through a tank wall) and a bright background next to it:
+% the grain must not hide the board edges
+% large checkers (150 px, blur sigma 3), grain on the black squares (13 % of the step), bright background
+[xx, yy] = meshgrid(1:1800, 1:1200);
+checkers = double(mod(floor(xx / 150) + floor(yy / 150), 2) == 0);
+checkers = imgaussfilt(checkers, 3);
+grain = imgaussfilt(randn(size(checkers)), 1.5);
+board = 0.3 + 0.3 * checkers + 0.04 * grain / std(grain(:)) .* (checkers < 0.5);
+picture = [board, ones(1200, 600)]; % bright background right of the board
+r = PIVlab_capture_edge_width(min(max(picture, 0), 1), 3, 3);
+testCase.verifyTrue(all(~isnan(r.width(:, 1:2)), 'all'), 'edges found under the grain');
+% the grain makes the edges read wider, the same in all regions
+testCase.verifyEqual(r.width(:, 1:2), median(r.width(:, 1:2), 'all') * ones(3, 2), 'RelTol', 0.1, 'equal widths');
+testCase.verifyEqual(median(r.width(:, 1:2), 'all'), 2.563 * 3, 'RelTol', 0.25, 'width about 2.56 sigma');
+end
+
+function test_board_markers_select_regions(testCase)
+% only edges near the ArUco markers count: a high-contrast object next to the board does not change its value
+img = double(board_image(2));
+img = img / max(img(:));
+picture = [img, zeros(600, 450)];
+picture(200:400, 1000:1200) = 1; % sharp bright object right of the board
+markers = PIVlab_capture_board_markers(picture, 3, 3);
+testCase.verifyTrue(markers.is_board);
+r = PIVlab_capture_edge_width(picture, 3, 3, markers);
+testCase.verifyTrue(all(isnan(r.width(:, 3))), 'no markers in the right third: no value');
+testCase.verifyTrue(all(~isnan(r.width(:, 1))), 'board regions have values');
+end
+
+function test_uneven_background(testCase)
+% out-of-focus objects behind the light sheet: large bright blurred patches under the particles (lower half
+% of the image) and a bright vertical stripe; every third still gets the particle diameter
+settings = default_image_settings();
+settings.diameter_left = 3;
+settings.diameter_right = 3;
+img = render_particles([900 1350], settings);
+[xx, yy] = meshgrid(1:1350, 1:900);
+patches = 2500 * exp(-((xx - 250).^2 / (2 * 150^2) + (yy - 700).^2 / (2 * 80^2))) + ...
+    2500 * exp(-((xx - 1100).^2 / (2 * 150^2) + (yy - 650).^2 / (2 * 100^2))) + ...
+    1500 * exp(-(xx - 1150).^2 / (2 * 25^2));
+r = PIVlab_capture_particle_diameter(img + patches, 3, 1);
+testCase.verifyTrue(all(r.is_particles), 'all thirds have particle tiles');
+testCase.verifyEqual(r.diameter, [3 3 3], 'RelTol', 0.15);
 end
 
 function img = board_image(blur)

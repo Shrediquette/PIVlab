@@ -351,6 +351,39 @@ verifyEqual(testCase, src.DeviceSerialNumber, '40000002', 'camera 1 after the sw
 end
 
 %% helpers
+function test_roi_unticks_overlays(testCase)
+% ROI selection (one camera): Sharpness, Grid, Calibration and Displacement are unticked while the ROI is
+% drawn and stay unticked afterwards
+folder = new_folder(testCase, 'roi');
+h = start_capture_gui(folder, 1, 1);
+boxes = [h.ac_displ_sharp h.ac_displ_grid h.calib_dolivedetect h.ac_realtime_PIV];
+set(boxes, 'Value', 1);
+acquisition.display_cam_overlay_Callback(h.ac_displ_sharp);
+acquisition.display_cam_overlay_Callback(h.ac_displ_grid);
+preproc.cam_live_detect_Callback(h.calib_dolivedetect);
+run_with_check(@check_roi, 2);
+acquisition.calibROI_Callback;
+r = getappdata(0, 'stereo_capture_test');
+verifyEqual(testCase, r.doing_roi, 1, 'the check ran during the ROI selection');
+verifyEqual(testCase, r.values, [0 0 0 0], 'overlays unticked during the ROI selection');
+verifyEqual(testCase, r.appdata, [0 0 0], 'the capture code reads the unticked state');
+values = zeros(1, numel(boxes));
+for k = 1:numel(boxes)
+    values(k) = get(boxes(k), 'Value');
+end
+verifyEqual(testCase, values, [0 0 0 0], 'still unticked after the ROI selection');
+end
+
+function check_roi(~, ~)
+% runs while calibROI_Callback waits for the double click on the ROI: read the checkboxes, then apply the ROI
+h = gui.gethand;
+r.doing_roi = gui.retr('doing_roi');
+r.values = [get(h.ac_displ_sharp, 'Value') get(h.ac_displ_grid, 'Value') get(h.calib_dolivedetect, 'Value') get(h.ac_realtime_PIV, 'Value')];
+r.appdata = [gui.retr('sharpness_enabled') gui.retr('crosshair_enabled') gui.retr('do_charuco_detection')];
+setappdata(0, 'stereo_capture_test', r);
+uiresume; % = double click on the ROI
+end
+
 function folder = new_folder(testCase, name)
 folder = fullfile(testCase.TestData.Dir, name);
 mkdir(folder);

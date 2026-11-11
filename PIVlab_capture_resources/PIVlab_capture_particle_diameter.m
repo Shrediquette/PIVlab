@@ -33,6 +33,9 @@ function result = PIVlab_capture_particle_diameter(input_image, n_cols, n_rows, 
 %   zero lag is not used (camera noise only adds to that lag). A Gaussian is fitted to the lags
 %   1, 2, ... in x and y. The pixel size (100 % fill factor, variance 1/12 px^2) is removed from the
 %   result, so the diameter is the diameter of the particle image before it is sampled by the pixels.
+%   A tile that fails the particle test gets a second try with a local background removal (morphological
+%   opening, 48 px): out-of-focus objects behind the light sheet make an uneven background. That second
+%   try only accepts particles up to 16 px.
 
 if nargin < 2
 	n_cols = 3;
@@ -54,6 +57,8 @@ check_lag = 64;      %lags up to here are compared with the fitted Gaussian ("pa
 max_deviation = 0.35; %largest deviation from the Gaussian (real particles <= 0.33, boards 0.28-0.89)
 min_skewness = 1.5;  %of the intensities (real particle regions 1.9-10; board and photo tiles up to 1.14)
 max_diameter = 50;   %[px]
+opening_width = 48;  %[px] background removal for tiles that fail the test (uneven background)
+max_skewness_opened = 5; %after the background removal: seeded tiles 2-4, isolated specks (photo, wall, haze) 5-14
 
 saturation_value = [];
 if isinteger(input_image)
@@ -80,6 +85,8 @@ limits.check_lag = check_lag;
 limits.max_deviation = max_deviation;
 limits.min_skewness = min_skewness;
 limits.max_diameter = max_diameter;
+limits.opening_width = opening_width;
+limits.max_skewness_opened = max_skewness_opened;
 result.n_tiles = zeros(n_rows, n_cols);
 result.n_valid = zeros(n_rows, n_cols);
 for r = 1:n_rows
@@ -92,6 +99,7 @@ for r = 1:n_rows
 		dx = nan(n, 1);
 		dy = nan(n, 1);
 		valid = false(n, 1);
+		opened = false(n, 1);
 		n_saturated = 0;
 		n_pixels = 0;
 		i = 0;
@@ -105,15 +113,21 @@ for r = 1:n_rows
 					n_saturated = n_saturated + nnz(tile >= saturation_value);
 				end
 				n_pixels = n_pixels + numel(tile);
-				[dx(i), dy(i), valid(i)] = analyse_tile(tile, limits);
+				[dx(i), dy(i), valid(i), opened(i)] = analyse_tile(tile, limits);
 				d(i) = (dx(i) + dy(i)) / 2;
 			end
+		end
+		%tiles that needed the background removal only count if the region has too few other particle tiles
+		%(the rim of a large bright object can leave thin slivers that look like particles)
+		min_tiles = max(min(min_valid, n), min_valid_fraction * n);
+		if nnz(valid & ~opened) >= min_tiles
+			valid = valid & ~opened;
 		end
 		result.n_tiles(r,c) = n;
 		result.n_valid(r,c) = nnz(valid);
 		result.saturated(r,c) = n_saturated / max(n_pixels, 1);
 		%obstacles, shadows, reflections only remove the tiles they cover; the median ignores single wrong tiles
-		result.is_particles(r,c) = nnz(valid) >= max(min(min_valid, n), min_valid_fraction * n);
+		result.is_particles(r,c) = nnz(valid) >= min_tiles;
 		if any(valid)
 			use = valid;
 		else
@@ -128,11 +142,41 @@ for r = 1:n_rows
 end
 end
 
-function [diameter_x, diameter_y, valid] = analyse_tile(tile, limits)
+function [diameter_x, diameter_y, valid, opened] = analyse_tile(tile, limits)
+%particle images: bright spots on a dark background (skewed intensities) and a Gaussian autocorrelation
+%peak. A board, a wall, a shadow edge or a photo has other autocorrelations and no or negative skew.
+%opened: valid only after the background removal
+opened = false;
+tile = single(tile);
+[diameter_x, diameter_y, skewness, deviation] = measure_tile(remove_plane(tile), limits);
+valid = (diameter_x + diameter_y) / 2 <= limits.max_diameter && skewness > limits.min_skewness && ...
+	deviation <= limits.max_deviation;
+if valid
+	return
+end
+%Second try for tiles with an uneven background (out-of-focus objects behind the light sheet, glare): subtract
+%the morphological opening (removes everything narrower than opening_width, keeps the background). Only small
+%particles (<= a third of the width, not shrunk by the opening) and not a few isolated bright specks (skewness
+%<= max_skewness_opened; photos, walls and haze leave such specks, seeded tiles have 2-4).
+w = limits.opening_width;
+background = movmax(movmax(movmin(movmin(tile, w, 1), w, 2), w, 1), w, 2);
+[dx, dy, skewness, deviation] = measure_tile(remove_plane(tile - background), limits);
+if (dx + dy) / 2 <= w / 3 && skewness > limits.min_skewness && skewness <= limits.max_skewness_opened && ...
+		deviation <= limits.max_deviation
+	diameter_x = dx;
+	diameter_y = dy;
+	valid = true;
+	opened = true;
+end
+end
+
+function [diameter_x, diameter_y, skewness, deviation] = measure_tile(tile, limits)
+%diameter in x and y from the autocorrelation, skewness of the intensities, largest deviation of the
+%autocorrelation from the fitted Gaussian
 diameter_x = NaN;
 diameter_y = NaN;
-valid = false;
-tile = remove_plane(single(tile));
+skewness = NaN;
+deviation = Inf;
 [h, w] = size(tile);
 lags = min(limits.check_lag, min(h, w) - 1);
 if lags < 2
@@ -150,12 +194,9 @@ sigma2_y = fit_gaussian_width(corr_y(1:n_fit));
 %particle variance = half the autocorrelation variance, minus the pixel size
 diameter_x = particle_diameter(sigma2_x);
 diameter_y = particle_diameter(sigma2_y);
-%particle images: bright spots on a dark background (skewed intensities) and a Gaussian autocorrelation
-%peak. A board, a wall, a shadow edge or a photo has other autocorrelations and no or negative skew.
 values = double(tile(:));
 skewness = mean(values.^3) / max(mean(values.^2), eps)^1.5;
-valid = (diameter_x + diameter_y) / 2 <= limits.max_diameter && skewness > limits.min_skewness && ...
-	gaussian_deviation(corr_x, sigma2_x) <= limits.max_deviation && gaussian_deviation(corr_y, sigma2_y) <= limits.max_deviation;
+deviation = max(gaussian_deviation(corr_x, sigma2_x), gaussian_deviation(corr_y, sigma2_y));
 end
 
 function starts = tile_starts(first, last, tile_size, max_tiles)
