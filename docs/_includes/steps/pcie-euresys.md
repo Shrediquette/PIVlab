@@ -1,0 +1,1 @@
+Install the [Euresys Coaxlink Quad CXP-12](https://www.euresys.com/de/Products/Frame-Grabbers/Coaxlink-series/Coaxlink-Quad-CXP-12) frame grabber in a free **PCIe 3.0 (Gen 3) x8** slot of the computer.

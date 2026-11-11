@@ -39,7 +39,7 @@
       <tr><th>Field</th><th>Meaning</th></tr>
       <tr><td>Board type</td><td>Currently only ChArUco DICT_4X4_1000.</td></tr>
       <tr><td>Origin color</td><td>Color of the top-left checker (Black/White) — must match your printed board.</td></tr>
-      <tr><td>Rows / Columns</td><td>Checkerboard dimensions (default 23 × 24).</td></tr>
+      <tr><td>Rows / Columns</td><td>Checkerboard dimensions (default 14 × 21; with the default 12 mm checkers, the board fits A4 landscape).</td></tr>
       <tr><td>Checker size / Marker size</td><td>Physical size of the checkers and the ArUco markers printed on them.</td></tr>
     </table>
     <p>Click <span class="ui">Guess parameters</span> to have PIVlab estimate these from a
@@ -51,7 +51,8 @@
     with 5 mm bleed. White is the spot colour <em>weiss</em> (overprint) in the top layer
     <em>weiss</em>; it does not overlap the other colours. The suggested file name contains
     the board size, e.g. <em>…_300x290mm_plus_5mm_bleed.pdf</em>.</p>
-    <p>A generated board carries a <strong>QR code</strong> that holds all of these parameters.
+    <p>A generated board carries a <strong>QR code</strong> in place of the central 2 × 2 checkers
+    that holds all of these parameters. It is also read when the board is seen from behind.
     With the <a href="capture.html#camera"><span class="ui">Calibration</span> overlay</a> of the
     image acquisition, PIVlab reads that code from the live image and fills the fields above by
     itself, so the board's dimensions and scale do not have to be entered by hand.</p>
@@ -61,10 +62,11 @@
       <figcaption>The <strong>Marker board setup</strong> panel.</figcaption>
     </figure>
     <figure>
-      <img src="../assets/img/camera-calibration/charuco-board.jpg" alt="A generated printable ChArUco board: a checkerboard with ArUco markers in the black squares, labelled with its dictionary and dimensions">
-      <figcaption>A board produced by <span class="ui">Generate Charuco board</span> — print it
-      out and photograph it to calibrate. The header records its exact parameters (dictionary,
-      rows × columns, checker/marker sizes) so PIVlab can detect it.</figcaption>
+      <img src="../assets/img/camera-calibration/charuco-board.jpg" alt="A generated printable ChArUco board: a checkerboard with ArUco markers in the white squares, a QR code in the centre, labelled with its dictionary and dimensions">
+      <figcaption>A board produced by <span class="ui">Generate Charuco board</span> with the
+      default settings — print it out and photograph it to calibrate. The header and the QR code in
+      the centre record its exact parameters (dictionary, rows × columns, checker/marker sizes) so
+      PIVlab can detect it.</figcaption>
     </figure>
 
     <h3 id="checker-size">Choosing the checker size</h3>

@@ -21,5 +21,8 @@ else
         ac_ROI_general=[];
         gui.put('ac_ROI_general',ac_ROI_general);
         gui.set_preference('ac_ROI_general',ac_ROI_general);
+        if strcmp(camera_type,'OPTOcam_20_9') %camera firmware workaround: restart when the image area has become larger
+            PIVlab_capture_OPTOcam_20_9_restart('');
+        end
     end
 end

@@ -29,14 +29,13 @@ if patternDims(1) == patternDims(2)
     return
 end
 minMarkerID = 0;
-%margins are 3 checkers wide
-marginsize=round(checkerSize* dpi / 25.4*3);
-%margins are 10% of image wide:
-%marginsize=max([round(patternDims(1)*checkerSize* dpi / 25.4*0.1) round(patternDims(2)*checkerSize* dpi / 25.4*0.1)]);
+layout = preproc.cam_board_layout(patternDims, markerFamily, checkerSize, markerSize, originCheckerColor);
+marginsize=round(layout.margin * dpi / 25.4);
 imageSize (1) =ceil(patternDims(1)*checkerSize* dpi / 25.4)+2*marginsize; %size in pixels at  dpi
 imageSize (2) = ceil(patternDims(2)*checkerSize* dpi / 25.4)+2*marginsize; %size in pixels at  dpi
 
-answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Generate board?',['Generate a board with a size of ' num2str(imageSize(2)) '*' num2str(imageSize(1)) ' pixels?' newline 'At ' num2str(dpi) ' dpi, this is ' num2str(round(imageSize(2)/dpi*25.4)) '*' num2str(round(imageSize(1)/dpi*25.4)) ' mm.' newline 'Save the image, then print at ' num2str(dpi) ' dpi and 100 % scaling.'],'modal',{'Yes','Cancel'},'Yes');
+final_height = imageSize(1) + max(0, round(layout.margin_top * dpi / 25.4) - marginsize); % cam_decorate_board adds the taller top margin
+answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Generate board?',['Generate a board with a size of ' num2str(imageSize(2)) '*' num2str(final_height) ' pixels?' newline 'At ' num2str(dpi) ' dpi, this is ' num2str(round(imageSize(2)/dpi*25.4)) '*' num2str(round(final_height/dpi*25.4)) ' mm.' newline 'Save the image, then print at ' num2str(dpi) ' dpi and 100 % scaling.'],'modal',{'Yes','Cancel'},'Yes');
 if ~strcmpi(answer,'Yes')
     gui.toolsavailable(1)
     return
@@ -51,7 +50,7 @@ I = preproc.cam_decorate_board(I, patternDims, markerFamily, checkerSize, marker
 gui.toolsavailable(1)
 figure;imshow(I)
 % default file name with the board size (width x height, with margins)
-board_mm = [(patternDims(2) + 6) * checkerSize, (patternDims(1) + 6) * checkerSize];
+board_mm = [layout.width, layout.height];
 default_name = [originCheckerColor '_' markerFamily '_' num2str(patternDims(1)) 'x' num2str(patternDims(2)) '_' num2str(checkerSize) 'mm_' num2str(markerSize) 'mm_' num2str(board_mm(1)) 'x' num2str(board_mm(2)) 'mm'];
 [file, location] = uiputfile({'*.tif','TIFF image (300 dpi)';'*.pdf','PDF vector, print-ready (exact size in mm, also for transparent material)'},'Save charuco board as...',default_name);
 if file ~=0

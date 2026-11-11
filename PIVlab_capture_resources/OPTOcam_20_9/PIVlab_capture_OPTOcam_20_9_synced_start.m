@@ -16,6 +16,22 @@ sharpness_enabled = getappdata(hgui,'sharpness_enabled'); %#ok<NASGU>
 OutputError=0;
 max_pair_rate=inf;
 
+%% Camera firmware workaround (see PIVlab_capture_OPTOcam_20_9_restart): the camera is restarted when the
+%sensor area (ROI x binning^2) is larger than in the previous double-frame acquisitions. Normally this has
+%already happened after the ROI selection / binning change; this call only catches other ways the image
+%area can grow.
+if isinf(nr_of_images)
+    PIVlab_capture_OPTOcam_20_9_restart('Starting PIV preview...');
+else
+    PIVlab_capture_OPTOcam_20_9_restart('Starting PIV capture...');
+end
+binning = getappdata(hgui,'binning'); %set with the "Binning" button
+if isempty(binning)
+    binning = 1;
+end
+sensor_area = ROI_OPTOcam(3)*ROI_OPTOcam(4)*binning^2;
+min_piv_area = getappdata(0,'OPTOcam_20_9_min_piv_area');
+
 %% Prepare camera (opened in the requested bit depth, or reused if already open)
 [OPTOcam_vid,imaq_error] = PIVlab_capture_OPTOcam_20_9_open(bitmode);
 if imaq_error~=0
@@ -39,11 +55,7 @@ PIVlab_axis = gui.retr('pivlab_axis');
 image_handle_OPTOcam = image_handles{1};
 setappdata(hgui,'image_handle_OPTOcam_20_9',image_handle_OPTOcam);
 
-%% Binning (set with the "Binning" button). Must be set BEFORE the ROI: the ROI is in binned pixels.
-binning = getappdata(hgui,'binning');
-if isempty(binning)
-    binning = 1;
-end
+%% Binning. Must be set BEFORE the ROI: the ROI is in binned pixels.
 OPTOcam_settings.Source.mvShutterMode = 'mvGlobalShutter'; %(a reused camera may still be in double-frame mode)
 if OPTOcam_settings.Source.BinningHorizontal ~= binning || OPTOcam_settings.Source.BinningVertical ~= binning
     try
@@ -140,6 +152,10 @@ setappdata(image_handle_OPTOcam,'OPTOcam_20_9_ab_state',[]);
 setappdata(image_handle_OPTOcam,'max_display_rate',min(10, 40e6/(ROI_OPTOcam(3)*ROI_OPTOcam(4)))); %frames per second drawn (CPU load)
 setappdata(image_handle_OPTOcam,'UpdatePreviewWindowFcn',@PIVlab_capture_OPTOcam_20_9_preview_update);
 preview(OPTOcam_vid,image_handle_OPTOcam);
+%double-frame acquisition is running now: remember its sensor area for the firmware workaround above
+if isempty(min_piv_area) || sensor_area < min_piv_area
+    setappdata(0,'OPTOcam_20_9_min_piv_area',sensor_area);
+end
 if bitmode ==8
     caxis(PIVlab_axis,[0 2^8]); %workaround to force preview to show full data range
 elseif bitmode==12

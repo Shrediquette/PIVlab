@@ -1,56 +1,58 @@
 function I = cam_decorate_board(I, patternDims, markerFamily, checkerSize, markerSize, originCheckerColor, marginsize, px_per_mm, grayscale)
-% QR code (in all four corners), Optolution logo (bottom) and a text line with the board
-% parameters (top) in the margin of a ChArUco board image, as on the boards that PIVlab prints
-% (Setup / define / generate marker board). Also used by the synthetic image generator
-% (simulate.board_texture), so that the simulated board looks like the printed one.
+% QR code (in place of the central 2 x 2 checkers), a text line with the board parameters (top
+% left) and the Optolution logo (top right) on a ChArUco board image, as on the boards that PIVlab
+% prints (Setup / define / generate marker board). Layout: preproc.cam_board_layout.
+% Also used by the synthetic image generator (simulate.board_texture), so that the simulated board
+% looks like the printed one.
 % I:          board image, double 0..1 (white = 1), from generateCharucoBoard with MarginSize = marginsize
-% marginsize: width of the white margin [px]; the QR codes fill the margin
-% px_per_mm:  image resolution [px/mm] (e.g. 300 dpi / 25.4); the font size scales with it
+% marginsize: width of the white margin [px]
+% px_per_mm:  image resolution [px/mm] (e.g. 300 dpi / 25.4)
 % grayscale:  true: the result is a grayscale image (logo in gray); default false: RGB (colour logo)
+% The result has a taller top margin (text and logo) of q_top pixels: white rows are added at the top.
 % The logo is drawn from images/OLT_logo_vector.svg at the image resolution.
 if nargin < 9
     grayscale = false;
 end
-imageSize = size(I, [1 2]);
-if strcmp(markerFamily, 'DICT_4X4_1000')
-    qr_fam = 1;
-else
-    qr_fam = 0;
-end
-if strcmpi(originCheckerColor, 'white')
-    qr_orig = 'w';
-else
-    qr_orig = 'b';
-end
-data = ['F:' num2str(qr_fam) ',O:' qr_orig ',R:' num2str(patternDims(1)) ',C:' num2str(patternDims(2)) ',S:' num2str(checkerSize) ',M:' num2str(markerSize)];
-
-%% QR codes in the corners (upright at the top, turned by 180 degrees at the bottom)
+L = preproc.cam_board_layout(patternDims, markerFamily, checkerSize, markerSize, originCheckerColor);
 q = marginsize;
-qr_0 = double(preproc.cam_encode_qr(data, q));
-qr_180 = rot90(qr_0, 2);
-top = 1:q;
-bottom = imageSize(1) - q + 1:imageSize(1);
-left = 1:q;
-right = imageSize(2) - q + 1:imageSize(2);
-I(top, left) = I(top, left) .* qr_0;
-I(top, right) = I(top, right) .* qr_0;
-I(bottom, left) = I(bottom, left) .* qr_180;
-I(bottom, right) = I(bottom, right) .* qr_180;
+q_top = top_margin_px(L, q, px_per_mm);
+I = [ones(q_top - q, size(I, 2)); I];
+imageSize = size(I, [1 2]);
+cpx = checkerSize * px_per_mm; % pixels per checker
 
-%% logo at the bottom, drawn from the vector logo (same size and position as in preproc.cam_board_pdf)
+%% QR code in place of the central 2 x 2 checkers
+% generateCharucoBoard rounds the checker edges in its own way: the pixels of the 2 x 2 checkers
+% are taken from the image, as the bounding box of its two black checkers (4-connected: black
+% checkers only touch at their corners)
+qr_r = [];
+qr_c = [];
+for r = L.qr_rows
+    for c = L.qr_cols
+        centre = [q_top + round((r - 0.5) * cpx), q + round((c - 0.5) * cpx)];
+        if I(centre(1), centre(2)) < 0.5
+            checker = bwselect(I < 0.5, centre(2), centre(1), 4);
+            [rows_k, cols_k] = find(checker);
+            qr_r = [qr_r min(rows_k) max(rows_k)]; %#ok<AGROW>
+            qr_c = [qr_c min(cols_k) max(cols_k)]; %#ok<AGROW>
+        end
+    end
+end
+qr_r = min(qr_r):max(qr_r);
+qr_c = min(qr_c):max(qr_c);
+qr = double(preproc.cam_encode_qr(L.qr_data, numel(qr_r))); % 1 = white
+if ~isempty(qr)
+    I(qr_r, qr_c) = imresize(qr, [numel(qr_r) numel(qr_c)], 'nearest');
+end
+
+%% logo top right, drawn from the vector logo (same size and position as in preproc.cam_board_pdf)
 logo_txt = fileread(fullfile(fileparts(mfilename('fullpath')), '..', 'images', 'OLT_logo_vector.svg'));
 logo_box = regexp(logo_txt, 'viewBox="([^"]*)"', 'tokens', 'once');
 logo_box = sscanf(logo_box{1}, '%f');
 logo_colours = regexp(logo_txt, '<path fill="#([0-9a-f]{6})"[^>]* d="([^"]*)"', 'tokens');
-logo_h = 0.8 * q; % [px]
+logo_h = L.logo_height * px_per_mm; % [px]
 logo_scale = logo_h / logo_box(4); % [px per logo unit]
-max_width = 0.9 * patternDims(2) * checkerSize * px_per_mm;
-if logo_box(3) * logo_scale > max_width
-    logo_scale = max_width / logo_box(3);
-    logo_h = logo_box(4) * logo_scale;
-end
-logo_x = (imageSize(2) - logo_box(3) * logo_scale) / 2; % left edge [px], 0 = left image edge
-logo_y = imageSize(1) - q / 2 - logo_h / 2;
+logo_x = imageSize(2) - q - L.logo_width * px_per_mm; % left edge [px], 0 = left image edge; right end at the board edge
+logo_y = q_top / 2 - logo_h / 2; % centred in the top margin
 if ~grayscale
     I = repmat(I, 1, 1, 3);
 end
@@ -83,18 +85,22 @@ for k = 1:numel(logo_colours)
 end
 I(r0 + 1:r1, c0 + 1:c1, :) = box;
 
-%% text with the board parameters at the top
-textx = round(imageSize(2) / 2);
-texty = round(marginsize / 2);
-fntsz = round(min(checkerSize * patternDims(2) / 2.5, 200) * px_per_mm / (300 / 25.4)); % font size at 300 dpi, scaled
-fntsz = min(fntsz, 200);
-if fntsz >= 4 % a smaller text would be unreadable anyway
+%% text with the board parameters top left
+fntsz = round(L.font_size * px_per_mm);
+if fntsz >= 4 && q_top >= 1 % a smaller text would be unreadable anyway
+    top = 1:q_top;
     strip = I(top, :, :); % only the top margin (fast for large images)
-    strip = insertText(strip, [textx, texty], [char(originCheckerColor) '; ' char(markerFamily) '; ' num2str(patternDims(1)) 'x' num2str(patternDims(2)) '; ' num2str(checkerSize) 'mm/' num2str(markerSize) 'mm'], ...
-        'FontSize', fntsz, 'FontColor', 'black', 'TextBoxColor', 'white', 'BoxOpacity', 0, 'Font', 'Arial Black', 'AnchorPoint', 'Center');
+    anchor = [q + (L.text_x - L.margin) * px_per_mm, q_top / 2 + (L.text_y - L.margin_top / 2) * px_per_mm] + 0.5; % ink from the left board edge
+    strip = insertText(strip, anchor, L.text, ...
+        'FontSize', min(fntsz, 200), 'FontColor', 'black', 'TextBoxColor', 'white', 'BoxOpacity', 0, 'Font', 'Arial Black', 'AnchorPoint', 'LeftCenter');
     if size(I, 3) == 1
         strip = rgb2gray(strip);
     end
     I(top, :, :) = strip;
 end
+end
+
+function q_top = top_margin_px(L, q, px_per_mm)
+% height of the top margin [px]
+q_top = max(q, round(L.margin_top * px_per_mm));
 end

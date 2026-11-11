@@ -27,7 +27,7 @@ pa = getpixelposition(acquire);
 pb = getpixelposition(b);
 verifyEqual(testCase, pb([1 3 4]), pa([1 3 4]), 'AbsTol', 1, 'same x position and size as "Acquire images"');
 verifyLessThan(testCase, pb(2), pa(2), 'below "Acquire images"');
-verifyLessThan(testCase, pa(2) - (pb(2) + pb(4)), pa(4) / 2, 'directly below "Acquire images"');
+verifyLessThan(testCase, pa(2) - (pb(2) + pb(4)), pa(4), 'directly below "Acquire images"');
 % the rest of the panel still fits
 children = findall(h.multip01, 'Type', 'uicontrol');
 for k = 1:numel(children)

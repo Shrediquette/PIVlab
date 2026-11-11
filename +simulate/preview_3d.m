@@ -206,12 +206,12 @@ if strcmp(key, S.board_key) && ~isempty(S.board_surface) && isvalid(S.board_surf
     return
 end
 delete(findobj(S.ax3, 'Tag', 'sim3d_board'));
-c = max(8, min(40, round(1200 / (board.PatternDims(2) + 6)))); % about 1200 texels across
+c = max(8, min(40, round(1200 / (board.PatternDims(2) + 2)))); % about 1200 texels across
 S.tex = simulate.board_texture(board, c, Decorated=true);
 img = S.tex.image / 255;
 checker = board.CheckerSize;
 x = ([0, size(img, 2)] - S.tex.m) / c - 1;
-y = ([0, size(img, 1)] - S.tex.m) / c - 1;
+y = ([0, size(img, 1)] - S.tex.m_top) / c - 1;
 [X, Y] = meshgrid(x * checker, y * checker);
 hold(S.ax3, 'on');
 S.board_surface = surface(S.ax3, X, Y, zeros(2), repmat(img, 1, 1, 3), 'FaceColor', 'texturemap', 'EdgeColor', [0.4 0.4 0.4], ...
@@ -409,7 +409,7 @@ end
 
 function s = camera_symbol_size(board)
 % size of the camera symbols in the 3D view: fixed relative to the board (with its margin)
-s = 0.06 * (board.PatternDims(2) + 6) * board.CheckerSize;
+s = 0.06 * (board.PatternDims(2) + 1) * board.CheckerSize;
 end
 
 %% ---------------------------------------------------------------- mouse

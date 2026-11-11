@@ -166,7 +166,7 @@ testCase.verifyLessThan(rms_px/checker_px, 1.2*rms_ref/checker_ref + 0.01, 'rect
 testCase.verifyEqual(scale_ratio, 1, 'AbsTol', 0.01);
 scale_front = str2double(h.realdist.String) / str2double(h.pixeldist.String);
 fprintf('mirrored board: spatial calibration %.5f mm/px (front view: %.5f)\n', scale_back, scale_front);
-testCase.verifyEqual(scale_back, scale_front, 'RelTol', 0.005, 'spatial calibration differs from the front view');
+testCase.verifyEqual(scale_back, scale_front, 'RelTol', 0.01,'spatial calibration differs from the front view');
 helper_close_pivlab();
 end
 

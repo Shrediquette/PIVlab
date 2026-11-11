@@ -31,6 +31,14 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
     projectpath=get(handles.ac_project,'String');
     capture_ok=acquisition.check_project_path(projectpath,'calibration');
     if capture_ok==1
+        %no overlays during the ROI selection; they stay unticked afterwards
+        set(handles.ac_displ_sharp,'Value',0);
+        set(handles.ac_displ_grid,'Value',0);
+        set(handles.calib_dolivedetect,'Value',0);
+        set(handles.ac_realtime_PIV,'Value',0);
+        acquisition.display_cam_overlay_Callback(handles.ac_displ_sharp);
+        acquisition.display_cam_overlay_Callback(handles.ac_displ_grid);
+        preproc.cam_live_detect_Callback(handles.calib_dolivedetect);
         gui.toolsavailable(0,'Capturing an image for the ROI selection...');drawnow
         gui.put('cancel_capture',0);
         gui.put('capturing',1);
@@ -203,6 +211,10 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             % the ROI changes the RAM needed per image pair: refresh the red/white image amount box
             if ~isequal(gui.retr('capturing'),1) %image_amount_Callback calls imaqreset, which would kill a running preview
                 acquisition.image_amount_Callback
+            end
+
+            if strcmp(camera_type,'OPTOcam_20_9') %camera firmware workaround: restart when the image area has become larger
+                PIVlab_capture_OPTOcam_20_9_restart('');
             end
 
             if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')

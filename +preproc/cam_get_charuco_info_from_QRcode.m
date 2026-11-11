@@ -6,11 +6,12 @@ qr_patternDims=[];
 qr_checkerSize=[];
 qr_markerSize=[];
 
-[msg,~,loc]=readBarcode(img(:,:,1),'QR-CODE'); % will only return the first detected Barcode
-if isempty(loc) && max(size(img,[1 2])) > 2000 %very large QR codes in high res images are often not detected. Retry in downscaled, binarized image
-	s = 1280 / max(size(img,[1 2]));
-	[msg,~,loc]=readBarcode(imbinarize(imresize(img(:,:,1),s),'adaptive'),'QR-CODE');
-	loc = (loc-0.5)/s + 0.5; % back to full res pixel coordinates
+[msg,loc] = read_qr(img(:,:,1));
+if isempty(loc) % board seen from behind (transparent board): the QR code is mirrored
+	[msg,loc] = read_qr(fliplr(img(:,:,1)));
+	if ~isempty(loc)
+		loc(:,1) = size(img,2) + 1 - loc(:,1); % back to the coordinates of the image as it is
+	end
 end
 %{
 %second try for better success....
@@ -53,4 +54,12 @@ if ~isempty(msg)
 			qr_markerSize=str2double(C{6}(3:end));
 		end
 	end
+end
+
+function [msg,loc] = read_qr(img)
+[msg,~,loc]=readBarcode(img,'QR-CODE'); % will only return the first detected Barcode
+if isempty(loc) && max(size(img,[1 2])) > 2000 %very large QR codes in high res images are often not detected. Retry in downscaled, binarized image
+	s = 1280 / max(size(img,[1 2]));
+	[msg,~,loc]=readBarcode(imbinarize(imresize(img,s),'adaptive'),'QR-CODE');
+	loc = (loc-0.5)/s + 0.5; % back to full res pixel coordinates
 end

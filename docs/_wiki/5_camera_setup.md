@@ -1,140 +1,26 @@
 ---
-layout: default
-title: Camera Setup
+title: Camera setup
+group: Hardware
+summary: Install drivers and connect your camera to PIVlab, step by step for each supported camera.
+description: How to set up OPTOcam, pco, OPTRONIS Cyclone / CyclonePlus and Krontech Chronos cameras for image acquisition in PIVlab (standalone app and MATLAB toolbox).
+keywords: camera driver installation genicam gentl image acquisition toolbox
 ---
-# Setting up the OPTOcam 20/9 camera
-### Standalone application of PIVlab
-* You need to install the "balluff Impact Acquire" software, which is available here ([link to the Balluff software](https://assets.balluff.com/documents/DRF_957084_AA_000/ImpactAcquire-x86_64-3.7.2.exe)).
-* You can uncheck all options except "Common Runtime" and "GenICam GenTL Support"
-* When this is finished, start PIVlab with the camera plugged into a USB3.0 port **(do NOT use a USB hub! The camera needs the full bandwith of the USB port)**, select the suitable configurations (e.g. "PIVlab LD-PS + OPTOcam 20/9), and start your PIV analyses! Please make sure that the computer you are using is connected to a power supply. Otherwise it may limit the bandwidth of the USB port for energy saving reasons.
-  
-### Matlab toolbox version
-* The OPTOcam requires the [image acquisition toolbox from Mathworks](https://de.mathworks.com/products/image-acquisition.html). This is included in many Matlab licenses from universities.
-* You need to install the "balluff Impact Acquire" software, which is available here ([link to the Balluff software](https://assets.balluff.com/documents/DRF_957084_AA_000/ImpactAcquire-x86_64-3.7.2.exe)).
-* You can uncheck all options except "Common Runtime" and "GenICam GenTL Support"
-* Then, you need to install the [Image Acquisition Toolbox Support Package for GenICam Interface](https://de.mathworks.com/matlabcentral/fileexchange/45180-image-acquisition-toolbox-support-package-for-genicam-interface?s_tid=srchtitle).
-* When this is finished, start PIVlab with the camera plugged into a USB3.0 port **(do NOT use a USB hub! The camera needs the full bandwith of the USB port)**, select the suitable configurations (e.g. "PIVlab LD-PS + OPTOcam 20/9), and start your PIV analyses! Please make sure that the computer you are using is connected to a power supply. Otherwise it may limit the bandwidth of the USB port for energy saving reasons.
+PIVlab captures PIV image pairs directly from these cameras, synchronized with the laser. Looking for a camera? See the [PIV cameras available from OPTOLUTION](https://optolution.com/en/products/particle-image-velocimetry-piv/cameras-overview/). Choose your camera for the installation steps:
 
+<div class="cards">
+{%- assign cams = site.cameras | sort: "order" %}
+{%- for c in cams %}
+  <a class="card camera-card" href="{{ c.url | relative_url }}">
+    <span class="card-photo">{% if c.image %}<img src="{{ c.image | relative_url }}" alt="{{ c.title }}" loading="lazy">{% else %}<svg viewBox="0 0 64 48" aria-hidden="true"><rect x="6" y="12" width="40" height="28" rx="4"/><path d="M46 20l12-6v20l-12-6z"/><circle cx="26" cy="26" r="8" class="lens"/></svg>{% endif %}</span>
+    <h3>{{ c.title }}</h3>
+    <p>{{ c.summary }}</p>
+    <span class="tags"><span class="tag">{{ c.connection }}</span><span class="tag">{{ c.software }}</span></span>
+  </a>
+{%- endfor %}
+</div>
 
-# Setting up the OPTOcam 2/80 camera
-### Standalone application of PIVlab
-* You need to install the "pylon camera software suite", which is available here ([link to the basler software website](https://www2.baslerweb.com/de/downloads/downloads-software/#type=pylonsoftware;language=all;version=all;series=baslerdart;model=all)).
-* When this is finished, start PIVlab with the camera plugged into a USB3.0 port **(do NOT use a USB hub! The camera needs the full bandwith of the USB port)**, select the suitable configurations (e.g. "PIVlab LD-PS + OPTOcam 2/80), and start your PIV analyses! Please make sure that the computer you are using is connected to a power supply. Otherwise it may limit the bandwidth of the USB port for energy saving reasons.
+## Before you start
 
-  
-### Matlab toolbox version
-*   The OPTOcam requires the [image acquisition toolbox from Mathworks](https://de.mathworks.com/products/image-acquisition.html). This is included in many Matlab licenses from universities.
-*   Furthermore, you need to install the "pylon camera software suite", which is available here ([link to the basler software website](https://www2.baslerweb.com/de/downloads/downloads-software/#type=pylonsoftware;language=all;version=all;series=baslerdart;model=all)).
-*   Then, you need to install the [Image Acquisition Toolbox Support Package for GenICam Interface](https://de.mathworks.com/matlabcentral/fileexchange/45180-image-acquisition-toolbox-support-package-for-genicam-interface?s_tid=srchtitle).
-* When this is finished, start PIVlab with the camera plugged into a USB3.0 port **(do NOT use a USB hub! The camera needs the full bandwith of the USB port)**, select the suitable configurations (e.g. "PIVlab LD-PS + OPTOcam 2/80), and start your PIV analyses! Please make sure that the computer you are using is connected to a power supply. Otherwise it may limit the bandwidth of the USB port for energy saving reasons.
-
-
-# Setting up pco cameras (panda 26 DS USB / pixelfly 1.4 DS USB / pco.edge 26 DS CLHS)
-
-### Standalone application of PIVlab
-1. Install the PCO interface drivers (USB 3.0 for the panda camera, USB 2.0 for the pixelfly, CLHS KAYA for the edge): https://www.excelitas.com/product/pco-interface-drivers
-2. Plug in your pco camera. Take care to fully insert the connector (**this is a common pitfall!** Tighten the screws on the USB plug on the panda and gently wiggle the plug on the edge.) Do NOT use a USB hub for the panda! The camera needs the full bandwith of the USB port. Please make sure that the computer you are using is connected to a power supply. Otherwise it may limit the bandwidth of the USB port / CLHGS grabber for energy saving reasons.
-
-### Instructions for PIVlab toolbox version
-1. Install pco camware: https://www.excelitas.com/product/pco-camera-control-software
-2. Install pco.matlab: https://www.excelitas.com/product/pco-software-development-kits
-3. Install the PCO interface drivers (USB 3.0 for the panda camera, USB 2.0 for the pixelfly, CLHS KAYA for the edge): https://www.excelitas.com/product/pco-interface-drivers
-4. Download and install Matlab Compiler: https://de.mathworks.com/matlabcentral/fileexchange/52848-matlab-support-for-mingw-w64-c-c-compiler
-5. Open the folder of the pco.matlab installation from step 2 (typically in "C:\Program Files\PCO Digital Camera Toolbox\pco.matlab"), and run pco.matlab\scripts\setup_files.m in Matlab
-6. In Matlab, add the pco.matlab folder to the search path permanently: Click on the "Home" tab, then "Set Path", then "Add with subfolders". Select the pco.matlab folder, then click "Save", then "Close".
-7. Plug in your pco camera. Take care to fully insert the connector (**this is a common pitfall!** Tighten the screws on the USB plug on the panda and gently wiggle the plug on the edge.) Do NOT use a USB hub for the panda! The camera needs the full bandwith of the USB port. Please make sure that the computer you are using is connected to a power supply. Otherwise it may limit the bandwidth of the USB port / CLHGS grabber for energy saving reasons.
-8. Run pco_camera_info.m in the pco.matlab\scripts folder to see information about your pco camera. This should run without errors.
-   Done. You can now use your pco camera in the PIVlab_GUI.
-
-# Setting up OPTRONIS cameras with bitflow Coaxlink Framegrabber
-* The following OPTRONIS cameras are supported:
-   * [Cyclone-25-150-M](https://optronis.com/produkte/cyclone-25-150/)
-   * [Cyclone-1HS-3500-M](https://optronis.com/produkte/cyclone-1hs-3500/)
-   * [Cyclone-2-2000-M](https://optronis.com/produkte/cyclone-2-2000/)
-* Currently, these cameras work in 8 bit mode.
-* Keep in mind that these high-speed cameras transfer enormous amounts of data. In PIVlab, image data is captured into RAM before it is saved to disk (otherwise most hard disks, even SSD's, can't keep up with the data rate). With a Cyclone-2-2000-M camera, you can capture approximately the following amount of 8-bit double images:
-   * 16 GB RAM: 1300 double images
-   * 32 GB RAM: 3400 double images
-   * 64 GB RAM: 7500 double images
-* PIVlab throws a warning before capturing when you selected too many images, and the corresponding edit field in the GUI becomes orange.
-* Also keep in mind that you need a fast SSD to write data from RAM in a reasonable time. And the SSD should also be large enough!
-* The camera needs to be connected via the bitflow PCIe frame grabber to a PC. The PC must have a PCIe 3.0 (Gen 3) x8 slot.
-
-### PIVlab toolbox version only:
-* The cameras require the [image acquisition toolbox from Mathworks](https://de.mathworks.com/products/image-acquisition.html). This is included in many Matlab licenses from universities.
-* Then, you need to install the [Image Acquisition Toolbox Support Package for GenICam Interface](https://de.mathworks.com/matlabcentral/fileexchange/45180-image-acquisition-toolbox-support-package-for-genicam-interface?s_tid=srchtitle).
-
-### Both Toolbox and Standalone version of PIVlab:
-* [Download and install the bitflow sdk](https://www.bitflow.com/current-downloads/)
-* [Download and install the bitflow Matlab IMAQ adaptor](https://www.bitflow.com/current-downloads/)
-* Connect the camera to the frame grabber using the four coaxial cables. You need to connect them in the right order: 1-A, 2-B, 3-C, 4-D. Don't forget to connect the trigger cable (Aux. port on the OPTRONIS, “Sync in”) to the laser or synchronizer.
-* Power your camera with the supplied power supply (or directly via Coaxpress).
-* All four lights on the back of the OPTRONIS need to be solid green.
-* When this is finished, start PIVlab and select the suitable configuration ("PIVlab LD-PS + OPTRONIS) in the image acquisition menu. The exact camera model will be detected automatically.
-* Connect to the laser / synchronizer in PIVlab.
-
-# Setting up OPTRONIS cameras with Euresys Coaxlink Framegrabber
-* The following OPTRONIS cameras are supported:
-   * [Cyclone-25-150-M](https://optronis.com/produkte/cyclone-25-150/)
-   * [Cyclone-1HS-3500-M](https://optronis.com/produkte/cyclone-1hs-3500/)
-   * [Cyclone-2-2000-M](https://optronis.com/produkte/cyclone-2-2000/)
-* Currently, these cameras work in 8 bit mode.
-* Keep in mind that these high-speed cameras transfer enormous amounts of data. In PIVlab, image data is captured into RAM before it is saved to disk (otherwise most hard disks, even SSD's, can't keep up with the data rate). With a Cyclone-2-2000-M camera, you can capture approximately the following amount of 8-bit double images:
-   * 16 GB RAM: 1300 double images
-   * 32 GB RAM: 3400 double images
-   * 64 GB RAM: 7500 double images
-* PIVlab throws a warning before capturing when you selected too many images, and the corresponding edit field in the GUI becomes orange.
-* Also keep in mind that you need a fast SSD to write data from RAM in a reasonable time. And the SSD should also be large enough!
-* The camera needs to be connected via a PCIe frame grabber to a PC [(Euresys Coaxlink Quad CXP-12)](https://www.euresys.com/de/Products/Frame-Grabbers/Coaxlink-series/Coaxlink-Quad-CXP-12). The PC must have a PCIe 3.0 (Gen 3) x8 slot.
-* You need to install the EGRABBER FOR COAXLINK from Euresys. Get the latest release from their website (at the time of writing, the latest release is egrabber-win10-x86_64-24.04.0.2.exe):
-   * [https://www.euresys.com/de/Support/Download-area?Series=e1bb72b9-60d9-4d17-aa17-daef9c856322&lang=de-DE](https://www.euresys.com/de/Support/Download-area?Series=e1bb72b9-60d9-4d17-aa17-daef9c856322&lang=de-DE)
-
-### PIVlab toolbox version only:
-* The cameras require the [image acquisition toolbox from Mathworks](https://de.mathworks.com/products/image-acquisition.html). This is included in many Matlab licenses from universities.
-* Then, you need to install the [Image Acquisition Toolbox Support Package for GenICam Interface](https://de.mathworks.com/matlabcentral/fileexchange/45180-image-acquisition-toolbox-support-package-for-genicam-interface?s_tid=srchtitle).
-
-### Both Toolbox and Standalone version of PIVlab:
-* The camera also needs to be **set to external triggering permanently**. How this is done in 'eGrabber Studio' is shown below. When the camera was bought from OPTOLUTION, then this is already done and can be skipped.
-* Connect the camera to the frame grabber using the four coaxial cables. You need to connect them in the right order: 1-A, 2-B, 3-C, 4-D. Don't forget to connect the trigger cable (Aux. port on the OPTRONIS, “Sync in”) to the laser or synchronizer.
-* Power your camera with the supplied power supply (or directly via Coaxpress).
-* All four lights on the back of the OPTRONIS need to be solid green.
-* When this is finished, start PIVlab and select the suitable configuration ("PIVlab LD-PS + OPTRONIS) in the image acquisition menu. The exact camera model will be detected automatically.
-* Connect to the laser / synchronizer in PIVlab.
-
-### Configuration in eGrabber Studio
-![](https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/Optronis_setup_1.JPG)
-![](https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/Optronis_setup_2.JPG)
-![](https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/Optronis_setup_3.JPG)
-![](https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/Optronis_setup_4.JPG)
-![](https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/Optronis_setup_5.JPG)
-When this is done, power cycle the camera and click the refresh button:
-![](https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/Optronis_setup_6.JPG)
-Verify that the changed settings have been accepted and didn’t change after the power cycle.
-
-# Setting up the Krontech Chronos cameras
-Here is some information about using the Chronos cameras in PIVlab. I have tested the Chronos 1.4, but not the 2.1. The Chronos 2.1 should work too.
-### Chronos limitations
-Unfortunately, there are some limitations of the Chronos, and it is also pretty hard to get support from the manufacturers. Therefore I cannot recommend this camera anymore. You are better off with an OPTRONIS high-speed camera.
-The camera is very nice and extremely affordable, but this also introduces some hick-ups in the Chronos Firmware.
-* Firmware 0.5.1 seems most stable and doesn't skip frames in the middle of a recording
-* Disable "Debounce" in the "IO1 BNC" panel on the Chronos "Trigger I/O" Menu
-* Click "Setup" in PIVlab Image acquisition panel and enter the IP address of the chronos like this: 192.168.254.100
-* The resolutions entered here must be accepted by the camera. Not every resolution is accepted by the Chronos. e.g.  1280x720 and 1280x1024 is ok.
-* Data transfer from Chronos RAM to SD card or SMB shared drive is slow.
-* Tiff raw is the recommended file format although it is slow to save.
-* H264 is much faster, but gives worse results.
-* Stripes in image? Cover lens. Go to "Util" -> "Factory" -> "Black calibrate all resolutions" on the Chronos touchscreen
-* Still stripes? Set camera to desired resolution, then goto main screen -> "Black cal" on the Chronos touchscreen (always cover the lens).
-* Still stripes? Then go to "Record settings" on the Chronos, click the two "max" buttons and then "OK".
-* Sometimes it also helps to change resolution to remove the stripes.
-* A frame rate of 1000 fps is not possible on the Chronos when using an external trigger. In order to use 1000 fps, you need to slightly reduce the resolution to something like 1280x720. I have no clue why this is the case.
-* In many cases, the Chronos will not properly shut down when you press the power button. A long press will force the camera to shut down. This seems to happen whenever the camera is configured to be triggered externally. You could circumvent this by initiating the live preview from PIVlab before you power the camera off.
-* When powering the camera on, it is sometimes not clear if the camera is booting or if it hangs. Powering up the camera takes some time, so you may need to wait between 30s and a minute.
-
-### General tips
-* I am using a VONETS VAP11s mini router connected to the Chronos. Then I can connect to the WiFi network of the Vonets and access the Chronos wirelessly.
-* Use PIVlab to toggle between live image preview or PIV capture mode.
-* In many cases, I am not enabling the "save" checkbox in the "Capture PIV images" panel in PIVlab. As soon as you click "Start" in the "Capture PIV images" panel, the chronos will capture images synced to the laser and will save them to the RAM ringbuffer, also when this checkbox is not enabled. You can stop the recording by pressing "Abort" in PIVlab.
-* You might then use the Chronos Webinterface to save data to SD or SSD or SMB of the camera. This webinterface seems pretty handy to review, select and save the desired frames.
-* You can of ourse also use the touchscreen of the camera to review, select and save the desired frames.
-* Always make sure that you verify that image A and B are not confused. Sometimes, the Chronos skips the very first frame, resulting in an incorrect frame-straddling sequence!
+- Each camera page has steps for the **Standalone app** and for the **MATLAB toolbox**. Pick your version with the switch at the top of the steps; your choice is remembered.
+- When the camera is connected, click **Detect connected cameras** in PIVlab's image acquisition panel to check that it is found.
+- The synchronizer and laser are set up separately: see [Synchronizer setup]({{ '/wiki/4-synchronizer-laser/' | relative_url }}).

@@ -83,8 +83,15 @@
       <tr><td>Lens</td><td>Lens control for cameras that support it, including autofocus.</td></tr>
       <tr><td>Setup</td><td>Camera-specific settings such as bit depth and gain, and the serial
       numbers of the connected cameras.</td></tr>
-      <tr><td>Sharpness</td><td>Overlays a focus measure — use it to focus by eye. Works in the
-      live image and in the <a href="#capture">PIV preview</a>.</td></tr>
+      <tr><td>Sharpness</td><td>Overlays a focus measure and, for the left, centre and right third
+      of the image, the blur in pixels (smaller = sharper; median of the last 5 updates): the
+      particle image diameter for particle images, the edge width for a calibration board, “–”
+      for other content. The three values can be compared with each other: with a Scheimpflug
+      adapter, focus until the centre is smallest, then adjust the adapter until left and right are
+      equal. A bar under each value shows the sharpness (full = sharpest value seen), a white mark the
+      best value of that third: turn back when a bar drops below its mark. Equal bars at their marks:
+      in focus everywhere. Equal side bars below a full centre bar cannot be corrected with the adapter
+      (close the aperture). Works in the live image and in the <a href="#capture">PIV preview</a>.</td></tr>
       <tr><td>Grid</td><td>Overlays a grid, for aligning the camera. Works in the live image and in
       the PIV preview.</td></tr>
       <tr><td>Calibration</td><td>Live detection of a

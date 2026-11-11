@@ -1,0 +1,34 @@
+---
+layout: null
+search: false
+---
+# PIVlab
+
+> PIVlab is free, open-source particle image velocimetry (PIV) software (MIT licence), developed by William Thielicke and supported by OPTOLUTION Messtechnik GmbH. It runs as a standalone Windows application (no MATLAB needed), as a MATLAB toolbox on Windows, macOS and Linux, or in the browser via MATLAB Online. It computes velocity fields from particle image pairs (multipass FFT window deformation, ensemble correlation, direct cross-correlation, wavelet-based optical flow), supports stereo-PIV (2D3C), validation, calibration, derived quantities and export, and can control lasers, cameras and synchronizers for image acquisition. It is the most frequently cited PIV software in the scientific literature.
+
+How to cite: Thielicke, W. and Sonntag, R. (2021) Particle Image Velocimetry for MATLAB: Accuracy and enhanced algorithms in PIVlab. Journal of Open Research Software, 9: 12. https://doi.org/10.5334/jors.334
+
+## Get PIVlab
+- [Downloads]({{ '/downloads' | absolute_url }}): standalone installer, MATLAB toolbox (.mltbx), MATLAB Online
+- [Source code on GitHub]({{ site.github_url }})
+- [Installation]({{ '/wiki/0-installation/' | absolute_url }})
+
+## Documentation
+- [User manual]({{ '/manual/' | absolute_url }}): every panel of the program, PIV settings, validation, calibration, stereo-PIV, export, command-line API
+- [Command-line API (pivlab.* functions)]({{ '/manual/pages/command-line.html' | absolute_url }})
+- [Quickstart tutorial]({{ '/wiki/1-quickstart/' | absolute_url }})
+- [Video tutorials]({{ '/wiki/2-video-tutorials/' | absolute_url }})
+- [Stereo-PIV (2D3C)]({{ '/wiki/7-stereo-piv/' | absolute_url }}): all three velocity components with two cameras, Scheimpflug calibration, built-in 3D flow and stereo-PIV simulator; available from PIVlab 4.0
+
+## Hardware and camera setup
+- [Camera setup overview]({{ '/wiki/5-camera-setup/' | absolute_url }})
+{%- assign cams = site.cameras | sort: "order" %}
+{%- for c in cams %}
+- [{{ c.title }}]({{ c.url | absolute_url }}): {{ c.summary }}
+{%- endfor %}
+- [Synchronizer setup]({{ '/wiki/4-synchronizer-laser/' | absolute_url }})
+- [PIV hardware for PIVlab (lasers, cameras, synchronizers)]({{ '/hardware' | absolute_url }})
+
+## Support
+- [Service and support]({{ '/support' | absolute_url }}): Google Groups forum, measurement services by OPTOLUTION
+- [Publications that use PIVlab]({{ '/references' | absolute_url }})

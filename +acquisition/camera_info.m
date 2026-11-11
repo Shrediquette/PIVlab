@@ -13,7 +13,7 @@ try
 catch ME
     % Error out if imaqhwinfo fails
     gui.toolsavailable(1)
-    gui.custom_msgbox('warn',getappdata(0,'hgui'),'Available devices',['No cameras found.' newline newline 'Please verify the correct installation of drivers and Addons following the instructions on' newline newline 'https://www.pivlab.de/wiki/5-camera-setup/'],'modal');
+    gui.custom_msgbox('warn',getappdata(0,'hgui'),'Available devices',['No cameras found.' newline newline 'Please verify the correct installation of drivers and Addons following the instructions on' newline newline camera_setup_url],'modal');
     error("Error while collecting information on connected GenTL hardware");
 end
 if isempty(hwinfo.DeviceIDs)
@@ -51,12 +51,38 @@ end
 
 
 if isempty(hwinfo.DeviceIDs) && isempty(cam_name)
-    gui.custom_msgbox('warn',getappdata(0,'hgui'),'Available devices',['No cameras found.' newline newline 'Please verify the correct installation of drivers and Addons following the instructions on' newline newline 'https://www.pivlab.de/wiki/5-camera-setup/'],'modal');
+    gui.custom_msgbox('warn',getappdata(0,'hgui'),'Available devices',['No cameras found.' newline newline 'Please verify the correct installation of drivers and Addons following the instructions on' newline newline camera_setup_url],'modal');
 else
     gui.custom_msgbox('warn',getappdata(0,'hgui'),'Available devices',['Detected cameras:' newline deviceListStr],'modal');
 end
 gui.toolsavailable(1)
 
+end
+
+function url = camera_setup_url
+% Setup page on pivlab.de for the camera of the selected capture configuration
+url = 'https://www.pivlab.de/wiki/5-camera-setup/';
+camera_type = gui.retr('camera_type');
+camera_sub_type = gui.retr('camera_sub_type');
+if ~ischar(camera_type)
+    return
+end
+switch camera_type
+    case 'OPTOcam_20_9'
+        url = 'https://www.pivlab.de/wiki/cameras/optocam-20-9/';
+    case 'OPTOcam'
+        url = 'https://www.pivlab.de/wiki/cameras/optocam-2-80/';
+    case {'pco_pixelfly', 'pco_panda', 'pco_edge26'}
+        url = 'https://www.pivlab.de/wiki/cameras/pco/';
+    case 'chronos'
+        url = 'https://www.pivlab.de/wiki/cameras/chronos/';
+    case 'OPTRONIS'
+        if ischar(camera_sub_type) && startsWith(camera_sub_type, 'CyclonePlus')
+            url = 'https://www.pivlab.de/wiki/cameras/optronis-cycloneplus/';
+        elseif ischar(camera_sub_type) && startsWith(camera_sub_type, 'Cyclone')
+            url = 'https://www.pivlab.de/wiki/cameras/optronis-cyclone/';
+        end
+end
 end
 
 function cam_name=pco_camera_info_pivlab(glvar)

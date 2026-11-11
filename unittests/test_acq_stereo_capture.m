@@ -76,7 +76,10 @@ verifyEqual(testCase, r.x_offset, [0 320 + round(0.03 * 320)], 'camera 2 right o
 verifyEqual(testCase, r.cdata_size, [240 320; 240 320], 'live image: full resolution');
 verifyEqual(testCase, r.device_shown, [2 1], 'camera 1 = lower serial number (device 2)');
 verifyEqual(testCase, r.labels, 2, 'labels Camera 1 / Camera 2');
-verifyEqual(testCase, r.sharpness_texts, 2);
+verifyEqual(testCase, r.sharpness_texts, 2 * 4, 'per camera: sharpness text + 3 particle diameters (left / centre / right)');
+verifyEqual(testCase, r.region_diameters, 6, 'a diameter in every column');
+% mock particles: single pixels blurred with sigma 1 px -> 4 * sqrt(1 - 1/12) = 3.8 px
+verifyEqual(testCase, r.median_diameter, 4, 'AbsTol', 0.5); % about 3.8 px, shown in whole pixels
 verifyEqual(testCase, r.grid_lines, 12);
 verifyTrue(testCase, r.charuco_cam1 && r.charuco_cam2, 'ChArUco markers per camera');
 verifyLessThanOrEqual(testCase, r.display_rate, 10);
@@ -114,7 +117,32 @@ for k = 1:numel(imgs)
 end
 r.display_rate = getappdata(imgs(1), 'max_display_rate');
 r.labels = numel(findobj(ax, 'Tag', 'capture_camera_label'));
-r.sharpness_texts = numel(findobj(ax, 'tag', 'sharpness_display_text'));
+texts = findobj(ax, 'Type', 'text', 'tag', 'sharpness_display_text');
+tries = getappdata(0, 'stereo_capture_test_tries');
+if isempty(tries)
+    tries = 0;
+end
+if numel(texts) ~= 8 && tries < 10
+    % the timer fired while the overlay was redrawn (old texts deleted, new ones not all drawn yet): read again
+    setappdata(0, 'stereo_capture_test_tries', tries + 1);
+    run_with_check(@check_live, 0.3);
+    return
+end
+if isappdata(0, 'stereo_capture_test_tries')
+    rmappdata(0, 'stereo_capture_test_tries');
+end
+r.sharpness_texts = numel(texts);
+values = [];
+for i = 1:numel(texts)
+    if ischar(texts(i).String) % region labels; the summary is a cell (several lines)
+        value = str2double(strtok(texts(i).String));
+        if ~isnan(value)
+            values(end+1) = value; %#ok<AGROW>
+        end
+    end
+end
+r.region_diameters = numel(values);
+r.median_diameter = median(values);
 r.grid_lines = numel(findobj(ax, 'tag', 'capture_grid'));
 r.charuco_cam1 = ~isempty(findobj(ax, 'tag', 'charucolabel_cam1'));
 r.charuco_cam2 = ~isempty(findobj(ax, 'tag', 'charucolabel_cam2'));
@@ -323,6 +351,39 @@ verifyEqual(testCase, src.DeviceSerialNumber, '40000002', 'camera 1 after the sw
 end
 
 %% helpers
+function test_roi_unticks_overlays(testCase)
+% ROI selection (one camera): Sharpness, Grid, Calibration and Displacement are unticked while the ROI is
+% drawn and stay unticked afterwards
+folder = new_folder(testCase, 'roi');
+h = start_capture_gui(folder, 1, 1);
+boxes = [h.ac_displ_sharp h.ac_displ_grid h.calib_dolivedetect h.ac_realtime_PIV];
+set(boxes, 'Value', 1);
+acquisition.display_cam_overlay_Callback(h.ac_displ_sharp);
+acquisition.display_cam_overlay_Callback(h.ac_displ_grid);
+preproc.cam_live_detect_Callback(h.calib_dolivedetect);
+run_with_check(@check_roi, 2);
+acquisition.calibROI_Callback;
+r = getappdata(0, 'stereo_capture_test');
+verifyEqual(testCase, r.doing_roi, 1, 'the check ran during the ROI selection');
+verifyEqual(testCase, r.values, [0 0 0 0], 'overlays unticked during the ROI selection');
+verifyEqual(testCase, r.appdata, [0 0 0], 'the capture code reads the unticked state');
+values = zeros(1, numel(boxes));
+for k = 1:numel(boxes)
+    values(k) = get(boxes(k), 'Value');
+end
+verifyEqual(testCase, values, [0 0 0 0], 'still unticked after the ROI selection');
+end
+
+function check_roi(~, ~)
+% runs while calibROI_Callback waits for the double click on the ROI: read the checkboxes, then apply the ROI
+h = gui.gethand;
+r.doing_roi = gui.retr('doing_roi');
+r.values = [get(h.ac_displ_sharp, 'Value') get(h.ac_displ_grid, 'Value') get(h.calib_dolivedetect, 'Value') get(h.ac_realtime_PIV, 'Value')];
+r.appdata = [gui.retr('sharpness_enabled') gui.retr('crosshair_enabled') gui.retr('do_charuco_detection')];
+setappdata(0, 'stereo_capture_test', r);
+uiresume; % = double click on the ROI
+end
+
 function folder = new_folder(testCase, name)
 folder = fullfile(testCase.TestData.Dir, name);
 mkdir(folder);

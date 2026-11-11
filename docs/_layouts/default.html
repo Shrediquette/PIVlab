@@ -1,63 +1,130 @@
 <!doctype html>
 <html lang="en">
-<!--<html lang="{{ site.lang | default: "en-US" }}">-->
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-
-  {% seo %}
-  <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
-  <script src="https://code.jquery.com/jquery-3.3.0.min.js" integrity="sha256-RTQy8VOmNlT6b2PIRur37p6JEBZUE7o8wPgMvu18MC4=" crossorigin="anonymous"></script>
-  <script src="{{ '/assets/js/main.js' | relative_url }}"></script>
-  <!--[if lt IE 9]>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js" integrity="sha256-3Jy/GbSLrg0o9y5Z5n1uw0qxZECH7C6OQpVBgNFYa0g=" crossorigin="anonymous"></script>
-  <![endif]-->
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-  <title> PIVlab Home</title>
-  <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/favicon.ico"> 
-  {% include head-custom.html %}
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {%- if page.url == "/" -%}
+    {%- assign full_title = "PIVlab – free open-source PIV software (particle image velocimetry)" -%}
+  {%- else -%}
+    {%- assign full_title = page.title | append: " | PIVlab" -%}
+  {%- endif -%}
+  {%- assign desc = page.description | default: site.description -%}
+  {%- assign canonical = page.url | replace: "index.html", "" | replace: ".html", "" | absolute_url -%}
+  <title>{{ full_title }}</title>
+  <meta name="description" content="{{ desc | strip_html | normalize_whitespace | xml_escape }}">
+  <link rel="canonical" href="{{ canonical }}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="PIVlab">
+  <meta property="og:title" content="{{ full_title | xml_escape }}">
+  <meta property="og:description" content="{{ desc | strip_html | normalize_whitespace | xml_escape }}">
+  <meta property="og:url" content="{{ canonical }}">
+  <meta property="og:image" content="{{ '/assets/images/pivlab_logo.png' | absolute_url }}">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="{{ '/assets/images/favicon.ico' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}">
+  <script>
+    /* colour theme before first paint: saved choice (shared with the manual), else the system setting */
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem("pivlab-manual-theme"); } catch (e) {}
+      if (!t) t = (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", t);
+    })();
+  </script>
+  {%- if page.url == "/" %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "PIVlab",
+    "url": "https://www.pivlab.de/",
+    "description": "Free, open-source particle image velocimetry (PIV) software. Runs as a standalone Windows app or as a MATLAB toolbox; analyses image pairs with cross-correlation and optical flow and controls lasers, cameras and synchronizers.",
+    "applicationCategory": "ScientificApplication",
+    "operatingSystem": "Windows, macOS, Linux (MATLAB toolbox)",
+    "license": "https://opensource.org/license/mit",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+    "author": { "@type": "Person", "name": "William Thielicke" },
+    "publisher": { "@type": "Organization", "name": "OPTOLUTION Messtechnik GmbH", "url": "https://optolution.com" },
+    "downloadUrl": "https://github.com/Shrediquette/PIVlab/releases/latest",
+    "softwareHelp": "https://www.pivlab.de/manual/",
+    "codeRepository": "https://github.com/Shrediquette/PIVlab",
+    "citation": "https://doi.org/10.5334/jors.334"
+  }
+  </script>
+  {%- endif %}
+  {%- if page.crumbs %}
+  <script type="application/ld+json">
+  {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+    {%- for c in page.crumbs %}
+    {"@type": "ListItem", "position": {{ forloop.index }}, "name": {{ c.title | jsonify }}, "item": {{ c.url | absolute_url | jsonify }}},
+    {%- endfor %}
+    {"@type": "ListItem", "position": {{ page.crumbs.size | plus: 1 }}, "name": {{ page.title | jsonify }}}
+  ]}
+  </script>
+  {%- endif %}
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 
-<header>
-  <h1>{{ page.title | default: site.title | default: site.github.repository_name }}</h1>
-<!--  <p>{{ page.description | default: site.description | default: site.github.project_tagline }}</p>-->
+<header class="hero">
+  <a class="hero-logo" href="{{ '/' | relative_url }}" aria-label="PIVlab home"></a>
+  <div class="hero-side">
+    <p class="hero-tagline">Open-source particle image velocimetry</p>
+    <div class="downloads">
+      <span class="downloads-label">Download</span>
+      {%- for d in site.downloads %}{% if d.header %}
+      <a class="dl-btn" href="{{ d.url }}" title="{{ d.text }}">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M7 1h2v7.6l2.3-2.3 1.4 1.4L8 12.4 3.3 7.7l1.4-1.4L7 8.6zM2 13h12v2H2z"/></svg>{{ d.button }}</a>
+      {%- endif %}{% endfor %}
+      <a class="dl-btn gh" href="{{ site.github_url }}">View on GitHub</a>
+    </div>
+  </div>
 </header>
 
-<div id="banner">
-  <a href="{{ site.github.repository_url }}" class="button fork"><strong>View On GitHub</strong></a>
-  {% if site.show_downloads %}
-  <div class="downloads">
-    <span>Downloads:</span>
-    <ul>
-      <li><a href="https://github.com/Shrediquette/PIVlab/releases/latest/download/PIVlab_installer.exe" class="button">Standalone</a></li>
-       <li><a href="https://github.com/Shrediquette/PIVlab/releases/latest/download/PIVlab.mltbx" class="button">Matlab Toolbox</a></li>
-       <li><a href="https://github.com/Shrediquette/PIVlab/archive/refs/heads/main.zip" class="button">Nightly build</a></li>
-    </ul>
-    <span id="logo"></span>
+<nav class="action-bar" aria-label="Main menu">
+  <button class="burger" type="button" aria-expanded="false" aria-controls="site-menu">&#9776; Menu</button>
+  {%- assign here = page.url | remove: ".html" %}
+  <ul class="menu" id="site-menu">
+    {%- for item in site.navigation %}
+      {%- assign len = item.url | size %}
+      {%- assign head = here | slice: 0, len %}
+      {%- assign active = false %}
+      {%- if item.url == "/" %}{% if here == "/" or here == "/index" %}{% assign active = true %}{% endif %}
+      {%- elsif head == item.url %}{% assign active = true %}{% endif %}
+    <li><a href="{{ item.url | relative_url }}"{% if active %} class="active" aria-current="page"{% endif %}>{{ item.title }}</a></li>
+    {%- endfor %}
+  </ul>
+  <div class="search" role="search">
+    <input type="search" id="site-search" placeholder="Search website + manual  ( / )" aria-label="Search the website and the manual" autocomplete="off">
+    <div class="search-panel" id="search-panel"></div>
   </div>
-  {% endif %}
-</div><!-- end banner -->
+  <button class="theme-toggle" type="button" aria-label="Switch colour theme">&#9790;</button>
+  <a class="site-mark" href="https://optolution.com" title="OPTOLUTION" aria-label="OPTOLUTION website"></a>
+</nav>
 
-<div class="wrapper">
-  <nav>
-    <ul>
-      {% for item in site.navigation %}
-      <li><a href="{{ item.url }}">{{ item.title }}</a></li>
-      {% endfor %}
-      <li class="list-divider"></li>
-    </ul>
-  </nav>
-  <section style="height: auto">
-    {{ content }}
-  </section>
- 
-  <footer>
-    {% if site.github.is_project_page %}
-    <p><small>Project by <a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a></small></p>
-    {% endif %}
-    <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/mattgraham">mattgraham</a></small></p>
-  </footer>
+<div class="page no-toc" id="page">
+  <main class="card-main" id="main">
+    {%- if page.crumbs %}
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      {%- for c in page.crumbs %}<a href="{{ c.url | relative_url }}">{{ c.title }}</a><span class="sep">›</span>{% endfor %}<span>{{ page.title }}</span>
+    </nav>
+    {%- endif %}
+    <article id="doc" class="prose{% if page.steps %} steps{% endif %}">
+{{ content }}
+    </article>
+  </main>
+  <aside class="toc-rail" id="toc-rail" hidden></aside>
 </div>
+
+<footer class="site-footer">
+  <span>PIVlab is developed by William Thielicke, supported by <a href="https://optolution.com">OPTOLUTION Messtechnik GmbH</a>.</span>
+  <nav aria-label="Legal">
+    <a href="{{ '/imprint/' | relative_url }}">Legal notice</a>
+    <a href="{{ '/privacy/' | relative_url }}">Privacy policy</a>
+    <a href="{{ site.github_url }}">Source code on GitHub</a>
+  </nav>
+</footer>
+
+<script src="{{ '/assets/js/site.js' | relative_url }}" defer></script>
 </body>
-<!--</html>-->
+</html>

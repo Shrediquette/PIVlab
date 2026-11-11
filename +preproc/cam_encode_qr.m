@@ -12,6 +12,7 @@ end
 %readBarcode (zxing-cpp 1.0) misses a finder pattern when the data modules form a
 %finder-like pattern that is scanned before it (~0.15 % of codes). Then use the
 %mask with the next lowest penalty, until the code reads in all 4 orientations.
+%A mirrored code (board seen from behind) is read in the flipped image (cam_get_charuco_info_from_QRcode).
 bytes = uint8(char(data));
 [qr, mask_order] = preproc.cam_qr_matrix_v1(bytes);
 for mask = mask_order
