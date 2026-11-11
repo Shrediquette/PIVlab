@@ -1,7 +1,8 @@
 function I = cam_decorate_board(I, patternDims, markerFamily, checkerSize, markerSize, originCheckerColor, marginsize, px_per_mm, grayscale)
 % QR code (in place of the central 2 x 2 checkers), a text line with the board parameters (top
-% left) and the Optolution logo (top right) on a ChArUco board image, as on the boards that PIVlab
-% prints (Setup / define / generate marker board). Layout: preproc.cam_board_layout.
+% left), the Optolution logo (top right) and the board coordinate system (origin, x, y, z; left
+% and bottom margin) on a ChArUco board image, as on the boards that PIVlab prints (Setup /
+% define / generate marker board). Layout: preproc.cam_board_layout.
 % Also used by the synthetic image generator (simulate.board_texture), so that the simulated board
 % looks like the printed one.
 % I:          board image, double 0..1 (white = 1), from generateCharucoBoard with MarginSize = marginsize
@@ -42,6 +43,27 @@ qr_c = min(qr_c):max(qr_c);
 qr = double(preproc.cam_encode_qr(L.qr_data, numel(qr_r))); % 1 = white
 if ~isempty(qr)
     I(qr_r, qr_c) = imresize(qr, [numel(qr_r) numel(qr_c)], 'nearest');
+end
+
+%% board coordinate system (origin, axes) in the left and bottom margin (as in preproc.cam_board_pdf)
+% mm -> px relative to the checker pattern as generateCharucoBoard drew it (its edges rounded to pixels)
+ss = 4; % 4 x 4 samples per pixel (smooth edges)
+sx = (imageSize(2) - 2 * q) / (patternDims(2) * checkerSize); % [px/mm]
+sy = (imageSize(1) - q_top - q) / (patternDims(1) * checkerSize);
+px_x = @(x) q + (x - L.margin) * sx; % px, 0 = left image edge
+px_y = @(y) q_top + (y - L.margin_top) * sy; % px, 0 = top image edge
+axes_regions = regions(L.axes.shape); % arrows and z symbol; one region (with its holes) at a time
+for k = 1:numel(axes_regions)
+    polys = cell(1, numboundaries(axes_regions(k)));
+    for b = 1:numel(polys)
+        [x, y] = boundary(axes_regions(k), b);
+        polys{b} = [x, y];
+    end
+    I = fill_black(I, polys, px_x, px_y, ss);
+end
+for k = 1:numel(L.axes.labels) % labels in the board font
+    [~, polys] = preproc.cam_board_text(L.axes.labels(k).text, L.axes.font_size, L.axes.labels(k).origin);
+    I = fill_black(I, polys, px_x, px_y, ss);
 end
 
 %% logo top right, drawn from the vector logo (same size and position as in preproc.cam_board_pdf)
@@ -85,22 +107,47 @@ for k = 1:numel(logo_colours)
 end
 I(r0 + 1:r1, c0 + 1:c1, :) = box;
 
-%% text with the board parameters top left
-fntsz = round(L.font_size * px_per_mm);
-if fntsz >= 4 && q_top >= 1 % a smaller text would be unreadable anyway
-    top = 1:q_top;
-    strip = I(top, :, :); % only the top margin (fast for large images)
-    anchor = [q + (L.text_x - L.margin) * px_per_mm, q_top / 2 + (L.text_y - L.margin_top / 2) * px_per_mm] + 0.5; % ink from the left board edge
-    strip = insertText(strip, anchor, L.text, ...
-        'FontSize', min(fntsz, 200), 'FontColor', 'black', 'TextBoxColor', 'white', 'BoxOpacity', 0, 'Font', 'Arial Black', 'AnchorPoint', 'LeftCenter');
-    if size(I, 3) == 1
-        strip = rgb2gray(strip);
-    end
-    I(top, :, :) = strip;
+%% text with the board parameters top left, outlines of the board font (as in preproc.cam_board_pdf)
+if round(L.font_size * px_per_mm) >= 4 && q_top >= 1 % a smaller text would be unreadable anyway
+    [~, polys] = preproc.cam_board_text(L.text, L.font_size, [L.text_x, L.text_y]);
+    % ink from the left board edge, centred in the top margin (as the logo)
+    I = fill_black(I, polys, @(x) q + (x - L.margin) * px_per_mm, @(y) q_top / 2 + (y - L.margin_top / 2) * px_per_mm, ss);
 end
+end
+
+function I = fill_black(I, polys, px_x, px_y, ss)
+% fills closed polygons (mm, fill rule even-odd) black; px_x, px_y: mm -> px (0 = image edge);
+% coverage of every pixel from ss x ss samples (smooth edges)
+pts = vertcat(polys{:});
+if isempty(pts)
+    return
+end
+imageSize = size(I, [1 2]);
+[r0, r1, c0, c1] = px_box(px_x([min(pts(:, 1)) max(pts(:, 1))]), px_y([min(pts(:, 2)) max(pts(:, 2))]), imageSize);
+mask = false((r1 - r0) * ss, (c1 - c0) * ss);
+for k = 1:numel(polys)
+    % poly2mask: sample centres at integer coordinates
+    mask = xor(mask, poly2mask((px_x(polys{k}(:, 1)) - c0) * ss + 0.5, (px_y(polys{k}(:, 2)) - r0) * ss + 0.5, size(mask, 1), size(mask, 2)));
+end
+I(r0 + 1:r1, c0 + 1:c1, :) = I(r0 + 1:r1, c0 + 1:c1, :) .* (1 - block_mean(mask, ss));
 end
 
 function q_top = top_margin_px(L, q, px_per_mm)
 % height of the top margin [px]
 q_top = max(q, round(L.margin_top * px_per_mm));
+end
+
+function [r0, r1, c0, c1] = px_box(x, y, imageSize)
+% whole pixels around x = [left right], y = [top bottom] (px, 0 = image edge), inside the image;
+% pixel rows r0 + 1 : r1, columns c0 + 1 : c1
+c0 = max(0, floor(x(1)));
+c1 = min(imageSize(2), max(c0, ceil(x(2))));
+r0 = max(0, floor(y(1)));
+r1 = min(imageSize(1), max(r0, ceil(y(2))));
+end
+
+function cov = block_mean(mask, ss)
+% mean of ss x ss blocks of samples: ink coverage of every pixel
+cov = reshape(sum(reshape(mask, ss, []), 1), size(mask, 1) / ss, []); % sum over sample rows
+cov = reshape(sum(reshape(cov', ss, []), 1), size(cov, 2) / ss, [])' / ss^2; % and columns
 end

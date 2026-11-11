@@ -125,6 +125,8 @@ I = preproc.cam_decorate_board(G, dims, 'DICT_4X4_1000', S, M, 'black', mg, px_p
 top = size(I, 1) - size(G, 1); % added rows of the taller top margin
 changed = abs(I(top + 1:end, :) - G) > 0.01;
 changed(1:mg, :) = false; % text and logo
+changed(end - mg + 1:end, :) = false; % coordinate system (left and bottom margin)
+changed(:, [1:mg, end - mg + 1:end]) = false;
 [rr, cc] = find(changed);
 R = top + (min(rr):max(rr));
 C = min(cc):max(cc);
@@ -161,6 +163,99 @@ inside = imerode(ink, true(3)); % pixels fully inside the logo / fully outside i
 outside = ~imdilate(ink, true(3)) & logo_area;
 testCase.verifyLessThan(max(I(inside)), 0.95, 'TIFF logo missing where the PDF logo is');
 testCase.verifyEqual(min(I(outside)), 1, 'TIFF logo where the PDF has no logo');
+end
+
+function test_axes(testCase)
+% board coordinate system in the margins: the ticks are at the row / column line through the first
+% inner corner, which is the origin of patternWorldPoints (x right, y down) in the detected board;
+% the TIFF draws it where the PDF does; the board is still detected
+dims = [9 13];
+S = 10;
+M = 6;
+px_per_mm = 10;
+pdf_file = fullfile(testCase.TestData.folder, 'axes.pdf');
+preproc.cam_board_pdf(pdf_file, dims, 'DICT_4X4_1000', S, M, 'black');
+farbe = draw_layers(fileread(pdf_file), px_per_mm);
+[I, L] = tiff_board(dims, S, M, px_per_mm);
+A = L.axes;
+testCase.assertGreaterThan(A.shape.NumRegions, 0);
+testCase.verifyEqual(A.shape.NumHoles, 4, 'holes of the z symbol (ring with cross)');
+testCase.verifyEqual({A.labels.text}, {'0', 'y', '0', 'x', 'z'});
+testCase.verifyEqual(A.origin, [L.margin + S, L.margin_top + S]);
+% ink in the margins (left and bottom, below the top margin)
+margins = false(size(farbe));
+margins(round(L.margin_top * px_per_mm) + 1:end, 1:round(L.margin * px_per_mm)) = true;
+margins(end - round(L.margin * px_per_mm) + 1:end, :) = true;
+ink = farbe & margins;
+testCase.assertGreaterThan(nnz(ink), 500);
+% left tick: ink next to the checker pattern only at the row line through the origin
+next_to_board = round((L.margin - 0.3 * L.margin) * px_per_mm) + 1:round((L.margin - 0.15 * L.margin) * px_per_mm);
+rows = find(any(ink(:, next_to_board), 2));
+testCase.verifyEqual(mean(rows) - 0.5, A.origin(2) * px_per_mm, 'AbsTol', 0.6, 'y tick not at the origin row line');
+testCase.verifyLessThan(numel(rows), 0.15 * L.margin * px_per_mm, 'more than the tick next to the pattern');
+% bottom tick: at the column line through the origin
+B = round((L.margin_top + dims(1) * S) * px_per_mm);
+below_board = B + (round(0.15 * L.margin * px_per_mm) + 1:round(0.3 * L.margin * px_per_mm));
+cols = find(any(ink(below_board, :), 1));
+cols = cols(cols > L.margin * px_per_mm); % below the checker pattern (left of it: label 'z')
+testCase.verifyEqual(mean(cols) - 0.5, A.origin(1) * px_per_mm, 'AbsTol', 0.6, 'x tick not at the origin column line');
+% TIFF as PDF
+inside = imerode(ink, true(3));
+outside = ~imdilate(ink, true(3)) & margins;
+outside(1:round((L.margin_top + 0.1) * px_per_mm), :) = false; % top margin: text
+testCase.verifyLessThan(max(I(inside)), 0.95, 'TIFF axes missing where the PDF axes are');
+testCase.verifyEqual(min(I(outside)), 1, 'TIFF axes where the PDF has none');
+% origin and axis directions of the detected board
+P = detectCharucoBoardPoints(uint8(I * 255), dims, 'DICT_4X4_1000', S * px_per_mm, M * px_per_mm, 'OriginCheckerColor', 'black');
+testCase.verifyGreaterThanOrEqual(nnz(all(isfinite(P), 2)), prod(dims - 1) - 9);
+wp = patternWorldPoints("charuco-board", dims, S);
+testCase.verifyEqual(wp(1, :), [0 0]);
+testCase.verifyEqual(P(1, :), A.origin * px_per_mm + 0.5, 'AbsTol', 0.5, 'origin of the world points is not the marked origin');
+testCase.verifyEqual(sign(wp(2, :) - wp(1, :)), sign(round(P(2, :) - P(1, :))), 'y direction');
+testCase.verifyEqual(sign(wp(dims(1), :) - wp(1, :)), sign(round(P(dims(1), :) - P(1, :))), 'x direction');
+testCase.verifyEqual(sign(round(P(2, :) - P(1, :))), [0 1], 'y does not point down');
+testCase.verifyEqual(sign(round(P(dims(1), :) - P(1, :))), [1 0], 'x does not point right');
+end
+
+function test_axes_small_checkers(testCase)
+% checkers too small for the coordinate system in the margin: no axes, PDF still valid
+L = preproc.cam_board_layout([3 5], 'DICT_4X4_1000', 2.5, 1.5, 'black');
+testCase.verifyEqual(L.axes.shape.NumRegions, 0);
+pdf_file = fullfile(testCase.TestData.folder, 'small.pdf');
+preproc.cam_board_pdf(pdf_file, [3 5], 'DICT_4X4_1000', 2.5, 1.5, 'black');
+[farbe, weiss] = draw_layers(fileread(pdf_file), 20, true);
+testCase.verifyEqual(nnz(farbe & weiss), 0);
+testCase.verifyEqual(nnz(~farbe & ~weiss), 0);
+end
+
+function test_all_vector(testCase)
+% nothing rasterized: no rectangle smaller than a QR module / marker bit (the text used to be cells
+% of 0.05 mm), text and labels as curves of the board font
+dims = [9 13];
+pdf_file = fullfile(testCase.TestData.folder, 'vector.pdf');
+preproc.cam_board_pdf(pdf_file, dims, 'DICT_4X4_1000', 10, 6, 'black');
+stream = pdf_stream(fileread(pdf_file));
+rects = regexp(stream, '([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+) re', 'tokens');
+wh = cellfun(@(t) str2double(t(3:4)), rects, 'UniformOutput', false);
+wh = vertcat(wh{:}) * 25.4 / 72; % [mm]
+testCase.verifyGreaterThan(min(wh(:)), min(6 / 6, 2 * 10 / 27) - 1e-3, 'rectangle smaller than a marker bit or QR module');
+testCase.verifyGreaterThan(numel(strfind(stream, ' c')), 100, 'no curves (text outlines)');
+% the text of the header in the PDF: the outlines of preproc.cam_board_text
+L = preproc.cam_board_layout(dims, 'DICT_4X4_1000', 10, 6, 'black');
+[~, ~, ink] = preproc.cam_board_text(L.text, L.font_size, [L.text_x, L.text_y]);
+testCase.verifyEqual(ink(1), L.margin, 'AbsTol', 1e-9, 'text does not start at the checker pattern');
+testCase.verifyEqual((ink(3) + ink(4)) / 2, L.margin_top / 2, 'AbsTol', 1e-9, 'text not centred in the top margin');
+end
+
+function test_board_font(testCase)
+% printable ASCII in the board font, licence next to the glyph file
+F = preproc.cam_board_font();
+testCase.verifyFalse(any(isnan(F.advance)), 'characters missing in the board font');
+testCase.verifyEmpty(F.contours{1}, 'space has no outline');
+testCase.verifyNumElements(F.contours{double('0') - 31}, 2, '''0'' has an outer and an inner contour');
+fonts = fullfile(helper_root(), 'images', 'fonts');
+testCase.verifyTrue(isfile(fullfile(fonts, 'OFL.txt')), 'licence of the board font missing');
+testCase.verifyError(@() preproc.cam_board_text(char(228), 1, [0 0]), 'preproc:cam_board_text');
 end
 
 function test_inkscape_detection(testCase)
@@ -317,6 +412,11 @@ for f = 1:numel(fills)
             poly = v(1:2)';
         elseif endsWith(line, ' l')
             poly(end + 1, :) = v(1:2)'; %#ok<AGROW>
+        elseif endsWith(line, ' c')
+            % cubic curve from the current point, in 16 straight pieces
+            t = (1:16)' / 16;
+            p0 = poly(end, :);
+            poly = [poly; (1 - t).^3 * p0 + 3 * (1 - t).^2 .* t * v(1:2)' + 3 * (1 - t) .* t.^2 * v(3:4)' + t.^3 * v(5:6)']; %#ok<AGROW>
         elseif strcmp(line, 'h')
             x = poly(:, 1) / pg.k * pg.px + 0.5; % poly2mask: pixel centres at integer coordinates
             y = (pg.H - poly(:, 2) / pg.k) * pg.px + 0.5;

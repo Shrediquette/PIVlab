@@ -1,15 +1,16 @@
 function cam_board_pdf(filename, patternDims, markerFamily, checkerSize, markerSize, originCheckerColor)
 % Writes a ChArUco board as a print-ready vector PDF. Same layout as the TIFF from
 % Setup / define / generate marker board (preproc.cam_board_layout): thin margin, QR code in
-% place of the central 2 x 2 checkers, text top left, logo top right. All edges are at
-% their exact positions in mm.
+% place of the central 2 x 2 checkers, text top left, logo top right, board coordinate system
+% (origin, x, y, z) in the left and bottom margin. All edges are at their exact positions in mm.
 % patternDims: [rows columns]; checkerSize, markerSize in mm.
 % Also for printing on transparent material (readable from both sides): layer "Farbe" (black =
 % 100 % K, logo colours in CMYK) and top layer "weiss" (spot colour "weiss", overprint), no
 % background. Every point of the board is covered by exactly one colour (no overlap, no gap).
 % Page = board + 5 mm on every side (bleed; no TrimBox / BleedBox, the page size is the document
 % size the print shop expects); the white margin fills the bleed.
-% The text is a black outline (pixels of 0.05 mm or smaller).
+% Everything is vector: rectangles (checkers, marker bits, QR modules), polygons (logo, arrows) and
+% the outlines of the text (board font Archivo Black, lines and curves: preproc.cam_board_text).
 % The marker bits are read from generateCharucoBoard (rendered with enough pixels per bit),
 % so marker IDs, order and orientation are the same as in the TIFF board.
 rows = patternDims(1);
@@ -66,16 +67,15 @@ end
 in_qr = false(rows, cols); % checkers replaced by the QR code
 in_qr(layout.qr_rows, layout.qr_cols) = true;
 
-%% text with the board parameters at the top, as black outline
-font_mm = layout.font_size;
-has_text = font_mm * 300 / 25.4 >= 4; % as in the TIFF (300 dpi): a smaller text would be unreadable
+%% text with the board parameters at the top and labels of the axes: outlines of the board font
+% (lines and curves, preproc.cam_board_text)
 txt = layout.text;
-if has_text
-    text_res = min(20, 200 / font_mm); % [px/mm]; insertText allows max. 200 px font size
-    strip = ones(ceil(top * text_res), ceil(W * text_res), 3);
-    strip = insertText(strip, [layout.text_x * text_res, layout.text_y * text_res], txt, ...
-        'FontSize', round(font_mm * text_res), 'FontColor', 'black', 'TextBoxColor', 'white', 'BoxOpacity', 0, 'Font', 'Arial Black', 'AnchorPoint', 'LeftCenter');
-    text_mask = rgb2gray(strip) < 0.5;
+text_contours = {};
+if round(layout.font_size * 300 / 25.4) >= 4 % as in the TIFF (300 dpi): a smaller text would be unreadable
+    text_contours = preproc.cam_board_text(txt, layout.font_size, [layout.text_x, layout.text_y]);
+end
+for k = 1:numel(layout.axes.labels)
+    text_contours = [text_contours, preproc.cam_board_text(layout.axes.labels(k).text, layout.axes.font_size, layout.axes.labels(k).origin)]; %#ok<AGROW>
 end
 
 %% logo top right (polygons, one path per colour, and the outline of the whole logo)
@@ -87,6 +87,10 @@ logo_outline = regexp(logo_txt, '<path id="outline"[^>]* d="([^"]*)"', 'tokens',
 logo_scale = layout.logo_height / logo_box(4);
 logo_x = layout.logo_x;
 logo_y = layout.logo_y;
+
+%% board coordinate system in the left and bottom margin: arrows and z symbol (polyshape, as in the
+% TIFF, preproc.cam_decorate_board)
+axes_shape = layout.axes.shape;
 
 %% file: header
 fid = fopen(filename, 'w');
@@ -118,9 +122,8 @@ end
 if has_qr
     write_cells(fid, pg, qr_0, layout.qr_x, layout.qr_y, module);
 end
-if has_text
-    write_cells(fid, pg, text_mask, 0, 0, 1 / text_res);
-end
+write_contours(fid, pg, text_contours);
+write_shape(fid, pg, axes_shape);
 fprintf(fid, 'f*\n');
 for k = 1:numel(logo_colours)
     cmyk = rgb_to_cmyk(logo_colours{k}{1});
@@ -149,9 +152,8 @@ if has_qr
 end
 write_rect(fid, pg, -pg.b, -pg.b, W + 2 * pg.b, H + 2 * pg.b); % the white margin reaches into the bleed
 write_rect(fid, pg, margin, top, cols * S, rows * S);
-if has_text
-    write_cells(fid, pg, text_mask, 0, 0, 1 / text_res);
-end
+write_contours(fid, pg, text_contours);
+write_shape(fid, pg, axes_shape);
 write_polygons(fid, pg, logo_outline{1}, logo_x, logo_y, logo_scale);
 fprintf(fid, 'f*\nEMC\n');
 stream_length = ftell(fid) - stream_start;
@@ -224,6 +226,45 @@ for k = 1:numel(letters)
         end
         fprintf(fid, '%s %s %s\n', num((pg.b + x0 + scale * v(1)) * pg.k), num((pg.b + pg.H - y0 - scale * v(2)) * pg.k), op);
     end
+end
+end
+
+function write_contours(fid, pg, contours)
+% outlines of preproc.cam_board_text (mm on the board, y down; rows [type x1 y1 x2 y2]: 0 start,
+% 1 line, 2 quadratic curve with control point x1 y1) as closed subpaths; a quadratic curve is
+% written exactly as cubic curve (control points 2/3 of the way to the quadratic control point)
+P = @(x, y) [num((pg.b + x) * pg.k) ' ' num((pg.b + pg.H - y) * pg.k)];
+for k = 1:numel(contours)
+    C = contours{k};
+    fprintf(fid, '%s m\n', P(C(1, 4), C(1, 5)));
+    for r = 2:size(C, 1)
+        if C(r, 1) == 1
+            fprintf(fid, '%s l\n', P(C(r, 4), C(r, 5)));
+        else
+            p0 = C(r - 1, 4:5);
+            c1 = p0 + 2 / 3 * (C(r, 2:3) - p0);
+            c2 = C(r, 4:5) + 2 / 3 * (C(r, 2:3) - C(r, 4:5));
+            fprintf(fid, '%s %s %s c\n', P(c1(1), c1(2)), P(c2(1), c2(2)), P(C(r, 4), C(r, 5)));
+        end
+    end
+    fprintf(fid, 'h\n');
+end
+end
+
+function write_shape(fid, pg, shape)
+% polyshape (mm on the board, y down) as closed subpaths, one per boundary (outlines and holes:
+% fill rule even-odd); its regions do not overlap each other nor anything else on the board
+for k = 1:numboundaries(shape)
+    [x, y] = boundary(shape, k);
+    if x(end) == x(1) && y(end) == y(1)
+        x(end) = []; % closed by h
+        y(end) = [];
+    end
+    fprintf(fid, '%s %s m\n', num((pg.b + x(1)) * pg.k), num((pg.b + pg.H - y(1)) * pg.k));
+    for i = 2:numel(x)
+        fprintf(fid, '%s %s l\n', num((pg.b + x(i)) * pg.k), num((pg.b + pg.H - y(i)) * pg.k));
+    end
+    fprintf(fid, 'h\n');
 end
 end
 
