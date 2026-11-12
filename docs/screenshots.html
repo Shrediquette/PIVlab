@@ -1,7 +1,7 @@
 ---
 title: Screenshots
 description: Screenshots of PIVlab - image import, masking, pre-processing, calibration, PIV settings, validation, derived parameters, plot appearance, extraction and export.
-keywords: screenshot gui images stereo-piv simulator synthetic particle image generator correlation demo
+keywords: screenshot gui images stereo-piv simulator synthetic particle image generator correlation demo image acquisition camera live image calibration board
 ---
 <h1>Screenshots</h1>
 <p>Some of PIVlab's features. Click an image to see it in full size.</p>
@@ -14,6 +14,14 @@ keywords: screenshot gui images stereo-piv simulator synthetic particle image ge
   <figure>
     <a href="{{ '/assets/images/stereo/stereo-simulator.jpg' | relative_url }}"><img src="{{ '/assets/images/stereo/stereo-simulator.jpg' | relative_url }}" alt="PIVlab screenshot: 3D flow and stereo-PIV simulator" loading="lazy"></a>
     <figcaption>3D flow and stereo-PIV simulator (from PIVlab 4.0)</figcaption>
+  </figure>
+  <figure>
+    <a href="{{ '/manual/assets/img/capture/stereo-live.png' | relative_url }}"><img src="{{ '/manual/assets/img/capture/stereo-live.png' | relative_url }}" alt="PIVlab screenshot: live image of two cameras with the detected calibration board markers" loading="lazy"></a>
+    <figcaption>Stereo acquisition: live image of both cameras with the detected calibration board (from PIVlab 4.0)</figcaption>
+  </figure>
+  <figure>
+    <a href="{{ '/manual/assets/img/capture/panel.png' | relative_url }}"><img src="{{ '/manual/assets/img/capture/panel.png' | relative_url }}" alt="PIVlab screenshot: image acquisition panel with synchronizer, laser and camera control" loading="lazy"></a>
+    <figcaption>Image acquisition: laser, synchronizer and camera control</figcaption>
   </figure>
 {%- for s in shots %}
   {%- assign parts = s | split: ":" %}

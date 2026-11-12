@@ -283,9 +283,12 @@
       });
       downloads.appendChild(h("span", { class: "downloads-label" }, "Download"));
       (nav.downloads || []).forEach(function (d) {
-        if (d.header) downloads.appendChild(h("a", { class: "dl-btn", href: d.url, title: d.text }, d.button));
+        // same download icon as in the website header (_layouts/default.html)
+        if (d.header) downloads.appendChild(h("a", { class: "dl-btn", href: d.url, title: d.text },
+          '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M7 1h2v7.6l2.3-2.3 1.4 1.4L8 12.4 3.3 7.7l1.4-1.4L7 8.6zM2 13h12v2H2z"/></svg>' + d.button));
       });
       downloads.appendChild(h("a", { class: "dl-btn gh", href: nav.github }, "View on GitHub"));
+      loadScript(SITE_ROOT + "assets/js/beta.js", function () {}); // adds a "Beta x.y" button while a beta exists
     });
 
     // Layout skeleton
@@ -301,7 +304,7 @@
     if (pager) main.appendChild(pager);
     main.appendChild(h("footer", { class: "site-footer" },
       'PIVlab manual · <a href="https://www.pivlab.de" target="_blank" rel="noopener">PIVlab.de</a> · ' +
-      'supported by <a href="https://optolution.com" target="_blank" rel="noopener">OPTOLUTION</a> · ' +
+      'PIVlab is developed by William Thielicke at <a href="https://optolution.com" target="_blank" rel="noopener">OPTOLUTION Messtechnik GmbH</a> · ' +
       '<a href="https://www.pivlab.de/imprint/">Legal notice</a> · <a href="https://www.pivlab.de/privacy/">Privacy policy</a>'));
 
     layout.appendChild(sidebar);
@@ -317,6 +320,12 @@
     document.addEventListener("click", function (e) {
       if (window.innerWidth <= 900 && sidebar.classList.contains("open") &&
           !sidebar.contains(e.target) && e.target !== burger) sidebar.classList.remove("open");
+    });
+    // reference tables with two columns are shown as label/explanation blocks on phones (style.css)
+    article.querySelectorAll("table.ref").forEach(function (t) {
+      var maxCols = 0;
+      t.querySelectorAll("tr").forEach(function (r) { maxCols = Math.max(maxCols, r.children.length); });
+      if (maxCols <= 2) t.classList.add("two-col");
     });
     initScrollSpy(toc);
     initSearch(searchInput, searchPanel);

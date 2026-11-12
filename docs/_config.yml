@@ -92,10 +92,5 @@ downloads:
     text: "Runs in the web browser. No hardware control, free MathWorks account needed."
     url: "https://matlab.mathworks.com/open/fileexchange/v1?id=27659"
     get: true
-  - button: "Nightly build"
-    title: "Nightly build"
-    text: "Latest source code from GitHub."
-    url: "https://github.com/Shrediquette/PIVlab/archive/refs/heads/main.zip"
-    header: true
 
 github_url: "https://github.com/Shrediquette/PIVlab"

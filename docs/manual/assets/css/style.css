@@ -90,7 +90,11 @@ a:hover { text-decoration: underline; }
   box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 1px 1px rgba(0,0,0,.15);
 }
 .dl-btn:hover { background: #fff1b8; text-decoration: none; }
+.dl-btn { display: inline-flex; align-items: center; gap: 6px; }
+.dl-btn svg { width: 14px; height: 14px; fill: currentColor; flex: none; }
 .dl-btn.gh { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.35); color: #f3f3f3; }
+.dl-btn.beta { background: #a6e39a; border-color: #4fae4a; }
+.dl-btn.beta:hover { background: #c4efba; }
 /* Website menu in the lime bar (same items as on the website) */
 .site-menu { display: flex; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; gap: 2px; }
 .site-menu a { display: block; padding: 6px 10px; border-radius: 5px; color: #1d2410; font-size: 14.5px; font-weight: 600; white-space: nowrap; }
@@ -212,7 +216,14 @@ kbd {
 code {
   font-family: var(--mono); font-size: .88em; background: var(--code-bg);
   padding: 2px 6px; border-radius: 5px;
+  overflow-wrap: anywhere; /* long inline code may break, instead of widening the page on phones */
 }
+/* code blocks scroll inside their own box */
+pre {
+  background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 16px; margin: 1.2em 0; overflow-x: auto; max-width: 100%;
+}
+pre code { background: none; padding: 0; overflow-wrap: normal; }
 
 /* Figures */
 figure { margin: 1.6em 0; }
@@ -281,7 +292,21 @@ ol.steps > li::before {
 table.ref { border-collapse: collapse; width: 100%; margin: 1.4em 0; font-size: .95em; }
 table.ref th, table.ref td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
 table.ref th { color: var(--text-soft); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
-table.ref td:first-child { white-space: nowrap; font-weight: 600; }
+/* first column: short labels stay on one line, long ones wrap (no nowrap: long first cells pushed the
+   table beyond the screen on phones) */
+table.ref td:first-child { font-weight: 600; min-width: 7em; max-width: 40%; }
+/* phones */
+@media (max-width: 600px) {
+  /* two-column tables: one block per row, label above its explanation */
+  table.ref.two-col, table.ref.two-col tbody, table.ref.two-col tr, table.ref.two-col td,
+  table.ref.two-col td:first-child { display: block; width: auto; max-width: none; min-width: 0; }
+  table.ref.two-col thead, table.ref.two-col tr:has(> th) { display: none; }
+  table.ref.two-col tr { border-bottom: 1px solid var(--border); padding: 8px 0; }
+  table.ref.two-col td { border-bottom: none; padding: 2px 0; }
+  /* wider tables keep their columns and scroll inside their own box if needed */
+  table.ref:not(.two-col) { display: block; overflow-x: auto; }
+  table.ref:not(.two-col) td:first-child { min-width: 6em; }
+}
 
 /* --------------------------------------------------------------------- TOC */
 .toc-rail {
