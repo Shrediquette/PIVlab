@@ -13,6 +13,9 @@
   <title>{{ full_title }}</title>
   <meta name="description" content="{{ desc | strip_html | normalize_whitespace | xml_escape }}">
   <link rel="canonical" href="{{ canonical }}">
+  {%- if page.noindex %}
+  <meta name="robots" content="noindex">
+  {%- endif %}
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="PIVlab">
   <meta property="og:title" content="{{ full_title | xml_escape }}">
