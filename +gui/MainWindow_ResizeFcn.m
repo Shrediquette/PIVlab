@@ -25,28 +25,33 @@ end
 if ~isempty(gui.retr('second_monitor_axis'))
 	colorbarpos = 1;
 end
-
-if colorbarpos==1
-	width_reduct=0;x_shift=0;
-	height_reduct=0;y_shift=0;
-else
+posichoice = {'None'};
+if colorbarpos~=1
 	posichoice = get(handles.colorbarpos,'String');
-	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'EastOutside')
-		width_reduct=30;x_shift=0;
-		height_reduct=0;y_shift=0;
-	end
-	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'WestOutside')
-		width_reduct=30;x_shift=30;
-		height_reduct=0;y_shift=0;
-	end
-	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'NorthOutside')
-		width_reduct=12;x_shift=6;
-		height_reduct=5;y_shift=0;
-	end
-	if strcmp(posichoice{get(handles.colorbarpos,'Value')},'SouthOutside')
-		width_reduct=12;x_shift=6;
-		height_reduct=5;y_shift=6;
-	end
+	posichoice = posichoice(colorbarpos);
+elseif isequal(gui.retr('stereo_colorbar_room'), true) % set by stereo.draw_disparity
+	% Stereo-PIV panel: a colour map of stereo.draw_disparity has its colour bar right of the image
+	% also when the plot settings have none
+	posichoice = {'EastOutside'};
+end
+
+width_reduct=0;x_shift=0;
+height_reduct=0;y_shift=0;
+if strcmp(posichoice{1},'EastOutside')
+	width_reduct=30;x_shift=0;
+	height_reduct=0;y_shift=0;
+end
+if strcmp(posichoice{1},'WestOutside')
+	width_reduct=30;x_shift=30;
+	height_reduct=0;y_shift=0;
+end
+if strcmp(posichoice{1},'NorthOutside')
+	width_reduct=12;x_shift=6;
+	height_reduct=5;y_shift=0;
+end
+if strcmp(posichoice{1},'SouthOutside')
+	width_reduct=12;x_shift=6;
+	height_reduct=5;y_shift=6;
 end
 % When second monitor is active, resize the main-window axis (original),
 % not the redirected second-monitor axis.

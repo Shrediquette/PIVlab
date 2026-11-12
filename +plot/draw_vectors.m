@@ -138,19 +138,7 @@ function update_magnitude_colorbar(target_axis, o, cmap, clims)
 %   Magnitude coloring is only used when no derived scalar is displayed, so nothing else is
 %   using the axes colormap here: the particle image and the mask are both drawn as truecolor
 %   RGB and ignore it. That makes it safe to point the axes colormap and CLim at the vector
-%   scale and let a normal colorbar read it.
-parentfig = ancestor(target_axis,'figure');
-delete(findobj(parentfig,'Tag','magnitude_colorbar'));
-if strcmpi(o.colorbar_position,'None')
-    return
-end
-
-colormap(target_axis, cmap);
-set(target_axis,'CLim',clims); % property assignment, not clim(): works on old releases too
-
-position = o.colorbar_position;
-coloobj = colorbar(position,'Fontsize',12,'HitTest','off','parent',parentfig,'Tag','magnitude_colorbar');
-
+%   scale and let a normal colorbar read it (plot.scale_colorbar).
 if (o.calu==1 || o.calu==-1) && o.calxy==1 % not calibrated
     label = 'Velocity magnitude in px/frame';
 else
@@ -160,22 +148,5 @@ else
         label = 'Velocity magnitude in m/s';
     end
 end
-if strcmp(position,'EastOutside') || strcmp(position,'WestOutside')
-    ylabel(coloobj,label,'fontsize',12,'fontweight','bold');
-else
-    xlabel(coloobj,label,'fontsize',12,'fontweight','bold');
-end
-
-% Match the tick formatting of the scalar colorbar.
-switch o.colorbar_format
-    case 2
-        fmt = '%0.3e';
-    case 3
-        fmt = '%0.3f';
-    otherwise
-        fmt = '%0.3g';
-end
-ticks = linspace(clims(1), clims(2), min(size(cmap,1),8)+1);
-coloobj.Ticks      = ticks;
-coloobj.TickLabels = num2str(ticks(:), fmt);
+plot.scale_colorbar(target_axis, cmap, clims, label, o.colorbar_position, o.colorbar_format, 'magnitude_colorbar');
 end

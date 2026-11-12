@@ -1,6 +1,11 @@
-function currentimage = draw_pixel_background_overlay(target_axis,displaywhat, selected, handles, currentframe)
+function currentimage = draw_pixel_background_overlay(target_axis,displaywhat, selected, handles, currentframe, image_only)
 %Collects the display settings of the GUI and draws particle image, derived map and mask.
 %The drawing itself (plot.draw_background) is shared with the command-line API (pivlab.display).
+%image_only (optional, default false): only the particle image and the mask, no derived map and no hint
+%(e.g. under the disparity displays of the Stereo-PIV panel).
+if nargin < 6
+	image_only = false;
+end
 derivative_alpha=str2double(get(handles.colormapopacity ,'string'))/100;
 if isnan(derivative_alpha) || derivative_alpha>1 || derivative_alpha <0 %opacity field in percent (0...100)
 	derivative_alpha=0.75;
@@ -9,7 +14,7 @@ end
 [currentimage,~]=import.get_img(selected);
 
 derived=gui.retr('derived');
-map_available = ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1 && size(derived,1)>=displaywhat-1 && numel(derived{displaywhat-1,(currentframe+1)/2})>0; %derived parameters requested and existant
+map_available = ~image_only && ~isempty(derived) && size(derived,2)>=(currentframe+1)/2 && displaywhat > 1 && size(derived,1)>=displaywhat-1 && numel(derived{displaywhat-1,(currentframe+1)/2})>0; %derived parameters requested and existant
 
 %% options from the GUI controls
 o.alpha = derivative_alpha;
@@ -29,7 +34,7 @@ posichoice = get(handles.colorbarpos,'String');
 o.colorbar_position = posichoice{get(handles.colorbarpos,'Value')};
 o.colorbar_format = get(handles.colorbarnumberformat,'Value');
 o.colorbar_label = '';
-if ~map_available && get(handles.derivchoice,'Value')>1
+if ~image_only && ~map_available && get(handles.derivchoice,'Value')>1
 	o.after_image = @(ax) text(ax,15,15,'This parameter needs to be calculated for this frame first. Go to Plot -> Spatial: Derive Parameters and click "Apply to all frames".','color','r','fontsize',9, 'BackgroundColor', 'k', 'tag', 'derivhint');
 end
 

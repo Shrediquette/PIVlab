@@ -456,7 +456,7 @@ window.MANUAL_SEARCH = [
     title: "Stereo-PIV (2D3C)",
     href: "pages/stereo-piv.html", hash: "top",
     section: "Analysis",
-    text: "stereo piv two cameras 2d3c three components w out-of-plane import stereo images camera switch stereo calibration disparity correction light sheet overlay scheimpflug tilted sensor check analysis rectified board stereo-piv panel checklist work in progress export w column vtk tecplot ascii mat w component 3d magnitude mean tke camera arrangement opposite sides forward scatter backward scatter mie particle brightness scattering angle water prism transparent board mirrored above each other"
+    text: "stereo piv two cameras 2d3c three components w out-of-plane import stereo images camera switch stereo calibration disparity correction remaining disparity reconstruction residual colour bar light sheet scheimpflug tilted sensor check analysis rectified board stereo-piv panel checklist export w column vtk tecplot ascii mat w component 3d magnitude mean tke camera arrangement opposite sides forward scatter backward scatter mie particle brightness scattering angle water prism transparent board mirrored above each other"
   },
   {
     title: "Phase averaging and frame selection for temporal derivation",

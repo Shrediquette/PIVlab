@@ -58,10 +58,10 @@ lines{end + 1} = sprintf('Common image: %d x %d px, %.4f mm/px', info.grid(2), i
 lines{end + 1} = sprintf('Overlap of the views: %.0f %%', info.overlap);
 lines{end + 1} = sprintf('Board corners: %d / %d (rejected %d / %d)', info.n_corners(1), info.n_corners(2), info.n_rejected(1), info.n_rejected(2));
 if isfinite(info.w_error_ratio)
-    lines{end + 1} = sprintf('Random error of W: about %.1f x that of U and V', info.w_error_ratio);
+    lines{end + 1} = sprintf('Random error of w: about %.1f x that of u and v', info.w_error_ratio);
 end
-lines{end + 1} = sprintf('W is positive %s', stereo.w_direction(calib));
+lines{end + 1} = sprintf('w is positive %s (Z axis)', stereo.w_direction(calib));
 if info.stereo_angle < 20
-    lines{end + 1} = 'Warning: small angle between the cameras, W will be inaccurate.';
+    lines{end + 1} = 'Warning: small angle between the cameras, w will be inaccurate.';
 end
 end

@@ -11,7 +11,10 @@ function remaining = disparity_remaining(measured, model_u, model_v, used)
 %   remaining.rms              rms over the used points without the noise of the measurement [px]: the noise is
 %                              estimated from the difference of two halves of the image pairs
 %   remaining.noise            rms of that noise [px]
-%   remaining.p95              95th percentile of the magnitude ("up to") [px]
+%   remaining.p95              95th percentile of the magnitude ("up to") without the noise [px]: the 95th
+%                              percentile of the noise magnitude is removed in quadrature, as the noise rms
+%                              from the rms (pure noise gives about 0, not 1.7 x the noise)
+%   remaining.p95_measured     95th percentile of the magnitude as measured, with the noise (scale of the map)
 u = measured.u - model_u;
 v = measured.v - model_v;
 ok = used & isfinite(u) & isfinite(v);
@@ -22,13 +25,17 @@ remaining.v = v;
 magnitude = sqrt(u(ok) .^ 2 + v(ok) .^ 2);
 total = sqrt(mean(magnitude .^ 2));
 remaining.noise = NaN;
+noise_p95 = NaN;
 n = size(measured.u_frames, 3);
 if n >= 2
+    % half the difference of the means of two halves: the same noise as the mean of all, without the signal
     du = (mean(measured.u_frames(:, :, 1:2:n), 3, 'omitnan') - mean(measured.u_frames(:, :, 2:2:n), 3, 'omitnan')) / 2;
     dv = (mean(measured.v_frames(:, :, 1:2:n), 3, 'omitnan') - mean(measured.v_frames(:, :, 2:2:n), 3, 'omitnan')) / 2;
     both = ok & isfinite(du) & isfinite(dv);
     if any(both(:))
-        remaining.noise = sqrt(mean(du(both) .^ 2 + dv(both) .^ 2));
+        noise_magnitude = sqrt(du(both) .^ 2 + dv(both) .^ 2);
+        remaining.noise = sqrt(mean(noise_magnitude .^ 2));
+        noise_p95 = prctile(noise_magnitude, 95);
     end
 end
 if isnan(remaining.noise)
@@ -36,8 +43,13 @@ if isnan(remaining.noise)
 else
     remaining.rms = sqrt(max(0, total ^ 2 - remaining.noise ^ 2));
 end
-remaining.p95 = NaN;
+remaining.p95_measured = NaN;
 if ~isempty(magnitude)
-    remaining.p95 = prctile(magnitude, 95);
+    remaining.p95_measured = prctile(magnitude, 95);
+end
+if isnan(noise_p95)
+    remaining.p95 = remaining.p95_measured;
+else
+    remaining.p95 = sqrt(max(0, remaining.p95_measured ^ 2 - noise_p95 ^ 2));
 end
 end

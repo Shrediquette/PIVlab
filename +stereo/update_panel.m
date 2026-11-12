@@ -1,8 +1,10 @@
 function update_panel(handles)
-%UPDATE_PANEL Checklist and disparity report of the Stereo-PIV panel (the calibration report is in "Show 3D setup").
+%UPDATE_PANEL Checklist, disparity report and displays of the popup "Show:" of the Stereo-PIV panel (the
+%calibration report is in "Show 3D setup").
 if nargin < 1
     handles = gui.gethand;
 end
+stereo.disparity_display_popup(handles, 'update'); % only the displays that have data
 if ~isequal(gui.retr('stereomode'), 1)
     set(handles.stereo_steps, 'String', 'Load the images of both cameras first (Input data panel: "Import stereo images").');
     set(handles.stereo_disp_report, 'String', 'Not measured yet.');

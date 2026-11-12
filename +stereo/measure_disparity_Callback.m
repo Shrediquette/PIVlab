@@ -66,10 +66,10 @@ if isempty(roirect) || (isfield(calib, 'auto_roi') && isequal(roirect, calib.aut
     roi.updateROIinfo
 end
 gui.toolsavailable(1)
-if strcmp(get(handles.multip30, 'Visible'), 'on')
-    set(handles.stereo_disp_show, 'Value', 3); % show the fitted disparity map
-end
 stereo.update_panel(handles)
+if strcmp(get(handles.multip30, 'Visible'), 'on')
+    stereo.disparity_display_popup(handles, 'fitted'); % show the fitted disparity map
+end
 stereo.show_active_camera
 masks = ~isempty(gui.retr('masks_in_frame')) || (isfield(state{3 - gui.retr('stereo_active_camera')}, 'masks_in_frame') ...
     && ~isempty(state{3 - gui.retr('stereo_active_camera')}.masks_in_frame));

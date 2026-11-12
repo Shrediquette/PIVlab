@@ -47,8 +47,15 @@ if capturing==0
         end
         xzoomlimit=gui.retr('xzoomlimit');
         yzoomlimit=gui.retr('yzoomlimit');
+        % Stereo-PIV panel: a disparity display is drawn on the particle image only (no derived map, no vectors)
+        stereo_mode = isequal(gui.retr('stereomode'), 1);
+        disparity_key = 'image';
+        if stereo_mode && target_axis==gui.retr('pivlab_axis') && strcmp(get(handles.multip30, 'Visible'), 'on')
+            disparity_key = stereo.disparity_display_popup(handles);
+        end
+        disparity_display = ~strcmp(disparity_key, 'image');
         %profile on
-        currentimage = plot.draw_pixel_background_overlay(target_axis,displaywhat, selected, handles, currentframe);
+        currentimage = plot.draw_pixel_background_overlay(target_axis,displaywhat, selected, handles, currentframe, disparity_display);
         %profile viewer
         axis (target_axis,'image');
         set(target_axis,'ytick',[])
@@ -77,8 +84,10 @@ if capturing==0
         end
 
         resultslist=gui.retr('resultslist');
-        plot.display_manual_markers(target_axis,handles);
-        if size(resultslist,2)>=(currentframe+1)/2 && numel(resultslist{1,(currentframe+1)/2})>0
+        if ~disparity_display
+            plot.display_manual_markers(target_axis,handles);
+        end
+        if ~disparity_display && size(resultslist,2)>=(currentframe+1)/2 && numel(resultslist{1,(currentframe+1)/2})>0
             [x, y, u, v, typevector, w] = plot.get_desired_u_and_v(resultslist, currentframe); %w: stereo-PIV, [] in 2D
             [u, v] = plot.get_highpassed_vectors(handles, u, v);
             [vecskip, vecscale] = plot.scale_vector_display(handles, x, y, u, v);
@@ -112,11 +121,15 @@ if capturing==0
             plot.manually_discarded_vectors(target_axis,handles, x, y);
         end
         mask.redraw_masks
-        if isequal(gui.retr('stereomode'), 1) && target_axis==gui.retr('pivlab_axis')
-            if strcmp(get(handles.multip30, 'Visible'), 'on') % Stereo-PIV panel: disparity displays
-                stereo.draw_disparity(target_axis, get(handles.stereo_disp_show, 'Value'))
+        if target_axis==gui.retr('pivlab_axis')
+            if stereo_mode && strcmp(get(handles.multip30, 'Visible'), 'on') % Stereo-PIV panel: disparity displays
+                stereo.draw_disparity(target_axis, disparity_key)
+            elseif isequal(gui.retr('stereo_colorbar_room'), true)
+                stereo.draw_disparity(target_axis, 'image') % panel closed: no more room for the colour bar of a display
             end
-            stereo.draw_camera_label(target_axis) % stereo-PIV: which camera is shown
+            if stereo_mode
+                stereo.draw_camera_label(target_axis) % stereo-PIV: which camera is shown
+            end
         end
         if isempty(xzoomlimit)==0
             set(target_axis,'xlim',xzoomlimit)

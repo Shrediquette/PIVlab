@@ -345,6 +345,12 @@ verifyEqual(testCase, remaining.rms, expected_rms, 'RelTol', 0.05, 'rms of the s
 verifyEqual(testCase, remaining.noise, sigma * sqrt(2) / sqrt(n), 'RelTol', 0.1, 'noise of the mean');
 verifyGreaterThan(testCase, remaining.p95, 4.5, 'up to: the stripe');
 verifyTrue(testCase, all(isnan(remaining.u(1, :))), 'unused points are NaN');
+% only noise: "up to" without the noise is about 0 (as measured it is about 1.7 x the noise)
+measured.u_frames = sigma * randn([size(x) n]);
+measured.u = mean(measured.u_frames, 3);
+remaining = stereo.disparity_remaining(measured, model_u, model_v, used);
+verifyGreaterThan(testCase, remaining.p95_measured, 1.4 * remaining.noise, 'measured: the noise');
+verifyLessThan(testCase, remaining.p95, 0.8 * remaining.noise, 'up to: noise not removed'); % 200 seeds: at most 0.72
 end
 
 function test_square_grid_covers_overlap(testCase)
