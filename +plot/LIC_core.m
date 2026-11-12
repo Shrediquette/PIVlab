@@ -28,13 +28,17 @@ kernel = ones(2 * LIClength);
 % Making white noise
 noiseImage=rand(width,height);
 % Making LIC Image
-if ~endsWith(which('plot.fastLICFunction'), mexext) % MEX file not compiled yet: compile it first
-    plot.fastLICFunction();
-    % MATLAB does not always notice the new MEX file (rehash is not enough when the PIVlab folder
-    % is not the current folder); reading the PIVlab folder into the search path again does
-    pivlab_folder = fileparts(fileparts(mfilename('fullpath')));
-    rmpath(pivlab_folder);
-    addpath(pivlab_folder);
+plot_folder = fileparts(mfilename('fullpath'));
+if ~isfile(fullfile(plot_folder, ['fastLICFunction.' mexext])) % MEX file not compiled yet: compile it first
+    disp('Compiling the LIC MEX file (only once)...');
+    try
+        mex('-outdir', plot_folder, fullfile(plot_folder, 'fastLICFunction.c'));
+    catch err
+        error('Could not compile the LIC MEX file %s (%s).', fullfile(plot_folder, 'fastLICFunction.c'), err.message);
+    end
+    % No .m file named fastLICFunction exists, so rehash finds the new MEX file. Never rmpath / addpath
+    % the PIVlab folder here: that unloads the running PIVlab code and classes (MATLAB crashed).
+    rehash path
 end
 for m = 1:iterations
     [LICImage, ~,~,~] = plot.fastLICFunction(double(vx),double(vy),noiseImage,kernel); % External Fast LIC implemennted in C language

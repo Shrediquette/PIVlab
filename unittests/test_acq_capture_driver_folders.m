@@ -52,18 +52,19 @@ testCase.verifyEmpty(dup, ['duplicate .m names: ' strjoin(dup, ', ')]);
 end
 
 function test_functions_are_found_on_the_pivlab_path(testCase)
-% path like PIVlab_GUI sets it: every capture function is found (and not shadowed)
+% path like PIVlab_GUI sets it: every capture function is found (and not shadowed).
+% Never restoredefaultpath here: it unloads the code of running objects (timers, add-ons) and
+% crashed MATLAB during the deploy test run (2026-11-12). Only the missing capture folders are added.
 root = testCase.TestData.Root;
 m_files = testCase.TestData.MFiles;
 m_names = testCase.TestData.MNames;
 old_path = path;
 not_found = {};
 try
-    restoredefaultpath;
-    addpath(root);
+    folders_on_path = strsplit(path, pathsep);
     capture_paths = strsplit(genpath(fullfile(root, 'PIVlab_capture_resources')), pathsep);
     for k = 1:numel(capture_paths)
-        if ~isempty(capture_paths{k}) && ~endsWith(capture_paths{k}, '_tests')
+        if ~isempty(capture_paths{k}) && ~endsWith(capture_paths{k}, '_tests') && ~any(strcmpi(folders_on_path, capture_paths{k}))
             addpath(capture_paths{k});
         end
     end
