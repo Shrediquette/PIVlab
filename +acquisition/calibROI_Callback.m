@@ -213,10 +213,6 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
                 acquisition.image_amount_Callback
             end
 
-            if strcmp(camera_type,'OPTOcam_20_9') %camera firmware workaround: restart when the image area has become larger
-                PIVlab_capture_OPTOcam_20_9_restart('');
-            end
-
             if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26')
                 %% jetzt nochmal mit finalen einstellungen bild capturen zum messen der framerate...
                 %Camera fps

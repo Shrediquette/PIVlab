@@ -16,21 +16,10 @@ sharpness_enabled = getappdata(hgui,'sharpness_enabled'); %#ok<NASGU>
 OutputError=0;
 max_pair_rate=inf;
 
-%% Camera firmware workaround (see PIVlab_capture_OPTOcam_20_9_restart): the camera is restarted when the
-%sensor area (ROI x binning^2) is larger than in the previous double-frame acquisitions. Normally this has
-%already happened after the ROI selection / binning change; this call only catches other ways the image
-%area can grow.
-if isinf(nr_of_images)
-    PIVlab_capture_OPTOcam_20_9_restart('Starting PIV preview...');
-else
-    PIVlab_capture_OPTOcam_20_9_restart('Starting PIV capture...');
-end
 binning = getappdata(hgui,'binning'); %set with the "Binning" button
 if isempty(binning)
     binning = 1;
 end
-sensor_area = ROI_OPTOcam(3)*ROI_OPTOcam(4)*binning^2;
-min_piv_area = getappdata(0,'OPTOcam_20_9_min_piv_area');
 
 %% Prepare camera (opened in the requested bit depth, or reused if already open)
 [OPTOcam_vid,imaq_error] = PIVlab_capture_OPTOcam_20_9_open(bitmode);
@@ -125,6 +114,16 @@ OPTOcam_settings.Source.TriggerSource  = 'Line4';       %external trigger input 
 OPTOcam_settings.Source.TriggerActivation = 'RisingEdge';
 OPTOcam_settings.Source.TriggerMode    = 'On';
 OPTOcam_settings.Source.ExposureTime   = exposure1;     %re-apply: the mode switch clamps ExposureTime to its double-frame range
+%Camera firmware: the double-frame mode adapts to a new image size only when the ROI is CHANGED while
+%mvPivShutter is active. With the ROI set in mvGlobalShutter only (above), a double-frame acquisition
+%with a larger area than before delivers mixed-up, tiled frames. Writing the same ROI again is
+%ignored, so first a ROI 16 rows smaller (or larger), then the real one.
+if ROI_OPTOcam(4) >= 32
+    OPTOcam_vid.ROIPosition = [ROI_OPTOcam(1) ROI_OPTOcam(2) ROI_OPTOcam(3) ROI_OPTOcam(4)-16];
+else
+    OPTOcam_vid.ROIPosition = [ROI_OPTOcam(1) ROI_OPTOcam(2) ROI_OPTOcam(3) ROI_OPTOcam(4)+16];
+end
+OPTOcam_vid.ROIPosition = ROI_OPTOcam;
 
 %% Line0 = ExposureActive output (used to measure timings/delays on the rig)
 OPTOcam_settings.Source.LineSelector = 'Line0';
@@ -152,10 +151,6 @@ setappdata(image_handle_OPTOcam,'OPTOcam_20_9_ab_state',[]);
 setappdata(image_handle_OPTOcam,'max_display_rate',min(10, 40e6/(ROI_OPTOcam(3)*ROI_OPTOcam(4)))); %frames per second drawn (CPU load)
 setappdata(image_handle_OPTOcam,'UpdatePreviewWindowFcn',@PIVlab_capture_OPTOcam_20_9_preview_update);
 preview(OPTOcam_vid,image_handle_OPTOcam);
-%double-frame acquisition is running now: remember its sensor area for the firmware workaround above
-if isempty(min_piv_area) || sensor_area < min_piv_area
-    setappdata(0,'OPTOcam_20_9_min_piv_area',sensor_area);
-end
 if bitmode ==8
     caxis(PIVlab_axis,[0 2^8]); %workaround to force preview to show full data range
 elseif bitmode==12

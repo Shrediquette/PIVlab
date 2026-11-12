@@ -505,7 +505,7 @@ if required_files_check
 			end
 		
 			found_the_data=0;
-			if gui.retr('cancel_capture')==0
+			if gui.retr('cancel_capture')==0 && isfinite(imageamount) && imageamount > 0 %Inf = images were not saved, NaN = invalid image amount
 				camera_type=gui.retr('camera_type');
 				found_the_data=acquisition.push_recorded_to_GUI(camera_type,imageamount);
 				if found_the_data==1
