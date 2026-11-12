@@ -605,7 +605,11 @@ dedicated pages.
 - **`capture.html` has no screenshots of its sub-panels.** The page has the whole-panel shot and
   the stereo live image; a capture of the Timing graph would help `#dt` most.
 - **`capture/stereo-live.png` is a simulated-camera screenshot** — swap in a real-rig capture when
-  one exists (see the 2026-10-24 entry).
+  one exists (see the 2026-10-24 entry). Recaptured 2026-11-12 (user: the old one detected too few
+  markers, 19 %, and had the cameras the wrong way round): simulated cameras showing the real pair
+  `D:\PIV Data\stereotest_optocam2\moving_board\CAM*_PIVlab_0026_B.tif`; camera 1 = left camera
+  (`CAM2_*` file), camera 2 = right camera (`CAM1_*`); calibration panel set to the 23 x 24 board;
+  live detection 99 % / 67 %. Best pair of that recording (camera 1 files never exceed ~73 %).
 - **Claude cannot watch video.** Verified 2026-11-05: titles and descriptions are fetchable (the
   oEmbed endpoint), captions are **not** — the caption URL is session-signed and 404s. Material
   from the user's YouTube tutorials has to arrive as a pasted transcript, and is then

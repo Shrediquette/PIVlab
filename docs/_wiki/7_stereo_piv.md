@@ -1,26 +1,32 @@
 ---
-title: "Stereo-PIV: all three velocity components"
+title: "Stereo-PIV software: all three velocity components"
 group: Going further
 summary: Add a second camera and measure the out-of-plane velocity too, with the same PIVlab workflow. Try it first with the built-in simulator.
-description: Stereo-PIV (2D3C) in PIVlab - measure all three velocity components u, v, w in the light sheet with two cameras. Scheimpflug calibration, ChArUco boards, stereo image acquisition and a 3D flow and stereo-PIV simulator to try it before buying hardware. Available from PIVlab 4.0.
-keywords: stereo piv stereoscopic 2d3c three components out-of-plane velocity w scheimpflug two cameras calibration charuco simulator synthetic 3d flow sphere wake upgrade
+description: Stereo-PIV (2D3C) software that also records - PIVlab measures all three velocity components u, v, w with two cameras, records both cameras synchronized with the laser, creates the calibration board, calibrates (incl. Scheimpflug) and analyses in one program. Includes a 3D flow and stereo-PIV simulator to try it before buying hardware. Available from PIVlab 4.0.
+keywords: stereo piv stereoscopic 2d3c three components out-of-plane velocity w scheimpflug two cameras dual camera stereo acquisition recording live marker detection calibration board generator charuco simulator synthetic 3d flow sphere wake upgrade all-in-one
 ---
-> **Available from PIVlab 4.0.** Would you like to try it earlier? Ask in the [PIVlab forum](https://groups.google.com/forum/?hl=en-GB#!forum/pivlab) and you get a link to the current version.
+> **Available from PIVlab 4.0.**
+
+<div class="beta-box" data-beta-box hidden></div>
 
 Standard (2D) PIV measures the two velocity components in the plane of the light sheet. With a **second camera** that looks at the light sheet from a different angle, PIVlab also measures the third component, the velocity **through** the light sheet (w). This is called stereo-PIV or 2D3C (two dimensions, three components).
 
 <video class="anim" preload="none" muted loop playsinline poster="/assets/images/stereo/stereo-result-w.webp" aria-label="Stereo-PIV result: in-plane velocity vectors and the out-of-plane component w in colour"><source src="/assets/images/stereo/stereo-result-w.mp4" type="video/mp4"><img src="/assets/images/stereo/stereo-result-w.gif" alt="Stereo-PIV result: in-plane velocity vectors and the out-of-plane component w in colour"></video>
 
-## The same workflow you already know
+## From recording to 3D result in one program
 
-Stereo-PIV in PIVlab uses the same program, the same panels and the same steps as 2D PIV. The additional steps are guided:
+PIVlab does not only analyse stereo-PIV images, it also records them. Recording, calibration and analysis happen in the same program, with the same panels as 2D PIV:
 
-1. Load the images of both cameras into one session.
-2. Calibrate each camera with images of a ChArUco calibration board. PIVlab creates printable boards for you.
-3. Run the stereo calibration and the disparity correction.
-4. Analyse, validate and export as usual: the results now include w.
+1. Print the ChArUco calibration board that PIVlab creates for you, in the size you need.
+2. Place the board in the light sheet. The live image shows both cameras side by side, with the detected board markers, so you see at once whether both cameras see the board well. One click saves the board images of both cameras.
+3. Focus the tilted lenses with the sharpness display.
+4. Record the PIV images of both cameras, synchronized with the laser. PIVlab opens them directly in stereo mode.
+5. Run the lens and stereo calibration and the disparity correction. The next recording with the same setup keeps the calibration.
+6. Analyse, validate and export as usual: the results now include w.
 
-Everything is explained step by step in the manual: [Stereo-PIV (2D3C)](/manual/pages/stereo-piv.html).
+![Live image of both cameras in PIVlab with the detected markers of the calibration board](/manual/assets/img/capture/stereo-live.png)
+
+Images recorded with other systems can be imported as well. Everything is explained step by step in the manual: [Stereo acquisition](/manual/pages/capture.html#stereo) and [Stereo-PIV (2D3C)](/manual/pages/stereo-piv.html).
 
 ## Try it before you buy anything
 

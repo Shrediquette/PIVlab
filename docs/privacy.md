@@ -22,7 +22,9 @@ This website is hosted by GitHub Pages, a service of GitHub, Inc., 88 Colin P. K
 
 Some images on this website and all PIVlab downloads are also delivered by GitHub (github.com, raw.githubusercontent.com).
 
-The legal basis is our legitimate interest in presenting the website reliably and securely (Art. 6 (1) (f) GDPR). Data may be transferred to the USA. GitHub is certified under the EU-U.S. Data Privacy Framework. More information: [GitHub Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
+To show download buttons for a beta version when one exists, your browser asks GitHub's interface (api.github.com) for the list of PIVlab releases, at most once per hour; GitHub receives your IP address with this request.
+
+The legal basis is our legitimate interest in presenting the website and its downloads reliably and securely (Art. 6 (1) (f) GDPR). Data may be transferred to the USA. GitHub is certified under the EU-U.S. Data Privacy Framework. More information: [GitHub Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
 
 ## YouTube videos {#youtube}
 
@@ -30,7 +32,7 @@ Videos on this website are embedded in YouTube's privacy-enhanced mode (youtube-
 
 ## Settings stored in your browser
 
-When you switch between light and dark mode, or between the PIVlab versions on the setup pages (for example "Standalone app" / "MATLAB toolbox"), your choice is stored in your browser's local storage, so the website remembers it. This data stays on your device and is never sent to us or anyone else. You can delete it at any time in your browser settings.
+When you switch between light and dark mode, or between the PIVlab versions on the setup pages (for example "Standalone app" / "MATLAB toolbox"), your choice is stored in your browser's local storage, so the website remembers it. The result of the beta check (see above) is kept in your browser's session storage for one hour. This data stays on your device and is never sent to us or anyone else. You can delete it at any time in your browser settings.
 
 ## Contact by email
 

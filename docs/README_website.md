@@ -20,6 +20,10 @@ Copy a file in `_cameras/`, e.g. `optocam-2-80.md`, and change the front matter 
 
 Steps that occur on several pages are in `_includes/steps/` and are used like this: `1. {% include steps/genicam.md %}`. Change the text there once and all pages follow.
 
+## Beta version
+
+Nothing to edit: publish a release on GitHub and tick **"Set as a pre-release"**. While it is the newest release, `assets/js/beta.js` shows an orange "Beta x.y" button in the download bar (website and manual) and a beta box on the home page, the downloads page and the stereo-PIV guide (any element with `data-beta-box`), linking to `PIVlab_installer.exe` and `PIVlab.mltbx` of that release. When a normal release is published later, the beta buttons disappear. Visitors see a new beta within an hour (the check is cached per browser session).
+
 ## Switches (Standalone app / MATLAB toolbox, frame grabber, ...)
 
 Put a marker line before the options; the headings after it become the tabs:

@@ -1,13 +1,28 @@
 ---
 title: PIVlab - open source particle image velocimetry
-description: PIVlab is free, open-source particle image velocimetry (PIV) software - standalone Windows app or MATLAB toolbox. Cross-correlation and optical flow, stereo-PIV, validation, calibration and export; controls lasers, cameras and synchronizers.
-keywords: piv software free open source particle image velocimetry matlab flow measurement optical flow stereo
+description: PIVlab is free, open-source particle image velocimetry (PIV) and stereo-PIV software for images and videos from any camera - standalone Windows app or MATLAB toolbox, easy for beginners. With an OPTOLUTION PIV system it becomes one program from the camera to the result - image acquisition synchronized with the laser, calibration board generator, calibration, analysis and export.
+keywords: piv software free open source particle image velocimetry matlab flow measurement optical flow stereo image acquisition camera laser synchronizer calibration board charuco all-in-one
+faq:
+  - q: "Can I analyse images from my own camera?"
+    a: "Yes. PIVlab analyses image series and videos from any camera, for example a smartphone, an action camera or a scientific camera. No special hardware is needed to get started. See the <a href=\"/wiki/1-quickstart/\">quickstart tutorial</a>."
+  - q: "Can PIVlab record images directly from a camera?"
+    a: "Yes, as soon as you add PIV hardware: together with an OPTOLUTION synchronizer and laser, PIVlab records PIV image pairs directly from supported cameras (OPTOcam, pco, OPTRONIS, Chronos), synchronized with the laser pulses. See <a href=\"/wiki/5-camera-setup/\">Camera setup</a>."
+  - q: "Does PIVlab support stereo-PIV?"
+    a: "Yes, from PIVlab 4.0. With two cameras PIVlab measures all three velocity components in the light sheet: it records both cameras synchronized, creates the calibration board, calibrates and analyses, all in one program. See <a href=\"/wiki/7-stereo-piv/\">Stereo-PIV</a>."
+  - q: "How do I get a calibration target?"
+    a: "PIVlab creates printable ChArUco calibration boards in the size you need. With a stereo set from OPTOLUTION, a calibration target is included."
+  - q: "Can I try stereo-PIV without buying hardware?"
+    a: "Yes. The built-in 3D flow and stereo-PIV simulator creates realistic images of two virtual cameras, including calibration boards, so you can go through the complete stereo-PIV workflow."
+  - q: "Do I need MATLAB?"
+    a: "No. The standalone app for Windows needs no MATLAB licence. PIVlab is also available as a MATLAB toolbox and in the web browser with MATLAB Online."
+  - q: "Is PIVlab free?"
+    a: "Yes. PIVlab is free, open-source software under the MIT licence."
 ---
 <h1>PIVlab – free (stereo) particle image velocimetry software</h1>
 <p class="lead">PIVlab is free and open-source particle image velocimetry (PIV) software, and currently the most frequently cited PIV tool on the market.
-It calculates the velocity distribution in imported or captured particle images, derives, displays and exports many parameters of the flow, and can control
-<a href="https://optolution.com/en/products/particle-image-velocimetry-piv/">OPTOLUTION's lasers, cameras and synchronizers</a>.
-The graphical user interface makes PIV data acquisition and post-processing fast and efficient.</p>
+It analyses particle images and videos from any camera – from a smartphone or action camera to a scientific high-speed camera – calculates the velocity distribution, and derives, displays and exports many parameters of the flow.
+The graphical user interface makes PIV analyses fast and easy, also for beginners.</p>
+<p>When your lab grows, PIVlab grows with it: together with <a href="https://optolution.com/en/products/particle-image-velocimetry-piv/">OPTOLUTION's lasers, cameras and synchronizers</a>, PIVlab also records the images itself, synchronized with the laser – and with two cameras even stereo-PIV.</p>
 
 <h2>Get PIVlab</h2>
 <div class="get">
@@ -15,6 +30,7 @@ The graphical user interface makes PIV data acquisition and post-processing fast
   <a href="{{ d.url }}"><strong>{{ d.title }}</strong><span>{{ d.text }}</span></a>
 {%- endif %}{% endfor %}
 </div>
+<div class="beta-box" data-beta-box hidden></div>
 <p>New to PIVlab? Start with the <a href="{{ '/wiki/0-installation/' | relative_url }}">installation guide</a> and the <a href="{{ '/wiki/1-quickstart/' | relative_url }}">quickstart tutorial</a>, or browse the <a href="{{ '/manual/' | relative_url }}">user manual</a>.</p>
 
 <h2>Why use PIVlab?</h2>
@@ -26,8 +42,23 @@ The graphical user interface makes PIV data acquisition and post-processing fast
 <p>PIVlab uses state-of-the-art algorithms for cross-correlation and optical flow:</p>
 <div class="video" data-yt="jDBMIuQ9fsw" data-title="PIV with a low-cost pulsed laser diode"><a href="https://www.youtube.com/watch?v=jDBMIuQ9fsw">Watch on YouTube: PIV with a low-cost pulsed laser diode</a></div>
 
+<h3>Complete</h3>
+<div class="media-side">
+  <div>
+    <p>Start with the images you already have, from any camera. When you add a PIV system from OPTOLUTION, PIVlab becomes more than analysis software: one program takes you from the camera to the result:</p>
+    <ul>
+      <li><strong>Control</strong> OPTOLUTION's lasers, synchronizers and cameras – developed together with PIVlab, so everything works hand in hand.</li>
+      <li><strong>Record</strong> the image pairs, synchronized with the laser.</li>
+      <li><strong>Create</strong> printable calibration boards.</li>
+      <li><strong>Calibrate</strong>, <strong>analyse</strong>, <strong>validate</strong> and <strong>export</strong>.</li>
+    </ul>
+    <p>No separate acquisition software, no copying files between programs. See <a href="{{ '/wiki/5-camera-setup/' | relative_url }}">Camera setup</a> and <a href="{{ '/manual/pages/capture.html' | relative_url }}">Capturing images</a> in the manual.</p>
+  </div>
+  <img src="{{ '/manual/assets/img/capture/panel.png' | relative_url }}" alt="The image acquisition panel of PIVlab: synchronizer, laser and camera control" loading="lazy">
+</div>
+
 <h3>Expandable</h3>
-<p>Start with standard 2D PIV in minutes. When you need the velocity through the light sheet as well, add a second camera: PIVlab then measures all three velocity components (stereo-PIV), with the same workflow. You can even try it before buying anything, with the built-in stereo-PIV simulator. Available from PIVlab 4.0.</p>
+<p>Start with standard 2D PIV in minutes. When you need the velocity through the light sheet as well, add a second camera: PIVlab records both cameras synchronized, creates the calibration board and measures all three velocity components (stereo-PIV), with the same workflow. You can even try it before buying anything, with the built-in stereo-PIV simulator. Available from PIVlab 4.0.</p>
 <a href="{{ '/wiki/7-stereo-piv/' | relative_url }}"><video class="anim" preload="none" muted loop playsinline poster="{{ '/assets/images/stereo/stereo-result-w.webp' | relative_url }}" aria-label="Stereo-PIV result: in-plane velocity vectors and the out-of-plane component w in colour"><source src="{{ '/assets/images/stereo/stereo-result-w.mp4' | relative_url }}" type="video/mp4"><img src="{{ '/assets/images/stereo/stereo-result-w.gif' | relative_url }}" alt="Stereo-PIV result: in-plane velocity vectors and the out-of-plane component w in colour"></video></a>
 <p><a href="{{ '/wiki/7-stereo-piv/' | relative_url }}">Learn more about stereo-PIV in PIVlab</a></p>
 
@@ -35,6 +66,21 @@ The graphical user interface makes PIV data acquisition and post-processing fast
 <p>Thousands of researchers trust the results of PIVlab:</p>
 <img src="https://raw.githubusercontent.com/Shrediquette/PIVlab/refs/heads/main/images/pivlab_citations.jpg" alt="Number of scientific publications citing PIVlab per year" loading="lazy">
 <p>Based on a <a href="https://pivlab.blogspot.com/2022/06/pivlab-is-becoming-super-popular.html">customized Google Scholar search</a>. See also the monthly updated <a href="https://shrediquette.github.io/PIV_Software_Usage_statistics/">PIV software usage statistics</a>.</p>
+
+<h2>Frequently asked questions</h2>
+<div class="faq">
+{%- for f in page.faq %}
+  <h3>{{ f.q }}</h3>
+  <p>{{ f.a }}</p>
+{%- endfor %}
+</div>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+{%- for f in page.faq %}
+  {"@type": "Question", "name": {{ f.q | jsonify }}, "acceptedAnswer": {"@type": "Answer", "text": {{ f.a | strip_html | jsonify }}}}{% unless forloop.last %},{% endunless %}
+{%- endfor %}
+]}
+</script>
 
 <h2>How to cite PIVlab</h2>
 <p>Thielicke, W. and Sonntag, R. (2021) Particle Image Velocimetry for MATLAB: Accuracy and enhanced algorithms in PIVlab. <em>Journal of Open Research Software</em>, 9: 12. DOI: <a href="https://doi.org/10.5334/jors.334">10.5334/jors.334</a>. More publications are listed under <a href="{{ '/references' | relative_url }}">References</a>.</p>

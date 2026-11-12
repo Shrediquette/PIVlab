@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {%- if page.url == "/" -%}
-    {%- assign full_title = "PIVlab – free open-source PIV software (particle image velocimetry)" -%}
+    {%- assign full_title = "PIVlab – free (stereo) particle image velocimetry (PIV) software" -%}
   {%- else -%}
     {%- assign full_title = page.title | append: " | PIVlab" -%}
   {%- endif -%}
@@ -38,8 +38,9 @@
     "@type": "SoftwareApplication",
     "name": "PIVlab",
     "url": "https://www.pivlab.de/",
-    "description": "Free, open-source particle image velocimetry (PIV) software. Runs as a standalone Windows app or as a MATLAB toolbox; analyses image pairs with cross-correlation and optical flow and controls lasers, cameras and synchronizers.",
+    "description": "Free, open-source particle image velocimetry (PIV) and stereo-PIV (2D3C) software, easy to use for beginners. Runs as a standalone Windows app or as a MATLAB toolbox; analyses images and videos from any camera with cross-correlation and optical flow. With an OPTOLUTION PIV system it also controls lasers, cameras and synchronizers, records the images and measures all three velocity components with two cameras.",
     "applicationCategory": "ScientificApplication",
+    "featureList": ["Analysis of particle images and videos from any camera", "Image acquisition from PIV cameras, synchronized with the laser", "Control of OPTOLUTION lasers, synchronizers and cameras", "Stereo image acquisition with two cameras", "Printable ChArUco calibration board generator", "Lens calibration including Scheimpflug cameras", "Stereo-PIV (2D3C): all three velocity components", "Multipass FFT window deformation, ensemble correlation and wavelet optical flow", "Validation, derived parameters, statistics and export", "3D flow and stereo-PIV image simulator", "Command-line API for MATLAB scripts"],
     "operatingSystem": "Windows, macOS, Linux (MATLAB toolbox)",
     "license": "https://opensource.org/license/mit",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
@@ -117,7 +118,7 @@
 </div>
 
 <footer class="site-footer">
-  <span>PIVlab is developed by William Thielicke, supported by <a href="https://optolution.com">OPTOLUTION Messtechnik GmbH</a>.</span>
+  <span>PIVlab is developed by William Thielicke at <a href="https://optolution.com">OPTOLUTION Messtechnik GmbH</a>.</span>
   <nav aria-label="Legal">
     <a href="{{ '/imprint/' | relative_url }}">Legal notice</a>
     <a href="{{ '/privacy/' | relative_url }}">Privacy policy</a>
@@ -126,5 +127,6 @@
 </footer>
 
 <script src="{{ '/assets/js/site.js' | relative_url }}" defer></script>
+<script src="{{ '/assets/js/beta.js' | relative_url }}" defer></script>
 </body>
 </html>
