@@ -41,18 +41,24 @@
 
   // ------------------------------------------------------- Homepage "Start here"
   // Auto-built from nav.js so the homepage never goes stale as pages ship.
-  // Renders one card per live page (except the homepage itself), using each
-  // item's `blurb`, in the order they appear in nav.js.
+  // Grouped like the sidebar: one titled group per nav section, one card per
+  // live page (except the homepage itself), using each item's `blurb`, in the
+  // order they appear in nav.js.
   function buildStartHereCards() {
     var container = document.getElementById("start-here-cards");
     if (!container) return;
     (window.MANUAL_NAV.sections || []).forEach(function (sec) {
-      (sec.items || []).forEach(function (it) {
-        if (it.status !== "live" || it.href === currentRel) return;
-        var card = h("a", { class: "card", href: resolve(it.href) },
-          "<h3>" + it.label + "</h3><p>" + (it.blurb || sec.title) + "</p>");
-        container.appendChild(card);
+      var items = (sec.items || []).filter(function (it) {
+        return it.status === "live" && it.href !== currentRel;
       });
+      if (!items.length) return;
+      container.appendChild(h("h3", { class: "cards-group-title" }, sec.title));
+      var grid = h("div", { class: "cards" });
+      items.forEach(function (it) {
+        grid.appendChild(h("a", { class: "card", href: resolve(it.href) },
+          "<h4>" + it.label + "</h4><p>" + (it.blurb || sec.title) + "</p>"));
+      });
+      container.appendChild(grid);
     });
   }
 

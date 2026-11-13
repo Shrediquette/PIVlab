@@ -347,7 +347,13 @@ table.ref td:first-child { font-weight: 600; min-width: 7em; max-width: 40%; }
   background: var(--bg-soft); display: block; color: var(--text);
 }
 .card:hover { border-color: var(--accent); text-decoration: none; box-shadow: var(--shadow); }
-.card h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.card h3, .card h4 { margin: 0 0 6px; font-size: 1.05rem; }
+/* Landing page: cards grouped under sub-headings that look like the sidebar groups (.nav-group-title) */
+#start-here-cards .cards { margin: 0 0 .4em; }
+#doc h3.cards-group-title {
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px;
+  color: var(--text-soft); margin: 1.8em 0 .7em;
+}
 .card p { margin: 0; font-size: .9em; color: var(--text-soft); }
 .card.soon { opacity: .55; }
 
