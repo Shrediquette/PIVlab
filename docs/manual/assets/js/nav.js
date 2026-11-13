@@ -58,7 +58,7 @@ window.MANUAL_NAV = {
     {
       title: "Stereo-PIV (2D3C)",
       items: [
-        { label: "Set-up and recording",                href: "pages/stereo-setup.html",          status: "live",
+        { label: "Stereo set-up and recording",         href: "pages/stereo-setup.html",          status: "live",
           blurb: "Two cameras and the laser: arrangement, Scheimpflug focus, calibration board, recording." },
         { label: "Stereo-PIV analysis",                 href: "pages/stereo-piv.html",            status: "live",
           blurb: "From the images of both cameras to u, v and w: stereo calibration, disparity correction." }
