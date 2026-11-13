@@ -564,7 +564,7 @@ window.MANUAL_SEARCH = [
     title: "Capturing images: stereo acquisition with two cameras",
     href: "pages/capture.html", hash: "stereo",
     section: "Image acquisition",
-    text: "stereo acquisition two cameras record stereo-piv capture y-cable camera 1 camera 2 swap cameras serial number side by side live image charuco board snapshot cam1 cam2 missed trigger"
+    text: "stereo acquisition two cameras record stereo-piv capture y-cable camera 1 camera 2 swap cameras serial number side by side live image charuco board snapshot cam1 cam2"
   },
   {
     title: "Trying capture with just a webcam",
