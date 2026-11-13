@@ -63,3 +63,45 @@
 /dev_notes/
 
 /unittests/parity/tag_renames.csv
+
+/+wOFV/Filter matrices/bior6.8/1024/Fmats.mat
+
+/+wOFV/Filter matrices/bior6.8/128/Fmats.mat
+
+/+wOFV/Filter matrices/bior6.8/16/Fmats.mat
+
+/+wOFV/Filter matrices/bior6.8/2048/Fmats.mat
+
+/+wOFV/Filter matrices/bior6.8/256/Fmats.mat
+
+/+wOFV/Filter matrices/bior6.8/32/Fmats.mat
+
+/+wOFV/Filter matrices/bior6.8/512/Fmats.mat
+
+/+wOFV/Filter matrices/bior6.8/64/Fmats.mat
+
+/Example_scripts/reduce_PIV_images.m
+
+/unittests/apply_tag_removals.m
+
+/unittests/find_unused_handles.m
+
+/unittests/gui_test_contents.txt
+
+/unittests/test_bias+rmse/Untitled.jpeg
+
+/unittests/test_bias+rmse/compare_pivlab_vs_pairs_unina.m
+
+/unittests/test_bias+rmse/openpiv_benchmark.py
+
+/unittests/test_bias+rmse/plot_comparison_fields.m
+
+/unittests/test_bias+rmse/plot_tool_comparison.m
+
+/unittests/test_bias+rmse/run_bias_rmse_sweep.m
+
+/unittests/test_bias+rmse/run_pivsuite_comparison.m
+
+/unittests/test_bias+rmse/verify_pivsuite.m
+
+/unittests/unused_handles_report.txt
