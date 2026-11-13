@@ -93,7 +93,7 @@ grep -oE '<kbd>[A-Z]</kbd>' docs/manual/pages/shortcuts.html | sort -u # what we
 | `generateUI.m:2042-2123` | `validation-image.html` |
 | `generateUI.m:2125-2223+`, `+acquisition/` | `capture.html` |
 | **`+pivlab/`** (the whole API package) | **`command-line.html`** |
-| **`+stereo/`**, `generateUI.m:49` (CAM 1/2 toggle), `+import/stereo_import_Callback.m` | **`stereo-piv.html`**, plus the stereo `.note`s on derive-spatial / derive-temporal / export / extract-* / validation-velocity / statistics |
+| **`+stereo/`**, `generateUI.m:49` (CAM 1/2 toggle), `+import/stereo_import_Callback.m` | **`stereo-piv.html`** (analysis) and **`stereo-setup.html`** (set-up and recording, workflow drawings from `tools/stereo_workflow_drawings.mjs`), plus the stereo `.note`s on derive-spatial / derive-temporal / export / extract-* / validation-velocity / statistics |
 | `+simulate/` (3D generator, `simulate.part_img_3d_Callback`) | `synthetic-images.html` |
 | `generateUI.m:2334-2496`, `cam_*_Callback.m` | `camera-calibration.html` |
 | `generateUI.m:2496-2511` | `correlation-matrices.html` |

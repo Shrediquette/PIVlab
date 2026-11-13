@@ -18,15 +18,20 @@ Standard (2D) PIV measures the two velocity components in the plane of the light
 PIVlab does not only analyse stereo-PIV images, it also records them. Recording, calibration and analysis happen in the same program, with the same panels as 2D PIV:
 
 1. Print the ChArUco calibration board that PIVlab creates for you, in the size you need.
-2. Place the board in the light sheet. The live image shows both cameras side by side, with the detected board markers, so you see at once whether both cameras see the board well. One click saves the board images of both cameras.
-3. Focus the tilted lenses with the sharpness display.
-4. Record the PIV images of both cameras, synchronized with the laser. PIVlab opens them directly in stereo mode.
-5. Run the lens and stereo calibration and the disparity correction. The next recording with the same setup keeps the calibration.
-6. Analyse, validate and export as usual: the results now include w.
+2. Place the board at the measurement position and focus the tilted lenses with the sharpness display.
+3. Record images of the board at many positions and tilts for the lens calibration of each camera.
+4. Align the light sheet on the board, switch the laser off and record the board under normal lighting. The live image shows both cameras side by side, with the detected board markers, so you see at once whether both cameras see the board well. One click saves the board images of both cameras.
+5. Record the PIV images of both cameras, synchronized with the laser. PIVlab opens them directly in stereo mode.
+6. Run the lens and stereo calibration and the disparity correction. The next recording with the same setup keeps the calibration.
+7. Analyse, validate and export as usual: the results now include w.
+
+How each step works is shown in eight drawings: [How stereo-PIV works: illustrated step by step]({{ '/wiki/8-stereo-piv-explained/' | relative_url }}).
+
+<a href="{{ '/wiki/8-stereo-piv-explained/' | relative_url }}"><img src="{{ '/manual/assets/img/stereo-piv/workflow/stereo-piv-workflow-card.png' | relative_url }}" width="1200" height="630" loading="lazy" alt="Stereo-PIV step by step: eight drawings from setting up the cameras to the 3D vector map with u, v and w"></a>
 
 ![Live image of both cameras in PIVlab with the detected markers of the calibration board](/manual/assets/img/capture/stereo-live.png)
 
-Images recorded with other systems can be imported as well. Everything is explained step by step in the manual: [Stereo acquisition](/manual/pages/capture.html#stereo) and [Stereo-PIV (2D3C)](/manual/pages/stereo-piv.html).
+Images recorded with other systems can be imported as well. Everything is explained step by step in the manual: [Stereo-PIV: set-up and recording](/manual/pages/stereo-setup.html), [Stereo acquisition](/manual/pages/capture.html#stereo) and [Stereo-PIV analysis](/manual/pages/stereo-piv.html).
 
 ## Try it before you buy anything
 

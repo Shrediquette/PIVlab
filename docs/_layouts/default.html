@@ -21,8 +21,9 @@
   <meta property="og:title" content="{{ full_title | xml_escape }}">
   <meta property="og:description" content="{{ desc | strip_html | normalize_whitespace | xml_escape }}">
   <meta property="og:url" content="{{ canonical }}">
-  <meta property="og:image" content="{{ '/assets/images/pivlab_logo.png' | absolute_url }}">
-  <meta name="twitter:card" content="summary">
+  {%- comment %} link preview: page.og_image (e.g. an illustration, 1200 x 630) or the logo {% endcomment %}
+  <meta property="og:image" content="{{ page.og_image | default: '/assets/images/pivlab_logo.png' | absolute_url }}">
+  <meta name="twitter:card" content="{% if page.og_image %}summary_large_image{% else %}summary{% endif %}">
   <link rel="icon" href="{{ '/assets/images/favicon.ico' | relative_url }}">
   <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}">
   <script>

@@ -453,10 +453,16 @@ window.MANUAL_SEARCH = [
     text: "stereo w component poly-line area extraction 3D magnitude click vector info"
   },
   {
-    title: "Stereo-PIV (2D3C)",
+    title: "Stereo-PIV analysis (2D3C)",
     href: "pages/stereo-piv.html", hash: "top",
-    section: "Analysis",
-    text: "stereo piv two cameras 2d3c three components w out-of-plane import stereo images camera switch stereo calibration disparity correction light sheet overlay scheimpflug tilted sensor check analysis rectified board stereo-piv panel checklist work in progress export w column vtk tecplot ascii mat w component 3d magnitude mean tke camera arrangement opposite sides forward scatter backward scatter mie particle brightness scattering angle water prism transparent board mirrored above each other"
+    section: "Stereo-PIV (2D3C)",
+    text: "stereo piv analysis two cameras 2d3c three components w out-of-plane import stereo images camera switch lens calibration board image load target image stereo calibration disparity correction remaining disparity reconstruction residual colour bar coordinate system x y z u v w tilted sensor check analysis rectified board stereo-piv panel checklist export w column vtk tecplot ascii mat w component 3d magnitude mean tke"
+  },
+  {
+    title: "Stereo-PIV: set-up and recording",
+    href: "pages/stereo-setup.html", hash: "top",
+    section: "Stereo-PIV (2D3C)",
+    text: "stereo piv set-up setup experiment recording two cameras laser camera arrangement angle opposite sides same side forward scatter backward scatter particle brightness transparent board mirrored scheimpflug adapter focus sharpness overlay charuco board lens calibration images measurement position overlap field of view light sheet alignment board images laser off normal lighting snapshot particle images synchronized"
   },
   {
     title: "Phase averaging and frame selection for temporal derivation",
@@ -564,7 +570,7 @@ window.MANUAL_SEARCH = [
     title: "Capturing images: stereo acquisition with two cameras",
     href: "pages/capture.html", hash: "stereo",
     section: "Image acquisition",
-    text: "stereo acquisition two cameras record stereo-piv capture y-cable camera 1 camera 2 swap cameras serial number side by side live image charuco board snapshot cam1 cam2 missed trigger"
+    text: "stereo acquisition two cameras record stereo-piv capture y-cable camera 1 camera 2 swap cameras serial number side by side live image charuco board snapshot cam1 cam2"
   },
   {
     title: "Trying capture with just a webcam",

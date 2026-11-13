@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stereo-PIV set-up and recording · PIVlab Manual</title>
+  <meta name="description" content="How to set up a stereo-PIV (2D3C) experiment and record it: camera arrangement and forward scatter, Scheimpflug focusing, lens calibration images, calibration board in the light sheet, particle images of both cameras.">
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+  <article id="doc">
+    <h1 id="top">Stereo-PIV: set-up and recording</h1>
+    <p class="lead">Before the analysis, the stereo-PIV experiment is set up and recorded: the cameras
+    and the laser, the focus, the images for the calibration and the particle images. This page covers
+    this part of the work. From the recorded images to u, v and w in PIVlab:
+    <a href="stereo-piv.html">Stereo-PIV analysis</a>.</p>
+    <p>The whole procedure in eight drawings:
+    <a href="https://www.pivlab.de/wiki/8-stereo-piv-explained/">How stereo-PIV works: illustrated step by step</a>.</p>
+
+    <h2 id="overview">Overview</h2>
+    <ol>
+      <li><a href="#arrangement">Cameras and laser</a>: two viewing directions, bright forward scatter.</li>
+      <li><a href="#focus">Focus</a> both cameras on the board at the measurement position.</li>
+      <li><a href="#lens-images">Images for the lens calibration</a>, for each camera.</li>
+      <li><a href="#board">Board at the measurement position</a>: the overlap of both views.</li>
+      <li><a href="#board-images">Light sheet on the board, board images</a>.</li>
+      <li><a href="#recording">Particle images</a> of both cameras.</li>
+    </ol>
+
+    <h2 id="arrangement">1. Cameras and laser</h2>
+    <p>Both cameras look at the same part of the light sheet from different directions. What counts
+    is the angle between the two lines of sight: 30° to 90° is good; a small angle makes w noisy. Two
+    cameras that look at each other along one line can not measure w.</p>
+    <table class="ref">
+      <tr><th>Arrangement</th><th>Notes</th></tr>
+      <tr><td>Same side of the sheet (side by side, above each other, diagonal)</td>
+      <td>The usual set-up; any direction between the cameras works.</td></tr>
+      <tr><td>Opposite sides of the sheet</td>
+      <td>The camera behind the board sees it from its back: use a transparent board (or one printed
+      mirrored on the back). PIVlab detects the mirrored board automatically.</td></tr>
+    </table>
+    <figure>
+      <img src="../assets/img/stereo-piv/workflow/stereo-piv-step-1-cameras-and-laser.svg" width="560" height="340" loading="lazy" alt="Top views of two camera arrangements: a) both cameras on the same side of the light sheet, one in backward and one in forward scatter; b) cameras on opposite sides of the sheet, both downstream of the laser in forward scatter.">
+      <figcaption>Camera arrangements (top views): same side, or opposite sides with both cameras in forward scatter.</figcaption>
+    </figure>
+    <div class="tip">
+      <strong>Bright particles: forward scatter</strong>
+      Particles are much brighter for a camera downstream of the laser (forward scatter) than for one
+      on the laser's side (backward scatter). Place both cameras downstream if you can, e.g. at
+      40–45° on opposite sides of the sheet. Keep a transparent board thin and flat.
+    </div>
+    <p>Each camera looks at the sheet at an angle, so a normal lens can not keep the whole sheet in
+    focus. A <strong>Scheimpflug adapter</strong> tilts the lens against the sensor, so that the
+    oblique plane is sharp everywhere. The board also defines the
+    <a href="stereo-piv.html#coordinates">coordinate system</a> of the result, as seen from camera 1.</p>
+
+    <h2 id="focus">2. Focus on the board</h2>
+    <p>Place the calibration board (made with
+    <a href="camera-calibration.html#markerboard"><span class="ui">Generate Charuco board</span></a>) at
+    the measurement position and focus both cameras on it; with Scheimpflug adapters, adjust focus and
+    tilt until the <strong>whole board</strong> is sharp. The <span class="ui">Sharpness</span> overlay
+    of the <a href="capture.html#camera">live image</a> rates the focus in the left, centre and right
+    third of the image.</p>
+    <figure>
+      <img src="../assets/img/stereo-piv/workflow/stereo-piv-step-2-focus.svg" width="560" height="340" loading="lazy" alt="The calibration board at the measurement position, seen by camera 1 and camera 2; both camera images show the whole board sharp.">
+      <figcaption>Focus both cameras on the board at the measurement position.</figcaption>
+    </figure>
+
+    <h2 id="lens-images">3. Images for the lens calibration</h2>
+    <p>For each camera, record images of the board at many positions and tilts, covering the whole
+    image. They are used for the <a href="stereo-piv.html#lens">lens calibration</a> of that camera.</p>
+    <figure>
+      <img src="../assets/img/stereo-piv/workflow/stereo-piv-step-3-lens-calibration.svg" width="560" height="340" loading="lazy" alt="Lens calibration: the board is moved and tilted in front of camera 1 into many positions; the recorded images show it at different places and angles. The same is repeated for camera 2.">
+      <figcaption>Many board images per camera, at different positions and tilts.</figcaption>
+    </figure>
+    <p>The lens calibration is only valid for these camera and lens settings. If there is no space at
+    the measurement position, record these images beforehand; afterwards focus, Scheimpflug angle and
+    the other lens settings must not change. The cameras themselves may still be moved.</p>
+
+    <h2 id="board">4. Board at the measurement position</h2>
+    <p>Put the board exactly where you want to measure: its surface defines the measurement plane.
+    Align the cameras so that their views <strong>overlap as much as possible</strong>; only the
+    overlap is measured with both cameras. The board should fill most of the overlap.</p>
+    <figure>
+      <img src="../assets/img/stereo-piv/workflow/stereo-piv-step-4-board-position.svg" width="560" height="340" loading="lazy" alt="The board at the measurement position in a tank; the views of camera 1 and camera 2 overlap almost completely, the overlap is the measurement area.">
+      <figcaption>The board at the measurement position; the overlap of both views is the measurement area.</figcaption>
+    </figure>
+
+    <h2 id="board-images">5. Light sheet on the board, board images</h2>
+    <ol class="steps">
+      <li>Switch the laser on and aim the light sheet at the board: the centre of the sheet should lie
+      on the board face that the cameras see.</li>
+      <li><strong>Switch the laser off</strong> and record the board with both cameras under normal
+      lighting: the sheet only grazes the board and lights it badly. These are the
+      <strong>board images in the light sheet</strong>, one per camera. Both must show the board in the
+      same position, ideally recorded at the same moment. With
+      <a href="capture.html#stereo">stereo acquisition</a> in PIVlab, tick
+      <span class="ui">Calibration</span> to see the detected markers in both images, then
+      <span class="ui">Snapshot</span> saves one image per camera.</li>
+      <li>Remove the board. <strong>From now on the cameras must not move.</strong></li>
+    </ol>
+    <figure>
+      <img src="../assets/img/stereo-piv/workflow/stereo-piv-step-5-board-in-light-sheet.svg" width="560" height="340" loading="lazy" alt="The light sheet is aligned on the board; the board images of both cameras are then recorded with the laser off, under normal lighting.">
+      <figcaption>Align the sheet on the board, then record the board images with the laser off.</figcaption>
+    </figure>
+    <p>A small offset or tilt between the sheet and the board is not a problem: the
+    <a href="stereo-piv.html#disparity">disparity correction</a> measures and corrects it on the
+    particle images.</p>
+
+    <h2 id="recording">6. Particle images</h2>
+    <p>Seed the flow and record image pairs with both cameras at the same moment, synchronized with the
+    laser. Both cameras must give the same number of images.</p>
+    <ul>
+      <li>With <a href="capture.html#stereo">stereo acquisition</a> in PIVlab, both cameras get the same
+      trigger and the recording opens directly in stereo mode.</li>
+      <li>Images recorded with another system are <a href="stereo-piv.html#import">imported</a> with
+      <span class="ui">Import stereo images</span>.</li>
+    </ul>
+    <p>Next: <a href="stereo-piv.html">Stereo-PIV analysis</a>, from the images to u, v and w. To try
+    everything without hardware, the <a href="synthetic-images.html">stereo-PIV simulator</a> creates
+    the images of two virtual cameras, including the calibration boards.</p>
+  </article>
+
+  <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/search-index.js"></script>
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

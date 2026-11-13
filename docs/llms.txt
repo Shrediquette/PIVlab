@@ -21,6 +21,7 @@ How to cite: Thielicke, W. and Sonntag, R. (2021) Particle Image Velocimetry for
 - [Quickstart tutorial]({{ '/wiki/1-quickstart/' | absolute_url }})
 - [Video tutorials]({{ '/wiki/2-video-tutorials/' | absolute_url }})
 - [Stereo-PIV (2D3C)]({{ '/wiki/7-stereo-piv/' | absolute_url }}): all three velocity components with two cameras, Scheimpflug calibration, built-in 3D flow and stereo-PIV simulator; available from PIVlab 4.0
+- [How stereo-PIV works: illustrated step by step]({{ '/wiki/8-stereo-piv-explained/' | absolute_url }}): the complete stereo-PIV procedure in eight drawings with explanations (camera arrangement and forward scatter, Scheimpflug focusing, lens calibration, board in the light sheet, stereo calibration, disparity correction / self-calibration, reconstruction of u, v, w); drawings free to reuse under CC BY 4.0
 
 ## Hardware and camera setup
 - [Camera setup overview]({{ '/wiki/5-camera-setup/' | absolute_url }})

@@ -10,6 +10,15 @@
 <body>
   <article id="doc">
     <h1 id="top">Capturing images from a camera</h1>
+    <div class="note">
+      <strong>Setting up the hardware</strong>
+      Camera drivers and connection:
+      <a href="https://shrediquette.github.io/PIVlab/wiki/5-camera-setup/" target="_blank" rel="noopener">Camera setup</a>
+      on the PIVlab wiki.<br>
+      Synchronizer and laser:
+      <a href="https://shrediquette.github.io/PIVlab/wiki/4-synchronizer-laser/" target="_blank" rel="noopener">Synchronizer setup</a>
+      on the PIVlab wiki.
+    </div>
     <p class="lead">PIVlab records PIV image pairs directly from a connected camera and, with a
     PIVlab synchronizer, triggers and times the pulsed laser to match. The recorded images go
     straight into the session, so you can analyse them without importing anything.</p>
@@ -39,6 +48,7 @@
     <h2 id="panel">The panel, part by part</h2>
 
     <h3 id="general">General settings</h3>
+    <div class="split">
     <table class="ref">
       <tr><th>Control</th><th>What it does</th></tr>
       <tr><td>Project path / Browse…</td><td>Folder for the recorded images and the configuration.</td></tr>
@@ -47,12 +57,17 @@
       loads the matching firmware settings. <span class="ui">Webcam demo (no synchronizer)</span>
       runs the panel without PIV hardware (see <a href="#webcam">below</a>).</td></tr>
       <tr><td>Stereo</td><td>Record with two cameras of the selected type for
-      <a href="stereo-piv.html">stereo-PIV</a> (see <a href="#stereo">below</a>).</td></tr>
+      <a href="stereo-setup.html">stereo-PIV</a> (see <a href="#stereo">below</a>).</td></tr>
       <tr><td>COM port / Connect</td><td>Serial port of the synchronizer. The indicator next to the
       button is red while disconnected and green once the synchronizer answers.</td></tr>
     </table>
+    <figure class="inline-panel">
+      <img src="../assets/img/capture/part-general.png" alt="General settings: project path, configuration, Stereo, COM port and Connect">
+    </figure>
+    </div>
 
     <h3 id="sync">Synchronizer control</h3>
+    <div class="split">
     <table class="ref">
       <tr><th>Control</th><th>What it does</th></tr>
       <tr><td>Frame rate in Hz</td><td>Rate of the double images during capture. The available
@@ -74,8 +89,13 @@
       <tr><td>Devices</td><td>Setup of further remote-controlled equipment on the wireless link,
       such as a seeding generator.</td></tr>
     </table>
+    <figure class="inline-panel">
+      <img src="../assets/img/capture/part-sync.png" alt="Synchronizer control: frame rate, pulse distance, laser energy, pulse length, Timing graph, Low energy mode, Toggle Laser and Devices">
+    </figure>
+    </div>
 
     <h3 id="camera">Camera settings</h3>
+    <div class="split">
     <table class="ref">
       <tr><th>Control</th><th>What it does</th></tr>
       <tr><td>Binning</td><td>Combines neighbouring pixels: brighter image, lower resolution.</td></tr>
@@ -98,6 +118,10 @@
       <a href="camera-calibration.html#markerboard">ChArUco board</a> — see below. Works in the
       live image only.</td></tr>
     </table>
+    <figure class="inline-panel">
+      <img src="../assets/img/capture/part-camera.png" alt="Camera settings: Binning, ROI, Lens and Setup buttons, and the live overlay switches">
+    </figure>
+    </div>
 
     <p>The <span class="ui">Calibration</span> overlay does three things at once, which makes it
     the quickest way to check a board and a camera position:</p>
@@ -119,6 +143,7 @@
     camera, to record the board image, and to focus on a <strong>target</strong> placed in the
     plane of the light sheet. To focus on the particles themselves, use the
     <a href="#capture">PIV preview</a>.</p>
+    <div class="split">
     <table class="ref">
       <tr><th>Control</th><th>What it does</th></tr>
       <tr><td>Exposure in ms</td><td>Camera exposure for the live view.</td></tr>
@@ -128,11 +153,16 @@
       <tr><td>Save</td><td>Stops the live view and keeps the last image — this is how the board
       image for the <a href="camera-calibration.html">camera calibration</a> is recorded.</td></tr>
     </table>
+    <figure class="inline-panel">
+      <img src="../assets/img/capture/part-live.png" alt="Live image: exposure, Start, Snapshot and Save">
+    </figure>
+    </div>
 
     <h3 id="capture">Capture PIV images</h3>
     <p>Here the camera runs <strong>synchronized</strong> with the laser. The
     <span class="ui">Save</span> tick decides what <span class="ui">Start</span> does: without it
     you get a running preview, with it a recording.</p>
+    <div class="split">
     <table class="ref">
       <tr><th>Control</th><th>What it does</th></tr>
       <tr><td>Save</td><td>Off: <span class="ui">Start</span> runs a <strong>PIV preview</strong> —
@@ -145,6 +175,10 @@
       laser starts, and — when saving — before existing files are overwritten.</td></tr>
       <tr><td>Abort</td><td>Ends the preview, or stops a recording and discards its images.</td></tr>
     </table>
+    <figure class="inline-panel">
+      <img src="../assets/img/capture/part-capture.png" alt="Capture PIV images: image amount, Save, Start and Abort">
+    </figure>
+    </div>
 
     <div class="tip">
       <strong>The PIV preview is where you judge the images</strong>
@@ -242,7 +276,7 @@
     </div>
 
     <h2 id="stereo">Stereo acquisition (two cameras)</h2>
-    <p>For <a href="stereo-piv.html">stereo-PIV</a>, PIVlab records with two cameras of the same
+    <p>For <a href="stereo-setup.html">stereo-PIV</a>, PIVlab records with two cameras of the same
     type at the same time (at present the OPTOcam 2/80).</p>
     <ol class="steps">
       <li>Connect both cameras to the computer, and both to the camera output of the synchronizer
@@ -254,40 +288,30 @@
       with the lower serial number; <span class="ui">Setup</span> shows both serial numbers, and
       <span class="ui">Swap cameras</span> exchanges camera 1 and 2.</li>
       <li>With <span class="ui">Calibration</span> ticked, the markers of a ChArUco board are shown in
-      both images. Place the board in the light sheet so that both cameras see it well;
-      <span class="ui">Snapshot</span> then saves one image per camera: the board images for the
+      both images. Place the board in the light sheet so that both cameras see it well; align the
+      sheet on it, then switch the laser off and light the board normally
+      (<a href="stereo-setup.html#board-images">why</a>). <span class="ui">Snapshot</span> then saves
+      one image per camera: the board images for the
       <a href="stereo-piv.html#calibration">stereo calibration</a>.</li>
       <li><span class="ui">Capture PIV images</span> saves the images of camera 1 in the subfolder
       <code>cam1</code> and those of camera 2 in <code>cam2</code> of the project folder, and opens
       them in stereo mode. The next recording with the same setup keeps the stereo calibration.</li>
     </ol>
     <figure>
-      <img src="../assets/img/capture/stereo-live.png" alt="Live image of two cameras side by side with the detected ChArUco markers">
-      <figcaption>Live image of both cameras with <span class="ui">Calibration</span> ticked: the
-      board is placed so that both cameras see most of it.</figcaption>
+      <img src="../assets/img/capture/stereo-live.png" alt="Live image of two cameras side by side, each showing the ChArUco board from a different angle, with the detected markers circled in green and the marker percentage in red">
+      <figcaption>Live image of both cameras with <span class="ui">Calibration</span> ticked
+      (artificial images from the <a href="synthetic-images.html">particle image
+      generator</a>): the board is placed so that both cameras see most of it, and almost all
+      markers are detected in both images.</figcaption>
     </figure>
-    <p>If one camera misses a trigger (e.g. at a frame rate that is too high for its USB
-    connection), its images no longer belong to those of the other camera. PIVlab compares the
-    frame times of both cameras after the recording and warns. Lens control works with one camera
-    only.</p>
 
     <h2 id="webcam">Trying it with just a webcam</h2>
     <p>The <span class="ui">Webcam demo (no synchronizer)</span> configuration runs the capture
     workflow against an ordinary USB webcam, so you can see how the panel behaves before setting up
-    real equipment. It needs the free
-    <a href="https://www.mathworks.com/matlabcentral/fileexchange/45182-matlab-support-package-for-usb-webcams" target="_blank" rel="noopener">MATLAB Support Package for USB Webcams</a>.
-    Everything that belongs to the synchronizer, the laser and a PIV camera is switched off, and
+    real equipment. When you run PIVlab inside MATLAB, this needs the free
+    <a href="https://www.mathworks.com/matlabcentral/fileexchange/45182-matlab-support-package-for-usb-webcams" target="_blank" rel="noopener">MATLAB Support Package for USB Webcams</a>;
+    the standalone PIVlab needs nothing extra. Everything that belongs to the synchronizer, the laser and a PIV camera is switched off, and
     the images it produces are a demonstration, not PIV data.</p>
-
-    <div class="note">
-      <strong>Hardware-specific setup lives on the PIVlab wiki</strong>
-      For wiring, camera drivers and step-by-step synchronizer configuration for your specific
-      hardware, see
-      <a href="https://shrediquette.github.io/PIVlab/wiki/5-camera-setup/" target="_blank" rel="noopener">Camera Setup</a>
-      and
-      <a href="https://shrediquette.github.io/PIVlab/wiki/4-synchronizer-laser/" target="_blank" rel="noopener">Synchronizer setup</a>
-      on the PIVlab website — this manual covers the in-app controls, not hardware wiring.
-    </div>
   </article>
 
   <script src="../assets/js/nav.js"></script>
