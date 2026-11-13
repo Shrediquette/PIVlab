@@ -51,10 +51,17 @@ window.MANUAL_NAV = {
       items: [
         { label: "PIV settings",                        href: "pages/piv-settings.html",         status: "live",
           blurb: "Choose the algorithm, interrogation areas and passes." },
-        { label: "Stereo-PIV (2D3C)",                   href: "pages/stereo-piv.html",            status: "live",
-          blurb: "Two cameras: stereo calibration, disparity correction, U, V and W." },
         { label: "Running the analysis (ANALYZE!)",     href: "pages/analyze.html",               status: "live",
           blurb: "Analyze one frame or the whole session, and track progress." }
+      ]
+    },
+    {
+      title: "Stereo-PIV (2D3C)",
+      items: [
+        { label: "Set-up and recording",                href: "pages/stereo-setup.html",          status: "live",
+          blurb: "Two cameras and the laser: arrangement, Scheimpflug focus, calibration board, recording." },
+        { label: "Stereo-PIV analysis",                 href: "pages/stereo-piv.html",            status: "live",
+          blurb: "From the images of both cameras to u, v and w: stereo calibration, disparity correction." }
       ]
     },
     {

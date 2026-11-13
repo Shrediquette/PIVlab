@@ -57,7 +57,7 @@
       loads the matching firmware settings. <span class="ui">Webcam demo (no synchronizer)</span>
       runs the panel without PIV hardware (see <a href="#webcam">below</a>).</td></tr>
       <tr><td>Stereo</td><td>Record with two cameras of the selected type for
-      <a href="stereo-piv.html">stereo-PIV</a> (see <a href="#stereo">below</a>).</td></tr>
+      <a href="stereo-setup.html">stereo-PIV</a> (see <a href="#stereo">below</a>).</td></tr>
       <tr><td>COM port / Connect</td><td>Serial port of the synchronizer. The indicator next to the
       button is red while disconnected and green once the synchronizer answers.</td></tr>
     </table>
@@ -276,7 +276,7 @@
     </div>
 
     <h2 id="stereo">Stereo acquisition (two cameras)</h2>
-    <p>For <a href="stereo-piv.html">stereo-PIV</a>, PIVlab records with two cameras of the same
+    <p>For <a href="stereo-setup.html">stereo-PIV</a>, PIVlab records with two cameras of the same
     type at the same time (at present the OPTOcam 2/80).</p>
     <ol class="steps">
       <li>Connect both cameras to the computer, and both to the camera output of the synchronizer
@@ -288,8 +288,10 @@
       with the lower serial number; <span class="ui">Setup</span> shows both serial numbers, and
       <span class="ui">Swap cameras</span> exchanges camera 1 and 2.</li>
       <li>With <span class="ui">Calibration</span> ticked, the markers of a ChArUco board are shown in
-      both images. Place the board in the light sheet so that both cameras see it well;
-      <span class="ui">Snapshot</span> then saves one image per camera: the board images for the
+      both images. Place the board in the light sheet so that both cameras see it well; align the
+      sheet on it, then switch the laser off and light the board normally
+      (<a href="stereo-setup.html#board-images">why</a>). <span class="ui">Snapshot</span> then saves
+      one image per camera: the board images for the
       <a href="stereo-piv.html#calibration">stereo calibration</a>.</li>
       <li><span class="ui">Capture PIV images</span> saves the images of camera 1 in the subfolder
       <code>cam1</code> and those of camera 2 in <code>cam2</code> of the project folder, and opens

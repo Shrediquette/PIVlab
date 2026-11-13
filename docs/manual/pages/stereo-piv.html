@@ -3,17 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Stereo-PIV (2D3C) · PIVlab Manual</title>
-  <meta name="description" content="How to measure all three velocity components in a light sheet with two cameras (stereo-PIV, 2D3C) in PIVlab.">
+  <title>Stereo-PIV analysis (2D3C) · PIVlab Manual</title>
+  <meta name="description" content="Stereo-PIV (2D3C) analysis in PIVlab: import of both cameras, lens and stereo calibration, disparity correction, analysis to u, v and w, and w in the rest of PIVlab.">
   <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
   <article id="doc">
-    <h1 id="top">Stereo-PIV (2D3C)</h1>
+    <h1 id="top">Stereo-PIV analysis (2D3C)</h1>
     <p class="lead">Two cameras that look at the light sheet from different directions give all
     <strong>three velocity components</strong>: u and v in the sheet and w through it. Most of the
     work is the same as in 2D PIV; new are the <strong>camera switch</strong> and the
     <strong>Stereo-PIV panel</strong>.</p>
+    <p>This page goes from the recorded images to u, v and w. Setting up the cameras and recording the
+    images: <a href="stereo-setup.html">Stereo-PIV: set-up and recording</a>. The whole procedure in
+    eight drawings: <a href="https://www.pivlab.de/wiki/8-stereo-piv-explained/">How stereo-PIV works:
+    illustrated step by step</a>.</p>
 
     <h2 id="idea">Overview</h2>
     <ol>
@@ -29,17 +33,6 @@
     then differ only because the cameras see the out-of-plane motion from different angles; w follows
     from this difference.</p>
 
-    <h3 id="arrangement">Camera set-up</h3>
-    <table class="ref">
-      <tr><th>Arrangement</th><th>Notes</th></tr>
-      <tr><td>Same side of the sheet (side by side, above each other, diagonal)</td>
-      <td>The usual set-up; any direction between the cameras works.</td></tr>
-      <tr><td>Opposite sides of the sheet</td>
-      <td>The camera behind the board sees it from its back: use a transparent board (or one printed
-      mirrored on the back). PIVlab detects the mirrored board automatically.</td></tr>
-    </table>
-    <p>What counts is the angle between the two lines of sight: 30° to 90° is good; a small angle
-    makes w noisy. Two cameras that look at each other along one line can not measure w.</p>
     <h3 id="coordinates">Coordinate system</h3>
     <p>The board in the light sheet defines the axes, as seen from <strong>camera 1</strong>:</p>
     <table class="ref">
@@ -53,11 +46,6 @@
     w has the units of u and v. The axes follow the board, not the light sheet: if the sheet is
     slightly tilted, the result is still aligned with the board, i.e. with your model or test
     section.</p>
-    <div class="tip">
-      <strong>Set-up tips</strong>
-      Particles are much brighter in forward scatter: place both cameras downstream of the laser if
-      you can (e.g. at 40–45° on opposite sides of the sheet). Keep a transparent board thin and flat.
-    </div>
 
     <h2 id="cameras">Two cameras in one session</h2>
     <p>All panels work on the <strong>active camera</strong>. Switch with the
@@ -88,17 +76,18 @@
     shown, to check the particle images. These check results are removed by the stereo calibration.</p>
 
     <h2 id="lens">2. Lens calibration and board image</h2>
-    <p>As in <a href="camera-calibration.html">Camera calibration</a>, once for each camera (the board
-    definition is shared):</p>
+    <p>The board images are recorded as described in <a href="stereo-setup.html#lens-images">set-up
+    and recording</a>. Then, as in <a href="camera-calibration.html">Camera calibration</a>, once for
+    each camera (the board definition is shared):</p>
     <ul>
       <li><a href="camera-calibration.html#calibration">Lens calibration</a>:
       <span class="ui">Estimate cam parameters</span> or <span class="ui">Load parameters</span>
       (tilted sensor model for Scheimpflug adapters). Stereo-PIV always undistorts; the checkbox
       <span class="ui">Show undistorted image</span> only changes the display.</li>
       <li><a href="camera-calibration.html#rectification">Board image in the light sheet</a>:
-      <span class="ui">Load target image</span>. Both images must show the board in the
-      <strong>same position</strong> (ideally recorded at the same time), covering as much of the
-      measurement area as possible.</li>
+      <span class="ui">Load target image</span> (<a href="stereo-setup.html#board-images">recorded with
+      the laser off</a>). Both images must show the board in the <strong>same position</strong>
+      (ideally recorded at the same time), covering as much of the measurement area as possible.</li>
     </ul>
 
     <h2 id="calibration">3. Stereo calibration</h2>
@@ -121,6 +110,10 @@
       <li>Masks, background images and results of both cameras are removed (PIVlab asks first), and
       background subtraction is switched off. Draw masks <strong>after</strong> the calibration.</li>
     </ul>
+    <figure>
+      <img src="../assets/img/stereo-piv/workflow/stereo-piv-step-6-stereo-calibration.svg" width="560" height="340" loading="lazy" alt="The board images of both cameras are mapped onto one common grid in the light sheet; the overlap of both views becomes the region of interest.">
+      <figcaption>Stereo calibration: both cameras on one common grid in the light sheet.</figcaption>
+    </figure>
     <p><span class="ui">Show 3D setup</span> draws cameras, board and light sheet, with a report of
     the viewing angles, the angle between the cameras, the scale, the overlap and the expected error
     of w relative to u and v.</p>
@@ -130,6 +123,10 @@
     the <strong>disparity</strong>. <span class="ui">Measure disparity</span> correlates frame A of
     camera 1 with frame A of camera 2, fits a smooth map and corrects both cameras with it. It also
     gives the position of the light sheet. ANALYZE measures it automatically if you have not.</p>
+    <figure>
+      <img src="../assets/img/stereo-piv/workflow/stereo-piv-step-7-disparity-correction.svg" width="560" height="340" loading="lazy" alt="Top view: the light sheet is slightly offset and tilted against the board position, so the rays of both cameras to one particle cross the board plane at different points (disparity). Correlating the A images of both cameras gives the disparity map that corrects both cameras.">
+      <figcaption>Why the disparity exists, and how it is measured and corrected.</figcaption>
+    </figure>
     <p>Only image data inside the region of interest and outside the masks (of both cameras) is used,
     with the image pre-processing of the GUI. A minimum-intensity background of each camera is always
     removed for this (from at least 10 A images).</p>
@@ -164,6 +161,10 @@
     <p><a href="preprocessing.html">Pre-processing</a>, <a href="masking.html">masks</a> (per camera),
     <a href="piv-settings.html">PIV settings</a> and <a href="analyze.html">ANALYZE!</a> work as in 2D.
     ANALYZE analyses <strong>both cameras</strong> with the same settings and computes u, v and w.</p>
+    <figure>
+      <img src="../assets/img/stereo-piv/workflow/stereo-piv-step-8-analysis-u-v-w.svg" width="560" height="340" loading="lazy" alt="The A and B images of each camera give a 2D vector field per camera; both are combined automatically into the 3D vector map with u, v and w.">
+      <figcaption>From the 2D result of each camera to the 3D vector map.</figcaption>
+    </figure>
     <ul>
       <li><a href="validation-velocity.html">Vector validation</a> filters the 2D results of both
       cameras; u, v and w are then computed again.</li>
