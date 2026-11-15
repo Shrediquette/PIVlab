@@ -98,6 +98,16 @@ else
     if numel(limits) ~= 4 || limits(2) <= limits(1) || limits(4) <= limits(3)
         error('pivlab:filter:limits','VelocityLimits must be [umin umax vmin vmax].');
     end
+    % one-sided limits written with -Inf / Inf: the limit rectangle stores minimum and width, and
+    % Inf - (-Inf) would give NaN limits (nothing removed). A finite limit far outside the data has
+    % the same effect (not too large: minimum + width must give the other limit back exactly).
+    limits = double(limits);
+    if any(isinf(limits))
+        data = abs(double([res.u_raw(:); res.v_raw(:)]));
+        big = 1000 * max([1; data(isfinite(data)); abs(limits(isfinite(limits)))']);
+        limits(limits == -Inf) = -big;
+        limits(limits == Inf) = big;
+    end
     velrect = [limits(1) limits(3) limits(2)-limits(1) limits(4)-limits(3)];
 end
 

@@ -323,7 +323,7 @@ rgb = presets{k,2};
 end
 
 function label = quantity_label(q, res)
-u = res.units;
+u = erase(erase(res.units, "("), ")^2"); % velocity unit (res.units of a TKE frame is squared)
 if u == "px/frame"
     t = "frame"; v = "px/frame";
 elseif u == "m/frame"

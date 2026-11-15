@@ -107,6 +107,8 @@ helper_stereo_gui_calibrate(c);
 set(h.pass1_size, 'String', '64'); piv.intarea_Callback(h.pass1_size, [], []);
 set(h.pass1_step, 'String', '32'); piv.step_Callback(h.pass1_step, [], []);
 set(h.pass2_enable, 'Value', 1); set(h.pass2_size, 'String', '32'); piv.pass2_checkbox_Callback(h.pass2_enable, [], []);
+set(h.stereo_disp_mode, 'Value', 2);   % "Settings: Manual": the panel values are used (Automatic: defaults)
+stereo.disparity_mode_Callback;
 set(h.stereo_disp_passes, 'String', '2');
 set(h.update_display_checkbox, 'Value', 0);
 piv.AnalyzeAll_Callback;

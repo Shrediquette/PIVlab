@@ -1,14 +1,15 @@
 function results = run_pivlab_tests(group)
 %RUN_PIVLAB_TESTS Runs a group of the PIVlab unit tests and prints a summary.
 %   results = run_pivlab_tests(group)
-%   group   'fast'    everything without the PIVlab window (core, api, acq, stereo_core), about 5 min
+%   group   'fast'    everything without the PIVlab window (core, api, acq, stereo_core, truth), about 7 min
 %           'core'    algorithms without GUI (test_core_*)
 %           'api'     command-line API without GUI (test_api_*)
 %           'gui'     the PIVlab window (test_gui_*)
 %           'apigui'  API and GUI give the same results (test_apigui_*)
 %           'stereo'  stereo-PIV (test_stereo_*)
 %           'acq'     image acquisition without hardware (test_acq_*)
-%           'all'     all of them (default), about 25 min
+%           'truth'   results against an analytic truth (test_truth_*, test_gui_truth*)
+%           'all'     all of them (default), about 30 min
 %   or the name of one test file, e.g. 'test_gui_sessions'.
 %
 %   Do not run the GUI groups while you use PIVlab with a camera in another MATLAB (imaqreset in the
@@ -21,7 +22,7 @@ group = char(group);
 here = fileparts(mfilename('fullpath'));
 switch group
     case 'fast'
-        patterns = {'test_core_*.m', 'test_api_*.m', 'test_acq_*.m', 'test_stereo_core.m'};
+        patterns = {'test_core_*.m', 'test_api_*.m', 'test_acq_*.m', 'test_stereo_core.m', 'test_truth_*.m'};
     case 'core'
         patterns = {'test_core_*.m'};
     case 'api'
@@ -34,8 +35,11 @@ switch group
         patterns = {'test_stereo_*.m'};
     case 'acq'
         patterns = {'test_acq_*.m'};
+    case 'truth'
+        patterns = {'test_truth_*.m', 'test_gui_truth*.m'};
     case 'all'
-        patterns = {'test_core_*.m', 'test_api_*.m', 'test_acq_*.m', 'test_stereo_*.m', 'test_gui_*.m', 'test_apigui_*.m'};
+        patterns = {'test_core_*.m', 'test_api_*.m', 'test_acq_*.m', 'test_stereo_*.m', 'test_truth_*.m', ...
+            'test_gui_*.m', 'test_apigui_*.m'};
     otherwise
         patterns = {[group '.m']};
 end

@@ -80,7 +80,7 @@ if src.Button == 1
 				set(handles.u_cp, 'String',  ['u:' sprintf('%0.4f',u_cp_string_velocity) ' m/' time_unit]);
 				set(handles.v_cp, 'String',  ['v:' sprintf('%0.4f',v_cp_string_velocity) ' m/' time_unit]);
 			end
-			if x_cp_string > 100 || x_cp_string < 0.01 || y_cp_string > 100 || y_cp_string < 0.01
+			if abs(x_cp_string) > 100 || abs(x_cp_string) < 0.01 || abs(y_cp_string) > 100 || abs(y_cp_string) < 0.01 %exponential format for very large or small values (also negative ones)
 				set(handles.x_cp, 'String', ['x:' sprintf('%0.4e',x_cp_string)  ' m']);
 				set(handles.y_cp, 'String', ['y:' sprintf('%0.4e',y_cp_string)  ' m']);
 			else
@@ -97,7 +97,7 @@ if src.Button == 1
 					name=get(handles.derivchoice,'string');
 					try
 						scalar_to_plot=map(info(1,1),info(1,2));
-						if scalar_to_plot >100 || scalar_to_plot < 0.001
+						if abs(scalar_to_plot) > 100 || abs(scalar_to_plot) < 0.001
 							scalar_to_plot_string = sprintf('%0.4e',scalar_to_plot);
 						else
 							scalar_to_plot_string = sprintf('%0.4f',scalar_to_plot);
@@ -107,7 +107,7 @@ if src.Button == 1
 						plot.derivs_Callback
 						name=get(handles.derivchoice,'string');
 						scalar_to_plot=map(info(1,1),info(1,2));
-						if scalar_to_plot >100 || scalar_to_plot < 0.001
+						if abs(scalar_to_plot) > 100 || abs(scalar_to_plot) < 0.001
 							scalar_to_plot_string = sprintf('%0.4e',scalar_to_plot);
 						else
 							scalar_to_plot_string = sprintf('%0.4f',scalar_to_plot);

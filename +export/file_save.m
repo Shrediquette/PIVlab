@@ -5,7 +5,8 @@ derived=gui.retr('derived');
 filename=gui.retr('filename');
 calu=gui.retr('calu');calv=gui.retr('calv');
 calxy=gui.retr('calxy');
-fac=gui.frame_factors(currentframe); %velocity, or standard deviation / TKE of temporal statistics
+[fac, statistic]=gui.frame_factors(currentframe); %velocity, or standard deviation / TKE of temporal statistics
+units=export_units(calu, calxy, gui.retr('displacement_only'), statistic); %unit texts of the headers
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	x=resultslist{1,currentframe};
 	y=resultslist{2,currentframe};
@@ -60,34 +61,13 @@ if type==1 %ascii file
 	end
 	if get(handles.addfileinfo, 'value')==1
 		header1=['PIVlab, ASCII chart output - ' char(datetime('today'))];
-		header2=['FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(calu)];
+		header2=['FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> ' units.length '): ' num2str(calxy) ', conversion factor uv (px/frame -> ' units.velocity '): ' num2str(calu)];
 	else
 		header1=[];
 		header2=[];
 	end
 	if get(handles.add_header, 'value')==1
-		if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
-			if get(handles.export_vort, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
-				header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'Vector type [-]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]' delimiter 'uncertainty [px/frame]'];
-			else
-				header3=['x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'Vector type [-]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
-			end
-		else %calibrated
-			displacement_only=gui.retr('displacement_only');
-			if ~isempty(displacement_only) && displacement_only == 1
-				if get(handles.export_vort, 'Value') == 1  %alle derivatives exportieren, kalibriert
-					header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/frame]' delimiter 'v [m/frame]' delimiter 'Vector type [-]' delimiter 'vorticity [1/frame]' delimiter 'magnitude [m/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]' delimiter 'uncertainty [m/frame]'];
-				else
-					header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
-				end
-			else
-				if get(handles.export_vort, 'Value') == 1  %alle derivatives exportieren, kalibriert
-					header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'Q criterion [1/s^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]' delimiter 'uncertainty [m/s]'];
-				else
-					header3=['x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'Vector type [-]'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
-				end
-			end
-		end
+		header3=column_header(units, delimiter, 'Vector type [-]', get(handles.export_vort, 'Value') == 1);
 	else
 		header3=[];
 	end
@@ -153,16 +133,7 @@ if type==3 %paraview vtk PARAVIEW DATEN OHNE die ganzen derivatives.... Berechne
 
 	nr_of_elements=numel(x_cal);
 	fid = fopen(fullfile(PathName,FileName), 'w');
-	if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
-		info='[px/frame]';
-	else
-		displacement_only=gui.retr('displacement_only');
-		if ~isempty(displacement_only) && displacement_only == 1
-			info='[m/frame]';
-		else
-			info='[m/s]';
-		end
-	end
+	info=['[' units.value ']'];
 	%ASCII file header
 	fprintf(fid, '# vtk DataFile Version 3.0\n');
 	fprintf(fid, ['VTK from PIVlab ' info '\n']);
@@ -216,34 +187,13 @@ end %type3
 if type==4 %tecplot file
 	delimiter = ' ';
 	header1=['# PIVlab by W.Th. & E.J.S., TECPLOT output - ' char(datetime('today'))];
-	header2=['# FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> m): ' num2str(calxy) ', conversion factor uv (px/frame -> m/s): ' num2str(calu)];
-	if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1
-		if get(handles.export_vort_tec, 'Value') == 1 %alle derivatives exportieren, nicht kalibriert
-			header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [px/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]' delimiter 'uncertainty [px/frame]'];
-			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "shear_rate", "simple_strain", "vector_direction", "correlation_map", "uncertainty_map"';
-		else
-			header3=['# x [px]' delimiter 'y [px]' delimiter 'u [px/frame]' delimiter 'v [px/frame]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
-			header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
-		end
-	else %calibrated
-		displacement_only=gui.retr('displacement_only');
-		if isempty(displacement_only) || displacement_only ~= 1 %velocities in m/s (displacements only: m/frame, below)
-			if get(handles.export_vort_tec, 'Value') == 1  %alle derivatives exportieren, kalibriert
-				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?' delimiter 'vorticity [1/s]' delimiter 'magnitude [m/s]' delimiter 'divergence [1/s]' delimiter 'Q criterion [1/s^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/s]' delimiter 'simple strain [1/s]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]' delimiter 'uncertainty [m/s]'];
-				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "shear_rate", "simple_strain", "vector_direction", "correlation_map", "uncertainty_map"';
-			else
-				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/s]' delimiter 'v [m/s]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
-				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
-			end
-		else
-			if get(handles.export_vort_tec, 'Value') == 1  %alle derivatives exportieren, kalibriert
-				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/frame]' delimiter 'v [m/frame]' delimiter 'isNaN?' delimiter 'vorticity [1/frame]' delimiter 'magnitude [m/frame]' delimiter 'divergence [1/frame]' delimiter 'Q criterion [1/frame^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/frame]' delimiter 'simple strain [1/frame]' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]' delimiter 'uncertainty [m/frame]'];
-				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "shear_rate", "simple_strain", "vector_direction", "correlation_map", "uncertainty_map"';
-			else
-				header3=['# x [m]' delimiter 'y [m]' delimiter 'u [m/frame]' delimiter 'v [m/frame]' delimiter 'isNaN?'];%delimiter 'magnitude[m/s]' delimiter 'divergence[1]' delimiter 'vorticity[1/s]' delimiter 'dcev[1]']
-				header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
-			end
-		end
+	header2=['# FRAME: ' int2str(currentframe) ', filenames: ' filename{currentframe*2-1} ' & ' filename{currentframe*2} ', conversion factor xy (px -> ' units.length '): ' num2str(calxy) ', conversion factor uv (px/frame -> ' units.velocity '): ' num2str(calu)];
+	with_derivatives=get(handles.export_vort_tec, 'Value') == 1;
+	header3=['# ' column_header(units, delimiter, 'isNaN?', with_derivatives)];
+	if with_derivatives
+		header5= 'VARIABLES = "x", "y", "u", "v", "isNaN", "vorticity", "magnitude", "divergence", "Q_criterion", "shear_rate", "simple_strain", "vector_direction", "correlation_map", "uncertainty_map"';
+	else
+		header5= 'VARIABLES = "x", "y", "u", "v", "isNaN"';
 	end
 	if ~isempty(w) %stereo-PIV: w right after v
 		header3=insert_w_header(header3,delimiter);
@@ -310,6 +260,35 @@ if type==4 %tecplot file
 
 	dlmwrite(fullfile(PathName,FileName), wholeLOT, '-append', 'delimiter', delimiter, 'precision', 10, 'newline', 'pc'); %#ok<DLMWT>
 end %fÃ¼r mehrere Zones: einfach header6 nochmal appenden, dann whileLOT fÃ¼r den nÃ¤chsten frame berechnen und appenden etc...
+
+function units=export_units(calu, calxy, displacement_only, statistic)
+%Unit texts of the exported columns: units.length (x, y), units.velocity (calibration of u, v),
+%units.value (u, v, w, magnitude: squared for TKE frames), units.time (derivatives).
+if (calu==1 || calu==-1) && calxy==1 %not calibrated
+	units.length='px';
+	units.velocity='px/frame';
+	units.time='frame';
+elseif ~isempty(displacement_only) && displacement_only == 1
+	units.length='m';
+	units.velocity='m/frame';
+	units.time='frame';
+else
+	units.length='m';
+	units.velocity='m/s';
+	units.time='s';
+end
+units.value=units.velocity;
+if strcmp(statistic,'tke')
+	units.value=['(' units.velocity ')^2']; %TKE: velocity squared
+end
+
+function header=column_header(units, delimiter, type_column, with_derivatives)
+%Column names of the ASCII and Tecplot exports (x y u v type [derivatives]).
+L=units.length; V=units.value; T=units.time;
+header=['x [' L ']' delimiter 'y [' L ']' delimiter 'u [' V ']' delimiter 'v [' V ']' delimiter type_column];
+if with_derivatives
+	header=[header delimiter 'vorticity [1/' T ']' delimiter 'magnitude [' V ']' delimiter 'divergence [1/' T ']' delimiter 'Q criterion [1/' T '^2]' delimiter 'shear rate (magnitude of the rate-of-strain tensor) [1/' T ']' delimiter 'simple strain [1/' T ']' delimiter 'vector direction [degrees]' delimiter 'correlation coefficient [-]' delimiter 'uncertainty [' units.velocity ']'];
+end
 
 function header=insert_w_header(header,delimiter)
 %stereo-PIV: a w column header after the v column, in the unit of v

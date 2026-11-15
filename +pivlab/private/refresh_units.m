@@ -26,15 +26,18 @@ if isempty(p.uncertainty)
 else
     res.uncertainty = p.uncertainty*abs(c.calu);
 end
-res.units = unit_string(c);
+res.units = unit_string(c, result_statistic(res));
 end
 
-function u = unit_string(c)
+function u = unit_string(c, statistic)
 if (c.calu==1 || c.calu==-1) && c.calxy==1
     u = "px/frame";
 elseif c.displacement_only
     u = "m/frame";
 else
     u = "m/s";
+end
+if strcmp(statistic, 'tke') % TKE: velocity squared
+    u = "(" + u + ")^2";
 end
 end
