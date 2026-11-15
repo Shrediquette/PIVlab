@@ -8,17 +8,18 @@ u = p.u; v = p.v;
 if res.smoothed && ~isempty(p.u_smoothed)
     u = p.u_smoothed; v = p.v_smoothed;
 end
-res.u = u*c.calu;
-res.v = v*c.calv;
-res.u_raw = p.u_raw*c.calu;
-res.v_raw = p.v_raw*c.calv;
-if isfield(p, 'w') % stereo-PIV: out-of-plane component, |calu| (an axis flip of x or y does not flip w)
+f = calibrate.statistic_factors(c.calu, c.calv, result_statistic(res)); % std and TKE: own units
+res.u = u*f.u;
+res.v = v*f.v;
+res.u_raw = p.u_raw*f.u;
+res.v_raw = p.v_raw*f.v;
+if isfield(p, 'w') % stereo-PIV: out-of-plane component, positive along z = x cross y
     w = p.w;
     if res.smoothed && ~isempty(p.w_smoothed)
         w = p.w_smoothed;
     end
-    res.w = w*abs(c.calu);
-    res.w_raw = p.w_raw*abs(c.calu);
+    res.w = w*f.w;
+    res.w_raw = p.w_raw*f.w;
 end
 if isempty(p.uncertainty)
     res.uncertainty = [];

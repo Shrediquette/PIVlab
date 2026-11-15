@@ -14,9 +14,10 @@ end
 pointscali = gui.retr('pointscali');
 time_inp = str2double(get(handles.time_inp, 'String'));
 if isempty(pointscali)
+    [calu, calv] = calibrate.uncalibrated_factors(get(handles.x_axis_direction, 'Value'), get(handles.y_axis_direction, 'Value'));
     gui.put('calxy', 1);
-    gui.put('calu', 1);
-    gui.put('calv', 1);
+    gui.put('calu', calu);
+    gui.put('calv', calv);
     gui.put('offset_x_true', 0);
     gui.put('offset_y_true', 0);
     gui.put('displacement_only', double(time_inp == 0));

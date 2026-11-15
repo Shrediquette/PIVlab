@@ -39,6 +39,6 @@ for i = 1:size(resultslist, 2)
         continue
     end
     discard{i} = stereo.limit_test(resultslist{3, i} * calu, resultslist{4, i} * calv, ...
-        resultslist{16, i} * abs(calu), velrect, roi_freehand, notch_limits); % |calu|: an axis flip does not flip w
+        resultslist{16, i} * calibrate.w_factor(calu, calv), velrect, roi_freehand, notch_limits); % w along z = x cross y
 end
 end

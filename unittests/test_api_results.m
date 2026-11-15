@@ -107,20 +107,29 @@ helper_verify_near(testCase, b.u, a.u, 'RelTol', 1e-6);
 % Origin: x and y are measured from this pixel
 o = pivlab.toMetric(res, DeltaT=0.002, PxPerMeter=5000, Origin=[100 200], Verbose=false);
 helper_verify_near(testCase, o.x, (double(res.px.x)-100)/5000, 'AbsTol', 1e-7);   % px positions are single
-helper_verify_near(testCase, o.y, (double(res.px.y)-200)/5000, 'AbsTol', 1e-7);
-% axis directions
+helper_verify_near(testCase, o.y, (200-double(res.px.y))/5000, 'AbsTol', 1e-7);   % default: y increases upward
+% axis directions (default: x right, y up)
+helper_verify_near(testCase, a.u, double(res.px.u)/5000/0.002, 'RelTol', 1e-6);
+helper_verify_near(testCase, a.v, -double(res.px.v)/5000/0.002, 'RelTol', 1e-6);
+testCase.verifyLessThan(a.y(2,1) - a.y(1,1), 0);
 l = pivlab.toMetric(res, DeltaT=0.002, PxPerMeter=5000, XAxis="left", Verbose=false);
 helper_verify_near(testCase, l.u, -a.u, 'RelTol', 1e-6);
 helper_verify_near(testCase, l.v, a.v, 'RelTol', 1e-6);
 testCase.verifyLessThan(l.x(1,2) - l.x(1,1), 0);
-up = pivlab.toMetric(res, DeltaT=0.002, PxPerMeter=5000, YAxis="up", Verbose=false);
-helper_verify_near(testCase, up.v, -a.v, 'RelTol', 1e-6);
-helper_verify_near(testCase, up.u, a.u, 'RelTol', 1e-6);
-testCase.verifyLessThan(up.y(2,1) - up.y(1,1), 0);
-% the sign of the vorticity follows the axes
+down = pivlab.toMetric(res, DeltaT=0.002, PxPerMeter=5000, YAxis="down", Verbose=false);
+helper_verify_near(testCase, down.v, -a.v, 'RelTol', 1e-6);
+helper_verify_near(testCase, down.u, a.u, 'RelTol', 1e-6);
+testCase.verifyGreaterThan(down.y(2,1) - down.y(1,1), 0);
+% vorticity is dv/dx - du/dy in the user's axes: one reversed axis reverses the sign, two keep it
 [~, w1] = pivlab.derive(a, "vorticity");
-[~, w2] = pivlab.derive(up, "vorticity");
-helper_verify_near(testCase, w2, -w1, 'AbsTol', 1e-6*max(abs(w1(:))));
+[~, w2] = pivlab.derive(down, "vorticity");
+[~, w3] = pivlab.derive(l, "vorticity");
+both = pivlab.toMetric(res, DeltaT=0.002, PxPerMeter=5000, XAxis="left", YAxis="down", Verbose=false);
+[~, w4] = pivlab.derive(both, "vorticity");
+tol = 1e-4*max(abs(w1(:)));   % single precision data, reversed coordinates
+helper_verify_near(testCase, w2, -w1, 'AbsTol', tol);
+helper_verify_near(testCase, w3, -w1, 'AbsTol', tol);
+helper_verify_near(testCase, w4, w1, 'AbsTol', tol);
 % DeltaT = 0: displacements in m per frame
 d = pivlab.toMetric(res, DeltaT=0, PxPerMeter=5000, Verbose=false);
 testCase.verifyEqual(d.units, "m/frame");
@@ -130,11 +139,11 @@ r = pivlab.toMetric(pivlab.toMetric(res, DeltaT=1, PxPerMeter=1, Verbose=false),
 testCase.verifyEqual(r.u, a.u);
 % calibration from a session or settings file
 f = fullfile(testCase.TestData.Dir, 'cal_session.mat');
-pivlab.saveSession(up, f, Verbose=false);
+pivlab.saveSession(down, f, Verbose=false);   % not the default axes
 s = pivlab.loadSettings(f);
 c = pivlab.toMetric(res, Settings=s, Verbose=false);
-helper_verify_near(testCase, c.u, up.u, 'RelTol', 1e-12);
-helper_verify_near(testCase, c.y, up.y, 'RelTol', 1e-12);
+helper_verify_near(testCase, c.u, down.u, 'RelTol', 1e-12);
+helper_verify_near(testCase, c.y, down.y, 'RelTol', 1e-12);
 % missing information
 testCase.verifyEqual(helper_error_id('pivlab.toMetric', res), 'pivlab:toMetric:noCalibration');
 testCase.verifyEqual(helper_error_id('pivlab.toMetric', res, 'DeltaT', 0.001), 'pivlab:toMetric:missing');
@@ -203,6 +212,39 @@ testCase.verifyEqual(vs, v1);
 % wrong input
 testCase.verifyEqual(helper_error_id('pivlab.derive', res, "speed"), 'pivlab:derive:quantity');
 testCase.verifyEqual(helper_error_id('pivlab.derive', res, "vorticity", 'Smoothing', "gaussian"), 'pivlab:derive:smoothing');
+end
+
+function test_temporal_units(testCase)
+% calibrated statistics: mean and sum like velocities, standard deviation never negative,
+% TKE in velocity units squared - for every axis setting
+res = pivlab.filter(testCase.TestData.Res, Verbose=false);
+xnames = ["right", "left"];
+ynames = ["down", "up"];
+for xd = 1:2
+    for yd = 1:2
+        m = pivlab.toMetric(res, DeltaT=0.002, PxPerMeter=5000, XAxis=xnames(xd), YAxis=ynames(yd), Verbose=false);
+        c = m.calibration;
+        name = xnames(xd) + "/" + ynames(yd);
+        for op = ["mean", "std", "tke"]
+            t = pivlab.temporal(m, op);
+            switch op
+                case "mean", fu = c.calu; fv = c.calv;
+                case "std",  fu = abs(c.calu); fv = abs(c.calv);
+                case "tke",  fu = c.calu^2; fv = c.calv^2;
+            end
+            ok = isfinite(t.px.u) & isfinite(t.px.v);
+            helper_verify_near(testCase, double(t.u(ok)), double(t.px.u(ok))*fu, 'RelTol', 1e-6, name + " " + op + " u");
+            helper_verify_near(testCase, double(t.v(ok)), double(t.px.v(ok))*fv, 'RelTol', 1e-6, name + " " + op + " v");
+            if op ~= "mean"
+                testCase.verifyGreaterThanOrEqual(min(t.u(ok)), 0, name + " " + op);
+            end
+            if op == "tke"
+                [~, total] = pivlab.derive(t, "magnitude");
+                helper_verify_near(testCase, double(total(ok)), double(t.u(ok) + t.v(ok)), 'RelTol', 1e-6, name + " total TKE");
+            end
+        end
+    end
+end
 end
 
 function test_temporal_options(testCase)

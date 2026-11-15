@@ -28,7 +28,7 @@ for k = 1:3
     ok = check(sprintf('corr map pair %d',k), res.correlation_map(:,:,k), B.raw{12,k}) && ok;
     ok = check(sprintf('u2 pair %d',k), res.px.u2(:,:,k), B.raw{13,k}) && ok;
 end
-res = pivlab.toMetric(res, ReferenceDistance=[100 0.01], DeltaT=0.1);
+res = pivlab.toMetric(res, ReferenceDistance=[100 0.01], DeltaT=0.1, XAxis="right", YAxis="down"); % as the GUI scenario
 ok = check('calxy', res.calibration.calxy, B.cal.calxy) && ok;
 ok = check('calu', res.calibration.calu, B.cal.calu) && ok;
 res = pivlab.filter(res, StdevThreshold=7, LocalMedianThreshold=3);

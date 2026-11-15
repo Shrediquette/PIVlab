@@ -63,13 +63,16 @@
     </div>
 
     <h2 id="offsets">Setting up axis directions and origin</h2>
-    <p>By default, image data has its origin at the top left, with <em>x</em> increasing right
-    and <em>y</em> increasing downward. The <span class="ui">Setup Offsets</span> panel lets you
-    match PIVlab's coordinate system to your own:</p>
+    <p>By default, <em>x</em> increases to the right and <em>y</em> upward, with the origin at the
+    bottom left of the image. <em>x</em>, <em>y</em> and <em>z</em> form a right-handed coordinate
+    system (<em>z</em> = <em>x</em> × <em>y</em>, toward the camera by default); vorticity and the
+    stereo-PIV component <em>w</em> refer to <em>z</em>. This also applies to uncalibrated results in
+    pixels. The <span class="ui">Setup Offsets</span> panel lets you match PIVlab's coordinate system
+    to your own:</p>
     <table class="ref">
       <tr><th>Control</th><th>Effect</th></tr>
       <tr><td>x increases towards the (right/left)</td><td>Flips the direction of positive x.</td></tr>
-      <tr><td>y increases towards the (bottom/top)</td><td>Flips the direction of positive y — e.g. choose "top" for a conventional bottom-left-origin coordinate system.</td></tr>
+      <tr><td>y increases towards the (bottom/top)</td><td>Flips the direction of positive y.</td></tr>
       <tr><td>Set x &amp; y offsets</td><td>Click a point in the calibration image and enter the physical (x, y) coordinate it represents, moving the origin there.</td></tr>
     </table>
 

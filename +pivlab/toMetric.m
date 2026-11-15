@@ -16,9 +16,12 @@ function res = toMetric(res, opts)
 %   PxPerMeter      image scale in px/m
 %   ReferenceDistance  alternative to PxPerMeter: [distance_px distance_m], e.g. a ruler in
 %                   the calibration image that is 512.3 px long and 0.05 m long: [512.3 0.05]
-%   Origin          pixel position [x y] of the coordinate origin (default: top left image corner)
+%   Origin          pixel position [x y] of the coordinate origin (default: the image corner from
+%                   which x and y increase, bottom left with the default axes)
 %   XAxis           "right" (default) or "left": direction in which x increases
-%   YAxis           "down" (default, image convention) or "up": direction in which y increases
+%   YAxis           "up" (default) or "down": direction in which y increases
+%   x, y and z form a right-handed coordinate system (z = x cross y). Vorticity and the stereo-PIV
+%   component w refer to z. With the default axes, z points toward the camera.
 %   Verbose         true (default) / false: print the calibration factor
 %   Settings        settings struct from pivlab.loadSettings (uses its calibration)
 %
@@ -27,7 +30,7 @@ function res = toMetric(res, opts)
 %   Filter limits (pivlab.filter, VelocityLimits) are always in the units res has at that time.
 %
 %   Example
-%       res = pivlab.toMetric(res, DeltaT=0.001, PxPerMeter=1234, YAxis="up");
+%       res = pivlab.toMetric(res, DeltaT=0.001, PxPerMeter=1234, XAxis="left");
 %
 %   See also pivlab.filter, pivlab.derive, calibrate.compute_calibration
 arguments
@@ -37,7 +40,7 @@ arguments
     opts.ReferenceDistance = []
     opts.Origin = []
     opts.XAxis {mustBeTextScalar} = "right"
-    opts.YAxis {mustBeTextScalar} = "down"
+    opts.YAxis {mustBeTextScalar} = "up"
     opts.Verbose (1,1) logical = true
     opts.Settings struct = struct()
 end

@@ -60,7 +60,8 @@ lines{end + 1} = sprintf('Board corners: %d / %d (rejected %d / %d)', info.n_cor
 if isfinite(info.w_error_ratio)
     lines{end + 1} = sprintf('Random error of w: about %.1f x that of u and v', info.w_error_ratio);
 end
-lines{end + 1} = sprintf('w is positive %s (Z axis)', stereo.w_direction(calib));
+[~, toward] = stereo.w_direction(calib);
+lines{end + 1} = sprintf('w is positive along z (x, y, z right-handed); x right, y up: %s', toward);
 if info.stereo_angle < 20
     lines{end + 1} = 'Warning: small angle between the cameras, w will be inaccurate.';
 end

@@ -331,6 +331,9 @@ elseif u == "m/frame"
 else
     t = "s"; v = "m/s";
 end
+if isfield(res,'statistic') && res.statistic == "tke"
+    v = "(" + v + ")^2"; % TKE: velocity squared
+end
 switch q
     case "vorticity",   label = "Vorticity in 1/" + t;
     case "magnitude",   label = "Magnitude in " + v;

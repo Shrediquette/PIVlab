@@ -64,6 +64,7 @@ default.analysis.bright_filter_thresh = 1;
 default.analysis.corr_filter_enable = 0;
 default.analysis.corr_filter_thresh = 0.5;
 % Stereo-PIV: disparity correction (also the defaults of stereo.defaults)
+default.analysis.stereo_disp_mode = 1;     % 1 = automatic (the defaults below), 2 = manual (the values below)
 default.analysis.stereo_disp_pairs = 0;    % image pairs used for the disparity, 0 = automatic
 default.analysis.stereo_disp_model = 1;    % 1 = 2nd-order polynomial, 2 = plane (1st order), 3 = projective
 default.analysis.stereo_disp_passes = 3;   % measurements (each one corrects the remaining disparity)
@@ -77,7 +78,7 @@ default.calibration.optimize_calib_img = 1;
 default.calibration.realdist = 1;
 default.calibration.time_inp = 1;
 default.calibration.x_axis_direction = 1;
-default.calibration.y_axis_direction = 1;
+default.calibration.y_axis_direction = 2; % y increases towards the top (x, y, z right-handed, z toward the camera)
 % Camera calibration
 default.calibration.calib_use_tilted_model = 0;
 default.calibration.calib_viewtype = 1;

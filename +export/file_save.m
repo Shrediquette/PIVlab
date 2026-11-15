@@ -5,6 +5,7 @@ derived=gui.retr('derived');
 filename=gui.retr('filename');
 calu=gui.retr('calu');calv=gui.retr('calv');
 calxy=gui.retr('calxy');
+fac=gui.frame_factors(currentframe); %velocity, or standard deviation / TKE of temporal statistics
 if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	x=resultslist{1,currentframe};
 	y=resultslist{2,currentframe};
@@ -43,7 +44,7 @@ v(typevector==0)=NaN;
 w=stereo.w_of_frame(currentframe,smoothed); %stereo-PIV: out-of-plane component (else empty), exported right after v
 if ~isempty(w)
 	w(typevector==0)=NaN;
-	w_cal=w*abs(calu); %like u (an axis flip does not flip w)
+	w_cal=w*fac.w; %w is positive along z = x cross y
 end
 subtract_u=gui.retr('subtr_u');
 subtract_v=gui.retr('subtr_v');
@@ -132,10 +133,10 @@ if type==1 %ascii file
 		unc_map=derived{12,currentframe};
 		if isempty(unc_map); unc_map=NaN(size(u)); end
 		%wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(dcev,size(dcev,1)*size(dcev,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1)];
-		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(q_criterion,size(q_criterion,1)*size(q_criterion,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1) reshape(corr_map,size(corr_map,1)*size(corr_map,2),1) reshape(unc_map,size(unc_map,1)*size(unc_map,2),1)];
+		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*fac.u-subtract_u,size(u,1)*size(u,2),1) reshape(v*fac.v-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(q_criterion,size(q_criterion,1)*size(q_criterion,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1) reshape(corr_map,size(corr_map,1)*size(corr_map,2),1) reshape(unc_map,size(unc_map,1)*size(unc_map,2),1)];
 	else %no derivatives.
 		%wholeLOT=[reshape(x*calxy,size(x,1)*size(x,2),1) reshape(y*calxy,size(y,1)*size(y,2),1) reshape(u*caluv-subtract_u,size(u,1)*size(u,2),1) reshape(v*caluv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
-		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
+		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*fac.u-subtract_u,size(u,1)*size(u,2),1) reshape(v*fac.v-subtract_v,size(v,1)*size(v,2),1) reshape(typevector,size(typevector,1)*size(typevector,2),1)];
 	end
 	if ~isempty(w)
 		wholeLOT=[wholeLOT(:,1:4) w_cal(:) wholeLOT(:,5:end)]; %x y u v w type ...
@@ -147,8 +148,8 @@ if type==2 %NOT USED ANYMORE matlab file
 end
 
 if type==3 %paraview vtk PARAVIEW DATEN OHNE die ganzen derivatives.... Berechnet man doch eh direkt in Paraview.
-	u=u*calu-subtract_u;
-	v=v*calv-subtract_v;
+	u=u*fac.u-subtract_u;
+	v=v*fac.v-subtract_v;
 
 	nr_of_elements=numel(x_cal);
 	fid = fopen(fullfile(PathName,FileName), 'w');
@@ -292,13 +293,13 @@ if type==4 %tecplot file
 		vectorangle(isnan(vectorangle))=0;
 		corr_map(isnan(corr_map))=0;
 		unc_map(isnan(unc_map))=0;
-		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(q_criterion,size(q_criterion,1)*size(q_criterion,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1) reshape(corr_map,size(corr_map,1)*size(corr_map,2),1) reshape(unc_map,size(unc_map,1)*size(unc_map,2),1)];
+		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*fac.u-subtract_u,size(u,1)*size(u,2),1) reshape(v*fac.v-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1) reshape(vort,size(vort,1)*size(vort,2),1) reshape(magn,size(magn,1)*size(magn,2),1) reshape(div,size(div,1)*size(div,2),1) reshape(q_criterion,size(q_criterion,1)*size(q_criterion,2),1) reshape(shear,size(shear,1)*size(shear,2),1) reshape(strain,size(strain,1)*size(strain,2),1) reshape(vectorangle,size(vectorangle,1)*size(vectorangle,2),1) reshape(corr_map,size(corr_map,1)*size(corr_map,2),1) reshape(unc_map,size(unc_map,1)*size(unc_map,2),1)];
 	else
 		nanmarker=zeros(size(x));
 		nanmarker(isnan(u))=1;
 		u(isnan(u))=0;
 		v(isnan(v))=0;
-		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*calu-subtract_u,size(u,1)*size(u,2),1) reshape(v*calv-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1)];
+		wholeLOT=[reshape(x_cal,size(x_cal,1)*size(x_cal,2),1) reshape(y_cal,size(y_cal,1)*size(y_cal,2),1) reshape(u*fac.u-subtract_u,size(u,1)*size(u,2),1) reshape(v*fac.v-subtract_v,size(v,1)*size(v,2),1) reshape(nanmarker,size(v,1)*size(v,2),1)];
 	end
 	if ~isempty(w)
 		w_tec=w_cal;

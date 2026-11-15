@@ -79,10 +79,10 @@ Now seed the flow and record image pairs with both cameras, synchronized with th
 ## 8. Analysis: from both cameras to u, v and w
 
 <figure>
-  <img src="{{ img | append: 'stereo-piv-step-8-analysis-u-v-w.svg' | relative_url }}" width="560" height="340" loading="lazy" alt="Analysis: the A and B images of each camera give a 2D vector field per camera. Both fields are combined automatically into the resulting 3D vector map, drawn as arrows above and below the measurement plane, with the axes X to the right, Y down and Z away from camera 1.">
+  <img src="{{ img | append: 'stereo-piv-step-8-analysis-u-v-w.svg' | relative_url }}" width="560" height="340" loading="lazy" alt="Analysis: the A and B images of each camera give a 2D vector field per camera. Both fields are combined automatically into the resulting 3D vector map, drawn as arrows above and below the measurement plane, with the axes X to the right, Y up in the image and Z toward camera 1.">
 </figure>
 
-Each camera is analysed with normal 2D PIV, with the same settings and on the corrected images. The two 2D vector fields differ, because each camera sees the out-of-plane motion from its own side. For every point, the two measured 2D displacements (four numbers) are combined into **one 3D vector**: u and v in the board plane (X to the right, Y down in the image) and w along Z, away from camera 1. In PIVlab this combination happens automatically after the analysis, and again after each validation.
+Each camera is analysed with normal 2D PIV, with the same settings and on the corrected images. The two 2D vector fields differ, because each camera sees the out-of-plane motion from its own side. For every point, the two measured 2D displacements (four numbers) are combined into **one 3D vector**: u and v in the board plane (X to the right, Y up in the image) and w along Z, toward camera 1 (X, Y, Z right-handed). In PIVlab this combination happens automatically after the analysis, and again after each validation.
 
 ## Use these drawings
 

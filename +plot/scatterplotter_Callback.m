@@ -27,7 +27,8 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		v=resultslist{4,currentframe};
 	end
 	w=stereo.w_of_frame(currentframe,smoothed); %stereo-PIV, [] in 2D
-	calu=gui.retr('calu');calv=gui.retr('calv');
+	fac=gui.frame_factors(currentframe); %velocity, or standard deviation / TKE of temporal statistics
+	calu=fac.u;calv=fac.v;
 	u=reshape(u,size(u,1)*size(u,2),1);
 	v=reshape(v,size(v,1)*size(v,2),1);
 	h=figure;
@@ -55,7 +56,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 	else %stereo-PIV: 3D scatter plot of u, v, w
 		set(h,'numbertitle','off','menubar','none','toolbar','figure','dockcontrols','off','name',['Scatter plot u, v, w, frame ' num2str(currentframe)],'tag', 'derivplotwindow');
 		w=reshape(w,numel(w),1);
-		h2=scatter3(axh,u*calu-gui.retr('subtr_u'),v*calv-gui.retr('subtr_v'),w*abs(calu),'r.'); %|calu|: an axis flip of x or y does not flip w
+		h2=scatter3(axh,u*calu-gui.retr('subtr_u'),v*calv-gui.retr('subtr_v'),w*fac.w,'r.'); %w is positive along z = x cross y
 		set (axh, 'xgrid', 'on', 'ygrid', 'on', 'zgrid', 'on', 'TickDir', 'in')
 		xlabel(['u' unit]);
 		ylabel(['v' unit]);

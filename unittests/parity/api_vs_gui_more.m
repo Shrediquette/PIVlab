@@ -81,7 +81,7 @@ end
 %% validation variants (validation_variants), calibrated 10 mm / 100 px, 100 ms
 B = load(fullfile(basedir,'validation_variants.mat'));
 res0 = pivlab.analyze(pivlab.preprocess(pivlab.readImages(J(2), "pairwise")), Passes=2, PassSizes=[32 32 32]);
-res0 = pivlab.toMetric(res0, ReferenceDistance=[100 0.01], DeltaT=0.1);
+res0 = pivlab.toMetric(res0, ReferenceDistance=[100 0.01], DeltaT=0.1, XAxis="right", YAxis="down"); % as the GUI scenario
 base = {'StdevThreshold',7,'LocalMedianThreshold',3};
 W = {'default',{}; 'nostdev',{'StdevCheck',false}; 'nomedian',{'LocalMedian',false}; 'nointerp',{'Interpolate',false}; ...
      'velrect',{'VelocityLimits',[-0.002 0.002 -0.002 0.002]}; 'corrfilt',{'CorrelationFilter',true,'CorrelationThreshold',0.6}; ...

@@ -330,7 +330,7 @@ window.MANUAL_SEARCH = [
     title: "Axis directions and origin offset",
     href: "pages/spatial-calibration.html", hash: "offsets",
     section: "Spatial calibration",
-    text: "x axis direction y axis direction offset origin coordinate system top left bottom right"
+    text: "x axis direction y axis direction offset origin coordinate system right-handed z axis bottom left top right"
   },
   {
     title: "Derived flow parameters (vorticity, divergence, Q criterion, …)",

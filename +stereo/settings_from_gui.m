@@ -4,6 +4,10 @@ if nargin < 1
     handles = gui.gethand;
 end
 st = stereo.defaults();
+st.Parallel = isequal(gui.retr('parallel'), 1);
+if get(handles.stereo_disp_mode, 'Value') ~= 2 % automatic: the defaults
+    return
+end
 models = stereo.disparity_models;
 st.disparity.Pairs = max(0, round(number(handles.stereo_disp_pairs, st.disparity.Pairs))); % 0 = automatic
 st.disparity.Model = models(get(handles.stereo_disp_model, 'Value'));
@@ -15,7 +19,6 @@ if ia > 0
 end
 st.disparity.StdevThreshold = number(handles.stereo_disp_stdev, st.disparity.StdevThreshold);
 st.disparity.LocalMedianThreshold = number(handles.stereo_disp_median, st.disparity.LocalMedianThreshold);
-st.Parallel = isequal(gui.retr('parallel'), 1);
 end
 
 function v = number(control, default)

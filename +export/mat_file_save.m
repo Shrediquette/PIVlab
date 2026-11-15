@@ -65,23 +65,24 @@ if isempty(resultslist)==0
 		if type==2 %all frames
 			currentframe=i;
 		end
+		fac=gui.frame_factors(currentframe); %velocity, or standard deviation / TKE of temporal statistics
 		[x_cal,y_cal]=calibrate.xy (resultslist{1,currentframe},resultslist{2,currentframe});
 		x{i,1}=x_cal;
 		y{i,1}=y_cal;
 
-		u_original{i,1}=resultslist{3,currentframe}*calu;
-		v_original{i,1}=resultslist{4,currentframe}*calv;
+		u_original{i,1}=resultslist{3,currentframe}*fac.u;
+		v_original{i,1}=resultslist{4,currentframe}*fac.v;
 		typevector_original{i,1}=resultslist{5,currentframe};
-		u_filtered{i,1}=resultslist{7,currentframe}*calu;
-		v_filtered{i,1}=resultslist{8,currentframe}*calv;
+		u_filtered{i,1}=resultslist{7,currentframe}*fac.u;
+		v_filtered{i,1}=resultslist{8,currentframe}*fac.v;
 		typevector_filtered{i,1}=resultslist{9,currentframe};
-		u_smoothed{i,1}=resultslist{10,currentframe}*calu;
-		v_smoothed{i,1}=resultslist{11,currentframe}*calv;
+		u_smoothed{i,1}=resultslist{10,currentframe}*fac.u;
+		v_smoothed{i,1}=resultslist{11,currentframe}*fac.v;
 		if stereo_mode %w is computed from the validated 2D results of both cameras: original = filtered
-			w_original{i,1}=stereo.w_of_frame(currentframe,false,resultslist)*abs(calu);
+			w_original{i,1}=stereo.w_of_frame(currentframe,false,resultslist)*fac.w;
 			w_filtered{i,1}=w_original{i,1};
 			if size(resultslist,1)>=17
-				w_smoothed{i,1}=resultslist{17,currentframe}*abs(calu);
+				w_smoothed{i,1}=resultslist{17,currentframe}*fac.w;
 			end
 		end
 
@@ -157,7 +158,7 @@ end
 if exist('stereo_mode','var') && stereo_mode %stereo-PIV: w and the reconstruction
 	stereo_vel=gui.retr('stereo_vel');
 	stereo_info=struct(); %saved as the variable "stereo" (a variable of this name would hide the package stereo)
-	w_away=stereo.w_direction(gui.retr('stereo_calib'));
+	w_away=stereo.w_direction(gui.retr('stereo_calib'),calibrate.w_factor(calu,calv));
 	stereo_info.w_sign=['w is positive ' w_away];
 	stereo_info.reconstruction_residual_px=stereo_vel.residual; %agreement of the two camera results, per analysed image pair
 	stereo_info.light_sheet_z_mm=stereo_vel.sheet_z_mm; %measured light sheet position relative to the board

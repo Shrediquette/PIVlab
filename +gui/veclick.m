@@ -4,6 +4,7 @@ if src.Button == 1
 	%only active if vectors are displayed.
 	handles=gui.gethand;
 	currentframe=2*floor(get(handles.fileselector, 'value'))-1;
+	fac=gui.frame_factors((currentframe+1)/2); %velocity, or standard deviation / TKE of temporal statistics
 	resultslist=gui.retr('resultslist');
 
 	%apply calibration, direction and offset to x and y coordinates
@@ -53,8 +54,8 @@ if src.Button == 1
 		delete(findobj(target_axis,'tag', 'infopoint'));
 		%here, the calibration matters...
 		if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1%not calibrated
-			set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*gui.retr('calu')-gui.retr('subtr_u'))*100000)/100000) ' px/fr']);
-			set(handles.v_cp, 'String', ['v:' num2str(round((v(info(1,1),info(1,2))*gui.retr('calv')-gui.retr('subtr_v'))*100000)/100000) ' px/fr']);
+			set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*fac.u-gui.retr('subtr_u'))*100000)/100000) ' px/fr']);
+			set(handles.v_cp, 'String', ['v:' num2str(round((v(info(1,1),info(1,2))*fac.v-gui.retr('subtr_v'))*100000)/100000) ' px/fr']);
 			set(handles.x_cp, 'String', ['x:' num2str(round((x_cal(info(1,1),info(1,2)))*10000)/10000) ' px']);
 			set(handles.y_cp, 'String', ['y:' num2str(round((y_cal(info(1,1),info(1,2)))*10000)/10000) ' px']);
 		else %calibrated
@@ -64,8 +65,8 @@ if src.Button == 1
 			else
 				time_unit='s';
 			end
-			u_cp_string_velocity=u(info(1,1),info(1,2))*gui.retr('calu')-gui.retr('subtr_u');
-			v_cp_string_velocity=v(info(1,1),info(1,2))*gui.retr('calv')-gui.retr('subtr_v');
+			u_cp_string_velocity=u(info(1,1),info(1,2))*fac.u-gui.retr('subtr_u');
+			v_cp_string_velocity=v(info(1,1),info(1,2))*fac.v-gui.retr('subtr_v');
 			x_cp_string = x_cal(info(1,1),info(1,2));
 			y_cp_string = y_cal(info(1,1),info(1,2));
 
@@ -124,9 +125,9 @@ if src.Button == 1
 			if isempty(w)
 				set(handles.scalar_cp, 'String','N/A');
 			elseif (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1 %not calibrated, like u and v
-				set(handles.scalar_cp, 'String', ['w:' num2str(round(w(info(1,1),info(1,2))*abs(gui.retr('calu'))*100000)/100000) ' px/fr']);
+				set(handles.scalar_cp, 'String', ['w:' num2str(round(w(info(1,1),info(1,2))*fac.w*100000)/100000) ' px/fr']);
 			else
-				w_cp_string_velocity=w(info(1,1),info(1,2))*abs(gui.retr('calu')); %|calu|: an axis flip of x or y does not flip w
+				w_cp_string_velocity=w(info(1,1),info(1,2))*fac.w; %w is positive along z = x cross y
 				if  magnitude_of_current_point > 100 || magnitude_of_current_point < 0.01
 					set(handles.scalar_cp, 'String',  ['w:' sprintf('%0.4e',w_cp_string_velocity) ' m/' time_unit]);
 				else
@@ -139,13 +140,13 @@ if src.Button == 1
 
 		try
 			magnitude_px=((u(info(1,1),info(1,2))).^2+(v(info(1,1),info(1,2))).^2).^0.5;
-			magnitude_m=((u(info(1,1),info(1,2))*gui.retr('calu')-gui.retr('subtr_u')).^2+(v(info(1,1),info(1,2))*gui.retr('calv')-gui.retr('subtr_v')).^2).^0.5;
+			magnitude_m=((u(info(1,1),info(1,2))*fac.u-gui.retr('subtr_u')).^2+(v(info(1,1),info(1,2))*fac.v-gui.retr('subtr_v')).^2).^0.5;
 			magnitude_label=' ';
 			w=stereo.w_of_frame((currentframe+1)/2,use_smoothed); %stereo-PIV: 3D magnitude, like 'Magnitude' in the derived parameters
 			if ~isempty(w)
 				w_point=w(info(1,1),info(1,2));
 				magnitude_px=(magnitude_px.^2+w_point.^2).^0.5;
-				magnitude_m=(magnitude_m.^2+(w_point*abs(gui.retr('calu'))).^2).^0.5;
+				magnitude_m=(magnitude_m.^2+(w_point*fac.w).^2).^0.5;
 				magnitude_label=' 3D: ';
 			end
 			magnitude_px = sprintf('%0.2g',magnitude_px);

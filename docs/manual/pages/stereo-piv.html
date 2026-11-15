@@ -34,16 +34,16 @@
     from this difference.</p>
 
     <h3 id="coordinates">Coordinate system</h3>
-    <p>The board in the light sheet defines the axes, as seen from <strong>camera 1</strong>:</p>
+    <p>The board in the light sheet defines the axes, as seen from <strong>camera 1</strong>
+    (default axes of the <a href="spatial-calibration.html#offsets">calibration</a>):</p>
     <table class="ref">
       <tr><th>Axis</th><th>Direction</th><th>Velocity component</th></tr>
       <tr><td>X</td><td>in the board plane, to the right in the image</td><td>u</td></tr>
-      <tr><td>Y</td><td>in the board plane, down in the image</td><td>v</td></tr>
-      <tr><td>Z</td><td>normal to the board, <strong>away from camera 1</strong></td><td>w</td></tr>
+      <tr><td>Y</td><td>in the board plane, up in the image</td><td>v</td></tr>
+      <tr><td>Z</td><td>normal to the board, <strong>toward camera 1</strong></td><td>w</td></tr>
     </table>
-    <p>X and Y are the x and y of the PIVlab image, the displays and the exports. A positive w
-    points away from camera 1 (both cameras on the same side of the sheet: away from the cameras).
-    w has the units of u and v. The axes follow the board, not the light sheet: if the sheet is
+    <p>X, Y and Z form a right-handed coordinate system (Z = X × Y). If you reverse one of the axes
+    in the calibration, Z and w reverse too. w has the units of u and v. The axes follow the board, not the light sheet: if the sheet is
     slightly tilted, the result is still aligned with the board, i.e. with your model or test
     section.</p>
 
@@ -130,6 +130,8 @@
     <p>Only image data inside the region of interest and outside the masks (of both cameras) is used,
     with the image pre-processing of the GUI. A minimum-intensity background of each camera is always
     removed for this (from at least 10 A images).</p>
+    <p><span class="ui">Settings</span>: <span class="ui">Automatic</span> (default) uses the default
+    values below, <span class="ui">Manual</span> shows them for editing.</p>
     <table class="ref">
       <tr><th>Setting</th><th>Meaning</th></tr>
       <tr><td>Pairs</td><td>Image pairs used. 0 (default) = automatic, until the map is accurate to about 0.5 px.</td></tr>

@@ -13,6 +13,7 @@ function [res, map] = derive(res, quantity, opts)
 %               "uncertainty" (needs pivlab.analyze(..., Uncertainty=true))
 %               "w"           (stereo-PIV, pivlab.stereo: out-of-plane component)
 %   Units follow res.units (call pivlab.toMetric first for SI units).
+%   Vorticity is dv/dx - du/dy, w is positive along z (x, y, z right-handed, see pivlab.toMetric).
 %   Stereo-PIV: "magnitude" is the 3D magnitude sqrt(u^2 + v^2 + w^2), and the smoothing smooths w too
 %   (res.px.w_smoothed), as in the GUI.
 %
@@ -138,7 +139,7 @@ res.px = p;
 cal = res.calibration;
 copt.subtr_u = subtract(1);
 copt.subtr_v = subtract(2);
-copt.is_tke = isfield(res,'statistic') && res.statistic == "tke";
+copt.statistic = result_statistic(res); % standard deviation and TKE have their own units
 map = [];
 for i = 1:n
     copt.correlation_map = res.correlation_map(:,:,i);

@@ -53,17 +53,18 @@ if isempty(resultslist)==0
 	uncertainty_map=cell(nrframes,1);
 
 	for i=1:nrframes
+		fac=gui.frame_factors(i); %velocity, or standard deviation / TKE of temporal statistics
 		[x_cal,y_cal]=calibrate.xy (resultslist{1,i},resultslist{2,i});
 		x{i,1}=x_cal;
 		y{i,1}=y_cal;
-		u_original{i,1}=resultslist{3,i}*calu;
-		v_original{i,1}=resultslist{4,i}*calv;
+		u_original{i,1}=resultslist{3,i}*fac.u;
+		v_original{i,1}=resultslist{4,i}*fac.v;
 		typevector_original{i,1}=resultslist{5,i};
-		u_filtered{i,1}=resultslist{7,i}*calu;
-		v_filtered{i,1}=resultslist{8,i}*calv;
+		u_filtered{i,1}=resultslist{7,i}*fac.u;
+		v_filtered{i,1}=resultslist{8,i}*fac.v;
 		typevector_filtered{i,1}=resultslist{9,i};
-		u_smoothed{i,1}=resultslist{10,i}*calu;
-		v_smoothed{i,1}=resultslist{11,i}*calv;
+		u_smoothed{i,1}=resultslist{10,i}*fac.u;
+		v_smoothed{i,1}=resultslist{11,i}*fac.v;
 
 		vorticity{i,1}=derived{1,i};
 		velocity_magnitude{i,1}=derived{2,i};
@@ -111,9 +112,10 @@ if isempty(resultslist)==0
 		w_smoothed=w_original;
 		w_component=w_original;
 		for i=1:nrframes
-			w_original{i,1}=stereo.w_of_frame(i,false,resultslist)*abs(calu);
+			fac=gui.frame_factors(i);
+			w_original{i,1}=stereo.w_of_frame(i,false,resultslist)*fac.w;
 			if size(resultslist,1)>=17
-				w_smoothed{i,1}=resultslist{17,i}*abs(calu);
+				w_smoothed{i,1}=resultslist{17,i}*fac.w;
 			end
 			if size(derived,1)>=13
 				w_component{i,1}=derived{13,i};
@@ -142,7 +144,7 @@ if isempty(resultslist)==0
 	disp('u_filtered and v_filtered is the above incl. your data validation selection.')
 	disp('u_smoothed and v_smoothed is the above incl. your smoothing selection.')
 	if isequal(gui.retr('stereomode'),1)
-		disp(['Stereo-PIV: w_original, w_filtered, w_smoothed and w_component are the out-of-plane component (positive ' stereo.w_direction(gui.retr('stereo_calib')) ').'])
+		disp(['Stereo-PIV: w_original, w_filtered, w_smoothed and w_component are the out-of-plane component (positive ' stereo.w_direction(gui.retr('stereo_calib'),calibrate.w_factor(calu,calv)) ').'])
 	end
 end
 

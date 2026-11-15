@@ -10,21 +10,22 @@ function [res, edited] = take_user_edits(res)
 %   edited.filtered  true if res.u or res.v were changed
 %   edited.raw       true if res.u_raw or res.v_raw were changed
 c = res.calibration;
+f = calibrate.statistic_factors(c.calu, c.calv, result_statistic(res)); % as in refresh_units
 p = res.px;
 edited.filtered = false;
 edited.raw = false;
 
 if res.smoothed && ~isempty(p.u_smoothed)
-    [p.u_smoothed, changed_u] = take_values(res.u, p.u_smoothed, c.calu, 'u');
-    [p.v_smoothed, changed_v] = take_values(res.v, p.v_smoothed, c.calv, 'v');
+    [p.u_smoothed, changed_u] = take_values(res.u, p.u_smoothed, f.u, 'u');
+    [p.v_smoothed, changed_v] = take_values(res.v, p.v_smoothed, f.v, 'v');
 else
-    [p.u, changed_u] = take_values(res.u, p.u, c.calu, 'u');
-    [p.v, changed_v] = take_values(res.v, p.v, c.calv, 'v');
+    [p.u, changed_u] = take_values(res.u, p.u, f.u, 'u');
+    [p.v, changed_v] = take_values(res.v, p.v, f.v, 'v');
 end
 edited.filtered = changed_u || changed_v;
 
-[p.u_raw, changed_u] = take_values(res.u_raw, p.u_raw, c.calu, 'u_raw');
-[p.v_raw, changed_v] = take_values(res.v_raw, p.v_raw, c.calv, 'v_raw');
+[p.u_raw, changed_u] = take_values(res.u_raw, p.u_raw, f.u, 'u_raw');
+[p.v_raw, changed_v] = take_values(res.v_raw, p.v_raw, f.v, 'v_raw');
 edited.raw = changed_u || changed_v;
 
 res.px = p;

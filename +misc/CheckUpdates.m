@@ -72,10 +72,10 @@ end
 
 function tf = isVersionNewer(a, b)
 % Returns true if version string a is strictly newer than version string b.
-% Compares major and minor parts as integers to avoid the dot-removal trick
-% failing across version boundaries (e.g. "4.0" vs "3.04").
-ap = sscanf(a, '%d.%d');
-bp = sscanf(b, '%d.%d');
+% Compares major, minor and patch parts as integers ("4.0" is read as 4.0.0, so
+% "4.0.1" is newer than "4.0", and "4.0" is newer than "3.14").
+ap = sscanf(a, '%d.%d.%d');
+bp = sscanf(b, '%d.%d.%d');
 n = max(numel(ap), numel(bp));
 ap(end+1:n) = 0;
 bp(end+1:n) = 0;

@@ -7,6 +7,7 @@ if nargin<5
 	w=[];
 end
 calu=gui.retr('calu');calv=gui.retr('calv');
+[fac, statistic]=gui.frame_factors(floor(get(handles.fileselector,'value'))); %velocity, or standard deviation / TKE of temporal statistics
 if (calu==1 || calu==-1) && gui.retr('calxy')==1
 	unit=' px/frame';
 else %calibrated
@@ -17,12 +18,15 @@ else %calibrated
 		unit=' m/s';
 	end
 end
-show_component(handles,'u',u*calu,unit);
-show_component(handles,'v',v*calv,unit);
+if strcmp(statistic,'tke')
+	unit=[' (' strtrim(unit) ')^2']; %TKE: velocity squared
+end
+show_component(handles,'u',u*fac.u,unit);
+show_component(handles,'v',v*fac.v,unit);
 if isempty(w)
 	show_component(handles,'w',[],unit);
 else
-	show_component(handles,'w',w*abs(calu),unit); %|calu|: an axis flip of x or y does not flip w
+	show_component(handles,'w',w*fac.w,unit); %w is positive along z = x cross y
 end
 end
 

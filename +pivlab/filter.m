@@ -193,7 +193,7 @@ n = size(p.u_raw, 3);
 discard = cell(1, n);
 if ~isempty(velrect) || ~isempty(roi_freehand) || ~isempty(notch_limits)
     for i = 1:n
-        discard{i} = stereo.limit_test(p.u_raw(:,:,i)*c.calu, p.v_raw(:,:,i)*c.calv, p.w_raw(:,:,i)*abs(c.calu), ...
+        discard{i} = stereo.limit_test(p.u_raw(:,:,i)*c.calu, p.v_raw(:,:,i)*c.calv, p.w_raw(:,:,i)*calibrate.w_factor(c.calu,c.calv), ...
             velrect, roi_freehand, notch_limits);
     end
 end

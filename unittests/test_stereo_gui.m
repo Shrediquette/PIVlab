@@ -674,14 +674,23 @@ verifyTrue(testCase, all(inside(:)), 'ROI leaves the overlap');
 pointscali = gui.retr('pointscali');
 verifyEqual(testCase, str2double(get(handles.realdist, 'String')) / abs(diff(pointscali(:, 1))), ...
     calib.Ravg.PixelExtentInWorldX, 'RelTol', 1e-4, 'mm per px of the spatial calibration');
-steps = get(handles.stereo_steps, 'String');
+steps = step_texts(handles);
 verifyTrue(testCase, startsWith(steps{4}, char(10003)), 'checklist: stereo calibration not ticked');
 verifyTrue(testCase, startsWith(steps{7}, char(10007)), 'checklist: time step ticked before it was applied');
+% done rows green, open rows red, only the first open row bold
+for k = 1:7
+    row = handles.(['stereo_step_' int2str(k)]);
+    color = get(row, 'ForegroundColor');
+    verifyEqual(testCase, color(2) > color(1), startsWith(steps{k}, char(10003)), sprintf('colour of step %d', k));
+    first_open = find(~startsWith(steps, char(10003)), 1);
+    verifyEqual(testCase, strcmp(get(row, 'FontWeight'), 'bold'), k == first_open, sprintf('bold of step %d', k));
+end
+verifyEqual(testCase, char(get(handles.stereo_steps, 'Visible')), 'off', 'the "load images" note in stereo mode');
 % time step applied in the calibration panel: ticked in the checklist
 set(handles.time_inp, 'String', '2');
 calibrate.apply_cali_Callback;
 stereo.panel_Callback;
-steps = get(handles.stereo_steps, 'String');
+steps = step_texts(handles);
 verifyTrue(testCase, startsWith(steps{7}, char(10003)), 'checklist: time step not ticked after applying it');
 % rectification panel: no 2D rectification and upscaling in stereo mode, a note instead
 verifyEqual(testCase, char(get(handles.calib_userectification, 'Visible')), 'off', '2D rectification must be hidden in stereo mode');
@@ -762,7 +771,7 @@ verifyGreaterThan(testCase, after, 1.5 * before, 'the correction should clearly 
 verifyGreaterThan(testCase, after, before + 0.1, 'the correction should clearly improve the agreement');
 fprintf('agreement of camera 1 and camera 2 images: %.2f without, %.2f with the disparity correction\n', before, after);
 % panel, displays, automatic ROI
-steps = get(handles.stereo_steps, 'String');
+steps = step_texts(handles);
 verifyTrue(testCase, startsWith(steps{5}, char(10003)), 'checklist: disparity not ticked');
 verifyNotEmpty(testCase, strfind(strjoin(get(handles.stereo_disp_report, 'String'), ' '), 'Light sheet'));
 % measured remaining disparity (what the correction leaves): small on synthetic data, in the report
@@ -821,14 +830,61 @@ verifyLessThan(testCase, d.accuracy_estimate, 0.5);
 verifyEqual(testCase, d.pairs, sort(d.pairs), 'pairs not in the order of their numbers');
 verifyTrue(testCase, startsWith(d.report{1}, '10 pairs (automatic), map accurate to ~'), d.report{1});
 verifyEqual(testCase, size(d.raw.u_frames, 3), 10);
-% fixed number: the same choice as before (spread with linspace)
+% fixed number: the same choice as before (spread with linspace); only used in manual mode
 set(handles.stereo_disp_pairs, 'String', '3');
+stereo.measure_disparity_Callback;
+verifyTrue(testCase, gui.retr('stereo_disparity').auto, 'automatic mode used the manual "Pairs"');
+set(handles.stereo_disp_mode, 'Value', 2);
 stereo.measure_disparity_Callback;
 d = gui.retr('stereo_disparity');
 verifyFalse(testCase, d.auto);
 verifyEqual(testCase, d.pairs, unique(round(linspace(1, 12, 3))));
 verifyTrue(testCase, startsWith(d.report{1}, '3 pairs'), d.report{1});
 set(handles.stereo_disp_pairs, 'String', '0');
+set(handles.stereo_disp_mode, 'Value', 1);
+end
+
+function test_disparity_mode(testCase)
+% "Settings: Automatic" hides the manual settings and shortens the panel (top and "Show" stay);
+% the mode is part of the settings files and the API settings
+helper_start_pivlab();
+handles = gui.gethand;
+gui.switchui('multip30');
+verifyEqual(testCase, get(handles.stereo_disp_mode, 'Value'), 1, 'default is not automatic');
+verifyEqual(testCase, char(get(handles.stereo_disp_manual, 'Visible')), 'off');
+verifyEqual(testCase, char(get(handles.stereo_disp_show, 'Visible')), 'on');
+auto_pos = get(handles.stereo_disp_panel, 'Position');
+set(handles.stereo_disp_mode, 'Value', 2);
+stereo.disparity_mode_Callback;
+verifyEqual(testCase, char(get(handles.stereo_disp_manual, 'Visible')), 'on');
+manual_pos = get(handles.stereo_disp_panel, 'Position');
+verifyEqual(testCase, manual_pos(2) + manual_pos(4), auto_pos(2) + auto_pos(4), 'AbsTol', 1e-9, 'top of the panel moved');
+verifyGreaterThan(testCase, manual_pos(4), auto_pos(4));
+results = get(handles.stereo_disp_results, 'Position');
+manual = get(handles.stereo_disp_manual, 'Position');
+verifyLessThanOrEqual(testCase, results(2) + results(4), manual(2) + 1e-9, 'results overlap the manual settings');
+verifyGreaterThanOrEqual(testCase, results(2), -1e-9, 'results below the panel');
+% settings file round trip
+set(handles.stereo_disp_passes, 'String', '5');
+settings = gui.collect_settings(getappdata(0, 'hgui'));
+verifyEqual(testCase, settings.analysis.stereo_disp_mode, 2);
+file = fullfile(testCase.TestData.folder, 'disparity_mode_settings.mat');
+export.write_settings_file(file, settings);
+api = pivlab.loadSettings(file);
+verifyEqual(testCase, api.stereo.Passes, 5);
+set(handles.stereo_disp_mode, 'Value', 1);
+gui.update_dependent_controls;
+verifyEqual(testCase, stereo.settings_from_gui(handles).disparity.Passes, stereo.defaults().disparity.Passes, 'automatic used the manual value');
+gui.apply_settings(settings, {'analysis'});
+verifyEqual(testCase, get(handles.stereo_disp_mode, 'Value'), 2);
+verifyEqual(testCase, char(get(handles.stereo_disp_manual, 'Visible')), 'on');
+verifyEqual(testCase, stereo.settings_from_gui(handles).disparity.Passes, 5);
+settings.analysis.stereo_disp_mode = 1;
+export.write_settings_file(file, settings);
+api = pivlab.loadSettings(file);
+verifyEqual(testCase, api.stereo.Passes, stereo.defaults().disparity.Passes, 'API: automatic used the manual value');gui.apply_settings(struct(), {'analysis'}); % defaults
+verifyEqual(testCase, char(get(handles.stereo_disp_manual, 'Visible')), 'off');
+verifyEqual(testCase, get(handles.stereo_disp_panel, 'Position'), auto_pos, 'AbsTol', 1e-9);
 end
 
 function test_stereo_analysis_in_gui(testCase)
@@ -934,7 +990,7 @@ verifyTrue(testCase, calib.opposite_sides);
 report = strjoin(calib.report, ' ');
 verifyNotEmpty(testCase, strfind(report, 'Cameras on opposite sides of the light sheet'));
 verifyNotEmpty(testCase, strfind(report, 'Camera 2 sees the board from behind'));
-verifyNotEmpty(testCase, strfind(report, 'w is positive away from camera 1'));
+verifyNotEmpty(testCase, strfind(report, 'x right, y up: toward camera 1'));
 stereo.show_3d_Callback;
 fig = findall(0, 'Type', 'figure', 'Name', 'Stereo-PIV setup in 3D');
 verifyNumElements(testCase, fig, 1);
@@ -949,7 +1005,7 @@ check_accuracy(testCase, result_error(c), [0.008 0.008 0.01]);
 folder = testCase.TestData.folder;
 export.mat_file_save(1, 'w_opposite.mat', folder, 2);
 M = load(fullfile(folder, 'w_opposite.mat'));
-verifyEqual(testCase, M.stereo.w_sign, 'w is positive away from camera 1');
+verifyEqual(testCase, M.stereo.w_sign, 'w is positive toward camera 1'); % default axes x right, y up: z toward the cameras
 end
 
 function test_3d_result_out_of_pivlab(testCase)
@@ -967,8 +1023,9 @@ set(h.update_display_checkbox, 'Value', 0);
 piv.AnalyzeAll_Callback;
 set(h.time_inp, 'String', '2'); % spatial calibration of the stereo calibration + time step: m/s
 calibrate.apply_cali_Callback;
-calu = abs(gui.retr('calu'));
-verifyNotEqual(testCase, calu, 1, 'not calibrated');
+calu = calibrate.w_factor(gui.retr('calu'), gui.retr('calv')); % w along z = x cross y
+verifyNotEqual(testCase, abs(calu), 1, 'not calibrated');
+verifyLessThan(testCase, calu, 0, 'default axes x right, y up: w is positive toward the cameras, W away from them');
 rl = gui.retr('resultslist');
 W = rl{16, 1};
 verifyTrue(testCase, any(isfinite(W(:))), 'no W in row 16');
@@ -1098,7 +1155,7 @@ calv = gui.retr('calv');
 verifyTrue(testCase, (calu == 1 || calu == -1) && gui.retr('calxy') == 1, 'expected px/frame');
 U = rl{7, 1} * calu;
 V = rl{8, 1} * calv;
-W = rl{16, 1} * abs(calu);
+W = rl{16, 1} * calibrate.w_factor(calu, calv); % w along z = x cross y
 verifyTrue(testCase, any(isfinite(W(:))), 'no W');
 
 % statistics values: mean, min, max, std of u, v, w
@@ -1112,7 +1169,7 @@ set(h.smooth_param, 'String', '0.5');
 plot.derivative_calc(1, 4, 0);
 plot.statistics_Callback;
 rl_smoothed = gui.retr('resultslist');
-expect_stats(testCase, h, 'w', rl_smoothed{17, 1} * abs(calu));
+expect_stats(testCase, h, 'w', rl_smoothed{17, 1} * calibrate.w_factor(calu, calv));
 set(h.smooth_mode, 'Value', 1);
 plot.derivative_calc(1, 4, 0);
 rl = gui.retr('resultslist');
@@ -1233,7 +1290,7 @@ function test_velocity_limits_on_3d_result(testCase)
 h = gui.gethand;
 calu = gui.retr('calu');
 U = raw{3, 1} * calu;
-W = raw{16, 1} * abs(calu);
+W = raw{16, 1} * calibrate.w_factor(calu, gui.retr('calv'));
 umin = velrect(1);
 umax = velrect(1) + velrect(3);
 gui.put('velrect', velrect);
@@ -1520,5 +1577,13 @@ for n = 1:n_pairs
         imwrite(uint8(255 * rand(sz)), file);
         files{end + 1, 1} = file; %#ok<AGROW>
     end
+end
+end
+
+function steps = step_texts(handles)
+% texts of the seven rows of the Steps panel (stereo.update_panel)
+steps = cell(1, 7);
+for k = 1:7
+    steps{k} = get(handles.(['stereo_step_' int2str(k)]), 'String');
 end
 end

@@ -458,12 +458,12 @@ const add = (name, s) => { files[name] = s; };
     const S = P3(x, y, 0), E = P3(x + u, y - v, -w), F = P3(x + u, y - v, 0);
     b += line(F, E, { c: C.mute, w: 1.2, dash: '3 2' }) + line(S, E, { c: C.line, w: 1.6, arrow: 'line' }) + dot(S, 1.5, C.line);
   }
-  // axes: X right, Y toward the viewer, Z down = away from camera 1
-  const O = [470, 92], ey = [-0.55, 0.84];
+  // axes (PIVlab default, right-handed): X right, Y away from the viewer (up in the image), Z up = toward camera 1
+  const O = [470, 128], ey = [0.55, -0.84];
   b += line(O, [O[0] + 34, O[1]], { c: C.mute, w: 1.3, arrow: 'mute' }) + text(O[0] + 38, O[1] + 4, 'X', { c: C.mute, b: true, s: 11 });
-  b += line(O, [O[0] + ey[0] * 30, O[1] + ey[1] * 30], { c: C.mute, w: 1.3, arrow: 'mute' }) + text(O[0] + ey[0] * 36 - 8, O[1] + ey[1] * 36 + 4, 'Y', { c: C.mute, b: true, s: 11 });
-  b += line(O, [O[0], O[1] + 30], { c: C.mute, w: 1.3, arrow: 'mute' }) + text(O[0] + 5, O[1] + 40, 'Z', { c: C.mute, b: true, s: 11 });
-  b += text(O[0] + 16, O[1] + 40, 'away from', { s: 10 }) + text(O[0] + 16, O[1] + 52, 'camera 1', { s: 10, c: C.cam1 });
+  b += line(O, [O[0] + ey[0] * 30, O[1] + ey[1] * 30], { c: C.mute, w: 1.3, arrow: 'mute' }) + text(O[0] + ey[0] * 36 + 2, O[1] + ey[1] * 36 + 2, 'Y', { c: C.mute, b: true, s: 11 });
+  b += line(O, [O[0], O[1] - 30], { c: C.mute, w: 1.3, arrow: 'mute' }) + text(O[0] - 4, O[1] - 36, 'Z', { c: C.mute, b: true, s: 11 });
+  b += text(O[0] - 12, O[1] - 18, 'toward', { s: 10, a: 'end' }) + text(O[0] - 12, O[1] - 6, 'camera 1', { s: 10, c: C.cam1, a: 'end' });
   add('stereo-step8-analysis.svg', svg(8, 'ANALYZE: from both cameras to u, v and w', b, [
     'ANALYZE runs a 2D PIV analysis of each camera (same settings, corrected images). The two fields',
     'differ because each camera sees the out-of-plane motion from its own side; PIVlab combines them',

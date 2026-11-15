@@ -210,6 +210,7 @@ else
 end
 enable([handles.stereo_calibrate handles.stereo_show_3d], stereo_mode);
 enable([handles.stereo_measure_disparity handles.stereo_disp_show], stereo_mode && ~isempty(gui.retr('stereo_calib')));
+stereo.disparity_panel_layout(handles);
 if stereo_mode && strcmp(get(handles.multip30, 'Visible'), 'on')
     stereo.update_panel(handles);
 end

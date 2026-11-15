@@ -67,7 +67,7 @@ calibrate.apply_cali_Callback;
 metric = pivlab.toMetric(filtered, DeltaT=0.002, Verbose=false);
 verifyEqual(testCase, metric.calibration.calu, gui.retr('calu'), 'RelTol', 1e-12, 'calu');
 verifyEqual(testCase, metric.units, "m/s");
-verifyEqual(testCase, metric.w, filtered.px.w * abs(gui.retr('calu')), 'RelTol', 1e-12, 'w in m/s');
+verifyEqual(testCase, metric.w, filtered.px.w * calibrate.w_factor(gui.retr('calu'), gui.retr('calv')), 'RelTol', 1e-12, 'w in m/s (along z = x cross y)');
 
 % derived parameters with spatial smoothing (frame 1): w component and 3D magnitude
 set(h.smooth_mode, 'Value', 2);

@@ -5,8 +5,13 @@ if nargin < 1
     handles = gui.gethand;
 end
 stereo.disparity_display_popup(handles, 'update'); % only the displays that have data
+rows = zeros(1, 7);
+for k = 1:7
+    rows(k) = handles.(['stereo_step_' int2str(k)]);
+end
 if ~isequal(gui.retr('stereomode'), 1)
-    set(handles.stereo_steps, 'String', 'Load the images of both cameras first (Input data panel: "Import stereo images").');
+    set(rows, 'Visible', 'off');
+    set(handles.stereo_steps, 'Visible', 'on', 'String', 'Load the images of both cameras first (Input data panel: "Import stereo images").');
     set(handles.stereo_disp_report, 'String', 'Not measured yet.');
     return
 end
@@ -24,15 +29,25 @@ end
 has_lens = [has(cams{1}, 'cameraParams'), has(cams{2}, 'cameraParams')];
 has_board = [has(cams{1}, 'cam_selected_rectification_image'), has(cams{2}, 'cam_selected_rectification_image')];
 calib = gui.retr('stereo_calib');
-steps = {};
-steps{end + 1} = [mark(true) ' Images of both cameras'];
-steps{end + 1} = [mark(all(has_lens)) ' Lens calibration' cameras_missing(has_lens)];
-steps{end + 1} = [mark(all(has_board)) ' Board image in the light sheet' cameras_missing(has_board)];
-steps{end + 1} = [mark(~isempty(calib)) ' Stereo calibration'];
-steps{end + 1} = [mark(~isempty(gui.retr('stereo_disparity'))) ' Disparity correction'];
-steps{end + 1} = [mark(~isempty(gui.retr('roirect'))) ' Region of interest'];
-steps{end + 1} = [mark(time_step_applied(calib)) ' Time step (calibration panel, CTRL+Z)'];
-set(handles.stereo_steps, 'String', steps);
+done = [true, all(has_lens), all(has_board), ~isempty(calib), ~isempty(gui.retr('stereo_disparity')), ...
+    ~isempty(gui.retr('roirect')), time_step_applied(calib)];
+names = {'Images of both cameras', ['Lens calibration' cameras_missing(has_lens)], ...
+    ['Board in the light sheet' cameras_missing(has_board)], 'Stereo calibration', ...
+    'Disparity correction', 'Region of interest', 'Time step (calibration panel, CTRL+Z)'};
+next = find(~done, 1); % the first open step is bold
+set(handles.stereo_steps, 'Visible', 'off');
+for k = 1:7
+    if done(k)
+        color = [0.10 0.60 0.10]; % green
+    else
+        color = [0.85 0.15 0.15]; % red
+    end
+    weight = 'normal';
+    if isequal(k, next)
+        weight = 'bold';
+    end
+    set(rows(k), 'String', [mark(done(k)) ' ' names{k}], 'ForegroundColor', color, 'FontWeight', weight, 'Visible', 'on');
+end
 disparity = gui.retr('stereo_disparity');
 if isempty(disparity) || ~isfield(disparity, 'report')
     set(handles.stereo_disp_report, 'String', 'Not measured yet.');
@@ -72,6 +87,6 @@ end
 function s = cameras_missing(present)
 s = '';
 if ~all(present)
-    s = [' (missing: camera ' strjoin(cellstr(num2str(find(~present)')), ' and ') ')'];
+    s = [' (missing: cam ' strjoin(cellstr(num2str(find(~present)')), ' + ') ')']; % one row of the Steps panel
 end
 end

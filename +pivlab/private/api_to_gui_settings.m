@@ -94,6 +94,15 @@ if isfield(s, 'stereo')
     end
     G.analysis.stereo_disp_stdev = st.StdevThreshold;
     G.analysis.stereo_disp_median = st.LocalMedianThreshold;
+    % "Settings: Manual" when a value differs from the defaults
+    default = gui.default_settings;
+    names = {'stereo_disp_pairs', 'stereo_disp_model', 'stereo_disp_passes', 'stereo_disp_ia', 'stereo_disp_stdev', 'stereo_disp_median'};
+    G.analysis.stereo_disp_mode = 1;
+    for k = 1:numel(names)
+        if ~isequal(double(G.analysis.(names{k})), double(default.analysis.(names{k})))
+            G.analysis.stereo_disp_mode = 2;
+        end
+    end
 end
 end
 

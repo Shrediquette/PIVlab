@@ -134,7 +134,7 @@ res = pivlab.toMetric(res, DeltaT=0.001); % the scale comes from the stereo cali
 pivlab.display(res, Overlay="w");</code></pre>
     <ul>
       <li>The result is a normal result with the out-of-plane component in addition:
-      <code>res.w</code> (and <code>res.px.w</code>), positive away from camera 1.
+      <code>res.w</code>, positive along z = x × y (with the default axes: toward camera 1).
       <code>res.stereo</code> holds the stereo calibration, the disparity (with the report of the
       Stereo-PIV panel in <code>res.stereo.disparity.report</code>), the 2D results of both cameras and
       the reconstruction residual.</li>

@@ -90,6 +90,7 @@ c.y_axis_direction = get_num(C,'y_axis_direction',c.y_axis_direction);
 c.realdist = get_num(C,'realdist',c.realdist);
 c.time_inp = get_num(C,'time_inp',c.time_inp);
 c.displacement_only = (c.time_inp == 0);
+[c.calu, c.calv] = calibrate.uncalibrated_factors(c.x_axis_direction, c.y_axis_direction); % pixel units, until a reference distance is given
 if isfield(G,'calibration_data')
     data = G.calibration_data;
     c.pointscali = field_or_empty(data,'pointscali');
@@ -139,6 +140,16 @@ s.display.EnhanceImage = get_flag(D,'enhance_images',s.display.EnhanceImage);
 %% Stereo-PIV panel: disparity correction (as stereo.settings_from_gui)
 if ~isfield(s, 'stereo')
     s.stereo = struct();
+end
+if ~isfield(A,'stereo_disp_mode') || A.stereo_disp_mode ~= 2 % "Settings: Automatic": the defaults
+    d = stereo.defaults().disparity;
+    s.stereo.Pairs = d.Pairs;
+    s.stereo.Model = d.Model;
+    s.stereo.Passes = d.Passes;
+    s.stereo.InterrogationArea = d.InterrogationArea;
+    s.stereo.StdevThreshold = d.StdevThreshold;
+    s.stereo.LocalMedianThreshold = d.LocalMedianThreshold;
+    return
 end
 s.stereo.Pairs = max(0, round(get_num(A,'stereo_disp_pairs',field_or_empty(s.stereo,'Pairs')))); % 0 = automatic
 if isfield(A,'stereo_disp_model')
