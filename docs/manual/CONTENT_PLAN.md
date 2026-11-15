@@ -157,6 +157,11 @@ Line numbers drift. Treat them as a starting hint, not gospel — grep for the p
 - Use the shared components: `.split` (text beside screenshot), `ol.steps`, `table.ref`,
   `.note`/`.tip`/`.warn` callouts, `.eq`/`.eq-where` (equations), `.annot`+`.legend` (annotated
   screenshots).
+- `.v3` box (blue, title **PIVlab 3.14**): the manual and wiki describe the PIVlab 4 beta; every
+  place where PIVlab 3.14 (current stable) behaves differently gets one short `.v3` box with the 3.14
+  behaviour. No box for purely new features, except "not available in 3.14" on the stereo pages.
+  Wiki: `<div class="v3"><strong>PIVlab 3.14</strong> text</div>` (style in `assets/css/site.css`).
+  When a stable 4.x is released, remove them all (`grep -rn 'class="v3"' docs`).
 - Flag anything disabled/WIP/experimental honestly rather than describing aspirational behaviour.
 - **No math library.** The manual is dependency-free and must keep working opened from `file://`.
   Equations are plain HTML + Unicode with `<em>` variables.
@@ -256,6 +261,17 @@ Findings worth never re-deriving:
 ## 7. Changelog
 
 Newest first. **Add an entry whenever you change the manual**, and bump the watermark.
+
+### 2026-11-15 — "PIVlab 3.14" boxes for behaviour changed since the stable release
+New `.v3` component (manual `style.css`, website `site.css`, tokens `--v3`/`--v3-bg`, light + dark).
+Boxes: `interface.html` (also fixed its outdated "origin top-left" text), `spatial-calibration.html#offsets`,
+`derive-spatial.html` (vector direction, vorticity sign bug with one flipped axis), `extract-polyline.html`
+(normal direction), `export.html` (y and v of exported files), `sessions.html` (file-selection window;
+old-files note converted to `.v3`), `shortcuts.html` (Ctrl without Shift), `synthetic-images.html`
+(old 2D generator), `command-line.html` (Example_scripts, `PIVlab_GUI(cores, session_file)`, old
+coordinates), `stereo-piv.html`, `stereo-setup.html`; wiki `1_quickstart.md`, `7_stereo_piv.md`
+(replaces "Available from PIVlab 4.0"), `8_stereo_piv_explained.md`. Camera 1/2 calibration sub-menus
+of 3.14 deliberately not mentioned (user). Watermark not bumped: no new code verified.
 
 ### 2026-11-05 — capture.html rewritten as a panel walkthrough
 `capture.html` went from a workflow sketch (126 lines, one steps list) to a reference of the whole

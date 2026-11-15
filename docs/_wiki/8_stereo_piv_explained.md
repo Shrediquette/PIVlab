@@ -9,6 +9,8 @@ og_image: /manual/assets/img/stereo-piv/workflow/stereo-piv-workflow-card.png
 {%- assign img = '/manual/assets/img/stereo-piv/workflow/' -%}
 Stereo-PIV (stereoscopic particle image velocimetry, also called 2D3C) measures **all three velocity components** in a light sheet: u and v in the plane of the sheet and w through it. It needs two cameras that look at the sheet from different directions. This page explains the whole procedure in eight drawings, from setting up the cameras to the 3D vector map. The procedure is general; for the details in PIVlab, see the manual pages [Stereo-PIV: set-up and recording]({{ '/manual/pages/stereo-setup.html' | relative_url }}) (steps 1–5 and the recording) and [Stereo-PIV analysis]({{ '/manual/pages/stereo-piv.html' | relative_url }}) (steps 6–8).
 
+<div class="v3"><strong>PIVlab 3.14</strong> Stereo-PIV is not available in PIVlab 3.14.</div>
+
 <figure>
   <a href="{{ img | append: 'stereo-piv-workflow-overview.png' | relative_url }}"><img src="{{ img | append: 'stereo-piv-workflow-overview.svg' | relative_url }}" width="1192" height="1592" alt="Overview of the stereo-PIV procedure in eight drawings: 1 set up cameras and laser, 2 focus both cameras on the calibration board, 3 lens calibration for each camera, 4 board at the measurement position, 5 align the light sheet and record the board, 6 stereo calibration onto a common grid, 7 record the flow and correct the disparity, 8 analysis of both cameras to u, v and w."></a>
   <figcaption>The whole procedure at a glance (click for the large image).</figcaption>
