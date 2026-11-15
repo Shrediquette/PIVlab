@@ -23,6 +23,8 @@
   --code-bg: #f0efe6;
   --callout-bg: #fbf6dc;
   --callout-border: #d9b849;
+  --v3: #4a7fb5;              /* "PIVlab 3.14" boxes (behaviour of the previous stable release) */
+  --v3-bg: #eef3f9;
   --beta-bg: #edf8e9;
   --shadow: 0 1px 3px rgba(30,30,20,.10), 0 8px 24px rgba(30,30,20,.08);
   --bar-h: 52px;
@@ -45,6 +47,8 @@ html[data-theme="dark"] {
   --code-bg: #1f2418;
   --callout-bg: #262513;
   --callout-border: #a88f2c;
+  --v3: #7fa9d8;
+  --v3-bg: #172029;
   --beta-bg: #17261a;
   --shadow: 0 1px 3px rgba(0,0,0,.45), 0 8px 24px rgba(0,0,0,.4);
 }
@@ -193,6 +197,13 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
   border-radius: var(--radius); background: var(--callout-bg);
 }
 .prose blockquote p:last-child { margin-bottom: 0; }
+/* Behaviour of PIVlab 3.14 (previous stable release); find them all with class="v3" */
+.prose .v3 {
+  margin: 1.4em 0; padding: 12px 16px; border: 1px solid var(--border); border-left: 4px solid var(--v3);
+  border-radius: var(--radius); background: var(--v3-bg);
+}
+.prose .v3 strong:first-child { display: block; margin-bottom: 2px; }
+.prose .v3 p:last-child { margin-bottom: 0; }
 
 /* Numbered steps (all ordered lists on camera pages) */
 .steps ol { counter-reset: step; list-style: none; padding-left: 0; }

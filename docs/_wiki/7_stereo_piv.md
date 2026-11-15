@@ -5,7 +5,7 @@ summary: Add a second camera and measure the out-of-plane velocity too, with the
 description: Stereo-PIV (2D3C) software that also records - PIVlab measures all three velocity components u, v, w with two cameras, records both cameras synchronized with the laser, creates the calibration board, calibrates (incl. Scheimpflug) and analyses in one program. Includes a 3D flow and stereo-PIV simulator to try it before buying hardware. Available from PIVlab 4.0.
 keywords: stereo piv stereoscopic 2d3c three components out-of-plane velocity w scheimpflug two cameras dual camera stereo acquisition recording live marker detection calibration board generator charuco simulator synthetic 3d flow sphere wake upgrade all-in-one
 ---
-> **Available from PIVlab 4.0.**
+<div class="v3"><strong>PIVlab 3.14</strong> Stereo-PIV is not available in PIVlab 3.14.</div>
 
 <div class="beta-box" data-beta-box hidden></div>
 

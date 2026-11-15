@@ -14,6 +14,13 @@
     the functions of the <code>pivlab</code> package. They use exactly the same code as the GUI,
     so a script and the GUI give identical results for identical settings. Every function works
     with only its required inputs and then uses the PIVlab defaults.</p>
+    <div class="v3">
+      <strong>PIVlab 3.14</strong>
+      There is no <code>pivlab</code> package. Scripts are based on the examples in
+      <code>Example_scripts</code> (e.g. <code>PIVlab_process_commandline.m</code>), and a saved
+      session can be analysed with <code>PIVlab_GUI(cores, session_file)</code>. Results use the
+      old coordinate system: origin top left, positive <em>v</em> pointing down.
+    </div>
 
     <h2 id="workflow">The workflow in ten lines</h2>
 <pre><code>imgs = pivlab.readImages("Example_data/Jet_*.jpg", "pairwise");   % select and pair images
@@ -134,7 +141,7 @@ res = pivlab.toMetric(res, DeltaT=0.001); % the scale comes from the stereo cali
 pivlab.display(res, Overlay="w");</code></pre>
     <ul>
       <li>The result is a normal result with the out-of-plane component in addition:
-      <code>res.w</code> (and <code>res.px.w</code>), positive away from camera 1.
+      <code>res.w</code>, positive along z = x × y (with the default axes: toward camera 1).
       <code>res.stereo</code> holds the stereo calibration, the disparity (with the report of the
       Stereo-PIV panel in <code>res.stereo.disparity.report</code>), the 2D results of both cameras and
       the reconstruction residual.</li>
