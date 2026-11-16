@@ -1,18 +1,18 @@
 ---
-title: "How stereo-PIV works: illustrated step by step"
+title: "Stereoscopic PIV: how stereo-PIV works, step by step"
 group: Going further
-summary: The complete stereo-PIV procedure in eight drawings, from setting up the cameras to the 3D vector map with u, v and w.
-description: "Stereo-PIV (stereoscopic PIV, 2D3C) explained step by step with eight drawings: camera arrangement and Scheimpflug, focusing, lens calibration, calibration board in the light sheet, stereo calibration, disparity correction (self-calibration) and the reconstruction of u, v and w. Free to reuse (CC BY 4.0)."
-keywords: how stereo piv works stereoscopic particle image velocimetry explained tutorial illustrated step by step procedure workflow 2d3c three components out-of-plane velocity w scheimpflug camera arrangement forward scatter calibration board charuco lens calibration stereo calibration disparity correction self-calibration reconstruction diagram drawing figure
+summary: The complete stereoscopic particle image velocimetry procedure in eight drawings, from setting up the cameras to the 3D vector map with u, v and w.
+description: "Stereoscopic PIV explained step by step with eight drawings: stereoscopic particle image velocimetry (stereo-PIV, 2D3C) from camera arrangement and Scheimpflug, focusing, lens calibration, calibration board in the light sheet, stereo calibration, disparity correction (self-calibration) to the reconstruction of u, v and w. Free to reuse (CC BY 4.0)."
+keywords: stereoscopic piv stereoscopic particle image velocimetry stereo particle image velocimetry how stereo piv works explained tutorial illustrated step by step procedure workflow 2d3c three components out-of-plane velocity w scheimpflug camera arrangement forward scatter calibration board charuco lens calibration stereo calibration disparity correction self-calibration reconstruction diagram drawing figure
 og_image: /manual/assets/img/stereo-piv/workflow/stereo-piv-workflow-card.png
 ---
 {%- assign img = '/manual/assets/img/stereo-piv/workflow/' -%}
-Stereo-PIV (stereoscopic particle image velocimetry, also called 2D3C) measures **all three velocity components** in a light sheet: u and v in the plane of the sheet and w through it. It needs two cameras that look at the sheet from different directions. This page explains the whole procedure in eight drawings, from setting up the cameras to the 3D vector map. The procedure is general; for the details in PIVlab, see the manual pages [Stereo-PIV: set-up and recording]({{ '/manual/pages/stereo-setup.html' | relative_url }}) (steps 1–5 and the recording) and [Stereo-PIV analysis]({{ '/manual/pages/stereo-piv.html' | relative_url }}) (steps 6–8).
+**Stereoscopic PIV** — also written stereo-PIV, stereoscopic particle image velocimetry or stereo particle image velocimetry, and abbreviated 2D3C — measures **all three velocity components** in a light sheet: u and v in the plane of the sheet and w through it. It needs two cameras that look at the sheet from different directions. This page explains the whole procedure in eight drawings, from setting up the cameras to the 3D vector map. The procedure is general; for the details in PIVlab, see the manual pages [Stereo-PIV: set-up and recording]({{ '/manual/pages/stereo-setup.html' | relative_url }}) (steps 1–5 and the recording) and [Stereo-PIV analysis]({{ '/manual/pages/stereo-piv.html' | relative_url }}) (steps 6–8).
 
 <div class="v3"><strong>PIVlab 3.14</strong> Stereo-PIV is not available in PIVlab 3.14.</div>
 
 <figure>
-  <a href="{{ img | append: 'stereo-piv-workflow-overview.png' | relative_url }}"><img src="{{ img | append: 'stereo-piv-workflow-overview.svg' | relative_url }}" width="1192" height="1592" alt="Overview of the stereo-PIV procedure in eight drawings: 1 set up cameras and laser, 2 focus both cameras on the calibration board, 3 lens calibration for each camera, 4 board at the measurement position, 5 align the light sheet and record the board, 6 stereo calibration onto a common grid, 7 record the flow and correct the disparity, 8 analysis of both cameras to u, v and w."></a>
+  <a href="{{ img | append: 'stereo-piv-workflow-overview.png' | relative_url }}"><img src="{{ img | append: 'stereo-piv-workflow-overview.svg' | relative_url }}" width="1192" height="1592" alt="Overview of the stereoscopic PIV (stereo-PIV) procedure in eight drawings: 1 set up cameras and laser, 2 focus both cameras on the calibration board, 3 lens calibration for each camera, 4 board at the measurement position, 5 align the light sheet and record the board, 6 stereo calibration onto a common grid, 7 record the flow and correct the disparity, 8 analysis of both cameras to u, v and w."></a>
   <figcaption>The whole procedure at a glance (click for the large image).</figcaption>
 </figure>
 
@@ -84,7 +84,7 @@ Now seed the flow and record image pairs with both cameras, synchronized with th
   <img src="{{ img | append: 'stereo-piv-step-8-analysis-u-v-w.svg' | relative_url }}" width="560" height="340" loading="lazy" alt="Analysis: the A and B images of each camera give a 2D vector field per camera. Both fields are combined automatically into the resulting 3D vector map, drawn as arrows above and below the measurement plane, with the axes X to the right, Y up in the image and Z toward camera 1.">
 </figure>
 
-Each camera is analysed with normal 2D PIV, with the same settings and on the corrected images. The two 2D vector fields differ, because each camera sees the out-of-plane motion from its own side. For every point, the two measured 2D displacements (four numbers) are combined into **one 3D vector**: u and v in the board plane (X to the right, Y up in the image) and w along Z, toward camera 1 (X, Y, Z right-handed). In PIVlab this combination happens automatically after the analysis, and again after each validation.
+Each camera is analysed with normal 2D PIV, with the same settings and on the corrected images. This last step is what turns two ordinary PIV measurements into stereoscopic particle image velocimetry. The two 2D vector fields differ, because each camera sees the out-of-plane motion from its own side. For every point, the two measured 2D displacements (four numbers) are combined into **one 3D vector**: u and v in the board plane (X to the right, Y up in the image) and w along Z, toward camera 1 (X, Y, Z right-handed). In PIVlab this combination happens automatically after the analysis, and again after each validation.
 
 ## Use these drawings
 
@@ -104,7 +104,7 @@ Try the procedure without any hardware: PIVlab's [3D flow and stereo-PIV simulat
 {%- for f in files %}
   {"@context": "https://schema.org", "@type": "ImageObject",
    "contentUrl": {{ img | append: 'stereo-piv-' | append: f | append: '.png' | absolute_url | jsonify }},
-   "name": {{ 'Stereo-PIV ' | append: f | replace: '-', ' ' | jsonify }},
+   "name": {{ 'Stereoscopic PIV (stereo-PIV) ' | append: f | replace: '-', ' ' | jsonify }},
    "license": "https://creativecommons.org/licenses/by/4.0/",
    "acquireLicensePage": {{ page.url | absolute_url | jsonify }},
    "creditText": "Drawings: PIVlab, www.pivlab.de, CC BY 4.0",
