@@ -25,7 +25,7 @@ PIVlab does not only analyse stereo-PIV images, it also records them. Recording,
 6. Run the lens and stereo calibration and the disparity correction. The next recording with the same setup keeps the calibration.
 7. Analyse, validate and export as usual: the results now include w.
 
-How each step works is shown in eight drawings: [How stereo-PIV works: illustrated step by step]({{ '/wiki/8-stereo-piv-explained/' | relative_url }}).
+How each step works is shown in eight drawings: [Stereoscopic PIV explained, step by step]({{ '/wiki/8-stereo-piv-explained/' | relative_url }}).
 
 <a href="{{ '/wiki/8-stereo-piv-explained/' | relative_url }}"><img src="{{ '/manual/assets/img/stereo-piv/workflow/stereo-piv-workflow-card.png' | relative_url }}" width="1200" height="630" loading="lazy" alt="Stereo-PIV step by step: eight drawings from setting up the cameras to the 3D vector map with u, v and w"></a>
 
