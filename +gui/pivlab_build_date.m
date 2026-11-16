@@ -1,5 +1,5 @@
 function build_date = pivlab_build_date
 % Date of the PIVlab build (shown at startup). clean_and_package_PIVlab writes it into this file
 % before a release; in the source code it is empty.
-build_date = '13-Nov-2026 10:54:19';
+build_date = '15-Nov-2026 21:11:48';
 end

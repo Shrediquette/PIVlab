@@ -22,7 +22,7 @@ Steps that occur on several pages are in `_includes/steps/` and are used like th
 
 ## Beta version
 
-Nothing to edit: publish a release on GitHub and tick **"Set as a pre-release"**. While it is the newest release, `assets/js/beta.js` shows an orange "Beta x.y" button in the download bar (website and manual) and a beta box on the home page, the downloads page and the stereo-PIV guide (any element with `data-beta-box`), linking to `PIVlab_installer.exe` and `PIVlab.mltbx` of that release. When a normal release is published later, the beta buttons disappear. Visitors see a new beta within an hour (the check is cached per browser session).
+Nothing to edit: publish a release on GitHub and tick **"Set as a pre-release"**. While it is the newest release, `assets/js/beta.js` shows a green "Beta x.y" button in the download bar (website and manual) and a beta box on the home page, the downloads page and the stereo-PIV guide (any element with `data-beta-box`), linking to `PIVlab_installer.exe` and `PIVlab.mltbx` of that release. When a normal release is published later, the beta buttons disappear. Visitors see a new beta within an hour (the check is cached per browser session).
 
 ## Switches (Standalone app / MATLAB toolbox, frame grabber, ...)
 
@@ -56,6 +56,24 @@ YouTube video:
 Nothing is loaded from YouTube before the visitor clicks (see privacy policy). The preview image is a copy on pivlab.de: save the video's thumbnail (`https://i.ytimg.com/vi/VIDEO_ID/maxresdefault.jpg`) as `assets/images/videos/VIDEO_ID.jpg`. Without it, a dark placeholder is shown.
 
 Short looping animation (e.g. made from a GIF): use an MP4 in `<video class="anim" preload="none" muted loop playsinline poster="still.webp">` – it is only loaded and played while it is on screen (see `assets/images/stereo/`).
+
+## Publishing website changes from `stereo` to `main` (for Claude Code sessions)
+
+pivlab.de is built from **`main:/docs`**. Website work happens on **`stereo`**, which also holds unreleased program code. Only the `docs/` folder may go to `main` – **never merge `stereo` into `main`** and never copy anything outside `docs/`. The user usually has unrelated uncommitted files in the folder: never commit, stash, reset, restore or delete them. Explain git state to the user in plain words.
+
+Only do this when the user asks. Commands for PowerShell, run in the repository folder (the one with branch `stereo` checked out); `<C>` = the stereo commit made in step 3.
+
+**Always address the second folder with `git -C ..\PIVlab_website <command>`, never with `cd <folder>` followed by git commands.** If the `cd` fails, the commands run in the stereo folder, and `push origin HEAD:main` then pushes the whole stereo branch to main. Before every push to main, check `git -C ..\PIVlab_website branch --show-current` (must be the temporary branch). After the push, `git diff --name-only <old main> origin/main -- . ':!docs'` must be empty.
+
+1. **Look first.** `git fetch origin`, `git status --short`, `git rev-list --left-right --count HEAD...origin/stereo`, `git diff --cached --name-only` (must be empty).
+2. **If GitHub's stereo is ahead** (the user pushes from other places): check that none of those commits touch a locally modified file (`git diff --name-only HEAD origin/stereo` vs. `git status`), then `git merge --ff-only origin/stereo`. If that is not a fast-forward or files overlap: stop and ask.
+3. **Commit only `docs/` on stereo:** `git add -- docs`, check that nothing outside `docs/` is staged, `git commit` (message ends with the Co-Authored-By line), `git push origin stereo`. Never force-push.
+4. **Separate folder with main:** `git worktree add -b <tmp-branch> ..\PIVlab_website origin/main` (the folder must not exist or be empty).
+5. **Copy docs exactly:** `git -C ..\PIVlab_website checkout <C> -- docs`. Files that stereo deleted from `docs/` are listed by `git diff --name-only --diff-filter=D origin/main <C> -- docs` – remove exactly those with `git rm`. Then check: `git -C ..\PIVlab_website diff --cached --name-only` has nothing outside `docs/`, and `git -C ..\PIVlab_website diff --cached --quiet <C> -- docs` returns 0 (identical).
+6. **Commit and publish:** commit in the worktree, then `git -C ..\PIVlab_website push origin HEAD:main` (a plain fast-forward; no pull request needed). If it is rejected because main moved: remove the worktree and start again at step 4.
+7. **Check the live site:** GitHub rebuilds in 1–2 minutes – poll a changed file (background loop with a timeout), then crawl pivlab.de for 404s and check the changed pages in the browser (no console errors, structured data valid). GitHub's Jekyll 3.x is not the local preview: e.g. static files have `path`, not `relative_path`.
+8. **Make stereo level with main again** (otherwise GitHub says "stereo is N commits behind main"): `git merge-tree --write-tree HEAD origin/main` must give a tree with **0 file changes** compared to HEAD; then `git merge --no-edit origin/main` (message ends with the Co-Authored-By line) and `git push origin stereo`. If the test merge would change files: stop and ask.
+9. **Clean up:** `git worktree remove ..\PIVlab_website`, `git branch -d <tmp-branch>`. Report what went live, the commit IDs, and that the user's uncommitted files are untouched.
 
 ## Search engines
 
