@@ -1385,14 +1385,33 @@ helper_start_pivlab();
 h = gui.gethand;
 hgui = getappdata(0, 'hgui');
 controls = {'residual_enable', 'residual_thresh', 'w_median_enable', 'w_median_thresh', 'w_limit_enable', ...
-    'w_limit_min', 'w_limit_max', 'stereo_show_residual', 'interpol_missing3'};
+    'w_limit_min', 'w_limit_max', 'w_limit_select', 'w_limit_auto', 'w_hist_all_frames', 'stereo_show_residual', 'interpol_missing3'};
 for k = 1:numel(controls)
-    verifyTrue(testCase, isequal(get(h.(controls{k}), 'Parent'), h.multip32), [controls{k} ' not in the stereo based validation panel']);
+    verifyTrue(testCase, isequal(ancestor(h.(controls{k}), 'uipanel', 'toplevel'), h.multip32) || isequal(get(h.(controls{k}), 'Parent'), h.multip32), ...
+        [controls{k} ' not in the stereo based validation panel']);
+end
+% W limits in their own sub-panel, like "Velocity limits (u & v)" (2026-11-18)
+w_controls = {'w_limit_enable', 'w_limit_min', 'w_limit_max', 'w_limit_select', 'w_limit_auto', 'w_hist_all_frames'};
+for k = 1:numel(w_controls)
+    verifyTrue(testCase, isequal(get(h.(w_controls{k}), 'Parent'), h.w_limit_panel), [w_controls{k} ' not in the W limits sub-panel']);
+end
+verifyEqual(testCase, h.w_limit_panel.Title, 'W limits');
+verifyNumElements(testCase, findobj(h.multip06, 'Type', 'uipanel', 'Title', 'Velocity limits (u & v)'), 1, 'velocity limits sub-panel title');
+verifyNumElements(testCase, findobj(h.multip06, 'Type', 'uicontrol', 'String', 'Clear all u & v velocity limits'), 1, 'clear velocity limits button text');
+% no shortcut in the panel titles (2026-11-18)
+panels = findobj(hgui, 'Type', 'uipanel');
+for k = 1:numel(panels)
+    verifyFalse(testCase, contains(string(panels(k).Title), 'CTRL', 'IgnoreCase', true), ['shortcut in the panel title "' char(string(panels(k).Title)) '"']);
 end
 verifyEmpty(testCase, findobj(h.multip06, 'Tag', 'residual_enable'), 'residual filter still in the vector validation panel');
 verifyEqual(testCase, [h.residual_enable.Value h.w_median_enable.Value h.w_limit_enable.Value h.stereo_show_residual.Value], [0 0 0 0], 'a stereo filter is on by default');
 verifyEqual(testCase, {h.residual_thresh.String, h.w_median_thresh.String, h.w_limit_min.String, h.w_limit_max.String}, {'2', '3', '-1', '1'}, 'default values');
 verifyEqual(testCase, {h.stereo_show_residual.UserData, h.interpol_missing3.UserData}, {'not_a_setting', 'not_a_setting'});
+verifyEqual(testCase, h.w_hist_all_frames.Value, 1, 'W histogram: all frames by default');
+% the W limit buttons do nothing in 2D
+validate.w_limit_select_Callback(h.w_limit_auto);
+verifyEmpty(testCase, findobj('Tag', 'w_limit_figure'), '2D: W histogram opened');
+verifyEqual(testCase, {h.w_limit_min.String, h.w_limit_max.String}, {'-1', '1'}, '2D: Auto changed the W limits');
 % menu entry: visible and enabled in 2D, opens the panel
 menu = findall(hgui, 'Tag', 'menu_stereovalidation');
 verifyNumElements(testCase, menu, 1);
@@ -1402,6 +1421,7 @@ verifyEqual(testCase, gui.retr('stereomode'), 0);
 validate.stereo_val_Callback;
 verifyEqual(testCase, {char(h.multip32.Visible), char(h.multip06.Visible), char(h.multip23.Visible)}, {'on', 'off', 'off'});
 verify_panel_layout(testCase, h.multip32);
+verify_panel_layout(testCase, h.w_limit_panel);
 verify_panel_layout(testCase, h.multip06);
 % the three "Interpolate missing data" checkboxes show one setting
 set(h.interpol_missing3, 'Value', 0);
@@ -1517,6 +1537,45 @@ outside = W < w_limits(1) | W > w_limits(2);
 verify_discarded(testCase, 1, outside, isfinite(W) & ~outside, 'W limits');
 set(h.w_limit_enable, 'Value', 0);
 validate.restore_all_Callback;
+% graphical W limits (2026-11-18): "Auto" = main peak of the W histogram of all frames, written to the panel
+W_all = [];
+for i = 1:size(raw, 2)
+    w = raw{16, i}(:) * calibrate.w_factor(gui.retr('calu'), gui.retr('calv'));
+    W_all = [W_all; double(w(isfinite(w)))]; %#ok<AGROW>
+end
+expected_range = validate.w_limit_auto_range(W_all, validate.w_limit_bin_edges(W_all));
+validate.w_limit_select_Callback(h.w_limit_auto);
+limit_figure = findobj('Tag', 'w_limit_figure');
+verifyNumElements(testCase, limit_figure, 1, 'Auto: no W histogram');
+verifyEqual(testCase, {h.w_limit_min.String, h.w_limit_max.String, h.w_limit_enable.Value}, ...
+    {sprintf('%.4g', expected_range(1)), sprintf('%.4g', expected_range(2)), 1}, 'Auto: W limits not written to the panel');
+histograms = getappdata(limit_figure, 'w_histograms');
+verifyEqual(testCase, numel(histograms(1).Data) + numel(histograms(2).Data), numel(W_all), 'histogram: not all frames');
+verifyEqual(testCase, get(findobj(limit_figure, 'Type', 'axes'), 'YScale'), 'linear');
+% dragging the range: full height kept, panel values follow, colours follow on release
+roi = findobj(limit_figure, 'Tag', 'w_limit_ROI');
+y_range = ylim(roi.Parent);
+new_range = prctile(W_all, [30 70]);
+roi.Position = [new_range(1) 1 diff(new_range) 3];
+validate.w_limit_roi_events(roi, struct('EventName', 'MovingROI'));
+verifyEqual(testCase, roi.Position([2 4]), [y_range(1) diff(y_range)], 'AbsTol', 1e-9, 'range: height not kept');
+verifyEqual(testCase, str2double({h.w_limit_min.String h.w_limit_max.String}), new_range, 'RelTol', 1e-3, 'range: panel values');
+validate.w_limit_roi_events(roi, struct('EventName', 'ROIMoved'));
+inside = W_all >= roi.Position(1) & W_all <= roi.Position(1) + roi.Position(3);
+verifyEqual(testCase, [numel(histograms(1).Data) numel(histograms(2).Data)], [nnz(inside) nnz(~inside)], 'range: colours');
+delete(limit_figure);
+verifyEqual(testCase, h.w_limit_enable.Value, 1, 'closing the window unticked "W limits"');
+% one frame only; "Select" shows the panel values without changing them
+set(h.w_hist_all_frames, 'Value', 0);
+set(h.fileselector, 'Value', 1); gui.fileselector_Callback(h.fileselector, [], []);
+set(h.w_limit_min, 'String', '-1'); set(h.w_limit_max, 'String', '1'); set(h.w_limit_enable, 'Value', 0);
+validate.w_limit_select_Callback(h.w_limit_select);
+limit_figure = findobj('Tag', 'w_limit_figure');
+histograms = getappdata(limit_figure, 'w_histograms');
+verifyEqual(testCase, numel(histograms(1).Data) + numel(histograms(2).Data), nnz(isfinite(W)), 'histogram: not only frame 1');
+verifyEqual(testCase, {h.w_limit_min.String, h.w_limit_max.String, h.w_limit_enable.Value}, {'-1', '1', 0}, 'Select changed the panel');
+delete(limit_figure);
+set(h.w_hist_all_frames, 'Value', 1);
 % median of W (the test itself: test_api_stereo/test_w_median_finds_spikes)
 filters = struct('residual_thresh', [], 'w_median_thresh', 1.5, 'w_limits', []);
 expected = stereo.limit_test(W, W, W, [], [], [], residual, raw{16, 1}, filters);
@@ -1532,8 +1591,26 @@ ax = gui.retr('pivlab_axis');
 set(h.fileselector, 'Value', 1); gui.fileselector_Callback(h.fileselector, [], []);
 validate.stereo_val_Callback;
 verifyEmpty(testCase, findobj(ax, 'Tag', 'stereo_disparity_display'), 'residual map without "Show residual map"');
+% "Show residual map" only with the residual filter (2026-11-18)
+verifyEqual(testCase, char(h.stereo_show_residual.Enable), 'off', '"Show residual map" enabled without the residual filter');
+set(h.residual_enable, 'Value', 1);
+validate.residual_enable_Callback;
+verifyEqual(testCase, char(h.stereo_show_residual.Enable), 'on', '"Show residual map" disabled with the residual filter');
 set(h.stereo_show_residual, 'Value', 1);
 validate.stereo_show_residual_Callback;
+verifyNotEmpty(testCase, findobj(ax, 'Type', 'image', 'UserData', 'residual_removed'), 'no residual map');
+set(h.residual_enable, 'Value', 0);
+validate.residual_enable_Callback;
+verifyEqual(testCase, [h.stereo_show_residual.Value strcmp(h.stereo_show_residual.Enable, 'off')], [0 1], 'unticking the residual filter: "Show residual map" still on');
+verifyEmpty(testCase, findobj(ax, 'Tag', 'stereo_disparity_display'), 'unticking the residual filter: residual map still shown');
+set(h.residual_enable, 'Value', 1);
+validate.residual_enable_Callback;
+verifyEmpty(testCase, findobj(ax, 'Tag', 'stereo_disparity_display'), 'ticking the residual filter shows the map without "Show residual map"');
+set(h.stereo_show_residual, 'Value', 1);
+validate.stereo_show_residual_Callback;
+% a new threshold in the edit field updates the map
+set(h.residual_thresh, 'String', num2str(prctile(residual(:), 50), 10));
+validate.stereo_value_Callback(h.residual_thresh);
 threshold = str2double(h.residual_thresh.String); % as shown in the panel
 removed_layer = findobj(ax, 'Type', 'image', 'Tag', 'stereo_disparity_display', 'UserData', 'residual_removed');
 verifyNumElements(testCase, removed_layer, 1, 'no layer of the removed vectors');
@@ -1555,9 +1632,22 @@ validate.stereo_show_residual_Callback;
 removed_layer = findobj(ax, 'Type', 'image', 'UserData', 'residual_removed');
 verifyNotEqual(testCase, squeeze(removed_layer.CData(1, 1, :))', [1 0 1], 'removed layer with cool: magenta');
 set(h.colormap_choice, 'Value', default_map);
+% Apply unticks "Show residual map": the validated vectors are shown (2026-11-18)
+validate.apply_filter_current_Callback;
+verifyEqual(testCase, h.stereo_show_residual.Value, 0, 'Apply to current frame: "Show residual map" still ticked');
+verifyEmpty(testCase, findobj(ax, 'Tag', 'stereo_disparity_display'), 'Apply to current frame: residual map still shown');
+set(h.stereo_show_residual, 'Value', 1);
+validate.stereo_show_residual_Callback;
+validate.apply_filter_all_Callback;
+verifyEqual(testCase, h.stereo_show_residual.Value, 0, 'Apply to all frames: "Show residual map" still ticked');
+verifyEmpty(testCase, findobj(ax, 'Tag', 'stereo_disparity_display'), 'Apply to all frames: residual map still shown');
+validate.restore_all_Callback;
+set(h.stereo_show_residual, 'Value', 1);
+validate.stereo_show_residual_Callback;
 validate.vector_val_Callback;
 verifyEmpty(testCase, findobj(ax, 'Tag', 'stereo_disparity_display'), 'residual map still shown in the vector validation panel');
-set(h.stereo_show_residual, 'Value', 0);
+set([h.stereo_show_residual h.residual_enable], 'Value', 0);
+gui.update_dependent_controls(h);
 end
 
 function test_stereo_filters_skipped_in_2d(testCase)

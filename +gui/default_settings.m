@@ -153,6 +153,7 @@ default.masks.mask_clear_frames = '1:end';
 default.display.update_display_checkbox = 0;
 % Vector validation
 default.display.scatter_all_frames = 1;
+default.display.w_hist_all_frames = 1;  % stereo based validation: W histogram of all frames
 % Derive parameters
 default.display.derivchoice = 1;
 default.display.licres = 0.7;

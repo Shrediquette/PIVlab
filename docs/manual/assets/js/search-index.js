@@ -327,6 +327,12 @@ window.MANUAL_SEARCH = [
     text: "stereo based validation stereo-piv reconstruction residual filter threshold dirt object local median filter w out-of-plane outliers w limits w min w max both cameras"
   },
   {
+    title: "Selecting W limits with the w histogram (stereo-based validation)",
+    href: "pages/validation-stereo.html", hash: "w-limits",
+    section: "Validation",
+    text: "w limits select auto histogram w out-of-plane range drag main peak outliers display all frames in histogram w min w max"
+  },
+  {
     title: "Residual map (stereo-based validation)",
     href: "pages/validation-stereo.html", hash: "residual-map",
     section: "Validation",

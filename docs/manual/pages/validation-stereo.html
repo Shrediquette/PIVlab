@@ -16,7 +16,8 @@
       <strong>PIVlab 3.14</strong>
       Stereo-PIV is not available in PIVlab 3.14.
     </div>
-    <p>Open via <span class="ui">Validation → Stereo based validation</span>. All filters are off by
+    <p>Open via <span class="ui">Validation → Stereo based validation</span>
+    (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>J</kbd>). All filters are off by
     default.</p>
 
     <figure>
@@ -46,6 +47,14 @@
         <a href="validation-velocity.html#limits">velocity limits</a>.</td>
       </tr>
     </table>
+
+    <h2 id="w-limits">Selecting the W limits</h2>
+    <p><span class="ui">Select</span> opens a histogram of w with the current W min / W max as a green
+    range. Drag the range or its edges:
+    W min and W max follow and <span class="ui">Enable W limits</span> is ticked. Bars outside the range turn
+    red. <span class="ui">Auto</span> sets the range to the main peak of the histogram first.
+    <span class="ui">display all frames in histogram</span> uses w of all frames instead of the current
+    frame.</p>
 
     <h2 id="residual-map">Residual map</h2>
     <p>Tick <span class="ui">Show residual map</span> to see the reconstruction residual of the frame

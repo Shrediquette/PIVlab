@@ -45,6 +45,11 @@ piv.overlappercent % overlap of the pass 1 windows in %
 
 %% Vector validation
 set([handles.interpol_missing2 handles.interpol_missing3], 'Value', get(handles.interpol_missing, 'Value')); % show the same setting
+residual_filter = get(handles.residual_enable, 'Value') == 1;
+enable(handles.stereo_show_residual, residual_filter); % the residual map shows what the residual filter removes
+if ~residual_filter
+    set(handles.stereo_show_residual, 'Value', 0);
+end
 
 %% Calibration: the axis directions and offsets need a reference distance
 enable(findobj(handles.uipanel_offsets, 'Type', 'uicontrol'), ~isempty(gui.retr('pointscali')));

@@ -53,7 +53,7 @@ if capturing==0
         if stereo_mode && target_axis==gui.retr('pivlab_axis') && strcmp(get(handles.multip30, 'Visible'), 'on')
             disparity_key = stereo.disparity_display_popup(handles);
         end
-        if stereo_mode && target_axis==gui.retr('pivlab_axis') && strcmp(get(handles.multip32, 'Visible'), 'on') && get(handles.stereo_show_residual, 'Value') == 1
+        if target_axis==gui.retr('pivlab_axis') && validate.residual_map_shown(handles)
             disparity_key = 'residual_raw'; % stereo based validation: residual of the unvalidated result
         end
         disparity_display = ~strcmp(disparity_key, 'image');

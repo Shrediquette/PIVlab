@@ -9,7 +9,7 @@ if get(handles.panon,'Value')==1
 	gui.panon_Callback(handles.panon)
 end
 %the residual map of the stereo based validation panel is only shown while that panel is open
-residual_map_shown = isfield(handles,'multip32') && strcmp(get(handles.multip32,'Visible'),'on') && get(handles.stereo_show_residual,'Value')==1 && isequal(gui.retr('stereomode'),1);
+residual_map_shown = validate.residual_map_shown(handles);
 turnoff=findobj('-regexp','Tag','multip');
 set(turnoff, 'visible', 'off');
 turnon=findobj('-regexp','Tag',who);

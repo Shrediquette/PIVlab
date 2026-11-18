@@ -1,4 +1,6 @@
 function apply_filter_all_Callback(~, ~, ~)
+handles=gui.gethand;
+set(handles.stereo_show_residual, 'Value', 0); % stereo based validation: show the validated vectors, not the residual map
 if stereo.redirect('filter_all') % stereo-PIV: both cameras, then U, V, W (stereo.per_camera)
 	return
 end
