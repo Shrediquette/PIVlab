@@ -311,6 +311,22 @@ end
 setappdata(0, 'stereo_capture_test', r);
 end
 
+function test_sharpness_calibration_exclusive(testCase)
+% Sharpness and Calibration (live ChArUco detection) exclude each other, for every camera
+folder = new_folder(testCase, 'exclusive');
+h = start_capture_gui(folder, 1, 1);
+set(h.ac_displ_sharp, 'Value', 1);
+acquisition.display_cam_overlay_Callback(h.ac_displ_sharp);
+set(h.calib_dolivedetect, 'Value', 1);
+preproc.cam_live_detect_Callback(h.calib_dolivedetect);
+verifyEqual(testCase, [get(h.ac_displ_sharp, 'Value') get(h.calib_dolivedetect, 'Value')], [0 1], 'Calibration ticked: Sharpness unticked');
+verifyEqual(testCase, [gui.retr('sharpness_enabled') gui.retr('do_charuco_detection')], [0 1], 'the capture code reads the same');
+set(h.ac_displ_sharp, 'Value', 1);
+acquisition.display_cam_overlay_Callback(h.ac_displ_sharp);
+verifyEqual(testCase, [get(h.ac_displ_sharp, 'Value') get(h.calib_dolivedetect, 'Value')], [1 0], 'Sharpness ticked: Calibration unticked');
+verifyEqual(testCase, [gui.retr('sharpness_enabled') gui.retr('do_charuco_detection')], [1 0]);
+end
+
 %% helpers
 function folder = new_folder(testCase, name)
 folder = fullfile(testCase.TestData.Dir, name);
