@@ -63,7 +63,7 @@ pivlab.saveSession(res, "analysis.mat");                           % open it in 
       <tr><td><code>res.typevector</code></td><td>1 = valid, 2 = removed/interpolated, 3 = second correlation peak, 0 = masked</td></tr>
       <tr><td><code>res.correlation_map</code></td><td>correlation coefficient of every vector</td></tr>
       <tr><td><code>res.derived</code></td><td>maps computed by <code>pivlab.derive</code>, e.g. <code>res.derived.vorticity</code></td></tr>
-      <tr><td><code>res.px</code></td><td>the same data in pixel units, as PIVlab stores it internally</td></tr>
+      <tr><td><code>res.px</code></td><td>the same data in pixel units</td></tr>
     </table>
     <p>You can change values in <code>res.u</code> / <code>res.v</code> by hand, e.g.
     <code>res.u(res.u &gt; 10) = NaN;</code>. The next <code>pivlab.*</code> function takes the changed

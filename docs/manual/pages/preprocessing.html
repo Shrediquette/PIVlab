@@ -18,8 +18,7 @@
       <div>
         <h2 id="opening">Opening the panel</h2>
         <p>Choose <span class="ui">Image settings → Image pre-processing / enhancement</span>
-        (<kbd>Ctrl+Shift+I</kbd>). Every filter here has its own tool tip — hover over a checkbox or
-        field for a short explanation.</p>
+        (<kbd>Ctrl+Shift+I</kbd>).</p>
         <p>Two filters are <strong>enabled by default</strong>: <span class="ui">Enable
         CLAHE</span> and <span class="ui">Auto contrast stretch</span>. For most datasets these
         two are all you need; the rest exist for specific, less common problems.</p>
@@ -95,6 +94,8 @@
     </ol>
 
     <h2 id="tips">Tips &amp; tricks: preprocessing isn't a fix-all</h2>
+    <details class="more">
+    <summary>How to work with the filters, and what they cannot do <span class="more-kind">tips</span></summary>
     <ul>
       <li><strong>Start simple.</strong> Leave the defaults (CLAHE + Auto contrast stretch)
       enabled and run a quick test analysis before reaching for anything else.</li>
@@ -112,6 +113,7 @@
       poor image data; see <a href="best-practices.html#seeding">Particle seeding &amp; image
       quality</a> for what to fix upstream instead.
     </div>
+    </details>
   </article>
 
   <script src="../assets/js/nav.js"></script>

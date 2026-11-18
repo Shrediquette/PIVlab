@@ -30,10 +30,9 @@
     <h2 id="setup">Setup</h2>
     <table class="ref">
       <tr><th>Setup</th><th>What you get</th></tr>
-      <tr><td>Simple: one camera straight on</td><td>The camera looks straight at the light sheet: no
-      perspective, no lens distortion, nothing to calibrate. You set the image size and the
-      <span class="ui">pixel size in the sheet</span> (mm per pixel; displacements in mm divided by it
-      are displacements in px). The image pairs are loaded into PIVlab after generating.</td></tr>
+      <tr><td>Simple: one camera straight on</td><td>No perspective, no lens distortion, nothing to
+      calibrate. Set the image size and the <span class="ui">pixel size in the sheet</span>
+      (mm per pixel).</td></tr>
       <tr><td>One camera with lens</td><td>A camera with position, aim point, focal length and lens
       distortion, plus images of the ChArUco board (light sheet position and calibration images) — to
       test the camera calibration and the rectification.</td></tr>
@@ -58,13 +57,10 @@
       (peak out-of-plane displacement) — a test case for stereo-PIV.</td></tr>
       <tr><td>Uniform displacement, solid body rotation, membrane</td><td>Maximum displacement,
       out-of-plane displacement.</td></tr>
-      <tr><td>Sphere wake, free jet (3D flow simulation)</td><td>An unsteady 3D flow is computed
-      (1 to 3 minutes): the wake of a sphere in the light sheet, or a round jet from a nozzle at the
-      left edge of the view (Re 3000; it behaves like a real round jet: potential core about 5
-      diameters, spreading about 0.09). Parameters: free stream / jet displacement, diameter of the
-      sphere / nozzle, and the <span class="ui">time between pairs</span> in D/U (the flow travels
-      this many diameters between two image pairs). Every image pair is a later moment of the flow:
-      a time series. The view must end within 10 jet diameters of the nozzle.</td></tr>
+      <tr><td>Sphere wake, free jet (3D flow simulation)</td><td>An unsteady 3D flow, computed in
+      1 to 3 minutes. Parameters: free stream / jet displacement, diameter of the sphere / nozzle,
+      and <span class="ui">time between pairs</span> in D/U. Each image pair is a later moment, so
+      you get a time series. Keep the view within 10 jet diameters of the nozzle.</td></tr>
     </table>
 
     <h2 id="general">Particles and output</h2>

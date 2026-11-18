@@ -13,21 +13,17 @@
     <p class="lead">Masking tells PIVlab which parts of your images to ignore — solid
     walls, models, reflections or any region without valid tracer particles. Masked pixels
     produce no vectors and are excluded from all results and statistics.</p>
-    <p>Open via <span class="ui">Image settings → Define masks</span>
-    (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>).</p>
+    <p>Open via <span class="ui">Image settings → Define masks (exclude regions from
+    analysis)</span> (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>).</p>
 
     <p>A mask is a shape (or several shapes) drawn on top of the image. Inside a mask, the
-    velocity is set to <em>“not a number”</em> (<code>NaN</code>), so it never contributes to
-    the correlation, the plots or the averaged data. Masks are stored per frame, but can be
-    copied to as many frames as you like — useful when an object stays still throughout a
-    time-resolved recording.</p>
+    velocity is set to <em>“not a number”</em> (<code>NaN</code>). Masks are stored per frame and
+    can be copied to as many frames as you like.</p>
 
     <div class="split">
       <div>
         <h2 id="opening">Opening the masking panel</h2>
-        <p>From the menu bar choose
-        <span class="ui">Image settings → Define masks (exclude regions from analysis)</span>.
-        The left-hand panel switches to <span class="ui">Image masking</span>, shown here.</p>
+        <p>The left-hand panel switches to <span class="ui">Image masking</span>, shown here.</p>
         <p>Load your images first (<span class="ui">File → New session</span>) so the image is
         visible while you draw. If a region is hard to see, use the
         <span class="ui">Image display options</span> buttons — <span class="ui">Brighter</span>,

@@ -48,15 +48,10 @@
       note it doesn't need to exclude the rod; that's what masking is for (see below).</figcaption>
     </figure>
 
-    <div class="note">
-      <strong>One ROI for the whole session</strong>
-      Unlike masks, there is only ever <em>one</em> ROI, and it's rectangular. It applies to
-      every frame in the session — you can't set a different ROI per frame.
-    </div>
-
     <h2 id="vs-masking">ROI vs. masking — which should I use?</h2>
-    <p>Both restrict what gets analysed, but they work very differently, and knowing the
-    difference saves confusion:</p>
+    <details class="more">
+    <summary>How a ROI and a mask differ, and when to use each <span class="more-kind">reference</span></summary>
+    <p>Both restrict what gets analysed, but they work differently:</p>
     <table class="ref">
       <tr><th></th><th>Region of interest</th><th>Masking</th></tr>
       <tr>
@@ -98,6 +93,7 @@
       need. If you're unsure whether a region matters, leave it in and use a
       <a href="masking.html">mask</a> instead if it turns out to be a problem.
     </div>
+    </details>
   </article>
 
   <script src="../assets/js/nav.js"></script>

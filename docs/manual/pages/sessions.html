@@ -11,7 +11,7 @@
   <article id="doc">
     <h1 id="top">Sessions: images, settings and saved work</h1>
     <p class="lead">Before anything else in PIVlab, you need images loaded. This page covers
-    importing an image sequence, and — because it trips people up — the difference between a
+    importing an image sequence, and the difference between a
     <strong>session</strong> (everything: images, masks, results) and <strong>settings</strong>
     (just your configuration, reusable on a different dataset).</p>
 
@@ -108,17 +108,16 @@
     <h2 id="imagelist">The image list and moving between frames</h2>
     <p>Loaded frames appear in the <span class="ui">Image list</span>, each entry prefixed
     <span class="ui">A:</span> or <span class="ui">B:</span> for the first/second image of the
-    pair. To move through frames, use the slider in the <span class="ui">Tools</span> panel at
-    the top of the screen (tooltip: “Step through your frames here”), and
-    <span class="ui">Toggle</span> to flip between the A and B image of the current frame.</p>
+    pair. Move through the frames with the slider in the
+    <a href="interface.html#tools">Tools panel</a>.</p>
 
     <p>Select one or more entries in the image list and click <span class="ui">Remove
     images</span> to drop them again. At least one pair must remain.</p>
 
     <div class="warn">
       <strong>Removing images clears your results</strong>
-      Removing images from the list also clears any analysis results, derived parameters and
-      manual vector deletions for the whole session — not just for the removed frames. Do this
+      For the whole session, not just the removed frames
+      (<a href="analyze.html#clear">what else clears results</a>). Do this
       before analysing, or be ready to re-run <span class="ui">ANALYZE!</span> afterwards. If
       removing leaves an odd number of images, PIVlab highlights the list red and asks you to
       remove one more.
@@ -186,16 +185,6 @@
       <li>A settings file can also be a session: <span class="ui">Import PIVlab settings</span>
       takes the settings out of a session file without loading its images or results.</li>
     </ol>
-
-    <div class="tip">
-      <strong>PIVlab already remembers a few defaults</strong>
-      PIVlab starts with its default settings every time, and a handful of individual choices
-      (e.g. Basic/Advanced mode, the last folder, the last sequencing style you used) are quietly
-      remembered as you work. That's not the same as saving your
-      whole current configuration, though — use <span class="ui">Save/Load PIVlab
-      settings</span> whenever you want a <em>complete, named, reusable</em> configuration you
-      can switch between or share.
-    </div>
 
     <div class="note">
       <strong>Related, but covered elsewhere</strong>

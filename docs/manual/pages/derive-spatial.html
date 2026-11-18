@@ -32,8 +32,9 @@
       <tr><td>u component / v component</td><td>Horizontal / vertical velocity only.</td></tr>
       <tr><td>Divergence</td><td>Net outflow/inflow at each point.</td></tr>
       <tr><td>Q criterion</td><td>A common vortex-identification measure.</td></tr>
-      <tr><td>Shear rate</td><td>Magnitude of the rate-of-strain tensor.</td></tr>
-      <tr><td>Simple strain rate</td><td>A simpler strain-rate estimate.</td></tr>
+      <tr><td>Shear rate</td><td>Magnitude of the rate-of-strain tensor — the complete measure.</td></tr>
+      <tr><td>Simple strain rate</td><td>One combination of two derivatives
+      (<em>∂u</em>/<em>∂x</em> − <em>∂v</em>/<em>∂y</em>), not the full strain rate.</td></tr>
       <tr><td>Line integral convolution (LIC)</td><td>A texture-based visualization of flow direction. Reveals streak-like structure; see the resolution slider below.</td></tr>
       <tr><td>Vector direction</td><td>Angle in degrees.</td></tr>
       <tr><td>Correlation coefficient</td><td>Quality of the underlying correlation.</td></tr>
@@ -54,14 +55,13 @@
 
     <div class="note">
       <strong>Stereo-PIV</strong>
-      In stereo mode the list has one more item, <span class="ui">w component</span>, and
-      <span class="ui">Magnitude</span> is the 3D magnitude sqrt(u² + v² + w²). Data smoothing
-      smooths w like u and v. See <a href="stereo-piv.html#w">Stereo-PIV</a>.
+      The list gains a <span class="ui">w component</span> and a few items change meaning —
+      see <a href="stereo-piv.html#w">w in the rest of PIVlab</a>.
     </div>
 
     <h2 id="equations">How each parameter is computed</h2>
-    <p>This section gives the exact definition behind every entry in the dropdown, so you can
-    check, cite or reproduce the numbers PIVlab reports.</p>
+    <details class="more">
+    <summary>Exact equation for every parameter <span class="more-kind">reference</span></summary>
 
     <p>Throughout, <em>u</em> and <em>v</em> are the velocity components along <em>x</em> and
     <em>y</em>, and <em>u</em><sub>0</sub> / <em>v</em><sub>0</sub> are the constant offsets you
@@ -88,9 +88,7 @@
     <p><strong>u component</strong> and <strong>v component</strong> are simply
     <em>u</em> − <em>u</em><sub>0</sub> and <em>v</em> − <em>v</em><sub>0</sub>.</p>
 
-    <p><strong>Vector direction</strong> — the angle of each vector, via
-    <a href="https://www.mathworks.com/help/matlab/ref/atan2d.html" target="_blank" rel="noopener"><code>atan2d</code></a>,
-    reported between −180° and +180°:</p>
+    <p><strong>Vector direction</strong> — the angle of each vector, between −180° and +180°:</p>
     <div class="eq">θ = atan2(<em>v</em> − <em>v</em><sub>0</sub>, <em>u</em> − <em>u</em><sub>0</sub>)</div>
     <p>With PIVlab's default axes (<em>x</em> right, <em>y</em> up) the angles line up like
     this:</p>
@@ -111,9 +109,7 @@
     <h3 id="eq-gradient">Gradient-based quantities</h3>
     <p>These are all built from the four spatial derivatives of the velocity field
     (<em>∂u</em>/<em>∂x</em>, <em>∂u</em>/<em>∂y</em>, <em>∂v</em>/<em>∂x</em>,
-    <em>∂v</em>/<em>∂y</em>), evaluated with MATLAB's
-    <a href="https://www.mathworks.com/help/matlab/ref/gradient.html" target="_blank" rel="noopener"><code>gradient</code></a>
-    (central differences inside the field, one-sided at the edges).</p>
+    <em>∂v</em>/<em>∂y</em>).</p>
 
     <div class="note">
       <strong>Subtract flow does not change any of these</strong>
@@ -123,9 +119,7 @@
       respond to it.
     </div>
 
-    <p><strong>Vorticity</strong> — the local rate of rotation of the fluid, computed with
-    MATLAB's
-    <a href="https://www.mathworks.com/help/matlab/ref/curl.html" target="_blank" rel="noopener"><code>curl</code></a>:</p>
+    <p><strong>Vorticity</strong> — the local rate of rotation of the fluid:</p>
     <div class="eq">ω = <em>∂v</em>/<em>∂x</em> − <em>∂u</em>/<em>∂y</em></div>
     <p>Vorticity is the <em>z</em> component of the rotation, in the coordinate system set in the
     <a href="spatial-calibration.html#offsets">calibration</a> (<em>z</em> = <em>x</em> × <em>y</em>).
@@ -138,9 +132,7 @@
       top), the sign of the vorticity is wrong.
     </div>
 
-    <p><strong>Divergence</strong> — the net rate at which fluid flows out of each point, via
-    MATLAB's
-    <a href="https://www.mathworks.com/help/matlab/ref/divergence.html" target="_blank" rel="noopener"><code>divergence</code></a>:</p>
+    <p><strong>Divergence</strong> — the net rate at which fluid flows out of each point:</p>
     <div class="eq">∇·<em>V</em> = <em>∂u</em>/<em>∂x</em> + <em>∂v</em>/<em>∂y</em></div>
     <p>For an incompressible flow measured in-plane this should be near zero, so a divergence map
     doubles as a rough sanity check on your data (or a sign of out-of-plane motion).</p>
@@ -155,21 +147,14 @@
 
     <div class="warn">
       <strong>This definition changed in PIVlab 3.10</strong>
-      Before version 3.10, <span class="ui">Shear rate</span> returned the simpler
-      <em>∂v</em>/<em>∂x</em> + <em>∂u</em>/<em>∂y</em>. If you are comparing against results
-      produced by an older PIVlab version, the two are not interchangeable.
+      Before 3.10, <span class="ui">Shear rate</span> returned
+      <em>∂v</em>/<em>∂x</em> + <em>∂u</em>/<em>∂y</em>, so results from an older version are not
+      comparable.
     </div>
 
     <p><strong>Simple strain rate</strong> — the difference between the two normal strain
     rates:</p>
     <div class="eq"><em>∂u</em>/<em>∂x</em> − <em>∂v</em>/<em>∂y</em></div>
-
-    <div class="note">
-      <strong>“Simple strain rate” is not the full strain rate</strong>
-      Despite the name, this is a single combination of two derivatives, not the magnitude of the
-      strain-rate tensor. If you want the complete measure, use <span class="ui">Shear rate</span>
-      above.
-    </div>
 
     <p><strong>Q criterion</strong> — a standard vortex-identification measure that compares
     rotation against strain. It is defined from the rotation tensor <strong>Ω</strong> and the
@@ -177,12 +162,10 @@
     squares of all components”. Written out for a 2D field:</p>
     <div class="eq"><em>Q</em> = ½ [ ½ (<em>∂v</em>/<em>∂x</em> − <em>∂u</em>/<em>∂y</em>)² − (<em>∂u</em>/<em>∂x</em>)² − (<em>∂v</em>/<em>∂y</em>)² − 2 ( ½ (<em>∂u</em>/<em>∂y</em> + <em>∂v</em>/<em>∂x</em>) )² ]</div>
     <p>Positive <em>Q</em> marks regions where rotation dominates over strain — the usual
-    criterion for identifying a vortex core. This calculation assumes an evenly spaced
-    measurement grid, which is what a standard PIV analysis produces.</p>
+    criterion for identifying a vortex core.</p>
 
     <h3 id="eq-analysis">Quantities carried over from the analysis</h3>
-    <p>The last three are not calculated on this panel at all — they are produced during the PIV
-    analysis itself and simply displayed here.</p>
+    <p>The last three come from the PIV analysis itself and are only displayed here.</p>
 
     <p><strong>Correlation coefficient</strong> — for each interrogation window, the Pearson
     correlation between the two image patches:</p>
@@ -216,24 +199,24 @@
       gradients and vortex cores. In the second case it is a spatial-resolution warning rather
       than a measurement error, telling you a smaller interrogation area would resolve more.
     </div>
-    <p>This map only exists if <span class="ui">Compute uncertainty</span> was enabled in
-    <a href="piv-settings.html">PIV settings</a> before the analysis ran; otherwise PIVlab tells
-    you there is no uncertainty data for the frame.</p>
+    <p>This map only exists if <span class="ui">Estimate uncertainty (slow)</span> was enabled in
+    <a href="piv-settings.html">PIV settings</a> before the analysis ran.</p>
 
-    <p><strong>Line integral convolution (LIC)</strong> has no closed-form equation. It smears a
+    <p><strong>Line integral convolution (LIC)</strong> smears a
     random noise image <em>along</em> the local flow direction, which makes streak-like patterns
     emerge that follow the vector field — a texture, not a measured quantity, so it carries no
-    units and is always drawn with a gray colormap. PIVlab runs the process twice, feeding each
-    result back in as the noise input for the next round. The technique was introduced by Cabral
+    units and is always drawn with a gray colormap. The technique was introduced by Cabral
     &amp; Leedom (<em>Imaging vector fields using line integral convolution</em>, SIGGRAPH '93);
     PIVlab's implementation comes from the Matlab VFV Toolbox 1.0, by courtesy of Nima Bigdely
     Shamlo, Computational Science Research Center, San Diego State University.</p>
+
+    </details>
 
     <h2 id="smoothing">Data smoothing</h2>
     <table class="ref">
       <tr><th>Mode</th><th>Effect</th></tr>
       <tr><td>None</td><td>No smoothing (default).</td></tr>
-      <tr><td>2D</td><td>Spatial smoothing within each frame, using Damien Garcia's <code>smoothn</code>. Controlled by <span class="ui">Smoothing parameter</span> (default 0.2; larger = smoother, typical range 0.1–1).</td></tr>
+      <tr><td>2D</td><td>Spatial smoothing within each frame. Controlled by <span class="ui">Smoothing parameter</span> (default 0.2; larger = smoother, typical range 0.1–1).</td></tr>
       <tr><td>time (moving average)</td><td>A moving average across neighbouring frames. <span class="ui">Temporal window (± frames)</span> sets how many frames on each side to include, combined with more weight given to closer frames.</td></tr>
       <tr><td>2D + time</td><td>Both, spatial smoothing first, then temporal.</td></tr>
     </table>

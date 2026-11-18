@@ -50,9 +50,8 @@
     <div class="note">
       <strong>This button renames itself for Ensemble</strong>
       If the <span class="ui">Ensemble multipass FFT window deformation</span> algorithm is
-      selected, this button reads <span class="ui">Start ensemble analysis</span> instead —
-      because ensemble correlation works across the whole sequence at once rather than
-      frame-by-frame.
+      selected, this button reads <span class="ui">Start ensemble analysis</span> instead, and
+      runs over the whole sequence.
     </div>
 
     <h2 id="progress">Tracking and cancelling progress</h2>
@@ -70,9 +69,23 @@
 
     <h2 id="clear">Clearing results</h2>
     <p>Click <span class="ui">Clear all results</span> to discard the current analysis
-    results and derived parameters and reset the progress display — useful before re-running
-    with different settings. This only clears <em>results</em>; your images, masks, ROI and PIV
-    settings are untouched.</p>
+    results and derived parameters — useful before re-running with different settings. Your
+    images, masks, ROI and PIV settings are untouched.</p>
+    <p>Several other actions also discard results:</p>
+    <table class="ref">
+      <tr><th>Action</th><th>What it removes</th></tr>
+      <tr><td><span class="ui">Clear all results</span></td><td>Results and derived parameters.</td></tr>
+      <tr><td><a href="sessions.html#imagelist"><span class="ui">Remove images</span></a></td>
+          <td>Results, derived parameters and manual vector deletions, for the whole session.</td></tr>
+      <tr><td><a href="sessions.html"><span class="ui">Reset PIVlab GUI</span></a></td>
+          <td>Everything: images, results, masks and calibrations.</td></tr>
+      <tr><td><a href="spatial-calibration.html"><span class="ui">Apply calibration</span></a></td>
+          <td>Derived parameters — they would be wrong in the new units.</td></tr>
+      <tr><td><a href="stereo-piv.html#calibration">Stereo calibration</a></td>
+          <td>Masks, background images and results of both cameras (PIVlab asks first).</td></tr>
+      <tr><td>ANALYZE and the validation</td>
+          <td><a href="derive-temporal.html">Mean / stdev / TKE frames</a> — make those last.</td></tr>
+    </table>
   </article>
 
   <script src="../assets/js/nav.js"></script>
