@@ -1,48 +1,99 @@
-function [OutputError,OPTOcam_vid,frame_nr_display,max_pair_rate] = PIVlab_capture_OPTOcam_20_9_synced_start(nr_of_images,ROI_OPTOcam,frame_rate,bitmode,exposure1)
-% Prepare the OPTOcam 20/9 for synced double-frame PIV capture using the sensor's
-% native double-frame (mvPivShutter) mode. ONE external trigger on Line4 makes the
-% sensor expose frame A (short, = exposure1) then frame B (long, automatic), i.e. one
-% trigger -> one image pair (double_shutter principle, like the pco cameras). The
-% synchronizer therefore sends nr_of_images trigger pulses and the camera delivers
-% nr_of_images*2 frames (A,B,A,B,...), saved later as _A/_B pairs.
+function [OutputError,OPTOcam_vid,frame_nr_display,max_pair_rate] = PIVlab_capture_OPTOcam_20_9_synced_start(nr_of_images,ROI_OPTOcam,frame_rate,bitmode,exposure1,n_cameras)
+% Prepare one OPTOcam 20/9, or two for stereo acquisition (n_cameras = 2, both on the same trigger), for
+% synced double-frame PIV capture using the sensor's native double-frame (mvPivShutter) mode. ONE external
+% trigger on Line4 makes the sensor expose frame A (short, = exposure1) then frame B (long, automatic), i.e.
+% one trigger -> one image pair (double_shutter principle, like the pco cameras). The synchronizer therefore
+% sends nr_of_images trigger pulses and each camera delivers nr_of_images*2 frames (A,B,A,B,...), saved later
+% as _A/_B pairs.
+% OPTOcam_vid: cell array with one videoinput per camera ({1} = camera 1).
 %
 % frame_rate here is the image-PAIR rate (pairs/s), consistent with the fps popup.
-% max_pair_rate is the highest achievable pair rate for the current ROI / bit depth (pairs/s),
-% read from the camera BEFORE the double-frame mode is enabled (see below); the caller
-% must use this value and not query mvResultingFrameRate itself.
+% max_pair_rate is the highest achievable pair rate for the current ROI / bit depth (pairs/s; stereo: of the
+% slower camera), read from the camera BEFORE the double-frame mode is enabled (see configure_synced); the
+% caller must use this value and not query mvResultingFrameRate itself.
+if nargin < 6
+	n_cameras = 1;
+end
 hgui=getappdata(0,'hgui');
-crosshair_enabled = getappdata(hgui,'crosshair_enabled'); %#ok<NASGU>
-sharpness_enabled = getappdata(hgui,'sharpness_enabled'); %#ok<NASGU>
 OutputError=0;
 max_pair_rate=inf;
+frame_nr_display=[];
 
 binning = getappdata(hgui,'binning'); %set with the "Binning" button
 if isempty(binning)
     binning = 1;
 end
+if nargin < 5 || isempty(exposure1)
+    exposure1 = 60; %us, lands in the minimum (123.5 us) frame-1 exposure plateau
+end
+exposure1 = max(7, min(2522, exposure1)); %settable ExposureTime range (measured on the rig)
 
-%% Prepare camera (opened in the requested bit depth, or reused if already open)
-[OPTOcam_vid,imaq_error] = PIVlab_capture_OPTOcam_20_9_open(bitmode);
+%% Prepare cameras (opened in the requested bit depth, or reused if already open)
+[OPTOcam_vid,imaq_error] = PIVlab_capture_OPTOcam_20_9_open(bitmode,n_cameras);
 if imaq_error~=0
-    OutputError=1; OPTOcam_vid=[]; frame_nr_display=[]; max_pair_rate=inf;
+    OutputError=1; OPTOcam_vid={};
     return
 end
+ROI_OPTOcam=[ROI_OPTOcam(1)-1,ROI_OPTOcam(2)-1,ROI_OPTOcam(3),ROI_OPTOcam(4)]; %0-based offset for the camera
+for k=1:n_cameras
+	max_pair_rate = min(max_pair_rate,configure_synced(OPTOcam_vid{k},ROI_OPTOcam,binning,exposure1));
+end
+if ~isinf(max_pair_rate)
+	disp(['Maximum image-pair rate with current settings: ' num2str(round(max_pair_rate,1)) ' pairs/s.'])
+end
+disp(['Requested image-pair rate: ' num2str(frame_rate) ' pairs/s.']);
 
+%% prepare axes
+PIVlab_axis = gui.retr('pivlab_axis');
+[image_handles,frame_nr_display] = acquisition.live_images(n_cameras,[ROI_OPTOcam(3) ROI_OPTOcam(4)],2^bitmode);
+setappdata(hgui,'image_handles_OPTOcam_20_9',image_handles);
+
+%% start acquisition (waiting for external triggers)
+OPTOcam_frames_to_capture = nr_of_images*2; %2 frames (A,B) per pair
+for k=1:n_cameras
+	OPTOcam_vid{k}.FramesPerTrigger = OPTOcam_frames_to_capture;
+	if ~isinf(nr_of_images) %only start capturing if save box is ticked.
+		flushdata(OPTOcam_vid{k});
+		OPTOcam_vid{k}.ErrorFcn = @CustomIMAQErrorFcn;
+		start(OPTOcam_vid{k});
+	end
+end
+
+%Frames arrive as A,B,A,B... and frame B (long fixed exposure) is much brighter with ambient
+%light, so a plain preview would flicker. The callback shows frame A only (B via the A/B toggle),
+%see PIVlab_capture_OPTOcam_20_9_preview_update.m
+for k=1:n_cameras
+	setappdata(image_handles{k},'OPTOcam_20_9_ab_state',[]);
+	setappdata(image_handles{k},'max_display_rate',min(10, 40e6/(n_cameras*ROI_OPTOcam(3)*ROI_OPTOcam(4)))); %frames per second drawn per camera (CPU load)
+	setappdata(image_handles{k},'UpdatePreviewWindowFcn',@PIVlab_capture_OPTOcam_20_9_preview_update);
+	preview(OPTOcam_vid{k},image_handles{k});
+end
+caxis(PIVlab_axis,[0 2^bitmode]); %#ok<CAXIS> workaround to force preview to show full data range
+%preview() sets the axes limits to its own image: show all cameras (stereo: side by side)
+set(PIVlab_axis,'XLim',[0.5 getappdata(image_handles{end},'x_offset')+ROI_OPTOcam(3)+0.5],'YLim',[0.5 ROI_OPTOcam(4)+0.5]);
+pause(0.1);
+if ~isinf(nr_of_images)
+	for k=1:n_cameras
+		status=[];
+		while isempty(status) %make sure OPTOcam is ready...
+			status=OPTOcam_vid{k}.Eventlog;
+			pause(0.001)
+		end
+	end
+end
+drawnow;
+pause(0.05)
+
+function max_pair_rate = configure_synced(OPTOcam_vid,ROI_OPTOcam,binning,exposure1)
+%triggered double-frame camera for the PIV capture (stereo: the same settings for both cameras)
 OPTOcam_settings = get(OPTOcam_vid);
 %Use the full USB3 bandwidth (no artificial throughput limit). The measured max pair rate depends
-%on ROI/bit depth; the settings check below warns if the requested rate is not achievable.
+%on ROI/bit depth; the settings check in piv_capture_Callback warns if the requested rate is not achievable.
 try
     OPTOcam_settings.Source.DeviceLinkThroughputLimitMode = 'Off';
 catch
 end
-OPTOcam_settings.PreviewFullBitDepth='On';
 OPTOcam_vid.PreviewFullBitDepth='On';
-
-%% prepare axes
-PIVlab_axis = gui.retr('pivlab_axis');
-[image_handles,frame_nr_display] = acquisition.live_images(1,[ROI_OPTOcam(3) ROI_OPTOcam(4)],2^bitmode);
-image_handle_OPTOcam = image_handles{1};
-setappdata(hgui,'image_handle_OPTOcam_20_9',image_handle_OPTOcam);
 
 %% Binning. Must be set BEFORE the ROI: the ROI is in binned pixels.
 OPTOcam_settings.Source.mvShutterMode = 'mvGlobalShutter'; %(a reused camera may still be in double-frame mode)
@@ -60,8 +111,7 @@ if OPTOcam_settings.Source.BinningHorizontal ~= binning || OPTOcam_settings.Sour
     start(OPTOcam_vid); stop(OPTOcam_vid);
 end
 
-%% ROI (0-based offset for the camera, like the pco/OPTOcam convention)
-ROI_OPTOcam=[ROI_OPTOcam(1)-1,ROI_OPTOcam(2)-1,ROI_OPTOcam(3),ROI_OPTOcam(4)];
+%% ROI
 OPTOcam_vid.ROIPosition=ROI_OPTOcam;
 
 %orientation: default (no mirroring). Flip here if the image is mirrored on the rig.
@@ -78,10 +128,6 @@ OPTOcam_settings.Source.Gain = OPTOcam_gain;
 %The value is produced by the shared timing model (PIVlab_capture_OPTOcam_20_9_timing.m): it is
 %chosen so that laser pulse 1 fits into frame 1 AND so that the camera's exposure quantisation
 %stays predictable (the setting sits in the middle of a quantisation plateau).
-if nargin < 5 || isempty(exposure1)
-    exposure1 = 60; %us, lands in the minimum (123.5 us) frame-1 exposure plateau
-end
-exposure1 = max(7, min(2522, exposure1)); %settable ExposureTime range (measured on the rig)
 OPTOcam_settings.Source.mvShutterMode = 'mvGlobalShutter'; %single-frame mode for the frame-rate query below
 OPTOcam_settings.Source.ExposureMode  = 'Timed';
 OPTOcam_settings.Source.TriggerMode   = 'Off';
@@ -100,11 +146,9 @@ end
 %delivers exactly that many single frames per second (measured), i.e. half as many image pairs.
 try
     max_pair_rate = get(OPTOcam_vid.Source,'mvResultingFrameRate')/2; %2 frames per image pair
-    disp(['Maximum image-pair rate with current settings: ' num2str(round(max_pair_rate,1)) ' pairs/s.'])
 catch
     max_pair_rate = inf;
 end
-disp(['Requested image-pair rate: ' num2str(frame_rate) ' pairs/s.']);
 
 %% double-frame (mvPivShutter) + hardware trigger on Line4
 triggerconfig(OPTOcam_vid, 'hardware');
@@ -134,38 +178,6 @@ OPTOcam_settings.Source.LineInverter = 'False';
 OPTOcam_settings.Source.LineSelector = 'Line1';
 OPTOcam_settings.Source.LineSource   = 'AcquisitionActive';
 OPTOcam_settings.Source.LineInverter = 'False';
-
-%% start acquisition (waiting for external triggers)
-OPTOcam_frames_to_capture = nr_of_images*2; %2 frames (A,B) per pair
-OPTOcam_vid.FramesPerTrigger = OPTOcam_frames_to_capture;
-if ~isinf(nr_of_images) %only start capturing if save box is ticked.
-    flushdata(OPTOcam_vid);
-    OPTOcam_vid.ErrorFcn = @CustomIMAQErrorFcn;
-    start(OPTOcam_vid);
-end
-
-%Frames arrive as A,B,A,B... and frame B (long fixed exposure) is much brighter with ambient
-%light, so a plain preview would flicker. The callback shows frame A only (B via the A/B toggle),
-%see PIVlab_capture_OPTOcam_20_9_preview_update.m
-setappdata(image_handle_OPTOcam,'OPTOcam_20_9_ab_state',[]);
-setappdata(image_handle_OPTOcam,'max_display_rate',min(10, 40e6/(ROI_OPTOcam(3)*ROI_OPTOcam(4)))); %frames per second drawn (CPU load)
-setappdata(image_handle_OPTOcam,'UpdatePreviewWindowFcn',@PIVlab_capture_OPTOcam_20_9_preview_update);
-preview(OPTOcam_vid,image_handle_OPTOcam);
-if bitmode ==8
-    caxis(PIVlab_axis,[0 2^8]); %workaround to force preview to show full data range
-elseif bitmode==12
-    caxis(PIVlab_axis,[0 2^12]);
-end
-pause(0.1);
-if ~isinf(nr_of_images)
-    status=[];
-    while isempty(status) %make sure OPTOcam is ready...
-        status=OPTOcam_vid.Eventlog;
-        pause(0.001)
-    end
-end
-drawnow;
-pause(0.05)
 
 function CustomIMAQErrorFcn(obj, event, varargin)
 stop(obj)

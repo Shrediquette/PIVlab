@@ -48,6 +48,7 @@ uimenu(m6,'Label','ANALYZE!   (Ctrl+Shift+A)','Callback',@piv.do_analys_Callback
 m7 = uimenu(MainWindow,'Label','Validation');
 uimenu(m7,'Label','Velocity based validation   (Ctrl+Shift+V)','Callback',@validate.vector_val_Callback,'Tag','menu_velvalidation');
 uimenu(m7,'Label','Image based validation   (Ctrl+Shift+F)','Callback',@validate.image_val_Callback,'Tag','menu_imgvalidation');
+uimenu(m7,'Label','Stereo based validation','Callback',@validate.stereo_val_Callback,'Tag','menu_stereovalidation');
 m8 = uimenu(MainWindow,'Label','Spatial calibration (px → mm)');
 uimenu(m8,'Label','Calibrate using current or external image   (Ctrl+Shift+Z)','Callback',@calibrate.cal_actual_Callback,'Tag','menu_spatialcalib');
 m9 = uimenu(MainWindow,'Label','Plot');

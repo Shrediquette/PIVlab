@@ -275,7 +275,7 @@ function c = controls()
 h = gui.gethand;
 panels = {'multip02', 'multip25', 'multip03', 'multip04', 'multip06', 'multip07', 'multip08', 'multip09', ...
     'multip12', 'multip13', 'multip14', 'multip16', 'multip17', 'multip18', 'multip22', 'multip23', ...
-    'multip26', 'multip27', 'multip28', 'multip29', 'multip30'};
+    'multip26', 'multip27', 'multip28', 'multip29', 'multip30', 'multip32'};
 c = gobjects(0);
 for p = 1:numel(panels)
     if ~isfield(h, panels{p}) || ~strcmp(get(h.(panels{p}), 'Visible'), 'on')
@@ -305,7 +305,7 @@ function press_button(r)
 h = gui.gethand;
 panels = {'multip01', 'multip02', 'multip25', 'multip03', 'multip04', 'multip05', 'multip06', 'multip07', ...
     'multip08', 'multip12', 'multip13', 'multip14', 'multip17', 'multip18', 'multip22', ...
-    'multip23', 'multip26', 'multip27', 'multip29', 'multip30'};
+    'multip23', 'multip26', 'multip27', 'multip29', 'multip30', 'multip32'};
 b = gobjects(0);
 for p = 1:numel(panels)
     if ~strcmp(get(h.(panels{p}), 'Visible'), 'on')

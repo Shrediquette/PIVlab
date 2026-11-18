@@ -50,6 +50,13 @@ default.analysis.loc_med_thresh = 3;
 default.analysis.notch_enable = 0;
 default.analysis.notch_L_thresh = -1;
 default.analysis.notch_H_thresh = 1;
+default.analysis.residual_enable = 0;   % stereo-PIV: remove vectors with a large reconstruction residual
+default.analysis.residual_thresh = 2;   % px
+default.analysis.w_median_enable = 0;   % stereo-PIV: normalized median test of W
+default.analysis.w_median_thresh = 3;
+default.analysis.w_limit_enable = 0;    % stereo-PIV: allowed range of W (units of the velocity limits)
+default.analysis.w_limit_min = -1;
+default.analysis.w_limit_max = 1;
 default.analysis.interpol_missing = 1;
 % Derive parameters
 default.analysis.smooth_mode = 1;

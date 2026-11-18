@@ -10,6 +10,8 @@ function draw_disparity(target_axis, key)
 %   'residual'   reconstruction residual of the image pair shown (after ANALYZE): how well the 2D results of both
 %                cameras fit one 3D velocity; large where one camera measured something the other one does not
 %                confirm
+%   'residual_raw'  the same of the unvalidated result, colours up to the threshold of the residual filter, the
+%                vectors above it in a solid colour (stereo based validation panel, "Show residual map")
 % The colour maps start at 0 px and have a colour bar (plot.scale_colorbar, position and number format of the
 % plot settings; inside the image when the plot settings have no colour bar). 'remaining' and 'residual' end at
 % the 95th percentile (larger values saturate), so that a few outliers do not hide the pattern.
@@ -34,6 +36,10 @@ if strcmp(key, 'image') || isempty(calib)
 end
 if strcmp(key, 'residual')
     draw_residual(target_axis);
+    return
+end
+if strcmp(key, 'residual_raw')
+    draw_residual_raw(target_axis);
     return
 end
 disparity = gui.retr('stereo_disparity');
@@ -111,6 +117,61 @@ colour_map(target_axis, double(resultslist{1, frame}), double(resultslist{2, fra
     prctile(residual(:), 95), 'Reconstruction residual [px]');
 note(target_axis, sprintf('Reconstruction residual: rms %.2f px, max %.2f px', ...
     sqrt(mean(residual(:) .^ 2, 'omitnan')), max(residual(:), [], 'omitnan')));
+end
+
+function draw_residual_raw(target_axis)
+% stereo based validation panel ("Show residual map"): reconstruction residual of the unvalidated 2D results of
+% the image pair shown, i.e. what the residual filter tests (stereo.limit_discard). The colour scale ends at the
+% threshold of the filter; the vectors above it (removed by the filter) are a solid colour that is not in the
+% colour map
+handles = gui.gethand;
+frame = floor(get(handles.fileselector, 'Value'));
+[resultslist, stereo_vel] = stereo.reconstruct_results(true, frame);
+if isempty(stereo_vel) || frame > size(resultslist, 2) || isempty(resultslist{1, frame})
+    note(target_axis, 'Reconstruction residual: run ANALYZE first.');
+    return
+end
+residual = abs(double(stereo_vel.residual(:, :, frame)));
+x = double(resultslist{1, frame});
+y = double(resultslist{2, frame});
+threshold = str2double(get(handles.residual_thresh, 'String'));
+if ~(threshold > 0) % also NaN: no threshold, the colour scale as the other residual display
+    colour_map(target_axis, x, y, residual, prctile(residual(:), 95), 'Reconstruction residual [px]');
+    note(target_axis, sprintf('Residual before validation: rms %.2f px, max %.2f px', ...
+        sqrt(mean(residual(:) .^ 2, 'omitnan')), max(residual(:), [], 'omitnan')));
+    return
+end
+colour_map(target_axis, x, y, residual, threshold, 'Reconstruction residual [px]');
+removed = residual > threshold;
+[rgb, colour_name] = removed_colour(handles);
+image(target_axis, 'XData', [x(1, 1) x(1, end)], 'YData', [y(1, 1) y(end, 1)], ...
+    'CData', repmat(reshape(rgb, 1, 1, 3), size(removed)), 'AlphaData', double(removed), ...
+    'Tag', 'stereo_disparity_display', 'UserData', 'residual_removed', 'HitTest', 'off', 'PickableParts', 'none');
+share = 100 * nnz(removed) / max(nnz(isfinite(residual)), 1);
+note(target_axis, sprintf('Residual before validation: rms %.2f px, max %.2f px. %s: above %g px (%.1f %% of the vectors)', ...
+    sqrt(mean(residual(:) .^ 2, 'omitnan')), max(residual(:), [], 'omitnan'), colour_name, threshold, share));
+end
+
+function [rgb, name] = removed_colour(handles)
+% the candidate colour farthest from all colours of the colour map of the plot settings (e.g. magenta for parula
+% and jet, green for hot)
+maps = get(handles.colormap_choice, 'String');
+steps = get(handles.colormap_steps, 'String');
+cmap = plot.vector_colormap_core(maps{get(handles.colormap_choice, 'Value')}, ...
+    str2double(steps{get(handles.colormap_steps, 'Value')}), Inf);
+candidates = [1 0 1; 1 0 0; 0 1 0; 0 0 0; 1 1 1];
+names = {'Magenta', 'Red', 'Green', 'Black', 'White'};
+best = 1;
+best_distance = -1;
+for k = 1:size(candidates, 1)
+    distance = min(sqrt(sum((cmap - candidates(k, :)) .^ 2, 2)));
+    if distance > best_distance + 1e-9
+        best = k;
+        best_distance = distance;
+    end
+end
+rgb = candidates(best, :);
+name = names{best};
 end
 
 function [u, v, passes] = measured_disparity(disparity)

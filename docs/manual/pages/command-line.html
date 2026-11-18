@@ -147,7 +147,12 @@ pivlab.display(res, Overlay="w");</code></pre>
       the reconstruction residual.</li>
       <li>As <span class="ui">Analyze</span> in the GUI, <code>pivlab.stereo</code> does not validate: call
       <code>pivlab.filter</code>. <code>VelocityLimits</code> act on U, V of the 3D result and
-      <code>NotchLimits</code> on the 3D magnitude; the removed vectors are removed in both cameras.</li>
+      <code>NotchLimits</code> on the 3D magnitude. The filters of the
+      <a href="validation-stereo.html">stereo-based validation</a>:
+      <code>ResidualFilter=true, ResidualThreshold=2</code> (reconstruction residual above 2 px),
+      <code>WMedianFilter=true, WMedianThreshold=3</code> (median test of w),
+      <code>WLimitFilter=true, WLimits=[-1 1]</code> (w range, units as <code>VelocityLimits</code>).
+      The removed vectors are removed in both cameras.</li>
       <li><code>pivlab.derive(res, "w")</code> gives the w component, <code>"magnitude"</code> the 3D
       magnitude. <code>pivlab.temporal</code> includes W. <code>pivlab.display</code> shows
       <code>Overlay="w"</code> and <code>Overlay="residual"</code> (how well both cameras fit one

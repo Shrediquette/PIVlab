@@ -52,7 +52,7 @@ mono_color = get(h.ac_imgamount, 'BackgroundColor');
 verifyNotEqual(testCase, stereo_color, mono_color, 'stereo: the image amount is marked (RAM of two cameras)');
 % another camera: unticked and disabled
 set(h.ac_stereo, 'Value', 1);
-set(h.ac_config, 'Value', 2); % OPTOcam 20/9
+set(h.ac_config, 'Value', find(strcmp(h.ac_config.String, 'PIVlab LD-PS + pco.edge 26 DS CLHS'))); % a camera without stereo
 acquisition.select_capture_config_Callback;
 verifyEqual(testCase, get(h.ac_stereo, 'Value'), 0);
 verifyEqual(testCase, get(h.ac_stereo, 'Enable'), 'off');
@@ -395,7 +395,7 @@ mock_imaq_setup(n_connected, 80);
 helper_start_pivlab();
 h = gui.gethand;
 set(h.ac_project, 'String', folder);
-set(h.ac_config, 'Value', find(strcmp(h.ac_config.String, 'PIVlab LD-PS + OPTOcam 2/80')));
+set(h.ac_config, 'Value', find(strcmp(h.ac_config.String, 'PIVlab LD-PS + OPTOcam'))); % the simulated cameras are detected as OPTOcam 2/80
 acquisition.select_capture_config_Callback;
 set(h.ac_fps, 'Value', find(strcmp(h.ac_fps.String, '80')));
 gui.put('ac_ROI_general', [1 1 320 240]);

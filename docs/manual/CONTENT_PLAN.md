@@ -91,6 +91,7 @@ grep -oE '<kbd>[A-Z]</kbd>' docs/manual/pages/shortcuts.html | sort -u # what we
 | `generateUI.m:1872-1920` | `streamlines.html` |
 | `generateUI.m:2008-2038` | `derive-temporal.html` |
 | `generateUI.m:2042-2123` | `validation-image.html` |
+| `generateUI.m` multip32, `+stereo/limit_test.m` | `validation-stereo.html` |
 | `generateUI.m:2125-2223+`, `+acquisition/` | `capture.html` |
 | **`+pivlab/`** (the whole API package) | **`command-line.html`** |
 | **`+stereo/`**, `generateUI.m:49` (CAM 1/2 toggle), `+import/stereo_import_Callback.m` | **`stereo-piv.html`** (analysis) and **`stereo-setup.html`** (set-up and recording, workflow drawings from `tools/stereo_workflow_drawings.mjs`), plus the stereo `.note`s on derive-spatial / derive-temporal / export / extract-* / validation-velocity / statistics |
@@ -569,6 +570,10 @@ All topics complete. Kept for the per-page verification detail, which feeds the 
   image space. Colour legend cross-links to `plot-appearance.html` (at `:146`). Has `#tuning`.
 - **Image-based** — `validation-image.html`. Mirrors the velocity panel but with 3 image-quality
   filters (low contrast, bright objects, correlation coefficient).
+- **Stereo-based** — `validation-stereo.html` (multip32, `+stereo/limit_test.m`). Residual filter,
+  local median of W, W limits; residual map. Stereo-PIV only (`.v3` box "not available in 3.14").
+  The only description of these filters: `stereo-piv.html#analysis`, `validation-velocity.html`,
+  `command-line.html#stereo` link to it.
 
 ### Spatial calibration
 - **Calibrating pixels to mm** — `spatial-calibration.html`. Time-step = 0 triggers

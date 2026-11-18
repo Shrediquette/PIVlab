@@ -35,12 +35,12 @@ else
 		bitmode=8;
 	elseif strcmpi(config_string,'PIVlab LD-PS + FLIR FFY-U3-16S2M')  %flir cameras
 		bitmode=8;
-	elseif strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2/80')  %OPTOcam
+	elseif strcmp(camera_type,'OPTOcam')  %OPTOcam 2/80
 		bitmode =gui.camera_setting('OPTOcam_bits');
 		if isempty (bitmode)
 			bitmode=8;
 		end
-	elseif strcmpi(config_string,'PIVlab LD-PS + OPTOcam 20/9')  %OPTOcam 20/9
+	elseif strcmp(camera_type,'OPTOcam_20_9')  %OPTOcam 20/9
 		bitmode =gui.camera_setting('OPTOcam_20_9_bits');
 		if isempty (bitmode)
 			bitmode=8;

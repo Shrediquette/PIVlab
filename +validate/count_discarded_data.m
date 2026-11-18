@@ -77,6 +77,11 @@ if isfield(handles,'veccolor_valid_swatch') || isfield(handles,'veccolor_valid_s
 		set(handles.veccolor_interp_swatch2,     'BackgroundColor', interpcolor);
 		set(handles.veccolor_secondpeak_swatch2, 'BackgroundColor', secondpeakcolor);
 	end
+	if isfield(handles,'veccolor_valid_swatch3') % stereo based validation
+		set(handles.veccolor_valid_swatch3,      'BackgroundColor', validcolor);
+		set(handles.veccolor_interp_swatch3,     'BackgroundColor', interpcolor);
+		set(handles.veccolor_secondpeak_swatch3, 'BackgroundColor', secondpeakcolor);
+	end
 	%calculate the percentage of 2ndpeak vectors
 	secondpeakstring=['Valid vectors (2nd peak): ' num2str(secondpeakamount)];
 	totalvalidstring=['Valid vectors (1st peak): ' num2str(firstpeak_valid_amount)];
@@ -87,4 +92,9 @@ if isfield(handles,'veccolor_valid_swatch') || isfield(handles,'veccolor_valid_s
 	handles.validtxt2.String = totalvalidstring;
 	handles.rejectedtxt1.String = rejectedstring;
 	handles.rejectedtxt2.String = rejectedstring;
+	if isfield(handles,'validtxt3')
+		handles.secondpeaktxt3.String = secondpeakstring;
+		handles.validtxt3.String = totalvalidstring;
+		handles.rejectedtxt3.String = rejectedstring;
+	end
 end

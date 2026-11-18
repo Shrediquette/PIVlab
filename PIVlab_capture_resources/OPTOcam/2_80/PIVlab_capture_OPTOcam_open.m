@@ -94,18 +94,48 @@ if imaq_error == 0
 		end
 	end
 end
-candidates = [];
+%% open the cameras and read their user IDs and serial numbers
+%a 2/80 is only known from its user ID (PIVlab_capture_OPTOcam_model), so the GenTL cameras except a 20/9
+%are opened, the most likely first (PIVlab_capture_OPTOcam_candidates); those that are not a 2/80 are closed again
+saved_serials = gui.camera_setting('OPTOcam_stereo_serials');
+if ~iscell(saved_serials)
+	saved_serials = {};
+end
+opened = {};
+serials = {};
 if imaq_error == 0
-	for CamID = 1:size(info.DeviceInfo,2)
+	candidates = PIVlab_capture_OPTOcam_candidates(info.DeviceInfo);
+	for c = 1:numel(candidates)
+		CamID = candidates(c);
 		camName = info.DeviceInfo(CamID).DeviceName;
-		if contains(camName,'160um','IgnoreCase',true) || contains(camName,'OPTOcam','IgnoreCase',true)
-			candidates(end+1) = CamID; %#ok<AGROW>
+		try
+			vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,video_format);
+		catch
+			continue %another camera, e.g. without this pixel format
+		end
+		user_id = '';
+		try
+			OPTOcam_src = vid.Source; %imaq: vid.Source.DeviceUserID in one expression is not allowed
+			user_id = char(OPTOcam_src.DeviceUserID);
+		catch
+		end
+		if ~strcmp(PIVlab_capture_OPTOcam_model(camName,user_id),'2_80')
+			delete(vid);
+			continue
+		end
+		opened{end+1} = vid; %#ok<AGROW>
+		serials{end+1} = serial_number(vid); %#ok<AGROW>
+		if n_cameras == 1 && (isempty(saved_serials) || strcmp(serials{end},saved_serials{1}))
+			break %the camera to use is open, the others are not needed
 		end
 	end
-	if isempty(candidates)
+	if isempty(opened)
 		imaq_error = 3;
-	elseif numel(candidates) < n_cameras
+	elseif numel(opened) < n_cameras
 		imaq_error = 4;
+		for c = 1:numel(opened)
+			delete(opened{c});
+		end
 	end
 end
 
@@ -117,28 +147,14 @@ elseif imaq_error == 2
 	disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
 	gui.custom_msgbox('error',getappdata(0,'hgui'),'Error, support package missing',{'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'modal');
 elseif imaq_error == 3
-	gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Camera not found! Is it connected?','modal');
+	if ~PIVlab_capture_OPTOcam_model_changed('2_80') %an OPTOcam 20/9 is connected instead: GUI switched to it, message shown
+		gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Camera not found! Is it connected?','modal');
+	end
 elseif imaq_error == 4
 	gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Stereo acquisition needs two OPTOcam 2/80, but only one was found. Are both cameras connected?','modal');
 end
 if imaq_error ~= 0
 	return
-end
-
-%% open the cameras and read their serial numbers
-saved_serials = gui.camera_setting('OPTOcam_stereo_serials');
-if ~iscell(saved_serials)
-	saved_serials = {};
-end
-opened = {};
-serials = {};
-for c = 1:numel(candidates)
-	vid = videoinput(info.AdaptorName,info.DeviceInfo(candidates(c)).DeviceID,video_format);
-	opened{end+1} = vid; %#ok<AGROW>
-	serials{end+1} = serial_number(vid); %#ok<AGROW>
-	if n_cameras == 1 && (isempty(saved_serials) || strcmp(serials{end},saved_serials{1}))
-		break %the camera to use is open, the others are not needed
-	end
 end
 
 %% camera 1 and 2

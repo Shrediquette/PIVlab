@@ -1,0 +1,203 @@
+function [OPTOcam_vids,imaq_error] = PIVlab_capture_OPTOcam_20_9_open(bitmode,n_cameras)
+%PIVlab_capture_OPTOcam_20_9_open  Find and open one or two OPTOcam 20/9, or reuse the cameras that are already open.
+%
+%   [OPTOcam_vids,imaq_error] = PIVlab_capture_OPTOcam_20_9_open(bitmode,n_cameras)
+%
+%   bitmode       8 (Mono8) or 12 (Mono12p, packed -> higher frame rate than Mono12)
+%   n_cameras     1, or 2 for stereo acquisition (default 1)
+%   OPTOcam_vids  cell array with one videoinput per camera; {1} is camera 1
+%   imaq_error    0 = ok, 1 = no Image Acquisition Toolbox, 2 = no GenTL adaptor, 3 = camera not found,
+%                 4 = stereo: fewer than two cameras found
+%
+%   A 20/9 is found by its device name (PIVlab_capture_OPTOcam_model). Camera 1 and 2 of a stereo setup are
+%   told apart by their serial numbers (camera setting 'OPTOcam_20_9_stereo_serials', set the first time and
+%   swapped in the OPTOcam 20/9 settings window); by default the camera with the lower serial number is
+%   camera 1. With one camera and two connected, camera 1 of the stereo setup is used.
+%   Opening a camera takes ~2 s, so the videoinput objects are kept after a capture (tags
+%   'OPTOcam_20_9_cam1', 'OPTOcam_20_9_cam2') and reused while the pixel format matches. All camera settings
+%   are applied by the callers every time. Changing the configuration in the GUI releases the cameras
+%   (select_capture_config_Callback: delete(imaqfind) + imaqreset). A kept camera that was unplugged in the
+%   meantime is opened again after an imaqreset.
+if nargin < 2
+	n_cameras = 1;
+end
+if bitmode == 8
+	video_format = 'Mono8';
+else
+	video_format = 'Mono12p';
+end
+warning('off','imaq:gentl:noSupportedPixelFormat')
+OPTOcam_vids = cell(1,n_cameras);
+
+%% fast path: reuse the opened cameras (in the saved order: after "Swap cameras" they are opened again)
+saved_serials = gui.camera_setting('OPTOcam_20_9_stereo_serials');
+disconnected = false; %a kept camera was unplugged: reset the toolbox before opening the cameras again
+try
+	reuse_ok = true;
+	for k = 1:n_cameras
+		vid = imaqfind('Tag',sprintf('OPTOcam_20_9_cam%d',k));
+		if iscell(vid) %imaqfind returns a cell array here
+			vid = [vid{:}];
+		end
+		if isscalar(vid) && isvalid(vid) && ~camera_connected(vid)
+			reuse_ok = false;
+			disconnected = true;
+		elseif isscalar(vid) && isvalid(vid) && strcmp(vid.VideoFormat,video_format)
+			OPTOcam_vids{k} = vid;
+			if iscell(saved_serials) && numel(saved_serials) >= k && ~strcmp(serial_number(vid),saved_serials{k})
+				reuse_ok = false; %camera k is now another camera
+			end
+		else
+			reuse_ok = false;
+		end
+	end
+	if reuse_ok
+		for k = 1:n_cameras
+			if isrunning(OPTOcam_vids{k})
+				stop(OPTOcam_vids{k});
+			end
+			stoppreview(OPTOcam_vids{k});
+			flushdata(OPTOcam_vids{k});
+			OPTOcam_vids{k}.ErrorFcn = ''; %set again by synced_start where needed
+		end
+		imaq_error = 0;
+		disp(['Found camera(s): OPTOcam 20/9 (already open, ' int2str(n_cameras) ')'])
+		return
+	end
+catch
+	%camera unplugged, toolbox reset etc. -> open again below
+	disconnected = true;
+end
+
+%% slow path: find the cameras and open them
+OPTOcam_vids = {};
+imaq_error = 0;
+try
+	delete(imaqfind); %clears all previous videoinputs
+	if disconnected
+		imaqreset %the toolbox finds the plugged-in camera again only after a reset
+	end
+	warning off
+	hwinf = imaqhwinfo;
+catch
+	imaq_error = 1;
+end
+if imaq_error == 0 && isempty(hwinf.InstalledAdaptors)
+	imaq_error = 2;
+end
+if imaq_error == 0
+	imaq_error = 2;
+	for adaptorID = 1:numel(hwinf.InstalledAdaptors)
+		info = imaqhwinfo(hwinf.InstalledAdaptors{adaptorID});
+		%'gentl' in a normal MATLAB, 'mwgentlimaq' when the adaptor was registered by path (imaqregister)
+		if strcmp(info.AdaptorName,'gentl') || strcmp(info.AdaptorName,'mwgentlimaq')
+			imaq_error = 0;
+			break
+		end
+	end
+end
+%% open the 20/9 cameras (found by their device name) and read their serial numbers
+if ~iscell(saved_serials)
+	saved_serials = {};
+end
+opened = {};
+serials = {};
+if imaq_error == 0
+	for CamID = 1:numel(info.DeviceInfo)
+		if ~strcmp(PIVlab_capture_OPTOcam_model(info.DeviceInfo(CamID).DeviceName),'20_9')
+			continue
+		end
+		try
+			vid = videoinput(info.AdaptorName,info.DeviceInfo(CamID).DeviceID,video_format);
+		catch
+			continue
+		end
+		opened{end+1} = vid; %#ok<AGROW>
+		serials{end+1} = serial_number(vid); %#ok<AGROW>
+		if n_cameras == 1 && (isempty(saved_serials) || strcmp(serials{end},saved_serials{1}))
+			break %the camera to use is open, the others are not needed
+		end
+	end
+	if isempty(opened)
+		imaq_error = 3;
+	elseif numel(opened) < n_cameras
+		imaq_error = 4;
+		for c = 1:numel(opened)
+			delete(opened{c});
+		end
+	end
+end
+
+if imaq_error == 1
+	gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','modal');
+	disp('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.')
+elseif imaq_error == 2
+	disp('ERROR: gentl adaptor not found. Please install the GenICam / GenTL support package from here:')
+	disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
+	gui.custom_msgbox('error',getappdata(0,'hgui'),'Error, support package missing',{'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'modal');
+elseif imaq_error == 3
+	if ~PIVlab_capture_OPTOcam_model_changed('20_9') %an OPTOcam 2/80 is connected instead: GUI switched to it, message shown
+		gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Camera not found! Is it connected?','modal');
+	end
+elseif imaq_error == 4
+	gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Stereo acquisition needs two OPTOcam 20/9, but only one was found. Are both cameras connected?','modal');
+end
+if imaq_error ~= 0
+	OPTOcam_vids = {};
+	return
+end
+
+%% camera 1 and 2
+if n_cameras == 1
+	use = numel(opened); %camera 1 of the stereo setup, or the first camera found
+	if ~isempty(saved_serials) && ~strcmp(serials{use},saved_serials{1})
+		use = 1;
+	end
+else
+	use = [];
+	if numel(saved_serials) == 2
+		first = find(strcmp(serials,saved_serials{1}),1);
+		second = find(strcmp(serials,saved_serials{2}),1);
+		if ~isempty(first) && ~isempty(second)
+			use = [first second];
+		end
+	end
+	if isempty(use) %new cameras: camera 1 = the lower serial number
+		[~,sorted] = sort(serials);
+		use = sorted(1:2);
+		gui.set_camera_setting('OPTOcam_20_9_stereo_serials',serials(use));
+	end
+end
+for c = 1:numel(opened)
+	if ~any(use == c)
+		delete(opened{c});
+	end
+end
+OPTOcam_vids = cell(1,n_cameras);
+for k = 1:n_cameras
+	OPTOcam_vids{k} = opened{use(k)};
+	OPTOcam_vids{k}.Tag = sprintf('OPTOcam_20_9_cam%d',k);
+	disp(['Found camera ' int2str(k) ': OPTOcam 20/9, serial number ' serials{use(k)}])
+end
+end
+
+function connected = camera_connected(vid)
+%After unplugging and plugging in the camera, the kept videoinput is still valid, but the camera does not
+%answer any more: its ExposureTime limits are then 0 (error "'ExposureTime' value must be less than or equal to 0").
+try
+	OPTOcam_src = vid.Source;
+	limits = propinfo(OPTOcam_src,'ExposureTime').ConstraintValue;
+	connected = limits(2) > 0;
+catch
+	connected = false;
+end
+end
+
+function serial = serial_number(vid)
+try
+	OPTOcam_src = vid.Source; %imaq: vid.Source.DeviceSerialNumber in one expression is not allowed
+	serial = char(OPTOcam_src.DeviceSerialNumber);
+catch
+	serial = '';
+end
+end

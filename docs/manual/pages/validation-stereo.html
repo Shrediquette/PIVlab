@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stereo-based validation · PIVlab Manual</title>
+  <meta name="description" content="How to remove PIVlab Stereo-PIV vectors with the reconstruction residual, a local median filter of w and w limits.">
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+  <article id="doc">
+    <h1 id="top">Stereo-based validation</h1>
+    <p class="lead">Filters that only exist in <a href="stereo-piv.html">Stereo-PIV</a>. They test the
+    3D result; a rejected vector is removed in <strong>both cameras</strong>.</p>
+    <div class="v3">
+      <strong>PIVlab 3.14</strong>
+      Stereo-PIV is not available in PIVlab 3.14.
+    </div>
+    <p>Open via <span class="ui">Validation → Stereo based validation</span>. All filters are off by
+    default.</p>
+
+    <figure>
+      <img src="../assets/img/validation-stereo/panel.png" alt="PIVlab Stereo based validation panel">
+      <figcaption>The <strong>Stereo based validation</strong> panel.</figcaption>
+    </figure>
+
+    <table class="ref">
+      <tr><th>Filter</th><th>Parameter</th><th>Removes vectors where…</th></tr>
+      <tr>
+        <td>Reconstruction residual filter</td>
+        <td>Threshold in px (default 2)</td>
+        <td>the two cameras do not fit one 3D velocity, e.g. where one camera sees dirt on a window or
+        an object.</td>
+      </tr>
+      <tr>
+        <td>Local median filter (W)</td>
+        <td>Threshold (default 3)</td>
+        <td>w differs from the median of its neighbours (normalized median test). Catches w outliers
+        that the residual cannot show: an error of one camera along the line between the cameras only
+        changes w.</td>
+      </tr>
+      <tr>
+        <td>W limits</td>
+        <td>W min / W max (default −1 / 1)</td>
+        <td>w is outside this range, in the units of the
+        <a href="validation-velocity.html#limits">velocity limits</a>.</td>
+      </tr>
+    </table>
+
+    <h2 id="residual-map">Residual map</h2>
+    <p>Tick <span class="ui">Show residual map</span> to see the reconstruction residual of the frame
+    shown. The colour scale ends at the threshold; the vectors above it, which the filter removes, are
+    shown in a solid colour named below the image.</p>
+
+    <h2 id="apply">Applying, undoing, and reading the result</h2>
+    <p>These work as in <a href="validation-velocity.html">velocity-based validation</a>.
+    <span class="ui">Apply</span> runs the filters of all three validation panels;
+    <span class="ui">Interpolate missing data</span> is the same setting in all three.</p>
+    <p>From the command line: <a href="command-line.html#stereo">Stereo-PIV options of
+    <code>pivlab.filter</code></a>.</p>
+  </article>
+
+  <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/search-index.js"></script>
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

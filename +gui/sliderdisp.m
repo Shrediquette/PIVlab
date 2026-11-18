@@ -53,6 +53,9 @@ if capturing==0
         if stereo_mode && target_axis==gui.retr('pivlab_axis') && strcmp(get(handles.multip30, 'Visible'), 'on')
             disparity_key = stereo.disparity_display_popup(handles);
         end
+        if stereo_mode && target_axis==gui.retr('pivlab_axis') && strcmp(get(handles.multip32, 'Visible'), 'on') && get(handles.stereo_show_residual, 'Value') == 1
+            disparity_key = 'residual_raw'; % stereo based validation: residual of the unvalidated result
+        end
         disparity_display = ~strcmp(disparity_key, 'image');
         %profile on
         currentimage = plot.draw_pixel_background_overlay(target_axis,displaywhat, selected, handles, currentframe, disparity_display);
@@ -71,7 +74,7 @@ if capturing==0
             %set (handles.filenameshow, 'string', ['Frame (' int2str(floor(get(handles.fileselector, 'value'))) '/' int2str(numel(video_frame_selection)/2) '):' sprintf('\n') filename]);
             set (handles.filenameshow, 'tooltipstring', filepath{selected});
         end
-        if strncmp(get(handles.multip06, 'visible'), 'on',2) || strncmp(get(handles.multip23, 'visible'), 'on',2) %if in data validation panel
+        if strncmp(get(handles.multip06, 'visible'), 'on',2) || strncmp(get(handles.multip23, 'visible'), 'on',2) || strncmp(get(handles.multip32, 'visible'), 'on',2) %if in data validation panel
             validate.count_discarded_data
         end
         if strncmp(get(handles.multip01, 'visible'), 'on',2)
@@ -122,7 +125,7 @@ if capturing==0
         end
         mask.redraw_masks
         if target_axis==gui.retr('pivlab_axis')
-            if stereo_mode && strcmp(get(handles.multip30, 'Visible'), 'on') % Stereo-PIV panel: disparity displays
+            if stereo_mode && (strcmp(get(handles.multip30, 'Visible'), 'on') || disparity_display) % Stereo-PIV panel: disparity displays; stereo based validation: residual map
                 stereo.draw_disparity(target_axis, disparity_key)
             elseif isequal(gui.retr('stereo_colorbar_room'), true)
                 stereo.draw_disparity(target_axis, 'image') % panel closed: no more room for the colour bar of a display

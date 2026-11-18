@@ -208,7 +208,7 @@ handles.mask_edit_mode = uicontrol(handles.multip25,'Style','popupmenu','String'
 
 %basic or expert mask capabilities
 item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 1.5];
-handles.text251 = uicontrol(handles.multip25,'Style','text','String','Capabilities:','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+handles.text251 = uicontrol(handles.multip25,'Style','text','String','Capabilities:','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text251'); % tag: hidden in Basic mode (PIVlab_hidden_elements.txt)
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
 handles.mask_basic_expert = uicontrol(handles.multip25,'Style','popupmenu','String',{'Basic','Expert'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_basic_expert','Callback',@mask.basic_expert_Callback, 'TooltipString','Switch betwenn basic mask generation and advanced mask generation modes','Value',default.masks.mask_basic_expert);
@@ -1900,6 +1900,97 @@ handles.veccolor_interp_swatch2 = uicontrol(handles.multip23,'Style','text','Str
 handles.rejectedtxt2 = uicontrol(handles.multip23,'Style','text','String','Rejected / interpolated','HorizontalAlignment','left', ...
     'Units','characters','Position',[label_x parentitem(4)-item(4)-margin-item(2) label_w item(4)],'tag','rejectedtxt2');
 
+%% Multip32: stereo based validation (stereo-PIV only: the filters test the 3D result, stereo.limit_discard)
+handles.multip32 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Stereo based validation', 'Tag','multip32','fontweight','bold');
+parentitem=get(handles.multip32, 'Position');
+item=[0 0 0 0];
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
+handles.stereo_val_note = uicontrol(handles.multip32,'Style','text','String','Stereo-PIV only. Vectors are removed in both cameras.','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
+handles.residual_enable = uicontrol(handles.multip32,'Style','checkbox','String','Reconstruction residual filter','Value',default.analysis.residual_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','residual_enable','TooltipString',['Removes vectors where the two cameras do not fit one 3D velocity (reconstruction residual larger than the threshold), ' ...
+    'e.g. where one camera sees dirt or an object']);
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1];
+handles.text_residual_thresh = uicontrol(handles.multip32,'Style','text','String','Threshold [px]','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+handles.residual_thresh = uicontrol(handles.multip32,'Style','edit','String',gui.setting_text(default.analysis.residual_thresh),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.stereo_value_Callback,'Tag','residual_thresh','TooltipString','Vectors with a reconstruction residual larger than this (px) are removed');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.1];
+handles.stereo_show_residual = uicontrol(handles.multip32,'Style','checkbox','String','Show residual map','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','stereo_show_residual','UserData','not_a_setting','Callback',@validate.stereo_show_residual_Callback, ...
+    'TooltipString','Shows the residual of the unvalidated result of this frame. Vectors above the threshold are shown in a solid colour.');
+
+item=[0 item(2)+item(4)+margin parentitem(3) 1.1];
+handles.w_median_enable = uicontrol(handles.multip32,'Style','checkbox','String','Local median filter (W)','Value',default.analysis.w_median_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','w_median_enable','TooltipString',['Normalized median test of the out-of-plane component W. ' ...
+    'Removes W outliers that the residual filter cannot see (an error of one camera along the stereo baseline only changes W).']);
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1];
+handles.text_w_median_thresh = uicontrol(handles.multip32,'Style','text','String','Threshold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+handles.w_median_thresh = uicontrol(handles.multip32,'Style','edit','String',gui.setting_text(default.analysis.w_median_thresh),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.stereo_value_Callback,'Tag','w_median_thresh','TooltipString','Threshold of the normalized median test of W (like the local median filter)');
+
+item=[0 item(2)+item(4)+margin parentitem(3) 1.1];
+handles.w_limit_enable = uicontrol(handles.multip32,'Style','checkbox','String','W limits','Value',default.analysis.w_limit_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','w_limit_enable','TooltipString','Removes vectors with an out-of-plane component W outside the range from W min to W max');
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1];
+handles.text_w_limit_min = uicontrol(handles.multip32,'Style','text','String','W min','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+handles.w_limit_min = uicontrol(handles.multip32,'Style','edit','String',gui.setting_text(default.analysis.w_limit_min),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.stereo_value_Callback,'Tag','w_limit_min','TooltipString','Smallest allowed W, in the units of the velocity limits (m/s with a calibration, px/frame without)');
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1];
+handles.text_w_limit_max = uicontrol(handles.multip32,'Style','text','String','W max','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+handles.w_limit_max = uicontrol(handles.multip32,'Style','edit','String',gui.setting_text(default.analysis.w_limit_max),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.stereo_value_Callback,'Tag','w_limit_max','TooltipString','Largest allowed W, in the units of the velocity limits (m/s with a calibration, px/frame without)');
+
+item=[0 item(2)+item(4)+margin parentitem(3) 1.1];
+handles.interpol_missing3 = uicontrol(handles.multip32,'Style','checkbox','String','Interpolate missing data','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpol_missing3','TooltipString','Interpolate missing velocity data. Interpolated data appears as ORANGE vectors','Callback',@validate.set_other_interpol_checkbox,'UserData','not_a_setting');
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
+uicontrol(handles.multip32,'Style','pushbutton','String','Apply to current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.apply_filter_current_Callback,'TooltipString','Apply the filters of all validation panels to the current frame');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
+uicontrol(handles.multip32,'Style','pushbutton','String','Apply to all frames','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.apply_filter_all_Callback,'TooltipString','Apply the filters of all validation panels to all frames');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
+uicontrol(handles.multip32,'Style','pushbutton','String','Undo all validations (all frames)','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.restore_all_Callback,'TooltipString','Remove all velocity filters for all frames');
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
+uicontrol(handles.multip32,'Style','text','String','Valid detection probability (VDP): 100 %','HorizontalAlignment','center','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','amount_nans','TooltipString','Valid detection probability in percent');
+
+swatch_w = 3; swatch_gap = 0.3;
+swatch_x = margin;
+label_x  = swatch_x + swatch_w + swatch_gap;
+label_w  = parentitem(3) - margin*2 - swatch_w - swatch_gap;
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.0];
+handles.veccolor_valid_swatch3 = uicontrol(handles.multip32,'Style','text','String','','Units','characters', ...
+    'Position',[swatch_x parentitem(4)-item(4)-margin-item(2) swatch_w item(4)], ...
+    'Tag','veccolor_valid_swatch3','BackgroundColor',[0 1 0], ...
+    'TooltipString','Valid vector color — configurable in ''Modify plot appearance''');
+handles.validtxt3 = uicontrol(handles.multip32,'Style','text','String','Valid vectors (1st peak)','HorizontalAlignment','left', ...
+    'Units','characters','Position',[label_x parentitem(4)-item(4)-margin-item(2) label_w item(4)],'tag','validtxt3');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.0];
+handles.veccolor_secondpeak_swatch3 = uicontrol(handles.multip32,'Style','text','String','','Units','characters', ...
+    'Position',[swatch_x parentitem(4)-item(4)-margin-item(2) swatch_w item(4)], ...
+    'Tag','veccolor_secondpeak_swatch3','BackgroundColor',[0 0.8 1], ...
+    'TooltipString','2nd-peak vector color — configurable in ''Modify plot appearance''');
+handles.secondpeaktxt3=uicontrol(handles.multip32,'Style','text','String','Valid vectors (2nd peak)','HorizontalAlignment','left', ...
+    'Units','characters','Position',[label_x parentitem(4)-item(4)-margin-item(2) label_w item(4)],'tag','secondpeaktxt3');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.0];
+handles.veccolor_interp_swatch3 = uicontrol(handles.multip32,'Style','text','String','','Units','characters', ...
+    'Position',[swatch_x parentitem(4)-item(4)-margin-item(2) swatch_w item(4)], ...
+    'Tag','veccolor_interp_swatch3','BackgroundColor',[1 0.5 0], ...
+    'TooltipString','Rejected/interpolated vector color — configurable in ''Modify plot appearance''');
+handles.rejectedtxt3 = uicontrol(handles.multip32,'Style','text','String','Rejected / interpolated','HorizontalAlignment','left', ...
+    'Units','characters','Position',[label_x parentitem(4)-item(4)-margin-item(2) label_w item(4)],'tag','rejectedtxt3');
+
 %% Multip24
 % General
 handles.multip24 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Image Acquisition', 'Tag','multip24','fontweight','bold');
@@ -1934,8 +2025,7 @@ available_PIV_configurations = { ...
     %	'Nd:YAG (SimpleSync) + pco.pixelfly usb' ...
     %	'Nd:YAG (SimpleSync) + pco.panda 26 DS' ...
     'Webcam demo (no synchronizer)' ...
-    'PIVlab LD-PS + OPTOcam 20/9' ...
-    'PIVlab LD-PS + OPTOcam 2/80' ...
+    'PIVlab LD-PS + OPTOcam' ... %the model (2/80 or 20/9) is detected in select_capture_config_Callback
     'PIVlab LD-PS + pco.edge 26 DS CLHS' ...
     'PIVlab LD-PS + pco.panda 26 DS' ...
     'PIVlab LD-PS + pco.pixelfly usb' ...

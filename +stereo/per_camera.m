@@ -39,6 +39,7 @@ elseif strcmp(action, 'filter_current')
 end
 gui.put('stereo_limit_discard', discard);
 gui.put('stereo_camera_loop', 1);
+gui.put('cancel_pressed', 0); % set by the Cancel button; the analysis itself resets 'cancel' before it returns
 cancelled = false;
 try
     for k = 1:2
@@ -57,7 +58,7 @@ try
                 validate.restore_all_Callback;
         end
         gui.put('stereo_result', gui.retr('resultslist'));
-        if analyze && isequal(gui.retr('cancel'), 1)
+        if analyze && isequal(gui.retr('cancel_pressed'), 1)
             cancelled = true;
             break
         end

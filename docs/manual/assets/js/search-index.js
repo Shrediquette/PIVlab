@@ -321,6 +321,18 @@ window.MANUAL_SEARCH = [
     text: "image based validation filter low contrast bright objects correlation coefficient filter threshold suggest threshold"
   },
   {
+    title: "Stereo-based validation filters (residual, median of w, w limits)",
+    href: "pages/validation-stereo.html", hash: "top",
+    section: "Validation",
+    text: "stereo based validation stereo-piv reconstruction residual filter threshold dirt object local median filter w out-of-plane outliers w limits w min w max both cameras"
+  },
+  {
+    title: "Residual map (stereo-based validation)",
+    href: "pages/validation-stereo.html", hash: "residual-map",
+    section: "Validation",
+    text: "show residual map reconstruction residual threshold solid colour removed vectors magenta colour scale"
+  },
+  {
     title: "Setting the calibration scale",
     href: "pages/spatial-calibration.html", hash: "scaling",
     section: "Spatial calibration",

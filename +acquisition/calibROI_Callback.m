@@ -1,5 +1,8 @@
 function calibROI_Callback (~,~,~)
 handles=gui.gethand;
+if PIVlab_capture_OPTOcam_missing %"OPTOcam" selected, but none was found
+	return
+end
 gui.put('capturing',0);
 camera_type=gui.retr('camera_type');
 binning=gui.retr('binning');
@@ -55,10 +58,26 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
         elseif strcmp(camera_type,'basler')
             [errorcode, caliimg]=PIVlab_capture_basler_calibration_image(1,expos,[1,1,max_cam_res]);
         elseif strcmp(camera_type,'OPTOcam')
-            [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(1,expos,[1,1,max_cam_res]);
+            try
+                [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(1,expos,[1,1,max_cam_res]);
+            catch ME
+                PIVlab_capture_OPTOcam_capture_error(ME,'2_80'); %returns only if an OPTOcam 20/9 is connected instead (GUI switched to it)
+                errorcode=1; caliimg=[];
+            end
+            if errorcode ~= 0
+                capture_ok=0; %camera not found or swapped: no ROI selection on an empty image
+            end
         elseif strcmp(camera_type,'OPTOcam_20_9')
             % returns after the first REAL camera frame (the preview placeholder image is skipped)
-            [errorcode, caliimg]=PIVlab_capture_OPTOcam_20_9_calibration_image(1,expos,[1,1,max_cam_res/binning]);
+            try
+                [errorcode, caliimg]=PIVlab_capture_OPTOcam_20_9_calibration_image(1,expos,[1,1,max_cam_res/binning]);
+            catch ME
+                PIVlab_capture_OPTOcam_capture_error(ME,'20_9'); %returns only if an OPTOcam 2/80 is connected instead (GUI switched to it)
+                errorcode=1; caliimg=[];
+            end
+            if errorcode ~= 0
+                capture_ok=0; %camera not found or swapped: no ROI selection on an empty image
+            end
         elseif strcmp(camera_type,'OPTRONIS')
             expos=round(str2num(get(handles.ac_expo,'String'))*1000);
             camera_sub_type=gui.retr('camera_sub_type');

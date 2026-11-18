@@ -44,7 +44,7 @@ set(handles.pass4_step, 'String', half_of(handles.pass4_size));
 piv.overlappercent % overlap of the pass 1 windows in %
 
 %% Vector validation
-set(handles.interpol_missing2, 'Value', get(handles.interpol_missing, 'Value')); % shows the same setting
+set([handles.interpol_missing2 handles.interpol_missing3], 'Value', get(handles.interpol_missing, 'Value')); % show the same setting
 
 %% Calibration: the axis directions and offsets need a reference distance
 enable(findobj(handles.uipanel_offsets, 'Type', 'uicontrol'), ~isempty(gui.retr('pointscali')));
