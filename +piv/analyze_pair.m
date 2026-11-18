@@ -13,7 +13,8 @@ function r = analyze_pair(image1, image2, mask_positions, s)
 %                   compute_uncertainty, do_correlation_matrices
 %
 %   r  struct with x, y, u, v, typevector, correlation_map, u2, v2, umap
-%      (the content of PIVlab's resultslist rows 1-5 and 12-15)
+%      (the content of PIVlab's resultslist rows 1-5 and 12-15); with s.do_correlation_matrices == 1
+%      also correlation_matrices and all_xy_tables (see piv.piv_FFTmulti)
 %
 %   Used by the GUI analysis loops (serial and parallel) and by pivlab.piv.
 
@@ -34,8 +35,9 @@ switch s.algorithm
     case 'dcc'
         [x, y, u, v, typevector] = piv.piv_DCC (image1,image2,s.interrogationarea, s.step, s.subpixfinder, converted_mask, s.roirect);
         correlation_map=zeros(size(x)); %no correlation coefficient in DCC.
+        correlation_matrices=[]; all_xy_tables=[];
     case 'fft'
-        [x, y, u, v, typevector,correlation_map,~,~,u2,v2,umap] = piv.piv_FFTmulti( ...
+        [x, y, u, v, typevector,correlation_map,correlation_matrices,all_xy_tables,u2,v2,umap] = piv.piv_FFTmulti( ...
             image1=image1, image2=image2, interrogationarea=s.interrogationarea, step=s.step, ...
             subpixfinder=s.subpixfinder, mask_inpt=converted_mask, roi_inpt=s.roirect, ...
             passes=s.passes, int2=s.int2, int3=s.int3, int4=s.int4, imdeform=s.imdeform, ...
@@ -48,4 +50,8 @@ switch s.algorithm
 end
 r = struct('x',x,'y',y,'u',u,'v',v,'typevector',typevector,'correlation_map',correlation_map, ...
     'u2',u2,'v2',v2,'umap',umap);
+if s.do_correlation_matrices == 1 % correlation matrices of all passes and their grids (FFT only)
+    r.correlation_matrices = correlation_matrices;
+    r.all_xy_tables = all_xy_tables;
+end
 end

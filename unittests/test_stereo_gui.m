@@ -1378,6 +1378,64 @@ verifyEqual(testCase, size(rl{16, 1}), size(rl{1, 1}));
 verifyEqual(testCase, get(h.AnalyzeAll, 'Enable'), 'on');
 end
 
+function test_correlation_matrices_per_camera(testCase)
+% "Retrieve correlation matrices": matrices of the camera shown, the same PIV as the analysis of this
+% camera, full matrices in pass 2; after a camera switch the matrices of the other camera are not shown
+% (before: shown without a hint) (2026-11-18)
+c = helper_stereo_synthetic_case(fullfile(testCase.TestData.folder, 'corrmat_case'), 2, 0);
+helper_start_pivlab();
+h = gui.gethand;
+calibrate_in_gui(c);
+set(h.pass1_size, 'String', '64'); piv.intarea_Callback(h.pass1_size, [], []);
+set(h.pass1_step, 'String', '32'); piv.step_Callback(h.pass1_step, [], []);
+set(h.pass2_enable, 'Value', 1); set(h.pass2_size, 'String', '32'); piv.pass2_checkbox_Callback(h.pass2_enable, [], []);
+evalc('piv.AnalyzeSingle_Callback');
+plot.correlation_matrices_Callback;
+data = cell(1, 2);
+for k = 1:2
+    stereo.switch_camera(k);
+    evalc('plot.correlation_matrices_calculate');
+    data{k} = gui.retr('correlation_matrices_data');
+    verifyEqual(testCase, data{k}.camera, k, 'camera of the matrices');
+    % same images, settings and peak search as the analysis of this camera
+    s = piv.settings_from_gui(h);
+    s.do_correlation_matrices = 1;
+    s.compute_uncertainty = 0;
+    r = piv.analyze_pair(import.get_img(1), import.get_img(2), {}, s);
+    R = gui.retr('stereo_result');
+    verifyEqual(testCase, r.u, R{3, 1}, sprintf('camera %d: u of the analysis', k));
+    verifyEqual(testCase, r.v, R{4, 1}, sprintf('camera %d: v of the analysis', k));
+    verifyEqual(testCase, r.correlation_matrices, data{k}.correlation_matrices, sprintf('camera %d: matrices', k));
+    % pass 2: full matrix (the restricted one is constant outside the peak search area, e.g. in the corners)
+    corner = double(data{k}.correlation_matrices{2}(1:3, 1:3, :));
+    spread = max(max(corner, [], 1), [], 2) - min(min(corner, [], 1), [], 2);
+    verifyTrue(testCase, any(spread(:) > 0), sprintf('camera %d: pass 2 matrices restricted to the peak search area', k));
+end
+verifyNotEqual(testCase, data{1}.correlation_matrices{2}, data{2}.correlation_matrices{2}, 'same matrices for both cameras');
+% retrieved for camera 2, camera 1 shown: no matrices
+stereo.switch_camera(1);
+rl = gui.retr('resultslist');
+x = rl{1, 1};
+y = rl{2, 1};
+row = round(size(x, 1) / 2);
+col = round(size(x, 2) / 2);
+close(findobj('Tag', 'correlation_matrices_plot_matrix'));
+click_vector(x(row, col), y(row, col));
+verifyEmpty(testCase, findobj('Tag', 'correlation_matrices_plot_matrix'), 'matrices of camera 2 shown for camera 1');
+% retrieved for camera 1: shown, with the camera
+evalc('plot.correlation_matrices_calculate');
+click_vector(x(row, col), y(row, col));
+fig = findobj('Tag', 'correlation_matrices_plot_matrix');
+verifyNotEmpty(testCase, fig, 'no matrices shown');
+verifyEqual(testCase, fig.Name, 'Correlation matrices - camera 1');
+shown = findobj(fig, 'Type', 'image');
+xp = data{1}.all_xy_tables{2, 1};
+yp = data{1}.all_xy_tables{2, 2};
+idx = find(xp == x(row, col) & yp == y(row, col), 1);
+verifyEqual(testCase, shown(1).CData, data{1}.correlation_matrices{2}(:, :, idx), 'matrix of the clicked vector (pass 2)');
+close(fig);
+end
+
 function test_stereo_validation_panel(testCase)
 % Validation -> Stereo based validation (2026-11-18): its own panel with the stereo filters (off by default),
 % also shown in 2D; the "Interpolate missing data" checkboxes of the three validation panels are one setting

@@ -516,7 +516,7 @@ window.MANUAL_SEARCH = [
     title: "Correlation matrices",
     href: "pages/correlation-matrices.html", hash: "top",
     section: "Plot & post-processing",
-    text: "correlation matrices retrieve click vector passes diagnostic peak noisy"
+    text: "correlation matrices retrieve click vector passes diagnostic peak noisy stereo camera"
   },
   {
     title: "Second monitor display (experimental)",

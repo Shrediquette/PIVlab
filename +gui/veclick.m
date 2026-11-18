@@ -167,12 +167,17 @@ if src.Button == 1
 		%% plot correlation matrices if the corresponding panel is visible
 		if handles.multip29.Visible
 			correlation_matrices_data = gui.retr('correlation_matrices_data');
-			if ~isempty(correlation_matrices_data) && currentframe == correlation_matrices_data.frame && size(x,1) == correlation_matrices_data.size(1) && size(x,2) == correlation_matrices_data.size(2) %% data was calculated for the currently visible frame
+			camera = 0; % 2D; stereo-PIV: the camera that is shown
+			if isequal(gui.retr('stereomode'), 1)
+				camera = gui.retr('stereo_active_camera');
+			end
+			if ~isempty(correlation_matrices_data) && isfield(correlation_matrices_data, 'camera') && correlation_matrices_data.camera ~= camera
+				gui.custom_msgbox('error',getappdata(0,'hgui'),'Other camera',['The correlation matrices were retrieved for camera ' int2str(correlation_matrices_data.camera) '. Retrieve them again for camera ' int2str(camera) '.'],'modal');
+			elseif ~isempty(correlation_matrices_data) && currentframe == correlation_matrices_data.frame && size(x,1) == correlation_matrices_data.size(1) && size(x,2) == correlation_matrices_data.size(2) %% data was calculated for the currently visible frame
 				fig=findobj('Tag','correlation_matrices_plot_matrix');
 				if isempty(fig)
 					fig=figure;
 					fig.Tag = 'correlation_matrices_plot_matrix';
-					fig.Name='Correlation matrices';
 					fig.IntegerHandle="off";
 					fig.DockControls="off";
 					%fig.WindowStyle="alwaysontop";
@@ -191,6 +196,19 @@ if src.Button == 1
 				end
 				t.TileSpacing = 'compact';
 				t.Padding = 'compact';
+				fig.Name = 'Correlation matrices';
+				if camera > 0
+					% stereo-PIV: the peaks are the 2D displacement of this camera (rectified images), not U, V, W
+					fig.Name = ['Correlation matrices - camera ' int2str(camera)];
+					title_text = ['Camera ' int2str(camera)];
+					camera_result = gui.retr('stereo_result');
+					if size(camera_result,2) >= (currentframe+1)/2 && isequal(size(camera_result{3,(currentframe+1)/2}), size(x))
+						u_camera = camera_result{3,(currentframe+1)/2}(info(1,1),info(1,2));
+						v_camera = camera_result{4,(currentframe+1)/2}(info(1,1),info(1,2));
+						title_text = [title_text ': u = ' sprintf('%0.2f',u_camera) ' px, v = ' sprintf('%0.2f',v_camera) ' px'];
+					end
+					title(t, title_text);
+				end
 				% find the corresponding correlation amtrices of the first passes
 				%info(1,2) %x koordinate
 				for pass = 1 : correlation_matrices_data.passes
