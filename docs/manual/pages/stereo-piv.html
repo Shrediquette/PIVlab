@@ -127,6 +127,13 @@
     the <strong>disparity</strong>. <span class="ui">Measure disparity</span> correlates frame A of
     camera 1 with frame A of camera 2, fits a smooth map and corrects both cameras with it. It also
     gives the position of the light sheet. ANALYZE measures it automatically if you have not.</p>
+    <details class="more">
+      <summary>Where this method comes from <span class="more-kind">source</span></summary>
+      <p>The disparity correction follows the self-calibration method of
+      Wieneke, B. (2005), <em>Stereo-PIV using self-calibration on particle images</em>,
+      Experiments in Fluids <strong>39</strong>, 267–280,
+      <a href="https://doi.org/10.1007/s00348-005-0962-z" target="_blank" rel="noopener">doi:10.1007/s00348-005-0962-z</a>.</p>
+    </details>
     <figure>
       <img src="../assets/img/stereo-piv/workflow/stereo-piv-step-7-disparity-correction.svg" width="560" height="340" loading="lazy" alt="Top view: the light sheet is slightly offset and tilted against the board position, so the rays of both cameras to one particle cross the board plane at different points (disparity). Correlating the A images of both cameras gives the disparity map that corrects both cameras.">
       <figcaption>Why the disparity exists, and how it is measured and corrected.</figcaption>
@@ -176,6 +183,8 @@
       cameras; u, v and w are then computed again.</li>
       <li><a href="validation-velocity.html#limits">Velocity limits</a> work on the 3D result (the
       magnitude limit on sqrt(u² + v² + w²)). A vector outside them is removed in both cameras.</li>
+      <li><a href="validation-stereo.html">Stereo-based validation</a> has additional filters of the
+      3D result.</li>
       <li>u and v are shown as vectors. A <a href="sessions.html">session</a> keeps both cameras, the
       calibrations, the disparity and the result.</li>
     </ul>

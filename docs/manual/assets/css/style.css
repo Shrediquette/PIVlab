@@ -261,6 +261,30 @@ figcaption { font-size: 13px; color: var(--text-soft); margin-top: .6em; }
 .tip  { border-left-color: #3aab6d; }
 .warn { border-left-color: #d9902a; }
 .note strong, .tip strong, .warn strong { display: block; margin-bottom: 2px; }
+
+/* Collapsible extra: background, reference and tips. Closed by default; the summary says what
+   is inside. Never put an h2/h3 inside one - the "On this page" rail indexes those. */
+details.more {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-soft); margin: 1.4em 0; padding: 0 16px;
+}
+details.more > summary {
+  cursor: pointer; padding: 11px 0; font-weight: 600; color: var(--text);
+  list-style: none; display: flex; align-items: center; gap: 8px;
+}
+details.more > summary::-webkit-details-marker { display: none; }
+details.more > summary::before {
+  content: "\25B8"; color: var(--text-soft); font-size: 13px;
+  transition: transform .15s ease; flex: none;
+}
+details.more[open] > summary::before { transform: rotate(90deg); }
+details.more > summary:hover { color: var(--accent); }
+details.more[open] > summary { border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+details.more > :last-child { margin-bottom: 14px; }
+details.more .more-kind {
+  font-weight: 400; font-size: 12px; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--text-soft);
+}
 /* Behaviour of PIVlab 3.14 (previous stable release); find them all with class="v3" */
 .v3 {
   border: 1px solid var(--border); border-left: 4px solid var(--v3); border-radius: var(--radius);

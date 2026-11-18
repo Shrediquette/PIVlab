@@ -10,8 +10,8 @@
 <body>
   <article id="doc">
     <h1 id="top">Correlation matrices</h1>
-    <p class="lead">A diagnostic tool for looking under the hood of a single vector — the raw
-    correlation surface that produced it, for every pass.</p>
+    <p class="lead">A diagnostic tool that shows what produced a single vector: the raw
+    correlation surface, for every pass.</p>
     <p>Open via <span class="ui">Plot → Correlation matrices</span>.</p>
 
     <figure class="inline-panel">
@@ -25,6 +25,8 @@
       <li>Click on any vector in the plot to display the correlation matrices of all passes for
       that specific vector.</li>
     </ol>
+    <p>Stereo-PIV: the matrices belong to the camera shown, and their peaks are that camera's
+    2D displacement. After switching the camera, retrieve them again.</p>
     <figure>
       <img src="../assets/img/correlation-matrices/result.jpg" alt="Pop-up showing four correlation matrices for one vector, one per pass, each with a single bright peak; the interrogation window shrinks from 128x128 down to 20x20 across the passes">
       <figcaption>The correlation matrices for a single vector, one per pass. The interrogation

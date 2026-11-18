@@ -47,10 +47,14 @@
     matching your settings. Save it as TIFF (300 dpi) or as print-ready PDF. In the PDF, all
     checkers and markers have their exact size in mm. Print either file at 100 % scaling.</p>
     <p>The PDF also suits printing on transparent material, e.g. an acrylic plate that is seen
-    from both sides in <a href="stereo-setup.html#arrangement">stereo PIV</a>. It is in CMYK (black = 100 % K)
-    with 5 mm bleed. White is the spot colour <em>weiss</em> (overprint) in the top layer
-    <em>weiss</em>; it does not overlap the other colours. The suggested file name contains
-    the board size, e.g. <em>…_300x290mm_plus_5mm_bleed.pdf</em>.</p>
+    from both sides in <a href="stereo-setup.html#arrangement">stereo PIV</a>.</p>
+    <details class="more">
+      <summary>What to tell the print shop <span class="more-kind">reference</span></summary>
+      <p>The PDF is in CMYK (black = 100 % K) with 5 mm bleed. White is the spot colour
+      <em>weiss</em> (overprint) in the top layer <em>weiss</em>; it does not overlap the other
+      colours. The suggested file name contains the board size, e.g.
+      <em>…_300x290mm_plus_5mm_bleed.pdf</em>.</p>
+    </details>
     <p>A generated board carries a <strong>QR code</strong> in place of the central 2 × 2 checkers
     that holds all of these parameters. It is also read when the board is seen from behind.
     With the <a href="capture.html#camera"><span class="ui">Calibration</span> overlay</a> of the
@@ -76,6 +80,8 @@
     </figure>
 
     <h3 id="checker-size">Choosing the checker size</h3>
+    <details class="more">
+    <summary>How large the checkers should be, and the limits <span class="more-kind">tips</span></summary>
     <p>Design the board for the camera image, not for the paper: the board should fill the
     camera image, and one checker should cover about <strong>60–130 pixels</strong> in the
     image. More and smaller checkers do not make the calibration more accurate — in tests with
@@ -108,6 +114,8 @@
         neighbouring markers, so partly visible boards are used.</li>
       </ul>
     </div>
+
+    </details>
 
     <h2 id="calibration">Camera calibration (lens undistortion)</h2>
     <p>Open via <span class="ui">Image settings → Camera calibration → Camera calibration

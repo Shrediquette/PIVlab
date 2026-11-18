@@ -337,5 +337,27 @@
     initSearch(searchInput, searchPanel);
     initTheme(themeBtn);
     buildStartHereCards();
+    initCollapsibles();
   });
+
+  // --------------------------------------------------------------- Collapsibles
+  // A closed <details> hides its contents from in-page navigation, so a link from the
+  // "On this page" rail, the pager or the search panel would land nowhere. Open every
+  // <details> around the target of the current #hash.
+  function initCollapsibles() {
+    function openForHash() {
+      var id = (location.hash || "").slice(1);
+      if (!id) return;
+      var target = document.getElementById(id);
+      if (!target) return;
+      var el = target;
+      while (el && el !== document.body) {
+        if (el.tagName === "DETAILS") el.open = true;
+        el = el.parentNode;
+      }
+      target.scrollIntoView();
+    }
+    openForHash();
+    window.addEventListener("hashchange", openForHash);
+  }
 })();

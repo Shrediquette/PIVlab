@@ -103,15 +103,9 @@
       <tr><td>Lens</td><td>Lens control for cameras that support it, including autofocus.</td></tr>
       <tr><td>Setup</td><td>Camera-specific settings such as bit depth and gain, and the serial
       numbers of the connected cameras.</td></tr>
-      <tr><td>Sharpness</td><td>Overlays a focus measure and, for the left, centre and right third
-      of the image, the blur in pixels (smaller = sharper; median of the last 5 updates): the
-      particle image diameter for particle images, the edge width for a calibration board, “–”
-      for other content. The three values can be compared with each other: with a Scheimpflug
-      adapter, focus until the centre is smallest, then adjust the adapter until left and right are
-      equal. A bar under each value shows the sharpness (full = sharpest value seen), a white mark the
-      best value of that third: turn back when a bar drops below its mark. Equal bars at their marks:
-      in focus everywhere. Equal side bars below a full centre bar cannot be corrected with the adapter
-      (close the aperture). Works in the live image and in the <a href="#capture">PIV preview</a>.</td></tr>
+      <tr><td>Sharpness</td><td>Blur in pixels for the left, centre and right third of the image —
+      smaller is sharper. See <a href="#focusing">Focusing with the Sharpness overlay</a>.
+      Works in the live image and in the <a href="#capture">PIV preview</a>.</td></tr>
       <tr><td>Grid</td><td>Overlays a grid, for aligning the camera. Works in the live image and in
       the PIV preview.</td></tr>
       <tr><td>Calibration</td><td>Live detection of a
@@ -122,6 +116,15 @@
       <img src="../assets/img/capture/part-camera.png" alt="Camera settings: Binning, ROI, Lens and Setup buttons, and the live overlay switches">
     </figure>
     </div>
+
+    <h4 id="focusing">Focusing with the Sharpness overlay</h4>
+    <p>Focus until all three values are as small as you can get them. With a Scheimpflug adapter,
+    focus until the <strong>centre</strong> value is smallest, then adjust the adapter until
+    <strong>left and right are equal</strong>.</p>
+    <p>The bar under each value fills as that third gets sharper, and a white mark records the best
+    value seen there. Turn back when a bar drops below its mark. All three bars at their marks
+    means the image is in focus everywhere. If the side bars sit level but below a full centre bar,
+    the adapter cannot fix it — close the aperture instead.</p>
 
     <p>The <span class="ui">Calibration</span> overlay does three things at once, which makes it
     the quickest way to check a board and a camera position:</p>
@@ -141,12 +144,12 @@
     the laser pulses and the camera exposures are not locked to each other. Brightness and particle
     images in this view therefore say nothing about the images you will record. Use it to aim the
     camera, to record the board image, and to focus on a <strong>target</strong> placed in the
-    plane of the light sheet. To focus on the particles themselves, use the
-    <a href="#capture">PIV preview</a>.</p>
+    plane of the light sheet.</p>
     <div class="split">
     <table class="ref">
       <tr><th>Control</th><th>What it does</th></tr>
-      <tr><td>Exposure in ms</td><td>Camera exposure for the live view.</td></tr>
+      <tr><td>Exposure in ms</td><td>Camera exposure for the live view only; the recording uses
+      the laser pulse, not this value.</td></tr>
       <tr><td>Start</td><td>Starts the live view. <span class="ui">Zoom</span> and the
       <span class="ui">Calibration</span> overlay work only here.</td></tr>
       <tr><td>Snapshot</td><td>Saves the image currently displayed into the project folder.</td></tr>
@@ -220,6 +223,8 @@
     from a test analysis.</p>
 
     <h3 id="straddling">How frame straddling works</h3>
+    <details class="more">
+    <summary>Why Δt is not tied to the frame rate, and what limits it <span class="more-kind">background</span></summary>
     <p>The two images of a pair are two <strong>consecutive camera frames</strong>. Instead of
     lighting each frame in the middle, the synchronizer puts the <strong>first laser pulse at the
     very end of the first frame's exposure and the second at the very beginning of the next
@@ -265,7 +270,7 @@
       <strong>Pulse length: light against streaking</strong>
       A longer pulse puts more light on the sensor but also smears each particle into a streak.
       Keep the streaks short — but not at any price: too little light costs more accuracy than a
-      little streaking does, because it lowers the signal-to-noise ratio of the correlation.
+      little streaking does.
     </div>
 
     <div class="tip">
@@ -274,6 +279,8 @@
       <span class="ui">Timing graph</span> switched on. PIVlab draws the timing and the resulting
       double-frame rate for that camera even when nothing is connected.
     </div>
+
+    </details>
 
     <h2 id="stereo">Stereo acquisition (two cameras)</h2>
     <p>For <a href="stereo-setup.html">stereo-PIV</a>, PIVlab records with two cameras of the same
