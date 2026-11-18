@@ -11,6 +11,9 @@ is_preview = strcmp(mode,'piv_preview');
 %Zoom: only in the live image (gui.toolsavailable(0) already switched an active zoom off)
 set(handles.zoomon,'enable',onoff(is_live));
 
+%CAM button (stereo acquisition): cameras shown, can be changed while the cameras run
+set(handles.stereo_camera_toggle,'enable',onoff(acquisition.capture_cameras == 2));
+
 %Calibration (live ChArUco detection): only in the live image
 if ~is_live
 	set(handles.calib_dolivedetect,'Value',0);

@@ -122,8 +122,10 @@ tries = getappdata(0, 'stereo_capture_test_tries');
 if isempty(tries)
     tries = 0;
 end
-if numel(texts) ~= 8 && tries < 10
-    % the timer fired while the overlay was redrawn (old texts deleted, new ones not all drawn yet): read again
+charuco_drawn = ~isempty(findobj(ax, 'tag', 'charucolabel_cam1')) && ~isempty(findobj(ax, 'tag', 'charucolabel_cam2'));
+if (numel(texts) ~= 8 || ~charuco_drawn) && tries < 10
+    % the timer fired while the overlay was redrawn (old texts deleted, new ones not all drawn yet), or before the
+    % first ChArUco detection: read again
     setappdata(0, 'stereo_capture_test_tries', tries + 1);
     run_with_check(@check_live, 0.3);
     return
@@ -268,7 +270,7 @@ acquisition.piv_capture_Callback;
 r = getappdata(0, 'stereo_capture_test');
 verifyEqual(testCase, r.n_images, 2);
 verifyEqual(testCase, r.cdata_size, [608 968; 608 968], 'downsampled to <= 1280 px per camera');
-verifyEqual(testCase, r.extent, [1 1936; 1 1936] + [0 0; 1 1] * (1936 + round(0.03 * 1936)), 'axes in camera pixels');
+verifyEqual(testCase, r.extent, [1 1936; 1 1936] + [0 0; 1 1] * (1936 + round(0.03 * 1936)), 'AbsTol', 1, 'axes in camera pixels (displayed pixels at their centres)');
 verifyLessThan(testCase, r.available, 60, 'PIV preview: frames are discarded');
 verifyGreaterThan(testCase, r.acquired, 30, 'cameras ran');
 verifyEqual(testCase, get(h.ac_realtime_PIV, 'Value'), 0, 'no displacement view in stereo mode');

@@ -41,7 +41,11 @@ image_handle_OPTOcam = image_handles{1};
 setappdata(hgui,'image_handles_OPTOcam_20_9',image_handles);
 
 %% get images
-display_rate = min(10, 40e6/(n_cameras*ROI_OPTOcam(3)*ROI_OPTOcam(4))); %frames per second drawn per camera (full frame: 2/s)
+%Frames drawn per second and camera: from the pixels actually drawn (screen size, zoom, cameras shown), at most
+%40 megapixels per second in total, so that PIVlab stays responsive (Stop button). Updated in the loop below.
+max_rate = 10; %the camera sends at most 10 frames/s in the live image
+pixel_budget = 40e6;
+display_rate = max_rate;
 set(frame_nr_display,'String','');
 %preview() first shows a placeholder image until the first camera frame arrives (~1.5 s at full frame).
 %The callback only receives real frames, so it counts them: needed for the single-image grab (ROI selection).
@@ -53,8 +57,7 @@ for k=1:n_cameras
     preview(OPTOcam_vids{k},image_handles{k})
 end
 caxis(PIVlab_axis,[0 2^bitmode]); %#ok<CAXIS> seems to be a workaround to force preview to show full data range...
-%preview() sets the axes limits to its own image: show all cameras (stereo: side by side)
-set(PIVlab_axis,'XLim',[0.5 getappdata(image_handles{end},'x_offset')+ROI_OPTOcam(3)+0.5],'YLim',[0.5 ROI_OPTOcam(4)+0.5]);
+acquisition.apply_camera_view %preview() sets the axes limits to its own image: show the cameras chosen with the CAM button
 displayed_img_amount=0;
 delaycounter=0; %autofocus state
 delaycounter2=0;
@@ -68,11 +71,11 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
         pause(0.01); %sleep and process GUI callbacks instead of spinning
         continue
     end
-    rate = display_rate;
+    rate = acquisition.display_rate(image_handles,max_rate,pixel_budget); %zoom / CAM button change the pixels drawn
     if isequal(getappdata(hgui,'autofocus_enabled'),1) && n_cameras == 1
-        rate = max(display_rate,5); %autofocus: a new frame is needed after each focus step (0.35 s)
+        rate = max(rate,5); %autofocus: a new frame is needed after each focus step (0.35 s)
+        setappdata(image_handle_OPTOcam,'max_display_rate',rate);
     end
-    setappdata(image_handle_OPTOcam,'max_display_rate',rate);
     next_update = toc(t0) + 1/rate;
     frames_shown = inf; %real camera frames of the slowest camera, read BEFORE the frames: they are then real frames if frames_shown >= 1
     for k=1:n_cameras

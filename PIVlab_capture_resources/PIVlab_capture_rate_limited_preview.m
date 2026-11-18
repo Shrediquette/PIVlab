@@ -20,7 +20,7 @@ if isempty(rate)
 	rate = 10;
 end
 last_display = getappdata(himage,'last_display');
-if isempty(last_display) || toc(last_display) >= 1/rate
+if isempty(last_display) || toc(last_display) >= 0.8/rate %0.8: frames that arrive exactly at the rate (jitter of a few ms) are not skipped every second time
 	acquisition.show_frame(himage, event.Data, 1);
 	setappdata(himage,'last_display',tic);
 end

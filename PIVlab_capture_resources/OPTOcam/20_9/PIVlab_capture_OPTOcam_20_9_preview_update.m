@@ -53,7 +53,7 @@ if isempty(rate)
 	rate = 10;
 end
 last_display = getappdata(himage,'last_display');
-due = isempty(last_display) || toc(last_display) >= 1/rate;
+due = isempty(last_display) || toc(last_display) >= 0.8/rate; %0.8: frames that arrive exactly at the rate are not skipped every second time
 if due && (~ab_distinguishable || is_bright == show_bright)
 	acquisition.show_frame(himage, frame, 1);
 	setappdata(himage,'last_display',tic);

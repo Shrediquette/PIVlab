@@ -21,6 +21,7 @@ if get(handles.ac_stereo,'Value') == 1
 	end
 end
 acquisition.image_amount_Callback %RAM for one or two cameras
+acquisition.camera_view_button %CAM button: cameras shown (only with two cameras)
 
 function n_found = connected_cameras(camera_type)
 %number of connected cameras of this type (OPTOcam 2/80: by user ID, see PIVlab_capture_OPTOcam_model)

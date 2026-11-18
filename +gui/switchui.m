@@ -42,4 +42,5 @@ end
 if residual_map_shown && ~strcmp(who,'multip32')
 	gui.sliderdisp(gui.retr('pivlab_axis')) %vectors instead of the residual map
 end
+acquisition.camera_view_button %CAM button: cameras shown (Image Acquisition, stereo) or camera switch (stereo-PIV)
 drawnow;

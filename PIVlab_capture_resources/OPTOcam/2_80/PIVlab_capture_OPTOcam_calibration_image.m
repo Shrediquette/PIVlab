@@ -28,7 +28,11 @@ PIVlab_axis = gui.retr('pivlab_axis');
 setappdata(hgui,'image_handles_OPTOcam',image_handles);
 
 %% get images
-display_rate = min(10, 25e6/(n_cameras*ROI_OPTOcam(3)*ROI_OPTOcam(4))); %frames per second drawn per camera
+%frames drawn per second and camera: from the pixels actually drawn (screen size, zoom, cameras shown), at most 25
+%megapixels per second in total, so that PIVlab stays responsive (Stop button); updated in the loop below
+max_rate = 10;
+pixel_budget = 25e6;
+display_rate = max_rate;
 for k=1:n_cameras
 	OPTOcam_vids{k}.FramesPerTrigger = 1;
 	setappdata(image_handles{k},'frames_shown',0); %counts real camera frames (skips the preview placeholder)
@@ -38,8 +42,7 @@ for k=1:n_cameras
 end
 set(frame_nr_display,'String','');
 caxis(PIVlab_axis,[0 2^12]); %#ok<CAXIS> seems to be a workaround to force preview to show full data range...
-%preview() sets the axes limits to its own image: show all cameras (stereo: side by side)
-set(PIVlab_axis,'XLim',[0.5 getappdata(image_handles{end},'x_offset')+ROI_OPTOcam(3)+0.5],'YLim',[0.5 ROI_OPTOcam(4)+0.5]);
+acquisition.apply_camera_view %preview() sets the axes limits to its own image: show the cameras chosen with the CAM button
 displayed_img_amount=0;
 delaycounter=0; %autofocus state
 delaycounter2=0;
@@ -53,6 +56,7 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
 		pause(0.01); %sleep and process GUI callbacks instead of spinning
 		continue
 	end
+	display_rate = acquisition.display_rate(image_handles,max_rate,pixel_budget); %zoom / CAM button change the pixels drawn
 	next_update = toc(t0) + 1/display_rate;
 	frames_shown = inf; %real camera frames of the slowest camera, read BEFORE the frames: they are then real frames if frames_shown >= 1
 	for k=1:n_cameras

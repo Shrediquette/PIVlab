@@ -389,6 +389,7 @@ gui.apply_pending_popup(handles.ac_fps) %frame rate of the last session / loaded
 acquisition.exposure_Callback
 straddling_figure=findobj('tag','straddling_figure');
 acquisition.initiate_straddling_graph
+acquisition.camera_view_button %CAM button: stereo may have been switched off
 
 function model = detect_OPTOcam_model
 %'2_80', '20_9' or 'none'. A list found just before (PIVlab_capture_OPTOcam_model_changed) is used once

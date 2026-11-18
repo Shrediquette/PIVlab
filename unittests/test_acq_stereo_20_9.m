@@ -150,6 +150,167 @@ src = vids{1}.Source;
 verifyEqual(testCase, src.DeviceSerialNumber, 'FF000002', 'camera 1 after the swap');
 end
 
+function test_camera_view_button(testCase)
+% CAM button in the Image Acquisition panel with two cameras: CAM 1+2 -> CAM 1 -> CAM 2 -> CAM 1+2; hidden with one camera
+folder = new_folder(testCase, 'view_button');
+h = start_capture_gui(folder, 2, 2);
+gui.switchui('multip24');
+verifyEqual(testCase, char(get(h.stereo_camera_toggle, 'Visible')), 'on');
+labels = cell(1, 4);
+labels{1} = get(h.stereo_camera_toggle, 'String');
+for i = 2:4
+    stereo.camera_toggle_Callback;
+    labels{i} = get(h.stereo_camera_toggle, 'String');
+end
+verifyEqual(testCase, labels, {'CAM 1+2', 'CAM 1', 'CAM 2', 'CAM 1+2'});
+set(h.ac_stereo, 'Value', 0);
+acquisition.stereo_Callback;
+verifyEqual(testCase, char(get(h.stereo_camera_toggle, 'Visible')), 'off', 'one camera: no CAM button');
+end
+
+function test_camera_view_live(testCase)
+% live image with CAM 2 shown: only camera 2 in view and drawn, snapshot only of camera 2; switching to CAM 1+2
+% while the live image runs shows both; zoom reset goes back to the view
+folder = new_folder(testCase, 'view_live');
+start_capture_gui(folder, 2, 2);
+gui.switchui('multip24');
+gui.put('capture_camera_view', 2);
+acquisition.camera_view_button;
+run_with_check(@check_view, 2);
+acquisition.calibcapture_Callback;
+r = getappdata(0, 'stereo_capture_test');
+verifyEqual(testCase, r.xlim_cam2, [330.5 650.5], 'CAM 2: x range of camera 2 (offset 320 + gap 10)');
+verifyEqual(testCase, r.hidden, [true false], 'camera 1 hidden');
+verifyEqual(testCase, r.label_visible, [false true], 'label CAMERA 1 hidden, CAMERA 2 shown');
+verifyEqual(testCase, r.xlim_both, [0.5 650.5], 'CAM 1+2: both cameras');
+verifyTrue(testCase, isfile(fullfile(folder, 'cam2', 'PIVlab_snapshot (0).tif')), 'snapshot camera 2');
+verifyFalse(testCase, isfile(fullfile(folder, 'cam1', 'PIVlab_snapshot (0).tif')), 'no snapshot of camera 1');
+verifyTrue(testCase, isfile(fullfile(folder, 'cam1', 'PIVlab_snapshot (1).tif')) && isfile(fullfile(folder, 'cam2', 'PIVlab_snapshot (1).tif')), ...
+    'pair: number 1 (0 is used by camera 2 alone)');
+gui.put('capture_camera_view', 1);
+gui.zoom_reset_zoom;
+verifyEqual(testCase, get(gui.retr('pivlab_axis'), 'XLim'), [0.5 320.5], 'zoom reset with CAM 1: camera 1');
+end
+
+function check_view(~, ~)
+ax = gui.retr('pivlab_axis');
+r.xlim_cam2 = get(ax, 'XLim');
+imgs = findobj(ax, 'Type', 'image');
+r.hidden = [false false];
+for i = 1:numel(imgs)
+    r.hidden(getappdata(imgs(i), 'camera')) = isequal(getappdata(imgs(i), 'hidden'), true);
+end
+labels = findobj(ax, 'Tag', 'capture_camera_label');
+r.label_visible = [false false];
+for i = 1:numel(labels)
+    r.label_visible(getappdata(labels(i), 'camera')) = strcmp(char(labels(i).Visible), 'on');
+end
+acquisition.camera_snapshot_Callback;
+stereo.camera_toggle_Callback; % CAM 2 -> CAM 1+2
+r.xlim_both = get(ax, 'XLim');
+acquisition.camera_snapshot_Callback; % both cameras: a number that is free in both folders
+setappdata(0, 'stereo_capture_test', r);
+gui.put('cancel_capture', 1); % Stop
+end
+
+function test_roi_camera_2(testCase)
+% ROI selection with CAM 2 shown: the ROI is drawn on the image of camera 2 (only this image in the image area)
+folder = new_folder(testCase, 'view_roi');
+start_capture_gui(folder, 2, 2);
+gui.switchui('multip24');
+gui.put('capture_camera_view', 2);
+gui.put('doing_roi', 0);
+setappdata(0, 'stereo_capture_test', []);
+t = timer('ObjectVisibility', 'off', 'ExecutionMode', 'fixedSpacing', 'Period', 0.5, 'TasksToExecute', 240, 'TimerFcn', @check_roi_image, 'StopFcn', @delete_timer);
+start(t); % checks until the ROI selection waits for the double click (at most 2 min)
+acquisition.calibROI_Callback;
+if isvalid(t)
+    stop(t);
+end
+r = getappdata(0, 'stereo_capture_test');
+verifyEqual(testCase, r.n_images, 1, 'one image');
+verifyEqual(testCase, r.camera, 2, 'image of camera 2');
+verifyEqual(testCase, r.x_data, [1 4512], 'full sensor at x = 1');
+end
+
+function check_roi_image(t, ~)
+if ~isequal(gui.retr('doing_roi'), 1) || isempty(findobj(gui.retr('pivlab_axis'), 'tag', 'new_ROImethod'))
+    return % the ROI selection does not wait for the double click yet
+end
+stop(t);
+imgs = findobj(gui.retr('pivlab_axis'), 'Type', 'image');
+r.n_images = numel(imgs);
+r.camera = getappdata(imgs(1), 'camera');
+r.x_data = imgs(1).XData;
+setappdata(0, 'stereo_capture_test', r);
+uiresume; % = double click on the ROI
+end
+
+function test_charuco_detection_per_view(testCase)
+% live ChArUco detection with a simulated board (with QR code) in both cameras: CAM 2 shown -> the full detection
+% for camera 2 (QR code read, board parameters filled in, labels in camera 2); CAM 1+2 -> markers + QR per camera
+folder = new_folder(testCase, 'view_charuco');
+board = fullfile(folder, 'board.png');
+sz = [1000 1000];
+dims = [9 12];
+cam = simulate.camera(ImageSize=sz, FocalLength=0.8*sz(2), Position=[110 70 -330], Target=[110 70 0]);
+imwrite(simulate.charuco_image(cam, PatternDims=dims, CheckerSize=20, MarkerSize=14, Blur=0.7, Decorated=true), board); % with QR code
+h = start_capture_gui(folder, 2, 2);
+reg = getappdata(0, 'mock_imaq');
+reg.images = {board, board};
+setappdata(0, 'mock_imaq', reg);
+gui.put('ac_ROI_general', [1 1 sz(2) sz(1)]);
+set(h.calib_rows, 'String', '3'); % changed by the QR code
+gui.switchui('multip24');
+gui.put('capture_camera_view', 2);
+set(h.calib_dolivedetect, 'Value', 1);
+setappdata(0, 'stereo_capture_test', struct('phase', 1));
+t = timer('ObjectVisibility', 'off', 'ExecutionMode', 'fixedSpacing', 'Period', 0.5, 'TasksToExecute', 240, 'TimerFcn', @check_charuco, 'StopFcn', @delete_timer);
+start(t);
+acquisition.calibcapture_Callback;
+if isvalid(t)
+    stop(t);
+end
+r = getappdata(0, 'stereo_capture_test');
+verifyEqual(testCase, r.phase, 3, 'both views checked');
+verifyGreaterThan(testCase, r.cam2_qr_x, sz(2), 'CAM 2: QR label in camera 2 (right of camera 1)');
+verifyEqual(testCase, r.rows, dims(1), 'board rows from the QR code');
+verifyEqual(testCase, r.stereo_labels, [true true], 'CAM 1+2: markers of both cameras');
+verifyTrue(testCase, r.stereo_qr, 'CAM 1+2: QR code found');
+end
+
+function check_charuco(t, ~)
+% phase 1: CAM 2, wait for the QR label of the full detection; phase 2: CAM 1+2, wait for the labels of both cameras
+r = getappdata(0, 'stereo_capture_test');
+ax = gui.retr('pivlab_axis');
+h = gui.gethand;
+if t.TasksExecuted >= t.TasksToExecute - 1
+    gui.put('cancel_capture', 1); % timeout: Stop, the verifications fail
+    return
+end
+if r.phase == 1
+    qr = findobj(ax, 'Type', 'text', 'Tag', 'charucolabel', 'String', 'QR');
+    if isempty(qr)
+        return
+    end
+    r.cam2_qr_x = qr(1).Position(1);
+    r.rows = str2double(h.calib_rows.String);
+    r.phase = 2;
+    stereo.camera_toggle_Callback; % CAM 2 -> CAM 1+2
+elseif r.phase == 2
+    r.stereo_labels = [~isempty(findobj(ax, 'Tag', 'charucolabel_cam1')) ~isempty(findobj(ax, 'Tag', 'charucolabel_cam2'))];
+    r.stereo_qr = ~isempty(findobj(ax, 'Type', 'text', 'String', 'QR'));
+    if ~all(r.stereo_labels) || ~r.stereo_qr
+        setappdata(0, 'stereo_capture_test', r);
+        return
+    end
+    r.phase = 3;
+    stop(t);
+    gui.put('cancel_capture', 1); % Stop
+end
+setappdata(0, 'stereo_capture_test', r);
+end
+
 %% helpers
 function folder = new_folder(testCase, name)
 folder = fullfile(testCase.TestData.Dir, name);
@@ -181,6 +342,7 @@ set(h.ac_fps, 'Value', find(strcmp(h.ac_fps.String, '17')));
 gui.put('ac_ROI_general', [1 1 320 240]);
 set(h.ac_stereo, 'Value', double(n_cameras == 2));
 gui.set_camera_setting('OPTOcam_20_9_stereo_serials', []);
+gui.put('capture_camera_view', 0); % both cameras shown
 end
 
 function run_with_check(check_function, delay)

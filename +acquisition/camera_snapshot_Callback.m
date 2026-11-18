@@ -49,7 +49,15 @@ delete(findobj('tag','captureinfo'));
 function stereo_snapshot(projectpath,n_cameras)
 %The latest full frame of each camera (acquisition.show_frame) as "PIVlab_snapshot (n).tif" in cam1 and cam2,
 %with the same number n for both cameras. These images can be used as board images for the stereo calibration.
+%Only the cameras shown are saved (CAM button, acquisition.camera_view): with one camera shown, e.g. board images
+%for the lens calibration of this camera.
 folders = acquisition.capture_folders(projectpath,n_cameras);
+view = acquisition.camera_view();
+if view == 0
+	shown = 1:n_cameras;
+else
+	shown = view;
+end
 frames = cell(1,n_cameras);
 current_axis=gui.retr('pivlab_axis');
 h1 = findall(current_axis,'Type','image');
@@ -62,11 +70,12 @@ for i=1:numel(h1)
 		end
 	end
 end
-for k=1:n_cameras
+for k=shown
 	if isempty(frames{k})
 		return %no image of this camera yet
 	end
 end
+%the number is free in the folders of BOTH cameras: the same number in cam1 and cam2 always means the same moment
 numbi = 0;
 free = false;
 while ~free
@@ -84,7 +93,7 @@ xl = get(current_axis,'XLim');
 yl = get(current_axis,'YLim');
 snaptxt=text(current_axis,mean(xl),mean(yl),'SNAPSHOT','BackgroundColor','k','Color','y','tag','captureinfo','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',24,'FontWeight','bold');
 drawnow;
-for k=1:n_cameras
+for k=shown
 	if ~exist(folders{k},'dir')
 		mkdir(folders{k});
 	end

@@ -170,14 +170,13 @@ end
 
 %% Stereo-PIV: camera switch only in stereo mode
 stereo_mode = isequal(gui.retr('stereomode'), 1);
-show(handles.stereo_camera_toggle, stereo_mode);
+acquisition.camera_view_button; % stereo acquisition: cameras shown in the Image Acquisition panel
 if stereo_mode
     active = gui.retr('stereo_active_camera');
     if isempty(active)
         active = 1;
     end
-    [cam_color, cam_text_color] = stereo.camera_colors(active);
-    set(handles.stereo_camera_toggle, 'String', ['CAM ' int2str(active)], 'BackgroundColor', cam_color, 'ForegroundColor', cam_text_color);
+    cam_color = stereo.camera_colors(active);
     set([handles.calib_undist_cam_label handles.calib_rect_cam_label], 'String', ['Current camera: CAMERA ' int2str(active)], 'ForegroundColor', cam_color);
     set(handles.stereo_rect_note, 'ForegroundColor', cam_color);
 end

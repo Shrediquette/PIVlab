@@ -18,10 +18,11 @@ image_handle_OPTOcam=image_handles{1};
 OutputError=0;
 OPTOcam_frames_to_capture = nr_of_images*2;
 set(frame_nr_display,'backgroundcolor','k');
-display_rate = getappdata(image_handle_OPTOcam,'max_display_rate');
-if isempty(display_rate)
-	display_rate = 10;
-end
+%Frames drawn per second and camera, from the pixels actually drawn (zoom, CAM button): a small budget of
+%5 megapixels per second in total, so that MATLAB is not busy with the display while the cameras record
+%(a busy MATLAB loses frames). Full sensor: about 3 frames/s per camera with both shown, 2 with one.
+pixel_budget = 5e6;
+max_rate = 10;
 delaycounter=0; %autofocus state
 delaycounter2=0;
 delay_time_1=tic;
@@ -35,6 +36,7 @@ while frames_acquired(OPTOcam_vid) < (OPTOcam_frames_to_capture) &&  getappdata(
 		pause(0.01); %sleep and process GUI callbacks instead of spinning
 		continue
 	end
+	display_rate = acquisition.display_rate(image_handles,max_rate,pixel_budget); %also read by the preview callback
 	next_update = toc(t0) + 1/display_rate;
 	if ~isinf(OPTOcam_frames_to_capture)
 		acquired = frames_acquired(OPTOcam_vid);

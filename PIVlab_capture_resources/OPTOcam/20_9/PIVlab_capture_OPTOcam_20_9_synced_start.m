@@ -64,13 +64,12 @@ end
 %see PIVlab_capture_OPTOcam_20_9_preview_update.m
 for k=1:n_cameras
 	setappdata(image_handles{k},'OPTOcam_20_9_ab_state',[]);
-	setappdata(image_handles{k},'max_display_rate',min(10, 40e6/(n_cameras*ROI_OPTOcam(3)*ROI_OPTOcam(4)))); %frames per second drawn per camera (CPU load)
+	setappdata(image_handles{k},'max_display_rate',1); %until the first update of synced_capture (acquisition.display_rate)
 	setappdata(image_handles{k},'UpdatePreviewWindowFcn',@PIVlab_capture_OPTOcam_20_9_preview_update);
 	preview(OPTOcam_vid{k},image_handles{k});
 end
 caxis(PIVlab_axis,[0 2^bitmode]); %#ok<CAXIS> workaround to force preview to show full data range
-%preview() sets the axes limits to its own image: show all cameras (stereo: side by side)
-set(PIVlab_axis,'XLim',[0.5 getappdata(image_handles{end},'x_offset')+ROI_OPTOcam(3)+0.5],'YLim',[0.5 ROI_OPTOcam(4)+0.5]);
+acquisition.apply_camera_view %preview() sets the axes limits to its own image: show the cameras chosen with the CAM button
 pause(0.1);
 if ~isinf(nr_of_images)
 	for k=1:n_cameras
