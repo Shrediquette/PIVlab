@@ -29,12 +29,13 @@ end
 if n > 1
     for k = 1:n
         [cam_color, text_color] = stereo.camera_colors(k);
-        text(PIVlab_axis, getappdata(himg{k}, 'x_offset') + 1, h, [' CAMERA ' int2str(k) ' '], 'VerticalAlignment', 'bottom', ...
+        label = text(PIVlab_axis, getappdata(himg{k}, 'x_offset') + 1, h, [' CAMERA ' int2str(k) ' '], 'VerticalAlignment', 'bottom', ...
             'HorizontalAlignment', 'left', 'FontWeight', 'bold', 'FontSize', 12, 'BackgroundColor', cam_color, ...
             'Color', text_color, 'Margin', 2, 'Tag', 'capture_camera_label', 'HitTest', 'off', 'PickableParts', 'none');
+        setappdata(label, 'camera', k); % hidden with its camera (acquisition.apply_camera_view)
     end
 end
-frame_nr_display = text(PIVlab_axis, 100, 100, 'Initializing...', 'Color', [1 1 0]);
+frame_nr_display = text(PIVlab_axis, 100, 100, 'Initializing...', 'Color', [1 1 0], 'Tag', 'capture_status_text');
 colormap(ancestor(PIVlab_axis, 'figure'), 'default') % reset colormap steps
 new_map = colormap(ancestor(PIVlab_axis, 'figure'), 'gray');
 new_map(1:3, :) = [0 0.2 0; 0 0.2 0; 0 0.2 0];
@@ -45,4 +46,5 @@ set(PIVlab_axis, 'ytick', [])
 set(PIVlab_axis, 'xtick', [])
 caxis(PIVlab_axis, [0 climit]); %#ok<CAXIS> as the other capture code (clim needs R2022a)
 colorbar(PIVlab_axis)
+acquisition.apply_camera_view % stereo: both cameras or only one (CAM button of the Tools panel)
 end

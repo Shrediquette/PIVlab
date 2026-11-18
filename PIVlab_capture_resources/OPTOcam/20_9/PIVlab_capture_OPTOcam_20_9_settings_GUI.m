@@ -19,7 +19,11 @@ if isempty(fh)
         mainpos=[0    2.8571  240.0000   50.9524];
     end
 
-	OPTOcam_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','OPTOcam 20/9 settings','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4+4 35 11+1.5+4+2],'tag','OPTOcam_20_9_control_window','visible','on','resize','off');
+	stereo_rows = 0; %stereo acquisition: rows for camera 1 / 2 and the swap button
+	if acquisition.capture_cameras > 1
+		stereo_rows = 5.5;
+	end
+	OPTOcam_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','OPTOcam 20/9 settings','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4+4-stereo_rows 35 11+1.5+4+2+stereo_rows],'tag','OPTOcam_20_9_control_window','visible','on','resize','off');
 	set (OPTOcam_control_window,'Units','Characters');
 
 
@@ -31,7 +35,7 @@ if isempty(fh)
 
 	margin=1.5;
 
-	panelheight=12+4+2;
+	panelheight=12+4+2+stereo_rows;
 	handles.mainpanel = uipanel(OPTOcam_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight parentitem(3)-2 panelheight],'title','OPTOcam 20/9 Settings','fontweight','bold');
 
 
@@ -76,6 +80,16 @@ if isempty(fh)
 
 	item=[0 item(2)+item(4) parentitem(3) 6];
 	handles.firmware_txt = uicontrol(handles.mainpanel,'Style','text','String',['Firmware: ' DeviceFirmwareVersion],'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'FontSize',7);
+
+	if stereo_rows > 0 %stereo acquisition: which camera is camera 1 (serial numbers)
+		item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
+		handles.stereo_cam1_txt = uicontrol(handles.mainpanel,'Style','text','String','','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','stereo_cam1_txt');
+		item=[0 item(2)+item(4) parentitem(3) 1.5];
+		handles.stereo_cam2_txt = uicontrol(handles.mainpanel,'Style','text','String','','Units','characters', 'Fontunits','points','HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','stereo_cam2_txt');
+		item=[0 item(2)+item(4) parentitem(3) 2];
+		handles.swap_btn = uicontrol(handles.mainpanel,'Style','pushbutton','String','Swap cameras','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@Swap_cameras,'tag','swap_btn','TooltipString','Exchange camera 1 and camera 2 of the stereo setup');
+		show_stereo_serials(handles);
+	end
 
 	item=[parentitem(3)/2 item(2)+item(4)+margin/2 parentitem(3)/2 2];
 	handles.apply_btn = uicontrol(handles.mainpanel,'Style','pushbutton','String','Apply','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@Apply_settings,'tag','apply_btn');
@@ -132,6 +146,43 @@ end
 
 close (fh)
 
+
+function show_stereo_serials(handles)
+serials = gui.camera_setting('OPTOcam_20_9_stereo_serials');
+if iscell(serials) && numel(serials) == 2
+	set(handles.stereo_cam1_txt,'String',['Camera 1: serial nr. ' serials{1}]);
+	set(handles.stereo_cam2_txt,'String',['Camera 2: serial nr. ' serials{2}]);
+else
+	set(handles.stereo_cam1_txt,'String','Camera 1: lower serial nr.');
+	set(handles.stereo_cam2_txt,'String','Camera 2: (set at the first start)');
+end
+
+function Swap_cameras(~,~,~)
+%camera 1 <-> camera 2 (stereo acquisition). The open cameras are released, so that the next start uses the new order.
+serials = gui.camera_setting('OPTOcam_20_9_stereo_serials');
+if ~(iscell(serials) && numel(serials) == 2)
+	gui.custom_msgbox('error',getappdata(0,'hgui'),'Swap cameras','The cameras are assigned at the first start of the live image or the PIV capture. Please start one of them first.','modal');
+	return
+end
+if isequal(retr('capturing'),1)
+	gui.custom_msgbox('error',getappdata(0,'hgui'),'Swap cameras','Please stop the cameras first.','modal');
+	return
+end
+gui.set_camera_setting('OPTOcam_20_9_stereo_serials',serials([2 1]));
+tags = {'OPTOcam_20_9_cam1','OPTOcam_20_9_cam2'};
+for t = 1:2
+	vids = imaqfind('Tag',tags{t}); %a cell array with the real toolbox
+	if ~iscell(vids)
+		vids = num2cell(vids);
+	end
+	for k = 1:numel(vids)
+		try
+			delete(vids{k});
+		catch
+		end
+	end
+end
+show_stereo_serials(gethand);
 
 function put(name, what)
 hgui=getappdata(0,'hgui');

@@ -9,6 +9,13 @@ set(handles.zoomon,'Value',0);
 set(handles.panon,'Value',0);
 zoom(current_ax,'off')
 pan(current_ax,'off')
+all_images=findobj(current_ax,'Type','Image');
+for i=1:numel(all_images)
+	if isappdata(all_images(i),'camera') %live image / PIV capture: the cameras shown (stereo: both or the one chosen with the CAM button)
+		acquisition.apply_camera_view
+		return
+	end
+end
 expected_image_size=gui.retr('expected_image_size');
 pcopanda_dbl_image=gui.retr('pcopanda_dbl_image');
 if isempty(pcopanda_dbl_image)

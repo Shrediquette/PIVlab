@@ -462,6 +462,9 @@ for multipass = 1:passes
             if multipass == passes
                 result_conv_full = result_conv; % save before spatial restriction for 2nd peak search
             end
+            if do_correlation_matrices
+                result_conv_shown = result_conv; % correlation matrices output: the full matrix, without the restriction
+            end
             if limit_peak_search_area == 1
                 if floor(size(result_conv,1)/3) >= 3 %if the interrogation area becomes too small, then further limiting of the search area doesnt make sense, because the peak may become as big as the search area
                     if mask_auto == 1 %more restricted when "disable autocorrelation" is enabled
@@ -639,7 +642,13 @@ for multipass = 1:passes
         end
     end
     if do_correlation_matrices
-        correlation_matrices{multipass}=result_conv;
+        if multipass > 1 % the matrix before the restriction of the peak search area (the peak was searched in its centre)
+            result_conv_shown = rescale_array(result_conv_shown);
+            result_conv_shown(:, :, mask(masked_ys, masked_xs)) = 0;
+            correlation_matrices{multipass}=result_conv_shown;
+        else
+            correlation_matrices{multipass}=result_conv;
+        end
     else
         correlation_matrices=[];
     end

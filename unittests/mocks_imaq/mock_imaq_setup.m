@@ -8,10 +8,11 @@ function mock_imaq_setup(n_cameras, trigger_fps)
 %   device k delivers incompletely (rows 10 to the end from the frame 3 frames earlier, like a slow USB link).
 imaqreset();
 serials = {'40000002', '40000001', '40000003'};
-devices = struct('name', {}, 'serial', {});
+devices = struct('name', {}, 'serial', {}, 'user_id', {});
 for k = 1:n_cameras
-    devices(k).name = ['Basler a2A1920-160umBAS (' serials{k} ')'];
+    devices(k).name = ['Camera (' serials{k} ')']; % real 2/80: model code (serial number), without the user ID
     devices(k).serial = serials{k};
+    devices(k).user_id = 'OPTOcam 2/80'; % set before shipping; identifies the 2/80
 end
 reg.devices = devices;
 reg.trigger_fps = trigger_fps;

@@ -1,5 +1,8 @@
 function calibROI_Callback (~,~,~)
 handles=gui.gethand;
+if PIVlab_capture_OPTOcam_missing %"OPTOcam" selected, but none was found
+	return
+end
 gui.put('capturing',0);
 camera_type=gui.retr('camera_type');
 binning=gui.retr('binning');
@@ -55,10 +58,36 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
         elseif strcmp(camera_type,'basler')
             [errorcode, caliimg]=PIVlab_capture_basler_calibration_image(1,expos,[1,1,max_cam_res]);
         elseif strcmp(camera_type,'OPTOcam')
-            [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(1,expos,[1,1,max_cam_res]);
+            try
+                if acquisition.camera_view() == 2 %stereo, CAM 2 shown: the ROI is drawn on the image of camera 2
+                    [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(1,expos,[1,1,max_cam_res],2);
+                    caliimg=only_camera(caliimg,2,errorcode);
+                else
+                    [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(1,expos,[1,1,max_cam_res]);
+                end
+            catch ME
+                PIVlab_capture_OPTOcam_capture_error(ME,'2_80'); %returns only if an OPTOcam 20/9 is connected instead (GUI switched to it)
+                errorcode=1; caliimg=[];
+            end
+            if errorcode ~= 0
+                capture_ok=0; %camera not found or swapped: no ROI selection on an empty image
+            end
         elseif strcmp(camera_type,'OPTOcam_20_9')
             % returns after the first REAL camera frame (the preview placeholder image is skipped)
-            [errorcode, caliimg]=PIVlab_capture_OPTOcam_20_9_calibration_image(1,expos,[1,1,max_cam_res/binning]);
+            try
+                if acquisition.camera_view() == 2 %stereo, CAM 2 shown: the ROI is drawn on the image of camera 2
+                    [errorcode, caliimg]=PIVlab_capture_OPTOcam_20_9_calibration_image(1,expos,[1,1,max_cam_res/binning],2);
+                    caliimg=only_camera(caliimg,2,errorcode);
+                else
+                    [errorcode, caliimg]=PIVlab_capture_OPTOcam_20_9_calibration_image(1,expos,[1,1,max_cam_res/binning]);
+                end
+            catch ME
+                PIVlab_capture_OPTOcam_capture_error(ME,'20_9'); %returns only if an OPTOcam 2/80 is connected instead (GUI switched to it)
+                errorcode=1; caliimg=[];
+            end
+            if errorcode ~= 0
+                capture_ok=0; %camera not found or swapped: no ROI selection on an empty image
+            end
         elseif strcmp(camera_type,'OPTRONIS')
             expos=round(str2num(get(handles.ac_expo,'String'))*1000);
             camera_sub_type=gui.retr('camera_sub_type');
@@ -89,6 +118,11 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
             ac_ROI_general=gui.get_preference('ac_ROI_general',[]); %camera ROI used last time
 
             bla=findobj(target_axis,'type','image');
+            full_frame=getappdata(bla,'frame'); %acquisition.show_frame draws only the visible part at screen resolution: the ROI needs the full frame
+            if ~isempty(full_frame)
+                set(bla,'CData',full_frame,'XData',[1 size(full_frame,2)],'YData',[1 size(full_frame,1)]);
+                rmappdata(bla,'frame'); %the contrast-stretched image below stays (acquisition.redraw_camera_images skips images without a frame)
+            end
             current_image_size=size(bla.CData);
             if isempty(ac_ROI_general)
                 if strcmp(camera_type,'OPTOcam_20_9')
@@ -235,3 +269,24 @@ if strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') || strcmp
         end
     end
 end
+function caliimg = only_camera(caliimg,k,errorcode)
+%Stereo live image of both cameras -> only camera k is kept in the image area (ROI selection on its image)
+if errorcode ~= 0 || ~iscell(caliimg)
+	return
+end
+caliimg = caliimg{k};
+target_axis = gui.retr('pivlab_axis');
+imgs = findobj(target_axis,'type','image');
+for i = 1:numel(imgs)
+	if isequal(getappdata(imgs(i),'camera'),k)
+		w = size(imgs(i).CData,2);
+		h = size(imgs(i).CData,1);
+		set(imgs(i),'XData',[1 w],'YData',[1 h]);
+		setappdata(imgs(i),'x_offset',0);
+		setappdata(imgs(i),'hidden',false);
+	else
+		delete(imgs(i));
+	end
+end
+delete(findobj(target_axis,'Tag','capture_camera_label'));
+set(target_axis,'XLim',[0.5 w+0.5],'YLim',[0.5 h+0.5]);

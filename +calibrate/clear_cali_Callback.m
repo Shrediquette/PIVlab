@@ -3,8 +3,10 @@ handles=gui.gethand;
 gui.put('pointscali',[]);
 gui.put('points_offsetx',[]);
 gui.put('points_offsety',[]);
-gui.put('calu',1);
-gui.put('calv',1);
+default = gui.default_settings();
+[calu, calv] = calibrate.uncalibrated_factors(default.calibration.x_axis_direction, default.calibration.y_axis_direction);
+gui.put('calu',calu);
+gui.put('calv',calv);
 gui.put('calxy',1);
 gui.put('offset_x_true',0);
 gui.put('offset_y_true',0);
@@ -19,8 +21,8 @@ set(handles.calidisp, 'string', 'inactive', 'backgroundcolor', bg_col);
 delete(findobj('tag', 'caliline'));
 set(handles.realdist, 'String','1');
 set(handles.time_inp, 'String','1');
-set(handles.x_axis_direction,'value',1);
-set(handles.y_axis_direction,'value',1);
+set(handles.x_axis_direction,'value',default.calibration.x_axis_direction);
+set(handles.y_axis_direction,'value',default.calibration.y_axis_direction);
 set(findobj(handles.uipanel_offsets,'Type','uicontrol'),'Enable','off')
 calibrate.pixeldist_changed_Callback
 if size(filepath,1) >1 || gui.retr('video_selection_done') == 1

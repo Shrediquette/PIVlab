@@ -1,9 +1,17 @@
 function PIVlab_capture_charuco_detector(img,figure_handle,~,x_offset,camera)
 %x_offset, camera (optional): stereo acquisition, image of camera 1 or 2 side by side in the PIVlab axis
-%(camera 2 starts at x = x_offset+1). See stereo_detection below.
-if nargin >= 4
+%(camera 2 starts at x = x_offset+1). With both cameras shown: markers only (stereo_detection below). With one
+%camera shown (CAM button, acquisition.camera_view): the full detection for this camera (QR code, pose, automatic
+%snapshots of this camera), like with a single camera.
+%Speed: the markers are detected in a reduced image (detection_step); the QR code is read in the full image.
+if nargin < 4
+	x_offset=0;
+	camera=0;
+elseif acquisition.camera_view() ~= camera
 	stereo_detection(img,figure_handle,x_offset,camera);
 	return
+else
+	switch_camera_state(camera); %positions of the automatic snapshots etc. per camera
 end
 handles=gui.gethand;
 calibration_demo_mode = gui.retr('calibration_demo_mode');
@@ -11,13 +19,13 @@ if isempty(calibration_demo_mode)
     calibration_demo_mode=0;
 end
 img_original=img;
-if numel(img) > 20000000 | calibration_demo_mode  % more than 20 megapixels image --> reduce resolution for charuco detection
-	large_img=1;
-else
-	large_img=0;
+large_img = numel(img) > 20000000 || calibration_demo_mode; %as before: thresholds below are for the reduced image
+step = detection_step(img_original, camera);
+if calibration_demo_mode
+	step = max(step,2);
 end
-if large_img
-	img=img(1:2:end,1:2:end,1);
+if step > 1
+	img=img(1:step:end,1:step:end,1);
 end
 
 img=mat2gray(img);
@@ -30,11 +38,10 @@ else
    
 end
  [ids,locs] = readArucoMarker(img,'DICT_4X4_1000','WindowSizeRange',[3 23],'MarkerSizeRange',[0.005 1],'ResolutionPerBit',16,'SquarenessTolerance',0.03); %schnellere detektierung wenn bekannt. Am besten: Erstmal so gucken welche Familie dominant. Dann zweiter durchgang mit nur dieser familie
-if large_img
-	locs=locs*2;
-end
+locs=(locs-1)*step+1; %pixel coordinates of the full image
+remember_marker_size(locs, camera); %next detection_step
 ids=ids';
-delete(findobj('tag','charucolabel'));
+delete(findobj(figure_handle,'-regexp','tag','^charucolabel')); %in the image axes only (searching all windows is slow); also labels of both cameras (CAM 1+2) drawn just before the CAM button was pressed
 draw_qr_status(figure_handle,calibration_demo_mode);
 
 if ~isempty(locs) && size(locs,3) == size(ids,1)
@@ -54,11 +61,11 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 	newBox = [min_x max_x min_y max_y];
 	% the QR code is in the centre of the board (preproc.cam_board_layout); first in the camera image
 	% (the equalised image destroys small QR codes), then in the equalised image
-	[detectionOK, qr_markerFamily, qr_originCheckerColor,qr_patternDims,qr_checkerSize,qr_markerSize,loc] = preproc.cam_get_charuco_info_from_QRcode (uint8(mat2gray(img_original(:,:,1))*255));
+	[detectionOK, qr_markerFamily, qr_originCheckerColor,qr_patternDims,qr_checkerSize,qr_markerSize,loc] = preproc.cam_get_charuco_info_from_QRcode (stretched_uint8(img_original));
 	if ~detectionOK
 		[detectionOK, qr_markerFamily, qr_originCheckerColor,qr_patternDims,qr_checkerSize,qr_markerSize,loc] = preproc.cam_get_charuco_info_from_QRcode (uint8(mat2gray(img)*255));
-		if large_img && ~isempty(loc)
-			loc = (loc - 0.5) * 2 + 0.5; % half resolution image: back to full resolution
+		if step > 1 && ~isempty(loc)
+			loc = (loc - 1) * step + 1; % reduced image: back to full resolution
 		end
 	end
 	if detectionOK && ~isempty(qr_patternDims(1)) && ~isempty(qr_patternDims(2)) % if QR code detected: fill GUI with the detected values
@@ -88,7 +95,7 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 		qr_params.markerSize=qr_markerSize;
 		qr_params.time=datetime('now');
 		gui.put('charuco_qr_params',qr_params);
-		delete(findobj('tag','charucolabel')); %only the status text exists at this point, redraw it with the new values
+		delete(findobj(figure_handle,'tag','charucolabel')); %only the status text exists at this point, redraw it with the new values
 		draw_qr_status(figure_handle,calibration_demo_mode);
 	else
 		patternDims = [str2double(handles.calib_rows.String),str2double(handles.calib_columns.String)];
@@ -126,8 +133,8 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
         dy_max = abs(oldBoxes(:,4) - newBox(4));
 
 
-        threshold_x = size(img,2)/7;
-        threshold_y = size(img,1)/7;
+        threshold_x = size(img_original,2)/7/(1+large_img); %as before (half resolution for large images)
+        threshold_y = size(img_original,1)/7/(1+large_img);
 
         isNew = all( ...
             dx_min > threshold_x | ...
@@ -151,7 +158,7 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 					if ~calibration_demo_mode
 						acquisition.camera_snapshot_Callback
 					else
-						demotxt=text(size(img_original,2)/2,size(img_original,1)/6*5,'SNAPSHOT!','tag','demolabel','Color','y','Backgroundcolor','k','FontSize',70,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','top','Parent',figure_handle);
+						demotxt=text(x_offset+size(img_original,2)/2,size(img_original,1)/6*5,'SNAPSHOT!','tag','demolabel','Color','y','Backgroundcolor','k','FontSize',70,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','top','Parent',figure_handle);
 						pause(0.1)
 						demotxt.Color='r';
 						pause(0.1)
@@ -177,13 +184,16 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 
 		%% estimate alpha and beta
 		%multiplication with 255 is necessary, OMG...!
-		imagePoints1 = detectCharucoBoardPoints(img*255,patternDims,markerFamily,checkerSize,markerSize, 'OriginCheckerColor', originCheckerColor,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
-		imagePoints1 = preproc.cam_filter_charuco_corners(imagePoints1, patternDims); % corners of wrongly decoded markers
-		if large_img %corners were detected in the half resolution image, the camera calibration is for the full resolution
-			imagePoints1 = imagePoints1*2-1;
+		cameraParams = camera_params(camera); %the corners are only needed for the pose, which needs the lens calibration
+		imagePoints1 = [];
+		if ~isempty(cameraParams)
+			imagePoints1 = detectCharucoBoardPoints(img*255,patternDims,markerFamily,checkerSize,markerSize, 'OriginCheckerColor', originCheckerColor,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
+			imagePoints1 = preproc.cam_filter_charuco_corners(imagePoints1, patternDims); % corners of wrongly decoded markers
+			imagePoints1 = (imagePoints1-1)*step+1; %corners were detected in the reduced image, the camera calibration is for the full resolution
+		else
+			orientation_message='Perform camera calibration to display yaw / pitch / roll angle of camera';
 		end
 		if ~isempty(imagePoints1)
-			cameraParams = gui.retr('cameraParams');
 			if ~isempty(cameraParams)
 				detector = vision.calibration.monocular.CharucoBoardDetector();
 				worldPoints1 = generateWorldPoints(detector, 'PatternDims', patternDims, 'CheckerSize', checkerSize);
@@ -248,8 +258,8 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 		mean_loc_x_old=gui.retr('mean_loc_x');
 		mean_loc_y_old=gui.retr('mean_loc_y');
 		if isempty(mean_loc_x_old)
-			mean_loc_x_old=size(img,2)/2;
-			mean_loc_y_old=size(img,1)/2;
+			mean_loc_x_old=size(img_original,2)/2;
+			mean_loc_y_old=size(img_original,1)/2;
 		end
 		lowpassed_mean_loc_x=mean_loc_x*0.1+mean_loc_x_old*0.9;
         lowpassed_mean_loc_y=mean_loc_y*0.1+mean_loc_y_old*0.9;
@@ -257,43 +267,50 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
         gui.put('mean_loc_y',lowpassed_mean_loc_y);
         hold(figure_handle,'on');
         if calibration_demo_mode
-    		scatter(locs_center_x,locs_center_y,1000,'green','tag','charucolabel','Parent',figure_handle,'LineWidth',5)
+    		scatter(x_offset+locs_center_x,locs_center_y,1000,'green','tag','charucolabel','Parent',figure_handle,'LineWidth',5)
         else
-            scatter(locs_center_x,locs_center_y,200,'green','tag','charucolabel','Parent',figure_handle,'LineWidth',2)
+            scatter(x_offset+locs_center_x,locs_center_y,200,'green','tag','charucolabel','Parent',figure_handle,'LineWidth',2)
         end
         hold(figure_handle,'off');
-        rectangle('Position',[min(locs_center_x), min(locs_center_y),max(locs_center_x) - min(locs_center_x), max(locs_center_y) - min(locs_center_y) ],'tag','charucolabel','EdgeColor','r','LineWidth',2,'Parent',figure_handle,'Curvature',0.15)
+        rectangle('Position',[x_offset+min(locs_center_x), min(locs_center_y),max(locs_center_x) - min(locs_center_x), max(locs_center_y) - min(locs_center_y) ],'tag','charucolabel','EdgeColor','r','LineWidth',2,'Parent',figure_handle,'Curvature',0.15)
 
-        text(lowpassed_mean_loc_x,lowpassed_mean_loc_y,orientation_message,'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',18,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','top','Parent',figure_handle)
-        text(lowpassed_mean_loc_x,lowpassed_mean_loc_y,['Markers: ' num2str(percentage_detected) ' %'  infotxt  infotxt2],'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','bottom','Parent',figure_handle)
+        text(x_offset+lowpassed_mean_loc_x,lowpassed_mean_loc_y,orientation_message,'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',18,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','top','Parent',figure_handle)
+        text(x_offset+lowpassed_mean_loc_x,lowpassed_mean_loc_y,['Markers: ' num2str(percentage_detected) ' %'  infotxt  infotxt2],'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','bottom','Parent',figure_handle)
         if calibration_demo_mode
-            text (figure_handle,50,50,'Demonstration of the new camera calibration feature with automatic image capture and pose estimation.','tag','charucolabel','Color','k','FontSize',16,'FontWeight','bold')
+            text (figure_handle,x_offset+50,50,'Demonstration of the new camera calibration feature with automatic image capture and pose estimation.','tag','charucolabel','Color','k','FontSize',16,'FontWeight','bold')
         end
         if detectionOK %QR code detected
-			rectangle('position',[min(loc(:,1))-20, min(loc(:,2))-20, max(loc(:,1)) - min(loc(:,1))+20 , max(loc(:,2)) - min(loc(:,2))+20],'tag','charucolabel','EdgeColor','b','LineWidth',6,'Parent',figure_handle,'Curvature',0.5)
-			text(mean(loc(:,1)),mean(loc(:,2)),'QR','tag','charucolabel','Color','w','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
+			rectangle('position',[x_offset+min(loc(:,1))-20, min(loc(:,2))-20, max(loc(:,1)) - min(loc(:,1))+20 , max(loc(:,2)) - min(loc(:,2))+20],'tag','charucolabel','EdgeColor','b','LineWidth',6,'Parent',figure_handle,'Curvature',0.5)
+			text(x_offset+mean(loc(:,1)),mean(loc(:,2)),'QR','tag','charucolabel','Color','w','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
 		end
 	end
 end
 
 function stereo_detection(img,figure_handle,x_offset,camera)
-%Stereo acquisition: the markers of the board in the light sheet that one of the two cameras sees, so that the
-%board can be placed where both cameras see it. No automatic snapshots and no camera pose: these belong to the
-%lens calibration of a single camera.
+%Stereo acquisition, both cameras shown: the markers of the board in the light sheet that one of the two cameras
+%sees, so that the board can be placed where both cameras see it, and the QR code (board parameters). No automatic
+%snapshots and no camera pose: with one camera shown (CAM button), the full detection runs for it.
 label_tag=sprintf('charucolabel_cam%d',camera);
-large_img = numel(img) > 20000000; %more than 20 megapixels: reduce the resolution for the detection
-if large_img
-	img=img(1:2:end,1:2:end,1);
+img_original=img;
+step = detection_step(img_original, camera);
+if step > 1
+	img=img(1:step:end,1:step:end,1);
 end
 img=histeq(mat2gray(img));
 [ids,locs] = readArucoMarker(img,'DICT_4X4_1000','WindowSizeRange',[3 23],'MarkerSizeRange',[0.005 1],'ResolutionPerBit',16,'SquarenessTolerance',0.03);
-if large_img
-	locs=locs*2;
+locs=(locs-1)*step+1; %pixel coordinates of the full image
+remember_marker_size(locs, camera);
+delete(findobj(figure_handle,'tag',label_tag));
+delete(findobj(figure_handle,'tag','charucolabel')); %QR status text (one for both cameras)
+draw_qr_status(figure_handle,0);
+[qr_ok,~,~,~,~,~,qr_loc] = stereo_qr(img_original); %full resolution: small QR codes
+if qr_ok
+	rectangle('position',[x_offset+min(qr_loc(:,1))-20, min(qr_loc(:,2))-20, max(qr_loc(:,1)) - min(qr_loc(:,1))+20 , max(qr_loc(:,2)) - min(qr_loc(:,2))+20],'tag',label_tag,'EdgeColor','b','LineWidth',3,'Parent',figure_handle,'Curvature',0.5)
+	text(x_offset+mean(qr_loc(:,1)),mean(qr_loc(:,2)),'QR','tag',label_tag,'Color','w','FontSize',14,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
 end
-delete(findobj('tag',label_tag));
 ids=ids(:);
 if isempty(locs) || size(locs,3) ~= numel(ids)
-	text(x_offset+size(img,2)/2*(1+large_img),size(img,1)/2*(1+large_img),'Markers: 0 %','tag',label_tag,'Color','r','Backgroundcolor','k','FontSize',14,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle);
+	text(x_offset+size(img_original,2)/2,size(img_original,1)/2,'Markers: 0 %','tag',label_tag,'Color','r','Backgroundcolor','k','FontSize',14,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle);
 	return
 end
 id_thresh = mean(ids,'omitnan')+2*std(ids,'omitnan'); %wrongly decoded markers have far too high ids
@@ -326,3 +343,120 @@ else
 	bgcolor=[0.85 0.4 0];
 end
 text(figure_handle,0.01,0.99,statustxt,'Units','normalized','tag','charucolabel','Color','w','Backgroundcolor',bgcolor,'FontSize',fontsize,'FontWeight','bold','HorizontalAlignment','left','VerticalAlignment','top','Interpreter','none');
+
+function out = stretched_uint8(img)
+%8 bit image stretched from its minimum to its maximum (as uint8(mat2gray(img)*255), but in integer arithmetic:
+%about 7x faster for a 20 megapixel frame; min and max from every 16th pixel)
+img = img(:,:,1);
+sample = img(1:16:end,1:16:end);
+lo = double(min(sample(:)));
+hi = double(max(sample(:)));
+if hi <= lo
+	out = uint8(mat2gray(img)*255);
+	return
+end
+out = imlincomb(255/(hi-lo), img, -255*lo/(hi-lo), 'uint8');
+
+function step = detection_step(img, camera)
+%Every step-th pixel is used for the marker detection (speed: about step^2 faster). As before, large images
+%(> 20 megapixels) are halved. When the markers of the last detection of this camera were large, a coarser image
+%is used, with at least 30 pixels per marker side; when no markers were found, the default again. Small markers
+%are therefore detected as before.
+default_step = 1;
+if numel(img) > 20000000
+	default_step = 2;
+end
+step = default_step;
+sizes = gui.retr('charuco_marker_size');
+if numel(sizes) >= camera+1 && sizes(camera+1) > 0
+	step = max(default_step, min(4, floor(sizes(camera+1)/30)));
+end
+
+function remember_marker_size(locs, camera)
+%median side length (full image pixels) of the detected markers, per camera (0 = single camera): see detection_step
+sizes = gui.retr('charuco_marker_size');
+if numel(sizes) < camera+1
+	sizes(camera+1) = 0;
+end
+sizes(camera+1) = 0;
+if ~isempty(locs)
+	sides = sqrt(sum((locs(2,:,:)-locs(1,:,:)).^2,2));
+	sizes(camera+1) = median(sides(:),'omitnan');
+	if isnan(sizes(camera+1))
+		sizes(camera+1) = 0;
+	end
+end
+gui.put('charuco_marker_size',sizes);
+
+function switch_camera_state(camera)
+%Stereo acquisition, one camera shown: the state of the automatic snapshots (positions taken, last image,
+%label position) belongs to this camera. When the shown camera changes, it is stored and the other one loaded.
+keys = {'last_auto_detected_charuco_boxes','old_charuco_img','mean_loc_x','mean_loc_y'};
+last_camera = gui.retr('charuco_last_camera');
+if isequal(last_camera, camera)
+	return
+end
+states = gui.retr('charuco_camera_states');
+if ~isstruct(states)
+	states = struct();
+end
+if ~isempty(last_camera)
+	for i = 1:numel(keys)
+		states.(sprintf('cam%d',last_camera)).(keys{i}) = gui.retr(keys{i});
+	end
+end
+field = sprintf('cam%d',camera);
+for i = 1:numel(keys)
+	value = [];
+	if isfield(states, field) && isfield(states.(field), keys{i})
+		value = states.(field).(keys{i});
+	end
+	gui.put(keys{i}, value);
+end
+gui.put('charuco_camera_states', states);
+gui.put('charuco_last_camera', camera);
+
+function cameraParams = camera_params(camera)
+%lens calibration of the camera: in stereo-PIV mode the one of this camera (the other camera's is stored in
+%stereo_cam_state), otherwise the one in the GUI
+cameraParams = gui.retr('cameraParams');
+if camera > 0 && isequal(gui.retr('stereomode'),1)
+	active = gui.retr('stereo_active_camera');
+	if isempty(active)
+		active = 1;
+	end
+	if camera ~= active
+		cameraParams = [];
+		state = gui.retr('stereo_cam_state');
+		if iscell(state) && numel(state) >= camera && isfield(state{camera},'cameraParams')
+			cameraParams = state{camera}.cameraParams;
+		end
+	end
+end
+
+function [detectionOK,markerFamily,originCheckerColor,patternDims,checkerSize,markerSize,loc] = stereo_qr(img)
+%QR code in the full camera image; when found, the board parameters are put into the calibration panel (as in
+%the detection of a single camera)
+[detectionOK,markerFamily,originCheckerColor,patternDims,checkerSize,markerSize,loc] = preproc.cam_get_charuco_info_from_QRcode(stretched_uint8(img));
+if ~detectionOK || isempty(patternDims)
+	detectionOK = 0;
+	return
+end
+handles=gui.gethand;
+handles.calib_rows.String = num2str(patternDims(1));
+handles.calib_columns.String = num2str(patternDims(2));
+if strcmpi(originCheckerColor,'Black')
+	handles.calib_origincolor.Value = 1;
+else
+	handles.calib_origincolor.Value = 2;
+end
+handles.calib_checkersize.String = num2str(checkerSize);
+handles.calib_markersize.String = num2str(markerSize);
+qr_params.markerFamily=markerFamily;
+qr_params.originCheckerColor=originCheckerColor;
+qr_params.patternDims=patternDims;
+qr_params.checkerSize=checkerSize;
+qr_params.markerSize=markerSize;
+qr_params.time=datetime('now');
+gui.put('charuco_qr_params',qr_params);
+

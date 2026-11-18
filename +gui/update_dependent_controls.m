@@ -44,7 +44,12 @@ set(handles.pass4_step, 'String', half_of(handles.pass4_size));
 piv.overlappercent % overlap of the pass 1 windows in %
 
 %% Vector validation
-set(handles.interpol_missing2, 'Value', get(handles.interpol_missing, 'Value')); % shows the same setting
+set([handles.interpol_missing2 handles.interpol_missing3], 'Value', get(handles.interpol_missing, 'Value')); % show the same setting
+residual_filter = get(handles.residual_enable, 'Value') == 1;
+enable(handles.stereo_show_residual, residual_filter); % the residual map shows what the residual filter removes
+if ~residual_filter
+    set(handles.stereo_show_residual, 'Value', 0);
+end
 
 %% Calibration: the axis directions and offsets need a reference distance
 enable(findobj(handles.uipanel_offsets, 'Type', 'uicontrol'), ~isempty(gui.retr('pointscali')));
@@ -165,14 +170,13 @@ end
 
 %% Stereo-PIV: camera switch only in stereo mode
 stereo_mode = isequal(gui.retr('stereomode'), 1);
-show(handles.stereo_camera_toggle, stereo_mode);
+acquisition.camera_view_button; % stereo acquisition: cameras shown in the Image Acquisition panel
 if stereo_mode
     active = gui.retr('stereo_active_camera');
     if isempty(active)
         active = 1;
     end
-    [cam_color, cam_text_color] = stereo.camera_colors(active);
-    set(handles.stereo_camera_toggle, 'String', ['CAM ' int2str(active)], 'BackgroundColor', cam_color, 'ForegroundColor', cam_text_color);
+    cam_color = stereo.camera_colors(active);
     set([handles.calib_undist_cam_label handles.calib_rect_cam_label], 'String', ['Current camera: CAMERA ' int2str(active)], 'ForegroundColor', cam_color);
     set(handles.stereo_rect_note, 'ForegroundColor', cam_color);
 end
@@ -210,6 +214,7 @@ else
 end
 enable([handles.stereo_calibrate handles.stereo_show_3d], stereo_mode);
 enable([handles.stereo_measure_disparity handles.stereo_disp_show], stereo_mode && ~isempty(gui.retr('stereo_calib')));
+stereo.disparity_panel_layout(handles);
 if stereo_mode && strcmp(get(handles.multip30, 'Visible'), 'on')
     stereo.update_panel(handles);
 end

@@ -324,8 +324,10 @@ if isempty(fh)
 
     %% Variable initialization
     gui.put ('toggler',0);
-    gui.put('calu',1);
-    gui.put('calv',1);
+    handles_init = gui.gethand;
+    [calu_init, calv_init] = calibrate.uncalibrated_factors(get(handles_init.x_axis_direction,'Value'), get(handles_init.y_axis_direction,'Value'));
+    gui.put('calu',calu_init);
+    gui.put('calv',calv_init);
     gui.put('calxy',1);
     gui.put('offset_x_true',0)
     gui.put('offset_y_true',0)

@@ -4,6 +4,7 @@ classdef mock_imaq_source < matlab.mixin.SetGet
     %   misspelled property of the real camera).
     properties
         DeviceSerialNumber = ''
+        DeviceUserID = ''             % set before shipping, e.g. 'OPTOcam 2/80'
         DeviceLinkThroughputLimitMode = 'Off'
         DeviceLinkThroughputLimit = 0
         ExposureMode = 'Timed'
@@ -35,8 +36,9 @@ classdef mock_imaq_source < matlab.mixin.SetGet
         connected = true              % false: the camera was unplugged and plugged in again (the object is stale)
     end
     methods
-        function obj = mock_imaq_source(serial)
+        function obj = mock_imaq_source(serial, user_id)
             obj.DeviceSerialNumber = serial;
+            obj.DeviceUserID = user_id;
         end
         function executeCommand(obj, command)
             obj.commands{end + 1} = char(command);

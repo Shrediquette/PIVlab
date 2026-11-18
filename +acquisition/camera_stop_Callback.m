@@ -27,10 +27,15 @@ if strncmp(evt.Source.Tag,'ac_calibsave',20) %only when "save" button is pressed
 			caliimg={caliimg};
 		end
 		numbi = 0;
-		while calibration_image_exists(folders,numbi)
+		while calibration_image_exists(folders,numbi) %free in the folders of both cameras: the same number = the same moment
 			numbi = numbi+1;
 		end
-		for k=1:numel(folders)
+		shown=1:numel(folders);
+		view=acquisition.camera_view(); %stereo: only the camera shown (CAM button), or both
+		if numel(folders) > 1 && view > 0 && view <= numel(folders)
+			shown=view;
+		end
+		for k=shown
 			if ~exist(folders{k},'dir')
 				mkdir(folders{k});
 			end

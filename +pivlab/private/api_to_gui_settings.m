@@ -50,6 +50,13 @@ G.analysis.corr_filter_thresh = f.CorrelationThreshold;
 G.analysis.notch_enable = double(f.NotchFilter);
 G.analysis.notch_L_thresh = f.NotchLimits(1);
 G.analysis.notch_H_thresh = f.NotchLimits(2);
+G.analysis.residual_enable = double(f.ResidualFilter);
+G.analysis.residual_thresh = f.ResidualThreshold;
+G.analysis.w_median_enable = double(f.WMedianFilter);
+G.analysis.w_median_thresh = f.WMedianThreshold;
+G.analysis.w_limit_enable = double(f.WLimitFilter);
+G.analysis.w_limit_min = f.WLimits(1);
+G.analysis.w_limit_max = f.WLimits(2);
 G.analysis.contrast_filter_enable = double(f.ContrastFilter);
 G.analysis.contrast_filter_thresh = f.ContrastThreshold;
 G.analysis.bright_filter_enable = double(f.BrightnessFilter);
@@ -94,6 +101,15 @@ if isfield(s, 'stereo')
     end
     G.analysis.stereo_disp_stdev = st.StdevThreshold;
     G.analysis.stereo_disp_median = st.LocalMedianThreshold;
+    % "Settings: Manual" when a value differs from the defaults
+    default = gui.default_settings;
+    names = {'stereo_disp_pairs', 'stereo_disp_model', 'stereo_disp_passes', 'stereo_disp_ia', 'stereo_disp_stdev', 'stereo_disp_median'};
+    G.analysis.stereo_disp_mode = 1;
+    for k = 1:numel(names)
+        if ~isequal(double(G.analysis.(names{k})), double(default.analysis.(names{k})))
+            G.analysis.stereo_disp_mode = 2;
+        end
+    end
 end
 end
 

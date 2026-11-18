@@ -70,7 +70,9 @@ window.MANUAL_NAV = {
         { label: "Velocity-based validation",           href: "pages/validation-velocity.html",  status: "live",
           blurb: "Remove spurious vectors with statistical filters, velocity limits, and manual rejection." },
         { label: "Image-based validation",              href: "pages/validation-image.html",     status: "live",
-          blurb: "Reject vectors from low-contrast, over-bright or poorly-correlated image regions." }
+          blurb: "Reject vectors from low-contrast, over-bright or poorly-correlated image regions." },
+        { label: "Stereo-based validation",             href: "pages/validation-stereo.html",    status: "live",
+          blurb: "Stereo-PIV only: remove vectors by the reconstruction residual, a median test of w, or w limits." }
       ]
     },
     {

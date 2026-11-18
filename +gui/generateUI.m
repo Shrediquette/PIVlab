@@ -106,7 +106,7 @@ gui.put('handle_toolprogress_fg',handles.toolprogress_fg);
 
 
 %% Multip01
-handles.multip01 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Input data (CTRL+N)', 'Tag','multip01','fontweight','bold');
+handles.multip01 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Input data', 'Tag','multip01','fontweight','bold');
 parentitem=get(handles.multip01, 'Position');
 item=[0 0 0 0];
 
@@ -149,7 +149,7 @@ item=[0 item(2)+item(4) parentitem(3) 4];
 handles.imsize = uicontrol(handles.multip01,'Style','text','units','characters','Horizontalalignment', 'left','position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'String','N/A','tag','imsize');
 
 %% Multip02
-handles.multip02 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Exclusions (CTRL+E)', 'Tag','multip02','fontweight','bold');
+handles.multip02 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Exclusions', 'Tag','multip02','fontweight','bold');
 parentitem=get(handles.multip02, 'Position');
 item=[0 0 0 0];
 
@@ -208,7 +208,7 @@ handles.mask_edit_mode = uicontrol(handles.multip25,'Style','popupmenu','String'
 
 %basic or expert mask capabilities
 item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 1.5];
-handles.text251 = uicontrol(handles.multip25,'Style','text','String','Capabilities:','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+handles.text251 = uicontrol(handles.multip25,'Style','text','String','Capabilities:','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','text251'); % tag: hidden in Basic mode (PIVlab_hidden_elements.txt)
 
 item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
 handles.mask_basic_expert = uicontrol(handles.multip25,'Style','popupmenu','String',{'Basic','Expert'},'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','mask_basic_expert','Callback',@mask.basic_expert_Callback, 'TooltipString','Switch betwenn basic mask generation and advanced mask generation modes','Value',default.masks.mask_basic_expert);
@@ -606,7 +606,7 @@ handles.mask_load = uicontrol(handles.uipanel25_6,'Style','pushbutton','String',
 
 
 %% Multip03
-handles.multip03 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Image pre-processing (CTRL+I)', 'Tag','multip03','fontweight','bold');
+handles.multip03 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Image pre-processing', 'Tag','multip03','fontweight','bold');
 parentitem=get(handles.multip03, 'Position');
 item=[0 0 0 0];
 
@@ -682,7 +682,7 @@ handles.export_preprocess = uicontrol(handles.multip03,'Style','pushbutton','Str
 
 
 %% Multip04
-handles.multip04 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','PIV settings (CTRL+S)', 'Tag','multip04','fontweight','bold');
+handles.multip04 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','PIV settings', 'Tag','multip04','fontweight','bold');
 parentitem=get(handles.multip04, 'Position');
 item=[0 0 0 0];
 %neu
@@ -853,7 +853,7 @@ item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 2];
 handles.Settings_Apply_current = uicontrol(handles.multip04,'Style','pushbutton','String','Analyze current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @piv.AnalyzeSingle_Callback,'Tag','Settings_Apply_current','TooltipString','Apply PIV settings to current frame');
 
 %% Multip05
-handles.multip05 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Analyze (CTRL+A)', 'Tag','multip05','fontweight','bold');
+handles.multip05 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Analyze', 'Tag','multip05','fontweight','bold');
 parentitem=get(handles.multip05, 'Position');
 item=[0 0 0 0];
 
@@ -885,12 +885,12 @@ item=[0 item(2)+item(4) parentitem(3) 2];
 handles.messagetext = uicontrol(handles.multip05,'Style','text','String','N/A','Units','characters', 'HorizontalAlignment','left','Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','messagetext');
 
 %% Multip06
-handles.multip06 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Vector validation (CTRL+V)', 'Tag','multip06','fontweight','bold');
+handles.multip06 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Vector validation', 'Tag','multip06','fontweight','bold');
 parentitem=get(handles.multip06, 'Position');
 item=[0 0 0 0];
 item=[0 item(2)+item(4) parentitem(3) 13];
 
-handles.uipanel42x = uipanel(handles.multip06, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Velocity limits','fontweight','bold');
+handles.uipanel42x = uipanel(handles.multip06, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Velocity limits (u & v)','fontweight','bold');
 parentitem=get(handles.uipanel42x, 'Position');
 item=[0 0 0 0];
 
@@ -913,7 +913,7 @@ item=[0 item(2)+item(4)+margin/4 parentitem(3) 3];
 handles.limittext = uicontrol(handles.uipanel42x,'Style','text','String','','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','limittext');
 
 item=[0 item(2)+item(4) parentitem(3) 2];
-handles.clear_vel_limit = uicontrol(handles.uipanel42x,'Style','pushbutton','String','Clear all velocity limits','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.clear_vel_limit_Callback,'TooltipString','Remove the velocity limits');
+handles.clear_vel_limit = uicontrol(handles.uipanel42x,'Style','pushbutton','String','Clear all u & v velocity limits','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.clear_vel_limit_Callback,'TooltipString','Remove the velocity limits');
 
 
 parentitem=get(handles.multip06, 'Position');
@@ -1009,7 +1009,7 @@ handles.rejectedtxt1=uicontrol(handles.multip06,'Style','text','String','Rejecte
     'Units','characters','Position',[label_x parentitem(4)-item(4)-margin-item(2) label_w item(4)],'tag','rejectedtxt1');
 
 %% Multip07
-handles.multip07 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Calibration (CTRL+Z)', 'Tag','multip07','fontweight','bold');
+handles.multip07 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Calibration', 'Tag','multip07','fontweight','bold');
 parentitem=get(handles.multip07, 'Position');
 item=[0 0 0 0];
 
@@ -1075,7 +1075,7 @@ item=[0 item(2)+item(4)+margin*0.5 parentitem(3) 2];
 handles.clear_cali = uicontrol(handles.multip07,'Style','pushbutton','String','Clear calibration','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @calibrate.clear_cali_Callback,'TooltipString','Remove calibration');
 
 %% Multip08
-handles.multip08 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Derive Parameters (CTRL+D)', 'Tag','multip08','fontweight','bold');
+handles.multip08 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Derive Parameters', 'Tag','multip08','fontweight','bold');
 parentitem=get(handles.multip08, 'Position');
 item=[0 0 0 0];
 
@@ -1170,7 +1170,7 @@ item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 handles.apply_deriv_all = uicontrol(handles.multip08,'Style','pushbutton','String','Apply to all frames','Units','characters', 'HorizontalAlignment','left','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@plot.apply_deriv_all_Callback, 'Tag','apply_deriv_all','TooltipString','Apply settings to all frames');
 
 %% Multip09
-handles.multip09 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Modify plot appearance (CTRL+M)', 'Tag','multip09','fontweight','bold');
+handles.multip09 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Modify plot appearance', 'Tag','multip09','fontweight','bold');
 parentitem=get(handles.multip09, 'Position');
 item=[0 0 0 0];
 
@@ -1418,7 +1418,7 @@ item=[0 item(2)+item(4)+margin/8 parentitem(3)/2 2];
 handles.save_data = uicontrol(handles.multip12,'Style','pushbutton','String','Export data','Units','characters', 'Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@extract.save_data_Callback,'TooltipString','Extract data and save results to a text file');
 
 %% Multip13
-handles.multip13 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Measure distance & angle (CTRL+T)', 'Tag','multip13','fontweight','bold');
+handles.multip13 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Measure distance & angle', 'Tag','multip13','fontweight','bold');
 parentitem=get(handles.multip13, 'Position');
 item=[0 0 0 0];
 
@@ -1489,7 +1489,7 @@ item=[0 22+margin/2 parentitem(3) 2];
 handles.markers_display_average = uicontrol(handles.multip13,'Style','pushbutton','String','Display average','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @mask.display_average_Callback,'TooltipString','Show the mean image');
 
 %% Multip14
-handles.multip14 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Statistics (CTRL+B)', 'Tag','multip14','fontweight','bold');
+handles.multip14 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Statistics', 'Tag','multip14','fontweight','bold');
 parentitem=get(handles.multip14, 'Position');
 item=[0 0 0 0];
 
@@ -1900,6 +1900,115 @@ handles.veccolor_interp_swatch2 = uicontrol(handles.multip23,'Style','text','Str
 handles.rejectedtxt2 = uicontrol(handles.multip23,'Style','text','String','Rejected / interpolated','HorizontalAlignment','left', ...
     'Units','characters','Position',[label_x parentitem(4)-item(4)-margin-item(2) label_w item(4)],'tag','rejectedtxt2');
 
+%% Multip32: stereo based validation (stereo-PIV only: the filters test the 3D result, stereo.limit_discard)
+handles.multip32 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Stereo based validation', 'Tag','multip32','fontweight','bold');
+parentitem=get(handles.multip32, 'Position');
+item=[0 0 0 0];
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
+handles.stereo_val_note = uicontrol(handles.multip32,'Style','text','String','Stereo-PIV only. Vectors are removed in both cameras.','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.1];
+handles.residual_enable = uicontrol(handles.multip32,'Style','checkbox','String','Reconstruction residual filter','Value',default.analysis.residual_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','residual_enable','Callback',@validate.residual_enable_Callback,'TooltipString',['Removes vectors where the two cameras do not fit one 3D velocity (reconstruction residual larger than the threshold), ' ...
+    'e.g. where one camera sees dirt or an object']);
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1];
+handles.text_residual_thresh = uicontrol(handles.multip32,'Style','text','String','Threshold [px]','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+handles.residual_thresh = uicontrol(handles.multip32,'Style','edit','String',gui.setting_text(default.analysis.residual_thresh),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.stereo_value_Callback,'Tag','residual_thresh','TooltipString','Vectors with a reconstruction residual larger than this (px) are removed');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.1];
+handles.stereo_show_residual = uicontrol(handles.multip32,'Style','checkbox','String','Show residual map','Value',0,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','stereo_show_residual','UserData','not_a_setting','Callback',@validate.stereo_show_residual_Callback, ...
+    'Enable','off','TooltipString','Shows the residual of the unvalidated result of this frame. Vectors above the threshold are shown in a solid colour. Needs the reconstruction residual filter.');
+
+item=[0 item(2)+item(4)+margin parentitem(3) 1.1];
+handles.w_median_enable = uicontrol(handles.multip32,'Style','checkbox','String','Local median filter (W)','Value',default.analysis.w_median_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','w_median_enable','TooltipString',['Normalized median test of the out-of-plane component W. ' ...
+    'Removes W outliers that the residual filter cannot see (an error of one camera along the stereo baseline only changes W).']);
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1];
+handles.text_w_median_thresh = uicontrol(handles.multip32,'Style','text','String','Threshold','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+handles.w_median_thresh = uicontrol(handles.multip32,'Style','edit','String',gui.setting_text(default.analysis.w_median_thresh),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.stereo_value_Callback,'Tag','w_median_thresh','TooltipString','Threshold of the normalized median test of W (like the local median filter)');
+
+% W limits: sub-panel like "Velocity limits (u & v)" of the vector validation
+item=[0 item(2)+item(4)+margin parentitem(3) 8.7];
+handles.w_limit_panel = uipanel(handles.multip32, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','W limits','fontweight','bold','Tag','w_limit_panel');
+panel_item = item; % continue below the sub-panel
+parentitem=get(handles.w_limit_panel, 'Position');
+item=[0 0 0 0];
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.1];
+handles.w_limit_enable = uicontrol(handles.w_limit_panel,'Style','checkbox','String','Enable W limits','Value',default.analysis.w_limit_enable,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','w_limit_enable','TooltipString','Removes vectors with an out-of-plane component W outside the range from W min to W max');
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1];
+handles.text_w_limit_min = uicontrol(handles.w_limit_panel,'Style','text','String','W min','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+handles.w_limit_min = uicontrol(handles.w_limit_panel,'Style','edit','String',gui.setting_text(default.analysis.w_limit_min),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.stereo_value_Callback,'Tag','w_limit_min','TooltipString','Smallest allowed W, in the units of the velocity limits (m/s with a calibration, px/frame without)');
+
+item=[0 item(2)+item(4) parentitem(3)/3*2 1];
+handles.text_w_limit_max = uicontrol(handles.w_limit_panel,'Style','text','String','W max','HorizontalAlignment','left','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+item=[parentitem(3)/3*2 item(2) parentitem(3)/3*1 1];
+handles.w_limit_max = uicontrol(handles.w_limit_panel,'Style','edit','String',gui.setting_text(default.analysis.w_limit_max),'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.stereo_value_Callback,'Tag','w_limit_max','TooltipString','Largest allowed W, in the units of the velocity limits (m/s with a calibration, px/frame without)');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/2 1.5];
+handles.w_limit_select = uicontrol(handles.w_limit_panel,'Style','pushbutton','String','Select','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.w_limit_select_Callback,'Tag','w_limit_select','TooltipString','Display a histogram of W and drag the range of the allowed W');
+
+item=[parentitem(3)/2 item(2) parentitem(3)/2 1.5];
+handles.w_limit_auto = uicontrol(handles.w_limit_panel,'Style','pushbutton','String','Auto','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@validate.w_limit_select_Callback,'Tag','w_limit_auto','TooltipString','Display a histogram of W and automatically select the range of the main peak');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.1];
+handles.w_hist_all_frames = uicontrol(handles.w_limit_panel,'Style','checkbox','Value',default.display.w_hist_all_frames,'String','display all frames in histogram','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','w_hist_all_frames','TooltipString','Use W of all frames in the histogram');
+
+parentitem=get(handles.multip32, 'Position');
+item=panel_item;
+item=[0 item(2)+item(4)+margin parentitem(3) 1.1];
+handles.interpol_missing3 = uicontrol(handles.multip32,'Style','checkbox','String','Interpolate missing data','Value',1,'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','interpol_missing3','TooltipString','Interpolate missing velocity data. Interpolated data appears as ORANGE vectors','Callback',@validate.set_other_interpol_checkbox,'UserData','not_a_setting');
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 2];
+uicontrol(handles.multip32,'Style','pushbutton','String','Apply to current frame','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.apply_filter_current_Callback,'TooltipString','Apply the filters of all validation panels to the current frame');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
+uicontrol(handles.multip32,'Style','pushbutton','String','Apply to all frames','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.apply_filter_all_Callback,'TooltipString','Apply the filters of all validation panels to all frames');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
+uicontrol(handles.multip32,'Style','pushbutton','String','Undo all validations (all frames)','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @validate.restore_all_Callback,'TooltipString','Remove all velocity filters for all frames');
+
+item=[0 item(2)+item(4)+margin/2 parentitem(3) 1];
+uicontrol(handles.multip32,'Style','text','String','Valid detection probability (VDP): 100 %','HorizontalAlignment','center','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','amount_nans','TooltipString','Valid detection probability in percent');
+
+swatch_w = 3; swatch_gap = 0.3;
+swatch_x = margin;
+label_x  = swatch_x + swatch_w + swatch_gap;
+label_w  = parentitem(3) - margin*2 - swatch_w - swatch_gap;
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.0];
+handles.veccolor_valid_swatch3 = uicontrol(handles.multip32,'Style','text','String','','Units','characters', ...
+    'Position',[swatch_x parentitem(4)-item(4)-margin-item(2) swatch_w item(4)], ...
+    'Tag','veccolor_valid_swatch3','BackgroundColor',[0 1 0], ...
+    'TooltipString','Valid vector color — configurable in ''Modify plot appearance''');
+handles.validtxt3 = uicontrol(handles.multip32,'Style','text','String','Valid vectors (1st peak)','HorizontalAlignment','left', ...
+    'Units','characters','Position',[label_x parentitem(4)-item(4)-margin-item(2) label_w item(4)],'tag','validtxt3');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.0];
+handles.veccolor_secondpeak_swatch3 = uicontrol(handles.multip32,'Style','text','String','','Units','characters', ...
+    'Position',[swatch_x parentitem(4)-item(4)-margin-item(2) swatch_w item(4)], ...
+    'Tag','veccolor_secondpeak_swatch3','BackgroundColor',[0 0.8 1], ...
+    'TooltipString','2nd-peak vector color — configurable in ''Modify plot appearance''');
+handles.secondpeaktxt3=uicontrol(handles.multip32,'Style','text','String','Valid vectors (2nd peak)','HorizontalAlignment','left', ...
+    'Units','characters','Position',[label_x parentitem(4)-item(4)-margin-item(2) label_w item(4)],'tag','secondpeaktxt3');
+
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.0];
+handles.veccolor_interp_swatch3 = uicontrol(handles.multip32,'Style','text','String','','Units','characters', ...
+    'Position',[swatch_x parentitem(4)-item(4)-margin-item(2) swatch_w item(4)], ...
+    'Tag','veccolor_interp_swatch3','BackgroundColor',[1 0.5 0], ...
+    'TooltipString','Rejected/interpolated vector color — configurable in ''Modify plot appearance''');
+handles.rejectedtxt3 = uicontrol(handles.multip32,'Style','text','String','Rejected / interpolated','HorizontalAlignment','left', ...
+    'Units','characters','Position',[label_x parentitem(4)-item(4)-margin-item(2) label_w item(4)],'tag','rejectedtxt3');
+
 %% Multip24
 % General
 handles.multip24 = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels],'title','Image Acquisition', 'Tag','multip24','fontweight','bold');
@@ -1934,8 +2043,7 @@ available_PIV_configurations = { ...
     %	'Nd:YAG (SimpleSync) + pco.pixelfly usb' ...
     %	'Nd:YAG (SimpleSync) + pco.panda 26 DS' ...
     'Webcam demo (no synchronizer)' ...
-    'PIVlab LD-PS + OPTOcam 20/9' ...
-    'PIVlab LD-PS + OPTOcam 2/80' ...
+    'PIVlab LD-PS + OPTOcam' ... %the model (2/80 or 20/9) is detected in select_capture_config_Callback
     'PIVlab LD-PS + pco.edge 26 DS CLHS' ...
     'PIVlab LD-PS + pco.panda 26 DS' ...
     'PIVlab LD-PS + pco.pixelfly usb' ...
@@ -2305,6 +2413,11 @@ item=[0 item(2)+item(4) parentitem(3) 9.5];
 handles.stereo_steps_panel = uipanel(handles.multip30, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Steps','fontweight','bold','Tag','stereo_steps_panel');
 parentitem2=get(handles.stereo_steps_panel, 'Position');
 handles.stereo_steps = uicontrol(handles.stereo_steps_panel,'Style','text','String','Load stereo images first (Input data panel: "Import stereo images").','Units','characters','HorizontalAlignment','left','Position',[margin margin/4 parentitem2(3)-margin*2 parentitem2(4)-margin*1.25],'Tag','stereo_steps','UserData','not_a_setting');
+% one row per step, coloured by stereo.update_panel (done / open / next step); only in stereo mode
+row_height=(parentitem2(4)-margin*1.25)/7;
+for k=1:7
+    handles.(['stereo_step_' int2str(k)]) = uicontrol(handles.stereo_steps_panel,'Style','text','String','','Units','characters','HorizontalAlignment','left','Position',[margin margin/4+(7-k)*row_height parentitem2(3)-margin*2 row_height],'Tag',['stereo_step_' int2str(k)],'Visible','off','UserData','not_a_setting');
+end
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 5.5-margin/4];
 handles.stereo_calib_panel = uipanel(handles.multip30, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Stereo calibration','fontweight','bold','Tag','stereo_calib_panel');
@@ -2315,44 +2428,59 @@ handles.stereo_calibrate = uicontrol(handles.stereo_calib_panel,'Style','pushbut
 item2=[0 item2(2)+item2(4)+margin/4 parentitem2(3) 1.5];
 handles.stereo_show_3d = uicontrol(handles.stereo_calib_panel,'Style','pushbutton','String','Show 3D setup','Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Callback',@stereo.show_3d_Callback,'Tag','stereo_show_3d','TooltipString','Both cameras, the board, the overlap of the views and the light sheet in 3D, with the report of the stereo calibration');
 
-item=[0 item(2)+item(4)+margin/4 parentitem(3) 21];
-handles.stereo_disp_panel = uipanel(handles.multip30, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Disparity correction','fontweight','bold','Tag','stereo_disp_panel');
-parentitem2=get(handles.stereo_disp_panel, 'Position');
-w=parentitem2(3);
+item=[0 item(2)+item(4)+margin/4 parentitem(3) 22.5+margin*3/4];
+handles.stereo_disp_panel = uipanel(handles.multip30, 'Units','characters', 'Position', [item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'title','Disparity correction','fontweight','bold','Tag','stereo_disp_panel','UserData',item(4)); % UserData: height in manual mode (stereo.disparity_panel_layout)
+parentitem3=get(handles.stereo_disp_panel, 'Position');
+w=parentitem3(3);
+item2=[0 0 0 0];
+item2=[0 item2(2)+item2(4) w/4 1.5];
+uicontrol(handles.stereo_disp_panel,'Style','text','String','Settings:','Units','characters','HorizontalAlignment','left','Tag','stereo_disp_mode_text','Position',[item2(1)+margin parentitem3(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
+item2=[w/4 item2(2) w*3/4 1.5];
+handles.stereo_disp_mode = uicontrol(handles.stereo_disp_panel,'Style','popupmenu','String',{'Automatic','Manual'},'Value',default.analysis.stereo_disp_mode,'Units','characters','Position',[item2(1)+margin parentitem3(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Callback',@stereo.disparity_mode_Callback,'Tag','stereo_disp_mode','TooltipString','Automatic: default settings for the disparity measurement. Manual: own settings');
+% Manual settings: only visible in manual mode, in automatic mode the panel is shorter (stereo.disparity_panel_layout)
+top=item2(2)+item2(4)+margin/4;
+h=4.5+margin*3/4; % four rows
+handles.stereo_disp_manual = uipanel(handles.stereo_disp_panel,'Units','characters','BorderType','none','Position',[0 parentitem3(4)-margin-top-h w h],'Tag','stereo_disp_manual');
+parentitem2=[0 0 w h+margin]; % the rows use the same formula as in a titled panel
 item2=[0 0 0 0];
 item2=[0 item2(2)+item2(4) w/4 1];
-uicontrol(handles.stereo_disp_panel,'Style','text','String','Pairs:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
+uicontrol(handles.stereo_disp_manual,'Style','text','String','Pairs:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
 item2=[w/4 item2(2) w/4 1];
-handles.stereo_disp_pairs = uicontrol(handles.stereo_disp_panel,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_pairs),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)],'Tag','stereo_disp_pairs','TooltipString','Number of image pairs used for the disparity (spread over the series). 0 = automatic: pairs are added until the disparity map is accurate to about 0.5 px');
+handles.stereo_disp_pairs = uicontrol(handles.stereo_disp_manual,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_pairs),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)],'Tag','stereo_disp_pairs','TooltipString','Number of image pairs used for the disparity (spread over the series). 0 = automatic: pairs are added until the disparity map is accurate to about 0.5 px');
 item2=[w/2 item2(2) w/4 1];
-uicontrol(handles.stereo_disp_panel,'Style','text','String','Passes:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
+uicontrol(handles.stereo_disp_manual,'Style','text','String','Passes:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
 item2=[w*3/4 item2(2) w/4 1];
-handles.stereo_disp_passes = uicontrol(handles.stereo_disp_panel,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_passes),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Tag','stereo_disp_passes','TooltipString','Measure again on the corrected images and add the remaining disparity');
+handles.stereo_disp_passes = uicontrol(handles.stereo_disp_manual,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_passes),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Tag','stereo_disp_passes','TooltipString','Measure again on the corrected images and add the remaining disparity');
 item2=[0 item2(2)+item2(4)+margin/4 w/4 1.5];
-uicontrol(handles.stereo_disp_panel,'Style','text','String','Model:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
+uicontrol(handles.stereo_disp_manual,'Style','text','String','Model:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
 [~, model_labels] = stereo.disparity_models;
 item2=[w/4 item2(2) w*3/4 1.5];
-handles.stereo_disp_model = uicontrol(handles.stereo_disp_panel,'Style','popupmenu','String',model_labels,'Value',default.analysis.stereo_disp_model,'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Tag','stereo_disp_model','TooltipString','Smooth model of the disparity map');
+handles.stereo_disp_model = uicontrol(handles.stereo_disp_manual,'Style','popupmenu','String',model_labels,'Value',default.analysis.stereo_disp_model,'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Tag','stereo_disp_model','TooltipString','Smooth model of the disparity map');
 item2=[0 item2(2)+item2(4)+margin/4 w*3/4 1];
-uicontrol(handles.stereo_disp_panel,'Style','text','String','Window size [px] (0 = auto):','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
+uicontrol(handles.stereo_disp_manual,'Style','text','String','Window size [px] (0 = auto):','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
 item2=[w*3/4 item2(2) w/4 1];
-handles.stereo_disp_ia = uicontrol(handles.stereo_disp_panel,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_ia),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Tag','stereo_disp_ia','TooltipString','Interrogation area of the first pass, 0 = one fifth of the image');
+handles.stereo_disp_ia = uicontrol(handles.stereo_disp_manual,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_ia),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Tag','stereo_disp_ia','TooltipString','Interrogation area of the first pass, 0 = one fifth of the image');
 item2=[0 item2(2)+item2(4)+margin/4 w/4 1];
-uicontrol(handles.stereo_disp_panel,'Style','text','String','Stdev:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
+uicontrol(handles.stereo_disp_manual,'Style','text','String','Stdev:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
 item2=[w/4 item2(2) w/4 1];
-handles.stereo_disp_stdev = uicontrol(handles.stereo_disp_panel,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_stdev),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)],'Tag','stereo_disp_stdev','TooltipString','Standard deviation filter of the disparity vectors');
+handles.stereo_disp_stdev = uicontrol(handles.stereo_disp_manual,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_stdev),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)],'Tag','stereo_disp_stdev','TooltipString','Standard deviation filter of the disparity vectors');
 item2=[w/2 item2(2) w/4 1];
-uicontrol(handles.stereo_disp_panel,'Style','text','String','Median:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
+uicontrol(handles.stereo_disp_manual,'Style','text','String','Median:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
 item2=[w*3/4 item2(2) w/4 1];
-handles.stereo_disp_median = uicontrol(handles.stereo_disp_panel,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_median),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Tag','stereo_disp_median','TooltipString','Local median filter of the disparity vectors');
-item2=[0 item2(2)+item2(4)+margin/2 w 1.5];
-handles.stereo_measure_disparity = uicontrol(handles.stereo_disp_panel,'Style','pushbutton','String','Measure disparity','Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Callback',@stereo.measure_disparity_Callback,'Tag','stereo_measure_disparity','TooltipString','Remaining misalignment of camera 1 and camera 2 (correlation of their A images); corrects both cameras');
+handles.stereo_disp_median = uicontrol(handles.stereo_disp_manual,'Style','edit','String',gui.setting_text(default.analysis.stereo_disp_median),'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Tag','stereo_disp_median','TooltipString','Local median filter of the disparity vectors');
+% Measurement, report and display (always visible)
+top=top+h;
+h=11.5+margin;
+handles.stereo_disp_results = uipanel(handles.stereo_disp_panel,'Units','characters','BorderType','none','Position',[0 parentitem3(4)-margin-top-h w h],'Tag','stereo_disp_results');
+parentitem2=[0 0 w h+margin];
+item2=[0 margin/2 w 1.5];
+handles.stereo_measure_disparity = uicontrol(handles.stereo_disp_results,'Style','pushbutton','String','Measure disparity','Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Callback',@stereo.measure_disparity_Callback,'Tag','stereo_measure_disparity','TooltipString','Remaining misalignment of camera 1 and camera 2 (correlation of their A images); corrects both cameras');
 item2=[0 item2(2)+item2(4)+margin/4 w 8.5];
-handles.stereo_disp_report = uicontrol(handles.stereo_disp_panel,'Style','text','String','Not measured yet.','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Tag','stereo_disp_report','UserData','not_a_setting');
+handles.stereo_disp_report = uicontrol(handles.stereo_disp_results,'Style','text','String','Not measured yet.','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Tag','stereo_disp_report','UserData','not_a_setting');
 item2=[0 item2(2)+item2(4)+margin/4 w/4 1.5];
-uicontrol(handles.stereo_disp_panel,'Style','text','String','Show:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
+uicontrol(handles.stereo_disp_results,'Style','text','String','Show:','Units','characters','HorizontalAlignment','left','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin item2(4)]);
 item2=[w/4 item2(2) w*3/4 1.5];
-handles.stereo_disp_show = uicontrol(handles.stereo_disp_panel,'Style','popupmenu','String',{'Camera image'},'Value',1,'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Callback',@stereo.disparity_display_Callback,'Tag','stereo_disp_show','TooltipString','What the image shows while this panel is open (the disparity displays appear after "Measure disparity", the reconstruction residual after ANALYZE)','UserData','not_a_setting'); % items: stereo.disparity_display_popup
+handles.stereo_disp_show = uicontrol(handles.stereo_disp_results,'Style','popupmenu','String',{'Camera image'},'Value',1,'Units','characters','Position',[item2(1)+margin parentitem2(4)-item2(4)-margin-item2(2) item2(3)-margin*2 item2(4)],'Callback',@stereo.disparity_display_Callback,'Tag','stereo_disp_show','TooltipString','What the image shows while this panel is open (the disparity displays appear after "Measure disparity", the reconstruction residual after ANALYZE)','UserData','not_a_setting'); % items: stereo.disparity_display_popup
 
 %% Multip31 3D particle image generator
 simulate.generate_ui_3d(MainWindow, default, margin, panelwidth, panelheightpanels, Figure_Size);

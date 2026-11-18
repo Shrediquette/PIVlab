@@ -78,6 +78,12 @@ s.filter.CorrelationFilter    = get_flag(A,'corr_filter_enable',s.filter.Correla
 s.filter.CorrelationThreshold = get_num(A,'corr_filter_thresh',s.filter.CorrelationThreshold);
 s.filter.NotchFilter          = get_flag(A,'notch_enable',s.filter.NotchFilter);
 s.filter.NotchLimits          = [get_num(A,'notch_L_thresh',s.filter.NotchLimits(1)) get_num(A,'notch_H_thresh',s.filter.NotchLimits(2))];
+s.filter.ResidualFilter       = get_flag(A,'residual_enable',s.filter.ResidualFilter);
+s.filter.ResidualThreshold    = get_num(A,'residual_thresh',s.filter.ResidualThreshold);
+s.filter.WMedianFilter        = get_flag(A,'w_median_enable',s.filter.WMedianFilter);
+s.filter.WMedianThreshold     = get_num(A,'w_median_thresh',s.filter.WMedianThreshold);
+s.filter.WLimitFilter         = get_flag(A,'w_limit_enable',s.filter.WLimitFilter);
+s.filter.WLimits              = [get_num(A,'w_limit_min',s.filter.WLimits(1)) get_num(A,'w_limit_max',s.filter.WLimits(2))];
 s.filter.ContrastFilter       = get_flag(A,'contrast_filter_enable',s.filter.ContrastFilter);
 s.filter.ContrastThreshold    = get_num(A,'contrast_filter_thresh',s.filter.ContrastThreshold);
 s.filter.BrightnessFilter     = get_flag(A,'bright_filter_enable',s.filter.BrightnessFilter);
@@ -90,6 +96,7 @@ c.y_axis_direction = get_num(C,'y_axis_direction',c.y_axis_direction);
 c.realdist = get_num(C,'realdist',c.realdist);
 c.time_inp = get_num(C,'time_inp',c.time_inp);
 c.displacement_only = (c.time_inp == 0);
+[c.calu, c.calv] = calibrate.uncalibrated_factors(c.x_axis_direction, c.y_axis_direction); % pixel units, until a reference distance is given
 if isfield(G,'calibration_data')
     data = G.calibration_data;
     c.pointscali = field_or_empty(data,'pointscali');
@@ -139,6 +146,16 @@ s.display.EnhanceImage = get_flag(D,'enhance_images',s.display.EnhanceImage);
 %% Stereo-PIV panel: disparity correction (as stereo.settings_from_gui)
 if ~isfield(s, 'stereo')
     s.stereo = struct();
+end
+if ~isfield(A,'stereo_disp_mode') || A.stereo_disp_mode ~= 2 % "Settings: Automatic": the defaults
+    d = stereo.defaults().disparity;
+    s.stereo.Pairs = d.Pairs;
+    s.stereo.Model = d.Model;
+    s.stereo.Passes = d.Passes;
+    s.stereo.InterrogationArea = d.InterrogationArea;
+    s.stereo.StdevThreshold = d.StdevThreshold;
+    s.stereo.LocalMedianThreshold = d.LocalMedianThreshold;
+    return
 end
 s.stereo.Pairs = max(0, round(get_num(A,'stereo_disp_pairs',field_or_empty(s.stereo,'Pairs')))); % 0 = automatic
 if isfield(A,'stereo_disp_model')

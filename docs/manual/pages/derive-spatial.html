@@ -92,20 +92,21 @@
     <a href="https://www.mathworks.com/help/matlab/ref/atan2d.html" target="_blank" rel="noopener"><code>atan2d</code></a>,
     reported between −180° and +180°:</p>
     <div class="eq">θ = atan2(<em>v</em> − <em>v</em><sub>0</sub>, <em>u</em> − <em>u</em><sub>0</sub>)</div>
-    <p>With PIVlab's default axis settings (<span class="ui">x increases towards the right</span>,
-    <span class="ui">y increases towards the bottom</span> — the usual image convention) the
-    angles line up like this:</p>
+    <p>With PIVlab's default axes (<em>x</em> right, <em>y</em> up) the angles line up like
+    this:</p>
     <table class="ref">
       <tr><th>Angle</th><th>Direction on screen</th></tr>
       <tr><td>0°</td><td>→ to the right</td></tr>
-      <tr><td>+90°</td><td>↓ downwards</td></tr>
+      <tr><td>+90°</td><td>↑ upwards</td></tr>
       <tr><td>+180° / −180°</td><td>← to the left</td></tr>
-      <tr><td>−90°</td><td>↑ upwards</td></tr>
+      <tr><td>−90°</td><td>↓ downwards</td></tr>
     </table>
-    <p>So 0° points right, and angles increase <strong>clockwise</strong> as you see them on
-    screen. If you set <span class="ui">y increases towards the top</span> in the
-    <a href="spatial-calibration.html">calibration</a> panel, the sign of <em>v</em> flips and
-    angles then increase <strong>counter-clockwise</strong> instead, with +90° pointing up.</p>
+    <p>Angles are measured from the <em>x</em> axis towards the <em>y</em> axis set in the
+    <a href="spatial-calibration.html">calibration</a>.</p>
+    <div class="v3">
+      <strong>PIVlab 3.14</strong>
+      With the default axes (<em>y</em> increases downward), +90° points down and −90° points up.
+    </div>
 
     <h3 id="eq-gradient">Gradient-based quantities</h3>
     <p>These are all built from the four spatial derivatives of the velocity field
@@ -126,10 +127,16 @@
     MATLAB's
     <a href="https://www.mathworks.com/help/matlab/ref/curl.html" target="_blank" rel="noopener"><code>curl</code></a>:</p>
     <div class="eq">ω = <em>∂v</em>/<em>∂x</em> − <em>∂u</em>/<em>∂y</em></div>
-    <p>PIVlab negates MATLAB's result, which sounds odd but is exactly what you want: image
-    coordinates run with <em>y</em> pointing <em>down</em>, and the sign flip cancels that out.
-    The result is the conventional definition above, so <strong>positive vorticity means
-    counter-clockwise rotation as it appears on your screen</strong>.</p>
+    <p>Vorticity is the <em>z</em> component of the rotation, in the coordinate system set in the
+    <a href="spatial-calibration.html#offsets">calibration</a> (<em>z</em> = <em>x</em> × <em>y</em>).
+    With the default axes (<em>x</em> right, <em>y</em> up), <strong>positive vorticity means
+    counter-clockwise rotation on screen</strong>.</p>
+    <div class="v3">
+      <strong>PIVlab 3.14</strong>
+      Positive vorticity is counter-clockwise rotation on screen with the default axes. If only one
+      axis direction is changed in the calibration (<em>x</em> to the left or <em>y</em> to the
+      top), the sign of the vorticity is wrong.
+    </div>
 
     <p><strong>Divergence</strong> — the net rate at which fluid flows out of each point, via
     MATLAB's

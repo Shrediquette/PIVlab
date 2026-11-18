@@ -321,6 +321,24 @@ window.MANUAL_SEARCH = [
     text: "image based validation filter low contrast bright objects correlation coefficient filter threshold suggest threshold"
   },
   {
+    title: "Stereo-based validation filters (residual, median of w, w limits)",
+    href: "pages/validation-stereo.html", hash: "top",
+    section: "Validation",
+    text: "stereo based validation stereo-piv reconstruction residual filter threshold dirt object local median filter w out-of-plane outliers w limits w min w max both cameras"
+  },
+  {
+    title: "Selecting W limits with the w histogram (stereo-based validation)",
+    href: "pages/validation-stereo.html", hash: "w-limits",
+    section: "Validation",
+    text: "w limits select auto histogram w out-of-plane range drag main peak outliers display all frames in histogram w min w max"
+  },
+  {
+    title: "Residual map (stereo-based validation)",
+    href: "pages/validation-stereo.html", hash: "residual-map",
+    section: "Validation",
+    text: "show residual map reconstruction residual threshold solid colour removed vectors magenta colour scale"
+  },
+  {
     title: "Setting the calibration scale",
     href: "pages/spatial-calibration.html", hash: "scaling",
     section: "Spatial calibration",
@@ -330,7 +348,7 @@ window.MANUAL_SEARCH = [
     title: "Axis directions and origin offset",
     href: "pages/spatial-calibration.html", hash: "offsets",
     section: "Spatial calibration",
-    text: "x axis direction y axis direction offset origin coordinate system top left bottom right"
+    text: "x axis direction y axis direction offset origin coordinate system right-handed z axis bottom left top right"
   },
   {
     title: "Derived flow parameters (vorticity, divergence, Q criterion, …)",
@@ -498,7 +516,7 @@ window.MANUAL_SEARCH = [
     title: "Correlation matrices",
     href: "pages/correlation-matrices.html", hash: "top",
     section: "Plot & post-processing",
-    text: "correlation matrices retrieve click vector passes diagnostic peak noisy"
+    text: "correlation matrices retrieve click vector passes diagnostic peak noisy stereo camera"
   },
   {
     title: "Second monitor display (experimental)",

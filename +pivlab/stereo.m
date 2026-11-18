@@ -20,7 +20,7 @@ function res = stereo(imgs, boards, board, opts)
 %   Verbose   true (default) / false
 %
 %   res is a normal PIVlab result (like pivlab.analyze) of U, V, with the out-of-plane component in res.w
-%   (positive away from camera 1, i.e. away from the cameras when both are on the same side), in px per image
+%   (positive along z = x cross y; with the default axes x right, y up: toward camera 1), in px per image
 %   pair of the common grid. As in the GUI after ANALYZE, the result is not validated yet: use pivlab.filter
 %   (it validates both cameras and makes U, V, W again; velocity limits act on U, V and the 3D magnitude),
 %   pivlab.toMetric (DeltaT is enough, the scale comes from the stereo calibration), pivlab.derive ("w",

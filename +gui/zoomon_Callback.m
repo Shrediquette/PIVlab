@@ -6,6 +6,7 @@ if get(hObject,'Value')==1
 	hZMenu = uimenu('Parent',hCMZ,'Label','Reset Zoom / Pan','Callback',@gui.zoom_reset_zoom);
 	hZoom=zoom(gcf);
 	hZoom.UIContextMenu = hCMZ;
+	hZoom.ActionPostCallback = @acquisition.redraw_camera_images; %live camera images: draw the zoomed part sharp
 	zoom(gui.retr('pivlab_axis'),'on')
 	set(handles.panon,'Value',0);
 else

@@ -4,6 +4,7 @@ if src.Button == 1
 	%only active if vectors are displayed.
 	handles=gui.gethand;
 	currentframe=2*floor(get(handles.fileselector, 'value'))-1;
+	fac=gui.frame_factors((currentframe+1)/2); %velocity, or standard deviation / TKE of temporal statistics
 	resultslist=gui.retr('resultslist');
 
 	%apply calibration, direction and offset to x and y coordinates
@@ -53,8 +54,8 @@ if src.Button == 1
 		delete(findobj(target_axis,'tag', 'infopoint'));
 		%here, the calibration matters...
 		if (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1%not calibrated
-			set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*gui.retr('calu')-gui.retr('subtr_u'))*100000)/100000) ' px/fr']);
-			set(handles.v_cp, 'String', ['v:' num2str(round((v(info(1,1),info(1,2))*gui.retr('calv')-gui.retr('subtr_v'))*100000)/100000) ' px/fr']);
+			set(handles.u_cp, 'String', ['u:' num2str(round((u(info(1,1),info(1,2))*fac.u-gui.retr('subtr_u'))*100000)/100000) ' px/fr']);
+			set(handles.v_cp, 'String', ['v:' num2str(round((v(info(1,1),info(1,2))*fac.v-gui.retr('subtr_v'))*100000)/100000) ' px/fr']);
 			set(handles.x_cp, 'String', ['x:' num2str(round((x_cal(info(1,1),info(1,2)))*10000)/10000) ' px']);
 			set(handles.y_cp, 'String', ['y:' num2str(round((y_cal(info(1,1),info(1,2)))*10000)/10000) ' px']);
 		else %calibrated
@@ -64,8 +65,8 @@ if src.Button == 1
 			else
 				time_unit='s';
 			end
-			u_cp_string_velocity=u(info(1,1),info(1,2))*gui.retr('calu')-gui.retr('subtr_u');
-			v_cp_string_velocity=v(info(1,1),info(1,2))*gui.retr('calv')-gui.retr('subtr_v');
+			u_cp_string_velocity=u(info(1,1),info(1,2))*fac.u-gui.retr('subtr_u');
+			v_cp_string_velocity=v(info(1,1),info(1,2))*fac.v-gui.retr('subtr_v');
 			x_cp_string = x_cal(info(1,1),info(1,2));
 			y_cp_string = y_cal(info(1,1),info(1,2));
 
@@ -79,7 +80,7 @@ if src.Button == 1
 				set(handles.u_cp, 'String',  ['u:' sprintf('%0.4f',u_cp_string_velocity) ' m/' time_unit]);
 				set(handles.v_cp, 'String',  ['v:' sprintf('%0.4f',v_cp_string_velocity) ' m/' time_unit]);
 			end
-			if x_cp_string > 100 || x_cp_string < 0.01 || y_cp_string > 100 || y_cp_string < 0.01
+			if abs(x_cp_string) > 100 || abs(x_cp_string) < 0.01 || abs(y_cp_string) > 100 || abs(y_cp_string) < 0.01 %exponential format for very large or small values (also negative ones)
 				set(handles.x_cp, 'String', ['x:' sprintf('%0.4e',x_cp_string)  ' m']);
 				set(handles.y_cp, 'String', ['y:' sprintf('%0.4e',y_cp_string)  ' m']);
 			else
@@ -96,7 +97,7 @@ if src.Button == 1
 					name=get(handles.derivchoice,'string');
 					try
 						scalar_to_plot=map(info(1,1),info(1,2));
-						if scalar_to_plot >100 || scalar_to_plot < 0.001
+						if abs(scalar_to_plot) > 100 || abs(scalar_to_plot) < 0.001
 							scalar_to_plot_string = sprintf('%0.4e',scalar_to_plot);
 						else
 							scalar_to_plot_string = sprintf('%0.4f',scalar_to_plot);
@@ -106,7 +107,7 @@ if src.Button == 1
 						plot.derivs_Callback
 						name=get(handles.derivchoice,'string');
 						scalar_to_plot=map(info(1,1),info(1,2));
-						if scalar_to_plot >100 || scalar_to_plot < 0.001
+						if abs(scalar_to_plot) > 100 || abs(scalar_to_plot) < 0.001
 							scalar_to_plot_string = sprintf('%0.4e',scalar_to_plot);
 						else
 							scalar_to_plot_string = sprintf('%0.4f',scalar_to_plot);
@@ -124,9 +125,9 @@ if src.Button == 1
 			if isempty(w)
 				set(handles.scalar_cp, 'String','N/A');
 			elseif (gui.retr('calu')==1 || gui.retr('calu')==-1) && gui.retr('calxy')==1 %not calibrated, like u and v
-				set(handles.scalar_cp, 'String', ['w:' num2str(round(w(info(1,1),info(1,2))*abs(gui.retr('calu'))*100000)/100000) ' px/fr']);
+				set(handles.scalar_cp, 'String', ['w:' num2str(round(w(info(1,1),info(1,2))*fac.w*100000)/100000) ' px/fr']);
 			else
-				w_cp_string_velocity=w(info(1,1),info(1,2))*abs(gui.retr('calu')); %|calu|: an axis flip of x or y does not flip w
+				w_cp_string_velocity=w(info(1,1),info(1,2))*fac.w; %w is positive along z = x cross y
 				if  magnitude_of_current_point > 100 || magnitude_of_current_point < 0.01
 					set(handles.scalar_cp, 'String',  ['w:' sprintf('%0.4e',w_cp_string_velocity) ' m/' time_unit]);
 				else
@@ -139,13 +140,13 @@ if src.Button == 1
 
 		try
 			magnitude_px=((u(info(1,1),info(1,2))).^2+(v(info(1,1),info(1,2))).^2).^0.5;
-			magnitude_m=((u(info(1,1),info(1,2))*gui.retr('calu')-gui.retr('subtr_u')).^2+(v(info(1,1),info(1,2))*gui.retr('calv')-gui.retr('subtr_v')).^2).^0.5;
+			magnitude_m=((u(info(1,1),info(1,2))*fac.u-gui.retr('subtr_u')).^2+(v(info(1,1),info(1,2))*fac.v-gui.retr('subtr_v')).^2).^0.5;
 			magnitude_label=' ';
 			w=stereo.w_of_frame((currentframe+1)/2,use_smoothed); %stereo-PIV: 3D magnitude, like 'Magnitude' in the derived parameters
 			if ~isempty(w)
 				w_point=w(info(1,1),info(1,2));
 				magnitude_px=(magnitude_px.^2+w_point.^2).^0.5;
-				magnitude_m=(magnitude_m.^2+(w_point*abs(gui.retr('calu'))).^2).^0.5;
+				magnitude_m=(magnitude_m.^2+(w_point*fac.w).^2).^0.5;
 				magnitude_label=' 3D: ';
 			end
 			magnitude_px = sprintf('%0.2g',magnitude_px);
@@ -166,12 +167,17 @@ if src.Button == 1
 		%% plot correlation matrices if the corresponding panel is visible
 		if handles.multip29.Visible
 			correlation_matrices_data = gui.retr('correlation_matrices_data');
-			if ~isempty(correlation_matrices_data) && currentframe == correlation_matrices_data.frame && size(x,1) == correlation_matrices_data.size(1) && size(x,2) == correlation_matrices_data.size(2) %% data was calculated for the currently visible frame
+			camera = 0; % 2D; stereo-PIV: the camera that is shown
+			if isequal(gui.retr('stereomode'), 1)
+				camera = gui.retr('stereo_active_camera');
+			end
+			if ~isempty(correlation_matrices_data) && isfield(correlation_matrices_data, 'camera') && correlation_matrices_data.camera ~= camera
+				gui.custom_msgbox('error',getappdata(0,'hgui'),'Other camera',['The correlation matrices were retrieved for camera ' int2str(correlation_matrices_data.camera) '. Retrieve them again for camera ' int2str(camera) '.'],'modal');
+			elseif ~isempty(correlation_matrices_data) && currentframe == correlation_matrices_data.frame && size(x,1) == correlation_matrices_data.size(1) && size(x,2) == correlation_matrices_data.size(2) %% data was calculated for the currently visible frame
 				fig=findobj('Tag','correlation_matrices_plot_matrix');
 				if isempty(fig)
 					fig=figure;
 					fig.Tag = 'correlation_matrices_plot_matrix';
-					fig.Name='Correlation matrices';
 					fig.IntegerHandle="off";
 					fig.DockControls="off";
 					%fig.WindowStyle="alwaysontop";
@@ -190,6 +196,19 @@ if src.Button == 1
 				end
 				t.TileSpacing = 'compact';
 				t.Padding = 'compact';
+				fig.Name = 'Correlation matrices';
+				if camera > 0
+					% stereo-PIV: the peaks are the 2D displacement of this camera (rectified images), not U, V, W
+					fig.Name = ['Correlation matrices - camera ' int2str(camera)];
+					title_text = ['Camera ' int2str(camera)];
+					camera_result = gui.retr('stereo_result');
+					if size(camera_result,2) >= (currentframe+1)/2 && isequal(size(camera_result{3,(currentframe+1)/2}), size(x))
+						u_camera = camera_result{3,(currentframe+1)/2}(info(1,1),info(1,2));
+						v_camera = camera_result{4,(currentframe+1)/2}(info(1,1),info(1,2));
+						title_text = [title_text ': u = ' sprintf('%0.2f',u_camera) ' px, v = ' sprintf('%0.2f',v_camera) ' px'];
+					end
+					title(t, title_text);
+				end
 				% find the corresponding correlation amtrices of the first passes
 				%info(1,2) %x koordinate
 				for pass = 1 : correlation_matrices_data.passes

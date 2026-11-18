@@ -1,11 +1,23 @@
 function select_capture_config_Callback (~,~,~)
 handles=gui.gethand;
 value=get(handles.ac_config,'value');
-config_string = handles.ac_config.String(value);
+config_string = char(handles.ac_config.String(value));
+
+%"PIVlab LD-PS + OPTOcam": the connected model (2/80 or 20/9) is detected here. The rest of PIVlab only
+%sees camera_type ('OPTOcam' = 2/80, 'OPTOcam_20_9' = 20/9). With no OPTOcam, the 2/80 settings are used for the
+%laser and 'OPTOcam_missing' is true (capture, live image, ROI and camera settings refuse to start).
+OPTOcam_model = '';
+if strcmpi(config_string,'PIVlab LD-PS + OPTOcam')
+	OPTOcam_model = detect_OPTOcam_model;
+end
+config_key = [config_string ' ' OPTOcam_model]; %another detected OPTOcam model counts as another configuration
 
 old_setting=gui.retr('old_setting');
-gui.put ('old_setting',config_string)
-if ~strcmpi(config_string,old_setting) %different camera/laser combination selected
+if ~ischar(old_setting)
+	old_setting='';
+end
+gui.put ('old_setting',config_key)
+if ~strcmpi(config_key,old_setting) && isempty(OPTOcam_model) %different camera/laser combination selected (the OPTOcam detection has released the cameras already)
 	gui.toolsavailable(0,'Releasing the previous camera...') %the first imaq call can take seconds
 	drawnow
 	try
@@ -13,6 +25,14 @@ if ~strcmpi(config_string,old_setting) %different camera/laser combination selec
 	catch %no Image Acquisition Toolbox
 	end
 	gui.toolsavailable(1)
+end
+old_setting = strtrim(old_setting); %the comparisons below compare the menu text (+ model for the OPTOcam)
+config_string = strtrim(config_key);
+%No OPTOcam found: the laser still works (with the 2/80 timing); only the camera functions refuse to start
+OPTOcam_missing = strcmpi(config_string,'PIVlab LD-PS + OPTOcam none');
+gui.put('OPTOcam_missing',OPTOcam_missing); %read by PIVlab_capture_OPTOcam_missing
+if OPTOcam_missing
+	config_string = 'PIVlab LD-PS + OPTOcam 2_80';
 end
 
 gui.put('do_realtime',0);
@@ -141,7 +161,7 @@ if strcmpi(config_string,'PIVlab LD-PS + FLIR FFY-U3-16S2M') % Flir
 	end
 	%end
 end
-if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2/80') % OPTOcam
+if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2_80') % OPTOcam 2/80 (detected)
 	gui.put('camera_type','OPTOcam');
 	gui.put('f1exp',352) % Exposure start -> Q1 delay
 	gui.put('f1exp_cam',350); %exposure time setting first frame
@@ -169,7 +189,7 @@ if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2/80') % OPTOcam
 	end
 	%end
 end
-if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 20/9') % OPTOcam 20/9 (double-frame PIV camera)
+if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 20_9') % OPTOcam 20/9 (detected, double-frame PIV camera)
 	gui.put('camera_type','OPTOcam_20_9');
 	gui.put('f1exp',352) % Exposure start -> Q1 delay (placeholder; refine with Line0/Line4 measurement)
 	gui.put('f1exp_cam',350); %exposure time setting first frame (placeholder)
@@ -319,7 +339,7 @@ if strcmpi(config_string,'Webcam demo (no synchronizer)')
             disp('https://www.mathworks.com/matlabcentral/fileexchange/45182-matlab-support-package-for-usb-webcams')
             gui.custom_msgbox('error',getappdata(0,'hgui'),'No webcam','Could not access webcam. This function requires the free MATLAB Support Package for USB Webcams add-on (the link is now displayed in the command window).','modal');
         end
-        set(handles.ac_config,'value',2); %webcam unavailable: fall back to the first real camera (index 2, OPTOcam 20/9), off the failed webcam entry (index 1)
+        set(handles.ac_config,'value',2); %webcam unavailable: fall back to the first real camera (index 2, OPTOcam), off the failed webcam entry (index 1)
 		acquisition.select_capture_config_Callback
         return
     end
@@ -359,7 +379,7 @@ else % not the webcam --> enable all controls
 	handles.ac_comport.Enable = 'on';
 end
 %"Stereo (2 cameras)" only for cameras that support stereo acquisition
-if acquisition.stereo_supported(gui.retr('camera_type'))
+if acquisition.stereo_supported(gui.retr('camera_type')) && ~OPTOcam_missing
 	handles.ac_stereo.Enable = 'on';
 else
 	handles.ac_stereo.Value = 0;
@@ -369,4 +389,42 @@ gui.apply_pending_popup(handles.ac_fps) %frame rate of the last session / loaded
 acquisition.exposure_Callback
 straddling_figure=findobj('tag','straddling_figure');
 acquisition.initiate_straddling_graph
+acquisition.camera_view_button %CAM button: stereo may have been switched off
 
+function model = detect_OPTOcam_model
+%'2_80', '20_9' or 'none'. A list found just before (PIVlab_capture_OPTOcam_model_changed) is used once
+%instead of enumerating the cameras again.
+models = gui.retr('OPTOcam_detected_models');
+gui.put('OPTOcam_detected_models',[]);
+if ~iscell(models)
+	gui.toolsavailable(0,'Looking for the OPTOcam...') %releasing the cameras and listing them can take seconds
+	drawnow
+	[models,imaq_error] = PIVlab_capture_OPTOcam_detect();
+	gui.toolsavailable(1)
+else
+	imaq_error = 0;
+end
+if imaq_error == 1
+	model = 'none';
+	gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Image Acquisition Toolbox not available! The OPTOcam needs the Image Acquisition Toolbox.','modal');
+elseif imaq_error == 2
+	model = 'none';
+	disp('https://de.mathworks.com/matlabcentral/fileexchange/45180')
+	gui.custom_msgbox('error',getappdata(0,'hgui'),'Error, support package missing',{'ERROR: gentl adaptor not found. Please got to Matlab file exchange and search for "GenICam Interface " to install it.' 'Link: https://de.mathworks.com/matlabcentral/fileexchange/45180'},'modal');
+elseif isempty(models)
+	model = 'none';
+	gui.custom_msgbox('error',getappdata(0,'hgui'),'No OPTOcam found','No OPTOcam found. Connect it and select the entry again.','modal');
+elseif isscalar(models)
+	model = models{1};
+else %a 2/80 and a 20/9 are connected
+	answer = gui.custom_msgbox('quest',getappdata(0,'hgui'),'Two OPTOcam models connected', ...
+		'An OPTOcam 2/80 and an OPTOcam 20/9 are connected. Which one should be used?','modal',{'OPTOcam 2/80','OPTOcam 20/9'},'OPTOcam 2/80');
+	if strcmp(answer,'OPTOcam 20/9')
+		model = '20_9';
+	else
+		model = '2_80';
+	end
+end
+if ~strcmp(model,'none')
+	disp(['Detected camera: OPTOcam ' strrep(model,'_','/')])
+end

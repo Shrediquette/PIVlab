@@ -116,15 +116,7 @@ if size(resultslist,2)>=frame && numel(resultslist{1,frame})>0 %analysis exists
 	cal.y_axis_direction=get(handles.y_axis_direction,'value'); %1= increase to bottom, 2= increase to top
 	copt.subtr_u=subtr_u;
 	copt.subtr_v=subtr_v;
-	copt.is_tke=false;
-	if deriv==3
-		ismean=gui.retr('ismean');
-		if numel(ismean)>=frame && ismean(frame) ==1 % temporal derivative
-			%total TKE is a simple sum of the x and y components, not a vector sum
-			filename=gui.retr('filename');
-			copt.is_tke=strncmpi(filename{frame*2-1},'TKE of frames',13);
-		end
-	end
+	[~, copt.statistic]=gui.frame_factors(frame); %temporal statistics: standard deviation and TKE have their own units
 	if deriv==10
 		copt.lic=@(vx,vy) plot.LIC(vx,vy,frame);
 	end

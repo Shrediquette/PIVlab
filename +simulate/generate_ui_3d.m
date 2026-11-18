@@ -5,7 +5,7 @@ function generate_ui_3d(MainWindow, default, margin, panelwidth, panelheightpane
 % Every edit field and popup menu is a setting (group tools of gui.default_settings).
 t = default.tools;
 P = uipanel(MainWindow, 'Units','characters', 'Position', [0+margin Figure_Size(4)-panelheightpanels-margin panelwidth panelheightpanels], ...
-    'title','Particle image generator (CTRL+G)', 'Tag','multip31','fontweight','bold');
+    'title','Particle image generator', 'Tag','multip31','fontweight','bold');
 pp = get(P, 'Position');
 w = pp(3);
 pos = @(parent, x, y, width, height) [x+margin parent(4)-height-margin-y width-margin*2 height];

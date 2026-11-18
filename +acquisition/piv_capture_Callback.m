@@ -1,5 +1,8 @@
 function piv_capture_Callback(~,~,~)
 gui.put('capturing',0);
+if PIVlab_capture_OPTOcam_missing %"OPTOcam" selected, but none was found
+	return
+end
 camera_type=gui.retr('camera_type');
 handles=gui.gethand;
 hgui=getappdata(0,'hgui');
@@ -207,7 +210,7 @@ if required_files_check
 				%                gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK')
 				%                acquisition.control_simple_sync_serial(1,0);
 				%                gui.put('laser_running',1);
-			elseif strcmpi(config_string,'PIVlab LD-PS + Chronos') || strcmpi(config_string,'PIVlab LD-PS + Basler acA2000-165um') || strcmpi(config_string,'PIVlab LD-PS + FLIR FFY-U3-16S2M') || strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2/80') || strcmpi(config_string,'PIVlab LD-PS + OPTOcam 20/9') || strcmpi(config_string,'PIVlab LD-PS + OPTRONIS Cyclone') || strcmpi(config_string,'Webcam demo (no synchronizer)')%chronos and basler and flir and OPTOcam and OPTRONIS: Camera needs to be started first, afterwards the laser is enabled.
+			elseif strcmpi(config_string,'PIVlab LD-PS + Chronos') || strcmpi(config_string,'PIVlab LD-PS + Basler acA2000-165um') || strcmpi(config_string,'PIVlab LD-PS + FLIR FFY-U3-16S2M') || strcmpi(config_string,'PIVlab LD-PS + OPTOcam') || strcmpi(config_string,'PIVlab LD-PS + OPTRONIS Cyclone') || strcmpi(config_string,'Webcam demo (no synchronizer)')%chronos and basler and flir and OPTOcam and OPTRONIS: Camera needs to be started first, afterwards the laser is enabled.
 				close(f)
 			end
 			camera_type=gui.retr('camera_type');
@@ -251,12 +254,17 @@ if required_files_check
 				gui.custom_msgbox('quest',getappdata(0,'hgui'),'Laser is armed','Pressing ''OK'' will start the laser.','modal',{'OK'},'OK');
 				acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
 				[OutputError,flir_vid] = PIVlab_capture_flir_synced_capture(flir_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display); %capture n images, display livestream
-			elseif strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2/80')  %OPTOcam
+			elseif strcmp(camera_type,'OPTOcam')  %OPTOcam 2/80
 				OPTOcam_bits =gui.camera_setting('OPTOcam_bits');
 				if isempty (OPTOcam_bits)
 					OPTOcam_bits=8;
 				end
-				[OutputError,OPTOcam_vid,frame_nr_display] = PIVlab_capture_OPTOcam_synced_start(imageamount,ac_ROI_general,cam_fps,OPTOcam_bits,acquisition.capture_cameras); %prepare cam(s) and start (waiting for trigger...); OPTOcam_vid: one videoinput per camera
+				try
+					[OutputError,OPTOcam_vid,frame_nr_display] = PIVlab_capture_OPTOcam_synced_start(imageamount,ac_ROI_general,cam_fps,OPTOcam_bits,acquisition.capture_cameras); %prepare cam(s) and start (waiting for trigger...); OPTOcam_vid: one videoinput per camera
+				catch ME
+					PIVlab_capture_OPTOcam_capture_error(ME,'2_80'); %returns only if an OPTOcam 20/9 is connected instead (GUI switched to it)
+					OutputError=1; OPTOcam_vid={}; frame_nr_display=[];
+				end
 				Error_Reason={};
 				OPTOcam_settings_check = 1;
 				max_fps_with_current_settings = inf;
@@ -284,13 +292,13 @@ if required_files_check
 					acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
 					[OutputError,OPTOcam_vid] = PIVlab_capture_OPTOcam_synced_capture(OPTOcam_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTOcam_bits); %capture n images, display livestream
 				else
-					if ~isempty(Error_Reason)
+					if ~isempty(Error_Reason) && OutputError == 0 %camera not found / swapped: that message was shown already
 						gui.custom_msgbox('error',getappdata(0,'hgui'),'',Error_Reason,'modal');
 					end
 					gui.put('cancel_capture',1);
 					imageamount=inf; %will prevent saving of images
 				end
-			elseif strcmpi(config_string,'PIVlab LD-PS + OPTOcam 20/9')  %OPTOcam 20/9 (double-frame mvPivShutter)
+			elseif strcmp(camera_type,'OPTOcam_20_9')  %OPTOcam 20/9 (double-frame mvPivShutter)
 				OPTOcam_bits =gui.camera_setting('OPTOcam_20_9_bits');
 				if isempty (OPTOcam_bits)
 					OPTOcam_bits=8;
@@ -303,9 +311,17 @@ if required_files_check
 				exposure1 = T209.exposure_set; %frame-1 exposure setting (quantised by the camera)
 				%max_pair_rate is delivered by synced_start: the camera's mvResultingFrameRate freezes once the
 				%double-frame mode is active, so it must be read inside synced_start before that mode is enabled.
-				[OutputError,OPTOcam_vid,frame_nr_display,max_pair_rate] = PIVlab_capture_OPTOcam_20_9_synced_start(imageamount,ac_ROI_general,cam_fps,OPTOcam_bits,exposure1); %prepare cam and start camera (waiting for external triggers on Line4)
+				try
+					[OutputError,OPTOcam_vid,frame_nr_display,max_pair_rate] = PIVlab_capture_OPTOcam_20_9_synced_start(imageamount,ac_ROI_general,cam_fps,OPTOcam_bits,exposure1,acquisition.capture_cameras); %prepare cam(s) and start (waiting for external triggers on Line4); OPTOcam_vid: one videoinput per camera
+				catch ME
+					PIVlab_capture_OPTOcam_capture_error(ME,'20_9'); %returns only if an OPTOcam 2/80 is connected instead (GUI switched to it)
+					OutputError=1; OPTOcam_vid={}; frame_nr_display=[]; max_pair_rate=inf;
+				end
 				Error_Reason={};
 				OPTOcam_settings_check = 1;
+				if OutputError ~= 0 %camera not found: the message was shown already
+					OPTOcam_settings_check = 0;
+				end
 				if cam_fps > max_pair_rate
 					OPTOcam_settings_check = 0;
 					Error_Reason{end+1,1}='Image-pair rate too high for the selected ROI and/or bit depth.';
@@ -334,7 +350,9 @@ if required_files_check
 					acquisition.control_simple_sync_serial(1,0); gui.put('laser_running',1); %turn on laser
 					[OutputError,OPTOcam_vid] = PIVlab_capture_OPTOcam_20_9_synced_capture(OPTOcam_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTOcam_bits); %capture n images, display livestream
 				else
-					gui.custom_msgbox('error',getappdata(0,'hgui'),'',Error_Reason,'modal');
+					if ~isempty(Error_Reason) && OutputError == 0 %camera not found / swapped: that message was shown already
+						gui.custom_msgbox('error',getappdata(0,'hgui'),'',Error_Reason,'modal');
+					end
 					gui.put('cancel_capture',1);
 					imageamount=inf; %will prevent saving of images
 				end
@@ -477,15 +495,15 @@ if required_files_check
 					[OutputError] = PIVlab_capture_flir_save(flir_vid,imageamount,projectpath,frame_nr_display); %save the images from ram to disk.
 				end
 			end
-			if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 2/80') %OPTOcam
+			if strcmp(camera_type,'OPTOcam') %OPTOcam 2/80
 				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
 					[OutputError,actually_saved_images] = PIVlab_capture_OPTOcam_save(OPTOcam_vid,imageamount,projectpath,frame_nr_display,OPTOcam_bits,cam_fps); %save the images from ram to disk.
 					imageamount=actually_saved_images;
 				end
 			end
-			if strcmpi(config_string,'PIVlab LD-PS + OPTOcam 20/9') %OPTOcam 20/9
+			if strcmp(camera_type,'OPTOcam_20_9') %OPTOcam 20/9
 				if ~isinf(imageamount) % when the nr. of images is inf, then dont save images. nr of images becomes inf when user selects to not save the images.
-					[OutputError,actually_saved_images] = PIVlab_capture_OPTOcam_20_9_save(OPTOcam_vid,imageamount,projectpath,frame_nr_display,OPTOcam_bits); %save the images from ram to disk.
+					[OutputError,actually_saved_images] = PIVlab_capture_OPTOcam_20_9_save(OPTOcam_vid,imageamount,projectpath,frame_nr_display,OPTOcam_bits,cam_fps); %save the images from ram to disk (stereo: cam1 / cam2).
 					imageamount=actually_saved_images;
 				end
 			end

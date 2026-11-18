@@ -1,5 +1,8 @@
 function calibcapture_Callback(~,~,~)
 filepath = fileparts(which('PIVlab_GUI.m'));
+if PIVlab_capture_OPTOcam_missing %"OPTOcam" selected, but none was found
+	return
+end
 camera_type=gui.retr('camera_type');
 if strcmp(camera_type,'pco_pixelfly') || strcmp(camera_type,'pco_panda') || strcmp(camera_type,'pco_edge26') %calib
     if exist('pco_camera_load_defines.m','file') && exist('pco_recorder.dll','file') %pco.matlab must have been added to matlab search path
@@ -47,6 +50,8 @@ else
 end
 if ready==1
     gui.put('last_auto_detected_charuco_boxes',[])
+    gui.put('charuco_camera_states',[]) %stereo: the same per camera (PIVlab_capture_charuco_detector)
+    gui.put('charuco_last_camera',[])
     handles=gui.gethand;
     try
         expos=round(str2num(get(handles.ac_expo,'String'))*1000);
@@ -94,9 +99,19 @@ if ready==1
         elseif strcmp(camera_type,'basler')
             [errorcode, caliimg]=PIVlab_capture_basler_calibration_image(inf,expos,ac_ROI_general);
         elseif strcmp(camera_type,'OPTOcam')
-            [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(inf,expos,ac_ROI_general,acquisition.capture_cameras); %stereo: caliimg = {camera 1, camera 2}
+            try
+                [errorcode, caliimg]=PIVlab_capture_OPTOcam_calibration_image(inf,expos,ac_ROI_general,acquisition.capture_cameras); %stereo: caliimg = {camera 1, camera 2}
+            catch ME
+                PIVlab_capture_OPTOcam_capture_error(ME,'2_80'); %returns only if an OPTOcam 20/9 is connected instead (GUI switched to it)
+                errorcode=1; caliimg=[];
+            end
         elseif strcmp(camera_type,'OPTOcam_20_9')
-            [errorcode, caliimg]=PIVlab_capture_OPTOcam_20_9_calibration_image(inf,expos,ac_ROI_general);
+            try
+                [errorcode, caliimg]=PIVlab_capture_OPTOcam_20_9_calibration_image(inf,expos,ac_ROI_general,acquisition.capture_cameras); %stereo: caliimg = {camera 1, camera 2}
+            catch ME
+                PIVlab_capture_OPTOcam_capture_error(ME,'20_9'); %returns only if an OPTOcam 2/80 is connected instead (GUI switched to it)
+                errorcode=1; caliimg=[];
+            end
         elseif strcmp(camera_type,'OPTRONIS')
             camera_sub_type=gui.retr('camera_sub_type');
             if endsWith(camera_sub_type, '-bitflow') && startsWith(camera_sub_type,'CyclonePlus')

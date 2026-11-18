@@ -45,7 +45,8 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		w(typevector==0)=nan;
 	end
 
-	calu=gui.retr('calu');calv=gui.retr('calv');
+	fac=gui.frame_factors(currentframe); %velocity, or standard deviation / TKE of temporal statistics
+	calu=fac.u;calv=fac.v;
 	calxy=gui.retr('calxy');
 	x=reshape(x,size(x,1)*size(x,2),1);
 	y=reshape(y,size(y,1)*size(y,2),1);
@@ -83,7 +84,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 			[n, xout]=hist(sqrt((u*calu-gui.retr('subtr_u')).^2+(v*calv-gui.retr('subtr_v')).^2),nrofbins);
 			xdescript='velocity magnitude';
 		else %stereo-PIV: 3D magnitude, like 'Magnitude' in the derived parameters
-			[n, xout]=hist(sqrt((u*calu-gui.retr('subtr_u')).^2+(v*calv-gui.retr('subtr_v')).^2+(w*abs(calu)).^2),nrofbins);
+			[n, xout]=hist(sqrt((u*calu-gui.retr('subtr_u')).^2+(v*calv-gui.retr('subtr_v')).^2+(w*fac.w).^2),nrofbins);
 			xdescript='velocity magnitude (3D)';
 		end
 	elseif choice_plot==4 %sub-pixels
@@ -92,7 +93,7 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 		[n, xout]=hist(frac,nrofbins);
 		xdescript='sub-pixel';
 	elseif choice_plot==5 %stereo-PIV: w
-		[n, xout]=hist(w*abs(calu),nrofbins); %|calu|: an axis flip of x or y does not flip w
+		[n, xout]=hist(w*fac.w,nrofbins); %w is positive along z = x cross y
 		xdescript='velocity (w)';
 	end
 	axh=axes(h);

@@ -23,6 +23,7 @@ matlab.toml
 **/PIVlab_capture_resources/_play_with_webcam.*
 **/PIVlab_capture_resources/*_tests/**/*
 **/PIVlab_capture_resources/_*
+**/PIVlab_capture_resources/**/_*
 **/PIVlab_capture_resources/william_*
 **/ftp_info.*
 **/.github/**/*

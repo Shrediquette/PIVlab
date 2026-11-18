@@ -127,9 +127,10 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 						v=resultslist{4,currentframe};
 						typevector=resultslist{5,currentframe};
 					end
-					calu=gui.retr('calu');calv=gui.retr('calv');
-					u=u*calu-gui.retr('subtr_u');
-					v=v*calv-gui.retr('subtr_v');
+					fac=gui.frame_factors(currentframe); %velocity, or standard deviation / TKE of temporal statistics
+					calu=gui.retr('calu');calv=gui.retr('calv'); %signs of the axes (tangent / normal direction)
+					u=u*fac.u-gui.retr('subtr_u');
+					v=v*fac.v-gui.retr('subtr_v');
 
 					u=plot.rescale_maps_nan(u,0,currentframe);
 					v=plot.rescale_maps_nan(v,0,currentframe);
@@ -247,9 +248,10 @@ if size(resultslist,2)>=currentframe && numel(resultslist{1,currentframe})>0
 						v=resultslist{4,currentframe};
 						typevector=resultslist{5,currentframe};
 					end
-					calu=gui.retr('calu');calv=gui.retr('calv');
-					u=u*calu-gui.retr('subtr_u');
-					v=v*calv-gui.retr('subtr_v');
+					fac=gui.frame_factors(currentframe); %velocity, or standard deviation / TKE of temporal statistics
+					calu=gui.retr('calu');calv=gui.retr('calv'); %signs of the axes (tangent / normal direction)
+					u=u*fac.u-gui.retr('subtr_u');
+					v=v*fac.v-gui.retr('subtr_v');
 					u=plot.rescale_maps_nan(u,0,currentframe);
 					v=plot.rescale_maps_nan(v,0,currentframe);
 

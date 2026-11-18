@@ -53,7 +53,7 @@ res = pivlab.filter(res);
 
 %% 4) Calibration: the scale comes from the stereo calibration, only the time step is needed
 res = pivlab.toMetric(res, DeltaT=delta_t);
-% res.x, res.y in m; res.u, res.v, res.w in m/s (w positive away from camera 1)
+% res.x, res.y in m; res.u, res.v, res.w in m/s (w positive toward camera 1)
 
 %% 5) Derived quantities, statistics, figures
 [res, w] = pivlab.derive(res, "w");                 % out-of-plane component

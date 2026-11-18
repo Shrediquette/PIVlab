@@ -78,7 +78,7 @@ set(h.pass3_enable, 'Value', 1); set(h.pass3_size, 'String', '24'); piv.pass3_ch
 helper_gui_analyze();
 gui.put('pointscali', [10 10; 110 10]);
 set(h.realdist, 'String', '10'); set(h.time_inp, 'String', '100');
-set(h.x_axis_direction, 'Value', 2); set(h.y_axis_direction, 'Value', 2);
+set(h.x_axis_direction, 'Value', 2); set(h.y_axis_direction, 'Value', 1); % not the default (2)
 calibrate.apply_cali_Callback([], [], []);
 gui.put('velrect', [-0.002 -0.002 0.004 0.004]);
 set(h.stdev_thresh, 'String', '6');

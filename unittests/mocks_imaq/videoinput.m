@@ -48,11 +48,18 @@ classdef videoinput < handle
     methods
         function obj = videoinput(adaptor, device_id, video_format)
             reg = getappdata(0, 'mock_imaq');
+            if nargin < 3
+                video_format = 'Mono8'; % default format
+            end
             obj.AdaptorName = adaptor;
             obj.DeviceID = device_id;
             obj.VideoFormat = video_format;
             obj.camera_index = device_id;
-            obj.Source = mock_imaq_source(reg.devices(device_id).serial);
+            user_id = '';
+            if isfield(reg.devices, 'user_id')
+                user_id = reg.devices(device_id).user_id;
+            end
+            obj.Source = mock_imaq_source(reg.devices(device_id).serial, user_id);
             obj.Name = [video_format '-' adaptor '-' int2str(device_id)];
             objects = getappdata(0, 'mock_imaq_objects');
             objects{end + 1} = obj;

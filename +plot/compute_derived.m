@@ -10,7 +10,9 @@ function out = compute_derived(x, y, u, v, deriv, cal, opts)
 %   cal         struct with calxy, calu, calv, x_axis_direction, y_axis_direction
 %   opts        struct with optional fields
 %                 subtr_u, subtr_v  velocity subtracted for magnitude/u/v/LIC/direction (calibrated units)
-%                 is_tke            true: magnitude of a TKE frame is the sum of both components
+%                 statistic         '' (default) or 'mean', 'sum', 'std', 'tke' for frames of temporal
+%                                   statistics (calibrate.statistic_factors; magnitude of a TKE frame is
+%                                   the sum of the components)
 %                 correlation_map   needed for deriv 12
 %                 uncertainty       uncertainty map in px/frame, needed for deriv 13
 %                 lic               function handle @(vx,vy) computing the LIC image (deriv 10)
@@ -24,9 +26,12 @@ if nargin < 7
 end
 subtr_u = get_opt(opts,'subtr_u',0);
 subtr_v = get_opt(opts,'subtr_v',0);
-calu = cal.calu; calv = cal.calv; calxy = cal.calxy;
+calxy = cal.calxy;
+%factors to the user's units: velocities (w positive along z = x cross y), or standard deviation / TKE
+f = calibrate.statistic_factors(cal.calu, cal.calv, get_opt(opts,'statistic',''));
+calu = f.u; calv = f.v; calw = f.w;
 
-%The direction of the coordinate system influences derivatives with gradients.
+%Derivatives are computed in the user's coordinate system (x, y, z right-handed, z = x cross y).
 if cal.x_axis_direction==1
     x_adjusted=x;
 else
@@ -45,18 +50,18 @@ if any(deriv==[2 6 7 8 9]) && (size(u,1)<2 || size(u,2)<2)
     return
 end
 switch deriv
-    case 2 %vorticity
+    case 2 %vorticity: z component of the curl, dv/dx - du/dy
         [curlz,~]= curl(x_adjusted*calxy,y_adjusted*calxy,u*calu,v*calv);
-        out=-curlz;
+        out=curlz;
     case 3 %magnitude
-        w = get_opt(opts,'w',[]); %stereo-PIV: 3D magnitude (|calu| for w: an axis flip does not flip w)
-        if get_opt(opts,'is_tke',false) % total TKE is to be calculated, just a simple sum of x and y
+        w = get_opt(opts,'w',[]); %stereo-PIV: 3D magnitude
+        if strcmpi(get_opt(opts,'statistic',''),'tke') % total TKE is to be calculated, just a simple sum of x and y
             out=(u*calu)+(v*calv);
             if ~isempty(w)
-                out=out+w*abs(calu);
+                out=out+w*calw;
             end
         elseif ~isempty(w)
-            out=sqrt((u*calu-subtr_u).^2+(v*calv-subtr_v).^2+(w*abs(calu)).^2);
+            out=sqrt((u*calu-subtr_u).^2+(v*calv-subtr_v).^2+(w*calw).^2);
         else
             out=sqrt((u*calu-subtr_u).^2+(v*calv-subtr_v).^2);
         end
@@ -75,7 +80,8 @@ switch deriv
     case 10
         lic = get_opt(opts,'lic',[]);
         if ~isempty(lic)
-            out=lic(v*calv-subtr_v,u*calu-subtr_u);
+            %the LIC image is drawn on the image: components in image directions (x right, y down)
+            out=lic((v*calv-subtr_v)*sign(calv),(u*calu-subtr_u)*sign(calu));
         end
     case 11
         try
@@ -90,12 +96,12 @@ switch deriv
     case 13
         unc = get_opt(opts,'uncertainty',[]);
         if ~isempty(unc)
-            out=unc * abs(calu);
+            out=unc * abs(cal.calu);
         end
     case 14 %w component (stereo-PIV)
         w = get_opt(opts,'w',[]);
         if ~isempty(w)
-            out=w * abs(calu);
+            out=w * calw;
         end
 end
 end

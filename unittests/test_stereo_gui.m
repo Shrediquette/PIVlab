@@ -674,14 +674,23 @@ verifyTrue(testCase, all(inside(:)), 'ROI leaves the overlap');
 pointscali = gui.retr('pointscali');
 verifyEqual(testCase, str2double(get(handles.realdist, 'String')) / abs(diff(pointscali(:, 1))), ...
     calib.Ravg.PixelExtentInWorldX, 'RelTol', 1e-4, 'mm per px of the spatial calibration');
-steps = get(handles.stereo_steps, 'String');
+steps = step_texts(handles);
 verifyTrue(testCase, startsWith(steps{4}, char(10003)), 'checklist: stereo calibration not ticked');
 verifyTrue(testCase, startsWith(steps{7}, char(10007)), 'checklist: time step ticked before it was applied');
+% done rows green, open rows red, only the first open row bold
+for k = 1:7
+    row = handles.(['stereo_step_' int2str(k)]);
+    color = get(row, 'ForegroundColor');
+    verifyEqual(testCase, color(2) > color(1), startsWith(steps{k}, char(10003)), sprintf('colour of step %d', k));
+    first_open = find(~startsWith(steps, char(10003)), 1);
+    verifyEqual(testCase, strcmp(get(row, 'FontWeight'), 'bold'), k == first_open, sprintf('bold of step %d', k));
+end
+verifyEqual(testCase, char(get(handles.stereo_steps, 'Visible')), 'off', 'the "load images" note in stereo mode');
 % time step applied in the calibration panel: ticked in the checklist
 set(handles.time_inp, 'String', '2');
 calibrate.apply_cali_Callback;
 stereo.panel_Callback;
-steps = get(handles.stereo_steps, 'String');
+steps = step_texts(handles);
 verifyTrue(testCase, startsWith(steps{7}, char(10003)), 'checklist: time step not ticked after applying it');
 % rectification panel: no 2D rectification and upscaling in stereo mode, a note instead
 verifyEqual(testCase, char(get(handles.calib_userectification, 'Visible')), 'off', '2D rectification must be hidden in stereo mode');
@@ -762,7 +771,7 @@ verifyGreaterThan(testCase, after, 1.5 * before, 'the correction should clearly 
 verifyGreaterThan(testCase, after, before + 0.1, 'the correction should clearly improve the agreement');
 fprintf('agreement of camera 1 and camera 2 images: %.2f without, %.2f with the disparity correction\n', before, after);
 % panel, displays, automatic ROI
-steps = get(handles.stereo_steps, 'String');
+steps = step_texts(handles);
 verifyTrue(testCase, startsWith(steps{5}, char(10003)), 'checklist: disparity not ticked');
 verifyNotEmpty(testCase, strfind(strjoin(get(handles.stereo_disp_report, 'String'), ' '), 'Light sheet'));
 % measured remaining disparity (what the correction leaves): small on synthetic data, in the report
@@ -821,14 +830,61 @@ verifyLessThan(testCase, d.accuracy_estimate, 0.5);
 verifyEqual(testCase, d.pairs, sort(d.pairs), 'pairs not in the order of their numbers');
 verifyTrue(testCase, startsWith(d.report{1}, '10 pairs (automatic), map accurate to ~'), d.report{1});
 verifyEqual(testCase, size(d.raw.u_frames, 3), 10);
-% fixed number: the same choice as before (spread with linspace)
+% fixed number: the same choice as before (spread with linspace); only used in manual mode
 set(handles.stereo_disp_pairs, 'String', '3');
+stereo.measure_disparity_Callback;
+verifyTrue(testCase, gui.retr('stereo_disparity').auto, 'automatic mode used the manual "Pairs"');
+set(handles.stereo_disp_mode, 'Value', 2);
 stereo.measure_disparity_Callback;
 d = gui.retr('stereo_disparity');
 verifyFalse(testCase, d.auto);
 verifyEqual(testCase, d.pairs, unique(round(linspace(1, 12, 3))));
 verifyTrue(testCase, startsWith(d.report{1}, '3 pairs'), d.report{1});
 set(handles.stereo_disp_pairs, 'String', '0');
+set(handles.stereo_disp_mode, 'Value', 1);
+end
+
+function test_disparity_mode(testCase)
+% "Settings: Automatic" hides the manual settings and shortens the panel (top and "Show" stay);
+% the mode is part of the settings files and the API settings
+helper_start_pivlab();
+handles = gui.gethand;
+gui.switchui('multip30');
+verifyEqual(testCase, get(handles.stereo_disp_mode, 'Value'), 1, 'default is not automatic');
+verifyEqual(testCase, char(get(handles.stereo_disp_manual, 'Visible')), 'off');
+verifyEqual(testCase, char(get(handles.stereo_disp_show, 'Visible')), 'on');
+auto_pos = get(handles.stereo_disp_panel, 'Position');
+set(handles.stereo_disp_mode, 'Value', 2);
+stereo.disparity_mode_Callback;
+verifyEqual(testCase, char(get(handles.stereo_disp_manual, 'Visible')), 'on');
+manual_pos = get(handles.stereo_disp_panel, 'Position');
+verifyEqual(testCase, manual_pos(2) + manual_pos(4), auto_pos(2) + auto_pos(4), 'AbsTol', 1e-9, 'top of the panel moved');
+verifyGreaterThan(testCase, manual_pos(4), auto_pos(4));
+results = get(handles.stereo_disp_results, 'Position');
+manual = get(handles.stereo_disp_manual, 'Position');
+verifyLessThanOrEqual(testCase, results(2) + results(4), manual(2) + 1e-9, 'results overlap the manual settings');
+verifyGreaterThanOrEqual(testCase, results(2), -1e-9, 'results below the panel');
+% settings file round trip
+set(handles.stereo_disp_passes, 'String', '5');
+settings = gui.collect_settings(getappdata(0, 'hgui'));
+verifyEqual(testCase, settings.analysis.stereo_disp_mode, 2);
+file = fullfile(testCase.TestData.folder, 'disparity_mode_settings.mat');
+export.write_settings_file(file, settings);
+api = pivlab.loadSettings(file);
+verifyEqual(testCase, api.stereo.Passes, 5);
+set(handles.stereo_disp_mode, 'Value', 1);
+gui.update_dependent_controls;
+verifyEqual(testCase, stereo.settings_from_gui(handles).disparity.Passes, stereo.defaults().disparity.Passes, 'automatic used the manual value');
+gui.apply_settings(settings, {'analysis'});
+verifyEqual(testCase, get(handles.stereo_disp_mode, 'Value'), 2);
+verifyEqual(testCase, char(get(handles.stereo_disp_manual, 'Visible')), 'on');
+verifyEqual(testCase, stereo.settings_from_gui(handles).disparity.Passes, 5);
+settings.analysis.stereo_disp_mode = 1;
+export.write_settings_file(file, settings);
+api = pivlab.loadSettings(file);
+verifyEqual(testCase, api.stereo.Passes, stereo.defaults().disparity.Passes, 'API: automatic used the manual value');gui.apply_settings(struct(), {'analysis'}); % defaults
+verifyEqual(testCase, char(get(handles.stereo_disp_manual, 'Visible')), 'off');
+verifyEqual(testCase, get(handles.stereo_disp_panel, 'Position'), auto_pos, 'AbsTol', 1e-9);
 end
 
 function test_stereo_analysis_in_gui(testCase)
@@ -934,7 +990,7 @@ verifyTrue(testCase, calib.opposite_sides);
 report = strjoin(calib.report, ' ');
 verifyNotEmpty(testCase, strfind(report, 'Cameras on opposite sides of the light sheet'));
 verifyNotEmpty(testCase, strfind(report, 'Camera 2 sees the board from behind'));
-verifyNotEmpty(testCase, strfind(report, 'w is positive away from camera 1'));
+verifyNotEmpty(testCase, strfind(report, 'x right, y up: toward camera 1'));
 stereo.show_3d_Callback;
 fig = findall(0, 'Type', 'figure', 'Name', 'Stereo-PIV setup in 3D');
 verifyNumElements(testCase, fig, 1);
@@ -949,7 +1005,7 @@ check_accuracy(testCase, result_error(c), [0.008 0.008 0.01]);
 folder = testCase.TestData.folder;
 export.mat_file_save(1, 'w_opposite.mat', folder, 2);
 M = load(fullfile(folder, 'w_opposite.mat'));
-verifyEqual(testCase, M.stereo.w_sign, 'w is positive away from camera 1');
+verifyEqual(testCase, M.stereo.w_sign, 'w is positive toward camera 1'); % default axes x right, y up: z toward the cameras
 end
 
 function test_3d_result_out_of_pivlab(testCase)
@@ -967,8 +1023,9 @@ set(h.update_display_checkbox, 'Value', 0);
 piv.AnalyzeAll_Callback;
 set(h.time_inp, 'String', '2'); % spatial calibration of the stereo calibration + time step: m/s
 calibrate.apply_cali_Callback;
-calu = abs(gui.retr('calu'));
-verifyNotEqual(testCase, calu, 1, 'not calibrated');
+calu = calibrate.w_factor(gui.retr('calu'), gui.retr('calv')); % w along z = x cross y
+verifyNotEqual(testCase, abs(calu), 1, 'not calibrated');
+verifyLessThan(testCase, calu, 0, 'default axes x right, y up: w is positive toward the cameras, W away from them');
 rl = gui.retr('resultslist');
 W = rl{16, 1};
 verifyTrue(testCase, any(isfinite(W(:))), 'no W in row 16');
@@ -1098,7 +1155,7 @@ calv = gui.retr('calv');
 verifyTrue(testCase, (calu == 1 || calu == -1) && gui.retr('calxy') == 1, 'expected px/frame');
 U = rl{7, 1} * calu;
 V = rl{8, 1} * calv;
-W = rl{16, 1} * abs(calu);
+W = rl{16, 1} * calibrate.w_factor(calu, calv); % w along z = x cross y
 verifyTrue(testCase, any(isfinite(W(:))), 'no W');
 
 % statistics values: mean, min, max, std of u, v, w
@@ -1112,7 +1169,7 @@ set(h.smooth_param, 'String', '0.5');
 plot.derivative_calc(1, 4, 0);
 plot.statistics_Callback;
 rl_smoothed = gui.retr('resultslist');
-expect_stats(testCase, h, 'w', rl_smoothed{17, 1} * abs(calu));
+expect_stats(testCase, h, 'w', rl_smoothed{17, 1} * calibrate.w_factor(calu, calv));
 set(h.smooth_mode, 'Value', 1);
 plot.derivative_calc(1, 4, 0);
 rl = gui.retr('resultslist');
@@ -1233,7 +1290,7 @@ function test_velocity_limits_on_3d_result(testCase)
 h = gui.gethand;
 calu = gui.retr('calu');
 U = raw{3, 1} * calu;
-W = raw{16, 1} * abs(calu);
+W = raw{16, 1} * calibrate.w_factor(calu, gui.retr('calv'));
 umin = velrect(1);
 umax = velrect(1) + velrect(3);
 gui.put('velrect', velrect);
@@ -1319,6 +1376,396 @@ rl = gui.retr('resultslist');
 verifyNotEmpty(testCase, rl{16, 1}, 'W missing after analysing all frames again');
 verifyEqual(testCase, size(rl{16, 1}), size(rl{1, 1}));
 verifyEqual(testCase, get(h.AnalyzeAll, 'Enable'), 'on');
+end
+
+function test_correlation_matrices_per_camera(testCase)
+% "Retrieve correlation matrices": matrices of the camera shown, the same PIV as the analysis of this
+% camera, full matrices in pass 2; after a camera switch the matrices of the other camera are not shown
+% (before: shown without a hint) (2026-11-18)
+c = helper_stereo_synthetic_case(fullfile(testCase.TestData.folder, 'corrmat_case'), 2, 0);
+helper_start_pivlab();
+h = gui.gethand;
+calibrate_in_gui(c);
+set(h.pass1_size, 'String', '64'); piv.intarea_Callback(h.pass1_size, [], []);
+set(h.pass1_step, 'String', '32'); piv.step_Callback(h.pass1_step, [], []);
+set(h.pass2_enable, 'Value', 1); set(h.pass2_size, 'String', '32'); piv.pass2_checkbox_Callback(h.pass2_enable, [], []);
+evalc('piv.AnalyzeSingle_Callback');
+plot.correlation_matrices_Callback;
+data = cell(1, 2);
+for k = 1:2
+    stereo.switch_camera(k);
+    evalc('plot.correlation_matrices_calculate');
+    data{k} = gui.retr('correlation_matrices_data');
+    verifyEqual(testCase, data{k}.camera, k, 'camera of the matrices');
+    % same images, settings and peak search as the analysis of this camera
+    s = piv.settings_from_gui(h);
+    s.do_correlation_matrices = 1;
+    s.compute_uncertainty = 0;
+    r = piv.analyze_pair(import.get_img(1), import.get_img(2), {}, s);
+    R = gui.retr('stereo_result');
+    verifyEqual(testCase, r.u, R{3, 1}, sprintf('camera %d: u of the analysis', k));
+    verifyEqual(testCase, r.v, R{4, 1}, sprintf('camera %d: v of the analysis', k));
+    verifyEqual(testCase, r.correlation_matrices, data{k}.correlation_matrices, sprintf('camera %d: matrices', k));
+    % pass 2: full matrix (the restricted one is constant outside the peak search area, e.g. in the corners)
+    corner = double(data{k}.correlation_matrices{2}(1:3, 1:3, :));
+    spread = max(max(corner, [], 1), [], 2) - min(min(corner, [], 1), [], 2);
+    verifyTrue(testCase, any(spread(:) > 0), sprintf('camera %d: pass 2 matrices restricted to the peak search area', k));
+end
+verifyNotEqual(testCase, data{1}.correlation_matrices{2}, data{2}.correlation_matrices{2}, 'same matrices for both cameras');
+% retrieved for camera 2, camera 1 shown: no matrices
+stereo.switch_camera(1);
+rl = gui.retr('resultslist');
+x = rl{1, 1};
+y = rl{2, 1};
+row = round(size(x, 1) / 2);
+col = round(size(x, 2) / 2);
+close(findobj('Tag', 'correlation_matrices_plot_matrix'));
+click_vector(x(row, col), y(row, col));
+verifyEmpty(testCase, findobj('Tag', 'correlation_matrices_plot_matrix'), 'matrices of camera 2 shown for camera 1');
+% retrieved for camera 1: shown, with the camera
+evalc('plot.correlation_matrices_calculate');
+click_vector(x(row, col), y(row, col));
+fig = findobj('Tag', 'correlation_matrices_plot_matrix');
+verifyNotEmpty(testCase, fig, 'no matrices shown');
+verifyEqual(testCase, fig.Name, 'Correlation matrices - camera 1');
+shown = findobj(fig, 'Type', 'image');
+xp = data{1}.all_xy_tables{2, 1};
+yp = data{1}.all_xy_tables{2, 2};
+idx = find(xp == x(row, col) & yp == y(row, col), 1);
+verifyEqual(testCase, shown(1).CData, data{1}.correlation_matrices{2}(:, :, idx), 'matrix of the clicked vector (pass 2)');
+close(fig);
+end
+
+function test_stereo_validation_panel(testCase)
+% Validation -> Stereo based validation (2026-11-18): its own panel with the stereo filters (off by default),
+% also shown in 2D; the "Interpolate missing data" checkboxes of the three validation panels are one setting
+helper_start_pivlab();
+h = gui.gethand;
+hgui = getappdata(0, 'hgui');
+controls = {'residual_enable', 'residual_thresh', 'w_median_enable', 'w_median_thresh', 'w_limit_enable', ...
+    'w_limit_min', 'w_limit_max', 'w_limit_select', 'w_limit_auto', 'w_hist_all_frames', 'stereo_show_residual', 'interpol_missing3'};
+for k = 1:numel(controls)
+    verifyTrue(testCase, isequal(ancestor(h.(controls{k}), 'uipanel', 'toplevel'), h.multip32) || isequal(get(h.(controls{k}), 'Parent'), h.multip32), ...
+        [controls{k} ' not in the stereo based validation panel']);
+end
+% W limits in their own sub-panel, like "Velocity limits (u & v)" (2026-11-18)
+w_controls = {'w_limit_enable', 'w_limit_min', 'w_limit_max', 'w_limit_select', 'w_limit_auto', 'w_hist_all_frames'};
+for k = 1:numel(w_controls)
+    verifyTrue(testCase, isequal(get(h.(w_controls{k}), 'Parent'), h.w_limit_panel), [w_controls{k} ' not in the W limits sub-panel']);
+end
+verifyEqual(testCase, h.w_limit_panel.Title, 'W limits');
+verifyNumElements(testCase, findobj(h.multip06, 'Type', 'uipanel', 'Title', 'Velocity limits (u & v)'), 1, 'velocity limits sub-panel title');
+verifyNumElements(testCase, findobj(h.multip06, 'Type', 'uicontrol', 'String', 'Clear all u & v velocity limits'), 1, 'clear velocity limits button text');
+% no shortcut in the panel titles (2026-11-18)
+panels = findobj(hgui, 'Type', 'uipanel');
+for k = 1:numel(panels)
+    verifyFalse(testCase, contains(string(panels(k).Title), 'CTRL', 'IgnoreCase', true), ['shortcut in the panel title "' char(string(panels(k).Title)) '"']);
+end
+verifyEmpty(testCase, findobj(h.multip06, 'Tag', 'residual_enable'), 'residual filter still in the vector validation panel');
+verifyEqual(testCase, [h.residual_enable.Value h.w_median_enable.Value h.w_limit_enable.Value h.stereo_show_residual.Value], [0 0 0 0], 'a stereo filter is on by default');
+verifyEqual(testCase, {h.residual_thresh.String, h.w_median_thresh.String, h.w_limit_min.String, h.w_limit_max.String}, {'2', '3', '-1', '1'}, 'default values');
+verifyEqual(testCase, {h.stereo_show_residual.UserData, h.interpol_missing3.UserData}, {'not_a_setting', 'not_a_setting'});
+verifyEqual(testCase, h.w_hist_all_frames.Value, 1, 'W histogram: all frames by default');
+% the W limit buttons do nothing in 2D
+validate.w_limit_select_Callback(h.w_limit_auto);
+verifyEmpty(testCase, findobj('Tag', 'w_limit_figure'), '2D: W histogram opened');
+verifyEqual(testCase, {h.w_limit_min.String, h.w_limit_max.String}, {'-1', '1'}, '2D: Auto changed the W limits');
+% menu entry: visible and enabled in 2D, opens the panel
+menu = findall(hgui, 'Tag', 'menu_stereovalidation');
+verifyNumElements(testCase, menu, 1);
+verifyEqual(testCase, get(get(menu, 'Parent'), 'Text'), 'Validation');
+verifyEqual(testCase, {char(menu.Visible), char(menu.Enable)}, {'on', 'on'}, '2D: menu entry hidden or greyed out');
+verifyEqual(testCase, gui.retr('stereomode'), 0);
+validate.stereo_val_Callback;
+verifyEqual(testCase, {char(h.multip32.Visible), char(h.multip06.Visible), char(h.multip23.Visible)}, {'on', 'off', 'off'});
+verify_panel_layout(testCase, h.multip32);
+verify_panel_layout(testCase, h.w_limit_panel);
+verify_panel_layout(testCase, h.multip06);
+% the three "Interpolate missing data" checkboxes show one setting
+set(h.interpol_missing3, 'Value', 0);
+validate.set_other_interpol_checkbox(h.interpol_missing3);
+verifyEqual(testCase, [h.interpol_missing.Value h.interpol_missing2.Value h.interpol_missing3.Value], [0 0 0], 'unticked in the stereo panel');
+set(h.interpol_missing, 'Value', 1);
+validate.set_other_interpol_checkbox(h.interpol_missing);
+verifyEqual(testCase, [h.interpol_missing.Value h.interpol_missing2.Value h.interpol_missing3.Value], [1 1 1], 'ticked in the vector validation panel');
+set(h.interpol_missing2, 'Value', 0);
+validate.set_other_interpol_checkbox(h.interpol_missing2);
+verifyEqual(testCase, [h.interpol_missing.Value h.interpol_missing2.Value h.interpol_missing3.Value], [0 0 0], 'unticked in the image validation panel');
+set(h.interpol_missing, 'Value', 1);
+validate.set_other_interpol_checkbox(h.interpol_missing);
+% stereo mode: the same panel
+positions = get(findobj(h.multip32, 'Type', 'uicontrol'), 'Position');
+import_stereo(testCase);
+verifyEqual(testCase, gui.retr('stereomode'), 1);
+validate.stereo_val_Callback;
+verifyEqual(testCase, get(findobj(h.multip32, 'Type', 'uicontrol'), 'Position'), positions, 'stereo mode changes the panel');
+verifyEqual(testCase, char(h.multip32.Visible), 'on');
+stereo.leave_stereo_mode;
+end
+
+function verify_panel_layout(testCase, panel)
+% every visible control and sub-panel inside the panel, no two of them on top of each other (the controls of a
+% sub-panel have positions relative to it)
+k = findobj(panel, '-depth', 1, 'Visible', 'on', '-regexp', 'Type', '^(uicontrol|uipanel)$');
+k = k(k ~= panel);
+p = get(panel, 'Position');
+name = get(panel, 'Title');
+for i = 1:numel(k)
+    a = k(i).Position;
+    verifyTrue(testCase, a(1) >= 0 && a(2) >= 0 && a(1) + a(3) <= p(3) + 1e-9 && a(2) + a(4) <= p(4) + 1e-9, ...
+        sprintf('%s: "%s" outside the panel', name, label(k(i))));
+    for j = i + 1:numel(k)
+        b = k(j).Position;
+        overlap_x = min(a(1) + a(3), b(1) + b(3)) - max(a(1), b(1));
+        overlap_y = min(a(2) + a(4), b(2) + b(4)) - max(a(2), b(2));
+        verifyFalse(testCase, overlap_x > 1e-6 && overlap_y > 1e-6, ...
+            sprintf('%s: "%s" and "%s" overlap', name, label(k(i)), label(k(j))));
+    end
+end
+end
+
+function s = label(k)
+% text of a control or title of a sub-panel, for the test messages
+if isprop(k, 'String')
+    s = char(join(string(k.String), ' '));
+else
+    s = char(string(k.Title));
+end
+if isempty(s)
+    s = ['(' char(string(k.Tag)) ')'];
+end
+end
+
+function test_basic_mode_hides_stereo(testCase)
+% Basic mode hides the stereo based validation and the stereo checkbox of the image acquisition; then a
+% ticked checkbox (e.g. from a settings file) does not record with two cameras (2026-11-18). Every tag of
+% PIVlab_hidden_elements.txt exists.
+helper_start_pivlab();
+h = gui.gethand;
+hgui = getappdata(0, 'hgui');
+lines = strtrim(splitlines(fileread(fullfile(fileparts(which('PIVlab_GUI.m')), 'PIVlab_hidden_elements.txt'))));
+tags = lines(~startsWith(lines, '#') & strlength(lines) > 0);
+for k = 1:numel(tags)
+    verifyNotEmpty(testCase, findall(hgui, 'Tag', tags{k}), ['PIVlab_hidden_elements.txt: no element ' tags{k}]);
+end
+gui.put('camera_type', 'OPTOcam');
+set(h.ac_stereo, 'Value', 1);
+verifyEqual(testCase, acquisition.capture_cameras, 2, 'advanced: ticked stereo checkbox');
+gui.apply_ui_mode('basic');
+hidden = {'menu_stereovalidation', 'multip32', 'ac_stereo', 'menu_stereopiv', 'stereo_import'};
+for k = 1:numel(hidden)
+    verifyEqual(testCase, char(get(findall(hgui, 'Tag', hidden{k}), 'Visible')), 'off', ['basic mode: ' hidden{k} ' shown']);
+end
+verifyEqual(testCase, acquisition.capture_cameras, 1, 'basic mode: records with two cameras');
+gui.apply_ui_mode('advanced');
+for k = 1:numel(hidden)
+    if ~strcmp(hidden{k}, 'multip32') % panels: shown by gui.switchui
+        verifyEqual(testCase, char(get(findall(hgui, 'Tag', hidden{k}), 'Visible')), 'on', ['advanced mode: ' hidden{k} ' hidden']);
+    end
+end
+verifyEqual(testCase, acquisition.capture_cameras, 2, 'advanced again');
+set(h.ac_stereo, 'Value', 0);
+end
+
+function test_stereo_filters_in_gui(testCase)
+% the filters of the stereo based validation panel on the raw 3D result: residual, median of W, W limits;
+% removed in both cameras. "Show residual map": residual of the unvalidated result with the threshold line,
+% only while the panel is open (2026-11-18)
+raw = limits_case(testCase, 'stereo_filter_case', 1);
+h = gui.gethand;
+[~, vel] = stereo.reconstruct_results(true);
+% residual
+residual = abs(double(vel.residual(:, :, 1)));
+threshold = prctile(residual(:), 80);
+set(h.residual_enable, 'Value', 1);
+set(h.residual_thresh, 'String', num2str(threshold, 10));
+validate.apply_filter_all_Callback;
+above = residual > threshold;
+verify_discarded(testCase, 1, above, isfinite(residual) & ~above, 'residual filter');
+set(h.residual_enable, 'Value', 0);
+validate.restore_all_Callback;
+% W limits
+W = raw{16, 1} * calibrate.w_factor(gui.retr('calu'), gui.retr('calv'));
+w_limits = prctile(W(:), [20 80]);
+set(h.w_limit_enable, 'Value', 1);
+set(h.w_limit_min, 'String', num2str(w_limits(2), 10)); % swapped: the order does not matter
+set(h.w_limit_max, 'String', num2str(w_limits(1), 10));
+validate.apply_filter_all_Callback;
+outside = W < w_limits(1) | W > w_limits(2);
+verify_discarded(testCase, 1, outside, isfinite(W) & ~outside, 'W limits');
+set(h.w_limit_enable, 'Value', 0);
+validate.restore_all_Callback;
+% graphical W limits (2026-11-18): "Auto" = main peak of the W histogram of all frames, written to the panel
+W_all = [];
+for i = 1:size(raw, 2)
+    w = raw{16, i}(:) * calibrate.w_factor(gui.retr('calu'), gui.retr('calv'));
+    W_all = [W_all; double(w(isfinite(w)))]; %#ok<AGROW>
+end
+expected_range = validate.w_limit_auto_range(W_all, validate.w_limit_bin_edges(W_all));
+validate.w_limit_select_Callback(h.w_limit_auto);
+limit_figure = findobj('Tag', 'w_limit_figure');
+verifyNumElements(testCase, limit_figure, 1, 'Auto: no W histogram');
+verifyEqual(testCase, {h.w_limit_min.String, h.w_limit_max.String, h.w_limit_enable.Value}, ...
+    {sprintf('%.4g', expected_range(1)), sprintf('%.4g', expected_range(2)), 1}, 'Auto: W limits not written to the panel');
+histograms = getappdata(limit_figure, 'w_histograms');
+verifyEqual(testCase, numel(histograms(1).Data) + numel(histograms(2).Data), numel(W_all), 'histogram: not all frames');
+verifyEqual(testCase, get(findobj(limit_figure, 'Type', 'axes'), 'YScale'), 'linear');
+% dragging the range: full height kept, panel values follow, colours follow on release
+roi = findobj(limit_figure, 'Tag', 'w_limit_ROI');
+y_range = ylim(roi.Parent);
+new_range = prctile(W_all, [30 70]);
+roi.Position = [new_range(1) 1 diff(new_range) 3];
+validate.w_limit_roi_events(roi, struct('EventName', 'MovingROI'));
+verifyEqual(testCase, roi.Position([2 4]), [y_range(1) diff(y_range)], 'AbsTol', 1e-9, 'range: height not kept');
+verifyEqual(testCase, str2double({h.w_limit_min.String h.w_limit_max.String}), new_range, 'RelTol', 1e-3, 'range: panel values');
+validate.w_limit_roi_events(roi, struct('EventName', 'ROIMoved'));
+inside = W_all >= roi.Position(1) & W_all <= roi.Position(1) + roi.Position(3);
+verifyEqual(testCase, [numel(histograms(1).Data) numel(histograms(2).Data)], [nnz(inside) nnz(~inside)], 'range: colours');
+delete(limit_figure);
+verifyEqual(testCase, h.w_limit_enable.Value, 1, 'closing the window unticked "W limits"');
+% one frame only; "Select" shows the panel values without changing them
+set(h.w_hist_all_frames, 'Value', 0);
+set(h.fileselector, 'Value', 1); gui.fileselector_Callback(h.fileselector, [], []);
+set(h.w_limit_min, 'String', '-1'); set(h.w_limit_max, 'String', '1'); set(h.w_limit_enable, 'Value', 0);
+validate.w_limit_select_Callback(h.w_limit_select);
+limit_figure = findobj('Tag', 'w_limit_figure');
+histograms = getappdata(limit_figure, 'w_histograms');
+verifyEqual(testCase, numel(histograms(1).Data) + numel(histograms(2).Data), nnz(isfinite(W)), 'histogram: not only frame 1');
+verifyEqual(testCase, {h.w_limit_min.String, h.w_limit_max.String, h.w_limit_enable.Value}, {'-1', '1', 0}, 'Select changed the panel');
+delete(limit_figure);
+set(h.w_hist_all_frames, 'Value', 1);
+% median of W (the test itself: test_api_stereo/test_w_median_finds_spikes)
+filters = struct('residual_thresh', [], 'w_median_thresh', 1.5, 'w_limits', []);
+expected = stereo.limit_test(W, W, W, [], [], [], residual, raw{16, 1}, filters);
+verifyTrue(testCase, any(expected(:)), 'test case: no W outlier at threshold 1.5');
+set(h.w_median_enable, 'Value', 1);
+set(h.w_median_thresh, 'String', '1.5');
+validate.apply_filter_all_Callback;
+verify_discarded(testCase, 1, expected, isfinite(W) & ~expected, 'median of W');
+set(h.w_median_enable, 'Value', 0);
+validate.restore_all_Callback;
+% residual map (frame 1; ANALYZE leaves the last frame shown)
+ax = gui.retr('pivlab_axis');
+set(h.fileselector, 'Value', 1); gui.fileselector_Callback(h.fileselector, [], []);
+validate.stereo_val_Callback;
+verifyEmpty(testCase, findobj(ax, 'Tag', 'stereo_disparity_display'), 'residual map without "Show residual map"');
+% "Show residual map" only with the residual filter (2026-11-18)
+verifyEqual(testCase, char(h.stereo_show_residual.Enable), 'off', '"Show residual map" enabled without the residual filter');
+set(h.residual_enable, 'Value', 1);
+validate.residual_enable_Callback;
+verifyEqual(testCase, char(h.stereo_show_residual.Enable), 'on', '"Show residual map" disabled with the residual filter');
+set(h.stereo_show_residual, 'Value', 1);
+validate.stereo_show_residual_Callback;
+verifyNotEmpty(testCase, findobj(ax, 'Type', 'image', 'UserData', 'residual_removed'), 'no residual map');
+set(h.residual_enable, 'Value', 0);
+validate.residual_enable_Callback;
+verifyEqual(testCase, [h.stereo_show_residual.Value strcmp(h.stereo_show_residual.Enable, 'off')], [0 1], 'unticking the residual filter: "Show residual map" still on');
+verifyEmpty(testCase, findobj(ax, 'Tag', 'stereo_disparity_display'), 'unticking the residual filter: residual map still shown');
+set(h.residual_enable, 'Value', 1);
+validate.residual_enable_Callback;
+verifyEmpty(testCase, findobj(ax, 'Tag', 'stereo_disparity_display'), 'ticking the residual filter shows the map without "Show residual map"');
+set(h.stereo_show_residual, 'Value', 1);
+validate.stereo_show_residual_Callback;
+% a new threshold in the edit field updates the map
+set(h.residual_thresh, 'String', num2str(prctile(residual(:), 50), 10));
+validate.stereo_value_Callback(h.residual_thresh);
+threshold = str2double(h.residual_thresh.String); % as shown in the panel
+removed_layer = findobj(ax, 'Type', 'image', 'Tag', 'stereo_disparity_display', 'UserData', 'residual_removed');
+verifyNumElements(testCase, removed_layer, 1, 'no layer of the removed vectors');
+verifyEqual(testCase, removed_layer.AlphaData, double(residual > threshold), 'removed layer: not the vectors above the threshold');
+verifyEqual(testCase, squeeze(removed_layer.CData(1, 1, :))', [1 0 1], 'removed layer: not magenta with parula');
+verifyNumElements(testCase, findobj(ax, 'Type', 'image', 'Tag', 'stereo_disparity_display'), 2, 'no residual map');
+bar = findobj(ancestor(ax, 'figure'), 'Tag', 'stereo_disparity_colorbar');
+verifyEqual(testCase, bar.Limits(2), threshold, 'AbsTol', 1e-9, 'colour scale does not end at the threshold');
+note = findobj(ax, 'Type', 'text', 'Tag', 'stereo_disparity_display');
+verifyTrue(testCase, contains(note.String, 'Residual before validation') ...
+    && contains(note.String, sprintf('Magenta: above %g px (%.1f %%', threshold, 100 * nnz(residual > threshold) / nnz(isfinite(residual)))), note.String);
+set(h.fileselector, 'Value', 2); gui.fileselector_Callback(h.fileselector, [], []);
+verifyNotEmpty(testCase, findobj(ax, 'Type', 'image', 'UserData', 'residual_removed'), 'frame 2: no residual map');
+% colour map cool (cyan to magenta): another colour
+maps = get(h.colormap_choice, 'String');
+default_map = get(h.colormap_choice, 'Value');
+set(h.colormap_choice, 'Value', find(strcmpi(maps, 'cool')));
+validate.stereo_show_residual_Callback;
+removed_layer = findobj(ax, 'Type', 'image', 'UserData', 'residual_removed');
+verifyNotEqual(testCase, squeeze(removed_layer.CData(1, 1, :))', [1 0 1], 'removed layer with cool: magenta');
+set(h.colormap_choice, 'Value', default_map);
+% Apply unticks "Show residual map": the validated vectors are shown (2026-11-18)
+validate.apply_filter_current_Callback;
+verifyEqual(testCase, h.stereo_show_residual.Value, 0, 'Apply to current frame: "Show residual map" still ticked');
+verifyEmpty(testCase, findobj(ax, 'Tag', 'stereo_disparity_display'), 'Apply to current frame: residual map still shown');
+set(h.stereo_show_residual, 'Value', 1);
+validate.stereo_show_residual_Callback;
+validate.apply_filter_all_Callback;
+verifyEqual(testCase, h.stereo_show_residual.Value, 0, 'Apply to all frames: "Show residual map" still ticked');
+verifyEmpty(testCase, findobj(ax, 'Tag', 'stereo_disparity_display'), 'Apply to all frames: residual map still shown');
+validate.restore_all_Callback;
+set(h.stereo_show_residual, 'Value', 1);
+validate.stereo_show_residual_Callback;
+validate.vector_val_Callback;
+verifyEmpty(testCase, findobj(ax, 'Tag', 'stereo_disparity_display'), 'residual map still shown in the vector validation panel');
+set([h.stereo_show_residual h.residual_enable], 'Value', 0);
+gui.update_dependent_controls(h);
+end
+
+function test_stereo_filters_skipped_in_2d(testCase)
+% 2D results: the ticked stereo filters change nothing, "Apply" works as in the other panels (2026-11-18)
+helper_start_pivlab();
+h = gui.gethand;
+paths = testCase.TestData.plain;
+gui.put('sequencer', 1);
+import.loadimgsbutton_Callback([], [], 0, struct('name', paths(:), 'isdir', num2cell(false(numel(paths), 1))));
+verifyEqual(testCase, gui.retr('stereomode'), 0);
+set(h.update_display_checkbox, 'Value', 0);
+evalc('piv.AnalyzeAll_Callback');
+validate.apply_filter_all_Callback;
+plain = gui.retr('resultslist');
+set([h.residual_enable h.w_median_enable h.w_limit_enable], 'Value', 1);
+set(h.residual_thresh, 'String', '0');
+set(h.w_median_thresh, 'String', '0');
+set(h.w_limit_min, 'String', '0');
+set(h.w_limit_max, 'String', '0');
+validate.stereo_val_Callback;
+validate.apply_filter_all_Callback;
+with_stereo = gui.retr('resultslist');
+verifyEqual(testCase, with_stereo(7:9, :), plain(7:9, :), '2D: the stereo filters changed the result');
+validate.apply_filter_current_Callback;
+verifyEqual(testCase, gui.retr('resultslist'), with_stereo, '2D: apply to current frame');
+set([h.residual_enable h.w_median_enable h.w_limit_enable], 'Value', 0);
+end
+
+function test_cancel_stops_both_cameras(testCase)
+% Cancel during ANALYZE (all frames) also stops camera 2 (before: the analysis of camera 1 reset 'cancel'
+% before it returned, so camera 2 was analysed anyway) (2026-11-17)
+c = helper_stereo_synthetic_case(fullfile(testCase.TestData.folder, 'cancel_case'), 3, 0);
+helper_start_pivlab();
+h = gui.gethand;
+calibrate_in_gui(c);
+set(h.update_display_checkbox, 'Value', 0);
+% hidden: control_simple_sync_serial deletes the visible timers
+t = timer('ObjectVisibility', 'off', 'ExecutionMode', 'fixedSpacing', 'Period', 0.01, 'TimerFcn', @press_cancel_in_camera_1);
+start(t);
+evalc('piv.AnalyzeAll_Callback');
+stop(t);
+delete(t);
+verifyEqual(testCase, getappdata(0, 'test_cancel_pressed'), 1, 'Cancel was not pressed during camera 1');
+state = gui.retr('stereo_cam_state');
+cam2 = state{2}.stereo_result;
+if gui.retr('stereo_active_camera') == 2
+    cam2 = gui.retr('stereo_result');
+end
+verifyTrue(testCase, isempty(cam2) || all(cellfun(@isempty, cam2(1, :))), 'camera 2 was analysed after Cancel');
+verifyEmpty(testCase, gui.retr('resultslist'), '3D result after Cancel');
+verifyEqual(testCase, get(h.AnalyzeAll, 'Enable'), 'on');
+rmappdata(0, 'test_cancel_pressed');
+end
+
+function press_cancel_in_camera_1(t, ~)
+if isequal(gui.retr('stereo_camera_loop'), 1) && gui.retr('stereo_active_camera') == 1
+    piv.cancelbutt_Callback;
+    setappdata(0, 'test_cancel_pressed', 1);
+    stop(t);
+end
 end
 
 function test_velocity_limits_parallel(testCase)
@@ -1520,5 +1967,13 @@ for n = 1:n_pairs
         imwrite(uint8(255 * rand(sz)), file);
         files{end + 1, 1} = file; %#ok<AGROW>
     end
+end
+end
+
+function steps = step_texts(handles)
+% texts of the seven rows of the Steps panel (stereo.update_panel)
+steps = cell(1, 7);
+for k = 1:7
+    steps{k} = get(handles.(['stereo_step_' int2str(k)]), 'String');
 end
 end

@@ -1,21 +1,28 @@
 function [OutputError,OPTOcam_vid] = PIVlab_capture_OPTOcam_20_9_synced_capture(OPTOcam_vid,nr_of_images,do_realtime,ROI_live,frame_nr_display,bitmode)
-% Live capture loop for the OPTOcam 20/9 double-frame PIV acquisition. The camera was
-% started (waiting for external triggers on Line4) by PIVlab_capture_OPTOcam_20_9_synced_start.
-% This function shows the live preview / sharpness / histogram / autofocus while the
+% Live capture loop for the OPTOcam 20/9 double-frame PIV acquisition, one camera or both cameras of a
+% stereo setup. The cameras were started (waiting for external triggers on Line4) by
+% PIVlab_capture_OPTOcam_20_9_synced_start; OPTOcam_vid is a cell array with one videoinput per camera.
+% This function shows the live preview / sharpness / histogram / autofocus (one camera only) while the
 % synchronizer drives the acquisition, then stops. Frames arrive as A,B,A,B... pairs;
 % saving into _A/_B is done by PIVlab_capture_OPTOcam_20_9_save.
 % CPU load: the frames are drawn at a limited rate (PIVlab_capture_OPTOcam_20_9_preview_update), and this
 % loop runs at that rate (overlays, status text) and sleeps in between.
+if ~iscell(OPTOcam_vid)
+	OPTOcam_vid = {OPTOcam_vid};
+end
+n_cameras = numel(OPTOcam_vid);
 warning('off','imaq:gentl:noSupportedPixelFormat')
 hgui=getappdata(0,'hgui');
-image_handle_OPTOcam=getappdata(hgui,'image_handle_OPTOcam_20_9');
+image_handles=getappdata(hgui,'image_handles_OPTOcam_20_9');
+image_handle_OPTOcam=image_handles{1};
 OutputError=0;
 OPTOcam_frames_to_capture = nr_of_images*2;
 set(frame_nr_display,'backgroundcolor','k');
-display_rate = getappdata(image_handle_OPTOcam,'max_display_rate');
-if isempty(display_rate)
-	display_rate = 10;
-end
+%Frames drawn per second and camera, from the pixels actually drawn (zoom, CAM button): a small budget of
+%5 megapixels per second in total, so that MATLAB is not busy with the display while the cameras record
+%(a busy MATLAB loses frames). Full sensor: about 3 frames/s per camera with both shown, 2 with one.
+pixel_budget = 5e6;
+max_rate = 10;
 delaycounter=0; %autofocus state
 delaycounter2=0;
 delay_time_1=tic;
@@ -24,25 +31,27 @@ sharp_loop_cnt=[];
 t0 = tic;
 next_update = 0;
 %% capture data
-while OPTOcam_vid.FramesAcquired < (OPTOcam_frames_to_capture) &&  getappdata(hgui,'cancel_capture') ~=1
+while frames_acquired(OPTOcam_vid) < (OPTOcam_frames_to_capture) &&  getappdata(hgui,'cancel_capture') ~=1
 	if toc(t0) < next_update
 		pause(0.01); %sleep and process GUI callbacks instead of spinning
 		continue
 	end
+	display_rate = acquisition.display_rate(image_handles,max_rate,pixel_budget); %also read by the preview callback
 	next_update = toc(t0) + 1/display_rate;
 	if ~isinf(OPTOcam_frames_to_capture)
-		if OPTOcam_vid.FramesAcquired == 0
+		acquired = frames_acquired(OPTOcam_vid);
+		if acquired == 0
 			set(frame_nr_display,'String','Waiting for trigger...')
 		else
-			set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTOcam_vid.FramesAcquired/2))]);
+			set(frame_nr_display,'String',['Image nr.: ' int2str(round(acquired/2))]);
 		end
 	else
 		set(frame_nr_display,'String','PIV preview');
 	end
-	acquisition.live_overlays({image_handle_OPTOcam},'capture'); %sharpness, grid
+	acquisition.live_overlays(image_handles,'capture'); %sharpness, grid
 	ima = getappdata(image_handle_OPTOcam,'frame');
 	drawnow limitrate;
-	if isempty(ima) %no camera frame yet
+	if isempty(ima) || n_cameras > 1 %no camera frame yet; autofocus: one camera (one lens controller)
 		continue
 	end
     %% Autofocus
@@ -161,15 +170,24 @@ while OPTOcam_vid.FramesAcquired < (OPTOcam_frames_to_capture) &&  getappdata(hg
 end
 
 
-stoppreview(OPTOcam_vid)
-stop(OPTOcam_vid);
+for k=1:n_cameras
+	stoppreview(OPTOcam_vid{k})
+	stop(OPTOcam_vid{k});
+end
 
 if ~isinf(OPTOcam_frames_to_capture)
-    set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTOcam_vid.FramesAcquired/2))]);
+    set(frame_nr_display,'String',['Image nr.: ' int2str(round(frames_acquired(OPTOcam_vid)/2))]);
 else
     set(frame_nr_display,'String','PIV preview stopped.');
 end
 drawnow;
+
+function acquired = frames_acquired(OPTOcam_vid)
+%frames of the slower camera
+acquired = inf;
+for k=1:numel(OPTOcam_vid)
+	acquired = min(acquired,OPTOcam_vid{k}.FramesAcquired);
+end
 
 function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');

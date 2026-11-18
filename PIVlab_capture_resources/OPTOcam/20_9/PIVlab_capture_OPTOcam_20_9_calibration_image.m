@@ -1,109 +1,63 @@
-function [OutputError,ima_out,frame_nr_display] = PIVlab_capture_OPTOcam_20_9_calibration_image(img_amount,exposure_time,ROI_OPTOcam)
-% Calibration / live image for the OPTOcam 20/9: single frames, manual trigger, continuous preview,
-% normal single (non-double) frame. The bit depth follows the OPTOcam 20/9 settings (same pixel format
-% as the PIV capture, so the opened camera can be reused, see PIVlab_capture_OPTOcam_20_9_open).
-% ima_out is always stretched to the full uint16 range.
+function [OutputError,ima_out,frame_nr_display] = PIVlab_capture_OPTOcam_20_9_calibration_image(img_amount,exposure_time,ROI_OPTOcam,n_cameras)
+% Calibration / live image for the OPTOcam 20/9, one camera or two side by side (stereo acquisition,
+% n_cameras = 2): single frames, manual trigger, continuous preview, normal single (non-double) frame. The
+% bit depth follows the OPTOcam 20/9 settings (same pixel format as the PIV capture, so the opened cameras
+% can be reused, see PIVlab_capture_OPTOcam_20_9_open).
+% img_amount: number of camera frames to show (inf = until Stop, 1 = one image for the ROI selection).
+% ima_out is always stretched to the full uint16 range; stereo: cell {camera 1, camera 2}.
 % CPU load: the camera sends at most 10 frames/s, the frames are drawn at a limited rate
-% (PIVlab_capture_rate_limited_preview, about 40 megapixels per second) and the overlays are computed at
-% that rate, not for every camera frame.
+% (PIVlab_capture_rate_limited_preview, about 40 megapixels per second in total) and the overlays are
+% computed at that rate, not for every camera frame.
+if nargin < 4
+    n_cameras = 1;
+end
 OutputError=0;
 hgui=getappdata(0,'hgui');
 bitmode = gui.camera_setting('OPTOcam_20_9_bits');
 if isempty(bitmode)
     bitmode = 8;
 end
-%% Prepare camera
-[OPTOcam_vid,imaq_error] = PIVlab_capture_OPTOcam_20_9_open(bitmode);
+%% Prepare cameras
+[OPTOcam_vids,imaq_error] = PIVlab_capture_OPTOcam_20_9_open(bitmode,n_cameras);
 if imaq_error~=0
     OutputError=1;
     ima_out=[];
     frame_nr_display=[];
     return
 end
-OPTOcam_settings = get(OPTOcam_vid);
-%Sensor power management (standby/active) intentionally NOT used for now:
-%putting the sensor to standby increases its reaction time to software triggers. The sensor is
-%left in its default active state.
-try
-    OPTOcam_settings.Source.DeviceLinkThroughputLimitMode = 'Off';
-catch
-end
-OPTOcam_settings.PreviewFullBitDepth='On';
-OPTOcam_vid.PreviewFullBitDepth='On';
-
-triggerconfig(OPTOcam_vid, 'manual');
-OPTOcam_settings.TriggerMode ='manual';
-try
-    OPTOcam_settings.Source.mvShutterMode = 'mvGlobalShutter'; %calibration uses a normal single (non-double) frame
-catch
-end
-
-%% Line0 = ExposureActive output (used to measure timings/delays on the rig)
-OPTOcam_settings.Source.LineSelector = 'Line0';
-OPTOcam_settings.Source.LineSource   = 'ExposureActive';
-OPTOcam_settings.Source.LineInverter = 'False';
-
-%% Line1 = AcquisitionActive output (used to signal activity on the camera LED and to turn off the fan)
-OPTOcam_settings.Source.LineSelector = 'Line1';
-OPTOcam_settings.Source.LineSource   = 'AcquisitionActive';
-OPTOcam_settings.Source.LineInverter = 'False';
-
-%% Binning (set with the "Binning" button). Must be set BEFORE the ROI: the ROI is in binned pixels.
-binning = getappdata(hgui,'binning');
+binning = getappdata(hgui,'binning'); %set with the "Binning" button
 if isempty(binning)
     binning = 1;
 end
-if OPTOcam_settings.Source.BinningHorizontal ~= binning || OPTOcam_settings.Source.BinningVertical ~= binning
-    try
-        OPTOcam_vid.ROIPosition = [0 0 OPTOcam_vid.VideoResolution]; %full frame first, so the (reused) camera accepts the new binning
-    catch
-    end
-    OPTOcam_settings.Source.BinningHorizontalMode = 'Average'; %no changes to bitmode, max and min stays the same
-    OPTOcam_settings.Source.BinningVerticalMode = 'Average';
-    OPTOcam_settings.Source.BinningHorizontal = binning; %1, 2 or 4
-    OPTOcam_settings.Source.BinningVertical = binning;
-    %MATLAB updates VideoResolution only when an acquisition starts (measured). Without this, a larger
-    %ROI is rejected after reducing the binning ("VideoResolution width exceeded").
-    start(OPTOcam_vid); stop(OPTOcam_vid);
-end
-
-OPTOcam_settings.Source.TriggerMode ='Off';
-OPTOcam_settings.Source.ExposureMode ='Timed';
-OPTOcam_settings.Source.ExposureTime =exposure_time;
-try %at most 10 frames/s from the camera: a live image does not need more, and less data means less CPU load
-    OPTOcam_settings.Source.AcquisitionFrameRateEnable = 'True';
-    OPTOcam_settings.Source.AcquisitionFrameRate = min(10, 1e6/exposure_time);
-catch
-end
-
 ROI_OPTOcam=[ROI_OPTOcam(1)-1,ROI_OPTOcam(2)-1,ROI_OPTOcam(3),ROI_OPTOcam(4)]; %unfortunaletly different definitions of ROI in pco and OPTOcam.
-OPTOcam_vid.ROIPosition=ROI_OPTOcam;
-
-OPTOcam_settings.Source.ReverseX = 'False'; %orientation of the OPTOcam 20/9; change to 'True' if image is mirrored
-OPTOcam_settings.Source.ReverseY = 'False';
-OPTOcam_gain = gui.camera_setting('OPTOcam_20_9_gain');
-if isempty (OPTOcam_gain)
-    OPTOcam_gain=0;
+for k=1:n_cameras
+    configure_live(OPTOcam_vids{k},exposure_time,ROI_OPTOcam,binning);
 end
-OPTOcam_settings.Source.Gain = OPTOcam_gain;
 
 %% prepare axis
 PIVlab_axis = gui.retr('pivlab_axis');
-[image_handles,frame_nr_display] = acquisition.live_images(1,[ROI_OPTOcam(3) ROI_OPTOcam(4)],2^bitmode);
+[image_handles,frame_nr_display] = acquisition.live_images(n_cameras,[ROI_OPTOcam(3) ROI_OPTOcam(4)],2^bitmode);
 image_handle_OPTOcam = image_handles{1};
-setappdata(hgui,'image_handle_OPTOcam_20_9',image_handle_OPTOcam);
+setappdata(hgui,'image_handles_OPTOcam_20_9',image_handles);
 
 %% get images
-display_rate = min(10, 40e6/(ROI_OPTOcam(3)*ROI_OPTOcam(4))); %frames per second drawn (full frame: 2/s)
-OPTOcam_vid.FramesPerTrigger = 1;
+%Frames drawn per second and camera: from the pixels actually drawn (screen size, zoom, cameras shown), at most
+%40 megapixels per second in total, so that PIVlab stays responsive (Stop button). Updated in the loop below.
+max_rate = 10; %the camera sends at most 10 frames/s in the live image
+pixel_budget = 40e6;
+display_rate = max_rate;
 set(frame_nr_display,'String','');
 %preview() first shows a placeholder image until the first camera frame arrives (~1.5 s at full frame).
 %The callback only receives real frames, so it counts them: needed for the single-image grab (ROI selection).
-setappdata(image_handle_OPTOcam,'frames_shown',0);
-setappdata(image_handle_OPTOcam,'max_display_rate',display_rate);
-setappdata(image_handle_OPTOcam,'UpdatePreviewWindowFcn',@PIVlab_capture_rate_limited_preview);
-preview(OPTOcam_vid,image_handle_OPTOcam)
+for k=1:n_cameras
+    OPTOcam_vids{k}.FramesPerTrigger = 1;
+    setappdata(image_handles{k},'frames_shown',0);
+    setappdata(image_handles{k},'max_display_rate',display_rate);
+    setappdata(image_handles{k},'UpdatePreviewWindowFcn',@PIVlab_capture_rate_limited_preview);
+    preview(OPTOcam_vids{k},image_handles{k})
+end
 caxis(PIVlab_axis,[0 2^bitmode]); %#ok<CAXIS> seems to be a workaround to force preview to show full data range...
+acquisition.apply_camera_view %preview() sets the axes limits to its own image: show the cameras chosen with the CAM button
 displayed_img_amount=0;
 delaycounter=0; %autofocus state
 delaycounter2=0;
@@ -117,13 +71,16 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
         pause(0.01); %sleep and process GUI callbacks instead of spinning
         continue
     end
-    rate = display_rate;
-    if getappdata(hgui,'autofocus_enabled') == 1
-        rate = max(display_rate,5); %autofocus: a new frame is needed after each focus step (0.35 s)
+    rate = acquisition.display_rate(image_handles,max_rate,pixel_budget); %zoom / CAM button change the pixels drawn
+    if isequal(getappdata(hgui,'autofocus_enabled'),1) && n_cameras == 1
+        rate = max(rate,5); %autofocus: a new frame is needed after each focus step (0.35 s)
+        setappdata(image_handle_OPTOcam,'max_display_rate',rate);
     end
-    setappdata(image_handle_OPTOcam,'max_display_rate',rate);
     next_update = toc(t0) + 1/rate;
-    frames_shown = getappdata(image_handle_OPTOcam,'frames_shown'); %read BEFORE the frame: it is then a real frame if frames_shown >= 1
+    frames_shown = inf; %real camera frames of the slowest camera, read BEFORE the frames: they are then real frames if frames_shown >= 1
+    for k=1:n_cameras
+        frames_shown = min(frames_shown,getappdata(image_handles{k},'frames_shown'));
+    end
     acquisition.live_overlays(image_handles,'live'); %sharpness, grid, ChArUco detection
     ima = getappdata(image_handle_OPTOcam,'frame');
     if isempty(ima) %no camera frame yet
@@ -131,6 +88,10 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
         continue
     end
     drawnow limitrate;
+    if n_cameras > 1 %autofocus: one camera (one lens controller)
+        displayed_img_amount = frames_shown;
+        continue
+    end
     %% Autofocus
     %% Lens control
     %Sowieso machen: Nicht lineare schritte für die anzufahrenden fokuspositionen. Diese Liste vorher ausrechnen und dann nur index anspringen
@@ -266,8 +227,76 @@ while getappdata(hgui,'cancel_capture') ~=1 && displayed_img_amount < img_amount
     end
     displayed_img_amount = frames_shown; %real camera frames (placeholder not counted)
 end
-stoppreview(OPTOcam_vid)
-ima_out = bitshift(uint16(getappdata(image_handle_OPTOcam,'frame')),16-bitmode); %stretch 8 or 12 bit to the full 16 bit range
+ima_out = cell(1,n_cameras);
+for k=1:n_cameras
+    stoppreview(OPTOcam_vids{k})
+    ima_out{k} = bitshift(uint16(getappdata(image_handles{k},'frame')),16-bitmode); %stretch 8 or 12 bit to the full 16 bit range
+end
+if n_cameras == 1
+    ima_out = ima_out{1};
+end
+
+function configure_live(OPTOcam_vid,exposure_time,ROI_OPTOcam,binning)
+%free-running single-frame camera for the live image (stereo: the same settings for both cameras)
+OPTOcam_settings = get(OPTOcam_vid);
+%Sensor power management (standby/active) intentionally NOT used for now:
+%putting the sensor to standby increases its reaction time to software triggers. The sensor is
+%left in its default active state.
+try
+    OPTOcam_settings.Source.DeviceLinkThroughputLimitMode = 'Off';
+catch
+end
+OPTOcam_vid.PreviewFullBitDepth='On';
+
+triggerconfig(OPTOcam_vid, 'manual');
+try
+    OPTOcam_settings.Source.mvShutterMode = 'mvGlobalShutter'; %calibration uses a normal single (non-double) frame
+catch
+end
+
+%% Line0 = ExposureActive output (used to measure timings/delays on the rig)
+OPTOcam_settings.Source.LineSelector = 'Line0';
+OPTOcam_settings.Source.LineSource   = 'ExposureActive';
+OPTOcam_settings.Source.LineInverter = 'False';
+
+%% Line1 = AcquisitionActive output (used to signal activity on the camera LED and to turn off the fan)
+OPTOcam_settings.Source.LineSelector = 'Line1';
+OPTOcam_settings.Source.LineSource   = 'AcquisitionActive';
+OPTOcam_settings.Source.LineInverter = 'False';
+
+%% Binning (set with the "Binning" button). Must be set BEFORE the ROI: the ROI is in binned pixels.
+if OPTOcam_settings.Source.BinningHorizontal ~= binning || OPTOcam_settings.Source.BinningVertical ~= binning
+    try
+        OPTOcam_vid.ROIPosition = [0 0 OPTOcam_vid.VideoResolution]; %full frame first, so the (reused) camera accepts the new binning
+    catch
+    end
+    OPTOcam_settings.Source.BinningHorizontalMode = 'Average'; %no changes to bitmode, max and min stays the same
+    OPTOcam_settings.Source.BinningVerticalMode = 'Average';
+    OPTOcam_settings.Source.BinningHorizontal = binning; %1, 2 or 4
+    OPTOcam_settings.Source.BinningVertical = binning;
+    %MATLAB updates VideoResolution only when an acquisition starts (measured). Without this, a larger
+    %ROI is rejected after reducing the binning ("VideoResolution width exceeded").
+    start(OPTOcam_vid); stop(OPTOcam_vid);
+end
+
+OPTOcam_settings.Source.TriggerMode ='Off';
+OPTOcam_settings.Source.ExposureMode ='Timed';
+OPTOcam_settings.Source.ExposureTime =exposure_time;
+try %at most 10 frames/s from the camera: a live image does not need more, and less data means less CPU load
+    OPTOcam_settings.Source.AcquisitionFrameRateEnable = 'True';
+    OPTOcam_settings.Source.AcquisitionFrameRate = min(10, 1e6/exposure_time);
+catch
+end
+
+OPTOcam_vid.ROIPosition=ROI_OPTOcam;
+
+OPTOcam_settings.Source.ReverseX = 'False'; %orientation of the OPTOcam 20/9; change to 'True' if image is mirrored
+OPTOcam_settings.Source.ReverseY = 'False';
+OPTOcam_gain = gui.camera_setting('OPTOcam_20_9_gain');
+if isempty (OPTOcam_gain)
+    OPTOcam_gain=0;
+end
+OPTOcam_settings.Source.Gain = OPTOcam_gain;
 
 function autofocus_notification(running)
 auto_focus_active_hint=findobj('tag', 'auto_focus_active');

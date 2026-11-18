@@ -52,7 +52,7 @@ mono_color = get(h.ac_imgamount, 'BackgroundColor');
 verifyNotEqual(testCase, stereo_color, mono_color, 'stereo: the image amount is marked (RAM of two cameras)');
 % another camera: unticked and disabled
 set(h.ac_stereo, 'Value', 1);
-set(h.ac_config, 'Value', 2); % OPTOcam 20/9
+set(h.ac_config, 'Value', find(strcmp(h.ac_config.String, 'PIVlab LD-PS + pco.edge 26 DS CLHS'))); % a camera without stereo
 acquisition.select_capture_config_Callback;
 verifyEqual(testCase, get(h.ac_stereo, 'Value'), 0);
 verifyEqual(testCase, get(h.ac_stereo, 'Enable'), 'off');
@@ -66,7 +66,7 @@ folder = new_folder(testCase, 'live');
 h = start_capture_gui(folder, 2, 2);
 set(h.ac_displ_sharp, 'Value', 1); % the live image takes the overlays from these checkboxes
 set(h.ac_displ_grid, 'Value', 1);
-set(h.calib_dolivedetect, 'Value', 1);
+set(h.calib_dolivedetect, 'Value', 1); % unticked at the start: Sharpness and Calibration exclude each other
 run_with_check(@check_live, 2);
 acquisition.calibcapture_Callback;
 r = getappdata(0, 'stereo_capture_test');
@@ -81,7 +81,8 @@ verifyEqual(testCase, r.region_diameters, 6, 'a diameter in every column');
 % mock particles: single pixels blurred with sigma 1 px -> 4 * sqrt(1 - 1/12) = 3.8 px
 verifyEqual(testCase, r.median_diameter, 4, 'AbsTol', 0.5); % about 3.8 px, shown in whole pixels
 verifyEqual(testCase, r.grid_lines, 12);
-verifyTrue(testCase, r.charuco_cam1 && r.charuco_cam2, 'ChArUco markers per camera');
+verifyFalse(testCase, r.charuco_cam1 || r.charuco_cam2, 'no ChArUco detection: Calibration was unticked by Sharpness');
+verifyEqual(testCase, get(h.calib_dolivedetect, 'Value'), 0, 'Calibration unticked');
 verifyLessThanOrEqual(testCase, r.display_rate, 10);
 verifyEqual(testCase, r.frame_rate_limit, {'True', 20}, 'live image: at most 20 frames/s from the camera');
 verifyTrue(testCase, isfile(fullfile(folder, 'cam1', 'PIVlab_snapshot (0).tif')), 'snapshot camera 1');
@@ -268,7 +269,7 @@ acquisition.piv_capture_Callback;
 r = getappdata(0, 'stereo_capture_test');
 verifyEqual(testCase, r.n_images, 2);
 verifyEqual(testCase, r.cdata_size, [608 968; 608 968], 'downsampled to <= 1280 px per camera');
-verifyEqual(testCase, r.extent, [1 1936; 1 1936] + [0 0; 1 1] * (1936 + round(0.03 * 1936)), 'axes in camera pixels');
+verifyEqual(testCase, r.extent, [1 1936; 1 1936] + [0 0; 1 1] * (1936 + round(0.03 * 1936)), 'AbsTol', 1, 'axes in camera pixels (displayed pixels at their centres)');
 verifyLessThan(testCase, r.available, 60, 'PIV preview: frames are discarded');
 verifyGreaterThan(testCase, r.acquired, 30, 'cameras ran');
 verifyEqual(testCase, get(h.ac_realtime_PIV, 'Value'), 0, 'no displacement view in stereo mode');
@@ -395,7 +396,7 @@ mock_imaq_setup(n_connected, 80);
 helper_start_pivlab();
 h = gui.gethand;
 set(h.ac_project, 'String', folder);
-set(h.ac_config, 'Value', find(strcmp(h.ac_config.String, 'PIVlab LD-PS + OPTOcam 2/80')));
+set(h.ac_config, 'Value', find(strcmp(h.ac_config.String, 'PIVlab LD-PS + OPTOcam'))); % the simulated cameras are detected as OPTOcam 2/80
 acquisition.select_capture_config_Callback;
 set(h.ac_fps, 'Value', find(strcmp(h.ac_fps.String, '80')));
 gui.put('ac_ROI_general', [1 1 320 240]);

@@ -1,4 +1,7 @@
 function camera_setup_Callback(~,~,~)
+if PIVlab_capture_OPTOcam_missing %"OPTOcam" selected, but none was found
+	return
+end
 camera_type=gui.retr('camera_type');
 if strcmp(camera_type,'chronos')
     PIVlab_capture_chronos_settings_GUI

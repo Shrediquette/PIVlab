@@ -7,9 +7,17 @@ function live_overlays(himg, mode)
 hgui = getappdata(0, 'hgui');
 PIVlab_axis = gui.retr('pivlab_axis');
 n = numel(himg);
+% CPU load: the overlays (sharpness, ChArUco detection) take about 0.1 - 0.2 s with large images. After an
+% update, the next one waits at least as long as the last one took, so they use at most half of the time and
+% PIVlab stays responsive (Stop button).
+timing = getappdata(himg{1}, 'overlay_timing');
+if ~isempty(timing) && toc(timing.finished) < timing.duration
+    return
+end
+started = tic;
 frames = cell(1, n);
 for k = 1:n
-    if isvalid(himg{k})
+    if isvalid(himg{k}) && ~isequal(getappdata(himg{k}, 'hidden'), true) % stereo: only the cameras shown (acquisition.apply_camera_view)
         frames{k} = getappdata(himg{k}, 'frame');
     end
 end
@@ -60,6 +68,11 @@ if strcmp(mode, 'live')
     else
         delete(findobj('-regexp', 'tag', '^charucolabel'));
     end
+end
+timing.duration = toc(started);
+timing.finished = tic;
+if isvalid(himg{1})
+    setappdata(himg{1}, 'overlay_timing', timing);
 end
 end
 

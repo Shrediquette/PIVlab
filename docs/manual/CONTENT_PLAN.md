@@ -91,6 +91,7 @@ grep -oE '<kbd>[A-Z]</kbd>' docs/manual/pages/shortcuts.html | sort -u # what we
 | `generateUI.m:1872-1920` | `streamlines.html` |
 | `generateUI.m:2008-2038` | `derive-temporal.html` |
 | `generateUI.m:2042-2123` | `validation-image.html` |
+| `generateUI.m` multip32, `+stereo/limit_test.m` | `validation-stereo.html` |
 | `generateUI.m:2125-2223+`, `+acquisition/` | `capture.html` |
 | **`+pivlab/`** (the whole API package) | **`command-line.html`** |
 | **`+stereo/`**, `generateUI.m:49` (CAM 1/2 toggle), `+import/stereo_import_Callback.m` | **`stereo-piv.html`** (analysis) and **`stereo-setup.html`** (set-up and recording, workflow drawings from `tools/stereo_workflow_drawings.mjs`), plus the stereo `.note`s on derive-spatial / derive-temporal / export / extract-* / validation-velocity / statistics |
@@ -157,6 +158,11 @@ Line numbers drift. Treat them as a starting hint, not gospel — grep for the p
 - Use the shared components: `.split` (text beside screenshot), `ol.steps`, `table.ref`,
   `.note`/`.tip`/`.warn` callouts, `.eq`/`.eq-where` (equations), `.annot`+`.legend` (annotated
   screenshots).
+- `.v3` box (blue, title **PIVlab 3.14**): the manual and wiki describe the PIVlab 4 beta; every
+  place where PIVlab 3.14 (current stable) behaves differently gets one short `.v3` box with the 3.14
+  behaviour. No box for purely new features, except "not available in 3.14" on the stereo pages.
+  Wiki: `<div class="v3"><strong>PIVlab 3.14</strong> text</div>` (style in `assets/css/site.css`).
+  When a stable 4.x is released, remove them all (`grep -rn 'class="v3"' docs`).
 - Flag anything disabled/WIP/experimental honestly rather than describing aspirational behaviour.
 - **No math library.** The manual is dependency-free and must keep working opened from `file://`.
   Equations are plain HTML + Unicode with `<em>` variables.
@@ -256,6 +262,17 @@ Findings worth never re-deriving:
 ## 7. Changelog
 
 Newest first. **Add an entry whenever you change the manual**, and bump the watermark.
+
+### 2026-11-15 — "PIVlab 3.14" boxes for behaviour changed since the stable release
+New `.v3` component (manual `style.css`, website `site.css`, tokens `--v3`/`--v3-bg`, light + dark).
+Boxes: `interface.html` (also fixed its outdated "origin top-left" text), `spatial-calibration.html#offsets`,
+`derive-spatial.html` (vector direction, vorticity sign bug with one flipped axis), `extract-polyline.html`
+(normal direction), `export.html` (y and v of exported files), `sessions.html` (file-selection window;
+old-files note converted to `.v3`), `shortcuts.html` (Ctrl without Shift), `synthetic-images.html`
+(old 2D generator), `command-line.html` (Example_scripts, `PIVlab_GUI(cores, session_file)`, old
+coordinates), `stereo-piv.html`, `stereo-setup.html`; wiki `1_quickstart.md`, `7_stereo_piv.md`
+(replaces "Available from PIVlab 4.0"), `8_stereo_piv_explained.md`. Camera 1/2 calibration sub-menus
+of 3.14 deliberately not mentioned (user). Watermark not bumped: no new code verified.
 
 ### 2026-11-05 — capture.html rewritten as a panel walkthrough
 `capture.html` went from a workflow sketch (126 lines, one steps list) to a reference of the whole
@@ -553,6 +570,10 @@ All topics complete. Kept for the per-page verification detail, which feeds the 
   image space. Colour legend cross-links to `plot-appearance.html` (at `:146`). Has `#tuning`.
 - **Image-based** — `validation-image.html`. Mirrors the velocity panel but with 3 image-quality
   filters (low contrast, bright objects, correlation coefficient).
+- **Stereo-based** — `validation-stereo.html` (multip32, `+stereo/limit_test.m`). Residual filter,
+  local median of W, W limits; residual map. Stereo-PIV only (`.v3` box "not available in 3.14").
+  The only description of these filters: `stereo-piv.html#analysis`, `validation-velocity.html`,
+  `command-line.html#stereo` link to it.
 
 ### Spatial calibration
 - **Calibrating pixels to mm** — `spatial-calibration.html`. Time-step = 0 triggers

@@ -5,7 +5,6 @@
 # Edit this file to customise which elements are shown in Basic mode.
 
 # ── Entire panels (hiding a panel hides all its children) ──
-multip15
 multip23
 multip26
 multip27
@@ -13,16 +12,21 @@ multip28
 multip29
 multip30
 multip31
+multip32
 
 # ── Menu items for hidden panels ────────────────────────────
 menu_partgen
 menu_imgvalidation
+menu_stereovalidation
 menu_camcalib
 menu_corrmatrices
 menu_stereopiv
 
 # ── multip01  Load images ───────────────────────────────────
 stereo_import
+
+# ── multip24  Image acquisition ─────────────────────────────
+ac_stereo
 
 # ── multip25  Mask generation ───────────────────────────────
 text251

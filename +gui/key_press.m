@@ -41,6 +41,8 @@ switch event.Key
 		gui.run_shortcut('menu_velvalidation');
 	case 'f'
 		gui.run_shortcut('menu_imgvalidation');
+	case 'j'
+		gui.run_shortcut('menu_stereovalidation');
 	case 'z'
 		gui.run_shortcut('menu_spatialcalib');
 	case 'd'
