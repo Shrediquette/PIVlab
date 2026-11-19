@@ -7,6 +7,9 @@
 %        C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
 %   2. OpenCV4 static-md installed:
 %        C:\vcpkg\vcpkg install "opencv4[core,calib3d,imgproc]:x64-windows-static-md"
+%   or: a static OpenCV built from the sources with CMake (BUILD_SHARED_LIBS=OFF,
+%   BUILD_WITH_STATIC_CRT=OFF, BUILD_LIST=core,imgproc,calib3d), installed to
+%   ..\opencv_test\opencv_static (used when vcpkg is not there)
 
 clc
 mex -setup C++
@@ -14,6 +17,11 @@ mex -setup C++
 VCPKG_ROOT = 'C:\vcpkg\installed\x64-windows-static-md';
 OPENCV_INC = fullfile(VCPKG_ROOT, 'include', 'opencv4');
 LIB_DIR    = fullfile(VCPKG_ROOT, 'lib');
+if ~isfolder(OPENCV_INC)
+    STATIC_ROOT = fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'opencv_test', 'opencv_static');
+    OPENCV_INC = fullfile(STATIC_ROOT, 'include');
+    LIB_DIR    = fullfile(STATIC_ROOT, 'x64', 'vc17', 'staticlib');
+end
 
 if ~isfolder(OPENCV_INC)
     error('OpenCV headers not found at %s\nRun: C:\\vcpkg\\vcpkg install "opencv4[core,calib3d,imgproc]:x64-windows-static-md"', OPENCV_INC);

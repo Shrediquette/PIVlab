@@ -105,3 +105,5 @@
 /unittests/test_bias+rmse/verify_pivsuite.m
 
 /unittests/unused_handles_report.txt
+
+/docs/manual/review.html

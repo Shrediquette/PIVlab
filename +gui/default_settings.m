@@ -88,6 +88,7 @@ default.calibration.x_axis_direction = 1;
 default.calibration.y_axis_direction = 2; % y increases towards the top (x, y, z right-handed, z toward the camera)
 % Camera calibration
 default.calibration.calib_use_tilted_model = 0;
+default.calibration.calib_tilt_angle = 0; % Scheimpflug tilt about the vertical image axis in deg, 0 = estimate
 default.calibration.calib_viewtype = 1;
 default.calibration.calib_usecalibration = 0;
 % Image rectification

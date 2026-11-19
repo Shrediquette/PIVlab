@@ -1,5 +1,7 @@
 function disparity = measure_disparity(imgs, calib, opts, verbose, backgrounds, progress_target)
 %MEASURE_DISPARITY Misalignment between the rectified views of both cameras (disparity correction).
+%   Self-calibration after Wieneke, B. (2005), "Stereo-PIV using self-calibration on particle
+%   images", Experiments in Fluids 39, 267-280, doi:10.1007/s00348-005-0962-z.
 %   disparity = stereo.measure_disparity(imgs, calib, opts)
 %   imgs   1x2 cell, pivlab image sets of camera 1 and 2 (pivlab.readImages; pivlab.preprocess sets
 %          the image pre-processing, which is used here too). The region of interest of camera 1

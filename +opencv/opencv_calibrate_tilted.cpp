@@ -6,15 +6,19 @@
 // opencv_calibrate_tilted: like opencv_calibrate_basic but enables
 // CALIB_TILTED_MODEL (Scheimpflug adapter support). Returns a 14-element
 // distortion vector [k1 k2 p1 p2 0 0 0 0 0 0 0 0 tauX tauY].
+// With fixTilt = true, tauX and tauY are kept at the values in D_init(13:14)
+// (CALIB_FIX_TAUX_TAUY).
 
 void mexFunction(int nlhs, mxArray *plhs[],
                  int nrhs, const mxArray *prhs[])
 {
-    if (nrhs != 3 && nrhs != 5)
+    if (nrhs != 3 && nrhs != 5 && nrhs != 6)
         mexErrMsgTxt("Usage:\n"
                      "[K, dist, rvecs, tvecs] = opencv_calibrate_tilted(imagePoints, worldPoints, imageSize)\n"
                      "or\n"
-                     "[K, dist, rvecs, tvecs] = opencv_calibrate_tilted(imagePoints, worldPoints, imageSize, K_init, D_init)");
+                     "[K, dist, rvecs, tvecs] = opencv_calibrate_tilted(imagePoints, worldPoints, imageSize, K_init, D_init)\n"
+                     "or\n"
+                     "[K, dist, rvecs, tvecs] = opencv_calibrate_tilted(imagePoints, worldPoints, imageSize, K_init, D_init, fixTilt)");
 
     if (nlhs != 4)
         mexErrMsgTxt("Four outputs required.");
@@ -103,7 +107,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     // Optional initial guess (K and D from a prior standard calibration)
     // D_init may be 4-element [k1 k2 p1 p2] — we copy what we have.
     // ----------------------------
-    if (nrhs == 5)
+    if (nrhs >= 5)
     {
         if (!mxIsDouble(prhs[3]) || mxGetM(prhs[3]) != 3 || mxGetN(prhs[3]) != 3)
             mexErrMsgTxt("K_init must be 3x3");
@@ -126,6 +130,10 @@ void mexFunction(int nlhs, mxArray *plhs[],
             distCoeffs.at<double>(0, (int)i) = Din[i];
 
         flags |= cv::CALIB_USE_INTRINSIC_GUESS;
+
+        // Optional: keep tauX/tauY fixed at the values in D_init
+        if (nrhs == 6 && mxGetScalar(prhs[5]) != 0)
+            flags |= cv::CALIB_FIX_TAUX_TAUY;
     }
 
     std::vector<cv::Mat> rvecs, tvecs;

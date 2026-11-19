@@ -270,7 +270,7 @@ window.MANUAL_SEARCH = [
     title: "Camera calibration (lens undistortion)",
     href: "pages/camera-calibration.html", hash: "calibration",
     section: "Image settings",
-    text: "camera calibration lens undistortion scheimpflug estimate parameters reprojection error black borders"
+    text: "camera calibration lens undistortion scheimpflug tilt angle tilted sensor estimate parameters reprojection error black borders"
   },
   {
     title: "Image rectification",
