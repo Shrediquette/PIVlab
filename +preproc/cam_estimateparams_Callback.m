@@ -144,7 +144,7 @@ if ~isempty(cam_selected_target_images)
         tilt_angle_y = NaN;
     end
     try
-        [cameraParams, imagesUsed, stats] = opencv.pivlab_estimateCameraParameters(imagePoints, worldPoints, [mrows, ncols], 'use_tilted_model', use_tilted_model, 'tilt_angle_y', tilt_angle_y);
+        [cameraParams, imagesUsed, stats] = camcal.estimate_camera_parameters(imagePoints, worldPoints, [mrows, ncols], 'use_tilted_model', use_tilted_model, 'tilt_angle_y', tilt_angle_y);
         gui.toolsavailable(1)
         gui.toolsavailable(0,'Refining camera parameters...');drawnow;
         imageFileNames = imageFileNames(imagesUsed);
@@ -163,7 +163,7 @@ if ~isempty(cam_selected_target_images)
             disp(['Skipping ' num2str(numel(badImages)) ' image(s) due to high reprojection errors.'])
             imagePoints = imagePoints(:, :, goodImages);
             imageFileNames = imageFileNames(goodImages);
-            [cameraParams, imagesUsed, stats] = opencv.pivlab_estimateCameraParameters(imagePoints, worldPoints, [mrows, ncols], cameraParams, 'use_tilted_model', use_tilted_model, 'tilt_angle_y', tilt_angle_y);
+            [cameraParams, imagesUsed, stats] = camcal.estimate_camera_parameters(imagePoints, worldPoints, [mrows, ncols], cameraParams, 'use_tilted_model', use_tilted_model, 'tilt_angle_y', tilt_angle_y);
             imageFileNames = imageFileNames(imagesUsed);
             disp('Images used:')
             for i=1:numel(imageFileNames)
@@ -206,8 +206,8 @@ if ~isempty(cam_selected_target_images)
             gui.custom_msgbox('msg',getappdata(0,'hgui'),'Success',msg,'modal',{'OK'},'OK');
         end
     catch ME
-        if strcmp(ME.identifier,'PIVlab:calibration:degenerate') || contains(ME.message,'Principal point must be within the image')
-            %ill-conditioned image set: explain the specific cause instead of the cryptic OpenCV message
+        if strcmp(ME.identifier,'PIVlab:calibration:degenerate')
+            %ill-conditioned image set: explain the specific cause
             diag = preproc.cam_diagnose_calibration_geometry(imagePoints, worldPoints, [mrows, ncols]);
             gui.custom_msgbox('error',getappdata(0,'hgui'),'Calibration failed',diag.message,'modal',{'OK'},'OK');
         else

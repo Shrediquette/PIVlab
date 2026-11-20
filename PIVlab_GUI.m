@@ -148,7 +148,7 @@ if isempty(fh)
     end
     try
         ctr=0;
-        pivFiles = {'+acquisition' '+calibrate' '+export' '+extract' '+gui' '+import' '+mask' '+misc' '+piv' '+plot' '+postproc' '+preproc' '+roi' '+simulate' '+validate' '+wOFV' '+opencv' 'OptimizationSolvers' 'PIVlab_capture_resources'};
+        pivFiles = {'+acquisition' '+calibrate' '+export' '+extract' '+gui' '+import' '+mask' '+misc' '+piv' '+plot' '+postproc' '+preproc' '+roi' '+simulate' '+validate' '+wOFV' '+camcal' '+pivlab' '+stereo' '+uncertainty' 'OptimizationSolvers' 'PIVlab_capture_resources'};
         for i=1:size(pivFiles,2)
             if exist(fullfile(tempfilepath,pivFiles{1,i}),'dir')~=7
                 disp(['ERROR: A required package folder was not found: ' pivFiles{1,i}]);
@@ -294,13 +294,6 @@ if isempty(fh)
         disp('WARNING: Image Acquisition Toolbox not found.')
         disp('Image capture inside PIVlab will only work with pco cameras.')
         disp('Use the standalone tool from http://PIVlab.de if you need to capture data with other cameras.')
-    end
-    try
-        v=opencv.opencv_version;
-        if startsWith(v,'4.')
-            disp(['-> OpenCV ' v ' found.'])
-        end
-    catch
     end
     %% Register bitflow IMAQ adaptor
     if isdeployed

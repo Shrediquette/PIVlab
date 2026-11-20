@@ -60,9 +60,13 @@ if extrapolate_border
         o_r1=1; o_r2=size(out,1); o_c1=1; o_c2=size(out,2);
     end
     sub=out(o_r1:o_r2, o_c1:o_c2);
-    sub=plot.inpaint_border_strips(sub, ...
-        miny_idx-o_r1+1, maxy_idx-o_r1+1, ...
-        minx_idx-o_c1+1, maxx_idx-o_c1+1);
+    % the vector grid inside the ROI box (it can reach beyond the box, e.g. a ROI drawn after the
+    % analysis: then there is no border strip on that side)
+    r_lo=max(1,miny_idx-o_r1+1); r_hi=min(size(sub,1),maxy_idx-o_r1+1);
+    c_lo=max(1,minx_idx-o_c1+1); c_hi=min(size(sub,2),maxx_idx-o_c1+1);
+    if r_lo<=r_hi && c_lo<=c_hi
+        sub=plot.inpaint_border_strips(sub, r_lo, r_hi, c_lo, c_hi);
+    end
     out(o_r1:o_r2, o_c1:o_c2)=sub;
     out(interior_nan)=NaN;
 end

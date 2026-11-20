@@ -49,9 +49,11 @@ else
     ready=1;
 end
 if ready==1
+    stereo.acquisition_stereo_mode %stereo acquisition: stereo-PIV mode, so the live detection uses the lens calibration of each camera
     gui.put('last_auto_detected_charuco_boxes',[])
     gui.put('charuco_camera_states',[]) %stereo: the same per camera (PIVlab_capture_charuco_detector)
     gui.put('charuco_last_camera',[])
+    gui.put('charuco_mirrored',[]) %board seen from behind, per camera (PIVlab_capture_charuco_detector)
     handles=gui.gethand;
     try
         expos=round(str2num(get(handles.ac_expo,'String'))*1000);

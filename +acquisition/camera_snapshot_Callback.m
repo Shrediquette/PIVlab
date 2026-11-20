@@ -15,11 +15,18 @@ end
 current_axis=gui.retr('pivlab_axis');
 h1 = findall(current_axis,'Type','image');
 if ~isempty(h1)
-    img=h1(end).CData;
+    %the full camera frame (acquisition.show_frame keeps it; the image shows only the visible part at screen
+    %resolution); camera drivers that do not keep it: the displayed image
+    img=getappdata(h1(end),'frame');
+    if isempty(img)
+        img=h1(end).CData;
+    end
     size_img=size(img);
     if ~isempty(img)
         try
-            snaptxt=text(current_axis,size_img(2)/2,size_img(1)/2,'SNAPSHOT','BackgroundColor','k','Color','y','tag','captureinfo','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',24,'FontWeight','bold');
+            xl = get(current_axis,'XLim');
+            yl = get(current_axis,'YLim');
+            snaptxt=text(current_axis,mean(xl),mean(yl),'SNAPSHOT','BackgroundColor','k','Color','y','tag','captureinfo','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',24,'FontWeight','bold');
             drawnow;
             pause(0.05)
             if exist('snaptxt','var')
@@ -35,7 +42,7 @@ if ~isempty(h1)
         catch
         end
     end
-    if size(size_img)>2
+    if numel(size_img)>2
         img=img(:,:,1);
     end
     imwrite(mat2gray(img),imgA_path,'tif','Compression','none');

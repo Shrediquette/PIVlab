@@ -50,7 +50,8 @@ Notes
 | `test_core_piv_ensemble.m` | `piv.piv_FFTensemble`: known shift, single and multi pass, correlation map, number of pairs |
 | `test_core_second_peak.m` | second-peak substitution in `validate.filtervectors_all_parallel` |
 | `test_core_rescale_map.m` | `plot.rescale_map_core`: derived maps on the image grid, border (mean / extrapolated), masked vectors, ROI, angles |
-| `test_core_opencv_undistort.m` | `opencv.opencv_undistort`: image classes, no rescaling of the grey values, same result as MATLAB |
+| `test_core_camcal.m` | camera calibration and undistortion without OpenCV (`+camcal`): same results as the former OpenCV MEX files (`camcal_reference.mat`), image classes, no rescaling of the grey values, model functions |
+| `test_core_display_resolution.m` | large frames at screen resolution (`import.read_frame_display`, `plot.display_grid`): averaged full resolution frame at the right place for every lens correction, zoom, background, drawing |
 | `test_core_simulate.m` | synthetic particle images (`+simulate`): all GUI flows, cameras, stereo projection, ChArUco boards; checked with PIVlab's PIV |
 | `test_core_simulate_3d.m` | particle image generator recordings (`simulate.recording_3d`): files, ground truth, boards, all flows, vortex pairs, simple setup, sphere wake and free jet simulations (about 3 min) |
 | `test_core_charuco_filter.m` | `preproc.cam_filter_charuco_corners`: corners of wrongly decoded markers removed, correct corners kept (also with strong distortion), boards with 2000 checkers |
@@ -69,6 +70,7 @@ Notes
 | `test_gui_sessions.m` | sessions bring everything back (settings, data, view, look), multi-page TIFF, capture sessions, large sessions |
 | `test_gui_preferences.m` | what PIVlab remembers for the next start, rebuilding the window, warnings and the PIVlab folder stay unchanged |
 | `test_gui_bugfixes.m` | old GUI bugs that were fixed (one test per bug) |
+| `test_gui_display_resolution.m` | large frames drawn at screen resolution: zoom / pan show the full resolution pixels, masks, ROI, derived map, tilted calibration, small frames and export axes unchanged |
 | `test_gui_busy_menus.m` | the menu bar is locked while PIVlab is busy and afterwards only the entries locked by it are enabled again (nested locks, Basic mode, context menus, reset) |
 | `test_apigui_results.m` | API and GUI: same results (FFT, validation, optical flow, tilted camera model, parallel, ensemble, background), sessions both ways |
 | `test_apigui_camera_calibration.m` | camera calibration made in the GUI (standard and tilted model, rectification) used by the API |

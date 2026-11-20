@@ -170,7 +170,7 @@ end
 function intrinsics = pinhole_intrinsics(cam, image_size)
 % camera matrix of the undistorted image (for the camera pose)
 if cam.use_tilted_model && ~isempty(cam.K_opencv)
-    K = cam.K_opencv; % opencv_undistort with view 'same' keeps K; 0-based pixel indices
+    K = cam.K_opencv; % camcal.undistort_image with view 'same' keeps K; 0-based pixel indices
     intrinsics = cameraIntrinsics([K(1, 1) K(2, 2)], [K(1, 3) K(2, 3)] + 1, image_size);
 elseif isa(cam.cameraParams, 'cameraParameters')
     intrinsics = cam.cameraParams.Intrinsics;

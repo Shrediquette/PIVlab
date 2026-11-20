@@ -9,7 +9,7 @@ function pd = distort_points(pu, cam)
 %   - MATLAB model (cam.cameraParams): radial k1..k3 and tangential p1, p2, skew
 %   - OpenCV model with tilted sensor (Scheimpflug, cam.use_tilted_model): cam.K_opencv and the
 %     distortion vector cam.tilted_D (k1 k2 p1 p2 k3 k4 k5 k6 s1 s2 s3 s4 tauX tauY), exactly as
-%     opencv_undistort (initUndistortRectifyMap) uses them
+%     camcal.undistort_image (OpenCV initUndistortRectifyMap) uses them
 if ~cam.use_calibration
     pd = pu;
     return
@@ -47,7 +47,7 @@ pd = [fx * xd + s * yd + cx, fy * yd + cy];
 end
 
 function pd = distort_opencv(pu, K, D)
-% OpenCV's rational + thin prism + tilted sensor model. opencv_undistort works on 0-based pixel
+% OpenCV's rational + thin prism + tilted sensor model. camcal.undistort_image works on 0-based pixel
 % indices: MATLAB coordinate = index + 1 in the undistorted and in the raw image.
 d = zeros(1, 14);
 d(1:numel(D)) = D(:)';

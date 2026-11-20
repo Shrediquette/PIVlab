@@ -419,16 +419,16 @@ cam.use_calibration = 0;
 verifyEqual(testCase, stereo.distort_points(pu, cam), pu);
 end
 
-function test_tilted_lens_model_matches_opencv(testCase)
+function test_tilted_lens_model_matches_undistort_image(testCase)
 % OpenCV model with tilted sensor (Scheimpflug): the map of stereo.distort_points applied to the raw
-% image must give the image of opencv_undistort (view 'same'), incl. its pixel convention
-assumeNotEmpty(testCase, which('opencv.opencv_undistort'), 'opencv_undistort mex not available');
+% image must give the image of camcal.undistort_image (view 'same', the OpenCV undistortion),
+% incl. its pixel convention
 sz = [400 500];
 [xx, yy] = meshgrid(1:sz(2), 1:sz(1));
 raw = uint16(30000 + 12000 * sin(xx / 9) .* cos(yy / 13) + 8000 * sin((xx + yy) / 17));
 K = [900 0 260; 0 905 190; 0 0 1];
 D = [0.08 -0.05 1e-3 -8e-4 0.01 0 0 0 1e-3 0 -1e-3 0 0.03 -0.02]; % k1 k2 p1 p2 k3 k4 k5 k6 s1-s4 tauX tauY
-reference = opencv.opencv_undistort(raw, K, D, 'same');
+reference = camcal.undistort_image(raw, K, D, 'same');
 cam = import.cam_settings(use_calibration=1, use_tilted_model=true, tilted_D=D, K_opencv=K, view='same');
 pd = stereo.distort_points([xx(:), yy(:)], cam);
 map.x = reshape(single(pd(:, 1)), sz);
@@ -437,7 +437,7 @@ out = stereo.rectify_map(raw, map); % uint16
 inner = false(sz);
 inner(30:end - 30, 30:end - 30) = true;
 e = abs(double(out(inner)) - double(reference(inner)));
-verifyLessThan(testCase, max(e), 0.005 * 65535, 'map differs from opencv_undistort');
+verifyLessThan(testCase, max(e), 0.005 * 65535, 'map differs from camcal.undistort_image');
 % the remaining difference is the interpolation kernel (OpenCV fixed-point bicubic); a map shifted by
 % 0.05 px must fit clearly worse, so the positions agree to better than that
 shifts = [0.05 0; -0.05 0; 0 0.05; 0 -0.05];
@@ -446,7 +446,7 @@ for k = 1:size(shifts, 1)
     shifted.y = map.y + shifts(k, 2);
     out_shifted = stereo.rectify_map(raw, shifted);
     e_shifted = abs(double(out_shifted(inner)) - double(reference(inner)));
-    verifyLessThan(testCase, mean(e), 0.85 * mean(e_shifted), 'map position differs from opencv_undistort');
+    verifyLessThan(testCase, mean(e), 0.85 * mean(e_shifted), 'map position differs from camcal.undistort_image');
 end
 end
 

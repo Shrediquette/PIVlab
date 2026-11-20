@@ -561,6 +561,18 @@ window.MANUAL_SEARCH = [
     text: "camera settings binning roi lens autofocus setup bit depth gain sharpness particle image diameter edge width blur scheimpflug overlay grid calibration charuco live image exposure start snapshot save focus"
   },
   {
+    title: "Capturing images: Sharpness overlay (focusing)",
+    href: "pages/capture.html", hash: "focusing",
+    section: "Image acquisition",
+    text: "sharpness overlay focus focusing blur bars white mark best value left centre right third scheimpflug adapter aperture"
+  },
+  {
+    title: "Capturing images: Calibration overlay (live ChArUco detection)",
+    href: "pages/capture.html", hash: "calibration-overlay",
+    section: "Image acquisition",
+    text: "calibration overlay live charuco detection markers yellow outline percentage qr code board parameters automatic snapshot steady shaking new existing position camera position orientation yaw pitch roll seen from behind transparent board overlap"
+  },
+  {
     title: "Capturing images: recording the image pairs",
     href: "pages/capture.html", hash: "capture",
     section: "Image acquisition",
@@ -588,7 +600,7 @@ window.MANUAL_SEARCH = [
     title: "Capturing images: stereo acquisition with two cameras",
     href: "pages/capture.html", hash: "stereo",
     section: "Image acquisition",
-    text: "stereo acquisition two cameras record stereo-piv capture y-cable camera 1 camera 2 swap cameras serial number side by side live image charuco board snapshot cam1 cam2"
+    text: "stereo acquisition two cameras record stereo-piv capture y-cable camera 1 camera 2 swap cameras serial number side by side live image charuco board snapshot cam1 cam2 overlap align cameras dashed frame"
   },
   {
     title: "Trying capture with just a webcam",

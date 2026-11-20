@@ -4,9 +4,15 @@ selected=2*floor(get(handles.fileselector, 'value'))-1;
 filepath=gui.retr('filepath');
 target_axis=gui.retr('pivlab_axis');
 if numel(filepath)>1 && get(handles.algorithm_selection,'Value') ~= 4 %display only when files are loaded and not using wOFV
-	[image_dummy,~]=import.get_img(selected);
-	size_img(1)=size(image_dummy,2)/2;
-	size_img(2)=size(image_dummy,1)/2;
+	% size of the corrected frame, stored by every frame display (import.note_image_size); reading
+	% and undistorting a large frame only for its size took up to a second per settings change
+	frame_size = gui.retr('size_of_the_image');
+	if numel(frame_size) < 2
+		[image_dummy,~]=import.get_img(selected);
+		frame_size = size(image_dummy(:,:,1));
+	end
+	size_img(1)=frame_size(2)/2;
+	size_img(2)=frame_size(1)/2;
 	step=str2double(get(handles.pass1_step,'string'));
 
 	delete(findobj(target_axis,'Type','hggroup')); %=vectors and scatter markers

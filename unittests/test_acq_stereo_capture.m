@@ -145,8 +145,8 @@ end
 r.region_diameters = numel(values);
 r.median_diameter = median(values);
 r.grid_lines = numel(findobj(ax, 'tag', 'capture_grid'));
-r.charuco_cam1 = ~isempty(findobj(ax, 'tag', 'charucolabel_cam1'));
-r.charuco_cam2 = ~isempty(findobj(ax, 'tag', 'charucolabel_cam2'));
+r.charuco_cam1 = ~isempty(findobj(ax, 'tag', 'charucolabel_status_cam1')); % status block of the live detection per camera
+r.charuco_cam2 = ~isempty(findobj(ax, 'tag', 'charucolabel_status_cam2'));
 vids = imaqfind('Tag', 'OPTOcam_cam1'); % a cell array, as with the real toolbox
 src = vids{1}.Source;
 r.frame_rate_limit = {src.AcquisitionFrameRateEnable, src.AcquisitionFrameRate};

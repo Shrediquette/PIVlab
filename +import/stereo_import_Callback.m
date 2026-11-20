@@ -137,6 +137,7 @@ for k = 1:2
     end
     kept.cameras{k} = camera;
     kept.raw_size{k} = raw_image_size(state{k});
+    kept.had_images(k) = isfield(state{k}, 'filepath') && ~isempty(state{k}.filepath);
 end
 kept.calib = gui.retr('stereo_calib');
 kept.disparity = gui.retr('stereo_disparity');
@@ -148,7 +149,15 @@ function message = restore_calibration(kept)
 state = gui.retr('stereo_cam_state');
 same_size = true;
 for k = 1:2
-    same_size = same_size && ~isempty(kept.raw_size{k}) && isequal(kept.raw_size{k}, raw_image_size(state{k}));
+    old_size = kept.raw_size{k};
+    has_lens = isfield(kept.cameras{k}, 'cameraParams') && ~isempty(kept.cameras{k}.cameraParams);
+    if ~kept.had_images(k) % stereo acquisition: stereo-PIV mode before any images were loaded
+        if ~has_lens
+            continue % neither images nor a lens calibration: nothing to compare
+        end
+        old_size = kept.cameras{k}.cameraParams.ImageSize; % size of the calibration images
+    end
+    same_size = same_size && ~isempty(old_size) && isequal(old_size, raw_image_size(state{k}));
 end
 calibrated = ~isempty(kept.calib) || isfield(kept.cameras{1}, 'cameraParams') && ~isempty(kept.cameras{1}.cameraParams) ...
     || isfield(kept.cameras{2}, 'cameraParams') && ~isempty(kept.cameras{2}.cameraParams);
@@ -157,7 +166,7 @@ if ~calibrated
     return
 end
 if ~same_size
-    message = 'The image size is different from the images before: the calibrations were removed.';
+    message = 'The image size is different from the images before (or from the calibration images): the calibrations were removed.';
     return
 end
 for k = 1:2
@@ -188,7 +197,9 @@ gui.put('stereo_calib', kept.calib);
 gui.put('stereo_disparity', disparity);
 gui.put('roirect', kept.roirect);
 stereo.update_maps
-roi.updateROIinfo
+if ~isempty(kept.roirect) % stereo acquisition: calibrated before any images, no region of interest yet
+    roi.updateROIinfo
+end
 message = ['The calibrations of both cameras' stereo_text(kept) ' and the region of interest were kept (same setup). ' ...
     'Use CAM 1 / CAM 2 in the Tools panel to switch between the cameras.'];
 end

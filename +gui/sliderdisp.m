@@ -1,4 +1,17 @@
 function sliderdisp(target_axis) %this is the most important function, doing all the displaying
+% while the frame is drawn, limit changes do not draw it again (plot.limits_changed)
+was_drawing = gui.retr('drawing_frame');
+gui.put('drawing_frame', true);
+try
+    draw_frame(target_axis);
+catch ME
+    gui.put('drawing_frame', was_drawing);
+    rethrow(ME)
+end
+gui.put('drawing_frame', was_drawing);
+end
+
+function draw_frame(target_axis)
 handles=gui.gethand;
 toggler=gui.retr('toggler');
 selected=2*floor(get(handles.fileselector, 'value'))-(1-toggler);
@@ -58,7 +71,7 @@ if capturing==0
         end
         disparity_display = ~strcmp(disparity_key, 'image');
         %profile on
-        currentimage = plot.draw_pixel_background_overlay(target_axis,displaywhat, selected, handles, currentframe, disparity_display);
+        [~, image_size] = plot.draw_pixel_background_overlay(target_axis,displaywhat, selected, handles, currentframe, disparity_display); %full resolution size (large images are drawn at screen resolution)
         %profile viewer
         axis (target_axis,'image');
         set(target_axis,'ytick',[])
@@ -78,7 +91,7 @@ if capturing==0
             validate.count_discarded_data
         end
         if strncmp(get(handles.multip01, 'visible'), 'on',2)
-            set(handles.imsize, 'string', ['Image size: ' int2str(size(currentimage,2)) '*' int2str(size(currentimage,1)) 'px' ])
+            set(handles.imsize, 'string', ['Image size: ' int2str(image_size(2)) '*' int2str(image_size(1)) 'px' ])
         end
 
         roirect=gui.retr('roirect');
@@ -144,4 +157,5 @@ if capturing==0
         set(target_axis,'YlimMode','manual');set(target_axis,'XlimMode','manual') %in r2014b, vectors are not clipped when set to auto... (?!?)
         drawnow;
     end
+end
 end
