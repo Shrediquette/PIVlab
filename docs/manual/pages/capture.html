@@ -109,15 +109,15 @@
       <tr><td>Grid</td><td>Overlays a grid, for aligning the camera. Works in the live image and in
       the PIV preview.</td></tr>
       <tr><td>Calibration</td><td>Live detection of a
-      <a href="camera-calibration.html#markerboard">ChArUco board</a> — see below. Works in the
-      live image only.</td></tr>
+      <a href="camera-calibration.html#markerboard">ChArUco board</a> — see
+      <a href="#calibration-overlay">Calibration overlay</a>. Works in the live image only.</td></tr>
     </table>
     <figure class="inline-panel">
       <img src="../assets/img/capture/part-camera.png" alt="Camera settings: Binning, ROI, Lens and Setup buttons, and the live overlay switches">
     </figure>
     </div>
 
-    <h4 id="focusing">Focusing with the Sharpness overlay</h4>
+    <h3 id="focusing">Sharpness overlay</h3>
     <p>Focus until all three values are as small as you can get them. With a Scheimpflug adapter,
     focus until the <strong>centre</strong> value is smallest, then adjust the adapter until
     <strong>left and right are equal</strong>.</p>
@@ -125,19 +125,42 @@
     value seen there. Turn back when a bar drops below its mark. All three bars at their marks
     means the image is in focus everywhere. If the side bars sit level but below a full centre bar,
     the adapter cannot fix it — close the aperture instead.</p>
+    <figure>
+      <img src="../assets/img/capture/overlay-sharpness.png" alt="Live image of two cameras with the Sharpness overlay: three yellow bars per camera with the blur in pixels below them and a white mark for the best value; top right the sharpness and the mean brightness">
+      <figcaption>The <span class="ui">Sharpness</span> overlay with two cameras: blur in pixels
+      for the left, centre and right third of each image, each bar with the white mark of its best
+      value.</figcaption>
+    </figure>
 
-    <p>The <span class="ui">Calibration</span> overlay does three things at once, which makes it
-    the quickest way to check a board and a camera position:</p>
+    <h3 id="calibration-overlay">Calibration overlay</h3>
+    <p>The <span class="ui">Calibration</span> overlay is the quickest way to check a board and a
+    camera position. Ticking it switches <span class="ui">Sharpness</span> off, and the other way
+    round.</p>
     <ul>
-      <li>It marks the detected markers and reports what percentage of them it found.</li>
-      <li>It reads the <strong>QR code</strong> printed on the board and fills the board definition
-      from it: pattern dimensions, origin colour, marker family, and the checker and marker size in
-      mm — the scale of the board. You do not have to type those numbers in.</li>
+      <li>A <strong>yellow outline</strong> marks each detected marker. The block at the top left
+      shows the percentage of the board's markers that were found.</li>
+      <li>It reads the <strong>QR code</strong> printed on the board, marks it with blue corners and
+      fills the board definition from it: pattern dimensions, origin colour, marker family, and the
+      checker and marker size in mm — the scale of the board. You do not have to type those numbers
+      in. The line at the top left is blue with the values read from the code, and orange while
+      PIVlab uses the parameters entered by hand.</li>
+      <li>It takes the board images for the <a href="camera-calibration.html">camera
+      calibration</a> by itself: move the board to a <strong>new position</strong> and hold it still.
+      At <strong>Steady!</strong> PIVlab saves a snapshot into the project folder;
+      <strong>Shaking…</strong> means the board still moves, <strong>Existing position</strong>
+      means there is a snapshot of this position already.</li>
       <li>Once a <a href="camera-calibration.html">camera calibration</a> has been performed, it
       also reports the <strong>camera position and orientation relative to the board</strong>: yaw,
       pitch and roll, and the camera X, Y and Z in mm, where X and Y run along the board and Z is
       the distance in front of it. Without a calibration it tells you to perform one first.</li>
+      <li>A transparent board seen from behind is detected as well; the block then shows
+      <strong>Board seen from behind</strong>.</li>
     </ul>
+    <figure>
+      <img src="../assets/img/capture/overlay-calibration.png" alt="Live image of a ChArUco board with the Calibration overlay: a yellow outline around every detected marker, blue corners around the QR code, at the top left the board parameters read from the QR code and the marker percentage">
+      <figcaption>The <span class="ui">Calibration</span> overlay: all markers found, the QR code
+      read and the board parameters taken from it.</figcaption>
+    </figure>
 
     <h3 id="live">Live image</h3>
     <p>Here the camera runs freely: it is <strong>not</strong> triggered by the synchronizer, so
@@ -295,7 +318,11 @@
       with the lower serial number; <span class="ui">Setup</span> shows both serial numbers, and
       <span class="ui">Swap cameras</span> exchanges camera 1 and 2.</li>
       <li>With <span class="ui">Calibration</span> ticked, the markers of a ChArUco board are shown in
-      both images. Place the board in the light sheet so that both cameras see it well; align the
+      both images. Each image also shows the frame of the other camera as a dashed line in that
+      camera's colour, and <strong>Overlap</strong> gives the part of the image that the other camera
+      sees too: align the cameras until the overlap is as large as you need it. The automatic
+      snapshots and the camera position need one camera shown (<span class="ui">CAM</span> button).
+      Place the board in the light sheet so that both cameras see it well; align the
       sheet on it, then switch the laser off and light the board normally
       (<a href="stereo-setup.html#board-images">why</a>). <span class="ui">Snapshot</span> then saves
       one image per camera: the board images for the
@@ -305,11 +332,10 @@
       them in stereo mode. The next recording with the same setup keeps the stereo calibration.</li>
     </ol>
     <figure>
-      <img src="../assets/img/capture/stereo-live.png" alt="Live image of two cameras side by side, each showing the ChArUco board from a different angle, with the detected markers circled in green and the marker percentage in red">
-      <figcaption>Live image of both cameras with <span class="ui">Calibration</span> ticked
-      (artificial images from the <a href="synthetic-images.html">particle image
-      generator</a>): the board is placed so that both cameras see most of it, and almost all
-      markers are detected in both images.</figcaption>
+      <img src="../assets/img/capture/stereo-live.png" alt="Live image of two cameras side by side, each showing the ChArUco board from a different angle, the detected markers outlined in yellow, the frame of the other camera as a dashed line, and the marker and overlap percentages at the top left">
+      <figcaption>Live image of both cameras with <span class="ui">Calibration</span> ticked: almost
+      all markers are detected in both images, and the dashed lines show where the other camera's
+      image lies.</figcaption>
     </figure>
 
     <h2 id="webcam">Trying it with just a webcam</h2>

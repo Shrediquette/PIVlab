@@ -289,6 +289,20 @@ Findings worth never re-deriving:
 
 Newest first. **Add an entry whenever you change the manual**, and bump the watermark.
 
+### 2026-11-20 — live overlays on capture.html
+The live detector overlays were redesigned (yellow marker outlines, status block top left, QR corner brackets,
+dashed frame of the other camera + "Overlap" in the dual view; stereo dev log section 57). `capture.html`:
+the h4 "Focusing with the Sharpness overlay" (not in "On this page", which lists h2/h3 only) became two h3s,
+**Sharpness overlay** (`#focusing`, anchor kept) and **Calibration overlay** (`#calibration-overlay`, new:
+markers, QR code + status colour, automatic snapshots New position / Steady! / Shaking… / Existing position,
+pose, board seen from behind, Sharpness/Calibration exclusive). `#stereo` step 4: dashed frame + Overlap,
+automatic snapshots and pose need one camera shown (CAM button). New images from the **real rig** (two OPTOcam
+20/9, user's board 11x12/12/9 mm, PIVlab driven by a script, screenshots of the axes after the live view
+stopped): `overlay-sharpness.png` (stereo, 1500 px), `overlay-calibration.png` (CAM 1, 900 px),
+`stereo-live.png` replaced (was simulated). Links fixed: camera-calibration.html → `#calibration-overlay`,
+stereo-setup.html Sharpness → `#focusing`. Search index: two records by hand, stereo record + overlap keywords.
+No `.v3` box (display change only, no behaviour change). Watermark not bumped (only this page part checked).
+
 ### 2026-11-18 — de-duplication, cut non-actionable text, collapsible extras
 The manual had grown 13,440 → 22,702 words since July while the page count only went 27 → 30: ~20
 commits touched code *and* manual in one go (`561b033` 6 pages, `a8b33b1` 19, `26ebf86` 5), each
@@ -725,12 +739,10 @@ dedicated pages.
 
 - **`capture.html` has no screenshots of its sub-panels.** The page has the whole-panel shot and
   the stereo live image; a capture of the Timing graph would help `#dt` most.
-- **`capture/stereo-live.png` is a simulated-camera screenshot** — swap in a real-rig capture when
-  one exists (see the 2026-10-24 entry). Recaptured 2026-11-12 (user: the old one detected too few
-  markers, 19 %, and had the cameras the wrong way round): simulated cameras showing the real pair
-  `D:\PIV Data\stereotest_optocam2\moving_board\CAM*_PIVlab_0026_B.tif`; camera 1 = left camera
-  (`CAM2_*` file), camera 2 = right camera (`CAM1_*`); calibration panel set to the 23 x 24 board;
-  live detection 99 % / 67 %. Best pair of that recording (camera 1 files never exceed ~73 %).
+- **Live-image screenshots come from the real rig** (since 2026-11-20, see that entry): when the
+  overlays change again, recapture `capture/stereo-live.png`, `overlay-sharpness.png` and
+  `overlay-calibration.png` the same way (desktop MATLAB, real cameras, axes captured after the live
+  view stopped).
 - **Claude cannot watch video.** Verified 2026-11-05: titles and descriptions are fetchable (the
   oEmbed endpoint), captions are **not** — the caption URL is session-signed and 404s. Material
   from the user's YouTube tutorials has to arrive as a pasted transcript, and is then
