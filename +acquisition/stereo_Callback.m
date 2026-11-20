@@ -21,6 +21,7 @@ if get(handles.ac_stereo,'Value') == 1
 	end
 end
 acquisition.image_amount_Callback %RAM for one or two cameras
+stereo.acquisition_stereo_mode %ticked: stereo-PIV mode (lens calibration per camera); unticked: 2D again if nothing is lost
 acquisition.camera_view_button %CAM button: cameras shown (only with two cameras)
 
 function n_found = connected_cameras(camera_type)

@@ -47,25 +47,10 @@
     as a starting point to fine-tune, not a final answer.</p>
 
     <h2 id="apply">Applying, undoing, and reading the result</h2>
-    <p>These work exactly as in velocity-based validation:</p>
-    <ol class="steps">
-      <li><span class="ui">Interpolate missing data</span> (on by default) fills gaps left by
-      rejected vectors — interpolated vectors are drawn in <strong>orange</strong>.</li>
-      <li>Click <span class="ui">Apply to current frame</span> or <span class="ui">Apply to all
-      frames</span>.</li>
-      <li>Click <span class="ui">Undo all validations (all frames)</span> to revert.</li>
-    </ol>
-    <p>The panel reports <span class="ui">Filtered data</span> as a percentage, and uses the
-    same vector color legend as velocity-based validation: <strong>green</strong> for valid
-    (1st peak), <strong>cyan</strong> for valid (2nd peak), <strong>orange</strong> for
-    rejected/interpolated — configurable in <a href="plot-appearance.html">Modify plot
-    appearance</a>.</p>
-
-    <div class="tip">
-      <strong>Combine with velocity-based validation</strong>
-      Image-based and <a href="validation-velocity.html">velocity-based validation</a> catch
-      different problems and are independent of each other — use both if your data needs it.
-    </div>
+    <p>Applying, undoing, <span class="ui">Interpolate missing data</span> and the vector colour
+    legend work as in
+    <a href="validation-velocity.html#apply">velocity-based validation</a>. These filters are
+    independent of the velocity-based ones, so both can be used on the same data.</p>
   </article>
 
   <script src="../assets/js/nav.js"></script>

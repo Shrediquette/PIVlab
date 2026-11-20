@@ -23,29 +23,23 @@
 
     <h2 id="selecting">Selecting which frames to include</h2>
     <p><span class="ui">Frames to process</span> accepts the same range syntax used elsewhere
-    in PIVlab — e.g. <code>1,3,4,8:10</code>. For a <strong>phase average</strong> (averaging
-    corresponding phases across repeated cycles rather than everything at once), enter multiple
-    rows: <code>[1:10:end;2:10:end;3:10:end]</code> produces one averaged result per row.</p>
+    in PIVlab — e.g. <code>1,3,4,8:10</code>. Multiple rows give one averaged result per row, which
+    is how a <a href="#phase-average">phase average</a> works.</p>
     <p><span class="ui">append to dataset</span> (default) adds the result as a new frame
     alongside your existing data; <span class="ui">replace all existing</span> discards previous
     results first.</p>
 
     <h2 id="operations">Available operations</h2>
-    <table class="ref">
-      <tr><th>Button</th><th>Computes</th></tr>
-      <tr><td>Calculate mean</td><td>Mean velocity across the selected frames.</td></tr>
-      <tr><td>Calculate sum</td><td>Sum of displacements across the selected frames.</td></tr>
-      <tr><td>Calculate stdev</td><td>Standard deviation across the selected frames.</td></tr>
-      <tr><td>Calculate TKE</td><td>Turbulent kinetic energy across the selected frames.</td></tr>
-    </table>
+    <p><span class="ui">Calculate mean</span>, <span class="ui">sum</span>,
+    <span class="ui">stdev</span> and <span class="ui">TKE</span> each work across the frames you
+    selected.</p>
     <p>Each button appends one new result frame. Click <span class="ui">Remove current</span>
     to delete the currently displayed (appended) frame if you don't want to keep it.</p>
 
     <div class="note">
       <strong>Stereo-PIV</strong>
-      In stereo mode all operations include the out-of-plane component w (the TKE frame contains
-      0.5·var(w) as its w part). Make the mean frames after the vector validation: ANALYZE and the
-      validation remove them. See <a href="stereo-piv.html#w">Stereo-PIV</a>.
+      All operations include w, and the mean frames have to be made after the validation —
+      see <a href="stereo-piv.html#w">w in the rest of PIVlab</a>.
     </div>
 
     <h2 id="phase-average">Phase average of periodic flow</h2>

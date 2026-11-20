@@ -59,10 +59,17 @@ if strcmp(mode, 'live')
                 PIVlab_capture_charuco_detector(frames{1}, PIVlab_axis, himg{1});
             end
         else
+            gui.put('charuco_live_markers', cell(1, n)); % filled by the detection of each camera
             for k = 1:n
                 if ~isempty(frames{k})
                     PIVlab_capture_charuco_detector(frames{k}, PIVlab_axis, himg{k}, getappdata(himg{k}, 'x_offset'), k);
                 end
+            end
+            if n == 2 && ~isempty(frames{1}) && ~isempty(frames{2}) && acquisition.camera_view() == 0
+                % both cameras shown: view of the other camera in each image (aligning the cameras)
+                acquisition.draw_camera_overlap(PIVlab_axis, [getappdata(himg{1}, 'x_offset'), getappdata(himg{2}, 'x_offset')]);
+            else
+                delete(findobj(PIVlab_axis, 'tag', 'charucolabel_overlap'));
             end
         end
     else

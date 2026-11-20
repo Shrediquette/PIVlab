@@ -153,11 +153,37 @@ Line numbers drift. Treat them as a starting hint, not gospel — grep for the p
 
   When something feels worth recording but fails the test, put it in the changelog here (or the
   dev log) and mention it in the chat summary instead of writing it into a page.
+
+  **Two scans that find suspects** (neither decides anything — they shortlist, you judge):
+
+  ```bash
+  # 1. lexical: the signature of implementation detail and rationale
+  grep -rnoiE "median of|internally|is computed|computed from|under the hood|that'?s why|the reason|because (the|it|they|PIVlab)|designed for|used to be" pages/*.html
+
+  # 2. density: table cells over 35 words, paragraphs over 90
+  node -e 'const fs=require("fs");for(const f of fs.readdirSync("pages")){if(!f.endsWith(".html"))continue;
+   const s=fs.readFileSync("pages/"+f,"utf8");for(const m of s.matchAll(/<td>([\s\S]*?)<\/td>/g)){
+   const w=m[1].replace(/<[^>]+>/g," ").trim().split(/\s+/).length;if(w>=35)console.log(w,f,m[1].replace(/<[^>]+>/g," ").trim().slice(0,50));}}'
+  ```
+
+  Scan 2 only finds things that are *long*; length is a proxy, not the defect. The 142-word
+  `Sharpness` cell on `capture.html` survived the 2026-11-18 pass precisely because the pass worked
+  from a list of known patterns and nobody measured. Its real fault ("median of the last 5
+  updates") is what scan 1 catches. **A short cell can be pure implementation detail, and a long
+  one can be entirely actionable** — read every hit.
 - Task-focused, not an exhaustive parameter reference — explain what a user does and why.
 - Prefer one real worked example (the Kármán-vortex rod mask) over abstract description.
 - Use the shared components: `.split` (text beside screenshot), `ol.steps`, `table.ref`,
   `.note`/`.tip`/`.warn` callouts, `.eq`/`.eq-where` (equations), `.annot`+`.legend` (annotated
-  screenshots).
+  screenshots), `details.more` (collapsible, see below).
+- **`details.more` — collapsed extras.** For reference, background and tips: content a user may
+  want but does not need in order to work. Closed by default; the `<summary>` must say what is
+  inside, optionally with a `<span class="more-kind">` one-word tag (*reference*, *background*,
+  *tips*, *source*). `initCollapsibles()` in `app.js` opens any `<details>` around the `#hash`
+  target, so TOC links, pager links and search hits still land inside a closed box — **keep that
+  function if `app.js` is reworked.** Headings inside a box are therefore fine (the rail still
+  advertises them); scroll-spy simply does not highlight them while it is closed.
+  **Do not collapse the `.v3` boxes** — `project_manual_v314_boxes` records "no auto-hiding".
 - `.v3` box (blue, title **PIVlab 3.14**): the manual and wiki describe the PIVlab 4 beta; every
   place where PIVlab 3.14 (current stable) behaves differently gets one short `.v3` box with the 3.14
   behaviour. No box for purely new features, except "not available in 3.14" on the stereo pages.
@@ -262,6 +288,94 @@ Findings worth never re-deriving:
 ## 7. Changelog
 
 Newest first. **Add an entry whenever you change the manual**, and bump the watermark.
+
+### 2026-11-20 — live overlays on capture.html
+The live detector overlays were redesigned (yellow marker outlines, status block top left, QR corner brackets,
+dashed frame of the other camera + "Overlap" in the dual view; stereo dev log section 57). `capture.html`:
+the h4 "Focusing with the Sharpness overlay" (not in "On this page", which lists h2/h3 only) became two h3s,
+**Sharpness overlay** (`#focusing`, anchor kept) and **Calibration overlay** (`#calibration-overlay`, new:
+markers, QR code + status colour, automatic snapshots New position / Steady! / Shaking… / Existing position,
+pose, board seen from behind, Sharpness/Calibration exclusive). `#stereo` step 4: dashed frame + Overlap,
+automatic snapshots and pose need one camera shown (CAM button). New images from the **real rig** (two OPTOcam
+20/9, user's board 11x12/12/9 mm, PIVlab driven by a script, screenshots of the axes after the live view
+stopped): `overlay-sharpness.png` (stereo, 1500 px), `overlay-calibration.png` (CAM 1, 900 px),
+`stereo-live.png` replaced (was simulated). Links fixed: camera-calibration.html → `#calibration-overlay`,
+stereo-setup.html Sharpness → `#focusing`. Search index: two records by hand, stereo record + overlap keywords.
+No `.v3` box (display change only, no behaviour change). Watermark not bumped (only this page part checked).
+
+### 2026-11-18 — de-duplication, cut non-actionable text, collapsible extras
+The manual had grown 13,440 → 22,702 words since July while the page count only went 27 → 30: ~20
+commits touched code *and* manual in one go (`561b033` 6 pages, `a8b33b1` 19, `26ebf86` 5), each
+adding a local note instead of extending one home. Result: **visible text ~22.7k → ~18.3k words**,
+with ~3k of that collapsed rather than deleted (final figure after the density pass below: **~17.9k**).
+
+**Four factual errors fixed** (all verified against the GUI source, not just reworded):
+- `piv-settings.html` — the ¼ rule was **inverted** ("window smaller than a quarter of the
+  displacement"), and stated as a hard rule the thing `#multipass-changes-rules` says does not
+  apply. Now points there.
+- `derive-spatial.html` — the control is `Estimate uncertainty (slow)` (`generateUI.m`), not
+  "Compute uncertainty".
+- `sessions.html` — claimed the Tools panel is "at the top of the screen"; it is bottom left.
+- `masking.html` — two different names for one menu item.
+
+**Deleted:** the six MATLAB name-drops (`atan2d`, `gradient`, `curl`, `divergence`, `smoothn`,
+`streamslice`), label-echo tables (markers, derive-temporal), "(no keyboard shortcut)",
+"has no extra options", "has no closed-form equation", "This manual is built from those same
+descriptions", "Where this advice comes from", the "already remembers a few defaults" tip, and the
+self-cancelling grid sentence. `index.html`'s "most frequently mentioned PIV software" **stays** —
+it is deliberate SEO copy (user, 2026-11-18).
+
+**De-duplicated:** six of the nine stereo `w` restatements now point at the `stereo-piv.html#w`
+hub; `validation-image.html` no longer re-tells velocity validation (14 lines → 4); the
+bad-images warning, the duplicate tooltip sentence and the redundant ROI note are gone.
+
+**Collapsed** into `details.more` (10 boxes on 9 pages): `derive-spatial#equations` (1295 w — the
+page shows 618 visible words instead of 1928), `piv-settings#tips` (1581 → 859),
+`capture#straddling`, `camera-calibration#checker-size` and its print-shop detail,
+`roi#vs-masking`, `best-practices#diagnose`, `preprocessing#tips`, `validation-velocity#tuning`,
+and the Wieneke citation.
+
+**One contradiction fixed:** `derive-spatial` defined every parameter twice (dropdown table vs
+equations). *Shear rate* was word-for-word and *Simple strain rate* said "a simpler strain-rate
+estimate" in the table while the reference said it is **not** a strain rate — a reader could come
+away with the wrong quantity. The table rows now carry the real distinction and the redundant
+`.note` is gone.
+
+**New: "what clears your results" table** on `analyze.html#clear`, collecting the six actions that
+discard results (clear, remove images, reset GUI, apply calibration, stereo calibration, ANALYZE
+on mean frames). The copies on `sessions.html` and elsewhere now link to it.
+
+**Citation added:** the disparity correction had **no reference anywhere** — `+stereo/` carried
+none and the Sciacchitano/Wieneke/Scarano 2013 reference in `+uncertainty/` is a different method.
+Added Wieneke, B. (2005), *Stereo-PIV using self-calibration on particle images*, Exp. Fluids 39,
+267–280 to `stereo-piv.html#disparity` **and** to the headers of `+stereo/measure_disparity.m` and
+`fit_disparity.m`.
+
+**Verified:** 31 pages, 0 broken in-page or cross-page anchors, 0 dead search records out of 112,
+both themes, 375 px with no horizontal scroll, and a **usefulness check** — 16 user journeys
+(load → pre-process → ROI → mask → settings → analyze → validate → calibrate → derive → export,
+plus capture, stereo, scripting, noisy vectors, troubleshooting, what-clears-results) all still
+answerable **with every box closed**. Repeat that check after any further trimming: it is the one
+that proves nothing was lost, as opposed to merely not broken.
+
+**Second pass, same day — density.** The user spotted that the `Sharpness` cell in
+`capture.html` had survived at **142 words**, explaining "the median of the last 5 updates" and how
+the number is derived. It survived because the first pass worked from the agents' *pattern* lists
+(MATLAB names, negatives, label-echo) and nobody measured the prose. Fixed by extracting
+`capture.html#focusing` as a real section (cell 142 → 35 w) and trimming
+`synthetic-images.html` (103 → 51, 50 → 25). Then both scans in §5 were run properly:
+11 table cells remain ≥ 35 words (all ≤ 52 and all carrying a unit, a default or a consequence),
+0 paragraphs ≥ 90 words, and of 17 lexical hits 5 were cut — the 6 that remain are a heading, the
+pixel→metre conversion the equations depend on, the worked masking example, the stereo
+principle, the normalized-median-test *definition* and one caution. Visible text now **~17.9k
+words**. Honest limit, worth remembering: **prose density cannot be measured.** Word count only
+flags what is *long*; a 20-word cell can be pure implementation detail and a 50-word one can be
+entirely actionable. The scans produce candidates — every hit still has to be read.
+
+**Tooling:** `tools/build_review.mjs` renders a word-level before/after report of all manual
+changes as readable prose (`node tools/build_review.mjs <ref>` → `review.html`). Its output
+`review.html` is in `.gitignore`; the script itself is deliberately left **untracked**. Neither may
+ever be committed — everything under `docs/` is served by pivlab.de.
 
 ### 2026-11-15 — "PIVlab 3.14" boxes for behaviour changed since the stable release
 New `.v3` component (manual `style.css`, website `site.css`, tokens `--v3`/`--v3-bg`, light + dark).
@@ -625,12 +739,10 @@ dedicated pages.
 
 - **`capture.html` has no screenshots of its sub-panels.** The page has the whole-panel shot and
   the stereo live image; a capture of the Timing graph would help `#dt` most.
-- **`capture/stereo-live.png` is a simulated-camera screenshot** — swap in a real-rig capture when
-  one exists (see the 2026-10-24 entry). Recaptured 2026-11-12 (user: the old one detected too few
-  markers, 19 %, and had the cameras the wrong way round): simulated cameras showing the real pair
-  `D:\PIV Data\stereotest_optocam2\moving_board\CAM*_PIVlab_0026_B.tif`; camera 1 = left camera
-  (`CAM2_*` file), camera 2 = right camera (`CAM1_*`); calibration panel set to the 23 x 24 board;
-  live detection 99 % / 67 %. Best pair of that recording (camera 1 files never exceed ~73 %).
+- **Live-image screenshots come from the real rig** (since 2026-11-20, see that entry): when the
+  overlays change again, recapture `capture/stereo-live.png`, `overlay-sharpness.png` and
+  `overlay-calibration.png` the same way (desktop MATLAB, real cameras, axes captured after the live
+  view stopped).
 - **Claude cannot watch video.** Verified 2026-11-05: titles and descriptions are fetchable (the
   oEmbed endpoint), captions are **not** — the caption URL is session-signed and 404s. Material
   from the user's YouTube tutorials has to arrive as a pasted transcript, and is then

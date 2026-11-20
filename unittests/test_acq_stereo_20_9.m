@@ -289,17 +289,17 @@ if t.TasksExecuted >= t.TasksToExecute - 1
     return
 end
 if r.phase == 1
-    qr = findobj(ax, 'Type', 'text', 'Tag', 'charucolabel', 'String', 'QR');
-    if isempty(qr)
+    qr_x = qr_box_x(ax, 2); % QR box of the full detection of camera 2
+    if isempty(qr_x)
         return
     end
-    r.cam2_qr_x = qr(1).Position(1);
+    r.cam2_qr_x = min(qr_x);
     r.rows = str2double(h.calib_rows.String);
     r.phase = 2;
     stereo.camera_toggle_Callback; % CAM 2 -> CAM 1+2
 elseif r.phase == 2
-    r.stereo_labels = [~isempty(findobj(ax, 'Tag', 'charucolabel_cam1')) ~isempty(findobj(ax, 'Tag', 'charucolabel_cam2'))];
-    r.stereo_qr = ~isempty(findobj(ax, 'Type', 'text', 'String', 'QR'));
+    r.stereo_labels = [markers_shown(ax, 1) markers_shown(ax, 2)];
+    r.stereo_qr = ~isempty(qr_box_x(ax, 1)) || ~isempty(qr_box_x(ax, 2));
     if ~all(r.stereo_labels) || ~r.stereo_qr
         setappdata(0, 'stereo_capture_test', r);
         return
@@ -374,4 +374,19 @@ end
 
 function n = trigger_of(frame)
 n = double(frame(1, 1)) + 256 * double(frame(1, 2));
+end
+
+function shown = markers_shown(ax, camera)
+% outlines of detected markers of this camera in the live image (PIVlab_capture_charuco_detector)
+m = findobj(ax, 'Tag', sprintf('charucolabel_markers_cam%d', camera));
+shown = ~isempty(m) && any(isfinite(m(1).Vertices(:)));
+end
+
+function x = qr_box_x(ax, camera)
+% x coordinates of the QR code box of this camera in the live image (empty: no QR code read)
+b = findobj(ax, 'Tag', sprintf('charucolabel_qr_cam%d', camera));
+x = [];
+if ~isempty(b)
+    x = b(1).XData(isfinite(b(1).XData));
+end
 end

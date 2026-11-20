@@ -72,8 +72,8 @@
       <tr><th>Field</th><th>Meaning</th></tr>
       <tr>
         <td>Pass 1 → Interrogation area [px]</td>
-        <td>Edge length of the first pass's window. Should be smaller than about a quarter of
-        your expected maximum displacement.</td>
+        <td>Edge length of the first pass's window. It has to be clearly larger than the
+        displacement you expect — see <a href="#tips">Tips &amp; tricks</a> for how to size it.</td>
       </tr>
       <tr>
         <td>Pass 1 → Step [px]</td>
@@ -89,10 +89,9 @@
     <p>For guidance on how large to make each pass and how many passes to use, see
     <a href="#tips">Tips &amp; tricks: choosing a suitable interrogation area</a> below.</p>
     <div class="note">
-      <strong>Ensemble has no single-frame preview</strong>
-      <span class="ui">Analyze current frame</span> isn't available for the Ensemble algorithm
-      — it builds one statistical correlation across your <em>entire</em> loaded sequence, so
-      there's nothing meaningful to compute from a single frame pair alone.
+      <strong>Ensemble always uses the whole sequence</strong>
+      Ensemble builds one statistical correlation across your <em>entire</em> loaded sequence,
+      so it runs on all frames rather than on the current one.
     </div>
 
     <h2 id="dcc">Single pass direct cross-correlation (DCC)</h2>
@@ -159,9 +158,10 @@
     </table>
 
     <h2 id="tips">Tips &amp; tricks: choosing a suitable interrogation area</h2>
-    <p>This applies mainly to <span class="ui">Multipass FFT window deformation</span> and
-    <span class="ui">Ensemble</span>, where you choose a size for each of several passes. DCC has
-    only one pass by definition, and wOFV doesn't use interrogation areas at all.</p>
+    <details class="more">
+    <summary>Particle count, pass sizes, a starting workflow and choosing Δt <span class="more-kind">tips</span></summary>
+    <p>This applies to <span class="ui">Multipass FFT window deformation</span> and
+    <span class="ui">Ensemble</span>, where you choose a size for each pass.</p>
 
     <h3 id="particles-vs-resolution">Balancing particle count and displacement</h3>
     <p>Two numbers matter most for your <em>final</em> pass: how many particles fall inside each
@@ -213,11 +213,8 @@
     <h3 id="dont-fix-with-ia">When not to fix it with interrogation area size</h3>
     <div class="warn">
       <strong>Don't tune around a bad image</strong>
-      Noisy or missing vectors are often caused by the images themselves — poor seeding density,
-      compression artifacts, a thick laser sheet, uneven illumination — not by interrogation-area
-      choice. No amount of parameter tuning fully compensates for poor image quality; see
-      <a href="best-practices.html#seeding">Particle seeding &amp; image quality</a> for what to
-      check first.
+      Noisy or missing vectors usually come from the images, not from the interrogation area.
+      Check <a href="best-practices.html#seeding">Particle seeding &amp; image quality</a> first.
     </div>
     <div class="note">
       <strong>If PIVlab warns your image data looks problematic</strong>
@@ -226,9 +223,8 @@
       displacement — not only by interrogation-area size. Check those too before assuming it's
       purely an IA problem.
     </div>
-    <p>The <a href="#suggest"><span class="ui">Suggest settings</span></a> button gives you a
-    first estimate from your image's particle density and typical displacement — a good starting
-    point, not a substitute for checking the result against the workflow above.</p>
+    <p><a href="#suggest"><span class="ui">Suggest settings</span></a> gives you a first estimate,
+    but still check the result against the workflow above.</p>
 
     <h3 id="choosing-dt">Choosing Δt together with the interrogation area</h3>
     <p>The time step between your two images (the same value you'll later enter as
@@ -241,6 +237,8 @@
     <a href="interface.html#tools">Tools panel</a> (bottom left, "Current point") reports the
     displacement directly in pixels, so you can see immediately whether it's in the 2–8 px range
     and adjust the pulse separation or frame spacing accordingly.</p>
+
+    </details>
 
     <h2 id="preview">Testing your settings</h2>
     <p>Click <span class="ui">Analyze current frame</span> to run the analysis on just the

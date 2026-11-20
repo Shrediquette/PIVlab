@@ -37,12 +37,15 @@ if calibration_demo_mode
 else
    
 end
- [ids,locs] = readArucoMarker(img,'DICT_4X4_1000','WindowSizeRange',[3 23],'MarkerSizeRange',[0.005 1],'ResolutionPerBit',16,'SquarenessTolerance',0.03); %schnellere detektierung wenn bekannt. Am besten: Erstmal so gucken welche Familie dominant. Dann zweiter durchgang mit nur dieser familie
+[ids,locs,mirrored] = read_markers(img,camera,handles); %also a board seen from behind (mirrored)
 locs=(locs-1)*step+1; %pixel coordinates of the full image
 remember_marker_size(locs, camera); %next detection_step
 ids=ids';
-delete(findobj(figure_handle,'-regexp','tag','^charucolabel')); %in the image axes only (searching all windows is slow); also labels of both cameras (CAM 1+2) drawn just before the CAM button was pressed
+clear_labels(figure_handle,camera); %labels of the last update; also those of both cameras (CAM 1+2) drawn just before the CAM button was pressed
 draw_qr_status(figure_handle,calibration_demo_mode);
+status_lines = {'Markers: 0 %'};
+marker_locs = [];
+qr_loc = []; %finder patterns of the QR code, when read
 
 if ~isempty(locs) && size(locs,3) == size(ids,1)
     id_thresh = mean(ids,'omitnan')+2*std(ids,'omitnan');
@@ -50,10 +53,7 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 	locs(:,:,isnan(ids))=[];
 	ids(isnan(ids))=[];
 	numMarkers = numel(ids);
-	locs_center_x=squeeze(mean(locs(:,1,:),'omitnan'));
-	locs_center_y=squeeze(mean(locs(:,2,:),'omitnan'));
-	mean_loc_x=mean(locs_center_x,'omitnan');
-	mean_loc_y=mean(locs_center_y,'omitnan');
+	marker_locs = locs;
 	min_x = min(locs(:,1));
 	max_x = max(locs(:,1));
 	min_y = min(locs(:,2));
@@ -67,6 +67,9 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 		if step > 1 && ~isempty(loc)
 			loc = (loc - 1) * step + 1; % reduced image: back to full resolution
 		end
+	end
+	if detectionOK
+		qr_loc = loc;
 	end
 	if detectionOK && ~isempty(qr_patternDims(1)) && ~isempty(qr_patternDims(2)) % if QR code detected: fill GUI with the detected values
 		handles.calib_rows.String = num2str(qr_patternDims(1));
@@ -95,8 +98,7 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 		qr_params.markerSize=qr_markerSize;
 		qr_params.time=datetime('now');
 		gui.put('charuco_qr_params',qr_params);
-		delete(findobj(figure_handle,'tag','charucolabel')); %only the status text exists at this point, redraw it with the new values
-		draw_qr_status(figure_handle,calibration_demo_mode);
+		draw_qr_status(figure_handle,calibration_demo_mode); %with the new values
 	else
 		patternDims = [str2double(handles.calib_rows.String),str2double(handles.calib_columns.String)];
 		if contains(handles.calib_boardtype.String{handles.calib_boardtype.Value}, 'DICT_4X4_1000')
@@ -187,7 +189,14 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 		cameraParams = camera_params(camera); %the corners are only needed for the pose, which needs the lens calibration
 		imagePoints1 = [];
 		if ~isempty(cameraParams)
-			imagePoints1 = detectCharucoBoardPoints(img*255,patternDims,markerFamily,checkerSize,markerSize, 'OriginCheckerColor', originCheckerColor,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
+			if mirrored %board seen from behind: corners can only be read in the mirrored image
+				imagePoints1 = detectCharucoBoardPoints(fliplr(img*255),patternDims,markerFamily,checkerSize,markerSize, 'OriginCheckerColor', originCheckerColor,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
+				if ~isempty(imagePoints1)
+					imagePoints1(:,1) = size(img,2) + 1 - imagePoints1(:,1); %back to the coordinates of the image as recorded
+				end
+			else
+				imagePoints1 = detectCharucoBoardPoints(img*255,patternDims,markerFamily,checkerSize,markerSize, 'OriginCheckerColor', originCheckerColor,'ResolutionPerBit',16,'MarkerSizeRange',[0.005 1]);
+			end
 			imagePoints1 = preproc.cam_filter_charuco_corners(imagePoints1, patternDims); % corners of wrongly decoded markers
 			imagePoints1 = (imagePoints1-1)*step+1; %corners were detected in the reduced image, the camera calibration is for the full resolution
 		else
@@ -197,6 +206,9 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 			if ~isempty(cameraParams)
 				detector = vision.calibration.monocular.CharucoBoardDetector();
 				worldPoints1 = generateWorldPoints(detector, 'PatternDims', patternDims, 'CheckerSize', checkerSize);
+				if mirrored
+					worldPoints1(:,1) = -worldPoints1(:,1); %board seen from behind (as preproc.cam_rectification_show_cam_position_Callback)
+				end
 				if patternDims(1) > patternDims(2) %Fixes the issue that high slender calibration bards result in rotated output
 					% swap axes
 					worldPoints1 = worldPoints1(:, [2 1]);
@@ -212,6 +224,7 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 					try
 						camExtrinsics1 = estimateExtrinsics(imagePoints1,worldPoints1,cameraParams.Intrinsics);
 					catch
+						draw_overlays(figure_handle,camera,x_offset,size(img_original),marker_locs,qr_loc,{['Markers: ' num2str(percentage_detected) ' %']},calibration_demo_mode);
 						return
 					end
 					R1=camExtrinsics1.R;
@@ -254,78 +267,171 @@ if ~isempty(locs) && size(locs,3) == size(ids,1)
 			end
 		end
 	end
+	%status block in the top left corner of the camera image (not on the board: it would hide markers)
+	status_lines = {['Markers: ' num2str(percentage_detected) ' %']};
 	if percentage_detected >= 3
-		mean_loc_x_old=gui.retr('mean_loc_x');
-		mean_loc_y_old=gui.retr('mean_loc_y');
-		if isempty(mean_loc_x_old)
-			mean_loc_x_old=size(img_original,2)/2;
-			mean_loc_y_old=size(img_original,1)/2;
+		status_lines{end+1} = strtrim(infotxt);
+		if isempty(infotxt2)
+			status_lines{end+1} = ' '; %"Steady!" / "Shaking..." only after a new position: keep its line, the lines below do not jump
+		else
+			status_lines{end+1} = strtrim(infotxt2);
 		end
-		lowpassed_mean_loc_x=mean_loc_x*0.1+mean_loc_x_old*0.9;
-        lowpassed_mean_loc_y=mean_loc_y*0.1+mean_loc_y_old*0.9;
-        gui.put('mean_loc_x',lowpassed_mean_loc_x);
-        gui.put('mean_loc_y',lowpassed_mean_loc_y);
-        hold(figure_handle,'on');
-        if calibration_demo_mode
-    		scatter(x_offset+locs_center_x,locs_center_y,1000,'green','tag','charucolabel','Parent',figure_handle,'LineWidth',5)
-        else
-            scatter(x_offset+locs_center_x,locs_center_y,200,'green','tag','charucolabel','Parent',figure_handle,'LineWidth',2)
-        end
-        hold(figure_handle,'off');
-        rectangle('Position',[x_offset+min(locs_center_x), min(locs_center_y),max(locs_center_x) - min(locs_center_x), max(locs_center_y) - min(locs_center_y) ],'tag','charucolabel','EdgeColor','r','LineWidth',2,'Parent',figure_handle,'Curvature',0.15)
-
-        text(x_offset+lowpassed_mean_loc_x,lowpassed_mean_loc_y,orientation_message,'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',18,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','top','Parent',figure_handle)
-        text(x_offset+lowpassed_mean_loc_x,lowpassed_mean_loc_y,['Markers: ' num2str(percentage_detected) ' %'  infotxt  infotxt2],'tag','charucolabel','Color','r','Backgroundcolor','k','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','bottom','Parent',figure_handle)
+		if mirrored
+			status_lines{end+1} = 'Board seen from behind';
+		end
+		if ~isempty(orientation_message)
+			status_lines = [status_lines, strsplit(orientation_message, newline)];
+		end
         if calibration_demo_mode
             text (figure_handle,x_offset+50,50,'Demonstration of the new camera calibration feature with automatic image capture and pose estimation.','tag','charucolabel','Color','k','FontSize',16,'FontWeight','bold')
         end
-        if detectionOK %QR code detected
-			rectangle('position',[x_offset+min(loc(:,1))-20, min(loc(:,2))-20, max(loc(:,1)) - min(loc(:,1))+20 , max(loc(:,2)) - min(loc(:,2))+20],'tag','charucolabel','EdgeColor','b','LineWidth',6,'Parent',figure_handle,'Curvature',0.5)
-			text(x_offset+mean(loc(:,1)),mean(loc(:,2)),'QR','tag','charucolabel','Color','w','FontSize',24,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
-		end
 	end
+end
+draw_overlays(figure_handle,camera,x_offset,size(img_original),marker_locs,qr_loc,status_lines,calibration_demo_mode);
+
+function draw_overlays(figure_handle,camera,x_offset,image_size,marker_locs,qr_loc,status_lines,calibration_demo_mode)
+%detected markers, QR code and status block of the full detection (one camera)
+if calibration_demo_mode
+	draw_markers(figure_handle,camera,x_offset,marker_locs,4);
+	draw_qr_box(figure_handle,camera,x_offset,qr_loc,18);
+	draw_status(figure_handle,camera,x_offset,image_size,status_lines,24,0.09);
+else
+	draw_markers(figure_handle,camera,x_offset,marker_locs,2);
+	draw_qr_box(figure_handle,camera,x_offset,qr_loc,9);
+	draw_status(figure_handle,camera,x_offset,image_size,status_lines,14,0.06);
 end
 
 function stereo_detection(img,figure_handle,x_offset,camera)
 %Stereo acquisition, both cameras shown: the markers of the board in the light sheet that one of the two cameras
 %sees, so that the board can be placed where both cameras see it, and the QR code (board parameters). No automatic
 %snapshots and no camera pose: with one camera shown (CAM button), the full detection runs for it.
-label_tag=sprintf('charucolabel_cam%d',camera);
 img_original=img;
 step = detection_step(img_original, camera);
 if step > 1
 	img=img(1:step:end,1:step:end,1);
 end
 img=histeq(mat2gray(img));
-[ids,locs] = readArucoMarker(img,'DICT_4X4_1000','WindowSizeRange',[3 23],'MarkerSizeRange',[0.005 1],'ResolutionPerBit',16,'SquarenessTolerance',0.03);
+handles=gui.gethand;
+[ids,locs] = read_markers(img,camera,handles); %also a board seen from behind (mirrored)
 locs=(locs-1)*step+1; %pixel coordinates of the full image
 remember_marker_size(locs, camera);
-delete(findobj(figure_handle,'tag',label_tag));
-delete(findobj(figure_handle,'tag','charucolabel')); %QR status text (one for both cameras)
+delete(findobj(figure_handle,'tag','charucolabel')); %labels of the full detection (CAM 1 / CAM 2 shown before)
 draw_qr_status(figure_handle,0);
 [qr_ok,~,~,~,~,~,qr_loc] = stereo_qr(img_original); %full resolution: small QR codes
-if qr_ok
-	rectangle('position',[x_offset+min(qr_loc(:,1))-20, min(qr_loc(:,2))-20, max(qr_loc(:,1)) - min(qr_loc(:,1))+20 , max(qr_loc(:,2)) - min(qr_loc(:,2))+20],'tag',label_tag,'EdgeColor','b','LineWidth',3,'Parent',figure_handle,'Curvature',0.5)
-	text(x_offset+mean(qr_loc(:,1)),mean(qr_loc(:,2)),'QR','tag',label_tag,'Color','w','FontSize',14,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
+if ~qr_ok
+	qr_loc = [];
 end
+draw_qr_box(figure_handle,camera,x_offset,qr_loc,6);
 ids=ids(:);
 if isempty(locs) || size(locs,3) ~= numel(ids)
-	text(x_offset+size(img_original,2)/2,size(img_original,1)/2,'Markers: 0 %','tag',label_tag,'Color','r','Backgroundcolor','k','FontSize',14,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle);
+	store_markers(camera,[],[],size(img_original)); %acquisition.draw_camera_overlap
+	draw_markers(figure_handle,camera,x_offset,[],1.5);
+	draw_status(figure_handle,camera,x_offset,size(img_original),{'Markers: 0 %'},12,0.06);
 	return
 end
 id_thresh = mean(ids,'omitnan')+2*std(ids,'omitnan'); %wrongly decoded markers have far too high ids
 locs(:,:,ids>id_thresh)=[];
 ids(ids>id_thresh)=[];
-handles=gui.gethand;
+store_markers(camera,ids,locs,size(img_original)); %acquisition.draw_camera_overlap: view of the other camera
 patternDims = [str2double(handles.calib_rows.String),str2double(handles.calib_columns.String)];
 percentage_detected=min(100,round(numel(ids)/(patternDims(1)*patternDims(2)/2)*100,0));
-locs_center_x=squeeze(mean(locs(:,1,:),'omitnan'))+x_offset;
-locs_center_y=squeeze(mean(locs(:,2,:),'omitnan'));
-hold(figure_handle,'on');
-scatter(locs_center_x,locs_center_y,40,'green','tag',label_tag,'Parent',figure_handle,'LineWidth',1.5) %smaller than in 2D: two images share the display
-hold(figure_handle,'off');
-rectangle('Position',[min(locs_center_x), min(locs_center_y),max(locs_center_x) - min(locs_center_x), max(locs_center_y) - min(locs_center_y) ],'tag',label_tag,'EdgeColor','r','LineWidth',2,'Parent',figure_handle,'Curvature',0.15)
-text(mean(locs_center_x),mean(locs_center_y),['Markers: ' num2str(percentage_detected) ' %'],'tag',label_tag,'Color','r','Backgroundcolor','k','FontSize',14,'FontWeight','bold','HorizontalAlignment','center','VerticalAlignment','middle','Parent',figure_handle)
+draw_markers(figure_handle,camera,x_offset,locs,1.5); %thinner than with one camera: two images share the display
+draw_status(figure_handle,camera,x_offset,size(img_original),{['Markers: ' num2str(percentage_detected) ' %']},12,0.06);
+
+function draw_markers(figure_handle,camera,x_offset,locs,line_width)
+%Outline of each detected marker (its 4 corners), one yellow line: it lies on the light border around the
+%marker, readable without a dark edge (a second, wider line below it looked uneven: both are rasterised
+%separately). One patch object per camera with one face per marker (closed outlines: all corners joined the
+%same way), kept and updated (no flicker, no new objects per frame).
+vertices = NaN(1,2);
+faces = NaN(1,4);
+if ~isempty(locs)
+	n = size(locs,3);
+	vertices = [reshape(locs(:,1,:),[],1) + x_offset, reshape(locs(:,2,:),[],1)]; % corner c of marker i in row 4*(i-1)+c
+	faces = reshape(1:4*n,4,n)';
+end
+markers = overlay_object(figure_handle,sprintf('charucolabel_markers_cam%d',camera),'patch');
+set(markers,'Faces',faces,'Vertices',vertices,'EdgeColor',[1 0.85 0],'LineWidth',line_width);
+
+function draw_qr_box(figure_handle,camera,x_offset,loc,line_width)
+%Four corner brackets around the QR code, along its edges (follows rotation and perspective); hidden when no
+%QR code was read. loc: finder pattern centres from readBarcode (bottom left, top left, top right).
+x = NaN;
+y = NaN;
+if size(loc,1) == 3
+	corners = [loc(2,:); loc(3,:); loc(3,:)+loc(1,:)-loc(2,:); loc(1,:)]; % finder centres + the 4th corner
+	centre = mean(corners,1);
+	% version 1 code: 21 modules, finder centres 7 modules from the centre, edge at 10.5; bracket 1 module outside
+	corners = centre + (corners - centre) * (11.5/7);
+	x = [];
+	y = [];
+	for i = 1:4
+		previous = corners(mod(i-2,4)+1,:);
+		next = corners(mod(i,4)+1,:);
+		bracket = [corners(i,:) + 0.25*(previous-corners(i,:)); corners(i,:); corners(i,:) + 0.25*(next-corners(i,:)); NaN NaN];
+		x = [x; bracket(:,1)]; %#ok<AGROW>
+		y = [y; bracket(:,2)]; %#ok<AGROW>
+	end
+	x = x + x_offset;
+end
+box = overlay_object(figure_handle,sprintf('charucolabel_qr_cam%d',camera),'line');
+set(box,'XData',x,'YData',y,'Color',[0.3 0.6 1],'LineWidth',line_width);
+
+function draw_status(figure_handle,camera,x_offset,image_size,lines,fontsize,y_fraction)
+%Status block (marker percentage, position, pose) in the top left corner of the camera image, below the QR status
+status = overlay_object(figure_handle,sprintf('charucolabel_status_cam%d',camera),'text');
+y = y_fraction*image_size(1);
+qr_status = findobj(figure_handle,'tag','charucolabel_qrstatus');
+if ~isempty(qr_status) && strcmp(figure_handle.YDir,'reverse')
+	% directly below the QR status line (its height on screen depends on the display size)
+	extent = qr_status(1).Extent; % normalized axes units: [left bottom width height], bottom of the axes = YLim(2)
+	y_limits = figure_handle.YLim;
+	y = y_limits(2) - extent(2)*diff(y_limits) + 0.005*diff(y_limits);
+end
+set(status,'Position',[x_offset+0.01*image_size(2), y, 0],'String',lines,'FontSize',fontsize);
+
+function h = overlay_object(figure_handle,tag,kind)
+%patch, line or text of the live detection: the existing one (updated by the caller) or a new one
+h = findobj(figure_handle,'tag',tag);
+if numel(h) > 1
+	delete(h(2:end));
+	h = h(1);
+end
+if isempty(h)
+	if strcmp(kind,'patch')
+		h = patch(figure_handle,'Faces',NaN(1,4),'Vertices',NaN(1,2),'FaceColor','none','LineJoin','round','tag',tag,'HitTest','off','PickableParts','none');
+	elseif strcmp(kind,'line')
+		h = line(figure_handle,NaN,NaN,'LineJoin','round','tag',tag,'HitTest','off','PickableParts','none');
+	else
+		h = text(figure_handle,0,0,'','tag',tag,'Color','w','BackgroundColor',[0 0 0 0.6],'FontWeight','bold', ...
+			'HorizontalAlignment','left','VerticalAlignment','top','Interpreter','none','HitTest','off','PickableParts','none');
+	end
+end
+
+function clear_labels(figure_handle,camera)
+%Full detection of one camera: removes the labels of the last update and of the other camera (both cameras were
+%shown before), except the objects of this camera and the QR status that are kept and updated
+keep = {sprintf('charucolabel_markers_cam%d',camera), sprintf('charucolabel_qr_cam%d',camera), ...
+	sprintf('charucolabel_status_cam%d',camera), 'charucolabel_qrstatus'};
+labels = findobj(figure_handle,'-regexp','tag','^charucolabel');
+remove = true(numel(labels),1);
+for i = 1:numel(labels)
+	remove(i) = ~any(strcmp(labels(i).Tag, keep));
+end
+delete(labels(remove));
+
+function store_markers(camera,ids,locs,image_size)
+%markers of this camera in the current frame (full image coordinates), for the overlap of the two camera views
+%(acquisition.draw_camera_overlap, called by acquisition.live_overlays after both cameras)
+markers = gui.retr('charuco_live_markers');
+if ~iscell(markers) || numel(markers) ~= 2
+	markers = cell(1,2);
+end
+m.ids = ids;
+m.locs = locs;
+m.size = image_size(1:2);
+markers{camera} = m;
+gui.put('charuco_live_markers',markers);
 
 function draw_qr_status(figure_handle,calibration_demo_mode)
 %Persistent info in the top left corner: were the board parameters read from a QR code?
@@ -342,7 +448,11 @@ else
 	statustxt='No QR code detected: using manual board parameters';
 	bgcolor=[0.85 0.4 0];
 end
-text(figure_handle,0.01,0.99,statustxt,'Units','normalized','tag','charucolabel','Color','w','Backgroundcolor',bgcolor,'FontSize',fontsize,'FontWeight','bold','HorizontalAlignment','left','VerticalAlignment','top','Interpreter','none');
+status = findobj(figure_handle,'tag','charucolabel_qrstatus'); %kept and updated
+if isempty(status)
+	status = text(figure_handle,0.01,0.99,'','Units','normalized','tag','charucolabel_qrstatus','Color','w','FontWeight','bold','HorizontalAlignment','left','VerticalAlignment','top','Interpreter','none','HitTest','off');
+end
+set(status,'String',statustxt,'BackgroundColor',bgcolor,'FontSize',fontsize);
 
 function out = stretched_uint8(img)
 %8 bit image stretched from its minimum to its maximum (as uint8(mat2gray(img)*255), but in integer arithmetic:
@@ -356,6 +466,48 @@ if hi <= lo
 	return
 end
 out = imlincomb(255/(hi-lo), img, -255*lo/(hi-lo), 'uint8');
+
+function [ids,locs,mirrored] = read_markers(img,camera,handles)
+%ArUco markers in the (reduced, equalised) image. A camera behind the light sheet sees the board mirrored
+%(transparent board): the markers can then only be read in the mirrored image (as
+%preproc.cam_detect_rectification_board). The orientation of the last detection of this camera is tried first; the
+%other one only when less than half of the markers of the board are found.
+%locs: in the coordinates of the image as given (also when mirrored)
+mirrored_states = gui.retr('charuco_mirrored');
+if numel(mirrored_states) < camera+1
+	mirrored_states(camera+1) = 0;
+end
+n_markers = str2double(handles.calib_rows.String)*str2double(handles.calib_columns.String)/2;
+ids = [];
+locs = [];
+mirrored = logical(mirrored_states(camera+1));
+for t = 1:2
+	try_mirrored = mirrored_states(camera+1);
+	if t == 2
+		try_mirrored = ~try_mirrored;
+	end
+	if try_mirrored
+		try_img = fliplr(img);
+	else
+		try_img = img;
+	end
+	[try_ids,try_locs] = readArucoMarker(try_img,'DICT_4X4_1000','WindowSizeRange',[3 23],'MarkerSizeRange',[0.005 1],'ResolutionPerBit',16,'SquarenessTolerance',0.03); %schnellere detektierung wenn bekannt. Am besten: Erstmal so gucken welche Familie dominant. Dann zweiter durchgang mit nur dieser familie
+	if numel(try_ids) > numel(ids)
+		if try_mirrored
+			try_locs(:,1,:) = size(img,2) + 1 - try_locs(:,1,:); %back to the coordinates of the image as given
+		end
+		ids = try_ids;
+		locs = try_locs;
+		mirrored = logical(try_mirrored);
+	end
+	if ~(numel(ids) < 0.5*n_markers) %also when the board size is unknown (NaN)
+		break
+	end
+end
+if ~isempty(ids)
+	mirrored_states(camera+1) = mirrored; %no board in view: keep the last orientation
+end
+gui.put('charuco_mirrored',mirrored_states);
 
 function step = detection_step(img, camera)
 %Every step-th pixel is used for the marker detection (speed: about step^2 faster). As before, large images
@@ -389,9 +541,9 @@ end
 gui.put('charuco_marker_size',sizes);
 
 function switch_camera_state(camera)
-%Stereo acquisition, one camera shown: the state of the automatic snapshots (positions taken, last image,
-%label position) belongs to this camera. When the shown camera changes, it is stored and the other one loaded.
-keys = {'last_auto_detected_charuco_boxes','old_charuco_img','mean_loc_x','mean_loc_y'};
+%Stereo acquisition, one camera shown: the state of the automatic snapshots (positions taken, last image) belongs
+%to this camera. When the shown camera changes, it is stored and the other one loaded.
+keys = {'last_auto_detected_charuco_boxes','old_charuco_img'};
 last_camera = gui.retr('charuco_last_camera');
 if isequal(last_camera, camera)
 	return

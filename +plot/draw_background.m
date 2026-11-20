@@ -1,6 +1,8 @@
-function [currentimage, minscale_adjusted, maxscale_adjusted] = draw_background(target_axis, currentimage, map, o)
+function [currentimage, minscale_adjusted, maxscale_adjusted] = draw_background(target_axis, currentimage, map, o, grid, update)
 %DRAW_BACKGROUND Draw the particle image, the colour-coded derived map and the mask (no GUI needed).
 %   [img, cmin, cmax] = plot.draw_background(target_axis, currentimage, map, o)
+%   [img, cmin, cmax] = plot.draw_background(target_axis, currentimage, map, o, grid)
+%   [img, cmin, cmax] = plot.draw_background(target_axis, currentimage, map, o, grid, true)
 %
 %   currentimage  particle image (gray or RGB, converted to gray)
 %   map           derived map interpolated to the image size (plot.rescale_map_core), or []
@@ -21,9 +23,30 @@ function [currentimage, minscale_adjusted, maxscale_adjusted] = draw_background(
 %     colorbar_position    'None','SouthOutside','NorthOutside','EastOutside','WestOutside'
 %     colorbar_label       label of the colour bar
 %     colorbar_format      1 = %0.3g, 2 = %0.3e, 3 = %0.3f
+%     enhance_limits       (with a grid) [low high] for imadjust, from the whole frame, so that
+%                          a zoomed part has the same contrast; [] or missing: from currentimage
+%     map_at_display       (with a grid) true: map is already at the display pixels
+%                          (plot.rescale_map_display); map_min_full / map_max_full: value range
+%                          of the full resolution map for the automatic colour limits
+%   grid          display grid (plot.display_grid) or [] (default): currentimage is then already
+%                 on the display grid (import.read_frame_display); map and o.mask stay at full
+%                 resolution (the colour limits come from the full map) and are taken at the
+%                 display pixel centres. The images are placed in full resolution pixel
+%                 coordinates (XData / YData) and tagged 'pivlab_display_frame' / '_map' / '_mask'.
+%   update        true (with a grid): only put the new data into the tagged images that are
+%                 already drawn (after zoom / pan, plot.redraw_display_resolution); nothing else
+%                 in the axes is changed.
 %
 %   img is the last image drawn (the scaled map if a map is shown), cmin / cmax the colour
 %   limits that were used. Used by plot.draw_pixel_background_overlay (GUI) and pivlab.display.
+if nargin < 5
+    grid = [];
+end
+if nargin < 6
+    update = false;
+end
+use_grid = ~isempty(grid);
+update = update && use_grid;
 minscale_adjusted = [];
 maxscale_adjusted = [];
 derivative_alpha = o.alpha;
@@ -35,25 +58,43 @@ if size(currentimage,3)>1 % color image
     end
     currentimage=rgb2gray(currentimage); %convert to gray, always.
 end
+frame_cdata = [];
 if o.displ_image==1
     if o.enhance
-        currentimage=imadjust(currentimage);
+        if use_grid && isfield(o,'enhance_limits') && ~isempty(o.enhance_limits)
+            currentimage=imadjust(currentimage,o.enhance_limits); % limits of the whole frame (same contrast when zoomed)
+        else
+            currentimage=imadjust(currentimage);
+        end
     end
-    image(cat(3, currentimage, currentimage, currentimage), 'parent',target_axis, 'cdatamapping', 'scaled');
+    frame_cdata = cat(3, currentimage, currentimage, currentimage);
 elseif o.displ_image==2 %black
-    image(cat(3, currentimage*0, currentimage*0, currentimage*0), 'parent',target_axis, 'cdatamapping', 'scaled');
+    frame_cdata = cat(3, currentimage*0, currentimage*0, currentimage*0);
 elseif o.displ_image==3 %white
-    image(cat(3, (currentimage+1)*inf, (currentimage+1)*inf, (currentimage+1)*inf), 'parent',target_axis, 'cdatamapping', 'scaled');
+    frame_cdata = cat(3, (currentimage+1)*inf, (currentimage+1)*inf, (currentimage+1)*inf);
 end
-colormap(target_axis,'gray');
-axis(target_axis,'image');
-if isfield(o,'after_image') && ~isempty(o.after_image)
-    o.after_image(target_axis); % e.g. a hint text of the GUI, drawn on top of the particle image
+if update
+    set_display_image(target_axis, 'pivlab_display_frame', frame_cdata, [], grid);
+else
+    if ~isempty(frame_cdata)
+        h_frame = image(frame_cdata, 'parent',target_axis, 'cdatamapping', 'scaled');
+        if use_grid
+            set(h_frame, 'XData', grid.xdata, 'YData', grid.ydata, 'Tag', 'pivlab_display_frame');
+        end
+    end
+    colormap(target_axis,'gray');
+    axis(target_axis,'image');
+    if isfield(o,'after_image') && ~isempty(o.after_image)
+        o.after_image(target_axis); % e.g. a hint text of the GUI, drawn on top of the particle image
+    end
 end
 
 %% mask as binary image
 if o.mask_preview && ~isempty(o.mask)
     converted_mask=o.mask;
+    if use_grid
+        converted_mask = converted_mask(grid.ri, grid.ci);
+    end
 else
     converted_mask=zeros(size(currentimage(:,:,1)));
 end
@@ -62,20 +103,28 @@ render_mask = o.mask_preview && o.render_mask;
 if ~isempty(map)
     currentimage = map;
     %set colormap
-    target_fig = ancestor(target_axis,'figure');
-    if ~o.is_lic
-        MAP = colormap(target_fig, plot.colormap_by_name(o.colormap_name));
-        %adjust colormap steps
-        cmap = MAP;
-        cmap_new=interp1(1:size(cmap,1),cmap,linspace(1,size(cmap,1),o.colormap_steps));
-        MAP = colormap(target_fig,cmap_new); %#ok<NASGU>
-    else %LIC can only be gray
-        MAP = colormap(target_fig,'gray'); %#ok<NASGU>
+    if ~update
+        target_fig = ancestor(target_axis,'figure');
+        if ~o.is_lic
+            MAP = colormap(target_fig, plot.colormap_by_name(o.colormap_name));
+            %adjust colormap steps
+            cmap = MAP;
+            cmap_new=interp1(1:size(cmap,1),cmap,linspace(1,size(cmap,1),o.colormap_steps));
+            MAP = colormap(target_fig,cmap_new); %#ok<NASGU>
+        else %LIC can only be gray
+            MAP = colormap(target_fig,'gray'); %#ok<NASGU>
+        end
     end
 
-    if o.autoscale
-        minscale=min(currentimage(:));
-        maxscale=max(currentimage(:));
+    map_at_display = use_grid && isfield(o,'map_at_display') && o.map_at_display;
+    if o.autoscale % colour limits from the full resolution map
+        if map_at_display % map only at the display pixels: value range of the full map given
+            minscale=o.map_min_full;
+            maxscale=o.map_max_full;
+        else
+            minscale=min(currentimage(:));
+            maxscale=max(currentimage(:));
+        end
         n=2;
         logflr = floor(log10(abs(minscale)));
         pof10 = 10.^(n-1-logflr);
@@ -94,6 +143,9 @@ if ~isempty(map)
         maxscale_adjusted=o.map_max;
     end
     colormap_steps=o.colormap_steps;
+    if use_grid && ~map_at_display
+        currentimage = currentimage(grid.ri, grid.ci); % the full resolution map at the display pixel centres
+    end
 
     %% Normalize the Imagerange to the desired range:
     currentimage(currentimage<minscale_adjusted)=minscale_adjusted;
@@ -106,67 +158,114 @@ if ~isempty(map)
         alpha_pixel_map=ones(size(currentimage,1),size(currentimage,2),'logical');
     end
     roirect=o.roirect;
-    alpha_ROI_map=zeros(size(currentimage,1),size(currentimage,2),'logical');
-    if ~isempty(roirect) && size(roirect,2)>1
-        alpha_ROI_map (roirect(2):(roirect(2)+roirect(4)) , roirect(1):(roirect(1)+roirect(3)))=1;
+    if use_grid % the ROI test of the full resolution pixel that contains each display pixel centre
+        if ~isempty(roirect) && size(roirect,2)>1
+            rows_in = grid.ri >= roirect(2) & grid.ri <= roirect(2)+roirect(4);
+            cols_in = grid.ci >= roirect(1) & grid.ci <= roirect(1)+roirect(3);
+            alpha_ROI_map = rows_in & cols_in;
+        else
+            alpha_ROI_map = true(size(currentimage,1),size(currentimage,2));
+        end
     else
-        alpha_ROI_map(:)=1;
+        alpha_ROI_map=zeros(size(currentimage,1),size(currentimage,2),'logical');
+        if ~isempty(roirect) && size(roirect,2)>1
+            alpha_ROI_map (roirect(2):(roirect(2)+roirect(4)) , roirect(1):(roirect(1)+roirect(3)))=1;
+        else
+            alpha_ROI_map(:)=1;
+        end
     end
-    hold(target_axis,'on');
     alphamap=derivative_alpha.*alpha_pixel_map.*alpha_ROI_map;
     alphamap(alphamap>1)=1;
     alphamap(alphamap<0)=0;
     %temporary workaround for bug in R2025 causing slow performance when not using alphadatamapping=scaled
     alphamap(1,1)=0;
     alphamap(end,end)=1;
-    image(currentimage, 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',alphamap,'AlphaDataMapping','scaled');
-    hold(target_axis,'off');
+    if update
+        set_display_image(target_axis, 'pivlab_display_map', currentimage, alphamap, grid);
+    else
+        hold(target_axis,'on');
+        h_map = image(currentimage, 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',alphamap,'AlphaDataMapping','scaled');
+        if use_grid
+            set(h_map, 'XData', grid.xdata, 'YData', grid.ydata, 'Tag', 'pivlab_display_map');
+        end
+        hold(target_axis,'off');
 
-    %% colorbar
-    if ~strcmpi(o.colorbar_position,'None')
-        position = o.colorbar_position;
-        parentfigure_of_target_axis=ancestor(target_axis,'figure');
-        coloobj=colorbar(position,'Fontsize',12,'HitTest','off','parent',parentfigure_of_target_axis);
-        axis (target_axis,'image');
-        if strcmp(position,'EastOutside') || strcmp(position,'WestOutside')
-            ylabel(coloobj,o.colorbar_label,'fontsize',12,'fontweight','bold');
+        %% colorbar
+        if ~strcmpi(o.colorbar_position,'None')
+            position = o.colorbar_position;
+            parentfigure_of_target_axis=ancestor(target_axis,'figure');
+            coloobj=colorbar(position,'Fontsize',12,'HitTest','off','parent',parentfigure_of_target_axis);
+            axis (target_axis,'image');
+            if strcmp(position,'EastOutside') || strcmp(position,'WestOutside')
+                ylabel(coloobj,o.colorbar_label,'fontsize',12,'fontweight','bold');
+            end
+            if strcmp(position,'NorthOutside') || strcmp(position,'SouthOutside')
+                xlabel(coloobj,o.colorbar_label,'fontsize',12,'fontweight','bold');
+            end
+            tickamount=min([colormap_steps 8])+1; % depends on the amount of colormap steps
+            coloobj.Ticks=linspace(0,colormap_steps,tickamount);
+            ticklabels=linspace(minscale_adjusted,maxscale_adjusted,tickamount);
+            if o.colorbar_format == 2
+                ticklabels_string=num2str(ticklabels(:),'%0.3e');
+            elseif o.colorbar_format == 3
+                ticklabels_string=num2str(ticklabels(:),'%0.3f');
+            else
+                ticklabels_string=num2str(ticklabels(:),'%0.3g');
+            end
+            coloobj.TickLabels =ticklabels_string;
         end
-        if strcmp(position,'NorthOutside') || strcmp(position,'SouthOutside')
-            xlabel(coloobj,o.colorbar_label,'fontsize',12,'fontweight','bold');
-        end
-        tickamount=min([colormap_steps 8])+1; % depends on the amount of colormap steps
-        coloobj.Ticks=linspace(0,colormap_steps,tickamount);
-        ticklabels=linspace(minscale_adjusted,maxscale_adjusted,tickamount);
-        if o.colorbar_format == 2
-            ticklabels_string=num2str(ticklabels(:),'%0.3e');
-        elseif o.colorbar_format == 3
-            ticklabels_string=num2str(ticklabels(:),'%0.3f');
-        else
-            ticklabels_string=num2str(ticklabels(:),'%0.3g');
-        end
-        coloobj.TickLabels =ticklabels_string;
     end
 end
 %% plot masks in preview mode (not in edit mode)
 if render_mask
     mask_dimensions=size(converted_mask);
-    x=[1 mask_dimensions(2)];
-    y=[1,mask_dimensions(1)];
-    skip_mask_pixels = round(0.0000020*mask_dimensions(1)*mask_dimensions(2) - 7); %reduce the amount of pixels displayed for the mask to save render time.
-    if skip_mask_pixels>5
-        skip_mask_pixels=5;
-    end
-    if skip_mask_pixels<1
+    if use_grid % already at screen resolution
+        x=grid.xdata;
+        y=grid.ydata;
         skip_mask_pixels=1;
+    else
+        x=[1 mask_dimensions(2)];
+        y=[1,mask_dimensions(1)];
+        skip_mask_pixels = round(0.0000020*mask_dimensions(1)*mask_dimensions(2) - 7); %reduce the amount of pixels displayed for the mask to save render time.
+        if skip_mask_pixels>5
+            skip_mask_pixels=5;
+        end
+        if skip_mask_pixels<1
+            skip_mask_pixels=1;
+        end
     end
-    hold(target_axis,'on');
     alphamapmask=converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*(1-(o.masktransp/100));
     alphamapmask(alphamapmask>1)=1;
     alphamapmask(alphamapmask<0)=0;
     %temporary workaround for bug in R2025 causing slow performance when not using alphadatamapping=scaled
     alphamapmask(1,1)=0;
     alphamapmask(end,end)=1;
-    image(x,y,cat(3, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.7, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1), 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',alphamapmask,'AlphaDataMapping','scaled');
-    hold(target_axis,'off');
+    mask_cdata = cat(3, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.7, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1, converted_mask(1:skip_mask_pixels:end,1:skip_mask_pixels:end)*0.1);
+    if update
+        set_display_image(target_axis, 'pivlab_display_mask', mask_cdata, alphamapmask, grid);
+    else
+        hold(target_axis,'on');
+        h_mask = image(x,y,mask_cdata, 'parent',target_axis, 'cdatamapping', 'direct','AlphaData',alphamapmask,'AlphaDataMapping','scaled');
+        if use_grid
+            set(h_mask, 'Tag', 'pivlab_display_mask');
+        end
+        hold(target_axis,'off');
+    end
+end
+end
+
+function set_display_image(ax, tag, cdata, alphadata, grid)
+% new data for an image drawn with a display grid (zoom / pan)
+h = findobj(ax, 'Type', 'image', 'Tag', tag);
+if isempty(h) || isempty(cdata)
+    return
+end
+if isappdata(h(1), 'brightness_factor') % made brighter / darker in the mask panel (mask.display_brighter_darker_Callback)
+    cdata = im2double(cdata) * getappdata(h(1), 'brightness_factor');
+end
+if isempty(alphadata)
+    set(h(1), 'CData', cdata, 'XData', grid.xdata, 'YData', grid.ydata);
+else
+    set(h(1), 'CData', cdata, 'AlphaData', alphadata, 'XData', grid.xdata, 'YData', grid.ydata);
 end
 end

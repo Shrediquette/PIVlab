@@ -5,7 +5,7 @@ if get(hObject,'Value')==1
 	hPMenu = uimenu('Parent',hCMP,'Label','Reset Pan / Zoom','Callback',@gui.zoom_reset_zoom);
 	hPan=pan(gcf);
 	hPan.UIContextMenu = hCMP;
-	hPan.ActionPostCallback = @acquisition.redraw_camera_images; %live camera images: draw the visible part
+	hPan.ActionPostCallback = @gui.after_view_change; %live camera images and large frames: draw the visible part
 	pan(gui.retr('pivlab_axis'),'on')
 	set(handles.zoomon,'Value',0);
 else

@@ -23,6 +23,7 @@ enable(handles.calib_showcams, has_params && has_targets);
 enable(handles.calib_showreproject, has_params && has_targets && has_stats);
 % a ticked checkbox stays enabled, so that it can be switched off
 enable(handles.calib_usecalibration, has_params || handles.calib_usecalibration.Value == 1);
+enable(handles.calib_tilt_angle, handles.calib_use_tilted_model.Value == 1);
 
 %% Image rectification
 enable(handles.rect_load_imgs, has_params);

@@ -2242,8 +2242,11 @@ handles.calib_undist_cam_label=uicontrol(handles.calib_imagedata,'Style','text',
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.calib_load_imgs = uicontrol(handles.calib_imagedata,'Style','pushbutton','Tag','calib_load_imgs','String','Load target images','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_calibration_loadimages_Callback,'TooltipString','Load images of the calibration target');
 
-item=[0 item(2)+item(4)+margin/4 parentitem(3) 1.5];
-handles.calib_use_tilted_model = uicontrol(handles.calib_imagedata,'Style','checkbox','String','Scheimpflug adapter (tilted sensor model)','Value',default.calibration.calib_use_tilted_model,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_use_tilted_model','Callback', @preproc.cam_togglescheimpflug_Callback,'TooltipString','Enable CALIB_TILTED_MODEL for cameras with a Scheimpflug adapter','UserData','session_only');
+item=[0 item(2)+item(4)+margin/4 parentitem(3)/5*4 1.5];
+handles.calib_use_tilted_model = uicontrol(handles.calib_imagedata,'Style','checkbox','String','Scheimpflug, tilt (deg):','Value',default.calibration.calib_use_tilted_model,'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_use_tilted_model','Callback', @preproc.cam_togglescheimpflug_Callback,'TooltipString','Tilted sensor model for cameras with a Scheimpflug adapter','UserData','session_only');
+
+item=[parentitem(3)/5*4 item(2) parentitem(3)/5 1.5];
+handles.calib_tilt_angle = uicontrol(handles.calib_imagedata,'Style','edit','String',gui.setting_text(default.calibration.calib_tilt_angle),'Units','characters','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Tag','calib_tilt_angle','Callback', @preproc.cam_togglescheimpflug_Callback,'TooltipString',['Tilt of the sensor about the vertical image axis in degrees (tilt about the horizontal axis = 0). The sign is found automatically.' newline '0: estimate both tilt angles from the target images (unreliable)']);
 
 item=[0 item(2)+item(4)+margin/2 parentitem(3) 1.5];
 handles.calib_estimateparams = uicontrol(handles.calib_imagedata,'Style','pushbutton','Tag','calib_estimateparams','String','Estimate cam parameters','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback', @preproc.cam_estimateparams_Callback,'TooltipString','Detect charuco markers and estimate camera parameters');

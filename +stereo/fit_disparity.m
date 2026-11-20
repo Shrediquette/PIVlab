@@ -1,5 +1,7 @@
 function fit = fit_disparity(calib, raw, model)
 %FIT_DISPARITY Smooth model of the measured disparity map (robust least squares).
+%   Part of the self-calibration after Wieneke, B. (2005), Experiments in Fluids 39, 267-280,
+%   doi:10.1007/s00348-005-0962-z (see stereo.measure_disparity).
 % raw: x, y (grid, rectified px), u, v (mean of the validated disparity over the image pairs, NaN where never
 %      valid), n_valid (number of pairs with a valid vector at each grid point)
 % model:

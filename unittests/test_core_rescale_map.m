@@ -95,6 +95,20 @@ testCase.verifyFalse(any(isnan(out(in_roi))), 'NaN left inside the ROI');
 testCase.verifyTrue(all(isnan(out(~in_roi))), 'pixels outside the ROI were filled');
 end
 
+function test_extrapolation_with_grid_beyond_the_roi(testCase)
+% a ROI drawn after the analysis: the vector grid reaches beyond the ROI on one side (this was an
+% index error in inpaint_border_strips). No border strip on that side, the others are extrapolated.
+td = testCase.TestData;
+roi = [2 2 60 40];   % rows 2...42, columns 2...62; grid rows 5...54, columns 5...74
+out = plot.rescale_map_core(td.in, td.x, td.y, td.img_size, false, 'bilinear', true, roi);
+in_roi = false(td.img_size);
+in_roi(roi(2):roi(2)+roi(4), roi(1):roi(1)+roi(3)) = true;
+testCase.verifyFalse(any(isnan(out(in_roi))), 'NaN left inside the ROI');
+testCase.verifyTrue(all(isnan(out(~in_roi & ~td.inner))), 'border outside the ROI was filled');
+plain = plot.rescale_map_core(td.in, td.x, td.y, td.img_size, false, 'bilinear', false, []);
+testCase.verifyEqual(out(td.inner & in_roi), plain(td.inner & in_roi), 'inside the grid unchanged');
+end
+
 function test_angles_are_interpolated_over_the_wrap(testCase)
 % direction in degrees: between 350 and 10 degrees the interpolation passes 0, not 180
 td = testCase.TestData;
