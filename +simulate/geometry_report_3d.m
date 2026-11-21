@@ -43,7 +43,7 @@ for k = 1:n
         k, side, info.distance(k), info.angle(k), char(176), info.mm_per_px(k, :), info.fov(k, :), info.distortion_px(k));
     if nargin >= 2
         dims = board.PatternDims;
-        wp = patternWorldPoints("charuco-board", dims, board.CheckerSize);
+        wp = preproc.cam_board_corners(dims, board.CheckerSize);
         q = simulate.project(cam, [wp, zeros(size(wp, 1), 1)]);
         sz = cam.imageSize;
         info.corners(k) = sum(q(:, 1) > 1 & q(:, 1) < sz(2) & q(:, 2) > 1 & q(:, 2) < sz(1));

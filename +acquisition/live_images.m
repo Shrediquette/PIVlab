@@ -24,23 +24,17 @@ for k = 1:n
         himg{k} = image('CData', zeros(h, w), 'XData', [1 w] + x_offset, 'YData', [1 h], 'CDataMapping', 'scaled', 'Parent', PIVlab_axis);
     end
     setappdata(himg{k}, 'x_offset', x_offset);
+    setappdata(himg{k}, 'image_size', [h w]); % acquisition.apply_camera_view (CData may be smaller)
     setappdata(himg{k}, 'camera', k);
 end
 if n > 1
     for k = 1:n
-        [cam_color, text_color] = stereo.camera_colors(k);
-        label = text(PIVlab_axis, getappdata(himg{k}, 'x_offset') + 1, h, [' CAMERA ' int2str(k) ' '], 'VerticalAlignment', 'bottom', ...
-            'HorizontalAlignment', 'left', 'FontWeight', 'bold', 'FontSize', 12, 'BackgroundColor', cam_color, ...
-            'Color', text_color, 'Margin', 2, 'Tag', 'capture_camera_label', 'HitTest', 'off', 'PickableParts', 'none');
+        label = acquisition.calib_overlay('camera_label', PIVlab_axis, k, getappdata(himg{k}, 'x_offset') + 1, h);
         setappdata(label, 'camera', k); % hidden with its camera (acquisition.apply_camera_view)
     end
 end
 frame_nr_display = text(PIVlab_axis, 100, 100, 'Initializing...', 'Color', [1 1 0], 'Tag', 'capture_status_text');
-colormap(ancestor(PIVlab_axis, 'figure'), 'default') % reset colormap steps
-new_map = colormap(ancestor(PIVlab_axis, 'figure'), 'gray');
-new_map(1:3, :) = [0 0.2 0; 0 0.2 0; 0 0.2 0];
-new_map(end-2:end, :) = [1 0.7 0.7; 1 0.7 0.7; 1 0.7 0.7];
-colormap(ancestor(PIVlab_axis, 'figure'), new_map);
+colormap(ancestor(PIVlab_axis, 'figure'), acquisition.calib_overlay('colormap'));
 axis(PIVlab_axis, 'image');
 set(PIVlab_axis, 'ytick', [])
 set(PIVlab_axis, 'xtick', [])

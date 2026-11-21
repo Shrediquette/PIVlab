@@ -69,7 +69,7 @@ if strcmp(mode, 'live')
                 % both cameras shown: view of the other camera in each image (aligning the cameras)
                 acquisition.draw_camera_overlap(PIVlab_axis, [getappdata(himg{1}, 'x_offset'), getappdata(himg{2}, 'x_offset')]);
             else
-                delete(findobj(PIVlab_axis, 'tag', 'charucolabel_overlap'));
+                delete(findobj(PIVlab_axis, '-regexp', 'tag', '^charucolabel_overlap'));
             end
         end
     else

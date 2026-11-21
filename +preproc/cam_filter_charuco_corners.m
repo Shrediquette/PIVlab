@@ -34,7 +34,7 @@ n_cols = patternDims(2) - 1;
 if isempty(P) || size(P, 1) ~= n_rows * n_cols
     return
 end
-grid = patternWorldPoints("charuco-board", patternDims, 1); % corner positions [checkers]
+grid = preproc.cam_board_corners(patternDims, 1); % corner positions on the board [checkers], in the order of the detector
 row_of = round(grid(:, 2)) + 1;
 col_of = round(grid(:, 1)) + 1;
 X = nan(n_rows, n_cols);

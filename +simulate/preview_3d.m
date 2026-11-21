@@ -42,11 +42,11 @@ screen = get(groot, 'ScreenSize');
 w = min(1400, screen(3) - 100);
 h = min(820, screen(4) - 120);
 fig.Position = [max(20, (screen(3) - w) / 2), max(40, (screen(4) - h) / 2), w, h];
-view3d = uipanel(fig, 'Units', 'normalized', 'Position', [0.005 0.195 0.635 0.8], 'BorderType', 'none', 'Tag', 'sim3d_view3d'); % clips the 3D scene
+view3d = uipanel(fig, 'Units', 'normalized', 'BorderType', 'none', 'Tag', 'sim3d_view3d'); % clips the 3D scene; position: layout
 S.ax3 = axes(view3d, 'Units', 'normalized', 'Position', [0 0 1 1], 'Tag', 'sim3d_ax3', 'Visible', 'off');
 S.axcam = gobjects(1, 2);
-S.axcam(1) = axes(fig, 'Units', 'normalized', 'Position', [0.655 0.61 0.33 0.35], 'Tag', 'sim3d_axcam1');
-S.axcam(2) = axes(fig, 'Units', 'normalized', 'Position', [0.655 0.235 0.33 0.35], 'Tag', 'sim3d_axcam2');
+S.axcam(1) = axes(fig, 'Units', 'normalized', 'Position', [0.655 0.6 0.335 0.365], 'Tag', 'sim3d_axcam1');
+S.axcam(2) = axes(fig, 'Units', 'normalized', 'Position', [0.655 0.2 0.335 0.365], 'Tag', 'sim3d_axcam2');
 S.info = uicontrol(fig, 'Style', 'edit', 'Max', 2, 'Enable', 'inactive', 'Units', 'normalized', 'Position', [0.01 0.01 0.84 0.17], ...
     'HorizontalAlignment', 'left', 'FontName', 'FixedWidth', 'Tag', 'sim3d_info');
 uicontrol(fig, 'Style', 'pushbutton', 'String', 'Reset view', 'Units', 'normalized', 'Position', [0.86 0.11 0.13 0.06], ...
@@ -59,11 +59,13 @@ S.clock = tic; % for limiting the rate of the camera images while dragging
 S.view_cost = 0;
 S.view_end = -inf;
 S.tex = [];
+S.marks = [];
 S.board_key = '';
 S.board_surface = gobjects(0);
 S.dynamic = {};
 S.view_set = false;
 S.cam_visible = true(1, 2);
+S.in_main = []; % camera images in the PIVlab window (layout)
 setappdata(fig, 'sim3d', S);
 set(fig, 'WindowButtonDownFcn', @mouse_down, 'WindowButtonUpFcn', @mouse_up, 'WindowScrollWheelFcn', @mouse_wheel);
 end
@@ -72,12 +74,10 @@ function draw(fig, with_views)
 % everything; with_views: also render the camera images (slower): 0 none, 1 simplified
 % (small, while dragging), 2 full
 S = getappdata(fig, 'sim3d');
-view_px = 360;
-if with_views == 1
-    view_px = 75;
-end
 setup = S.setup;
 ax = S.ax3;
+main_ax = main_axes();
+S = layout(S, ~isempty(main_ax));
 try
     g = simulate.geometry_3d(setup);
 catch err
@@ -128,7 +128,7 @@ if any(strcmp(setup.flow.Type, {'sphere', 'jet'})) && isfield(setup.flow, 'Diame
 end
 cam_size = camera_symbol_size(setup.board); % fixed relative to the board
 for k = 1:n
-    col = camera_color(k);
+    col = stereo.camera_colors(k);
     [vx, vy] = boundary(g.views(k));
     if ~isempty(vx)
         P = transformPointsForward(pose, [vx, vy, zeros(size(vx))]);
@@ -176,6 +176,17 @@ end
 shown = simulate.result_axes(setup); % axes of the results, as in the panel
 lines{end + 1} = sprintf('Light sheet: %+.2f mm from the board (towards camera 1), tilted %.2f%s about x and %.2f%s about y, %.2f mm thick', ...
     setup.sheet.Offset, shown.sheet.TiltX, char(176), shown.sheet.TiltY, char(176), setup.sheet.Thickness);
+where = '';
+if ~isempty(main_ax)
+    where = ' in the PIVlab window';
+end
+stereo_note = '';
+if n > 1
+    stereo_note = '; dashed: frame of the other camera';
+end
+sz = g.cams{1}.imageSize;
+lines{end + 1} = sprintf('Camera images%s (%d x %d px): calibration overlay as in the live image of the image acquisition%s.', ...
+    where, sz(2), sz(1), stereo_note);
 lines{end + 1} = ['Mouse: drag a camera to move it (Shift + drag: closer / farther), drag an arrow at a camera to move it along x, y or z, ' ...
     'drag a diamond to move the aim point, drag elsewhere to rotate the view, right drag to pan, wheel to zoom.'];
 S.info.String = lines;
@@ -183,15 +194,31 @@ S.info.String = lines;
 %% what the cameras see
 if with_views
     t_views = toc(S.clock);
-    for k = 1:2
-        cla(S.axcam(k));
-        if k > n
-            title(S.axcam(k), '');
-            S.axcam(k).Visible = 'off';
-            continue
+    % calibration overlay as in the live image of the image acquisition, from the exact positions of the
+    % markers: what the live ChArUco detection would show
+    marks = cell(1, n);
+    for k = 1:n
+        marks{k} = camera_marks(g.cams{k}, S.marks);
+    end
+    ov.ok = false;
+    if n == 2
+        ov = acquisition.camera_overlap({marks{1}.markers, marks{2}.markers});
+    end
+    flip_xy = axis_directions(main_ax);
+    if ~isempty(main_ax) % in the image area of the PIVlab window, as the live image of the image acquisition
+        [cam_axes, himg, x_offsets, style] = main_targets(main_ax, g);
+    else % without the PIVlab window (scripts): in this figure
+        [cam_axes, himg, x_offsets, style] = figure_targets(S.axcam, g);
+    end
+    for k = 1:n
+        cax = cam_axes(k);
+        [I, x_data, y_data] = camera_image(g.cams{k}, S.tex, view_resolution(cax, g.cams{k}.imageSize, with_views));
+        set(himg(k), 'CData', I, 'XData', x_data + x_offsets(k), 'YData', y_data);
+        if k == 1 || cax ~= cam_axes(k - 1) % one QR line per axes
+            acquisition.calib_overlay('qr_status', cax, S.marks.qr_params, style.qr_status);
         end
-        S.axcam(k).Visible = 'on';
-        camera_view(S.axcam(k), g, k, S.tex, view_px, setup.board);
+        origin_marker(cax, k, marks{k}.origin, x_offsets(k));
+        calibration_overlay(cax, g, k, setup.board, marks{k}, ov, flip_xy, style, x_offsets(k));
     end
     S.view_cost = toc(S.clock) - t_views;
     S.view_end = toc(S.clock);
@@ -229,13 +256,217 @@ for a = 1:3
     plot3(S.ax3, [O(1) E(1)], [O(2) E(2)], [O(3) E(3)], '-', 'Color', cols(a, :), 'LineWidth', 2, 'HitTest', 'off', 'Tag', 'sim3d_board');
     text(S.ax3, E(1), E(2), E(3), names{a}, 'Color', cols(a, :), 'HitTest', 'off', 'Tag', 'sim3d_board');
 end
+S.marks = board_marks(S.tex, board);
 S.board_key = key;
 end
 
-function camera_view(ax, g, k, tex, view_px, board)
-% low resolution image (view_px on the long side) of the board in the light sheet, as camera k
-% sees it, with its view of the overlap and the origin of the results (bottom left inner corner)
-cam = g.cams{k};
+function M = board_marks(tex, board)
+% markers (IDs and corners in the order of readArucoMarker) and QR code (finder pattern centres) of the
+% board as printed, in board coordinates (z = 0): read once from the texture of the board, with the
+% corners then put exactly onto the marker squares
+S = board.CheckerSize;
+c = max(tex.c, ceil(24 * S / board.MarkerSize)); % at least 24 texels per marker side for the detection
+if c > tex.c
+    tex = simulate.board_texture(board, c, Decorated=true);
+end
+img = uint8(tex.image);
+to_board = @(p) [((p(:, 1) - tex.m - 0.5) / c - 1) * S, ((p(:, 2) - tex.m_top - 0.5) / c - 1) * S];
+[ids, locs] = readArucoMarker(img, board.MarkerFamily, 'MarkerSizeRange', [0.005 1]);
+n = numel(ids);
+M.ids = ids(:);
+M.corners = zeros(4, 3, n);
+for i = 1:n
+    p = to_board(locs(:, :, i));
+    centre = (round(mean(p, 1) / S - 0.5) + 0.5) * S; % centre of the checker of the marker
+    M.corners(:, 1:2, i) = centre + board.MarkerSize / 2 * sign(p - mean(p, 1));
+end
+[ok, ~, origin_color, dims, checker, marker, loc] = preproc.cam_get_charuco_info_from_QRcode(img);
+M.qr = [];
+M.qr_params = [];
+if ok && size(loc, 1) == 3
+    M.qr = [to_board(loc), zeros(3, 1)];
+    M.qr_params = struct('patternDims', dims, 'checkerSize', checker, 'markerSize', marker, 'originCheckerColor', origin_color);
+end
+M.world = [preproc.cam_board_corners(board.PatternDims, S), zeros(prod(board.PatternDims - 1), 1)]; % inner corners, in the order of the detector
+M.origin = origin_mark(board);
+end
+
+function m = camera_marks(cam, M)
+% markers, QR code, inner corners and origin of the results in the image of camera cam (exact positions;
+% markers only when all their corners are in the image, as the detection would find them)
+n = numel(M.ids);
+n_qr = size(M.qr, 1);
+[q, inside] = project_into_image(cam, [reshape(permute(M.corners, [1 3 2]), [], 3); M.qr; M.world; M.origin]); % one projection
+seen = all(reshape(inside(1:4 * n), 4, n), 1); % row 4*(i-1)+c: corner c of marker i
+locs = permute(reshape(q(1:4 * n, :), 4, n, 2), [1 3 2]);
+m.markers.ids = M.ids(seen);
+m.markers.locs = locs(:, :, seen);
+m.markers.size = cam.imageSize;
+rows = 4 * n + (1:n_qr);
+m.qr = [];
+if n_qr > 0 && all(inside(rows))
+    m.qr = q(rows, :);
+end
+rows = 4 * n + n_qr + (1:size(M.world, 1));
+m.corners = q(rows, :);
+m.corners(~inside(rows), :) = NaN;
+m.origin = [];
+if inside(end)
+    m.origin = q(end, :);
+end
+end
+
+function [q, inside] = project_into_image(cam, P)
+% pixel positions of the points P (N x 3, board coordinates) and whether they are in the image (in front of
+% the camera; far outside the image, the distortion model folds points back into it: not inside)
+sz = cam.imageSize;
+q = simulate.project(cam, P);
+Pc = transformPointsForward(cam.pose, P);
+u = world2img(P, cam.pose, cam.intrinsics); % without distortion
+inside = Pc(:, 3) > 0 & q(:, 1) > 0.5 & q(:, 1) < sz(2) + 0.5 & q(:, 2) > 0.5 & q(:, 2) < sz(1) + 0.5 & ...
+    u(:, 1) > -0.5 * sz(2) & u(:, 1) < 1.5 * sz(2) & u(:, 2) > -0.5 * sz(1) & u(:, 2) < 1.5 * sz(1);
+end
+
+function flip = axis_directions(main_ax)
+% axis directions of the PIV data (calibration panel of PIVlab: right / left, up / down); the camera position
+% of the calibration overlay uses them as the live image does. Without the PIVlab window: right, up.
+flip = [false false];
+if ~isempty(main_ax)
+    handles = gui.gethand;
+    flip = [handles.x_axis_direction.Value == 2, handles.y_axis_direction.Value == 2];
+end
+end
+
+function ax = main_axes()
+% image area of the PIVlab window, or [] without the PIVlab window (scripts, tests)
+ax = [];
+hgui = getappdata(0, 'hgui');
+if ~isempty(hgui) && isvalid(hgui)
+    ax = gui.retr('pivlab_axis');
+end
+if ~isempty(ax) && ~isgraphics(ax, 'axes')
+    ax = [];
+end
+end
+
+function S = layout(S, in_main)
+% camera images in the PIVlab window: the 3D view uses the whole figure; otherwise the camera images are at
+% its right. Only when this changes.
+if isequal(S.in_main, in_main)
+    return
+end
+S.in_main = in_main;
+if in_main
+    S.ax3.Parent.Position = [0.005 0.195 0.99 0.8];
+    for k = 1:2
+        cla(S.axcam(k));
+        title(S.axcam(k), '');
+        S.axcam(k).Visible = 'off';
+    end
+else
+    S.ax3.Parent.Position = [0.005 0.195 0.635 0.8];
+end
+end
+
+function [cam_axes, himg, x_offsets, style] = main_targets(ax, g)
+% image objects of the cameras in the image area of the PIVlab window, as the live image of the image
+% acquisition shows the cameras (acquisition.live_images: side by side, camera labels, colour map, colour bar):
+% the ones of the last drawing, or new ones
+n = numel(g.cams);
+sz = g.cams{1}.imageSize; % both cameras have the same sensor
+imgs = findobj(ax, 'Type', 'image');
+himg = gobjects(1, n);
+for i = 1:numel(imgs)
+    k = getappdata(imgs(i), 'camera');
+    if isequal(getappdata(imgs(i), 'sim3d_size'), sz) && ~isempty(k) && k <= n
+        himg(k) = imgs(i);
+    end
+end
+if numel(imgs) ~= n || ~all(isgraphics(himg))
+    h = acquisition.live_images(n, sz([2 1]), 255);
+    delete(findobj(ax, 'Tag', 'capture_status_text'));
+    himg = [h{:}];
+    for k = 1:n
+        setappdata(himg(k), 'sim3d_size', sz);
+    end
+end
+cam_axes = repmat(ax, 1, n);
+x_offsets = arrayfun(@(h) getappdata(h, 'x_offset'), himg);
+modes = {'single', 'stereo'};
+style = acquisition.calib_overlay('style', modes{n});
+end
+
+function [cam_axes, himg, x_offsets, style] = figure_targets(axcam, g)
+% image objects of the cameras in the preview figure (without the PIVlab window): one axes per camera
+n = numel(g.cams);
+himg = gobjects(1, n);
+for k = 1:2
+    ax = axcam(k);
+    if k > n
+        cla(ax);
+        title(ax, '');
+        ax.Visible = 'off';
+        continue
+    end
+    sz = g.cams{k}.imageSize;
+    h = findobj(ax, 'Type', 'image', 'Tag', 'sim3d_camera_image');
+    if ~isempty(h) && isequal(getappdata(h(1), 'sim3d_size'), sz)
+        himg(k) = h(1);
+    else
+        cla(ax);
+        ax.Visible = 'on';
+        himg(k) = image(ax, 'CData', zeros(sz), 'CDataMapping', 'scaled', 'Tag', 'sim3d_camera_image');
+        setappdata(himg(k), 'sim3d_size', sz);
+        colormap(ax, acquisition.calib_overlay('colormap')); % as the live image
+        clim(ax, [0 255]);
+        axis(ax, 'image');
+        set(ax, 'XLim', [0.5 sz(2) + 0.5], 'YLim', [0.5 sz(1) + 0.5], 'YDir', 'reverse', 'XTick', [], 'YTick', []);
+        title(ax, sprintf('Board seen by camera %d (%d x %d px)', k, sz(2), sz(1)), 'FontWeight', 'normal');
+        acquisition.calib_overlay('camera_label', ax, k, 1, sz(1));
+    end
+end
+cam_axes = axcam(1:n);
+x_offsets = zeros(1, n);
+style = struct('markers', 1, 'qr_box', 3, 'status', 8, 'qr_status', 7, 'y_fraction', 0.06); % small images
+end
+
+function view_px = view_resolution(ax, sz, with_views)
+% long side [px] of the rendered camera image: about one pixel per screen pixel (with_views 2), coarse
+% while a camera is dragged (1)
+pos = getpixelposition(ax);
+scale = min(pos(3) / diff(ax.XLim), pos(4) / diff(ax.YLim)); % screen pixels per camera pixel
+view_px = min(max(sz), max(200, ceil(1.1 * scale * max(sz))));
+if with_views == 1
+    view_px = max(75, round(view_px / 5));
+end
+end
+
+function calibration_overlay(ax, g, k, board, m, ov, flip_xy, style, x_offset)
+% overlay of the live ChArUco detection (image acquisition) on the view of camera k: markers, QR code,
+% status block (markers, overlap, pose of the camera) and the frame of the other camera
+acquisition.calib_overlay('markers', ax, k, x_offset, m.markers.locs, style.markers);
+acquisition.calib_overlay('qr_box', ax, k, x_offset, m.qr, style.qr_box);
+percentage = acquisition.calib_overlay('marker_percentage', numel(m.markers.ids), board.PatternDims);
+lines = {sprintf('Markers: %d %%', percentage)};
+if numel(g.cams) > 1
+    lines{end + 1} = acquisition.calib_overlay('overlap', ax, k, x_offset, ov);
+end
+mirrored = g.centre(k, 3) > 0; % behind the board (the cameras usually are at z < 0)
+if mirrored
+    lines{end + 1} = 'Board seen from behind';
+end
+if percentage > 33 % as the live detection
+    [message, ok] = acquisition.charuco_pose(m.corners, board.PatternDims, board.CheckerSize, mirrored, g.cams{k}.intrinsics, flip_xy);
+    if ok
+        lines = [lines, strsplit(message, newline)];
+    end
+end
+acquisition.calib_overlay('status', ax, k, x_offset, g.cams{k}.imageSize, lines, style.status, style.y_fraction);
+end
+
+function [I, x_data, y_data] = camera_image(cam, tex, view_px)
+% low resolution image (view_px on the long side) of the board as camera cam sees it; x_data, y_data: its
+% first and last pixel in the pixel coordinates of the camera (full resolution)
 sz = cam.imageSize;
 small = max(1, round(sz * min(1, view_px / max(sz))));
 s = small([2 1]) ./ sz([2 1]); % [x y] scale
@@ -247,28 +478,27 @@ if any(s < 1)
     cam.imageSize = small;
 end
 I = simulate.charuco_image(cam, Texture=tex);
-imagesc(ax, ([1 small(2)] - 0.5) / s(1) + 0.5, ([1 small(1)] - 0.5) / s(2) + 0.5, I); % full-resolution pixel coordinates
-colormap(ax, gray(256));
-clim(ax, [0 255]);
-axis(ax, 'image');
-hold(ax, 'on');
-[ox, oy] = boundary(g.overlap);
-if numel(g.cams) > 1 && ~isempty(ox)
-    q = simulate.project(g.cams{k}, transformPointsForward(g.sheet_pose, [ox, oy, zeros(size(ox))]));
-    plot(ax, q(:, 1), q(:, 2), '-', 'Color', [0.2 0.9 0.3], 'LineWidth', 1.5, 'HitTest', 'off');
-end
-o = simulate.project(g.cams{k}, origin_mark(board));
-plot(ax, o(1), o(2), 'g*', 'MarkerSize', 10, 'HitTest', 'off');
-xlim(ax, [0.5 sz(2) + 0.5]);
-ylim(ax, [0.5 sz(1) + 0.5]);
-title(ax, sprintf('Camera %d: board in the light sheet (%d x %d px)', k, sz(2), sz(1)), 'Color', camera_color(k));
-ax.XTick = [];
-ax.YTick = [];
-hold(ax, 'off');
+x_data = ([1 small(2)] - 0.5) / s(1) + 0.5;
+y_data = ([1 small(1)] - 0.5) / s(2) + 0.5;
 end
 
-function col = camera_color(k)
-col = stereo.camera_colors(k);
+function origin_marker(ax, k, origin, x_offset)
+% in the image of camera k: the origin of the results (bottom left inner corner; origin = []: not in the
+% image). Kept and updated, as the objects of acquisition.calib_overlay.
+if isempty(origin)
+    origin = [NaN NaN];
+end
+set(kept_line(ax, sprintf('sim3d_origin_cam%d', k), 'LineStyle', 'none', 'Marker', '*', 'Color', 'g', 'MarkerSize', 10), ...
+    'XData', origin(1) + x_offset, 'YData', origin(2));
+end
+
+function h = kept_line(ax, tag, varargin)
+% the line object with this tag in ax, or a new one with these properties
+h = findobj(ax, 'Type', 'line', 'Tag', tag);
+if isempty(h)
+    h = line(ax, NaN, NaN, varargin{:}, 'Tag', tag, 'HitTest', 'off', 'PickableParts', 'none');
+end
+h = h(1);
 end
 
 function h = camera_arrows(fig, ax, C, k, len)

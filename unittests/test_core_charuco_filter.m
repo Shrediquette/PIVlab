@@ -107,6 +107,33 @@ filtered = preproc.cam_detectCharucoBoardPoints_scaled(I, dims, 'DICT_4X4_1000',
 testCase.verifyEqual(filtered, plain);
 end
 
+function test_tall_board_wrong_marker_removed(testCase)
+% more rows than columns: the detector numbers the corners as if the board were turned by 90 degrees
+% (preproc.cam_board_corners); a wrong marker is removed, the correct corners are kept
+dims = [23 17];
+P = board_corners(dims, [-0.3 0.08]);
+to = corner_index(dims, [12 13], [10 11]);
+P(to, :) = P(corner_index(dims, [3 4], [4 5]), :);
+[Q, n_rejected] = preproc.cam_filter_charuco_corners(P, dims);
+correct = setdiff(find(~isnan(P(:, 1))), to);
+testCase.verifyTrue(all(isnan(Q(to, 1))), 'Wrong corners kept.');
+testCase.verifyEqual(Q(correct, :), P(correct, :), 'Correct corners removed.');
+testCase.verifyEqual(n_rejected, numel(to));
+end
+
+function test_detection_tall_board(testCase)
+% PIVlab's detection (with the filter) of a board with more rows than columns: the same corners as
+% detectCharucoBoardPoints (the filter used to fail with an index error)
+dims = [14 11];
+center = [(dims(2) - 2) / 2, (dims(1) - 2) / 2, 0] * 10;
+cam = simulate.camera(ImageSize=[1200 1000], FocalLength=3000, Position=center + [-280 0 -300], Target=center, RadialDistortion=[0.15 -0.04]);
+I = simulate.charuco_image(cam, PatternDims=dims, CheckerSize=10, MarkerSize=7, Blur=0.7);
+plain = detectCharucoBoardPoints(I, dims, "DICT_4X4_1000", 10, 7, 'MinMarkerID', 0, 'OriginCheckerColor', 'black');
+filtered = preproc.cam_detectCharucoBoardPoints_scaled(I, dims, 'DICT_4X4_1000', 10, 7, 'MinMarkerID', 0, 'OriginCheckerColor', 'black');
+testCase.verifyGreaterThan(nnz(~isnan(plain(:, 1))), 50, 'Board not detected.');
+testCase.verifyEqual(filtered, plain);
+end
+
 function test_board_with_2000_checkers(testCase)
 % the board generator allows rows x columns <= 2000 (DICT_4X4_1000: 1000 markers)
 dims = [40 50];
@@ -121,16 +148,16 @@ end
 % -------------------------------------------------------------------------
 
 function P = board_corners(dims, radial_distortion)
-% exact image positions of the corners of an oblique board (order of patternWorldPoints)
+% exact image positions of the corners of an oblique board (order of detectCharucoBoardPoints)
 center = [(dims(2) - 2) / 2, (dims(1) - 2) / 2, 0] * 10;
 cam = simulate.camera(ImageSize=[1200 1600], FocalLength=1100, Position=center + [-150 60 -260], ...
     Target=center, RadialDistortion=radial_distortion);
-wp = patternWorldPoints("charuco-board", dims, 10);
+wp = preproc.cam_board_corners(dims, 10);
 P = simulate.project(cam, [wp, zeros(size(wp, 1), 1)]);
 end
 
 function k = corner_index(dims, rows, cols)
-% indices (order of patternWorldPoints) of the corners in the given board rows / columns (1-based)
-grid = patternWorldPoints("charuco-board", dims, 1);
+% indices (order of detectCharucoBoardPoints) of the corners in the given board rows / columns (1-based)
+grid = preproc.cam_board_corners(dims, 1);
 k = find(ismember(round(grid(:, 2)) + 1, rows) & ismember(round(grid(:, 1)) + 1, cols));
 end

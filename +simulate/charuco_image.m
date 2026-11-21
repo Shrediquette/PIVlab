@@ -8,7 +8,7 @@ function [I, cornersPx] = charuco_image(cam, opts)
 % [I, cornersPx] = simulate.charuco_image(cam, PatternDims=[23 24], CheckerSize=10, MarkerSize=7)
 % I:         uint8 image
 % cornersPx: exact image positions of the inner corners, in the order of
-%            patternWorldPoints / detectCharucoBoardPoints (ground truth)
+%            detectCharucoBoardPoints (ground truth, preproc.cam_board_corners)
 arguments
     cam struct
     opts.PatternDims (1,2) double = [23 24]     % number of checkers [rows columns]
@@ -39,7 +39,7 @@ if ~isempty(opts.Texture) % the board of the texture
 end
 
 % ground truth corner positions
-wp = patternWorldPoints("charuco-board", dims, checker);
+wp = preproc.cam_board_corners(dims, checker);
 cornersPx = simulate.project(cam, transformPointsForward(boardPose, [wp, zeros(size(wp, 1), 1)]));
 
 % board texture with about two texels per image pixel

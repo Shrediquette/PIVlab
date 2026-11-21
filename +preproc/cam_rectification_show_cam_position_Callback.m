@@ -41,24 +41,15 @@ if ~isempty(cam_selected_rectification_image)
     end
 end
 
-%[mean_checker_size_x,mean_checker_size_y]=preproc.cam_meanCharucoSize(tmp_img,markerFamily,checkerSize,markerSize);
-
-worldPoints = patternWorldPoints("charuco-board",patternDims,checkerSize);%checkerSize); %here, checkersize units are also mm to get correct extrinsics of camera.
-if mirrored
-    worldPoints(:,1) = -worldPoints(:,1); % board seen from behind: board turned by 180 deg about y, camera in front
-end
-
-worldPoints(isnan(imagePoints1))=NaN;
-imagePoints1 = rmmissing(imagePoints1); %remove missing entries... does that work simply like this? --> yes. If matching world points are also removed.
-worldPoints = rmmissing(worldPoints);
-
-if patternDims(1) > patternDims(2) %Fixes the issue that high slender calibration bards result in rotated output
-    % swap axes
-    worldPoints = worldPoints(:, [2 1]);
-    % flip y axis
-    worldPoints(:,2) = -worldPoints(:,2);
-end
+% camera pose as in the live image of the image acquisition (checker size in mm: extrinsics in mm)
+[message,~,pose] = acquisition.charuco_pose(imagePoints1,patternDims,checkerSize,mirrored,cameraParams.Intrinsics,[false false]);
 gui.toolsavailable(1)
+if isempty(pose)
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Too few ChArUco corners detected to estimate the camera position.','modal');
+    return
+end
+orientation_message = strtok(message, newline); % first line: yaw, pitch, roll
+worldPoints = pose.world_points; % in the board coordinates of the pose
 
 %% check what the image size will be after image undistortion
 if handles.calib_userectification.Value ==1
@@ -78,36 +69,12 @@ else
     end
 end
 gui.sliderdisp(gui.retr('pivlab_axis'));
-camExtrinsics1 = estimateExtrinsics(imagePoints1,worldPoints,cameraParams.Intrinsics);
-% get angles
-R1=camExtrinsics1.R;
-t1=camExtrinsics1.Translation;
-z_cam = [0; 0; 1];
-z_world1 = R1 * z_cam;
-alpha1 = atan2(z_world1(1), z_world1(3));   % yaw (X–Z plane)
-beta1  = atan2(z_world1(2), z_world1(3));   % pitch (Y–Z plane)
-alpha_deg = rad2deg(alpha1); %should be camera yaw
-beta_deg  = rad2deg(beta1); % should be camera pitch
-% Roll (untested)
-% Kamera -> Welt Rotation
-R_wc = R1.';
-% Kamera-X-Achse im Weltkoordinatensystem
-x_cam_w = R_wc(:,1);
-% Projektion in die Welt-XY-Ebene
-x_proj = x_cam_w;
-x_proj(3) = 0;
-x_proj = x_proj / norm(x_proj);
-% Roll (Rotation um optische Achse)
-roll = atan2(x_proj(2), x_proj(1));
-roll_deg = rad2deg(roll);
-orientation_message=['Yaw: ' num2str(round(alpha_deg)) ' ; Pitch: ' num2str(round(beta_deg)) ' ; Roll: ' num2str(round(roll_deg,1))];
-
 camfig=figure('Name','Camera position in 3D','DockControls','off','WindowStyle','normal','Scrollable','off','MenuBar','figure','Resize','on','ToolBar','none','NumberTitle','off');
 camax=axes(camfig);
 plot3(worldPoints(:,1),worldPoints(:,2),zeros(size(worldPoints, 1),1),"*",'Parent',camax);
 hold on
 plot3(0,0,0,"g*",'Parent',camax);
-absPose1 = extr2pose(camExtrinsics1);
+absPose1 = extr2pose(pose.extrinsics);
 %absPose2 = extr2pose(camExtrinsics2);
 plotcam1 = plotCamera(AbsolutePose=absPose1,Size=5,Color="red",AxesVisible=true,Label=['Cam1' newline orientation_message],Parent=camax);
 %plotcam2 = plotCamera(AbsolutePose=absPose2,Size=30,Color="blue",AxesVisible=true,Label="Cam2",Parent=camax);
