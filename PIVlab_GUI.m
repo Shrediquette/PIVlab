@@ -42,8 +42,7 @@ if isempty(fh)
     handles = guihandles; %alle handles mit tag laden und ansprechbar machen
     guidata(MainWindow,handles)
     setappdata(0,'hgui',MainWindow);
-    version = gui.pivlab_version;
-    isbeta=1;
+    [version, isbeta] = gui.pivlab_version;
     gui.put('PIVver', version);
     gui.put('isbeta', isbeta);
     build_date=gui.pivlab_build_date; %written by clean_and_package_PIVlab
