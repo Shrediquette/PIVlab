@@ -528,7 +528,7 @@ window.MANUAL_SEARCH = [
     title: "Particle image generator: setup (simple, one camera, stereo)",
     href: "pages/synthetic-images.html", hash: "setup",
     section: "Synthetic images",
-    text: "particle image generator simple setup one camera straight on pixel size lens distortion stereo two cameras charuco board 3d preview synthetic recording"
+    text: "particle image generator simple setup one camera straight on pixel size lens distortion stereo two cameras charuco board 3d preview camera position calibration overlay synthetic recording"
   },
   {
     title: "Synthetic image particle settings",
