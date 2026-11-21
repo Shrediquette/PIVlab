@@ -39,8 +39,18 @@
       <tr><td>Two cameras (stereo-PIV)</td><td>As above for two cameras; the light sheet can be offset
       and tilted against the board, so the disparity correction has to find it. See
       <a href="stereo-piv.html">Stereo-PIV</a>. <span class="ui">Show 3D preview</span> shows the
-      board, the sheet, the cameras and what they see; drag the cameras with the mouse.</td></tr>
+      board, the sheet and the cameras; drag the cameras with the mouse. The PIVlab window shows the
+      board as each camera sees it, with the
+      <a href="capture.html#calibration-overlay">calibration overlay</a> of the live image.</td></tr>
     </table>
+    <figure>
+      <img src="../assets/img/synthetic-images/preview-3d.png" alt="3D preview window: the ChArUco board in the light sheet, the views of camera 1 (blue) and camera 2 (orange) on the sheet, the two cameras with arrows for moving them along x, y and z, and below a report of the viewing geometry">
+      <figcaption><span class="ui">Show 3D preview</span>: board, light sheet and cameras.</figcaption>
+    </figure>
+    <figure>
+      <img src="../assets/img/synthetic-images/camera-views.png" alt="PIVlab window with the Particle image generator panel and the ChArUco board as camera 1 and camera 2 see it, side by side: detected markers outlined in yellow, the QR code bracketed in blue, marker and overlap percentages, camera angles and position at the top left, and the frame of the other camera as a dashed line">
+      <figcaption>The board as both cameras see it, with the calibration overlay.</figcaption>
+    </figure>
     <p>The settings are on two pages (<span class="ui">Settings</span>): camera and light sheet, and
     flow, particles and output. The ChArUco board is the one of
     <span class="ui">Camera calibration → Setup / define / generate marker board</span>.</p>
