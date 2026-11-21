@@ -60,19 +60,21 @@
     With the <a href="capture.html#calibration-overlay"><span class="ui">Calibration</span> overlay</a> of the
     image acquisition, PIVlab reads that code from the live image and fills the fields above by
     itself, so the board's dimensions and scale do not have to be entered by hand.</p>
-    <p>The left and bottom margins show the <strong>board coordinate system</strong>, as PIVlab
-    uses it for the calibration and for <a href="stereo-piv.html">stereo PIV</a>: the origin
-    (<em>0</em>) is the first inner checker corner at the top left, <em>x</em> points to the
-    right, <em>y</em> down and <em>z</em> into the board (⊗). The two ticks mark the row and
-    the column line through the origin. Seen from behind, the board and its axes appear
-    mirrored.</p>
+    <p>The left and bottom margins show the <strong>axes of the results</strong> (default axes of the
+    <a href="spatial-calibration.html#offsets">calibration</a>, also for
+    <a href="stereo-piv.html#coordinates">stereo PIV</a>), as seen from camera 1 with the board
+    upright in the image: <em>x</em> points to the right, <em>y</em> up and <em>z</em> out of the
+    board, toward the camera (⊙). The two ticks and the <em>0</em> mark the row and the column line
+    through the inner checker corner at the bottom left. The board only sets the directions: the
+    origin of the results is the bottom left of the image. Seen from behind, the board and its axes
+    appear mirrored.</p>
 
     <figure class="inline-panel">
       <img src="../assets/img/camera-calibration/panel-markerboard.png" alt="PIVlab Marker board setup panel">
       <figcaption>The <strong>Marker board setup</strong> panel.</figcaption>
     </figure>
     <figure>
-      <img src="../assets/img/camera-calibration/charuco-board.jpg" alt="A generated printable ChArUco board: a checkerboard with ArUco markers in the white squares, a QR code in the centre, labelled with its dictionary and dimensions">
+      <img src="../assets/img/camera-calibration/charuco-board.jpg" alt="A generated printable ChArUco board: a checkerboard with ArUco markers in the white squares, a QR code in the centre, labelled with its dictionary and dimensions, and the axes x (right), y (up) and z (out of the board) in the bottom left margin">
       <figcaption>A board produced by <span class="ui">Generate Charuco board</span> with the
       default settings — print it out and photograph it to calibrate. The header and the QR code in
       the centre record its exact parameters (dictionary, rows × columns, checker/marker sizes) so

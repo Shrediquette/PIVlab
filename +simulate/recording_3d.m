@@ -504,6 +504,7 @@ end
 
 function write_readme(file, setup, g, truth)
 n = numel(g.cams);
+r = simulate.result_axes(setup); % positions, sheet rotation and out-of-plane displacement as in the panel
 fid = fopen(file, 'w');
 closer = onCleanup(@() fclose(fid));
 p = @(varargin) fprintf(fid, [varargin{1} '\r\n'], varargin{2:end});
@@ -518,18 +519,20 @@ if g.simple
 else
     p('PIVlab synthetic %s recording (particle image generator), %s', ternary(n > 1, 'stereo-PIV', 'single camera'), char(datetime('now')));
     p('');
-    p('World coordinates = board coordinates in mm: origin at the first inner corner of the ChArUco board,');
-    p('x right (columns), y down (rows), z into the board. Displacements in mm per image pair.');
+    p('Positions in mm in the axes of the PIVlab results, as printed on the board: origin at the inner corner at the');
+    p('bottom left of the ChArUco board, x right, y up, z out of the board. Displacements in mm per image pair.');
+    p('(ground_truth.mat and generator_setup.mat use board coordinates: origin at the first inner corner, top left,');
+    p('x right, y down, z into the board; simulate.result_axes converts.)');
     p('');
     p('Board: %d x %d checkers, %g mm checkers, %g mm markers, %s, origin checker %s', setup.board.PatternDims, ...
         setup.board.CheckerSize, setup.board.MarkerSize, char(setup.board.MarkerFamily), char(setup.board.OriginCheckerColor));
     p('Sensor: %d x %d px, %g um pixels, lens %g mm', setup.sensor.ImageSize([2 1]), setup.sensor.PixelPitch, setup.sensor.FocalLength);
     for k = 1:n
         p('Camera %d: position [%g %g %g] mm, aim point [%g %g] mm, radial distortion k1 = %g, k2 = %g', k, ...
-            setup.cameras(k).Position, setup.cameras(k).Target, setup.cameras(k).RadialDistortion);
+            r.cameras(k).Position, r.cameras(k).Target, setup.cameras(k).RadialDistortion);
     end
     p('Light sheet: offset %g mm (towards camera 1), tilt %g deg about x, %g deg about y, thickness %g mm', ...
-        setup.sheet.Offset, setup.sheet.TiltX, setup.sheet.TiltY, setup.sheet.Thickness);
+        setup.sheet.Offset, r.sheet.TiltX, r.sheet.TiltY, setup.sheet.Thickness);
 end
 if isfield(truth, 'simulation') && strcmp(setup.flow.Type, 'sphere')
     p('Flow: sphere wake (3D flow simulation), free stream displacement %g mm per image pair (in +x), sphere diameter %g mm,', ...
@@ -542,10 +545,10 @@ elseif isfield(truth, 'simulation')
     p('      centre of the nozzle exit [%.1f %.1f] mm in sheet coordinates, %g D/U between the image pairs (time series)', ...
         truth.simulation.Centre(1:2), setup.flow.Spacing);
 elseif any(strcmp(setup.flow.Type, {'rankine', 'oseen'})) && setup.flow.Distance > 0
-    p('Flow: %s, pair of counter-rotating vortices %g mm apart, in-plane %g mm, radius %g mm, out-of-plane %g mm', ...
-        setup.flow.Type, setup.flow.Distance, setup.flow.InPlane, setup.flow.Radius, setup.flow.OutOfPlane);
+    p('Flow: %s, pair of counter-rotating vortices %g mm apart, in-plane %g mm, radius %g mm, out-of-plane %g mm (along z)', ...
+        setup.flow.Type, setup.flow.Distance, setup.flow.InPlane, setup.flow.Radius, r.flow.OutOfPlane);
 else
-    p('Flow: %s, in-plane %g mm, radius %g mm, out-of-plane %g mm', setup.flow.Type, setup.flow.InPlane, setup.flow.Radius, setup.flow.OutOfPlane);
+    p('Flow: %s, in-plane %g mm, radius %g mm, out-of-plane %g mm (along z)', setup.flow.Type, setup.flow.InPlane, setup.flow.Radius, r.flow.OutOfPlane);
 end
 p('Particles: %g per pixel, diameter %g px (+-%g), noise %g', setup.particles.Density, setup.particles.Diameter, ...
     setup.particles.DiameterVariation, setup.particles.Noise);

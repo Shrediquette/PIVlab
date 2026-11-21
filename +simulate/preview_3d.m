@@ -173,8 +173,9 @@ lines = simulate.geometry_report_3d(g, setup.board);
 if ~g.ok
     lines = [{['Warning: ' g.message]}, lines];
 end
+shown = simulate.result_axes(setup); % axes of the results, as in the panel
 lines{end + 1} = sprintf('Light sheet: %+.2f mm from the board (towards camera 1), tilted %.2f%s about x and %.2f%s about y, %.2f mm thick', ...
-    setup.sheet.Offset, setup.sheet.TiltX, char(176), setup.sheet.TiltY, char(176), setup.sheet.Thickness);
+    setup.sheet.Offset, shown.sheet.TiltX, char(176), shown.sheet.TiltY, char(176), setup.sheet.Thickness);
 lines{end + 1} = ['Mouse: drag a camera to move it (Shift + drag: closer / farther), drag an arrow at a camera to move it along x, y or z, ' ...
     'drag a diamond to move the aim point, drag elsewhere to rotate the view, right drag to pan, wheel to zoom.'];
 S.info.String = lines;
@@ -190,7 +191,7 @@ if with_views
             continue
         end
         S.axcam(k).Visible = 'on';
-        camera_view(S.axcam(k), g, k, S.tex, view_px);
+        camera_view(S.axcam(k), g, k, S.tex, view_px, setup.board);
     end
     S.view_cost = toc(S.clock) - t_views;
     S.view_end = toc(S.clock);
@@ -216,19 +217,24 @@ y = ([0, size(img, 1)] - S.tex.m_top) / c - 1;
 hold(S.ax3, 'on');
 S.board_surface = surface(S.ax3, X, Y, zeros(2), repmat(img, 1, 1, 3), 'FaceColor', 'texturemap', 'EdgeColor', [0.4 0.4 0.4], ...
     'HitTest', 'off', 'Tag', 'sim3d_board', 'DisplayName', 'board');
+% axes of the results (as printed on the board and in the panel): origin at the inner corner at the
+% bottom left, x right, y up, z out of the board (the scene is in board coordinates: y down, z into it)
 L = 3 * checker;
-plot3(S.ax3, [0 L], [0 0], [0 0], 'r-', 'LineWidth', 2, 'HitTest', 'off', 'Tag', 'sim3d_board');
-plot3(S.ax3, [0 0], [0 L], [0 0], 'g-', 'LineWidth', 2, 'HitTest', 'off', 'Tag', 'sim3d_board');
-plot3(S.ax3, [0 0], [0 0], [0 -L], 'b-', 'LineWidth', 2, 'HitTest', 'off', 'Tag', 'sim3d_board');
-text(S.ax3, L, 0, 0, ' x', 'Color', 'r', 'HitTest', 'off', 'Tag', 'sim3d_board');
-text(S.ax3, 0, L, 0, ' y', 'Color', [0 0.6 0], 'HitTest', 'off', 'Tag', 'sim3d_board');
-text(S.ax3, 0, 0, -L, ' -z', 'Color', 'b', 'HitTest', 'off', 'Tag', 'sim3d_board');
+O = origin_mark(board);
+D = arrow_directions();
+names = {' x', ' y', ' z'};
+cols = [1 0 0; 0 0.6 0; 0 0 1];
+for a = 1:3
+    E = O + L * D(a, :);
+    plot3(S.ax3, [O(1) E(1)], [O(2) E(2)], [O(3) E(3)], '-', 'Color', cols(a, :), 'LineWidth', 2, 'HitTest', 'off', 'Tag', 'sim3d_board');
+    text(S.ax3, E(1), E(2), E(3), names{a}, 'Color', cols(a, :), 'HitTest', 'off', 'Tag', 'sim3d_board');
+end
 S.board_key = key;
 end
 
-function camera_view(ax, g, k, tex, view_px)
+function camera_view(ax, g, k, tex, view_px, board)
 % low resolution image (view_px on the long side) of the board in the light sheet, as camera k
-% sees it, with its view of the overlap and the board origin
+% sees it, with its view of the overlap and the origin of the results (bottom left inner corner)
 cam = g.cams{k};
 sz = cam.imageSize;
 small = max(1, round(sz * min(1, view_px / max(sz))));
@@ -251,7 +257,7 @@ if numel(g.cams) > 1 && ~isempty(ox)
     q = simulate.project(g.cams{k}, transformPointsForward(g.sheet_pose, [ox, oy, zeros(size(ox))]));
     plot(ax, q(:, 1), q(:, 2), '-', 'Color', [0.2 0.9 0.3], 'LineWidth', 1.5, 'HitTest', 'off');
 end
-o = simulate.project(g.cams{k}, [0 0 0]);
+o = simulate.project(g.cams{k}, origin_mark(board));
 plot(ax, o(1), o(2), 'g*', 'MarkerSize', 10, 'HitTest', 'off');
 xlim(ax, [0.5 sz(2) + 0.5]);
 ylim(ax, [0.5 sz(1) + 0.5]);
@@ -266,7 +272,7 @@ col = stereo.camera_colors(k);
 end
 
 function h = camera_arrows(fig, ax, C, k, len)
-% three arrows at camera k along the board axes (x, y, -z and colours as the axes on the board);
+% three arrows at camera k along the axes of the results (x, y, z and colours as the axes on the board);
 % drag one to move the camera along it
 dirs = arrow_directions();
 cols = [1 0 0; 0 1 0; 0 0 1];
@@ -284,7 +290,13 @@ end
 end
 
 function dirs = arrow_directions()
-dirs = [1 0 0; 0 1 0; 0 0 -1];
+% x, y, z of the results in board coordinates (simulate.result_axes)
+dirs = [1 0 0; 0 -1 0; 0 0 -1];
+end
+
+function O = origin_mark(board)
+% origin of the results (the '0' printed on the board) in board coordinates
+O = [simulate.result_axes([0 0], board), 0];
 end
 
 function fade_arrows(ax)
@@ -324,7 +336,7 @@ if all(g.centre(:, 3) < 0) || all(g.centre(:, 3) > 0)
 else
     behind = [0.83 0 -0.55]; % cameras on both sides: from the side
 end
-fit_view(S.ax3, g, S.setup.board, behind + [0 -0.6 0]); % and from above (y is down)
+fit_view(S.ax3, g, S.setup.board, behind + [0 -0.6 0]); % and from above (board y is down)
 S.view_set = true;
 setappdata(fig, 'sim3d', S);
 end

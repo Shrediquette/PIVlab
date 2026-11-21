@@ -9,7 +9,8 @@ function vel = reconstruct(res1, res2, calib, disparity, opts)
 %   opts        stereo.defaults().reconstruction (SheetFromDisparity, DisparityGradient)
 %
 %   vel.U, vel.V, vel.W [rectified px per image pair, rows x columns x pairs], vel.x, vel.y [px].
-%   Coordinates like PIVlab: x to the right, y down (rectified image), right-handed: W is positive
+%   Image coordinates (the results flip y and W, calibrate.w_factor): x to the right, y down
+%   (rectified image), right-handed: W is positive
 %   AWAY from camera 1 (into the board as seen from camera 1; with both cameras on the same side:
 %   away from the cameras).
 %   vel.residual [px]: 4 measured components, 3 unknowns - the part of the difference of the two

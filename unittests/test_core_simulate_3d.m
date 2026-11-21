@@ -95,10 +95,36 @@ testCase.verifyEqual(preproc.cam_get_charuco_info_from_QRcode(I), 1, 'QR code re
 testCase.verifyEqual(preproc.cam_get_charuco_info_from_QRcode(fliplr(I)), 1, 'QR code readable mirrored (board seen from behind)');
 end
 
+function test_result_axes(testCase)
+% the panel (and its default settings) uses the axes of the results, as printed on the board:
+% origin at the bottom left inner corner, x right, y up, z out of the board
+d = gui.default_settings;
+t = d.tools;
+s = simulate.setup_3d(Mode='cameras');
+b = s.board;
+y0 = (b.PatternDims(1) - 2) * b.CheckerSize;
+testCase.verifyGreaterThan(t.sim3d_c1z, 0, 'default cameras in front of the board: z > 0 in the panel');
+testCase.verifyEqual(s.cameras(1).Position, [t.sim3d_c1x, y0 - t.sim3d_c1y, -t.sim3d_c1z]);
+testCase.verifyEqual(s.cameras(2).Target, [t.sim3d_c2ax, y0 - t.sim3d_c2ay]);
+testCase.verifyLessThan(s.cameras(1).Position(3), 0, 'board coordinates: cameras in front at z < 0');
+testCase.verifyEqual(s.flow.OutOfPlane, -t.sim3d_w, 'out-of-plane: positive out of the board in the panel');
+testCase.verifyEqual(s.sheet.TiltX, t.sim3d_sheet_tiltx);
+% its own inverse; the printed origin is the bottom left inner corner of the detected board
+r = simulate.result_axes(s);
+testCase.verifyEqual(simulate.result_axes(r), s);
+testCase.verifyEqual(r.cameras(1).Position, [t.sim3d_c1x t.sim3d_c1y t.sim3d_c1z]);
+wp = patternWorldPoints("charuco-board", b.PatternDims, b.CheckerSize);
+testCase.verifyEqual(simulate.result_axes(wp(b.PatternDims(1) - 1, :), b), [0 0], 'AbsTol', 1e-9);
+L = preproc.cam_board_layout(b.PatternDims, char(b.MarkerFamily), b.CheckerSize, b.MarkerSize, char(b.OriginCheckerColor));
+testCase.verifyEqual(L.axes.origin - [L.margin, L.margin_top] - b.CheckerSize, [0 y0], 'AbsTol', 1e-9, ...
+    'printed origin is not the origin of the result axes');
+end
+
 function test_ground_truth(testCase)
 load(fullfile(testCase.TestData.Dir, 'ground_truth.mat'), 'truth');
 s = testCase.TestData.Setup;
-testCase.verifyEqual(max(truth.W(:)), s.flow.OutOfPlane, 'RelTol', 0.02, 'jet peak');
+[~, i_peak] = max(abs(truth.W(:)));
+testCase.verifyEqual(truth.W(i_peak), s.flow.OutOfPlane, 'RelTol', 0.02, 'jet peak');
 testCase.verifyLessThanOrEqual(max(hypot(truth.U(:), truth.V(:))), s.flow.InPlane * 1.001);
 % world coordinates: the sheet is offset towards camera 1 (z < 0) and tilted about x
 g = simulate.geometry_3d(s);

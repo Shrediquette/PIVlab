@@ -6,6 +6,7 @@ if isempty(hgui) || ~isgraphics(hgui)
     return
 end
 handles = gui.gethand;
+setup = simulate.result_axes(setup); % board coordinates -> axes of the results (panel)
 for k = 1:numel(setup.cameras)
     c = sprintf('sim3d_c%d', k);
     values = [setup.cameras(k).Position, setup.cameras(k).Target];

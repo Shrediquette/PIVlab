@@ -166,9 +166,10 @@ testCase.verifyEqual(min(I(outside)), 1, 'TIFF logo where the PDF has no logo');
 end
 
 function test_axes(testCase)
-% board coordinate system in the margins: the ticks are at the row / column line through the first
-% inner corner, which is the origin of patternWorldPoints (x right, y down) in the detected board;
-% the TIFF draws it where the PDF does; the board is still detected
+% axes of the results in the margins (x right, y up, z out of the board): the ticks are at the
+% row / column line through the last inner corner of the first column (bottom left) of the
+% detected board, y points against the y of patternWorldPoints (down), x along its x; the TIFF
+% draws it where the PDF does; the board is still detected
 dims = [9 13];
 S = 10;
 M = 6;
@@ -179,9 +180,13 @@ farbe = draw_layers(fileread(pdf_file), px_per_mm);
 [I, L] = tiff_board(dims, S, M, px_per_mm);
 A = L.axes;
 testCase.assertGreaterThan(A.shape.NumRegions, 0);
-testCase.verifyEqual(A.shape.NumHoles, 4, 'holes of the z symbol (ring with cross)');
+testCase.verifyEqual(A.shape.NumRegions, 4, 'arrows x, y and z symbol (ring and dot)');
+testCase.verifyEqual(A.shape.NumHoles, 1, 'hole of the z symbol (ring around the dot)');
 testCase.verifyEqual({A.labels.text}, {'0', 'y', '0', 'x', 'z'});
-testCase.verifyEqual(A.origin, [L.margin + S, L.margin_top + S]);
+testCase.verifyEqual(A.origin, [L.margin + S, L.margin_top + (dims(1) - 1) * S]);
+y_tip = min(A.shape.Vertices(A.shape.Vertices(:, 1) < L.margin, 2));
+testCase.verifyLessThan(y_tip, A.origin(2) - 0.5 * L.margin, 'y arrow does not point up');
+testCase.verifyGreaterThan(y_tip, L.margin_top, 'y arrow in the top margin');
 % ink in the margins (left and bottom, below the top margin)
 margins = false(size(farbe));
 margins(round(L.margin_top * px_per_mm) + 1:end, 1:round(L.margin * px_per_mm)) = true;
@@ -205,16 +210,18 @@ outside = ~imdilate(ink, true(3)) & margins;
 outside(1:round((L.margin_top + 0.1) * px_per_mm), :) = false; % top margin: text
 testCase.verifyLessThan(max(I(inside)), 0.95, 'TIFF axes missing where the PDF axes are');
 testCase.verifyEqual(min(I(outside)), 1, 'TIFF axes where the PDF has none');
-% origin and axis directions of the detected board
+% marked corner and axis directions in the detected board: the world points (internal frame) have
+% y down, the printed y (results) points up, x is the same
 P = detectCharucoBoardPoints(uint8(I * 255), dims, 'DICT_4X4_1000', S * px_per_mm, M * px_per_mm, 'OriginCheckerColor', 'black');
 testCase.verifyGreaterThanOrEqual(nnz(all(isfinite(P), 2)), prod(dims - 1) - 9);
 wp = patternWorldPoints("charuco-board", dims, S);
-testCase.verifyEqual(wp(1, :), [0 0]);
-testCase.verifyEqual(P(1, :), A.origin * px_per_mm + 0.5, 'AbsTol', 0.5, 'origin of the world points is not the marked origin');
-testCase.verifyEqual(sign(wp(2, :) - wp(1, :)), sign(round(P(2, :) - P(1, :))), 'y direction');
-testCase.verifyEqual(sign(wp(dims(1), :) - wp(1, :)), sign(round(P(dims(1), :) - P(1, :))), 'x direction');
-testCase.verifyEqual(sign(round(P(2, :) - P(1, :))), [0 1], 'y does not point down');
-testCase.verifyEqual(sign(round(P(dims(1), :) - P(1, :))), [1 0], 'x does not point right');
+n = dims(1) - 1; % inner corners per column: point n = last inner corner of the first column
+testCase.verifyEqual(wp(n, :), [0 (dims(1) - 2) * S], 'AbsTol', 1e-9);
+testCase.verifyEqual(P(n, :), A.origin * px_per_mm + 0.5, 'AbsTol', 0.5, 'marked corner is not the bottom left inner corner');
+testCase.verifyEqual(sign(wp(n - 1, :) - wp(n, :)), [0 -1], 'world y of the board does not point down');
+testCase.verifyEqual(sign(round(P(n - 1, :) - P(n, :))), [0 -1], 'printed y does not point up in the image');
+testCase.verifyEqual(sign(wp(n + n, :) - wp(n, :)), sign(round(P(n + n, :) - P(n, :))), 'x direction');
+testCase.verifyEqual(sign(round(P(n + n, :) - P(n, :))), [1 0], 'x does not point right');
 end
 
 function test_axes_small_checkers(testCase)

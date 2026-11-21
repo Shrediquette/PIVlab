@@ -54,8 +54,8 @@ y = y + 1 + margin/4;
 uicontrol(cams,'Style','text','String','Camera 1','Units','characters','HorizontalAlignment','center','Position',pos(pc,wc*0.4,y,wc*0.3,1),'ForegroundColor',stereo.camera_colors(1));
 uicontrol(cams,'Style','text','String','Camera 2','Units','characters','HorizontalAlignment','center','Position',pos(pc,wc*0.7,y,wc*0.3,1),'ForegroundColor',stereo.camera_colors(2),'Tag','sim3d_cam2_title');
 y = y + 1;
-pos_tip = 'Position of the camera in board coordinates [mm]: origin = first inner corner of the board, x right, y down, z into the board (the cameras are usually at z < 0). Drag the camera in the 3D preview to move it.';
-aim_tip = 'Point on the board (z = 0) that the camera looks at [mm]. Drag the diamond in the 3D preview to move it.';
+pos_tip = 'Position of the camera [mm] in the axes of the results, as printed on the board: origin = inner corner at the bottom left of the board (0), x right, y up, z out of the board (the cameras are usually at z > 0, in front of the board). Drag the camera in the 3D preview to move it.';
+aim_tip = 'Point on the board (z = 0) that the camera looks at [mm], x right, y up from the inner corner at the bottom left. Drag the diamond in the 3D preview to move it.';
 dist_tip = 'Radial lens distortion (MATLAB / OpenCV model, normalized image coordinates): k1 < 0 barrel, k1 > 0 pincushion, 0 = none. The 3D preview shows the resulting distortion in pixels at the image corners.';
 labels = {'Position x [mm]:','Position y [mm]:','Position z [mm]:','Aim at x [mm]:','Aim at y [mm]:','Distortion k1:','Distortion k2:'};
 fields = {'x','y','z','ax','ay','k1','k2'};
@@ -74,9 +74,9 @@ y = 0;
 row_edits(sheet, ps, y, 'Offset from the board [mm]:', {'sim3d_sheet_offset'}, t.sim3d_sheet_offset, ...
     {'Distance of the light sheet centre plane from the board at the aim points, positive towards camera 1. The stereo calibration uses the board, the disparity correction has to find this offset.'});
 y = y + 1;
-row_edits(sheet, ps, y, 'Rotation about x [°]:', {'sim3d_sheet_tiltx'}, t.sim3d_sheet_tiltx, {'Rotation of the light sheet against the board about the board x axis'});
+row_edits(sheet, ps, y, 'Rotation about x [°]:', {'sim3d_sheet_tiltx'}, t.sim3d_sheet_tiltx, {'Rotation of the light sheet against the board about the x axis (right-handed)'});
 y = y + 1;
-row_edits(sheet, ps, y, 'Rotation about y [°]:', {'sim3d_sheet_tilty'}, t.sim3d_sheet_tilty, {'Rotation of the light sheet against the board about the board y axis'});
+row_edits(sheet, ps, y, 'Rotation about y [°]:', {'sim3d_sheet_tilty'}, t.sim3d_sheet_tilty, {'Rotation of the light sheet against the board about the y axis (up, right-handed)'});
 y = y + 1;
 row_edits(sheet, ps, y, 'Thickness [mm]:', {'sim3d_sheet_thick'}, t.sim3d_sheet_thick, {'Thickness of the light sheet (e^-2 intensity)'});
 
@@ -106,7 +106,7 @@ overlay_edit(flow, pf, y, 'sim3d_diameter', t.sim3d_diameter, ['Diameter of the 
     'The flow goes from left to right (+x). Free jet: the views must end within 10 diameters of the nozzle.']);
 y = y + 1;
 row_edits(flow, pf, y, 'Out-of-plane displ. [mm]:', {'sim3d_w'}, t.sim3d_w, ...
-    {'Displacement perpendicular to the light sheet: peak of the jet in the vortex core, or constant for the other flows'}, 'sim3d_w_text');
+    {'Displacement perpendicular to the light sheet, positive along z (out of the board, toward the cameras in front of it; w of the results): peak of the jet in the vortex core, or constant for the other flows'}, 'sim3d_w_text');
 overlay_edit(flow, pf, y, 'sim3d_pair_time', t.sim3d_pair_time, ['Time between two image pairs in D/U: the flow ' ...
     'travels this many diameters. Sphere: a vortex is shed about every 5 D/U. 0.25 gives a time-resolved series, ' ...
     '5 or more nearly independent snapshots (longer computation).']);

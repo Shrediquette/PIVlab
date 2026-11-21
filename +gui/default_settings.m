@@ -257,24 +257,25 @@ default.acquisition.ac_realtime = 0;
 default.acquisition.ac_pivcapture_save = 0;
 
 %% tools (particle image generator, temporal statistics)
-% Particle image generator (simulate.setup_3d; positions in board coordinates [mm])
+% Particle image generator (simulate.setup_3d; positions in the axes of the results [mm]: origin at the
+% bottom left inner corner of the board, x right, y up, z out of the board; simulate.result_axes)
 default.tools.sim3d_setup = 1;          % 1 simple (one camera straight on), 2 one camera, 3 two cameras (stereo)
 default.tools.sim3d_pixel = 0.1;        % simple setup: pixel size in the light sheet [mm]
 default.tools.sim3d_sizex = 2000;
 default.tools.sim3d_sizey = 2000;
 default.tools.sim3d_pitch = 5;
 default.tools.sim3d_focal = 25;
-% cameras aimed at the centre of the default board (corners 0..228 x 0..144 mm)
+% cameras in front of the board (z > 0), aimed at the centre of the default board (corners 0..228 x 0..144 mm)
 default.tools.sim3d_c1x = -171;
 default.tools.sim3d_c1y = 72;
-default.tools.sim3d_c1z = -494;
+default.tools.sim3d_c1z = 494;
 default.tools.sim3d_c1ax = 114;
 default.tools.sim3d_c1ay = 72;
 default.tools.sim3d_c1k1 = -0.45;
 default.tools.sim3d_c1k2 = 0.1;
 default.tools.sim3d_c2x = 399;
 default.tools.sim3d_c2y = 72;
-default.tools.sim3d_c2z = -494;
+default.tools.sim3d_c2z = 494;
 default.tools.sim3d_c2ax = 114;
 default.tools.sim3d_c2ay = 72;
 default.tools.sim3d_c2k1 = -0.35;
@@ -286,7 +287,7 @@ default.tools.sim3d_sheet_thick = 1.5;
 default.tools.sim3d_flow = 1;
 default.tools.sim3d_displ = 0.8;
 default.tools.sim3d_radius = 40;
-default.tools.sim3d_w = 0.5;
+default.tools.sim3d_w = 0.5;           % out-of-plane displacement, positive along z (out of the board)
 default.tools.sim3d_vortex_distance = 0;
 default.tools.sim3d_diameter = 40;
 default.tools.sim3d_pair_time = 0.25;

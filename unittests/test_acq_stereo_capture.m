@@ -280,6 +280,22 @@ function check_preview(~, ~)
 r = struct();
 ax = gui.retr('pivlab_axis');
 imgs = findobj(ax, 'Type', 'image');
+% wait for the first frames: opening and starting two cameras takes a few seconds before the capture loop
+% draws its first frames (until then, the image area shows the empty camera images in full size)
+drawn = arrayfun(@(img) double(getappdata(img, 'frames_drawn')), imgs, 'UniformOutput', false);
+ready = numel(imgs) == 2 && all(cellfun(@(n) ~isempty(n) && n >= 2, drawn));
+tries = getappdata(0, 'stereo_capture_test_tries');
+if isempty(tries)
+    tries = 0;
+end
+if ~ready && tries < 40
+    setappdata(0, 'stereo_capture_test_tries', tries + 1);
+    run_with_check(@check_preview, 0.3);
+    return
+end
+if isappdata(0, 'stereo_capture_test_tries')
+    rmappdata(0, 'stereo_capture_test_tries');
+end
 r.n_images = numel(imgs);
 cams = zeros(1, numel(imgs));
 for i = 1:numel(imgs)

@@ -7,7 +7,9 @@ function setup = setup_3d(opts)
 %
 % World coordinates = board coordinates in mm: origin at the first inner corner of the ChArUco
 % board, x along the columns (right), y along the rows (down), z into the board. The cameras look
-% at the board from z < 0 (or from behind, z > 0: they see the board mirrored).
+% at the board from z < 0 (or from behind, z > 0: they see the board mirrored). The panel and its
+% default settings show positions, aim points, sheet.TiltY and flow.OutOfPlane in the axes of the
+% results instead (y up, z out of the board, origin bottom left): simulate.result_axes.
 %
 %   setup.Mode        'simple': one camera looks straight at the light sheet (orthographic, no lens;
 %                     pixel = sheet position / Simple.PixelSize; no board, no calibration images);
@@ -72,4 +74,5 @@ setup.flow = struct('Type', types{t.sim3d_flow}, 'InPlane', t.sim3d_displ, 'Radi
 setup.particles = struct('Density', t.sim3d_ppp, 'Diameter', t.sim3d_psize, 'DiameterVariation', t.sim3d_pvar, 'Noise', t.sim3d_noise);
 setup.output = struct('Pairs', t.sim3d_pairs, 'CalibrationImages', t.sim3d_ncalib, ...
     'Backgrounds', fullfile(fileparts(fileparts(mfilename('fullpath'))), 'images', 'calibration_backgrounds.mat'));
+setup = simulate.result_axes(setup); % the panel (default settings) uses the axes of the results
 end

@@ -258,7 +258,7 @@ window.MANUAL_SEARCH = [
     title: "Setting up a ChArUco marker board",
     href: "pages/camera-calibration.html", hash: "markerboard",
     section: "Image settings",
-    text: "charuco marker board rows columns checker size origin color guess parameters generate board"
+    text: "charuco marker board rows columns checker size origin color guess parameters generate board axes x y z coordinate system"
   },
   {
     title: "Choosing the checker size",

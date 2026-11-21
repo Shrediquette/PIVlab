@@ -39,6 +39,8 @@
 % on opposite sides (the camera behind the board sees it mirrored: transparent board, detected
 % automatically). Both cameras must look at the sheet from clearly different directions.
 %
-% Coordinates like PIVlab: x to the right, y down (rectified image, as seen from camera 1), W positive
-% away from camera 1 (= away from the cameras when both are on the same side).
-% World coordinates = board coordinates in mm.
+% Internal coordinates (reconstruction): image coordinates, x to the right, y down (rectified image, as
+% seen from camera 1), W positive away from camera 1 (= away from the cameras when both are on the same
+% side). World coordinates = board coordinates in mm (first inner corner, x right, y down, z into the
+% board). The results use the axes of the calibration (default x right, y up, w = z = x cross y toward
+% camera 1, as printed on the board); see calibrate.w_factor.

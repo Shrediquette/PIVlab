@@ -31,4 +31,5 @@ setup.particles = struct('Density', v('sim3d_ppp'), 'Diameter', v('sim3d_psize')
     'Noise', v('sim3d_noise'));
 setup.output.Pairs = round(v('sim3d_pairs')); % (Backgrounds: default folder of simulate.setup_3d)
 setup.output.CalibrationImages = round(v('sim3d_ncalib'));
+setup = simulate.result_axes(setup); % panel: axes of the results -> board coordinates
 end

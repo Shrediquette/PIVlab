@@ -40,8 +40,9 @@ s.disparity.MinBackgroundFrames = 10;       % fewer A images: no background (the
                                             % remove the particles)
 s.disparity.MinBackgroundMaxFrames = 100;   % more A images: this many, spread over the whole recording
 
-% reconstruction (coordinates like PIVlab: x right, y down; W positive away from camera 1 = away from the
-% cameras if both are on the same side of the light sheet). Any camera arrangement: side by side, above
+% reconstruction (internal image coordinates: x right, y down; W positive away from camera 1 = away from
+% the cameras if both are on the same side of the light sheet; the results use the axes of the
+% calibration, default y up and w toward camera 1). Any camera arrangement: side by side, above
 % each other, on opposite sides of the light sheet.
 s.reconstruction.SheetFromDisparity = true; % light sheet position from the disparity (else: on the board)
 s.reconstruction.DisparityGradient = true;  % correct the displacements for the varying disparity shift

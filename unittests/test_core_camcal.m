@@ -48,14 +48,20 @@ for k = 1:numel(ref.boards)
 		verifyEqual(testCase, used, r.imagesUsed, label);
 		verifyEqual(testCase, numel(st.D_full), numel(r.D_full), [label ': length of D']);
 		verifyEqual(testCase, st.MeanReprojectionError, r.MeanReprojectionError, 'RelTol', 1e-4, [label ': reprojection error']);
-		% the undistortion maps: identical, except the free tilt of the synthetic camera (true tilt
-		% 0: very flat error valley, OpenCV stops after 30 iterations; the maps differ by a projective
-		% transform that the rectification takes up)
-		limit = 0.01;
+		% the undistortion maps (positions in the camera image that each undistorted pixel samples):
+		% identical, except the free tilt of the synthetic camera. True tilt 0: very flat error valley
+		% (tilt <-> principal point), OpenCV stops after 30 iterations. Where the fit stops there depends
+		% on rounding: with the same solver, the map moves by 0.2 - 1 px with the number of BLAS threads
+		% (also for an OpenCV-like Jacobi SVD). Almost all of it is a projective transform, which the
+		% rectification takes up: compared after the best projective fit (0.004 - 0.025 px left), and
+		% the raw difference only for gross errors.
 		if contains(b.name, 'synthetic') && any(strcmp(cases{c}, {'tilted', 'tilted_start'}))
-			limit = 0.5;
+			[raw, projective] = map_difference(r.K_opencv, r.D_full, st.K_opencv, st.D_full, b.imageSize);
+			verifyLessThan(testCase, projective, 0.05, [label ': undistortion map after a projective fit (px)']);
+			verifyLessThan(testCase, raw, 2, [label ': undistortion map (px)']);
+		else
+			verifyLessThan(testCase, map_difference(r.K_opencv, r.D_full, st.K_opencv, st.D_full, b.imageSize), 0.01, [label ': undistortion map (px)']);
 		end
-		verifyLessThan(testCase, map_difference(r.K_opencv, r.D_full, st.K_opencv, st.D_full, b.imageSize), limit, [label ': undistortion map (px)']);
 		if strcmp(cases{c}, 'fixed_tilt')
 			verifyEqual(testCase, [st.tilt_candidates.tilt_angle_y], [r.tilt_candidates.tilt_angle_y], label);
 			verifyEqual(testCase, rad2deg(st.D_full(14)), rad2deg(r.D_full(14)), 'AbsTol', 1e-9, [label ': sign chosen']);
@@ -193,12 +199,19 @@ function [txt, cp, used, st] = evalc_estimate(ip, b, args)
 [txt, cp, used, st] = evalc('camcal.estimate_camera_parameters(ip, b.worldPoints, b.imageSize, args{:})');
 end
 
-function md = map_difference(K1, D1, K2, D2, sz)
-% largest difference of the undistortion map ('same' view) on a 41 x 41 grid (px)
+function [md, md_projective] = map_difference(K1, D1, K2, D2, sz)
+% largest difference of the undistortion map ('same' view) on a 41 x 41 grid (px); md_projective:
+% what is left after the best projective transform between the two maps
 [jj, ii] = meshgrid(linspace(0, sz(2) - 1, 41), linspace(0, sz(1) - 1, 41));
 [x1, y1] = camcal.distort_normalized((jj - K1(1,3)) / K1(1,1), (ii - K1(2,3)) / K1(2,2), D1);
 [x2, y2] = camcal.distort_normalized((jj - K2(1,3)) / K2(1,1), (ii - K2(2,3)) / K2(2,2), D2);
-md = max(hypot(K1(1,1) * x1 + K1(1,3) - K2(1,1) * x2 - K2(1,3), K1(2,2) * y1 + K1(2,3) - K2(2,2) * y2 - K2(2,3)), [], 'all');
+P1 = [K1(1,1) * x1(:) + K1(1,3), K1(2,2) * y1(:) + K1(2,3)];
+P2 = [K2(1,1) * x2(:) + K2(1,3), K2(2,2) * y2(:) + K2(2,3)];
+md = max(hypot(P1(:,1) - P2(:,1), P1(:,2) - P2(:,2)));
+if nargout > 1
+	Q = transformPointsForward(fitgeotform2d(P2, P1, 'projective'), P2);
+	md_projective = max(hypot(Q(:,1) - P1(:,1), Q(:,2) - P1(:,2)));
+end
 end
 
 function [imagePoints, worldPoints, imageSize, K, D] = synthetic_boards(noise, tilt_deg)

@@ -67,25 +67,31 @@ L.axes = axes_layout(L, rows, cols, S);
 end
 
 function A = axes_layout(L, rows, cols, S)
-% Coordinate system of the board, as patternWorldPoints / detectCharucoBoardPoints and
-% stereo.calibrate use it: origin = first inner corner (top left), x to the right, y down, z into
-% the board. Drawn in the left and bottom margin only (the checker pattern stays as it is, the
-% detection is not affected): in the left margin a tick at the row line through the origin and an
-% arrow down (y), in the bottom margin a tick at the column line through the origin and an arrow to
-% the right (x), labels '0', 'y', 'x', and in the bottom left corner the z axis as a circle with a
-% cross (pointing into the board) with label 'z'. All sizes in units of the margin.
-%   A.origin     [x y] of the origin [mm]
+% Axes of the PIVlab results (default axes of the calibration, also for stereo PIV), as seen from
+% camera 1 with the board upright in the image: x to the right, y up, z out of the board (toward
+% camera 1, z = x cross y). The reference mark '0' is the last inner corner of the first column
+% (bottom left). The results have their own origin (bottom left of the image); only the directions
+% are those of the board. (Internally, patternWorldPoints / detectCharucoBoardPoints and
+% stereo.calibrate use the first inner corner, top left, with y down and z into the board.)
+% Drawn in the left and bottom margin only (the checker pattern stays as it is, the detection is
+% not affected): in the left margin a tick at the row line through the mark and an arrow up (y), in
+% the bottom margin a tick at the column line through the mark and an arrow to the right (x),
+% labels '0', 'y', 'x', and in the bottom left corner the z axis as a circle with a dot (pointing
+% out of the board) with label 'z'. All sizes in units of the margin.
+%   A.origin     [x y] of the reference mark [mm]
 %   A.shape      arrows and z symbol as one polyshape (vector outlines, mm, y down); regions do not
 %                overlap, holes are holes
 %   A.labels     .text, .origin (left end of the baseline, mm) of the labels; A.font_size [mm]
 %                (board font, preproc.cam_board_text)
 % Empty shape and labels: the checkers are too small for the axes (no room in the margin).
 m = L.margin;
-A.origin = [m + S, L.margin_top + S];
+B = L.margin_top + rows * S; % bottom edge of the checker pattern
+A.origin = [m + S, B - S];
 A.shape = polyshape();
 A.labels = struct('text', {}, 'origin', {});
 A.font_size = 0.7 * m;
-if S < 0.6 * m || (rows - 1) * S < 1.7 * m || cols < 2
+% S >= 1.1 margins: label '0' of y (below the tick) clear of label 'z' (above the z symbol)
+if S < 1.1 * m || (rows - 1) * S < 1.7 * m || cols < 2
     return
 end
 O = A.origin;
@@ -94,24 +100,23 @@ hl = 0.4 * m; % arrow head length
 hw = 0.2 * m; % arrow head half width
 c = 0.4 * m; % shafts 0.4 margin from the board edge, 0.6 margin from the checker pattern
 t = 0.15 * m; % gap between the ticks and the checker pattern
-B = L.margin_top + rows * S; % bottom edge of the checker pattern
 preferred = S * max(1, ceil(1.2 * m / S)); % arrow length: whole checkers, at least 1.2 margins
-len_y = max(0.6 * m, min(preferred, (rows - 1) * S - 1.1 * m)); % label 'y' clear of label 'z'
+len_y = max(0.6 * m, min(preferred, (rows - 1) * S - 0.8 * m)); % label 'y' below the top margin
 len_x = max(0.6 * m, min(preferred, (cols - 1) * S + 0.2 * m)); % label 'x' on the board
-% y: left margin, tick at the row line through the origin, arrow down
-yt = O(2) + len_y;
-yh = yt - hl;
-arrow_y = polyshape([c - w / 2, O(2) - w / 2; m - t, O(2) - w / 2; m - t, O(2) + w / 2; c + w / 2, O(2) + w / 2; ...
+% y: left margin, tick at the row line through the mark, arrow up
+yt = O(2) - len_y;
+yh = yt + hl;
+arrow_y = polyshape([c - w / 2, O(2) + w / 2; m - t, O(2) + w / 2; m - t, O(2) - w / 2; c + w / 2, O(2) - w / 2; ...
     c + w / 2, yh; c + hw, yh; c, yt; c - hw, yh; c - w / 2, yh]);
-% x: bottom margin, tick at the column line through the origin, arrow to the right
+% x: bottom margin, tick at the column line through the mark, arrow to the right
 yc = B + m - c;
 xt = O(1) + len_x;
 xh = xt - hl;
 arrow_x = polyshape([O(1) - w / 2, B + t; O(1) + w / 2, B + t; O(1) + w / 2, yc - w / 2; xh, yc - w / 2; ...
     xh, yc - hw; xt, yc; xh, yc + hw; xh, yc + w / 2; O(1) - w / 2, yc + w / 2]);
-A.shape = union([arrow_y, arrow_x, into_board([c, yc], 0.3 * m, 0.08 * m)]);
+A.shape = union([arrow_y, arrow_x, out_of_board([c, yc], 0.3 * m, 0.08 * m)]);
 % labels, centred (outline) at these points
-centres = {'0', [c, O(2) - 0.5 * m]; 'y', [c, yt + 0.45 * m]; '0', [O(1) - 0.5 * m, yc]; ...
+centres = {'0', [c, O(2) + 0.5 * m]; 'y', [c, yt - 0.45 * m]; '0', [O(1) - 0.5 * m, yc]; ...
     'x', [xt + 0.45 * m, yc]; 'z', [c, yc - 0.65 * m]};
 for k = 1:size(centres, 1)
     [~, ~, e] = preproc.cam_board_text(centres{k, 1}, A.font_size, [0 0]);
@@ -119,15 +124,15 @@ for k = 1:size(centres, 1)
 end
 end
 
-function s = into_board(centre, radius, line_width)
-% circle with a cross: axis pointing into the board
+function s = out_of_board(centre, radius, line_width)
+% circle with a dot: axis pointing out of the board (toward the viewer)
 a = linspace(0, 2 * pi, 97)';
 a(end) = [];
 ring = subtract(polyshape(centre(1) + radius * cos(a), centre(2) + radius * sin(a)), ...
     polyshape(centre(1) + (radius - line_width) * cos(a), centre(2) + (radius - line_width) * sin(a)));
-d = (radius - line_width / 2) / sqrt(2); % the cross ends in the middle of the ring
-cross = [polybuffer(centre + [-d -d; d d], 'lines', line_width / 2), polybuffer(centre + [-d d; d -d], 'lines', line_width / 2)];
-s = union([ring, cross]);
+r_dot = 0.35 * radius;
+dot = polyshape(centre(1) + r_dot * cos(a), centre(2) + r_dot * sin(a));
+s = union([ring, dot]);
 end
 
 function ink = text_ink(txt)
