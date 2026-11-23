@@ -21,7 +21,8 @@ function imgs = preprocess(imgs, opts)
 %   MinIntensity, MaxIntensity     fixed intensity limits (0...1), used when AutoLimit is false
 %   Background         "none" | "mean" | "min"  subtract the mean or minimum intensity image
 %   Roi                region of interest [x y width height] in pixels,
-%                      "none" = whole image (also when Settings contain a region of interest)
+%                      "none" = whole image (also when Settings contain a region of interest);
+%                      combined cameras (pivlab.combineCameras): default inside the part the cameras see
 %   Mask               logical image (true = masked, same mask for every pair), a cell array
 %                      with one logical image per pair, or PIVlab mask objects (masks_in_frame),
 %                      "none" = no mask
@@ -115,11 +116,11 @@ p = resolve_options('preprocess', opts);
 % "none" switches a region of interest or a mask off (also one that came in through Settings)
 if is_none(p.Roi)
     p.Roi = [];
+elseif isempty(p.Roi) && combined
+    p.Roi = fov.auto_roi(imgs.cam.fov.owner); % combined cameras: inside the part the cameras see
 end
 if is_none(p.Mask)
     p.Mask = [];
-elseif isempty(p.Mask) && combined
-    p.Mask = imgs.cam.fov.owner == 0; % combined cameras: the part no camera sees
 end
 p.Background = lower(string(p.Background));
 if ~ismember(p.Background, ["none","mean","min"])

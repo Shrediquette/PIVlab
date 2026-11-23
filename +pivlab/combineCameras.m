@@ -21,8 +21,8 @@ function out = combineCameras(imgs, boards, board, opts)
 %
 %   out is ONE normal 2D image set: every image is the combination of both cameras on the grid of the board
 %   (lens undistortion and projective transform per camera, hard seam in the middle of the overlap, the part
-%   no camera sees is 0). Use it like any image set: pivlab.preprocess (keeps the cameras; default mask = the
-%   part no camera sees), pivlab.analyze, pivlab.filter, pivlab.toMetric (DeltaT is enough, the scale comes
+%   no camera sees is 0). Use it like any image set: pivlab.preprocess (keeps the cameras; default region of interest
+%   inside the part the cameras see, fov.auto_roi; Roi="none" for the whole image), pivlab.analyze, pivlab.filter, pivlab.toMetric (DeltaT is enough, the scale comes
 %   from the calibration), pivlab.getImage, pivlab.display.
 %   out.fov_calib   the calibration (stereo.calibrate); out.fov_report: the report lines
 %   The combined image is aligned to the board: x along the board x axis, y along the board y axis.

@@ -15,58 +15,60 @@ function [img, grid, out_size, raw_read, img_whole] = read_frame_display(src, se
 %             pixel is the average of the full resolution pixels it covers. [] when the frame is
 %             small enough to be drawn at full resolution (then grid is [] too).
 %   grid      display grid (plot.display_grid), full resolution pixel coordinates
-%   out_size  [height width] of the full resolution corrected frame (grid []: of the frame as read)
+%   out_size  [height width] of the full resolution corrected frame (grid []: of the frame as read;
+%             two cameras combined: always of the combined image)
 %
 %   Only for drawing. Everything that computes with image data (analysis, masks, background,
 %   export, ...) uses import.get_img at full resolution.
+%   Two cameras combined (cam.fov): raw_read is {frame of camera 1, frame of camera 2}; each display pixel is
+%   sampled in the raw frame of the camera that gives it (cam.fov.owner, cam.fov.coarse), the combined image
+%   at full resolution is not made.
 if nargin < 7 || isempty(raw_read)
-	raw_read = import.read_raw_frame(src, selected);
+	raw_read = import.read_raw_frame(src, selected, cam);
 end
 img = [];
 img_whole = [];
-if fov.is_combined(cam)
-	% two cameras combined: drawn at full resolution (import.get_img combines both cameras; raw_read is the
-	% frame of camera 1, which it uses). Known limitation: no display-resolution shortcut for these frames yet
-	% (it would sample the display grid through cam.fov.map / owner, like display_geometry does for one camera)
-	grid = [];
-	out_size = cam.fov.size;
-	return
-end
+grid = [];
+combined = fov.is_combined(cam);
+geo = [];
 raw = raw_read;
-if size(raw, 3) > 1
-	raw = rgb2gray(raw); % as preproc.cam_undistort / stereo.rectify_map
+if combined
+	out_size = cam.fov.size;
+else
+	if size(raw, 3) > 1
+		raw = rgb2gray(raw); % as preproc.cam_undistort / stereo.rectify_map
+	end
+	% small frame: drawn at full resolution by the caller, no display geometry needed (the correction
+	% keeps the size, the stereo transform about the same; a large corrected size is checked below)
+	out_size = [size(raw, 1) size(raw, 2)];
+	if isempty(plot.display_grid(target_axis, out_size, limits))
+		return
+	end
+	geo = import.display_geometry(cam, size(raw), class(raw));
+	out_size = geo.out_size;
 end
-% small frame: drawn at full resolution by the caller, no display geometry needed (the correction
-% keeps the size, the stereo transform about the same; a large corrected size is checked below)
-out_size = [size(raw, 1) size(raw, 2)];
 grid = plot.display_grid(target_axis, out_size, limits);
 if isempty(grid)
 	return
 end
-geo = import.display_geometry(cam, size(raw), class(raw));
-out_size = geo.out_size;
-if ~isequal(out_size, grid.full_size)
-	grid = plot.display_grid(target_axis, out_size, limits);
-	if isempty(grid)
-		return
-	end
-end
-stereo_mode = isfield(cam, 'stereo_map') && ~isempty(cam.stereo_map);
-bg_img = [];
-if ~isempty(bg)
-	if mod(selected, 2) == 1
-		bg_img = bg.A;
-	else
-		bg_img = bg.B;
-	end
-end
-img = frame_on_grid(raw, geo, grid, bg_img, stereo_mode);
+bg_img = import.background_of(bg, selected);
+img = image_on_grid(raw, cam, geo, grid, bg_img);
 if nargout > 4
 	% the whole frame at the display pixel centres without block average (n = 1): the grey value
 	% distribution of the full resolution pixels (averaging dims sparse particles)
 	whole_grid = plot.display_grid(target_axis, out_size, []);
 	whole_grid.n = 1;
-	img_whole = frame_on_grid(raw, geo, whole_grid, bg_img, stereo_mode);
+	img_whole = image_on_grid(raw, cam, geo, whole_grid, bg_img);
+end
+end
+
+function img = image_on_grid(raw, cam, geo, grid, bg_img)
+% the frame at the display pixels of grid: two cameras combined, or one camera (display geometry geo)
+if fov.is_combined(cam)
+	img = combined_on_grid(raw, cam.fov, grid, bg_img);
+else
+	stereo_mode = isfield(cam, 'stereo_map') && ~isempty(cam.stereo_map);
+	img = frame_on_grid(raw, geo, grid, bg_img, stereo_mode);
 end
 end
 
@@ -102,22 +104,65 @@ if ~geo.identity
 	vals = vals .* single(weight) * geo.scale;
 	vals(~valid) = 0;
 end
-% background in corrected coordinates: averaged the same way and subtracted
-if ~isempty(bg_img) && ~bg_in_raw
-	[b1, b2] = needed_range(grid.yc, size(bg_img, 1), n);
-	[d1, d2] = needed_range(grid.xc, size(bg_img, 2), n);
-	bgd = sample_block_average(single(bg_img(b1:b2, d1:d2)), n, b1, d1, grid.yc, grid.xc);
-	vals = max(vals - bgd, 0);
-end
-vals(vals < 0) = 0;
-vals(isnan(vals)) = 0;
 % class of import.get_img: the corrected frame, minus the background image (stereo: the background
 % is subtracted from the raw frame, the stereo transform gives the class)
 out_class = geo.out_class;
 if ~isempty(bg_img) && ~stereo_mode
 	out_class = class(zeros(1, 1, geo.out_class) - bg_img(1));
 end
-img = cast(vals, out_class); % integer classes: rounded and saturated
+bg_corrected = [];
+if ~bg_in_raw
+	bg_corrected = bg_img;
+end
+img = finish_on_grid(vals, grid, bg_corrected, out_class);
+end
+
+function img = combined_on_grid(raws, F, grid, bg_img)
+% two cameras combined (fov.compose) at the display pixels of grid: every display pixel from the raw frame
+% of the camera that gives it, block average and cubic interpolation as for one camera
+own = F.owner(grid.ri, grid.ci);
+vals = zeros(size(own), 'single');
+for k = 1:2
+	sel = own == k;
+	if ~any(sel(:))
+		continue
+	end
+	raw = raws{k};
+	if size(raw, 3) > 1
+		raw = rgb2gray(raw); % as stereo.rectify_map
+	end
+	src_x = F.coarse.Fx{k}({grid.yc, grid.xc});
+	src_y = F.coarse.Fy{k}({grid.yc, grid.xc});
+	src_x = src_x(sel);
+	src_y = src_y(sel);
+	[r1, r2] = needed_range(src_y, size(raw, 1), grid.n);
+	[c1, c2] = needed_range(src_x, size(raw, 2), grid.n);
+	vals(sel) = sample_block_average(single(raw(r1:r2, c1:c2)), grid.n, r1, c1, src_y, src_x);
+end
+% grey values and class of fov.compose (stereo.rectify_map: integer images -> uint16), minus the (combined)
+% background image
+out_class = class(raws{1});
+if isinteger(raws{1})
+	vals = vals * (65535 / double(intmax(out_class)));
+	out_class = 'uint16';
+end
+if ~isempty(bg_img)
+	out_class = class(zeros(1, 1, out_class) - bg_img(1));
+end
+img = finish_on_grid(vals, grid, bg_img, out_class);
+end
+
+function img = finish_on_grid(vals, grid, bg_img, out_class)
+% background in output coordinates (bg_img, [] = none) averaged like the frame and subtracted; negative and
+% undefined values 0; cast to the class of import.get_img (integer classes: rounded and saturated)
+if ~isempty(bg_img)
+	[b1, b2] = needed_range(grid.yc, size(bg_img, 1), grid.n);
+	[d1, d2] = needed_range(grid.xc, size(bg_img, 2), grid.n);
+	vals = vals - sample_block_average(single(bg_img(b1:b2, d1:d2)), grid.n, b1, d1, grid.yc, grid.xc);
+end
+vals(vals < 0) = 0;
+vals(isnan(vals)) = 0;
+img = cast(vals, out_class);
 end
 
 function [a, b] = needed_range(pos, len, n)

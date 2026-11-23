@@ -4,7 +4,8 @@ function [currentimage, rawimage] = read_frame(src, selected, cam, bg, raw_in)
 %   [currentimage, rawimage] = import.read_frame(src, selected, cam, bg, raw_in)
 %
 %   raw_in    (optional) the frame as import.read_raw_frame returns it, when the caller has read
-%             it already (import.read_frame_display); [] = read it here
+%             it already (import.read_frame_display); [] = read it here. Two cameras combined (cam.fov):
+%             {frame of camera 1, frame of camera 2}
 %
 %   src       struct with fields
 %               filepath, framenum, framepart  (see import.build_file_list)
@@ -31,18 +32,11 @@ if isempty(cam)
     cam = import.cam_settings();
 end
 if nargin < 5 || isempty(raw_in)
-    currentimage = import.read_raw_frame(src, selected);
+    currentimage = import.read_raw_frame(src, selected, cam);
 else
     currentimage = raw_in;
 end
-bg_img = [];
-if ~isempty(bg)
-    if mod(selected,2)==1 %uneven image nr.
-        bg_img = bg.A;
-    else
-        bg_img = bg.B;
-    end
-end
+bg_img = import.background_of(bg, selected);
 if isfield(cam,'stereo_map') && ~isempty(cam.stereo_map)
     % stereo-PIV: background subtraction on the raw camera image, then the stereo transform
     raw = currentimage;
@@ -64,7 +58,7 @@ if isfield(cam,'stereo_map') && ~isempty(cam.stereo_map)
 else
     if fov.is_combined(cam)
         % larger field of view: combine camera 1 (this frame list) and camera 2 (cam.fov.src), then 2D
-        currentimage = fov.compose(currentimage, import.read_raw_frame(cam.fov.src, selected), cam.fov);
+        currentimage = fov.compose(currentimage{1}, currentimage{2}, cam.fov);
     else
         currentimage = undistort(currentimage, cam);
     end

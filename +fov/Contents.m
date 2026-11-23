@@ -12,7 +12,7 @@
 %   report, overlap_width - report of the 3D alignment (overlap width, warnings)
 %   measure_sheet - light sheet position from the disparity in the overlap; both cameras mapped onto the sheet
 %   on_sheet   - the alignment moved from the board onto a light sheet plane; sheet_report - its report lines
-%   GUI: enter_combined, apply_alignment, measure_sheet_Callback, update_maps, clear_combined, gui_active,
-%        uncovered_mask
+%   auto_roi   - automatic region of interest inside the part the cameras see
+%   GUI: enter_combined, apply_alignment, measure_sheet_Callback, update_maps, clear_combined, gui_active
 %
 % API: pivlab.combineCameras. Plan: dev_notes/two_camera_fov_plan.md

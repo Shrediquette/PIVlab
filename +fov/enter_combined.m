@@ -6,8 +6,8 @@ function enter_combined(calib)
 % Called in stereo mode (after "Compute 3D alignment") with the images of both cameras loaded. Afterwards the
 % window holds a normal 2D data set: the frame list of camera 1, and in gui.retr('fov_src2') that of camera 2;
 % every frame is the combination of both cameras (import.read_frame with cam.fov). The camera switch
-% disappears, the spatial calibration (px -> mm) is filled in, the part no camera sees is masked in all frames,
-% the region of interest is the whole image. Lens calibration and rectification are in the combined images.
+% disappears, the spatial calibration (px -> mm) is filled in, the region of interest is set automatically
+% inside the part the cameras see (fov.auto_roi). Lens calibration and rectification are in the combined images.
 if gui.retr('stereo_active_camera') ~= 1
     stereo.switch_camera(1); % the window shows camera 1: its frame list stays
 end

@@ -2,7 +2,7 @@
 %
 % "Import multi-camera images" + lens calibration and board image per camera + "Compute 3D alignment" with two
 % cameras side by side: PIVlab chooses the larger field of view and makes ONE combined 2D data set (camera
-% switch gone, px -> mm filled in, the part no camera sees masked, calibration panel locked). Then: analysis
+% switch gone, px -> mm filled in, automatic region of interest inside the views, calibration panel locked). Then: analysis
 % against the ground truth, background, image-based validation, sessions, a new import of the same cameras
 % (combined again), a 2D import (combined data removed), removing images, Show 3D setup.
 % Plan: dev_notes/two_camera_fov_plan.md
@@ -51,14 +51,15 @@ verifyEqual(testCase, char(get(h.stereo_rect_note, 'Visible')), 'on');
 cam = import.cam_settings(FromGUI=true);
 verifyEqual(testCase, cam.use_calibration, 0);
 verifyNotEmpty(testCase, cam.fov);
-% px -> mm from the alignment, region of interest = whole image, the part no camera sees is masked
+% px -> mm from the alignment, automatic region of interest inside the part the cameras see, no masks
 pc = gui.retr('pointscali');
 verifyEqual(testCase, str2double(get(h.realdist, 'String')) / diff(pc(:, 1)), F.mm_per_px, 'RelTol', 1e-3);
-verifyEmpty(testCase, gui.retr('roirect'));
-masks = gui.retr('masks_in_frame');
-verifyEqual(testCase, numel(masks), 3, 'a mask in every frame');
-binary = mask.convert_masks_to_binary(F.size, masks{2});
-verifyEqual(testCase, binary, F.owner == 0, 'the mask is the part no camera sees');
+verifyEqual(testCase, gui.retr('roirect'), fov.auto_roi(F.owner));
+calib = gui.retr('fov_calib');
+roirect = gui.retr('roirect');
+verifyEqual(testCase, calib.auto_roi, roirect);
+verifyEqual(testCase, get(h.ROI_Man_w, 'String'), int2str(roirect(3)));
+verifyEmpty(testCase, gui.retr('masks_in_frame'));
 % the checklist of the panel
 verifyTrue(testCase, contains(get(h.stereo_step_4, 'String'), 'larger field of view'));
 end
@@ -186,10 +187,10 @@ h = gui.gethand;
 verifyEqual(testCase, char(get(h.stereo_measure_disparity, 'Enable')), 'on');
 verifyEqual(testCase, char(get(h.stereo_disp_panel, 'Visible')), 'on');
 verifyTrue(testCase, contains(get(h.stereo_step_5, 'String'), 'Light sheet position'));
-masks = gui.retr('masks_in_frame');
-user = {'ROI_object_rectangle', [100 100 50 40], [1 0 0], '', 'user_mask'};
-masks{1} = [masks{1}; user];
+masks = cell(1, 3);
+masks{1} = {'ROI_object_rectangle', [100 100 50 40], [1 0 0], '', 'user_mask'};
 gui.put('masks_in_frame', masks);
+auto_before = gui.retr('roirect');
 gui.put('resultslist', cell(15, 3));
 stereo.measure_disparity_Callback;
 calib = gui.retr('fov_calib');
@@ -203,10 +204,16 @@ verifyTrue(testCase, startsWith(get(h.stereo_step_5, 'String'), char(10003)), 'c
 verifyEmpty(testCase, gui.retr('resultslist'), 'results not reset');
 F = gui.retr('fov_maps');
 verifyEqual(testCase, import.get_img(3), fov.compose(imread(c.files{1}(3)), imread(c.files{2}(3)), F));
-masks = gui.retr('masks_in_frame');
-verifyTrue(testCase, any(strcmp(masks{1}(:, 5), 'user_mask')), 'user mask lost');
-verifyEqual(testCase, mask.convert_masks_to_binary(F.size, masks{2}), F.owner == 0, 'mask of the part no camera sees');
-verifyEqual(testCase, size(masks{1}, 1), size(masks{2}, 1) + 1);
+verifyEqual(testCase, gui.retr('masks_in_frame'), masks, 'user masks changed');
+% the automatic region of interest follows the views on the sheet, one set by the user stays
+verifyEqual(testCase, gui.retr('roirect'), fov.auto_roi(F.owner));
+calib = gui.retr('fov_calib');
+verifyEqual(testCase, calib.auto_roi, gui.retr('roirect'));
+verifyNotEmpty(testCase, auto_before);
+user_roi = gui.retr('roirect') + [10 10 -20 -20];
+gui.put('roirect', user_roi);
+fov.apply_alignment(gui.retr('fov_calib')) % as after a new disparity measurement
+verifyEqual(testCase, gui.retr('roirect'), user_roi, 'region of interest of the user replaced');
 % a session keeps the sheet
 before = import.get_img(5);
 file = fullfile(testCase.TestData.Dir, 'fov_sheet_session.mat');

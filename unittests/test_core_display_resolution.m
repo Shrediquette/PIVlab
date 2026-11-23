@@ -69,7 +69,7 @@ for cls = {'uint8', 'uint16', 'double'}
 	verifyEqual(testCase, out_size, size(full));
 	verifyClass(testCase, img, class(full));
 	verifyEqual(testCase, size(img), [numel(g.yc) numel(g.xc)]);
-	ref = ideal_display(full, g);
+	ref = helper_ideal_display(full, g);
 	verifyEqual(testCase, double(img), double(ref), 'AbsTol', 1e-4 * double(max(raw(:))) + (isinteger(raw)), cls{1});
 end
 end
@@ -86,7 +86,7 @@ for cls = {'uint16', 'double'}
 	full(full < 0) = 0;
 	[img, g] = import.read_frame_display(src, 1, cam, bg, testCase.TestData.ax, []);
 	verifyClass(testCase, img, class(full));
-	ref = ideal_display(full, g);
+	ref = helper_ideal_display(full, g);
 	verifyEqual(testCase, double(img), double(ref), 'AbsTol', 1.01 * isinteger(raw) + 1e-5, cls{1});
 end
 end
@@ -98,7 +98,7 @@ full = import.read_frame(src, 1, cam, []);
 [img, g] = import.read_frame_display(src, 1, cam, [], testCase.TestData.ax, []);
 verifyEqual(testCase, size(raw, 3), 3);
 verifyEqual(testCase, size(img, 3), 1);
-verifyEqual(testCase, double(img), double(ideal_display(full, g)), 'AbsTol', 1);
+verifyEqual(testCase, double(img), double(helper_ideal_display(full, g)), 'AbsTol', 1);
 end
 
 function test_zoomed_identity_shows_the_image_pixels(testCase)
@@ -348,35 +348,13 @@ src.framepart = [1 H; 1 H];
 src.video_reader_object = [];
 end
 
-function ref = ideal_display(full, g)
-% the full resolution frame averaged over n x n blocks and taken at the display centres (cubic),
-% within the grey value range of its class
-cls = class(full);
-full = double(full);
-n = g.n;
-[h, w] = size(full);
-hb = ceil(h / n);
-wb = ceil(w / n);
-full = [full; repmat(full(end, :), hb * n - h, 1)];
-full = [full, repmat(full(:, end), 1, wb * n - w)];
-P = reshape(sum(sum(reshape(full, n, hb, n, wb), 1), 3), hb, wb) / n ^ 2;
-gy = (1:hb) * n + 1 - n + (n - 1) / 2;
-gx = (1:wb) * n + 1 - n + (n - 1) / 2;
-F = griddedInterpolant({gy, gx}, P, 'cubic', 'nearest');
-ref = F({g.yc(:), g.xc(:)});
-ref(ref < 0) = 0;
-if isinteger(zeros(1, cls))
-	ref = min(ref, double(intmax(cls)));
-end
-end
-
 function check_against_full_frame(testCase, src, cam, bg, label)
 full = import.read_frame(src, 1, cam, bg);
 full(full < 0) = 0;
 [img, g, out_size] = import.read_frame_display(src, 1, cam, bg, testCase.TestData.ax, []);
 verifyEqual(testCase, out_size, [size(full, 1) size(full, 2)], [label ': size']);
 verifyClass(testCase, img, class(full), [label ': class']);
-ref = ideal_display(full, g);
+ref = helper_ideal_display(full, g);
 d = abs(double(img) - ref);
 range = double(max(full(:)));
 valid = ref > 0.05 * range & double(img) > 0.05 * range; % inside the corrected image (edges fade)

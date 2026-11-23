@@ -1,7 +1,18 @@
-function img = read_raw_frame(src, selected)
+function img = read_raw_frame(src, selected, cam)
 %READ_RAW_FRAME Read one frame of a PIVlab frame list as stored (before undistortion and background).
 %   img = import.read_raw_frame(src, selected)
-%   src and selected as in import.read_frame. Used by import.read_frame and import.read_frame_display.
+%   img = import.read_raw_frame(src, selected, cam)
+%   src, selected and cam as in import.read_frame. Two cameras combined (cam.fov set): img is
+%   {frame of camera 1 (src), frame of camera 2 (cam.fov.src)}.
+%   Used by import.read_frame and import.read_frame_display.
+if nargin > 2 && fov.is_combined(cam)
+    img = {read_one(src, selected), read_one(cam.fov.src, selected)};
+else
+    img = read_one(src, selected);
+end
+end
+
+function img = read_one(src, selected)
 if isfield(src,'video_reader_object') && ~isempty(src.video_reader_object)
     img = read(src.video_reader_object,src.video_frame_selection(selected));
 else

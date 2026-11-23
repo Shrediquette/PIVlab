@@ -148,14 +148,80 @@ plain = import.cam_settings();
 verifyEqual(testCase, fov.subset(plain, [1 2]), plain);
 end
 
-function test_preprocess_keeps_cameras_and_masks_uncovered_part(testCase)
+function test_preprocess_keeps_cameras_and_sets_roi(testCase)
+% default: region of interest inside the part the cameras see, no mask; Roi="none": the whole image
 out = testCase.TestData.out;
 im = pivlab.preprocess(out, Verbose=false);
 verifyEqual(testCase, im.cam, out.cam);
 verifyEqual(testCase, im.imageSize, out.imageSize);
-verifyEqual(testCase, im.mask, out.cam.fov.owner == 0);
-im = pivlab.preprocess(out, Mask="none", Verbose=false);
 verifyEmpty(testCase, im.mask);
+r = im.preprocess.Roi;
+verifyEqual(testCase, r, fov.auto_roi(out.cam.fov.owner));
+seen = out.cam.fov.owner(r(2):r(2) + r(4), r(1):r(1) + r(3)) > 0;
+verifyTrue(testCase, all(seen(:)), 'region of interest outside the views');
+verifyGreaterThan(testCase, r(3) * r(4), 0.8 * nnz(out.cam.fov.owner > 0), 'region of interest too small');
+im = pivlab.preprocess(out, Roi="none", Verbose=false);
+verifyEmpty(testCase, im.preprocess.Roi);
+end
+
+function test_display_resolution(testCase)
+% combined frames drawn at screen resolution (import.read_frame_display) without making the full combined image:
+% the same as the full combined image averaged over the display pixels; zoomed in 1:1 its pixels; background;
+% the raw frames of both cameras are returned and used again
+out = testCase.TestData.out;
+fig = figure('Visible', 'off', 'Units', 'pixels', 'Position', [10 10 600 500]);
+ax = axes(fig, 'Units', 'pixels', 'Position', [10 10 500 400]);
+full = import.read_frame(out, 1, out.cam, []);
+[img, g, out_size, raw_read, whole] = import.read_frame_display(out, 1, out.cam, [], ax, []);
+verifyEqual(testCase, out_size, size(full));
+verifyNotEmpty(testCase, g, 'large enough for the display grid');
+verifyClass(testCase, img, class(full));
+verifyEqual(testCase, size(img), [numel(g.yc) numel(g.xc)]);
+verifyEqual(testCase, size(whole), size(img), 'point samples of the whole frame');
+% sparse particle images: blocks in the raw frames and in the combined image are not aligned (as with one camera
+% and a lens model), so the comparison is made after a slight smoothing; no shift, same grey values
+ref = helper_ideal_display(full, g);
+range = double(max(full(:)));
+verifyEqual(testCase, mean(double(img(:))), mean(ref(:)), 'RelTol', 0.01, 'mean grey value');
+a = imgaussfilt(double(img), 1);
+b = imgaussfilt(ref, 1);
+verifyLessThan(testCase, mean(abs(a(:) - b(:))) / range, 0.01, 'grey values');
+cc = corrcoef(a(:), b(:));
+verifyGreaterThan(testCase, cc(1, 2), 0.97, 'correlation with the full combined image');
+cc_shift = corrcoef(reshape(a(:, 2:end), [], 1), reshape(b(:, 1:end - 1), [], 1));
+verifyGreaterThan(testCase, cc(1, 2), cc_shift(1, 2), 'shifted by a display pixel');
+% zoomed in at the seam: the display pixels are the pixels of the combined image
+[~, seam] = max(sum(out.cam.fov.owner == 1, 1) .* (sum(out.cam.fov.owner == 2, 1) > 0));
+limits = [seam - 150.5, seam + 149.5, 300.5, 540.5];
+[img, g] = import.read_frame_display(out, 1, out.cam, [], ax, limits);
+verifyEqual(testCase, g.n, 1);
+ref = double(full(round(g.yc), round(g.xc)));
+verifyLessThan(testCase, max(abs(double(img(:)) - ref(:))) / range, 0.02, 'zoomed: pixels of the combined image');
+% background (combined images), subtracted as in import.read_frame
+b = cast(double(full) * 0.4, class(full));
+bg = struct('A', b, 'B', b);
+full_bg = import.read_frame(out, 1, out.cam, bg);
+[img, g] = import.read_frame_display(out, 1, out.cam, bg, ax, []);
+verifyClass(testCase, img, class(full_bg));
+ref = helper_ideal_display(full_bg, g);
+a = imgaussfilt(double(img), 1);
+b = imgaussfilt(ref, 1);
+verifyLessThan(testCase, mean(abs(a(:) - b(:))) / range, 0.01, 'with background');
+% the raw frames of both cameras: import.read_frame gives the same image with them
+verifyTrue(testCase, iscell(raw_read) && numel(raw_read) == 2);
+verifyEqual(testCase, import.read_frame(out, 1, out.cam, [], raw_read), full);
+close(fig)
+end
+
+function test_auto_roi_views_with_gap(testCase)
+% two views with a gap between them: the rectangle of the larger part, not across the gap
+owner = zeros(200, 400);
+owner(20:180, 10:180) = 1;
+owner(30:170, 200:390) = 2;
+r = fov.auto_roi(owner);
+seen = owner(r(2):r(2) + r(4), r(1):r(1) + r(3));
+verifyTrue(testCase, all(seen(:) == 1), 'inside camera 1 only');
+verifyGreaterThan(testCase, r(3) * r(4), 0.9 * 157 * 167);
 end
 
 % -------------------------------------------------------------------------
