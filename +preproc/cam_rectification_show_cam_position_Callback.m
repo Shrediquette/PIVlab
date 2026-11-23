@@ -48,8 +48,11 @@ if isempty(pose)
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Too few ChArUco corners detected to estimate the camera position.','modal');
     return
 end
-orientation_message = strtok(message, newline); % first line: yaw, pitch, roll
-worldPoints = pose.world_points; % in the board coordinates of the pose
+% coordinates of the pose -> board as printed (the pose may be estimated mirrored or turned: charuco_pose)
+board = struct('PatternDims', patternDims, 'CheckerSize', checkerSize, 'MarkerSize', markerSize, ...
+    'MarkerFamily', string(markerFamily), 'OriginCheckerColor', string(lower(originCheckerColor)));
+printed = preproc.cam_board_corners(patternDims, checkerSize);
+frame = scene3d.frame_transform(pose.world_points, printed(~any(isnan(imagePoints1), 2), :));
 
 %% check what the image size will be after image undistortion
 if handles.calib_userectification.Value ==1
@@ -69,36 +72,15 @@ else
     end
 end
 gui.sliderdisp(gui.retr('pivlab_axis'));
-camfig=figure('Name','Camera position in 3D','DockControls','off','WindowStyle','normal','Scrollable','off','MenuBar','figure','Resize','on','ToolBar','none','NumberTitle','off');
-camax=axes(camfig);
-plot3(worldPoints(:,1),worldPoints(:,2),zeros(size(worldPoints, 1),1),"*",'Parent',camax);
-hold on
-plot3(0,0,0,"g*",'Parent',camax);
-absPose1 = extr2pose(pose.extrinsics);
-%absPose2 = extr2pose(camExtrinsics2);
-plotcam1 = plotCamera(AbsolutePose=absPose1,Size=5,Color="red",AxesVisible=true,Label=['Cam1' newline orientation_message],Parent=camax);
-%plotcam2 = plotCamera(AbsolutePose=absPose2,Size=30,Color="blue",AxesVisible=true,Label="Cam2",Parent=camax);
-axis equal
-grid on
-set(camax,CameraUpVector=[0 -1 0]);
-axis equal
-grid on
-cameratoolbar(camfig,'SetMode','orbit');
-cameratoolbar(camfig,"SetCoordSys","y")
-xlabel("X (mm)");
-ylabel("Y (mm)");
-zlabel("Z (mm)");
-view(camax,[0 -45]);
-camorbit(camax,-45,0,'data',[0 1 0])
-camproj(camax,'perspective')
-%{
-figure(getappdata(0,'hgui'));drawnow
-%reset zoom
-set(handles.panon,'Value',0);
-set(handles.zoomon,'Value',0);
-gui.put('xzoomlimit', []);
-gui.put('yzoomlimit', []);
-gui.sliderdisp(gui.retr('pivlab_axis'))
-drawnow;
-figure(camfig)
-%}
+intrinsics = cameraParams.Intrinsics;
+[~, ax] = scene3d.window(@(ax) draw_camera(ax, board, frame, pose.extrinsics, intrinsics), Name='Camera position in 3D');
+scene3d.caption(ax, 'Camera position from the rectification image');
+scene3d.info(ax, strsplit(message, newline), 'cam_position_report');
+end
+
+function draw_camera(ax, board, frame, extrinsics, intrinsics)
+% the board, the camera and its view on the board (scene3d.window); yaw, pitch, roll: in the text box
+scene3d.board(ax, board, Frame=frame);
+col = stereo.camera_colors(1);
+scene3d.camera(ax, extrinsics, col, '', View=scene3d.view_outline(intrinsics, extrinsics));
+end

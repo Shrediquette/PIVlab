@@ -11,17 +11,11 @@ if isempty(calib) || ~isequal(gui.retr('stereomode'), 1) && ~fov.gui_active
     gui.custom_msgbox('error', getappdata(0, 'hgui'), 'Multi-camera PIV', 'Compute the 3D alignment first ("Compute 3D alignment").', 'modal');
     return
 end
-fig = figure('Name', 'Camera setup in 3D', 'NumberTitle', 'off', 'DockControls', 'off', 'MenuBar', 'figure', 'ToolBar', 'none');
-ax = axes(fig);
-stereo.plot_setup(ax, calib, disparity);
-cameratoolbar(fig, 'SetMode', 'orbit');
-cameratoolbar(fig, 'SetCoordSys', 'y');
+[~, ax] = scene3d.window(@(ax) stereo.plot_setup(ax, calib, disparity), Name='Camera setup in 3D');
 if isfield(calib, 'report') && ~isempty(calib.report)
     report = calib.report;
 else
     report = stereo.geometry_report(calib);
 end
-% top left (the legend is top right); colours of the axes, so that it is readable in light and dark mode
-annotation(fig, 'textbox', [0.01 0.78 0.45 0.2], 'String', report, 'FitBoxToText', 'on', 'BackgroundColor', get(ax, 'Color'), ...
-    'Color', get(ax, 'XColor'), 'EdgeColor', get(ax, 'GridColor'), 'FontSize', 9, 'Interpreter', 'none', 'Tag', 'stereo_calib_report');
+scene3d.info(ax, report, 'stereo_calib_report'); % top left, below the header line (the legend is top right)
 end

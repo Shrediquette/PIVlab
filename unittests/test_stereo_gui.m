@@ -822,7 +822,7 @@ gui.sliderdisp(gui.retr('pivlab_axis'));
 verifyEmpty(testCase, findobj(fig, 'Tag', 'stereo_disparity_colorbar'), 'camera image: colour bar not removed');
 stereo.show_3d_Callback;
 fig = findall(0, 'Type', 'figure', 'Name', 'Camera setup in 3D');
-verifyNotEmpty(testCase, findobj(fig, 'Type', 'surface'), 'light sheet missing in the 3D view');
+verifyNotEmpty(testCase, findall(fig, 'Tag', 'scene3d_sheet'), 'light sheet missing in the 3D view');
 close(fig);
 % session: disparity stored, maps made again identically
 maps = gui.retr('stereo_maps');

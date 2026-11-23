@@ -1,78 +1,39 @@
-function show_extrinsics(cameraParams, fig)
+function show_extrinsics(cameraParams, fig, board)
 %SHOW_EXTRINSICS 3D view of the calibration board and the camera positions of the calibration images.
 %   camcal.show_extrinsics(cameraParams, fig)
-%   cameraParams  cameraParameters of camcal.estimate_camera_parameters (board poses in OpenCV
-%                 convention: camera = R * board + t)
-%   fig           figure to draw into
-R = cameraParams.RotationMatrices;
+%   camcal.show_extrinsics(cameraParams, fig, board)
+%   cameraParams  cameraParameters of camcal.estimate_camera_parameters (PatternExtrinsics: board -> camera;
+%                 world points in the numbering of the detector)
+%   fig           figure to draw into (empty)
+%   board         ChArUco board (stereo.board_from_gui): drawn as printed. Without it (or if it does not
+%                 fit the world points): a plain plate with the corners.
+% The board stays where it is, the cameras are around it (scene3d: axes of the results, floor).
+if nargin < 3
+    board = [];
+end
+wp = cameraParams.WorldPoints;
+if ~isempty(board) && size(wp, 1) ~= prod(board.PatternDims - 1)
+    board = [];
+end
+n = numel(cameraParams.PatternExtrinsics);
+[~, ax] = scene3d.window(@(ax) draw(ax, cameraParams, board), Figure=fig);
+scene3d.caption(ax, sprintf('%d calibration images: camera positions relative to the board', n));
+end
+
+function draw(ax, cameraParams, board)
+poses = cameraParams.PatternExtrinsics; % rigidtform3d, board -> camera
 t = cameraParams.TranslationVectors;
 wp = cameraParams.WorldPoints;
-
-numImages = size(R,3);
-
-xmin = min(wp(:,1));
-xmax = max(wp(:,1));
-ymin = min(wp(:,2));
-ymax = max(wp(:,2));
-
-board = [xmin ymin 0;
-    xmax ymin 0;
-    xmax ymax 0;
-    xmin ymax 0]';
-
-camSize = max(xmax-xmin,ymax-ymin)/15;
-
-axh=axes(fig);
-hold on
-axis equal
-grid on
-view(3)
-
-xlabel("X")
-ylabel("Y")
-zlabel("Z")
-
-%% Board surface
-fill3(board(1,:),board(2,:),board(3,:), ...
-    [0.85 0.85 0.85], ...
-    FaceAlpha=0.6,EdgeColor="k")
-
-%% Marker centers (WorldPoints)
-plot3(wp(:,1),wp(:,2),zeros(size(wp,1),1), ...
-    'k.','MarkerSize',15)
-
-%% Board origin
-plot3(0,0,0,'ro','MarkerSize',10,'LineWidth',2)
-
-%% Board axes
-axisLength = camSize*3;
-
-plot3([0 axisLength],[0 0],[0 0],'r','LineWidth',2) % X axis
-plot3([0 0],[0 axisLength],[0 0],'r','LineWidth',2) % Y axis
-
-text(axisLength,0,0,'X','Color','r','FontWeight','bold')
-text(0,axisLength,0,'Y','Color','r','FontWeight','bold')
-
-%% Different colors for cameras
-colors = lines(numImages);
-
-for i = 1:numImages
-
-    Ri = R(:,:,i);
-    ti = t(i,:);
-
-    Rcw = Ri';
-    C   = -ti * Rcw;
-
-    plotCamera( ...
-        Location=C, ...
-        Orientation=Rcw, ...
-        Size=camSize, ...
-        Color=colors(i,:), ...
-        Label=num2str(i), ...
-        AxesVisible=true)
-
+if isempty(board)
+    scene3d.board(ax, [], Points=wp);
+else % the world points of the detector -> board as printed (tall boards: turned back)
+    scene3d.board(ax, board, Frame=scene3d.frame_transform(wp, preproc.cam_board_corners(board.PatternDims, board.CheckerSize)));
 end
-set(axh,CameraUpVector=[0 -1 0])
-camproj("perspective")
+n = numel(poses);
+cols = scene3d.colors('sequence', n);
+distance = median(vecnorm(t, 2, 2));
+centre = [mean(wp, 1), 0]; % centre of the board: lines of sight
+for i = 1:n
+    scene3d.camera(ax, poses(i), cols(i, :), sprintf('%d', i), Size=0.05 * distance, Sight=centre);
+end
 end

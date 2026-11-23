@@ -9,6 +9,8 @@ function fig = preview_3d(setup, opts)
 % farther), drag one of the arrows at a camera to move it along x, y or z of the board, drag an aim
 % point (diamond on the board) to move it on the board, drag elsewhere to rotate the view, drag with
 % the right mouse button to pan the view, mouse wheel to zoom. After every drag, OnChange is called with the new setup.
+% The 3D view is a scene3d scene: axes of the results, floor, "Board upright / lying flat". The setup
+% and the dragging work in board coordinates; scene3d.result converts.
 arguments
     setup struct
     opts.OnChange = []
@@ -49,9 +51,11 @@ S.axcam(1) = axes(fig, 'Units', 'normalized', 'Position', [0.655 0.6 0.335 0.365
 S.axcam(2) = axes(fig, 'Units', 'normalized', 'Position', [0.655 0.2 0.335 0.365], 'Tag', 'sim3d_axcam2');
 S.info = uicontrol(fig, 'Style', 'edit', 'Max', 2, 'Enable', 'inactive', 'Units', 'normalized', 'Position', [0.01 0.01 0.84 0.17], ...
     'HorizontalAlignment', 'left', 'FontName', 'FixedWidth', 'Tag', 'sim3d_info');
-uicontrol(fig, 'Style', 'pushbutton', 'String', 'Reset view', 'Units', 'normalized', 'Position', [0.86 0.11 0.13 0.06], ...
-    'Callback', @(~, ~) reset_view(fig), 'Tag', 'sim3d_resetview', 'TooltipString', 'Look from behind the cameras onto the board');
-uicontrol(fig, 'Style', 'pushbutton', 'String', 'Update camera images', 'Units', 'normalized', 'Position', [0.86 0.03 0.13 0.06], ...
+scene3d.init(S.ax3, OnViewChange=@(~, finished) view_changed(fig, finished), OnUpChange=@() up_changed(fig));
+scene3d.up_control(fig, S.ax3, [0.86 0.13 0.13 0.045], 'normalized');
+uicontrol(fig, 'Style', 'pushbutton', 'String', 'Reset view', 'Units', 'normalized', 'Position', [0.86 0.075 0.13 0.045], ...
+    'Callback', @(~, ~) reset_view(fig), 'Tag', 'sim3d_resetview', 'TooltipString', 'Look from behind the cameras onto the board (also: double click)');
+uicontrol(fig, 'Style', 'pushbutton', 'String', 'Update camera images', 'Units', 'normalized', 'Position', [0.86 0.02 0.13 0.045], ...
     'Callback', @(~, ~) draw(fig, 2), 'Tag', 'sim3d_updateviews', 'TooltipString', 'Render the views of the cameras again');
 S.onchange = [];
 S.drag = [];
@@ -67,7 +71,6 @@ S.view_set = false;
 S.cam_visible = true(1, 2);
 S.in_main = []; % camera images in the PIVlab window (layout)
 setappdata(fig, 'sim3d', S);
-set(fig, 'WindowButtonDownFcn', @mouse_down, 'WindowButtonUpFcn', @mouse_up, 'WindowScrollWheelFcn', @mouse_wheel);
 end
 
 function draw(fig, with_views)
@@ -90,22 +93,24 @@ for i = 1:numel(S.dynamic) % objects of the previous drawing (not the board)
         delete(S.dynamic{i});
     end
 end
+scene3d.clear(ax); % cameras of the previous drawing
 h = {}; %#ok<*AGROW> (a few objects per camera)
 hold(ax, 'on');
 n = numel(g.cams);
 pose = g.sheet_pose;
+R = @(P) scene3d.result(ax, P); % board coordinates -> axes of the results (the scene)
 
 %% light sheet (box of all views, enlarged) and the views of the cameras
 r = g.region;
 grow = 0.15 * [-(r(2) - r(1)), r(2) - r(1), -(r(4) - r(3)), r(4) - r(3)];
 r = r + grow;
-corners = transformPointsForward(pose, [r([1 2 2 1])', r([3 3 4 4])', zeros(4, 1)]);
+corners = R(transformPointsForward(pose, [r([1 2 2 1])', r([3 3 4 4])', zeros(4, 1)]));
 h{end + 1} = patch(ax, corners(:, 1), corners(:, 2), corners(:, 3), [0.2 0.85 0.3], 'FaceAlpha', 0.22, 'EdgeColor', [0.1 0.6 0.2], ...
-    'HitTest', 'off', 'DisplayName', 'light sheet');
+    'HitTest', 'off', 'PickableParts', 'none', 'DisplayName', 'light sheet'); % click-through: the aim points are behind it
 [ox, oy] = boundary(g.overlap);
 if n > 1 && ~isempty(ox)
-    P = transformPointsForward(pose, [ox, oy, zeros(size(ox))]);
-    h{end + 1} = patch(ax, P(:, 1), P(:, 2), P(:, 3), [0.2 0.85 0.3], 'FaceAlpha', 0.45, 'EdgeColor', 'none', 'HitTest', 'off', ...
+    P = R(transformPointsForward(pose, [ox, oy, zeros(size(ox))]));
+    h{end + 1} = patch(ax, P(:, 1), P(:, 2), P(:, 3), [0.2 0.85 0.3], 'FaceAlpha', 0.45, 'EdgeColor', 'none', 'HitTest', 'off', 'PickableParts', 'none', ...
         'DisplayName', 'overlap of the views');
 end
 if any(strcmp(setup.flow.Type, {'sphere', 'jet'})) && isfield(setup.flow, 'Diameter') && setup.flow.Diameter > 0
@@ -122,39 +127,40 @@ if any(strcmp(setup.flow.Type, {'sphere', 'jet'})) && isfield(setup.flow, 'Diame
         sz = cz;
         P = [sx(:), sy(:), sz(:)];
     end
-    P = transformPointsForward(pose, P);
+    P = R(transformPointsForward(pose, P));
     h{end + 1} = surf(ax, reshape(P(:, 1), size(sx)), reshape(P(:, 2), size(sx)), reshape(P(:, 3), size(sx)), ...
-        'FaceColor', [0.55 0.55 0.6], 'EdgeColor', [0.4 0.4 0.45], 'EdgeAlpha', 0.3, 'HitTest', 'off', 'DisplayName', setup.flow.Type);
+        'FaceColor', [0.55 0.55 0.6], 'EdgeColor', [0.4 0.4 0.45], 'EdgeAlpha', 0.3, 'HitTest', 'off', 'PickableParts', 'none', 'DisplayName', setup.flow.Type);
 end
 cam_size = camera_symbol_size(setup.board); % fixed relative to the board
 for k = 1:n
     col = stereo.camera_colors(k);
     [vx, vy] = boundary(g.views(k));
+    view_outline = [];
     if ~isempty(vx)
-        P = transformPointsForward(pose, [vx, vy, zeros(size(vx))]);
-        h{end + 1} = plot3(ax, P(:, 1), P(:, 2), P(:, 3), '-', 'Color', col, 'LineWidth', 1.5, 'HitTest', 'off', ...
-            'DisplayName', sprintf('view of camera %d', k));
+        view_outline = transformPointsForward(pose, [vx, vy, zeros(size(vx))]);
     end
-    C = g.centre(k, :);
     T = [setup.cameras(k).Target 0];
-    h{end + 1} = plot3(ax, [C(1) T(1)], [C(2) T(2)], [C(3) T(3)], '--', 'Color', col, 'HitTest', 'off', 'HandleVisibility', 'off');
-    cam = plotCamera(AbsolutePose=extr2pose(g.cams{k}.pose), Size=cam_size, Color=col, Label=sprintf('Camera %d', k), ...
-        AxesVisible=false, Opacity=0.25, Parent=ax);
-    h{end + 1} = cam;
+    [cam, hc] = scene3d.camera(ax, g.cams{k}.pose, col, sprintf('%d', k), Size=cam_size, View=view_outline, ...
+        Sight=T, ViewName=sprintf('view of camera %d', k), Opacity=0.25, LabelHeight=1.3 * arrow_length(setup.board)); % above the arrows
+    h = [h, {cam}, hc];
     cam.ButtonDownFcn = @(~, ~) start_drag(fig, 'camera', k);
+    C = R(g.centre(k, :));
+    T = R(T);
     h{end + 1} = plot3(ax, C(1), C(2), C(3), 'o', 'MarkerSize', 11, 'MarkerFaceColor', col, 'MarkerEdgeColor', 'k', ...
         'ButtonDownFcn', @(~, ~) start_drag(fig, 'camera', k), 'HandleVisibility', 'off');
     h{end + 1} = plot3(ax, T(1), T(2), T(3), 'd', 'MarkerSize', 11, 'MarkerFaceColor', [1 0.85 0.1], 'MarkerEdgeColor', col, 'LineWidth', 1.5, ...
         'ButtonDownFcn', @(~, ~) start_drag(fig, 'target', k), 'HandleVisibility', 'off');
     h = [h, camera_arrows(fig, ax, C, k, arrow_length(setup.board))];
 end
+scene3d.add_points(ax, R(extra_points(g, setup.board))); % light sheet, arrows (board, cameras: scene3d)
+scene3d.finish(ax); % floor, shadows
 fade_arrows(ax);
 S.dynamic = h;
-axis(ax, 'equal');
+S.g = g; % for remember_cameras_in_view
 ax.Visible = 'off';
 setappdata(fig, 'sim3d', S);
 if ~S.view_set
-    reset_view(fig, g);
+    reset_view(fig);
     S = getappdata(fig, 'sim3d');
 end
 if isempty(S.drag) % not while dragging: after it
@@ -162,7 +168,8 @@ if isempty(S.drag) % not while dragging: after it
     before = S.cam_visible;
     m = min(numel(before), numel(visible));
     if any(before(1:m) & ~visible(1:m)) % a camera left the view: show everything again (same direction)
-        fit_view(S.ax3, g, setup.board, S.ax3.CameraPosition - S.ax3.CameraTarget);
+        scene3d.fit_view(S.ax3, S.ax3.CameraPosition - S.ax3.CameraTarget);
+        fade_arrows(S.ax3);
         visible = cameras_in_view(S.ax3, g, setup.board);
     end
     S.cam_visible = visible;
@@ -233,30 +240,10 @@ key = sprintf('%g_', board.PatternDims, board.CheckerSize, board.MarkerSize, dou
 if strcmp(key, S.board_key) && ~isempty(S.board_surface) && isvalid(S.board_surface)
     return
 end
-delete(findobj(S.ax3, 'Tag', 'sim3d_board'));
-c = max(8, min(40, round(1200 / (board.PatternDims(2) + 2)))); % about 1200 texels across
-S.tex = simulate.board_texture(board, c, Decorated=true);
-c = S.tex.c; % larger for an elongated board (simulate.board_texture)
-img = S.tex.image / 255;
-checker = board.CheckerSize;
-x = ([0, size(img, 2)] - S.tex.m) / c - 1;
-y = ([0, size(img, 1)] - S.tex.m_top) / c - 1;
-[X, Y] = meshgrid(x * checker, y * checker);
-hold(S.ax3, 'on');
-S.board_surface = surface(S.ax3, X, Y, zeros(2), repmat(img, 1, 1, 3), 'FaceColor', 'texturemap', 'EdgeColor', [0.4 0.4 0.4], ...
-    'HitTest', 'off', 'Tag', 'sim3d_board', 'DisplayName', 'board');
-% axes of the results (as printed on the board and in the panel): origin at the inner corner at the
-% bottom left, x right, y up, z out of the board (the scene is in board coordinates: y down, z into it)
-L = 3 * checker;
-O = origin_mark(board);
-D = arrow_directions();
-names = {' x', ' y', ' z'};
-cols = [1 0 0; 0 0.6 0; 0 0 1];
-for a = 1:3
-    E = O + L * D(a, :);
-    plot3(S.ax3, [O(1) E(1)], [O(2) E(2)], [O(3) E(3)], '-', 'Color', cols(a, :), 'LineWidth', 2, 'HitTest', 'off', 'Tag', 'sim3d_board');
-    text(S.ax3, E(1), E(2), E(3), names{a}, 'Color', cols(a, :), 'HitTest', 'off', 'Tag', 'sim3d_board');
-end
+delete(findall(S.ax3, 'Tag', 'sim3d_board')); % findall: HandleVisibility off (scene3d.board)
+% the board as printed and the axes of the results at its '0' (as printed on the board and in the panel)
+[hb, S.tex] = scene3d.board(S.ax3, board, Tag='sim3d_board');
+S.board_surface = hb(1);
 S.marks = board_marks(S.tex, board);
 S.board_key = key;
 end
@@ -504,10 +491,10 @@ h = h(1);
 end
 
 function h = camera_arrows(fig, ax, C, k, len)
-% three arrows at camera k along the axes of the results (x, y, z and colours as the axes on the board);
-% drag one to move the camera along it
-dirs = arrow_directions();
-cols = [1 0 0; 0 1 0; 0 0 1];
+% three arrows at camera k (C: axes of the results, as the scene) along the axes of the results (x, y,
+% z and colours as the axes on the board); drag one to move the camera along it
+dirs = eye(3); % in the scene: the axes of the results
+cols = scene3d.colors('axes');
 h = cell(1, 6);
 for a = 1:3
     E = C + len * dirs(a, :);
@@ -540,7 +527,7 @@ for i = 1:numel(arrows)
     info = arrows(i).UserData;
     sight = info.base - ax.CameraPosition;
     if abs(dot(info.dir, sight)) > cosd(15) * norm(sight)
-        col = 0.2 * info.color + 0.8 * bg;
+        col = scene3d.colors('mix', info.color, bg, 0.8);
         pickable = 'none';
     else
         col = info.color;
@@ -550,63 +537,30 @@ for i = 1:numel(arrows)
 end
 end
 
-function reset_view(fig, g)
-% look from behind and above the cameras onto the board, everything in view
+function reset_view(fig)
+% look from behind and above the cameras onto the board, everything in view (scene3d.reset_view)
 S = getappdata(fig, 'sim3d');
-if nargin < 2
-    g = simulate.geometry_3d(S.setup);
-end
-[cx, cy] = centroid(g.overlap);
-if isnan(cx)
-    cx = mean(g.region(1:2));
-    cy = mean(g.region(3:4));
-end
-sheet_centre = transformPointsForward(g.sheet_pose, [cx cy 0]);
-if all(g.centre(:, 3) < 0) || all(g.centre(:, 3) > 0)
-    behind = mean(g.centre, 1) - sheet_centre; % from behind the cameras
-    behind = behind / norm(behind);
-else
-    behind = [0.83 0 -0.55]; % cameras on both sides: from the side
-end
-fit_view(S.ax3, g, S.setup.board, behind + [0 -0.6 0]); % and from above (board y is down)
+scene3d.reset_view(S.ax3);
+fade_arrows(S.ax3);
 S.view_set = true;
 setappdata(fig, 'sim3d', S);
 end
 
-function fit_view(ax, g, board, direction)
-% camera of the 3D view: looks along -direction at the centre of the scene, from the distance at
-% which the board, the light sheet and all cameras are in view (fixed view angle)
-P = scene_points(g, board);
-direction = direction / norm(direction);
-target = (min(P, [], 1) + max(P, [], 1)) / 2;
-up = [0 -1 0] - dot([0 -1 0], direction) * direction;
-if norm(up) < 1e-6 % looking along y
-    up = [0 0 -1] - dot([0 0 -1], direction) * direction;
+function view_changed(fig, finished)
+% the user rotates, pans or zooms the view (scene3d.init)
+S = getappdata(fig, 'sim3d');
+fade_arrows(S.ax3);
+if finished
+    remember_cameras_in_view(fig);
 end
-up = up / norm(up);
-right = cross(direction, up);
-[tan_h, tan_v] = view_tangents(ax, 30);
-q = P - target;
-along = q * direction';
-distance = max(along + max(abs(q * up') / tan_v, abs(q * right') / tan_h)) * 1.08; % 8 % margin
-camproj(ax, 'perspective');
-set(ax, 'CameraTarget', target, 'CameraPosition', target + distance * direction, 'CameraUpVector', up, 'CameraViewAngle', 30);
-fade_arrows(ax);
 end
 
-function [tan_h, tan_v] = view_tangents(ax, angle)
-% half-angle tangents of the view horizontally / vertically (the view angle is for the shorter side)
-pos = getpixelposition(ax);
-w = max(pos(3), 1);
-h = max(pos(4), 1);
-t = tand(angle / 2);
-if w >= h
-    tan_v = t;
-    tan_h = t * w / h;
-else
-    tan_h = t;
-    tan_v = t * h / w;
-end
+function up_changed(fig)
+% "Board upright / lying flat": floor and view anew
+S = getappdata(fig, 'sim3d');
+S.view_set = false;
+setappdata(fig, 'sim3d', S);
+draw(fig, 0);
 end
 
 function inside = all_in_view(ax, P)
@@ -616,7 +570,7 @@ f = f / norm(f);
 up = ax.CameraUpVector - dot(ax.CameraUpVector, f) * f;
 up = up / norm(up);
 right = cross(f, up);
-[tan_h, tan_v] = view_tangents(ax, ax.CameraViewAngle);
+[tan_h, tan_v] = scene3d.view_tangents(ax);
 q = P - ax.CameraPosition;
 along = q * f';
 inside = all(along > 0) && all(abs(q * up') <= tan_v * along) && all(abs(q * right') <= tan_h * along);
@@ -627,23 +581,17 @@ function visible = cameras_in_view(ax, g, board)
 s = camera_symbol_size(board);
 visible = false(1, size(g.centre, 1));
 for k = 1:numel(visible)
-    visible(k) = all_in_view(ax, g.centre(k, :) + s * [-1 -1 -1; 1 1 1]);
+    visible(k) = all_in_view(ax, scene3d.result(ax, g.centre(k, :) + s * [-1 -1 -1; 1 1 1]));
 end
 end
 
-function P = scene_points(g, board)
-% corners of the board (with its margin) and of the light sheet, and the cameras
-c = board.CheckerSize;
-d = board.PatternDims;
-x = [-4, d(2) + 2] * c; % margin of three checkers
-y = [-4, d(1) + 2] * c;
-P = [x([1 2 2 1])', y([1 1 2 2])', zeros(4, 1)];
+function P = extra_points(g, board)
+% corners of the light sheet and tips of the arrows at the cameras (board coordinates): the scene besides
+% the board and the cameras, which scene3d knows
 r = g.region;
-P = [P; transformPointsForward(g.sheet_pose, [r([1 2 2 1])', r([3 3 4 4])', zeros(4, 1)])];
-s = camera_symbol_size(board);
+P = transformPointsForward(g.sheet_pose, [r([1 2 2 1])', r([3 3 4 4])', zeros(4, 1)]);
 for k = 1:size(g.centre, 1)
-    P = [P; g.centre(k, :) + s * [-1 -1 -1; 1 1 1]]; % the camera symbol around its centre
-    P = [P; g.centre(k, :) + arrow_length(board) * arrow_directions()]; % tips of its arrows
+    P = [P; g.centre(k, :) + arrow_length(board) * arrow_directions()];
 end
 end
 
@@ -659,8 +607,8 @@ end
 %% ---------------------------------------------------------------- mouse
 
 function start_drag(fig, kind, k, a)
-% a: number of the arrow (1 x, 2 y, 3 z) for kind 'axis'
-if strcmp(fig.SelectionType, 'alt') % right button: pans the view, also over a camera (mouse_down)
+% a: number of the arrow (1 x, 2 y, 3 z) for kind 'axis'. The drag works in board coordinates (the setup).
+if any(strcmp(fig.SelectionType, {'alt', 'open'})) % right button: pans the view, double click: resets it (scene3d)
     return
 end
 S = getappdata(fig, 'sim3d');
@@ -670,8 +618,8 @@ d.k = k;
 d.mode = fig.SelectionType; % 'normal', 'extend' (Shift), 'alt' (right / Ctrl)
 d.mouse0 = fig.CurrentPoint;
 d.setup0 = S.setup;
-d.view_dir = (ax.CameraTarget - ax.CameraPosition) / norm(ax.CameraTarget - ax.CameraPosition);
-ray = ax.CurrentPoint;
+d.view_dir = scene3d.to_board(ax, (ax.CameraTarget - ax.CameraPosition) / norm(ax.CameraTarget - ax.CameraPosition), 'direction');
+ray = mouse_ray(ax);
 switch kind
     case 'camera'
         C0 = S.setup.cameras(k).Position;
@@ -688,26 +636,16 @@ switch kind
 end
 S.drag = d;
 setappdata(fig, 'sim3d', S);
-set(fig, 'WindowButtonMotionFcn', @mouse_move);
+scene3d.custom_drag(ax, @mouse_move, @mouse_up); % instead of rotating the view
 end
 
-function mouse_down(fig, ~)
-% runs before the ButtonDownFcn of a camera or aim point, which then replaces the orbit by its drag
-S = getappdata(fig, 'sim3d');
-if ~over_axes(fig, S.ax3)
-    return
-end
-d.kind = 'orbit';
-if strcmp(fig.SelectionType, 'alt') % right button (or Ctrl + left)
-    d.kind = 'pan';
-end
-d.mouse0 = fig.CurrentPoint;
-S.drag = d;
-setappdata(fig, 'sim3d', S);
-set(fig, 'WindowButtonMotionFcn', @mouse_move);
+function ray = mouse_ray(ax)
+% the mouse ray (axes CurrentPoint, 2 x 3) in board coordinates
+ray = scene3d.to_board(ax, ax.CurrentPoint);
 end
 
 function mouse_move(fig, ~)
+% drag of a camera, an arrow or an aim point (rotating, panning and zooming the view: scene3d)
 S = getappdata(fig, 'sim3d');
 d = S.drag;
 if isempty(d)
@@ -715,39 +653,6 @@ if isempty(d)
 end
 ax = S.ax3;
 switch d.kind
-    case 'orbit'
-        % like the orbit of cameratoolbar with SetCoordSys 'y' (the other 3D views of PIVlab):
-        % 1 degree per pixel, about the y axis of the board (y is down), which stays upright
-        delta = fig.CurrentPoint - d.mouse0;
-        y_axis = [0 -1 0];
-        if any(cross(y_axis, ax.CameraPosition - ax.CameraTarget)) % not looking along y
-            ax.CameraUpVector = y_axis;
-        end
-        camorbit(ax, delta(1), -delta(2), 'data', y_axis);
-        fade_arrows(ax);
-        d.mouse0 = fig.CurrentPoint;
-        S.drag = d;
-        setappdata(fig, 'sim3d', S);
-        drawnow limitrate
-        return
-    case 'pan' % shifts camera and target of the view parallel to the screen: the scene follows the mouse
-        delta = fig.CurrentPoint - d.mouse0;
-        f = ax.CameraTarget - ax.CameraPosition;
-        distance = norm(f);
-        f = f / distance;
-        up = ax.CameraUpVector - dot(ax.CameraUpVector, f) * f;
-        up = up / norm(up);
-        right = cross(f, up);
-        pos = getpixelposition(ax);
-        [~, tan_v] = view_tangents(ax, ax.CameraViewAngle);
-        mm_per_px = 2 * distance * tan_v / pos(4); % in the depth of the target
-        shift = -mm_per_px * (delta(1) * right + delta(2) * up);
-        set(ax, 'CameraPosition', ax.CameraPosition + shift, 'CameraTarget', ax.CameraTarget + shift);
-        d.mouse0 = fig.CurrentPoint;
-        S.drag = d;
-        setappdata(fig, 'sim3d', S);
-        drawnow limitrate
-        return
     case 'camera'
         k = d.k;
         C0 = d.setup0.cameras(k).Position;
@@ -756,12 +661,12 @@ switch d.kind
             factor = exp((fig.CurrentPoint(2) - d.mouse0(2)) / 200);
             C = T + (C0 - T) * factor;
         else
-            C = intersect_plane(ax.CurrentPoint, C0, d.view_dir) + d.offset;
+            C = intersect_plane(mouse_ray(ax), C0, d.view_dir) + d.offset;
         end
         S.setup.cameras(k).Position = round(C * 10) / 10;
     case 'axis' % along one axis of the board
         k = d.k;
-        s = position_on_line(ax.CurrentPoint, d.setup0.cameras(k).Position, d.axis_dir);
+        s = position_on_line(mouse_ray(ax), d.setup0.cameras(k).Position, d.axis_dir);
         if isnan(s)
             return
         end
@@ -769,7 +674,7 @@ switch d.kind
         S.setup.cameras(k).Position = round(C * 10) / 10;
     case 'target'
         k = d.k;
-        p = intersect_plane(ax.CurrentPoint, [0 0 0], [0 0 1]) + d.offset;
+        p = intersect_plane(mouse_ray(ax), [0 0 0], [0 0 1]) + d.offset;
         S.setup.cameras(k).Target = round(p(1:2) * 10) / 10;
 end
 setappdata(fig, 'sim3d', S);
@@ -783,16 +688,12 @@ draw(fig, quality);
 end
 
 function mouse_up(fig, ~)
+% end of the drag of a camera, an arrow or an aim point
 S = getappdata(fig, 'sim3d');
-set(fig, 'WindowButtonMotionFcn', '');
 d = S.drag;
 S.drag = [];
 setappdata(fig, 'sim3d', S);
 if isempty(d)
-    return
-end
-if strcmp(d.kind, 'orbit') || strcmp(d.kind, 'pan')
-    remember_cameras_in_view(fig);
     return
 end
 draw(fig, 2);
@@ -801,31 +702,15 @@ if ~isempty(S.onchange)
 end
 end
 
-function mouse_wheel(fig, evt)
-% zooms the 3D view wherever the mouse is (the CurrentPoint of the figure is not updated while
-% the mouse only moves, so it cannot tell where the mouse is)
-S = getappdata(fig, 'sim3d');
-camzoom(S.ax3, 1.1 ^ (-evt.VerticalScrollCount));
-remember_cameras_in_view(fig);
-end
-
 function remember_cameras_in_view(fig)
 % after the user changed the view: a camera that is outside the view now stays so (draw shows
 % everything again only if a camera leaves the view while it is dragged)
 S = getappdata(fig, 'sim3d');
-try
-    g = simulate.geometry_3d(S.setup);
-catch
+if ~isfield(S, 'g') % no drawing yet
     return
 end
-S.cam_visible = cameras_in_view(S.ax3, g, S.setup.board);
+S.cam_visible = cameras_in_view(S.ax3, S.g, S.setup.board); % geometry of the last drawing
 setappdata(fig, 'sim3d', S);
-end
-
-function inside = over_axes(fig, ax)
-p = fig.CurrentPoint; % pixels
-pos = getpixelposition(ax, true);
-inside = p(1) >= pos(1) && p(1) <= pos(1) + pos(3) && p(2) >= pos(2) && p(2) <= pos(2) + pos(4);
 end
 
 function p = intersect_plane(ray, P0, n)

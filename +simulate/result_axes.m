@@ -26,8 +26,6 @@ end
 
 function P = points(P, board)
 y0 = (board.PatternDims(1) - 2) * board.CheckerSize;
-P(:, 2) = y0 - P(:, 2);
-if size(P, 2) > 2
-    P(:, 3) = 0 - P(:, 3);
-end
+Q = scene3d.to_result(P, y0); % the conversion (also of the 3D views)
+P = Q(:, 1:size(P, 2));
 end
