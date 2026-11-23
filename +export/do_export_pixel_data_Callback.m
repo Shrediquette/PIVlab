@@ -1,7 +1,7 @@
 function do_export_pixel_data_Callback(~, src, ~)
 handles=gui.gethand;
 filepath=gui.retr('filepath');
-if strmatch(src.Source.Tag,'do_export_pixel_data')
+if strcmp(src.Source.Tag,'do_export_pixel_data') %all frames from - to (else: the current frame)
     startframe=str2num(get(handles.firstframe,'string'));
     if startframe <1
         startframe=1;
@@ -27,8 +27,7 @@ end
 
 %% get desired resolution
 resolution=str2double(get(handles.resolution_setting,'String'));
-sppi = get(groot,"ScreenPixelsPerInch"); %screen dpi
-[currentimage,~]=import.get_img(1);
+currentimage=import.get_img(1);
 original_height = round(size(currentimage,1)*resolution/100) +20; %10 pixel padding by default
 original_width = round(size(currentimage,2)*resolution/100) +20;
 
@@ -41,18 +40,16 @@ end
 if colorbarpos==1 %no colorbar
     original_width = 'auto';
 else
-    posichoice = get(handles.colorbarpos,'String');
-    if strcmp(posichoice{get(handles.colorbarpos,'Value')},'EastOutside') || strcmp(posichoice{get(handles.colorbarpos,'Value')},'WestOutside')
+    posichoice = gui.popup_text(handles.colorbarpos);
+    if ismember(posichoice,{'EastOutside','WestOutside'})
         original_width = 'auto';
     end
-    if strcmp(posichoice{get(handles.colorbarpos,'Value')},'NorthOutside') || strcmp(posichoice{get(handles.colorbarpos,'Value')},'SouthOutside')
+    if ismember(posichoice,{'NorthOutside','SouthOutside'})
         original_height = 'auto';
     end
 end
 
-str=get(handles.export_still_or_animation,'String');
-value=get(handles.export_still_or_animation,'Value');
-selected_format=str{value};
+selected_format=gui.popup_text(handles.export_still_or_animation);
 
 switch selected_format
     case 'PNG'
@@ -91,7 +88,7 @@ else
 end
 if ~isequal(filename,0) && ~isequal(pathname,0)
     gui.put('imgsavepath',pathname );
-    [Dir, Name, Ext] = fileparts(filename);
+    [~, Name, Ext] = fileparts(filename);
 
     quality=str2double(get(handles.quality_setting,'String'));
     fps=str2double(get(handles.fps_setting,'String'));
@@ -104,17 +101,12 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
     set(export_figure,'units','normalized','outerposition',[0 0 1 1]) %unfortunately, setting figure to fullscreen still reports a non-fullscreen position in matlab...
     wait_for_window_size(export_figure)
 
-    if verLessThan('matlab','9.8')  %2020a and up contains exportgraphics
-        use_exportfig =1;
-    else
-        use_exportfig =0;
-    end
+    use_exportfig = verLessThan('matlab','9.8'); %2020a and up contains exportgraphics
 
     export_axis=axes('parent',export_figure);
     gui.put('export_axis',export_axis);
     pause(0.01)
     try
-        firstframe=1;
         for i=startframe:endframe
             if startframe ~=endframe
                 percentage_done = round((i-startframe)/(endframe-startframe)*100);
@@ -124,36 +116,21 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
             end
             newfilename=[Name sprintf('_%03d',i) Ext];
             set(handles.fileselector, 'value',i)
-            if ~verLessThan('Matlab','25')
-                if firstframe==1
-                    export_figure.Theme = "light";
-                    figure(export_figure); %maaaaan, why does r2025a require this...?
-                end
+            if i==startframe && ~verLessThan('Matlab','25')
+                export_figure.Theme = "light";
+                figure(export_figure); %maaaaan, why does r2025a require this...?
             end
             gui.sliderdisp(export_axis);
 
             switch selected_format
-                case 'PNG'
+                case {'PNG','JPG'}
                     if use_exportfig
                         export.exportfig(export_figure,fullfile(pathname,newfilename),'Format','bmp','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
-                        export.autocrop(fullfile(pathname,newfilename),0);
+                        export.autocrop(fullfile(pathname,newfilename),double(strcmp(selected_format,'JPG'))); %0 = png, 1 = jpg
+                    elseif ~isMATLABReleaseOlderThan("R2025a")
+                        exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','Padding',10,'width',original_width,'height',original_height)
                     else
-                        if ~isMATLABReleaseOlderThan("R2025a")
-                            exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','Padding',10,'width',original_width,'height',original_height)
-                        else
-                            exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution)
-                        end
-                    end
-                case 'JPG'
-                    if use_exportfig
-                        export.exportfig(export_figure,fullfile(pathname,newfilename),'Format','bmp','color','rgb','linemode','scaled','FontMode','scaled','FontSizeMin',16,'Bounds','loose','resolution',resolution)
-                        export.autocrop(fullfile(pathname,newfilename),1);
-                    else
-                        if ~isMATLABReleaseOlderThan("R2025a")
-                            exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','Padding',10,'width',original_width,'height',original_height)
-                        else
-                            exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution);
-                        end
+                        exportgraphics(export_axis,fullfile(pathname,newfilename),'ContentType','image','resolution',resolution)
                     end
                 case 'PDF'
                     if use_exportfig
@@ -167,43 +144,26 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
                 case 'Matlab Figure'
                     set(export_figure,'Name',fullfile(pathname,newfilename),'NumberTitle','on','visible','on','units','pixels','Toolbar','figure','DockControls','on','WindowState','normal','Color','w','WindowStyle','normal');
                     savefig(export_figure,fullfile(pathname,newfilename),'compact');
-                case 'Archival AVI'
-                    pixeldata=getframe(export_figure);
-                    export_image=frame2im(pixeldata);
-                    if i==startframe %this makes sure that frame sizes keep the same size
+                case {'Archival AVI','MPEG-4'}
+                    export_image=frame2im(getframe(export_figure));
+                    if i==startframe %the crop of the first frame for all frames: same frame size
                         [export_image,croprect] = export.autocrop(export_image,3);
-                    else
-                        export_image=export_image(croprect(1):croprect(2),croprect(3):croprect(4),:);
-                    end
-                    if i==startframe
-                        v = VideoWriter(fullfile(pathname,filename),'Uncompressed AVI');
+                        if strcmp(selected_format,'MPEG-4')
+                            v = VideoWriter(fullfile(pathname,filename),'MPEG-4');
+                            v.Quality=quality;
+                        else
+                            v = VideoWriter(fullfile(pathname,filename),'Uncompressed AVI');
+                        end
                         v.FrameRate=fps;
                         open(v);
-                    end
-                    writeVideo(v,export_image);
-                    if i==endframe
-                        close(v);
-                    end
-                case 'MPEG-4'
-                    pixeldata=getframe(export_figure);
-                    export_image=frame2im(pixeldata);
-                    if i==startframe %this makes sure that frame sizes keep the same size
-                        [export_image,croprect] = export.autocrop(export_image,3);
                     else
                         export_image=export_image(croprect(1):croprect(2),croprect(3):croprect(4),:);
-                    end
-                    if i==startframe
-                        v = VideoWriter(fullfile(pathname,filename),'MPEG-4');
-                        v.FrameRate=fps;
-                        v.Quality=quality;
-                        open(v);
                     end
                     writeVideo(v,export_image);
                     if i==endframe
                         close(v);
                     end
             end
-            firstframe=0;
         end
     catch ME
         try

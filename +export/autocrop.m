@@ -1,44 +1,15 @@
 function [imagedata,croprect]=autocrop (file,fmt)
-%problem, entweder Verfahren nicht geeignet oder irgendein Matlab bug...
+% Removes the white border of an image. fmt 0 = png file, 1 = jpg file (both overwritten),
+% 3 = image data (returned in imagedata). croprect = [first_row last_row first_col last_col].
 if fmt ~=3
 	A=imread(file);
 else
 	A=file;
 end
 B=rgb2gray(A);
-
-%rows (y) detect white borders
-val=mean(B,2);
-startcropy = find(val~=255,1,'first');
-if isempty (startcropy)
-	startcropy=1;
-end
-
-endcropy = find(val~=255,1,'last');
-if isempty (endcropy)
-	endcropy=size(B,1);
-end
-
-%disp([num2str(startcropy) '  '  num2str(endcropy)])
-
-%cols (y) detect white borders
-val=mean(B,1);
-startcropx = find(val~=255,1,'first');
-if isempty (startcropx)
-	startcropx=1;
-end
-
-endcropx = find(val~=255,1,'last');
-if isempty (endcropx)
-	endcropx=size(B,2);
-end
-%disp([num2str(startcropx) '  '  num2str(endcropx)])
-
-
-%crop image data
-A=A(startcropy:endcropy,startcropx:endcropx,:);
-
-%overwrite file
+rows=not_white(mean(B,2));
+cols=not_white(mean(B,1));
+A=A(rows(1):rows(2),cols(1):cols(2),:);
 if fmt==1 %jpg
 	imwrite(A,file,'quality', 100);
 elseif fmt == 0 %png
@@ -46,5 +17,13 @@ elseif fmt == 0 %png
 elseif fmt == 3 %video
 	imagedata=A;
 end
-croprect=[startcropy endcropy startcropx endcropx];
+croprect=[rows cols];
 
+function range=not_white(val)
+%first and last entry that is not white (all, if all are white)
+k=find(val~=255);
+if isempty(k)
+	range=[1 numel(val)];
+else
+	range=[k(1) k(end)];
+end

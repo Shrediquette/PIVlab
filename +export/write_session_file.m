@@ -7,9 +7,9 @@ function write_session_file(file, settings, data, view)
 % MAT format 7 without compression: measured on 850 MB of session data (2026-10-06) it saves in
 % 0.7 s instead of 7.4 s (compressed) or 10.7 s (format 7.3), the file is only about 10 % larger
 % (PIV results hardly compress). Format 7.3 only when the data is too large for format 7 (2 GB).
-pivlab_info = struct('format', 'PIVlab session', 'format_version', 1, 'pivlab_version', gui.pivlab_version, ...
-    'saved', char(datetime('now', 'Format', 'yyyy-MM-dd HH:mm:ss')), 'matlab_release', version('-release'));
 pivlab_settings = export.settings_with_format(settings);
+pivlab_info = struct('format', 'PIVlab session', 'format_version', 1, 'pivlab_version', pivlab_settings.pivlab_version, ...
+    'saved', pivlab_settings.saved, 'matlab_release', version('-release'));
 pivlab_data = data;
 pivlab_view = view;
 w = whos('pivlab_data');

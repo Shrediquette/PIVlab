@@ -1,150 +1,64 @@
 function write_workspace_Callback(~, ~, ~)
+% Export to the MATLAB workspace: the results of all frames (one cell per frame) and the derived
+% parameters that were calculated in the GUI.
 resultslist=gui.retr('resultslist');
-if isempty(resultslist)==0
-	derived=gui.retr('derived');
-	calxy=gui.retr('calxy');
-	calu=gui.retr('calu');calv=gui.retr('calv');
-	nrframes=size(resultslist,2);
-	if size(resultslist,1)< 11
-		resultslist{11,nrframes}=[]; %make sure resultslist has cells for all params
+if isempty(resultslist)
+	return
+end
+derived=gui.retr('derived');
+calxy=gui.retr('calxy');
+calu=gui.retr('calu');calv=gui.retr('calv');
+nrframes=size(resultslist,2);
+if isempty(derived)
+	derived=cell(11,nrframes);
+elseif size(derived,1)<= 10|| size(derived,2) < nrframes
+	derived{11,nrframes}=[]; %make sure derived has cells for all params
+end
+unit=export.unit_texts(calu, calxy, gui.retr('displacement_only'), []);
+stereo_mode=isequal(gui.retr('stereomode'),1);
+
+[data, w_data]=export.result_cells(resultslist, 1:nrframes);
+if stereo_mode %stereo-PIV: the out-of-plane component w (units like u)
+	w_data.w_component=cell(nrframes,1);
+	if size(derived,1)>=13
+		w_data.w_component=derived(13,1:nrframes).';
 	end
-	if isempty(derived)==0
-		if size(derived,1)<= 10|| size(derived,2) < nrframes
-			derived{11,nrframes}=[]; %make sure derived has cells for all params
-		end
-	else
-		derived=cell(11,nrframes);
-	end
-
-	if calxy==1 && (calu==1 ||calu==-1)
-		units='[px] respectively [px/frame]';
-	else % calibrated
-		displacement_only=gui.retr('displacement_only');
-		if ~isempty(displacement_only) && displacement_only == 1
-			units='[m] respectively [m/frame]';
-		else
-			units='[m] respectively [m/s]';
-		end
-	end
-	%ohne alles: 6 hoch
-	%mit filtern: 11 hoch
-	%mit smoothed, 11 hoch und inhalt...
-	u_original=cell(size(resultslist,2),1);
-	v_original=u_original;
-	x=u_original;
-	y=u_original;
-	typevector_original=u_original;
-	u_filtered=u_original;
-	v_filtered=v_original;
-	typevector_filtered=u_original;
-	u_smoothed=u_original;
-	v_smoothed=u_original;
-	vorticity=cell(size(derived,2),1);
-	velocity_magnitude=vorticity;
-	u_component=vorticity;
-	v_component=vorticity;
-	divergence=vorticity;
-	q_criterion=vorticity;
-	shear_rate=vorticity;
-	strain_rate=vorticity;
-	LIC=vorticity;
-	vectorangle=vorticity;
-	correlation_map=vorticity;
-	uncertainty_map=cell(nrframes,1);
-
-	for i=1:nrframes
-		fac=gui.frame_factors(i); %velocity, or standard deviation / TKE of temporal statistics
-		[x_cal,y_cal]=calibrate.xy (resultslist{1,i},resultslist{2,i});
-		x{i,1}=x_cal;
-		y{i,1}=y_cal;
-		u_original{i,1}=resultslist{3,i}*fac.u;
-		v_original{i,1}=resultslist{4,i}*fac.v;
-		typevector_original{i,1}=resultslist{5,i};
-		u_filtered{i,1}=resultslist{7,i}*fac.u;
-		v_filtered{i,1}=resultslist{8,i}*fac.v;
-		typevector_filtered{i,1}=resultslist{9,i};
-		u_smoothed{i,1}=resultslist{10,i}*fac.u;
-		v_smoothed{i,1}=resultslist{11,i}*fac.v;
-
-		vorticity{i,1}=derived{1,i};
-		velocity_magnitude{i,1}=derived{2,i};
-		u_component{i,1}=derived{3,i};
-		v_component{i,1}=derived{4,i};
-		divergence{i,1}=derived{5,i};
-		q_criterion{i,1}=derived{6,i};
-		shear_rate{i,1}=derived{7,i};
-		strain_rate{i,1}=derived{8,i};
-		LIC{i,1}=derived{9,i};
-		vectorangle{i,1}=derived{10,i};
-		correlation_map{i,1}=derived{11,i};
-		if size(resultslist,1)>=15
-			uncertainty_map{i,1}=resultslist{15,i}*abs(calu);
-		end
-	end
-
-	assignin('base','x',x);
-	assignin('base','y',y);
-	assignin('base','u_original',u_original);
-	assignin('base','v_original',v_original);
-	assignin('base','typevector_original',typevector_original);
-	assignin('base','u_filtered',u_filtered);
-	assignin('base','v_filtered',v_filtered);
-	assignin('base','typevector_filtered',typevector_filtered);
-	assignin('base','u_smoothed',u_smoothed);
-	assignin('base','v_smoothed',v_smoothed);
-
-	assignin('base','vorticity',vorticity);
-
-	assignin('base','velocity_magnitude',velocity_magnitude);
-	assignin('base','u_component',u_component);
-	assignin('base','v_component',v_component);
-	assignin('base','divergence',divergence);
-	assignin('base','q_criterion',q_criterion);
-	assignin('base','shear_rate',shear_rate);
-	assignin('base','strain_rate',strain_rate);
-	assignin('base','LIC',LIC);
-	assignin('base','vectorangle',vectorangle);
-	assignin('base','correlation_map',correlation_map);
-	assignin('base','uncertainty_map',uncertainty_map);
-
-	if isequal(gui.retr('stereomode'),1) %stereo-PIV: the out-of-plane component w (units like u)
-		w_original=cell(nrframes,1);
-		w_smoothed=w_original;
-		w_component=w_original;
-		for i=1:nrframes
-			fac=gui.frame_factors(i);
-			w_original{i,1}=stereo.w_of_frame(i,false,resultslist)*fac.w;
-			if size(resultslist,1)>=17
-				w_smoothed{i,1}=resultslist{17,i}*fac.w;
-			end
-			if size(derived,1)>=13
-				w_component{i,1}=derived{13,i};
-			end
-		end
-		assignin('base','w_original',w_original);
-		assignin('base','w_filtered',w_original); %w is computed from the validated results of both cameras
-		assignin('base','w_smoothed',w_smoothed);
-		assignin('base','w_component',w_component);
-	end
-	assignin('base','calxy',calxy);
-	assignin('base','calu',calu);
-	assignin('base','calv',calv);
-	assignin('base','units',units);
-
-
-	clc
-	disp('EXPLANATIONS:')
-	disp(' ')
-	disp('The first dimension of the variables is the frame number.')
-	disp('The variables contain all data that was calculated in the PIVlab GUI.')
-	disp('If some data was not calculated, the corresponding cell is empty.')
-	disp('Typevector is 0 for masked vector, 1 for regular vector, 2 for filtered vector')
-	disp(' ')
-	disp('u_original and v_original are the unmodified velocities from the cross-correlation.')
-	disp('u_filtered and v_filtered is the above incl. your data validation selection.')
-	disp('u_smoothed and v_smoothed is the above incl. your smoothing selection.')
-	if isequal(gui.retr('stereomode'),1)
-		disp(['Stereo-PIV: w_original, w_filtered, w_smoothed and w_component are the out-of-plane component (positive ' stereo.w_direction(gui.retr('stereo_calib'),calibrate.w_factor(calu,calv)) ').'])
+	for name=fieldnames(w_data).'
+		data.(name{1})=w_data.(name{1});
 	end
 end
+%the derived parameters as calculated in the GUI (derived row id-1 of plot.derivative_calc)
+derived_names={'vorticity','velocity_magnitude','u_component','v_component','divergence','q_criterion','shear_rate','strain_rate','LIC','vectorangle','correlation_map'};
+for k=1:numel(derived_names)
+	values=cell(size(derived,2),1);
+	values(1:nrframes)=derived(k,1:nrframes);
+	data.(derived_names{k})=values;
+end
+data.uncertainty_map=cell(nrframes,1);
+if size(resultslist,1)>=15
+	for i=1:nrframes
+		data.uncertainty_map{i,1}=resultslist{15,i}*abs(calu);
+	end
+end
+data.calxy=calxy;
+data.calu=calu;
+data.calv=calv;
+data.units=['[' unit.length '] respectively [' unit.velocity ']'];
+for name=fieldnames(data).'
+	assignin('base',name{1},data.(name{1}));
+end
 
+clc
+disp('EXPLANATIONS:')
+disp(' ')
+disp('The first dimension of the variables is the frame number.')
+disp('The variables contain all data that was calculated in the PIVlab GUI.')
+disp('If some data was not calculated, the corresponding cell is empty.')
+disp('Typevector is 0 for masked vector, 1 for regular vector, 2 for filtered vector')
+disp(' ')
+disp('u_original and v_original are the unmodified velocities from the cross-correlation.')
+disp('u_filtered and v_filtered is the above incl. your data validation selection.')
+disp('u_smoothed and v_smoothed is the above incl. your smoothing selection.')
+if stereo_mode
+	disp(['Stereo-PIV: w_original, w_filtered, w_smoothed and w_component are the out-of-plane component (positive ' stereo.w_direction(gui.retr('stereo_calib'),calibrate.w_factor(calu,calv)) ').'])
+end
