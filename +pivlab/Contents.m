@@ -31,6 +31,7 @@
 % Stereo-PIV
 %   stereo       - Stereo calibration, disparity correction and PIV of two cameras: U, V and W
 %                  (the result works with filter, toMetric, derive, temporal, display, saveSession)
+%   combineCameras - Two cameras side by side combined into one larger 2D image set (u, v)
 %
 % Settings and sessions
 %   defaults     - Default settings (the settings the PIVlab GUI starts with)

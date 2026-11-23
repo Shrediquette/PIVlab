@@ -47,7 +47,7 @@ done = false;
 width = 900;
 height = 600;
 if stereo_mode
-    window_title = 'Import stereo images (camera 1 and camera 2)';
+    window_title = 'Import multi-camera images (camera 1 and camera 2)';
 else
     window_title = 'Import images';
 end

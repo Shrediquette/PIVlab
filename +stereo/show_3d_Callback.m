@@ -2,13 +2,18 @@ function show_3d_Callback(~, ~, ~)
 %SHOW_3D_CALLBACK "Show 3D setup" (Stereo-PIV panel): both cameras, the board and the overlap in 3D, with the
 % report of the stereo calibration (stereo.geometry_report) in the figure.
 calib = gui.retr('stereo_calib');
-if isempty(calib)
-    gui.custom_msgbox('error', getappdata(0, 'hgui'), 'Stereo-PIV', 'Compute the stereo calibration first.', 'modal');
+disparity = gui.retr('stereo_disparity');
+if fov.gui_active % two cameras combined into one image (larger field of view)
+    calib = gui.retr('fov_calib');
+    disparity = [];
+end
+if isempty(calib) || ~isequal(gui.retr('stereomode'), 1) && ~fov.gui_active
+    gui.custom_msgbox('error', getappdata(0, 'hgui'), 'Multi-camera PIV', 'Compute the 3D alignment first ("Compute 3D alignment").', 'modal');
     return
 end
-fig = figure('Name', 'Stereo-PIV setup in 3D', 'NumberTitle', 'off', 'DockControls', 'off', 'MenuBar', 'figure', 'ToolBar', 'none');
+fig = figure('Name', 'Camera setup in 3D', 'NumberTitle', 'off', 'DockControls', 'off', 'MenuBar', 'figure', 'ToolBar', 'none');
 ax = axes(fig);
-stereo.plot_setup(ax, calib, gui.retr('stereo_disparity'));
+stereo.plot_setup(ax, calib, disparity);
 cameratoolbar(fig, 'SetMode', 'orbit');
 cameratoolbar(fig, 'SetCoordSys', 'y');
 if isfield(calib, 'report') && ~isempty(calib.report)

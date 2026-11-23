@@ -6,7 +6,8 @@ function res = toMetric(res, opts)
 %   Afterwards res.x and res.y are in m, res.u and res.v in m/s, res.units is "m/s".
 %
 %   Stereo-PIV result (pivlab.stereo): res = pivlab.toMetric(res, DeltaT=dt) is enough, the image scale comes
-%   from the stereo calibration (as in the GUI). res.w is then in m/s too.
+%   from the stereo calibration (as in the GUI). res.w is then in m/s too. The same holds for two cameras
+%   combined into a larger field of view (pivlab.combineCameras).
 %
 %   res = pivlab.toMetric(res, Settings=s) uses the calibration stored in a PIVlab session or
 %   settings file (s = pivlab.loadSettings(file)).
@@ -46,11 +47,17 @@ arguments
 end
 res = take_user_edits(res);
 has_scale = ~isempty(opts.PxPerMeter) || ~isempty(opts.ReferenceDistance);
-if ~has_scale && ~isempty(opts.DeltaT) && isfield(res, 'stereo') && ~isempty(res.stereo)
-    % stereo-PIV: the scale of the common grid from the stereo calibration, set like the GUI does
-    % (stereo.calibrate_Callback: a reference distance of up to 1000 px along x)
-    n = min(1000, res.stereo.calib.Ravg.ImageSize(2) - 1);
-    opts.ReferenceDistance = [n, str2double(num2str(n * res.stereo.mm_per_px(1))) / 1000];
+% stereo-PIV / two combined cameras: the scale of the common grid from the 3D alignment, set like the GUI
+% does (calibrate.set_grid_scale)
+grid = [];
+if isfield(res, 'stereo') && ~isempty(res.stereo)
+    grid = [res.stereo.calib.Ravg.ImageSize(2), res.stereo.mm_per_px(1)];
+elseif isfield(res, 'images') && isfield(res.images, 'cam') && fov.is_combined(res.images.cam)
+    grid = [res.images.cam.fov.size(2), res.images.cam.fov.mm_per_px];
+end
+if ~has_scale && ~isempty(opts.DeltaT) && ~isempty(grid)
+    [n, distance_mm] = calibrate.grid_reference(grid(1), grid(2));
+    opts.ReferenceDistance = [n, distance_mm / 1000];
     has_scale = true;
 end
 if ~has_scale && isempty(opts.DeltaT)

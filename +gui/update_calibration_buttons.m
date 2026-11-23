@@ -30,6 +30,11 @@ enable(handles.rect_load_imgs, has_params);
 enable([handles.rect_show_points handles.rect_show_cam_position handles.calib_upscale], has_params && has_rect_image);
 enable(handles.rect_show_rectified, (has_params && has_rect_image) || has_stereo_calib);
 enable(handles.calib_userectification, (has_params && has_rect_image) || handles.calib_userectification.Value == 1);
+
+%% Two cameras combined into one image: lens undistortion and the board grid are in the images (fov.enter_combined)
+if fov.gui_active
+    enable([handles.calib_usecalibration handles.calib_userectification handles.rect_load_imgs handles.rect_show_rectified], false);
+end
 end
 
 function enable(h, tf)

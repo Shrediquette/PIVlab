@@ -43,6 +43,7 @@ if gui.retr('video_selection_done') == 1 % the video reader is not stored: open 
 	end
 end
 stereo.update_maps % stereo-PIV: the image maps are not stored in sessions
+fov.update_maps % two cameras combined: neither
 gui.put('existing_handles',[]);
 gui.put('num_handle_calls',0);
 gui.sliderrange(1)

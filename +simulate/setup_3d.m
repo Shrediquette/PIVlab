@@ -13,7 +13,7 @@ function setup = setup_3d(opts)
 %
 %   setup.Mode        'simple': one camera looks straight at the light sheet (orthographic, no lens;
 %                     pixel = sheet position / Simple.PixelSize; no board, no calibration images);
-%                     'cameras': setup.cameras with lens and perspective (1 camera, or 2: stereo-PIV)
+%                     'cameras': setup.cameras with lens and perspective (1 camera, or 2: stereo-PIV or a larger field of view, from the positions)
 %   setup.Simple      PixelSize [mm] (size of a pixel in the light sheet, simple setup)
 %   setup.cameras(k)  Position [x y z] (camera centre), Target [x y] (aim point on the board, z = 0),
 %                     RadialDistortion [k1 k2] (MATLAB / OpenCV model, normalized image coordinates)

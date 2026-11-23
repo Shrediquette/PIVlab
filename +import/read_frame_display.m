@@ -22,12 +22,20 @@ function [img, grid, out_size, raw_read, img_whole] = read_frame_display(src, se
 if nargin < 7 || isempty(raw_read)
 	raw_read = import.read_raw_frame(src, selected);
 end
+img = [];
+img_whole = [];
+if fov.is_combined(cam)
+	% two cameras combined: drawn at full resolution (import.get_img combines both cameras; raw_read is the
+	% frame of camera 1, which it uses). Known limitation: no display-resolution shortcut for these frames yet
+	% (it would sample the display grid through cam.fov.map / owner, like display_geometry does for one camera)
+	grid = [];
+	out_size = cam.fov.size;
+	return
+end
 raw = raw_read;
 if size(raw, 3) > 1
 	raw = rgb2gray(raw); % as preproc.cam_undistort / stereo.rectify_map
 end
-img = [];
-img_whole = [];
 % small frame: drawn at full resolution by the caller, no display geometry needed (the correction
 % keeps the size, the stereo transform about the same; a large corrected size is checked below)
 out_size = [size(raw, 1) size(raw, 2)];

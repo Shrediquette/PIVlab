@@ -57,7 +57,15 @@ if isempty(fieldnames(S))
 end
 st = stereo_settings(S, opts.Stereo);
 
-calib = stereo.calibrate({imgs{1}.cam, imgs{2}.cam}, boards, board, st.calibration);
+cal = st.calibration;
+if strcmpi(cal.Use, "auto")
+    cal.Use = "stereo"; % explicit call: stereo-PIV (pivlab.combineCameras for a larger field of view)
+end
+calib = stereo.calibrate({imgs{1}.cam, imgs{2}.cam}, boards, board, cal);
+if calib.use_info.use == "fov" && cal.Use == "stereo"
+    warning('pivlab:stereo:fovGeometry', ['%s. The cameras look like a set-up for a larger field of view: ' ...
+        'pivlab.combineCameras combines them into one 2D image.'], calib.use_info.reason);
+end
 if verbose
     fprintf('Stereo calibration: output grid %d x %d px, %.4f mm per px, board corners rejected: %s\n', ...
         calib.Ravg.ImageSize(2), calib.Ravg.ImageSize(1), calib.Ravg.PixelExtentInWorldX, mat2str(calib.n_rejected));

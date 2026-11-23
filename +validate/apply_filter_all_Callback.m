@@ -124,9 +124,21 @@ if ~isempty(resultslist)
 			u2_data(num_frames_to_process-1)={[]};
 			v2_data(num_frames_to_process-1)={[]};
 		end
+		fov_cam = []; fov_src = []; fov_bg = [];
+		if fov.gui_active % two cameras combined into one image: read as in the analysis
+			fov_cam = import.cam_settings(FromGUI=true);
+			fov_src = struct('filepath', {filepath}, 'framenum', framenum, 'framepart', framepart);
+			if bg_sub == 1
+				fov_bg = struct('A', bg_img_A, 'B', bg_img_B);
+			end
+		end
         parfor i=1:num_frames_to_process-1 %without parallel processing toolbox, this is just a normal for loop.
             if ~isempty(x(i))
-				if do_contrast_filter == 1 || do_bright_filter == 1
+				if (do_contrast_filter == 1 || do_bright_filter == 1) && ~isempty(fov_cam)
+					% two cameras combined: the images through import.read_frame (both cameras, background)
+					[A, rawimageA] = import.read_frame(fov_src, 2*i-1, fov_cam, fov_bg);
+					[B, rawimageB] = import.read_frame(fov_src, 2*i, fov_cam, fov_bg);
+				elseif do_contrast_filter == 1 || do_bright_filter == 1
 					%% load images in a parfor loop
 					[~,~,ext] = fileparts(slicedfilepath1{i});
 					if strcmp(ext,'.b16')

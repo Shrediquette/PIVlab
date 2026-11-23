@@ -7,7 +7,8 @@ function calib = calibrate(cams, boards, board, opts)
 %   boards  1x2 cell, image of the board in the light sheet (raw camera image or file name)
 %   board   ChArUco board: PatternDims, CheckerSize [mm], MarkerSize [mm], MarkerFamily,
 %           OriginCheckerColor (as for simulate.charuco_image)
-%   opts    stereo.defaults().calibration (PixelSize, CornerFilter, BoardFromBehind)
+%   opts    stereo.defaults().calibration (PixelSize, CornerFilter, BoardFromBehind, Use, StereoMinOverlap,
+%           StereoMinAngle)
 %
 % The cameras may be on the same side of the light sheet or on opposite sides. A camera behind the
 % board sees it mirrored (transparent board, or a board printed on both sides with the back side
@@ -25,9 +26,14 @@ function calib = calibrate(cams, boards, board, opts)
 %     extrinsics{k}, centre (2x3)        camera poses, camera centres [mm]
 %     board_from_behind  [1x2 logical] camera k saw the board mirrored (from its back side)
 %     opposite_sides   true: the cameras are on opposite sides of the light sheet
-%     Ravg             common output grid (imref2d, mm): square pixels, cropped to the overlap
+%     use              "stereo" (stereo-PIV) or "fov" (larger field of view), opts.Use; "auto" (default):
+%                      from the geometry (stereo.camera_use)
+%     use_info         overlap [%], angle between the lines of sight [deg], reason (one line for the report)
+%     Ravg             common output grid (imref2d, mm): square pixels, cropped to the overlap (stereo) or
+%                      covering both views (fov)
 %     grid_info        pixel size, footprint of a camera pixel, overlap and views (polyshapes)
-%     mask             true where not both cameras see the sheet (PIVlab mask convention)
+%     mask             true where not both cameras (stereo) / no camera (fov) see the sheet (PIVlab mask
+%                      convention)
 %     image_size{k}    raw image size of camera k
 if nargin < 4 || isempty(opts)
     d = stereo.defaults();
@@ -105,17 +111,35 @@ for k = 1:2
     calib.extrinsics{k} = extr;
 end
 calib.opposite_sides = stereo.opposite_sides(calib);
-[calib.Ravg, calib.grid_info] = stereo.square_grid(calib.tform, calib.image_size, opts.PixelSize, calib.cams);
-% mask: output pixels that are outside the view of one camera
-H = calib.Ravg.ImageSize(1);
-W = calib.Ravg.ImageSize(2);
-both = true(H, W);
-for k = 1:2
-    [vx, vy] = boundary(calib.grid_info.views{k});
-    [ix, iy] = worldToIntrinsic(calib.Ravg, vx, vy);
-    both = both & poly2mask(ix, iy, H, W);
+% stereo-PIV or larger field of view (automatic unless opts.Use says it)
+d = stereo.defaults();
+use_opts = d.calibration;
+for f = ["Use", "StereoMinOverlap", "StereoMinAngle"]
+    if isfield(opts, f) && ~isempty(opts.(f))
+        use_opts.(f) = opts.(f);
+    end
 end
-calib.mask = ~both;
+use = lower(string(use_opts.Use));
+if ~ismember(use, ["auto", "stereo", "fov"])
+    error('stereo:calibrate', 'Use must be "auto", "stereo" or "fov".');
+end
+views = stereo.view_polygons(calib.tform, calib.image_size, calib.cams);
+calib.use_info = stereo.camera_use(calib.centre, views, use_opts);
+if use == "auto"
+    calib.use = calib.use_info.use;
+else
+    calib.use = use;
+    if use ~= calib.use_info.use
+        calib.use_info.reason = sprintf('%s (chosen: %s)', calib.use_info.reason, use);
+    end
+end
+region = "overlap";
+if calib.use == "fov"
+    region = "union";
+end
+[calib.Ravg, calib.grid_info] = stereo.square_grid(calib.tform, calib.image_size, opts.PixelSize, calib.cams, region, views);
+% mask: output pixels outside the view of one camera (stereo), outside both views (larger field of view)
+calib.mask = stereo.coverage_mask(calib);
 end
 
 function [ip, wp, n_rejected, mirrored] = detect_board(target, board, corner_filter, side)
@@ -161,8 +185,10 @@ for t = 1:numel(tries)
         n_rejected = n_bad;
         mirrored = tries(t);
     end
-    if isempty(side) && ~tries(t) && size(ip, 1) >= 0.5 * size(all_wp, 1)
-        break % more than half of the board found as it is: a mirrored board can not give that
+    if isempty(side) && ~tries(t) && size(ip, 1) >= min(0.5 * size(all_wp, 1), 50)
+        % more than half of the board, or 50 corners, found as it is: a mirrored board can not give that
+        % (with one large board over two cameras side by side, each camera sees only a part of it)
+        break
     end
 end
 end

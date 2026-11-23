@@ -115,9 +115,10 @@ else
 end
 % stereo-PIV (cam.stereo_map): the images are read with import.read_frame, which subtracts the (raw)
 % background images before the stereo transform; the subtraction further down is then skipped.
-stereo_active = isfield(cam,'stereo_map') && ~isempty(cam.stereo_map);
+% larger field of view (cam.fov): read with import.read_frame too (it combines both cameras)
+read_via_read_frame = (isfield(cam,'stereo_map') && ~isempty(cam.stereo_map)) || fov.is_combined(cam);
 stereo_bg = [];
-if stereo_active
+if read_via_read_frame
     if ~isempty(bg_img_A) || ~isempty(bg_img_B)
         stereo_bg = struct('A',bg_img_A,'B',bg_img_B);
     end
@@ -129,7 +130,7 @@ if stereo_active
     end
 end
 for ensemble_i1=1:2:amount_input_imgs
-    if isempty(video_frame_selection) && stereo_active
+    if isempty(video_frame_selection) && read_via_read_frame
         image1 = import.read_frame(stereo_src, ensemble_i1, cam, stereo_bg);
         image2 = import.read_frame(stereo_src, ensemble_i1+1, cam, stereo_bg);
     elseif isempty(video_frame_selection) %list with image files was passed
@@ -657,7 +658,7 @@ if cancel == 0
         end
 
         for ensemble_i1=1:2:amount_input_imgs
-            if isempty(video_frame_selection) && stereo_active
+            if isempty(video_frame_selection) && read_via_read_frame
                 image1 = import.read_frame(stereo_src, ensemble_i1, cam, stereo_bg);
                 image2 = import.read_frame(stereo_src, ensemble_i1+1, cam, stereo_bg);
             elseif isempty(video_frame_selection) %list with image files was passed

@@ -8,6 +8,7 @@ if isequal(gui.retr('stereomode'), 1) % new 2D images end the stereo-PIV session
     end
     stereo.leave_stereo_mode
 end
+fov.clear_combined % new images: no combined cameras (Import multi-camera images sets them again)
 if useGUI ==1
     gui.toolsavailable(0,'Please select the images in the file dialog.',true);drawnow
 end

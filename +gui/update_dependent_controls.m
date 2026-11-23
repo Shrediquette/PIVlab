@@ -182,7 +182,18 @@ if stereo_mode
 end
 % stereo-PIV rectifies both cameras with the stereo calibration: no 2D rectification and upscaling
 show([handles.calib_userectification handles.calib_upscale handles.calib_upscale_label], ~stereo_mode);
-show(handles.stereo_rect_note, stereo_mode);
+% two cameras combined into one image (fov.enter_combined): the note says why the calibration is locked
+combined = fov.gui_active;
+show(handles.stereo_rect_note, stereo_mode || combined);
+if combined
+    set([handles.calib_undist_cam_label handles.calib_rect_cam_label], 'String', 'Both cameras combined', ...
+        'ForegroundColor', get(handles.filenameshow, 'ForegroundColor'));
+    set(handles.stereo_rect_note, 'String', ['Two cameras combined into one image (larger field of view): lens undistortion ' ...
+        'and the board grid are in the images. Lens calibration and rectification are locked.'], ...
+        'ForegroundColor', get(handles.filenameshow, 'ForegroundColor'));
+else
+    set(handles.stereo_rect_note, 'String', 'Two cameras: this board image is used by the 3D alignment (Analysis -> Multi-camera PIV).');
+end
 % Statistics panel: w in the histogram list (item 5; items 1-4 as in 2D) and a 3D scatter plot
 hist_items = {'u velocity'; 'v velocity'; 'velocity magnitude'; 'sub-pixels'};
 if stereo_mode
@@ -212,10 +223,13 @@ if stereo_mode
 else
     set(handles.calib_usecalibration, 'String', 'Enable camera calibration', 'TooltipString', 'Enable camera calibration / undistortion');
 end
-enable([handles.stereo_calibrate handles.stereo_show_3d], stereo_mode);
-enable([handles.stereo_measure_disparity handles.stereo_disp_show], stereo_mode && ~isempty(gui.retr('stereo_calib')));
+enable(handles.stereo_calibrate, stereo_mode);
+enable(handles.stereo_show_3d, stereo_mode || combined);
+enable(handles.stereo_measure_disparity, (stereo_mode && ~isempty(gui.retr('stereo_calib'))) || combined);
+% combined cameras: the disparity gives the light sheet position (fov.measure_sheet), no disparity displays
+enable(handles.stereo_disp_show, stereo_mode && ~isempty(gui.retr('stereo_calib')));
 stereo.disparity_panel_layout(handles);
-if stereo_mode && strcmp(get(handles.multip30, 'Visible'), 'on')
+if (stereo_mode || combined) && strcmp(get(handles.multip30, 'Visible'), 'on')
     stereo.update_panel(handles);
 end
 

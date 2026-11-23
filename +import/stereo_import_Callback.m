@@ -17,15 +17,16 @@ if nargin < 3
     paths = {};
 end
 was_stereo = isequal(gui.retr('stereomode'), 1);
-if isempty(paths) && was_stereo && ~batch
-    answer = gui.custom_msgbox('quest', getappdata(0,'hgui'), 'Stereo-PIV', ['Load new images of both cameras?' newline newline ...
+was_combined = fov.gui_active; % two cameras combined into a larger field of view
+if isempty(paths) && (was_stereo || was_combined) && ~batch
+    answer = gui.custom_msgbox('quest', getappdata(0,'hgui'), 'Multi-camera PIV', ['Load new images of both cameras?' newline newline ...
         'Results, masks and background images are removed. The calibrations stay if ' ...
         'the new images have the same size.'], 'modal', {'Yes','No'}, 'Yes');
     if ~strcmp(answer, 'Yes')
         return
     end
 elseif isempty(paths) && ~isempty(gui.retr('filepath')) && ~batch
-    answer = gui.custom_msgbox('quest', getappdata(0,'hgui'), 'Stereo-PIV', ['Start a stereo-PIV session with two cameras?' ...
+    answer = gui.custom_msgbox('quest', getappdata(0,'hgui'), 'Multi-camera PIV', ['Start a session with two cameras?' ...
         newline newline 'The images, calibrations and results that are loaded now are removed.'], 'modal', {'Yes','No'}, 'Yes');
     if ~strcmp(answer, 'Yes')
         return
@@ -80,8 +81,11 @@ end
 kept = [];
 if was_stereo
     kept = calibration_of_both_cameras; % back after loading, if the image size is the same
+elseif was_combined
+    kept = calibration_of_combined_cameras;
 end
 stereo.leave_stereo_mode
+fov.clear_combined
 clear_camera_calibration
 roi.clear_roi_Callback % also the ROI fields and "ROI active"
 
@@ -100,8 +104,19 @@ gui.put('stereo_active_camera', 1);
 gui.put('stereo_cam_state', {struct(), camera2});
 stereo.store_active_camera
 kept_message = '';
+restored = false;
 if ~isempty(kept)
-    kept_message = restore_calibration(kept);
+    [kept_message, restored] = restore_calibration(kept);
+end
+if restored && isfield(kept, 'fov_calib')
+    % same cameras as the combined data set before: combined again (no new 3D alignment needed)
+    fov.enter_combined(kept.fov_calib);
+    if ~batch
+        gui.custom_msgbox('success', getappdata(0,'hgui'), 'Multi-camera PIV', ['Images of both cameras loaded (' ...
+            int2str(n_images(1) / 2) ' image pairs each).' newline newline 'The lens calibrations and the 3D alignment ' ...
+            'were kept (same cameras): both cameras are combined into one image again.'], 'modal');
+    end
+    return
 end
 stereo.show_active_camera
 if ~batch && ~isempty(kept_message)
@@ -122,20 +137,25 @@ if any(strcmpi(ext, {'.tif', '.tiff'}))
 end
 end
 
+function kept = calibration_of_combined_cameras
+% two cameras combined into a larger field of view: the calibration data of both cameras and the 3D alignment
+% (fov.enter_combined) for new images of the same size
+calib = gui.retr('fov_calib');
+kept.cameras = calib.cameras;
+kept.raw_size = calib.image_size;
+kept.had_images = [true true];
+kept.calib = [];
+kept.disparity = [];
+kept.roirect = [];
+kept.fov_calib = calib;
+end
+
 function kept = calibration_of_both_cameras
 % the calibration data of both cameras and the stereo data that can be used for new images of the same size
 stereo.store_active_camera
 state = gui.retr('stereo_cam_state');
-keys = calibration_keys;
-kept.cameras = cell(1, 2);
+kept.cameras = stereo.setup_of_cameras(state);
 for k = 1:2
-    camera = struct();
-    for i = 1:numel(keys)
-        if isfield(state{k}, keys{i})
-            camera.(keys{i}) = state{k}.(keys{i});
-        end
-    end
-    kept.cameras{k} = camera;
     kept.raw_size{k} = raw_image_size(state{k});
     kept.had_images(k) = isfield(state{k}, 'filepath') && ~isempty(state{k}.filepath);
 end
@@ -144,8 +164,9 @@ kept.disparity = gui.retr('stereo_disparity');
 kept.roirect = gui.retr('roirect');
 end
 
-function message = restore_calibration(kept)
+function [message, restored] = restore_calibration(kept)
 % calibrations of the old images for the new images, if both cameras have the same image size as before
+restored = false;
 state = gui.retr('stereo_cam_state');
 same_size = true;
 for k = 1:2
@@ -200,6 +221,7 @@ stereo.update_maps
 if ~isempty(kept.roirect) % stereo acquisition: calibrated before any images, no region of interest yet
     roi.updateROIinfo
 end
+restored = true;
 message = ['The calibrations of both cameras' stereo_text(kept) ' and the region of interest were kept (same setup). ' ...
     'Use CAM 1 / CAM 2 in the Tools panel to switch between the cameras.'];
 end
@@ -207,15 +229,8 @@ end
 function text = stereo_text(kept)
 text = ''; % the disparity correction stays without a word (user decision)
 if ~isempty(kept.calib)
-    text = ', the stereo calibration';
+    text = ', the 3D alignment';
 end
-end
-
-function keys = calibration_keys
-% per-camera data that belongs to the setup, not to the images (lens calibration, board image)
-keys = {'cameraParams', 'cameraStats', 'cam_use_calibration', 'cam_use_rectification', 'cam_use_tilted_model', ...
-    'cam_tilted_D', 'cam_K_opencv', 'rectification_tform', 'cam_selected_target_images', ...
-    'cam_selected_rectification_image', 'charuco_qr_params', 'controls'};
 end
 
 function sz = raw_image_size(camera)

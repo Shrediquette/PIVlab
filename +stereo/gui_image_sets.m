@@ -6,11 +6,21 @@ function imgs = gui_image_sets(handles)
 % cameras, in the names of pivlab.preprocess, with the region of interest of the GUI), mask = the masks
 % of the camera (masks_in_frame, one entry per image pair). Used for the disparity measurement
 % (stereo.measure_disparity).
+% Two cameras combined into one image (fov.gui_active): the raw images of both cameras (camera 1: the frame list
+% of the window, camera 2: gui.retr('fov_src2')) with their lens calibration from gui.retr('fov_calib');
+% imgs{1}.mask = the masks of the combined images (fov.measure_sheet).
 if nargin < 1
     handles = gui.gethand;
 end
-stereo.store_active_camera
-state = gui.retr('stereo_cam_state');
+combined = fov.gui_active;
+if combined
+    calib = gui.retr('fov_calib');
+    state = {struct('filepath', {gui.retr('filepath')}, 'framenum', gui.retr('framenum'), 'framepart', gui.retr('framepart'), ...
+        'masks_in_frame', {gui.retr('masks_in_frame')}), gui.retr('fov_src2')};
+else
+    stereo.store_active_camera
+    state = gui.retr('stereo_cam_state');
+end
 s = piv.settings_from_gui(handles);
 pre.CLAHE = logical(s.clahe);
 pre.CLAHESize = s.clahesize;
@@ -31,9 +41,14 @@ for k = 1:2
     im.framenum = camera.framenum;
     im.framepart = camera.framepart;
     im.sequencer = gui.retr('sequencer');
-    im.pairs = numel(camera.filepath) / 2;
-    im.cam = stereo.camera_lens(camera);
-    im.imageSize = camera.expected_image_size;
+    im.pairs = floor(numel(camera.filepath) / 2);
+    if combined
+        im.cam = calib.cams{k};
+        im.imageSize = calib.image_size{k};
+    else
+        im.cam = stereo.camera_lens(camera);
+        im.imageSize = camera.expected_image_size;
+    end
     im.background = [];
     im.preprocess = pre;
     im.mask = {};

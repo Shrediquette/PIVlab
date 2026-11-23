@@ -9,9 +9,25 @@ rows = zeros(1, 7);
 for k = 1:7
     rows(k) = handles.(['stereo_step_' int2str(k)]);
 end
+if fov.gui_active % two cameras combined into one image: a normal 2D data set, only the time step is left
+    calib = gui.retr('fov_calib');
+    measured = isfield(calib, 'sheet') && ~isempty(calib.sheet);
+    done = [true true true true measured time_step_applied(calib)];
+    names = {'Images of both cameras', 'Lens calibration', 'Board in the light sheet', ...
+        '3D alignment: larger field of view (u, v)', 'Light sheet position (disparity in the overlap)', ...
+        'Time step (calibration panel, CTRL+Z)'};
+    set(handles.stereo_steps, 'Visible', 'off');
+    set_rows(rows, done, names);
+    if measured
+        set(handles.stereo_disp_report, 'String', fov.sheet_report(calib));
+    else
+        set(handles.stereo_disp_report, 'String', 'Not measured yet.');
+    end
+    return
+end
 if ~isequal(gui.retr('stereomode'), 1)
     set(rows, 'Visible', 'off');
-    set(handles.stereo_steps, 'Visible', 'on', 'String', 'Load the images of both cameras first (Input data panel: "Import stereo images").');
+    set(handles.stereo_steps, 'Visible', 'on', 'String', 'Load the images of both cameras first (Input data panel: "Import multi-camera images").');
     set(handles.stereo_disp_report, 'String', 'Not measured yet.');
     return
 end
@@ -32,11 +48,26 @@ calib = gui.retr('stereo_calib');
 done = [true, all(has_lens), all(has_board), ~isempty(calib), ~isempty(gui.retr('stereo_disparity')), ...
     ~isempty(gui.retr('roirect')), time_step_applied(calib)];
 names = {'Images of both cameras', ['Lens calibration' cameras_missing(has_lens)], ...
-    ['Board in the light sheet' cameras_missing(has_board)], 'Stereo calibration', ...
+    ['Board in the light sheet' cameras_missing(has_board)], '3D alignment', ...
     'Disparity correction', 'Region of interest', 'Time step (calibration panel, CTRL+Z)'};
-next = find(~done, 1); % the first open step is bold
 set(handles.stereo_steps, 'Visible', 'off');
-for k = 1:7
+set_rows(rows, done, names);
+disparity = gui.retr('stereo_disparity');
+if isempty(disparity) || ~isfield(disparity, 'report')
+    set(handles.stereo_disp_report, 'String', 'Not measured yet.');
+else
+    set(handles.stereo_disp_report, 'String', disparity.report);
+end
+end
+
+function set_rows(rows, done, names)
+% the checklist: green done, red open, the first open step bold; rows without a step are hidden
+next = find(~done, 1);
+for k = 1:numel(rows)
+    if k > numel(done)
+        set(rows(k), 'Visible', 'off');
+        continue
+    end
     if done(k)
         color = [0.10 0.60 0.10]; % green
     else
@@ -47,12 +78,6 @@ for k = 1:7
         weight = 'bold';
     end
     set(rows(k), 'String', [mark(done(k)) ' ' names{k}], 'ForegroundColor', color, 'FontWeight', weight, 'Visible', 'on');
-end
-disparity = gui.retr('stereo_disparity');
-if isempty(disparity) || ~isfield(disparity, 'report')
-    set(handles.stereo_disp_report, 'String', 'Not measured yet.');
-else
-    set(handles.stereo_disp_report, 'String', disparity.report);
 end
 end
 

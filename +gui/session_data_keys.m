@@ -12,4 +12,5 @@ keys = [keys, {'calu', 'calv', 'calxy', 'offset_x_true', 'offset_y_true', 'point
 keys = [keys, {'cameraParams', 'cameraStats', 'cam_use_calibration', 'cam_use_rectification', 'cam_use_tilted_model', 'cam_tilted_D', 'cam_K_opencv', 'rectification_tform', 'cam_selected_target_images', 'cam_selected_rectification_image', 'charuco_qr_params'}]; % camera calibration and rectification
 keys = [keys, {'displaywhat', 'subtr_u', 'subtr_v', 'streamlinesX', 'streamlinesY', 'streamslice_active', 'manmarkersX', 'manmarkersY', 'xposition', 'yposition', 'extract_type'}]; % display and tools
 keys = [keys, {'stereomode', 'stereo_active_camera', 'stereo_cam_state', 'stereo_calib', 'stereo_disparity', 'stereo_result', 'stereo_vel', 'stereo_check'}]; % stereo-PIV (stereo.camera_data_keys: per camera)
+keys = [keys, {'fov_calib', 'fov_src2'}]; % two cameras combined into a larger field of view (fov.enter_combined; maps: fov.update_maps)
 end

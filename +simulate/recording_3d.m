@@ -568,20 +568,20 @@ end
 p('Contents (k = camera number)');
 p('  camera<k>/particle_images/       %d image pairs per camera (cam<k>_0001_A.tif, cam<k>_0001_B.tif, ...)', setup.output.Pairs);
 p('  camera<k>/calibration_images/    %d images of the board in random positions (lens calibration)', setup.output.CalibrationImages);
-p('  camera<k>/board_in_light_sheet_cam<k>.tif   board where the light sheet is (stereo calibration / rectification)');
+p('  camera<k>/board_in_light_sheet_cam<k>.tif   board where the light sheet is (3D alignment / rectification)');
 p('  camera<k>/true_lens_cam<k>.mat   the true lens ("Load camera parameters"), to compare with the calibration');
 p('  ground_truth.mat                 variable truth: displacement field and geometry');
 p('  generator_setup.mat              variable setup: input of simulate.recording_3d');
 p('');
 p('Workflow in PIVlab');
 if n > 1
-    p('  1. Input data: "Import stereo images": the particle images of camera 1 and camera 2.');
+    p('  1. Input data: "Import multi-camera images": the particle images of camera 1 and camera 2.');
     p('  2. For camera <k> = 1 and 2 (switch with the CAM 1 / CAM 2 button at the bottom left):');
     p('     Image settings -> Camera calibration -> Camera calibration (undistortion):');
     p('     load the calibration images of camera <k> and estimate the camera parameters.');
     p('     Image settings -> Camera calibration -> Image rectification / alignment:');
     p('     load board_in_light_sheet_cam<k>.tif as target image.');
-    p('  3. Analysis -> Stereo-PIV: compute the stereo calibration, measure the disparity, analyze.');
+    p('  3. Analysis -> Multi-camera PIV: "Compute 3D alignment" (stereo-PIV or larger field of view, from the camera positions), measure the disparity, analyze.');
     p('     The light sheet is offset by %g mm and tilted: the disparity correction has to find it.', setup.sheet.Offset);
     p('  4. Compare with the ground truth: simulate.truth_at_board(truth, x_mm, y_mm).');
 else

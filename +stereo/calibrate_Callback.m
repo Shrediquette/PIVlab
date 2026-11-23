@@ -1,15 +1,17 @@
 function calibrate_Callback(~, ~, ~)
-%CALIBRATE_CALLBACK "Compute stereo calibration" (Stereo-PIV panel).
+%CALIBRATE_CALLBACK "Compute 3D alignment" (Multi-camera PIV panel): stereo-PIV or larger field of view.
 % Uses the lens calibration and the board image in the light sheet of each camera (camera calibration
 % panels of camera 1 and 2) and the board definition of the calibration panels. Afterwards both cameras
 % show their images on the common grid (stereo.update_maps), the region of interest is the overlap of
 % both views and the spatial calibration (px -> mm) is filled in; only the time step is missing (checklist of
 % the panel). The report of the set-up is shown in "Show 3D setup".
 % Masks, background images and results are reset (they belong to the uncalibrated images).
+% Cameras side by side with a small overlap (stereo.camera_use): both are combined into ONE larger 2D image
+% instead (fov.enter_combined), analysed like a normal 2D data set.
 hgui = getappdata(0, 'hgui');
 batch = isequal(gui.retr('batchModeActive'), 1);
 if ~isequal(gui.retr('stereomode'), 1)
-    gui.custom_msgbox('error', hgui, 'Stereo-PIV', 'Load the images of both cameras first (Input data panel: "Import stereo images").', 'modal');
+    gui.custom_msgbox('error', hgui, 'Multi-camera PIV', 'Load the images of both cameras first (Input data panel: "Import multi-camera images").', 'modal');
     return
 end
 stereo.store_active_camera
@@ -30,29 +32,47 @@ for k = 1:2
     end
 end
 if ~isempty(missing)
-    gui.custom_msgbox('error', hgui, 'Stereo calibration', strjoin([{'Missing for the stereo calibration:'}, missing], newline), 'modal');
+    gui.custom_msgbox('error', hgui, '3D alignment', strjoin([{'Missing for the 3D alignment:'}, missing], newline), 'modal');
     return
 end
 board = stereo.board_from_gui;
 if any(isnan([board.PatternDims board.CheckerSize board.MarkerSize])) || board.MarkerSize >= board.CheckerSize
-    gui.custom_msgbox('error', hgui, 'Stereo calibration', 'Check the board definition in the camera calibration panel (rows, columns, checker and marker size).', 'modal');
+    gui.custom_msgbox('error', hgui, '3D alignment', 'Check the board definition in the camera calibration panel (rows, columns, checker and marker size).', 'modal');
     return
 end
 if ~batch
-    answer = gui.custom_msgbox('quest', hgui, 'Stereo calibration', ['Masks, region of interest, background images and results ' ...
+    answer = gui.custom_msgbox('quest', hgui, '3D alignment', ['Masks, region of interest, background images and results ' ...
         'of both cameras are reset. Continue?'], 'modal', {'OK', 'Cancel'}, 'OK');
     if ~strcmp(answer, 'OK')
         return
     end
 end
 
-gui.toolsavailable(0, 'Stereo calibration...'); drawnow
+gui.toolsavailable(0, '3D alignment...'); drawnow
 try
-    calib = stereo.calibrate(cams, boards, board);
-    calib.report = stereo.geometry_report(calib);
+    calib = stereo.calibrate(cams, boards, board); % stereo-PIV or larger field of view: from the geometry
+    if calib.use == "stereo"
+        calib.report = stereo.geometry_report(calib);
+        calib.report = [{calib.use_info.reason}, calib.report];
+    end
 catch err
     gui.toolsavailable(1)
-    gui.custom_msgbox('error', hgui, 'Stereo calibration', ['The stereo calibration failed: ' err.message], 'modal');
+    gui.custom_msgbox('error', hgui, '3D alignment', ['The 3D alignment failed: ' err.message], 'modal');
+    return
+end
+if calib.use == "fov"
+    % two cameras side by side: ONE combined 2D data set (the camera switch disappears)
+    calib.boards = boards;
+    calib.cameras = stereo.setup_of_cameras(state); % for a new import of the same cameras
+    fov.enter_combined(calib);
+    gui.toolsavailable(1)
+    gui.update_dependent_controls(gui.gethand) % toolsavailable(1) restores what was disabled before (e.g. Measure disparity)
+    if ~batch
+        combined = gui.retr('fov_calib');
+        report = combined.report;
+        gui.custom_msgbox('success', hgui, '3D alignment', strjoin([{['Both cameras are combined into one image. ' ...
+            'It is analysed like a normal 2D image; only the time step is missing (calibration panel).'], ''}, report], newline), 'modal');
+    end
     return
 end
 gui.put('stereo_calib', calib);
@@ -60,12 +80,7 @@ gui.put('stereo_disparity', []);
 
 % reset what belongs to the uncalibrated images (both cameras)
 handles = gui.gethand;
-for name = {'resultslist', 'derived', 'ismean', 'manualdeletion', 'framemanualdeletion', 'streamlinesX', 'streamlinesY', ...
-        'velrect', 'velrect_freehand', 'masks_in_frame', 'bg_img_A', 'bg_img_B', 'stereo_result', 'stereo_vel', 'stereo_check'}
-    gui.put(name{1}, []);
-end
-gui.put('displaywhat', 1);
-set(handles.bg_subtract, 'Value', 1);
+stereo.clear_image_data({'stereo_result', 'stereo_vel', 'stereo_check'});
 other = 3 - gui.retr('stereo_active_camera');
 state{other}.masks_in_frame = [];
 state{other}.bg_img_A = [];
@@ -85,12 +100,9 @@ gui.put('roirect', roirect);
 roi.updateROIinfo
 
 % spatial calibration like the 2D rectification: reference distance along x on the common grid
-n = min(1000, calib.Ravg.ImageSize(2) - 1);
-gui.put('pointscali', [1 1; 1 + n 1]);
-set(handles.realdist, 'String', num2str(n * calib.Ravg.PixelExtentInWorldX));
 board_image = imread(boards{1});
 gui.put('caliimg', stereo.rectify_map(board_image, maps{1}));
-calibrate.pixeldist_changed_Callback()
+calibrate.set_grid_scale(calib.Ravg.ImageSize(2), calib.Ravg.PixelExtentInWorldX);
 
 gui.toolsavailable(1)
 stereo.update_panel(handles)

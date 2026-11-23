@@ -95,6 +95,20 @@ testCase.verifyEqual(preproc.cam_get_charuco_info_from_QRcode(I), 1, 'QR code re
 testCase.verifyEqual(preproc.cam_get_charuco_info_from_QRcode(fliplr(I)), 1, 'QR code readable mirrored (board seen from behind)');
 end
 
+function test_board_texture_elongated_board(testCase)
+% an elongated board (14 x 46 checkers, one board over two cameras side by side): generateCharucoBoard needs
+% both image sides to be ~8.5 px per checker of the longer side; the texture takes more texels per checker
+% instead of failing ("Show 3D preview" did with 25 texels per checker)
+b = struct('PatternDims', [14 46], 'CheckerSize', 12, 'MarkerSize', 9, 'MarkerFamily', "DICT_4X4_1000", ...
+    'OriginCheckerColor', "black");
+tex = simulate.board_texture(b, 25, Decorated=true);
+testCase.verifyGreaterThanOrEqual(tex.c, 26);
+testCase.verifyEqual(size(tex.image, 2), b.PatternDims(2) * tex.c + 2 * tex.m, 'texture width from tex.c');
+testCase.verifyEqual(size(tex.image, 1), b.PatternDims(1) * tex.c + tex.m + tex.m_top, 'texture height from tex.c');
+tex = simulate.board_texture(testCase.TestData.Setup.board, 25, Decorated=true);
+testCase.verifyEqual(tex.c, 25, 'a normal board keeps the texels per checker');
+end
+
 function test_result_axes(testCase)
 % the panel (and its default settings) uses the axes of the results, as printed on the board:
 % origin at the bottom left inner corner, x right, y up, z out of the board

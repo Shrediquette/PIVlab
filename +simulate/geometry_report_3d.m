@@ -58,12 +58,33 @@ info.overlap_size = [NaN NaN];
 if ~isempty(ox)
     info.overlap_size = [max(ox) - min(ox), max(oy) - min(oy)];
 end
+info.use = "";
 if n > 1
-    info.stereo_angle = acosd(dot(sight(1, :), sight(2, :)));
-    lines{end + 1} = sprintf('Angle between the cameras: %.1f%s; overlap of the views: %.0f x %.0f mm', ...
-        info.stereo_angle, char(176), info.overlap_size);
-    if info.stereo_angle < 10
-        lines{end + 1} = 'Warning: the angle between the cameras is small, W will be very noisy.';
+    % what PIVlab's 3D alignment will do with these cameras (stereo.camera_use, in sheet coordinates)
+    centres = transformPointsInverse(g.sheet_pose, g.centre(1:2, :));
+    u = stereo.camera_use(centres, {g.views(1), g.views(2)});
+    info.use = u.use;
+    lines{end + 1} = ['PIVlab: ' u.reason];
+    if u.use == "stereo"
+        info.stereo_angle = acosd(dot(sight(1, :), sight(2, :)));
+        lines{end + 1} = sprintf('Angle between the cameras: %.1f%s; overlap of the views: %.0f x %.0f mm', ...
+            info.stereo_angle, char(176), info.overlap_size);
+        if info.stereo_angle < 10
+            lines{end + 1} = 'Warning: the angle between the cameras is small, W will be very noisy.';
+        end
+    else
+        % larger field of view: overlap width and warnings as in fov.report
+        px_per_mm = 1 / mean(info.mm_per_px(:));
+        [width, along_x, warnings] = fov.overlap_width({g.views(1), g.views(2)}, g.overlap, px_per_mm);
+        n_img = g.cams{1}.imageSize(1 + along_x); % image width for cameras side by side, else height
+        [bx, by] = boundingbox(union(g.views(1), g.views(2)));
+        lines{end + 1} = sprintf('Combined field of view %.0f x %.0f mm; overlap %.1f mm (%.0f px, %.0f %% of the image)', ...
+            diff(bx), diff(by), width, width * px_per_mm, 100 * width * px_per_mm / n_img);
+        lines = [lines, warnings];
+    end
+    if nargin >= 2 && any(info.corners < 8)
+        lines{end + 1} = sprintf(['Warning: camera %d sees fewer than 8 board corners: the 3D alignment needs one board ' ...
+            'that reaches into the views of both cameras.'], find(info.corners < 8, 1));
     end
 end
 end

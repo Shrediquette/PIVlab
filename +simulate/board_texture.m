@@ -24,10 +24,16 @@ c = round(texelsPerChecker);
 dims = board.PatternDims;
 if opts.Decorated
     layout = preproc.cam_board_layout(dims, char(board.MarkerFamily), board.CheckerSize, board.MarkerSize, char(board.OriginCheckerColor));
-    m = round(layout.margin / board.CheckerSize * c); % as the printed boards
+    margin_checkers = layout.margin / board.CheckerSize; % as the printed boards
 else
-    m = round(opts.Margin * c);
+    margin_checkers = opts.Margin;
 end
+% generateCharucoBoard needs both image sides to be at least about 8.5 px per checker of the LONGER side of
+% the pattern (measured with R2026b: 376-389 px for 46 columns). The short side, (min(dims) + 2 margins) * c,
+% must reach that, with some reserve: an elongated board (e.g. 14 x 46) gets more texels per checker than asked
+% for. tex.c is then larger than texelsPerChecker (callers use tex.c).
+c = max(c, ceil(9 * max(dims) / (min(dims) + 2 * margin_checkers)));
+m = round(margin_checkers * c);
 marker = round(c * board.MarkerSize / board.CheckerSize);
 img = generateCharucoBoard(dims * c + 2 * m, dims, board.MarkerFamily, c, marker, ...
     MarginSize=m, OriginCheckerColor=board.OriginCheckerColor, MinMarkerID=opts.MinMarkerID);

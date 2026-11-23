@@ -236,6 +236,7 @@ end
 delete(findobj(S.ax3, 'Tag', 'sim3d_board'));
 c = max(8, min(40, round(1200 / (board.PatternDims(2) + 2)))); % about 1200 texels across
 S.tex = simulate.board_texture(board, c, Decorated=true);
+c = S.tex.c; % larger for an elongated board (simulate.board_texture)
 img = S.tex.image / 255;
 checker = board.CheckerSize;
 x = ([0, size(img, 2)] - S.tex.m) / c - 1;
@@ -269,6 +270,7 @@ c = max(tex.c, ceil(24 * S / board.MarkerSize)); % at least 24 texels per marker
 if c > tex.c
     tex = simulate.board_texture(board, c, Decorated=true);
 end
+c = tex.c; % may be larger than asked for (simulate.board_texture)
 img = uint8(tex.image);
 to_board = @(p) [((p(:, 1) - tex.m - 0.5) / c - 1) * S, ((p(:, 2) - tex.m_top - 0.5) / c - 1) * S];
 [ids, locs] = readArucoMarker(img, board.MarkerFamily, 'MarkerSizeRange', [0.005 1]);

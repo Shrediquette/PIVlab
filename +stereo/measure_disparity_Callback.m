@@ -4,11 +4,17 @@ function measure_disparity_Callback(~, ~, ~)
 % image pre-processing of the GUI) and fits a smooth model (stereo.measure_disparity). Afterwards both
 % cameras show disparity-corrected images (stereo.update_maps); an automatic region of interest is
 % adapted to the corrected overlap. Results are reset (they were computed without this correction).
+% Two cameras combined into one image: the disparity in their overlap gives the light sheet position
+% (fov.measure_sheet_Callback).
+if fov.gui_active
+    fov.measure_sheet_Callback
+    return
+end
 hgui = getappdata(0, 'hgui');
 batch = isequal(gui.retr('batchModeActive'), 1);
 calib = gui.retr('stereo_calib');
 if ~isequal(gui.retr('stereomode'), 1) || isempty(calib)
-    gui.custom_msgbox('error', hgui, 'Stereo-PIV', 'Compute the stereo calibration first.', 'modal');
+    gui.custom_msgbox('error', hgui, 'Multi-camera PIV', 'Compute the 3D alignment first ("Compute 3D alignment").', 'modal');
     return
 end
 handles = gui.gethand;

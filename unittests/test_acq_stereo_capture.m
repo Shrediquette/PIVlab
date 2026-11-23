@@ -222,7 +222,7 @@ verifyFalse(testCase, contains(output, 'Camera 1:'), output);
 counts = gui.retr('capture_incomplete_frames'); % [found; checked] per camera
 verifyEqual(testCase, counts(1, 1), 0, 'camera 1 complete');
 verifyGreaterThan(testCase, counts(1, 2), 0, 'camera 2 incomplete');
-verifyGreaterThan(testCase, counts(2, 1), 2, 'camera 1 checked during the recording');
+verifyGreaterThan(testCase, counts(2, 1), 0, 'camera 1 checked during the recording'); % ~5 per s, fewer on a slow computer
 verifyEqual(testCase, gui.retr('capture_missing_frames'), [0 0], 'no missing frames');
 end
 

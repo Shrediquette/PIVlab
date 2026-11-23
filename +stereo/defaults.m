@@ -13,6 +13,11 @@ s.calibration.PixelSize = [];               % [mm] per output pixel, [] = pixel 
 s.calibration.CornerFilter = true;          % reject wrongly identified board corners (RANSAC)
 s.calibration.BoardFromBehind = [];         % [] = automatic: a camera behind the board (opposite side of the
                                             % light sheet) sees it mirrored; [false true] = fixed per camera
+% what the two cameras are used for (stereo.camera_use): "auto" = from the geometry of the calibration,
+% "stereo" = stereo-PIV (u, v, w; grid = overlap), "fov" = larger field of view (u, v; grid = both views)
+s.calibration.Use = "auto";
+s.calibration.StereoMinOverlap = 50;        % [% of the smaller view] stereo-PIV needs this much overlap ...
+s.calibration.StereoMinAngle = 10;          % [deg] ... and this angle between the lines of sight
 
 % disparity: PIV between the A images of camera 1 and camera 2 (rectified). The values that the
 % Stereo-PIV panel shows come from gui.default_settings (one list of defaults for GUI and scripts).

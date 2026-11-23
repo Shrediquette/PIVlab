@@ -1,4 +1,9 @@
 function generate_BG_img_parallel
+if fov.gui_active % two cameras combined: preproc.compute_background makes and combines both backgrounds
+    % (serial; known limitation: this parallel copy of compute_background does not handle cam.fov)
+    preproc.generate_BG_img
+    return
+end
 handles=gui.gethand;
 bg_operation=0;
 if get(handles.bg_subtract,'Value')==2 %subtract mean value

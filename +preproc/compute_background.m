@@ -188,7 +188,18 @@ end
 
 % stereo-PIV (cam.stereo_map): the background stays a raw camera image, it is subtracted before the
 % stereo transform (import.read_frame)
-if ~(isfield(cam,'stereo_map') && ~isempty(cam.stereo_map))
+% larger field of view (cam.fov): background of camera 2 in the same way, then both combined like the
+% frames (import.read_frame subtracts it from the combined image)
+if fov.is_combined(cam)
+    [bg2_A, bg2_B, msg2] = preproc.compute_background(cam.fov.src, sequencer, bg_operation, [], progressFcn);
+    if isempty(msg)
+        msg = msg2;
+    end
+    image1_bg = fov.compose(image1_bg, bg2_A, cam.fov);
+    if sequencer==1 %not time-resolved
+        image2_bg = fov.compose(image2_bg, bg2_B, cam.fov);
+    end
+elseif ~(isfield(cam,'stereo_map') && ~isempty(cam.stereo_map))
     image1_bg = preproc.cam_undistort_with(image1_bg, cam);
     if sequencer==1 %not time-resolved
         image2_bg = preproc.cam_undistort_with(image2_bg, cam);

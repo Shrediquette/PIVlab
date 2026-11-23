@@ -3,24 +3,39 @@ function plot_setup(ax, calib, disparity)
 %   stereo.plot_setup(ax, calib)
 %   stereo.plot_setup(ax, calib, disparity)
 %   ax         axes to draw into
-%   calib      stereo.calibrate
+%   calib      stereo.calibrate (stereo-PIV, or calib.use = "fov": two cameras combined into a larger field of view)
 %   disparity  stereo.measure_disparity (optional): the light sheet position (stereo.sheet_position)
 % World coordinates = board coordinates in mm (x right, y down, z into the board, away from camera 1).
 % The view looks from behind the cameras onto the board (cameras on opposite sides of the light sheet:
 % from the side, along the board); rotate it with the mouse (cameratoolbar 'orbit').
+combined = isfield(calib, 'use') && calib.use == "fov";
 hold(ax, 'on');
 wp = calib.world_points{1};
+if combined
+    wp = unique([calib.world_points{1}; calib.world_points{2}], 'rows'); % each camera sees a part of the board
+end
 plot3(ax, wp(:, 1), wp(:, 2), zeros(size(wp, 1), 1), '.', 'Color', [0.55 0.55 0.55], 'DisplayName', 'board corners');
-[ox, oy] = boundary(calib.grid_info.overlap);
-fill3(ax, ox, oy, zeros(size(ox)), [0.35 0.8 0.35], 'FaceAlpha', 0.35, 'EdgeColor', [0.2 0.6 0.2], 'DisplayName', 'overlap of both views');
-[cx, cy] = centroid(calib.grid_info.overlap);
+if calib.grid_info.overlap.NumRegions > 0
+    [ox, oy] = boundary(calib.grid_info.overlap);
+    fill3(ax, ox, oy, zeros(size(ox)), [0.35 0.8 0.35], 'FaceAlpha', 0.35, 'EdgeColor', [0.2 0.6 0.2], 'DisplayName', 'overlap of both views');
+end
+if combined % centre of both views together; each camera looks at the centre of its own view
+    [cx, cy] = centroid(union(calib.grid_info.views{1}, calib.grid_info.views{2}));
+else
+    [cx, cy] = centroid(calib.grid_info.overlap);
+end
 target = [cx cy 0];
 distance = mean([norm(calib.centre(1, :) - target), norm(calib.centre(2, :) - target)]);
 for k = 1:2
     [cam_color, ~] = stereo.camera_colors(k);
     [vx, vy] = boundary(calib.grid_info.views{k});
     plot3(ax, vx, vy, zeros(size(vx)), '-', 'Color', cam_color, 'LineWidth', 1.5, 'DisplayName', sprintf('view of camera %d', k));
-    plot3(ax, [calib.centre(k, 1) cx], [calib.centre(k, 2) cy], [calib.centre(k, 3) 0], '--', 'Color', cam_color, 'HandleVisibility', 'off');
+    sx = cx;
+    sy = cy;
+    if combined
+        [sx, sy] = centroid(calib.grid_info.views{k});
+    end
+    plot3(ax, [calib.centre(k, 1) sx], [calib.centre(k, 2) sy], [calib.centre(k, 3) 0], '--', 'Color', cam_color, 'HandleVisibility', 'off');
     plotCamera(AbsolutePose=extr2pose(calib.extrinsics{k}), Size=0.05 * distance, Color=cam_color, ...
         Label=sprintf('Camera %d', k), AxesVisible=false, Parent=ax);
 end
@@ -37,9 +52,15 @@ xlabel(ax, 'X (mm)');
 ylabel(ax, 'Y (mm)');
 zlabel(ax, 'Z (mm)');
 legend(ax, 'Location', 'northeast');
-[~, info] = stereo.geometry_report(calib);
-title(ax, sprintf('Angle between the cameras: %.0f%s', info.stereo_angle, char(176)));
-if info.opposite_sides
+if combined
+    title(ax, 'Two cameras combined: larger field of view');
+    opposite = false;
+else
+    [~, info] = stereo.geometry_report(calib);
+    title(ax, sprintf('Angle between the cameras: %.0f%s', info.stereo_angle, char(176)));
+    opposite = info.opposite_sides;
+end
+if opposite
     % look from the side (perpendicular to the line between the cameras) and somewhat from camera 1's side
     % of the board, so that the board and both cameras are visible
     side = cross(calib.centre(2, :) - calib.centre(1, :), [0 -1 0]);

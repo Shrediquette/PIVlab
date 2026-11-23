@@ -7,7 +7,9 @@ function ov = camera_overlap(markers)
 %   markers{k}.size   [height width] of camera k's image
 %   The corners of the markers that both cameras see (same ID) give a projective transform from camera 1 to
 %   camera 2 (RANSAC, wrongly decoded markers are outliers). It is valid in the plane of the board (the light
-%   sheet when the board is placed there); lens distortion is not included (straight frame edges).
+%   sheet when the board is placed there); lens distortion is not included (straight frame edges). When the
+%   common markers lie in a narrow strip (small overlap), a similarity transform instead (rotation, scale,
+%   shift): the strip does not determine the perspective.
 %   ov.ok          true when the transform could be fitted (at least 2 common markers, 8 inlier corners)
 %   ov.n_common    number of markers seen by both cameras
 %   ov.tform       projtform2d, camera 1 -> camera 2 image coordinates
@@ -36,16 +38,24 @@ p2 = reshape(permute(locs2(:, :, i2), [1 3 2]), [], 2);
 % inlier distance: a wrongly decoded marker is off by at least one checker
 side = sqrt(sum((locs2(2, :, i2) - locs2(1, :, i2)).^2, 2));
 max_distance = max(2, 0.1 * median(side(:)));
+model = 'projective';
+if in_a_strip(p1, markers{1}.size)
+	% cameras side by side with a small overlap: the common markers lie in a narrow strip. Scale and perspective
+	% across the strip cannot be determined from it (a projective fit extrapolates to anything); rotation and
+	% scale come from the length of the strip (similar cameras at a similar distance)
+	model = 'similarity';
+end
 try
-	[tform, inliers] = estgeotform2d(p1, p2, 'projective', 'MaxDistance', max_distance, 'Confidence', 99.9, 'MaxNumTrials', 1000);
+	[~, inliers] = estgeotform2d(p1, p2, model, 'MaxDistance', max_distance, 'Confidence', 99.9, 'MaxNumTrials', 1000);
+	if nnz(inliers) < 8
+		return
+	end
+	tform = fitgeotform2d(p1(inliers, :), p2(inliers, :), model); % least squares on all inliers: no random part
 catch
 	return % too few or degenerate points
 end
-if nnz(inliers) < 8
-	return
-end
 ov.ok = true;
-ov.tform = tform;
+ov.tform = projtform2d(tform.A);
 A = tform.A;
 B = inv(A); % camera 2 -> camera 1
 ov.region{2} = mapped_frame(A, markers{1}.size, markers{2}.size);
@@ -53,6 +63,13 @@ ov.region{1} = mapped_frame(B, markers{2}.size, markers{1}.size);
 for k = 1:2
 	ov.fraction(k) = area(ov.region{k}) / prod(markers{k}.size);
 end
+
+function tf = in_a_strip(p, image_size)
+%the points lie in a strip narrower than a third of the shorter image side (across their main direction)
+c = p - mean(p, 1);
+[~, ~, V] = svd(c, 'econ');
+across = c * V(:, 2);
+tf = max(across) - min(across) < min(image_size) / 3;
 
 function [ids, locs] = unique_markers(m)
 %markers whose ID was found more than once (one of them wrongly decoded) are not used

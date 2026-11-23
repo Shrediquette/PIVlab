@@ -189,9 +189,21 @@ files = gui.image_import_dialog(mode, folder);
 end
 
 function start_dialog_timer(steps)
+% The steps run as soon as the dialog is open (checked every 0.5 s: opening it can take longer on a slow
+% computer). A watchdog closes a dialog that is still open after 120 s, so that the test can not hang.
 stop_dialog_timers();
-t = timer('StartDelay', 1, 'TimerFcn', {@run_steps, steps}, 'Tag', 'image_import_dialog_test');
+t = timer('StartDelay', 0.5, 'Period', 0.5, 'ExecutionMode', 'fixedSpacing', 'TasksToExecute', 120, ...
+    'TimerFcn', {@run_steps, steps}, 'Tag', 'image_import_dialog_test');
 start(t);
+w = timer('StartDelay', 120, 'TimerFcn', @dialog_watchdog, 'Tag', 'image_import_dialog_test');
+start(w);
+end
+
+function dialog_watchdog(~, ~)
+if ~isempty(findall(0, 'Tag', 'image_import_dialog'))
+    setappdata(0, 'dialog_test_error', 'the dialog was still open after 120 s (closed by the watchdog)');
+    press('import_cancel');
+end
 end
 
 function stop_dialog_timers()
@@ -202,8 +214,15 @@ if ~isempty(t)
 end
 end
 
-function run_steps(~, ~, steps)
+function run_steps(t, ~, steps)
 % the steps in the open dialog; on an error the dialog is closed (the test would wait for ever otherwise)
+if isempty(findall(0, 'Tag', 'image_import_dialog'))
+    if t.TasksExecuted >= t.TasksToExecute
+        setappdata(0, 'dialog_test_error', 'the dialog did not open within 60 s');
+    end
+    return % not open yet: check again in 0.5 s
+end
+stop(t); % run the steps once
 try
     if isappdata(0, 'dialog_test_folder') % the buttons open the dialog in the last image folder
         set(findall(0, 'Tag', 'import_folder'), 'String', getappdata(0, 'dialog_test_folder'));
@@ -722,7 +741,7 @@ verifyNumElements(testCase, board, 1);
 verifyEqual(testCase, size(board.CData, 1, 2), sz, 'board not shown on the common grid');
 % 3D view
 stereo.show_3d_Callback;
-fig = findall(0, 'Type', 'figure', 'Name', 'Stereo-PIV setup in 3D');
+fig = findall(0, 'Type', 'figure', 'Name', 'Camera setup in 3D');
 verifyNumElements(testCase, fig, 1);
 report = findall(fig, 'Tag', 'stereo_calib_report');
 verifyNumElements(testCase, report, 1, 'calibration report missing in the 3D view');
@@ -802,7 +821,7 @@ set(handles.stereo_disp_show, 'Value', 1);
 gui.sliderdisp(gui.retr('pivlab_axis'));
 verifyEmpty(testCase, findobj(fig, 'Tag', 'stereo_disparity_colorbar'), 'camera image: colour bar not removed');
 stereo.show_3d_Callback;
-fig = findall(0, 'Type', 'figure', 'Name', 'Stereo-PIV setup in 3D');
+fig = findall(0, 'Type', 'figure', 'Name', 'Camera setup in 3D');
 verifyNotEmpty(testCase, findobj(fig, 'Type', 'surface'), 'light sheet missing in the 3D view');
 close(fig);
 % session: disparity stored, maps made again identically
@@ -992,7 +1011,7 @@ verifyNotEmpty(testCase, strfind(report, 'Cameras on opposite sides of the light
 verifyNotEmpty(testCase, strfind(report, 'Camera 2 sees the board from behind'));
 verifyNotEmpty(testCase, strfind(report, 'x right, y up: toward camera 1'));
 stereo.show_3d_Callback;
-fig = findall(0, 'Type', 'figure', 'Name', 'Stereo-PIV setup in 3D');
+fig = findall(0, 'Type', 'figure', 'Name', 'Camera setup in 3D');
 verifyNumElements(testCase, fig, 1);
 close(fig);
 set(handles.pass1_size, 'String', '64'); piv.intarea_Callback(handles.pass1_size, [], []);

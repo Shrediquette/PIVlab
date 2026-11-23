@@ -14,6 +14,9 @@ arguments
     opts.K_opencv = []
     opts.stereo_map = []                % stereo-PIV: map of stereo.camera_map (replaces undistortion
                                         % and rectification, see preproc.cam_undistort_with)
+    opts.fov = []                       % two cameras for a larger field of view: fov.maps (with the
+                                        % frame list of camera 2); import.read_frame combines both
+                                        % cameras (replaces undistortion and rectification)
     opts.FromGUI (1,1) logical = false
 end
 if opts.FromGUI
@@ -34,6 +37,11 @@ if opts.FromGUI
         if iscell(maps) && ~isempty(active) && active <= numel(maps)
             opts.stereo_map = maps{active};
         end
+    elseif fov.gui_active % two cameras combined into a larger field of view (fov.update_maps)
+        opts.fov = gui.retr('fov_maps');
+        opts.fov.src = gui.retr('fov_src2'); % camera 2 frames: kept only there (also when images are removed)
+        opts.use_calibration = 0; % lens undistortion and rectification are in the combined images
+        opts.use_rectification = 0;
     end
 end
 cam = rmfield(opts,'FromGUI');

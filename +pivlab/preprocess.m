@@ -35,7 +35,9 @@ function imgs = preprocess(imgs, opts)
 %                        set, or a stereo-PIV camera from stereo.rectified_images): used as it is
 %                      - "none": no undistortion
 %                      Default: "none" - also when imgs was corrected before, the Camera option has
-%                      to be given again (like all other options, see Settings).
+%                      to be given again (like all other options, see Settings). Exception: an image
+%                      set of two combined cameras (pivlab.combineCameras) keeps its cameras, and
+%                      its default Mask is the part of the combined image that no camera sees.
 %                      The camera calibration itself is made in the PIVlab GUI (visual feedback).
 %   CameraView         "valid" (cut away black borders, default), "same" (same size as the input
 %                      image) or "full" (include black borders); default from the session
@@ -84,13 +86,20 @@ opts = rmfield(opts, {'Verbose', 'Camera', 'CameraView', 'Rectification'});
 if isempty(camera) && (~isempty(camera_view) || ~isempty(rectification))
     error('pivlab:preprocess:camera', 'CameraView and Rectification need the Camera option.');
 end
-if isempty(camera)
+combined = isfield(imgs, 'cam') && fov.is_combined(imgs.cam);
+if isempty(camera) && combined
+    camera = imgs.cam; % two cameras combined (pivlab.combineCameras): the images ARE the combined images
+elseif isempty(camera)
     camera = "none";   % options that are not given: defaults (no camera calibration)
 end
 imgs.cam = camera_from_source(camera, camera_view, rectification);
 first = import.read_frame(imgs, 1, imgs.cam, []);
 imgs.imageSize = [size(first,1) size(first,2)];
-if verbose && isfield(imgs.cam, 'stereo_map') && ~isempty(imgs.cam.stereo_map)
+combined = fov.is_combined(imgs.cam);
+if verbose && combined
+    fprintf('Two cameras combined into one image (larger field of view), image size %d x %d pixels.\n', ...
+        imgs.imageSize(2), imgs.imageSize(1));
+elseif verbose && isfield(imgs.cam, 'stereo_map') && ~isempty(imgs.cam.stereo_map)
     fprintf('Stereo-PIV camera: rectified onto the common grid of both cameras, image size %d x %d pixels.\n', ...
         imgs.imageSize(2), imgs.imageSize(1));
 elseif verbose && imgs.cam.use_calibration
@@ -109,6 +118,8 @@ if is_none(p.Roi)
 end
 if is_none(p.Mask)
     p.Mask = [];
+elseif isempty(p.Mask) && combined
+    p.Mask = imgs.cam.fov.owner == 0; % combined cameras: the part no camera sees
 end
 p.Background = lower(string(p.Background));
 if ~ismember(p.Background, ["none","mean","min"])

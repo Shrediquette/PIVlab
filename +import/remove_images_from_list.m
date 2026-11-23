@@ -28,6 +28,12 @@ if gui.retr('video_selection_done') ~= 1
 				masks_in_frame_doubled(box_select(i))=[];
 			end
 		end
+		if fov.gui_active % two cameras combined: the same images of camera 2
+			src2 = gui.retr('fov_src2');
+			keep = true(numel(src2.filepath), 1);
+			keep(box_select) = false;
+			gui.put('fov_src2', import.frame_list(src2, find(keep)));
+		end
 		if ~isempty(masks_in_frame)
 			masks_in_frame=cell(0);
 			cntr=1;

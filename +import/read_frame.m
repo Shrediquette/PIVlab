@@ -21,6 +21,10 @@ function [currentimage, rawimage] = read_frame(src, selected, cam, bg, raw_in)
 %   background is subtracted BEFORE the stereo transform (reflections are fixed to the camera,
 %   and the background stays valid when the disparity correction changes).
 %
+%   Larger field of view (cam.fov set, fov.maps): src is the frame list of camera 1, cam.fov.src
+%   that of camera 2 (same order); both raw frames are combined into one image (fov.compose), then
+%   it continues like a normal 2D image (the background images are combined images too).
+%
 %   Used by import.get_img (GUI), the parallel PIV loops and the pivlab.* API.
 
 if isempty(cam)
@@ -58,7 +62,12 @@ if isfield(cam,'stereo_map') && ~isempty(cam.stereo_map)
         end
     end
 else
-    currentimage = undistort(currentimage, cam);
+    if fov.is_combined(cam)
+        % larger field of view: combine camera 1 (this frame list) and camera 2 (cam.fov.src), then 2D
+        currentimage = fov.compose(currentimage, import.read_raw_frame(cam.fov.src, selected), cam.fov);
+    else
+        currentimage = undistort(currentimage, cam);
+    end
     rawimage=currentimage;
     if ~isempty(bg_img)
         if size(currentimage,3)>1 %color image cannot be displayed properly when bg subtraction is enabled.
