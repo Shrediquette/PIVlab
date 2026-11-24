@@ -27,7 +27,7 @@ if fov.gui_active % two cameras combined into one image: a normal 2D data set, o
 end
 if ~isequal(gui.retr('stereomode'), 1)
     set(rows, 'Visible', 'off');
-    set(handles.stereo_steps, 'Visible', 'on', 'String', 'Load the images of both cameras first (Input data panel: "Import multi-camera images").');
+    set(handles.stereo_steps, 'Visible', 'on', 'String', 'Load the images of both cameras first (Input data panel: "Import stereo / multicam images").');
     set(handles.stereo_disp_report, 'String', 'Not measured yet.');
     return
 end

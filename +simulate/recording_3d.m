@@ -575,13 +575,13 @@ p('  generator_setup.mat              variable setup: input of simulate.recordin
 p('');
 p('Workflow in PIVlab');
 if n > 1
-    p('  1. Input data: "Import multi-camera images": the particle images of camera 1 and camera 2.');
+    p('  1. Input data: "Import stereo / multicam images": the particle images of camera 1 and camera 2.');
     p('  2. For camera <k> = 1 and 2 (switch with the CAM 1 / CAM 2 button at the bottom left):');
     p('     Image settings -> Camera calibration -> Camera calibration (undistortion):');
     p('     load the calibration images of camera <k> and estimate the camera parameters.');
     p('     Image settings -> Camera calibration -> Image rectification / alignment:');
     p('     load board_in_light_sheet_cam<k>.tif as target image.');
-    p('  3. Analysis -> Multi-camera PIV: "Compute 3D alignment" (stereo-PIV or larger field of view, from the camera positions), measure the disparity, analyze.');
+    p('  3. Analysis -> Stereo-PIV / multicam: "Compute stereo / 3D alignment" (stereo-PIV or larger field of view, from the camera positions), measure the disparity, analyze.');
     p('     The light sheet is offset by %g mm and tilted: the disparity correction has to find it.', setup.sheet.Offset);
     p('  4. Compare with the ground truth: simulate.truth_at_board(truth, x_mm, y_mm).');
 else

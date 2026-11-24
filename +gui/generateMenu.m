@@ -43,7 +43,7 @@ uimenu(m5,'Label','Define masks (exclude regions from analysis)   (Ctrl+Shift+K)
 
 m6 = uimenu(MainWindow,'Label','Analysis');
 uimenu(m6,'Label','PIV settings   (Ctrl+Shift+S)','Callback',@piv.sett_Callback,'Tag','menu_pivsettings');
-uimenu(m6,'Label','Multi-camera PIV   (Ctrl+Shift+W)','Callback',@stereo.panel_Callback,'Tag','menu_stereopiv');
+uimenu(m6,'Label','Stereo-PIV / multicam   (Ctrl+Shift+W)','Callback',@stereo.panel_Callback,'Tag','menu_stereopiv');
 uimenu(m6,'Label','ANALYZE!   (Ctrl+Shift+A)','Callback',@piv.do_analys_Callback,'Tag','menu_analyze');
 m7 = uimenu(MainWindow,'Label','Validation');
 uimenu(m7,'Label','Velocity based validation   (Ctrl+Shift+V)','Callback',@validate.vector_val_Callback,'Tag','menu_velvalidation');

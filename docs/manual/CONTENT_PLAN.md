@@ -289,6 +289,14 @@ Findings worth never re-deriving:
 
 Newest first. **Add an entry whenever you change the manual**, and bump the watermark.
 
+### 2026-11-24 — stereo UI renames
+GUI labels renamed: "Import stereo / multicam images" (Input data panel, buttons now 11 pt so the label
+fits), menu and panel "Stereo-PIV / multicam", button "Compute stereo / 3D alignment" (sub-box
+"3D alignment"). Updated the UI names in `stereo-piv`, `stereo-setup`, `sessions`, `shortcuts`,
+`command-line`, `camera-calibration` and the search index (old names kept as keywords). New screenshots
+`sessions/input-data-panel.png` and `stereo-piv/panel.png`. Watermark **not** bumped: the large field of
+view mode (two cameras side by side, `+fov`) is not documented yet.
+
 ### 2026-11-20 — live overlays on capture.html
 The live detector overlays were redesigned (yellow marker outlines, status block top left, QR corner brackets,
 dashed frame of the other camera + "Overlap" in the dual view; stereo dev log section 57). `capture.html`:

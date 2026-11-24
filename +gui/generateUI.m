@@ -137,33 +137,33 @@ item=[0 0 0 0];
 
 item=[0 item(2)+item(4) parentitem(3) 2];
 gui.ui_button(handles.multip01, pos(parentitem,item,margin), 'Import images', {@import.loadimgsbutton_Callback,1,[]}, ...
-    'Fontsize',12, 'TooltipString','Load image data');
+    'Fontsize',11, 'TooltipString','Load image data');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
-gui.ui_button(handles.multip01, pos(parentitem,item,margin), 'Import multi-camera images', @import.stereo_import_Callback, ...
-    'Fontsize',12, 'Tag','stereo_import', ...
-    'TooltipString','Import the images of camera 1 and camera 2: stereo-PIV (u, v, w) or one larger field of view (u, v), chosen from the camera geometry by "Compute 3D alignment" (Ctrl+Shift+O)');
+gui.ui_button(handles.multip01, pos(parentitem,item,margin), 'Import stereo / multicam images', @import.stereo_import_Callback, ...
+    'Fontsize',11, 'Tag','stereo_import', ...
+    'TooltipString','Import the images of camera 1 and camera 2: stereo-PIV (u, v, w) or one larger field of view (u, v), chosen from the camera geometry by "Compute stereo / 3D alignment" (Ctrl+Shift+O)');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 gui.ui_button(handles.multip01, pos(parentitem,item,margin), 'Convert + import video', @import.convertvideobutton_Callback, ...
-    'Fontsize',12, 'TooltipString','Convert a video to lossless image files, then load them (time-resolved)');
+    'Fontsize',11, 'TooltipString','Convert a video to lossless image files, then load them (time-resolved)');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 gui.ui_button(handles.multip01, pos(parentitem,item,margin), 'Load session', @import.load_session_Callback, ...
-    'Fontsize',12, 'TooltipString','Load previously saved session file');
+    'Fontsize',11, 'TooltipString','Load previously saved session file');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 gui.ui_button(handles.multip01, pos(parentitem,item,margin), 'Acquire images', @acquisition.capture_images_Callback, ...
-    'Fontsize',12, 'TooltipString','Acquire PIV images in PIVlab');
+    'Fontsize',11, 'TooltipString','Acquire PIV images in PIVlab');
 
 item=[0 item(2)+item(4)+margin parentitem(3) 2];
 gui.ui_button(handles.multip01, pos(parentitem,item,margin), 'Reset PIVlab GUI', @gui.reset_gui_Callback, ...
-    'Fontsize',12, 'Tag','reset_gui', 'Fontangle','italic', ...
+    'Fontsize',11, 'Tag','reset_gui', 'Fontangle','italic', ...
     'TooltipString','Remove all images, results, masks and calibrations and set all settings to their defaults, as after a new start of PIVlab');
 
 item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
 gui.ui_button(handles.multip01, pos(parentitem,item,margin), 'Read Manual', @gui.pivlabmanual_Callback, ...
-    'Fontsize',12, 'TooltipString','Open the PIVlab manual', 'Foregroundcolor',[0.2 0.4 1], 'Fontangle','italic');
+    'Fontsize',11, 'TooltipString','Open the PIVlab manual', 'Foregroundcolor',[0.2 0.4 1], 'Fontangle','italic');
 
 item=[0 item(2)+item(4)+margin*1.5 parentitem(3) 1];
 gui.ui_text(handles.multip01, pos(parentitem,item,margin), 'Image list:');
@@ -2920,7 +2920,7 @@ gui.ui_setting(handles.rect_imagedata, 'checkbox', pos(parentitem,item,margin), 
 
 % stereo-PIV: instead of upscaling and "Enable image rectification" (gui.update_dependent_controls)
 item=[0 upscale_row parentitem(3) 5];
-gui.ui_text(handles.rect_imagedata, pos(parentitem,item,margin), 'Two cameras: this board image is used by the 3D alignment (Analysis -> Multi-camera PIV).', ...
+gui.ui_text(handles.rect_imagedata, pos(parentitem,item,margin), 'Two cameras: this board image is used by the 3D alignment (Analysis -> Stereo-PIV / multicam).', ...
     'FontWeight','bold', 'Visible','off', 'Tag','stereo_rect_note', 'UserData','not_a_setting');
 
 
@@ -3020,7 +3020,7 @@ gui.ui_text(handles.plot_correlation_matrices, pos(parentitem,item,margin), 'Aft
 
 
 %% Multip30 Stereo-PIV
-handles.multip30 = gui.ui_panel(MainWindow, mainpanel_pos, 'Multi-camera PIV', ...
+handles.multip30 = gui.ui_panel(MainWindow, mainpanel_pos, 'Stereo-PIV / multicam', ...
     'Tag','multip30');
 parentitem=get(handles.multip30, 'Position');
 item=[0 0 0 0];
@@ -3029,7 +3029,7 @@ item=[0 item(2)+item(4) parentitem(3) 9.5];
 handles.stereo_steps_panel = gui.ui_panel(handles.multip30, pos(parentitem,item,margin), 'Steps', ...
     'Tag','stereo_steps_panel');
 parentitem2=get(handles.stereo_steps_panel, 'Position');
-gui.ui_text(handles.stereo_steps_panel, [margin margin/4 parentitem2(3)-margin*2 parentitem2(4)-margin*1.25], 'Load the images of both cameras first (Input data panel: "Import multi-camera images").', ...
+gui.ui_text(handles.stereo_steps_panel, [margin margin/4 parentitem2(3)-margin*2 parentitem2(4)-margin*1.25], 'Load the images of both cameras first (Input data panel: "Import stereo / multicam images").', ...
     'Tag','stereo_steps', 'UserData','not_a_setting');
 % one row per step, coloured by stereo.update_panel (done / open / next step); only in stereo mode
 row_height=(parentitem2(4)-margin*1.25)/7;
@@ -3044,7 +3044,7 @@ handles.stereo_calib_panel = gui.ui_panel(handles.multip30, pos(parentitem,item,
 parentitem2=get(handles.stereo_calib_panel, 'Position');
 item2=[0 0 0 0];
 item2=[0 item2(2)+item2(4) parentitem2(3) 1.5];
-gui.ui_button(handles.stereo_calib_panel, pos(parentitem2,item2,margin), 'Compute 3D alignment', @stereo.calibrate_Callback, ...
+gui.ui_button(handles.stereo_calib_panel, pos(parentitem2,item2,margin), 'Compute stereo / 3D alignment', @stereo.calibrate_Callback, ...
     'Tag','stereo_calibrate', ...
     'TooltipString','Places both cameras on the board from the board image in the light sheet of each camera (Image settings -> Camera calibration -> Image rectification -> Load target image). From the geometry: stereo-PIV (cameras look from different directions at the same area) or one larger field of view (cameras side by side, small overlap)');
 item2=[0 item2(2)+item2(4)+margin/4 parentitem2(3) 1.5];

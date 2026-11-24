@@ -13,7 +13,7 @@
     <p class="lead">Two cameras that look at the light sheet from different directions give all
     <strong>three velocity components</strong>: u and v in the sheet and w through it. Most of the
     work is the same as in 2D PIV; new are the <strong>camera switch</strong> and the
-    <strong>Stereo-PIV panel</strong>.</p>
+    <strong>Stereo-PIV / multicam panel</strong>.</p>
     <div class="v3">
       <strong>PIVlab 3.14</strong>
       Stereo-PIV is not available in PIVlab 3.14.
@@ -69,7 +69,7 @@
 
     <h2 id="import">1. Import</h2>
     <ul>
-      <li>Input data panel: <span class="ui">Import stereo images</span>
+      <li>Input data panel: <span class="ui">Import stereo / multicam images</span>
       (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd>). In the
       <a href="sessions.html#importing">import dialog</a> add the images with
       <span class="ui">Add to camera 1</span> and <span class="ui">Add to camera 2</span>.</li>
@@ -95,15 +95,15 @@
     </ul>
 
     <h2 id="calibration">3. Stereo calibration</h2>
-    <p>Steps 3 and 4 are in the <strong>Stereo-PIV panel</strong>
-    (<span class="ui">Analysis → Stereo-PIV</span>, <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>W</kbd>).
+    <p>Steps 3 and 4 are in the <strong>Stereo-PIV / multicam panel</strong>
+    (<span class="ui">Analysis → Stereo-PIV / multicam</span>, <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>W</kbd>).
     Its checklist shows what is still missing.</p>
     <figure class="inline-panel">
-      <img src="../assets/img/stereo-piv/panel.png" alt="The Stereo-PIV panel with the checklist, the stereo calibration buttons and the disparity correction settings and report">
-      <figcaption>The <strong>Stereo-PIV</strong> panel after the stereo calibration and the
+      <img src="../assets/img/stereo-piv/panel.png" alt="The Stereo-PIV / multicam panel with the checklist, the 3D alignment buttons and the disparity correction settings and report">
+      <figcaption>The <strong>Stereo-PIV / multicam</strong> panel after the stereo calibration and the
       disparity correction.</figcaption>
     </figure>
-    <p><span class="ui">Compute stereo calibration</span> finds the board corners in both board
+    <p><span class="ui">Compute stereo / 3D alignment</span> finds the board corners in both board
     images and computes the camera positions. Afterwards:</p>
     <ul>
       <li>Both cameras are shown on the common grid (check with <span class="ui">Show rectified

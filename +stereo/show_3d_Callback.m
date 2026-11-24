@@ -8,7 +8,7 @@ if fov.gui_active % two cameras combined into one image (larger field of view)
     disparity = [];
 end
 if isempty(calib) || ~isequal(gui.retr('stereomode'), 1) && ~fov.gui_active
-    gui.custom_msgbox('error', getappdata(0, 'hgui'), 'Multi-camera PIV', 'Compute the 3D alignment first ("Compute 3D alignment").', 'modal');
+    gui.custom_msgbox('error', getappdata(0, 'hgui'), 'Stereo-PIV / multicam', 'Compute the 3D alignment first ("Compute stereo / 3D alignment").', 'modal');
     return
 end
 [~, ax] = scene3d.window(@(ax) stereo.plot_setup(ax, calib, disparity), Name='Camera setup in 3D');

@@ -1,6 +1,6 @@
 %% Two cameras for a larger field of view in the PIVlab window
 %
-% "Import multi-camera images" + lens calibration and board image per camera + "Compute 3D alignment" with two
+% "Import stereo / multicam images" + lens calibration and board image per camera + "Compute stereo / 3D alignment" with two
 % cameras side by side: PIVlab chooses the larger field of view and makes ONE combined 2D data set (camera
 % switch gone, px -> mm filled in, automatic region of interest inside the views, calibration panel locked). Then: analysis
 % against the ground truth, background, image-based validation, sessions, a new import of the same cameras
@@ -131,7 +131,7 @@ verifyEqual(testCase, import.get_img(5), before);
 end
 
 function test_new_import_keeps_alignment(testCase)
-% "Import multi-camera images" with images of the same cameras: combined again, no new 3D alignment
+% "Import stereo / multicam images" with images of the same cameras: combined again, no new 3D alignment
 c = testCase.TestData.c;
 combined(c);
 calib = gui.retr('fov_calib');

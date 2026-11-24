@@ -17,7 +17,7 @@ if analyze
     if isempty(gui.retr('stereo_disparity'))
         if ~batch
             gui.custom_msgbox('msg', hgui, 'Stereo-PIV', ['The disparity correction is measured first, with the settings ' ...
-                'of the Multi-camera PIV panel.'], 'modal', {'OK'}, 'OK');
+                'of the Stereo-PIV / multicam panel.'], 'modal', {'OK'}, 'OK');
         end
         stereo.measure_disparity_Callback;
         if isempty(gui.retr('stereo_disparity'))

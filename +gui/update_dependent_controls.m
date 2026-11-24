@@ -192,7 +192,7 @@ if combined
         'and the board grid are in the images. Lens calibration and rectification are locked.'], ...
         'ForegroundColor', get(handles.filenameshow, 'ForegroundColor'));
 else
-    set(handles.stereo_rect_note, 'String', 'Two cameras: this board image is used by the 3D alignment (Analysis -> Multi-camera PIV).');
+    set(handles.stereo_rect_note, 'String', 'Two cameras: this board image is used by the 3D alignment (Analysis -> Stereo-PIV / multicam).');
 end
 % Statistics panel: w in the histogram list (item 5; items 1-4 as in 2D) and a 3D scatter plot
 hist_items = {'u velocity'; 'v velocity'; 'velocity magnitude'; 'sub-pixels'};

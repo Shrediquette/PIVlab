@@ -1,5 +1,5 @@
 function calibrate_Callback(~, ~, ~)
-%CALIBRATE_CALLBACK "Compute 3D alignment" (Multi-camera PIV panel): stereo-PIV or larger field of view.
+%CALIBRATE_CALLBACK "Compute stereo / 3D alignment" (Stereo-PIV / multicam panel): stereo-PIV or larger field of view.
 % Uses the lens calibration and the board image in the light sheet of each camera (camera calibration
 % panels of camera 1 and 2) and the board definition of the calibration panels. Afterwards both cameras
 % show their images on the common grid (stereo.update_maps), the region of interest is the overlap of
@@ -11,7 +11,7 @@ function calibrate_Callback(~, ~, ~)
 hgui = getappdata(0, 'hgui');
 batch = isequal(gui.retr('batchModeActive'), 1);
 if ~isequal(gui.retr('stereomode'), 1)
-    gui.custom_msgbox('error', hgui, 'Multi-camera PIV', 'Load the images of both cameras first (Input data panel: "Import multi-camera images").', 'modal');
+    gui.custom_msgbox('error', hgui, 'Stereo-PIV / multicam', 'Load the images of both cameras first (Input data panel: "Import stereo / multicam images").', 'modal');
     return
 end
 stereo.store_active_camera

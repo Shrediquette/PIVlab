@@ -474,7 +474,7 @@ window.MANUAL_SEARCH = [
     title: "Stereo-PIV analysis (2D3C)",
     href: "pages/stereo-piv.html", hash: "top",
     section: "Stereo-PIV (2D3C)",
-    text: "stereo piv analysis two cameras 2d3c three components w out-of-plane import stereo images camera switch lens calibration board image load target image stereo calibration disparity correction remaining disparity reconstruction residual colour bar coordinate system x y z u v w tilted sensor check analysis rectified board stereo-piv panel checklist export w column vtk tecplot ascii mat w component 3d magnitude mean tke"
+    text: "stereo piv analysis two cameras 2d3c three components w out-of-plane import stereo images import stereo / multicam images multicam camera switch lens calibration board image load target image stereo calibration disparity correction remaining disparity reconstruction residual colour bar coordinate system x y z u v w tilted sensor check analysis rectified board stereo-piv panel stereo-piv / multicam panel compute stereo / 3d alignment checklist export w column vtk tecplot ascii mat w component 3d magnitude mean tke"
   },
   {
     title: "Stereo-PIV: set-up and recording",

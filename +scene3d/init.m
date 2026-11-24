@@ -69,12 +69,13 @@ ax = d.ax;
 delta = fig.CurrentPoint - d.mouse0;
 switch d.kind
     case 'orbit'
-        % 1 degree per pixel about the vertical axis of the scene, which stays upright
+        % 0.5 degree per pixel about the vertical axis of the scene, which stays upright; the near side of
+        % the scene follows the mouse in both directions
         u = scene3d.up(ax);
         if any(cross(u, ax.CameraPosition - ax.CameraTarget)) % not looking along the vertical
             ax.CameraUpVector = u;
         end
-        camorbit(ax, delta(1), -delta(2), 'data', u);
+        camorbit(ax, -0.5 * delta(1), -0.5 * delta(2), 'data', u);
     case 'pan' % camera and target of the view parallel to the screen: the scene follows the mouse
         f = ax.CameraTarget - ax.CameraPosition;
         distance = norm(f);

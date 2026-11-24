@@ -3,7 +3,7 @@ function clear_image_data(extra_keys)
 %   stereo.clear_image_data
 %   stereo.clear_image_data(extra_keys)   also these GUI data entries (e.g. the stereo results)
 % Results, derived data, manual deletions, streamlines, velocity limits, masks and background images; the
-% display goes back to the image and background subtraction is switched off. Used by "Compute 3D alignment"
+% display goes back to the image and background subtraction is switched off. Used by "Compute stereo / 3D alignment"
 % (stereo.calibrate_Callback, fov.enter_combined).
 if nargin < 1
     extra_keys = {};

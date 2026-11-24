@@ -14,7 +14,7 @@ hgui = getappdata(0, 'hgui');
 batch = isequal(gui.retr('batchModeActive'), 1);
 calib = gui.retr('stereo_calib');
 if ~isequal(gui.retr('stereomode'), 1) || isempty(calib)
-    gui.custom_msgbox('error', hgui, 'Multi-camera PIV', 'Compute the 3D alignment first ("Compute 3D alignment").', 'modal');
+    gui.custom_msgbox('error', hgui, 'Stereo-PIV / multicam', 'Compute the 3D alignment first ("Compute stereo / 3D alignment").', 'modal');
     return
 end
 handles = gui.gethand;
