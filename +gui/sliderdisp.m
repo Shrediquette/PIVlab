@@ -90,8 +90,10 @@ if capturing==0
         if strncmp(get(handles.multip06, 'visible'), 'on',2) || strncmp(get(handles.multip23, 'visible'), 'on',2) || strncmp(get(handles.multip32, 'visible'), 'on',2) %if in data validation panel
             validate.count_discarded_data
         end
-        if strncmp(get(handles.multip01, 'visible'), 'on',2)
-            set(handles.imsize, 'string', ['Image size: ' int2str(image_size(2)) '*' int2str(image_size(1)) 'px' ])
+        % also while another panel is open (new images loaded from there), so the Input data panel is never outdated
+        imsize_string = ['Image size: ' int2str(image_size(2)) '*' int2str(image_size(1)) 'px'];
+        if ~strcmp(get(handles.imsize, 'string'), imsize_string)
+            set(handles.imsize, 'string', imsize_string)
         end
 
         roirect=gui.retr('roirect');
