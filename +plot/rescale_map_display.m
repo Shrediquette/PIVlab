@@ -13,7 +13,7 @@ function [out, minscale, maxscale, region] = rescale_map_display(in, x, y, imsiz
 %                       (zoom / pan: only the display pixels change); [] = compute it
 %
 %   Inside the vector grid the values are exactly those of plot.rescale_map_core (the same
-%   imresize, taken at the display pixels); outside the fill value (mean) is the same. Only the
+%   plot.grid_to_pixels, taken at the display pixels); outside the fill value (mean) is the same. Only the
 %   extrapolated border (extrapolate_border, spring inpainting) is computed at display
 %   resolution: at full resolution it took 1-3 s for a 26 MP frame. Inpainting with springs gives
 %   values between the known neighbours, so the colour limits of the full map are those of the
@@ -43,8 +43,6 @@ miny_idx = max(1, floor(miny));
 minx_idx = max(1, floor(minx));
 maxy_idx = min(H, floor(maxy - 1));
 maxx_idx = min(W, floor(maxx - 1));
-target_rows = maxy_idx - miny_idx + 1;
-target_cols = maxx_idx - minx_idx + 1;
 if extrapolate_border
 	fill = NaN;
 else
@@ -56,12 +54,14 @@ end
 if isstruct(region) && isfield(region, 'key') && isequaln(region.key, key) % isequaln: maps with NaN
 	dispvar = region.dispvar;
 else
+	rows = miny_idx:maxy_idx;
+	cols = minx_idx:maxx_idx;
 	if isangle == 1 % angle data is unsteady, needs to interpolated differently
-		X_interp = imresize(cos(in/180*pi), [target_rows target_cols], 'bilinear');
-		Y_interp = imresize(sin(in/180*pi), [target_rows target_cols], 'bilinear');
+		X_interp = plot.grid_to_pixels(cos(in/180*pi), x(1,:), y(:,1), rows, cols, 'bilinear');
+		Y_interp = plot.grid_to_pixels(sin(in/180*pi), x(1,:), y(:,1), rows, cols, 'bilinear');
 		dispvar = angle(complex(X_interp, Y_interp))*180/pi;
 	else
-		dispvar = imresize(in, [target_rows target_cols], interp_method);
+		dispvar = plot.grid_to_pixels(in, x(1,:), y(:,1), rows, cols, interp_method);
 	end
 	region = struct();
 	region.key = key;

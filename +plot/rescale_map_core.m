@@ -30,21 +30,22 @@ miny_idx=max(1,floor(miny));
 minx_idx=max(1,floor(minx));
 maxy_idx=min(size(out,1),floor(maxy-1));
 maxx_idx=min(size(out,2),floor(maxx-1));
-target_rows=maxy_idx-miny_idx+1;
-target_cols=maxx_idx-minx_idx+1;
+rows=miny_idx:maxy_idx;
+cols=minx_idx:maxx_idx;
 if size(in,3)>1
     in(:,:,2:end)=[];
 end
+%interpolation at the true pixel positions (kernels of imresize, see plot.grid_to_pixels)
 if isangle == 1 %angle data is unsteady, needs to interpolated differently
     X_raw=cos(in/180*pi);
     Y_raw=sin(in/180*pi);
     %interpolate
-    X_interp = imresize(X_raw,[target_rows target_cols],'bilinear');
-    Y_interp = imresize(Y_raw,[target_rows target_cols],'bilinear');
+    X_interp = plot.grid_to_pixels(X_raw,x(1,:),y(:,1),rows,cols,'bilinear');
+    Y_interp = plot.grid_to_pixels(Y_raw,x(1,:),y(:,1),rows,cols,'bilinear');
     %reconvert to phase
     dispvar = angle(complex(X_interp,Y_interp))*180/pi;
 else
-    dispvar = imresize(in,[target_rows target_cols],interp_method);
+    dispvar = plot.grid_to_pixels(in,x(1,:),y(:,1),rows,cols,interp_method);
 end
 out(miny_idx:maxy_idx,minx_idx:maxx_idx)=dispvar;
 if extrapolate_border

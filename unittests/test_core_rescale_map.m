@@ -34,13 +34,49 @@ end
 
 % -------------------------------------------------------------------------
 
-function test_inside_the_grid_is_the_interpolated_map(testCase)
+function test_inside_the_grid_values_at_the_true_pixel_positions(testCase)
+% pixel (r, c) has its centre at x = c, y = r. A linear map is reproduced exactly (bilinear: in the
+% whole region, the half cell outside the outermost vectors continues their values; bicubic: one
+% cell inside the outermost vectors); nearest: the value of the nearest vector (ties to the next).
+% Until 2026-11 the map was shifted by 0.5 px (1 px for grids on half pixels).
 td = testCase.TestData;
+lin = 0.3 * td.x - 0.2 * td.y + 5;
+[C, R] = meshgrid(td.cols, td.rows);
+xg = td.x(1, :);
+yg = td.y(:, 1);
+Cc = min(max(C, xg(1)), xg(end));       % the outermost values continue
+Rc = min(max(R, yg(1)), yg(end));
 for method = {'bilinear', 'bicubic', 'nearest'}
-    out = plot.rescale_map_core(td.in, td.x, td.y, td.img_size, false, method{1}, false, []);
+    out = plot.rescale_map_core(lin, td.x, td.y, td.img_size, false, method{1}, false, []);
     testCase.verifyEqual(size(out), td.img_size, method{1});
-    expected = imresize(td.in, [numel(td.rows) numel(td.cols)], method{1});
-    testCase.verifyEqual(out(td.rows, td.cols), expected, 'AbsTol', 1e-12, method{1});
+    inside = out(td.rows, td.cols);
+    switch method{1}
+        case 'bilinear'
+            testCase.verifyEqual(inside, 0.3 * Cc - 0.2 * Rc + 5, 'AbsTol', 1e-12, method{1});
+        case 'bicubic'
+            ok = C >= xg(2) & C <= xg(end-1) & R >= yg(2) & R <= yg(end-1);
+            testCase.verifyEqual(inside(ok), 0.3 * C(ok) - 0.2 * R(ok) + 5, 'AbsTol', 1e-12, method{1});
+        case 'nearest'
+            step = xg(2) - xg(1);
+            j = min(max(floor((C - xg(1)) / step + 0.5) + 1, 1), numel(xg));
+            i = min(max(floor((R - yg(1)) / step + 0.5) + 1, 1), numel(yg));
+            testCase.verifyEqual(inside, lin(sub2ind(size(lin), i, j)), 'AbsTol', 1e-12, method{1});
+    end
+end
+end
+
+function test_same_kernels_as_imresize(testCase)
+% on a grid where imresize to the size of the region is at the right positions (vectors on half
+% pixels: x1 - step/2 + 0.5 is a whole pixel), the map is that of imresize: only the positions
+% were changed, not the interpolation
+[x, y] = meshgrid(5.5:10:75.5, 5.5:10:55.5);
+rng(2);
+in = rand(size(x));
+for method = {'bilinear', 'bicubic', 'nearest'}
+    out = plot.rescale_map_core(in, x, y, [70 90], false, method{1}, false, []);
+    expected = imresize(in, size(x) * 10, method{1});   % pixel centres 1 ... 10 n
+    % the region of the map is rows 1 ... 59, columns 1 ... 79 (as before the change)
+    testCase.verifyEqual(out(1:59, 1:79), expected(1:59, 1:79), 'AbsTol', 1e-12, method{1});
 end
 end
 
@@ -77,8 +113,21 @@ in = td.in;
 in(2,3) = NaN;
 in(3,2) = NaN;
 out = plot.rescale_map_core(in, td.x, td.y, td.img_size, false, 'bilinear', true, []);
+% bilinear: a pixel is NaN if a NaN vector is less than one step away in x and in y (the outermost
+% values continue in the half cell outside the grid)
+xg = td.x(1, :);
+yg = td.y(:, 1);
+step = xg(2) - xg(1);
+[C, R] = meshgrid(td.cols, td.rows);
+Cc = min(max(C, xg(1)), xg(end));
+Rc = min(max(R, yg(1)), yg(end));
+[ni, nj] = find(isnan(in));
+near_nan = false(size(C));
+for k = 1:numel(ni)
+    near_nan = near_nan | (abs(Cc - xg(nj(k))) < step & abs(Rc - yg(ni(k))) < step);
+end
 expected_nan = false(td.img_size);
-expected_nan(td.rows, td.cols) = isnan(imresize(in, [numel(td.rows) numel(td.cols)], 'bilinear'));
+expected_nan(td.rows, td.cols) = near_nan;
 testCase.assertTrue(any(expected_nan(:)), 'test setup: no NaN inside the grid');
 testCase.verifyEqual(isnan(out), expected_nan, 'NaN of masked vectors changed');
 end

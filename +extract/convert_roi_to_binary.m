@@ -14,8 +14,9 @@ elseif strcmp(extract_type,'extract_rectangle_area')%rectangle:
 	rectangle_coords(4, 2) = bbox(:, 2) + bbox(:, 4);
 	BW = poly2mask(rectangle_coords(:,1),rectangle_coords(:,2),size_of_image(1),size_of_image(2));
 elseif strcmp(extract_type,'extract_circle_area')%circles:
-	nsides_that_make_sense = floor(sqrt(2*pi()*yposition));
-	pgon = nsidedpoly(nsides_that_make_sense,'Center',xposition,'Radius',yposition);
-	BW = poly2mask(pgon.Vertices(:,1),pgon.Vertices(:,2),size_of_image(1),size_of_image(2));
+	%the circle as in the circle series (extract.plot_data_area): 360 sides. A polygon with
+	%floor(sqrt(2*pi*r)) sides made the area too small (6.5 % at r = 16 px, 3 % at r = 40 px).
+	valtable=linspace(0,2*pi,361)';
+	BW = poly2mask(sin(valtable)*yposition+xposition(1),cos(valtable)*yposition+xposition(2),size_of_image(1),size_of_image(2));
 end
 

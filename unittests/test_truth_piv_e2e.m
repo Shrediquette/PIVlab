@@ -1,8 +1,10 @@
 function tests = test_truth_piv_e2e
 %TEST_TRUTH_PIV_E2E The whole chain with PIV error: synthetic particle images (300 x 300 px) of a known
-%   linear flow -> pivlab.analyze (fft multipass, ensemble, dcc) -> pivlab.filter -> pivlab.toMetric
-%   -> pivlab.derive, for all axis settings and calibrations: velocities, coordinates and gradients
-%   match the truth within the PIV error. Optical flow is not tested here. No PIVlab window.
+%   linear flow -> pivlab.analyze (fft multipass, ensemble, dcc, wavelet optical flow) -> pivlab.filter
+%   -> pivlab.toMetric -> pivlab.derive, for all axis settings and calibrations: velocities,
+%   coordinates and gradients match the truth within the PIV error. The optical flow test needs the
+%   wOFV filter matrices (+wOFV/Filter matrices, downloaded at the first use of the optical flow in
+%   PIVlab) and is skipped without them. No PIVlab window.
 %   Run with: run_pivlab_tests('test_truth_piv_e2e')
 tests = functiontests(localfunctions);
 end
@@ -29,6 +31,7 @@ testCase.TestData.Res.fft = pivlab.analyze(imgs, Algorithm="fft", InterrogationA
 testCase.TestData.Res.ensemble = pivlab.analyze(imgs, Algorithm="ensemble", InterrogationArea=48, Step=16, ...
     Passes=2, PassSizes=24, Verbose=false);
 testCase.TestData.Res.dcc = pivlab.analyze(imgs, Algorithm="dcc", InterrogationArea=32, Step=16, Verbose=false);
+testCase.TestData.Imgs = imgs;
 end
 
 function teardownOnce(testCase)
@@ -55,11 +58,25 @@ function test_dcc(testCase)
 check_algorithm(testCase, "dcc", 4);
 end
 
+function test_optical_flow(testCase)
+% dense result (one vector per pixel, patch size 256 px). Measured: rms error about 0.01 px/frame,
+% max 0.05 inside, up to 0.2 in the outermost 8 px, which are left out.
+testCase.assumeTrue(isfolder(fullfile(testCase.TestData.Root, '+wOFV', 'Filter matrices')), ...
+    'wOFV filter matrices not downloaded yet');
+testCase.TestData.Res.ofv = pivlab.analyze(testCase.TestData.Imgs, Algorithm="ofv", Verbose=false);
+check_algorithm(testCase, "ofv", 4, 8);
+end
+
 %% ------------------------------------------------------------------ local functions
 
-function check_algorithm(testCase, alg, n_frames)
+function check_algorithm(testCase, alg, n_frames, border)
 % measured on these images (px/frame): rms error about 0.02, max about 0.08, vorticity median
 % within 1 %. Tolerances: rms 0.05, max 0.2, median of the gradients 3 %, 95th percentile 50 %.
+% border: vectors closer than this to the image border (px) are not checked (default: only the
+% outermost row and column of vectors)
+if nargin < 4
+    border = [];
+end
 D = testCase.TestData;
 F = D.F;
 res = D.Res.(alg);
@@ -68,8 +85,12 @@ res = pivlab.filter(res, Verbose=false);
 x = double(res.px.x);
 y = double(res.px.y);
 T = helper_truth_field(F, x, y);
-inner = false(size(x));
-inner(2:end-1, 2:end-1) = true;
+if isempty(border)
+    inner = false(size(x));
+    inner(2:end-1, 2:end-1) = true;
+else
+    inner = x > border & x <= F.size(2) - border & y > border & y <= F.size(1) - border;
+end
 C = helper_truth_cases();
 for k = 1:numel(C)
     c = C(k);
@@ -94,7 +115,20 @@ for k = 1:numel(C)
         m = double(m(:, :, 1));
         truth = pairs{q, 2}(1);       % constant for the linear flow
         med = median(m(inner), 'omitnan');
-        if pairs{q, 1} == "qcriterion"
+        if alg == "ofv"
+            % optical flow: the gradients are taken on the 1 px grid. Their medians are within 1 %,
+            % but single values are noisy: 95th percentile of the error about 0.67 g (tolerance g).
+            % Q is a product of gradients: the noise (interquartile range about 6 times Q) biases its
+            % median to about 15 % of the truth, also after spatial smoothing: only the sign is checked.
+            if pairs{q, 1} == "qcriterion"
+                testCase.verifyEqual(sign(med), sign(truth), ...
+                    sprintf('%s: sign of the median qcriterion %.4g, truth %.4g', name, med, truth));
+                continue
+            end
+            tol = 0.03 * g;
+            testCase.verifyLessThanOrEqual(prctile(abs(m(inner) - truth), 95), g, ...
+                sprintf('%s: 95th percentile of the %s error', name, pairs{q, 1}));
+        elseif pairs{q, 1} == "qcriterion"
             % Q = omega^2 - a^2 - s^2 is a small difference of products of noisy gradients: the noise
             % biases it (about -15 % with fft, -30 % with dcc here): only size and sign are checked
             tol = 0.4 * abs(truth);
