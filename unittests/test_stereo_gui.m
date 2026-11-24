@@ -180,7 +180,23 @@ verifyEqual(testCase, numel(gui.retr('filepath')) + numel(state{2}.filepath), 12
 rmappdata(0, 'dialog_test');
 rmappdata(0, 'dialog_test_folder');
 stop_dialog_timers();
-verifyFalse(testCase, isappdata(0, 'dialog_test_error'), 'error in a dialog step');
+verifyFalse(testCase, isappdata(0, 'dialog_test_error'), dialog_error_text());
+end
+
+function text = dialog_error_text()
+% diagnostic: the error of a dialog step (stored by the timer callbacks)
+message = getappdata(0, 'dialog_test_error');
+if isempty(message)
+    message = '';
+end
+text = ['error in a dialog step: ' char(message)];
+end
+
+function ready = dialog_ready()
+% the import dialog is open and complete: gui.image_import_dialog makes its window visible after all
+% controls exist (the window has its Tag from the start: steps that run earlier find missing controls)
+fig = findall(0, 'Tag', 'image_import_dialog');
+ready = ~isempty(fig) && strcmp(char(fig(1).Visible), 'on');
 end
 
 function files = run_dialog(mode, folder, steps)
@@ -216,11 +232,11 @@ end
 
 function run_steps(t, ~, steps)
 % the steps in the open dialog; on an error the dialog is closed (the test would wait for ever otherwise)
-if isempty(findall(0, 'Tag', 'image_import_dialog'))
+if ~dialog_ready()
     if t.TasksExecuted >= t.TasksToExecute
         setappdata(0, 'dialog_test_error', 'the dialog did not open within 60 s');
     end
-    return % not open yet: check again in 0.5 s
+    return % not open (or not complete) yet: check again in 0.5 s
 end
 stop(t); % run the steps once
 try
@@ -355,7 +371,7 @@ files = [];
 output = evalc('files = gui.image_import_dialog(''single'', root);'); % the table prints its errors only
 stop_dialog_timers();
 rmappdata(0, 'dialog_test_root');
-assertFalse(testCase, isappdata(0, 'dialog_test_error'), 'error in a dialog step');
+assertFalse(testCase, isappdata(0, 'dialog_test_error'), dialog_error_text());
 verifyFalse(testCase, contains(output, 'Error'), output);
 info = getappdata(0, 'dialog_test');
 rmappdata(0, 'dialog_test');
@@ -377,7 +393,7 @@ state.ticks = state.ticks + 1;
 state.all_ticks = state.all_ticks + 1;
 info = getappdata(0, 'dialog_test');
 root = getappdata(0, 'dialog_test_root');
-dialog_open = ~isempty(findall(0, 'Tag', 'image_import_dialog'));
+dialog_open = dialog_ready();
 folder = '';
 if dialog_open
     folder = get(findall(0, 'Tag', 'import_folder'), 'String');
