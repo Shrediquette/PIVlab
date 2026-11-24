@@ -95,9 +95,14 @@ if isempty(fh)
                 MainWindow.Theme = 'light';
             end
         else
+            % no theme chosen in PIVlab: the window follows the MATLAB theme. It may still get the
+            % system theme some seconds later; the PIVlab colours follow it (gui.theme_changed).
             theme=MainWindow.Theme;
             if strcmpi(theme.BaseColorStyle,'dark')
                 gui.put('darkmode',1);
+            end
+            if isprop(MainWindow,'ThemeChangedFcn')
+                MainWindow.ThemeChangedFcn = @gui.theme_changed;
             end
         end
     else
@@ -487,6 +492,10 @@ if isempty(fh)
     gui.put('batchModeActive',0)
     % state of the window data after the start: "Reset PIVlab GUI" (gui.reset_gui_Callback) goes back to it
     gui.put('startup_appdata',getappdata(MainWindow))
+    % the window may have got the system theme while PIVlab started: the colours follow it now
+    if isprop(MainWindow,'ThemeChangedFcn') && ~isempty(MainWindow.ThemeChangedFcn)
+        gui.theme_changed(MainWindow)
+    end
 else %Figure handle does already exist --> bring PIVlab to foreground.
     disp('Only one instance of PIVlab is allowed to run.')
     figure(fh)

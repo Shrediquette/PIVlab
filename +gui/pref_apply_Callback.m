@@ -15,4 +15,6 @@ gui.apply_settings(settings, fieldnames(gui.default_settings), true);
 gui.MainWindow_ResizeFcn(getappdata(0,'hgui'))
 gui.preferences_Callback % open the preferences panel first: only it is visible while the data is shown again
 gui.show_data_after_rebuild(view)
+gui.toolsavailable(0) % as at the start: remembers the disabled controls of the new window (a later
+gui.toolsavailable(1) % gui.toolsavailable(1) would otherwise enable them) and enables the others again
 

@@ -40,6 +40,62 @@ helper_close_pivlab();
 testCase.verifyFalse(ispref('PIVlab','ui_mode'), 'nothing stored without a change');
 end
 
+function test_colours_follow_the_matlab_theme(testCase)
+% without a theme chosen in PIVlab, the PIVlab colours follow a change of the MATLAB theme (as the
+% system theme, which the first window of a MATLAB session without desktop gets only some seconds
+% after it was made): the controls are built again, the open panel and the images stay, nothing is stored
+if ispref('PIVlab'), rmpref('PIVlab'); end
+testCase.addTeardown(@clear_temporary_matlab_theme);
+testCase.addTeardown(@helper_close_pivlab);   % runs first: PIVlab is closed before the MATLAB theme goes back
+helper_start_pivlab();
+helper_gui_load_images(helper_files('jet', 3));
+gui.switchui('multip04');
+dark_before = isequal(gui.retr('darkmode'), 1);
+set_temporary_matlab_theme(~dark_before);
+testCase.verifyTrue(wait_for(@() isequal(gui.retr('darkmode'), 1) == ~dark_before), 'PIVlab colours follow the MATLAB theme');
+hgui = getappdata(0,'hgui');
+h = gui.gethand;
+testCase.verifyEqual(strcmpi(hgui.Theme.BaseColorStyle,'dark'), ~dark_before, 'window theme');
+testCase.verifyEqual(get(h.zoomon,'CData'), zoom_icon(~dark_before), 'controls built again in the new colours');
+testCase.verifyEqual(char(get(findobj(hgui,'Tag','multip04'),'Visible')), 'on', 'the open panel stays open');
+testCase.verifyEqual(get(h.filenamebox,'String'), gui.retr('filename'), 'images still loaded');
+testCase.verifyFalse(ispref('PIVlab','dark_mode_theme'), 'the theme is not stored');
+set_temporary_matlab_theme(dark_before);
+testCase.verifyTrue(wait_for(@() isequal(gui.retr('darkmode'), 1) == dark_before), 'and back');
+% controls that are disabled after the start stay disabled after the next busy phase (gui.toolsavailable)
+helper_gui_load_images(helper_files('jet', 3));
+testCase.verifyEqual(char(get(findobj(getappdata(0,'hgui'),'Tag','ac_calibsave'),'Enable')), 'off', 'Save button of the camera calibration');
+end
+
+function test_theme_change_waits_while_pivlab_is_busy(testCase)
+% the controls are not built again while PIVlab is busy, but when it is done
+if ispref('PIVlab'), rmpref('PIVlab'); end
+testCase.addTeardown(@clear_temporary_matlab_theme);
+testCase.addTeardown(@helper_close_pivlab);   % runs first: PIVlab is closed before the MATLAB theme goes back
+helper_start_pivlab();
+dark_before = isequal(gui.retr('darkmode'), 1);
+gui.toolsavailable(0, [], true);
+set_temporary_matlab_theme(~dark_before);
+testCase.verifyFalse(wait_for(@() isequal(gui.retr('darkmode'), 1) == ~dark_before, 3), 'nothing built again while busy');
+gui.toolsavailable(1);
+testCase.verifyTrue(wait_for(@() isequal(gui.retr('darkmode'), 1) == ~dark_before), 'colours follow when PIVlab is done');
+testCase.verifyEmpty(timerfindall('Tag','PIVlab_theme_follow'), 'no timer left');
+end
+
+function test_chosen_theme_does_not_follow_matlab(testCase)
+% a theme chosen in PIVlab (stored in the preferences) stays when the MATLAB theme changes
+if ispref('PIVlab'), rmpref('PIVlab'); end
+testCase.addTeardown(@clear_temporary_matlab_theme);
+testCase.addTeardown(@helper_close_pivlab);   % runs first: PIVlab is closed before the MATLAB theme goes back
+gui.set_preference('dark_mode_theme', 1);
+helper_start_pivlab();
+set_temporary_matlab_theme(false);
+pause(3);
+hgui = getappdata(0,'hgui');
+testCase.verifyEqual(gui.retr('darkmode'), 1);
+testCase.verifyEqual(hgui.Theme.BaseColorStyle, 'dark');
+end
+
 function test_preferences_are_remembered(testCase)
 root = testCase.TestData.Root;
 if ispref('PIVlab'), rmpref('PIVlab'); end
@@ -206,6 +262,44 @@ gui.put('batchModeActive',1);
 gui.MainWindow_CloseRequestFcn(hgui, []);
 drawnow;
 setappdata(0,'hgui',[]);
+end
+
+function set_temporary_matlab_theme(dark)
+% MATLAB theme for this MATLAB session only (not stored in the MATLAB settings)
+s = settings;
+if dark
+    s.matlab.appearance.MATLABTheme.TemporaryValue = 'Dark';
+else
+    s.matlab.appearance.MATLABTheme.TemporaryValue = 'Light';
+end
+end
+
+function clear_temporary_matlab_theme()
+s = settings;
+if hasTemporaryValue(s.matlab.appearance.MATLABTheme)
+    clearTemporaryValue(s.matlab.appearance.MATLABTheme);
+end
+end
+
+function ok = wait_for(condition, seconds)
+% true as soon as condition() is true; callbacks (ThemeChangedFcn, timers) run meanwhile
+if nargin < 2, seconds = 10; end
+t0 = tic;
+ok = condition();
+while ~ok && toc(t0) < seconds
+    pause(0.2);
+    ok = condition();
+end
+end
+
+function c = zoom_icon(dark)
+% zoom button icon as gui.generateUI makes it
+load(fullfile('images','icons.mat'), 'zoompic');
+c = zoompic;
+if dark
+    c = 1-c+35/255;
+    c(c>1) = 1;
+end
 end
 
 function L = folder_listing(root)

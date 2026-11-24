@@ -37,6 +37,7 @@ elementsOfCrime=findobj(hgui, 'type', 'uicontrol');
 % menu bar with all its entries (hidden handles, see gui.generateMenu); not the context menus
 menu_items=findall(findall(hgui,'-depth',1,'Type','uimenu'),'Type','uimenu');
 if inpt==0
+	gui.put('tools_locked',1); % PIVlab is busy or waits for the user: the controls are not built again meanwhile (gui.theme_changed)
 	% remember which controls were disabled before (by handle: controls may be created or
 	% deleted while PIVlab is busy). Only kept in memory, never saved in a session.
 	was_disabled=false(numel(elementsOfCrime),1);
@@ -68,6 +69,7 @@ if inpt==0
 	end
 else
 	gui.put('busy_since',[]);
+	gui.put('tools_locked',0); % see gui.theme_changed
 	for i=1:numel(busy_figs)
 		if strcmp(get(busy_figs(i),'Pointer'),'watch')
 			set(busy_figs(i),'Pointer','arrow');
