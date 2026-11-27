@@ -66,6 +66,9 @@ if strmatch(button,'OK')==1
             else
                 [OutputError,OPTRONIS_vid] = PIVlab_capture_OPTRONIS_synced_capture(OPTRONIS_vid,imageamount,do_realtime,ac_ROI_realtime,frame_nr_display,OPTRONIS_bits); %capture n images, display livestream
             end
+            if iscell(OPTRONIS_vid) %Cyclone on BitFlow: one videoinput per camera; the pulse distance is found with camera 1
+                OPTRONIS_vid = OPTRONIS_vid{1};
+            end
             while OPTRONIS_vid.FramesAcquired < imageamount
                 disp ('waiting for data acquisition')
                 pause(0.1)

@@ -1,38 +1,15 @@
-function [OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_bitflow_synced_start(nr_of_images,ROI_OPTRONIS,frame_rate,bitmode)
+function [OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_bitflow_synced_start(nr_of_images,ROI_OPTRONIS,frame_rate,bitmode,n_cameras)
+% Prepare one OPTRONIS Cyclone on the BitFlow grabber, or two for stereo acquisition (n_cameras = 2, both on
+% the camera output of the synchronizer), for synced PIV capture. OPTRONIS_vid: cell array with one
+% videoinput per camera ({1} = camera 1). After this function, the cameras wait for the external trigger.
+if nargin < 5
+    n_cameras = 1;
+end
 fix_Optronis_skipped_frame=0;
 hgui=getappdata(0,'hgui');
 OutputError=0;
+frame_nr_display=[];
 
-%% Prepare camera
-delete(imaqfind); %clears all previous videoinputs
-imaqreset
-try
-    hwinf = imaqhwinfo;
-catch
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error','Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.','modal');
-    disp('Error: Image Acquisition Toolbox not available! This camera needs the image acquisition toolbox.')
-end
-
-found_correct_adaptor=0;
-for adaptorID=1:numel(hwinf.InstalledAdaptors)
-    info = imaqhwinfo(hwinf.InstalledAdaptors{adaptorID});
-    if strcmp(info.AdaptorName,'bitflow')
-        disp(['bitflow adaptor found with ID: ' num2str(adaptorID)])
-        found_correct_adaptor=1;
-        break
-    end
-end
-
-if found_correct_adaptor~=1
-    disp('ERROR: bitflow adaptor not found. Please install the BitFlow MATLAB adaptor.')
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Error, adaptor missing','ERROR: bitflow adaptor not found. Please install the BitFlow MATLAB IMAQ adaptor.','modal');
-    OutputError=1;
-    OPTRONIS_vid=[];
-    frame_nr_display=[];
-    return
-end
-
-%% Create videoinput
 %% select bitmode
 if isempty(bitmode) || ~isnumeric(bitmode)
     bitmode=8;
@@ -45,27 +22,20 @@ end
 %% select cam subtype
 camera_sub_type = gui.retr('camera_sub_type');
 if contains(camera_sub_type, '25-150')
-    bfml_name = 'Optronis-Cyclone-25-150-M_OLT.bfml';
     exposure_gap = 24;
-    minexpo = 12;
 elseif contains(camera_sub_type, '2-2000')
-    bfml_name = 'Optronis-Cyclone-2-2000-M_OLT.bfml';
     exposure_gap = 3;
-    minexpo = 2;
 elseif contains(camera_sub_type, '1HS-3500')
-    bfml_name = 'Optronis-Cyclone-1HS-3500-M_OLT.bfml'; %does not exist yet
     exposure_gap = 3;
-    minexpo = 2;
 else
     disp('bfml file does not exist for this camera type')
+    OutputError=1;
+    OPTRONIS_vid={};
     return
 end
 if bitmode > 8
     exposure_gap = exposure_gap + 1; %maximum exposure issmaller at 10 bit
 end
-
-bfml_dir  = fileparts(mfilename('fullpath'));
-bfml_path = fullfile(bfml_dir, [camfilemode '@' bfml_name]);
 
 if isinf(nr_of_images) %PIV preview
     buffers_needed = 125;
@@ -73,9 +43,76 @@ else
     buffers_needed = nr_of_images*2 / 4 ; % one quarter of images RAM buffer
 end
 
-OPTRONIS_vid = videoinput('bitflow', 1, [bfml_path ';BuffersToUse=' num2str(buffers_needed)]);
-OPTRONIS_src = OPTRONIS_vid.Source;
+%% Prepare cameras
+imaqreset
+[OPTRONIS_vid,imaq_error] = PIVlab_capture_OPTRONIS_bitflow_open(camfilemode,n_cameras,buffers_needed);
+if imaq_error ~= 0
+    OutputError=1;
+    OPTRONIS_vid={};
+    return
+end
 
+%% camera settings (stereo: the same settings for both cameras)
+ROI_OPTRONIS=[ROI_OPTRONIS(1)-1, ROI_OPTRONIS(2)-1, ROI_OPTRONIS(3), ROI_OPTRONIS(4)];
+fps_too_high=0;
+for k=1:n_cameras
+    if configure_synced(OPTRONIS_vid{k},ROI_OPTRONIS,frame_rate,exposure_gap) == 0
+        fps_too_high=1;
+    end
+end
+if fps_too_high==1
+    gui.custom_msgbox('error',getappdata(0,'hgui'),'Frame rate too high','The frame rate is too high for the current configuration, please reduce it.', 'modal');
+end
+
+%% prepare axes
+%image objects for acquisition.show_frame (drawn at screen resolution, sharp when zoomed); stereo side by side
+[image_handles,frame_nr_display] = acquisition.live_images(n_cameras,[ROI_OPTRONIS(3) ROI_OPTRONIS(4)],2^bitmode);
+setappdata(hgui,'image_handles_OPTRONIS',image_handles);
+setappdata(hgui,'image_handle_OPTRONIS',image_handles{1});
+
+if fps_too_high==0
+    OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame+2;
+    for k=1:n_cameras
+        OPTRONIS_src = OPTRONIS_vid{k}.Source;
+        OPTRONIS_src.BFGTLNodeName     = 'EnableFan';
+        OPTRONIS_src.BFGTLNodeValueStr = 'Off';
+        OPTRONIS_vid{k}.FramesPerTrigger = OPTRONIS_frames_to_capture;
+        if ~isinf(nr_of_images) %PIV capture
+            prewarm(OPTRONIS_vid{k},OPTRONIS_frames_to_capture);
+        end
+        OPTRONIS_vid{k}.ErrorFcn = @CustomIMAQErrorFcn;
+    end
+    %No preview(): synced_capture shows the frames via peekdata (displaying the full frames at a
+    %high rate causes skipped frames and a high CPU load). In PIV preview (nr_of_images = Inf,
+    %FramesPerTrigger = Inf), synced_capture discards the frames continuously.
+
+    for k=1:n_cameras
+        tmp=get(image_handles{k},'CData');
+        tmp=size(tmp(:,:,1));
+        set(image_handles{k},'CData',ones(tmp)*35);
+    end
+    delete(frame_nr_display);
+    frame_nr_display=text(100,100,'Ready!','Color',[1 1 0]);
+    pause(0.01)
+    caxis([0 2^bitmode]);
+
+    %%% Variante mit manuellem trigger
+    for k=1:n_cameras
+        triggerconfig(OPTRONIS_vid{k}, 'manual'); %so recording starts only when (trigger(OPTR... is called
+        start(OPTRONIS_vid{k});
+    end
+    pause(0.2)
+    for k=1:n_cameras
+        trigger(OPTRONIS_vid{k}) %also in PIV preview: frames must be logged for peekdata
+    end
+    pause(0.1)
+    drawnow;
+    %Here: capture is running, waiting for external trigger input.
+end
+
+function ok = configure_synced(OPTRONIS_vid,ROI_OPTRONIS,frame_rate,exposure_gap)
+%exposure, counter, gain, ROI and frame rate of one camera; ok = 0: the camera refused the frame rate
+OPTRONIS_src = OPTRONIS_vid.Source;
 %% Set exposure time
 exposure_time = ceil(1/frame_rate*1000^2 - exposure_gap);
 OPTRONIS_src.BFGTLNodeName = 'ExposureTime';
@@ -103,10 +140,7 @@ end
 OPTRONIS_src.BFGTLNodeName     = 'AGain';
 OPTRONIS_src.BFGTLNodeValueStr = num2str(OPTRONIS_gain);
 
-
 %% Set ROI
-ROI_OPTRONIS=[ROI_OPTRONIS(1)-1, ROI_OPTRONIS(2)-1, ROI_OPTRONIS(3), ROI_OPTRONIS(4)];
-%'ist das so?'
 %ROI_OPTRONIS(3) = max(64, floor(ROI_OPTRONIS(3)/64)*64); % width must be multiple of 64 (4 CXP links × 16-pixel quantum)
 OPTRONIS_src.BFGTLNodeName     = 'OffsetX'; % zero offsets before changing size to avoid constraint violations
 OPTRONIS_src.BFGTLNodeValueStr = '0';
@@ -123,106 +157,44 @@ OPTRONIS_src.BFGTLNodeValueStr = num2str(ROI_OPTRONIS(2));
 % VideoResolution stays at the BFML default (sensor size); clip to the actual frame size
 OPTRONIS_vid.ROIPosition = [0 0 ROI_OPTRONIS(3) ROI_OPTRONIS(4)];
 
-%% prepare axes
-PIVlab_axis = gui.retr('pivlab_axis');
-OPTRONIS_climits=2^bitmode;
-
-image_handle_OPTRONIS=imagesc(zeros(ROI_OPTRONIS(4),ROI_OPTRONIS(3)),'Parent',PIVlab_axis,[0 OPTRONIS_climits]);
-setappdata(hgui,'image_handle_OPTRONIS',image_handle_OPTRONIS);
-frame_nr_display=text(PIVlab_axis,100,100,'Initializing...','Color',[1 1 0]);
-
-colormap(ancestor(PIVlab_axis,'figure'),'default')
-new_map=colormap(ancestor(PIVlab_axis,'figure'),'gray');
-colormap(ancestor(PIVlab_axis,'figure'),new_map);axis(PIVlab_axis,'image');
-set(PIVlab_axis,'ytick',[])
-set(PIVlab_axis,'xtick',[])
-
-
-%% Set frame rate (check if too high)
-fps_too_high=0;
+%% Set frame rate (check if too high). The camera limits it to what its CoaXPress links can transfer
+%% (Cyclone-2-2000-M full frame 8 bit: 2160 fps with four links, 1087 fps with two links in stereo).
+ok=1;
 try
     OPTRONIS_src.BFGTLNodeName     = 'AcquisitionFrameRate';
     OPTRONIS_src.BFGTLNodeValueStr = num2str(round(frame_rate));
-    set_frame_rate = str2num(OPTRONIS_src.BFGTLNodeValueStr);
+    set_frame_rate = str2double(OPTRONIS_src.BFGTLNodeValueStr);
     if set_frame_rate ~= round(frame_rate)
-        fps_too_high=1;
-        gui.custom_msgbox('error',getappdata(0,'hgui'),'Frame rate too high','The frame rate is too high for the current configuration, please reduce it.', 'modal');
+        ok=0;
     end
 catch
-    gui.custom_msgbox('error',getappdata(0,'hgui'),'Frame rate too high','The frame rate is too high for the current configuration, please reduce it.', 'modal');
-    fps_too_high=1;
+    ok=0;
 end
 
-
-if fps_too_high==0
-    OPTRONIS_src.BFGTLNodeName     = 'EnableFan';
-    OPTRONIS_src.BFGTLNodeValueStr = 'Off';
-
-    OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame+2;
-    OPTRONIS_vid.FramesPerTrigger = OPTRONIS_frames_to_capture;
-    %OPTRONIS_vid.TriggerRepeat = 0;
-
-    if ~isinf(nr_of_images) %PIV capture
-        disp('prewarm start')
-        % Pre-warm: 2 frames with internal trigger (Continuous mode), discard
-        % Ensures the CXP/DMA pipeline and camera state machine are fully initialised
-        % before the real triggered acquisition, preventing the first-frame skip.
-        OPTRONIS_src.BFGTLNodeName     = 'AcquisitionStop';   % put camera in Idle (makes AcquisitionMode writable)
-        OPTRONIS_src.BFGTLNodeValueStr = '1';                 % '1' executes a GenICam command node
-        pause(0.01)
-        OPTRONIS_src.BFGTLNodeName     = 'AcquisitionMode';
-        OPTRONIS_src.BFGTLNodeValueStr = 'Continuous';
-        OPTRONIS_vid.FramesPerTrigger  = 2;
-        triggerconfig(OPTRONIS_vid, 'immediate');
-        start(OPTRONIS_vid);
-        wait(OPTRONIS_vid, 5);             % 2 frames @ 100 fps = 20 ms; 5 s is a safe ceiling
-        stop(OPTRONIS_vid);                % sends AcquisitionStop -> camera back to Idle
-        flushdata(OPTRONIS_vid);           % discard warm-up frames
-        pause(0.01)
-        % Restore SingleFrame + external trigger for the real acquisition
-        OPTRONIS_src.BFGTLNodeName     = 'AcquisitionMode';
-        OPTRONIS_src.BFGTLNodeValueStr = 'SingleFrame';
-        OPTRONIS_vid.FramesPerTrigger  = OPTRONIS_frames_to_capture;
-        pause(0.1);
-        disp('prewarm stop')
-    end
-    OPTRONIS_vid.ErrorFcn = @CustomIMAQErrorFcn;
-    %No preview(): synced_capture shows downsampled frames via peekdata (displaying the full frames at a
-    %high rate causes skipped frames and a high CPU load). In PIV preview (nr_of_images = Inf,
-    %FramesPerTrigger = Inf), synced_capture discards the frames continuously.
-
-    tmp=get(image_handle_OPTRONIS,'CData');
-    tmp=size(tmp(:,:,1));
-    set(image_handle_OPTRONIS,'CData',ones(tmp)*35);
-    delete(frame_nr_display);
-    frame_nr_display=text(100,100,'Ready!','Color',[1 1 0]);
-
-    %% Verify active settings read back from camera
-    %{
-    OPTRONIS_src.BFGTLNodeName = 'AcquisitionFrameRate';
-    disp(['  AcquisitionFrameRate (active) = ' OPTRONIS_src.BFGTLNodeValueStr ' fps']);
-    OPTRONIS_src.BFGTLNodeName = 'ExposureTime';
-    disp(['  ExposureTime         (active) = ' OPTRONIS_src.BFGTLNodeValueStr ' µs']);
-    OPTRONIS_src.BFGTLNodeName = 'AcquisitionMode';
-    disp(['  AcquisitionMode      (active) = ' OPTRONIS_src.BFGTLNodeValueStr]);
-    OPTRONIS_src.BFGTLNodeName = 'SyncInActivation';
-    disp(['  SyncInActivation     (active) = ' OPTRONIS_src.BFGTLNodeValueStr]);
-    %}
-    pause(0.01)
-    caxis([0 2^bitmode]);
-
-
-    %%% Variante mit manuellem trigger
-    triggerconfig(OPTRONIS_vid, 'manual'); %so recording starts only when (trigger(OPTR... is called
-    start(OPTRONIS_vid);
-    pause(0.1)
-    %flushdata(OPTRONIS_vid)
-    pause(0.1)
-    trigger(OPTRONIS_vid) %also in PIV preview: frames must be logged for peekdata
-    pause(0.1)
-    drawnow;
-    %Here: capture is running, waiting for external trigger input.
-end
+function prewarm(OPTRONIS_vid,OPTRONIS_frames_to_capture)
+% Pre-warm: 2 frames with internal trigger (Continuous mode), discard
+% Ensures the CXP/DMA pipeline and camera state machine are fully initialised
+% before the real triggered acquisition, preventing the first-frame skip.
+disp('prewarm start')
+OPTRONIS_src = OPTRONIS_vid.Source;
+OPTRONIS_src.BFGTLNodeName     = 'AcquisitionStop';   % put camera in Idle (makes AcquisitionMode writable)
+OPTRONIS_src.BFGTLNodeValueStr = '1';                 % '1' executes a GenICam command node
+pause(0.01)
+OPTRONIS_src.BFGTLNodeName     = 'AcquisitionMode';
+OPTRONIS_src.BFGTLNodeValueStr = 'Continuous';
+OPTRONIS_vid.FramesPerTrigger  = 2;
+triggerconfig(OPTRONIS_vid, 'immediate');
+start(OPTRONIS_vid);
+wait(OPTRONIS_vid, 5);             % 2 frames @ 100 fps = 20 ms; 5 s is a safe ceiling
+stop(OPTRONIS_vid);                % sends AcquisitionStop -> camera back to Idle
+flushdata(OPTRONIS_vid);           % discard warm-up frames
+pause(0.01)
+% Restore SingleFrame + external trigger for the real acquisition
+OPTRONIS_src.BFGTLNodeName     = 'AcquisitionMode';
+OPTRONIS_src.BFGTLNodeValueStr = 'SingleFrame';
+OPTRONIS_vid.FramesPerTrigger  = OPTRONIS_frames_to_capture;
+pause(0.1);
+disp('prewarm stop')
 
 function CustomIMAQErrorFcn(obj, event, varargin)
 stop(obj)
@@ -256,10 +228,6 @@ fprintf('%s event occurred at %s for video input object: %s.\n', ...
 if strcmpi(EventType, 'error')
     fprintf('%s\n', EventData.Message);
 end
-
-'lalalla'
-fprintf('%s\n', EventData.Message);
-'lalalla'
 
 if strcmpi(event.Data.MessageID,'imaq:imaqmex:outofmemory')
     gui.custom_msgbox('error',getappdata(0,'hgui'),'Memory full','Out of memory. RAM is full, most likely, you need to lower the amount of frames to capture to fix this error.','modal');

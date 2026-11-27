@@ -12,7 +12,11 @@ if isempty(fh)
         mainpos=[0    2.8571  240.0000   50.9524];
     end
 
-    OPTRONIS_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','OPTRONIS settings','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4+4 35 11+1.5+5],'tag','OPTRONIS_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
+    stereo_rows = 0; %stereo acquisition: row for "Swap cameras"
+    if acquisition.capture_cameras == 2
+        stereo_rows = 2.5;
+    end
+    OPTRONIS_control_window = figure('numbertitle','off','MenuBar','none','DockControls','off','Name','OPTRONIS settings','Toolbar','none','Units','characters','Position', [mainpos(1)+mainpos(3)-35 mainpos(2)+15+4+4-stereo_rows 35 11+1.5+5+stereo_rows],'tag','OPTRONIS_control_window','visible','on','KeyPressFcn', @key_press,'resize','off');
     set (OPTRONIS_control_window,'Units','Characters');
 
     handles = guihandles;
@@ -21,7 +25,7 @@ if isempty(fh)
 
     parentitem = get(OPTRONIS_control_window, 'Position');
     margin=1.5;
-    panelheight=12+5;
+    panelheight=12+5+stereo_rows;
     handles.mainpanel = uipanel(OPTRONIS_control_window, 'Units','characters', 'Position', [1 parentitem(4)-panelheight parentitem(3)-2 panelheight],'title','OPTRONIS Settings','fontweight','bold');
 
     %% mainpanel
@@ -83,7 +87,13 @@ if isempty(fh)
         bfml_dir  = fileparts(mfilename('fullpath'));
         bfml_path = fullfile(bfml_dir, [camfilemode '@' bfml_name]);
 
-        OPTRONIS_vid = videoinput('bitflow', 1, [bfml_path ';BuffersToUse=' num2str(4)]);
+        try
+            OPTRONIS_vid = videoinput('bitflow', 1, [bfml_path ';BuffersToUse=' num2str(4)]);
+        catch
+            %two Cyclone-2-2000-M on one grabber (stereo): two CoaXPress links per camera
+            bfml_path = fullfile(bfml_dir, [camfilemode '@Optronis-Cyclone-2-2000-M-2links_OLT.bfml']);
+            OPTRONIS_vid = videoinput('bitflow', 1, [bfml_path ';BuffersToUse=' num2str(4)]);
+        end
         OPTRONIS_src = OPTRONIS_vid.Source;
 
         OPTRONIS_src.BFGTLNodeName = 'AcquisitionStop';
@@ -129,6 +139,11 @@ if isempty(fh)
 
     item=[0 item(2)+item(4) parentitem(3) 2];
     handles.firmware_txt = uicontrol(handles.mainpanel,'Style','text','String',['Firmware: ' DeviceFirmwareVersion],'Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)]);
+
+    if stereo_rows > 0
+        item=[0 item(2)+item(4)+margin/4 parentitem(3) 2];
+        handles.swap_cameras = uicontrol(handles.mainpanel,'Style','checkbox','String','Swap cameras','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'tag','swap_cameras','Value',isequal(gui.camera_setting('OPTRONIS_stereo_swap'),1),'TooltipString','Camera 1 = the camera on grabber links 3 and 4 (default: links 1 and 2)');
+    end
 
     item=[parentitem(3)/2 item(2)+item(4)+margin/4 parentitem(3)/2 2];
     handles.apply_btn = uicontrol(handles.mainpanel,'Style','pushbutton','String','Apply','Units','characters', 'Fontunits','points','Position',[item(1)+margin parentitem(4)-item(4)-margin-item(2) item(3)-margin*2 item(4)],'Callback',@Apply_settings,'tag','apply_btn');
@@ -191,6 +206,9 @@ if strcmpi(counterchoices{get(handles.counter,'value')},'off')
     gui.set_camera_setting('OPTRONIS_counter',0)
 elseif strcmpi(counterchoices{get(handles.counter,'value')},'on')
     gui.set_camera_setting('OPTRONIS_counter',1)
+end
+if isfield(handles,'swap_cameras') %stereo: camera 1 = grabber links 1-2 (default) or 3-4
+    gui.set_camera_setting('OPTRONIS_stereo_swap',get(handles.swap_cameras,'Value'));
 end
 close(fh)
 

@@ -38,8 +38,14 @@ end
 %% Create temporary videoinput to identify camera
 try
     bfml_dir  = fileparts(mfilename('fullpath'));
-    bfml_path = fullfile(bfml_dir, 'Optronis-Cyclone-2-2000-M_OLT.bfml');
-    OPTRONIS_vid = videoinput('bitflow', 1, [bfml_path ';BuffersToUse=4']);
+    try
+        bfml_path = fullfile(bfml_dir, 'Optronis-Cyclone-2-2000-M_OLT.bfml');
+        OPTRONIS_vid = videoinput('bitflow', 1, [bfml_path ';BuffersToUse=4']);
+    catch
+        %two cameras on one grabber (stereo): only two CoaXPress links per camera, see PIVlab_capture_OPTRONIS_bitflow_open
+        bfml_path = fullfile(bfml_dir, 'Optronis-Cyclone-2-2000-M-2links_OLT.bfml');
+        OPTRONIS_vid = videoinput('bitflow', 1, [bfml_path ';BuffersToUse=4']);
+    end
     OPTRONIS_src = getselectedsource(OPTRONIS_vid);
 
     OPTRONIS_src.BFGTLNodeName = 'AcquisitionStop';

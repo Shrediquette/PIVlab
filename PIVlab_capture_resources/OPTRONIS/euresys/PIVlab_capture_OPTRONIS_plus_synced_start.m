@@ -106,21 +106,10 @@ ROI_OPTRONIS=[ROI_OPTRONIS(1)-1,ROI_OPTRONIS(2)-1,ROI_OPTRONIS(3),ROI_OPTRONIS(4
 OPTRONIS_vid.ROIPosition=ROI_OPTRONIS; %must be set before the max. frame rate is read, and before start
 
 %% prepare axes
-PIVlab_axis = gui.retr('pivlab_axis');
-OPTRONIS_climits=2^bitmode;
-image_handle_OPTRONIS=imagesc(zeros(ROI_OPTRONIS(4),ROI_OPTRONIS(3)),'Parent',PIVlab_axis,[0 OPTRONIS_climits]);
+%image object for acquisition.show_frame (drawn at screen resolution, sharp when zoomed)
+[image_handles,frame_nr_display] = acquisition.live_images(1,[ROI_OPTRONIS(3) ROI_OPTRONIS(4)],2^bitmode);
+image_handle_OPTRONIS = image_handles{1};
 setappdata(hgui,'image_handle_OPTRONIS',image_handle_OPTRONIS);
-
-frame_nr_display=text(PIVlab_axis,100,100,'Initializing...','Color',[1 1 0]);
-colormap(ancestor(PIVlab_axis,'figure'),'default') %reset colormap steps
-new_map=colormap(ancestor(PIVlab_axis,'figure'),'gray');
-new_map(1:3,:)=[0 0.2 0;0 0.2 0;0 0.2 0];
-new_map(end-2:end,:)=[1 0.7 0.7;1 0.7 0.7;1 0.7 0.7];
-colormap(ancestor(PIVlab_axis,'figure'),new_map);axis(PIVlab_axis,'image');
-set(PIVlab_axis,'ytick',[])
-set(PIVlab_axis,'xtick',[])
-
-colorbar(PIVlab_axis)
 
 %% max. frame rate for this ROI (can only be read with TriggerMode Off)
 if settings_ok==1

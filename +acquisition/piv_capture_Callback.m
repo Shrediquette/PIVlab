@@ -430,7 +430,7 @@ if required_files_check
 					if is_bitflow && is_plus
 						[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_plus_bitflow_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits);
 					elseif is_bitflow
-						[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_bitflow_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits);
+						[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_bitflow_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits,acquisition.capture_cameras); %OPTRONIS_vid: one videoinput per camera
 					elseif is_plus
 						[OutputError,OPTRONIS_vid,frame_nr_display] = PIVlab_capture_OPTRONIS_plus_synced_start(imageamount,ac_ROI_general,cam_fps,OPTRONIS_bits);
 					else

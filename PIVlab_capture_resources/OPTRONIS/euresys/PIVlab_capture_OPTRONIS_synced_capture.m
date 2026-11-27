@@ -8,8 +8,9 @@ OutputError=0;
 OPTRONIS_frames_to_capture = nr_of_images*2+fix_Optronis_skipped_frame;
 set(frame_nr_display,'backgroundcolor','k');
 %% capture data
-%preview() is not used (see synced_start). The latest frame is shown with peekdata, downsampled to approx.
-%1280 pixels. Displaying the full frames in the PIVlab window causes skipped frames and a high CPU load.
+%preview() is not used (see synced_start). The latest frame is shown with peekdata and acquisition.show_frame
+%(only the visible part at screen resolution). Displaying the full frames in the PIVlab window causes skipped
+%frames and a high CPU load.
 is_preview = isinf(OPTRONIS_frames_to_capture); %PIV preview: endless acquisition, frames are discarded with flushdata
 if ~is_preview
     update_interval = 1/5;
@@ -19,7 +20,6 @@ end
 t0 = tic;
 next_update = 0;
 ima = image_handle_OPTRONIS.CData;
-ds = 1; %downsampling factor of the displayed image
 while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdata(hgui,'cancel_capture') ~=1
     if toc(t0) < next_update
         if is_preview && OPTRONIS_vid.FramesAvailable > 50
@@ -40,39 +40,14 @@ while OPTRONIS_vid.FramesAcquired < (OPTRONIS_frames_to_capture+2) &&  getappdat
         if is_preview
             flushdata(OPTRONIS_vid); %frames are not saved in PIV preview
         end
-        ds = max(1,ceil(max(size(ima,[1 2]))/1280));
-        %XData and YData keep the axes in camera pixel coordinates
-        set(image_handle_OPTRONIS,'CData',ima(1:ds:end,1:ds:end),'XData',[1 size(ima,2)],'YData',[1 size(ima,1)]);
+        acquisition.show_frame(image_handle_OPTRONIS,ima,1);
         if ~is_preview
 			set(frame_nr_display,'String',['Image nr.: ' int2str(round(OPTRONIS_vid.FramesAcquired/2))]);
         else
             set(frame_nr_display,'String','PIV preview');
         end
 	end
-	%% sharpness indicator
-	sharpness_enabled = getappdata(hgui,'sharpness_enabled');
-	if sharpness_enabled == 1 % sharpness indicator
-        [~,~] = PIVlab_capture_sharpness_indicator (ima,1);
-    else
-        delete(findobj('tag','sharpness_display_text'));
-    end
-    crosshair_enabled = getappdata(hgui,'crosshair_enabled');
-    if crosshair_enabled == 1 %cross-hair
-        %% cross-hair
-        locations=[0.15 0.5 0.85];
-        half_thickness=floor(1/ds); %3 px wide lines at full resolution, 1 px in the downsampled image
-        brightness_incr=101;
-        ima_ed=ima(1:ds:end,1:ds:end); %drawn into the displayed (downsampled) image
-        old_max=max(ima_ed(:));
-        for loca=locations
-            %vertical
-            ima_ed(:,round(size(ima_ed,2)*loca)-half_thickness:round(size(ima_ed,2)*loca)+half_thickness)=ima_ed(:,round(size(ima_ed,2)*loca)-half_thickness:round(size(ima_ed,2)*loca)+half_thickness)+brightness_incr;
-            %horizontal
-            ima_ed(round(size(ima_ed,1)*loca)-half_thickness:round(size(ima_ed,1)*loca)+half_thickness,:)=ima_ed(round(size(ima_ed,1)*loca)-half_thickness:round(size(ima_ed,1)*loca)+half_thickness,:)+brightness_incr;
-        end
-        ima_ed(ima_ed>old_max)=old_max;
-        set(image_handle_OPTRONIS,'CData',ima_ed);
-    end
+	acquisition.live_overlays({image_handle_OPTRONIS},'capture'); %sharpness, grid
     drawnow limitrate;
     %% Autofocus
     %% Lens control

@@ -113,18 +113,10 @@ bf_set(OPTRONIS_src, 'OffsetY', num2str(ROI_OPTRONIS(2)));
 OPTRONIS_vid.ROIPosition = [0 0 ROI_OPTRONIS(3) ROI_OPTRONIS(4)];
 
 %% prepare axes
-PIVlab_axis = gui.retr('pivlab_axis');
-OPTRONIS_climits=2^bitmode;
-
-image_handle_OPTRONIS=imagesc(zeros(ROI_OPTRONIS(4),ROI_OPTRONIS(3)),'Parent',PIVlab_axis,[0 OPTRONIS_climits]);
+%image object for acquisition.show_frame (drawn at screen resolution, sharp when zoomed)
+[image_handles,frame_nr_display] = acquisition.live_images(1,[ROI_OPTRONIS(3) ROI_OPTRONIS(4)],2^bitmode);
+image_handle_OPTRONIS = image_handles{1};
 setappdata(hgui,'image_handle_OPTRONIS',image_handle_OPTRONIS);
-frame_nr_display=text(PIVlab_axis,100,100,'Initializing...','Color',[1 1 0]);
-
-colormap(ancestor(PIVlab_axis,'figure'),'default')
-new_map=colormap(ancestor(PIVlab_axis,'figure'),'gray');
-colormap(ancestor(PIVlab_axis,'figure'),new_map);axis(PIVlab_axis,'image');
-set(PIVlab_axis,'ytick',[])
-set(PIVlab_axis,'xtick',[])
 
 %% Exposure time
 exposure_time=ceil(1/frame_rate*1000^2-exposure_gap);
