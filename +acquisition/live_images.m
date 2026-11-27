@@ -41,4 +41,5 @@ set(PIVlab_axis, 'xtick', [])
 caxis(PIVlab_axis, [0 climit]); %#ok<CAXIS> as the other capture code (clim needs R2022a)
 colorbar(PIVlab_axis)
 acquisition.apply_camera_view % stereo: both cameras or only one (CAM button of the Tools panel)
+acquisition.camera_view_button % CAM button: cameras shown again (after loaded images it was the camera switch)
 end

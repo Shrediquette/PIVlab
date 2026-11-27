@@ -4,6 +4,7 @@ projectpath=get(handles.ac_project,'String');
 n_cameras = acquisition.capture_cameras;
 if n_cameras > 1 %stereo acquisition: images in cam1 and cam2, opened in stereo mode
 	found_the_data = push_stereo(projectpath,imageamount,n_cameras);
+	acquisition.camera_view_button %CAM button: now the camera switch of the loaded stereo images
 	return
 end
 %imageamount=str2double(get(handles.ac_imgamount,'String'));

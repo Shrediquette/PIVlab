@@ -186,6 +186,12 @@ for k = 1:2
         {'On', 'Line2', 'Line4', 'ExposureActive', 'Output', 'False'}, sprintf('camera %d: trigger and exposure output', k));
 end
 verifyEqual(testCase, gui.camera_setting('OPTOcam_stereo_serials'), {'40000001', '40000002'}, 'camera order saved');
+% CAM button after the recording (Image Acquisition panel still open): camera switch of the loaded stereo images
+verifyEqual(testCase, char(get(h.multip24, 'Visible')), 'on', 'Image Acquisition panel still open');
+verifyEqual(testCase, get(h.stereo_camera_toggle, 'String'), 'CAM 1', 'CAM button: camera switch');
+stereo.camera_toggle_Callback;
+verifyEqual(testCase, gui.retr('stereo_active_camera'), 2, 'CAM button switches to camera 2');
+verifyEqual(testCase, get(h.stereo_camera_toggle, 'String'), 'CAM 2');
 end
 
 function test_stereo_recording_missed_trigger(testCase)
